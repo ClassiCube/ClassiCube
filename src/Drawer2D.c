@@ -309,7 +309,7 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 }
 
 void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, int height) {
-	Gfx_RecreateTexture(&tex->ID, bmp, false, false);
+	Gfx_RecreateTexture(&tex->ID, bmp, 0, false);
 	tex->Width  = width;
 	tex->Height = height;
 

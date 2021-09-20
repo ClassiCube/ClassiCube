@@ -55,14 +55,17 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
+#define TEXTURE_FLAG_MANAGED 0x01 /* Texture should persist across gfx context loss */
+
 void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
-void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps);
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
+/* Supported flags: TEXTURE_FLAG_MANAGED */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend. */
-CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps);
+CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
 CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps); /* OBSOLETE */
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */

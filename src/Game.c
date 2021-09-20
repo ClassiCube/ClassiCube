@@ -208,7 +208,7 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
 		if (skinType) { *skinType = Utils_CalcSkinType(&bmp); }
-		Gfx_RecreateTexture(texId, &bmp, true, false);
+		Gfx_RecreateTexture(texId, &bmp, TEXTURE_FLAG_MANAGED, false);
 	}
 
 	Mem_Free(bmp.scan0);

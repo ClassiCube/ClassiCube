@@ -55,7 +55,7 @@ static void Atlas_Convert2DTo1D(void) {
 			Bitmap_UNSAFE_CopyBlock(atlasX, atlasY, 0, y * tileSize,
 								&Atlas2D.Bmp, &atlas1D, tileSize);
 		}
-		Gfx_RecreateTexture(&Atlas1D.TexIds[i], &atlas1D, true, Gfx.Mipmaps);
+		Gfx_RecreateTexture(&Atlas1D.TexIds[i], &atlas1D, TEXTURE_FLAG_MANAGED, Gfx.Mipmaps);
 	}
 	Mem_Free(atlas1D.scan0);
 }
@@ -92,7 +92,7 @@ static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, struct Bitmap* elemen
 	if (y >= Atlas2D.RowsCount) return 0;
 
 	Bitmap_UNSAFE_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bmp, element, size);
-	return Gfx_CreateTexture(element, false, Gfx.Mipmaps);
+	return Gfx_CreateTexture(element, 0, Gfx.Mipmaps);
 }
 
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {

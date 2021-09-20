@@ -248,14 +248,14 @@ static const cc_string curlAlt = String_FromConst("libcurl.so.3");
 #endif
 
 static cc_bool LoadCurlFuncs(void) {
-	static const struct DynamicLibSym funcs[8] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(curl_global_init),    DynamicLib_Sym(curl_global_cleanup),
 		DynamicLib_Sym(curl_easy_init),      DynamicLib_Sym(curl_easy_perform),
 		DynamicLib_Sym(curl_easy_setopt),    DynamicLib_Sym(curl_easy_cleanup),
 		DynamicLib_Sym(curl_slist_free_all), DynamicLib_Sym(curl_slist_append)
 	};
 	/* Non-essential function missing in older curl versions */
-	static const struct DynamicLibSym optFuncs[1] = { DynamicLib_Sym(curl_easy_strerror) };
+	static const struct DynamicLibSym optFuncs[] = { DynamicLib_Sym(curl_easy_strerror) };
 
 	void* lib = DynamicLib_Load2(&curlLib);
 	if (!lib) { 

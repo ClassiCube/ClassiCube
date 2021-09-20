@@ -97,9 +97,9 @@ void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices)
 	*vb = Gfx_CreateDynamicVb(fmt, maxVertices);
 }
 
-void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	Gfx_DeleteTexture(tex);
-	*tex = Gfx_CreateTexture(bmp, managedPool, mipmaps);
+	*tex = Gfx_CreateTexture(bmp, flags, mipmaps);
 }
 
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {

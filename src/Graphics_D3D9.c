@@ -296,7 +296,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
 	cc_result res;
@@ -308,7 +308,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 	}
 	if (Gfx.LostContext) return 0;
 
-	if (managedPool) {
+	if (flags & TEXTURE_FLAG_MANAGED) {
 		for (;;) {
 			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 								0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);

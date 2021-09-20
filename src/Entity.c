@@ -443,7 +443,7 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 		Chat_Add1("&cSkin %s is too large", skin);
 	} else {
 		if (e->Model->usesHumanSkin) Entity_ClearHat(bmp, e->SkinType);
-		Gfx_RecreateTexture(&e->TextureId, bmp, true, false);
+		Gfx_RecreateTexture(&e->TextureId, bmp, TEXTURE_FLAG_MANAGED, false);
 		Entity_SetSkinAll(e, false);
 	}
 	return 0;
