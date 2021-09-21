@@ -72,7 +72,7 @@ static void CreateD3D9Instance(void) {
 	cc_result res;
 	// still to check: managed texture perf, driver reset
 	//   consider optimised CreateTexture??
-	if (false) {
+	if (Options_GetBool("gfx-direct3d9ex", false)) {
 		res = _Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d);
 		if (res == D3DERR_NOTAVAILABLE) {
 			/* Direct3D9Ex not supported, fallback to normal Direct3D9 */
@@ -322,6 +322,18 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
+static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int usage, int pool, void** data) {
+	IDirect3DTexture9* tex;
+	cc_result res;
+	
+	for (;;) {
+		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
+			usage, D3DFMT_A8R8G8B8, pool, &tex, data);
+		if (D3D9_CheckResult(res, "D3D9_CreateTexture failed")) break;
+	}
+	return tex;
+}
+
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
@@ -337,33 +349,26 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	if (Gfx.LostContext) return 0;
 
 	if ((flags & TEXTURE_FLAG_MANAGED) && !using_d3d9Ex) {
-		for (;;) {
-			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-								0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
-			if (D3D9_CheckResult(res, "D3D9_CreateTexture failed")) break;
-		}
-
+		/* Direct3D9Ex doesn't support managed textures */
+		tex = DoCreateTexture(bmp, levels, 0, D3DPOOL_MANAGED, NULL);
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
 	} else {
-		/* Direct3D9Ex doesn't support dynamic textures */
+		/* Direct3D9Ex requires this for dynamically updatable textures */
 		if ((flags & TEXTURE_FLAG_DYNAMIC) && using_d3d9Ex) usage = D3DUSAGE_DYNAMIC;
 
-		for (;;) {
-			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-								0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
-			if (D3D9_CheckResult(res, "D3D9_CreateSysTexture failed")) break;
+		if (using_d3d9Ex && !mipmaps) {
+			/* Direct3D9Ex allows avoiding copying data altogether in some circumstances */
+			/* https://docs.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3ddevice9-createtexture */
+			void** pixels = &bmp->scan0;
+			sys = DoCreateTexture(bmp, levels, 0, D3DPOOL_SYSTEMMEM, pixels);
+		} else {
+			sys = DoCreateTexture(bmp, levels, 0, D3DPOOL_SYSTEMMEM, NULL);
+			D3D9_SetTextureData(sys, bmp, 0);
+			if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
 		}
-
-		D3D9_SetTextureData(sys, bmp, 0);
-		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
-
-		for (;;) {
-			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-								usage, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
-			if (D3D9_CheckResult(res, "D3D9_CreateGPUTexture failed")) break;
-		}
-
+		
+		tex = DoCreateTexture(bmp, levels, usage, D3DPOOL_DEFAULT, NULL);
 		res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
 		D3D9_FreeResource(&sys);
