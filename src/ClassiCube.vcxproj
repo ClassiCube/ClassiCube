@@ -257,6 +257,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
+    <ClCompile Include="Graphics_D3D11.c" />
     <ClCompile Include="Graphics_D3D9.c" />
     <ClCompile Include="Graphics_GL.c" />
     <ClCompile Include="Audio.c" />

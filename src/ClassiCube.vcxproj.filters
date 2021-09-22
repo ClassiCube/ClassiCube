@@ -581,5 +581,8 @@
     <ClCompile Include="Window_Carbon.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics_D3D11.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
