@@ -152,7 +152,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #ifndef CC_BUILD_MANUAL
 #if defined _WIN32
 #define CC_BUILD_WIN
-#define CC_BUILD_D3D9
+#define CC_BUILD_D3D11
 #define CC_BUILD_WINGUI
 #define CC_BUILD_WININET
 #define CC_BUILD_WINMM
@@ -247,7 +247,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #endif
 #endif
 
-#ifdef CC_BUILD_D3D9
+#if defined CC_BUILD_D3D9 || defined CC_BUILD_D3D11
 typedef void* GfxResourceID;
 #else
 /* Ensure size is same as D3D9, even though only 32 bits are used */
