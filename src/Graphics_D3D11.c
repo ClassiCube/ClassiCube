@@ -4,7 +4,7 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "_D3D11Shaders"
+#include "_D3D11Shaders.h"
 
 /* Avoid pointless includes */
 #define WIN32_LEAN_AND_MEAN
@@ -28,21 +28,14 @@ static ID3D11RenderTargetView* backbuffer;
 static ID3D11InputLayout* input_textured;
 static ID3D11Buffer* vs_cBuffer;
 static ID3D11Buffer* ps_cBuffer;
+static ID3D11RasterizerState* rasterstate;
+static ID3D11BlendState* blendState;
 
 static _declspec(align(64)) struct VSConstants
 {
 	struct Matrix mvp;
 } vs_constants;
 
-
-static void UpdateViewport(void) {
-	D3D11_VIEWPORT viewport = { 0 };
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width    = WindowInfo.Width;
-	viewport.Height   = WindowInfo.Height;
-	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
-}
 
 static void AttachShaders(void) {
 	ID3D11VertexShader* vs;
@@ -53,6 +46,20 @@ static void AttachShaders(void) {
 
 	ID3D11DeviceContext_VSSetShader(context, vs, NULL, 0);
 	ID3D11DeviceContext_PSSetShader(context, ps, NULL, 0);
+}
+
+static void CreateInputLayouts(void) {
+	ID3D11InputLayout* input = NULL;
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage-getting-started
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats
+	static D3D11_INPUT_ELEMENT_DESC T_layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
+	input_textured = input;
 }
 
 static void AttachSampler(void) {
@@ -94,17 +101,35 @@ static void AttachConstants(void) {
 	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer);
 }
 
-static void CreateInputLayouts(void) {
-	ID3D11InputLayout* input = NULL;
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage-getting-started
-	static D3D11_INPUT_ELEMENT_DESC T_layout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
-	input_textured = input;
+static void UpdateViewport(void) {
+	D3D11_VIEWPORT viewport = { 0 };
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width    = WindowInfo.Width;
+	viewport.Height   = WindowInfo.Height;
+	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
+}
+
+static void UpdateRasterState(void) {
+	D3D11_RASTERIZER_DESC desc = { 0 };
+	desc.CullMode              = D3D11_CULL_NONE;
+	desc.FillMode              = D3D11_FILL_SOLID;
+	desc.FrontCounterClockwise = true;
+	ID3D11Device_CreateRasterizerState(device, &desc, &rasterstate);
+	ID3D11DeviceContext_RSSetState(context, rasterstate);
+}
+
+static void AttachBlendState(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
+	D3D11_BLEND_DESC desc = { 0 };
+	desc.RenderTarget[0].BlendEnable = FALSE;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	ID3D11Device_CreateBlendState(device, &desc, &blendState);
+
+	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	UINT sampleMask       = 0xffffffff;
+	ID3D11DeviceContext_OMSetBlendState(context, blendState, blendFactor, sampleMask);
 }
 
 void Gfx_Create(void) {
@@ -141,11 +166,13 @@ void Gfx_Create(void) {
 	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, NULL);
 
 	UpdateViewport();
-	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TRIANGLE);
+	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	AttachShaders();
+	CreateInputLayouts();
 	AttachSampler();
 	AttachConstants();
-	CreateInputLayouts();
+	UpdateRasterState();
+	//AttachBlendState();
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
