@@ -52,11 +52,13 @@ static void CreateInputLayouts(void) {
 	ID3D11InputLayout* input = NULL;
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage-getting-started
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats
+	// https://stackoverflow.com/questions/23398711/d3d11-input-element-desc-element-types-ordering-packing
+	// D3D11_APPEND_ALIGNED_ELEMENT
 	static D3D11_INPUT_ELEMENT_DESC T_layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
 	input_textured = input;
@@ -73,8 +75,9 @@ static void AttachSampler(void) {
 	desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
 	desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
 	desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
-	desc.MaxAnisotropy = 1;
-	desc.MaxLOD        = D3D11_FLOAT32_MAX;
+	desc.MaxAnisotropy  = 1;
+	desc.MaxLOD         = D3D11_FLOAT32_MAX;
+	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 
 	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &sampler);
 	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &sampler);
@@ -102,11 +105,13 @@ static void AttachConstants(void) {
 }
 
 static void UpdateViewport(void) {
-	D3D11_VIEWPORT viewport = { 0 };
+	D3D11_VIEWPORT viewport;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.Width    = WindowInfo.Width;
 	viewport.Height   = WindowInfo.Height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
 }
 
@@ -201,8 +206,15 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+typedef struct CC_D3D11Texture {
+	ID3D11Texture2D* tex;
+	ID3D11ShaderResourceView* view;
+} CC_D3D11Texture;
+
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
+	ID3D11ShaderResourceView* view = NULL;
+	HRESULT hr;
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
 	desc.Width     = bmp->width;
@@ -219,20 +231,37 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 	data.SysMemPitch      = bmp->width * 4;
 	data.SysMemSlicePitch = 0;
 
-	HRESULT hr = ID3D11Device_CreateTexture2D(device, &desc, &data, &tex);
+	hr = ID3D11Device_CreateTexture2D(device, &desc, &data, &tex);
 	if (hr) Logger_Abort2(hr, "Failed to create texture");
-	return tex;
+
+	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
+	if (hr) Logger_Abort2(hr, "Failed to create view");
+
+	CC_D3D11Texture* ccTex = Mem_TryAlloc(1, sizeof(CC_D3D11Texture));
+	ccTex->tex  = tex;
+	ccTex->view = view;
+	return ccTex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	CC_D3D11Texture* tex = (CC_D3D11Texture*)texId;
+	if (tex) {
+		ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &tex->view);
+	} else {
+
+	}
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	ID3D11Texture2D* tex = (ID3D11Texture2D*)(*texId);
-	if (tex) ID3D11Texture2D_Release(tex);
+	CC_D3D11Texture* tex = (CC_D3D11Texture*)(*texId);
+	if (tex) {
+		ID3D11Texture2D_Release(tex->tex);
+		ID3D11ShaderResourceView_Release(tex->view);
+		Mem_Free(tex);
+	}
 	*texId = NULL;
 }
 
@@ -379,33 +408,32 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 
 cc_bool render;
 void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+
 	render = fmt == VERTEX_FORMAT_TEXTURED;
 	ID3D11DeviceContext_IASetInputLayout(context, input_textured);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	if (!render) return;
-	// WARNING: IF YOU UNCOMMENT YOUR DISPLAY DRIVER MAY CRASH
-	// ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_LINE);
-	// ID3D11DeviceContext_Draw(context, verticesCount, 0);
-	// ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TRIANGLE);
+	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	ID3D11DeviceContext_Draw(context, verticesCount, 0);
+	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (!render) return;
-	// WARNING: IF YOU UNCOMMENT YOUR DISPLAY DRIVER MAY CRASH
-	//ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, 0);
+	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, 0);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	if (!render) return;
-	// WARNING: IF YOU UNCOMMENT YOUR DISPLAY DRIVER MAY CRASH
-	// ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
+	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (!render) return;
-	// WARNING: IF YOU UNCOMMENT YOUR DISPLAY DRIVER MAY CRASH
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 
