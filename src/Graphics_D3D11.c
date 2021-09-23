@@ -178,6 +178,12 @@ void Gfx_Create(void) {
 	AttachConstants();
 	UpdateRasterState();
 	//AttachBlendState();
+
+	// TODO need a better solution
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-limits
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
+	Gfx.MaxTexWidth  = 8192;
+	Gfx.MaxTexHeight = 8192;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -206,11 +212,6 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct CC_D3D11Texture {
-	ID3D11Texture2D* tex;
-	ID3D11ShaderResourceView* view;
-} CC_D3D11Texture;
-
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
@@ -221,7 +222,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 	desc.Height    = bmp->height;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
-	desc.Format    = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Format    = DXGI_FORMAT_B8G8R8A8_UNORM;
 	desc.Usage     = D3D11_USAGE_IMMUTABLE;
 	desc.SampleDesc.Count = 1;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -236,31 +237,25 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 
 	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
 	if (hr) Logger_Abort2(hr, "Failed to create view");
-
-	CC_D3D11Texture* ccTex = Mem_TryAlloc(1, sizeof(CC_D3D11Texture));
-	ccTex->tex  = tex;
-	ccTex->view = view;
-	return ccTex;
+	return view;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	CC_D3D11Texture* tex = (CC_D3D11Texture*)texId;
-	if (tex) {
-		ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &tex->view);
-	} else {
-
-	}
+	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
+	ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &view);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	CC_D3D11Texture* tex = (CC_D3D11Texture*)(*texId);
-	if (tex) {
-		ID3D11Texture2D_Release(tex->tex);
-		ID3D11ShaderResourceView_Release(tex->view);
-		Mem_Free(tex);
+	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)(*texId);
+	ID3D11Resource* res = NULL;
+
+	if (view) {
+		ID3D11ShaderResourceView_GetResource(view, &res);
+		ID3D11Resource_Release(res);
+		ID3D11ShaderResourceView_Release(view);
 	}
 	*texId = NULL;
 }
