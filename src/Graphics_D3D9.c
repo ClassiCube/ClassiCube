@@ -72,7 +72,7 @@ static void CreateD3D9Instance(void) {
 	cc_result res;
 	// still to check: managed texture perf, driver reset
 	//   consider optimised CreateTexture??
-	if (true || Options_GetBool("gfx-direct3d9ex", false)) {
+	if (_Direct3DCreate9Ex && Options_GetBool("gfx-direct3d9ex", false)) {
 		res = _Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d);
 		if (res == D3DERR_NOTAVAILABLE) {
 			/* Direct3D9Ex not supported, fallback to normal Direct3D9 */
