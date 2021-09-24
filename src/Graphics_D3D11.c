@@ -606,9 +606,15 @@ static void OM_Init(void) {
 	OM_UpdateBlendState();
 }
 
-static void OM_Free(void) {
+static void OM_FreeTargets(void) {
 	ID3D11DeviceContext_OMSetRenderTargets(context, 0, NULL, NULL);
 	ID3D11RenderTargetView_Release(backbuffer);
+	ID3D11DepthStencilView_Release(depthbufferView);
+	ID3D11Texture2D_Release(depthbuffer);
+}
+
+static void OM_Free(void) {
+	OM_FreeTargets();
 }
 
 void Gfx_ClearCol(PackedCol col) {
@@ -675,15 +681,15 @@ finished:
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+	gfx_vsync = vsync;
 }
-
-void Gfx_BeginFrame(void) {
-}
-
-void Gfx_Clear(void) { OM_Clear(); }
+void Gfx_BeginFrame(void) { }
+void Gfx_Clear(void)      { OM_Clear(); }
 
 void Gfx_EndFrame(void) {
-	HRESULT hr = IDXGISwapChain_Present(swapchain, 0, 0);
+	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present
+	// gfx_vsync happens to match SyncInterval parameter
+	HRESULT hr = IDXGISwapChain_Present(swapchain, gfx_vsync, 0);
 	if (hr) Logger_Abort2(hr, "Failed to swap buffers");
 }
 
@@ -694,5 +700,11 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 void Gfx_OnWindowResize(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
+	OM_FreeTargets();
+	HRESULT hr = IDXGISwapChain_ResizeBuffers(swapchain, 0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+	if (hr) Logger_Abort2(hr, "Failed to resize swapchain");
+
+	OM_InitTargets();
+	RS_UpdateViewport();
 }
 #endif
