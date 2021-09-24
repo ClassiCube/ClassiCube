@@ -254,6 +254,7 @@ cc_bool render;
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
 
 	render = fmt == VERTEX_FORMAT_TEXTURED;
 	IA_UpdateLayout();
@@ -306,6 +307,10 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
+	Mem_Copy(data, vertices, vCount * gfx_stride);
+	Gfx_UnlockDynamicVb(vb);
+	Gfx_BindVb(vb);
 }
 
 
