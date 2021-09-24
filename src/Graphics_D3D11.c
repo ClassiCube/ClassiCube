@@ -16,8 +16,8 @@
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
 
-static int gfx_stride, gfx_format = -1;
-static int depthBits;
+static int gfx_format = -1, depthBits;
+static UINT gfx_stride;
 static ID3D11Device* device;
 static ID3D11DeviceContext* context;
 static IDXGIDevice1* dxgi_device;
@@ -33,6 +33,7 @@ static void VS_Init(void);
 static void VS_UpdateShader(void);
 static void RS_Init(void);
 static void PS_Init(void);
+static void PS_UpdateShader(void);
 static void OM_Init(void);
 static void OM_Free(void);
 
@@ -252,36 +253,31 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	tmp = NULL;
 }
 
-cc_bool render;
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 
-	render = fmt == VERTEX_FORMAT_TEXTURED;
 	IA_UpdateLayout();
 	VS_UpdateShader();
+	PS_UpdateShader();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	if (!render) return;
 	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	ID3D11DeviceContext_Draw(context, verticesCount, 0);
 	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (!render) return;
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, 0);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (!render) return;
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	if (!render) return;
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
 }
 
@@ -353,9 +349,8 @@ void Gfx_BindIb(GfxResourceID ib) {
 
 void Gfx_BindVb(GfxResourceID vb) {
 	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
-	static UINT32 stride[] = { SIZEOF_VERTEX_TEXTURED };
 	static UINT32 offset[] = { 0 };
-	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, stride, offset);
+	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);
 }
 
 static void IA_CreateLayouts(void) {
@@ -403,7 +398,7 @@ static const struct ShaderDesc vs_descs[3] = {
 };
 
 static void VS_CreateShaders(void) {
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < Array_Elems(vs_shaders); i++) {
 		HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_descs[i].data, vs_descs[i].len, NULL, &vs_shaders[i]);
 		if (hr) Logger_Abort2(hr, "Failed to compile vertex shader");
 	}
@@ -520,11 +515,23 @@ static void RS_Init(void) {
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/pixel-shader-stage
 static ID3D11SamplerState* ps_sampler;
+static ID3D11PixelShader* ps_shaders[2];
+
+static const struct ShaderDesc ps_descs[2] = {
+	{ ps_shader_colored,  sizeof(ps_shader_colored) },
+	{ ps_shader_textured, sizeof(ps_shader_textured) },
+};
 
 static void PS_CreateShaders(void) {
-	ID3D11PixelShader* ps;
-	HRESULT hr = ID3D11Device_CreatePixelShader(device, ps_shader, sizeof(ps_shader), NULL, &ps);
-	ID3D11DeviceContext_PSSetShader(context, ps, NULL, 0);
+	for (int i = 0; i < Array_Elems(ps_shaders); i++) {
+		HRESULT hr = ID3D11Device_CreatePixelShader(device, ps_descs[i].data, ps_descs[i].len, NULL, &ps_shaders[i]);
+		if (hr) Logger_Abort2(hr, "Failed to compile pixel shader");
+	}
+}
+
+static void PS_UpdateShader(void) {
+	int idx = gfx_format == VERTEX_FORMAT_COLOURED ? 0 : 1;
+	ID3D11DeviceContext_PSSetShader(context, ps_shaders[idx], NULL, 0);
 }
 
 static void PS_CreateSamplers(void) {
@@ -552,6 +559,7 @@ static void PS_Init(void) {
 	PS_CreateShaders();
 	PS_CreateSamplers();
 	PS_UpdateSampler();
+	PS_UpdateShader();
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -609,7 +617,7 @@ static void OM_CreateDepthStates(void) {
 	HRESULT hr;
 	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
 		desc.DepthEnable    = (i & 1) != 0;
 		desc.DepthWriteMask = (i & 2) != 0;
 
@@ -634,7 +642,7 @@ static void OM_CreateBlendStates(void) {
 	desc.RenderTarget[0].DestBlend      = D3D11_BLEND_INV_SRC_ALPHA;
 	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < Array_Elems(om_blendStates); i++) {
 		desc.RenderTarget[0].RenderTargetWriteMask = (i & 1) ? D3D11_COLOR_WRITE_ENABLE_ALL : 0;
 		desc.RenderTarget[0].BlendEnable           = (i & 2) != 0;
 
