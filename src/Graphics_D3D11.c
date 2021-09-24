@@ -25,117 +25,19 @@ static IDXGIAdapter* dxgi_adapter;
 static IDXGIFactory1* dxgi_factory;
 static IDXGISwapChain* swapchain;
 static ID3D11RenderTargetView* backbuffer;
-static ID3D11InputLayout* input_textured;
-static ID3D11Buffer* vs_cBuffer;
-static ID3D11Buffer* ps_cBuffer;
-static ID3D11RasterizerState* rasterstate;
 static ID3D11BlendState* blendState;
 
-static _declspec(align(64)) struct VSConstants
-{
-	struct Matrix mvp;
-} vs_constants;
-
-
-static void AttachShaders(void) {
-	ID3D11VertexShader* vs;
-	HRESULT hr1 = ID3D11Device_CreateVertexShader(device, vs_shader, sizeof(vs_shader), NULL, &vs);
-
-	ID3D11PixelShader* ps;
-	HRESULT hr2 = ID3D11Device_CreatePixelShader(device, ps_shader, sizeof(ps_shader), NULL, &ps);
-
-	ID3D11DeviceContext_VSSetShader(context, vs, NULL, 0);
-	ID3D11DeviceContext_PSSetShader(context, ps, NULL, 0);
-}
-
-static void CreateInputLayouts(void) {
-	ID3D11InputLayout* input = NULL;
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage-getting-started
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats
-	// https://stackoverflow.com/questions/23398711/d3d11-input-element-desc-element-types-ordering-packing
-	// D3D11_APPEND_ALIGNED_ELEMENT
-	static D3D11_INPUT_ELEMENT_DESC T_layout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
-	input_textured = input;
-}
-
-static void AttachSampler(void) {
-	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createsamplerstate
-	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
-	ID3D11SamplerState* sampler = NULL;
-	D3D11_SAMPLER_DESC desc = { 0 };
-
-	desc.Filter   = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
-	desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
-	desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
-	desc.MaxAnisotropy  = 1;
-	desc.MaxLOD         = D3D11_FLOAT32_MAX;
-	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-
-	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &sampler);
-	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &sampler);
-}
-
-static void AttachConstants(void) {
-	// https://developer.nvidia.com/content/constant-buffers-without-constant-pain-0
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
-	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
-	D3D11_BUFFER_DESC desc = { 0 };
-	desc.ByteWidth      = sizeof(vs_constants);
-	//desc.Usage          = D3D11_USAGE_DYNAMIC;
-	//desc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
-	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem          = &vs_constants;
-	data.SysMemPitch      = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &vs_cBuffer);
-	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer);
-}
-
-static void UpdateViewport(void) {
-	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width    = WindowInfo.Width;
-	viewport.Height   = WindowInfo.Height;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
-}
-
-static void UpdateRasterState(void) {
-	D3D11_RASTERIZER_DESC desc = { 0 };
-	desc.CullMode              = D3D11_CULL_NONE;
-	desc.FillMode              = D3D11_FILL_SOLID;
-	desc.FrontCounterClockwise = true;
-	ID3D11Device_CreateRasterizerState(device, &desc, &rasterstate);
-	ID3D11DeviceContext_RSSetState(context, rasterstate);
-}
-
-static void AttachBlendState(void) {
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
-	D3D11_BLEND_DESC desc = { 0 };
-	desc.RenderTarget[0].BlendEnable = FALSE;
-	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	ID3D11Device_CreateBlendState(device, &desc, &blendState);
-
-	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	UINT sampleMask       = 0xffffffff;
-	ID3D11DeviceContext_OMSetBlendState(context, blendState, blendFactor, sampleMask);
-}
+// TODO RS_Init / RS_Free funcs
+static void IA_CreateLayouts(void);
+static void IA_UpdateLayout(void);
+static void VS_CreateShaders(void);
+static void VS_CreateConstants(void);
+static void RS_CreateRasterState(void);
+static void RS_UpdateViewport(void);
+static void RS_UpdateRasterState(void);
+static void PS_CreateShaders(void);
+static void PS_CreateSamplers(void);
+static void PS_UpdateSampler(void);
 
 void Gfx_Create(void) {
 	DWORD createFlags = 0;
@@ -170,13 +72,17 @@ void Gfx_Create(void) {
 	ID3D11Texture2D_Release(pBackBuffer);
 	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, NULL);
 
-	UpdateViewport();
 	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	AttachShaders();
-	CreateInputLayouts();
-	AttachSampler();
-	AttachConstants();
-	UpdateRasterState();
+	
+	VS_CreateShaders();
+	VS_CreateConstants();
+	IA_CreateLayouts();
+	RS_CreateRasterState();
+	RS_UpdateViewport();
+	RS_UpdateRasterState();
+	PS_CreateShaders();
+	PS_CreateSamplers();
+	PS_UpdateSampler();
 	//AttachBlendState();
 
 	// TODO need a better solution
@@ -340,11 +246,6 @@ GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	return buffer;
 }
 
-void Gfx_BindIb(GfxResourceID ib) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)ib;
-	ID3D11DeviceContext_IASetIndexBuffer(context, buffer, DXGI_FORMAT_R16_UINT, 0);
-}
-
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)(*ib);
 	if (buffer) ID3D11Buffer_Release(buffer);
@@ -375,13 +276,6 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	return CreateVertexBuffer(fmt, count, false);
 }
 
-void Gfx_BindVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
-	static UINT32 stride[] = { SIZEOF_VERTEX_TEXTURED };
-	static UINT32 offset[] = { 0 };
-	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, stride, offset);
-}
-
 void Gfx_DeleteVb(GfxResourceID* vb) { 
 	ID3D11Buffer* buffer = (ID3D11Buffer*)(*vb);
 	if (buffer) ID3D11Buffer_Release(buffer);
@@ -407,7 +301,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 
 	render = fmt == VERTEX_FORMAT_TEXTURED;
-	ID3D11DeviceContext_IASetInputLayout(context, input_textured);
+	IA_UpdateLayout();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -456,23 +350,6 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static void UpdateVSConstants(void) {
-	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
-}
-
-static struct Matrix _view, _proj;
-void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
-
-	Matrix_Mul(&vs_constants.mvp, &_view, &_proj);
-	UpdateVSConstants();
-}
-
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
-}
-
 void Gfx_EnableTextureOffset(float x, float y) {
 }
 
@@ -500,6 +377,178 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matri
 	/* Adjust the projection matrix to produce reversed Z values */
 	matrix->row3.Z = -matrix->row3.Z - 1.0f;
 	matrix->row4.Z = -matrix->row4.Z;
+}
+
+//########################################################################################################################
+//-------------------------------------------------------Input Assembler--------------------------------------------------
+//########################################################################################################################
+static ID3D11InputLayout* input_textured;
+
+void Gfx_BindIb(GfxResourceID ib) {
+	ID3D11Buffer* buffer = (ID3D11Buffer*)ib;
+	ID3D11DeviceContext_IASetIndexBuffer(context, buffer, DXGI_FORMAT_R16_UINT, 0);
+}
+
+void Gfx_BindVb(GfxResourceID vb) {
+	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
+	static UINT32 stride[] = { SIZEOF_VERTEX_TEXTURED };
+	static UINT32 offset[] = { 0 };
+	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, stride, offset);
+}
+
+static void IA_CreateLayouts(void) {
+	ID3D11InputLayout* input = NULL;
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage-getting-started
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats
+	// https://stackoverflow.com/questions/23398711/d3d11-input-element-desc-element-types-ordering-packing
+	// D3D11_APPEND_ALIGNED_ELEMENT
+	static D3D11_INPUT_ELEMENT_DESC T_layout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
+	input_textured = input;
+}
+
+static void IA_UpdateLayout(void) {
+	ID3D11DeviceContext_IASetInputLayout(context, input_textured);
+}
+
+
+//########################################################################################################################
+//--------------------------------------------------------Vertex shader---------------------------------------------------
+//########################################################################################################################
+static ID3D11VertexShader* vs;
+static ID3D11Buffer* vs_cBuffer;
+static _declspec(align(64)) struct VSConstants
+{
+	struct Matrix mvp;
+} vs_constants;
+
+static void VS_CreateShaders(void) {
+	HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_shader, sizeof(vs_shader), NULL, &vs);
+	ID3D11DeviceContext_VSSetShader(context, vs, NULL, 0);
+}
+
+static void VS_CreateConstants(void) {
+	// https://developer.nvidia.com/content/constant-buffers-without-constant-pain-0
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
+	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
+	D3D11_BUFFER_DESC desc = { 0 };
+	desc.ByteWidth      = sizeof(vs_constants);
+	//desc.Usage          = D3D11_USAGE_DYNAMIC;
+	//desc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.Usage     = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem          = &vs_constants;
+	data.SysMemPitch      = 0;
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &vs_cBuffer);
+	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer);
+}
+
+static void VS_UpdateConstants(void) {
+	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
+}
+
+static struct Matrix _view, _proj;
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	if (type == MATRIX_VIEW)       _view = *matrix;
+	if (type == MATRIX_PROJECTION) _proj = *matrix;
+
+	Matrix_Mul(&vs_constants.mvp, &_view, &_proj);
+	VS_UpdateConstants();
+}
+
+void Gfx_LoadIdentityMatrix(MatrixType type) {
+	Gfx_LoadMatrix(type, &Matrix_Identity);
+}
+
+
+//########################################################################################################################
+//---------------------------------------------------------Rasteriser-----------------------------------------------------
+//########################################################################################################################
+static ID3D11RasterizerState* rs_state;
+
+static void RS_CreateRasterState(void) {
+	D3D11_RASTERIZER_DESC desc = { 0 };
+	desc.CullMode              = D3D11_CULL_NONE;
+	desc.FillMode              = D3D11_FILL_SOLID;
+	desc.FrontCounterClockwise = true;
+	ID3D11Device_CreateRasterizerState(device, &desc, &rs_state);
+}
+
+static void RS_UpdateViewport(void) {
+	D3D11_VIEWPORT viewport;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width    = WindowInfo.Width;
+	viewport.Height   = WindowInfo.Height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
+}
+
+static void RS_UpdateRasterState(void) {
+	ID3D11DeviceContext_RSSetState(context, rs_state);
+}
+
+
+//########################################################################################################################
+//--------------------------------------------------------Pixel shader----------------------------------------------------
+//########################################################################################################################
+static ID3D11SamplerState* sampler = NULL;
+
+static void PS_CreateShaders(void) {
+	ID3D11PixelShader* ps;
+	HRESULT hr = ID3D11Device_CreatePixelShader(device, ps_shader, sizeof(ps_shader), NULL, &ps);
+	ID3D11DeviceContext_PSSetShader(context, ps, NULL, 0);
+}
+
+static void PS_CreateSamplers(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createsamplerstate
+	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
+	
+	D3D11_SAMPLER_DESC desc = { 0 };
+
+	desc.Filter   = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+	desc.MaxAnisotropy  = 1;
+	desc.MaxLOD         = D3D11_FLOAT32_MAX;
+	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+
+	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &sampler);
+	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &sampler);
+}
+
+static void PS_UpdateSampler(void) {
+	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &sampler);
+}
+
+
+//########################################################################################################################
+//-------------------------------------------------------Output merger----------------------------------------------------
+//########################################################################################################################
+static void AttachBlendState(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
+	D3D11_BLEND_DESC desc = { 0 };
+	desc.RenderTarget[0].BlendEnable = FALSE;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	ID3D11Device_CreateBlendState(device, &desc, &blendState);
+
+	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	UINT sampleMask       = 0xffffffff;
+	ID3D11DeviceContext_OMSetBlendState(context, blendState, blendFactor, sampleMask);
 }
 
 
