@@ -24,11 +24,13 @@ static IDXGIDevice1* dxgi_device;
 static IDXGIAdapter* dxgi_adapter;
 static IDXGIFactory1* dxgi_factory;
 static IDXGISwapChain* swapchain;
+struct ShaderDesc { const void* data; int len; };
 
 // TODO RS_Init / RS_Free funcs
 static void IA_Init(void);
 static void IA_UpdateLayout(void);
 static void VS_Init(void);
+static void VS_UpdateShader(void);
 static void RS_Init(void);
 static void PS_Init(void);
 static void OM_Init(void);
@@ -258,6 +260,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	render = fmt == VERTEX_FORMAT_TEXTURED;
 	IA_UpdateLayout();
+	VS_UpdateShader();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -317,12 +320,6 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_EnableTextureOffset(float x, float y) {
-}
-
-void Gfx_DisableTextureOffset(void) {
-}
-
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
 	matrix->row3.Z = 1.0f       / (ORTHO_NEAR - ORTHO_FAR);
@@ -373,7 +370,8 @@ static void IA_CreateLayouts(void) {
 		{ "COLOR"   , 0, DXGI_FORMAT_R8G8B8A8_UNORM,  0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
-	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
+	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), 
+												vs_shader_textured, sizeof(vs_shader_textured), &input);
 	input_textured = input;
 }
 
@@ -391,16 +389,24 @@ static void IA_Init(void) {
 //--------------------------------------------------------Vertex shader---------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/vertex-shader-stage
-static ID3D11VertexShader* vs;
+static ID3D11VertexShader* vs_shaders[3];
 static ID3D11Buffer* vs_cBuffer;
-static _declspec(align(64)) struct VSConstants
-{
+
+static _declspec(align(64)) struct VSConstants {
 	struct Matrix mvp;
+	float texX, texY;
 } vs_constants;
+static const struct ShaderDesc vs_descs[3] = {
+	{ vs_shader_colored,         sizeof(vs_shader_colored) },
+	{ vs_shader_textured,        sizeof(vs_shader_textured) },
+	{ vs_shader_textured_offset, sizeof(vs_shader_textured_offset) },
+};
 
 static void VS_CreateShaders(void) {
-	HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_shader, sizeof(vs_shader), NULL, &vs);
-	ID3D11DeviceContext_VSSetShader(context, vs, NULL, 0);
+	for (int i = 0; i < 3; i++) {
+		HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_descs[i].data, vs_descs[i].len, NULL, &vs_shaders[i]);
+		if (hr) Logger_Abort2(hr, "Failed to compile vertex shader");
+	}
 }
 
 static void VS_CreateConstants(void) {
@@ -424,6 +430,18 @@ static void VS_CreateConstants(void) {
 	ID3D11DeviceContext_VSSetConstantBuffers(context, 0, 1, &vs_cBuffer);
 }
 
+static int VS_CalcShaderIndex(void) {
+	if (gfx_format == VERTEX_FORMAT_COLOURED) return 0;
+
+	cc_bool has_offset = vs_constants.texX != 0 || vs_constants.texY != 0;
+	return has_offset ? 2 : 1;
+}
+
+static void VS_UpdateShader(void) {
+	int idx = VS_CalcShaderIndex();
+	ID3D11DeviceContext_VSSetShader(context, vs_shaders[idx], NULL, 0);
+}
+
 static void VS_UpdateConstants(void) {
 	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
 }
@@ -431,6 +449,7 @@ static void VS_UpdateConstants(void) {
 static void VS_Init(void) {
 	VS_CreateShaders();
 	VS_CreateConstants();
+	VS_UpdateShader();
 }
 
 static struct Matrix _view, _proj;
@@ -444,6 +463,19 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
 	Gfx_LoadMatrix(type, &Matrix_Identity);
+}
+
+void Gfx_EnableTextureOffset(float x, float y) {
+	vs_constants.texX = x;
+	vs_constants.texY = y;
+	VS_UpdateShader();
+	VS_UpdateConstants();
+}
+
+void Gfx_DisableTextureOffset(void) {
+	vs_constants.texX = 0;
+	vs_constants.texY = 0;
+	VS_UpdateShader();
 }
 
 
@@ -717,6 +749,7 @@ void Gfx_EndFrame(void) {
 	if (hr) Logger_Abort2(hr, "Failed to swap buffers");
 }
 
+// you were expecting a BitmapCol*, but it was me, D3D11_MAPPED_SUBRESOURCE*!
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {
