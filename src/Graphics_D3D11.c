@@ -287,15 +287,22 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	// TODO pass true instead
-	return CreateVertexBuffer(fmt, maxVertices, false);
+	return CreateVertexBuffer(fmt, maxVertices, true);
 }
 
+static D3D11_MAPPED_SUBRESOURCE mapDesc;
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return Gfx_LockVb(vb, fmt, count);
+	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	mapDesc.pData = NULL;
+
+	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
+	if (hr) Logger_Abort2(hr, "Failed to lock dynamic VB");
+	return mapDesc.pData;
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	Gfx_UnlockVb(vb);
+	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	ID3D11DeviceContext_Unmap(context, buffer, 0);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
@@ -490,9 +497,9 @@ static void PS_CreateSamplers(void) {
 	D3D11_SAMPLER_DESC desc = { 0 };
 
 	desc.Filter   = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
-	desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
-	desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	desc.MaxAnisotropy  = 1;
 	desc.MaxLOD         = D3D11_FLOAT32_MAX;
 	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
@@ -520,13 +527,14 @@ void Gfx_BindTexture(GfxResourceID texId) {
 //-------------------------------------------------------Output merger----------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage
-static ID3D11DepthStencilState* om_depthState;
 static ID3D11RenderTargetView* backbuffer;
 static ID3D11Texture2D* depthbuffer;
 static ID3D11DepthStencilView* depthbufferView;
-static ID3D11BlendState* om_blendStates[2];
+static ID3D11BlendState* om_blendStates[4];
+static ID3D11DepthStencilState* om_depthStates[4];
 static float gfx_clearColor[4];
-static cc_bool gfx_alphaBlending;
+static cc_bool gfx_alphaBlending, gfx_colorEnabled = true;
+static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(void) {
 	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
@@ -559,30 +567,29 @@ static void OM_InitTargets(void) {
 	ID3D11Texture2D_Release(pBackBuffer);
 }
 
-static void OM_InitDepthState(void) {
+static void OM_CreateDepthStates(void) {
 	D3D11_DEPTH_STENCIL_DESC desc = { 0 };
 	HRESULT hr;
+	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
-	desc.DepthEnable    = TRUE;
-	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	desc.DepthFunc      = D3D11_COMPARISON_LESS_EQUAL;
+	for (int i = 0; i < 4; i++) {
+		desc.DepthEnable    = (i & 1) != 0;
+		desc.DepthWriteMask = (i & 2) != 0;
 
-	hr = ID3D11Device_CreateDepthStencilState(device, &desc, &om_depthState);
-	if (hr) Logger_Abort2(hr, "Failed to create depth state");
+		hr = ID3D11Device_CreateDepthStencilState(device, &desc, &om_depthStates[i]);
+		if (hr) Logger_Abort2(hr, "Failed to create depth state");
+	}
+}
 
-	ID3D11DeviceContext_OMSetDepthStencilState(context, om_depthState, 0);
+static void OM_UpdateDepthState(void) {
+	ID3D11DepthStencilState* depthState = om_depthStates[gfx_depthTest | (gfx_depthWrite << 1)];
+	ID3D11DeviceContext_OMSetDepthStencilState(context, depthState, 0);
 }
 
 static void OM_CreateBlendStates(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
 	D3D11_BLEND_DESC desc = { 0 };
 	HRESULT hr;
-	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[0]);
-	if (hr) Logger_Abort2(hr, "Failed to create nil blend state");
-
-	desc.RenderTarget[0].BlendEnable  = TRUE;
 	desc.RenderTarget[0].BlendOp        = D3D11_BLEND_OP_ADD;
 	desc.RenderTarget[0].BlendOpAlpha   = D3D11_BLEND_OP_ADD;
 	desc.RenderTarget[0].SrcBlend       = D3D11_BLEND_SRC_ALPHA;
@@ -590,18 +597,24 @@ static void OM_CreateBlendStates(void) {
 	desc.RenderTarget[0].DestBlend      = D3D11_BLEND_INV_SRC_ALPHA;
 	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 
-	hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[1]);
-	if (hr) Logger_Abort2(hr, "Failed to create blend state");
+	for (int i = 0; i < 4; i++) {
+		desc.RenderTarget[0].RenderTargetWriteMask = (i & 1) ? D3D11_COLOR_WRITE_ENABLE_ALL : 0;
+		desc.RenderTarget[0].BlendEnable           = (i & 2) != 0;
+
+		hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[i]);
+		if (hr) Logger_Abort2(hr, "Failed to create blend state");
+	}
 }
 
 static void OM_UpdateBlendState(void) {
-	ID3D11BlendState* blendState = om_blendStates[gfx_alphaBlending];
+	ID3D11BlendState* blendState = om_blendStates[gfx_colorEnabled | (gfx_alphaBlending << 1)];
 	ID3D11DeviceContext_OMSetBlendState(context, blendState, NULL, 0xffffffff);
 }
 
 static void OM_Init(void) {
 	OM_InitTargets();
-	OM_InitDepthState();
+	OM_CreateDepthStates();
+	OM_UpdateDepthState();
 	OM_CreateBlendStates();
 	OM_UpdateBlendState();
 }
@@ -625,9 +638,13 @@ void Gfx_ClearCol(PackedCol col) {
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
+	gfx_depthTest = enabled;
+	OM_UpdateDepthState();
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
+	gfx_depthWrite = enabled;
+	OM_UpdateDepthState();
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
@@ -636,6 +653,8 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	gfx_colorEnabled = r;
+	OM_UpdateBlendState();
 }
 
 
