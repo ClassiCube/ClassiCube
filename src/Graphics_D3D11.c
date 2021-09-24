@@ -706,6 +706,17 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol* D3D11_GetRow(struct Bitmap* bmp, int y) {
+	// You were expecting a BitmapCol*, but it was me, D3D11_MAPPED_SUBRESOURCE*!
+	//  This is necessary because the stride of the mapped backbuffer often doesn't equal width of the bitmap
+	//    e.g. with backbuffer width of 854, stride is 3456 bytes instead of expected 3416 (854*4)
+	//  Therefore have to calculate row address manually instead of using Bitmap_GetRow
+	D3D11_MAPPED_SUBRESOURCE* buffer = (D3D11_MAPPED_SUBRESOURCE*)bmp->scan0;
+
+	char* row = (char*)buffer->pData + y * buffer->RowPitch;
+	return (BitmapCol*)row;
+}
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	ID3D11Texture2D* tmp;
 	struct Bitmap bmp;
@@ -734,8 +745,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	hr = ID3D11DeviceContext_Map(context, tmp, 0, D3D11_MAP_READ, 0, &buffer);
 	if (hr) goto finished;
 	{
-		Bitmap_Init(bmp, desc.Width, desc.Height, (BitmapCol*)buffer.pData);
-		hr = Png_Encode(&bmp, output, NULL, false);
+		Bitmap_Init(bmp, desc.Width, desc.Height, (BitmapCol*)&buffer);
+		hr = Png_Encode(&bmp, output, D3D11_GetRow, false);
 	}
 	ID3D11DeviceContext_Unmap(context, tmp, 0);
 
@@ -757,7 +768,6 @@ void Gfx_EndFrame(void) {
 	if (hr) Logger_Abort2(hr, "Failed to swap buffers");
 }
 
-// you were expecting a BitmapCol*, but it was me, D3D11_MAPPED_SUBRESOURCE*!
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {

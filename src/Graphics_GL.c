@@ -430,8 +430,10 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-/* OpenGL stores bitmap in bottom-up order, so flip order when saving */
-static int SelectRow(struct Bitmap* bmp, int y) { return (bmp->height - 1) - y; }
+static BitmapCol* GL_GetRow(struct Bitmap* bmp, int y) { 
+	/* OpenGL stores bitmap in bottom-up order, so flip order when saving */
+	return Bitmap_GetRow(bmp, (bmp->height - 1) - y); 
+}
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	struct Bitmap bmp;
 	cc_result res;
@@ -445,7 +447,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
 	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
-	res = Png_Encode(&bmp, output, SelectRow, false);
+	res = Png_Encode(&bmp, output, GL_GetRow, false);
 	Mem_Free(bmp.scan0);
 	return res;
 }

@@ -625,9 +625,9 @@ static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* 
 	best[0] = bestFilter;
 }
 
-static int Png_SelectRow(struct Bitmap* bmp, int y) { return y; }
+static BitmapCol* DefaultGetRow(struct Bitmap* bmp, int y) { return Bitmap_GetRow(bmp, y); }
 cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
-					Png_RowSelector selectRow, cc_bool alpha) {
+					Png_RowGetter getRow, cc_bool alpha) {
 	cc_uint8 tmp[32];
 	/* TODO: This should be * 4 for alpha (should switch to mem_alloc though) */
 	cc_uint8 prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];
@@ -642,7 +642,7 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 	/* stream may not start at 0 (e.g. when making default.zip) */
 	if ((res = stream->Position(stream, &stream_beg))) return res;
 
-	if (!selectRow) selectRow = Png_SelectRow;
+	if (!getRow) getRow = DefaultGetRow;
 	if ((res = Stream_Write(stream, pngSig, PNG_SIG_SIZE))) return res;
 	Stream_WriteonlyCrc32(&chunk, stream);
 
@@ -671,10 +671,9 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 	Mem_Set(prevLine, 0, lineSize);
 
 	for (y = 0; y < bmp->height; y++) {
-		int row = selectRow(bmp, y);
-		BitmapCol* src = Bitmap_GetRow(bmp, row);
-		cc_uint8* prev  = (y & 1) == 0 ? prevLine : curLine;
-		cc_uint8* cur   = (y & 1) == 0 ? curLine  : prevLine;
+		BitmapCol* src = getRow(bmp, y);
+		cc_uint8* prev = (y & 1) == 0 ? prevLine : curLine;
+		cc_uint8* cur  = (y & 1) == 0 ? curLine  : prevLine;
 
 		Png_MakeRow(src, cur, lineSize, alpha);
 		Png_EncodeRow(cur, prev, bestLine, lineSize, alpha);
