@@ -176,19 +176,7 @@ void Gfx_SetFogMode(FogFunc func) {
 void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-}
-
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-}
-
-void Gfx_SetDepthTest(cc_bool enabled) {
-}
-
-void Gfx_SetDepthWrite(cc_bool enabled) {
 }
 
 
@@ -343,7 +331,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matri
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, CalcZNear(fov), zFar);
 }
 
-//########################################################################################################################
+//#####################z###################################################################################################
 //-------------------------------------------------------Input Assembler--------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage
@@ -370,7 +358,7 @@ static void IA_CreateLayouts(void) {
 	static D3D11_INPUT_ELEMENT_DESC T_layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR"   , 0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR"   , 0, DXGI_FORMAT_R8G8B8A8_UNORM,  0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), vs_shader, sizeof(vs_shader), &input);
@@ -536,8 +524,9 @@ static ID3D11DepthStencilState* om_depthState;
 static ID3D11RenderTargetView* backbuffer;
 static ID3D11Texture2D* depthbuffer;
 static ID3D11DepthStencilView* depthbufferView;
-static ID3D11BlendState* blendState;
+static ID3D11BlendState* om_blendStates[2];
 static float gfx_clearColor[4];
+static cc_bool gfx_alphaBlending;
 
 static void OM_Clear(void) {
 	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
@@ -584,22 +573,37 @@ static void OM_InitDepthState(void) {
 	ID3D11DeviceContext_OMSetDepthStencilState(context, om_depthState, 0);
 }
 
-static void AttachBlendState(void) {
+static void OM_CreateBlendStates(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
 	D3D11_BLEND_DESC desc = { 0 };
-	desc.RenderTarget[0].BlendEnable = FALSE;
+	HRESULT hr;
 	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-	ID3D11Device_CreateBlendState(device, &desc, &blendState);
+	hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[0]);
+	if (hr) Logger_Abort2(hr, "Failed to create nil blend state");
 
-	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	UINT sampleMask      = 0xffffffff;
-	ID3D11DeviceContext_OMSetBlendState(context, blendState, blendFactor, sampleMask);
+	desc.RenderTarget[0].BlendEnable  = TRUE;
+	desc.RenderTarget[0].BlendOp        = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].BlendOpAlpha   = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].SrcBlend       = D3D11_BLEND_SRC_ALPHA;
+	desc.RenderTarget[0].SrcBlendAlpha  = D3D11_BLEND_SRC_ALPHA;
+	desc.RenderTarget[0].DestBlend      = D3D11_BLEND_INV_SRC_ALPHA;
+	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+
+	hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[1]);
+	if (hr) Logger_Abort2(hr, "Failed to create blend state");
+}
+
+static void OM_UpdateBlendState(void) {
+	ID3D11BlendState* blendState = om_blendStates[gfx_alphaBlending];
+	ID3D11DeviceContext_OMSetBlendState(context, blendState, NULL, 0xffffffff);
 }
 
 static void OM_Init(void) {
 	OM_InitTargets();
 	OM_InitDepthState();
+	OM_CreateBlendStates();
+	OM_UpdateBlendState();
 }
 
 static void OM_Free(void) {
@@ -612,6 +616,20 @@ void Gfx_ClearCol(PackedCol col) {
 	gfx_clearColor[1] = PackedCol_G(col) / 255.0f;
 	gfx_clearColor[2] = PackedCol_B(col) / 255.0f;
 	gfx_clearColor[3] = PackedCol_A(col) / 255.0f;
+}
+
+void Gfx_SetDepthTest(cc_bool enabled) {
+}
+
+void Gfx_SetDepthWrite(cc_bool enabled) {
+}
+
+void Gfx_SetAlphaBlending(cc_bool enabled) {
+	gfx_alphaBlending = enabled;
+	OM_UpdateBlendState();
+}
+
+void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
 
 
