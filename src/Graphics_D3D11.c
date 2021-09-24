@@ -24,20 +24,15 @@ static IDXGIDevice1* dxgi_device;
 static IDXGIAdapter* dxgi_adapter;
 static IDXGIFactory1* dxgi_factory;
 static IDXGISwapChain* swapchain;
-static ID3D11RenderTargetView* backbuffer;
-static ID3D11BlendState* blendState;
 
 // TODO RS_Init / RS_Free funcs
-static void IA_CreateLayouts(void);
+static void IA_Init(void);
 static void IA_UpdateLayout(void);
-static void VS_CreateShaders(void);
-static void VS_CreateConstants(void);
-static void RS_CreateRasterState(void);
-static void RS_UpdateViewport(void);
-static void RS_UpdateRasterState(void);
-static void PS_CreateShaders(void);
-static void PS_CreateSamplers(void);
-static void PS_UpdateSampler(void);
+static void VS_Init(void);
+static void RS_Init(void);
+static void PS_Init(void);
+static void OM_Init(void);
+static void OM_Free(void);
 
 void Gfx_Create(void) {
 	DWORD createFlags = 0;
@@ -62,28 +57,13 @@ void Gfx_Create(void) {
 			createFlags, NULL, 0, D3D11_SDK_VERSION,
 			&desc, &swapchain, &device, &fl, &context);
 	if (hr) Logger_Abort2(hr, "Failed to create D3D11 device");
-	
-	ID3D11Texture2D* pBackBuffer;
-	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &IID_ID3D11Texture2D, (void**)&pBackBuffer);
-	if (hr) Logger_Abort2(hr, "Failed to get DXGI buffer");
 
-	hr = ID3D11Device_CreateRenderTargetView(device, pBackBuffer, NULL, &backbuffer);
-	if (hr) Logger_Abort2(hr, "Failed to create render target");
-	ID3D11Texture2D_Release(pBackBuffer);
-	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, NULL);
-
-	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-	VS_CreateShaders();
-	VS_CreateConstants();
-	IA_CreateLayouts();
-	RS_CreateRasterState();
-	RS_UpdateViewport();
-	RS_UpdateRasterState();
-	PS_CreateShaders();
-	PS_CreateSamplers();
-	PS_UpdateSampler();
-	//AttachBlendState();
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline
+	IA_Init();
+	VS_Init();
+	RS_Init();
+	PS_Init();
+	OM_Init();
 
 	// TODO need a better solution
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-limits
@@ -98,8 +78,7 @@ cc_bool Gfx_TryRestoreContext(void) {
 
 void Gfx_Free(void) {
 	ID3D11DeviceContext_ClearState(context);
-
-	ID3D11RenderTargetView_Release(backbuffer);
+	OM_Free();
 	IDXGISwapChain_Release(swapchain);
 	ID3D11DeviceContext_Release(context);
 	ID3D11Device_Release(device);
@@ -149,11 +128,6 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 }
 
-void Gfx_BindTexture(GfxResourceID texId) {
-	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
-	ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &view);
-}
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)(*texId);
 	ID3D11Resource* res = NULL;
@@ -179,7 +153,7 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static float gfx_clearColor[4];
+
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
 }
@@ -206,13 +180,6 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
-}
-
-void Gfx_ClearCol(PackedCol col) {
-	gfx_clearColor[0] = PackedCol_R(col) / 255.0f;
-	gfx_clearColor[1] = PackedCol_G(col) / 255.0f;
-	gfx_clearColor[2] = PackedCol_B(col) / 255.0f;
-	gfx_clearColor[3] = PackedCol_A(col) / 255.0f;
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -374,14 +341,12 @@ static float CalcZNear(float fov) {
 
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, CalcZNear(fov), zFar);
-	/* Adjust the projection matrix to produce reversed Z values */
-	matrix->row3.Z = -matrix->row3.Z - 1.0f;
-	matrix->row4.Z = -matrix->row4.Z;
 }
 
 //########################################################################################################################
 //-------------------------------------------------------Input Assembler--------------------------------------------------
 //########################################################################################################################
+// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage
 static ID3D11InputLayout* input_textured;
 
 void Gfx_BindIb(GfxResourceID ib) {
@@ -416,10 +381,16 @@ static void IA_UpdateLayout(void) {
 	ID3D11DeviceContext_IASetInputLayout(context, input_textured);
 }
 
+static void IA_Init(void) {
+	IA_CreateLayouts();
+	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
 
 //########################################################################################################################
 //--------------------------------------------------------Vertex shader---------------------------------------------------
 //########################################################################################################################
+// https://docs.microsoft.com/en-us/windows/win32/direct3d11/vertex-shader-stage
 static ID3D11VertexShader* vs;
 static ID3D11Buffer* vs_cBuffer;
 static _declspec(align(64)) struct VSConstants
@@ -457,6 +428,11 @@ static void VS_UpdateConstants(void) {
 	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
 }
 
+static void VS_Init(void) {
+	VS_CreateShaders();
+	VS_CreateConstants();
+}
+
 static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
@@ -474,6 +450,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 //########################################################################################################################
 //---------------------------------------------------------Rasteriser-----------------------------------------------------
 //########################################################################################################################
+// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage
 static ID3D11RasterizerState* rs_state;
 
 static void RS_CreateRasterState(void) {
@@ -499,11 +476,18 @@ static void RS_UpdateRasterState(void) {
 	ID3D11DeviceContext_RSSetState(context, rs_state);
 }
 
+static void RS_Init(void) {
+	RS_CreateRasterState();
+	RS_UpdateViewport();
+	RS_UpdateRasterState();
+}
+
 
 //########################################################################################################################
 //--------------------------------------------------------Pixel shader----------------------------------------------------
 //########################################################################################################################
-static ID3D11SamplerState* sampler = NULL;
+// https://docs.microsoft.com/en-us/windows/win32/direct3d11/pixel-shader-stage
+static ID3D11SamplerState* ps_sampler;
 
 static void PS_CreateShaders(void) {
 	ID3D11PixelShader* ps;
@@ -515,7 +499,6 @@ static void PS_CreateSamplers(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createsamplerstate
 	// https://gamedev.stackexchange.com/questions/18026/directx11-how-do-i-manage-and-update-multiple-shader-constant-buffers
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-buffers-constant-how-to
-	
 	D3D11_SAMPLER_DESC desc = { 0 };
 
 	desc.Filter   = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -526,18 +509,81 @@ static void PS_CreateSamplers(void) {
 	desc.MaxLOD         = D3D11_FLOAT32_MAX;
 	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 
-	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &sampler);
-	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &sampler);
+	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &ps_sampler);
 }
 
 static void PS_UpdateSampler(void) {
-	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &sampler);
+	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &ps_sampler);
+}
+
+static void PS_Init(void) {
+	PS_CreateShaders();
+	PS_CreateSamplers();
+	PS_UpdateSampler();
+}
+
+void Gfx_BindTexture(GfxResourceID texId) {
+	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
+	ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &view);
 }
 
 
 //########################################################################################################################
 //-------------------------------------------------------Output merger----------------------------------------------------
 //########################################################################################################################
+// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage
+static ID3D11DepthStencilState* om_depthState;
+static ID3D11RenderTargetView* backbuffer;
+static ID3D11Texture2D* depthbuffer;
+static ID3D11DepthStencilView* depthbufferView;
+static ID3D11BlendState* blendState;
+static float gfx_clearColor[4];
+
+static void OM_Clear(void) {
+	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
+	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+static void OM_InitTargets(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-depth-stencil
+	D3D11_TEXTURE2D_DESC desc;
+	ID3D11Texture2D* pBackBuffer;
+	HRESULT hr;
+
+	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &IID_ID3D11Texture2D, (void**)&pBackBuffer);
+	if (hr) Logger_Abort2(hr, "Failed to get swapchain backbuffer");
+
+	hr = ID3D11Device_CreateRenderTargetView(device, pBackBuffer, NULL, &backbuffer);
+	if (hr) Logger_Abort2(hr, "Failed to create render target");
+
+	ID3D11Texture2D_GetDesc(pBackBuffer, &desc);
+    desc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+    hr = ID3D11Device_CreateTexture2D(device, &desc, NULL, &depthbuffer);
+	if (hr) Logger_Abort2(hr, "Failed to create depthbuffer texture");
+
+	hr = ID3D11Device_CreateDepthStencilView(device, depthbuffer, NULL, &depthbufferView);
+	if (hr) Logger_Abort2(hr, "Failed to create depthbuffer view");
+
+	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, depthbufferView);
+	ID3D11Texture2D_Release(pBackBuffer);
+}
+
+static void OM_InitDepthState(void) {
+	D3D11_DEPTH_STENCIL_DESC desc = { 0 };
+	HRESULT hr;
+
+	desc.DepthEnable    = TRUE;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	desc.DepthFunc      = D3D11_COMPARISON_LESS_EQUAL;
+
+	hr = ID3D11Device_CreateDepthStencilState(device, &desc, &om_depthState);
+	if (hr) Logger_Abort2(hr, "Failed to create depth state");
+
+	ID3D11DeviceContext_OMSetDepthStencilState(context, om_depthState, 0);
+}
+
 static void AttachBlendState(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
 	D3D11_BLEND_DESC desc = { 0 };
@@ -547,8 +593,25 @@ static void AttachBlendState(void) {
 	ID3D11Device_CreateBlendState(device, &desc, &blendState);
 
 	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	UINT sampleMask       = 0xffffffff;
+	UINT sampleMask      = 0xffffffff;
 	ID3D11DeviceContext_OMSetBlendState(context, blendState, blendFactor, sampleMask);
+}
+
+static void OM_Init(void) {
+	OM_InitTargets();
+	OM_InitDepthState();
+}
+
+static void OM_Free(void) {
+	ID3D11DeviceContext_OMSetRenderTargets(context, 0, NULL, NULL);
+	ID3D11RenderTargetView_Release(backbuffer);
+}
+
+void Gfx_ClearCol(PackedCol col) {
+	gfx_clearColor[0] = PackedCol_R(col) / 255.0f;
+	gfx_clearColor[1] = PackedCol_G(col) / 255.0f;
+	gfx_clearColor[2] = PackedCol_B(col) / 255.0f;
+	gfx_clearColor[3] = PackedCol_A(col) / 255.0f;
 }
 
 
@@ -599,9 +662,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) {
 }
 
-void Gfx_Clear(void) {
-	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
-}
+void Gfx_Clear(void) { OM_Clear(); }
 
 void Gfx_EndFrame(void) {
 	HRESULT hr = IDXGISwapChain_Present(swapchain, 0, 0);
@@ -614,5 +675,6 @@ void Gfx_GetApiInfo(cc_string* info) {
 }
 
 void Gfx_OnWindowResize(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
 }
 #endif
