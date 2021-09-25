@@ -775,7 +775,11 @@ static void UpdateSwapchain(const char* reason) {
 		/* Try to use ResetEx first to avoid resetting resources */
 		IDirect3DDevice9Ex* dev = (IDirect3DDevice9Ex*)device;
 		D3D9_FillPresentArgs(&args);
-		if (!IDirect3DDevice9Ex_ResetEx(dev, &args, NULL)) return;
+
+		if (!IDirect3DDevice9Ex_ResetEx(dev, &args, NULL)) {
+			/* Fast path succeeded */
+			D3D9_UpdateCachedDimensions(); return;
+		}
 	}
 	Gfx_LoseContext(reason);
 }
