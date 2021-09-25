@@ -21,6 +21,7 @@ struct OUTPUT_VERTEX {
 
 OUTPUT_VERTEX main(INPUT_VERTEX input) {
 	OUTPUT_VERTEX output;
+	// https://stackoverflow.com/questions/16578765/hlsl-mul-variables-clarification
 	output.position = mul(mvpMatrix, float4(input.position, 1.0f));
 #ifndef VS_COLOR_ONLY
 	output.coords = input.coords;

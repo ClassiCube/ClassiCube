@@ -14,7 +14,14 @@
 #define COBJMACROS
 #include <d3d11.h>
 #pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxguid.lib")
+static const GUID guid_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c } };
+
+// some generally useful debugging links
+//   https://docs.microsoft.com/en-us/visualstudio/debugger/graphics/visual-studio-graphics-diagnostics
+//   https://stackoverflow.com/questions/50591937/how-do-i-launch-the-hlsl-debugger-in-visual-studio-2017
+//   https://docs.microsoft.com/en-us/visualstudio/debugger/graphics/graphics-object-table?view=vs-2019
+// Some generally useful background links
+//   https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052
 
 static int gfx_format = -1, depthBits;
 static UINT gfx_stride;
@@ -26,7 +33,6 @@ static IDXGIFactory1* dxgi_factory;
 static IDXGISwapChain* swapchain;
 struct ShaderDesc { const void* data; int len; };
 
-// TODO RS_Init / RS_Free funcs
 static void IA_Init(void);
 static void IA_UpdateLayout(void);
 static void VS_Init(void);
@@ -592,7 +598,7 @@ static void OM_InitTargets(void) {
 	ID3D11Texture2D* pBackBuffer;
 	HRESULT hr;
 
-	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &IID_ID3D11Texture2D, (void**)&pBackBuffer);
+	hr = IDXGISwapChain_GetBuffer(swapchain, 0, &guid_ID3D11Texture2D, (void**)&pBackBuffer);
 	if (hr) Logger_Abort2(hr, "Failed to get swapchain backbuffer");
 
 	hr = ID3D11Device_CreateRenderTargetView(device, pBackBuffer, NULL, &backbuffer);
