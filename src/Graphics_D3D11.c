@@ -20,6 +20,7 @@ static const GUID guid_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0
 //   https://docs.microsoft.com/en-us/visualstudio/debugger/graphics/visual-studio-graphics-diagnostics
 //   https://stackoverflow.com/questions/50591937/how-do-i-launch-the-hlsl-debugger-in-visual-studio-2017
 //   https://docs.microsoft.com/en-us/visualstudio/debugger/graphics/graphics-object-table?view=vs-2019
+//   https://github.com/gfx-rs/wgpu/issues/1171
 // Some generally useful background links
 //   https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052
 
@@ -44,6 +45,7 @@ static void OM_Init(void);
 static void OM_Free(void);
 
 void Gfx_Create(void) {
+	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
 	DWORD createFlags = 0;
 	D3D_FEATURE_LEVEL fl;
 	HRESULT hr;
@@ -487,10 +489,12 @@ void Gfx_DisableTextureOffset(void) {
 static ID3D11RasterizerState* rs_state;
 
 static void RS_CreateRasterState(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_rasterizer_desc
 	D3D11_RASTERIZER_DESC desc = { 0 };
 	desc.CullMode              = D3D11_CULL_NONE;
 	desc.FillMode              = D3D11_FILL_SOLID;
 	desc.FrontCounterClockwise = true;
+	desc.DepthClipEnable       = true; // otherwise vertices beyond far plane are still wrongly rendered
 	ID3D11Device_CreateRasterizerState(device, &desc, &rs_state);
 }
 

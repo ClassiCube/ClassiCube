@@ -15,6 +15,9 @@
 #include <d3d9caps.h>
 #include <d3d9types.h>
 
+/* https://docs.microsoft.com/en-us/windows/win32/dxtecharts/resource-management-best-practices */
+/* https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline */
+
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
 static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
 /* Current format and size of vertices */
