@@ -653,6 +653,8 @@ void Process_Exit(cc_result code) { exit(code); }
 /* Opening browser/starting shell is not really standardised */
 #if defined CC_BUILD_ANDROID
 /* Implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #elif defined CC_BUILD_MACOS
 cc_result Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
@@ -675,8 +677,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 	Process_RawStart("open", cmd);
 	return 0;
 }
-#elif defined CC_BUILD_IOS
-/* implemented in interop_ios.m */
 #else
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
@@ -691,7 +691,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 #endif
 
 /* Retrieving exe path is completely OS dependant */
-#if defined CC_BUILD_DARWIN
+#if defined CC_BUILD_MACOS
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Set(path, '\0', NATIVE_STR_LEN);
 	cc_uint32 size = NATIVE_STR_LEN;
@@ -791,7 +791,7 @@ const char* const Updater_OGL = "ClassiCube.rpi";
 #else
 const char* const Updater_OGL = NULL;
 #endif
-#elif defined CC_BUILD_DARWIN
+#elif defined CC_BUILD_MACOS
 #if __x86_64__
 const char* const Updater_OGL = "ClassiCube.64.osx";
 #elif __i386__
@@ -1209,7 +1209,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
 
-#ifdef CC_BUILD_DARWIN
+#ifdef CC_BUILD_MACOS
 	/* Sometimes a "-psn_0_[number]" argument is added before actual args */
 	if (argc) {
 		static const cc_string psn = String_FromConst("-psn_0_");
@@ -1255,7 +1255,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 		if (path[i] == '/') break;
 	}
 
-#ifdef CC_BUILD_DARWIN
+#ifdef CC_BUILD_MACOS
 	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
 	cc_string raw = String_Init(path, len, 0);
 

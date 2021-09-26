@@ -142,9 +142,9 @@ Use Android Studio or run gradlew in android folder (TODO explain more detailed)
 
 #### iOS
 
-```clang *.c interop_ios.m -framework UIKit -framework OpenGLES -framework Foundation -lobjc```
+```clang *.c interop_ios.m -framework UIKit -framework OpenGLES -framework CoreGraphics -framework QuartzCore -framework Foundation```
 
-iOS version is unfinished because of lack of access to suitable devices for me to test with
+iOS version will have issues as it's incomplete and only tested in iOS Simulator
 
 
 ##### Other
