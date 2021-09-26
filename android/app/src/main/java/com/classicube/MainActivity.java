@@ -63,8 +63,9 @@ public class MainActivity extends Activity {
 	//  Therefore pushing/pulling events must be thread-safe, which is achieved through ConcurrentLinkedQueue
 	//  Additionally, a cache is used (freeCmds) to avoid constantly allocating NativeCmdArgs instances
 	class NativeCmdArgs { public int cmd, arg1, arg2, arg3, arg4; public String str; public Surface sur; }
-	Queue<NativeCmdArgs> pending  = new ConcurrentLinkedQueue<NativeCmdArgs>();
-	Queue<NativeCmdArgs> freeCmds = new ConcurrentLinkedQueue<NativeCmdArgs>();
+	// static to persist across activity destroy/create
+	static Queue<NativeCmdArgs> pending  = new ConcurrentLinkedQueue<NativeCmdArgs>();
+	static Queue<NativeCmdArgs> freeCmds = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	
 	NativeCmdArgs getCmdArgs() {
 		NativeCmdArgs args = freeCmds.poll();
@@ -136,8 +137,9 @@ public class MainActivity extends Activity {
 	// ======================================
 	// --------------- EVENTS ---------------
 	// ======================================
-	static boolean gameRunning;
 	InputMethodManager input;
+	// static to persist across activity destroy/create
+	static boolean gameRunning;
 
 	void startGameAsync() {
 		Log.i("CC_WIN", "handing off to native..");

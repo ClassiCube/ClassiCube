@@ -10,8 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
-
-/* POSIX can be shared between Linux/BSD/macOS */
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -40,7 +38,7 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
-/* Platform specific include files (Try to share for UNIX-ish) */
+/* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
@@ -1366,11 +1364,6 @@ jbyteArray JavaMakeBytes(JNIEnv* env, const void* src, cc_uint32 len) {
 void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
 	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
 	(*env)->CallVoidMethodA(env, App_Instance, method, args);
-}
-
-jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	return (*env)->CallIntMethodA(env, App_Instance, method, args);
 }
 
 jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args) {

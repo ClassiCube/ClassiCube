@@ -631,6 +631,8 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 *-----------------------------------------------------Android backend-----------------------------------------------------*
 *#########################################################################################################################*/
 struct HttpRequest* java_req;
+static jmethodID JAVA_httpInit, JAVA_httpSetHeader, JAVA_httpPerform, JAVA_httpSetData;
+static jmethodID JAVA_httpDescribeError;
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	char buffer[NATIVE_STR_LEN];
@@ -641,7 +643,7 @@ cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	
 	JavaGetCurrentEnv(env);
 	args[0].i = res;
-	obj       = JavaCallObject(env, "httpDescribeError", "(I)Ljava/lang/String;", args);
+	obj       = JavaInstanceCall_Obj(env, JAVA_httpDescribeError, args);
 	if (!obj) return false;
 
 	err = JavaGetString(env, obj, buffer);
@@ -658,7 +660,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 	args[0].l = JavaMakeConst(env,  key);
 	args[1].l = JavaMakeString(env, value);
 
-	JavaCallVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;)V", args);
+	JavaInstanceCall_Void(env, JAVA_httpSetHeader, args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
@@ -680,14 +682,24 @@ static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, 
 	Http_BufferExpanded(req, len);
 }
 
-static const JNINativeMethod methods[2] = {
+static const JNINativeMethod methods[] = {
 	{ "httpParseHeader", "(Ljava/lang/String;)V", java_HttpParseHeader },
 	{ "httpAppendData",  "([BI)V",                java_HttpAppendData }
 };
+static void CacheMethodRefs(JNIEnv* env) {
+	JAVA_httpInit      = JavaGetMethod(env, "httpInit",      "(Ljava/lang/String;Ljava/lang/String;)I");
+	JAVA_httpSetHeader = JavaGetMethod(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;)V");
+	JAVA_httpPerform   = JavaGetMethod(env, "httpPerform",   "()I");
+	JAVA_httpSetData   = JavaGetMethod(env, "httpSetData",   "([B)I");
+
+	JAVA_httpDescribeError = JavaGetMethod(env, "httpDescribeError", "(I)Ljava/lang/String;");
+}
+
 static void HttpBackend_Init(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaRegisterNatives(env, methods);
+	CacheMethodRefs(env);
 }
 
 static cc_result Http_InitReq(JNIEnv* env, struct HttpRequest* req, cc_string* url) {
@@ -698,7 +710,7 @@ static cc_result Http_InitReq(JNIEnv* env, struct HttpRequest* req, cc_string* u
 	args[0].l = JavaMakeString(env, url);
 	args[1].l = JavaMakeConst(env,  verbs[req->requestType]);
 
-	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;)I", args);
+	res = JavaInstanceCall_Int(env, JAVA_httpInit, args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 	return res;
@@ -709,7 +721,7 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	jint res;
 
 	args[0].l = JavaMakeBytes(env, req->data, req->size);
-	res = JavaCallInt(env, "httpSetData", "([B)I", args);
+	res = JavaInstanceCall_Int(env, JAVA_httpSetData, args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	return res;
 }
@@ -729,7 +741,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 
 	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
-	res = JavaCallInt(env, "httpPerform", "()I", NULL);
+	res = JavaInstanceCall_Int(env, JAVA_httpPerform, NULL);
 	http_curProgress = 100;
 	return res;
 }
