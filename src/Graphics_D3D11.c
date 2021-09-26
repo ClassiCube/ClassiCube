@@ -494,7 +494,7 @@ static void RS_CreateRasterState(void) {
 	desc.CullMode              = D3D11_CULL_NONE;
 	desc.FillMode              = D3D11_FILL_SOLID;
 	desc.FrontCounterClockwise = true;
-	desc.DepthClipEnable       = true; // otherwise vertices beyond far plane are still wrongly rendered
+	desc.DepthClipEnable       = true; // otherwise vertices/pixels beyond far plane are still wrongly rendered
 	ID3D11Device_CreateRasterizerState(device, &desc, &rs_state);
 }
 

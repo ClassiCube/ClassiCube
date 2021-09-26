@@ -243,12 +243,13 @@ CC_API cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success);
 extern jclass  App_Class;
 extern jobject App_Instance;
 extern JavaVM* VM_Ptr;
+void Platform_ShareScreenshot(const cc_string* filename);
 
 #define JavaGetCurrentEnv(env) (*VM_Ptr)->AttachCurrentThread(VM_Ptr, &env, NULL)
 #define JavaMakeConst(env, str) (*env)->NewStringUTF(env, str)
 
 #define JavaRegisterNatives(env, methods) (*env)->RegisterNatives(env, App_Class, methods, Array_Elems(methods));
-#define JavaGetMethod(env, name, sig) (*env)->GetMethodID(env, App_Class, name, sig)
+#define JavaGetIMethod(env, name, sig) (*env)->GetMethodID(env, App_Class, name, sig)
 
 /* Creates a string from the given java string. buffer must be at least NATIVE_STR_LEN long. */
 /* NOTE: Don't forget to call env->ReleaseStringUTFChars. Only works with ASCII strings. */
@@ -261,8 +262,6 @@ jbyteArray JavaMakeBytes(JNIEnv* env, const void* src, cc_uint32 len);
 void JavaCallVoid(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */
 jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the activity class that returns a jint. */
-jfloat JavaCallFloat(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jobject. */
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that takes a string and returns nothing. */
@@ -272,12 +271,12 @@ void JavaCall_Void_String(const char* name, cc_string* dst);
 /* Calls a method in the activity class that takes a string and returns a string. */
 void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* dst);
 
-#define JavaInstanceCall_Void(env, method, args) (*env)->CallVoidMethodA(env,  App_Instance, method, args)
+#define JavaICall_Void(env, method, args) (*env)->CallVoidMethodA(env,  App_Instance, method, args)
 /* Calls an instance method in the activity class that returns a jint */
-#define JavaInstanceCall_Int(env,  method, args) (*env)->CallIntMethodA(env,   App_Instance, method, args)
-#define JavaInstanceCall_Long(env, method, args) (*env)->CallLongMethodA(env,  App_Instance, method, args)
+#define JavaICall_Int(env,  method, args) (*env)->CallIntMethodA(env,   App_Instance, method, args)
+#define JavaICall_Long(env, method, args) (*env)->CallLongMethodA(env,  App_Instance, method, args)
 /* Calls an instance method in the activity class that returns a jfloat */
-#define JavaInstanceCall_Float(env,method, args) (*env)->CallFloatMethodA(env, App_Instance, method, args)
-#define JavaInstanceCall_Obj(env,  method, args) (*env)->CallObjectMethodA(env,App_Instance, method, args)
+#define JavaICall_Float(env,method, args) (*env)->CallFloatMethodA(env, App_Instance, method, args)
+#define JavaICall_Obj(env,  method, args) (*env)->CallObjectMethodA(env,App_Instance, method, args)
 #endif
 #endif

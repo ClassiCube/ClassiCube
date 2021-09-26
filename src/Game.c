@@ -533,12 +533,7 @@ void Game_TakeScreenshot(void) {
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 
 #ifdef CC_BUILD_ANDROID
-	path.length = 0;
-	JavaCall_String_String("shareScreenshot", &filename, &path);
-	if (!path.length) return;
-	
-	Chat_AddRaw("&cError sharing screenshot");
-	Chat_Add1("  &c%s", &path);
+	Platform_ShareScreenshot(&filename);
 #endif
 #endif
 }

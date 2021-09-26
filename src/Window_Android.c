@@ -144,7 +144,7 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	/* eglSwapBuffers might return EGL_BAD_SURFACE, EGL_BAD_ALLOC, or some other error */
 	/* Instead the context is lost here in a consistent manner */
 	if (Gfx.Created) Gfx_LoseContext("surface lost");
-	JavaInstanceCall_Void(env, JAVA_processedSurfaceDestroyed, NULL);
+	JavaICall_Void(env, JAVA_processedSurfaceDestroyed, NULL);
 }
 
 static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject surface) {
@@ -180,7 +180,7 @@ static void JNICALL java_onDestroy(JNIEnv* env, jobject o) {
 
 	if (WindowInfo.Exists) Window_Close();
 	/* TODO: signal to java code we're done */
-	/* JavaInstanceCall_Void(env, JAVA_processedDestroyed", NULL); */
+	/* JavaICall_Void(env, JAVA_processedDestroyed", NULL); */
 }
 
 static void JNICALL java_onGotFocus(JNIEnv* env, jobject o) {
@@ -227,23 +227,23 @@ static const JNINativeMethod methods[] = {
 	{ "processOnLowMemory", "()V", java_onLowMemory }
 };
 static void CacheMethodRefs(JNIEnv* env) {
-	JAVA_openKeyboard    = JavaGetMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
-	JAVA_setKeyboardText = JavaGetMethod(env, "setKeyboardText", "(Ljava/lang/String;)V");
-	JAVA_closeKeyboard   = JavaGetMethod(env, "closeKeyboard",   "()V");
+	JAVA_openKeyboard    = JavaGetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
+	JAVA_setKeyboardText = JavaGetIMethod(env, "setKeyboardText", "(Ljava/lang/String;)V");
+	JAVA_closeKeyboard   = JavaGetIMethod(env, "closeKeyboard",   "()V");
 
-	JAVA_getWindowState  = JavaGetMethod(env, "getWindowState",  "()I");
-	JAVA_enterFullscreen = JavaGetMethod(env, "enterFullscreen", "()V");
-	JAVA_exitFullscreen  = JavaGetMethod(env, "exitFullscreen",  "()V");
+	JAVA_getWindowState  = JavaGetIMethod(env, "getWindowState",  "()I");
+	JAVA_enterFullscreen = JavaGetIMethod(env, "enterFullscreen", "()V");
+	JAVA_exitFullscreen  = JavaGetIMethod(env, "exitFullscreen",  "()V");
 
-	JAVA_getDpiX      = JavaGetMethod(env, "getDpiX", "()F");
-	JAVA_getDpiY      = JavaGetMethod(env, "getDpiY", "()F");
-	JAVA_setupForGame = JavaGetMethod(env, "setupForGame", "()V");
+	JAVA_getDpiX      = JavaGetIMethod(env, "getDpiX", "()F");
+	JAVA_getDpiY      = JavaGetIMethod(env, "getDpiY", "()F");
+	JAVA_setupForGame = JavaGetIMethod(env, "setupForGame", "()V");
 
-	JAVA_processedSurfaceDestroyed = JavaGetMethod(env, "processedSurfaceDestroyed", "()V");
-	JAVA_processEvents             = JavaGetMethod(env, "processEvents",             "()V");
+	JAVA_processedSurfaceDestroyed = JavaGetIMethod(env, "processedSurfaceDestroyed", "()V");
+	JAVA_processEvents             = JavaGetIMethod(env, "processEvents",             "()V");
 
-	JAVA_showAlert = JavaGetMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
-	JAVA_setRequestedOrientation = JavaGetMethod(env, "setRequestedOrientation", "(I)V");
+	JAVA_showAlert = JavaGetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
+	JAVA_setRequestedOrientation = JavaGetIMethod(env, "setRequestedOrientation", "(I)V");
 }
 
 void Window_Init(void) {
@@ -257,8 +257,8 @@ void Window_Init(void) {
 	Input_SetTouchMode(true);
 
 	DisplayInfo.Depth  = 32;
-	DisplayInfo.ScaleX = JavaInstanceCall_Float(env, JAVA_getDpiX, NULL);
-	DisplayInfo.ScaleY = JavaInstanceCall_Float(env, JAVA_getDpiY, NULL);
+	DisplayInfo.ScaleX = JavaICall_Float(env, JAVA_getDpiX, NULL);
+	DisplayInfo.ScaleY = JavaICall_Float(env, JAVA_getDpiY, NULL);
 }
 
 static void Window_RemakeSurface(void) {
@@ -268,7 +268,7 @@ static void Window_RemakeSurface(void) {
 
 	/* Force window to be destroyed and re-created */
 	/* (see comments in setupForGame for why this has to be done) */
-	JavaInstanceCall_Void(env, JAVA_setupForGame, NULL);
+	JavaICall_Void(env, JAVA_setupForGame, NULL);
 	Platform_LogConst("Entering wait for window exist loop..");
 
 	/* Loop until window gets created by main UI thread */
@@ -306,20 +306,20 @@ void Window_Show(void) { } /* Window already visible */
 int Window_GetWindowState(void) { 
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	return JavaInstanceCall_Int(env, JAVA_getWindowState, NULL);
+	return JavaICall_Int(env, JAVA_getWindowState, NULL);
 }
 
 cc_result Window_EnterFullscreen(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	JavaInstanceCall_Void(env, JAVA_enterFullscreen, NULL);
+	JavaICall_Void(env, JAVA_enterFullscreen, NULL);
 	return 0; 
 }
 
 cc_result Window_ExitFullscreen(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	JavaInstanceCall_Void(env, JAVA_exitFullscreen, NULL);
+	JavaICall_Void(env, JAVA_exitFullscreen, NULL);
 	return 0; 
 }
 
@@ -336,7 +336,7 @@ void Window_ProcessEvents(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	/* TODO: Cache the java env */
-	JavaInstanceCall_Void(env, JAVA_processEvents, NULL);
+	JavaICall_Void(env, JAVA_processEvents, NULL);
 }
 
 /* No actual mouse cursor */
@@ -356,7 +356,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 	args[0].l = JavaMakeConst(env, title);
 	args[1].l = JavaMakeConst(env, msg);
-	JavaInstanceCall_Void(env, JAVA_showAlert, args);
+	JavaICall_Void(env, JAVA_showAlert, args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
@@ -412,7 +412,7 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* kArgs) {
 
 	args[0].l = JavaMakeString(env, kArgs->text);
 	args[1].i = kArgs->type;
-	JavaInstanceCall_Void(env, JAVA_openKeyboard, args);
+	JavaICall_Void(env, JAVA_openKeyboard, args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
@@ -422,14 +422,14 @@ void Window_SetKeyboardText(const cc_string* text) {
 	JavaGetCurrentEnv(env);
 
 	args[0].l = JavaMakeString(env, text);
-	JavaInstanceCall_Void(env, JAVA_setKeyboardText, args);
+	JavaICall_Void(env, JAVA_setKeyboardText, args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
 void Window_CloseKeyboard(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	JavaInstanceCall_Void(env, JAVA_closeKeyboard, NULL);
+	JavaICall_Void(env, JAVA_closeKeyboard, NULL);
 }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
@@ -440,7 +440,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 	/* SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006 */
 	/* SCREEN_ORIENTATION_UNSPECIFIED = 0xffffffff */
 	args[0].i = lock ? 0x00000006 : 0xffffffff;
-	JavaInstanceCall_Void(env, JAVA_setRequestedOrientation, args);
+	JavaICall_Void(env, JAVA_setRequestedOrientation, args);
 }
 
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
