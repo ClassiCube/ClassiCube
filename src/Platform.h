@@ -238,12 +238,15 @@ CC_API cc_result Socket_Close(cc_socket s);
 /* NOTE: A socket is considered writable once it has finished connecting. */
 CC_API cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success);
 
+#ifdef CC_BUILD_MOBILE
+void Platform_ShareScreenshot(const cc_string* filename);
+#endif
+
 #ifdef CC_BUILD_ANDROID
 #include <jni.h>
 extern jclass  App_Class;
 extern jobject App_Instance;
 extern JavaVM* VM_Ptr;
-void Platform_ShareScreenshot(const cc_string* filename);
 
 #define JavaGetCurrentEnv(env) (*VM_Ptr)->AttachCurrentThread(VM_Ptr, &env, NULL)
 #define JavaMakeConst(env, str) (*env)->NewStringUTF(env, str)

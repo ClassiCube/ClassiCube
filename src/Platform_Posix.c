@@ -775,6 +775,8 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #else
 const char* const Updater_D3D9 = NULL;
 cc_bool Updater_Clean(void) { return true; }

@@ -6,6 +6,7 @@
 #include "String.h"
 #include "Errors.h"
 #include <mach-o/dyld.h>
+#include <sys/stat.h>
 #include <UIKit/UIPasteboard.h>
 #include <UIKit/UIKit.h>
 #include <OpenGLES/ES2/gl.h>
@@ -25,26 +26,24 @@ static CCViewController* controller;
 static UIWindow* win_handle;
 static UIView* view_handle;
 
-static void DoDrawFramebuffer(CGRect dirty);
-
 static void AddTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
     int x = loc.x, y = loc.y; long ui_id = (long)t;
-    Platform_Log3("POINTER %i - DOWN %i,%i", &ui_id, &x, &y);
+    Platform_Log3("POINTER %x - DOWN %i,%i", &ui_id, &x, &y);
     Input_AddTouch((long)t, loc.x, loc.y);
 }
 
 static void UpdateTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
     int x = loc.x, y = loc.y; long ui_id = (long)t;
-    Platform_Log3("POINTER %i - MOVE %i,%i", &ui_id, &x, &y);
+    Platform_Log3("POINTER %x - MOVE %i,%i", &ui_id, &x, &y);
     Input_UpdateTouch((long)t, loc.x, loc.y);
 }
 
 static void RemoveTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
     int x = loc.x, y = loc.y; long ui_id = (long)t;
-    Platform_Log3("POINTER %i - UP %i,%i", &ui_id, &x, &y);
+    Platform_Log3("POINTER %x - UP %i,%i", &ui_id, &x, &y);
     Input_RemoveTouch((long)t, loc.x, loc.y);
 }
 
@@ -352,6 +351,29 @@ void GLContext_GetApiInfo(cc_string* info) { }
 
 
 /*########################################################################################################################*
+ *--------------------------------------------------------Updater----------------------------------------------------------*
+ *#########################################################################################################################*/
+const char* const Updater_OGL  = NULL;
+const char* const Updater_D3D9 = NULL;
+cc_bool Updater_Clean(void) { return true; }
+
+cc_result Updater_GetBuildTime(cc_uint64* t) {
+    char path[NATIVE_STR_LEN + 1] = { 0 };
+    uint32_t size = NATIVE_STR_LEN;
+    if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
+    
+    struct stat sb;
+    if (stat(path, &sb) == -1) return errno;
+    *t = (cc_uint64)sb.st_mtime;
+    return 0;
+}
+
+cc_result Updater_Start(const char** action)   { *action = "Updating game"; return ERR_NOT_SUPPORTED; }
+cc_result Updater_MarkExecutable(void)         { return 0; }
+cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
+
+
+/*########################################################################################################################*
  *--------------------------------------------------------Platform--------------------------------------------------------*
  *#########################################################################################################################*/
 cc_result Process_StartOpen(const cc_string* args) {
@@ -391,8 +413,8 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
     const char* name = [str fileSystemRepresentation];
     return chdir(name) == -1 ? errno : 0;*/
     
-    char path[NATIVE_STR_LEN] = { 0 };
-    cc_uint32 size = NATIVE_STR_LEN;
+    char path[NATIVE_STR_LEN + 1] = { 0 };
+    uint32_t size = NATIVE_STR_LEN;
     if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
     
     // despite what you'd assume, size is NOT changed to length of path
@@ -405,4 +427,22 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 
     path[len] = '\0';
     return chdir(path) == -1 ? errno : 0;
+}
+
+void Platform_ShareScreenshot(const cc_string* filename) {
+    cc_string path; char pathBuffer[FILENAME_SIZE];
+    String_InitArray(path, pathBuffer);
+    char tmp[NATIVE_STR_LEN];
+    
+    String_Format1(&path, "screenshots/%s", filename);
+    Platform_EncodeUtf8(tmp, &path);
+    
+    NSString* pathStr = [NSString stringWithUTF8String:tmp];
+    UIImage* img = [UIImage imageWithContentsOfFile:pathStr];
+    
+    // https://stackoverflow.com/questions/31955140/sharing-image-using-uiactivityviewcontroller
+    UIActivityViewController* act;
+    act = [UIActivityViewController alloc];
+    act = [act initWithActivityItems:@[ @"Share screenshot via", img] applicationActivities:Nil];
+    [controller presentViewController:act animated:true completion:Nil];
 }

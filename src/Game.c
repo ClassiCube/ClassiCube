@@ -532,7 +532,7 @@ void Game_TakeScreenshot(void) {
 	if (res) { Logger_SysWarn2(res, "closing", &path); return; }
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	Platform_ShareScreenshot(&filename);
 #endif
 #endif
