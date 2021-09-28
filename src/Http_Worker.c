@@ -746,10 +746,12 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	return res;
 }
 #elif defined CC_BUILD_CFNETWORK
+/*########################################################################################################################*
+*----------------------------------------------------CFNetwork backend----------------------------------------------------*
+*#########################################################################################################################*/
 #include "Errors.h"
 #include <stddef.h>
 #include <CFNetwork/CFNetwork.h>
-
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
     return false;
@@ -772,24 +774,38 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
     CFRelease(valCF);
 }
 
+static void Http_CheckHeader(void* k, void* v, void* ctx) {
+    cc_string line; char lineBuffer[2048];
+    char keyBuf[128]  = { 0 };
+    char valBuf[1024] = { 0 };
+    String_InitArray(line, lineBuffer);
+    
+    CFStringGetCString((CFStringRef)k, keyBuf, sizeof(keyBuf), kCFStringEncodingUTF8);
+    CFStringGetCString((CFStringRef)v, valBuf, sizeof(valBuf), kCFStringEncodingUTF8);
+    
+    String_Format2(&line, "%c:%c", keyBuf, valBuf);
+    Http_ParseHeader((struct HttpRequest*)ctx, &line);
+    ctx = NULL;
+}
+
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     static CFStringRef verbs[] = { CFSTR("GET"), CFSTR("HEAD"), CFSTR("POST") };
+    CFHTTPMessageRef request, response;
     char tmp[NATIVE_STR_LEN];
     CFStringRef urlCF;
     CFURLRef urlRef;
-    CFHTTPMessageRef msg;
     
     Platform_EncodeUtf8(tmp, url);
     urlCF  = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
     urlRef = CFURLCreateWithString(NULL, urlCF, NULL);
     
-    msg = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
-    req->meta = msg;
+    request = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
+    req->meta = request;
     Http_SetRequestHeaders(req);
     
     if (req->data && req->size) {
         CFDataRef body = CFDataCreate(NULL, req->data, req->size);
-        CFHTTPMessageSetBody(msg, body);
+        CFHTTPMessageSetBody(request, body);
         CFRelease(body); /* TODO: ???? */
         
         req->data = NULL;
@@ -797,7 +813,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
         Mem_Free(req->data);
     }
     
-    CFReadStreamRef stream = CFReadStreamCreateForHTTPRequest(NULL, msg);
+    CFReadStreamRef stream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFReadStreamSetProperty(stream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
     //CFHTTPReadStreamSetRedirectsAutomatically(stream, TRUE);
     CFReadStreamOpen(stream);
@@ -815,8 +831,16 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
         Http_BufferExpanded(req, read);
     }
     
-    // error handling? what's that anyways?
-    req->statusCode = 200;
+    response = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
+    if (!response) return ERR_INVALID_ARGUMENT; /* TODO mem leak? */
+    
+    CFDictionaryRef headers = CFHTTPMessageCopyAllHeaderFields(response);
+    CFDictionaryApplyFunction(headers, Http_CheckHeader, req);
+    req->statusCode = CFHTTPMessageGetResponseStatusCode(response);
+    
+    CFRelease(headers);
+    CFRelease(response);
+    CFRelease(request);
     return 0;
 }
 #endif
