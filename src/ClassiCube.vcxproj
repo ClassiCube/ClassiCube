@@ -289,6 +289,7 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
+    <ClCompile Include="Platform_Android.c" />
     <ClCompile Include="Platform_Posix.c" />
     <ClCompile Include="Platform_Web.c" />
     <ClCompile Include="Platform_WinApi.c" />

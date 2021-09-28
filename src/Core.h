@@ -188,14 +188,16 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_IOS
 #define CC_BUILD_TOUCH
+#define CC_BUILD_CFNETWORK
 #elif defined __x86_64__ || defined __arm64__
 #define CC_BUILD_COCOA
 #define CC_BUILD_MACOS
+#define CC_BUILD_CURL
 #else
 #define CC_BUILD_CARBON
 #define CC_BUILD_MACOS
-#endif
 #define CC_BUILD_CURL
+#endif
 #define CC_BUILD_OPENAL
 #elif defined __sun__
 #define CC_BUILD_SOLARIS
