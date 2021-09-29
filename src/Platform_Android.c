@@ -6,6 +6,7 @@
 #include "Funcs.h"
 #include "String.h"
 #include "Platform.h"
+#include <errno.h>
 #include <unistd.h>
 #include <android/log.h>
 

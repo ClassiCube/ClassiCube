@@ -641,7 +641,7 @@ static int SkipRange(const cc_string* str) {
 	/* Android has a lot of ranges in /maps, which produces 100-120 kb of logs for one single crash! */
 	/* As such, to cut down the crash logs to more relevant information, ignore shared memory and fonts */
 	/* (e.g. removes a ton of '/dev/ashmem/dalvik-thread local mark stack (deleted)' entries */
-	return String_ContainsConst(str, "/system/fonts/") || String_ContainsConst(str, "/dev/ashmem/") || String_ContainsConst("/dev/mali0");
+	return String_ContainsConst(str, "/system/fonts/") || String_ContainsConst(str, "/dev/ashmem/") || String_ContainsConst(str, "/dev/mali0");
 }
 #else
 static int SkipRange(const cc_string* str) { return false; }
