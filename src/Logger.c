@@ -639,17 +639,39 @@ static void DumpMisc(void* ctx) {
 #ifdef CC_BUILD_ANDROID
 static int SkipRange(const cc_string* str) {
 	/* Android has a lot of ranges in /maps, which produces 100-120 kb of logs for one single crash! */
-	/*  As such, to cut down the crash logs to more relevant information, ignore shared memory and fonts */
-	/*  (e.g. removes a ton of '/dev/ashmem/dalvik-thread local mark stack (deleted)' entries */
-	return String_ContainsConst(str, "/system/fonts/") || String_ContainsConst(str, "/dev/ashmem/")
+	/* Example of different types of ranges:
+		7a2df000-7a2eb000 r-xp 00000000 fd:01 419        /vendor/lib/libdrm.so
+		7a2eb000-7a2ec000 r--p 0000b000 fd:01 419        /vendor/lib/libdrm.so
+		7a2ec000-7a2ed000 rw-p 0000c000 fd:01 419        /vendor/lib/libdrm.so
+		7a3d5000-7a4d1000 rw-p 00000000 00:00 0
+		7a4d1000-7a4d2000 ---p 00000000 00:00 0          [anon:thread stack guard]
+	To cut down crash logs to more relevant information, unnecessary '/' entries are ignored */
+	cc_string path;
+
+	/* Always include ranges without a / */
+	int idx = String_IndexOf(str, '/');
+	if (idx == -1) return false;
+	path = String_UNSAFE_SubstringAt(str, idx);
+
+	return
+		/* Ignore fonts */
+		String_ContainsConst(&path, "/system/fonts/")
+		/* Ignore shared memory (e.g. '/dev/ashmem/dalvik-thread local mark stack (deleted)') */
+		|| String_ContainsConst(&path, "/dev/ashmem/")
 		/* Ignore /dev/mali0 ranges (~200 entries on some devices) */
-		|| String_ContainsConst(str, "/dev/mali0")
+		|| String_ContainsConst(&path, "/dev/mali0")
 		/* Ignore /system/lib/ (~350 entries) and /system/lib64 (~700 entries) */
-		|| String_ContainsConst(str, "/system/lib")
+		|| String_ContainsConst(&path, "/system/lib")
 		/* Ignore /system/framework (~130 to ~160 entries) */
-		|| String_ContainsConst(str, "/system/framework/")
+		|| String_ContainsConst(&path, "/system/framework/")
 		/* Ignore /apex/com.android.art/javalib/ (~240 entries) */
-		|| String_ContainsConst(str, "/apex/com.");
+		|| String_ContainsConst(&path, "/apex/com.")
+		/* Ignore /dev/dri/renderD128 entries (~100 to ~120 entries) */
+		|| String_ContainsConst(&path, "/dri/renderD128")
+		/* Ignore /data/dalvik-cache entries (~80 entries) */
+		|| String_ContainsConst(&path, "/data/dalvik-cache/")
+		/* Ignore /vendor/lib entries (~80 entries) */
+		|| String_ContainsConst(&path, "/vendor/lib");
 }
 #else
 static int SkipRange(const cc_string* str) { return false; }
