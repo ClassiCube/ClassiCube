@@ -791,11 +791,11 @@ public class MainActivity extends Activity {
 	// ---------------- HTTP ----------------
 	// ======================================
 	//  Implements java Android side of the Android HTTP backend (See Http.c)
-	HttpURLConnection conn;
-	InputStream src;
-	byte[] readCache = new byte[8192];
+	static HttpURLConnection conn;
+	static InputStream src;
+	static byte[] readCache = new byte[8192];
 
-	public int httpInit(String url, String method) {
+	public static int httpInit(String url, String method) {
 		try {
 			conn = (HttpURLConnection)new URL(url).openConnection();
 			conn.setDoInput(true);
@@ -807,11 +807,11 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public void httpSetHeader(String name, String value) {
+	public static void httpSetHeader(String name, String value) {
 		conn.setRequestProperty(name, value);
 	}
 
-	public int httpSetData(byte[] data) {
+	public static int httpSetData(byte[] data) {
 		try {
 			conn.setDoOutput(true);
 			conn.getOutputStream().write(data);
@@ -822,7 +822,7 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public int httpPerform() {
+	public static int httpPerform() {
 		int len;
 		try {
 			conn.connect();
@@ -854,7 +854,7 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	void httpFinish() {
+	static void httpFinish() {
 		conn = null;
 		try {
 			src.close();
@@ -863,20 +863,20 @@ public class MainActivity extends Activity {
 	}
 
 	// TODO: Should we prune this list?
-	List<String> errors = new ArrayList<String>();
+	static List<String> errors = new ArrayList<String>();
 
-	int httpOnError(Exception ex) {
+	static int httpOnError(Exception ex) {
 		ex.printStackTrace();
 		httpFinish();
 		errors.add(ex.getMessage());
 		return -errors.size(); // don't want 0 as an error code
 	}
 
-	public String httpDescribeError(int res) {
+	public static String httpDescribeError(int res) {
 		res = -res - 1;
 		return res >= 0 && res < errors.size() ? errors.get(res) : null;
 	}
 
-	native void httpParseHeader(String header);
-	native void httpAppendData(byte[] data, int len);
+	native static void httpParseHeader(String header);
+	native static void httpAppendData(byte[] data, int len);
 }
