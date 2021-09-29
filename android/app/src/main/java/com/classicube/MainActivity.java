@@ -193,6 +193,8 @@ public class MainActivity extends Activity {
 		HACK_avoidFileUriExposedErrors();
 
 		if (!gameRunning) startGameAsync();
+		// TODO rethink to avoid this
+		if (gameRunning) updateInstance();
 		super.onCreate(savedInstanceState);
 	}
 
@@ -382,6 +384,7 @@ public class MainActivity extends Activity {
 	native void processOnLowMemory();
 	
 	native void runGameAsync();
+	native void updateInstance();
 	
 	// ======================================
 	// --------------- VIEWS ----------------

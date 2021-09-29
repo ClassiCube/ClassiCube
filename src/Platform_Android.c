@@ -198,4 +198,45 @@ void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* d
 	ReturnString(env, obj, dst);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Initialisation-------------------------------------------------------*
+*#########################################################################################################################*/
+extern void android_main(void);
+static void JNICALL java_updateInstance(JNIEnv* env, jobject instance) {
+	Platform_LogConst("App instance updated!");
+	App_Instance = (*env)->NewGlobalRef(env, instance);
+	/* TODO: Do we actually need to remove that global ref later? */
+}
+
+/* Called eventually by the activity java class to actually start the game */
+static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
+	void* thread;
+	java_updateInstance(env, instance);
+
+	Platform_LogConst("Running game async!");
+	/* The game must be run on a separate thread, as blocking the */
+	/* main UI thread will cause a 'App not responding..' messagebox */
+	thread = Thread_Start(android_main);
+	Thread_Detach(thread);
+}
+static const JNINativeMethod methods[] = {
+	{ "updateInstance", "()V", java_updateInstance },
+	{ "runGameAsync",   "()V", java_runGameAsync }
+};
+
+/* This method is automatically called by the Java VM when the */
+/*  activity java class calls 'System.loadLibrary("classicube");' */
+CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+	jclass klass;
+	JNIEnv* env;
+	VM_Ptr = vm;
+	JavaGetCurrentEnv(env);
+
+	klass     = (*env)->FindClass(env, "com/classicube/MainActivity");
+	App_Class = (*env)->NewGlobalRef(env, klass);
+	JavaRegisterNatives(env, methods);
+	return JNI_VERSION_1_4;
+}
 #endif

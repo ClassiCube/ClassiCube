@@ -261,7 +261,7 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = JavaICall_Float(env, JAVA_getDpiY, NULL);
 }
 
-static void Window_RemakeSurface(void) {
+static void RemakeWindowSurface(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	winCreated = false;
@@ -272,6 +272,7 @@ static void Window_RemakeSurface(void) {
 	Platform_LogConst("Entering wait for window exist loop..");
 
 	/* Loop until window gets created by main UI thread */
+	/* (i.e. until processSurfaceCreated is received) */
 	while (!winCreated) {
 		Window_ProcessEvents();
 		Thread_Sleep(10);
@@ -282,8 +283,7 @@ static void Window_RemakeSurface(void) {
 
 static void DoCreateWindow(void) {
 	WindowInfo.Exists = true;
-	/* actual window creation is done when processSurfaceCreated is received */
-	Window_RemakeSurface();
+	RemakeWindowSurface();
 	/* always start as fullscreen */
 	Window_EnterFullscreen();
 }
