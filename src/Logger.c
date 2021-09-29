@@ -639,9 +639,17 @@ static void DumpMisc(void* ctx) {
 #ifdef CC_BUILD_ANDROID
 static int SkipRange(const cc_string* str) {
 	/* Android has a lot of ranges in /maps, which produces 100-120 kb of logs for one single crash! */
-	/* As such, to cut down the crash logs to more relevant information, ignore shared memory and fonts */
-	/* (e.g. removes a ton of '/dev/ashmem/dalvik-thread local mark stack (deleted)' entries */
-	return String_ContainsConst(str, "/system/fonts/") || String_ContainsConst(str, "/dev/ashmem/") || String_ContainsConst(str, "/dev/mali0");
+	/*  As such, to cut down the crash logs to more relevant information, ignore shared memory and fonts */
+	/*  (e.g. removes a ton of '/dev/ashmem/dalvik-thread local mark stack (deleted)' entries */
+	return String_ContainsConst(str, "/system/fonts/") || String_ContainsConst(str, "/dev/ashmem/")
+		/* Ignore /dev/mali0 ranges (~200 entries on some devices) */
+		|| String_ContainsConst(str, "/dev/mali0")
+		/* Ignore /system/lib/ (~350 entries) and /system/lib64 (~700 entries) */
+		|| String_ContainsConst(str, "/system/lib")
+		/* Ignore /system/framework (~130 to ~160 entries) */
+		|| String_ContainsConst(str, "/system/framework/")
+		/* Ignore /apex/com.android.art/javalib/ (~240 entries) */
+		|| String_ContainsConst(str, "/apex/com.");
 }
 #else
 static int SkipRange(const cc_string* str) { return false; }
