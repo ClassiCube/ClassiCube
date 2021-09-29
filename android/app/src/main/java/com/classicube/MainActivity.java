@@ -387,7 +387,8 @@ public class MainActivity extends Activity {
 	// --------------- VIEWS ----------------
 	// ======================================
 	volatile boolean fullscreen;
-	final Semaphore winDestroyedSem = new Semaphore(0, true);
+	// static to persist across activity destroy/create
+	static final Semaphore winDestroyedSem = new Semaphore(0, true);
 	SurfaceHolder.Callback callback;
 	CCView curView;
 	
