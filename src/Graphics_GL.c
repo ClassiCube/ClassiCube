@@ -23,8 +23,10 @@
 #include <OpenGLES/ES2/gl.h>
 #elif defined CC_BUILD_MACOS
 #include <OpenGL/gl.h>
-#elif defined CC_BUILD_GLES
+#elif defined CC_BUILD_GLES && defined CC_BUILD_GLMODERN
 #include <GLES2/gl2.h>
+#elif defined CC_BUILD_GLES
+#include <GLES/gl.h>
 #else
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
@@ -971,7 +973,13 @@ void Gfx_SetFogMode(FogFunc func) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
 	if (func == gfx_fogMode) return;
 
+#ifdef CC_BUILD_GLES
+	/* OpenGL ES doesn't support glFogi, so use glFogf instead */
+	/*  https://www.khronos.org/registry/OpenGL-Refpages/es1.1/xhtml/ */
+	glFogf(GL_FOG_MODE, modes[func]);
+#else
 	glFogi(GL_FOG_MODE, modes[func]);
+#endif
 	gfx_fogMode = func;
 }
 
