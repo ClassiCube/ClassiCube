@@ -1570,14 +1570,27 @@ static struct UpdatesScreen {
 	cc_bool pendingFetch, release, d3d9;
 } UpdatesScreen_Instance;
 
-CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, char* type, int delta, int unit) {
-	delta /= unit;
-	String_AppendInt(str, delta);
-	String_Append(str, ' ');
-	String_AppendConst(str, type);
+CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, int delta) {
+	const char* span;
+	int unit, value = Math_AbsI(delta);
 
-	if (delta > 1) String_Append(str, 's');
-	String_AppendConst(str, " ago");
+	if (value < SECS_PER_MIN) {
+		span = "second";  unit = 1;
+	} else if (value < SECS_PER_HOUR) {
+		span = "minute";  unit = SECS_PER_MIN;
+	} else if (value < SECS_PER_DAY) {
+		span = "hour";    unit = SECS_PER_HOUR;
+	} else {
+		span = "day";     unit = SECS_PER_DAY;
+	}
+
+	value /= unit;
+	String_AppendInt(str, value);
+	String_Append(str, ' ');
+	String_AppendConst(str, span);
+
+	if (value > 1) String_Append(str, 's');
+	String_AppendConst(str, delta >= 0 ? " ago" : " in the future");
 }
 
 static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint64 timestamp) {
@@ -1594,16 +1607,7 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint
 		now   = DateTime_CurrentUTC_MS() - UNIX_EPOCH;
 		/* must divide as cc_uint64, int delta overflows after 26 days */
 		delta = (int)((now / 1000) - timestamp);
-
-		if (delta < SECS_PER_MIN) {
-			UpdatesScreen_FormatTime(&str, "second", delta, 1);
-		} else if (delta < SECS_PER_HOUR) {
-			UpdatesScreen_FormatTime(&str, "minute", delta, SECS_PER_MIN);
-		} else if (delta < SECS_PER_DAY) {
-			UpdatesScreen_FormatTime(&str, "hour",   delta, SECS_PER_HOUR);
-		} else {
-			UpdatesScreen_FormatTime(&str, "day",    delta, SECS_PER_DAY);
-		}
+		UpdatesScreen_FormatTime(&str, delta);
 	}
 	LLabel_SetText(lbl, &str);
 	LWidget_Redraw(lbl);
