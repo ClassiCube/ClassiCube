@@ -698,8 +698,8 @@ public class MainActivity extends Activity {
 	final Semaphore dialogSem = new Semaphore(0, true);
 	
 	void releaseDialogSem() {
-		// Only release when no free permits (otherwise showAlert doesn't block when called)
-		if (dialogSem.availablePermits() > 0) return;
+		// Only release when no waiting threads (otherwise showAlert doesn't block when called)
+		if (!dialogSem.hasQueuedThreads()) return;
 		dialogSem.release();
 	}
 
