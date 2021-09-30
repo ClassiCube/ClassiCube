@@ -54,11 +54,11 @@ import android.view.inputmethod.InputMethodManager;
 //   was added in, as this will make things easier if the minimum required API level is ever changed again
 
 // implements InputQueue.Callback
-public class MainActivity extends Activity {
-	
-	// ======================================
-	// -------------- COMMANDS --------------
-	// ======================================
+public class MainActivity extends Activity 
+{
+	// ==================================================================
+	// ---------------------------- COMMANDS ----------------------------
+	// ==================================================================
 	//  The main thread (which receives events) is separate from the game thread (which processes events)
 	//  Therefore pushing/pulling events must be thread-safe, which is achieved through ConcurrentLinkedQueue
 	//  Additionally, a cache is used (freeCmds) to avoid constantly allocating NativeCmdArgs instances
@@ -134,9 +134,10 @@ public class MainActivity extends Activity {
 	final static int CMD_CONFIG_CHANGED = 17;
 	final static int CMD_LOW_MEMORY  = 18;
 	
-	// ======================================
-	// --------------- EVENTS ---------------
-	// ======================================
+	
+	// ====================================================================
+	// ------------------------------ EVENTS ------------------------------
+	// ====================================================================
 	InputMethodManager input;
 	// static to persist across activity destroy/create
 	static boolean gameRunning;
@@ -386,9 +387,10 @@ public class MainActivity extends Activity {
 	native void runGameAsync();
 	native void updateInstance();
 	
-	// ======================================
-	// --------------- VIEWS ----------------
-	// ======================================
+	
+	// ====================================================================
+	// ------------------------------ VIEWS -------------------------------
+	// ====================================================================
 	volatile boolean fullscreen;
 	// static to persist across activity destroy/create
 	static final Semaphore winDestroyedSem = new Semaphore(0, true);
@@ -560,9 +562,10 @@ public class MainActivity extends Activity {
 		}
 	}
 	
-	// ======================================
-	// -------------- PLATFORM --------------
-	// ======================================
+	
+	// ==================================================================
+	// ---------------------------- PLATFORM ----------------------------
+	// ==================================================================
 	//  Implements java Android side of the Android Platform backend (See Platform.c)
 	public void setupForGame() {
 		// Once a surface has been locked for drawing with canvas, can't ever be detached
@@ -607,10 +610,11 @@ public class MainActivity extends Activity {
 			return 0;
 		}
 	}
+	
 
-	// ======================================
-	// --------------- WINDOW ---------------
-	// ======================================
+	// ====================================================================
+	// ------------------------------ WINDOW ------------------------------
+	// ====================================================================
 	//  Implements java Android side of the Android Window backend (See Window.c)
 	volatile int keyboardType;
 	volatile String keyboardText = "";
@@ -791,9 +795,10 @@ public class MainActivity extends Activity {
 		return "";
 	}
 
-	// ======================================
-	// ---------------- HTTP ----------------
-	// ======================================
+
+	// ======================================================================
+	// -------------------------------- HTTP --------------------------------
+	// ======================================================================
 	//  Implements java Android side of the Android HTTP backend (See Http.c)
 	static HttpURLConnection conn;
 	static InputStream src;

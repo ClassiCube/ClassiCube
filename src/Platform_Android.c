@@ -63,6 +63,20 @@ cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+void Platform_TryLogJavaError(void) {
+	JNIEnv* env;
+	jthrowable err;
+	JavaGetCurrentEnv(env);
+
+	err = (*env)->ExceptionOccurred(env);
+	if (!err) return;
+
+	Platform_LogConst("PANIC");
+	(*env)->ExceptionDescribe(env);
+	(*env)->ExceptionClear(env);
+	/* TODO actually do something */
+}
+
 void Platform_ShareScreenshot(const cc_string* filename) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	String_InitArray(path, pathBuffer);

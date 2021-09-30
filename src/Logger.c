@@ -818,6 +818,10 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
+#if defined CC_BUILD_ANDROID
+	/* deliberate Dalvik VM abort, try to log a nicer error for this */
+	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
+#endif
 	AbortCommon(0, msg.buffer, ctx);
 }
 

@@ -247,6 +247,7 @@ void Platform_ShareScreenshot(const cc_string* filename);
 extern jclass  App_Class;
 extern jobject App_Instance;
 extern JavaVM* VM_Ptr;
+void Platform_TryLogJavaError(void);
 
 #define JavaGetCurrentEnv(env) (*VM_Ptr)->AttachCurrentThread(VM_Ptr, &env, NULL)
 #define JavaMakeConst(env, str) (*env)->NewStringUTF(env, str)
