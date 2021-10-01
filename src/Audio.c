@@ -39,16 +39,6 @@ static void ApplyVolume(cc_int16* samples, int count, int volume) {
 	}
 }
 
-static int GetVolume(const char* volKey, const char* boolKey) {
-	int volume = Options_GetInt(volKey, 0, 100, 0);
-	if (volume) return volume;
-
-	/* backwards compatibility */
-	volume = Options_GetBool(boolKey, false) ? 100 : 0;
-	Options_Set(boolKey, NULL);
-	return volume;
-}
-
 /* Common/Base methods */
 static void AudioWarn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
@@ -1137,7 +1127,12 @@ static void Sounds_Stop(void) {
 }
 
 static void Sounds_Init(void) {
-	int volume = GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
+#ifdef CC_BUILD_WEBAUDIO
+	int volume = Options_GetInt(OPT_SOUND_VOLUME, 0, 100, 0);
+#else
+	int volume = Options_GetInt(OPT_SOUND_VOLUME, 0, 100, 100);
+#endif
+
 	Audio_SetSounds(volume);
 	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
@@ -1354,7 +1349,7 @@ static void Music_Init(void) {
 	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
 
 	music_waitable = Waitable_Create();
-	volume         = GetVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
+	volume         = Options_GetInt(OPT_MUSIC_VOLUME, 0, 100, 100);
 	Audio_SetMusic(volume);
 }
 

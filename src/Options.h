@@ -5,8 +5,6 @@
    Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
-#define OPT_USE_MUSIC "usemusic"
-#define OPT_USE_SOUND "usesound"
 #define OPT_MUSIC_VOLUME "musicvolume"
 #define OPT_SOUND_VOLUME "soundsvolume"
 #define OPT_FORCE_OPENAL "forceopenal"
