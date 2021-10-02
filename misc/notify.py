@@ -17,51 +17,17 @@ def notify_webhook(body):
 			"content" : body
 		}
 		r = requests.post(WEBHOOK_URL, json=webhook_data)
-		print("Webhook response: " + r.text)
+		print("BuildNotify response: " + r.text)
 	except Exception as e:
-		print("Webhook failed: %s" % (e))
+		print("BuildNotify failed: %s" % (e))
 
-def build_exists(file):
-	return os.path.exists('client/src/' + file)
+cc_errors = None
+try:
+	with open('client/cc_errors.txt', 'r') as file:
+		cc_errors = file.read()
+except FileNotFoundError:
+	# nothing to as no compile errors
+	pass
 
-builds = {
-	'Windows32' : build_exists('cc-w32-d3d.exe'),
-	'Windows64' : build_exists('cc-w64-d3d.exe'),
-	'macOS32'   : build_exists('cc-osx32'),
-	'macOS64'   : build_exists('cc-osx64'),
-	'Linux32'   : build_exists('cc-nix32'),
-	'Linux64'   : build_exists('cc-nix64'),
-	'RPi'       : build_exists('cc-rpi'),
-	'Web'       : build_exists('cc.js'),
-	'Android'   : build_exists('cc.apk'),
-	'Win-ogl32' : build_exists('cc-w32-ogl.exe'),
-	'Win-ogl64' : build_exists('cc-w64-ogl.exe'),
-}
-
-failed = []
-
-def check_build(key):
-	key_32 = key + '32'
-	key_64 = key + '64'
-
-	if key in builds:
-		if not builds[key]:
-			failed.append(key)
-	else:
-		if not builds[key_32] and not builds[key_64]:
-			failed.append(key + ' 32/64')
-		elif not builds[key_32]:
-			failed.append(key + ' 32')
-		elif not builds[key_64]:
-			failed.append(key + ' 64')
-
-check_build('Windows')
-check_build('macOS')
-check_build('Linux')
-check_build('RPi')
-check_build('Web')
-check_build('Android')
-check_build('Win-ogl')
-
-if len(failed):
-	notify_webhook('<@%s>, failed to compile for: %s' % (TARGET_USER, ', '.join(failed)))
+if cc_errors:
+	notify_webhook('**Houston, we have a problem** <@%s>\n\n%s' % (TARGET_USER, cc_errors))

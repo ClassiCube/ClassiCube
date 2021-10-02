@@ -20,6 +20,10 @@
 ROOT_DIR=~/client # can be changed
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -Qn -w"
 
+# log file that errors are written to
+ERR_FILES=$ROOT_DIR/cc_errors.txt
+rm "$ERRS_FILE"
+
 # ----------------------------- compile windows
 #   I installed gcc-mingw-w64-i686 and gcc-mingw-w64-x86-64 packages
 WIN32_CC="i686-w64-mingw32-gcc"
@@ -33,7 +37,9 @@ build_win32() {
   rm cc-w32-d3d.exe cc-w32-ogl.exe
 
   $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit" >> "$ERRS_FILE"; fi
   $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit (OpenGL)" >> "$ERRS_FILE"; fi
 }
 
 build_win64() {
@@ -42,7 +48,9 @@ build_win64() {
   rm cc-w64-d3d.exe cc-w64-ogl.exe
   
   $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-d3d.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 64 bit" >> "$ERRS_FILE"; fi
   $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-ogl.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 64 bit (OpenGL)" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile linux
@@ -55,6 +63,7 @@ build_nix32() {
   cp $ROOT_DIR/misc/CCicon_nix32 $ROOT_DIR/src/CCicon_nix32.o
   rm cc-nix32
   gcc *.c $ALL_FLAGS $NIX32_FLAGS CCicon_nix32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix32 -lX11 -lXi -lpthread -lGL -lm -ldl
+  if [ $? -ne 0 ]; then echo "Failed to compile Linux 32 bit" >> "$ERRS_FILE"; fi
 }
 
 build_nix64() {
@@ -62,6 +71,7 @@ build_nix64() {
   cp $ROOT_DIR/misc/CCicon_nix64 $ROOT_DIR/src/CCicon_nix64.o
   rm cc-nix64
   gcc *.c $ALL_FLAGS $NIX64_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix64 -lX11 -lXi -lpthread -lGL -lm -ldl
+  if [ $? -ne 0 ]; then echo "Failed to compile Linux 64 bit" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile macOS
@@ -74,6 +84,7 @@ build_mac32() {
   cp $ROOT_DIR/misc/CCicon_mac32 $ROOT_DIR/src/CCicon_mac32.o
   rm cc-osx32
   $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
+  if [ $? -ne 0 ]; then echo "Failed to compile macOS 32 bit" >> "$ERRS_FILE"; fi
 }
 
 build_mac64() {
@@ -81,6 +92,7 @@ build_mac64() {
   cp $ROOT_DIR/misc/CCicon_mac64 $ROOT_DIR/src/CCicon_mac64.o
   rm cc-osx64
   $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+  if [ $? -ne 0 ]; then echo "Failed to compile macOS 64 bit" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile web
@@ -91,6 +103,7 @@ build_web() {
   echo "Building web.."
   rm cc.js
   $WEB_CC *.c -O1 -o cc.js --js-library interop_web.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web --preload-file texpacks/default.zip -w
+  if [ $? -ne 0 ]; then echo "Failed to compile Webclient" >> "$ERRS_FILE"; fi
   # so game loads textures from classicube.net/static/default.zip
   sed -i 's#cc.data#/static/default.zip#g' cc.js
   # fix mouse wheel scrolling page not being properly prevented
@@ -109,6 +122,7 @@ build_rpi() {
   cp $ROOT_DIR/misc/CCicon_rpi $ROOT_DIR/src/CCicon_rpi.o
   rm cc-rpi
   $RPI_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile android
@@ -116,16 +130,21 @@ DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
 DROID_LIBS="-lGLESv2 -lEGL -lm -landroid -llog"
 NDK_ROOT="/home/buildbot/android/android-ndk-r22/toolchains/llvm/prebuilt/linux-x86_64/bin"
 TOOLS_ROOT="/home/buildbot/android/sdk/build-tools/26.0.0"
-SDK_ROOT="/home/buildbot/android/sdk/platforms/android-26"
+SDK_ROOT="/home/buildbot/android/sdk/platforms/android-28"
   
 build_android() {
   echo "Building android.."
   rm cc.apk cc-droid-arm_16 cc-droid-arm_32 cc-droid-arm_64 cc-droid-x86_32 cc-droid-x86_64
   $NDK_ROOT/armv7a-linux-androideabi16-clang *.c $DROID_FLAGS -march=armv5 $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-arm_16
+  if [ $? -ne 0 ]; then echo "Failed to compile Android ARM-16" >> "$ERRS_FILE"; fi
   $NDK_ROOT/armv7a-linux-androideabi16-clang *.c $DROID_FLAGS $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-arm_32
+  if [ $? -ne 0 ]; then echo "Failed to compile Android ARM-32" >> "$ERRS_FILE"; fi
   $NDK_ROOT/aarch64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-arm_64
+  if [ $? -ne 0 ]; then echo "Failed to compile Android ARM-64" >> "$ERRS_FILE"; fi
   $NDK_ROOT/i686-linux-android16-clang *.c $DROID_FLAGS $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-x86_32
+  if [ $? -ne 0 ]; then echo "Failed to compile Android x86-32" >> "$ERRS_FILE"; fi
   $NDK_ROOT/x86_64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-x86_64
+  if [ $? -ne 0 ]; then echo "Failed to compile Android x86-64" >> "$ERRS_FILE"; fi
   
   cd $ROOT_DIR/android/app/src/main
   # remove old java temp files
@@ -150,6 +169,7 @@ build_android() {
   
   # compile interop java file into its multiple .class files
   javac java/com/classicube/MainActivity.java -d ./obj -classpath $SDK_ROOT/android.jar
+  if [ $? -ne 0 ]; then echo "Failed to compile Android Java" >> "$ERRS_FILE"; fi
   # compile the multiple .class files into one .dex file
   $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
   # create initial .apk with packaged version of resources
