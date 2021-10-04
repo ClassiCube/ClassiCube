@@ -71,7 +71,13 @@ static void RemoveTouch(UITouch* t) {
 
 @end
 
+static cc_bool landscape_locked;
 @implementation CCViewController
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    if (landscape_locked)
+        return UIInterfaceOrientationMaskLandscape;
+    return [super supportedInterfaceOrientations];
+}
 @end
 
 @implementation CCAppDelegate
@@ -218,9 +224,26 @@ void ShowDialogCore(const char* title, const char* msg) {
     }
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
+static UITextField* text_input;
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+    text_input = [[UITextField alloc] initWithFrame:CGRectZero];
+    text_input.hidden = YES;
+    [view_handle addSubview:text_input];
+    [text_input becomeFirstResponder];
+}
+
+void Window_SetKeyboardText(const cc_string* text) {
+    char raw[NATIVE_STR_LEN];
+    NSString* str;
+    
+    Platform_EncodeUtf8(raw, text);
+    str = [NSString stringWithUTF8String:raw];
+    text_input.text = str;
+}
+
+void Window_CloseKeyboard(void) {
+    [text_input resignFirstResponder];
+}
 
 int Window_GetWindowState(void) { return WINDOW_STATE_NORMAL; }
 cc_result Window_EnterFullscreen(void) { return ERR_NOT_SUPPORTED; }
@@ -231,7 +254,9 @@ void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
-    // TODO implement
+    // TODO doesn't work
+    landscape_locked = lock;
+    [UIViewController attemptRotationToDeviceOrientation];
 }
 
 
