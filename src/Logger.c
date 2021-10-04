@@ -82,6 +82,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case CW_ERR_STRING_LEN: return "NBT string too long";
 
 	case ERR_DOWNLOAD_INVALID: return "Website denied download or doesn't exist";
+	case ERR_NO_AUDIO_OUTPUT: return "No audio output devices plugged in";
 	}
 	return NULL;
 }

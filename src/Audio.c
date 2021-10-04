@@ -332,6 +332,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 #define CALLBACK_NULL  0x00000000l
 typedef UINT           MMRESULT;
 #define WINMMAPI       DECLSPEC_IMPORT
+#define MMSYSERR_BADDEVICEID 2
 /* === BEGIN mmeapi.h === */
 typedef struct WAVEHDR_ {
 	LPSTR       lpData;
@@ -367,6 +368,7 @@ WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT
 WINMMAPI MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
 WINMMAPI MMRESULT WINAPI waveOutGetErrorTextA(MMRESULT err, LPSTR text, UINT textLen);
+WINMMAPI UINT     WINAPI waveOutGetNumDevs(void);
 /* === END mmeapi.h === */
 
 struct AudioContext {
@@ -429,7 +431,12 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	fmt.nBlockAlign     = sampleSize;
 	fmt.wBitsPerSample  = 16;
 	fmt.cbSize          = 0;
-	return waveOutOpen(&ctx->handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
+	
+	res = waveOutOpen(&ctx->handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
+	/* Better error message for this particular case */
+	if (res == MMSYSERR_BADDEVICEID && waveOutGetNumDevs() == 0)
+		return ERR_NO_AUDIO_OUTPUT;
+	return res;
 }
 
 cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
