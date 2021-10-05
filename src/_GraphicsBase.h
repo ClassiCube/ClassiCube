@@ -200,10 +200,6 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 }
 
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
 	cc_uint8* src_ = (cc_uint8*)src->scan0;

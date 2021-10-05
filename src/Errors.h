@@ -70,8 +70,8 @@ enum CC_ERRORS {
 	GZIP_ERR_METHOD    = 0xCCDED037UL, /* GZIP stream uses unsupported compression method */
 	GZIP_ERR_FLAGS     = 0xCCDED038UL, /* GZIP stream uses unsupported flags */
 
-	ZLIB_ERR_METHOD    = 0xCCDED039UL, /* ZLIB steam uses unsupported compression method */
-	ZLIB_ERR_FLAGS     = 0xCCDED03AUL, /* ZLIB steam uses unsupported flags */
+	ZLIB_ERR_METHOD    = 0xCCDED039UL, /* ZLIB stream uses unsupported compression method */
+	ZLIB_ERR_FLAGS     = 0xCCDED03AUL, /* ZLIB stream uses unsupported flags */
 
 	FCM_ERR_IDENTIFIER = 0xCCDED03BUL, /* FCM stream bytes #1-#4 aren't 0x0FC2AF40 */
 	FCM_ERR_REVISION   = 0xCCDED03CUL, /* FCM stream byte #5 isn't 13 */

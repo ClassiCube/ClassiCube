@@ -114,7 +114,7 @@ static int RunProgram(int argc, char** argv) {
 #if defined CC_BUILD_IOS
 /* ClassiCube is sort of and sort of not the executable */
 /*  on iOS - UIKit is responsible for kickstarting the game. */
-/* (this is handled interop_ios.m as the code is Objective C) */
+/* (this is handled in interop_ios.m as the code is Objective C) */
 int main_real(int argc, char** argv) {
 	SetupProgram(argc, argv);
 	for (;;) { RunProgram(argc, argv); }

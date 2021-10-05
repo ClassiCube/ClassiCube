@@ -385,6 +385,10 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, rowWidth, true);
 }
 
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+}
+
 void Gfx_BindTexture(GfxResourceID texId) {
 	cc_result res = IDirect3DDevice9_SetTexture(device, 0, (IDirect3DBaseTexture9*)texId);
 	if (res) Logger_Abort2(res, "D3D9_BindTexture");

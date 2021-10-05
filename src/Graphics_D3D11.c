@@ -139,6 +139,9 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 }
 
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+}
+
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)(*texId);
 	ID3D11Resource* res = NULL;

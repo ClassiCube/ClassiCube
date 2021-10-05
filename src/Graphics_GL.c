@@ -217,6 +217,10 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
 }
 
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+}
+
 void Gfx_BindTexture(GfxResourceID texId) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 }

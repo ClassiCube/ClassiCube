@@ -55,8 +55,10 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
-#define TEXTURE_FLAG_MANAGED 0x01 /* Texture should persist across gfx context loss */
-#define TEXTURE_FLAG_DYNAMIC 0x02 /* Texture should allow updating via Gfx_UpdateTexture */
+/* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
+#define TEXTURE_FLAG_MANAGED 0x01
+/* Texture should allow updating via Gfx_UpdateTexture */
+#define TEXTURE_FLAG_DYNAMIC 0x02
 
 void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
 void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
@@ -68,10 +70,10 @@ void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 use mipmapping may be either a per-texture or global state depending on the backend. */
 CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
-CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps); /* OBSOLETE */
+CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
-/* NOTE: rowWidth is in pixels (so for normal bitmaps, rowWidth equals width) */
-CC_API void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps);
+/* NOTE: rowWidth is in pixels (so for normal bitmaps, rowWidth equals width) */ /* OBSOLETE */
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps);
 /* Sets the currently active texture. */
 CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to 0. */
