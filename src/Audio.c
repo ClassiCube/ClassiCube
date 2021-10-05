@@ -433,7 +433,8 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	fmt.cbSize          = 0;
 	
 	res = waveOutOpen(&ctx->handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
-	/* Better error message for this particular case */
+	/* Show a better error message when no audio output devices connected than */
+	/*  "A device ID has been used that is out of range for your system" */
 	if (res == MMSYSERR_BADDEVICEID && waveOutGetNumDevs() == 0)
 		return ERR_NO_AUDIO_OUTPUT;
 	return res;
