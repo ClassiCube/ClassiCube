@@ -510,8 +510,6 @@ void Game_TakeScreenshot(void) {
 	extern void interop_TakeScreenshot(const char* path);
 	Platform_EncodeUtf8(str, &filename);
 	interop_TakeScreenshot(str);
-#elif CC_BUILD_MINFILES
-	/* no screenshots for these systems */
 #else
 	if (!Utils_EnsureDirectory("screenshots")) return;
 	String_InitArray(path, pathBuffer);

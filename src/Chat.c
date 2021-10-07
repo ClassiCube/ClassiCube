@@ -53,14 +53,6 @@ static void AppendChatLogTime(void) {
 	Chat_LogTime[logTimesCount++] = now;
 }
 
-#ifdef CC_BUILD_MINFILES
-static void ResetLogFile(void) { }
-static void CloseLogFile(void) { }
-void Chat_SetLogName(const cc_string* name) { }
-void Chat_DisableLogging(void) { }
-static void OpenChatLog(struct DateTime* now) { }
-static void AppendChatLog(const cc_string* text) { }
-#else
 static char      logNameBuffer[STRING_SIZE];
 static cc_string logName = String_FromArray(logNameBuffer);
 static char      logPathBuffer[FILENAME_SIZE];
@@ -193,7 +185,6 @@ static void AppendChatLog(const cc_string* text) {
 	Chat_DisableLogging();
 	Logger_SysWarn2(res, "writing to", &logPath);
 }
-#endif
 
 void Chat_Add1(const char* format, const void* a1) {
 	Chat_Add4(format, a1, NULL, NULL, NULL);
@@ -642,9 +633,8 @@ static void OnInit(void) {
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 
-#if defined CC_BUILD_MINFILES 
-#elif defined CC_BUILD_MOBILE
-	/* Better to not log chat by default on mobile, */
+#if defined CC_BUILD_MOBILE || defined CC_BUILD_WEB
+	/* Better to not log chat by default on mobile/web, */
 	/* since it's not easily visible to end users */
 	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, false);
 #else

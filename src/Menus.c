@@ -2857,11 +2857,6 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	s->numCore      = 4;
 	s->maxVertices += 4 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
-
-	/* If MINFILES is defined, chat logging code is not even included at all */
-#ifdef CC_BUILD_MINFILES
-	s->buttons[2].disabled = true;
-#endif
 }
 
 void ChatOptionsScreen_Show(void) {
