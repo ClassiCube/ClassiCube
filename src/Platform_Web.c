@@ -358,7 +358,12 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
-void Process_Exit(cc_result code) { exit(code); }
+void Process_Exit(cc_result code) {
+	/* Window isn't implicitly closed when process is exited */
+	if (code) Window_Close();
+
+	exit(code);
+}
 
 extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {

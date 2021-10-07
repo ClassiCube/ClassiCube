@@ -481,13 +481,16 @@ void Window_Close(void) {
 	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 	/* If the game is closed while in fullscreen, the last rendered frame stays */
-	/* shown in fullscreen, but the game can't be interacted with anymore */
+	/*  shown in fullscreen, but the game can't be interacted with anymore */
 	Window_ExitFullscreen();
 
 	/* Don't want cursor stuck on the dead 0,0 canvas */
 	Window_DisableRawMouse();
 	Window_SetSize(0, 0);
 	UnhookEvents();
+	/* Game_DoFrame doesn't do anything when WindowExists.False is false, */
+	/*  but it's still better to cancel main loop to minimise resource usage */
+	emscripten_cancel_main_loop();
 }
 
 extern void interop_RequestCanvasResize(void);
