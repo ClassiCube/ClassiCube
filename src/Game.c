@@ -36,9 +36,6 @@
 #include "Protocol.h"
 #include "Picking.h"
 #include "Animations.h"
-#ifdef CC_BUILD_WEB
-#include <emscripten.h>
-#endif
 
 struct _GameData Game;
 cc_bool Game_UseCPEBlocks;
@@ -623,7 +620,7 @@ void Game_Free(void* obj) {
 
 #ifdef CC_BUILD_WEB
 static cc_uint64 lastRender;
-static void Game_DoFrame(void) {
+void Game_DoFrame(void) {
 	cc_uint64 render; 
 	double time;
 	Game_DoFrameBody()
@@ -631,10 +628,8 @@ static void Game_DoFrame(void) {
 
 static void Game_RunLoop(void) {
 	lastRender = Stopwatch_Measure();
-	emscripten_set_main_loop(Game_DoFrame, 0, false);
-	/* The Game_SetFpsLimit call back in Game_Load does nothing because no main loop yet */
-	/*  Now thats there's a main loop, Game_SetFpsLimit will actually do something */
-	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
+	/* Window_Web.c sets Game_DoFrame as the main loop callback function */
+	/* (i.e. web browser is in charge of calling Game_DoFrame, not us) */
 }
 
 cc_bool Game_ShouldClose(void) {
