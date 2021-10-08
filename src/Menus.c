@@ -3134,8 +3134,8 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 void MiscOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[9];
 	MenuInput_Float(descs[0], 1, 1024, 5);
-	MenuInput_Int(descs[1],   0, 100,  0);
-	MenuInput_Int(descs[2],   0, 100,  0);
+	MenuInput_Int(descs[1],   0, 100,  DEFAULT_MUSIC_VOLUME);
+	MenuInput_Int(descs[2],   0, 100,  DEFAULT_SOUNDS_VOLUME);
 #ifdef CC_BUILD_WIN
 	MenuInput_Int(descs[7],   1, 200, 40);
 #else

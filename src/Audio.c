@@ -19,6 +19,11 @@
 int Audio_SoundsVolume, Audio_MusicVolume;
 static const cc_string audio_dir = String_FromConst("audio");
 
+struct Sound {
+	int channels, sampleRate;
+	void* data; cc_uint32 size;
+};
+
 static void ApplyVolume(cc_int16* samples, int count, int volume) {
 	int i;
 
@@ -1135,12 +1140,7 @@ static void Sounds_Stop(void) {
 }
 
 static void Sounds_Init(void) {
-#ifdef CC_BUILD_WEBAUDIO
-	int volume = Options_GetInt(OPT_SOUND_VOLUME, 0, 100, 0);
-#else
-	int volume = Options_GetInt(OPT_SOUND_VOLUME, 0, 100, 100);
-#endif
-
+	int volume = Options_GetInt(OPT_SOUND_VOLUME, 0, 100, DEFAULT_SOUNDS_VOLUME);
 	Audio_SetSounds(volume);
 	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
@@ -1355,9 +1355,9 @@ static void Music_Init(void) {
 	/* music is delayed between 2 - 7 minutes by default */
 	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
 	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
-
 	music_waitable = Waitable_Create();
-	volume         = Options_GetInt(OPT_MUSIC_VOLUME, 0, 100, 100);
+
+	volume = Options_GetInt(OPT_MUSIC_VOLUME, 0, 100, DEFAULT_MUSIC_VOLUME);
 	Audio_SetMusic(volume);
 }
 

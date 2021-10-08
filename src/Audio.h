@@ -8,10 +8,18 @@ struct IGameComponent;
 extern struct IGameComponent Audio_Component; 
 struct AudioContext;
 
-struct Sound {
-	int channels, sampleRate;
-	void* data; cc_uint32 size;
-};
+#ifdef CC_BUILD_WEBAUDIO
+#define DEFAULT_SOUNDS_VOLUME   0
+#else
+#define DEFAULT_SOUNDS_VOLUME 100
+#endif
+
+#ifdef CC_BUILD_NOMUSIC
+#define DEFAULT_MUSIC_VOLUME   0
+#else
+#define DEFAULT_MUSIC_VOLUME 100
+#endif
+
 struct AudioData {
 	void* data; cc_uint32 size; /* the raw 16 bit integer samples */
 	int channels;
