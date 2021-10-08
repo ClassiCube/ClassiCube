@@ -603,6 +603,12 @@ mergeInto(LibraryManager.library, {
       elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
       elem.setAttribute('placeholder', UTF8ToString(placeholder));
       elem.value = UTF8ToString(text);
+  
+      // stop event propogation, because we don't want the game trying to handle these events
+      elem.addEventListener('touchstart', function(ev) { ev.stopPropagation(); }, false);
+      elem.addEventListener('touchmove',  function(ev) { ev.stopPropagation(); }, false);
+      elem.addEventListener('mousedown',  function(ev) { ev.stopPropagation(); }, false);
+      elem.addEventListener('mousemove',  function(ev) { ev.stopPropagation(); }, false);
 
       elem.addEventListener('input', 
         function(ev) {
@@ -612,7 +618,7 @@ mergeInto(LibraryManager.library, {
 
       window.cc_divElem = document.createElement('div');
       window.cc_divElem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; background-color: black; opacity:0.4; resize:none; pointer-events:none;');
-      
+
       window.cc_container.appendChild(window.cc_divElem);
       window.cc_container.appendChild(elem);
     }
