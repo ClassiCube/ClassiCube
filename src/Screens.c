@@ -1058,7 +1058,6 @@ static void ChatScreen_ContextLost(void* screen) {
 	Elem_Free(&s->smallAnnouncement);
 
 #ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return;
 	Elem_Free(&s->more);
 	Elem_Free(&s->send);
 	Elem_Free(&s->cancel);
@@ -1115,7 +1114,6 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_Layout(&s->smallAnnouncement);
 
 #ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return;
 	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
 		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10,  60);
 		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10,  10);
@@ -1246,14 +1244,16 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	}
 
 #ifdef CC_BUILD_TOUCH
-	if (Widget_Contains(&s->send, x, y)) {
-		ChatScreen_EnterChatInput(s, false); return TOUCH_TYPE_GUI;
-	}
-	if (Widget_Contains(&s->cancel, x, y)) {
-		ChatScreen_EnterChatInput(s, true); return TOUCH_TYPE_GUI;
-	}
-	if (Widget_Contains(&s->more, x, y)) {
-		ChatScreen_ToggleAltInput(s); return TOUCH_TYPE_GUI;
+	if (Input_TouchMode) {
+		if (Widget_Contains(&s->send, x, y)) {
+			ChatScreen_EnterChatInput(s, false); return TOUCH_TYPE_GUI;
+		}
+		if (Widget_Contains(&s->cancel, x, y)) {
+			ChatScreen_EnterChatInput(s, true); return TOUCH_TYPE_GUI;
+		}
+		if (Widget_Contains(&s->more, x, y)) {
+			ChatScreen_ToggleAltInput(s); return TOUCH_TYPE_GUI;
+		}
 	}
 #endif
 
@@ -1312,7 +1312,6 @@ static void ChatScreen_Init(void* screen) {
 	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
 
 #ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return;
 	ButtonWidget_Init(&s->send,   100, NULL);
 	ButtonWidget_Init(&s->cancel, 100, NULL);
 	ButtonWidget_Init(&s->more,   100, NULL);
