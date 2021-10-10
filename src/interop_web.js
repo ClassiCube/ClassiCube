@@ -597,6 +597,7 @@ mergeInto(LibraryManager.library, {
     if (!elem) {
       if (type == 1) {
         elem = document.createElement('input');
+        elem.setAttribute('type', 'text')
         elem.setAttribute('inputmode', 'decimal');
       } else {
         elem = document.createElement('textarea');
