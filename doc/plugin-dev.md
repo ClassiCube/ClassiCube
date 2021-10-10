@@ -21,7 +21,8 @@ Or in other words, in a directory somewhere, you have a file named ```TestPlugin
 ### Basic plugin
 ```C
 #include "src/Chat.h"
-#include "src/GameStructs.h"
+#include "src/Game.h"
+#include "src/String.h"
 
 static void TestPlugin_Init(void) {
         cc_string msg = String_FromConst("Hello world!");
@@ -35,10 +36,7 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
 
 ### Basic plugin boilerplate
 ```C
-#include "src/Chat.h"
-#include "src/Game.h"
-
-#ifdef CC_BUILD_WIN
+#ifdef _WIN32
     #define CC_API __declspec(dllimport)
     #define CC_VAR __declspec(dllimport)
     #define EXPORT __declspec(dllexport)
@@ -47,6 +45,10 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
     #define CC_VAR
     #define EXPORT __attribute__((visibility("default")))
 #endif
+
+#include "src/Chat.h"
+#include "src/Game.h"
+#include "src/String.h"
 
 static void TestPlugin_Init(void) {
         cc_string msg = String_FromConst("Hello world!");
@@ -62,16 +64,17 @@ All plugins require this boilerplate, so feel free to copy and paste it.
 ---
 
 ### Writing plugins in C++
-When including game headers, they must be surrounded with `extern "C"`, i.e.
+When including headers from ClassiCube, they **must** be surrounded with `extern "C"`, i.e.
 ```C
 extern "C" {
 #include "src/Chat.h"
 #include "src/Game.h"
+#include "src/String.h"
 }
 ```
 Otherwise you will get obscure `Undefined reference` errors when compiling.
 
-Exported plugin functions must be surrounded with `extern "C"`, i.e.
+Exported plugin functions **must** be surrounded with `extern "C"`, i.e.
 ```C
 extern "C" {
 EXPORT int Plugin_ApiVersion = 1;
