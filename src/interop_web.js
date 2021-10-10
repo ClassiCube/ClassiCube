@@ -592,7 +592,8 @@ mergeInto(LibraryManager.library, {
     alert(UTF8ToString(title) + "\n\n" + UTF8ToString(msg));
   },
   interop_OpenKeyboard: function(text, type, placeholder) {
-    var elem = window.cc_inputElem;
+    var elem  = window.cc_inputElem;
+    var shown = true;
     if (!elem) {
       if (type == 1) {
         elem = document.createElement('input');
@@ -600,11 +601,15 @@ mergeInto(LibraryManager.library, {
       } else {
         elem = document.createElement('textarea');
       }
-      elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
-      elem.setAttribute('placeholder', UTF8ToString(placeholder));
-      elem.value = UTF8ToString(text);
+      shown = false;
+    }
+
+    elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
+    elem.setAttribute('placeholder', UTF8ToString(placeholder));
+    elem.value = UTF8ToString(text);
   
-      // stop event propogation, because we don't want the game trying to handle these events
+    if (!shown) {
+      // stop event propagation, because we don't want the game trying to handle these events
       elem.addEventListener('touchstart', function(ev) { ev.stopPropagation(); }, false);
       elem.addEventListener('touchmove',  function(ev) { ev.stopPropagation(); }, false);
       elem.addEventListener('mousedown',  function(ev) { ev.stopPropagation(); }, false);
@@ -622,15 +627,17 @@ mergeInto(LibraryManager.library, {
       window.cc_container.appendChild(window.cc_divElem);
       window.cc_container.appendChild(elem);
     }
+
+    // force on-screen keyboard to be shown
     elem.focus();
     elem.click();
   },
-  // NOTE: When pressing 'Go' on the on-screen keyboard, some web browsers add \n to value
   interop_SetKeyboardText: function(text) {
     if (!window.cc_inputElem) return;
     var str = UTF8ToString(text);
     var cur = window.cc_inputElem.value;
     
+    // when pressing 'Go' on the on-screen keyboard, some web browsers add \n to value
     if (cur.length && cur[cur.length - 1] == '\n') { cur = cur.substring(0, cur.length - 1); }
     if (str != cur) window.cc_inputElem.value = str;
   },
