@@ -204,6 +204,9 @@ struct TextInputWidget {
 	int minWidth, minHeight;
 	struct MenuInputDesc desc;
 	char _textBuffer[INPUTWIDGET_LEN];
+	/* variables for on-screen keyboard */
+	const char* onscreenPlaceholder;
+	int onscreenType;
 };
 #define MENUINPUTWIDGET_MAX 8
 

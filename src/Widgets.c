@@ -1606,12 +1606,24 @@ static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
 	return valid;
 }
 
+static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
+#ifdef CC_BUILD_TOUCH
+	struct TextInputWidget* w = (struct TextInputWidget*)widget;
+	struct OpenKeyboardArgs args;
+
+	OpenKeyboardArgs_Init(&args, &w->base.text, w->onscreenType);
+	args.placeholder = w->onscreenPlaceholder;
+	Window_OpenKeyboard(&args);
+#endif
+	return InputWidget_PointerDown(widget, id, x, y);
+}
+
 static int TextInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE TextInputWidget_VTABLE = {
-	TextInputWidget_Render,  InputWidget_Free, InputWidget_Reposition,
-	InputWidget_KeyDown,     Widget_InputUp,   Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove,
-	TextInputWidget_BuildMesh, TextInputWidget_Render2
+	TextInputWidget_Render,      InputWidget_Free, InputWidget_Reposition,
+	InputWidget_KeyDown,         Widget_InputUp,   Widget_MouseScroll,
+	TextInputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove,
+	TextInputWidget_BuildMesh,   TextInputWidget_Render2
 };
 void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
@@ -1632,6 +1644,8 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 
 	String_InitArray(w->base.text, w->_textBuffer);
 	String_Copy(&w->base.text, text);
+	w->onscreenPlaceholder = "";
+	w->onscreenType        = KEYBOARD_TYPE_TEXT;
 }
 
 void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font) {
