@@ -670,8 +670,8 @@ public class MainActivity extends Activity
 	public int getKeyboardType() {
 		// TYPE_CLASS_TEXT, TYPE_CLASS_NUMBER, TYPE_TEXT_VARIATION_PASSWORD - API level 3
 		if (keyboardType == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
-		if (keyboardType == 1) return InputType.TYPE_CLASS_NUMBER;  // KEYBOARD_TYPE_NUMERIC
-		if (keyboardType == 3) return InputType.TYPE_CLASS_INTEGER; // KEYBOARD_TYPE_INTEGER
+		if (keyboardType == 1) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_NUMERIC
+		if (keyboardType == 3) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_INTEGER
 		return InputType.TYPE_CLASS_TEXT;
 	}
 
