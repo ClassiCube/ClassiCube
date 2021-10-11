@@ -1077,7 +1077,7 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int def) {
 	TextWidget_Init(&s->labels[i]);
 	s->labels[i].col = PackedCol_Make(224, 224, 224, 255);
 	/* TODO placeholder */
-	s->inputs[i].onscreenType = KEYBOARD_TYPE_NUMBER;
+	s->inputs[i].onscreenType = KEYBOARD_TYPE_INTEGER;
 }
 
 static int GenLevelScreen_KeyDown(void* screen, int key) {
@@ -2121,7 +2121,6 @@ static void MenuInputOverlay_Default(void* screen, void* widget) {
 
 static void MenuInputOverlay_Init(void* screen) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
-	cc_bool is_number;
 	s->widgets     = menuInput_widgets;
 	s->numWidgets  = Array_Elems(menuInput_widgets);
 	s->maxVertices = MENUINPUT_MAX_VERTICES;
@@ -2130,8 +2129,11 @@ static void MenuInputOverlay_Init(void* screen) {
 	ButtonWidget_Init(&s->Default,              200, MenuInputOverlay_Default);
 	ButtonWidget_Init(&s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
 
-	is_number = s->desc->VTABLE == &IntInput_VTABLE || s->desc->VTABLE == &FloatInput_VTABLE;
-	s->input.onscreenType = is_number ? KEYBOARD_TYPE_NUMBER : KEYBOARD_TYPE_TEXT;
+	if (s->desc->VTABLE == &IntInput_VTABLE) {
+		s->input.onscreenType = KEYBOARD_TYPE_INTEGER;
+	} else if (s->desc->VTABLE == &FloatInput_VTABLE) {
+		s->input.onscreenType = KEYBOARD_TYPE_NUMBER;
+	}
 }
 
 static void MenuInputOverlay_Update(void* screen, double delta) {

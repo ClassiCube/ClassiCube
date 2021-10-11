@@ -430,7 +430,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	
 	for (i = 0; i < 5 * 3; i++) {
 		LInput_Init(s_, &s->iptColours[i], 55, NULL);
-		s->iptColours[i].type        = KEYBOARD_TYPE_NUMBER;
+		s->iptColours[i].type        = KEYBOARD_TYPE_INTEGER;
 		s->iptColours[i].TextFilter  = ColoursScreen_InputFilter;
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
 	}
@@ -650,7 +650,7 @@ static void MFAScreen_Init(struct LScreen* s_) {
 
 	s->btnSignIn.OnClick = MFAScreen_SignIn;
 	s->btnCancel.OnClick = MFAScreen_Cancel;
-	s->iptCode.type      = KEYBOARD_TYPE_NUMBER;
+	s->iptCode.type      = KEYBOARD_TYPE_INTEGER;
 }
 
 static void MFAScreen_Show(struct LScreen* s_) {

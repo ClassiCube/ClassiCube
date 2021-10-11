@@ -595,10 +595,10 @@ mergeInto(LibraryManager.library, {
     var elem  = window.cc_inputElem;
     var shown = true;
     if (!elem) {
-      if (type == 1) {
+      if (type == 1 || type == 3) { // KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_INTEGER
         elem = document.createElement('input');
         elem.setAttribute('type', 'text')
-        elem.setAttribute('inputmode', 'decimal');
+        elem.setAttribute('inputmode', type == 1 ? 'decimal' : 'numeric');
       } else {
         elem = document.createElement('textarea');
       }
