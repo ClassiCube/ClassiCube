@@ -595,10 +595,18 @@ mergeInto(LibraryManager.library, {
     var elem  = window.cc_inputElem;
     var shown = true;
     if (!elem) {
-      if (type == 1 || type == 3) { // KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_INTEGER
+      if (type == 1) { // KEYBOARD_TYPE_NUMBER
         elem = document.createElement('input');
         elem.setAttribute('type', 'text')
-        elem.setAttribute('inputmode', type == 1 ? 'decimal' : 'numeric');
+        elem.setAttribute('inputmode', 'decimal');
+      } else if (type == 3) { // KEYBOARD_TYPE_INTEGER
+        elem = document.createElement('input');
+        elem.setAttribute('type', 'text')
+        elem.setAttribute('inputmode', 'numeric');
+        // Fix for older iOS safari where inputmode is unsupported
+        //  https://news.ycombinator.com/item?id=22433654
+        //  https://technology.blog.gov.uk/2020/02/24/why-the-gov-uk-design-system-team-changed-the-input-type-for-numbers/
+        elem.setAttribute('pattern', '[0-9]*');
       } else {
         elem = document.createElement('textarea');
       }
