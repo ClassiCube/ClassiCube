@@ -1107,7 +1107,6 @@ static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 
 	if (s->selected) s->selected->base.showCaret = false;
 	s->selected = (struct TextInputWidget*)&s->inputs[i];
-	s->selected->base.showCaret = true;
 	Window_SetKeyboardText(&s->inputs[i].base.text);
 	return TOUCH_TYPE_GUI;
 }
