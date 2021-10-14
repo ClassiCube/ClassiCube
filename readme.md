@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, macOS, Linux, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, and in a browser.
+ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, macOS, Linux, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, and in a web browser.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -7,19 +7,23 @@ ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that
 You can download the game [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
 #### What ClassiCube is
-* A complete re-implementation of Minecraft Classic, with optional additions.
-* Lightweight, minimal memory usage compared to the vanilla client.
-* Works with effectively all graphics cards that support OpenGL or Direct3D 9.
+* A complete re-implementation of Minecraft Classic 0.30, with **optional** additions
+* Lightweight, minimal memory usage compared to original Minecraft Classic
+* Much better performance than original Minecraft Classic
+* Works with effectively all graphics cards that support OpenGL or Direct3D 9
 
-It **does not** work with 'modern/premium' Minecraft servers.
+#### What ClassiCube isn't
+* It does not work with Minecraft Java or Bedrock edition servers
+* It does not have a survival mode (nor will such a mode be added)
+* It does not reimplement Minecraft Classic versions before 0.30
 
-#### Requirements
-* Windows: 98 or later.
-* macOS: 10.5 or later. (Can be compiled to work with 10.3/10.4 though)
-* Linux: libcurl and libopenal.
-* Android: 2.3 or later.
+#### System requirements
+* Windows: 98 or later
+* macOS: 10.5 or later (can be compiled to work with 10.3/10.4 though)
+* Linux: libcurl and libopenal
+* Android: 2.3 or later
 
-**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly.
+**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
 
 #### Instructions
 Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net. 
