@@ -136,7 +136,11 @@ static void GLContext_FreeSurface(void) {
 }
 
 void GLContext_Create(void) {
-	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+#ifdef CC_BUILD_GLMODERN
+	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+#else
+	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 1, EGL_NONE };
+#endif
 	static EGLint attribs[19] = {
 		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
 		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
@@ -165,7 +169,7 @@ void GLContext_Create(void) {
 	eglBindAPI(EGL_OPENGL_ES_API);
 	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
 
-	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
 	GLContext_InitSurface();
 }
 
