@@ -6,6 +6,8 @@ ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that
 
 You can download the game [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
+## Information
+
 #### What ClassiCube is
 * A complete re-implementation of Minecraft Classic 0.30, with **optional** additions
 * Lightweight, minimal memory usage compared to original Minecraft Classic
@@ -50,21 +52,21 @@ If you get a ```The Windows SDK version 5.1 was not found``` compilation error, 
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
 2. Navigate to directory with game's source code
-3. Enter `cl.exe *.c /link user32.lib gdi32.lib crypt32.lib ws2_32.lib wininet.lib winmm.lib dbghelp.lib d3d9.lib shell32.lib /out:ClassiCube.exe`
+3. Enter `cl.exe *.c /link user32.lib gdi32.lib crypt32.lib ws2_32.lib wininet.lib winmm.lib dbghelp.lib shell32.lib /out:ClassiCube.exe`
 
 ##### Using MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to directory with game's source code
-4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9`
+4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32`
 
 ##### Using MinGW
 I am assuming you used the installer from http://www.mingw.org/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 3. Navigate to directory with game's source code
-4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9`
+4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32`
 
 ##### Using TCC
 I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
@@ -81,16 +83,20 @@ I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 
 Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev and libgl1-mesa-dev
 
-```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -ldl```
+```gcc *.c -o ClassiCube -rdynamic -lm -lpthread -lX11 -lXi -lGL -ldl```
 
-##### Cross compiling for windows:
+##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
+```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
 
-##### Raspberry pi
+##### Cross compiling for Windows (64 bit):
+
+```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+
+##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
+```gcc *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
 
 ## Compiling - macOS
 
@@ -106,21 +112,25 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 #### FreeBSD
 
-```clang *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+Install libexecinfo, curl and openal-soft package if needed
+
+```cc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### OpenBSD
 
-Install libexecinfo, curl and openal package if needed.
+Install libexecinfo, curl and openal package if needed
 
 ```cc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### NetBSD
 
-```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
+Install libexecinfo, curl and openal-soft package if needed
+
+```cc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### DragonflyBSD
 
-```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
+```cc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### Solaris
 
@@ -128,9 +138,9 @@ Install libexecinfo, curl and openal package if needed.
 
 #### Haiku
 
-Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
+Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed
 
-```gcc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
+```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
 
 ## Compiling - other
 
