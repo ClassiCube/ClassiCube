@@ -512,12 +512,18 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined __sparc__
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
 	Dump_SPARC()
+#elif defined __PPC__ && __WORDSIZE == 32
+    #define REG_GNUM(num)     &r.gregs[num]
+    #define REG_GET_PC()      &r.gregs[32]
+    #define REG_GET_LR()      &r.gregs[35]
+    #define REG_GET_CTR()     &r.gregs[34]
+    Dump_PPC()
 #elif defined __PPC__
-	#define REG_GNUM(num)     &r.gregs[num]
-	#define REG_GET_PC()      &r.gregs[32]
-	#define REG_GET_LR()      &r.gregs[35]
-	#define REG_GET_CTR()     &r.gregs[34]
-	Dump_PPC()
+    #define REG_GNUM(num)     &r.gp_regs[num]
+    #define REG_GET_PC()      &r.gp_regs[32]
+    #define REG_GET_LR()      &r.gp_regs[35]
+    #define REG_GET_CTR()     &r.gp_regs[34]
+    Dump_PPC()
 #elif defined __riscv
 	#define REG_GNUM(num)     &r.__gregs[num]
 	#define REG_GET_PC()      &r.__gregs[REG_PC]
