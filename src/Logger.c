@@ -414,6 +414,17 @@ String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21
 String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
 String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31));
 
+#define Dump_MIPS() \
+String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
+String_Format4(str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
+String_Format4(str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
+String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
+String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
+String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
+String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
+String_Format4(str, "r28=%x sp =%x fp =%x ra =%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
+String_Format3(str, "pc =%x lo =%x hi =%x" _NL,        REG_GET_PC(), REG_GET_LO(), REG_GET_HI());
+
 #if defined CC_BUILD_WEB
 static void PrintRegisters(cc_string* str, void* ctx) { }
 #elif defined CC_BUILD_WIN
@@ -513,21 +524,29 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
 	Dump_SPARC()
 #elif defined __PPC__ && __WORDSIZE == 32
-    #define REG_GNUM(num)     &r.gregs[num]
-    #define REG_GET_PC()      &r.gregs[32]
-    #define REG_GET_LR()      &r.gregs[35]
-    #define REG_GET_CTR()     &r.gregs[34]
-    Dump_PPC()
+	#define REG_GNUM(num)     &r.gregs[num]
+	#define REG_GET_PC()      &r.gregs[32]
+	#define REG_GET_LR()      &r.gregs[35]
+	#define REG_GET_CTR()     &r.gregs[34]
+	Dump_PPC()
 #elif defined __PPC__
-    #define REG_GNUM(num)     &r.gp_regs[num]
-    #define REG_GET_PC()      &r.gp_regs[32]
-    #define REG_GET_LR()      &r.gp_regs[35]
-    #define REG_GET_CTR()     &r.gp_regs[34]
-    Dump_PPC()
+	#define REG_GNUM(num)     &r.gp_regs[num]
+	#define REG_GET_PC()      &r.gp_regs[32]
+	/* TODO this might be wrong, compare with PT_LNK in */
+	/* https://elixir.bootlin.com/linux/v4.19.122/source/arch/powerpc/include/uapi/asm/ptrace.h#L102 */
+	#define REG_GET_LR()      &r.gp_regs[35]
+	#define REG_GET_CTR()     &r.gp_regs[34]
+	Dump_PPC()
 #elif defined __riscv
 	#define REG_GNUM(num)     &r.__gregs[num]
 	#define REG_GET_PC()      &r.__gregs[REG_PC]
 	Dump_RISCV()
+#elif defined __mips__
+	#define REG_GNUM(num)     &r.gregs[num]
+	#define REG_GET_PC()      &r.pc
+	#define REG_GET_LO()      &r.mdlo
+	#define REG_GET_HI()      &r.mdhi
+	Dump_MIPS()
 #else
 	#error "Unknown CPU architecture"
 #endif
