@@ -108,7 +108,7 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;
@@ -119,7 +119,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
 	desc.Format    = DXGI_FORMAT_B8G8R8A8_UNORM;
-	desc.Usage     = D3D11_USAGE_IMMUTABLE;
+	desc.Usage     = D3D11_USAGE_DEFAULT; // TODO D3D11_USAGE_IMMUTABLE when not dynamic
 	desc.SampleDesc.Count = 1;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
@@ -137,9 +137,24 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
+	ID3D11Resource* res = NULL;
+	D3D11_BOX box;
+	box.front  = 0;
+	box.back   = 1;
+	box.left   = x;
+	box.right  = x + part->width;
+	box.top    = y;
+	box.bottom = y + part->height;
+
+	int stride = rowWidth * 4;
+	ID3D11ShaderResourceView_GetResource(view, &res);
+	ID3D11DeviceContext_UpdateSubresource(context, res, 0, &box, part->scan0, stride, stride * part->height);
+	ID3D11Resource_Release(res);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width * 4, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -503,8 +518,8 @@ static void RS_UpdateViewport(void) {
 	D3D11_VIEWPORT viewport;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width    = max(WindowInfo.Width, 1);
-	viewport.Height   = max(WindowInfo.Height, 1);
+	viewport.Width    = WindowInfo.Width;
+	viewport.Height   = WindowInfo.Height;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
