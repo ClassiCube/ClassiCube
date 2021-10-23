@@ -321,13 +321,13 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
 	ID3D11DeviceContext_Unmap(context, buffer, 0);
+	Gfx_BindVb(vb);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
 	Mem_Copy(data, vertices, vCount * gfx_stride);
 	Gfx_UnlockDynamicVb(vb);
-	Gfx_BindVb(vb);
 }
 
 
