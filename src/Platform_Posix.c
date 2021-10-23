@@ -330,7 +330,7 @@ void Mutex_Unlock(void* handle) {
 struct WaitData {
 	pthread_cond_t  cond;
 	pthread_mutex_t mutex;
-	int signalled;
+	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
 };
 
 void* Waitable_Create(void) {

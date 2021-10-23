@@ -167,11 +167,6 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-
-
-void Gfx_SetFaceCulling(cc_bool enabled) {
-}
-
 void Gfx_SetFog(cc_bool enabled) {
 }
 
@@ -489,7 +484,7 @@ void Gfx_DisableTextureOffset(void) {
 //---------------------------------------------------------Rasteriser-----------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage
-static ID3D11RasterizerState* rs_state;
+static ID3D11RasterizerState* rs_states[2];
 
 static void RS_CreateRasterState(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_rasterizer_desc
@@ -498,22 +493,31 @@ static void RS_CreateRasterState(void) {
 	desc.FillMode              = D3D11_FILL_SOLID;
 	desc.FrontCounterClockwise = true;
 	desc.DepthClipEnable       = true; // otherwise vertices/pixels beyond far plane are still wrongly rendered
-	ID3D11Device_CreateRasterizerState(device, &desc, &rs_state);
+	ID3D11Device_CreateRasterizerState(device, &desc, &rs_states[0]);
+
+	desc.CullMode = D3D11_CULL_BACK;
+	ID3D11Device_CreateRasterizerState(device, &desc, &rs_states[1]);
 }
 
 static void RS_UpdateViewport(void) {
 	D3D11_VIEWPORT viewport;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width    = WindowInfo.Width;
-	viewport.Height   = WindowInfo.Height;
+	viewport.Width    = max(WindowInfo.Width, 1);
+	viewport.Height   = max(WindowInfo.Height, 1);
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
 }
 
+static cc_bool cullingOn;
 static void RS_UpdateRasterState(void) {
-	ID3D11DeviceContext_RSSetState(context, rs_state);
+	ID3D11DeviceContext_RSSetState(context, rs_states[cullingOn]);
+}
+
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	cullingOn = enabled;
+	RS_UpdateRasterState();
 }
 
 static void RS_Init(void) {

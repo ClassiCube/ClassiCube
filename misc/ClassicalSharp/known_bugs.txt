@@ -18,3 +18,4 @@
 * Crashes at startup when another process has exclusively acquired Direct3D9 device
 * Can't bind controls to mouse buttons
 * Does not work at all on 64 bit macOS
+* Making a gas block undeletable doesn't prevent placing blocks over it
