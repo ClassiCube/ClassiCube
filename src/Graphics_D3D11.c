@@ -147,6 +147,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	box.top    = y;
 	box.bottom = y + part->height;
 
+	// https://eatplayhate.me/2013/09/29/d3d11-texture-update-costs/
+	// Might not be ideal, but seems to work well enough
 	int stride = rowWidth * 4;
 	ID3D11ShaderResourceView_GetResource(view, &res);
 	ID3D11DeviceContext_UpdateSubresource(context, res, 0, &box, part->scan0, stride, stride * part->height);
