@@ -15,6 +15,7 @@
 #include <d3d11.h>
 #pragma comment(lib, "d3d11.lib")
 static const GUID guid_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c } };
+static const GUID guid_IXDGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c } };
 
 // some generally useful debugging links
 //   https://docs.microsoft.com/en-us/visualstudio/debugger/graphics/visual-studio-graphics-diagnostics
@@ -24,7 +25,7 @@ static const GUID guid_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0
 // Some generally useful background links
 //   https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052
 
-static int gfx_format = -1, depthBits;
+static int gfx_format = -1, depthBits; // TODO implement depthBits?? for ZNear calc
 static UINT gfx_stride;
 static ID3D11Device* device;
 static ID3D11DeviceContext* context;
@@ -197,12 +198,6 @@ void Gfx_SetFogEnd(float value) {
 }
 
 void Gfx_SetFogMode(FogFunc func) {
-}
-
-void Gfx_SetAlphaTest(cc_bool enabled) {
-}
-
-void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 }
 
 
@@ -389,7 +384,7 @@ static void IA_CreateLayouts(void) {
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	HRESULT hr = ID3D11Device_CreateInputLayout(device, T_layout, Array_Elems(T_layout), 
-												vs_shader_textured, sizeof(vs_shader_textured), &input);
+												vs_textured, sizeof(vs_textured), &input);
 	input_textured = input;
 }
 
@@ -414,10 +409,10 @@ static _declspec(align(64)) struct VSConstants {
 	struct Matrix mvp;
 	float texX, texY;
 } vs_constants;
-static const struct ShaderDesc vs_descs[3] = {
-	{ vs_shader_colored,         sizeof(vs_shader_colored) },
-	{ vs_shader_textured,        sizeof(vs_shader_textured) },
-	{ vs_shader_textured_offset, sizeof(vs_shader_textured_offset) },
+static const struct ShaderDesc vs_descs[] = {
+	{ vs_colored,         sizeof(vs_colored) },
+	{ vs_textured,        sizeof(vs_textured) },
+	{ vs_textured_offset, sizeof(vs_textured_offset) },
 };
 
 static void VS_CreateShaders(void) {
@@ -502,6 +497,7 @@ void Gfx_DisableTextureOffset(void) {
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage
 static ID3D11RasterizerState* rs_states[2];
+static cc_bool rs_culling;
 
 static void RS_CreateRasterState(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_rasterizer_desc
@@ -527,19 +523,18 @@ static void RS_UpdateViewport(void) {
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
 }
 
-static cc_bool cullingOn;
 static void RS_UpdateRasterState(void) {
-	ID3D11DeviceContext_RSSetState(context, rs_states[cullingOn]);
-}
-
-void Gfx_SetFaceCulling(cc_bool enabled) {
-	cullingOn = enabled;
-	RS_UpdateRasterState();
+	ID3D11DeviceContext_RSSetState(context, rs_states[rs_culling]);
 }
 
 static void RS_Init(void) {
 	RS_CreateRasterState();
 	RS_UpdateViewport();
+	RS_UpdateRasterState();
+}
+
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	rs_culling = enabled;
 	RS_UpdateRasterState();
 }
 
@@ -549,11 +544,14 @@ static void RS_Init(void) {
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/pixel-shader-stage
 static ID3D11SamplerState* ps_sampler;
-static ID3D11PixelShader* ps_shaders[2];
+static ID3D11PixelShader* ps_shaders[4];
+static cc_bool ps_alphaTesting;
 
-static const struct ShaderDesc ps_descs[2] = {
-	{ ps_shader_colored,  sizeof(ps_shader_colored) },
-	{ ps_shader_textured, sizeof(ps_shader_textured) },
+static const struct ShaderDesc ps_descs[] = {
+	{ ps_colored,  sizeof(ps_colored) },
+	{ ps_textured, sizeof(ps_textured) },
+	{ ps_colored_test,  sizeof(ps_colored_test) },
+	{ ps_textured_test, sizeof(ps_textured_test) },
 };
 
 static void PS_CreateShaders(void) {
@@ -565,6 +563,7 @@ static void PS_CreateShaders(void) {
 
 static void PS_UpdateShader(void) {
 	int idx = gfx_format == VERTEX_FORMAT_COLOURED ? 0 : 1;
+	if (ps_alphaTesting) idx += 2;
 	ID3D11DeviceContext_PSSetShader(context, ps_shaders[idx], NULL, 0);
 }
 
@@ -595,6 +594,13 @@ static void PS_Init(void) {
 	PS_UpdateSampler();
 	PS_UpdateShader();
 }
+
+void Gfx_SetAlphaTest(cc_bool enabled) {
+	ps_alphaTesting = enabled;
+	PS_UpdateShader();
+}
+// unnecessary? check if any performance is gained, probably irrelevant
+void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
@@ -805,6 +811,32 @@ void Gfx_EndFrame(void) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {
+	int pointerSize = sizeof(void*) * 8;
+	HRESULT hr;
+	String_Format1(info, "-- Using Direct3D11 (%i bit) --\n", &pointerSize);
+
+	// TODO this overlaps with global declarations, switch to them at some point.. ?
+	// apparently using D3D11CreateDeviceAndSwapChain is bad, need to investigate
+	IDXGIDevice* dxgi_device = NULL;
+	hr = ID3D11Device_QueryInterface(device, &guid_IXDGIDevice, &dxgi_device);
+	if (hr || !dxgi_device) return;
+
+	IDXGIAdapter* dxgi_adapter;
+	hr = IDXGIDevice_GetAdapter(dxgi_device, &dxgi_adapter);
+	if (hr || !dxgi_adapter) return;
+
+	DXGI_ADAPTER_DESC desc = { 0 };
+	hr = IDXGIAdapter_GetDesc(dxgi_adapter, &desc);
+	if (hr) return;
+
+	// desc.Description is a WCHAR, convert to char
+	char adapter[128] = { 0 };
+	for (int i = 0; i < 128; i++) { adapter[i] = desc.Description[i]; }
+
+	// TODO check what desc.DedicatedSystemMemory gives on intel laptop
+	float vram = desc.DedicatedVideoMemory / (1024.0 * 1024.0);
+	String_Format1(info, "Adapter: %c\n", adapter);
+	String_Format1(info, "Video memory: %f2 MB total\n", &vram);
 }
 
 void Gfx_OnWindowResize(void) {
