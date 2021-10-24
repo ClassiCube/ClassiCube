@@ -183,25 +183,6 @@ void Gfx_DisableMipmaps(void) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------State management----------------------------------------------------*
-*#########################################################################################################################*/
-void Gfx_SetFog(cc_bool enabled) {
-}
-
-void Gfx_SetFogCol(PackedCol col) {
-}
-
-void Gfx_SetFogDensity(float value) {
-}
-
-void Gfx_SetFogEnd(float value) {
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-}
-
-
-/*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
@@ -544,14 +525,30 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/pixel-shader-stage
 static ID3D11SamplerState* ps_sampler;
-static ID3D11PixelShader* ps_shaders[4];
+static ID3D11PixelShader* ps_shaders[12];
+static ID3D11Buffer* ps_cBuffer;
 static cc_bool ps_alphaTesting;
+static float ps_fogEnd, ps_fogDensity;
+static PackedCol ps_fogColor;
+static int ps_fogMode;
 
+static _declspec(align(64)) struct PSConstants {
+	float fogValue;
+	float fogR, fogG, fogB;
+} ps_constants;
 static const struct ShaderDesc ps_descs[] = {
-	{ ps_colored,  sizeof(ps_colored) },
-	{ ps_textured, sizeof(ps_textured) },
+	{ ps_colored,       sizeof(ps_colored) },
+	{ ps_textured,      sizeof(ps_textured) },
 	{ ps_colored_test,  sizeof(ps_colored_test) },
 	{ ps_textured_test, sizeof(ps_textured_test) },
+	{ ps_colored_linear,       sizeof(ps_colored_linear) },
+	{ ps_textured_linear,      sizeof(ps_textured_linear) },
+	{ ps_colored_test_linear,  sizeof(ps_colored_test_linear) },
+	{ ps_textured_test_linear, sizeof(ps_textured_test_linear) },
+	{ ps_colored_density,       sizeof(ps_colored_density) },
+	{ ps_textured_density,      sizeof(ps_textured_density) },
+	{ ps_colored_test_density,  sizeof(ps_colored_test_density) },
+	{ ps_textured_test_density, sizeof(ps_textured_test_density) },
 };
 
 static void PS_CreateShaders(void) {
@@ -561,9 +558,35 @@ static void PS_CreateShaders(void) {
 	}
 }
 
-static void PS_UpdateShader(void) {
+static void PS_CreateConstants(void) {
+	D3D11_BUFFER_DESC desc = { 0 }; // TODO see notes in VS_CreateConstants
+	desc.ByteWidth      = sizeof(ps_constants);
+	desc.Usage     = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem          = &ps_constants;
+	data.SysMemPitch      = 0;
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &ps_cBuffer);
+	ID3D11DeviceContext_PSSetConstantBuffers(context, 0, 1, &ps_cBuffer);
+}
+
+static int PS_CalcShaderIndex(void) {
 	int idx = gfx_format == VERTEX_FORMAT_COLOURED ? 0 : 1;
 	if (ps_alphaTesting) idx += 2;
+
+	if (gfx_fogEnabled) {
+		// uncomment when it works
+		//if (ps_fogMode == FOG_LINEAR) idx += 4;
+		//if (ps_fogMode == FOG_EXP)    idx += 8;
+	}
+	return idx;
+}
+
+static void PS_UpdateShader(void) {
+	int idx = PS_CalcShaderIndex();
 	ID3D11DeviceContext_PSSetShader(context, ps_shaders[idx], NULL, 0);
 }
 
@@ -584,6 +607,15 @@ static void PS_CreateSamplers(void) {
 	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &ps_sampler);
 }
 
+static void PS_UpdateConstants(void) {
+	ps_constants.fogR = PackedCol_R(ps_fogColor) / 255.0f;
+	ps_constants.fogG = PackedCol_G(ps_fogColor) / 255.0f;
+	ps_constants.fogB = PackedCol_B(ps_fogColor) / 255.0f;
+
+	ps_constants.fogValue = ps_fogMode == FOG_LINEAR ? ps_fogEnd : ps_fogDensity;
+	ID3D11DeviceContext_UpdateSubresource(context, ps_cBuffer, 0, NULL, &ps_constants, 0, 0);
+}
+
 static void PS_UpdateSampler(void) {
 	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &ps_sampler);
 }
@@ -591,6 +623,7 @@ static void PS_UpdateSampler(void) {
 static void PS_Init(void) {
 	PS_CreateShaders();
 	PS_CreateSamplers();
+	PS_CreateConstants();
 	PS_UpdateSampler();
 	PS_UpdateShader();
 }
@@ -605,6 +638,36 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 void Gfx_BindTexture(GfxResourceID texId) {
 	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
 	ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &view);
+}
+
+void Gfx_SetFog(cc_bool enabled) {
+	if (gfx_fogEnabled == enabled) return;
+	gfx_fogEnabled = enabled;
+	PS_UpdateShader();
+}
+
+void Gfx_SetFogCol(PackedCol col) {
+	if (col == ps_fogColor) return;
+	ps_fogColor = col;
+	PS_UpdateConstants();
+}
+
+void Gfx_SetFogDensity(float value) {
+	if (value == ps_fogDensity) return;
+	ps_fogDensity = value;
+	PS_UpdateConstants();
+}
+
+void Gfx_SetFogEnd(float value) {
+	if (value == ps_fogEnd) return;
+	ps_fogEnd = value;
+	PS_UpdateConstants();
+}
+
+void Gfx_SetFogMode(FogFunc func) {
+	if (ps_fogMode == func) return;
+	ps_fogMode = func;
+	PS_UpdateShader();
 }
 
 

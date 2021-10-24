@@ -25,7 +25,7 @@ static const char VS_SOURCE[] =
 "   float2 coords : TEXCOORD0;                                      \n" \
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
-"   float4 position : SV_POSITION;                                  \n" \
+"   float4 position : VPOS;                                         \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
 "OUTPUT_VERTEX main(INPUT_VERTEX input) {                           \n" \
@@ -52,7 +52,8 @@ static const char PS_SOURCE[] =
 "float3 fogColor;                                                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
-"float  fogDensity                                                  \n" \
+"float  fogDensity;                                                 \n" \
+"float3 fogColor;                                                   \n" \
 "#endif                                                             \n" \
 "                                                                   \n" \
 "struct INPUT_VERTEX {                                              \n" \
@@ -60,6 +61,12 @@ static const char PS_SOURCE[] =
 "   float2 coords : TEXCOORD0;                                      \n" \
 "#endif                                                             \n" \
 "   float4 color : COLOR0;                                          \n" \
+"#ifdef PS_FOG_LINEAR                                               \n" \
+"   float4 position : VPOS;                                         \n" \
+"#endif                                                             \n" \
+"#ifdef PS_FOG_DENSITY                                              \n" \
+"   float4 position : VPOS;                                         \n" \
+"#endif                                                             \n" \
 "};                                                                 \n" \
 "                                                                   \n" \
 "//float4 main(float2 coords : TEXCOORD0, float4 color : COLOR0) : SV_TARGET {\n" \
@@ -77,11 +84,14 @@ static const char PS_SOURCE[] =
 "   if (color.a < 0.5) { discard; return color; }                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_LINEAR                                               \n" \
-"float  fogEnd;                                                     \n" \
-"float3 fogColor;                                                   \n" \
+"   float depth = input.position.z / input.position.w;              \n" \
+"   float fog   = saturate((fogEnd - depth) / fogEnd);              \n" \
+"   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
-"float  fogDensity                                                  \n" \
+"   float depth = input.position.z / input.position.w;              \n" \
+"   float fog   = saturate(exp(fogDensity * depth));                \n" \
+"   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
 "#endif                                                             \n" \
 "   return color;                                                   \n" \
 "}";
@@ -134,22 +144,42 @@ int main() {
 	const D3D_SHADER_MACRO ps_colored_test[]  = { "PS_COLOR_ONLY","1",  "PS_ALPHA_TEST","1",  NULL,NULL };
 	const D3D_SHADER_MACRO ps_textured_test[] = {                       "PS_ALPHA_TEST","1",  NULL,NULL };
 
+	const D3D_SHADER_MACRO ps_colored_linear[]       = { "PS_FOG_LINEAR","1",  "PS_COLOR_ONLY","1",  NULL,NULL };
+	const D3D_SHADER_MACRO ps_textured_linear[]      = { "PS_FOG_LINEAR","1",                        NULL,NULL };
+	const D3D_SHADER_MACRO ps_colored_test_linear[]  = { "PS_FOG_LINEAR","1",  "PS_COLOR_ONLY","1",  "PS_ALPHA_TEST","1",  NULL,NULL };
+	const D3D_SHADER_MACRO ps_textured_test_linear[] = { "PS_FOG_LINEAR","1",                        "PS_ALPHA_TEST","1",  NULL,NULL };
+
+	const D3D_SHADER_MACRO ps_colored_density[]       = { "PS_FOG_DENSITY","1",  "PS_COLOR_ONLY","1",  NULL,NULL };
+	const D3D_SHADER_MACRO ps_textured_density[]      = { "PS_FOG_DENSITY","1",                        NULL,NULL };
+	const D3D_SHADER_MACRO ps_colored_test_density[]  = { "PS_FOG_DENSITY","1",  "PS_COLOR_ONLY","1",  "PS_ALPHA_TEST","1",  NULL,NULL };
+	const D3D_SHADER_MACRO ps_textured_test_density[] = { "PS_FOG_DENSITY","1",                        "PS_ALPHA_TEST","1",  NULL,NULL };
+
 	printf("// Generated using misc/D3D11ShaderGen.c\n\n");
 	printf("//########################################################################################################################\n");
 	printf("//------------------------------------------------------Vertex shaders----------------------------------------------------\n");
 	printf("//########################################################################################################################\n");
-	CompileVertexShader("vs_colored",  vs_colored);
-	CompileVertexShader("vs_textured", vs_textured);
+	CompileVertexShader("vs_colored",         vs_colored);
+	CompileVertexShader("vs_textured",        vs_textured);
 	CompileVertexShader("vs_textured_offset", vs_offset);
 
 	printf("\n\n");
 	printf("//########################################################################################################################\n");
 	printf("//------------------------------------------------------Pixel shaders-----------------------------------------------------\n");
 	printf("//########################################################################################################################\n");
-	CompilePixelShader("ps_colored",  ps_colored);
-	CompilePixelShader("ps_textured", ps_textured);
+	CompilePixelShader("ps_colored",       ps_colored);
+	CompilePixelShader("ps_textured",      ps_textured);
 	CompilePixelShader("ps_colored_test",  ps_colored_test);
 	CompilePixelShader("ps_textured_test", ps_textured_test);
+
+	CompilePixelShader("ps_colored_linear",       ps_colored_linear);
+	CompilePixelShader("ps_textured_linear",      ps_textured_linear);
+	CompilePixelShader("ps_colored_test_linear",  ps_colored_test_linear);
+	CompilePixelShader("ps_textured_test_linear", ps_textured_test_linear);
+
+	CompilePixelShader("ps_colored_density",       ps_colored_density);
+	CompilePixelShader("ps_textured_density",      ps_textured_density);
+	CompilePixelShader("ps_colored_test_density",  ps_colored_test_density);
+	CompilePixelShader("ps_textured_test_density", ps_textured_test_density);
 
 	//Sleep(5000);
 	return 0;
