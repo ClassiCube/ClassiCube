@@ -428,8 +428,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 }
 
 EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
-	/* no point showing more than 128 characters in chat */
-	cc_string str = String_FromRaw(msg, 128);
+	cc_string str = String_FromReadonly(msg);
 	Logger_WarnFunc(&str);
 }
 
