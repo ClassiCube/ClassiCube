@@ -327,6 +327,9 @@
     <ClInclude Include="_WindowBase.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="_GLShared.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -554,9 +557,6 @@
     <ClCompile Include="Graphics_D3D9.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics_GL.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Http_Web.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
@@ -586,6 +586,12 @@
     </ClCompile>
     <ClCompile Include="Platform_Android.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_GL1.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_GL2.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
