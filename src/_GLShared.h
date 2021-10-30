@@ -1,14 +1,17 @@
+#define _GL_TEXTURE_MAX_LEVEL        0x813D
+#define _GL_BGRA_EXT                 0x80E1
+#define _GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
+
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 #define PIXEL_FORMAT GL_RGBA
 #else
-#define PIXEL_FORMAT GL_BGRA_EXT
+#define PIXEL_FORMAT _GL_BGRA_EXT
 #endif
-#define _GL_TEXTURE_MAX_LEVEL 0x813D
 
 #if defined CC_BIG_ENDIAN
 /* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
 /* So use GL_UNSIGNED_INT_8_8_8_8_REV instead to remedy this */
-#define TRANSFER_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
+#define TRANSFER_FORMAT _GL_UNSIGNED_INT_8_8_8_8_REV
 #else
 /* Pixels are stored in memory as B,G,R,A and GL_UNSIGNED_BYTE will interpret as B,G,R,A */
 /* So fine to just use GL_UNSIGNED_BYTE here */

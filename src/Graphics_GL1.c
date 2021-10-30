@@ -108,39 +108,39 @@ GLAPI void APIENTRY glCallList(GLuint list);
 GLAPI void APIENTRY glClear(GLuint mask);
 GLAPI void APIENTRY glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 GLAPI void APIENTRY glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
 GLAPI void APIENTRY glDeleteLists(GLuint list, GLsizei range);
-GLAPI void APIENTRY glDeleteTextures(GLsizei n, const GLuint *textures);
+GLAPI void APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures);
 GLAPI void APIENTRY glDepthFunc(GLenum func);
 GLAPI void APIENTRY glDepthMask(GLboolean flag);
 GLAPI void APIENTRY glDisable(GLenum cap);
 GLAPI void APIENTRY glDisableClientState(GLenum array);
 GLAPI void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count);
-GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
+GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 GLAPI void APIENTRY glEnable(GLenum cap);
 GLAPI void APIENTRY glEnableClientState(GLenum array);
 GLAPI void APIENTRY glEndList(void);
 GLAPI void APIENTRY glFogf(GLenum pname, GLfloat param);
-GLAPI void APIENTRY glFogfv(GLenum pname, const GLfloat *params);
+GLAPI void APIENTRY glFogfv(GLenum pname, const GLfloat* params);
 GLAPI void APIENTRY glFogi(GLenum pname, GLint param);
-GLAPI void APIENTRY glFogiv(GLenum pname, const GLint *params);
+GLAPI void APIENTRY glFogiv(GLenum pname, const GLint* params);
 GLAPI GLuint APIENTRY glGenLists(GLsizei range);
-GLAPI void APIENTRY glGenTextures(GLsizei n, GLuint *textures);
+GLAPI void APIENTRY   glGenTextures(GLsizei n, GLuint* textures);
 GLAPI GLenum APIENTRY glGetError(void);
-GLAPI void APIENTRY glGetFloatv(GLenum pname, GLfloat *params);
-GLAPI void APIENTRY glGetIntegerv(GLenum pname, GLint *params);
-GLAPI const GLubyte * APIENTRY glGetString(GLenum name);
+GLAPI void APIENTRY glGetFloatv(GLenum pname, GLfloat* params);
+GLAPI void APIENTRY glGetIntegerv(GLenum pname, GLint* params);
+GLAPI const GLubyte* APIENTRY glGetString(GLenum name);
 GLAPI void APIENTRY glHint(GLenum target, GLenum mode);
 GLAPI void APIENTRY glLoadIdentity(void);
-GLAPI void APIENTRY glLoadMatrixf(const GLfloat *m);
+GLAPI void APIENTRY glLoadMatrixf(const GLfloat* m);
 GLAPI void APIENTRY glMatrixMode(GLenum mode);
 GLAPI void APIENTRY glNewList(GLuint list, GLenum mode);
-GLAPI void APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
-GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
-GLAPI void APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+GLAPI void APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
+GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
 GLAPI void APIENTRY glTexParameteri(GLenum target, GLenum pname, GLint param);
-GLAPI void APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
-GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+GLAPI void APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
+GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
 GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 /* === END OPENGL HEADERS === */
 
@@ -469,7 +469,7 @@ static void APIENTRY fake_glBufferSubData(GLenum target, cc_uintptr offset, cc_u
 	Mem_Copy(buffer->data, data, size);
 }
 
-static void GL_CheckSupport(void) {
+static void GLBackend_Init(void) {
 	static const struct DynamicLibSym coreVboFuncs[5] = {
 		DynamicLib_Sym2("glBindBuffer",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffers", glDeleteBuffers),
 		DynamicLib_Sym2("glGenBuffers",    glGenBuffers), DynamicLib_Sym2("glBufferData",    glBufferData),
