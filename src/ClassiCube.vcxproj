@@ -250,6 +250,7 @@
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="_GLShared.h" />
     <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_HttpBase.h" />
     <ClInclude Include="_PlatformBase.h" />

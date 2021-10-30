@@ -327,6 +327,9 @@
     <ClInclude Include="_WindowBase.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="_GLShared.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">

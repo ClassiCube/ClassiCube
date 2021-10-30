@@ -5,10 +5,9 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-/* The OpenGL backend is a bit of a mess, since it's really 3 backends in one:
+/* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
- * - OpenGL 2.0 (alternative modern-ish backend)
 */
 
 #if defined CC_BUILD_WIN
@@ -159,22 +158,7 @@ static void (APIENTRY *_glGenBuffers)(GLsizei n, GLuint *buffers);
 static void (APIENTRY *_glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
 static void (APIENTRY *_glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
 #endif
-
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-#define PIXEL_FORMAT GL_RGBA
-#else
-#define PIXEL_FORMAT 0x80E1 /* GL_BGRA_EXT */
-#endif
-
-#if defined CC_BIG_ENDIAN
-/* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
-/* So use GL_UNSIGNED_INT_8_8_8_8_REV instead to remedy this */
-#define TRANSFER_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
-#else
-/* Pixels are stored in memory as B,G,R,A and GL_UNSIGNED_BYTE will interpret as B,G,R,A */
-/* So fine to just use GL_UNSIGNED_BYTE here */
-#define TRANSFER_FORMAT GL_UNSIGNED_BYTE
-#endif
+#include "_GLShared.h"
 
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
@@ -182,187 +166,6 @@ static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
-
-static void GL_UpdateVsync(void) {
-	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
-}
-
-static void GL_CheckSupport(void);
-void Gfx_Create(void) {
-	GLContext_Create();
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
-	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
-	Gfx.Created      = true;
-
-	GL_CheckSupport();
-	Gfx_RestoreState();
-	GL_UpdateVsync();
-}
-
-cc_bool Gfx_TryRestoreContext(void) {
-	return GLContext_TryRestore();
-}
-
-void Gfx_Free(void) {
-	Gfx_FreeState();
-	GLContext_Free();
-}
-
-#define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
-static void* tmpData;
-static int tmpSize;
-
-static void* FastAllocTempMem(int size) {
-	if (size > tmpSize) {
-		Mem_Free(tmpData);
-		tmpData = Mem_Alloc(size, 1, "Gfx_AllocTempMemory");
-	}
-
-	tmpSize = size;
-	return tmpData;
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Textures--------------------------------------------------------*
-*#########################################################################################################################*/
-static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_bool partial) {
-	BitmapCol* prev = bmp->scan0;
-	BitmapCol* cur;
-
-	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
-	int lvl, width = bmp->width, height = bmp->height;
-
-	for (lvl = 1; lvl <= lvls; lvl++) {
-		x /= 2; y /= 2;
-		if (width > 1)  width /= 2;
-		if (height > 1) height /= 2;
-
-		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
-		GenMipmaps(width, height, cur, prev, rowWidth);
-
-		if (partial) {
-			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
-		} else {
-			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
-		}
-
-		if (prev != bmp->scan0) Mem_Free(prev);
-		prev    = cur;
-		rowWidth = width;
-	}
-	if (prev != bmp->scan0) Mem_Free(prev);
-}
-
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	GLuint texId;
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	if (Gfx.LostContext) return 0;
-
-	if (mipmaps) {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		if (customMipmapsLevels) {
-			int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
-			glTexParameteri(GL_TEXTURE_2D, _GL_TEXTURE_MAX_LEVEL, lvls);
-		}
-	} else {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	}
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
-
-	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, bmp->width, false);
-	return texId;
-}
-
-#define UPDATE_FAST_SIZE (64 * 64)
-static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth) {
-	BitmapCol buffer[UPDATE_FAST_SIZE];
-	void* ptr = (void*)buffer;
-	int count = part->width * part->height;
-
-	/* cannot allocate memory on the stack for very big updates */
-	if (count > UPDATE_FAST_SIZE) {
-		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
-	}
-
-	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
-	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
-}
-
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-	/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL */
-
-	if (part->width == rowWidth) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
-	} else {
-		UpdateTextureSlow(x, y, part, rowWidth);
-	}
-	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
-void Gfx_BindTexture(GfxResourceID texId) {
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-}
-
-void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GLuint id = (GLuint)(*texId);
-	if (!id) return;
-	glDeleteTextures(1, &id);
-	*texId = 0;
-}
-
-void Gfx_EnableMipmaps(void) { }
-void Gfx_DisableMipmaps(void) { }
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------State management----------------------------------------------------*
-*#########################################################################################################################*/
-static PackedCol gfx_clearColor, gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode  = -1;
-
-void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
-void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
-
-static void GL_ClearCol(PackedCol col) {
-	glClearColor(PackedCol_R(col) / 255.0f, PackedCol_G(col) / 255.0f,
-				 PackedCol_B(col) / 255.0f, PackedCol_A(col) / 255.0f);
-}
-void Gfx_ClearCol(PackedCol col) {
-	if (col == gfx_clearColor) return;
-	GL_ClearCol(col);
-	gfx_clearColor = col;
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	glColorMask(r, g, b, a);
-}
-
-void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
-void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
-
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
-}
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
-	float zNear = 0.1f;
-	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
-}
 
 
 /*########################################################################################################################*
@@ -423,22 +226,7 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(_GL_ARRAY_BUFFER, tmpSize, tmpData, _GL_STATIC_DRAW);
 }
 #else
-static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
-	/* We need to restore client state afer building the list */
-	int realFormat = gfx_format;
-	void* dyn_data = dynamicListData;
-	Gfx_SetVertexFormat(fmt);
-	dynamicListData = vertices;
-
-	glNewList(list, GL_COMPILE);
-	gfx_setupVBFunc();
-	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gl_indices);
-	glEndList();
-
-	Gfx_SetVertexFormat(realFormat);
-	dynamicListData = dyn_data;
-}
-
+static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count);
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
 void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
 
@@ -526,90 +314,15 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------------Misc----------------------------------------------------------*
+*-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static BitmapCol* GL_GetRow(struct Bitmap* bmp, int y) { 
-	/* OpenGL stores bitmap in bottom-up order, so flip order when saving */
-	return Bitmap_GetRow(bmp, (bmp->height - 1) - y); 
-}
-cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	struct Bitmap bmp;
-	cc_result res;
-	GLint vp[4];
-	
-	glGetIntegerv(GL_VIEWPORT, vp); /* { x, y, width, height } */
-	bmp.width  = vp[2]; 
-	bmp.height = vp[3];
+static PackedCol gfx_fogColor;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static int gfx_fogMode  = -1;
 
-	bmp.scan0  = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, 4);
-	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
-	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
-
-	res = Png_Encode(&bmp, output, GL_GetRow, false);
-	Mem_Free(bmp.scan0);
-	return res;
-}
-
-static void AppendVRAMStats(cc_string* info) {
-	static const cc_string memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	GLint totalKb, curKb;
-	float total, cur;
-
-	/* NOTE: glGetString returns UTF8, but I just treat it as code page 437 */
-	cc_string exts = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
-	if (!String_CaselessContains(&exts, &memExt)) return;
-
-	glGetIntegerv(0x9048, &totalKb);
-	glGetIntegerv(0x9049, &curKb);
-	if (totalKb <= 0 || curKb <= 0) return;
-
-	total = totalKb / 1024.0f; cur = curKb / 1024.0f;
-	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &total, &cur);
-}
-
-void Gfx_GetApiInfo(cc_string* info) {
-	GLint depthBits;
-	int pointerSize = sizeof(void*) * 8;
-
-	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
-	String_Format1(info, "Vendor: %c\n",     glGetString(GL_VENDOR));
-	String_Format1(info, "Renderer: %c\n",   glGetString(GL_RENDERER));
-	String_Format1(info, "GL version: %c\n", glGetString(GL_VERSION));
-	AppendVRAMStats(info);
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(info, "Depth buffer bits: %i\n",      &depthBits);
-	GLContext_GetApiInfo(info);
-}
-
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
-	if (Gfx.Created) GL_UpdateVsync();
-}
-
-void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
-void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
-void Gfx_EndFrame(void) { 
-	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
-	if (gfx_minFrameMs) LimitFPS();
-}
-
-void Gfx_OnWindowResize(void) {
-	GLContext_Update();
-	/* In case GLContext_Update changes window bounds */
-	/* TODO: Eliminate this nasty hack.. */
-	Game_UpdateDimensions();
-	glViewport(0, 0, Game.Width, Game.Height);
-}
-
-
-/*########################################################################################################################*
-*------------------------------------------------------OpenGL legacy------------------------------------------------------*
-*#########################################################################################################################*/
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	gl_Toggle(GL_FOG);
+	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
 }
 
 void Gfx_SetFogCol(PackedCol col) {
@@ -649,9 +362,17 @@ void Gfx_SetFogMode(FogFunc func) {
 	gfx_fogMode = func;
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
-void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
+void Gfx_SetTexturing(cc_bool enabled) { 
+	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
+}
+void Gfx_SetAlphaTest(cc_bool enabled) { 
+	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
+}
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Matrices--------------------------------------------------------*
+*#########################################################################################################################*/
 static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
@@ -673,6 +394,10 @@ void Gfx_EnableTextureOffset(float x, float y) {
 
 void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------State setup-------------------------------------------------------*
+*#########################################################################################################################*/
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
