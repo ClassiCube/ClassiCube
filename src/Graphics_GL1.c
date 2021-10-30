@@ -1,5 +1,5 @@
 #include "Core.h"
-#ifdef CC_BUILD_GL
+#if defined CC_BUILD_GL && !defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Chat.h"
 #include "Errors.h"
@@ -18,19 +18,82 @@
 #define NOMCX
 #define NOIME
 #include <windows.h>
-#include <GL/gl.h>
-#elif defined CC_BUILD_IOS
-#include <OpenGLES/ES2/gl.h>
-#elif defined CC_BUILD_MACOS
-#include <OpenGL/gl.h>
-#elif defined CC_BUILD_GLES && defined CC_BUILD_GLMODERN
-#include <GLES2/gl2.h>
-#elif defined CC_BUILD_GLES
-#include <GLES/gl.h>
+#define GLAPI WINGDIAPI
 #else
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
+#define GLAPI extern
+#define APIENTRY
 #endif
+
+/* === BEGIN OPENGL HEADERS === */
+typedef unsigned int GLenum;
+typedef unsigned char GLboolean;
+typedef signed char GLbyte;
+typedef int GLint;
+typedef int GLsizei;
+typedef unsigned char GLubyte;
+typedef unsigned int GLuint;
+typedef float GLfloat;
+typedef void GLvoid;
+
+#define GL_LEQUAL                0x0203
+#define GL_GREATER               0x0204
+
+#define GL_DEPTH_BUFFER_BIT      0x00000100
+#define GL_COLOR_BUFFER_BIT      0x00004000
+
+#define GL_LINES                 0x0001
+#define GL_TRIANGLES             0x0004
+
+#define GL_BLEND                 0x0BE2
+#define GL_SRC_ALPHA             0x0302
+#define GL_ONE_MINUS_SRC_ALPHA   0x0303
+
+#define GL_UNSIGNED_BYTE         0x1401
+#define GL_UNSIGNED_SHORT        0x1403
+#define GL_UNSIGNED_INT          0x1405
+#define GL_FLOAT                 0x1406
+#define GL_RGBA                  0x1908
+#define GL_BGRA_EXT              0x80E1
+
+#define GL_FOG                   0x0B60
+#define GL_FOG_DENSITY           0x0B62
+#define GL_FOG_END               0x0B64
+#define GL_FOG_MODE              0x0B65
+#define GL_FOG_COLOR             0x0B66
+#define GL_LINEAR                0x2601
+#define GL_EXP                   0x0800
+#define GL_EXP2                  0x0801
+
+#define GL_CULL_FACE             0x0B44
+#define GL_DEPTH_TEST            0x0B71
+#define GL_MATRIX_MODE           0x0BA0
+#define GL_VIEWPORT              0x0BA2
+#define GL_ALPHA_TEST            0x0BC0
+#define GL_MAX_TEXTURE_SIZE      0x0D33
+#define GL_DEPTH_BITS            0x0D56
+
+#define GL_FOG_HINT              0x0C54
+#define GL_NICEST                0x1102
+#define GL_COMPILE               0x1300
+
+#define GL_MODELVIEW             0x1700
+#define GL_PROJECTION            0x1701
+#define GL_TEXTURE               0x1702
+
+#define GL_VENDOR                0x1F00
+#define GL_RENDERER              0x1F01
+#define GL_VERSION               0x1F02
+#define GL_EXTENSIONS            0x1F03
+
+#define GL_TEXTURE_2D            0x0DE1
+#define GL_NEAREST               0x2600
+#define GL_NEAREST_MIPMAP_LINEAR 0x2702
+#define GL_TEXTURE_MAG_FILTER    0x2800
+#define GL_TEXTURE_MIN_FILTER    0x2801
+
+#define GL_VERTEX_ARRAY          0x8074
+#define GL_COLOR_ARRAY           0x8076
+#define GL_TEXTURE_COORD_ARRAY   0x8078
 
 /* Not present in gl.h on Windows (only up to OpenGL 1.1) */
 #define _GL_ARRAY_BUFFER         0x8892
@@ -39,28 +102,57 @@
 #define _GL_DYNAMIC_DRAW         0x88E8
 #define _GL_TEXTURE_MAX_LEVEL    0x813D
 
-#define _GL_FRAGMENT_SHADER      0x8B30
-#define _GL_VERTEX_SHADER        0x8B31
-#define _GL_COMPILE_STATUS       0x8B81
-#define _GL_LINK_STATUS          0x8B82
-#define _GL_INFO_LOG_LENGTH      0x8B84
+GLAPI void APIENTRY glAlphaFunc(GLenum func, GLfloat ref);
+GLAPI void APIENTRY glBindTexture(GLenum target, GLuint texture);
+GLAPI void APIENTRY glBlendFunc(GLenum sfactor, GLenum dfactor);
+GLAPI void APIENTRY glCallList(GLuint list);
+GLAPI void APIENTRY glClear(GLuint mask);
+GLAPI void APIENTRY glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+GLAPI void APIENTRY glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+GLAPI void APIENTRY glDeleteLists(GLuint list, GLsizei range);
+GLAPI void APIENTRY glDeleteTextures(GLsizei n, const GLuint *textures);
+GLAPI void APIENTRY glDepthFunc(GLenum func);
+GLAPI void APIENTRY glDepthMask(GLboolean flag);
+GLAPI void APIENTRY glDisable(GLenum cap);
+GLAPI void APIENTRY glDisableClientState(GLenum array);
+GLAPI void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count);
+GLAPI void APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
+GLAPI void APIENTRY glEnable(GLenum cap);
+GLAPI void APIENTRY glEnableClientState(GLenum array);
+GLAPI void APIENTRY glEndList(void);
+GLAPI void APIENTRY glFogf(GLenum pname, GLfloat param);
+GLAPI void APIENTRY glFogfv(GLenum pname, const GLfloat *params);
+GLAPI void APIENTRY glFogi(GLenum pname, GLint param);
+GLAPI void APIENTRY glFogiv(GLenum pname, const GLint *params);
+GLAPI GLuint APIENTRY glGenLists(GLsizei range);
+GLAPI void APIENTRY glGenTextures(GLsizei n, GLuint *textures);
+GLAPI GLenum APIENTRY glGetError(void);
+GLAPI void APIENTRY glGetFloatv(GLenum pname, GLfloat *params);
+GLAPI void APIENTRY glGetIntegerv(GLenum pname, GLint *params);
+GLAPI const GLubyte * APIENTRY glGetString(GLenum name);
+GLAPI void APIENTRY glHint(GLenum target, GLenum mode);
+GLAPI void APIENTRY glLoadIdentity(void);
+GLAPI void APIENTRY glLoadMatrixf(const GLfloat *m);
+GLAPI void APIENTRY glMatrixMode(GLenum mode);
+GLAPI void APIENTRY glNewList(GLuint list, GLenum mode);
+GLAPI void APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
+GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+GLAPI void APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+GLAPI void APIENTRY glTexParameteri(GLenum target, GLenum pname, GLint param);
+GLAPI void APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
+GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+/* === END OPENGL HEADERS === */
+
 
 #if defined CC_BUILD_GL11
 static GLuint activeList;
 #define gl_DYNAMICLISTID 1234567891
 static void* dynamicListData;
 static cc_uint16 gl_indices[GFX_MAX_INDICES];
-#elif defined CC_BUILD_GLMODERN
-#define _glBindBuffer(t,b)        glBindBuffer(t,b)
-#define _glDeleteBuffers(n,b)     glDeleteBuffers(n,b)
-#define _glGenBuffers(n,b)        glGenBuffers(n,b)
-#define _glBufferData(t,s,d,u)    glBufferData(t,s,d,u)
-#define _glBufferSubData(t,o,s,d) glBufferSubData(t,o,s,d)
 #else
 /* OpenGL functions use stdcall instead of cdecl on Windows */
-#ifndef APIENTRY
-#define APIENTRY
-#endif
 static void (APIENTRY *_glBindBuffer)(GLenum target, GLuint buffer);
 static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
 static void (APIENTRY *_glGenBuffers)(GLsizei n, GLuint *buffers);

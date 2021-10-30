@@ -1,15 +1,11 @@
 #include "Core.h"
-#ifdef CC_BUILD_GL
+#if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Chat.h"
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-/* The OpenGL backend is a bit of a mess, since it's really 3 backends in one:
- * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
- * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
- * - OpenGL 2.0 (alternative modern-ish backend)
-*/
+/* OpenGL 2.0 backend (alternative modern-ish backend) */
 
 #if defined CC_BUILD_WIN
 /* Avoid pointless includes */
@@ -23,10 +19,8 @@
 #include <OpenGLES/ES2/gl.h>
 #elif defined CC_BUILD_MACOS
 #include <OpenGL/gl.h>
-#elif defined CC_BUILD_GLES && defined CC_BUILD_GLMODERN
-#include <GLES2/gl2.h>
 #elif defined CC_BUILD_GLES
-#include <GLES/gl.h>
+#include <GLES2/gl2.h>
 #else
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
@@ -44,23 +38,6 @@
 #define _GL_COMPILE_STATUS       0x8B81
 #define _GL_LINK_STATUS          0x8B82
 #define _GL_INFO_LOG_LENGTH      0x8B84
-
-#if defined CC_BUILD_GL11
-static GLuint activeList;
-#define gl_DYNAMICLISTID 1234567891
-static void* dynamicListData;
-static cc_uint16 gl_indices[GFX_MAX_INDICES];
-#else
-/* OpenGL functions use stdcall instead of cdecl on Windows */
-#ifndef APIENTRY
-#define APIENTRY
-#endif
-static void (APIENTRY *_glBindBuffer)(GLenum target, GLuint buffer);
-static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
-static void (APIENTRY *_glGenBuffers)(GLsizei n, GLuint *buffers);
-static void (APIENTRY *_glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
-static void (APIENTRY *_glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
-#endif
 
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 #define PIXEL_FORMAT GL_RGBA
@@ -270,50 +247,43 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matri
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_GL11
 static GLuint GL_GenAndBind(GLenum target) {
 	GLuint id;
-	_glGenBuffers(1, &id);
-	_glBindBuffer(target, id);
+	glGenBuffers(1, &id);
+	glBindBuffer(target, id);
 	return id;
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	GLuint id     = GL_GenAndBind(_GL_ELEMENT_ARRAY_BUFFER);
 	cc_uint32 size = indicesCount * 2;
-	_glBufferData(_GL_ELEMENT_ARRAY_BUFFER, size, indices, _GL_STATIC_DRAW);
+	glBufferData(_GL_ELEMENT_ARRAY_BUFFER, size, indices, _GL_STATIC_DRAW);
 	return id;
 }
 
-void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(_GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
+void Gfx_BindIb(GfxResourceID ib) { glBindBuffer(_GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	GLuint id = (GLuint)(*ib);
 	if (!id) return;
-	_glDeleteBuffers(1, &id);
+	glDeleteBuffers(1, &id);
 	*ib = 0;
 }
-#else
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return 0; }
-void Gfx_BindIb(GfxResourceID ib) { }
-void Gfx_DeleteIb(GfxResourceID* ib) { }
-#endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	return GL_GenAndBind(_GL_ARRAY_BUFFER);
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindVb(GfxResourceID vb) { glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
 	if (!id) return;
-	_glDeleteBuffers(1, &id);
+	glDeleteBuffers(1, &id);
 	*vb = 0;
 }
 
@@ -322,60 +292,13 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	_glBufferData(_GL_ARRAY_BUFFER, tmpSize, tmpData, _GL_STATIC_DRAW);
+	glBufferData(_GL_ARRAY_BUFFER, tmpSize, tmpData, _GL_STATIC_DRAW);
 }
-#else
-static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
-	/* We need to restore client state afer building the list */
-	int realFormat = gfx_format;
-	void* dyn_data = dynamicListData;
-	Gfx_SetVertexFormat(fmt);
-	dynamicListData = vertices;
-
-	glNewList(list, GL_COMPILE);
-	gfx_setupVBFunc();
-	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gl_indices);
-	glEndList();
-
-	Gfx_SetVertexFormat(realFormat);
-	dynamicListData = dyn_data;
-}
-
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
-void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
-
-void Gfx_DeleteVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
-	if (id) glDeleteLists(id, 1);
-	*vb = 0;
-}
-
-/* NOTE! Building chunk in Builder.c relies on vb being ignored */
-/* If that changes, you must fix Builder.c to properly call Gfx_LockVb */
-static VertexFormat tmpFormat;
-static int tmpCount;
-void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	tmpFormat = fmt;
-	tmpCount  = count;
-	return FastAllocTempMem(count * strideSizes[fmt]);
-}
-
-void Gfx_UnlockVb(GfxResourceID vb) {
-	UpdateDisplayList((GLuint)vb, tmpData, tmpFormat, tmpCount);
-}
-
-GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
-	GLuint list = glGenLists(1);
-	UpdateDisplayList(list, vertices, fmt, count);
-	return list;
-}
-#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	GLuint id;
 	cc_uint32 size;
@@ -383,7 +306,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 
 	id = GL_GenAndBind(_GL_ARRAY_BUFFER);
 	size = maxVertices * strideSizes[fmt];
-	_glBufferData(_GL_ARRAY_BUFFER, size, NULL, _GL_DYNAMIC_DRAW);
+	glBufferData(_GL_ARRAY_BUFFER, size, NULL, _GL_DYNAMIC_DRAW);
 	return id;
 }
 
@@ -392,39 +315,15 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(_GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
+	glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
+	glBufferSubData(_GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
-	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(_GL_ARRAY_BUFFER, 0, size, vertices);
+	glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
+	glBufferSubData(_GL_ARRAY_BUFFER, 0, size, vertices);
 }
-#else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
-	return (GfxResourceID)Mem_Alloc(maxVertices, strideSizes[fmt], "creating dynamic vb");
-}
-
-void Gfx_BindDynamicVb(GfxResourceID vb) {
-	activeList      = gl_DYNAMICLISTID;
-	dynamicListData = (void*)vb;
-}
-
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
-	void* addr = (void*)(*vb);
-	if (addr) Mem_Free(addr);
-	*vb = 0;
-}
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return (void*)vb; }
-void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	Gfx_BindDynamicVb(vb);
-	Mem_Copy((void*)vb, vertices, vCount * gfx_stride);
-}
-#endif
 
 
 /*########################################################################################################################*
