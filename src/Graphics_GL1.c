@@ -467,38 +467,83 @@ cc_bool Gfx_WarnIfNecessary(void) {
 #ifdef CC_BUILD_GL11
 static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
 #else
+
+#if defined CC_BUILD_WIN && defined(_M_IX86)
+/* On 32 bit windows, can replace the gl function drawing with these 1.1 fallbacks  */
+/*  (note that this only works on 32 bit system, as OpenGL IDs are 32 bit integers) */
+static void (APIENTRY *real_drawElements)(GLenum mode,   GLsizei count, GLenum type,  const GLvoid* indices);
+static void (APIENTRY *real_colorPointer)(GLint size,    GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *real_texCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *real_vertexPointer)(GLint size,   GLenum type, GLsizei stride, const GLvoid* pointer);
+
 /* fake vertex buffer objects with client side pointers */
 typedef struct fake_buffer { cc_uint8* data; } fake_buffer;
 static fake_buffer* cur_ib;
 static fake_buffer* cur_vb;
 #define fake_GetBuffer(target) (target == GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
 
-static void APIENTRY fake_glBindBuffer(GLenum target, GLuint src) {
+static void APIENTRY fake_bindBuffer(GLenum target, GLuint src) {
 	fake_buffer** buffer = fake_GetBuffer(target);
 	*buffer = (fake_buffer*)src;
 }
 
-static void APIENTRY fake_glDeleteBuffers(GLsizei n, const GLuint *buffers) {
+static void APIENTRY fake_deleteBuffers(GLsizei n, const GLuint *buffers) {
 	Mem_Free((void*)buffers[0]);
 }
 
-static void APIENTRY fake_glGenBuffers(GLsizei n, GLuint *buffers) {
+static void APIENTRY fake_genBuffers(GLsizei n, GLuint *buffers) {
 	fake_buffer* buffer = (fake_buffer*)Mem_TryAlloc(1, sizeof(fake_buffer));
 	buffer->data = NULL;
 	buffers[0]   = (GLuint)buffer;
 }
 
-static void APIENTRY fake_glBufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {
+static void APIENTRY fake_bufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {
 	fake_buffer* buffer = *fake_GetBuffer(target);
 	Mem_Free(buffer->data);
 
 	buffer->data = Mem_TryAlloc(size, 1);
 	if (data) Mem_Copy(buffer->data, data, size);
 }
-static void APIENTRY fake_glBufferSubData(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data) {
+static void APIENTRY fake_bufferSubData(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data) {
 	fake_buffer* buffer = *fake_GetBuffer(target);
 	Mem_Copy(buffer->data, data, size);
 }
+
+static void APIENTRY fake_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
+	real_drawElements(mode, count, type, (cc_uintptr)indices + cur_ib->data);
+}
+static void APIENTRY fake_colorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
+	real_colorPointer(size,    type, stride, (cc_uintptr)pointer + cur_vb->data);
+}
+static void APIENTRY fake_texCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
+	real_texCoordPointer(size, type, stride, (cc_uintptr)pointer + cur_vb->data);
+}
+static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
+	real_vertexPointer(size,   type, stride, (cc_uintptr)pointer + cur_vb->data);
+}
+
+static void OpenGL11Fallback(void) {
+	Window_ShowDialog("Performance warning",
+		"Your system only supports only OpenGL 1.1\n" \
+		"This is usually caused by graphics drivers not being installed\n\n" \
+		"As such you will likely experience very poor performance");
+
+	_glBindBuffer = fake_bindBuffer; _glDeleteBuffers = fake_deleteBuffers;
+	_glGenBuffers = fake_genBuffers; _glBufferData    = fake_bufferData;
+	_glBufferSubData = fake_bufferSubData;
+
+	real_drawElements    = _glDrawElements;    _glDrawElements    = fake_drawElements;
+	real_colorPointer    = _glColorPointer;    _glColorPointer    = fake_colorPointer;
+	real_texCoordPointer = _glTexCoordPointer; _glTexCoordPointer = fake_texCoordPointer;
+	real_vertexPointer   = _glVertexPointer;   _glVertexPointer   = fake_vertexPointer;
+}
+#else
+/* No point in even trying for other systems */
+static void OpenGL11Fallback(void) {
+	Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
+		"Compile the game with CC_BUILD_GL11, or ask on the ClassiCube forums for it");
+}
+#endif
 
 static void GLBackend_Init(void) {
 	static const struct DynamicLibSym coreVboFuncs[5] = {
@@ -517,6 +562,9 @@ static void GLBackend_Init(void) {
 
 	/* Version string is always: x.y. (and whatever afterwards) */
 	int major = ver[0] - '0', minor = ver[2] - '0';
+#ifdef CC_BUILD_WIN
+	LoadCoreFuncs();
+#endif
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {
@@ -524,17 +572,8 @@ static void GLBackend_Init(void) {
 	} else if (String_CaselessContains(&extensions, &vboExt)) {
 		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
 	} else {
-		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
-			"Compile the game with CC_BUILD_GL11, or ask on the ClassiCube forums for it");
-
-		_glBindBuffer = fake_glBindBuffer; _glDeleteBuffers = fake_glDeleteBuffers;
-		_glGenBuffers = fake_glGenBuffers; _glBufferData    = fake_glBufferData;
-		_glBufferSubData = fake_glBufferSubData;
+		OpenGL11Fallback();
 	}
-
-#ifdef CC_BUILD_WIN
-	LoadCoreFuncs();
-#endif
 	customMipmapsLevels = true;
 }
 #endif
