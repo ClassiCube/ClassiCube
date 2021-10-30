@@ -52,8 +52,6 @@ typedef void GLvoid;
 #define GL_UNSIGNED_INT          0x1405
 #define GL_FLOAT                 0x1406
 #define GL_RGBA                  0x1908
-#define GL_BGRA_EXT              0x80E1
-#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
 
 #define GL_FOG                   0x0B60
 #define GL_FOG_DENSITY           0x0B62
@@ -166,6 +164,39 @@ static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
+
+#ifdef CC_BUILD_WIN
+/* Note the following about calling OpenGL functions on Windows */
+/*  1) wglGetProcAddress returns a context specific address */
+/*  2) dllimport functions are implemented using indirect function pointers */
+/*     https://web.archive.org/web/20080321171626/http://blogs.msdn.com/oldnewthing/archive/2006/07/20/672695.aspx */
+/*     https://web.archive.org/web/20071016185327/http://blogs.msdn.com/oldnewthing/archive/2006/07/27/680250.aspx */
+/* Therefore one layer of indirection can be avoided by calling wglGetProcAddress functions instead */
+/*  e.g. if _glDrawElements = wglGetProcAddress("glDrawElements") */
+/*    call [glDrawElements]  --> opengl32.dll thunk--> GL driver thunk --> GL driver implementation */
+/*    call [_glDrawElements] --> GL driver thunk --> GL driver implementation */
+
+static void (APIENTRY *_glColorPointer)(GLint size,    GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *_glDrawArrays)(GLenum mode,     GLint first, GLsizei count);
+static void (APIENTRY *_glDrawElements)(GLenum mode, GLsizei count,    GLenum type, const GLvoid* indices);
+static void (APIENTRY *_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *_glVertexPointer)(GLint size,   GLenum type, GLsizei stride, const GLvoid* pointer);
+
+static const struct DynamicLibSym coreFuncs[] = {
+	DynamicLib_Sym2("glColorPointer",    glColorPointer),    DynamicLib_Sym2("glDrawArrays",   glDrawArrays),
+	DynamicLib_Sym2("glTexCoordPointer", glTexCoordPointer), DynamicLib_Sym2("glDrawElements", glDrawElements),
+	DynamicLib_Sym2("glVertexPointer",  glVertexPointer)
+};
+static void LoadCoreFuncs(void) {
+	GLContext_GetAll(coreFuncs, Array_Elems(coreFuncs));
+}
+
+#define glColorPointer    _glColorPointer
+#define glDrawArrays      _glDrawArrays
+#define glDrawElements    _glDrawElements
+#define glTexCoordPointer _glTexCoordPointer
+#define glVertexPointer   _glVertexPointer
+#endif
 
 
 /*########################################################################################################################*
@@ -500,6 +531,10 @@ static void GLBackend_Init(void) {
 		_glGenBuffers = fake_glGenBuffers; _glBufferData    = fake_glBufferData;
 		_glBufferSubData = fake_glBufferSubData;
 	}
+
+#ifdef CC_BUILD_WIN
+	LoadCoreFuncs();
+#endif
 	customMipmapsLevels = true;
 }
 #endif
