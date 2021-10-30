@@ -190,12 +190,12 @@ static const struct DynamicLibSym coreFuncs[] = {
 static void LoadCoreFuncs(void) {
 	GLContext_GetAll(coreFuncs, Array_Elems(coreFuncs));
 }
-
-#define glColorPointer    _glColorPointer
-#define glDrawArrays      _glDrawArrays
-#define glDrawElements    _glDrawElements
-#define glTexCoordPointer _glTexCoordPointer
-#define glVertexPointer   _glVertexPointer
+#else
+#define _glColorPointer    glColorPointer
+#define _glDrawArrays      glDrawArrays
+#define _glDrawElements    glDrawElements
+#define _glTexCoordPointer glTexCoordPointer
+#define _glVertexPointer   glVertexPointer
 #endif
 
 
@@ -471,10 +471,6 @@ static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
 #if defined CC_BUILD_WIN && defined(_M_IX86)
 /* On 32 bit windows, can replace the gl function drawing with these 1.1 fallbacks  */
 /*  (note that this only works on 32 bit system, as OpenGL IDs are 32 bit integers) */
-static void (APIENTRY *real_drawElements)(GLenum mode,   GLsizei count, GLenum type,  const GLvoid* indices);
-static void (APIENTRY *real_colorPointer)(GLint size,    GLenum type, GLsizei stride, const GLvoid* pointer);
-static void (APIENTRY *real_texCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
-static void (APIENTRY *real_vertexPointer)(GLint size,   GLenum type, GLsizei stride, const GLvoid* pointer);
 
 /* fake vertex buffer objects with client side pointers */
 typedef struct fake_buffer { cc_uint8* data; } fake_buffer;
@@ -509,33 +505,27 @@ static void APIENTRY fake_bufferSubData(GLenum target, cc_uintptr offset, cc_uin
 	Mem_Copy(buffer->data, data, size);
 }
 
+/* wglGetProcAddress doesn't work with OpenGL 1.1 software rasteriser, so call GL functions directly */
 static void APIENTRY fake_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
-	real_drawElements(mode, count, type, (cc_uintptr)indices + cur_ib->data);
+	glDrawElements(mode, count, type, (cc_uintptr)indices + cur_ib->data);
 }
 static void APIENTRY fake_colorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	real_colorPointer(size,    type, stride, (cc_uintptr)pointer + cur_vb->data);
+	glColorPointer(size,    type, stride, (cc_uintptr)pointer + cur_vb->data);
 }
 static void APIENTRY fake_texCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	real_texCoordPointer(size, type, stride, (cc_uintptr)pointer + cur_vb->data);
+	glTexCoordPointer(size, type, stride, (cc_uintptr)pointer + cur_vb->data);
 }
 static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	real_vertexPointer(size,   type, stride, (cc_uintptr)pointer + cur_vb->data);
+	glVertexPointer(size,   type, stride, (cc_uintptr)pointer + cur_vb->data);
 }
 
 static void OpenGL11Fallback(void) {
-	Window_ShowDialog("Performance warning",
-		"Your system only supports only OpenGL 1.1\n" \
-		"This is usually caused by graphics drivers not being installed\n\n" \
-		"As such you will likely experience very poor performance");
-
 	_glBindBuffer = fake_bindBuffer; _glDeleteBuffers = fake_deleteBuffers;
 	_glGenBuffers = fake_genBuffers; _glBufferData    = fake_bufferData;
 	_glBufferSubData = fake_bufferSubData;
 
-	real_drawElements    = _glDrawElements;    _glDrawElements    = fake_drawElements;
-	real_colorPointer    = _glColorPointer;    _glColorPointer    = fake_colorPointer;
-	real_texCoordPointer = _glTexCoordPointer; _glTexCoordPointer = fake_texCoordPointer;
-	real_vertexPointer   = _glVertexPointer;   _glVertexPointer   = fake_vertexPointer;
+	_glDrawElements    = fake_drawElements;    _glColorPointer  = fake_colorPointer;
+	_glTexCoordPointer = fake_texCoordPointer; _glVertexPointer = fake_vertexPointer;
 }
 #else
 /* No point in even trying for other systems */
@@ -593,27 +583,27 @@ static void GLBackend_Init(void) {
 #endif
 
 static void GL_SetupVbColoured(void) {
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
 }
 
 static void GL_SetupVbTextured(void) {
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
-	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -634,7 +624,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	gfx_setupVBFunc();
-	glDrawArrays(GL_LINES, 0, verticesCount);
+	_glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
@@ -642,7 +632,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
 #endif
 	gfx_setupVBRangeFunc(startVertex);
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
@@ -650,7 +640,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
 #endif
 	gfx_setupVBFunc();
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
 #ifdef CC_BUILD_GL11
@@ -658,10 +648,10 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList
 #else
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
 }
 #endif /* !CC_BUILD_GL11 */
 #endif
