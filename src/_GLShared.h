@@ -1,8 +1,9 @@
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 #define PIXEL_FORMAT GL_RGBA
 #else
-#define PIXEL_FORMAT 0x80E1 /* GL_BGRA_EXT */
+#define PIXEL_FORMAT GL_BGRA_EXT
 #endif
+#define _GL_TEXTURE_MAX_LEVEL 0x813D
 
 #if defined CC_BIG_ENDIAN
 /* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
@@ -22,14 +23,14 @@ static void GL_UpdateVsync(void) {
 	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
 }
 
-static void GL_CheckSupport(void);
+static void GLBackend_Init(void);
 void Gfx_Create(void) {
 	GLContext_Create();
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 	Gfx.Created      = true;
 
-	GL_CheckSupport();
+	GLBackend_Init();
 	Gfx_RestoreState();
 	GL_UpdateVsync();
 }

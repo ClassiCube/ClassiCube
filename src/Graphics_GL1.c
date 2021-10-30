@@ -53,6 +53,7 @@ typedef void GLvoid;
 #define GL_FLOAT                 0x1406
 #define GL_RGBA                  0x1908
 #define GL_BGRA_EXT              0x80E1
+#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
 
 #define GL_FOG                   0x0B60
 #define GL_FOG_DENSITY           0x0B62
@@ -95,11 +96,10 @@ typedef void GLvoid;
 #define GL_TEXTURE_COORD_ARRAY   0x8078
 
 /* Not present in gl.h on Windows (only up to OpenGL 1.1) */
-#define _GL_ARRAY_BUFFER         0x8892
-#define _GL_ELEMENT_ARRAY_BUFFER 0x8893
-#define _GL_STATIC_DRAW          0x88E4
-#define _GL_DYNAMIC_DRAW         0x88E8
-#define _GL_TEXTURE_MAX_LEVEL    0x813D
+#define GL_ARRAY_BUFFER          0x8892
+#define GL_ELEMENT_ARRAY_BUFFER  0x8893
+#define GL_STATIC_DRAW           0x88E4
+#define GL_DYNAMIC_DRAW          0x88E8
 
 GLAPI void APIENTRY glAlphaFunc(GLenum func, GLfloat ref);
 GLAPI void APIENTRY glBindTexture(GLenum target, GLuint texture);
@@ -180,13 +180,13 @@ static GLuint GL_GenAndBind(GLenum target) {
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	GLuint id     = GL_GenAndBind(_GL_ELEMENT_ARRAY_BUFFER);
+	GLuint id     = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
 	cc_uint32 size = indicesCount * 2;
-	_glBufferData(_GL_ELEMENT_ARRAY_BUFFER, size, indices, _GL_STATIC_DRAW);
+	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
 }
 
-void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(_GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
+void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	GLuint id = (GLuint)(*ib);
@@ -206,10 +206,10 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return GL_GenAndBind(_GL_ARRAY_BUFFER);
+	return GL_GenAndBind(GL_ARRAY_BUFFER);
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
@@ -223,7 +223,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	_glBufferData(_GL_ARRAY_BUFFER, tmpSize, tmpData, _GL_STATIC_DRAW);
+	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
 static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count);
@@ -267,9 +267,9 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	cc_uint32 size;
 	if (Gfx.LostContext) return 0;
 
-	id = GL_GenAndBind(_GL_ARRAY_BUFFER);
+	id = GL_GenAndBind(GL_ARRAY_BUFFER);
 	size = maxVertices * strideSizes[fmt];
-	_glBufferData(_GL_ARRAY_BUFFER, size, NULL, _GL_DYNAMIC_DRAW);
+	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
@@ -278,14 +278,14 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(_GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
+	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	_glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
-	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(_GL_ARRAY_BUFFER, 0, size, vertices);
+	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #else
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
@@ -434,13 +434,13 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *-------------------------------------------------------Compatibility-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GL11
-static void GL_CheckSupport(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
+static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
 #else
 /* fake vertex buffer objects with client side pointers */
 typedef struct fake_buffer { cc_uint8* data; } fake_buffer;
 static fake_buffer* cur_ib;
 static fake_buffer* cur_vb;
-#define fake_GetBuffer(target) (target == _GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
+#define fake_GetBuffer(target) (target == GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
 
 static void APIENTRY fake_glBindBuffer(GLenum target, GLuint src) {
 	fake_buffer** buffer = fake_GetBuffer(target);
