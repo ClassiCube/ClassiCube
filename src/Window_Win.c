@@ -464,7 +464,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_Close(void) {
-	PostMessageW(win_handle, WM_CLOSE, 0, 0);
+	PostMessageA(win_handle, WM_CLOSE, 0, 0);
 }
 
 void Window_ProcessEvents(void) {

@@ -177,13 +177,12 @@ static int gfx_stride, gfx_format = -1;
 /*    call [_glDrawElements] --> GL driver thunk --> GL driver implementation */
 
 static void (APIENTRY *_glColorPointer)(GLint size,    GLenum type, GLsizei stride, const GLvoid* pointer);
-static void (APIENTRY *_glDrawArrays)(GLenum mode,     GLint first, GLsizei count);
 static void (APIENTRY *_glDrawElements)(GLenum mode, GLsizei count,    GLenum type, const GLvoid* indices);
 static void (APIENTRY *_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
 static void (APIENTRY *_glVertexPointer)(GLint size,   GLenum type, GLsizei stride, const GLvoid* pointer);
 
 static const struct DynamicLibSym coreFuncs[] = {
-	DynamicLib_Sym2("glColorPointer",    glColorPointer),    DynamicLib_Sym2("glDrawArrays",   glDrawArrays),
+	DynamicLib_Sym2("glColorPointer",    glColorPointer),
 	DynamicLib_Sym2("glTexCoordPointer", glTexCoordPointer), DynamicLib_Sym2("glDrawElements", glDrawElements),
 	DynamicLib_Sym2("glVertexPointer",  glVertexPointer)
 };
@@ -192,7 +191,6 @@ static void LoadCoreFuncs(void) {
 }
 #else
 #define _glColorPointer    glColorPointer
-#define _glDrawArrays      glDrawArrays
 #define _glDrawElements    glDrawElements
 #define _glTexCoordPointer glTexCoordPointer
 #define _glVertexPointer   glVertexPointer
@@ -536,12 +534,12 @@ static void OpenGL11Fallback(void) {
 #endif
 
 static void GLBackend_Init(void) {
-	static const struct DynamicLibSym coreVboFuncs[5] = {
+	static const struct DynamicLibSym coreVboFuncs[] = {
 		DynamicLib_Sym2("glBindBuffer",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffers", glDeleteBuffers),
 		DynamicLib_Sym2("glGenBuffers",    glGenBuffers), DynamicLib_Sym2("glBufferData",    glBufferData),
 		DynamicLib_Sym2("glBufferSubData", glBufferSubData)
 	};
-	static const struct DynamicLibSym arbVboFuncs[5] = {
+	static const struct DynamicLibSym arbVboFuncs[] = {
 		DynamicLib_Sym2("glBindBufferARB",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffersARB", glDeleteBuffers),
 		DynamicLib_Sym2("glGenBuffersARB",    glGenBuffers), DynamicLib_Sym2("glBufferDataARB",    glBufferData),
 		DynamicLib_Sym2("glBufferSubDataARB", glBufferSubData)
@@ -624,7 +622,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	gfx_setupVBFunc();
-	_glDrawArrays(GL_LINES, 0, verticesCount);
+	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
