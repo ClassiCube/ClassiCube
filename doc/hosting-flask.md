@@ -71,15 +71,7 @@ if __name__ == "__main__":
 </div>
 <script type='text/javascript'>
   // need to load IndexedDB before running the game
-  function preloadIndexedDB() {
-    addRunDependency('load-idb');
-    FS.mkdir('/classicube');
-    FS.mount(IDBFS, {}, '/classicube');
-    FS.syncfs(true, function(err) {
-        if (err) window.cc_idbErr = err;
-        removeRunDependency('load-idb');
-    })
-  }
+  function preloadIndexedDB() { _interop_LoadIndexedDB(); }
 
   function resizeGameCanvas() {
     var cc_canv = $('canvas#canvas');
@@ -96,8 +88,8 @@ if __name__ == "__main__":
     if (canv_w % 2) { canv_w = canv_w - 1; }
 
 {% if mobile_mode %}
-    var screen_h = window.outerHeight || window.innerHeight;
-    canv_h = Math.min(canv_h, screen_h);
+    var screen_h = Math.min(window.innerHeight, window.outerHeight || window.innerHeight);
+    canv_h = screen_h;
 {% endif %}
      cc_canv[0].width  = canv_w * dpi;
      cc_canv[0].height = canv_h * dpi;
