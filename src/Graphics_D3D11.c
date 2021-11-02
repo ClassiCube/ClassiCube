@@ -70,6 +70,15 @@ void Gfx_Create(void) {
 			&desc, &swapchain, &device, &fl, &context);
 	if (hr) Logger_Abort2(hr, "Failed to create D3D11 device");
 
+	// The fog calculation requires reading Z/W of fragment position (SV_POSITION) in pixel shader,
+	//  unfortunately this is unsupported in Direct3d9 (https://docs.microsoft.com/en-us/windows/uwp/gaming/glsl-to-hlsl-reference)
+	// So for the sake of simplicity and since only a few old GPUs don't support feature level 10 anyways
+	//   https://walbourn.github.io/direct3d-feature-levels/
+	//   https://github.com/MonoGame/MonoGame/issues/5789
+	//  I decided to just not support GPUs that do not support at least feature level 10
+	if (fl < D3D_FEATURE_LEVEL_10_0)
+		Logger_Abort("Your GPU is too old to support the Direct3D11 version.\nTry using the Direct3D9 version instead.\n");
+
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline
 	IA_Init();
 	VS_Init();
@@ -579,8 +588,8 @@ static int PS_CalcShaderIndex(void) {
 
 	if (gfx_fogEnabled) {
 		// uncomment when it works
-		//if (ps_fogMode == FOG_LINEAR) idx += 4;
-		//if (ps_fogMode == FOG_EXP)    idx += 8;
+		if (ps_fogMode == FOG_LINEAR) idx += 4;
+		if (ps_fogMode == FOG_EXP)    idx += 8;
 	}
 	return idx;
 }
