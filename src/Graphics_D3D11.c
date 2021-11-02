@@ -612,7 +612,8 @@ static void PS_UpdateConstants(void) {
 	ps_constants.fogG = PackedCol_G(ps_fogColor) / 255.0f;
 	ps_constants.fogB = PackedCol_B(ps_fogColor) / 255.0f;
 
-	ps_constants.fogValue = ps_fogMode == FOG_LINEAR ? ps_fogEnd : ps_fogDensity;
+	// avoid doing - in pixel shader for density fog
+	ps_constants.fogValue = ps_fogMode == FOG_LINEAR ? ps_fogEnd : -ps_fogDensity;
 	ID3D11DeviceContext_UpdateSubresource(context, ps_cBuffer, 0, NULL, &ps_constants, 0, 0);
 }
 

@@ -194,6 +194,7 @@ Further information (e.g. style) for the game's source code can be found in the 
 * [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows
 * [Clang](https://clang.llvm.org/) - Compiles client for macOS
 * [Emscripten](https://emscripten.org/) - Compiles client for web
+* [RenderDoc](https://renderdoc.org/) - graphics debugging
 
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>
