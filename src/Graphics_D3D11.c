@@ -118,6 +118,41 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap* bmp, int rowWidth) {
+	BitmapCol* prev = bmp->scan0;
+	BitmapCol* cur;
+
+	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
+	int lvl, width = bmp->width, height = bmp->height;
+
+	for (lvl = 1; lvl <= lvls; lvl++) {
+		x /= 2; y /= 2;
+		if (width > 1)  width  /= 2;
+		if (height > 1) height /= 2;
+
+		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
+		GenMipmaps(width, height, cur, prev, rowWidth);
+
+		D3D11_BOX box;
+		box.front  = 0;
+		box.back   = 1;
+		box.left   = x;
+		box.right  = x + width;
+		box.top    = y;
+		box.bottom = y + height;
+
+		// https://eatplayhate.me/2013/09/29/d3d11-texture-update-costs/
+		// Might not be ideal, but seems to work well enough
+		int stride = width * 4;
+		ID3D11DeviceContext_UpdateSubresource(context, texture, lvl, &box, cur, stride, stride * height);
+
+		if (prev != bmp->scan0) Mem_Free(prev);
+		prev     = cur;
+		rowWidth = width;
+	}
+	if (prev != bmp->scan0) Mem_Free(prev);
+}
+
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
@@ -137,12 +172,23 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	data.pSysMem          = bmp->scan0;
 	data.SysMemPitch      = bmp->width * 4;
 	data.SysMemSlicePitch = 0;
+	D3D11_SUBRESOURCE_DATA* src = &data;
 
-	hr = ID3D11Device_CreateTexture2D(device, &desc, &data, &tex);
+	// Direct3D11 specifies pInitialData as an array of D3D11_SUBRESOURCE_DATA of length desc->MipsLevels
+	// Rather than writing such code just to support the mipmaps case, I went with the simpler approach of
+	//  leaving pInitialData as NULL and specfiying the texture data later using Gfx_UpdateTexturePart
+	if (mipmaps) {
+		desc.MipLevels += CalcMipmapsLevels(bmp->width, bmp->height);
+		src = NULL;
+	}
+
+	hr = ID3D11Device_CreateTexture2D(device, &desc, src, &tex);
 	if (hr) Logger_Abort2(hr, "Failed to create texture");
 
 	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
 	if (hr) Logger_Abort2(hr, "Failed to create view");
+
+	if (mipmaps) Gfx_UpdateTexturePart(view, 0, 0, bmp, mipmaps);
 	return view;
 }
 
@@ -162,11 +208,13 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	int stride = rowWidth * 4;
 	ID3D11ShaderResourceView_GetResource(view, &res);
 	ID3D11DeviceContext_UpdateSubresource(context, res, 0, &box, part->scan0, stride, stride * part->height);
+
+	if (mipmaps) D3D11_DoMipmaps(res, x, y, part, rowWidth);
 	ID3D11Resource_Release(res);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width * 4, mipmaps);
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -182,12 +230,6 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
 void Gfx_SetTexturing(cc_bool enabled) {
-}
-
-void Gfx_EnableMipmaps(void) {
-}
-
-void Gfx_DisableMipmaps(void) {
 }
 
 
@@ -533,10 +575,10 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 //--------------------------------------------------------Pixel shader----------------------------------------------------
 //########################################################################################################################
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/pixel-shader-stage
-static ID3D11SamplerState* ps_sampler;
+static ID3D11SamplerState* ps_samplers[2];
 static ID3D11PixelShader* ps_shaders[12];
 static ID3D11Buffer* ps_cBuffer;
-static cc_bool ps_alphaTesting;
+static cc_bool ps_alphaTesting, ps_mipmaps;
 static float ps_fogEnd, ps_fogDensity;
 static PackedCol ps_fogColor;
 static int ps_fogMode;
@@ -613,7 +655,11 @@ static void PS_CreateSamplers(void) {
 	desc.MaxLOD         = D3D11_FLOAT32_MAX;
 	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 
-	HRESULT hr = ID3D11Device_CreateSamplerState(device, &desc, &ps_sampler);
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	HRESULT hr1 = ID3D11Device_CreateSamplerState(device, &desc, &ps_samplers[0]);
+
+	desc.Filter = D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+	HRESULT hr2 = ID3D11Device_CreateSamplerState(device, &desc, &ps_samplers[1]);
 }
 
 static void PS_UpdateConstants(void) {
@@ -627,7 +673,7 @@ static void PS_UpdateConstants(void) {
 }
 
 static void PS_UpdateSampler(void) {
-	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &ps_sampler);
+	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &ps_samplers[ps_mipmaps]);
 }
 
 static void PS_Init(void) {
@@ -678,6 +724,18 @@ void Gfx_SetFogMode(FogFunc func) {
 	if (ps_fogMode == func) return;
 	ps_fogMode = func;
 	PS_UpdateShader();
+}
+
+void Gfx_EnableMipmaps(void) {
+	if (!Gfx.Mipmaps) return;
+	ps_mipmaps = true;
+	PS_UpdateSampler();
+}
+
+void Gfx_DisableMipmaps(void) {
+	if (!Gfx.Mipmaps) return;
+	ps_mipmaps = false;
+	PS_UpdateSampler();
 }
 
 
