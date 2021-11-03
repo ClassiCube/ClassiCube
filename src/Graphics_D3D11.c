@@ -45,7 +45,7 @@ static void PS_UpdateShader(void);
 static void OM_Init(void);
 static void OM_Free(void);
 
-void Gfx_Create(void) {
+static void CreateDeviceAndSwapChain(void) {
 	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
 	DWORD createFlags = 0;
 	D3D_FEATURE_LEVEL fl;
@@ -78,6 +78,12 @@ void Gfx_Create(void) {
 	//  I decided to just not support GPUs that do not support at least feature level 10
 	if (fl < D3D_FEATURE_LEVEL_10_0)
 		Logger_Abort("Your GPU is too old to support the Direct3D11 version.\nTry using the Direct3D9 version instead.\n");
+}
+
+void Gfx_Create(void) {
+	CreateDeviceAndSwapChain();
+	Gfx.Created         = true;
+	customMipmapsLevels = true;
 
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline
 	IA_Init();
