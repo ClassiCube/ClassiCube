@@ -35,15 +35,11 @@ static IDXGIFactory1* dxgi_factory;
 static IDXGISwapChain* swapchain;
 struct ShaderDesc { const void* data; int len; };
 
-static void IA_Init(void);
 static void IA_UpdateLayout(void);
-static void VS_Init(void);
 static void VS_UpdateShader(void);
-static void RS_Init(void);
-static void PS_Init(void);
 static void PS_UpdateShader(void);
-static void OM_Init(void);
-static void OM_Free(void);
+static void InitPipeline(void);
+static void FreePipeline(void);
 
 static void CreateDeviceAndSwapChain(void) {
 	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
@@ -84,13 +80,7 @@ void Gfx_Create(void) {
 	CreateDeviceAndSwapChain();
 	Gfx.Created         = true;
 	customMipmapsLevels = true;
-
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline
-	IA_Init();
-	VS_Init();
-	RS_Init();
-	PS_Init();
-	OM_Init();
+	Gfx_RestoreState();
 
 	// TODO need a better solution
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-limits
@@ -99,25 +89,43 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 8192;
 }
 
-cc_bool Gfx_TryRestoreContext(void) {
-	return true;
-}
-
 void Gfx_Free(void) {
+	Gfx_FreeState();
 	ID3D11DeviceContext_ClearState(context);
-	OM_Free();
 	IDXGISwapChain_Release(swapchain);
 	ID3D11DeviceContext_Release(context);
 	ID3D11Device_Release(device);
 }
 
+static cc_bool inited;
+cc_bool Gfx_TryRestoreContext(void) {
+	return true;
+}
+
 static void Gfx_FreeState(void) {
+	if (!inited) return;
+	inited = false;
+
 	FreeDefaultResources();
+	FreePipeline();
+#ifdef _DEBUG
+	ID3D11Debug *d3dDebug;
+	static const GUID guid_d3dDebug = { 0x79cf2233, 0x7536, 0x4948,{ 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
+	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, &d3dDebug);
+	if (SUCCEEDED(hr))
+	{
+		hr = ID3D11Debug_ReportLiveDeviceObjects(d3dDebug, D3D11_RLDO_DETAIL);
+	}
+#endif
 }
 
 static void Gfx_RestoreState(void) {
+	if (inited) return;
+	inited = true;
+
 	InitDefaultResources();
 	gfx_format = -1;
+	InitPipeline();
 }
 
 
@@ -398,17 +406,6 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matri
 // https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage
 static ID3D11InputLayout* input_textured;
 
-void Gfx_BindIb(GfxResourceID ib) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)ib;
-	ID3D11DeviceContext_IASetIndexBuffer(context, buffer, DXGI_FORMAT_R16_UINT, 0);
-}
-
-void Gfx_BindVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
-	static UINT32 offset[] = { 0 };
-	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);
-}
-
 static void IA_CreateLayouts(void) {
 	ID3D11InputLayout* input = NULL;
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-input-assembler-stage-getting-started
@@ -433,6 +430,21 @@ static void IA_UpdateLayout(void) {
 static void IA_Init(void) {
 	IA_CreateLayouts();
 	ID3D11DeviceContext_IASetPrimitiveTopology(context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+static void IA_Free(void) {
+	ID3D11InputLayout_Release(input_textured);
+}
+
+void Gfx_BindIb(GfxResourceID ib) {
+	ID3D11Buffer* buffer = (ID3D11Buffer*)ib;
+	ID3D11DeviceContext_IASetIndexBuffer(context, buffer, DXGI_FORMAT_R16_UINT, 0);
+}
+
+void Gfx_BindVb(GfxResourceID vb) {
+	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
+	static UINT32 offset[] = { 0 };
+	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);
 }
 
 
@@ -493,14 +505,29 @@ static void VS_UpdateShader(void) {
 	ID3D11DeviceContext_VSSetShader(context, vs_shaders[idx], NULL, 0);
 }
 
+static void VS_FreeShaders(void) {
+	for (int i = 0; i < Array_Elems(vs_shaders); i++) {
+		ID3D11VertexShader_Release(vs_shaders[i]);
+	}
+}
+
 static void VS_UpdateConstants(void) {
 	ID3D11DeviceContext_UpdateSubresource(context, vs_cBuffer, 0, NULL, &vs_constants, 0, 0);
+}
+
+static void VS_FreeConstants(void) {
+	ID3D11Buffer_Release(vs_cBuffer);
 }
 
 static void VS_Init(void) {
 	VS_CreateShaders();
 	VS_CreateConstants();
 	VS_UpdateShader();
+}
+
+static void VS_Free(void) {
+	VS_FreeShaders();
+	VS_FreeConstants();
 }
 
 static struct Matrix _view, _proj;
@@ -565,10 +592,20 @@ static void RS_UpdateRasterState(void) {
 	ID3D11DeviceContext_RSSetState(context, rs_states[rs_culling]);
 }
 
+static void RS_FreeRasterStates(void) {
+	for (int i = 0; i < Array_Elems(rs_states); i++) {
+		ID3D11RasterizerState_Release(rs_states[i]);
+	}
+}
+
 static void RS_Init(void) {
 	RS_CreateRasterState();
 	RS_UpdateViewport();
 	RS_UpdateRasterState();
+}
+
+static void RS_Free(void) {
+	RS_FreeRasterStates();
 }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
@@ -615,21 +652,6 @@ static void PS_CreateShaders(void) {
 	}
 }
 
-static void PS_CreateConstants(void) {
-	D3D11_BUFFER_DESC desc = { 0 }; // TODO see notes in VS_CreateConstants
-	desc.ByteWidth      = sizeof(ps_constants);
-	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem          = &ps_constants;
-	data.SysMemPitch      = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &ps_cBuffer);
-	ID3D11DeviceContext_PSSetConstantBuffers(context, 0, 1, &ps_cBuffer);
-}
-
 static int PS_CalcShaderIndex(void) {
 	int idx = gfx_format == VERTEX_FORMAT_COLOURED ? 0 : 1;
 	if (ps_alphaTesting) idx += 2;
@@ -645,6 +667,12 @@ static int PS_CalcShaderIndex(void) {
 static void PS_UpdateShader(void) {
 	int idx = PS_CalcShaderIndex();
 	ID3D11DeviceContext_PSSetShader(context, ps_shaders[idx], NULL, 0);
+}
+
+static void PS_FreeShaders(void) {
+	for (int i = 0; i < Array_Elems(ps_shaders); i++) {
+		ID3D11PixelShader_Release(ps_shaders[i]);
+	}
 }
 
 static void PS_CreateSamplers(void) {
@@ -668,6 +696,31 @@ static void PS_CreateSamplers(void) {
 	HRESULT hr2 = ID3D11Device_CreateSamplerState(device, &desc, &ps_samplers[1]);
 }
 
+static void PS_UpdateSampler(void) {
+	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &ps_samplers[ps_mipmaps]);
+}
+
+static void PS_FreeSamplers(void) {
+	for (int i = 0; i < Array_Elems(ps_samplers); i++) {
+		ID3D11SamplerState_Release(ps_samplers[i]);
+	}
+}
+
+static void PS_CreateConstants(void) {
+	D3D11_BUFFER_DESC desc = { 0 }; // TODO see notes in VS_CreateConstants
+	desc.ByteWidth      = sizeof(ps_constants);
+	desc.Usage     = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem          = &ps_constants;
+	data.SysMemPitch      = 0;
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, &data, &ps_cBuffer);
+	ID3D11DeviceContext_PSSetConstantBuffers(context, 0, 1, &ps_cBuffer);
+}
+
 static void PS_UpdateConstants(void) {
 	ps_constants.fogR = PackedCol_R(ps_fogColor) / 255.0f;
 	ps_constants.fogG = PackedCol_G(ps_fogColor) / 255.0f;
@@ -678,8 +731,8 @@ static void PS_UpdateConstants(void) {
 	ID3D11DeviceContext_UpdateSubresource(context, ps_cBuffer, 0, NULL, &ps_constants, 0, 0);
 }
 
-static void PS_UpdateSampler(void) {
-	ID3D11DeviceContext_PSSetSamplers(context, 0, 1, &ps_samplers[ps_mipmaps]);
+static void PS_FreeConstants(void) {
+	ID3D11Buffer_Release(ps_cBuffer);
 }
 
 static void PS_Init(void) {
@@ -688,6 +741,12 @@ static void PS_Init(void) {
 	PS_CreateConstants();
 	PS_UpdateSampler();
 	PS_UpdateShader();
+}
+
+static void PS_Free(void) {
+	PS_FreeShaders();
+	PS_FreeSamplers();
+	PS_FreeConstants();
 }
 
 void Gfx_SetAlphaTest(cc_bool enabled) {
@@ -808,6 +867,12 @@ static void OM_UpdateDepthState(void) {
 	ID3D11DeviceContext_OMSetDepthStencilState(context, depthState, 0);
 }
 
+static void OM_FreeDepthStates(void) {
+	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
+		ID3D11DepthStencilState_Release(om_depthStates[i]);
+	}
+}
+
 static void OM_CreateBlendStates(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-blend-state
 	D3D11_BLEND_DESC desc = { 0 };
@@ -833,6 +898,12 @@ static void OM_UpdateBlendState(void) {
 	ID3D11DeviceContext_OMSetBlendState(context, blendState, NULL, 0xffffffff);
 }
 
+static void OM_FreeBlendStates(void) {
+	for (int i = 0; i < Array_Elems(om_blendStates); i++) {
+		ID3D11BlendState_Release(om_blendStates[i]);
+	}
+}
+
 static void OM_Init(void) {
 	OM_InitTargets();
 	OM_CreateDepthStates();
@@ -850,6 +921,8 @@ static void OM_FreeTargets(void) {
 
 static void OM_Free(void) {
 	OM_FreeTargets();
+	OM_FreeDepthStates();
+	OM_FreeBlendStates();
 }
 
 void Gfx_ClearCol(PackedCol col) {
@@ -991,5 +1064,22 @@ void Gfx_OnWindowResize(void) {
 
 	OM_InitTargets();
 	RS_UpdateViewport();
+}
+
+static void InitPipeline(void) {
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline
+	IA_Init();
+	VS_Init();
+	RS_Init();
+	PS_Init();
+	OM_Init();
+}
+
+static void FreePipeline(void) {
+	IA_Free();
+	VS_Free();
+	RS_Free();
+	PS_Free();
+	OM_Free();
 }
 #endif
