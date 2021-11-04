@@ -942,6 +942,13 @@ void Gfx_EndFrame(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present
 	// gfx_vsync happens to match SyncInterval parameter
 	HRESULT hr = IDXGISwapChain_Present(swapchain, gfx_vsync, 0);
+
+	// run at reduced FPS when minimised
+	if (hr == DXGI_STATUS_OCCLUDED) {
+		TickReducedPerformance(); return;
+	}
+
+	EndReducedPerformance();
 	if (hr) Logger_Abort2(hr, "Failed to swap buffers");
 }
 

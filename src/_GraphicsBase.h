@@ -91,6 +91,21 @@ void Gfx_RecreateContext(void) {
 	Event_RaiseVoid(&GfxEvents.ContextRecreated);
 }
 
+cc_bool reducedPerformance;
+static void TickReducedPerformance(void) {
+	Thread_Sleep(100); /* 10 FPS */
+
+	if (reducedPerformance) return;
+	reducedPerformance = true; /* TODO: also log a message in-game? */
+	Platform_LogConst("Entering reduced performance mode");
+}
+
+static void EndReducedPerformance(void) {
+	if (!reducedPerformance) return;
+	reducedPerformance = false;
+	Platform_LogConst("Exited reduced performance mode");
+}
+
 
 void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices) {
 	Gfx_DeleteDynamicVb(vb);

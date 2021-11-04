@@ -3691,7 +3691,7 @@ static const struct ScreenVTABLE TexPackOverlay_VTABLE = {
 void TexPackOverlay_Show(const cc_string* url) {
 	struct TexPackOverlay* s = &TexPackOverlay;
 	s->grabsInput = true;
-	/* Too easy to accidentally ESC this important dialog*/
+	/* Too easy to accidentally ESC this important dialog */
 	/* s->closable= true; */
 	s->VTABLE     = &TexPackOverlay_VTABLE;
 	
