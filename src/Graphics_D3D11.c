@@ -91,10 +91,19 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
-	ID3D11DeviceContext_ClearState(context);
 	IDXGISwapChain_Release(swapchain);
 	ID3D11DeviceContext_Release(context);
 	ID3D11Device_Release(device);
+
+#ifdef _DEBUG
+	ID3D11Debug *d3dDebug;
+	static const GUID guid_d3dDebug = { 0x79cf2233, 0x7536, 0x4948,{ 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
+	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, &d3dDebug);
+	if (SUCCEEDED(hr))
+	{
+		hr = ID3D11Debug_ReportLiveDeviceObjects(d3dDebug, D3D11_RLDO_DETAIL);
+	}
+#endif
 }
 
 static cc_bool inited;
@@ -108,15 +117,6 @@ static void Gfx_FreeState(void) {
 
 	FreeDefaultResources();
 	FreePipeline();
-#ifdef _DEBUG
-	ID3D11Debug *d3dDebug;
-	static const GUID guid_d3dDebug = { 0x79cf2233, 0x7536, 0x4948,{ 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
-	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, &d3dDebug);
-	if (SUCCEEDED(hr))
-	{
-		hr = ID3D11Debug_ReportLiveDeviceObjects(d3dDebug, D3D11_RLDO_DETAIL);
-	}
-#endif
 }
 
 static void Gfx_RestoreState(void) {
@@ -239,6 +239,10 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 		ID3D11ShaderResourceView_GetResource(view, &res);
 		ID3D11Resource_Release(res);
 		ID3D11ShaderResourceView_Release(view);
+
+		// note that ID3D11ShaderResourceView_GetResource increments refcount, so need to Release twice
+		//  https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11view-getresource
+		ID3D11Resource_Release(res);
 	}
 	*texId = NULL;
 }
@@ -1081,5 +1085,12 @@ static void FreePipeline(void) {
 	RS_Free();
 	PS_Free();
 	OM_Free();
+
+	ID3D11DeviceContext_ClearState(context);
+	// Direct3D11 uses deferred resource destruction, so Flush to force destruction
+	//  https://stackoverflow.com/questions/44155133/directx11-com-object-with-0-references-not-released
+	//  https://stackoverflow.com/questions/20032816/can-someone-explain-why-i-still-have-live-objects-after-releasing-the-pointers-t
+	//  https://www.gamedev.net/forums/topic/659651-dxgi-leak-warnings/5172345/
+	//ID3D11DeviceContext_Flush(context);
 }
 #endif
