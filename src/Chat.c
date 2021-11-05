@@ -666,8 +666,9 @@ static void OnFree(void) {
 	cmds_head = NULL;
 
 	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);
-	Chat_LogTime  = defaultLogTimes;
-	logTimesCount = 0;
+	Chat_LogTime     = defaultLogTimes;
+	logTimesCount    = 0;
+	logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS;
 
 	StringsBuffer_Clear(&Chat_Log);
 	StringsBuffer_Clear(&Chat_InputLog);
