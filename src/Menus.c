@@ -2318,7 +2318,13 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 
 static void MenuOptionsScreen_OnDone(const cc_string* value, cc_bool valid) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
-	if (valid) MenuOptionsScreen_Set(s, s->activeI, value);
+	if (valid) {
+		MenuOptionsScreen_Set(s, s->activeI, value);
+		/* Marking screen as dirty fixes changed option widget appearing wrong */
+		/*  for a few frames (e.g. Chatlines options changed from '12' to '1') */
+		s->dirty = true;
+	}
+
 	MenuOptionsScreen_SelectExtHelp(s, s->activeI);
 	s->activeI = -1;
 }

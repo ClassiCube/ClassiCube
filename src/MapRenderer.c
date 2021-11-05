@@ -719,7 +719,7 @@ void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
 }
 
 static void OnEnvVariableChanged(void* obj, int envVar) {
-	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {
+	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR) {
 		MapRenderer_Refresh();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		int oldClip        = Builder_EdgeLevel;

@@ -41,7 +41,7 @@ static int CalcNumVertices(int axis1Len, int axis2Len) {
 /*########################################################################################################################*
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
-static void CalcFog(float* density, PackedCol* col) {
+static void CalcFog(float* density, PackedCol* color) {
 	Vec3 pos;
 	IVec3 coords;
 	BlockID block;
@@ -57,12 +57,12 @@ static void CalcFog(float* density, PackedCol* col) {
 
 	if (AABB_ContainsPoint(&blockBB, &Camera.CurrentPos) && Blocks.FogDensity[block]) {
 		*density = Blocks.FogDensity[block];
-		*col     = Blocks.FogCol[block];
+		*color   = Blocks.FogCol[block];
 	} else {
 		*density = 0.0f;
 		/* Blend fog and sky together */
 		blend    = CalcBlendFactor((float)Game_ViewDistance);
-		*col     = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
+		*color   = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
 	}
 }
 
@@ -83,7 +83,7 @@ static void UpdateFogMinimal(float fogDensity) {
 	}
 }
 
-static void UpdateFogNormal(float fogDensity, PackedCol fogCol) {
+static void UpdateFogNormal(float fogDensity, PackedCol fogColor) {
 	double density;
 
 	if (fogDensity != 0.0f) {
@@ -105,22 +105,22 @@ static void UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 		Gfx_SetFogMode(FOG_LINEAR);
 		Gfx_SetFogEnd((float)Game_ViewDistance);
 	}
-	Gfx_SetFogCol(fogCol);
+	Gfx_SetFogCol(fogColor);
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 void EnvRenderer_UpdateFog(void) {
 	float fogDensity; 
-	PackedCol fogCol;
+	PackedCol fogColor;
 	if (!World.Loaded) return;
 
-	CalcFog(&fogDensity, &fogCol);
-	Gfx_ClearCol(fogCol);
+	CalcFog(&fogDensity, &fogColor);
+	Gfx_ClearCol(fogColor);
 
 	if (EnvRenderer_Minimal) {
 		UpdateFogMinimal(fogDensity);
 	} else {
-		UpdateFogNormal(fogDensity, fogCol);
+		UpdateFogNormal(fogDensity, fogColor);
 	}
 }
 
@@ -839,20 +839,20 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		UpdateMapEdges();
 		UpdateMapSides();
-	} else if (envVar == ENV_VAR_SUN_COL) {
+	} else if (envVar == ENV_VAR_SUN_COLOR) {
 		UpdateMapEdges();
-	} else if (envVar == ENV_VAR_SHADOW_COL) {
+	} else if (envVar == ENV_VAR_SHADOW_COLOR) {
 		UpdateMapSides();
-	} else if (envVar == ENV_VAR_SKY_COL) {
+	} else if (envVar == ENV_VAR_SKY_COLOR) {
 		UpdateSky();
-	} else if (envVar == ENV_VAR_FOG_COL) {
+	} else if (envVar == ENV_VAR_FOG_COLOR) {
 		EnvRenderer_UpdateFog();
-	} else if (envVar == ENV_VAR_CLOUDS_COL) {
+	} else if (envVar == ENV_VAR_CLOUDS_COLOR) {
 		UpdateClouds();
 	} else if (envVar == ENV_VAR_CLOUDS_HEIGHT) {
 		UpdateSky();
 		UpdateClouds();
-	} else if (envVar == ENV_VAR_SKYBOX_COL) {
+	} else if (envVar == ENV_VAR_SKYBOX_COLOR) {
 		UpdateSkybox();
 	}
 }
