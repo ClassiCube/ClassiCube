@@ -363,7 +363,7 @@ void Gfx_SetFogCol(PackedCol color) {
 	rgba[3] = PackedCol_A(color) / 255.0f;
 
 	glFogfv(GL_FOG_COLOR, rgba);
-	gfx_fogColor = col;
+	gfx_fogColor = color;
 }
 
 void Gfx_SetFogDensity(float value) {

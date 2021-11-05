@@ -591,7 +591,7 @@ static void UpdateBorderTextures(void) {
 #define Borders_HorOffset(block) (Blocks.RenderMinBB[block].X - Blocks.MinBB[block].X)
 #define Borders_YOffset(block)   (Blocks.RenderMinBB[block].Y - Blocks.MinBB[block].Y)
 
-static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, struct VertexTextured** vertices) {
+static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol color, struct VertexTextured** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
 	struct VertexTextured* v = *vertices;
@@ -605,16 +605,16 @@ static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, st
 			if (y2 > endY) y2 = endY;
 
 			u2   = (float)z2 - (float)z1;      v2   = (float)y2 - (float)y1;
-			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z1; v->Col = col; v->U = 0;  v->V = v2; v++;
-			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z1; v->Col = col; v->U = 0;  v->V = 0;  v++;
-			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z2; v->Col = col; v->U = u2; v->V = 0;  v++;
-			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z2; v->Col = col; v->U = u2; v->V = v2; v++;
+			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z1; v->Col = color; v->U = 0;  v->V = v2; v++;
+			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z1; v->Col = color; v->U = 0;  v->V = 0;  v++;
+			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z2; v->Col = color; v->U = u2; v->V = 0;  v++;
+			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z2; v->Col = color; v->U = u2; v->V = v2; v++;
 		}
 	}
 	*vertices = v;
 }
 
-static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, struct VertexTextured** vertices) {
+static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol color, struct VertexTextured** vertices) {
 	int endX = x2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
 	struct VertexTextured* v = *vertices;
@@ -628,16 +628,16 @@ static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, st
 			if (y2 > endY) y2 = endY;
 
 			u2   = (float)x2 - (float)x1;       v2   = (float)y2 - (float)y1;
-			v->X = (float)x1; v->Y = (float)y1; v->Z = (float)z; v->Col = col; v->U = 0;  v->V = v2; v++;
-			v->X = (float)x1; v->Y = (float)y2; v->Z = (float)z; v->Col = col; v->U = 0;  v->V = 0;  v++;
-			v->X = (float)x2; v->Y = (float)y2; v->Z = (float)z; v->Col = col; v->U = u2; v->V = 0;  v++;
-			v->X = (float)x2; v->Y = (float)y1; v->Z = (float)z; v->Col = col; v->U = u2; v->V = v2; v++;
+			v->X = (float)x1; v->Y = (float)y1; v->Z = (float)z; v->Col = color; v->U = 0;  v->V = v2; v++;
+			v->X = (float)x1; v->Y = (float)y2; v->Z = (float)z; v->Col = color; v->U = 0;  v->V = 0;  v++;
+			v->X = (float)x2; v->Y = (float)y2; v->Z = (float)z; v->Col = color; v->U = u2; v->V = 0;  v++;
+			v->X = (float)x2; v->Y = (float)y1; v->Z = (float)z; v->Col = color; v->U = u2; v->V = v2; v++;
 		}
 	}
 	*vertices = v;
 }
 
-static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, struct VertexTextured** vertices) {
+static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol color, float offset, float yOffset, struct VertexTextured** vertices) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
 	struct VertexTextured* v = *vertices;
@@ -652,10 +652,10 @@ static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, 
 			if (z2 > endZ) z2 = endZ;
 
 			u2   = (float)x2 - (float)x1;         v2   = (float)z2 - (float)z1;
-			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = col; v->U = 0;  v->V = 0;  v++;
-			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = col; v->U = 0;  v->V = v2; v++;
-			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = col; v->U = u2; v->V = v2; v++;
-			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = col; v->U = u2; v->V = 0;  v++;
+			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = color; v->U = 0;  v->V = 0;  v++;
+			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = color; v->U = 0;  v->V = v2; v++;
+			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = color; v->U = u2; v->V = v2; v++;
+			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = color; v->U = u2; v->V = 0;  v++;
 		}
 	}
 	*vertices = v;
@@ -664,7 +664,7 @@ static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, 
 static void UpdateMapSides(void) {
 	Rect2D rects[4], r;
 	BlockID block;
-	PackedCol col;
+	PackedCol color;
 	int y, y1, y2;
 	int i;
 	struct VertexTextured* data;
@@ -690,12 +690,12 @@ static void UpdateMapSides(void) {
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
 	sides_fullBright = Blocks.FullBright[block];
-	col = sides_fullBright ? PACKEDCOL_WHITE : Env.ShadowCol;
-	Block_Tint(col, block)
+	color = sides_fullBright ? PACKEDCOL_WHITE : Env.ShadowCol;
+	Block_Tint(color, block)
 
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (float)y, col,
+		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (float)y, color,
 			0, Borders_YOffset(block), &data);
 	}
 
@@ -703,11 +703,11 @@ static void UpdateMapSides(void) {
 	y1 = 0; y2 = y;
 	if (y < 0) { y1 = y; y2 = 0; }
 
-	DrawBorderY(0, 0, World.Width, World.Length, 0, col, 0, 0, &data);
-	DrawBorderZ(0, 0, World.Width, y1, y2, col, &data);
-	DrawBorderZ(World.Length, 0, World.Width, y1, y2, col, &data);
-	DrawBorderX(0, 0, World.Length, y1, y2, col, &data);
-	DrawBorderX(World.Width, 0, World.Length, y1, y2, col, &data);
+	DrawBorderY(0, 0, World.Width, World.Length, 0, color, 0, 0, &data);
+	DrawBorderZ(0, 0, World.Width, y1, y2, color, &data);
+	DrawBorderZ(World.Length, 0, World.Width, y1, y2, color, &data);
+	DrawBorderX(0, 0, World.Length, y1, y2, color, &data);
+	DrawBorderX(World.Width, 0, World.Length, y1, y2, color, &data);
 
 	Gfx_UnlockVb(sides_vb);
 }
@@ -715,7 +715,7 @@ static void UpdateMapSides(void) {
 static void UpdateMapEdges(void) {
 	Rect2D rects[4], r;
 	BlockID block;
-	PackedCol col;
+	PackedCol color;
 	float y;
 	int i;
 	struct VertexTextured* data;
@@ -736,13 +736,13 @@ static void UpdateMapEdges(void) {
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
 	edges_fullBright = Blocks.FullBright[block];
-	col = edges_fullBright ? PACKEDCOL_WHITE : Env.SunCol;
-	Block_Tint(col, block)
+	color = edges_fullBright ? PACKEDCOL_WHITE : Env.SunCol;
+	Block_Tint(color, block)
 
 	y = (float)Env.EdgeHeight;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, col,
+		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, color,
 			Borders_HorOffset(block), Borders_YOffset(block), &data);
 	}
 	Gfx_UnlockVb(edges_vb);
