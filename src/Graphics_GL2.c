@@ -390,9 +390,9 @@ static void SwitchProgram(void) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; SwitchProgram(); }
-void Gfx_SetFogCol(PackedCol col) {
-	if (col == gfx_fogColor) return;
-	gfx_fogColor = col;
+void Gfx_SetFogCol(PackedCol color) {
+	if (color == gfx_fogColor) return;
+	gfx_fogColor = color;
 	DirtyUniform(UNI_FOG_COL);
 	ReloadUniforms();
 }
@@ -476,7 +476,7 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	DirtyUniform(UNI_MASK_ALL);
-	GL_ClearCol(gfx_clearColor);
+	GL_ClearColor(gfx_clearColor);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
 }

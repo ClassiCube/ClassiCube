@@ -47,7 +47,7 @@ static int Lighting_GetLightHeight(int x, int z) {
 	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World.Height - 1, z, hIndex) : lightH;
 }
 
-/* Outside colour is same as sunlight colour, so we reuse when possible */
+/* Outside color is same as sunlight color, so we reuse when possible */
 cc_bool Lighting_IsLit(int x, int y, int z) {
 	return y > Lighting_GetLightHeight(x, z);
 }

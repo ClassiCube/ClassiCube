@@ -747,7 +747,7 @@ static void TableWidget_Render(void* widget, double delta) {
 	int i, x, y;
 
 	/* These were sourced by taking a screenshot of vanilla */
-	/* Then using paint to extract the colour components */
+	/* Then using paint to extract the color components */
 	/* Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topBackColor    = PackedCol_Make( 34,  34,  34, 168);
 	PackedCol bottomBackColor = PackedCol_Make( 57,  57, 104, 202);
@@ -1688,12 +1688,12 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 		if (!w->lines[i].length) break;
 		line.length = 0;
 
-		/* Colour code continues in next line */
+		/* Color code continues in next line */
 		lastCol = InputWidget_GetLastCol(w, 0, i);
 		if (!Drawer2D_IsWhiteColor(lastCol)) {
 			String_Append(&line, '&'); String_Append(&line, lastCol);
 		}
-		/* Convert % to & for colour codes */
+		/* Convert % to & for color codes */
 		InputWidget_FormatLine(w, i, &line);
 		args.text = line;
 
@@ -1992,7 +1992,7 @@ static int TextGroupWidget_NextUrl(char* chars, int charsLen, int i) {
 		left = charsLen - i;
 		if (left < TEXTGROUPWIDGET_HTTP_LEN) return charsLen;
 
-		/* colour codes at start of URL */
+		/* color codes at start of URL */
 		start = i;
 		while (left >= 2 && chars[i] == '&') { left -= 2; i += 2; }
 		if (left < TEXTGROUPWIDGET_HTTP_LEN) continue;
@@ -2355,7 +2355,7 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 	i = (x + y * e.itemsPerRow) * e.charsPerItem;
 	if (i >= e.contents.length) return;
 
-	/* TODO: need to insert characters that don't affect w->caretPos index, adjust w->caretPos colour */
+	/* TODO: need to insert characters that don't affect w->caretPos index, adjust w->caretPos color */
 	str = String_Init(&e.contents.buffer[i], e.charsPerItem, 0);
 
 	/* TODO: Not be so hacky */

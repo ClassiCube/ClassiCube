@@ -772,9 +772,9 @@ void Gfx_SetFog(cc_bool enabled) {
 	PS_UpdateShader();
 }
 
-void Gfx_SetFogCol(PackedCol col) {
-	if (col == ps_fogColor) return;
-	ps_fogColor = col;
+void Gfx_SetFogCol(PackedCol color) {
+	if (color == ps_fogColor) return;
+	ps_fogColor = color;
 	PS_UpdateConstants();
 }
 
@@ -930,11 +930,11 @@ static void OM_Free(void) {
 	OM_FreeBlendStates();
 }
 
-void Gfx_ClearCol(PackedCol col) {
-	gfx_clearColor[0] = PackedCol_R(col) / 255.0f;
-	gfx_clearColor[1] = PackedCol_G(col) / 255.0f;
-	gfx_clearColor[2] = PackedCol_B(col) / 255.0f;
-	gfx_clearColor[3] = PackedCol_A(col) / 255.0f;
+void Gfx_ClearCol(PackedCol color) {
+	gfx_clearColor[0] = PackedCol_R(color) / 255.0f;
+	gfx_clearColor[1] = PackedCol_G(color) / 255.0f;
+	gfx_clearColor[2] = PackedCol_B(color) / 255.0f;
+	gfx_clearColor[3] = PackedCol_A(color) / 255.0f;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {

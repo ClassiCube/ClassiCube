@@ -50,7 +50,7 @@ static void LavaAnimation_Tick(void) {
 	
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
-			/* Calculate the colour at this coordinate in the heatmap */
+			/* Calculate the color at this coordinate in the heatmap */
 
 			/* Lookup table for (int)(1.2 * sin([ANGLE] * 22.5 * MATH_DEG2RAD)); */
 			/* [ANGLE] is integer x/y, so repeats every 16 intervals */
@@ -131,7 +131,7 @@ static void WaterAnimation_Tick(void) {
 	
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
-			/* Calculate the colour at this coordinate in the heatmap */
+			/* Calculate the color at this coordinate in the heatmap */
 			soupHeat =
 				W_soupHeat[y << shift | ((x - 1) & mask)] +
 				W_soupHeat[y << shift | x               ] +

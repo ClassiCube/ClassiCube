@@ -175,14 +175,14 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-static void GL_ClearCol(PackedCol col) {
-	glClearColor(PackedCol_R(col) / 255.0f, PackedCol_G(col) / 255.0f,
-				 PackedCol_B(col) / 255.0f, PackedCol_A(col) / 255.0f);
+static void GL_ClearColor(PackedCol color) {
+	glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
+				 PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
 }
-void Gfx_ClearCol(PackedCol col) {
-	if (col == gfx_clearColor) return;
-	GL_ClearCol(col);
-	gfx_clearColor = col;
+void Gfx_ClearCol(PackedCol color) {
+	if (color == gfx_clearColor) return;
+	GL_ClearColor(color);
+	gfx_clearColor = color;
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {

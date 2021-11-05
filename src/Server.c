@@ -140,7 +140,7 @@ static void SPConnection_AddPart(const cc_string* text) {
 	int i;
 	String_InitArray(tmp, tmpBuffer);
 
-	/* Prepend colour codes for subsequent lines of multi-line chat */
+	/* Prepend color codes for subsequent lines of multi-line chat */
 	if (!Drawer2D_IsWhiteColor(sp_lastCol)) {
 		String_Append(&tmp, '&');
 		String_Append(&tmp, sp_lastCol);

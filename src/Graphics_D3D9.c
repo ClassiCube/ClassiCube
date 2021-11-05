@@ -440,9 +440,9 @@ void Gfx_SetFog(cc_bool enabled) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
-void Gfx_SetFogCol(PackedCol col) {
-	if (col == gfx_fogColor) return;
-	gfx_fogColor = col;
+void Gfx_SetFogCol(PackedCol color) {
+	if (color == gfx_fogColor) return;
+	gfx_fogColor = color;
 
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogColor);
@@ -500,7 +500,7 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 }
 
-void Gfx_ClearCol(PackedCol col) { gfx_clearColor = col; }
+void Gfx_ClearCol(PackedCol color) { gfx_clearColor = color; }
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	if (Gfx.LostContext) return;

@@ -269,7 +269,7 @@ void String_AppendColorless(cc_string* str, const cc_string* src) {
 
 	for (i = 0; i < src->length; i++) {
 		c = src->buffer[i];
-		if (c == '&') { i++; continue; } /* Skip over the following colour code */
+		if (c == '&') { i++; continue; } /* Skip over the following color code */
 		String_Append(str, c);
 	}
 }

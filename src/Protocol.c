@@ -123,7 +123,7 @@ static void WriteString(cc_uint8* data, const cc_string* value) {
 	int i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
-		if (c == '&') c = '%'; /* escape colour codes */
+		if (c == '&') c = '%'; /* escape color codes */
 		data[i] = c;
 	}
 
@@ -1201,7 +1201,7 @@ static void CPE_SetTextColor(cc_uint8* data) {
 	BitmapCol c   = BitmapCol_Make(data[0], data[1], data[2], data[3]);
 	cc_uint8 code = data[4];
 
-	/* disallow space, null, and colour code specifiers */
+	/* disallow space, null, and color code specifiers */
 	if (code == '\0' || code == ' ' || code == 0xFF) return;
 	if (code == '%'  || code == '&') return;
 

@@ -94,7 +94,7 @@ void Chat_SetLogName(const cc_string* name) {
 		if (AllowedLogNameChar(c)) {
 			String_Append(&logName, c);
 		} else if (c == '&') {
-			i++; /* skip over following colour code */
+			i++; /* skip over following color code */
 		}
 	}
 }

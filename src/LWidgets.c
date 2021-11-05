@@ -650,7 +650,7 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 	}
 }
 
-/* Works out the background colour of the given row */
+/* Works out the background color of the given row */
 static BitmapCol LTable_RowColor(struct LTable* w, int row) {
 	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
 	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);

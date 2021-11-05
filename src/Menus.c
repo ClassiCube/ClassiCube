@@ -77,7 +77,7 @@ static void Menu_CloseKeyboard(void* s) { Window_CloseKeyboard(); }
 
 static void Menu_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
-	Then using paint to extract the colour components
+	Then using paint to extract the color components
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PackedCol_Make(24, 24, 24, 105);
 	PackedCol bottomCol = PackedCol_Make(51, 51, 98, 162);

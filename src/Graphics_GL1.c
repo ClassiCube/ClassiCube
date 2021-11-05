@@ -353,12 +353,14 @@ void Gfx_SetFog(cc_bool enabled) {
 	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
 }
 
-void Gfx_SetFogCol(PackedCol col) {
+void Gfx_SetFogCol(PackedCol color) {
 	float rgba[4];
-	if (col == gfx_fogColor) return;
+	if (color == gfx_fogColor) return;
 
-	rgba[0] = PackedCol_R(col) / 255.0f; rgba[1] = PackedCol_G(col) / 255.0f;
-	rgba[2] = PackedCol_B(col) / 255.0f; rgba[3] = PackedCol_A(col) / 255.0f;
+	rgba[0] = PackedCol_R(color) / 255.0f; 
+	rgba[1] = PackedCol_G(color) / 255.0f;
+	rgba[2] = PackedCol_B(color) / 255.0f; 
+	rgba[3] = PackedCol_A(color) / 255.0f;
 
 	glFogfv(GL_FOG_COLOR, rgba);
 	gfx_fogColor = col;
