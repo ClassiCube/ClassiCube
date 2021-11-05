@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "Options.h"
 #include "Bitmap.h"
+#include "Chat.h"
 
 struct _GfxData Gfx;
 GfxResourceID Gfx_defaultIb;
@@ -96,14 +97,14 @@ static void TickReducedPerformance(void) {
 	Thread_Sleep(100); /* 10 FPS */
 
 	if (reducedPerformance) return;
-	reducedPerformance = true; /* TODO: also log a message in-game? */
-	Platform_LogConst("Entering reduced performance mode");
+	reducedPerformance = true;
+	Chat_AddRaw("&eEntering reduced performance mode (game minimised or hidden)");
 }
 
 static void EndReducedPerformance(void) {
 	if (!reducedPerformance) return;
 	reducedPerformance = false;
-	Platform_LogConst("Exited reduced performance mode");
+	Chat_AddRaw("&eExited reduced performance mode");
 }
 
 

@@ -1,7 +1,6 @@
 #include "Core.h"
 #if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
-#include "Chat.h"
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"

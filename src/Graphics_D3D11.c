@@ -52,8 +52,9 @@ static void CreateDeviceAndSwapChain(void) {
 
 	DXGI_SWAP_CHAIN_DESC desc = { 0 };
 	desc.BufferCount = 1;
+	// todo see if BGRA slightly faster
 	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	desc.BufferDesc.RefreshRate.Numerator   = 60;
+	desc.BufferDesc.RefreshRate.Numerator   = 60; // TODO just leave at 0? check DXGI docs again
 	desc.BufferDesc.RefreshRate.Denominator = 1;
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	desc.OutputWindow = WindowInfo.Handle;
