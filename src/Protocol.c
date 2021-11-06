@@ -63,7 +63,7 @@ cc_bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
 static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2, cpe_customModelsVer = 2;
 static cc_bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
-static cc_bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
+static cc_bool cpe_twoWayPing, cpe_pluginMessages, cpe_extTextures, cpe_extBlocks;
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -795,6 +795,19 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 	Server.SendData(data, 15);
 }
 
+void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
+	cc_uint8 buffer[66];
+
+	if (!cpe_pluginMessages) return;
+
+	buffer[0] = OPCODE_PLUGIN_MESSAGE;
+	{
+		buffer[1] = channel;
+		Mem_Copy(buffer + 2, data, 64);
+	}
+	Server.SendData(buffer, 66);
+}
+
 static void CPE_SendExtInfo(int extsCount) {
 	cc_uint8 data[67];
 	data[0] = OPCODE_EXT_INFO;
@@ -932,6 +945,8 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (version == 2) {
 			Protocol.Sizes[OPCODE_DEFINE_MODEL_PART] = 167;
 		}
+	} else if (String_CaselessEqualsConst(&ext, "PluginMessages")) {
+		cpe_pluginMessages = true;
 	}
 #ifdef EXTENDED_TEXTURES
 	else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
@@ -1540,8 +1555,8 @@ static void CPE_Reset(void) {
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
 	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2; cpe_customModelsVer = 2;
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
-	cpe_extTextures = false; cpe_fastMap = false; cpe_extBlocks = false;
-	Game_UseCPEBlocks = false; cpe_blockPerms = false;
+	cpe_pluginMessages = false; cpe_extTextures = false; cpe_fastMap = false;
+	cpe_extBlocks = false; Game_UseCPEBlocks = false; cpe_blockPerms = false;
 	if (!Game_UseCPE) return;
 
 	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);

@@ -64,4 +64,6 @@ void Classic_WritePosition(Vec3 pos, float yaw, float pitch);
 void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 void Classic_SendLogin(void);
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);
+
+CC_API void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data);
 #endif
