@@ -53,6 +53,15 @@ static void AppendChatLogTime(void) {
 	Chat_LogTime[logTimesCount++] = now;
 }
 
+static void ClearChatLogs(void) {
+	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);
+	Chat_LogTime     = defaultLogTimes;
+	logTimesCount    = 0;
+	logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS;
+
+	StringsBuffer_Clear(&Chat_Log);
+}
+
 static char      logNameBuffer[STRING_SIZE];
 static cc_string logName = String_FromArray(logNameBuffer);
 static char      logPathBuffer[FILENAME_SIZE];
@@ -211,6 +220,15 @@ void Chat_Add(const cc_string* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
 void Chat_AddOf(const cc_string* text, int msgType) {
 	if (msgType == MSG_TYPE_NORMAL) {
+		/* Check for chat overflow (see issue #837) */
+		/* This happens because Offset/Length are packed into a single 32 bit value, */
+		/*  with 9 bits used for length. Hence if offset exceeds 2^23 (8388608), it */
+		/*  overflows and earlier chat messages start wrongly appearing instead */
+		if (Chat_Log.totalLength > 8388000) {
+			ClearChatLogs();
+			Chat_AddRaw("&cChat log cleared as it hit 8.3 million character limit");
+		}
+
 		StringsBuffer_Add(&Chat_Log, text);
 		AppendChatLogTime();
 		AppendChatLog(text);
@@ -665,12 +683,7 @@ static void OnFree(void) {
 	ClearCPEMessages();
 	cmds_head = NULL;
 
-	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);
-	Chat_LogTime     = defaultLogTimes;
-	logTimesCount    = 0;
-	logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS;
-
-	StringsBuffer_Clear(&Chat_Log);
+	ClearChatLogs();
 	StringsBuffer_Clear(&Chat_InputLog);
 }
 
