@@ -1,18 +1,19 @@
 #include "Event.h"
 #include "Logger.h"
 
-struct _EntityEventsList  EntityEvents;
-struct _TabListEventsList TabListEvents;
-struct _TextureEventsList TextureEvents;
-struct _GfxEventsList     GfxEvents;
-struct _UserEventsList    UserEvents;
-struct _BlockEventsList   BlockEvents;
-struct _WorldEventsList   WorldEvents;
-struct _ChatEventsList    ChatEvents;
-struct _WindowEventsList  WindowEvents;
-struct _InputEventsList   InputEvents;
-struct _PointerEventsList PointerEvents;
-struct _NetEventsList     NetEvents;
+struct _EntityEventsList        EntityEvents;
+struct _TabListEventsList       TabListEvents;
+struct _TextureEventsList       TextureEvents;
+struct _GfxEventsList           GfxEvents;
+struct _UserEventsList          UserEvents;
+struct _BlockEventsList         BlockEvents;
+struct _WorldEventsList         WorldEvents;
+struct _ChatEventsList          ChatEvents;
+struct _WindowEventsList        WindowEvents;
+struct _InputEventsList         InputEvents;
+struct _PointerEventsList       PointerEvents;
+struct _NetEventsList           NetEvents;
+struct _PluginMessageEventsList PluginMessageEvents;
 
 void Event_Register(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	int i;
@@ -168,5 +169,12 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
+	}
+}
+
+void Event_RaiseData(struct Event_Data* handlers, cc_uint8* data) {
+	int i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](handlers->Objs[i], data);
 	}
 }

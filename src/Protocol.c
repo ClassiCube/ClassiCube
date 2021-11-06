@@ -1530,6 +1530,11 @@ static void CPE_UndefineModel(cc_uint8* data) {
 	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
 }
 
+static void CPE_PluginMessage(cc_uint8* data) {
+	cc_uint8 channel = data[0];
+	Event_RaiseData(&PluginMessageEvents.Received, data + 1);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1575,6 +1580,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
+	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 2);
 }
 
 static void CPE_Tick(void) {
