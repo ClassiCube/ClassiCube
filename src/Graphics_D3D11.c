@@ -54,8 +54,7 @@ static void CreateDeviceAndSwapChain(void) {
 	desc.BufferCount = 1;
 	// todo see if BGRA slightly faster
 	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	desc.BufferDesc.RefreshRate.Numerator   = 60; // TODO just leave at 0? check DXGI docs again
-	desc.BufferDesc.RefreshRate.Denominator = 1;
+	// RefreshRate intentionally left at 0 so display's refresh rate is used
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	desc.OutputWindow = WindowInfo.Handle;
 	desc.SampleDesc.Count   = 1;
@@ -94,9 +93,13 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 	IDXGISwapChain_Release(swapchain);
 	ID3D11DeviceContext_Release(context);
+#ifndef _DEBUG
 	ID3D11Device_Release(device);
 
-#ifdef _DEBUG
+#else
+	ULONG refCount = ID3D11Device_Release(device);
+	if (refCount == 0) return; // device destroyed with no issues
+
 	ID3D11Debug *d3dDebug;
 	static const GUID guid_d3dDebug = { 0x79cf2233, 0x7536, 0x4948,{ 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
 	HRESULT hr = ID3D11Device_QueryInterface(device, &guid_d3dDebug, &d3dDebug);
@@ -1011,9 +1014,10 @@ finished:
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_vsync = vsync;
+	gfx_minFrameMs = minFrameMs;
+	gfx_vsync      = vsync;
 }
-void Gfx_BeginFrame(void) { }
+void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
 void Gfx_Clear(void)      { OM_Clear(); }
 
 void Gfx_EndFrame(void) {
@@ -1028,6 +1032,7 @@ void Gfx_EndFrame(void) {
 
 	EndReducedPerformance();
 	if (hr) Logger_Abort2(hr, "Failed to swap buffers");
+	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
