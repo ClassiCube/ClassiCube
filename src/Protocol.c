@@ -758,7 +758,7 @@ static const char* cpe_clientExtensions[] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages"
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1532,7 +1532,7 @@ static void CPE_UndefineModel(cc_uint8* data) {
 
 static void CPE_PluginMessage(cc_uint8* data) {
 	cc_uint8 channel = data[0];
-	Event_RaiseData(&PluginMessageEvents.Received, data + 1);
+	Event_RaisePluginMessage(&PluginMessageEvents.Received, channel, data + 1);
 }
 
 static void CPE_Reset(void) {
@@ -1580,7 +1580,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
-	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 2);
+	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
 }
 
 static void CPE_Tick(void) {

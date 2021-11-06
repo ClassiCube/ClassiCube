@@ -63,9 +63,9 @@ struct Event_RawMove {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Data_Callback)(void* obj, cc_uint8* data);
-struct Event_Data {
-	Event_Data_Callback Handlers[EVENT_MAX_CALLBACKS]; 
+typedef void (*Event_PluginMessage_Callback)(void* obj, cc_uint8 channel, cc_uint8* data);
+struct Event_PluginMessage {
+	Event_PluginMessage_Callback Handlers[EVENT_MAX_CALLBACKS]; 
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
@@ -101,7 +101,7 @@ void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
 void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
 /* Calls all registered callbacks for an event which has a data argument. */
-void Event_RaiseData(struct Event_Data* handlers, cc_uint8* data);
+void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 channel, cc_uint8* data);
 
 void Event_UnregisterAll(void);
 /* NOTE: Event_UnregisterAll must be updated if events lists are changed */
@@ -187,6 +187,6 @@ CC_VAR extern struct _NetEventsList {
 } NetEvents;
 
 CC_VAR extern struct _PluginMessageEventsList {
-	struct Event_Data Received;
+	struct Event_PluginMessage Received;
 } PluginMessageEvents;
 #endif

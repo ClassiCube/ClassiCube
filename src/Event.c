@@ -172,9 +172,9 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 	}
 }
 
-void Event_RaiseData(struct Event_Data* handlers, cc_uint8* data) {
+void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 channel, cc_uint8* data) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], data);
+		handlers->Handlers[i](handlers->Objs[i], channel, data);
 	}
 }
