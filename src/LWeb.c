@@ -548,13 +548,13 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 #endif
 }
 
-void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
+void FetchUpdateTask_Run(cc_bool release, int buildIndex) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
 	String_Format2(&url, UPDATES_SERVER "/%c/%c",
-		release ? "release"    : "latest",
-		d3d9    ? Updater_D3D9 : Updater_OGL);
+		release ? "release" : "latest",
+		Updater_Info.builds[buildIndex].path);
 
 	LWebTask_Reset(&FetchUpdateTask.Base);
 	FetchUpdateTask.timestamp   = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;

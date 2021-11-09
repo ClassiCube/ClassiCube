@@ -600,13 +600,18 @@ cc_result Process_StartOpen(const cc_string* args) {
 #define UPDATE_TMP TEXT("CC_prev.exe")
 #define UPDATE_SRC TEXT(UPDATE_FILE)
 
+const struct UpdaterInfo Updater_Info = {
+	"&eDirect3D 9 is recommended", 2,
+	{
 #if _WIN64
-const char* const Updater_D3D9 = "ClassiCube.64.exe";
-const char* const Updater_OGL  = "ClassiCube.64-opengl.exe";
+		{ "OpenGL",    "ClassiCube.64-opengl.exe" },
+		{ "Direct3D9", "ClassiCube.64.exe" }
 #else
-const char* const Updater_D3D9 = "ClassiCube.exe";
-const char* const Updater_OGL  = "ClassiCube.opengl.exe";
+		{ "OpenGL",    "ClassiCube.opengl.exe" },
+		{ "Direct3D9", "ClassiCube.exe" }
 #endif
+	}
+};
 
 cc_bool Updater_Clean(void) {
 	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;

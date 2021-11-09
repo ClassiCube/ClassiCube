@@ -1565,9 +1565,8 @@ static struct UpdatesScreen {
 	struct LButton btnRel[2], btnDev[2], btnBack;
 	struct LLabel  lblYour, lblRel, lblDev, lblInfo, lblStatus;
 	struct LWidget* _widgets[12];
-	const char* buildName;
-	int buildProgress;
-	cc_bool pendingFetch, release, d3d9;
+	int buildProgress, buildIndex;
+	cc_bool pendingFetch, release;
 } UpdatesScreen_Instance;
 
 CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, int delta) {
@@ -1618,29 +1617,33 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 	UpdatesScreen_Format(&s->lblDev, "Latest dev build: ", CheckUpdateTask.devTimestamp);
 }
 
+static void UpdatesScreen_UpdateHeader(struct UpdatesScreen* s, cc_string* str) {
+	const char* message;
+	if ( s->release) message = "&eFetching latest release ";
+	if (!s->release) message = "&eFetching latest dev build ";
+
+	String_Format2(str, "%c%c", message, Updater_Info.builds[s->buildIndex].name);
+}
+
 static void UpdatesScreen_DoFetch(struct UpdatesScreen* s) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	cc_uint64 time;
 	
 	time = s->release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
 	if (!time || FetchUpdateTask.Base.working) return;
-	FetchUpdateTask_Run(s->release, s->d3d9);
-	s->pendingFetch = false;
+	FetchUpdateTask_Run(s->release, s->buildIndex);
 
-	if ( s->release &&  s->d3d9) s->buildName = "&eFetching latest release (Direct3D9)";
-	if ( s->release && !s->d3d9) s->buildName = "&eFetching latest release (OpenGL)";
-	if (!s->release &&  s->d3d9) s->buildName = "&eFetching latest dev build (Direct3D9)";
-	if (!s->release && !s->d3d9) s->buildName = "&eFetching latest dev build (OpenGL)";
-
+	s->pendingFetch  = false;
 	s->buildProgress = -1;
 	String_InitArray(str, strBuffer);
 
-	String_Format1(&str, "%c..", s->buildName);
+	UpdatesScreen_UpdateHeader(s, &str);
+	String_AppendConst(&str, "..");
 	LLabel_SetText(&s->lblStatus, &str);
 	LWidget_Redraw(&s->lblStatus);
 }
 
-static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
+static void UpdatesScreen_Get(cc_bool release, int buildIndex) {
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 	/* This code is deliberately split up to handle this particular case: */
 	/*  The user clicked this button before CheckUpdateTask completed, */
@@ -1648,7 +1651,7 @@ static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 	/*  By storing requested build, it can be fetched later upon completion. */
 	s->pendingFetch = true;
 	s->release      = release;
-	s->d3d9         = d3d9;
+	s->buildIndex   = buildIndex;
 	UpdatesScreen_DoFetch(s);
 }
 
@@ -1670,7 +1673,8 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 	if (progress < 0 || progress > 100) return;
 	String_InitArray(str, strBuffer);
 
-	String_Format2(&str, "%c &a%i%%", s->buildName, &s->buildProgress);
+	UpdatesScreen_UpdateHeader(s, &str);
+	String_Format1(&str, " &a%i%%", &s->buildProgress);
 	LLabel_SetText(&s->lblStatus, &str);
 	LWidget_Redraw(&s->lblStatus);
 }
@@ -1695,10 +1699,10 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 	}
 }
 
-static void UpdatesScreen_RelD3D9(void* w, int idx)   { UpdatesScreen_Get(true,  true);  }
-static void UpdatesScreen_RelOpenGL(void* w, int idx) { UpdatesScreen_Get(true,  false); }
-static void UpdatesScreen_DevD3D9(void* w, int idx)   { UpdatesScreen_Get(false, true);  }
-static void UpdatesScreen_DevOpenGL(void* w, int idx) { UpdatesScreen_Get(false, false); }
+static void UpdatesScreen_RelD3D9(void* w, int idx)   { UpdatesScreen_Get(true,  1);  }
+static void UpdatesScreen_RelOpenGL(void* w, int idx) { UpdatesScreen_Get(true,  0); }
+static void UpdatesScreen_DevD3D9(void* w, int idx)   { UpdatesScreen_Get(false, 1);  }
+static void UpdatesScreen_DevOpenGL(void* w, int idx) { UpdatesScreen_Get(false, 0); }
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
@@ -1713,18 +1717,15 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_,  &s->lblStatus, "");
 	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
-	if (Updater_D3D9) {
-		LButton_Init(s_, &s->btnRel[0], 130, 35, "Direct3D 9");
-		LButton_Init(s_, &s->btnDev[0], 130, 35, "Direct3D 9");
-		LLabel_Init(s_,  &s->lblInfo, "&eDirect3D 9 is recommended");
+	if (Updater_Info.numBuilds >= 2) {
+		LButton_Init(s_, &s->btnRel[0], 130, 35, Updater_Info.builds[1].name);
+		LButton_Init(s_, &s->btnDev[0], 130, 35, Updater_Info.builds[1].name);
 	}
-	if (Updater_OGL) {
-		LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
-		LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
+	if (Updater_Info.numBuilds >= 1) {
+		LButton_Init(s_, &s->btnRel[1], 130, 35, Updater_Info.builds[0].name);
+		LButton_Init(s_, &s->btnDev[1], 130, 35, Updater_Info.builds[0].name);
 	}
-#ifdef CC_BUILD_MOBILE
-	LLabel_Init(s_, &s->lblInfo, "&eRedownload and reinstall to update");
-#endif
+	LLabel_Init(s_, &s->lblInfo, Updater_Info.info);
 
 	s->btnRel[0].OnClick = UpdatesScreen_RelD3D9;
 	s->btnRel[1].OnClick = UpdatesScreen_RelOpenGL;
@@ -1759,7 +1760,7 @@ static void UpdatesScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->lblRel,    ANCHOR_CENTRE, ANCHOR_CENTRE, -20, -75);
 	LWidget_SetLocation(&s->btnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, -40);
 
-	if (Updater_D3D9) {
+	if (Updater_Info.numBuilds >= 2) {
 		LWidget_SetLocation(&s->btnRel[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 80, -40);
 	} else {
 		LWidget_SetLocation(&s->btnRel[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -40);
@@ -1768,7 +1769,7 @@ static void UpdatesScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->lblDev,    ANCHOR_CENTRE, ANCHOR_CENTRE, -30, 20);
 	LWidget_SetLocation(&s->btnDev[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, 55);
 
-	if (Updater_D3D9) {
+	if (Updater_Info.numBuilds >= 2) {
 		LWidget_SetLocation(&s->btnDev[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 80, 55);
 	} else {
 		LWidget_SetLocation(&s->btnDev[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, 55);
@@ -1790,7 +1791,6 @@ static void UpdatesScreen_Tick(struct LScreen* s_) {
 /* Aborts fetch if it is in progress */
 static void UpdatesScreen_Free(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	s->buildName     = NULL;
 	s->buildProgress = -1;
 
 	FetchUpdateTask.Base.working = false;
