@@ -73,7 +73,7 @@ You are required to have this HTML code somewhere in the page:
 
 ### Complete example
 
-The links below show implementing a simple website that hosts the web client
+The links below show how to integrate the webclient into a simple website
 * [Flask (python webserver)](hosting-flask.md)
 
 ### iOS / Android support
