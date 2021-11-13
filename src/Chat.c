@@ -510,29 +510,7 @@ static int cuboid_block = -1;
 static IVec3 cuboid_mark1, cuboid_mark2;
 static cc_bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
 static const cc_string cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-
-static cc_bool CuboidCommand_ParseArgs(const cc_string* args, int argsCount) {
-	int block;
-	if (!argsCount) return true;
-
-	if (String_CaselessEqualsConst(&args[argsCount - 1], "yes")) { 
-		cuboid_persist = true; 
-		/* special case "/cuboid yes" */
-		if (argsCount == 1) return true;
-	}
-
-	block = Block_Parse(&args[0]);
-	if (block == -1) {
-		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[0]); return false;
-	}
-
-	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
-		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[0]); return false;
-	}
-
-	cuboid_block = block;
-	return true;
-}
+static const cc_string yes_string = String_FromConst("yes");
 
 static void CuboidCommand_DoCuboid(void) {
 	IVec3 min, max;
@@ -582,6 +560,33 @@ static void CuboidCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, Blo
 	}
 }
 
+static cc_bool CuboidCommand_ParseArgs(const cc_string* args) {
+	cc_string value = *args;
+	int block;
+
+	/* Check for /cuboid [block] yes */
+	if (String_CaselessEnds(&value, &yes_string)) {
+		cuboid_persist = true; 
+		value.length  -= 3;
+		String_UNSAFE_TrimEnd(&value);
+
+		/* special case "/cuboid yes" */
+		if (!value.length) return true;
+	}
+
+	block = Block_Parse(&value);
+	if (block == -1) {
+		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &value); return false;
+	}
+
+	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
+		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &value); return false;
+	}
+
+	cuboid_block = block;
+	return true;
+}
+
 static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 	if (cuboid_hooked) {
 		Event_Unregister_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
@@ -591,7 +596,7 @@ static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 	cuboid_block    = -1;
 	cuboid_hasMark1 = false;
 	cuboid_persist  = false;
-	if (!CuboidCommand_ParseArgs(args, argsCount)) return;
+	if (argsCount && !CuboidCommand_ParseArgs(args)) return;
 
 	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
 	Event_Register_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
@@ -600,7 +605,7 @@ static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 
 static struct ChatCommand CuboidCommand = {
 	"Cuboid", CuboidCommand_Execute,
-	COMMAND_FLAG_SINGLEPLAYER_ONLY,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client cuboid [block] [persist]",
 		"&eFills the 3D rectangle between two points with [block].",
