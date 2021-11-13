@@ -39,13 +39,18 @@ extern double Chat_AnnouncementReceived;
 extern double Chat_BigAnnouncementReceived;
 extern double Chat_SmallAnnouncementReceived;
 
+/* This command is only available in singleplayer */
+#define COMMAND_FLAG_SINGLEPLAYER_ONLY 0x01
+/* args is passed as a single string instead of being split by spaces */
+#define COMMAND_FLAG_UNSPLIT_ARGS 0x02
+
 struct ChatCommand;
 /* Represents a client-side command/action. */
 struct ChatCommand {
 	const char* name;         /* Full name of this command */
 	/* Function pointer for the actual action the command performs */
 	void (*Execute)(const cc_string* args, int argsCount);
-	cc_bool singleplayerOnly; /* Whether this command is only usable in singleplayer */
+	cc_uint8 flags;           /* Flags for handling this command (see COMMAND_FLAG defines) */
 	const char* help[5];      /* Messages to show when a player uses /help on this command */
 	struct ChatCommand* next; /* Next command in linked-list of client commands */
 };
