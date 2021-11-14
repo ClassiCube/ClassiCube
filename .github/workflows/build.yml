@@ -49,22 +49,29 @@ jobs:
 
       # Build
       - name: Build for ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit)
-        if: matrix.config.plat == 'Linux'
+        if: matrix.config.plat == 'Linux' && matrix.config.bits == 64
         run: |
           cd src
-          gcc *.c -m${{ matrix.config.bits }} -o ClassiCube -rdynamic -lm -lpthread -lX11 -lXi -lGL -ldl
+          make linux
+
+      - name: Build for ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit)
+        if: matrix.config.plat == 'Linux' && matrix.config.bits == 32
+        run: |
+          cd src
+          # Note, this overwrites the previous flags
+          make linux CFLAGS="-m32" LDFLAGS="-m32"
 
       - name: Build for ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit)
         if: matrix.config.plat == 'Windows' && matrix.config.bits == 64
         run: |
           cd src
-          x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32
+          make mingw CC="x86_64-w64-mingw32-gcc"
 
       - name: Build for ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit)
         if: matrix.config.plat == 'Windows' && matrix.config.bits == 32
         run: |
           cd src
-          i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32
+          make mingw CC="i686-w64-mingw32-gcc"
 
   build_on_windows:
     name: Build ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit) on Windows
