@@ -134,4 +134,4 @@ jobs:
         if: matrix.config.plat == 'Mac' && matrix.config.bits == 32
         run: |
           cd src
-          cc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit
+          make darwin
