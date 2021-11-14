@@ -63,7 +63,7 @@ cc_bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
 static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2, cpe_customModelsVer = 2;
 static cc_bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
-static cc_bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
+static cc_bool cpe_twoWayPing, cpe_pluginMessages, cpe_extTextures, cpe_extBlocks;
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -758,7 +758,7 @@ static const char* cpe_clientExtensions[] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -793,6 +793,19 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 		}
 	}
 	Server.SendData(data, 15);
+}
+
+void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
+	cc_uint8 buffer[66];
+
+	if (!cpe_pluginMessages) return;
+
+	buffer[0] = OPCODE_PLUGIN_MESSAGE;
+	{
+		buffer[1] = channel;
+		Mem_Copy(buffer + 2, data, 64);
+	}
+	Server.SendData(buffer, 66);
 }
 
 static void CPE_SendExtInfo(int extsCount) {
@@ -932,6 +945,8 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (version == 2) {
 			Protocol.Sizes[OPCODE_DEFINE_MODEL_PART] = 167;
 		}
+	} else if (String_CaselessEqualsConst(&ext, "PluginMessages")) {
+		cpe_pluginMessages = true;
 	}
 #ifdef EXTENDED_TEXTURES
 	else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
@@ -1530,13 +1545,18 @@ static void CPE_UndefineModel(cc_uint8* data) {
 	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
 }
 
+static void CPE_PluginMessage(cc_uint8* data) {
+	cc_uint8 channel = data[0];
+	Event_RaisePluginMessage(&PluginMessageEvents.Received, channel, data + 1);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
 	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2; cpe_customModelsVer = 2;
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
-	cpe_extTextures = false; cpe_fastMap = false; cpe_extBlocks = false;
-	Game_UseCPEBlocks = false; cpe_blockPerms = false;
+	cpe_pluginMessages = false; cpe_extTextures = false; cpe_fastMap = false;
+	cpe_extBlocks = false; Game_UseCPEBlocks = false; cpe_blockPerms = false;
 	if (!Game_UseCPE) return;
 
 	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);
@@ -1575,6 +1595,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
+	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
 }
 
 static void CPE_Tick(void) {

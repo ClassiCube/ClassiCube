@@ -35,6 +35,7 @@ enum OPCODE_ {
 	OPCODE_SET_SPAWNPOINT,      OPCODE_VELOCITY_CONTROL,
 	OPCODE_DEFINE_EFFECT,       OPCODE_SPAWN_EFFECT,
 	OPCODE_DEFINE_MODEL, OPCODE_DEFINE_MODEL_PART, OPCODE_UNDEFINE_MODEL,
+	OPCODE_PLUGIN_MESSAGE,
 
 	OPCODE_COUNT
 };
@@ -63,4 +64,7 @@ void Classic_WritePosition(Vec3 pos, float yaw, float pitch);
 void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 void Classic_SendLogin(void);
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);
+
+/* Send a PluginMessage to the server; data must contain 64 bytes. */
+CC_API void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data);
 #endif
