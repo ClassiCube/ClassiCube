@@ -128,10 +128,10 @@ jobs:
           cd src
           # fix for "error: implicit declaration of function 'CGDisplayBitsPerPixel'"
           sed -i '' 's|#include <Cocoa/Cocoa.h>|&\'$'\nextern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);|' interop_cocoa.m
-          gcc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          make mac_x64
 
       - name: Build for ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit)
         if: matrix.config.plat == 'Mac' && matrix.config.bits == 32
         run: |
           cd src
-          make darwin
+          make mac_x32
