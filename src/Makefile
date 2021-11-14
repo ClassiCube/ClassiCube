@@ -1,5 +1,6 @@
-SOURCES=$(wildcard *.c)
-OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
+C_SOURCES:=$(wildcard *.c)
+C_OBJECTS:=$(patsubst %.c, %.o, $(C_SOURCES))
+OBJECTS:=$(C_OBJECTS)
 ENAME=ClassiCube
 DEL=rm
 JOBS=1
@@ -55,7 +56,7 @@ LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL -framework 
 endif
 
 ifeq ($(PLAT),mac_x64)
-SOURCES+=interop_cocoa.m
+OBJECTS+=interop_cocoa.o
 CFLAGS=-g -m64 -pipe -fno-math-errno
 LIBS=
 LDFLAGS=-rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
@@ -126,5 +127,8 @@ clean:
 $(ENAME): $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(LIBS)
 
-$(OBJECTS): %.o : %.c
+$(C_OBJECTS): %.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+	
+interop_cocoa.o: interop_cocoa.m
 	$(CC) $(CFLAGS) -c $< -o $@
