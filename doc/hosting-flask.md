@@ -1,4 +1,6 @@
-The website will be structured like so:
+The page provides a complete example for how to integrate the webclient into a simple website
+
+The example website will be structured like so:
 
 ```
 websrv.py

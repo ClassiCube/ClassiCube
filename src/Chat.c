@@ -335,6 +335,7 @@ static void Commands_Execute(const cc_string* input) {
 
 	struct ChatCommand* cmd;
 	int offset, count;
+	cc_string name, value;
 	cc_string args[50];
 
 	if (String_CaselessStarts(&text, &prefixSpace)) { /* /client command args */
@@ -349,15 +350,22 @@ static void Commands_Execute(const cc_string* input) {
 	/* Check for only / or /client */
 	if (!text.length) { Commands_PrintDefault(); return; }
 
-	count = String_UNSAFE_Split(&text, ' ', args, Array_Elems(args));
-	cmd   = Commands_FindMatch(&args[0]);
+	String_UNSAFE_Separate(&text, ' ', &name, &value);
+	cmd = Commands_FindMatch(&name);
 	if (!cmd) return;
 
-	if (cmd->singleplayerOnly && !Server.IsSinglePlayer) {
-		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", &args[0]);
+	if ((cmd->flags & COMMAND_FLAG_SINGLEPLAYER_ONLY) && !Server.IsSinglePlayer) {
+		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", &name);
 		return;
 	}
-	cmd->Execute(&args[1], count - 1);
+
+	if (cmd->flags & COMMAND_FLAG_UNSPLIT_ARGS) {
+		/* argsCount = 0 if value.length is 0, 1 otherwise */
+		cmd->Execute(&value, value.length != 0);
+	} else {
+		count = String_UNSAFE_Split(&value, ' ', args, Array_Elems(args));
+		cmd->Execute(args, count);
+	}
 }
 
 
@@ -369,7 +377,7 @@ static void HelpCommand_Execute(const cc_string* args, int argsCount) {
 	int i;
 
 	if (!argsCount) { Commands_PrintDefault(); return; }
-	cmd = Commands_FindMatch(&args[0]);
+	cmd = Commands_FindMatch(args);
 	if (!cmd) return;
 
 	for (i = 0; i < Array_Elems(cmd->help); i++) {
@@ -379,7 +387,8 @@ static void HelpCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand HelpCommand = {
-	"Help", HelpCommand_Execute, false,
+	"Help", HelpCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client help [command name]",
 		"&eDisplays the help for the given command.",
@@ -399,7 +408,8 @@ static void GpuInfoCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand GpuInfoCommand = {
-	"GpuInfo", GpuInfoCommand_Execute, false,
+	"GpuInfo", GpuInfoCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client gpuinfo",
 		"&eDisplays information about your GPU.",
@@ -412,18 +422,19 @@ static void RenderTypeCommand_Execute(const cc_string* args, int argsCount) {
 		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
 	}
 
-	flags = EnvRenderer_CalcFlags(&args[0]);
+	flags = EnvRenderer_CalcFlags(args);
 	if (flags >= 0) {
 		EnvRenderer_SetMode(flags);
-		Options_Set(OPT_RENDER_TYPE, &args[0]);
-		Chat_Add1("&e/client: &fRender type is now %s.", &args[0]);
+		Options_Set(OPT_RENDER_TYPE, args);
+		Chat_Add1("&e/client: &fRender type is now %s.", args);
 	} else {
-		Chat_Add1("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[0]);
+		Chat_Add1("&e/client: &cUnrecognised render type &f\"%s\"&c.", args);
 	}
 }
 
 static struct ChatCommand RenderTypeCommand = {
-	"RenderType", RenderTypeCommand_Execute, false,
+	"RenderType", RenderTypeCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client rendertype [normal/legacy/legacyfast]",
 		"&bnormal: &eDefault renderer, with all environmental effects enabled.",
@@ -451,7 +462,8 @@ static void ResolutionCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand ResolutionCommand = {
-	"Resolution", ResolutionCommand_Execute, false,
+	"Resolution", ResolutionCommand_Execute,
+	0,
 	{
 		"&a/client resolution [width] [height]",
 		"&ePrecisely sets the size of the rendered window.",
@@ -460,14 +472,15 @@ static struct ChatCommand ResolutionCommand = {
 
 static void ModelCommand_Execute(const cc_string* args, int argsCount) {
 	if (argsCount) {
-		Entity_SetModel(&LocalPlayer_Instance.Base, &args[0]);
+		Entity_SetModel(&LocalPlayer_Instance.Base, args);
 	} else {
 		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	}
 }
 
 static struct ChatCommand ModelCommand = {
-	"Model", ModelCommand_Execute, true,
+	"Model", ModelCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client model [name]",
 		"&bnames: &echibi, chicken, creeper, human, pig, sheep",
@@ -481,7 +494,8 @@ static void ClearDeniedCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand ClearDeniedCommand = {
-	"ClearDenied", ClearDeniedCommand_Execute, false,
+	"ClearDenied", ClearDeniedCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client cleardenied",
 		"&eClears the list of texture pack URLs you have denied",
@@ -496,29 +510,7 @@ static int cuboid_block = -1;
 static IVec3 cuboid_mark1, cuboid_mark2;
 static cc_bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
 static const cc_string cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-
-static cc_bool CuboidCommand_ParseArgs(const cc_string* args, int argsCount) {
-	int block;
-	if (!argsCount) return true;
-
-	if (String_CaselessEqualsConst(&args[argsCount - 1], "yes")) { 
-		cuboid_persist = true; 
-		/* special case "/cuboid yes" */
-		if (argsCount == 1) return true;
-	}
-
-	block = Block_Parse(&args[0]);
-	if (block == -1) {
-		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[0]); return false;
-	}
-
-	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
-		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[0]); return false;
-	}
-
-	cuboid_block = block;
-	return true;
-}
+static const cc_string yes_string = String_FromConst("yes");
 
 static void CuboidCommand_DoCuboid(void) {
 	IVec3 min, max;
@@ -568,6 +560,33 @@ static void CuboidCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, Blo
 	}
 }
 
+static cc_bool CuboidCommand_ParseArgs(const cc_string* args) {
+	cc_string value = *args;
+	int block;
+
+	/* Check for /cuboid [block] yes */
+	if (String_CaselessEnds(&value, &yes_string)) {
+		cuboid_persist = true; 
+		value.length  -= 3;
+		String_UNSAFE_TrimEnd(&value);
+
+		/* special case "/cuboid yes" */
+		if (!value.length) return true;
+	}
+
+	block = Block_Parse(&value);
+	if (block == -1) {
+		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &value); return false;
+	}
+
+	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
+		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &value); return false;
+	}
+
+	cuboid_block = block;
+	return true;
+}
+
 static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 	if (cuboid_hooked) {
 		Event_Unregister_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
@@ -577,7 +596,7 @@ static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 	cuboid_block    = -1;
 	cuboid_hasMark1 = false;
 	cuboid_persist  = false;
-	if (!CuboidCommand_ParseArgs(args, argsCount)) return;
+	if (argsCount && !CuboidCommand_ParseArgs(args)) return;
 
 	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
 	Event_Register_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
@@ -585,7 +604,8 @@ static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand CuboidCommand = {
-	"Cuboid", CuboidCommand_Execute, true, 
+	"Cuboid", CuboidCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
 	{
 		"&a/client cuboid [block] [persist]",
 		"&eFills the 3D rectangle between two points with [block].",
@@ -618,7 +638,8 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 }
 
 static struct ChatCommand TeleportCommand = {
-	"TP", TeleportCommand_Execute, true,
+	"TP", TeleportCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY,
 	{
 		"&a/client tp [x y z]",
 		"&eMoves you to the given coordinates.",

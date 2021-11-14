@@ -519,6 +519,11 @@ static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride,
 }
 
 static void OpenGL11Fallback(void) {
+	Window_ShowDialog("Performance warning",
+		"Your system only supports only OpenGL 1.1\n" \
+		"This is usually caused by graphics drivers not being installed\n\n" \
+		"As such you will likely experience very poor performance");
+		
 	_glBindBuffer = fake_bindBuffer; _glDeleteBuffers = fake_deleteBuffers;
 	_glGenBuffers = fake_genBuffers; _glBufferData    = fake_bufferData;
 	_glBufferSubData = fake_bufferSubData;
