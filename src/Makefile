@@ -13,6 +13,14 @@ ifndef $(PLAT)
 	else
 		PLAT=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 	endif
+	
+	ifeq ($(PLAT),darwin)
+		ifeq ($(shell uname -m), x86_64)
+			PLAT=mac_x64
+		else
+			PLAT=mac_x32
+		endif
+	endif
 endif
 
 ifeq ($(PLAT),web)
@@ -40,9 +48,17 @@ CFLAGS=-g -pipe -fno-math-errno
 LIBS=-lm -lsocket -lX11 -lXi -lGL
 endif
 
-ifeq ($(PLAT),darwin)
+ifeq ($(PLAT),mac_x32)
 LIBS=
+CFLAGS=-g -m32 -pipe -fno-math-errno
 LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL -framework IOKit
+endif
+
+ifeq ($(PLAT),mac_x64)
+SOURCES+=interop_cocoa.m
+CFLAGS=-g -m64 -pipe -fno-math-errno
+LIBS=
+LDFLAGS=-rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 endif
 
 ifeq ($(PLAT),freebsd)
@@ -89,8 +105,10 @@ mingw:
 	$(MAKE) $(ENAME) PLAT=mingw -j$(JOBS)
 sunos:
 	$(MAKE) $(ENAME) PLAT=sunos -j$(JOBS)
-darwin:
-	$(MAKE) $(ENAME) PLAT=darwin -j$(JOBS)
+mac_x32:
+	$(MAKE) $(ENAME) PLAT=mac_x32 -j$(JOBS)
+mac_x64:
+	$(MAKE) $(ENAME) PLAT=mac_x64 -j$(JOBS)
 freebsd:
 	$(MAKE) $(ENAME) PLAT=freebsd -j$(JOBS)
 openbsd:
