@@ -21,7 +21,7 @@ ROOT_DIR=~/client # can be changed
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -Qn -w"
 
 # log file that errors are written to
-ERR_FILES=$ROOT_DIR/cc_errors.txt
+ERRS_FILE=$ROOT_DIR/cc_errors.txt
 rm "$ERRS_FILE"
 
 # ----------------------------- compile windows
