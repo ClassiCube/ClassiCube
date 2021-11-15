@@ -766,7 +766,7 @@ static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 		String_AppendConst(&text, "Key: press a key..");
 	} else {
 		String_AppendConst(&text, "Key: ");
-		String_AppendConst(&text, Input_Names[s->curHotkey.Trigger]);
+		String_AppendConst(&text, Input_Names[s->curHotkey.trigger]);
 	}
 	ButtonWidget_Set(&s->btns[0], &text, &s->titleFont);
 }
@@ -779,7 +779,7 @@ static void EditHotkeyScreen_UpdateModifiers(struct EditHotkeyScreen* s) {
 		String_AppendConst(&text, "Modifiers: press a key..");
 	} else {
 		String_AppendConst(&text, "Modifiers:");
-		EditHotkeyScreen_MakeFlags(s->curHotkey.Flags, &text);
+		EditHotkeyScreen_MakeFlags(s->curHotkey.mods, &text);
 	}
 	ButtonWidget_Set(&s->btns[1], &text, &s->titleFont);
 }
@@ -789,7 +789,7 @@ static void EditHotkeyScreen_UpdateLeaveOpen(struct EditHotkeyScreen* s) {
 	String_InitArray(text, textBuffer);
 
 	String_AppendConst(&text, "Input stays open: ");
-	String_AppendConst(&text, s->curHotkey.StaysOpen ? "ON" : "OFF");
+	String_AppendConst(&text, s->curHotkey.staysOpen ? "ON" : "OFF");
 	ButtonWidget_Set(&s->btns[2], &text, &s->titleFont);
 }
 
@@ -817,7 +817,7 @@ static void EditHotkeyScreen_LeaveOpen(void* screen, void* b) {
 		EditHotkeyScreen_UpdateModifiers(s);
 	}
 	
-	s->curHotkey.StaysOpen = !s->curHotkey.StaysOpen;
+	s->curHotkey.staysOpen = !s->curHotkey.staysOpen;
 	EditHotkeyScreen_UpdateLeaveOpen(s);
 }
 
@@ -825,16 +825,16 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	struct HotkeyData hk = s->origHotkey;
 
-	if (hk.Trigger) {
-		Hotkeys_Remove(hk.Trigger, hk.Flags);
-		StoredHotkeys_Remove(hk.Trigger, hk.Flags);
+	if (hk.trigger) {
+		Hotkeys_Remove(hk.trigger, hk.mods);
+		StoredHotkeys_Remove(hk.trigger, hk.mods);
 	}
 
 	hk = s->curHotkey;
-	if (hk.Trigger) {
+	if (hk.trigger) {
 		cc_string text = s->input.base.text;
-		Hotkeys_Add(hk.Trigger, hk.Flags, &text, hk.StaysOpen);
-		StoredHotkeys_Add(hk.Trigger, hk.Flags, hk.StaysOpen, &text);
+		Hotkeys_Add(hk.trigger, hk.mods, &text, hk.staysOpen);
+		StoredHotkeys_Add(hk.trigger, hk.mods, hk.staysOpen, &text);
 	}
 	HotkeyListScreen_Show();
 }
@@ -843,9 +843,9 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	struct HotkeyData hk = s->origHotkey;
 
-	if (hk.Trigger) {
-		Hotkeys_Remove(hk.Trigger, hk.Flags);
-		StoredHotkeys_Remove(hk.Trigger, hk.Flags);
+	if (hk.trigger) {
+		Hotkeys_Remove(hk.trigger, hk.mods);
+		StoredHotkeys_Remove(hk.trigger, hk.mods);
 	}
 	HotkeyListScreen_Show();
 }
@@ -881,12 +881,12 @@ static int EditHotkeyScreen_KeyDown(void* screen, int key) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->selectedI >= 0) {
 		if (s->selectedI == 0) {
-			s->curHotkey.Trigger = key;
+			s->curHotkey.trigger = key;
 		} else if (s->selectedI == 1) {
-			if      (key == KEY_LCTRL  || key == KEY_RCTRL)  s->curHotkey.Flags |= HOTKEY_MOD_CTRL;
-			else if (key == KEY_LSHIFT || key == KEY_RSHIFT) s->curHotkey.Flags |= HOTKEY_MOD_SHIFT;
-			else if (key == KEY_LALT   || key == KEY_RALT)   s->curHotkey.Flags |= HOTKEY_MOD_ALT;
-			else s->curHotkey.Flags = 0;
+			if      (key == KEY_LCTRL  || key == KEY_RCTRL)  s->curHotkey.mods |= HOTKEY_MOD_CTRL;
+			else if (key == KEY_LSHIFT || key == KEY_RSHIFT) s->curHotkey.mods |= HOTKEY_MOD_SHIFT;
+			else if (key == KEY_LALT   || key == KEY_RALT)   s->curHotkey.mods |= HOTKEY_MOD_ALT;
+			else s->curHotkey.mods = 0;
 		}
 
 		s->supressNextPress = true;
@@ -908,7 +908,7 @@ static void EditHotkeyScreen_ContextLost(void* screen) {
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	cc_bool existed = s->origHotkey.Trigger != KEY_NONE;
+	cc_bool existed = s->origHotkey.trigger != KEY_NONE;
 
 	Gui_MakeTitleFont(&s->titleFont);
 	Gui_MakeBodyFont(&s->textFont);
@@ -966,8 +966,8 @@ static void EditHotkeyScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->btns[3], 300, EditHotkeyScreen_SaveChanges);
 	ButtonWidget_Init(&s->btns[4], 300, EditHotkeyScreen_RemoveHotkey);
 
-	if (s->origHotkey.Trigger) {
-		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
+	if (s->origHotkey.trigger) {
+		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.textIndex);
 	} else { text = String_Empty; }
 
 	TextInputWidget_Create(&s->input, 500, &text, &desc);
@@ -1657,7 +1657,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	struct HotkeyData h, original = { 0 };
 	cc_string text, key, value;
 	int trigger;
-	int i, flags = 0;
+	int i, mods = 0;
 
 	text = ListScreen_UNSAFE_GetCur(s, widget);
 	if (!text.length) {
@@ -1665,14 +1665,14 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
-	if (String_ContainsConst(&value, "Ctrl"))  flags |= HOTKEY_MOD_CTRL;
-	if (String_ContainsConst(&value, "Shift")) flags |= HOTKEY_MOD_SHIFT;
-	if (String_ContainsConst(&value, "Alt"))   flags |= HOTKEY_MOD_ALT;
+	if (String_ContainsConst(&value, "Ctrl"))  mods |= HOTKEY_MOD_CTRL;
+	if (String_ContainsConst(&value, "Shift")) mods |= HOTKEY_MOD_SHIFT;
+	if (String_ContainsConst(&value, "Alt"))   mods |= HOTKEY_MOD_ALT;
 
 	trigger = Utils_ParseEnum(&key, KEY_NONE, Input_Names, INPUT_COUNT);
 	for (i = 0; i < HotkeysText.count; i++) {
 		h = HotkeysList[i];
-		if (h.Trigger == trigger && h.Flags == flags) { original = h; break; }
+		if (h.trigger == trigger && h.mods == mods) { original = h; break; }
 	}
 
 	EditHotkeyScreen_Show(original);
@@ -1693,11 +1693,11 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 	for (i = 0; i < HotkeysText.count; i++) {
 		hKey = HotkeysList[i];
 		text.length = 0;
-		String_AppendConst(&text, Input_Names[hKey.Trigger]);
+		String_AppendConst(&text, Input_Names[hKey.trigger]);
 
-		if (hKey.Flags) {
+		if (hKey.mods) {
 			String_AppendConst(&text, " +");
-			HotkeyListScreen_MakeFlags(hKey.Flags, &text);
+			HotkeyListScreen_MakeFlags(hKey.mods, &text);
 		}
 		StringsBuffer_Add(&s->entries, &text);
 	}

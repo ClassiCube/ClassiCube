@@ -143,10 +143,10 @@ void KeyBind_Set(KeyBind binding, int key);
 
 extern const cc_uint8 Hotkeys_LWJGL[256];
 struct HotkeyData {
-	int TextIndex;     /* contents to copy directly into the input bar */
-	cc_uint8 Trigger;  /* Member of Key enumeration */
-	cc_uint8 Flags;    /* HotkeyModifiers bitflags */
-	cc_bool StaysOpen; /* whether the user is able to enter further input */
+	int textIndex;     /* contents to copy directly into the input bar */
+	cc_uint8 trigger;  /* Member of Key enumeration */
+	cc_uint8 mods;     /* HotkeyModifiers bitflags */
+	cc_bool staysOpen; /* whether the user is able to enter further input */
 };
 
 #define HOTKEYS_MAX_COUNT 256

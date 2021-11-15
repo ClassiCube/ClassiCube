@@ -407,12 +407,12 @@ static void Hotkeys_QuickSort(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		cc_uint8 pivot = keys[(i + j) >> 1].Flags;
+		cc_uint8 pivot = keys[(i + j) >> 1].mods;
 
 		/* partition the list */
 		while (i <= j) {
-			while (pivot < keys[i].Flags) i++;
-			while (pivot > keys[j].Flags) j--;
+			while (pivot < keys[i].mods) i++;
+			while (pivot > keys[j].mods) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -422,10 +422,10 @@ static void Hotkeys_QuickSort(int left, int right) {
 
 static void Hotkeys_AddNewHotkey(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool more) {
 	struct HotkeyData hKey;
-	hKey.Trigger = trigger;
-	hKey.Flags   = modifiers;
-	hKey.TextIndex = HotkeysText.count;
-	hKey.StaysOpen = more;
+	hKey.trigger = trigger;
+	hKey.mods    = modifiers;
+	hKey.textIndex = HotkeysText.count;
+	hKey.staysOpen = more;
 
 	if (HotkeysText.count == HOTKEYS_MAX_COUNT) {
 		Chat_AddRaw("&cCannot define more than 256 hotkeys");
@@ -443,7 +443,7 @@ static void Hotkeys_RemoveText(int index) {
 	 int i;
 
 	for (i = 0; i < HotkeysText.count; i++, hKey++) {
-		if (hKey->TextIndex >= index) hKey->TextIndex--;
+		if (hKey->textIndex >= index) hKey->textIndex--;
 	}
 	StringsBuffer_Remove(&HotkeysText, index);
 }
@@ -454,11 +454,11 @@ void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool
 	int i;
 
 	for (i = 0; i < HotkeysText.count; i++, hk++) {		
-		if (hk->Trigger != trigger || hk->Flags != modifiers) continue;
-		Hotkeys_RemoveText(hk->TextIndex);
+		if (hk->trigger != trigger || hk->mods != modifiers) continue;
+		Hotkeys_RemoveText(hk->textIndex);
 
-		hk->StaysOpen = more;
-		hk->TextIndex = HotkeysText.count;
+		hk->staysOpen = more;
+		hk->textIndex = HotkeysText.count;
 		StringsBuffer_Add(&HotkeysText, text);
 		return;
 	}
@@ -470,8 +470,8 @@ cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers) {
 	int i, j;
 
 	for (i = 0; i < HotkeysText.count; i++, hk++) {
-		if (hk->Trigger != trigger || hk->Flags != modifiers) continue;
-		Hotkeys_RemoveText(hk->TextIndex);
+		if (hk->trigger != trigger || hk->mods != modifiers) continue;
+		Hotkeys_RemoveText(hk->textIndex);
 
 		for (j = i; j < HotkeysText.count; j++) {
 			HotkeysList[j] = HotkeysList[j + 1];
@@ -492,7 +492,7 @@ int Hotkeys_FindPartial(int key) {
 	for (i = 0; i < HotkeysText.count; i++) {
 		hk = HotkeysList[i];
 		/* e.g. if holding Ctrl and Shift, a hotkey with only Ctrl modifiers matches */
-		if ((hk.Flags & modifiers) == hk.Flags && hk.Trigger == key) return i;
+		if ((hk.mods & modifiers) == hk.mods && hk.trigger == key) return i;
 	}
 	return -1;
 }
@@ -936,9 +936,9 @@ static void HandleHotkeyDown(int key) {
 
 	if (i == -1) return;
 	hkey = &HotkeysList[i];
-	text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
+	text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->textIndex);
 
-	if (!hkey->StaysOpen) {
+	if (!hkey->staysOpen) {
 		Chat_Send(&text, false);
 	} else if (!Gui.InputGrab) {
 		ChatScreen_OpenInput(&text);
