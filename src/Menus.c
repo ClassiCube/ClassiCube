@@ -789,7 +789,8 @@ static void EditHotkeyScreen_UpdateLeaveOpen(struct EditHotkeyScreen* s) {
 	String_InitArray(text, textBuffer);
 
 	String_AppendConst(&text, "Input stays open: ");
-	String_AppendConst(&text, s->curHotkey.staysOpen ? "ON" : "OFF");
+	String_AppendConst(&text, 
+		(s->curHotkey.flags & HOTKEY_FLAG_STAYS_OPEN) ? "ON" : "OFF");
 	ButtonWidget_Set(&s->btns[2], &text, &s->titleFont);
 }
 
@@ -817,7 +818,8 @@ static void EditHotkeyScreen_LeaveOpen(void* screen, void* b) {
 		EditHotkeyScreen_UpdateModifiers(s);
 	}
 	
-	s->curHotkey.staysOpen = !s->curHotkey.staysOpen;
+	/* Toggle Input Stays Open flag */
+	s->curHotkey.flags ^= HOTKEY_FLAG_STAYS_OPEN;
 	EditHotkeyScreen_UpdateLeaveOpen(s);
 }
 
@@ -829,12 +831,14 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 		Hotkeys_Remove(hk.trigger, hk.mods);
 		StoredHotkeys_Remove(hk.trigger, hk.mods);
 	}
-
 	hk = s->curHotkey;
+
 	if (hk.trigger) {
-		cc_string text = s->input.base.text;
-		Hotkeys_Add(hk.trigger, hk.mods, &text, hk.staysOpen);
-		StoredHotkeys_Add(hk.trigger, hk.mods, hk.staysOpen, &text);
+		cc_string text    = s->input.base.text;
+		cc_bool staysOpen = hk.flags & HOTKEY_FLAG_STAYS_OPEN;
+
+		Hotkeys_Add(hk.trigger, hk.mods, &text, hk.flags);
+		StoredHotkeys_Add(hk.trigger, hk.mods, staysOpen, &text);
 	}
 	HotkeyListScreen_Show();
 }

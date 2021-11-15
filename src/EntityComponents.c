@@ -229,7 +229,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	/* Can use hacks by default (also case with WoM), no need to check +hax */
 	cc_bool hax = !String_ContainsConst(&hacks->HacksFlags, "-hax");
 	HacksComp_SetAll(hacks, hax);
-	hacks->CanBePushed = true;
+	hacks->CanBePushed   = true;
 
 	HacksComp_ParseFlag(hacks, "+fly",         "-fly",         &hacks->CanFly);
 	HacksComp_ParseFlag(hacks, "+noclip",      "-noclip",      &hacks->CanNoclip);

@@ -420,12 +420,12 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool more) {
+static void Hotkeys_AddNewHotkey(int trigger, cc_uint8 modifiers, const cc_string* text, cc_uint8 flags) {
 	struct HotkeyData hKey;
 	hKey.trigger = trigger;
 	hKey.mods    = modifiers;
 	hKey.textIndex = HotkeysText.count;
-	hKey.staysOpen = more;
+	hKey.flags   = flags;
 
 	if (HotkeysText.count == HOTKEYS_MAX_COUNT) {
 		Chat_AddRaw("&cCannot define more than 256 hotkeys");
@@ -449,7 +449,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool more) {
+void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_uint8 flags) {
 	struct HotkeyData* hk = HotkeysList;
 	int i;
 
@@ -457,12 +457,12 @@ void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool
 		if (hk->trigger != trigger || hk->mods != modifiers) continue;
 		Hotkeys_RemoveText(hk->textIndex);
 
-		hk->staysOpen = more;
+		hk->flags     = flags;
 		hk->textIndex = HotkeysText.count;
 		StringsBuffer_Add(&HotkeysText, text);
 		return;
 	}
-	Hotkeys_AddNewHotkey(trigger, modifiers, text, more);
+	Hotkeys_AddNewHotkey(trigger, modifiers, text, flags);
 }
 
 cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers) {
@@ -938,7 +938,7 @@ static void HandleHotkeyDown(int key) {
 	hkey = &HotkeysList[i];
 	text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->textIndex);
 
-	if (!hkey->staysOpen) {
+	if (!(hkey->flags & HOTKEY_FLAG_STAYS_OPEN)) {
 		Chat_Send(&text, false);
 	} else if (!Gui.InputGrab) {
 		ChatScreen_OpenInput(&text);

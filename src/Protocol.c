@@ -1015,9 +1015,11 @@ static void CPE_SetTextHotkey(cc_uint8* data) {
 		StoredHotkeys_Load(key, keyMods);
 	} else if (action.buffer[action.length - 1] == '\n') {
 		action.length--;
-		Hotkeys_Add(key, keyMods, &action, false);
+		Hotkeys_Add(key, keyMods, &action, 
+					HOTKEY_FLAG_AUTO_DEFINED);
 	} else { /* more input needed by user */
-		Hotkeys_Add(key, keyMods, &action, true);
+		Hotkeys_Add(key, keyMods, &action, 
+					HOTKEY_FLAG_AUTO_DEFINED | HOTKEY_FLAG_STAYS_OPEN);
 	}
 }
 
