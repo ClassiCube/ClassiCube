@@ -376,8 +376,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
-const char* const Updater_D3D9 = NULL;
-const char* const Updater_OGL  = NULL;
+const struct UpdaterInfo Updater_Info = { "", 0 };
 
 cc_result Updater_GetBuildTime(cc_uint64* t)   { return ERR_NOT_SUPPORTED; }
 cc_bool Updater_Clean(void)                    { return true; }

@@ -44,8 +44,9 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
-const char* const Updater_OGL  = NULL;
-const char* const Updater_D3D9 = NULL;
+const struct UpdaterInfo Updater_Info = {
+	"&eRedownload and reinstall to update", 0
+};
 cc_bool Updater_Clean(void) { return true; }
 
 cc_result Updater_GetBuildTime(cc_uint64* t) {

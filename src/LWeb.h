@@ -107,7 +107,7 @@ extern struct FetchUpdateData {
 	/* Unix timestamp downloaded build was originally built at. */
 	cc_uint64 timestamp;
 } FetchUpdateTask;
-void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9);
+void FetchUpdateTask_Run(cc_bool release, int buildIndex);
 
 
 extern struct FetchFlagsData { 

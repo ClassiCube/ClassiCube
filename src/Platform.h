@@ -70,8 +70,17 @@ CC_API void Process_Exit(cc_result code);
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API cc_result Process_StartOpen(const cc_string* args);
 
-extern const char* const Updater_D3D9;
-extern const char* const Updater_OGL;
+struct UpdaterBuild { 
+	const char* name; 
+	const char* path; 
+};
+extern const struct UpdaterInfo {
+	const char* info;
+	/* Number of compiled builds available for this platform */
+	int numBuilds;
+	/* Metadata for the compiled builds available for this platform */
+	const struct UpdaterBuild builds[2]; // TODO name and path
+} Updater_Info;
 /* Attempts to clean up any leftover files from an update */
 cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */

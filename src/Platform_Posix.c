@@ -783,24 +783,24 @@ cc_bool Updater_Clean(void) { return true; }
 
 #if defined CC_BUILD_LINUX
 #if __x86_64__
-const char* const Updater_OGL = "ClassiCube";
+const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube" } } };
 #elif __i386__
-const char* const Updater_OGL = "ClassiCube.32";
+const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.32" } } };
 #elif CC_BUILD_RPI
-const char* const Updater_OGL = "ClassiCube.rpi";
+const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.rpi" } } };
 #else
-const char* const Updater_OGL = NULL;
+const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 #endif
 #elif defined CC_BUILD_MACOS
 #if __x86_64__
-const char* const Updater_OGL = "ClassiCube.64.osx";
+const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.64.osx" } } };
 #elif __i386__
-const char* const Updater_OGL = "ClassiCube.osx";
+const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.osx" } } };
 #else
-const char* const Updater_OGL = NULL;
+const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 #endif
 #else
-const char* const Updater_OGL = NULL;
+const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 #endif
 
 cc_result Updater_Start(const char** action) {
