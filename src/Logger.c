@@ -913,6 +913,18 @@ static void CloseLogFile(void) {
 }
 #endif
 
+#if defined CC_BUILD_D3D11
+	#define GFX_BACKEND " (Direct3D11)"
+#elif defined CC_BUILD_D3D9
+	#define GFX_BACKEND " (Direct3D9)"
+#elif defined CC_BUILD_GLMODERN
+	#define GFX_BACKEND " (ModernGL)"
+#elif defined CC_BUILD_GL
+	#define GFX_BACKEND " (OpenGL)"
+#else
+	#define GFX_BACKEND " (Unknown)"
+#endif
+
 static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {	
 	cc_string msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
@@ -920,7 +932,7 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	String_AppendConst(&msg, "ClassiCube crashed." _NL);
 	if (raw_msg) String_Format1(&msg, "Reason: %c" _NL, raw_msg);
 	#ifdef CC_COMMIT_SHA
-	String_AppendConst(&msg, "Commit SHA: " CC_COMMIT_SHA _NL);
+	String_AppendConst(&msg, "Commit SHA: " CC_COMMIT_SHA GFX_BACKEND _NL);
 	#endif
 
 	if (result) {

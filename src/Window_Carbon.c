@@ -5,8 +5,7 @@
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
-#include <ApplicationServices/ApplicationServices.h>
-#include <HIToolbox/HIToolbox.h>
+#include <Carbon/Carbon.h>
 
 static int windowX, windowY;
 static WindowRef win_handle;
