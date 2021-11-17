@@ -5,7 +5,7 @@ ENAME=ClassiCube
 DEL=rm
 JOBS=1
 CC=cc
-CFLAGS=-g -pipe -rdynamic -fno-math-errno
+CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g -rdynamic
 
 ifndef $(PLAT)
@@ -50,8 +50,8 @@ LIBS=-lm -lsocket -lX11 -lXi -lGL
 endif
 
 ifeq ($(PLAT),mac_x32)
-LIBS=
 CFLAGS=-g -m32 -pipe -fno-math-errno
+LIBS=
 LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL -framework IOKit
 endif
 

@@ -6,7 +6,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
+#include <HIToolbox/HIToolbox.h>
 
 static int windowX, windowY;
 static WindowRef win_handle;
