@@ -902,8 +902,7 @@ static void WorkerLoop(void) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_Init(void) {
-	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
-	ScheduledTask_Add(30, Http_CleanCacheTask);
+	Http_InitCommon();
 	/* Http component gets initialised multiple times on Android */
 	if (workerThread) return;
 

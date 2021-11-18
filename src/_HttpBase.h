@@ -9,6 +9,9 @@
 #include "Options.h"
 
 static cc_bool httpsOnly, httpOnly;
+static char skinServer_buffer[128];
+static cc_string skinServer = String_FromArray(skinServer_buffer);
+
 /* Frees data from a HTTP request. */
 static void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
@@ -212,7 +215,7 @@ int Http_AsyncGetSkin(const cc_string* skinName) {
 	if (Utils_IsUrlPrefix(skinName)) {
 		String_Copy(&url, skinName);
 	} else {
-		String_Format1(&url, SKINS_SERVER "/%s.png", skinName);
+		String_Format2(&url, "%s/%s.png", &skinServer, skinName);
 	}
 	return Http_AsyncGetData(&url, false);
 }
@@ -263,6 +266,11 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 /*########################################################################################################################*
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
+static void Http_InitCommon(void) {
+	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
+	Options_Get(OPT_SKIN_SERVER, &skinServer, SKINS_SERVER);
+	ScheduledTask_Add(30, Http_CleanCacheTask);
+}
 static void Http_Init(void);
 
 struct IGameComponent Http_Component = {

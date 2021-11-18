@@ -113,7 +113,7 @@ static void HttpBackend_Add(struct HttpRequest* req, cc_bool priority) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_Init(void) {
-	ScheduledTask_Add(30, Http_CleanCacheTask);
+	Http_InitCommon();
 	/* If this webpage is https://, browsers deny any http:// downloading */
 	httpsOnly = interop_IsHttpsOnly();
 
