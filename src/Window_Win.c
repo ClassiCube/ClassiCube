@@ -652,7 +652,14 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
+	static const cc_string glPath = String_FromConst("OPENGL32.dll");
+	static void* lib;
 	void* addr = (void*)wglGetProcAddress(function);
+	if (!GLContext_IsInvalidAddress(addr)) return addr;
+
+	/* Some drivers return NULL from wglGetProcAddress for core OpenGL functions */
+	if (!lib) lib = DynamicLib_Load2(&glPath);
+	addr = DynamicLib_Get2(lib, function);
 	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
