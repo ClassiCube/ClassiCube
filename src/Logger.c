@@ -457,6 +457,12 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined __x86_64__
 	#define REG_GET(reg, ign) &r->__ss.__r##reg
 	Dump_X64()
+#elif defined __aarch64__
+	#define REG_GNUM(num)     &r->__ss.__x[num]
+	#define REG_GET_SP()      &r->__ss.__sp
+	#define REG_GET_IP()      &r->__ss.__pc
+	/* TODO this reads invalid memory */
+	Dump_ARM64()
 #elif defined __arm__
 	#define REG_GNUM(num)     &r->__ss.__r[num]
 	#define REG_GET(reg, ign) &r->__ss.__ ## reg

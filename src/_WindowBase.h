@@ -99,7 +99,6 @@ static void InitGraphicsMode(struct GraphicsMode* m) {
 #ifdef CC_BUILD_GL
 /* OpenGL contexts are heavily tied to the window, so for simplicitly are also included here */
 /* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system. */
-#define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
 	int i;

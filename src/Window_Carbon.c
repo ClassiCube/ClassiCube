@@ -798,11 +798,9 @@ void GLContext_Free(void) {
 void* GLContext_GetAddress(const char* function) {
 	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
 	static void* lib;
-	void* addr;
 
 	if (!lib) lib = DynamicLib_Load2(&glPath);
-	addr = DynamicLib_Get2(lib, function);
-	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
+	return DynamicLib_Get2(lib, function);
 }
 
 cc_bool GLContext_SwapBuffers(void) {
