@@ -383,8 +383,8 @@ String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_
 String_Format3(str, "r3 =%x r4 =%x r5 =%x" _NL, REG_GNUM(3),  REG_GNUM(4),  REG_GNUM(5));\
 String_Format3(str, "r6 =%x r7 =%x r8 =%x" _NL, REG_GNUM(6),  REG_GNUM(7),  REG_GNUM(8));\
 String_Format3(str, "r9 =%x r10=%x fp =%x" _NL, REG_GNUM(9),  REG_GNUM(10), REG_GET_FP());\
-String_Format3(str, "ip =%x sp =%x lr =%x" _NL, REG_GET_IP(),REG_GET(sp,Sp),REG_GET(lr,Lr));\
-String_Format1(str, "pc =%x"               _NL, REG_GET(pc,Pc));
+String_Format3(str, "ip =%x sp =%x lr =%x" _NL, REG_GET_IP(), REG_GET_SP(), REG_GET_LR());\
+String_Format1(str, "pc =%x"               _NL, REG_GET_PC());
 
 #define Dump_ARM64() \
 String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
@@ -394,8 +394,8 @@ String_Format4(str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13
 String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
 String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
 String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
-String_Format3(str, "r28=%x r29=%x r30=%x" _NL,        REG_GNUM(28), REG_GNUM(29), REG_GNUM(30)); \
-String_Format2(str, "sp =%x pc =%x" _NL,               REG_GET_SP(), REG_GET_PC());
+String_Format4(str, "r28=%x fp =%x lr =%x sp =%x" _NL, REG_GNUM(28), REG_GET_FP(), REG_GET_LR(), REG_GET_SP()); \
+String_Format1(str, "pc =%x" _NL,                      REG_GET_PC());
 
 #define Dump_SPARC() \
 String_Format4(str, "o0=%x o1=%x o2=%x o3=%x" _NL, REG_GET(o0,O0), REG_GET(o1,O1), REG_GET(o2,O2), REG_GET(o3,O3)); \
@@ -439,9 +439,11 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	Dump_X64()
 #elif defined _M_ARM
 	#define REG_GNUM(num)     &r->R ## num
-	#define REG_GET(ign, reg) &r-> ## reg
 	#define REG_GET_FP()      &r->R11
 	#define REG_GET_IP()      &r->R12
+	#define REG_GET_SP()      &r->Sp
+	#define REG_GET_LR()      &r->Lr
+	#define REG_GET_PC()      &r->Pc
 	Dump_ARM32()
 #else
 	#error "Unknown CPU architecture"
@@ -459,15 +461,18 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	Dump_X64()
 #elif defined __aarch64__
 	#define REG_GNUM(num)     &r->__ss.__x[num]
+	#define REG_GET_FP()      &r->__ss.__fp
+	#define REG_GET_LR()      &r->__ss.__lr
 	#define REG_GET_SP()      &r->__ss.__sp
-	#define REG_GET_IP()      &r->__ss.__pc
-	/* TODO this reads invalid memory */
+	#define REG_GET_PC()      &r->__ss.__pc
 	Dump_ARM64()
 #elif defined __arm__
 	#define REG_GNUM(num)     &r->__ss.__r[num]
-	#define REG_GET(reg, ign) &r->__ss.__ ## reg
 	#define REG_GET_FP()      &r->__ss.__r[11]
-	#define REG_GET_IP()      &r->__ss.__pc
+	#define REG_GET_IP()      &r->__ss.__r[12]
+	#define REG_GET_SP()      &r->__ss.__sp
+	#define REG_GET_LR()      &r->__ss.__lr
+	#define REG_GET_PC()      &r->__ss.__pc
 	Dump_ARM32()
 #elif defined __ppc__
 	#define REG_GNUM(num)     &r->__ss.__r##num
@@ -517,14 +522,18 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	Dump_X64()
 #elif defined __aarch64__
 	#define REG_GNUM(num)     &r.regs[num]
+	#define REG_GET_FP()      &r.regs[29]
+	#define REG_GET_LR()      &r.regs[30]
 	#define REG_GET_SP()      &r.sp
 	#define REG_GET_PC()      &r.pc
 	Dump_ARM64()
 #elif defined __arm__
 	#define REG_GNUM(num)     &r.arm_r##num
-	#define REG_GET(reg, ign) &r.arm_##reg
 	#define REG_GET_FP()      &r.arm_fp
 	#define REG_GET_IP()      &r.arm_ip
+	#define REG_GET_SP()      &r.arm_sp
+	#define REG_GET_LR()      &r.arm_lr
+	#define REG_GET_PC()      &r.arm_pc
 	Dump_ARM32()
 #elif defined __sparc__
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
