@@ -66,8 +66,8 @@ Listed below are all of the options supported in options.txt
 ### Audio options
 |Name|Default|Description|
 |--|--|--|
-`soundsvolume`|`0` for webclient<br>100 elsewhere|Volume of game sounds (e.g. break/walk sounds)<br>Volume must be between 0 and 100
-`musicvolume`|`0` for webclient<br>100 elsewhere|Volume of game background music<br>Volume must be between 0 and 100
+`soundsvolume`|`0` for webclient<br>`100` elsewhere|Volume of game sounds (e.g. break/walk sounds)<br>Volume must be between 0 and 100
+`musicvolume`|`0` for webclient<br>`100` elsewhere|Volume of game background music<br>Volume must be between 0 and 100
 `music-mindelay`|`120` (2 minutes)|Minimum delay before next music track is played <br>Delay must be between 0 and 3600
 `music-maxdelay`|`420` (7 minutes)|Maximum delay before next music track is played <br>Delay must be between 0 and 3600
 
@@ -114,8 +114,10 @@ Listed below are all of the options supported in options.txt
 ./Game.c:       Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
 
 ### Hacks options
-./Entity.c:     hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
-./Entity.c:     hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR, 0.1f, 50.0f, 10.0f);
+|Name|Default|Description|
+|--|--|--|
+`hacks-hacksenabled`|`true`|Whether hacks are enabled at all<br>Has no effect in 'classic only' game mode
+`hacks-speedmultiplier`|`10.0`|Speed multiplier/factor when speedhacks are active<br>Multiplier must be between 0.1 and 50.0
 ./Entity.c:     hacks->PushbackPlacing = Options_GetBool(OPT_PUSHBACK_PLACING, false);
 ./Entity.c:     hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE,     false);
 ./Entity.c:     hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS,  false);

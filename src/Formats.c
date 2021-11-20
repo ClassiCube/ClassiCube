@@ -894,34 +894,25 @@ static int Dat_I32(struct JFieldDesc* field) {
 	return field->Value.I32;
 }
 
-cc_result Dat_Load(struct Stream* stream) {
-	cc_uint8 header[10];
+static cc_result Dat_LoadFormat2(struct Stream* stream) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	cc_uint8 header[5];
 	struct JClassDesc obj;
 	struct JFieldDesc* field;
 	cc_string fieldName;
 	cc_result res;
 	int i;
-
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct Stream compStream;
-	struct InflateState state;
-	Inflate_MakeStream2(&compStream, &state, stream);
-
-	if ((res = Map_SkipGZipHeader(stream)))                       return res;
-	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
-	/* .dat header */
-	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
-	if (header[4] != 0x02) return DAT_ERR_VERSION;
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
 	/* Java seralisation headers */
-	if (Stream_GetU16_BE(&header[5]) != 0xACED) return DAT_ERR_JIDENTIFIER;
-	if (Stream_GetU16_BE(&header[7]) != 0x0005) return DAT_ERR_JVERSION;
-	if (header[9] != TC_OBJECT)                 return DAT_ERR_ROOT_TYPE;
-	if ((res = Dat_ReadClassDesc(&compStream, &obj))) return res;
+	if (Stream_GetU16_BE(&header[0]) != 0xACED) return DAT_ERR_JIDENTIFIER;
+	if (Stream_GetU16_BE(&header[2]) != 0x0005) return DAT_ERR_JVERSION;
+	if (header[4] != TC_OBJECT)                 return DAT_ERR_ROOT_TYPE;
+	if ((res = Dat_ReadClassDesc(stream, &obj))) return res;
 
 	for (i = 0; i < obj.FieldsCount; i++) {
 		field = &obj.Fields[i];
-		if ((res = Dat_ReadFieldData(&compStream, field))) return res;
+		if ((res = Dat_ReadFieldData(stream, field))) return res;
 		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
@@ -943,6 +934,23 @@ cc_result Dat_Load(struct Stream* stream) {
 		}
 	}
 	return 0;
+}
+
+cc_result Dat_Load(struct Stream* stream) {
+	cc_uint8 header[5];
+	cc_result res;
+
+	struct Stream compStream;
+	struct InflateState state;
+	Inflate_MakeStream2(&compStream, &state, stream);
+	if ((res = Map_SkipGZipHeader(stream)))                       return res;
+
+	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
+	/* .dat header */
+	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
+	if (header[4] != 0x02)                          return DAT_ERR_VERSION;
+
+	return Dat_LoadFormat2(&compStream);
 }
 
 
