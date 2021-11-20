@@ -894,9 +894,59 @@ static int Dat_I32(struct JFieldDesc* field) {
 	return field->Value.I32;
 }
 
+static void UseClassic013Env(void) {
+	/* Similiar env to how it appears in 0.13 classic client */
+	Env.CloudsHeight = -30000;
+	Env.SkyCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);
+	Env.FogCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);
+}
+
+static cc_result Dat_LoadFormat0(struct Stream* stream) {
+	/* Map 'format' is just the 256x64x256 blocks of the level */
+	#define PC_WIDTH  256
+	#define PC_HEIGHT  64
+	#define PC_LENGTH 256
+	#define PC_VOLUME (PC_WIDTH * PC_HEIGHT * PC_LENGTH)
+
+	UseClassic013Env();
+	/* Similiar env to how it appears in preclassic client */
+	Env.EdgeBlock  = BLOCK_AIR;
+	Env.SidesBlock = BLOCK_AIR;
+
+	World.Width  = PC_WIDTH;
+	World.Height = PC_HEIGHT;
+	World.Length = PC_LENGTH;
+
+	World.Volume = PC_VOLUME;
+	World.Blocks = (BlockRaw*)Mem_TryAlloc(PC_VOLUME, 1);
+	if (!World.Blocks) return ERR_OUT_OF_MEMORY;
+
+	/* First 5 bytes already read earlier as .dat header */
+	Mem_Set(World.Blocks, BLOCK_STONE, 5);
+	return Stream_Read(stream, World.Blocks + 5, PC_VOLUME - 5);
+}
+
+static cc_result Dat_LoadFormat1(struct Stream* stream) {
+	cc_uint8 level_name[JNAME_SIZE];
+	cc_uint8 level_author[JNAME_SIZE];
+	cc_uint8 header[8 + 2 + 2 + 2];
+	cc_result res;
+
+	UseClassic013Env();
+	if ((res = Dat_ReadString(stream,   level_name))) return res;
+	if ((res = Dat_ReadString(stream, level_author))) return res;
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
+	
+	/* bytes 0-8 = created timestamp (currentTimeMillis) */
+	World.Width  = Stream_GetU16_BE(header +  8);
+	World.Length = Stream_GetU16_BE(header + 10);
+	World.Height = Stream_GetU16_BE(header + 12);
+	return Map_ReadBlocks(stream);
+}
+
 static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	cc_uint8 header[5];
+	cc_uint8 header[2 + 2 + 1];
 	struct JClassDesc obj;
 	struct JFieldDesc* field;
 	cc_string fieldName;
@@ -905,8 +955,8 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
 	/* Java seralisation headers */
-	if (Stream_GetU16_BE(&header[0]) != 0xACED) return DAT_ERR_JIDENTIFIER;
-	if (Stream_GetU16_BE(&header[2]) != 0x0005) return DAT_ERR_JVERSION;
+	if (Stream_GetU16_BE(header + 0) != 0xACED) return DAT_ERR_JIDENTIFIER;
+	if (Stream_GetU16_BE(header + 2) != 0x0005) return DAT_ERR_JVERSION;
 	if (header[4] != TC_OBJECT)                 return DAT_ERR_ROOT_TYPE;
 	if ((res = Dat_ReadClassDesc(stream, &obj))) return res;
 
@@ -937,20 +987,38 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 }
 
 cc_result Dat_Load(struct Stream* stream) {
-	cc_uint8 header[5];
+	cc_uint8 header[4 + 1];
+	cc_uint32 signature;
 	cc_result res;
 
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream2(&compStream, &state, stream);
 	if ((res = Map_SkipGZipHeader(stream)))                       return res;
-
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
-	/* .dat header */
-	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
-	if (header[4] != 0x02)                          return DAT_ERR_VERSION;
 
-	return Dat_LoadFormat2(&compStream);
+	signature = Stream_GetU32_BE(header + 0);
+	switch (signature)
+	{
+		/* Classic map format signature */
+	case 0x271BB788: break;
+		/* Not an actual signature, but 99% of preclassic to classic 0.12 */
+		/*  maps will start with these 4 bytes */
+	case 0x01010101: return Dat_LoadFormat0(&compStream);
+		/* Bogus .dat file */
+	default:         return DAT_ERR_IDENTIFIER;
+	}
+
+	/* Format version */
+	switch (header[4])
+	{
+		/* Format version 1 = classic 0.13 */
+	case 0x01: return Dat_LoadFormat1(&compStream);
+		/* Format version 2 = classic 0.15 to 0.30 */
+	case 0x02: return Dat_LoadFormat2(&compStream);
+		/* Bogus .dat file */
+	default:   return DAT_ERR_VERSION;
+	}
 }
 
 
