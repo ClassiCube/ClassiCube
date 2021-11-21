@@ -1548,10 +1548,19 @@ void SaveLevelScreen_Show(void) {
 static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	cc_string file = ListScreen_UNSAFE_GetCur(s, widget);
+	cc_result res;
 
 	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
-	TexturePack_ExtractCurrent(true);
+	res = TexturePack_ExtractCurrent(true);
+
+	/* Load error may be because user deleted .zips from disc */
+	if (res != ReturnCode_FileNotFound) return;
+
+	Chat_AddRaw("&eReloading texture pack list as it may be out of date");
+	ListScreen_Free(s);
+	s->LoadEntries(s);
+	ListScreen_SetCurrentIndex(s, s->currentIndex);
 }
 
 static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {

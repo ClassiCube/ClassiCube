@@ -93,7 +93,7 @@ extern int TexturePack_ReqID;
 void TexturePack_SetDefault(const cc_string* texPack);
 /* If TexturePack_Url is empty, extracts user's default texture pack. */
 /* Otherwise extracts the cached texture pack for that URL. */
-void TexturePack_ExtractCurrent(cc_bool forceReload);
+cc_result TexturePack_ExtractCurrent(cc_bool forceReload);
 /* Checks if the texture pack currently being downloaded has completed. */
 /* If completed, then applies the downloaded texture pack and updates cache */
 void TexturePack_CheckPending(void);

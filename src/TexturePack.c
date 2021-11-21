@@ -314,13 +314,13 @@ static cc_result ExtractPng(struct Stream* stream) {
 }
 
 static cc_bool needReload;
-static void ExtractFrom(struct Stream* stream, const cc_string* path) {
+static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	cc_result res;
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
 	/* If context is lost, then trying to load textures will just fail */
 	/* So defer loading the texture pack until context is restored */
-	if (Gfx.LostContext) { needReload = true; return; }
+	if (Gfx.LostContext) { needReload = true; return 0; }
 	needReload = false;
 
 	if (String_ContainsConst(path, ".zip")) {
@@ -330,9 +330,10 @@ static void ExtractFrom(struct Stream* stream, const cc_string* path) {
 		res = ExtractPng(stream);
 		if (res) Logger_SysWarn2(res, "decoding", path);
 	}
+	return res;
 }
 
-static void ExtractFromFile(const cc_string* filename) {
+static cc_result ExtractFromFile(const cc_string* filename) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	cc_result res;
@@ -345,41 +346,47 @@ static void ExtractFromFile(const cc_string* filename) {
 		/* Game shows a dialog if default.zip is missing */
 		Game_DefaultZipMissing |= res == ReturnCode_FileNotFound
 					&& String_CaselessEquals(filename, &defaultZip);
-		Logger_SysWarn2(res, "opening", &path); return; 
+		Logger_SysWarn2(res, "opening", &path); 
+		return res; 
 	}
 
-	ExtractFrom(&stream, &path);
+	res = ExtractFrom(&stream, &path);
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
+	return res;
 }
 
-static void ExtractDefault(void) {
+static cc_result ExtractDefault(void) {
 	cc_string texPack = Game_ClassicMode ? defaultZip : defTexPack;
-	ExtractFromFile(&defaultZip);
+	cc_result res = ExtractFromFile(&defaultZip);
 
 	/* in case the user's default texture pack doesn't have all required textures */
-	if (!String_CaselessEquals(&texPack, &defaultZip)) ExtractFromFile(&texPack);
+	if (!String_CaselessEquals(&texPack, &defaultZip)) {
+		res = ExtractFromFile(&texPack);
+	}
+	return res;
 }
 
 static cc_bool usingDefault;
-void TexturePack_ExtractCurrent(cc_bool forceReload) {
+cc_result TexturePack_ExtractCurrent(cc_bool forceReload) {
 	cc_string url = TexturePack_Url;
 	struct Stream stream;
-	cc_result res;
+	cc_result res = 0;
 
 	/* don't pointlessly load default texture pack */
 	if (!usingDefault || forceReload) {
-		ExtractDefault();
+		res = ExtractDefault();
 		usingDefault = true;
 	}
 
 	if (url.length && OpenCachedData(&url, &stream)) {
-		ExtractFrom(&stream, &url);
+		res = ExtractFrom(&stream, &url);
 		usingDefault = false;
 
 		/* No point logging error for closing readonly file */
 		(void)stream.Close(&stream);
 	}
+	return res;
 }
 
 /* Extracts and updates cache for the downloaded texture pack */
