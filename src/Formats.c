@@ -716,9 +716,9 @@ cc_result Cw_Load(struct Stream* stream) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------Minecraft .dat format---------------------------------------------------*
+*-----------------------------------------------Java serialisation format-------------------------------------------------*
 *#########################################################################################################################*/
-/* .dat is a java serialised map format. Rather than bothering following this, I skip a lot of it.
+/* Rather than bothering following this, I skip a lot of the java serialisation format
      Stream              BlockData        BlockDataTiny      BlockDataLong
 |--------------|     |---------------|  |---------------|  |---------------| 
 | U16 Magic    |     |>BlockDataTiny |  | TC_BLOCKDATA  |  | TC_BLOCKLONG  |
@@ -764,7 +764,7 @@ struct JClassDesc {
 	struct JFieldDesc Fields[22];
 };
 
-static cc_result Dat_ReadString(struct Stream* stream, cc_uint8* buffer) {
+static cc_result Java_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	int len;
 	cc_result res;
 
@@ -772,33 +772,33 @@ static cc_result Dat_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	len = Stream_GetU16_BE(buffer);
 
 	Mem_Set(buffer, 0, JNAME_SIZE);
-	if (len > JNAME_SIZE) return DAT_ERR_JSTRING_LEN;
+	if (len > JNAME_SIZE) return JAVA_ERR_JSTRING_LEN;
 	return Stream_Read(stream, buffer, len);
 }
 
-static cc_result Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
+static cc_result Java_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 	cc_uint8 typeCode;
 	cc_uint8 className1[JNAME_SIZE];
 	cc_result res;
 
-	if ((res = stream->ReadU8(stream, &desc->Type)))     return res;
-	if ((res = Dat_ReadString(stream, desc->FieldName))) return res;
+	if ((res = stream->ReadU8(stream, &desc->Type)))      return res;
+	if ((res = Java_ReadString(stream, desc->FieldName))) return res;
 
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {		
 		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
 		if (typeCode == TC_STRING) {
-			return Dat_ReadString(stream, className1);
+			return Java_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
 			return stream->Skip(stream, 4); /* (4) handle */
 		} else {
-			return DAT_ERR_JFIELD_CLASS_NAME;
+			return JAVA_ERR_JFIELD_CLASS_NAME;
 		}
 	}
 	return 0;
 }
 
-static cc_result Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
+static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	cc_uint8 typeCode;
 	cc_uint8 count[2];
 	struct JClassDesc superClassDesc;
@@ -807,26 +807,26 @@ static cc_result Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* des
 
 	if ((res = stream->ReadU8(stream, &typeCode))) return res;
 	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return 0; }
-	if (typeCode != TC_CLASSDESC) return DAT_ERR_JCLASS_TYPE;
+	if (typeCode != TC_CLASSDESC) return JAVA_ERR_JCLASS_TYPE;
 
-	if ((res = Dat_ReadString(stream, desc->ClassName))) return res;
+	if ((res = Java_ReadString(stream, desc->ClassName))) return res;
 	if ((res = stream->Skip(stream, 9))) return res; /* (8) serial version UID, (1) flags */
 
 	if ((res = Stream_Read(stream, count, 2))) return res;
 	desc->FieldsCount = Stream_GetU16_BE(count);
-	if (desc->FieldsCount > Array_Elems(desc->Fields)) return DAT_ERR_JCLASS_FIELDS;
+	if (desc->FieldsCount > Array_Elems(desc->Fields)) return JAVA_ERR_JCLASS_FIELDS;
 	
 	for (i = 0; i < desc->FieldsCount; i++) {
-		if ((res = Dat_ReadFieldDesc(stream, &desc->Fields[i]))) return res;
+		if ((res = Java_ReadFieldDesc(stream, &desc->Fields[i]))) return res;
 	}
 
 	if ((res = stream->ReadU8(stream, &typeCode))) return res;
-	if (typeCode != TC_ENDBLOCKDATA) return DAT_ERR_JCLASS_ANNOTATION;
+	if (typeCode != TC_ENDBLOCKDATA) return JAVA_ERR_JCLASS_ANNOTATION;
 
-	return Dat_ReadClassDesc(stream, &superClassDesc);
+	return Java_ReadClassDesc(stream, &superClassDesc);
 }
 
-static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
+static cc_result Java_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	cc_uint8 typeCode;
 	cc_string fieldName;
 	cc_uint32 count;
@@ -860,7 +860,7 @@ static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fie
 			if ((res = stream->Skip(stream, 152)))         return res;
 		} else if (typeCode != TC_NULL) {
 			/* WoM maps have this field as null, which makes things easier for us */
-			return DAT_ERR_JOBJECT_TYPE;
+			return JAVA_ERR_JOBJECT_TYPE;
 		}
 	} break;
 
@@ -873,9 +873,9 @@ static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fie
 			break;
 		}
 
-		if (typeCode != TC_ARRAY) return DAT_ERR_JARRAY_TYPE;
-		if ((res = Dat_ReadClassDesc(stream, &arrayClassDesc))) return res;
-		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return DAT_ERR_JARRAY_CONTENT;
+		if (typeCode != TC_ARRAY) return JAVA_ERR_JARRAY_TYPE;
+		if ((res = Java_ReadClassDesc(stream, &arrayClassDesc))) return res;
+		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return JAVA_ERR_JARRAY_CONTENT;
 
 		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 		field->Value.Array.Size = count;
@@ -889,10 +889,33 @@ static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fie
 	return 0;
 }
 
-static int Dat_I32(struct JFieldDesc* field) {
+static int Java_I32(struct JFieldDesc* field) {
 	if (field->Type != JFIELD_I32) Logger_Abort("Field type must be Int32");
 	return field->Value.I32;
 }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------Minecraft .dat format---------------------------------------------------*
+*#########################################################################################################################*/
+/* Minecraft Classic used 3 different GZIP compressed binary map formats throughout its various versions
+Preclassic - Classic 0.12:
+    U8* "Blocks"     (256x64x256 array)
+Classic 0.13:
+	U32 "Identifier" (must be 0x271BB788)
+	U8  "Version"    (must be 1)
+	STR "Name"       (ignored)
+	STR "Author"     (ignored)
+	U64 "Creation"   (ignored)
+	U16 "Width"
+	U16 "Length"
+	U16 "Height"
+	U8* "Blocks"
+Classic 0.15 to Classic 0.30:
+	U32 "Identifier" (must be 0x271BB788)
+	U8  "Version"    (must be 2)
+	VAR "Level"      (Java serialised level object instance)
+}*/
 
 static void UseClassic013Env(void) {
 	/* Similiar env to how it appears in 0.13 classic client */
@@ -902,21 +925,17 @@ static void UseClassic013Env(void) {
 }
 
 static cc_result Dat_LoadFormat0(struct Stream* stream) {
-	/* Map 'format' is just the 256x64x256 blocks of the level */
-	#define PC_WIDTH  256
-	#define PC_HEIGHT  64
-	#define PC_LENGTH 256
-	#define PC_VOLUME (PC_WIDTH * PC_HEIGHT * PC_LENGTH)
-
 	UseClassic013Env();
 	/* Similiar env to how it appears in preclassic client */
 	Env.EdgeBlock  = BLOCK_AIR;
 	Env.SidesBlock = BLOCK_AIR;
 
-	World.Width  = PC_WIDTH;
-	World.Height = PC_HEIGHT;
-	World.Length = PC_LENGTH;
+	/* Map 'format' is just the 256x64x256 blocks of the level */
+	World.Width  = 256;
+	World.Height =  64;
+	World.Length = 256;
 
+	#define PC_VOLUME (256 * 64 * 256)
 	World.Volume = PC_VOLUME;
 	World.Blocks = (BlockRaw*)Mem_TryAlloc(PC_VOLUME, 1);
 	if (!World.Blocks) return ERR_OUT_OF_MEMORY;
@@ -933,8 +952,8 @@ static cc_result Dat_LoadFormat1(struct Stream* stream) {
 	cc_result res;
 
 	UseClassic013Env();
-	if ((res = Dat_ReadString(stream,   level_name))) return res;
-	if ((res = Dat_ReadString(stream, level_author))) return res;
+	if ((res = Java_ReadString(stream,   level_name))) return res;
+	if ((res = Java_ReadString(stream, level_author))) return res;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 	
 	/* bytes 0-8 = created timestamp (currentTimeMillis) */
@@ -955,32 +974,32 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
 	/* Java seralisation headers */
-	if (Stream_GetU16_BE(header + 0) != 0xACED) return DAT_ERR_JIDENTIFIER;
-	if (Stream_GetU16_BE(header + 2) != 0x0005) return DAT_ERR_JVERSION;
-	if (header[4] != TC_OBJECT)                 return DAT_ERR_ROOT_TYPE;
-	if ((res = Dat_ReadClassDesc(stream, &obj))) return res;
+	if (Stream_GetU16_BE(header + 0) != 0xACED)   return DAT_ERR_JIDENTIFIER;
+	if (Stream_GetU16_BE(header + 2) != 0x0005)   return DAT_ERR_JVERSION;
+	if (header[4] != TC_OBJECT)                   return DAT_ERR_ROOT_TYPE;
+	if ((res = Java_ReadClassDesc(stream, &obj))) return res;
 
 	for (i = 0; i < obj.FieldsCount; i++) {
 		field = &obj.Fields[i];
-		if ((res = Dat_ReadFieldData(stream, field))) return res;
+		if ((res = Java_ReadFieldData(stream, field))) return res;
 		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
-			World.Width  = Dat_I32(field);
+			World.Width  = Java_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "height")) {
-			World.Length = Dat_I32(field);
+			World.Length = Java_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "depth")) {
-			World.Height = Dat_I32(field);
+			World.Height = Java_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
 			if (field->Type != JFIELD_ARRAY) Logger_Abort("Blocks field must be Array");
 			World.Blocks = field->Value.Array.Ptr;
 			World.Volume = field->Value.Array.Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
-			p->Spawn.X = (float)Dat_I32(field);
+			p->Spawn.X = (float)Java_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {
-			p->Spawn.Y = (float)Dat_I32(field);
+			p->Spawn.Y = (float)Java_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "zSpawn")) {
-			p->Spawn.Z = (float)Dat_I32(field);
+			p->Spawn.Z = (float)Java_I32(field);
 		}
 	}
 	return 0;
@@ -1002,8 +1021,8 @@ cc_result Dat_Load(struct Stream* stream) {
 	{
 		/* Classic map format signature */
 	case 0x271BB788: break;
-		/* Not an actual signature, but 99% of preclassic to classic 0.12 */
-		/*  maps will start with these 4 bytes */
+		/* Not an actual signature, but 99% of preclassic */
+		/*  to classic 0.12 maps start with these 4 bytes */
 	case 0x01010101: return Dat_LoadFormat0(&compStream);
 		/* Bogus .dat file */
 	default:         return DAT_ERR_IDENTIFIER;

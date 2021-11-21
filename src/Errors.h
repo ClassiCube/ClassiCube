@@ -78,19 +78,20 @@ enum CC_ERRORS {
 
 	LVL_ERR_VERSION    = 0xCCDED03DUL, /* LVL stream byte #1-#2 aren't 1874 */
 
-	DAT_ERR_IDENTIFIER        = 0xCCDED03EUL, /* DAT stream bytes #1-#4 aren't 0x271BB788 */
-	DAT_ERR_VERSION           = 0xCCDED03FUL, /* DAT stream byte #5 isn't 2 */
-	DAT_ERR_JIDENTIFIER       = 0xCCDED040UL, /* DAT stream bytes #6-#7 aren't 0xACED */
-	DAT_ERR_JVERSION          = 0xCCDED041UL, /* DAT stream bytes #8-#9 aren't 0x0005 */
-	DAT_ERR_ROOT_TYPE         = 0xCCDED042UL, /* Java root element type isn't Object */
-	DAT_ERR_JSTRING_LEN       = 0xCCDED043UL, /* Java string is too long */
-	DAT_ERR_JFIELD_CLASS_NAME = 0xCCDED044UL, /* Java field classname type is invalid */
-	DAT_ERR_JCLASS_TYPE       = 0xCCDED045UL, /* Java class classdesc type is invalid */
-	DAT_ERR_JCLASS_FIELDS     = 0xCCDED046UL, /* Java class classdesc has too many fields */
-	DAT_ERR_JCLASS_ANNOTATION = 0xCCDED047UL, /* Java classdesc uses unsupported annotations */
-	DAT_ERR_JOBJECT_TYPE      = 0xCCDED048UL, /* Java object field data type is invalid */
-	DAT_ERR_JARRAY_TYPE       = 0xCCDED049UL, /* Java array field data type is invalid */
-	DAT_ERR_JARRAY_CONTENT    = 0xCCDED04AUL, /* Java array field isn't a byte array */
+	DAT_ERR_IDENTIFIER  = 0xCCDED03EUL, /* DAT stream bytes #1-#4 aren't 0x271BB788 */
+	DAT_ERR_VERSION     = 0xCCDED03FUL, /* DAT stream byte #5 isn't 2 */
+	DAT_ERR_JIDENTIFIER = 0xCCDED040UL, /* DAT stream bytes #6-#7 aren't 0xACED */
+	DAT_ERR_JVERSION    = 0xCCDED041UL, /* DAT stream bytes #8-#9 aren't 0x0005 */
+	DAT_ERR_ROOT_TYPE   = 0xCCDED042UL, /* Java root element type isn't Object */
+
+	JAVA_ERR_JSTRING_LEN       = 0xCCDED043UL, /* Java string is too long */
+	JAVA_ERR_JFIELD_CLASS_NAME = 0xCCDED044UL, /* Java field classname type is invalid */
+	JAVA_ERR_JCLASS_TYPE       = 0xCCDED045UL, /* Java class classdesc type is invalid */
+	JAVA_ERR_JCLASS_FIELDS     = 0xCCDED046UL, /* Java class classdesc has too many fields */
+	JAVA_ERR_JCLASS_ANNOTATION = 0xCCDED047UL, /* Java classdesc uses unsupported annotations */
+	JAVA_ERR_JOBJECT_TYPE      = 0xCCDED048UL, /* Java object field data type is invalid */
+	JAVA_ERR_JARRAY_TYPE       = 0xCCDED049UL, /* Java array field data type is invalid */
+	JAVA_ERR_JARRAY_CONTENT    = 0xCCDED04AUL, /* Java array field isn't a byte array */
 
 	NBT_ERR_UNKNOWN   = 0xCCDED04BUL, /* NBT tag has an unknown type */
 	CW_ERR_ROOT_TAG   = 0xCCDED04CUL, /* NBT root tag isn't a Compound tag */
