@@ -264,8 +264,8 @@ cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char sepa
 		}
 	}
 
-	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", &path); }
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
 	return res;
 }
 

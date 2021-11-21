@@ -349,8 +349,8 @@ static void ExtractFromFile(const cc_string* filename) {
 	}
 
 	ExtractFrom(&stream, &path);
-	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", &path); }
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
 }
 
 static void ExtractDefault(void) {
@@ -377,8 +377,8 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 		ExtractFrom(&stream, &url);
 		usingDefault = false;
 
-		res = stream.Close(&stream);
-		if (res) Logger_SysWarn2(res, "closing cache for", &url);
+		/* No point logging error for closing readonly file */
+		(void)stream.Close(&stream);
 	}
 }
 

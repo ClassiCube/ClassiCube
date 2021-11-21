@@ -71,8 +71,8 @@ void Map_LoadFrom(const cc_string* path) {
 		Logger_SysWarn2(res, "decoding", path);
 	}
 
-	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", path); }
+	/* No point logging error for closing readonly file */
+	stream.Close(&stream);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	LocalPlayer_MoveToSpawn();

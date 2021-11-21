@@ -925,9 +925,10 @@ static cc_result Sound_ReadWave(const cc_string* path, struct Sound* snd) {
 	res = Stream_OpenFile(&stream, path);
 	if (res) return res;
 	res = Sound_ReadWaveData(&stream, snd);
-	if (res) { stream.Close(&stream); return res; }
 
-	return stream.Close(&stream);
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
+	return res;
 }
 
 static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const cc_string* name) {

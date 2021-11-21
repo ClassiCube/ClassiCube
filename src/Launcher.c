@@ -466,7 +466,8 @@ static void ExtractTexturePack(const cc_string* path) {
 	res = Zip_Extract(&state);
 
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
-	stream.Close(&stream);
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
 }
 
 void Launcher_TryLoadTexturePack(void) {
