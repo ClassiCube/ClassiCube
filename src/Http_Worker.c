@@ -428,8 +428,8 @@ typedef WORD INTERNET_PORT;
 INETAPI BOOL WINAPI InternetCloseHandle(HINTERNET hInternet);
 INETAPI HINTERNET WINAPI InternetConnectA(HINTERNET hInternet, PCSTR serverName, INTERNET_PORT serverPort, PCSTR userName, PCSTR password, DWORD service, DWORD flags, DWORD_PTR context);
 INETAPI HINTERNET WINAPI InternetOpenA(PCSTR agent, DWORD accessType, PCSTR lpszProxy, PCSTR proxyBypass, DWORD flags);
-INETAPI BOOL WINAPI InternetQueryOptionW(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD* bufferLength);
-INETAPI BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD bufferLength);
+INETAPI BOOL WINAPI InternetQueryOptionA(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD* bufferLength);
+INETAPI BOOL WINAPI InternetSetOptionA(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD bufferLength);
 INETAPI BOOL WINAPI InternetQueryDataAvailable(HINTERNET hFile, DWORD* numBytesAvailable, DWORD flags, DWORD_PTR context);
 INETAPI BOOL WINAPI InternetReadFile(HINTERNET hFile, PVOID buffer, DWORD numBytesToRead, DWORD* numBytesRead);
 INETAPI BOOL WINAPI HttpQueryInfoA(HINTERNET hRequest, DWORD infoLevel, PVOID buffer, DWORD* bufferLength, DWORD* index);
@@ -552,11 +552,12 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 }
 
 /* Creates and sends a HTTP request */
-static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url, HINTERNET* handle) {
+static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url) {
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
 	cc_string path; char pathBuffer[URL_MAX_SIZE + 1];
 	DWORD flags, bufferLen;
+	HINTERNET handle;
 	cc_result res;
 
 	String_InitArray_NT(path, pathBuffer);
@@ -567,22 +568,26 @@ static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url, HINT
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
 
-	*handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], 
-								pathBuffer, NULL, NULL, NULL, flags, 0);
-	req->meta = *handle;
-	if (!req->meta) return GetLastError();
+	handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], pathBuffer, NULL, NULL, NULL, flags, 0);
+	/* Fallback for Windows 95 which returns ERROR_INVALID_PARAMETER */
+	if (!handle) {
+		flags &= ~INTERNET_FLAG_NO_UI; /* INTERNET_FLAG_NO_UI unsupported on Windows 95 */
+		handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], pathBuffer, NULL, NULL, NULL, flags, 0);
+		if (!handle) return GetLastError();
+	}
+	req->meta = handle;
 
 	bufferLen = sizeof(flags);
-	InternetQueryOptionW(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
+	InternetQueryOptionA(handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
 	/* Users have had issues in the past with revocation servers randomly being offline, */
 	/*  which caused all https:// requests to fail. So just skip revocation check. */
 	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
 
 	if (!httpsVerify) flags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
-	InternetSetOptionW(*handle,   INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
+	InternetSetOptionA(handle,   INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
 
 	Http_SetRequestHeaders(req);
-	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
+	return HttpSendRequestA(handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
 }
 
 /* Gets headers from a HTTP response */
@@ -621,10 +626,11 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	HINTERNET handle;
-	cc_result res = Http_StartRequest(req, url, &handle);
+	cc_result res = Http_StartRequest(req, url);
 	HttpRequest_Free(req);
 	if (res) return res;
 
+	handle = req->meta;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = Http_ProcessHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
