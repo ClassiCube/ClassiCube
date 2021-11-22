@@ -360,7 +360,7 @@ static cc_result ExtractDefault(void) {
 	cc_string texPack = Game_ClassicMode ? defaultZip : defTexPack;
 	cc_result res = ExtractFromFile(&defaultZip);
 
-	/* in case the user's default texture pack doesn't have all required textures */
+	/* override default.zip with user's default texture pack */
 	if (!String_CaselessEquals(&texPack, &defaultZip)) {
 		res = ExtractFromFile(&texPack);
 	}

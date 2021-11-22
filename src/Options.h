@@ -71,6 +71,7 @@
 #define OPT_TOUCH_BUTTONS "gui-touchbuttons"
 #define OPT_TOUCH_SCALE "gui-touchscale"
 #define OPT_HTTP_ONLY "http-no-https"
+#define OPT_HTTPS_VERIFY "https-verify"
 #define OPT_SKIN_SERVER "http-skinserver"
 #define OPT_RAW_INPUT "win-raw-input"
 

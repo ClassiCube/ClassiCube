@@ -212,9 +212,11 @@ typedef int CURLcode;
 #define CURLOPT_POST           (0     + 47)
 #define CURLOPT_FOLLOWLOCATION (0     + 52)
 #define CURLOPT_POSTFIELDSIZE  (0     + 60)
+#define CURLOPT_SSL_VERIFYPEER (0     + 64)
 #define CURLOPT_MAXREDIRS      (0     + 68)
 #define CURLOPT_HEADERFUNCTION (20000 + 79)
 #define CURLOPT_HTTPGET        (0     + 80)
+#define CURLOPT_SSL_VERIFYHOST (0     + 81)
 
 #if defined _WIN32
 #define APIENTRY __cdecl
@@ -341,6 +343,9 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
 	_curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_ProcessData);
 	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+
+	if (httpsVerify) return;
+	_curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
@@ -414,7 +419,9 @@ typedef WORD INTERNET_PORT;
 #define INTERNET_FLAG_NO_COOKIES     0x00080000
 #define INTERNET_FLAG_NO_UI          0x00000200
 
-#define SECURITY_FLAG_IGNORE_REVOCATION 0x00000080
+#define SECURITY_FLAG_IGNORE_REVOCATION      0x00000080
+#define SECURITY_FLAG_IGNORE_UNKNOWN_CA      0x00000100
+#define SECURITY_FLAG_IGNORE_CERT_CN_INVALID 0x00001000
 #define HTTP_QUERY_RAW_HEADERS          21
 #define INTERNET_OPTION_SECURITY_FLAGS  31
 
@@ -565,11 +572,14 @@ static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url, HINT
 	req->meta = *handle;
 	if (!req->meta) return GetLastError();
 
-	/* ignore revocation stuff */
 	bufferLen = sizeof(flags);
 	InternetQueryOptionW(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
+	/* Users have had issues in the past with revocation servers randomly being offline, */
+	/*  which caused all https:// requests to fail. So just skip revocation check. */
 	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
-	InternetSetOptionW(*handle, INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
+
+	if (!httpsVerify) flags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
+	InternetSetOptionW(*handle,   INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
 
 	Http_SetRequestHeaders(req);
 	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();

@@ -1553,10 +1553,9 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
 	res = TexturePack_ExtractCurrent(true);
-
-	/* Load error may be because user deleted .zips from disc */
 	if (res != ReturnCode_FileNotFound) return;
 
+	/* FileNotFound error may be because user deleted.zips from disc */
 	Chat_AddRaw("&eReloading texture pack list as it may be out of date");
 	ListScreen_Free(s);
 	s->LoadEntries(s);

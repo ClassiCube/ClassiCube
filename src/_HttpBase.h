@@ -8,7 +8,7 @@
 #include "Utils.h"
 #include "Options.h"
 
-static cc_bool httpsOnly, httpOnly;
+static cc_bool httpsOnly, httpOnly, httpsVerify;
 static char skinServer_buffer[128];
 static cc_string skinServer = String_FromArray(skinServer_buffer);
 
@@ -267,7 +267,9 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_InitCommon(void) {
-	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
+	httpOnly    = Options_GetBool(OPT_HTTP_ONLY, false);
+	httpsVerify = Options_GetBool(OPT_HTTPS_VERIFY, true);
+
 	Options_Get(OPT_SKIN_SERVER, &skinServer, SKINS_SERVER);
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 }
