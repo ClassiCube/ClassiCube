@@ -9,6 +9,8 @@ build_files = {
 	'/ClassiCube.osx'    : 'cc-osx32',       '/ClassiCube.64.osx'        : 'cc-osx64',
 	'/ClassiCube.js'     : 'cc.js',          '/ClassiCube.apk'           : 'cc.apk',
 	'/ClassiCube.rpi'    : 'cc-rpi',
+	'/cc-nix32-gl2'      : 'cc-nix32-gl2',   '/cc-nix64-gl2'             : 'cc-nix64-gl2',
+	'/cc-osx32-gl2'      : 'cc-osx32-gl2',   '/cc-osx64-gl2'             : 'cc-osx64-gl2',
 }
 
 release_files = { 

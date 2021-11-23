@@ -252,7 +252,11 @@ void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;
 
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
+#ifdef CC_BUILD_GLMODERN
+	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
+#else
 	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
+#endif
 	String_Format1(info, "Vendor: %c\n",     glGetString(GL_VENDOR));
 	String_Format1(info, "Renderer: %c\n",   glGetString(GL_RENDERER));
 	String_Format1(info, "GL version: %c\n", glGetString(GL_VERSION));

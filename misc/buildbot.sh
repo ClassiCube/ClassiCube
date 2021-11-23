@@ -64,6 +64,8 @@ build_nix32() {
   rm cc-nix32
   gcc *.c $ALL_FLAGS $NIX32_FLAGS CCicon_nix32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix32 -lX11 -lXi -lpthread -lGL -lm -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Linux 32 bit" >> "$ERRS_FILE"; fi
+  gcc *.c $ALL_FLAGS $NIX32_FLAGS CCicon_nix32.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+  if [ $? -ne 0 ]; then echo "Failed to compile Linux 32 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
 build_nix64() {
@@ -72,6 +74,8 @@ build_nix64() {
   rm cc-nix64
   gcc *.c $ALL_FLAGS $NIX64_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix64 -lX11 -lXi -lpthread -lGL -lm -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Linux 64 bit" >> "$ERRS_FILE"; fi
+  gcc *.c $ALL_FLAGS $NIX64_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-nix64-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+  if [ $? -ne 0 ]; then echo "Failed to compile Linux 64 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile macOS
@@ -85,6 +89,8 @@ build_mac32() {
   rm cc-osx32
   $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
   if [ $? -ne 0 ]; then echo "Failed to compile macOS 32 bit" >> "$ERRS_FILE"; fi
+  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-osx32-gl2 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
+  if [ $? -ne 0 ]; then echo "Failed to compile macOS 32 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
 build_mac64() {
@@ -93,6 +99,8 @@ build_mac64() {
   rm cc-osx64
   $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
   if [ $? -ne 0 ]; then echo "Failed to compile macOS 64 bit" >> "$ERRS_FILE"; fi
+  $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-osx64-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+  if [ $? -ne 0 ]; then echo "Failed to compile macOS 64 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile web
