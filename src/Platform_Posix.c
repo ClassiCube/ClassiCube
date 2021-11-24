@@ -783,9 +783,21 @@ cc_bool Updater_Clean(void) { return true; }
 
 #if defined CC_BUILD_LINUX
 #if __x86_64__
-const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube" } } };
+const struct UpdaterInfo Updater_Info = {
+	"&eModernGL is recommended for newer machines (2010 or later)", 2,
+	{
+		{ "ModernGL", "cc-nix64-gl2" },
+		{ "OpenGL",   "ClassiCube" }
+	}
+};
 #elif __i386__
-const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.32" } } };
+const struct UpdaterInfo Updater_Info = {
+	"&eModernGL is recommended for newer machines (2010 or later)", 2,
+	{
+		{ "ModernGL", "cc-nix32-gl2" },
+		{ "OpenGL",   "ClassiCube.32" }
+	}
+};
 #elif CC_BUILD_RPI
 const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.rpi" } } };
 #else
@@ -793,9 +805,21 @@ const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to updat
 #endif
 #elif defined CC_BUILD_MACOS
 #if __x86_64__
-const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.64.osx" } } };
+const struct UpdaterInfo Updater_Info = {
+	"&eModernGL is recommended for newer machines (2010 or later)", 2,
+	{
+		{ "ModernGL", "cc-osx64-gl2" },
+		{ "OpenGL",   "ClassiCube.64.osx" }
+	}
+};
 #elif __i386__
-const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.osx" } } };
+const struct UpdaterInfo Updater_Info = {
+	"&eModernGL is recommended for newer machines (2010 or later)", 2,
+	{
+		{ "ModernGL", "cc-osx32-gl2" },
+		{ "OpenGL",   "ClassiCube.osx" }
+	}
+};
 #else
 const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 #endif
