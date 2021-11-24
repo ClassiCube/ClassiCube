@@ -786,16 +786,16 @@ cc_bool Updater_Clean(void) { return true; }
 const struct UpdaterInfo Updater_Info = {
 	"&eModernGL is recommended for newer machines (2010 or later)", 2,
 	{
-		{ "ModernGL", "cc-nix64-gl2" },
-		{ "OpenGL",   "ClassiCube" }
+		{ "OpenGL",   "ClassiCube" },
+		{ "ModernGL", "cc-nix64-gl2" }
 	}
 };
 #elif __i386__
 const struct UpdaterInfo Updater_Info = {
 	"&eModernGL is recommended for newer machines (2010 or later)", 2,
 	{
-		{ "ModernGL", "cc-nix32-gl2" },
-		{ "OpenGL",   "ClassiCube.32" }
+		{ "OpenGL",   "ClassiCube.32" },
+		{ "ModernGL", "cc-nix32-gl2" }
 	}
 };
 #elif CC_BUILD_RPI
@@ -808,16 +808,16 @@ const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to updat
 const struct UpdaterInfo Updater_Info = {
 	"&eModernGL is recommended for newer machines (2010 or later)", 2,
 	{
-		{ "ModernGL", "cc-osx64-gl2" },
-		{ "OpenGL",   "ClassiCube.64.osx" }
+		{ "OpenGL",   "ClassiCube.64.osx" },
+		{ "ModernGL", "cc-osx64-gl2" }
 	}
 };
 #elif __i386__
 const struct UpdaterInfo Updater_Info = {
 	"&eModernGL is recommended for newer machines (2010 or later)", 2,
 	{
-		{ "ModernGL", "cc-osx32-gl2" },
-		{ "OpenGL",   "ClassiCube.osx" }
+		{ "OpenGL",   "ClassiCube.osx" },
+		{ "ModernGL", "cc-osx32-gl2" }
 	}
 };
 #else
