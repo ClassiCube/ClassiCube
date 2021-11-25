@@ -453,8 +453,24 @@ void Gfx_DisableTextureOffset(void) {
 *-------------------------------------------------------State setup-------------------------------------------------------*
 *#########################################################################################################################*/
 static void GLBackend_Init(void) {
-#ifndef CC_BUILD_GLES
-	customMipmapsLevels = true;
+#ifdef CC_BUILD_GLES
+	// OpenGL ES 2.0 doesn't support custom mipmaps levels
+#else
+    customMipmapsLevels = true;
+    const GLubyte* ver  = glGetString(GL_VERSION);
+    int major = ver[0] - '0', minor = ver[2] - '0';
+    if (major >= 2) return;
+
+    // OpenGL 1.x.. will likely either not work or perform poorly
+    cc_string str; char strBuffer[1024];
+    String_InitArray_NT(str, strBuffer);
+    String_Format2(&str,"Modern OpenGL build requires at least OpenGL 2.0\n" \
+                        "Your system only supports OpenGL %i.%i however\n\n" \
+                        "As such ClassiCube will likely perform poorly or not work\n" \
+                        "It is recommended you use the Normal OpenGL build instead\n",
+                        &major, &minor);
+    strBuffer[str.length] = '\0';
+    Window_ShowDialog("Compatibility warning", strBuffer);
 #endif
 }
 
