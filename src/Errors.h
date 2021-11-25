@@ -109,6 +109,7 @@ enum CC_ERRORS {
 	INF_ERR_NUM_CODES    = 0xCCDED056UL, /* Too many codewords specified for bit length */
 
 	ERR_DOWNLOAD_INVALID = 0xCCDED057UL, /* Unspecified error occurred downloading data */
-	ERR_NO_AUDIO_OUTPUT  = 0xCCDED058UL  /* No audio output devices are connected */
+	ERR_NO_AUDIO_OUTPUT  = 0xCCDED058UL, /* No audio output devices are connected */
+	ERR_INVALID_URL      = 0xCCDED059UL  /* Invalid URL provided to download from */
 };
 #endif

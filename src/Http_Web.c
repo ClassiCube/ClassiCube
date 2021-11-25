@@ -3,7 +3,7 @@
 #include "_HttpBase.h"
 #include <emscripten/emscripten.h>
 #include "Errors.h"
-extern void interop_DownloadAsync(const char* url, int method, int reqID);
+extern int interop_DownloadAsync(const char* url, int method, int reqID);
 extern int interop_IsHttpsOnly(void);
 static struct RequestList workingReqs, queuedReqs;
 
@@ -54,6 +54,7 @@ static void Http_StartNextDownload(void) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	char urlStr[NATIVE_STR_LEN];
 	struct HttpRequest* req;
+	cc_result res;
 
 	/* Avoid making too many requests at once */
 	if (workingReqs.count >= HTTP_MAX_CONCURRENCY) return;
@@ -65,9 +66,21 @@ static void Http_StartNextDownload(void) {
 	Platform_Log1("Fetching %s", &url);
 
 	Platform_EncodeUtf8(urlStr, &url);
-	interop_DownloadAsync(urlStr, req->requestType, req->id);
-	RequestList_Append(&workingReqs, req, false);
-	RequestList_RemoveAt(&queuedReqs, 0);
+	res = interop_DownloadAsync(urlStr, req->requestType, req->id);
+	
+	if (res) {
+		/* Download error code -> ClassiCube error code */
+		if (res == 1) res = ERR_INVALID_URL;
+		req->result = res;
+		
+		/* Invalid URL so move onto next request */
+		Http_FinishRequest(req);
+		RequestList_RemoveAt(&queuedReqs, 0);
+		Http_StartNextDownload();
+	} else {
+		RequestList_Append(&workingReqs, req, false);
+		RequestList_RemoveAt(&queuedReqs, 0);
+	}
 }
 
 EMSCRIPTEN_KEEPALIVE void Http_OnUpdateProgress(int reqID, int read, int total) {

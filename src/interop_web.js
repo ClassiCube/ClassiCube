@@ -50,7 +50,15 @@ mergeInto(LibraryManager.library, {
     var onProgress = Module["_Http_OnUpdateProgress"];
 
     var xhr = new XMLHttpRequest();
-    xhr.open(reqMethod, url);
+    try {
+      xhr.open(reqMethod, url);
+    } catch (e) {
+      // DOMException gets thrown when invalid URL provided. Test cases:
+      //   http://%7https://www.example.com/test.zip
+      //   http://example:app/test.zip
+      console.log(e);
+      return 1;
+    }  
     xhr.responseType = 'arraybuffer';
 
     var getContentLength = function(e) {
@@ -74,6 +82,7 @@ mergeInto(LibraryManager.library, {
     xhr.onprogress = function(e) { onProgress(reqID, e.loaded, e.total); };
 
     try { xhr.send(); } catch (e) { onFinished(reqID, 0, 0, 0); }
+    return 0;
   },
   interop_IsHttpsOnly : function() {
     // If this webpage is https://, browsers deny any http:// downloading
