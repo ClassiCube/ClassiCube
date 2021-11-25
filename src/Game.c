@@ -430,8 +430,6 @@ static void UpdateViewMatrix(void) {
 
 static void Game_Render3D(double delta, float t) {
 	Vec3 pos;
-
-	EnvRenderer_UpdateFog();
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 
 	AxisLinesRenderer_Render();
@@ -568,8 +566,10 @@ static void Game_RenderFrame(double delta) {
 	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(t);
 
-	Gfx_Clear();
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
+	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
+	EnvRenderer_UpdateFog();
+	Gfx_Clear();
 	UpdateViewMatrix();
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
