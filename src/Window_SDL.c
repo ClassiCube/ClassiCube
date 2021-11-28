@@ -83,6 +83,8 @@ cc_result Window_EnterFullscreen(void) {
 }
 cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
 
+int Window_IsObscured(void) { return 0; }
+
 void Window_Show(void) { SDL_ShowWindow(win_handle); }
 
 void Window_SetSize(int width, int height) {

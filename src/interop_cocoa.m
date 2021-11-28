@@ -10,6 +10,7 @@ static int windowX, windowY;
 static NSApplication* appHandle;
 static NSWindow* winHandle;
 static NSView* viewHandle;
+static cc_bool canCheckOcclusion;
 
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
@@ -287,6 +288,8 @@ static void DoCreateWindow(int width, int height) {
 	RefreshWindowBounds();
 	MakeContentView();
 	ApplyIcon();
+    
+    canCheckOcclusion = [winHandle respondsToSelector:@selector(occlusionState)];
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
@@ -321,6 +324,17 @@ cc_result Window_EnterFullscreen(void) {
 cc_result Window_ExitFullscreen(void) {
 	[winHandle toggleFullScreen:appHandle];
 	return 0;
+}
+
+// NOTE: Only defined since macOS 10.9 SDK
+#define _NSWindowOcclusionStateVisible (1 << 1)
+int Window_IsObscured(void) {
+    if (!canCheckOcclusion)
+        return [winHandle isMiniaturized];
+    
+    // covers both minimised and hidden behind another window
+    int flags = [winHandle occlusionState];
+    return !(flags & _NSWindowOcclusionStateVisible);
 }
 
 void Window_Show(void) { 

@@ -447,6 +447,8 @@ cc_result Window_ExitFullscreen(void) {
 	return 0;
 }
 
+int Window_IsObscured(void) { return 0; }
+
 void Window_Show(void) {
 	ShowWindow(win_handle, SW_SHOW);
 	BringWindowToTop(win_handle);

@@ -433,6 +433,8 @@ cc_result Window_ExitFullscreen(void) {
 	ToggleFullscreen(_NET_WM_STATE_REMOVE); return 0;
 }
 
+int Window_IsObscured(void) { return 0; }
+
 void Window_Show(void) { XMapWindow(win_display, win_handle); }
 
 void Window_SetSize(int width, int height) {
