@@ -41,14 +41,16 @@ static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 }
 
 IMapImporter Map_FindImporter(const cc_string* path) {
-	static const cc_string cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	static const cc_string fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	static const cc_string cw   = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	static const cc_string fcm  = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	static const cc_string mine = String_FromConst(".mine");
 
-	if (String_CaselessEnds(path, &cw))  return Cw_Load;
+	if (String_CaselessEnds(path,   &cw))  return Cw_Load;
 #ifndef CC_BUILD_WEB
-	if (String_CaselessEnds(path, &lvl)) return Lvl_Load;
-	if (String_CaselessEnds(path, &fcm)) return Fcm_Load;
-	if (String_CaselessEnds(path, &dat)) return Dat_Load;
+	if (String_CaselessEnds(path,  &lvl)) return Lvl_Load;
+	if (String_CaselessEnds(path,  &fcm)) return Fcm_Load;
+	if (String_CaselessEnds(path,  &dat)) return Dat_Load;
+	if (String_CaselessEnds(path, &mine)) return Dat_Load;
 #endif
 
 	return NULL;
@@ -836,8 +838,9 @@ static cc_result Java_SkipAnnotation(struct Stream* stream) {
 }
 
 
-/* .dat files only seem to use at most 16 different class types */
-#define CLASS_CAPACITY 17
+/* Most .dat maps only use at most 16 different class types */
+/*  However some survival test maps can use up to 30 */
+#define CLASS_CAPACITY 30
 static struct JClassDesc* class_cache;
 static int class_count;
 static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc** desc);
