@@ -738,17 +738,19 @@ cc_result Cw_Load(struct Stream* stream) {
 }*/
 enum JTypeCode {
 	TC_NULL = 0x70, TC_REFERENCE = 0x71, TC_CLASSDESC = 0x72, TC_OBJECT = 0x73, 
-	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_ENDBLOCKDATA = 0x78
+	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_BLOCKDATA = 0x77, TC_ENDBLOCKDATA = 0x78
 };
 enum JFieldType {
-	JFIELD_I8 = 'B', JFIELD_F32 = 'F', JFIELD_I32 = 'I', JFIELD_I64 = 'J',
+	JFIELD_I8 = 'B', JFIELD_F64 = 'D', JFIELD_F32 = 'F', JFIELD_I32 = 'I', JFIELD_I64 = 'J',
 	JFIELD_BOOL = 'Z', JFIELD_ARRAY = '[', JFIELD_OBJECT = 'L'
 };
 
 #define JNAME_SIZE 48
-static cc_uint32 reference_id;
-#define SC_WRITE_METHOD 0x0
+#define SC_WRITE_METHOD 0x01
 #define SC_SERIALIZABLE 0x02
+
+static cc_uint32 reference_id;
+#define Java_AddReference() reference_id++;
 
 union JValue {
 	cc_uint8  U8;
@@ -771,7 +773,7 @@ struct JClassDesc {
 	cc_uint8 ClassName[JNAME_SIZE];
 	cc_uint8 Flags;
 	int FieldsCount;
-	struct JFieldDesc Fields[22];
+	struct JFieldDesc Fields[38];
 	cc_uint32 Reference;
 	struct JClassDesc* SuperClass;
 	struct JClassDesc* tmp;
@@ -804,41 +806,51 @@ static cc_result Java_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	return Stream_Read(stream, buffer, len);
 }
 
+
+static cc_result Java_ReadObject(struct Stream* stream,     struct JUnion* object);
+static cc_result Java_ReadObjectData(struct Stream* stream, struct JUnion* object);
 static cc_result Java_SkipAnnotation(struct Stream* stream) {
-	cc_uint8 typeCode;
+	cc_uint8 typeCode, count;
+	struct JUnion object;
 	cc_result res;
 
-	if ((res = stream->ReadU8(stream, &typeCode))) return res;
-	if (typeCode != TC_ENDBLOCKDATA) return JAVA_ERR_JCLASS_ANNOTATION;
+	for (;;)
+	{
+		if ((res = stream->ReadU8(stream, &typeCode))) return res;
+
+		switch (typeCode)
+		{
+		case TC_BLOCKDATA:
+			if ((res = stream->ReadU8(stream, &count))) return res;
+			if ((res = stream->Skip(stream, count)))    return res;
+			break;
+		case TC_ENDBLOCKDATA: 
+			return 0;
+		default:
+			object.Type = typeCode;
+			if ((res = Java_ReadObjectData(stream, &object))) return res;
+			break;
+		}
+	}
 	return 0;
 }
 
 
 /* .dat files only seem to use at most 16 different class types */
-#define CLASS_CAPACITY 20
-static struct JClassDesc  class_empty;
+#define CLASS_CAPACITY 17
 static struct JClassDesc* class_cache;
 static int class_count;
 static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc** desc);
 
 static cc_result Java_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
-	cc_uint8 typeCode;
-	cc_uint8 className1[JNAME_SIZE];
+	struct JUnion className;
 	cc_result res;
 
 	if ((res = stream->ReadU8(stream, &desc->Type)))      return res;
 	if ((res = Java_ReadString(stream, desc->FieldName))) return res;
 
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {		
-		if ((res = stream->ReadU8(stream, &typeCode))) return res;
-
-		if (typeCode == TC_STRING) {
-			return Java_ReadString(stream, className1);
-		} else if (typeCode == TC_REFERENCE) {
-			return stream->Skip(stream, 4); /* (4) handle */
-		} else {
-			return JAVA_ERR_JFIELD_CLASS_NAME;
-		}
+		return Java_ReadObject(stream, &className);
 	}
 	return 0;
 }
@@ -851,6 +863,9 @@ static cc_result Java_ReadNewClassDesc(struct Stream* stream, struct JClassDesc*
 	if ((res = Java_ReadString(stream, desc->ClassName))) return res;
 	if ((res = stream->Skip(stream, 8)))                  return res; /* serial version UID */
 	if ((res = stream->ReadU8(stream, &desc->Flags)))     return res;
+
+	desc->Reference = reference_id;
+	Java_AddReference();
 
 	if ((res = Stream_Read(stream, count, 2))) return res;
 	desc->FieldsCount = Stream_GetU16_BE(count);
@@ -874,7 +889,7 @@ static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc** d
 	switch (typeCode)
 	{
 		case TC_NULL:
-			*desc = &class_empty;
+			*desc = NULL;
 			return 0;
 
 		case TC_REFERENCE:
@@ -900,7 +915,6 @@ static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc** d
 }
 
 
-static cc_result Java_ReadObject(struct Stream* stream, struct JUnion* object);
 static cc_result Java_ReadValue(struct Stream* stream, cc_uint8 type, union JValue* value) {
 	struct JUnion obj;
 	cc_result res;
@@ -912,6 +926,7 @@ static cc_result Java_ReadValue(struct Stream* stream, cc_uint8 type, union JVal
 	case JFIELD_F32:
 	case JFIELD_I32:
 		return Stream_ReadU32_BE(stream, &value->U32);
+	case JFIELD_F64:
 	case JFIELD_I64:
 		return stream->Skip(stream, 8); /* (8) data */
 	case JFIELD_OBJECT:
@@ -953,10 +968,16 @@ static cc_result Java_ReadClassData(struct Stream* stream, struct JClassDesc* de
 	return 0;
 }
 
+static cc_result Java_ReadNewString(struct Stream* stream, struct JUnion* object) {
+	Java_AddReference();
+	return Java_ReadString(stream, object->Value.String);
+}
+
 static cc_result Java_ReadNewObject(struct Stream* stream, struct JUnion* object) {
 	struct JClassDesc* head;
 	cc_result res;
 	if ((res = Java_ReadClassDesc(stream, &object->Value.Object))) return res;
+	Java_AddReference();
 
 	/* Linked list of classes, with most superclass fist as head */
 	head = object->Value.Object; head->tmp = NULL;
@@ -984,6 +1005,7 @@ static cc_result Java_ReadNewArray(struct Stream* stream, struct JUnion* object)
 	if ((res = Java_ReadClassDesc(stream, &array->Desc))) return res;
 	if ((res = Stream_ReadU32_BE(stream, &count)))        return res;
 	type = array->Desc->ClassName[1];
+	Java_AddReference();
 
 	if (type != JFIELD_I8) {
 		/* Not a byte array, so just discard the unnecessary values */
@@ -994,7 +1016,6 @@ static cc_result Java_ReadNewArray(struct Stream* stream, struct JUnion* object)
 		return 0;
 	}
 
-	if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 	array->Size = count;
 	array->Data = (cc_uint8*)Mem_TryAlloc(count, 1);
 
@@ -1004,20 +1025,25 @@ static cc_result Java_ReadNewArray(struct Stream* stream, struct JUnion* object)
 	return res;
 }
 
-static cc_result Java_ReadObject(struct Stream* stream, struct JUnion* object) {
+static cc_result Java_ReadObjectData(struct Stream* stream, struct JUnion* object) {
 	cc_uint32 reference;
 	cc_result res;
 
-	if ((res = stream->ReadU8(stream, &object->Type))) return res;
 	switch (object->Type) 
 	{
-		case TC_STRING:    return Java_ReadString(stream, object->Value.String);
+		case TC_STRING:    return Java_ReadNewString(stream, object);
 		case TC_NULL:      return 0;
 		case TC_REFERENCE: return Stream_ReadU32_BE(stream, &reference);
 		case TC_OBJECT:    return Java_ReadNewObject(stream, object);
 		case TC_ARRAY:     return Java_ReadNewArray(stream,  object);
 	}
 	return JAVA_ERR_INVALID_TYPECODE;
+}
+
+static cc_result Java_ReadObject(struct Stream* stream, struct JUnion* object) {
+	cc_result res;
+	if ((res = stream->ReadU8(stream, &object->Type))) return res;
+	return Java_ReadObjectData(stream, object);
 }
 
 static int Java_I32(struct JFieldDesc* field) {
@@ -1119,7 +1145,8 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	if (obj.Type != TC_OBJECT)                  return DAT_ERR_ROOT_OBJECT;
 	desc = obj.Value.Object;
 
-	for (i = 0; i < desc->FieldsCount; i++) {
+	for (i = 0; i < desc->FieldsCount; i++) 
+	{
 		field     = &desc->Fields[i];
 		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
 
