@@ -248,6 +248,7 @@ void Window_CloseKeyboard(void) {
 int Window_GetWindowState(void) { return WINDOW_STATE_NORMAL; }
 cc_result Window_EnterFullscreen(void) { return ERR_NOT_SUPPORTED; }
 cc_result Window_ExitFullscreen(void) { return ERR_NOT_SUPPORTED; }
+int Window_IsObscured(void) { return 0; }
 
 void Window_EnableRawMouse(void)  { }
 void Window_UpdateRawMouse(void)  { }

@@ -543,6 +543,8 @@ cc_result Window_ExitFullscreen(void) {
 	return res;
 }
 
+int Window_IsObscured(void) { return 0; }
+
 void Window_Show(void) {
 	ShowWindow(win_handle);
 	/* TODO: Do we actually need to reposition */

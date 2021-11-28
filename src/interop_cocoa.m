@@ -323,6 +323,8 @@ cc_result Window_ExitFullscreen(void) {
 	return 0;
 }
 
+int Window_IsObscured(void) { return 0; }
+
 void Window_Show(void) { 
 	[winHandle makeKeyAndOrderFront:appHandle];
 	RefreshWindowBounds(); // TODO: even necessary?

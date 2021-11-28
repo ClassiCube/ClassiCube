@@ -103,6 +103,9 @@ int Window_GetWindowState(void);
 cc_result Window_EnterFullscreen(void);
 /* Attempts to restore the window to before it entered full screen. */
 cc_result Window_ExitFullscreen(void);
+/* Returns non-zero if the window is obscured (occluded or minimised) */
+/* NOTE: Not supported by all windowing backends */
+int Window_IsObscured(void);
 
 /* Makes the window visible and focussed on screen. */
 void Window_Show(void);

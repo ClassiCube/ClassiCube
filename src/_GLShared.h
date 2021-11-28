@@ -275,7 +275,15 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
 void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-void Gfx_EndFrame(void) { 
+void Gfx_EndFrame(void) {
+#ifndef CC_BUILD_GLMODERN
+	if (Window_IsObscured()) {
+		TickReducedPerformance();
+	} else {
+		EndReducedPerformance();
+	}
+#endif
+
 	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
 	if (gfx_minFrameMs) LimitFPS();
 }
