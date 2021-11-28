@@ -1028,8 +1028,6 @@ static cc_result Java_ReadNewArray(struct Stream* stream, struct JUnion* object)
 
 static cc_result Java_ReadObjectData(struct Stream* stream, struct JUnion* object) {
 	cc_uint32 reference;
-	cc_result res;
-
 	switch (object->Type) 
 	{
 		case TC_STRING:    return Java_ReadNewString(stream, object);

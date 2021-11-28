@@ -411,7 +411,7 @@ void Window_Show(void) {
 }
 
 int Window_GetWindowState(void) {
-	DWORD s = GetWindowLongW(win_handle, GWL_STYLE);
+	DWORD s = GetWindowLongA(win_handle, GWL_STYLE);
 
 	if ((s & WS_MINIMIZE))                   return WINDOW_STATE_MINIMISED;
 	if ((s & WS_MAXIMIZE) && (s & WS_POPUP)) return WINDOW_STATE_FULLSCREEN;
@@ -455,7 +455,7 @@ cc_result Window_ExitFullscreen(void) {
 
 
 void Window_SetSize(int width, int height) {
-	DWORD style = GetWindowLongW(win_handle, GWL_STYLE);
+	DWORD style = GetWindowLongA(win_handle, GWL_STYLE);
 	RECT rect   = { 0, 0, width, height };
 	AdjustWindowRect(&rect, style, false);
 
