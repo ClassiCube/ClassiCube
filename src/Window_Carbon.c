@@ -520,13 +520,6 @@ void Window_SetTitle(const cc_string* title) {
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }
 
-void Window_Show(void) {
-	ShowWindow(win_handle);
-	/* TODO: Do we actually need to reposition */
-	RepositionWindow(win_handle, NULL, kWindowCenterOnMainScreen);
-	SelectWindow(win_handle);
-}
-
 int Window_GetWindowState(void) {
 	if (win_fullscreen)                return WINDOW_STATE_FULLSCREEN;
 	if (IsWindowCollapsed(win_handle)) return WINDOW_STATE_MINIMISED;
@@ -548,6 +541,13 @@ cc_result Window_ExitFullscreen(void) {
 	cc_result res = GLContext_UnsetFullscreen();
 	UpdateWindowState();
 	return res;
+}
+
+void Window_Show(void) {
+	ShowWindow(win_handle);
+	/* TODO: Do we actually need to reposition */
+	RepositionWindow(win_handle, NULL, kWindowCenterOnMainScreen);
+	SelectWindow(win_handle);
 }
 
 void Window_SetSize(int width, int height) {

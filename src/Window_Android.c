@@ -302,7 +302,6 @@ void Clipboard_SetText(const cc_string* value) {
 	JavaCall_String_Void("setClipboardText", value);
 }
 
-void Window_Show(void) { } /* Window already visible */
 int Window_GetWindowState(void) { 
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
@@ -323,6 +322,7 @@ cc_result Window_ExitFullscreen(void) {
 	return 0; 
 }
 
+void Window_Show(void) { } /* Window already visible */
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) {

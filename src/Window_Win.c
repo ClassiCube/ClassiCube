@@ -404,12 +404,6 @@ void Clipboard_SetText(const cc_string* value) {
 	}
 }
 
-void Window_Show(void) {
-	ShowWindow(win_handle, SW_SHOW);
-	BringWindowToTop(win_handle);
-	SetForegroundWindow(win_handle);
-}
-
 int Window_GetWindowState(void) {
 	DWORD s = GetWindowLongA(win_handle, GWL_STYLE);
 
@@ -425,7 +419,7 @@ static void ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 	suppress_resize = true;
 	{
 		ShowWindow(win_handle, SW_RESTORE); /* reset maximised state */
-		SetWindowLongW(win_handle, GWL_STYLE, style);
+		SetWindowLongA(win_handle, GWL_STYLE, style);
 		SetWindowPos(win_handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 		ShowWindow(win_handle, finalShow); 
 		Window_ProcessEvents();
@@ -453,6 +447,11 @@ cc_result Window_ExitFullscreen(void) {
 	return 0;
 }
 
+void Window_Show(void) {
+	ShowWindow(win_handle, SW_SHOW);
+	BringWindowToTop(win_handle);
+	SetForegroundWindow(win_handle);
+}
 
 void Window_SetSize(int width, int height) {
 	DWORD style = GetWindowLongA(win_handle, GWL_STYLE);

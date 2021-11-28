@@ -429,8 +429,6 @@ void Clipboard_SetText(const cc_string* value) {
 	interop_TrySetClipboardText(str);
 }
 
-void Window_Show(void) { }
-
 int Window_GetWindowState(void) {
 	EmscriptenFullscreenChangeEvent status = { 0 };
 	emscripten_get_fullscreen_status(&status);
@@ -467,6 +465,8 @@ cc_result Window_ExitFullscreen(void) {
 	UpdateWindowBounds();
 	return 0;
 }
+
+void Window_Show(void) { }
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size("#canvas", width, height);

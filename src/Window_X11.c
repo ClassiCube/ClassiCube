@@ -381,8 +381,6 @@ void Clipboard_SetText(const cc_string* value) {
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
-void Window_Show(void) { XMapWindow(win_display, win_handle); }
-
 int Window_GetWindowState(void) {
 	cc_bool fullscreen = false, minimised = false;
 	Atom prop_type;
@@ -434,6 +432,8 @@ cc_result Window_EnterFullscreen(void) {
 cc_result Window_ExitFullscreen(void) {
 	ToggleFullscreen(_NET_WM_STATE_REMOVE); return 0;
 }
+
+void Window_Show(void) { XMapWindow(win_display, win_handle); }
 
 void Window_SetSize(int width, int height) {
 	XResizeWindow(win_display, win_handle, width, height);

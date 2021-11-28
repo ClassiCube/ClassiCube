@@ -97,8 +97,6 @@ CC_API void Clipboard_GetText(cc_string* value);
 /* In web backend, can only be called during INPUT_CLIPBOARD_COPY event. */
 CC_API void Clipboard_SetText(const cc_string* value);
 
-/* Makes the window visible and focussed on screen. */
-void Window_Show(void);
 /* Gets the current state of the window, see WindowState enum. */
 int Window_GetWindowState(void);
 /* Attempts to switch the window to occupy the entire screen. */
@@ -106,6 +104,8 @@ cc_result Window_EnterFullscreen(void);
 /* Attempts to restore the window to before it entered full screen. */
 cc_result Window_ExitFullscreen(void);
 
+/* Makes the window visible and focussed on screen. */
+void Window_Show(void);
 /* Sets the size of the internal bounds of the window in pixels. */
 /* NOTE: This size excludes the bounds of borders + title */
 void Window_SetSize(int width, int height);

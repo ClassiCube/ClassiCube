@@ -70,8 +70,6 @@ void Clipboard_SetText(const cc_string* value) {
 	SDL_SetClipboardText(str);
 }
 
-void Window_Show(void) { SDL_ShowWindow(win_handle); }
-
 int Window_GetWindowState(void) {
 	Uint32 flags = SDL_GetWindowFlags(win_handle);
 
@@ -84,6 +82,8 @@ cc_result Window_EnterFullscreen(void) {
 	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
 cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
+
+void Window_Show(void) { SDL_ShowWindow(win_handle); }
 
 void Window_SetSize(int width, int height) {
 	SDL_SetWindowSize(win_handle, width, height);

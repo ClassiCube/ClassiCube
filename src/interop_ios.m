@@ -188,13 +188,13 @@ static CGRect DoCreateWindow(void) {
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_SetSize(int width, int height) { }
 
+void Window_Show(void) {
+    [win_handle makeKeyAndVisible];
+}
+
 void Window_Close(void) {
     WindowInfo.Exists = false;
     Event_RaiseVoid(&WindowEvents.Closing);
-}
-
-void Window_Show(void) {
-    [win_handle makeKeyAndVisible];
 }
 
 void Window_ProcessEvents(void) {

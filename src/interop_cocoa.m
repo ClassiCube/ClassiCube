@@ -301,11 +301,6 @@ void Window_SetTitle(const cc_string* title) {
 	[str release];
 }
 
-void Window_Show(void) { 
-	[winHandle makeKeyAndOrderFront:appHandle];
-	RefreshWindowBounds(); // TODO: even necessary?
-}
-
 // NOTE: Only defined since macOS 10.7 SDK
 #define _NSFullScreenWindowMask (1 << 14)
 int Window_GetWindowState(void) {
@@ -326,6 +321,11 @@ cc_result Window_EnterFullscreen(void) {
 cc_result Window_ExitFullscreen(void) {
 	[winHandle toggleFullScreen:appHandle];
 	return 0;
+}
+
+void Window_Show(void) { 
+	[winHandle makeKeyAndOrderFront:appHandle];
+	RefreshWindowBounds(); // TODO: even necessary?
 }
 
 void Window_SetSize(int width, int height) {
