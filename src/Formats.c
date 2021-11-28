@@ -46,12 +46,10 @@ IMapImporter Map_FindImporter(const cc_string* path) {
 	static const cc_string mine = String_FromConst(".mine");
 
 	if (String_CaselessEnds(path,   &cw))  return Cw_Load;
-#ifndef CC_BUILD_WEB
 	if (String_CaselessEnds(path,  &lvl)) return Lvl_Load;
 	if (String_CaselessEnds(path,  &fcm)) return Fcm_Load;
 	if (String_CaselessEnds(path,  &dat)) return Dat_Load;
 	if (String_CaselessEnds(path, &mine)) return Dat_Load;
-#endif
 
 	return NULL;
 }
