@@ -543,7 +543,11 @@ cc_result Window_ExitFullscreen(void) {
 	return res;
 }
 
-int Window_IsObscured(void) { return 0; }
+int Window_IsObscured(void) {
+	/* TODO: This isn't a complete fix because it doesn't check for occlusion - */
+	/*  so you'll still get 100% CPU usage when window is hidden in background */
+	return IsWindowCollapsed(win_handle);
+}
 
 void Window_Show(void) {
 	ShowWindow(win_handle);
