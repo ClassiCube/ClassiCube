@@ -82,34 +82,36 @@ enum CC_ERRORS {
 	DAT_ERR_VERSION     = 0xCCDED03FUL, /* DAT stream byte #5 isn't 2 */
 	DAT_ERR_JIDENTIFIER = 0xCCDED040UL, /* DAT stream bytes #6-#7 aren't 0xACED */
 	DAT_ERR_JVERSION    = 0xCCDED041UL, /* DAT stream bytes #8-#9 aren't 0x0005 */
-	DAT_ERR_ROOT_TYPE   = 0xCCDED042UL, /* Java root element type isn't Object */
+	DAT_ERR_ROOT_OBJECT = 0xCCDED042UL, /* DAT version 2 root value isn't an object */
 
-	JAVA_ERR_JSTRING_LEN       = 0xCCDED043UL, /* Java string is too long */
-	JAVA_ERR_JFIELD_CLASS_NAME = 0xCCDED044UL, /* Java field classname type is invalid */
-	JAVA_ERR_JCLASS_TYPE       = 0xCCDED045UL, /* Java class classdesc type is invalid */
-	JAVA_ERR_JCLASS_FIELDS     = 0xCCDED046UL, /* Java class classdesc has too many fields */
-	JAVA_ERR_JCLASS_ANNOTATION = 0xCCDED047UL, /* Java classdesc uses unsupported annotations */
-	JAVA_ERR_JOBJECT_TYPE      = 0xCCDED048UL, /* Java object field data type is invalid */
-	JAVA_ERR_JARRAY_TYPE       = 0xCCDED049UL, /* Java array field data type is invalid */
-	JAVA_ERR_JARRAY_CONTENT    = 0xCCDED04AUL, /* Java array field isn't a byte array */
+	JAVA_ERR_INVALID_TYPECODE  = 0xCCDED043UL, /* Typecode is invalid or incorrect */
+	JAVA_ERR_JSTRING_LEN       = 0xCCDED044UL, /* String length is too long */
+	JAVA_ERR_JFIELD_CLASS_NAME = 0xCCDED045UL, /* Field classname type is invalid */
+	JAVA_ERR_JCLASS_TYPE       = 0xCCDED046UL, /* ClassDescriptor type is invalid */
+	JAVA_ERR_JCLASS_FIELDS     = 0xCCDED047UL, /* ClassDescriptor has too many fields */
+	JAVA_ERR_JCLASS_ANNOTATION = 0xCCDED048UL, /* ClassDescriptor uses unsupported annotations */
+	JAVA_ERR_JCLASSES_COUNT    = 0xCCDED049UL, /* Too many ClassDescriptors in stream */
+	JAVA_ERR_JCLASS_REFERENCE  = 0xCCDED04AUL, /* Reference refers to non-existent ClassDescriptor */
+	JAVA_ERR_JOBJECT_FLAGS     = 0xCCDED04BUL, /* Object class isn't deserialisable */
+	JAVA_ERR_JVALUE_TYPE       = 0xCCDED04CUL, /* Value data type is invalid */
 
-	NBT_ERR_UNKNOWN   = 0xCCDED04BUL, /* NBT tag has an unknown type */
-	CW_ERR_ROOT_TAG   = 0xCCDED04CUL, /* NBT root tag isn't a Compound tag */
-	CW_ERR_STRING_LEN = 0xCCDED04DUL, /* NBT string is too long */
-	CW_ERR_UUID_LEN   = 0xCCDED04EUL, /* Map UUID byte array length is not 16 */
+	NBT_ERR_UNKNOWN   = 0xCCDED050UL, /* NBT tag has an unknown type */
+	CW_ERR_ROOT_TAG   = 0xCCDED051UL, /* NBT root tag isn't a Compound tag */
+	CW_ERR_STRING_LEN = 0xCCDED052UL, /* NBT string is too long */
+	CW_ERR_UUID_LEN   = 0xCCDED053UL, /* Map UUID byte array length is not 16 */
 
-	AL_ERR_INIT_DEVICE   = 0xCCDED04FUL, /* Unknown error occurred creating OpenAL device */
-	AL_ERR_INIT_CONTEXT  = 0xCCDED050UL, /* Unknown error occurred creating OpenAL context */
+	AL_ERR_INIT_DEVICE   = 0xCCDED054UL, /* Unknown error occurred creating OpenAL device */
+	AL_ERR_INIT_CONTEXT  = 0xCCDED055UL, /* Unknown error occurred creating OpenAL context */
 
-	INF_ERR_BLOCKTYPE    = 0xCCDED051UL, /* Block has invalid block type */
-	INF_ERR_LEN_VERIFY   = 0xCCDED052UL, /* Block length checksum failed */
-	INF_ERR_REPEAT_BEG   = 0xCCDED053UL, /* Attempted to repeat codewords before first code */
-	INF_ERR_REPEAT_END   = 0xCCDED054UL, /* Attempted to repeat codewords after last code */
-	INF_ERR_INVALID_CODE = 0xCCDED055UL, /* Attempted to decode unknown codeword */
-	INF_ERR_NUM_CODES    = 0xCCDED056UL, /* Too many codewords specified for bit length */
+	INF_ERR_BLOCKTYPE    = 0xCCDED056UL, /* Block has invalid block type */
+	INF_ERR_LEN_VERIFY   = 0xCCDED057UL, /* Block length checksum failed */
+	INF_ERR_REPEAT_BEG   = 0xCCDED058UL, /* Attempted to repeat codewords before first code */
+	INF_ERR_REPEAT_END   = 0xCCDED059UL, /* Attempted to repeat codewords after last code */
+	INF_ERR_INVALID_CODE = 0xCCDED05AUL, /* Attempted to decode unknown codeword */
+	INF_ERR_NUM_CODES    = 0xCCDED05BUL, /* Too many codewords specified for bit length */
 
-	ERR_DOWNLOAD_INVALID = 0xCCDED057UL, /* Unspecified error occurred downloading data */
-	ERR_NO_AUDIO_OUTPUT  = 0xCCDED058UL, /* No audio output devices are connected */
-	ERR_INVALID_URL      = 0xCCDED059UL  /* Invalid URL provided to download from */
+	ERR_DOWNLOAD_INVALID = 0xCCDED05CUL, /* Unspecified error occurred downloading data */
+	ERR_NO_AUDIO_OUTPUT  = 0xCCDED05DUL, /* No audio output devices are connected */
+	ERR_INVALID_URL      = 0xCCDED05EUL  /* Invalid URL provided to download from */
 };
 #endif

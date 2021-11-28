@@ -41,15 +41,15 @@ static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 }
 
 IMapImporter Map_FindImporter(const cc_string* path) {
-	static const cc_string cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	static const cc_string fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	static const cc_string cw   = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	static const cc_string fcm  = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	static const cc_string mine = String_FromConst(".mine");
 
-	if (String_CaselessEnds(path, &cw))  return Cw_Load;
-#ifndef CC_BUILD_WEB
-	if (String_CaselessEnds(path, &lvl)) return Lvl_Load;
-	if (String_CaselessEnds(path, &fcm)) return Fcm_Load;
-	if (String_CaselessEnds(path, &dat)) return Dat_Load;
-#endif
+	if (String_CaselessEnds(path,   &cw))  return Cw_Load;
+	if (String_CaselessEnds(path,  &lvl)) return Lvl_Load;
+	if (String_CaselessEnds(path,  &fcm)) return Fcm_Load;
+	if (String_CaselessEnds(path,  &dat)) return Dat_Load;
+	if (String_CaselessEnds(path, &mine)) return Dat_Load;
 
 	return NULL;
 }
@@ -738,30 +738,60 @@ cc_result Cw_Load(struct Stream* stream) {
 }*/
 enum JTypeCode {
 	TC_NULL = 0x70, TC_REFERENCE = 0x71, TC_CLASSDESC = 0x72, TC_OBJECT = 0x73, 
-	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_ENDBLOCKDATA = 0x78
+	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_BLOCKDATA = 0x77, TC_ENDBLOCKDATA = 0x78
 };
 enum JFieldType {
-	JFIELD_I8 = 'B', JFIELD_F32 = 'F', JFIELD_I32 = 'I', JFIELD_I64 = 'J',
+	JFIELD_I8 = 'B', JFIELD_F64 = 'D', JFIELD_F32 = 'F', JFIELD_I32 = 'I', JFIELD_I64 = 'J',
 	JFIELD_BOOL = 'Z', JFIELD_ARRAY = '[', JFIELD_OBJECT = 'L'
 };
 
 #define JNAME_SIZE 48
+#define SC_WRITE_METHOD 0x01
+#define SC_SERIALIZABLE 0x02
+
+static cc_uint32 reference_id;
+#define Java_AddReference() reference_id++;
+
+union JValue {
+	cc_uint8  U8;
+	cc_int32  I32;
+	cc_uint32 U32;
+	float     F32;
+	struct { cc_uint8* Ptr; cc_uint32 Size; } Array;
+};
+
 struct JFieldDesc {
 	cc_uint8 Type;
 	cc_uint8 FieldName[JNAME_SIZE];
-	union {
-		cc_uint8  U8;
-		cc_int32  I32;
-		cc_uint32 U32;
-		float    F32;
-		struct { cc_uint8* Ptr; cc_uint32 Size; } Array;
-	} Value;
+	union JValue Value; 
+	/* "Value" field here is not accurate to how java deserialising actually works, */
+	/*  but easier to store here since only care about Level class values anyways */
 };
 
+struct JClassDesc;
 struct JClassDesc {
 	cc_uint8 ClassName[JNAME_SIZE];
+	cc_uint8 Flags;
 	int FieldsCount;
-	struct JFieldDesc Fields[22];
+	struct JFieldDesc Fields[38];
+	cc_uint32 Reference;
+	struct JClassDesc* SuperClass;
+	struct JClassDesc* tmp;
+};
+
+struct JArray {
+	struct JClassDesc* Desc;
+	cc_uint8* Data; /* for byte arrays */
+	cc_uint32 Size; /* for byte arrays */
+};
+
+struct JUnion {
+	cc_uint8 Type;
+	union {
+		cc_uint8 String[JNAME_SIZE]; /* TC_STRING */
+		struct JClassDesc* Object;   /* TC_OBJECT */
+		struct JArray      Array;    /* TC_ARRAY */
+	} Value;
 };
 
 static cc_result Java_ReadString(struct Stream* stream, cc_uint8* buffer) {
@@ -776,41 +806,67 @@ static cc_result Java_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	return Stream_Read(stream, buffer, len);
 }
 
+
+static cc_result Java_ReadObject(struct Stream* stream,     struct JUnion* object);
+static cc_result Java_ReadObjectData(struct Stream* stream, struct JUnion* object);
+static cc_result Java_SkipAnnotation(struct Stream* stream) {
+	cc_uint8 typeCode, count;
+	struct JUnion object;
+	cc_result res;
+
+	for (;;)
+	{
+		if ((res = stream->ReadU8(stream, &typeCode))) return res;
+
+		switch (typeCode)
+		{
+		case TC_BLOCKDATA:
+			if ((res = stream->ReadU8(stream, &count))) return res;
+			if ((res = stream->Skip(stream, count)))    return res;
+			break;
+		case TC_ENDBLOCKDATA: 
+			return 0;
+		default:
+			object.Type = typeCode;
+			if ((res = Java_ReadObjectData(stream, &object))) return res;
+			break;
+		}
+	}
+	return 0;
+}
+
+
+/* Most .dat maps only use at most 16 different class types */
+/*  However some survival test maps can use up to 30 */
+#define CLASS_CAPACITY 30
+static struct JClassDesc* class_cache;
+static int class_count;
+static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc** desc);
+
 static cc_result Java_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
-	cc_uint8 typeCode;
-	cc_uint8 className1[JNAME_SIZE];
+	struct JUnion className;
 	cc_result res;
 
 	if ((res = stream->ReadU8(stream, &desc->Type)))      return res;
 	if ((res = Java_ReadString(stream, desc->FieldName))) return res;
 
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {		
-		if ((res = stream->ReadU8(stream, &typeCode))) return res;
-
-		if (typeCode == TC_STRING) {
-			return Java_ReadString(stream, className1);
-		} else if (typeCode == TC_REFERENCE) {
-			return stream->Skip(stream, 4); /* (4) handle */
-		} else {
-			return JAVA_ERR_JFIELD_CLASS_NAME;
-		}
+		return Java_ReadObject(stream, &className);
 	}
 	return 0;
 }
 
-static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
-	cc_uint8 typeCode;
+static cc_result Java_ReadNewClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	cc_uint8 count[2];
-	struct JClassDesc superClassDesc;
 	cc_result res;
 	int i;
 
-	if ((res = stream->ReadU8(stream, &typeCode))) return res;
-	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return 0; }
-	if (typeCode != TC_CLASSDESC) return JAVA_ERR_JCLASS_TYPE;
-
 	if ((res = Java_ReadString(stream, desc->ClassName))) return res;
-	if ((res = stream->Skip(stream, 9))) return res; /* (8) serial version UID, (1) flags */
+	if ((res = stream->Skip(stream, 8)))                  return res; /* serial version UID */
+	if ((res = stream->ReadU8(stream, &desc->Flags)))     return res;
+
+	desc->Reference = reference_id;
+	Java_AddReference();
 
 	if ((res = Stream_Read(stream, count, 2))) return res;
 	desc->FieldsCount = Stream_GetU16_BE(count);
@@ -820,73 +876,175 @@ static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 		if ((res = Java_ReadFieldDesc(stream, &desc->Fields[i]))) return res;
 	}
 
-	if ((res = stream->ReadU8(stream, &typeCode))) return res;
-	if (typeCode != TC_ENDBLOCKDATA) return JAVA_ERR_JCLASS_ANNOTATION;
-
-	return Java_ReadClassDesc(stream, &superClassDesc);
+	if ((res = Java_SkipAnnotation(stream))) return res;
+	return Java_ReadClassDesc(stream, &desc->SuperClass);
 }
 
-static cc_result Java_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
+static cc_result Java_ReadClassDesc(struct Stream* stream, struct JClassDesc** desc) {
 	cc_uint8 typeCode;
-	cc_string fieldName;
-	cc_uint32 count;
-	struct JClassDesc arrayClassDesc;
+	cc_uint32 reference;
+	cc_result res;
+	int i;
+	if ((res = stream->ReadU8(stream, &typeCode))) return res;
+
+	switch (typeCode)
+	{
+		case TC_NULL:
+			*desc = NULL;
+			return 0;
+
+		case TC_REFERENCE:
+			if ((res = Stream_ReadU32_BE(stream, &reference))) return res;
+
+			/* Use a previously defined ClassDescriptor */
+			for (i = 0; i < class_count; i++) 
+			{
+				if (class_cache[i].Reference != reference) continue;
+				
+				*desc = &class_cache[i];
+				return 0;
+			}
+			return JAVA_ERR_JCLASS_REFERENCE;
+
+		case TC_CLASSDESC:
+			if (class_count >= CLASS_CAPACITY) return JAVA_ERR_JCLASSES_COUNT;
+
+			*desc = &class_cache[class_count++];
+			return Java_ReadNewClassDesc(stream, *desc);
+	}
+	return JAVA_ERR_JCLASS_TYPE;
+}
+
+
+static cc_result Java_ReadValue(struct Stream* stream, cc_uint8 type, union JValue* value) {
+	struct JUnion obj;
 	cc_result res;
 
-	switch (field->Type) {
+	switch (type) {
 	case JFIELD_I8:
 	case JFIELD_BOOL:
-		return stream->ReadU8(stream, &field->Value.U8);
+		return stream->ReadU8(stream, &value->U8);
 	case JFIELD_F32:
 	case JFIELD_I32:
-		return Stream_ReadU32_BE(stream, &field->Value.U32);
+		return Stream_ReadU32_BE(stream, &value->U32);
+	case JFIELD_F64:
 	case JFIELD_I64:
 		return stream->Skip(stream, 8); /* (8) data */
+	case JFIELD_OBJECT:
+		return Java_ReadObject(stream, &obj);
 
-	case JFIELD_OBJECT: {
-		/* Luckily for us, we only have to account for blockMap object */
-		/* Other objects (e.g. player) are stored after the fields we actually care about, so ignore them */
-		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
-		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) return 0;
-		if ((res = stream->ReadU8(stream, &typeCode))) return res;
+	case JFIELD_ARRAY:
+		if ((res = Java_ReadObject(stream, &obj))) return res;
+		value->Array.Size = 0;
+		value->Array.Ptr  = NULL;
 
-		/* Skip all blockMap data with awful hacks */
-		/* These offsets were based on server_level.dat map from original minecraft classic server */
-		if (typeCode == TC_OBJECT) {
-			if ((res = stream->Skip(stream, 315)))         return res;
-			if ((res = Stream_ReadU32_BE(stream, &count))) return res;
-
-			if ((res = stream->Skip(stream, 17 * count)))  return res;
-			if ((res = stream->Skip(stream, 152)))         return res;
-		} else if (typeCode != TC_NULL) {
-			/* WoM maps have this field as null, which makes things easier for us */
-			return JAVA_ERR_JOBJECT_TYPE;
+		/* Array is a byte array */
+		/* NOTE: This can technically leak memory if this array is discarded, however */
+		/*  so far the only observed byte array in .dat files is the map blocks anyways */
+		if (obj.Type == TC_ARRAY && obj.Value.Array.Desc->ClassName[1] == JFIELD_I8) {
+			value->Array.Size = obj.Value.Array.Size;
+			value->Array.Ptr  = obj.Value.Array.Data;
 		}
-	} break;
+		return 0;
+	}
+	return JAVA_ERR_JVALUE_TYPE;
+}
 
-	case JFIELD_ARRAY: {
-		if ((res = stream->ReadU8(stream, &typeCode))) return res;
-		/* NULL/empty array */
-		if (typeCode == TC_NULL) {
-			field->Value.Array.Size = 0;
-			field->Value.Array.Ptr  = NULL;
-			break;
-		}
+static cc_result Java_ReadClassData(struct Stream* stream, struct JClassDesc* desc) {
+	struct JFieldDesc* field;
+	cc_result res;
+	int i;
 
-		if (typeCode != TC_ARRAY) return JAVA_ERR_JARRAY_TYPE;
-		if ((res = Java_ReadClassDesc(stream, &arrayClassDesc))) return res;
-		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return JAVA_ERR_JARRAY_CONTENT;
+	if (!(desc->Flags & SC_SERIALIZABLE))
+		return JAVA_ERR_JOBJECT_FLAGS;
 
-		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
-		field->Value.Array.Size = count;
-		field->Value.Array.Ptr  = (cc_uint8*)Mem_TryAlloc(count, 1);
+	for (i = 0; i < desc->FieldsCount; i++) 
+	{
+		field = &desc->Fields[i];
+		if ((res = Java_ReadValue(stream, field->Type, &field->Value))) return res;
+	}
 
-		if (!field->Value.Array.Ptr) return ERR_OUT_OF_MEMORY;
-		res = Stream_Read(stream, field->Value.Array.Ptr, count);
-		if (res) { Mem_Free(field->Value.Array.Ptr); return res; }
-	} break;
+	if (desc->Flags & SC_WRITE_METHOD)
+		return Java_SkipAnnotation(stream);
+	return 0;
+}
+
+static cc_result Java_ReadNewString(struct Stream* stream, struct JUnion* object) {
+	Java_AddReference();
+	return Java_ReadString(stream, object->Value.String);
+}
+
+static cc_result Java_ReadNewObject(struct Stream* stream, struct JUnion* object) {
+	struct JClassDesc* head;
+	cc_result res;
+	if ((res = Java_ReadClassDesc(stream, &object->Value.Object))) return res;
+	Java_AddReference();
+
+	/* Linked list of classes, with most superclass fist as head */
+	head = object->Value.Object; head->tmp = NULL;
+	while (head->SuperClass) {
+		head->SuperClass->tmp = head;
+		head = head->SuperClass;
+	}
+
+	/* Class data is read with most superclass first */
+	while (head) {
+		if ((res = Java_ReadClassData(stream, head))) return res;
+		head = head->tmp;
 	}
 	return 0;
+}
+
+static cc_result Java_ReadNewArray(struct Stream* stream, struct JUnion* object) {
+	struct JArray* array = &object->Value.Array;
+	union JValue value;
+	cc_uint32 count;
+	cc_uint8 type;
+	cc_result res;
+	int i;
+
+	if ((res = Java_ReadClassDesc(stream, &array->Desc))) return res;
+	if ((res = Stream_ReadU32_BE(stream, &count)))        return res;
+	type = array->Desc->ClassName[1];
+	Java_AddReference();
+
+	if (type != JFIELD_I8) {
+		/* Not a byte array, so just discard the unnecessary values */
+		for (i = 0; i < count; i++)
+		{
+			if ((res = Java_ReadValue(stream, type, &value))) return res;
+		}
+		return 0;
+	}
+
+	array->Size = count;
+	array->Data = (cc_uint8*)Mem_TryAlloc(count, 1);
+
+	if (!array->Data) return ERR_OUT_OF_MEMORY;
+	res = Stream_Read(stream, array->Data, count);
+	if (res) { Mem_Free(array->Data); }
+	return res;
+}
+
+static cc_result Java_ReadObjectData(struct Stream* stream, struct JUnion* object) {
+	cc_uint32 reference;
+	cc_result res;
+
+	switch (object->Type) 
+	{
+		case TC_STRING:    return Java_ReadNewString(stream, object);
+		case TC_NULL:      return 0;
+		case TC_REFERENCE: return Stream_ReadU32_BE(stream, &reference);
+		case TC_OBJECT:    return Java_ReadNewObject(stream, object);
+		case TC_ARRAY:     return Java_ReadNewArray(stream,  object);
+	}
+	return JAVA_ERR_INVALID_TYPECODE;
+}
+
+static cc_result Java_ReadObject(struct Stream* stream, struct JUnion* object) {
+	cc_result res;
+	if ((res = stream->ReadU8(stream, &object->Type))) return res;
+	return Java_ReadObjectData(stream, object);
 }
 
 static int Java_I32(struct JFieldDesc* field) {
@@ -965,23 +1123,32 @@ static cc_result Dat_LoadFormat1(struct Stream* stream) {
 
 static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	cc_uint8 header[2 + 2 + 1];
-	struct JClassDesc obj;
+	struct JClassDesc classes[CLASS_CAPACITY];
+	cc_uint8 header[2 + 2];
+	struct JUnion obj;
+	struct JClassDesc* desc;
 	struct JFieldDesc* field;
 	cc_string fieldName;
 	cc_result res;
 	int i;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
-	/* Java seralisation headers */
-	if (Stream_GetU16_BE(header + 0) != 0xACED)   return DAT_ERR_JIDENTIFIER;
-	if (Stream_GetU16_BE(header + 2) != 0x0005)   return DAT_ERR_JVERSION;
-	if (header[4] != TC_OBJECT)                   return DAT_ERR_ROOT_TYPE;
-	if ((res = Java_ReadClassDesc(stream, &obj))) return res;
+	/* Reset state for Java Serialisation */
+	class_cache  = classes;
+	class_count  = 0;
+	reference_id = 0x7E0000;
 
-	for (i = 0; i < obj.FieldsCount; i++) {
-		field = &obj.Fields[i];
-		if ((res = Java_ReadFieldData(stream, field))) return res;
+	/* Java seralisation headers */
+	if (Stream_GetU16_BE(header + 0) != 0xACED) return DAT_ERR_JIDENTIFIER;
+	if (Stream_GetU16_BE(header + 2) != 0x0005) return DAT_ERR_JVERSION;
+
+	if ((res = Java_ReadObject(stream, &obj)))  return res;
+	if (obj.Type != TC_OBJECT)                  return DAT_ERR_ROOT_OBJECT;
+	desc = obj.Value.Object;
+
+	for (i = 0; i < desc->FieldsCount; i++) 
+	{
+		field     = &desc->Fields[i];
 		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
