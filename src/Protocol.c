@@ -243,7 +243,7 @@ static void WoM_CheckMotd(void) {
 
 	/* Ensure that if the user quickly changes to a different world, env settings from old world aren't
 	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
-	wom_identifier = Http_AsyncGetData(&url, true);
+	wom_identifier = Http_AsyncGetData(&url, HTTP_FLAG_PRIORITY);
 	wom_sendId = true;
 }
 

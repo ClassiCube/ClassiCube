@@ -120,10 +120,10 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 static void Http_SignalWorker(void) { Waitable_Signal(workerWaitable); }
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
-static void HttpBackend_Add(struct HttpRequest* req, cc_bool priority) {
+static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
 	Mutex_Lock(pendingMutex);
 	{	
-		RequestList_Append(&pendingReqs, req, priority);
+		RequestList_Append(&pendingReqs, req, flags);
 	}
 	Mutex_Unlock(pendingMutex);
 	Http_SignalWorker();

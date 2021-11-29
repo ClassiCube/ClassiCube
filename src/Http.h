@@ -9,7 +9,9 @@
 struct IGameComponent;
 struct ScheduledTask;
 struct StringsBuffer;
+
 #define URL_MAX_SIZE (STRING_SIZE * 2)
+#define HTTP_FLAG_PRIORITY 0x01
 
 extern struct IGameComponent Http_Component;
 
@@ -45,15 +47,15 @@ struct HttpRequest {
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
 int Http_AsyncGetSkin(const cc_string* skinName);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
-int Http_AsyncGetData(const cc_string* url, cc_bool priority);
+int Http_AsyncGetData(const cc_string* url, cc_uint8 flags);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */
-int Http_AsyncGetHeaders(const cc_string* url, cc_bool priority);
+int Http_AsyncGetHeaders(const cc_string* url, cc_uint8 flags);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-int Http_AsyncPostData(const cc_string* url, cc_bool priority, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
+int Http_AsyncPostData(const cc_string* url, cc_uint8 flags, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-int Http_AsyncGetDataEx(const cc_string* url, cc_bool priority, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies);
+int Http_AsyncGetDataEx(const cc_string* url, cc_uint8 flags, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies);
 /* Attempts to remove given request from pending and finished request lists. */
 /* NOTE: Won't cancel the request if it is currently in progress. */
 void Http_TryCancel(int reqID);

@@ -116,8 +116,8 @@ EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(int reqID, void* data, int len, i
 }
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
-static void HttpBackend_Add(struct HttpRequest* req, cc_bool priority) {
-	RequestList_Append(&queuedReqs, req, priority);
+static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
+	RequestList_Append(&queuedReqs, req, flags);
 	Http_StartNextDownload();
 }
 

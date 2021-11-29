@@ -37,16 +37,16 @@ static void RequestList_EnsureSpace(struct RequestList* list) {
 }
 
 /* Adds a request to the list */
-static void RequestList_Append(struct RequestList* list, struct HttpRequest* item, cc_bool atFront) {
+static void RequestList_Append(struct RequestList* list, struct HttpRequest* item, cc_uint8 flags) {
 	int i;
 	RequestList_EnsureSpace(list);
 
-	if (atFront) {
+	if (flags & HTTP_FLAG_PRIORITY) {
 		/* Shift all requests right one place */
 		for (i = list->count; i > 0; i--) {
 			list->entries[i] = list->entries[i - 1];
 		}
-		/* Insert new request at start */
+		/* Insert new request at front/start */
 		i = 0;
 	} else {
 		/* Insert new request at end */
@@ -106,10 +106,10 @@ static void RequestList_Free(struct RequestList* list) {
 static void* processedMutex;
 static struct RequestList processedReqs;
 static int nextReqID;
-static void HttpBackend_Add(struct HttpRequest* req, cc_bool priority);
+static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags);
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const cc_string* lastModified,
+static int Http_Add(const cc_string* url, cc_uint8 flags, cc_uint8 type, const cc_string* lastModified,
 					const cc_string* etag, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
 	static const cc_string https = String_FromConst("https://");
 	static const cc_string http  = String_FromConst("http://");
@@ -147,7 +147,7 @@ static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const
 	req.cookies  = cookies;
 	req.progress = HTTP_PROGRESS_NOT_WORKING_ON;
 
-	HttpBackend_Add(&req, priority);
+	HttpBackend_Add(&req, flags);
 	return req.id;
 }
 
@@ -217,20 +217,20 @@ int Http_AsyncGetSkin(const cc_string* skinName) {
 	} else {
 		String_Format2(&url, "%s/%s.png", &skinServer, skinName);
 	}
-	return Http_AsyncGetData(&url, false);
+	return Http_AsyncGetData(&url, 0);
 }
 
-int Http_AsyncGetData(const cc_string* url, cc_bool priority) {
-	return Http_Add(url, priority, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
+int Http_AsyncGetData(const cc_string* url, cc_uint8 flags) {
+	return Http_Add(url, flags, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
 }
-int Http_AsyncGetHeaders(const cc_string* url, cc_bool priority) {
-	return Http_Add(url, priority, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
+int Http_AsyncGetHeaders(const cc_string* url, cc_uint8 flags) {
+	return Http_Add(url, flags, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-int Http_AsyncPostData(const cc_string* url, cc_bool priority, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
-	return Http_Add(url, priority, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
+int Http_AsyncPostData(const cc_string* url, cc_uint8 flags, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
+	return Http_Add(url, flags, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
-int Http_AsyncGetDataEx(const cc_string* url, cc_bool priority, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies) {
-	return Http_Add(url, priority, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
+int Http_AsyncGetDataEx(const cc_string* url, cc_uint8 flags, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies) {
+	return Http_Add(url, flags, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
 }
 
 static cc_bool Http_UrlDirect(cc_uint8 c) {

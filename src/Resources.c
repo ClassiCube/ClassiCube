@@ -752,7 +752,7 @@ CC_NOINLINE static int Fetcher_DownloadAudio(const char* hash) {
 	String_InitArray(url, urlBuffer);
 	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
 					&hash[0], &hash[1], hash);
-	return Http_AsyncGetData(&url, false);
+	return Http_AsyncGetData(&url, 0);
 }
 
 const char* Fetcher_RequestName(int reqID) {
@@ -783,7 +783,7 @@ void Fetcher_Run(void) {
 		if (allTexturesExist) continue;
 
 		url = String_FromReadonly(fileResources[i].url);
-		fileResources[i].reqID = Http_AsyncGetData(&url, false);
+		fileResources[i].reqID = Http_AsyncGetData(&url, 0);
 	}
 
 	for (i = 0; i < Array_Elems(musicResources); i++) {

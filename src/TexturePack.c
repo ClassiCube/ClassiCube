@@ -433,7 +433,7 @@ static void DownloadAsync(const cc_string* url) {
 	}
 
 	Http_TryCancel(TexturePack_ReqID);
-	TexturePack_ReqID = Http_AsyncGetDataEx(url, true, &time, &etag, NULL);
+	TexturePack_ReqID = Http_AsyncGetDataEx(url, HTTP_FLAG_PRIORITY, &time, &etag, NULL);
 }
 
 void TexturePack_Extract(const cc_string* url) {

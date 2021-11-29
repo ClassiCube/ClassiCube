@@ -276,7 +276,7 @@ void GetTokenTask_Run(void) {
 	GetTokenTask.error = false;
 
 	GetTokenTask.Base.Handle = GetTokenTask_Handle;
-	GetTokenTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
+	GetTokenTask.Base.reqID  = Http_AsyncGetDataEx(&url, 0, NULL, NULL, &ccCookies);
 }
 
 
@@ -343,7 +343,7 @@ void SignInTask_Run(const cc_string* user, const cc_string* pass, const cc_strin
 	SignInTask_Append(&args, "&login_code=", mfaCode);
 
 	SignInTask.Base.Handle = SignInTask_Handle;
-	SignInTask.Base.reqID  = Http_AsyncPostData(&url, false, args.buffer, args.length, &ccCookies);
+	SignInTask.Base.reqID  = Http_AsyncPostData(&url, 0, args.buffer, args.length, &ccCookies);
 }
 
 
@@ -416,7 +416,7 @@ void FetchServerTask_Run(const cc_string* hash) {
 	String_Format2(&url, "%s/server/%s", &servicesServer, hash);
 
 	FetchServerTask.Base.Handle = FetchServerTask_Handle;
-	FetchServerTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
+	FetchServerTask.Base.reqID  = Http_AsyncGetDataEx(&url, 0, NULL, NULL, &ccCookies);
 }
 
 
@@ -472,7 +472,7 @@ void FetchServersTask_Run(void) {
 	String_Format1(&url, "%s/servers", &servicesServer);
 
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
-	FetchServersTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
+	FetchServersTask.Base.reqID  = Http_AsyncGetDataEx(&url, 0, NULL, NULL, &ccCookies);
 }
 
 void FetchServersTask_ResetOrder(void) {
@@ -522,7 +522,7 @@ void CheckUpdateTask_Run(void) {
 	String_InitArray(CheckUpdateTask.latestRelease, relVersionBuffer);
 
 	CheckUpdateTask.Base.Handle = CheckUpdateTask_Handle;
-	CheckUpdateTask.Base.reqID  = Http_AsyncGetData(&url, false);
+	CheckUpdateTask.Base.reqID  = Http_AsyncGetData(&url, 0);
 }
 
 
@@ -559,7 +559,7 @@ void FetchUpdateTask_Run(cc_bool release, int buildIndex) {
 	LWebTask_Reset(&FetchUpdateTask.Base);
 	FetchUpdateTask.timestamp   = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
 	FetchUpdateTask.Base.Handle = FetchUpdateTask_Handle;
-	FetchUpdateTask.Base.reqID  = Http_AsyncGetData(&url, false);
+	FetchUpdateTask.Base.reqID  = Http_AsyncGetData(&url, 0);
 }
 
 
@@ -619,7 +619,7 @@ static void FetchFlagsTask_DownloadNext(void) {
 			&flags[FetchFlagsTask.count].country[0], &flags[FetchFlagsTask.count].country[1]);
 
 	FetchFlagsTask.Base.Handle = FetchFlagsTask_Handle;
-	FetchFlagsTask.Base.reqID  = Http_AsyncGetData(&url, false);
+	FetchFlagsTask.Base.reqID  = Http_AsyncGetData(&url, 0);
 }
 
 static void FetchFlagsTask_Ensure(void) {
