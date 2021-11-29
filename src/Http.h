@@ -12,6 +12,7 @@ struct StringsBuffer;
 
 #define URL_MAX_SIZE (STRING_SIZE * 2)
 #define HTTP_FLAG_PRIORITY 0x01
+#define HTTP_FLAG_NOCACHE  0x02
 
 extern struct IGameComponent Http_Component;
 
@@ -45,7 +46,7 @@ struct HttpRequest {
 
 /* Aschronously performs a http GET request to download a skin. */
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
-int Http_AsyncGetSkin(const cc_string* skinName);
+int Http_AsyncGetSkin(const cc_string* skinName, cc_uint8 flags);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 int Http_AsyncGetData(const cc_string* url, cc_uint8 flags);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */

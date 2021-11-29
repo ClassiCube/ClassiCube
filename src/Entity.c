@@ -468,6 +468,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 	struct Stream mem;
 	struct Bitmap bmp;
 	cc_string skin;
+	cc_uint8 flags;
 	cc_result res;
 
 	/* Don't check skin if don't have to */
@@ -477,8 +478,10 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
+		flags = e == &LocalPlayer_Instance ? HTTP_FLAG_NOCACHE : 0;
+
 		if (!first) {
-			e->_skinReqID     = Http_AsyncGetSkin(&skin);
+			e->_skinReqID     = Http_AsyncGetSkin(&skin, flags);
 			e->SkinFetchState = SKIN_FETCH_DOWNLOADING;
 		} else {
 			Entity_CopySkin(e, first);

@@ -6,6 +6,7 @@
 extern int interop_DownloadAsync(const char* url, int method, int reqID);
 extern int interop_IsHttpsOnly(void);
 static struct RequestList workingReqs, queuedReqs;
+static cc_uint64 startTime;
 
 
 /*########################################################################################################################*
@@ -117,6 +118,13 @@ EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(int reqID, void* data, int len, i
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
 static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
+	/* Add time based query string parameter to bypass browser cache */
+	if (flags & HTTP_FLAG_NOCACHE) {
+		cc_string url = String_FromRawArray(req->url);
+		int lo = (int)(startTime), hi = (int)(startTime >> 32);
+		String_Format2(&url, "?t=%i%i", &hi, &lo);
+	}
+
 	RequestList_Append(&queuedReqs, req, flags);
 	Http_StartNextDownload();
 }
@@ -129,6 +137,7 @@ static void Http_Init(void) {
 	Http_InitCommon();
 	/* If this webpage is https://, browsers deny any http:// downloading */
 	httpsOnly = interop_IsHttpsOnly();
+	startTime = DateTime_CurrentUTC_MS();
 
 	RequestList_Init(&queuedReqs);
 	RequestList_Init(&workingReqs);

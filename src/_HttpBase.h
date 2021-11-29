@@ -208,7 +208,7 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 /*########################################################################################################################*
 *----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
-int Http_AsyncGetSkin(const cc_string* skinName) {
+int Http_AsyncGetSkin(const cc_string* skinName, cc_uint8 flags) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
@@ -217,7 +217,7 @@ int Http_AsyncGetSkin(const cc_string* skinName) {
 	} else {
 		String_Format2(&url, "%s/%s.png", &skinServer, skinName);
 	}
-	return Http_AsyncGetData(&url, 0);
+	return Http_AsyncGetData(&url, flags);
 }
 
 int Http_AsyncGetData(const cc_string* url, cc_uint8 flags) {
