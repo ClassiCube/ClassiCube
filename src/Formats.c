@@ -54,28 +54,29 @@ IMapImporter Map_FindImporter(const cc_string* path) {
 	return NULL;
 }
 
-void Map_LoadFrom(const cc_string* path) {
+cc_result Map_LoadFrom(const cc_string* path) {
 	IMapImporter importer;
 	struct Stream stream;
 	cc_result res;
 	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "opening", path); return; }
+	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
 	importer = Map_FindImporter(path);
 	if (!importer) {
-		Logger_SysWarn2(ERR_NOT_SUPPORTED, "decoding", path);
+		res = ERR_NOT_SUPPORTED;
 	} else if ((res = importer(&stream))) {
 		World_Reset();
-		Logger_SysWarn2(res, "decoding", path);
 	}
 
 	/* No point logging error for closing readonly file */
 	stream.Close(&stream);
+	if (res) Logger_SysWarn2(res, "decoding", path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	LocalPlayer_MoveToSpawn();
+	return res;
 }
 
 

@@ -413,6 +413,12 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->upload, "Upload", &s->font);
 }
 
+static void ListScreen_Reload(struct ListScreen* s) {
+	ListScreen_Free(s);
+	s->LoadEntries(s);
+	ListScreen_SetCurrentIndex(s, s->currentIndex);
+}
+
 static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    Screen_NullUpdate, ListScreen_Free,  
 	ListScreen_Render,  Screen_BuildMesh,
@@ -1553,13 +1559,11 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
 	res = TexturePack_ExtractCurrent(true);
-	if (res != ReturnCode_FileNotFound) return;
 
-	/* FileNotFound error may be because user deleted.zips from disc */
+	/* FileNotFound error may be because user deleted .zips from disc */
+	if (res != ReturnCode_FileNotFound) return;
 	Chat_AddRaw("&eReloading texture pack list as it may be out of date");
-	ListScreen_Free(s);
-	s->LoadEntries(s);
-	ListScreen_SetCurrentIndex(s, s->currentIndex);
+	ListScreen_Reload(s);
 }
 
 static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
@@ -1745,11 +1749,17 @@ void HotkeyListScreen_Show(void) {
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
+	cc_result res;
 
 	cc_string relPath = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "maps/%s", &relPath);
-	Map_LoadFrom(&path);
+	res = Map_LoadFrom(&path);
+
+	/* FileNotFound error may be because user deleted maps from disc */
+	if (res != ReturnCode_FileNotFound) return;
+	Chat_AddRaw("&eReloading level list as it may be out of date");
+	ListScreen_Reload(s);
 }
 
 static void LoadLevelScreen_FilterFiles(const cc_string* path, void* obj) {
