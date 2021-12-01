@@ -152,10 +152,6 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
-void Gfx_BindTexture(GfxResourceID texId) {
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-}
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GLuint id = (GLuint)(*texId);
 	if (!id) return;

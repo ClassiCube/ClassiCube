@@ -28,6 +28,7 @@
 #include "_GLShared.h"
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
+static GfxResourceID white_square;
 
 
 /*########################################################################################################################*
@@ -387,6 +388,19 @@ static void SwitchProgram(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Textures--------------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_BindTexture(GfxResourceID texId) {
+	/* Texture 0 has different behaviour depending on backend */
+	/*   Desktop OpenGL  - pure white 1x1 texture */
+	/*   WebGL/OpenGL ES - pure black 1x1 texture */
+	/* So for consistency, always use a 1x1 pure white texture */
+	if (!texId) texId = white_square;
+	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; SwitchProgram(); }
@@ -483,6 +497,7 @@ static void Gfx_FreeState(void) {
 		glDeleteProgram(shaders[i].program);
 		shaders[i].program = 0;
 	}
+	Gfx_DeleteTexture(&white_square);
 }
 
 static void Gfx_RestoreState(void) {
@@ -495,6 +510,12 @@ static void Gfx_RestoreState(void) {
 	GL_ClearColor(gfx_clearColor);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
+
+	/* 1x1 dummy white texture */
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOL_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
