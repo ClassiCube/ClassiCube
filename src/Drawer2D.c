@@ -684,18 +684,39 @@ cc_string Font_Lookup(const cc_string* fontName, int flags) { return String_Empt
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
 	desc->flags  = flags;
-	desc->height = 0;
+	desc->height = size;
+
+	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
+	if (!desc->handle) return 0;
+	
+	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
 	return 0;
 }
-void Font_MakeDefault(struct FontDesc* desc, int size, int flags) { Font_Make(desc, NULL, size, flags); }
+void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	font_candidates[0].length = 0;
+	String_AppendConst(&font_candidates[0], "serif");
+	Font_Make(desc, &font_candidates[0], size, flags); 
+}
 
 void Font_Free(struct FontDesc* desc) {
+	Mem_Free(desc->handle);
+	desc->handle = NULL;
 	desc->size   = 0;
 }
 
 void SysFonts_Register(const cc_string* path) { }
-static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
-static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) { }
+extern int interop_TextWidth(const char* font, int size, const char* text, const int len);
+extern void interop_TextDraw(const char* font, int size, const char* text, const int len, 
+							struct Bitmap* bmp, int x, int y);
+
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+	struct FontDesc* font = args->font;
+	return interop_TextWidth(font->handle, font->size, args->text.buffer, args->text.length);
+}
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	struct FontDesc* font = args->font;
+	interop_TextDraw(font->handle, font->size, args->text.buffer, args->text.length, bmp, x, y);
+}
 #else
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"

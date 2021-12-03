@@ -815,4 +815,68 @@ mergeInto(LibraryManager.library, {
     var str = AUDIO.errors[errCode - 1];
     return stringToUTF8(str, buffer, bufferLen);
   },
+  
+  
+//########################################################################################################################
+//-----------------------------------------------------------Font---------------------------------------------------------
+//########################################################################################################################
+  interop_TextInit: function(font, size) {
+    if (!window.FONT_CANVAS) {
+      window.FONT_CANVAS  = document.createElement('canvas');
+      window.FONT_CONTEXT = window.FONT_CANVAS.getContext('2d');
+    }
+    
+    var ctx = window.FONT_CONTEXT;
+    ctx.font = size + 'px ' + font;
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'top';
+    return ctx;
+  },
+  interop_TextWidth__deps: ['interop_TextInit'],
+  interop_TextWidth: function(fontStr, fontSize, textStr, textLen) {
+    var font = UTF8ToString(fontStr);
+    var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
+
+    var ctx  = _interop_TextInit(font, fontSize);
+    var data = ctx.measureText(text);
+    return Math.ceil(data.width)|0;
+  },
+  interop_TextDraw__deps: ['interop_TextInit'],
+  interop_TextDraw: function(fontStr, fontSize, textStr, textLen, bmp, dstX, dstY) {
+    var font = UTF8ToString(fontStr);
+    var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
+
+    var ctx = _interop_TextInit(font, fontSize);
+	ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx.fillStyle = "#000000";
+    ctx.fillText(text, 0, 0);
+    
+    var dst_pixels = HEAP32[(bmp|0 + 0)>>2];
+    var dst_width  = HEAP32[(bmp|0 + 4)>>2];
+    var dst_height = HEAP32[(bmp|0 + 8)>>2];
+    
+    // TODO not all of it
+    var src = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+    var src_pixels = src.data;
+    var src_width  = src.width|0;
+    var src_height = src.height|0;
+
+    var img_width  = Math.min(src_width,  dst_width);
+    var img_height = Math.min(src_height, dst_height);
+
+    for (var y = 0; y < img_height; y++)
+    {
+      var src_row =              (y*(src_width << 2))|0;
+      var dst_row = dst_pixels + (y*(dst_width << 2))|0;
+      
+      for (var x = 0; x < img_width; x++)
+      {
+         HEAPU8[dst_row + (x<<2)+0] = src_pixels[src_row + (x<<2)+0];
+         HEAPU8[dst_row + (x<<2)+1] = src_pixels[src_row + (x<<2)+1];
+         HEAPU8[dst_row + (x<<2)+2] = src_pixels[src_row + (x<<2)+2];
+         HEAPU8[dst_row + (x<<2)+3] = 255;
+      }
+    }
+  },
 });
