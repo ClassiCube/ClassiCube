@@ -109,8 +109,6 @@ CC_API void Font_GetNames(struct StringsBuffer* buffer);
 
 /* Sets padding for a bitmapped font */
 void Font_SetPadding(struct FontDesc* desc, int amount);
-/* Finds the path and face number of the given system font, with closest matching style */
-cc_string Font_Lookup(const cc_string* fontName, int flags);
 /* Allocates a new system font from the given arguments */
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
 /* Allocates a new system font from the given arguments using default system font */

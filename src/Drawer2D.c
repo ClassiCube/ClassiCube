@@ -678,8 +678,20 @@ struct IGameComponent Drawer2D_Component = {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 const cc_string* Font_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
-void Font_GetNames(struct StringsBuffer* buffer) { }
-cc_string Font_Lookup(const cc_string* fontName, int flags) { return String_Empty; }
+
+void Font_GetNames(struct StringsBuffer* buffer) {
+	static const char* font_names[] = { 
+		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
+		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
+		"cursive", "fantasy", "monospace", "sans-serif", "serif", "system-ui"
+	};
+	int i;
+
+	for (i = 0; i < Array_Elems(font_names); i++) {
+		cc_string str = String_FromReadonly(font_names[i]);
+		StringsBuffer_Add(buffer, &str);
+	}
+}
 
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
@@ -692,10 +704,13 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
 	return 0;
 }
+
 void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
-	font_candidates[0].length = 0;
-	String_AppendConst(&font_candidates[0], "serif");
-	Font_Make(desc, &font_candidates[0], size, flags); 
+	cc_string str = font_candidates[0];
+	/* Fallback to arial */
+	if (!str.length) str = font_candidates[1];
+
+	Font_Make(desc, &str, size, flags); 
 }
 
 void Font_Free(struct FontDesc* desc) {
@@ -727,6 +742,8 @@ static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct StringsBuffer font_list;
 static cc_bool fonts_changed;
+/* Finds the path and face number of the given system font, with closest matching style */
+static cc_string Font_Lookup(const cc_string* fontName, int flags);
 
 struct SysFont {
 	FT_Face face;
@@ -973,6 +990,7 @@ void Font_GetNames(struct StringsBuffer* buffer) {
 		name.length -= 2;
 		StringsBuffer_Add(buffer, &name);
 	}
+	StringsBuffer_Sort(buffer);
 }
 
 static cc_string Font_LookupOf(const cc_string* fontName, const char type) {

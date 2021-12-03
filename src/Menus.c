@@ -289,32 +289,6 @@ static void ListScreen_MoveForwards(void* screen, void* b) {
 	ListScreen_PageClick(s, true);
 }
 
-static void ListScreen_QuickSort(int left, int right) {
-	struct StringsBuffer* buffer = &ListScreen.entries; 
-	cc_uint32* keys = buffer->flagsBuffer; cc_uint32 key;
-
-	while (left < right) {
-		int i = left, j = right;
-		cc_string pivot = StringsBuffer_UNSAFE_Get(buffer, (i + j) >> 1);
-		cc_string strI, strJ;
-
-		/* partition the list */
-		while (i <= j) {
-			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), String_Compare(&pivot, &strI)) > 0) i++;
-			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), String_Compare(&pivot, &strJ)) < 0) j--;
-			QuickSort_Swap_Maybe();
-		}
-		/* recurse into the smaller subset */
-		QuickSort_Recurse(ListScreen_QuickSort)
-	}
-}
-
-CC_NOINLINE static void ListScreen_Sort(struct ListScreen* s) {
-	if (s->entries.count) {
-		ListScreen_QuickSort(0, s->entries.count - 1);
-	}
-}
-
 static cc_string ListScreen_UNSAFE_GetCur(struct ListScreen* s, void* widget) {
 	int i = Screen_Index(s, widget);
 	return ListScreen_UNSAFE_Get(s, s->currentIndex + i);
@@ -1583,7 +1557,7 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 	static const cc_string path = String_FromConst(TEXPACKS_DIR);
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
-	ListScreen_Sort(s);
+	StringsBuffer_Sort(&s->entries);
 }
 
 #ifdef CC_BUILD_WEB
@@ -1648,7 +1622,6 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 
 static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	Font_GetNames(&s->entries);
-	ListScreen_Sort(s);
 	ListScreen_Select(s, Font_UNSAFE_GetDefault());
 }
 
@@ -1720,7 +1693,7 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 
 	/* Placeholder for 'add new hotkey' */
 	StringsBuffer_Add(&s->entries, &String_Empty);
-	ListScreen_Sort(s);
+	StringsBuffer_Sort(&s->entries);
 }
 
 static void HotkeyListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {
@@ -1774,7 +1747,7 @@ static void LoadLevelScreen_FilterFiles(const cc_string* path, void* obj) {
 static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 	static const cc_string path = String_FromConst("maps");
 	Directory_Enum(&path, &s->entries, LoadLevelScreen_FilterFiles);
-	ListScreen_Sort(s);
+	StringsBuffer_Sort(&s->entries);
 }
 
 #ifdef CC_BUILD_WEB
