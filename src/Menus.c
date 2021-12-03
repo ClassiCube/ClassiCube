@@ -196,7 +196,7 @@ static struct Widget* list_widgets[10] = {
 	(struct Widget*)&ListScreen.done,    NULL
 };
 #define LIST_MAX_VERTICES (9 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
-#define LISTSCREEN_EMPTY "-----"
+#define LISTSCREEN_EMPTY "-"
 
 static void ListScreen_Layout(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;

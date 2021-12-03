@@ -6,6 +6,7 @@ Listed below are all of the options supported in options.txt
 |Name|Default|Description|
 |--|--|--|
 `http-no-https`|`false`|Whether `https://` support is disabled<br>**Disabling means your account password is transmitted in plaintext**
+`https-verify`|`false`|Whether to validate 'https://' certificates returned by webservers<br>**Disabling this is a bad idea, but is still less bad than `http-no-https`**
 
 ### Text drawing options
 |Name|Default|Description|
@@ -103,6 +104,8 @@ Listed below are all of the options supported in options.txt
 `cameramass`|`20`|How smooth the smooth camera is<br>Value must be between 1 and 100
 
 ### Game options
+|Name|Default|Description|
+|--|--|--|
 ./Game.c:       Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 ./Game.c:       Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 ./Game.c:       Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
@@ -118,12 +121,12 @@ Listed below are all of the options supported in options.txt
 |--|--|--|
 `hacks-hacksenabled`|`true`|Whether hacks are enabled at all<br>Has no effect in 'classic only' game mode
 `hacks-speedmultiplier`|`10.0`|Speed multiplier/factor when speedhacks are active<br>Multiplier must be between 0.1 and 50.0
-./Entity.c:     hacks->PushbackPlacing = Options_GetBool(OPT_PUSHBACK_PLACING, false);
-./Entity.c:     hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE,     false);
-./Entity.c:     hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS,  false);
-./Entity.c:     hacks->FullBlockStep   = Options_GetBool(OPT_FULL_BLOCK_STEP,  false);
-./Entity.c:     p->Physics.UserJumpVel = Options_GetFloat(OPT_JUMP_VELOCITY, 0.0f, 52.0f, 0.42f);
-./Entity.c:     hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);
+`hacks-pushbackplacing`|`false`|Whether to enable pushback placing mode
+`hacks-noclipslide`|`false`|Whether to still slide for a bit after a movement button is released in noclip mode
+`hacks-womstylehacks`|`false`|Whether to enable WoM client style hacks (e.g. ludicrous triple jump)
+`hacks-fullblockstep`|`false`|Whether to automatically climb up 1.0 (default is only 0.5) tall blocks
+`hacks-jumpvelocity`|`0.42`|Initial vertical velocity when you start a jump<br>Velocity must be between 0.0 and 52.0
+`hacks-perm-msgs`|`true`|Whether to show a message in chat if you attempt to use a currently disabled hack
 
 ## General rendering options
 |Name|Default|Description|
