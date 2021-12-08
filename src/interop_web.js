@@ -847,14 +847,15 @@ mergeInto(LibraryManager.library, {
     var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
 
     var ctx = _interop_TextInit(font, fontSize);
-	ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	ctx.fillStyle = "#000000";
+    ctx.fillStyle = "#000000";
     ctx.fillText(text, 0, 0);
     
-    var dst_pixels = HEAP32[(bmp|0 + 0)>>2];
-    var dst_width  = HEAP32[(bmp|0 + 4)>>2];
-    var dst_height = HEAP32[(bmp|0 + 8)>>2];
+    bmp = bmp|0;
+    var dst_pixels = HEAP32[(bmp + 0|0)>>2];
+    var dst_width  = HEAP32[(bmp + 4|0)>>2];
+    var dst_height = HEAP32[(bmp + 8|0)>>2];
     
     // TODO not all of it
     var src = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
