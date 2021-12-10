@@ -845,11 +845,16 @@ mergeInto(LibraryManager.library, {
   interop_TextDraw: function(fontStr, fontSize, textStr, textLen, bmp, dstX, dstY) {
     var font = UTF8ToString(fontStr);
     var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
+    var ctx  = _interop_TextInit(font, fontSize);
 
-    var ctx = _interop_TextInit(font, fontSize);
+    // resize canvas if necessary so test fits
+    var data = ctx.measureText(text);
+    var text_width = Math.ceil(data.width)|0;
+    if (text_width > ctx.canvas.width)
+        ctx.canvas.width = text_width;
+
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.fillStyle = "#000000";
     ctx.fillText(text, 0, 0);
     
     bmp = bmp|0;
@@ -876,7 +881,7 @@ mergeInto(LibraryManager.library, {
          HEAPU8[dst_row + (x<<2)+0] = src_pixels[src_row + (x<<2)+0];
          HEAPU8[dst_row + (x<<2)+1] = src_pixels[src_row + (x<<2)+1];
          HEAPU8[dst_row + (x<<2)+2] = src_pixels[src_row + (x<<2)+2];
-         HEAPU8[dst_row + (x<<2)+3] = 255;
+         HEAPU8[dst_row + (x<<2)+3] = src_pixels[src_row + (x<<2)+3];
       }
     }
   },
