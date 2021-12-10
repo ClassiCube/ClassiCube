@@ -720,17 +720,26 @@ void Font_Free(struct FontDesc* desc) {
 }
 
 void SysFonts_Register(const cc_string* path) { }
-extern int interop_TextWidth(const char* font, int size, const char* text, const int len);
-extern void interop_TextDraw(const char* font, int size, const char* text, const int len, 
-							struct Bitmap* bmp, int x, int y);
+extern void  interop_SetFont(const char* font, int size, int flags);
+extern int interop_TextWidth(const char* text, const int len);
+extern void interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow);
 
 static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	struct FontDesc* font = args->font;
-	return interop_TextWidth(font->handle, font->size, args->text.buffer, args->text.length);
+	char buffer[NATIVE_STR_LEN];
+	int len = Platform_EncodeUtf8(buffer, &args->text);
+
+	interop_SetFont(font->handle, font->size, font->flags);
+	return interop_TextWidth(buffer, len);
 }
+
 static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
 	struct FontDesc* font = args->font;
-	interop_TextDraw(font->handle, font->size, args->text.buffer, args->text.length, bmp, x, y);
+	char buffer[NATIVE_STR_LEN];
+	int len = Platform_EncodeUtf8(buffer, &args->text);
+
+	interop_SetFont(font->handle, font->size, font->flags);
+	interop_TextDraw(buffer, len, bmp, x, y, shadow);
 }
 #else
 #include "freetype/ft2build.h"
