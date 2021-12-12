@@ -722,7 +722,11 @@ static int SkipRange(const cc_string* str) {
 		|| String_ContainsConst(&path, "/vendor/lib");
 }
 #else
-static int SkipRange(const cc_string* str) { return false; }
+static int SkipRange(const cc_string* str) { 
+	return
+		/* Ignore GPU iris driver i915 GEM buffers (~60,000 entries for one user) */
+		String_ContainsConst(str, "anon_inode:i915.gem");
+}
 #endif
 
 static void DumpMisc(void* ctx) {
