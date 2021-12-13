@@ -689,10 +689,14 @@ static void ClearCPEMessages(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_3);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_4);
+	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_5);
+	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_6);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_1);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_2);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_3);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_4);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_5);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_6);
 }
 
 static void OnReset(void) {
