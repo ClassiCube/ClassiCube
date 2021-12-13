@@ -263,6 +263,12 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
 	DisplayInfo.ScaleY = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
 	ReleaseDC(NULL, hdc);
+
+	/* https://docs.microsoft.com/en-us/windows/win32/opengl/reading-color-values-from-the-framebuffer */
+	/*https://devblogs.microsoft.com/oldnewthing/20101013-00/?p=12543  */
+	/* TODO probably should always multiply? not just for 16 colors */
+	if (DisplayInfo.Depth != 1) return;
+	DisplayInfo.Depth *= GetDeviceCaps(hdc, PLANES);
 }
 
 static ATOM DoRegisterClass(void) {
@@ -605,7 +611,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.cColorBits = mode->R + mode->G + mode->B;
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
 
-	pfd.iPixelType = mode->IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
+	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cRedBits   = mode->R;
 	pfd.cGreenBits = mode->G;
 	pfd.cBlueBits  = mode->B;
