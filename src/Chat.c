@@ -19,14 +19,14 @@
 #include "Options.h"
 #include "Drawer2D.h"
 
-static char msgs[12][STRING_SIZE];
-cc_string Chat_Status[4]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]) };
-cc_string Chat_BottomRight[3]  = { String_FromArray(msgs[4]), String_FromArray(msgs[5]), String_FromArray(msgs[6]) };
-cc_string Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
+static char msgs[18][STRING_SIZE];
+cc_string Chat_Status[7]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]), String_FromArray(msgs[4]), String_FromArray(msgs[5]), String_FromArray(msgs[6]) };
+cc_string Chat_BottomRight[6]  = { String_FromArray(msgs[7]), String_FromArray(msgs[8]), String_FromArray(msgs[9]), String_FromArray(msgs[10]), String_FromArray(msgs[11]), String_FromArray(msgs[12]) };
+cc_string Chat_ClientStatus[2] = { String_FromArray(msgs[13]), String_FromArray(msgs[14]) };
 
-cc_string Chat_Announcement = String_FromArray(msgs[9]);
-cc_string Chat_BigAnnouncement = String_FromArray(msgs[10]);
-cc_string Chat_SmallAnnouncement = String_FromArray(msgs[11]);
+cc_string Chat_Announcement = String_FromArray(msgs[15]);
+cc_string Chat_BigAnnouncement = String_FromArray(msgs[16]);
+cc_string Chat_SmallAnnouncement = String_FromArray(msgs[17]);
 
 double Chat_AnnouncementReceived;
 double Chat_BigAnnouncementReceived;
@@ -232,10 +232,10 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 		StringsBuffer_Add(&Chat_Log, text);
 		AppendChatLogTime();
 		AppendChatLog(text);
-	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
+	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_6) {
 		/* Status[0] is for texture pack downloading message */
 		String_Copy(&Chat_Status[1 + (msgType - MSG_TYPE_STATUS_1)], text);
-	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {	
+	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_6) {	
 		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
@@ -688,9 +688,11 @@ static void ClearCPEMessages(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_4);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_1);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_2);
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_4);
 }
 
 static void OnReset(void) {
