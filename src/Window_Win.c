@@ -23,6 +23,7 @@
 #endif
 #include <windows.h>
 
+/* https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat */
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define CC_WIN_CLASSNAME TEXT("ClassiCube_Window")
 #define Rect_Width(rect)  (rect.right  - rect.left)
@@ -34,10 +35,9 @@
 #define WM_XBUTTONUP   0x020C
 #endif
 
-typedef BOOL (WINAPI *FUNC_RegisterRawInput)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
-static FUNC_RegisterRawInput _registerRawInput;
-typedef UINT (WINAPI *FUNC_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
-static FUNC_GetRawInputData _getRawInputData;
+static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
+static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
+static BOOL (WINAPI* _SetProcessDPIAware)(void);
 
 static HINSTANCE win_instance;
 static HWND win_handle;
@@ -174,7 +174,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		UINT ret, rawSize = sizeof(RAWINPUT);
 		int dx, dy;
 
-		ret = _getRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER));
+		ret = _GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER));
 		if (ret == -1 || raw.header.dwType != RIM_TYPEMOUSE) break;		
 
 		if (raw.data.mouse.usFlags == MOUSE_MOVE_RELATIVE) {
@@ -256,7 +256,22 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 void Window_Init(void) {
-	HDC hdc = GetDC(NULL);
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(RegisterRawInputDevices),
+		DynamicLib_Sym(GetRawInputData),
+		DynamicLib_Sym(SetProcessDPIAware)
+	};
+	static const cc_string user32 = String_FromConst("USER32.DLL");
+	void* lib = DynamicLib_Load2(&user32);
+	HDC hdc;
+
+	if (lib) {
+		DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+		/* Enable high DPI support */
+		if (_SetProcessDPIAware) _SetProcessDPIAware();
+	}
+
+	hdc = GetDC(NULL);
 	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);
 	DisplayInfo.Height = GetSystemMetrics(SM_CYSCREEN);
 	DisplayInfo.Depth  = GetDeviceCaps(hdc, BITSPIXEL);
@@ -265,7 +280,7 @@ void Window_Init(void) {
 	ReleaseDC(NULL, hdc);
 
 	/* https://docs.microsoft.com/en-us/windows/win32/opengl/reading-color-values-from-the-framebuffer */
-	/*https://devblogs.microsoft.com/oldnewthing/20101013-00/?p=12543  */
+	/* https://devblogs.microsoft.com/oldnewthing/20101013-00/?p=12543  */
 	/* TODO probably should always multiply? not just for 16 colors */
 	if (DisplayInfo.Depth != 1) return;
 	DisplayInfo.Depth *= GetDeviceCaps(hdc, PLANES);
@@ -275,7 +290,7 @@ static ATOM DoRegisterClass(void) {
 	ATOM atom;
 	WNDCLASSEXW wc = { 0 };
 	wc.cbSize     = sizeof(WNDCLASSEXW);
-	wc.style      = CS_OWNDC;
+	wc.style      = CS_OWNDC; /* https://stackoverflow.com/questions/48663815/getdc-releasedc-cs-owndc-with-opengl-and-gdi */
 	wc.hInstance  = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
@@ -549,15 +564,9 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
 	static const cc_string user32 = String_FromConst("USER32.DLL");
-	void* lib;
 	RAWINPUTDEVICE rid;
 
-	if ((lib = DynamicLib_Load2(&user32))) {
-		_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_Get2(lib, "RegisterRawInputDevices");
-		_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_Get2(lib, "GetRawInputData");
-		rawMouseSupported = _registerRawInput && _getRawInputData;
-	}
-
+	rawMouseSupported = _RegisterRawInputDevices && _GetRawInputData;
 	rawMouseSupported &= Options_GetBool(OPT_RAW_INPUT, true);
 	if (!rawMouseSupported) { Platform_LogConst("## Raw input unsupported!"); return; }
 
@@ -566,7 +575,7 @@ static void InitRawMouse(void) {
 	rid.dwFlags     = RIDEV_INPUTSINK;
 	rid.hwndTarget  = win_handle;
 
-	if (_registerRawInput(&rid, 1, sizeof(rid))) return;
+	if (_RegisterRawInputDevices(&rid, 1, sizeof(rid))) return;
 	Logger_SysWarn(GetLastError(), "initing raw mouse");
 	rawMouseSupported = false;
 }
