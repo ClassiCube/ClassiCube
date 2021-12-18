@@ -678,24 +678,69 @@ struct IGameComponent Drawer2D_Component = {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 const cc_string* Font_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
-void Font_GetNames(struct StringsBuffer* buffer) { }
-cc_string Font_Lookup(const cc_string* fontName, int flags) { return String_Empty; }
+
+void Font_GetNames(struct StringsBuffer* buffer) {
+	static const char* font_names[] = { 
+		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
+		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
+		"cursive", "fantasy", "monospace", "sans-serif", "serif", "system-ui"
+	};
+	int i;
+
+	for (i = 0; i < Array_Elems(font_names); i++) {
+		cc_string str = String_FromReadonly(font_names[i]);
+		StringsBuffer_Add(buffer, &str);
+	}
+}
 
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
 	desc->flags  = flags;
-	desc->height = 0;
+	desc->height = size;
+
+	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
+	if (!desc->handle) return 0;
+	
+	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
 	return 0;
 }
-void Font_MakeDefault(struct FontDesc* desc, int size, int flags) { Font_Make(desc, NULL, size, flags); }
+
+void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	cc_string str = font_candidates[0];
+	/* Fallback to arial */
+	if (!str.length) str = font_candidates[1];
+
+	Font_Make(desc, &str, size, flags); 
+}
 
 void Font_Free(struct FontDesc* desc) {
+	Mem_Free(desc->handle);
+	desc->handle = NULL;
 	desc->size   = 0;
 }
 
 void SysFonts_Register(const cc_string* path) { }
-static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
-static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) { }
+extern void  interop_SetFont(const char* font, int size, int flags);
+extern int interop_TextWidth(const char* text, const int len);
+extern void interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow);
+
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+	struct FontDesc* font = args->font;
+	char buffer[NATIVE_STR_LEN];
+	int len = Platform_EncodeUtf8(buffer, &args->text);
+
+	interop_SetFont(font->handle, font->size, font->flags);
+	return interop_TextWidth(buffer, len);
+}
+
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	struct FontDesc* font = args->font;
+	char buffer[NATIVE_STR_LEN];
+	int len = Platform_EncodeUtf8(buffer, &args->text);
+
+	interop_SetFont(font->handle, font->size, font->flags);
+	interop_TextDraw(buffer, len, bmp, x, y, shadow);
+}
 #else
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
@@ -706,6 +751,8 @@ static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct StringsBuffer font_list;
 static cc_bool fonts_changed;
+/* Finds the path and face number of the given system font, with closest matching style */
+static cc_string Font_Lookup(const cc_string* fontName, int flags);
 
 struct SysFont {
 	FT_Face face;
@@ -952,6 +999,7 @@ void Font_GetNames(struct StringsBuffer* buffer) {
 		name.length -= 2;
 		StringsBuffer_Add(buffer, &name);
 	}
+	StringsBuffer_Sort(buffer);
 }
 
 static cc_string Font_LookupOf(const cc_string* fontName, const char type) {

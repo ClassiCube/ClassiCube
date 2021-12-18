@@ -872,6 +872,32 @@ void StringsBuffer_Remove(struct StringsBuffer* buffer, int index) {
 	buffer->totalLength -= len;
 }
 
+static struct StringsBuffer* sort_buffer;
+static void StringsBuffer_QuickSort(int left, int right) {
+	struct StringsBuffer* buffer = sort_buffer;
+	cc_uint32* keys = buffer->flagsBuffer; cc_uint32 key;
+
+	while (left < right) {
+		int i = left, j = right;
+		cc_string pivot = StringsBuffer_UNSAFE_Get(buffer, (i + j) >> 1);
+		cc_string strI, strJ;
+
+		/* partition the list */
+		while (i <= j) {
+			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), String_Compare(&pivot, &strI)) > 0) i++;
+			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), String_Compare(&pivot, &strJ)) < 0) j--;
+			QuickSort_Swap_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(StringsBuffer_QuickSort)
+	}
+}
+
+void StringsBuffer_Sort(struct StringsBuffer* buffer) {
+	sort_buffer = buffer;
+	StringsBuffer_QuickSort(0, buffer->count - 1);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Word wrapper-------------------------------------------------------*

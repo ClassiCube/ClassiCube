@@ -815,4 +815,88 @@ mergeInto(LibraryManager.library, {
     var str = AUDIO.errors[errCode - 1];
     return stringToUTF8(str, buffer, bufferLen);
   },
+  
+  
+//########################################################################################################################
+//-----------------------------------------------------------Font---------------------------------------------------------
+//########################################################################################################################
+  interop_SetFont: function(fontStr, size, flags) {
+    if (!window.FONT_CANVAS) {
+      window.FONT_CANVAS  = document.createElement('canvas');
+      window.FONT_CONTEXT = window.FONT_CANVAS.getContext('2d');
+    }
+    
+    var prefix = '';
+    if (flags & 1) prefix += 'Bold ';
+    
+    var font = UTF8ToString(fontStr);
+    var ctx  = window.FONT_CONTEXT;
+    ctx.font = prefix + size + 'px ' + font;
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'top';
+    return ctx;
+  },
+  interop_TextWidth: function(textStr, textLen) {
+    var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
+    var ctx  = window.FONT_CONTEXT;
+    var data = ctx.measureText(text);
+    return Math.ceil(data.width)|0;
+  },
+  interop_TextDraw: function(textStr, textLen, bmp, dstX, dstY, shadow) {
+    var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
+    var ctx  = window.FONT_CONTEXT;
+
+    // resize canvas if necessary so test fits
+    var data = ctx.measureText(text);
+    var text_width = Math.ceil(data.width)|0;
+    if (text_width > ctx.canvas.width)
+      ctx.canvas.width = text_width;
+    
+    var text_offset = 0.0;
+    ctx.fillStyle   = "#ffffff";
+    if (shadow) {
+      text_offset   = 1.3;
+      ctx.fillStyle = "#7f7f7f";
+    }
+
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillText(text, text_offset, text_offset);
+    
+    bmp  = bmp|0;
+    dstX = dstX|0;
+    dstY = dstY|0;
+    
+    var dst_pixels = HEAP32[(bmp + 0|0)>>2] + (dstX << 2);
+    var dst_width  = HEAP32[(bmp + 4|0)>>2];
+    var dst_height = HEAP32[(bmp + 8|0)>>2];
+    
+    // TODO not all of it
+    var src = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+    var src_pixels = src.data;
+    var src_width  = src.width|0;
+    var src_height = src.height|0;
+
+    var img_width  = Math.min(src_width,  dst_width);
+    var img_height = Math.min(src_height, dst_height);
+
+    for (var y = 0; y < img_height; y++)
+    {
+      var yy = y + dstY;
+      if (yy < 0 || yy >= dst_height) continue;
+      
+      var src_row =              (y *(src_width << 2))|0;
+      var dst_row = dst_pixels + (yy*(dst_width << 2))|0;
+      
+      for (var x = 0; x < img_width; x++)
+      {
+         var xx = x + dstX;
+         if (xx < 0 || xx >= dst_width) continue;
+
+         HEAPU8[dst_row + (x<<2)+0] = src_pixels[src_row + (x<<2)+0];
+         HEAPU8[dst_row + (x<<2)+1] = src_pixels[src_row + (x<<2)+1];
+         HEAPU8[dst_row + (x<<2)+2] = src_pixels[src_row + (x<<2)+2];
+         HEAPU8[dst_row + (x<<2)+3] = src_pixels[src_row + (x<<2)+3];
+      }
+    }
+  },
 });

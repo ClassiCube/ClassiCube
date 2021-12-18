@@ -241,6 +241,8 @@ STRING_REF void StringsBuffer_UNSAFE_GetRaw(struct StringsBuffer* buffer, int i,
 CC_API void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str);
 /* Removes the i'th string from the given buffer, shifting following strings downwards */
 CC_API void StringsBuffer_Remove(struct StringsBuffer* buffer, int index);
+/* Sorts all the entries in the given buffer using String_Compare */
+void StringsBuffer_Sort(struct StringsBuffer* buffer);
 
 /* Performs line wrapping on the given string. */
 /* e.g. "some random tex|t* (| is lineLen) becomes "some random" "text" */
