@@ -1452,7 +1452,7 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 #if defined CC_BUILD_MOBILE
 	LLabel_Init(s_,    &s->lblExtra, "Force landscape");
 	LCheckbox_Init(s_, &s->cbExtra);
-	s->cbOrientlock.OnClick = SettingsScreen_LockOrientation;
+	s->cbExtra.OnClick = SettingsScreen_LockOrientation;
 #else
 	LLabel_Init(s_,    &s->lblExtra, "Close this after game starts");
 	LCheckbox_Init(s_, &s->cbExtra);

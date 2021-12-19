@@ -3076,9 +3076,6 @@ static void MiscOptionsScreen_SetPhysics(const cc_string* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
 
-static void MiscOptionsScreen_GetAutoClose(cc_string* v) { Menu_GetBool(v, Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false)); }
-static void MiscOptionsScreen_SetAutoClose(const cc_string* v) { Menu_SetBool(v, OPT_AUTO_CLOSE_LAUNCHER); }
-
 static void MiscOptionsScreen_GetInvert(cc_string* v) { Menu_GetBool(v, Camera.Invert); }
 static void MiscOptionsScreen_SetInvert(const cc_string* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
@@ -3089,7 +3086,7 @@ static void MiscOptionsScreen_SetSensitivity(const cc_string* v) {
 }
 
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[8] = {
+	static const struct MenuOptionDesc buttons[7] = {
 		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
 		{ -1,  -50, "Music volume",   MenuOptionsScreen_Input,
@@ -3101,15 +3098,13 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	
 		{ 1, -100, "Block physics",       MenuOptionsScreen_Bool,
 			MiscOptionsScreen_GetPhysics,     MiscOptionsScreen_SetPhysics },
-		{ 1,  -50, "Auto close launcher", MenuOptionsScreen_Bool,
-			MiscOptionsScreen_GetAutoClose,   MiscOptionsScreen_SetAutoClose },
 		{ 1,    0, "Invert mouse",        MenuOptionsScreen_Bool,
 			MiscOptionsScreen_GetInvert,      MiscOptionsScreen_SetInvert },
 		{ 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity }
 	};
-	s->numCore      = 8;
-	s->maxVertices += 8 * BUTTONWIDGET_MAX;
+	s->numCore      = 7;
+	s->maxVertices += 7 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	/* Disable certain options */
@@ -3118,14 +3113,14 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 }
 
 void MiscOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[9];
+	static struct MenuInputDesc descs[8];
 	MenuInput_Float(descs[0], 1, 1024, 5);
 	MenuInput_Int(descs[1],   0, 100,  DEFAULT_MUSIC_VOLUME);
 	MenuInput_Int(descs[2],   0, 100,  DEFAULT_SOUNDS_VOLUME);
 #ifdef CC_BUILD_WIN
-	MenuInput_Int(descs[7],   1, 200, 40);
+	MenuInput_Int(descs[6],   1, 200, 40);
 #else
-	MenuInput_Int(descs[7],   1, 200, 30);
+	MenuInput_Int(descs[6],   1, 200, 30);
 #endif
 
 	MenuOptionsScreen_Show(descs, NULL, 0, MiscSettingsScreen_InitWidgets);
