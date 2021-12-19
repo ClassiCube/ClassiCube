@@ -1412,13 +1412,10 @@ static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnUpdates, btnMode, btnColours, btnBack;
 	struct LLabel  lblUpdates, lblMode, lblColours;
-#if defined CC_BUILD_MOBILE
-	struct LLabel lblOrientlock;
-	struct LCheckbox cbOrientlock;
-	struct LWidget* _widgets[9];
-#else
-	struct LWidget* _widgets[7];
-#endif
+	struct LLabel lblExtra;
+	struct LCheckbox cbExtra;
+	struct LLine sep;
+	struct LWidget* _widgets[10];
 } SettingsScreen_Instance;
 
 #if defined CC_BUILD_MOBILE
@@ -1429,11 +1426,19 @@ static void SettingsScreen_LockOrientation(void* w, int idx) {
 	Window_LockLandscapeOrientation(cb->value);
 	Launcher_Redraw();
 }
+#else
+static void SettingsScreen_AutoClose(void* w, int idx) {
+	struct LCheckbox* cb = (struct LCheckbox*)w;
+	cb->value = !cb->value;
+	Options_SetBool(OPT_AUTO_CLOSE_LAUNCHER, cb->value);
+	Launcher_Redraw();
+}
 #endif
 
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	s->widgets = s->_widgets;
+	LLine_Init(s_, &s->sep, 380);
 
 	LButton_Init(s_, &s->btnUpdates, 110, 35, "Updates");
 	LLabel_Init(s_,  &s->lblUpdates, "&eGet the latest stuff");
@@ -1445,9 +1450,13 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_,  &s->lblColours, "&eChange how the launcher looks");
 
 #if defined CC_BUILD_MOBILE
-	LLabel_Init(s_,    &s->lblOrientlock, "Force landscape");
-	LCheckbox_Init(s_, &s->cbOrientlock);
+	LLabel_Init(s_,    &s->lblExtra, "Force landscape");
+	LCheckbox_Init(s_, &s->cbExtra);
 	s->cbOrientlock.OnClick = SettingsScreen_LockOrientation;
+#else
+	LLabel_Init(s_,    &s->lblExtra, "Close this after game starts");
+	LCheckbox_Init(s_, &s->cbExtra);
+	s->cbExtra.OnClick = SettingsScreen_AutoClose;
 #endif
 
 	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
@@ -1462,8 +1471,11 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	s->btnColours.hidden = Options_GetBool(OPT_CLASSIC_MODE, false);
 	s->lblColours.hidden = s->btnColours.hidden;
+
 #if defined CC_BUILD_MOBILE
-	s->cbOrientlock.value = Options_GetBool(OPT_LANDSCAPE_MODE, false);
+	s->cbExtra.value = Options_GetBool(OPT_LANDSCAPE_MODE, false);
+#else
+	s->cbExtra.value = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
 #endif
 }
 
@@ -1478,9 +1490,13 @@ static void SettingsScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnColours, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -20);
 	LWidget_SetLocation(&s->lblColours, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -20);
 
+	LWidget_SetLocation(&s->sep,      ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 15);
 #if defined CC_BUILD_MOBILE
-	LWidget_SetLocation(&s->cbOrientlock,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 24);
-	LWidget_SetLocation(&s->lblOrientlock, ANCHOR_CENTRE, ANCHOR_CENTRE,   -84, 24);
+	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 44);
+	LWidget_SetLocation(&s->lblExtra, ANCHOR_CENTRE, ANCHOR_CENTRE,  -84, 44);
+#else
+	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 44);
+	LWidget_SetLocation(&s->lblExtra, ANCHOR_CENTRE, ANCHOR_CENTRE,  -42, 44);
 #endif
 
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);

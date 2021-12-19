@@ -32,16 +32,16 @@ bld/
 [Oo]bj/
 [Oo]utput/
 [Pp]rofilingSessions/
-[sS]rc/audio
-[sS]rc/texpacks
-[sS]rc/maps
-[sS]rc/texturecache
-[sS]rc/logs
-[sS]rc/options.txt
-[sS]rc/ClassiCube*
-[sS]rc/screenshots
-[sS]rc/fontscache.txt
-[sSrc]/.vs/
+src/audio
+src/texpacks
+src/maps
+src/texturecache
+src/logs
+src/options.txt
+src/ClassiCube*
+src/screenshots
+src/fontscache.txt
+src/.vs/
 #GCC object files
 *.o
 
