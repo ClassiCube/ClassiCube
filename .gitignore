@@ -41,6 +41,7 @@ bld/
 [sS]rc/ClassiCube*
 [sS]rc/screenshots
 [sS]rc/fontscache.txt
+[sSrc]/.vs/
 #GCC object files
 *.o
 

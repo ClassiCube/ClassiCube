@@ -164,7 +164,7 @@ static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN && !defined CC_BUILD_GL11
 /* Note the following about calling OpenGL functions on Windows */
 /*  1) wglGetProcAddress returns a context specific address */
 /*  2) dllimport functions are implemented using indirect function pointers */
@@ -254,7 +254,6 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
-static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count);
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
 void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
 
@@ -262,6 +261,22 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
 	if (id) glDeleteLists(id, 1);
 	*vb = 0;
+}
+
+static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
+	/* We need to restore client state afer building the list */
+	int realFormat = gfx_format;
+	void* dyn_data = dynamicListData;
+	Gfx_SetVertexFormat(fmt);
+	dynamicListData = vertices;
+
+	glNewList(list, GL_COMPILE);
+	gfx_setupVBFunc();
+	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gl_indices);
+	glEndList();
+
+	Gfx_SetVertexFormat(realFormat);
+	dynamicListData = dyn_data;
 }
 
 /* NOTE! Building chunk in Builder.c relies on vb being ignored */
