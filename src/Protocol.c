@@ -1008,7 +1008,7 @@ static void CPE_SetTextHotkey(cc_uint8* data) {
 	if (keyCode > 255) return;
 	key = Hotkeys_LWJGL[keyCode];
 	if (!key) return;
-	Platform_Log3("CPE hotkey added: %c, %b: %s", Input_Names[key], &keyMods, &action);
+	Platform_Log3("CPE hotkey added: %c, %b: %s", Input_DisplayNames[key], &keyMods, &action);
 
 	if (!action.length) {
 		Hotkeys_Remove(key, keyMods);

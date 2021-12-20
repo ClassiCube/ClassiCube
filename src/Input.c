@@ -190,7 +190,7 @@ cc_bool Input_Pressed[INPUT_COUNT];
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 
-const char* const Input_Names[INPUT_COUNT] = {
+const char* const Input_StorageNames[INPUT_COUNT] = {
 	"None",
 	Key_Function_Names,
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
@@ -212,27 +212,27 @@ const char* const Input_Names[INPUT_COUNT] = {
 	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse"
 };
 
-/* TODO: Should this only be shown in GUI? not saved to disc? */
-/*const char* const Input_Names[INPUT_COUNT] = {
+const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"NONE",
 	Key_Function_Names,
-	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET",
-	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "SLASH", "BACKSLASH",
+	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET", "SLASH",
+	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "BACKSLASH",
 	"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL",
-	"LMENU", "RMENU", "LWIN", "RWIN", "MENU",
+	"LALT", "RALT", "LWIN", "RWIN",
 	"UP", "DOWN", "LEFT", "RIGHT",
 	"0", "1", "2", "3", "4",
 	"5", "6", "7", "8", "9",
-	"RETURN", "ESCAPE", "SPACE", "TAB", "BACK", "INSERT",
-	"DELETE", "PRIOR", "DOWN", "HOME", "END", "CAPITAL",
+	"INSERT", "DELETE", "HOME", "END", "PRIOR", "DOWN",
+	"MENU",
+	Key_Ascii_Names,
+	"RETURN", "ESCAPE", "SPACE", "BACK", "TAB", "CAPITAL",
 	"SCROLL", "PRINT", "PAUSE", "NUMLOCK",
 	"NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4",
 	"NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
-	Key_Ascii_Names,
-	"XBUTTON1", "XBUTTON2, "MMOUSE"
-};*/
+	"XBUTTON1", "XBUTTON2", "LMOUSE", "RMOUSE", "MMOUSE"
+};
 
 void Input_SetPressed(int key) {
 	cc_bool wasPressed = Input_Pressed[key];
@@ -352,7 +352,7 @@ static void KeyBind_Load(void) {
 		String_Format1(&name, "key-%c", keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
-		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Input_Names, INPUT_COUNT);
+		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Input_StorageNames, INPUT_COUNT);
 		if (mapping != KEY_ESCAPE) KeyBinds[i] = mapping;
 	}
 }
@@ -363,7 +363,7 @@ void KeyBind_Set(KeyBind binding, int key) {
 	String_InitArray(name, nameBuffer);
 
 	String_Format1(&name, "key-%c", keybindNames[binding]);
-	value = String_FromReadonly(Input_Names[key]);
+	value = String_FromReadonly(Input_StorageNames[key]);
 	Options_SetString(&name, &value);
 	KeyBinds[binding] = key;
 }
@@ -510,7 +510,7 @@ static void StoredHotkey_Parse(cc_string* key, cc_string* value) {
 	if (!String_UNSAFE_Separate(key,   '&', &strKey,  &strMods)) return;
 	if (!String_UNSAFE_Separate(value, '&', &strMore, &strText)) return;
 	
-	trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_Names, INPUT_COUNT);
+	trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_StorageNames, INPUT_COUNT);
 	if (trigger == KEY_NONE) return; 
 	if (!Convert_ParseUInt8(&strMods, &modifiers)) return;
 	if (!Convert_ParseBool(&strMore,  &more))      return;
@@ -535,7 +535,7 @@ void StoredHotkeys_Load(int trigger, cc_uint8 modifiers) {
 	cc_string key, value; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
 	key.buffer[key.length] = '\0'; /* TODO: Avoid this null terminator */
 
 	Options_UNSAFE_Get(key.buffer, &value);
@@ -546,7 +546,7 @@ void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers) {
 	cc_string key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
 	Options_SetString(&key, NULL);
 }
 
@@ -556,7 +556,7 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 	String_InitArray(key, keyBuffer);
 	String_InitArray(value, valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_SetString(&key, &value);
 }
@@ -820,9 +820,9 @@ static cc_bool InputHandler_IsShutdown(int key) {
 static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg, const char* disableMsg) {
 	*target = !(*target);
 	if (*target) {
-		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_Names[key]);
+		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_StorageNames[key]);
 	} else {
-		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Input_Names[key]);
+		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Input_StorageNames[key]);
 	}
 }
 

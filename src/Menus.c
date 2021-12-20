@@ -746,7 +746,7 @@ static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 		String_AppendConst(&text, "Key: press a key..");
 	} else {
 		String_AppendConst(&text, "Key: ");
-		String_AppendConst(&text, Input_Names[s->curHotkey.trigger]);
+		String_AppendConst(&text, Input_DisplayNames[s->curHotkey.trigger]);
 	}
 	ButtonWidget_Set(&s->btns[0], &text, &s->titleFont);
 }
@@ -1658,7 +1658,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	if (String_ContainsConst(&value, "Shift")) mods |= HOTKEY_MOD_SHIFT;
 	if (String_ContainsConst(&value, "Alt"))   mods |= HOTKEY_MOD_ALT;
 
-	trigger = Utils_ParseEnum(&key, KEY_NONE, Input_Names, INPUT_COUNT);
+	trigger = Utils_ParseEnum(&key, KEY_NONE, Input_DisplayNames, INPUT_COUNT);
 	for (i = 0; i < HotkeysText.count; i++) {
 		h = HotkeysList[i];
 		if (h.trigger == trigger && h.mods == mods) { original = h; break; }
@@ -1682,7 +1682,7 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 	for (i = 0; i < HotkeysText.count; i++) {
 		hKey = HotkeysList[i];
 		text.length = 0;
-		String_AppendConst(&text, Input_Names[hKey.trigger]);
+		String_AppendConst(&text, Input_DisplayNames[hKey.trigger]);
 
 		if (hKey.mods) {
 			String_AppendConst(&text, " +");
@@ -1761,7 +1761,7 @@ static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 
 void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
-	s->titleText   = "Select a level";
+	s->titleText   = "Load level";
 	s->UploadClick = LoadLevelScreen_UploadFunc;
 	s->LoadEntries = LoadLevelScreen_LoadEntries;
 	s->EntryClick  = LoadLevelScreen_EntryClick;
@@ -1806,7 +1806,7 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	String_InitArray(text, textBuffer);
 
 	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
-		s->descs[i], Input_Names[KeyBinds[s->binds[i]]]);
+		s->descs[i], Input_DisplayNames[KeyBinds[s->binds[i]]]);
 	ButtonWidget_Set(&s->buttons[i], &text, &s->titleFont);
 	s->dirty = true;
 }
@@ -1955,7 +1955,7 @@ static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const cha
 *#########################################################################################################################*/
 void ClassicKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[10]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
-	static const char* const descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
+	static const char* const descs[10] = { "Forward", "Back", "Jump", "Chat", "Save location", "Left", "Right", "Build", "Toggle fog", "Load location" };
 	
 	if (Game_ClassicHacks) {
 		KeyBindsScreen_Reset(NULL, Menu_SwitchKeysClassicHacks, 260);

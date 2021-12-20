@@ -666,11 +666,12 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-static void TableWidget_MakeBlockDesc(cc_string* desc, BlockID block) {
+static void TableWidget_MakeBlockDesc(struct TableWidget* w, cc_string* desc, BlockID block) {
 	cc_string name;
 	int block_ = block;
 	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
-	if (block == BLOCK_AIR) return;
+	if (block == BLOCK_AIR)     return;
+	if (w->selectedIndex == -1) return;
 
 	name = Block_UNSAFE_GetName(block);
 	String_AppendString(desc, &name);
@@ -690,10 +691,8 @@ static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
 static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 	if (w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
-	w->lastCreatedIndex = w->selectedIndex;
 
-	Gfx_DeleteTexture(&w->descTex.ID);
-	if (w->selectedIndex == -1) return;
+	w->lastCreatedIndex = w->selectedIndex;
 	TableWidget_MakeDescTex(w, w->blocks[w->selectedIndex]);
 }
 
@@ -703,7 +702,7 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 
 	Gfx_DeleteTexture(&w->descTex.ID);
 	String_InitArray(desc, descBuffer);
-	TableWidget_MakeBlockDesc(&desc, block);
+	TableWidget_MakeBlockDesc(w, &desc, block);
 	if (!desc.length) return;
 	
 	DrawTextArgs_Make(&args, &desc, w->font, true);

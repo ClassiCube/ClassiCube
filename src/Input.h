@@ -50,8 +50,10 @@ enum InputButtons {
 	INPUT_CLIPBOARD_PASTE = 1002
 };
 
-/* Simple names for each input button. */
-extern const char* const Input_Names[INPUT_COUNT];
+/* Names for each input button when stored to disc */
+extern const char* const Input_StorageNames[INPUT_COUNT];
+/* Simple display names for each input button */
+extern const char* const Input_DisplayNames[INPUT_COUNT];
 
 #define Key_IsWinPressed()   (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
 #define Key_IsAltPressed()   (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
