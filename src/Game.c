@@ -38,6 +38,7 @@
 #include "Animations.h"
 
 struct _GameData Game;
+cc_uint64 Game_FrameStart;
 cc_bool Game_UseCPEBlocks;
 
 struct RayTracer Game_SelectedPos;
@@ -607,25 +608,24 @@ void Game_Free(void* obj) {
 }
 
 #define Game_DoFrameBody() \
+	render = Stopwatch_Measure();\
 	Window_ProcessEvents();\
 	if (!WindowInfo.Exists) return;\
 	\
-	render = Stopwatch_Measure();\
-	time   = Stopwatch_ElapsedMicroseconds(lastRender, render) / (1000.0 * 1000.0);\
+	delta  = Stopwatch_ElapsedMicroseconds(Game_FrameStart, render) / (1000.0 * 1000.0);\
 	\
-	if (time > 1.0) time = 1.0; /* avoid large delta with suspended process */ \
-	if (time > 0.0) { lastRender = Stopwatch_Measure(); Game_RenderFrame(time); }
+	if (delta > 1.0) delta = 1.0; /* avoid large delta with suspended process */ \
+	if (delta > 0.0) { Game_FrameStart = render; Game_RenderFrame(delta); }
 
 #ifdef CC_BUILD_WEB
-static cc_uint64 lastRender;
 void Game_DoFrame(void) {
 	cc_uint64 render; 
-	double time;
+	double delta;
 	Game_DoFrameBody()
 }
 
 static void Game_RunLoop(void) {
-	lastRender = Stopwatch_Measure();
+	Game_FrameStart = Stopwatch_Measure();
 	/* Window_Web.c sets Game_DoFrame as the main loop callback function */
 	/* (i.e. web browser is in charge of calling Game_DoFrame, not us) */
 }
@@ -643,9 +643,10 @@ cc_bool Game_ShouldClose(void) {
 }
 #else
 static void Game_RunLoop(void) {
-	cc_uint64 lastRender, render; 
-	double time;
-	lastRender = Stopwatch_Measure();
+	cc_uint64 render;
+	double delta;
+
+	Game_FrameStart = Stopwatch_Measure();
 	for (;;) { Game_DoFrameBody() }
 }
 #endif

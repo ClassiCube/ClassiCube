@@ -1017,7 +1017,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync      = vsync;
 }
-void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
+void Gfx_BeginFrame(void) { }
 void Gfx_Clear(void)      { OM_Clear(); }
 
 void Gfx_EndFrame(void) {

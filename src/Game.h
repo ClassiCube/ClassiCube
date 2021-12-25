@@ -16,6 +16,8 @@ CC_VAR extern struct _GameData {
 	int ChunkUpdates;
 } Game;
 
+/* Stopwatch measurement of when current frame started */
+extern cc_uint64 Game_FrameStart;
 extern struct RayTracer Game_SelectedPos;
 extern cc_bool Game_UseCPEBlocks;
 

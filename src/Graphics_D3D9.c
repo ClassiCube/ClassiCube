@@ -801,7 +801,6 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 
 void Gfx_BeginFrame(void) { 
 	IDirect3DDevice9_BeginScene(device);
-	frameStart = Stopwatch_Measure();
 }
 
 void Gfx_Clear(void) {

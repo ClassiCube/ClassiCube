@@ -22,7 +22,6 @@ static cc_bool customMipmapsLevels;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
-static cc_uint64 frameStart;
 cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
 /* Initialises/Restores render state */
@@ -78,7 +77,7 @@ static float gfx_targetTime, gfx_actualTime;
 /*  then sleeps if actual frame time is too fast */
 static void LimitFPS(void) {
 	cc_uint64 frameEnd = Stopwatch_Measure();
-	gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
+	gfx_actualTime += Stopwatch_ElapsedMicroseconds(Game_FrameStart, frameEnd) / 1000.0f;
 	gfx_targetTime += gfx_minFrameMs;
 
 	/* going faster than FPS limit - sleep to slow down */
