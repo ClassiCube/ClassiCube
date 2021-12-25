@@ -65,19 +65,38 @@ static void FreeDefaultResources(void) {
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
+#ifdef CC_BUILD_WEB
 static void LimitFPS(void) {
 	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
 	/* However this is not a problem, because GLContext_SetVsync */
-	/*  gets the browser to automatically handle the timing instead */
-#ifndef CC_BUILD_WEB
-	cc_uint64 frameEnd = Stopwatch_Measure();
-	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
-	float leftOver  = gfx_minFrameMs - elapsedMs;
-
-	/* going faster than FPS limit */
-	if (leftOver > 0.001f) { Thread_Sleep((int)(leftOver + 0.5f)); }
-#endif
+	/*  makes the web browser manage the frame timing instead */
 }
+#else
+static float gfx_targetTime, gfx_actualTime;
+
+/* Examines difference between expected and actual frame times, */
+/*  then sleeps if actual frame time is too fast */
+static void LimitFPS(void) {
+	cc_uint64 frameEnd = Stopwatch_Measure();
+	gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
+	gfx_targetTime += gfx_minFrameMs;
+
+	/* going faster than FPS limit - sleep to slow down */
+	if (gfx_actualTime < gfx_targetTime) {
+		float cooldown = gfx_targetTime - gfx_actualTime;
+		Thread_Sleep((int)(cooldown + 0.5f));
+
+		/* also accumulate Thread_Sleep duration, as actual sleep  
+		/*  duration can significantly deviate from requested time */ 
+		/*  (e.g. requested 4ms, but actually slept for 8ms) */
+		cc_uint64 sleepEnd = Stopwatch_Measure();
+		gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameEnd, sleepEnd) / 1000.0f;
+	}
+
+	/* reset accumulated time to avoid excessive FPS drift */
+	if (gfx_targetTime >= 1000) { gfx_actualTime = 0; gfx_targetTime = 0; }
+}
+#endif
 
 void Gfx_LoseContext(const char* reason) {
 	if (Gfx.LostContext) return;
