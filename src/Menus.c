@@ -429,8 +429,9 @@ static struct PauseScreen {
 	int descsCount;
 	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget btns[PAUSE_MAX_BTNS], quit, back;
+	struct TextWidget title;
 } PauseScreen;
-#define PAUSE_MAX_VERTICES ((PAUSE_MAX_BTNS + 2) * BUTTONWIDGET_MAX)
+#define PAUSE_MAX_VERTICES (TEXTWIDGET_MAX + (PAUSE_MAX_BTNS + 2) * BUTTONWIDGET_MAX)
 
 static void PauseScreenBase_Quit(void* a, void* b) { Window_Close(); }
 static void PauseScreenBase_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen); }
@@ -440,29 +441,26 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 	Gui_MakeTitleFont(titleFont);
 	Menu_SetButtons(s->btns, titleFont, s->descs, s->descsCount);
 	ButtonWidget_SetConst(&s->back, "Back to game", titleFont);
+	TextWidget_SetConst(&s->title,  "Game menu", titleFont);
 
 	if (Server.IsSinglePlayer) return;
 	s->btns[1].disabled = true;
 	s->btns[2].disabled = true;
 }
 
-static void PauseScreenBase_Layout(void* screen) {
-	struct PauseScreen* s = (struct PauseScreen*)screen;
-	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
-	Menu_LayoutBack(&s->back);
-}
-
 static void PauseScreenBase_Init(struct PauseScreen* s, int width) {
 	s->maxVertices = PAUSE_MAX_VERTICES;
 	Menu_InitButtons(s->btns, width, s->descs, s->descsCount);
 	Menu_InitBack(&s->back, PauseScreenBase_Game);
+	TextWidget_Init(&s->title);
 }
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Widget* pause_widgets[6 + 2] = {
+static struct Widget* pause_widgets[] = {
+	(struct Widget*)&PauseScreen.title,
 	(struct Widget*)&PauseScreen.btns[0], (struct Widget*)&PauseScreen.btns[1],
 	(struct Widget*)&PauseScreen.btns[2], (struct Widget*)&PauseScreen.btns[3],
 	(struct Widget*)&PauseScreen.btns[4], (struct Widget*)&PauseScreen.btns[5],
@@ -488,13 +486,15 @@ static void PauseScreen_ContextRecreated(void* screen) {
 
 static void PauseScreen_Layout(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	PauseScreenBase_Layout(screen);
-	Widget_SetLocation(&s->quit, ANCHOR_MAX, ANCHOR_MAX, 5, 5);
+	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
+	Menu_LayoutBack(&s->back);
+	Widget_SetLocation(&s->quit,  ANCHOR_MAX,    ANCHOR_MAX,    5,    5);
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
 }
 
 static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	static const struct SimpleButtonDesc descs[6] = {
+	static const struct SimpleButtonDesc descs[] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
@@ -535,7 +535,8 @@ void PauseScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------ClassicPauseScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static struct Widget* classicPause_widgets[5 + 1] = {
+static struct Widget* classicPause_widgets[] = {
+	(struct Widget*)&PauseScreen.title,
 	(struct Widget*)&PauseScreen.btns[0], (struct Widget*)&PauseScreen.btns[1],
 	(struct Widget*)&PauseScreen.btns[2], (struct Widget*)&PauseScreen.btns[3],
 	(struct Widget*)&PauseScreen.btns[4], (struct Widget*)&PauseScreen.back
@@ -548,14 +549,21 @@ static void ClassicPauseScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
+static void ClassicPauseScreen_Layout(void* screen) {
+	struct PauseScreen* s = (struct PauseScreen*)screen;
+	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
+	Widget_SetLocation(&s->back,  ANCHOR_CENTRE, ANCHOR_MAX, 0, Game_ClassicMode ? 80 : 25);
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -150);
+}
+
 static void ClassicPauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	static const struct SimpleButtonDesc descs[5] = {
+	static const struct SimpleButtonDesc descs[] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
 		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
-		{    0,    0, "Load level...",          Menu_SwitchLoadLevel },
-		{    0,   50, "Save level...",          Menu_SwitchSaveLevel },
-		{    0,  150, "Nostalgia options...",   Menu_SwitchNostalgia }
+		{    0,    0, "Save level..",           Menu_SwitchSaveLevel },
+		{    0,   50, "Load level..",           Menu_SwitchLoadLevel },
+		{    0,  100, "Nostalgia options...",   Menu_SwitchNostalgia }
 	};
 	s->widgets    = classicPause_widgets;
 	s->numWidgets = Array_Elems(classicPause_widgets);
@@ -563,16 +571,16 @@ static void ClassicPauseScreen_Init(void* screen) {
 
 	/* Don't show nostalgia options in classic mode */
 	s->descsCount = Game_ClassicMode ? 4    : 5;
-	s->widgets[4] = Game_ClassicMode ? NULL : (struct Widget*)&s->btns[4];
+	s->widgets[5] = Game_ClassicMode ? NULL : (struct Widget*)&s->btns[4];
 	PauseScreenBase_Init(s, 400);
 }
 
 static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
-	ClassicPauseScreen_Init, Screen_NullUpdate, Screen_NullFunc, 
-	MenuScreen_Render2,      Screen_BuildMesh,
-	Screen_InputDown,        Screen_InputUp,    Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,        Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	PauseScreenBase_Layout,  Screen_ContextLost, ClassicPauseScreen_ContextRecreated
+	ClassicPauseScreen_Init,   Screen_NullUpdate, Screen_NullFunc, 
+	MenuScreen_Render2,        Screen_BuildMesh,
+	Screen_InputDown,          Screen_InputUp,    Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
+	ClassicPauseScreen_Layout, Screen_ContextLost, ClassicPauseScreen_ContextRecreated
 };
 void ClassicPauseScreen_Show(void) {
 	struct PauseScreen* s = &PauseScreen;
@@ -1185,13 +1193,15 @@ void GenLevelScreen_Show(void) {
 static struct ClassicGenScreen {
 	Screen_Body
 	struct ButtonWidget btns[3], cancel;
+	struct TextWidget title;
 } ClassicGenScreen;
 
-static struct Widget* classicgen_widgets[4] = {
+static struct Widget* classicgen_widgets[] = {
+	(struct Widget*)&ClassicGenScreen.title,
 	(struct Widget*)&ClassicGenScreen.btns[0], (struct Widget*)&ClassicGenScreen.btns[1],
 	(struct Widget*)&ClassicGenScreen.btns[2], (struct Widget*)&ClassicGenScreen.cancel
 };
-#define CLASSICGEN_MAX_VERTICES (4 * BUTTONWIDGET_MAX)
+#define CLASSICGEN_MAX_VERTICES (TEXTWIDGET_MAX + 4 * BUTTONWIDGET_MAX)
 
 static void ClassicGenScreen_Gen(int size) {
 	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
@@ -1209,9 +1219,11 @@ static void ClassicGenScreen_Huge(void* a, void* b)   { ClassicGenScreen_Gen(512
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	struct FontDesc titleFont;
-	Screen_UpdateVb(screen);
 
+	Screen_UpdateVb(screen);
 	Gui_MakeTitleFont(&titleFont);
+	TextWidget_SetConst(&s->title, "Generate new level", &titleFont);
+
 	ButtonWidget_SetConst(&s->btns[0], "Small",  &titleFont);
 	ButtonWidget_SetConst(&s->btns[1], "Normal", &titleFont);
 	ButtonWidget_SetConst(&s->btns[2], "Huge",   &titleFont);
@@ -1221,10 +1233,11 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 
 static void ClassicGenScreen_Layout(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
+	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -150);
 	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
 	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -50);
 	Widget_SetLocation(&s->btns[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,    0);
-	Menu_LayoutBack(&s->cancel);
+	Widget_SetLocation(&s->cancel,  ANCHOR_CENTRE, ANCHOR_MAX,    0,   80);
 }
 
 static void ClassicGenScreen_Init(void* screen) {
@@ -1233,6 +1246,7 @@ static void ClassicGenScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(classicgen_widgets);
 	s->maxVertices = CLASSICGEN_MAX_VERTICES;
 
+	TextWidget_Init(&s->title);
 	ButtonWidget_Init(&s->btns[0], 400, ClassicGenScreen_Small);
 	ButtonWidget_Init(&s->btns[1], 400, ClassicGenScreen_Medium);
 	ButtonWidget_Init(&s->btns[2], 400, ClassicGenScreen_Huge);
