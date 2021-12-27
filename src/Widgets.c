@@ -142,7 +142,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		Texture_Render(&back);
 	} else {
 		/* Split button down the middle */
-		scale = (w->width / 400.0f) * 0.5f;
+		scale = (w->width / 400.0f) / (2 * DisplayInfo.ScaleX);
 		Gfx_BindTexture(back.ID); /* avoid bind twice */
 
 		back.Width = (w->width / 2);
@@ -181,7 +181,7 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 		*vertices += 4; /* always use up 8 vertices for body */
 	} else {
 		/* Split button down the middle */
-		scale = (w->width / 400.0f) * 0.5f;
+		scale = (w->width / 400.0f) / (2 * DisplayInfo.ScaleX);
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
