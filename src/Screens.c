@@ -2177,12 +2177,8 @@ static void TouchScreen_Layout(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchButtonDesc* desc;
 	float scale = Gui.RawTouchScale;
-	int i, height;
+	int i, x, y, height;
 
-	for (i = 0; i < s->numOnscreen; i++) {
-		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, 10, 10 + i * 40);
-	}
-	Widget_SetLocation(&s->more, ANCHOR_CENTRE, ANCHOR_MIN, 0, 10);
 	/* Need to align these relative to the hotbar */
 	height = HUDScreen_LayoutHotbar();
 
@@ -2196,6 +2192,17 @@ static void TouchScreen_Layout(void* screen) {
 		s->btns[i].minHeight = Display_ScaleY(60 * scale);
 		Widget_Layout(&s->btns[i]);
 	}
+
+	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++, y += 40) {
+		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, x, y);
+		if (s->onscreen[i].y + s->onscreen[i].height <= s->btns[0].y) continue;
+
+		// overflowed onto jump/fly buttons, move to next column
+		y = 10;
+		x += 110;
+		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, x, y);
+	}
+	Widget_SetLocation(&s->more, ANCHOR_CENTRE, ANCHOR_MIN, 0, 10);
 
 	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 5);
 	s->thumbstick.yOffset += height;

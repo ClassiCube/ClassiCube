@@ -32,7 +32,7 @@ add_library(classicube SHARED
         ../../src/Game.c
         ../../src/Window_Android.c
         ../../src/_ftbase.c
-        ../../src/Graphics_GL.c
+        ../../src/Graphics_GL2.c
         ../../src/_type1cid.c
         ../../src/Deflate.c
         ../../src/_cff.c
@@ -49,6 +49,7 @@ add_library(classicube SHARED
         ../../src/World.c
         ../../src/PickedPosRenderer.c
         ../../src/Platform_Posix.c
+        ../../src/Platform_Android.c
         ../../src/LScreens.c
         ../../src/_truetype.c
         ../../src/_ftglyph.c
@@ -97,6 +98,7 @@ add_library(classicube SHARED
         ../../src/EnvRenderer.c
         ../../src/Animations.c
         ../../src/LBackend.c
+        ../../src/TouchUI.c
         )
 
 # add lib dependencies
