@@ -25,6 +25,67 @@
 #include <GL/gl.h>
 #endif
 
+/* Windows gl.h only supplies up to OpenGL 1.1 headers */
+#ifdef CC_BUILD_WIN
+/* === BEGIN OPENGL HEADERS === */
+#define GL_ARRAY_BUFFER          0x8892
+#define GL_ELEMENT_ARRAY_BUFFER  0x8893
+#define GL_STATIC_DRAW           0x88E4
+#define GL_DYNAMIC_DRAW          0x88E8
+
+#define GL_FRAGMENT_SHADER       0x8B30
+#define GL_VERTEX_SHADER         0x8B31
+#define GL_COMPILE_STATUS        0x8B81
+#define GL_LINK_STATUS           0x8B82
+#define GL_INFO_LOG_LENGTH       0x8B84
+
+static void (APIENTRY *glBindBuffer)(GLenum target, GLuint buffer);
+static void (APIENTRY *glDeleteBuffers)(GLsizei n, const GLuint* buffers);
+static void (APIENTRY *glGenBuffers)(GLsizei n, GLuint *buffers);
+static void (APIENTRY *glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
+static void (APIENTRY *glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
+
+static GLuint (APIENTRY* glCreateShader)(GLenum type);
+static void   (APIENTRY* glDeleteShader)(GLuint shader);
+static void   (APIENTRY* glGetShaderiv)(GLuint shader, GLenum pname, GLint* params);
+static void   (APIENTRY* glGetShaderInfoLog)(GLuint shader, GLsizei bufSize, GLsizei* length, char* infoLog);
+static void   (APIENTRY* glShaderSource)(GLuint shader, GLsizei count, const char* const* string, const GLint* length);
+
+static void (APIENTRY* glAttachShader)(GLuint program, GLuint shader);
+static void (APIENTRY* glBindAttribLocation)(GLuint program, GLuint index, const char* name);
+static void (APIENTRY* glCompileShader)(GLuint shader);
+static void (APIENTRY* glDetachShader)(GLuint program, GLuint shader);
+static void (APIENTRY* glLinkProgram)(GLuint program);
+
+static GLuint (APIENTRY* glCreateProgram)(void);
+static void   (APIENTRY* glDeleteProgram)(GLuint program);
+static void   (APIENTRY* glGetProgramiv)(GLuint program, GLenum pname, GLint* params);
+static void   (APIENTRY* glGetProgramInfoLog)(GLuint program, GLsizei bufSize, GLsizei* length, char* infoLog);
+static void   (APIENTRY* glUseProgram)(GLuint program);
+
+static void (APIENTRY *glDisableVertexAttribArray)(GLuint index);
+static void (APIENTRY *glEnableVertexAttribArray)(GLuint index);
+static void (APIENTRY *glVertexAttribPointer)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
+
+static GLint (APIENTRY *glGetUniformLocation)(GLuint program, const char* name);
+static void  (APIENTRY *glUniform1f)(GLint location, GLfloat v0);
+static void  (APIENTRY *glUniform2f)(GLint location, GLfloat v0, GLfloat v1);
+static void  (APIENTRY *glUniform3f)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+static void  (APIENTRY *glUniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+
+#define GLSym(sym) { DYNAMICLIB_QUOTE(sym), (void**)& ## sym }
+static const struct DynamicLibSym core_funcs[] = {
+	GLSym(glBindBuffer), GLSym(glDeleteBuffers), GLSym(glGenBuffers), GLSym(glBufferData), GLSym(glBufferSubData),
+	GLSym(glCreateShader), GLSym(glDeleteShader), GLSym(glGetShaderiv), GLSym(glGetShaderInfoLog), GLSym(glShaderSource),
+	GLSym(glAttachShader), GLSym(glBindAttribLocation), GLSym(glCompileShader), GLSym(glDetachShader), GLSym(glLinkProgram),
+	GLSym(glCreateProgram), GLSym(glDeleteProgram), GLSym(glGetProgramiv), GLSym(glGetProgramInfoLog), GLSym(glUseProgram),
+	GLSym(glDisableVertexAttribArray), GLSym(glEnableVertexAttribArray), GLSym(glVertexAttribPointer),
+	GLSym(glGetUniformLocation), GLSym(glUniform1f), GLSym(glUniform2f), GLSym(glUniform3f), GLSym(glUniformMatrix4fv),
+};
+
+/* === END OPENGL HEADERS === */
+#endif
+
 #include "_GLShared.h"
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
@@ -467,6 +528,10 @@ void Gfx_DisableTextureOffset(void) {
 *-------------------------------------------------------State setup-------------------------------------------------------*
 *#########################################################################################################################*/
 static void GLBackend_Init(void) {
+#ifdef CC_BUILD_WIN
+	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
+#endif
+
 #ifdef CC_BUILD_GLES
 	// OpenGL ES 2.0 doesn't support custom mipmaps levels
 #else
