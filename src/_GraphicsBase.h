@@ -275,28 +275,34 @@ static BitmapCol AverageCol(BitmapCol p1, BitmapCol p2) {
 		aSum >> 1);
 }
 
-/* Generates the next mipmaps level bitmap for the given bitmap. */
-static void GenMipmaps(int width, int height, BitmapCol* lvlScan0, BitmapCol* scan0, int rowWidth) {
-	BitmapCol* baseSrc = (BitmapCol*)scan0;
-	BitmapCol* baseDst = (BitmapCol*)lvlScan0;
-
+/* Generates the next mipmaps level bitmap by downsampling from the given bitmap. */
+static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, int srcWidth) {
 	int x, y;
+	/* Downsampling from a 1 pixel wide bitmap requires simpler filtering */
+	if (srcWidth == 1) {
+		for (y = 0; y < height; y++) {
+			/* 1x2 bilinear filter */
+			dst[0] = AverageCol(*src, *(src + srcWidth));
+
+			dst += width;
+			src += (srcWidth << 1);
+		}
+		return;
+	}
+
 	for (y = 0; y < height; y++) {
-		int srcY = (y << 1);
-		BitmapCol* src0 = baseSrc + srcY * rowWidth;
-		BitmapCol* src1 = src0    + rowWidth;
-		BitmapCol* dst  = baseDst + y * width;
+		BitmapCol* src0 = src;
+		BitmapCol* src1 = src + srcWidth;
 
 		for (x = 0; x < width; x++) {
 			int srcX = (x << 1);
-			BitmapCol src00 = src0[srcX], src01 = src0[srcX + 1];
-			BitmapCol src10 = src1[srcX], src11 = src1[srcX + 1];
-
-			/* bilinear filter this mipmap */
-			BitmapCol ave0 = AverageCol(src00, src01);
-			BitmapCol ave1 = AverageCol(src10, src11);
+			/* 2x2 bilinear filter */
+			BitmapCol ave0 = AverageCol(src0[srcX], src0[srcX + 1]);
+			BitmapCol ave1 = AverageCol(src1[srcX], src1[srcX + 1]);
 			dst[x] = AverageCol(ave0, ave1);
 		}
+		src += (srcWidth << 1);
+		dst += width;
 	}
 }
 
