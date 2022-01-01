@@ -828,6 +828,7 @@ mergeInto(LibraryManager.library, {
     
     var prefix = '';
     if (flags & 1) prefix += 'Bold ';
+    size += 4; // adjust font size so text appears more like FreeType
     
     var font = UTF8ToString(fontStr);
     var ctx  = window.FONT_CONTEXT;
@@ -889,13 +890,14 @@ mergeInto(LibraryManager.library, {
       
       for (var x = 0; x < img_width; x++)
       {
-         var xx = x + dstX;
-         if (xx < 0 || xx >= dst_width) continue;
+        var xx = x + dstX;
+        if (xx < 0 || xx >= dst_width) continue;
+        var I = src_pixels[src_row + (x<<2)+3], invI = 255 - I|0;
 
-         HEAPU8[dst_row + (x<<2)+0] = src_pixels[src_row + (x<<2)+0];
-         HEAPU8[dst_row + (x<<2)+1] = src_pixels[src_row + (x<<2)+1];
-         HEAPU8[dst_row + (x<<2)+2] = src_pixels[src_row + (x<<2)+2];
-         HEAPU8[dst_row + (x<<2)+3] = src_pixels[src_row + (x<<2)+3];
+        HEAPU8[dst_row + (x<<2)+0] = ((src_pixels[src_row + (x<<2)+0] * I) >> 8) + ((HEAPU8[dst_row + (x<<2)+0] * invI) >> 8);
+        HEAPU8[dst_row + (x<<2)+1] = ((src_pixels[src_row + (x<<2)+1] * I) >> 8) + ((HEAPU8[dst_row + (x<<2)+1] * invI) >> 8);
+        HEAPU8[dst_row + (x<<2)+2] = ((src_pixels[src_row + (x<<2)+2] * I) >> 8) + ((HEAPU8[dst_row + (x<<2)+2] * invI) >> 8);
+        HEAPU8[dst_row + (x<<2)+3] =                                          I  + ((HEAPU8[dst_row + (x<<2)+3] * invI) >> 8);
       }
     }
   },

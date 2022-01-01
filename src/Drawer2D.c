@@ -696,7 +696,7 @@ void Font_GetNames(struct StringsBuffer* buffer) {
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
 	desc->flags  = flags;
-	desc->height = size;
+	desc->height = Drawer2D_AdjHeight(size);
 
 	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
 	if (!desc->handle) return 0;
@@ -737,6 +737,9 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	struct FontDesc* font = args->font;
 	char buffer[NATIVE_STR_LEN];
 	int len = Platform_EncodeUtf8(buffer, &args->text);
+
+	/* adjust y position to more closely match FreeType drawn text */
+	y += (args->font->height - args->font->size) / 2;
 
 	interop_SetFont(font->handle, font->size, font->flags);
 	interop_TextDraw(buffer, len, bmp, x, y, shadow);
