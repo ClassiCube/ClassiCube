@@ -105,7 +105,14 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 channel, cc_uint8* data);
 
 void Event_UnregisterAll(void);
-/* NOTE: Event_UnregisterAll must be updated if events lists are changed */
+/* NOTE: Event_UnregisterAll MUST be updated when events lists are changed */
+
+/* Event API version supported by the client */
+/*  Version 1 - Added NetEvents.PluginMessageReceived, */
+/* You MUST CHECK the event API version before attempting to use the events listed above, */
+/*  as otherwise if the player is using an older client that lacks some of the above events, */
+/*  you will be calling Event_Register on random data instead of the expected EventsList struct */
+CC_VAR extern int EventAPIVersion;
 
 CC_VAR extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
@@ -163,8 +170,9 @@ CC_VAR extern struct _WindowEventsList {
 	struct Event_Void Resized;      /* Window is resized */
 	struct Event_Void Closing;      /* Window is about to close (should free resources/save state/etc here) */
 	struct Event_Void FocusChanged; /* Focus of the window changed */
-	struct Event_Void StateChanged; /* WindowState of the window changed */
+	struct Event_Void StateChanged; /* State of the window changed (e.g. minimised, fullscreen) */
 	struct Event_Void Created;      /* Window has been created, Window_Handle is valid now. */
+	struct Event_Void InactiveChanged; /* Inactive/background state of the window changed */
 } WindowEvents;
 
 CC_VAR extern struct _InputEventsList {
@@ -183,11 +191,8 @@ CC_VAR extern struct _PointerEventsList {
 } PointerEvents;
 
 CC_VAR extern struct _NetEventsList {
-	struct Event_Void Connected;    /* Connection to a server was established. */
-	struct Event_Void Disconnected; /* Connection to the server was lost. */
+	struct Event_Void Connected;    /* Connection to a server was established */
+	struct Event_Void Disconnected; /* Connection to the server was lost */
+	struct Event_PluginMessage PluginMessageReceived; /* Received a PluginMessage packet from the server */
 } NetEvents;
-
-CC_VAR extern struct _PluginMessageEventsList {
-	struct Event_PluginMessage Received; /* Received a PluginMessage from the server. */
-} PluginMessageEvents;
 #endif

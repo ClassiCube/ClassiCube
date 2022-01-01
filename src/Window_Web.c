@@ -154,16 +154,16 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	return true;
 }
 
-static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
+static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void* data) {
 	UpdateWindowBounds(); needResize = true;
 	return true;
 }
 /* This is only raised when going into fullscreen */
-static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
+static EM_BOOL OnCanvasResize(int type, const void* reserved, void* data) {
 	UpdateWindowBounds(); needResize = true;
 	return false;
 }
-static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
+static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void* data) {
 	UpdateWindowBounds(); needResize = true;
 	return false;
 }
@@ -177,6 +177,15 @@ static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 	}
 	Window_Close();
 	return NULL;
+}
+
+static EM_BOOL OnVisibilityChanged(int eventType, const EmscriptenVisibilityChangeEvent* ev, void* data) {
+	cc_bool inactive = ev->visibilityState == EMSCRIPTEN_VISIBILITY_HIDDEN;
+	if (WindowInfo.Inactive == inactive) return false;
+
+	WindowInfo.Inactive = inactive;
+	Event_RaiseVoid(&WindowEvents.InactiveChanged);
+	return false;
 }
 
 static int MapNativeKey(int k, int l) {
@@ -312,6 +321,7 @@ static void HookEvents(void) {
 	emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, OnFocus);
 	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnResize);
 	emscripten_set_beforeunload_callback(                          NULL,    OnBeforeUnload);
+	emscripten_set_visibilitychange_callback(                      NULL, 0, OnVisibilityChanged);
 
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnKeyDown);
 	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnKeyUp);
@@ -333,6 +343,7 @@ static void UnhookEvents(void) {
 	emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, NULL);
 	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, NULL);
 	emscripten_set_beforeunload_callback(                          NULL,    NULL);
+	emscripten_set_visibilitychange_callback(                      NULL, 0, NULL);
 
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, NULL);
 	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, NULL);
