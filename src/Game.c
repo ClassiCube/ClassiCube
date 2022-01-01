@@ -275,12 +275,17 @@ static void HandleLowVRAMDetected(void* obj) {
 
 static void HandleInactiveChanged(void* obj) {
 	if (WindowInfo.Inactive) {
-		Chat_AddRaw("&cHIDE");
+		Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
 		Gfx_SetFpsLimit(false, 1000 / 1.0f);
 	} else {
-		Chat_AddRaw("&aSHOW");
+		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
 		Game_SetFpsLimit(Game_FpsLimit);
 	}
+
+#ifdef CC_BUILD_WEB
+	extern void emscripten_resume_main_loop(void);
+	emscripten_resume_main_loop();
+#endif
 }
 
 static void Game_WarnFunc(const cc_string* msg) {

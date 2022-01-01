@@ -116,13 +116,13 @@ static void TickReducedPerformance(void) {
 
 	if (reducedPerformance) return;
 	reducedPerformance = true;
-	Chat_AddRaw("&eEntering reduced performance mode (game minimised or hidden)");
+	Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
 }
 
 static void EndReducedPerformance(void) {
 	if (!reducedPerformance) return;
 	reducedPerformance = false;
-	Chat_AddRaw("&eExited reduced performance mode");
+	Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
 }
 
 
