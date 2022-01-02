@@ -859,7 +859,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	wasOnGround    = e->OnGround;
 
 	LocalInterpComp_AdvanceState(&p->Interp);
-	p->Base.Position = p->Interp.Next.Pos;
+	p->Base.Position = p->Interp.Prev.Pos;
 
 	LocalPlayer_HandleInput(&xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
@@ -1137,7 +1137,7 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_AdvanceState(&p->Interp);
-	p->Base.Position = p->Interp.Next.Pos;
+	p->Base.Position = p->Interp.Prev.Pos;
 
 	Entity_CheckSkin(e);
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
