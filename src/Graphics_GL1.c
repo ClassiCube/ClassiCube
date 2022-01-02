@@ -546,6 +546,7 @@ static void OpenGL11Fallback(void) {
 		"Your system only supports only OpenGL 1.1\n" \
 		"This is usually caused by graphics drivers not being installed\n\n" \
 		"As such you will likely experience very poor performance");
+	customMipmapsLevels = false;
 		
 	_glBindBuffer = fake_bindBuffer; _glDeleteBuffers = fake_deleteBuffers;
 	_glGenBuffers = fake_genBuffers; _glBufferData    = fake_bufferData;
@@ -582,6 +583,7 @@ static void GLBackend_Init(void) {
 #ifdef CC_BUILD_WIN
 	LoadCoreFuncs();
 #endif
+	customMipmapsLevels = true;
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {
@@ -591,7 +593,6 @@ static void GLBackend_Init(void) {
 	} else {
 		OpenGL11Fallback();
 	}
-	customMipmapsLevels = true;
 }
 #endif
 
