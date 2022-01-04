@@ -5,19 +5,19 @@
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.2.9"
+#define GAME_APP_VER "1.3.0"
 #define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
-#define GAME_APP_ALT   "ClassiCube 1.2.9 web mobile"
-#define GAME_APP_NAME  "ClassiCube 1.2.9 web"
+#define GAME_APP_ALT   "ClassiCube 1.3.0 web mobile"
+#define GAME_APP_NAME  "ClassiCube 1.3.0 web"
 #define GAME_APP_TITLE "ClassiCube"
 #elif defined CC_BUILD_ANDROID
-#define GAME_APP_NAME  "ClassiCube 1.2.9 android alpha"
-#define GAME_APP_TITLE "ClassiCube 1.2.9 android alpha"
+#define GAME_APP_NAME  "ClassiCube 1.3.0 android alpha"
+#define GAME_APP_TITLE "ClassiCube 1.3.0 android alpha"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.2.9"
-#define GAME_APP_TITLE "ClassiCube 1.2.9"
+#define GAME_APP_NAME  "ClassiCube 1.3.0"
+#define GAME_APP_TITLE "ClassiCube 1.3.0"
 #endif
 
 /* Max number of characters strings can have. */
