@@ -75,6 +75,9 @@ CC_VAR extern struct _WinData {
 	cc_bool Focused;
 	/* The type of on-screen keyboard this platform supports. (usually SOFT_KEYBOARD_NONE) */
 	cc_uint8 SoftKeyboard;
+	/* Whether this window is backgrounded / inactivated */
+	/* (rendering is not performed when window is inactive) */
+	cc_bool Inactive;
 } WindowInfo;
 
 /* Initialises state for window. Also sets Display_ members. */

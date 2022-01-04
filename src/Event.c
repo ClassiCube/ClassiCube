@@ -1,6 +1,7 @@
 #include "Event.h"
 #include "Logger.h"
 
+int EventAPIVersion = 1;
 struct _EntityEventsList        EntityEvents;
 struct _TabListEventsList       TabListEvents;
 struct _TextureEventsList       TextureEvents;
@@ -13,7 +14,6 @@ struct _WindowEventsList        WindowEvents;
 struct _InputEventsList         InputEvents;
 struct _PointerEventsList       PointerEvents;
 struct _NetEventsList           NetEvents;
-struct _PluginMessageEventsList PluginMessageEvents;
 
 void Event_Register(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	int i;
@@ -52,7 +52,7 @@ void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callbac
 }
 
 void Event_UnregisterAll(void) {
-	/* NOTE: This must be kept in sync with Event.h list of events */
+	/* NOTE: This MUST be kept in sync with Event.h list of events */
 	EntityEvents.Added.Count   = 0;
 	EntityEvents.Removed.Count = 0;
 
@@ -92,7 +92,8 @@ void Event_UnregisterAll(void) {
 	WindowEvents.Closing.Count = 0;
 	WindowEvents.FocusChanged.Count = 0;
 	WindowEvents.StateChanged.Count = 0;
-	WindowEvents.Created.Count = 0;
+	WindowEvents.Created.Count      = 0;
+	WindowEvents.InactiveChanged.Count = 0;
 
 	InputEvents.Press.Count = 0;
 	InputEvents.Down.Count  = 0;
@@ -107,6 +108,7 @@ void Event_UnregisterAll(void) {
 
 	NetEvents.Connected.Count    = 0;
 	NetEvents.Disconnected.Count = 0;
+	NetEvents.PluginMessageReceived.Count = 0;
 }
 
 void Event_RaiseVoid(struct Event_Void* handlers) {

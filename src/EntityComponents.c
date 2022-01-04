@@ -446,9 +446,7 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 }
 
 void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
 	interp->Prev = interp->Next;
-	p->Position  = interp->Next.Pos;
 	InterpComp_AdvanceRotY(interp);
 }
 

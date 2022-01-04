@@ -273,6 +273,21 @@ static void HandleLowVRAMDetected(void* obj) {
 	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
 }
 
+static void HandleInactiveChanged(void* obj) {
+	if (WindowInfo.Inactive) {
+		Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
+		Gfx_SetFpsLimit(false, 1000 / 1.0f);
+	} else {
+		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
+		Game_SetFpsLimit(Game_FpsLimit);
+	}
+
+#ifdef CC_BUILD_WEB
+	extern void emscripten_resume_main_loop(void);
+	emscripten_resume_main_loop();
+#endif
+}
+
 static void Game_WarnFunc(const cc_string* msg) {
 	cc_string str = *msg, line;
 	while (str.length) {
@@ -356,11 +371,12 @@ static void Game_Load(void) {
 	LoadOptions();
 	Utils_EnsureDirectory("maps");
 
-	Event_Register_(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
-	Event_Register_(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
-	Event_Register_(&GfxEvents.LowVRAMDetected, NULL, HandleLowVRAMDetected);
-	Event_Register_(&WindowEvents.Resized,      NULL, Game_OnResize);
-	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
+	Event_Register_(&WorldEvents.NewMap,           NULL, HandleOnNewMap);
+	Event_Register_(&WorldEvents.MapLoaded,        NULL, HandleOnNewMapLoaded);
+	Event_Register_(&GfxEvents.LowVRAMDetected,    NULL, HandleLowVRAMDetected);
+	Event_Register_(&WindowEvents.Resized,         NULL, Game_OnResize);
+	Event_Register_(&WindowEvents.Closing,         NULL, Game_Free);
+	Event_Register_(&WindowEvents.InactiveChanged, NULL, HandleInactiveChanged);
 
 	Game_AddComponent(&World_Component);
 	Game_AddComponent(&Textures_Component);
@@ -570,11 +586,14 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
-	Gfx_Clear();
 	UpdateViewMatrix();
 
+	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
+	if (WindowInfo.Inactive) return;
+	Gfx_Clear();
+
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
+	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
 
 	if (!Gui_GetBlocksWorld()) {
 		Game_Render3D(delta, t);

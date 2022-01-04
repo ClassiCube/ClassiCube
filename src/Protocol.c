@@ -1549,7 +1549,7 @@ static void CPE_UndefineModel(cc_uint8* data) {
 
 static void CPE_PluginMessage(cc_uint8* data) {
 	cc_uint8 channel = data[0];
-	Event_RaisePluginMessage(&PluginMessageEvents.Received, channel, data + 1);
+	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
 }
 
 static void CPE_Reset(void) {
