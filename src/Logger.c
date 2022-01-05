@@ -82,7 +82,8 @@ static const char* GetCCErrorDesc(cc_result res) {
 
 	case ERR_DOWNLOAD_INVALID: return "Website denied download or doesn't exist";
 	case ERR_NO_AUDIO_OUTPUT:  return "No audio output devices plugged in";
-	case ERR_INVALID_URL:      return "Cannot download from invalid URL";
+	case ERR_INVALID_DATA_URL: return "Cannot download from invalid URL";
+	case ERR_INVALID_OPEN_URL: return "Cannot navigate to invalid URL";
 	}
 	return NULL;
 }

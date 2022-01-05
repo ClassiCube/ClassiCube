@@ -70,8 +70,8 @@ static void Http_StartNextDownload(void) {
 	res = interop_DownloadAsync(urlStr, req->requestType, req->id);
 	
 	if (res) {
-		/* Download error code -> ClassiCube error code */
-		if (res == 1) res = ERR_INVALID_URL;
+		/* interop error code -> ClassiCube error code */
+		if (res == 1) res = ERR_INVALID_DATA_URL;
 		req->result = res;
 		
 		/* Invalid URL so move onto next request */

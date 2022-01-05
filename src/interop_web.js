@@ -120,7 +120,14 @@ mergeInto(LibraryManager.library, {
 //---------------------------------------------------------Platform-------------------------------------------------------
 //########################################################################################################################
   interop_OpenTab: function(url) {
-    window.open(UTF8ToString(url));
+    try {
+      window.open(UTF8ToString(url));
+    } catch (e) {
+      // DOMException gets thrown when invalid URL provided. Test cases:
+      //   http://example:app/test.zip
+      console.log(e);
+      return 1;
+    }
     return 0;
   },
   interop_Log: function(msg, len) {

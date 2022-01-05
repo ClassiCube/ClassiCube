@@ -112,6 +112,7 @@ enum CC_ERRORS {
 
 	ERR_DOWNLOAD_INVALID = 0xCCDED05CUL, /* Unspecified error occurred downloading data */
 	ERR_NO_AUDIO_OUTPUT  = 0xCCDED05DUL, /* No audio output devices are connected */
-	ERR_INVALID_URL      = 0xCCDED05EUL  /* Invalid URL provided to download from */
+	ERR_INVALID_DATA_URL = 0xCCDED05EUL, /* Invalid URL provided to download from */
+	ERR_INVALID_OPEN_URL = 0xCCDED05FUL, /* Invalid URL provided to open in new tab */
 };
 #endif
