@@ -368,8 +368,13 @@ void Process_Exit(cc_result code) {
 extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
+	cc_result res;
 	Platform_EncodeUtf8(str, args);
-	return interop_OpenTab(str);
+
+	res = interop_OpenTab(str);
+	/* interop error code -> ClassiCube error code */
+	if (res == 1) res = ERR_INVALID_OPEN_URL;
+	return res;
 }
 
 
