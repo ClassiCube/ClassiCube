@@ -26,8 +26,16 @@ static cc_uint8 priorities[GUI_MAX_SCREENS];
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
 static CC_NOINLINE int GetWindowScale(void) {
-	float windowScale = min(WindowInfo.Width / 640.0f, WindowInfo.Height / 480.0f);
-	return 1 + (int)windowScale;
+	float widthScale  = WindowInfo.Width  / 640.0f;
+	float heightScale = WindowInfo.Height / 480.0f;
+
+	/* Use larger UI scaling on mobile */
+	/* TODO move this DPI scaling elsewhere.,. */
+	if (!Input_TouchMode) {
+		widthScale  /= DisplayInfo.ScaleX;
+		heightScale /= DisplayInfo.ScaleY;
+	}
+	return 1 + (int)(min(widthScale, heightScale));
 }
 
 float Gui_Scale(float value) {
