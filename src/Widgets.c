@@ -76,13 +76,12 @@ void TextWidget_Init(struct TextWidget* w) {
 void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
+	DrawTextArgs_Make(&args, text, font, true);
+	Drawer2D_MakeTextTexture(&w->tex, &args);
 
-	if (Drawer2D_IsEmptyText(text)) {
-		w->tex.Width  = 0; 
+	/* Give text widget default height when text is empty */
+	if (!w->tex.Height) {
 		w->tex.Height = Drawer2D_FontHeight(font, true);
-	} else {	
-		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->tex, &args);
 	}
 
 	w->width = w->tex.Width; w->height = w->tex.Height;
@@ -233,13 +232,12 @@ void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
+	DrawTextArgs_Make(&args, text, font, true);
+	Drawer2D_MakeTextTexture(&w->tex, &args);
 
-	if (Drawer2D_IsEmptyText(text)) {
-		w->tex.Width  = 0;
+	/* Give button default height when text is empty */
+	if (!w->tex.Height) {
 		w->tex.Height = Drawer2D_FontHeight(font, true);
-	} else {
-		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->tex, &args);
 	}
 	Widget_Layout(w);
 }
