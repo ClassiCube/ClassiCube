@@ -268,7 +268,8 @@ void Window_Init(void) {
 	if (lib) {
 		DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
 		/* Enable high DPI support */
-		if (_SetProcessDPIAware) _SetProcessDPIAware();
+		/* TODO re-enable when this can be set via option */
+		/* if (_SetProcessDPIAware) _SetProcessDPIAware(); */
 	}
 
 	hdc = GetDC(NULL);
