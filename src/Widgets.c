@@ -668,8 +668,7 @@ static void TableWidget_MakeBlockDesc(struct TableWidget* w, cc_string* desc, Bl
 	cc_string name;
 	int block_ = block;
 	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
-	if (block == BLOCK_AIR)     return;
-	if (w->selectedIndex == -1) return;
+	if (block == BLOCK_AIR) return;
 
 	name = Block_UNSAFE_GetName(block);
 	String_AppendString(desc, &name);
@@ -687,11 +686,13 @@ static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
 }
 
 static void TableWidget_RecreateDescTex(struct TableWidget* w) {
+	BlockID block;
 	if (w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
-
 	w->lastCreatedIndex = w->selectedIndex;
-	TableWidget_MakeDescTex(w, w->blocks[w->selectedIndex]);
+
+	block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
+	TableWidget_MakeDescTex(w, block);
 }
 
 void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
