@@ -968,16 +968,86 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 static GC fb_gc;
 static XImage* fb_image;
+static struct Bitmap fb_bmp;
+static void* fb_data;
+static int fb_fast;
+static int fb_rShift,  fb_gShift,  fb_bShift;
+static int fb_rOffset, fb_gOffset, fb_bOffset;
+
+static int CountSetBits(cc_uint32 i) {
+     i = i - ((i >> 1) & 0x55555555);
+     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+     i = (i + (i >> 4)) & 0x0F0F0F0F;
+     return (i * 0x01010101) >> 24;
+}
+
+/* Calculates adjustments from 24 bit depth to depth of window visual */
+static void CalcRGBAdjustments(void) {
+	int rBits = CountSetBits(win_visual.red_mask);
+	int gBits = CountSetBits(win_visual.green_mask);
+	int bBits = CountSetBits(win_visual.blue_mask);
+
+	/* e.g. for 8 bits to 6 bits, need to drop 2 lowest bits */
+	fb_bShift = 8 - rBits;
+	fb_gShift = 8 - gBits;
+	fb_rShift = 8 - bBits;
+
+	fb_bOffset = 0;
+	fb_gOffset = bBits;
+	fb_rOffset = bBits + gBits;
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
-
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_image   = XCreateImage(win_display, win_visual.visual,
-		win_visual.depth, ZPixmap, 0, (char*)bmp->scan0,
+
+	/* X11 requires that the image to draw has same depth as window */
+	/* Easy for 24/32 bit case, but much trickier with other depths */
+	/*  (have to do a manual and slow second blit for other depths) */
+	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
+	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(bmp->width * bmp->height, 4, "window blit");
+	CalcRGBAdjustments();
+
+	fb_bmp   = *bmp;
+	fb_image = XCreateImage(win_display, win_visual.visual,
+		win_visual.depth, ZPixmap, 0, fb_data,
 		bmp->width, bmp->height, 32, 0);
 }
 
+static void BlitFramebuffer(int x1, int y1, int width, int height) {
+	unsigned long pixel;
+	BitmapCol src;
+	int x, y;
+
+	for (y = y1; y < y1 + height; y++) {
+		BitmapCol* row = Bitmap_GetRow(&fb_bmp, y);
+		for (x = x1; x < x1 + width; x++) {
+			src   = row[x];
+
+			/* e.g. for 24 to 16 bit depth (R5 G5 B5): */
+			/*   B is shifted right 3 bits, then shifted left 0 bits   */
+			/*   G is shifted right 2 bits, then shifted left 5 bits   */
+			/*   R is shifted right 3 bits, then shifted left 6+5 bits */
+			/* Visually explained
+			/*   rrrrrrrr:gggggggg:bbbbbbbb */
+			/*   |||||    ||||||  :|||||
+			/*   rrrrr    gggggg  :bbbbb    */
+			/*     \\\\\   \\\\\\  |||||
+			/*        rrrrrggg:gggbbbbb*/
+			pixel = 
+				((BitmapCol_R(src) >> fb_rShift) << fb_rOffset) |
+				((BitmapCol_G(src) >> fb_gShift) << fb_gOffset) |
+				((BitmapCol_B(src) >> fb_bShift) << fb_bOffset);
+
+			XPutPixel(fb_image, x, y, pixel);
+		}
+	}
+}
+
 void Window_DrawFramebuffer(Rect2D r) {
+	/* Convert 32 bit depth to window depth when required */
+	if (!fb_fast) BlitFramebuffer(r.X, r.Y, r.Width, r.Height);
+
 	XPutImage(win_display, win_handle, fb_gc, fb_image,
 		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
 }
@@ -985,6 +1055,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	XFree(fb_image);
 	Mem_Free(bmp->scan0);
+	if (bmp->scan0 != fb_data) Mem_Free(fb_data);
 }
 
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }

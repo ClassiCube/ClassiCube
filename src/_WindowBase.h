@@ -79,17 +79,19 @@ static void InitGraphicsMode(struct GraphicsMode* m) {
 	m->A = 0;
 	switch (bpp) {
 	case 32:
-		m->R = 8; m->G = 8; m->B = 8; m->A = 8; break;
+		m->R =  8; m->G =  8; m->B =  8; m->A = 8; break;
+	case 30:
+		m->R = 10; m->G = 10; m->B = 10; m->A = 2; break;
 	case 24:
-		m->R = 8; m->G = 8; m->B = 8; break;
+		m->R =  8; m->G =  8; m->B =  8; break;
 	case 16:
-		m->R = 5; m->G = 6; m->B = 5; break;
+		m->R =  5; m->G =  6; m->B =  5; break;
 	case 15:
-		m->R = 5; m->G = 5; m->B = 5; break;
+		m->R =  5; m->G =  5; m->B =  5; break;
 	case 8:
-		m->R = 3; m->G = 3; m->B = 2; break;
+		m->R =  3; m->G =  3; m->B =  2; break;
 	case 4:
-		m->R = 2; m->G = 2; m->B = 1; break;
+		m->R =  2; m->G =  2; m->B =  1; break;
 	default:
 		/* mode->R = 0; mode->G = 0; mode->B = 0; */
 		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
