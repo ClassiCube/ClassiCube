@@ -970,32 +970,6 @@ static GC fb_gc;
 static XImage* fb_image;
 static struct Bitmap fb_bmp;
 static void* fb_data;
-static int fb_fast;
-static int fb_rShift,  fb_gShift,  fb_bShift;
-static int fb_rOffset, fb_gOffset, fb_bOffset;
-
-static int CountSetBits(cc_uint32 i) {
-     i = i - ((i >> 1) & 0x55555555);
-     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-     i = (i + (i >> 4)) & 0x0F0F0F0F;
-     return (i * 0x01010101) >> 24;
-}
-
-/* Calculates adjustments from 24 bit depth to depth of window visual */
-static void CalcRGBAdjustments(void) {
-	int rBits = CountSetBits(win_visual.red_mask);
-	int gBits = CountSetBits(win_visual.green_mask);
-	int bBits = CountSetBits(win_visual.blue_mask);
-
-	/* e.g. for 8 bits to 6 bits, need to drop 2 lowest bits */
-	fb_bShift = 8 - rBits;
-	fb_gShift = 8 - gBits;
-	fb_rShift = 8 - bBits;
-
-	fb_bOffset = 0;
-	fb_gOffset = bBits;
-	fb_rOffset = bBits + gBits;
-}
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
@@ -1006,7 +980,6 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	/*  (have to do a manual and slow second blit for other depths) */
 	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
 	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(bmp->width * bmp->height, 4, "window blit");
-	CalcRGBAdjustments();
 
 	fb_bmp   = *bmp;
 	fb_image = XCreateImage(win_display, win_visual.visual,
@@ -1015,31 +988,42 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 static void BlitFramebuffer(int x1, int y1, int width, int height) {
-	unsigned long pixel;
+	unsigned char* dst;
+	BitmapCol* row;
 	BitmapCol src;
+	cc_uint32 pixel;
+	int R, G, B, A;
 	int x, y;
 
 	for (y = y1; y < y1 + height; y++) {
-		BitmapCol* row = Bitmap_GetRow(&fb_bmp, y);
+		row = Bitmap_GetRow(&fb_bmp, y);
+		dst = ((unsigned char*)fb_image->data) + y * fb_image->bytes_per_line;
+
 		for (x = x1; x < x1 + width; x++) {
-			src   = row[x];
+			src = row[x];
+			R = BitmapCol_R(src);
+			G = BitmapCol_G(src);
+			B = BitmapCol_B(src);
+			A = BitmapCol_A(src);
 
-			/* e.g. for 24 to 16 bit depth (R5 G5 B5): */
-			/*   B is shifted right 3 bits, then shifted left 0 bits   */
-			/*   G is shifted right 2 bits, then shifted left 5 bits   */
-			/*   R is shifted right 3 bits, then shifted left 6+5 bits */
-			/* Visually explained
-			/*   rrrrrrrr:gggggggg:bbbbbbbb */
-			/*   |||||    ||||||  :|||||
-			/*   rrrrr    gggggg  :bbbbb    */
-			/*     \\\\\   \\\\\\  |||||
-			/*        rrrrrggg:gggbbbbb*/
-			pixel = 
-				((BitmapCol_R(src) >> fb_rShift) << fb_rOffset) |
-				((BitmapCol_G(src) >> fb_gShift) << fb_gOffset) |
-				((BitmapCol_B(src) >> fb_bShift) << fb_bOffset);
-
-			XPutPixel(fb_image, x, y, pixel);
+			switch (win_visual.depth)
+			{
+			case 30: /* B10 G10 R10 A2 */
+				pixel = B | (G << 10) | (B << 20) | ((A >> 6) << 30);
+				((cc_uint32*)dst)[x] = pixel;
+			case 16: /* B5 G6 R5 */
+				pixel = (B >> 3) | ((G >> 2) << 5) | ((R >> 3) << 11);
+				((cc_uint16*)dst)[x] = pixel;
+				break;
+			case 15: /* B5 G5 R5 */
+				pixel = (B >> 3) | ((G >> 3) << 5) | ((R >> 3) << 10);
+				((cc_uint16*)dst)[x] = pixel;
+				break;
+			case 8:  /* B2 G3 R3 */
+				pixel = (B >> 6) | ((G >> 5) << 2) | ((R >> 5) << 5);
+				((cc_uint8*) dst)[x] = pixel;
+				break;
+			}
 		}
 	}
 }
