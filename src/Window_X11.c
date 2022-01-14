@@ -970,6 +970,7 @@ static GC fb_gc;
 static XImage* fb_image;
 static struct Bitmap fb_bmp;
 static void* fb_data;
+static int fb_fast;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
