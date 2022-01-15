@@ -1009,19 +1009,20 @@ static void BlitFramebuffer(int x1, int y1, int width, int height) {
 
 			switch (win_visual.depth)
 			{
-			case 30: /* B10 G10 R10 A2 */
-				pixel = B | (G << 10) | (B << 20) | ((A >> 6) << 30);
+			case 30: /* R10 G10 B10 A2 */
+				pixel = (R << 2) | ((G << 2) << 10) | ((B << 2) << 20) | ((A >> 6) << 30);
 				((cc_uint32*)dst)[x] = pixel;
+				break;
 			case 16: /* B5 G6 R5 */
-				pixel = (B >> 3) | ((G >> 2) << 5) | ((R >> 3) << 11);
+				pixel = (B >> 3) | ((G >> 2) <<  5) | ((R >> 3) << 11);
 				((cc_uint16*)dst)[x] = pixel;
 				break;
 			case 15: /* B5 G5 R5 */
-				pixel = (B >> 3) | ((G >> 3) << 5) | ((R >> 3) << 10);
+				pixel = (B >> 3) | ((G >> 3) <<  5) | ((R >> 3) << 10);
 				((cc_uint16*)dst)[x] = pixel;
 				break;
 			case 8:  /* B2 G3 R3 */
-				pixel = (B >> 6) | ((G >> 5) << 2) | ((R >> 5) << 5);
+				pixel = (B >> 6) | ((G >> 5) <<  2) | ((R >> 5) <<  5);
 				((cc_uint8*) dst)[x] = pixel;
 				break;
 			}
