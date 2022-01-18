@@ -17,6 +17,7 @@ typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func Layout; /* Positions the widgets on the screen. */ \
 	LScreen_Func Draw;   /* Draws all widgets and any other features such as lines/rectangles. */ \
 	LScreen_Func Tick;   /* Repeatedly called multiple times every second. */ \
+	void (*DrawBackground)(struct LScreen* s); \
 	void (*KeyDown)(struct LScreen* s,     int key, cc_bool wasDown); \
 	void (*KeyPress)(struct LScreen* s,    char c);  \
 	void (*MouseDown)(struct LScreen* s,   int idx); \

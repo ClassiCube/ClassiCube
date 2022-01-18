@@ -16,6 +16,7 @@
 #include "Input.h"
 #include "Options.h"
 #include "Utils.h"
+#include "LBackend.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -170,6 +171,31 @@ static void LScreen_MouseMove(struct LScreen* s, int idx) {
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
+static void LScreen_DrawBackground(struct LScreen* s) {
+	cc_string title_fore, title_back;
+	struct DrawTextArgs args;
+	int x;
+
+	if (!s->title_fore) {
+		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
+		return;
+	}
+	title_fore = String_FromReadonly(s->title_fore);
+	title_back = String_FromReadonly(s->title_back);
+
+	LBackend_ResetPixels();
+	DrawTextArgs_Make(&args, &title_fore, &Launcher_LogoFont, false);
+	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
+
+	args.text = title_back;
+	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
+		x + Display_ScaleX(4), Display_ScaleY(4));
+
+	args.text = title_fore;
+	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
+		x,                     0);
+}
+
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	int i;
 
@@ -184,9 +210,10 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->MouseUp    = LScreen_MouseUp;
 	s->MouseMove  = LScreen_MouseMove;
 	s->MouseWheel = LScreen_MouseWheel;
-	s->HoverWidget   = LScreen_HoverWidget;
-	s->UnhoverWidget = LScreen_UnhoverWidget;
-	s->TextChanged   = LScreen_TextChanged;
+	s->HoverWidget    = LScreen_HoverWidget;
+	s->UnhoverWidget  = LScreen_UnhoverWidget;
+	s->TextChanged    = LScreen_TextChanged;
+	s->DrawBackground = LScreen_DrawBackground;
 
 	/* reset all widgets mouse state */
 	for (i = 0; i < s->numWidgets; i++) { 
@@ -1067,7 +1094,7 @@ CC_NOINLINE static void CheckResourcesScreen_ResetArea(int x, int y, int width, 
 	Launcher_MarkDirty(x, y, width, height);
 }
 
-CC_NOINLINE static void CheckResourcesScreen_DrawBase(void) {
+CC_NOINLINE static void CheckResourcesScreen_DrawBackground(struct LScreen* s) {
 	int x, y, width, height;
 	Drawer2D_Clear(&Launcher_Framebuffer, BitmapCol_Make(12, 12, 12, 255),
 					0, 0, WindowInfo.Width, WindowInfo.Height);
@@ -1079,19 +1106,14 @@ CC_NOINLINE static void CheckResourcesScreen_DrawBase(void) {
 	CheckResourcesScreen_ResetArea(x, y, width, height);
 }
 
-static void CheckResourcesScreen_Draw(struct LScreen* s) {
-	CheckResourcesScreen_DrawBase();
-	LScreen_Draw(s);
-}
-
 void CheckResourcesScreen_SetActive(void) {
 	struct CheckResourcesScreen* s = &CheckResourcesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = CheckResourcesScreen_Init;
 	s->Show   = CheckResourcesScreen_Show;
-	s->Draw   = CheckResourcesScreen_Draw;
 	s->Layout = CheckResourcesScreen_Layout;
-	s->onEnterWidget = (struct LWidget*)&s->btnYes;
+	s->DrawBackground = CheckResourcesScreen_DrawBackground;
+	s->onEnterWidget  = (struct LWidget*)&s->btnYes;
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -1125,11 +1147,6 @@ static void FetchResourcesScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->lblStatus,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -10);
 	LWidget_SetLocation(&s->btnCancel,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  45);
 	LWidget_SetLocation(&s->sdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  15);
-}
-
-static void FetchResourcesScreen_Draw(struct LScreen* s) {
-	CheckResourcesScreen_DrawBase();
-	LScreen_Draw(s);
 }
 
 static void FetchResourcesScreen_SetStatus(const cc_string* str) {
@@ -1197,9 +1214,9 @@ void FetchResourcesScreen_SetActive(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = FetchResourcesScreen_Init;
 	s->Show   = FetchResourcesScreen_Show;
-	s->Draw   = FetchResourcesScreen_Draw;
 	s->Tick   = FetchResourcesScreen_Tick;
 	s->Layout = FetchResourcesScreen_Layout;
+	s->DrawBackground = CheckResourcesScreen_DrawBackground;
 	Launcher_SetScreen((struct LScreen*)s);
 }
 

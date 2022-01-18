@@ -27,11 +27,9 @@ static Rect2D dirty_rect;
 
 static struct LScreen* activeScreen;
 struct Bitmap Launcher_Framebuffer;
-struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
-
+struct FontDesc Launcher_TitleFont, Launcher_TextFont;
+struct FontDesc Launcher_HintFont, Launcher_LogoFont;
 static cc_bool pendingRedraw;
-static struct FontDesc logoFont;
-static int titleX, titleY;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE], userBuffer[STRING_SIZE];
@@ -255,7 +253,6 @@ static void Launcher_Init(void) {
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_FLAGS_BOLD);
 	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_FLAGS_NONE);
 	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_FLAGS_NONE);
-	titleX = Display_ScaleX(4); titleY = Display_ScaleY(4);
 
 	Drawer2D.Colors['g'] = BitmapCol_Make(125, 125, 125, 255);
 	Utils_EnsureDirectory("texpacks");
@@ -265,10 +262,10 @@ static void Launcher_Init(void) {
 static void Launcher_Free(void) {
 	Event_UnregisterAll();
 	Flags_Free();
-	Font_Free(&logoFont);
 	Font_Free(&Launcher_TitleFont);
 	Font_Free(&Launcher_TextFont);
 	Font_Free(&Launcher_HintFont);
+	Font_Free(&Launcher_LogoFont);
 	hasBitmappedFont = false;
 
 	CloseActiveScreen();
@@ -487,9 +484,9 @@ void Launcher_TryLoadTexturePack(void) {
 }
 
 void Launcher_UpdateLogoFont(void) {
-	Font_Free(&logoFont);
+	Font_Free(&Launcher_LogoFont);
 	Drawer2D.BitmappedText = (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
-	Drawer2D_MakeFont(&logoFont, 32, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&Launcher_LogoFont, 32, FONT_FLAGS_NONE);
 	Drawer2D.BitmappedText = false;
 }
 
@@ -498,31 +495,8 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 	Launcher_MarkDirty(x, y, width, height);
 }
 
-void Launcher_ResetPixels(void) {
-	cc_string title_fore, title_back;
-	struct DrawTextArgs args;
-	int x;
-
-	if (activeScreen && !activeScreen->title_fore) {
-		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
-		return;
-	}
-	title_fore = String_FromReadonly(activeScreen->title_fore);
-	title_back = String_FromReadonly(activeScreen->title_back);
-
-	LBackend_ResetPixels();
-	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
-	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
-
-	args.text = title_back;
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + titleX, titleY);
-	args.text = title_fore;
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, 0);
-	Launcher_MarkAllDirty();
-}
-
 void Launcher_Redraw(void) {
-	Launcher_ResetPixels();
+	activeScreen->DrawBackground(activeScreen);
 	activeScreen->Draw(activeScreen);
 	Launcher_MarkAllDirty();
 }

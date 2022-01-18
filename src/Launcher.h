@@ -13,6 +13,8 @@ extern struct Bitmap Launcher_Framebuffer;
 extern struct FontDesc Launcher_TitleFont, Launcher_TextFont;
 /* Default font for input widget hints. */
 extern struct FontDesc Launcher_HintFont;
+/* Default font for screen/menu titles. */
+extern struct FontDesc Launcher_LogoFont;
 
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. */
 extern cc_bool Launcher_ShouldExit;
