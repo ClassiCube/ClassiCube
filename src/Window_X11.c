@@ -966,6 +966,10 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	XFlush(m.dpy); /* flush so window disappears immediately */
 }
 
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
+
 static GC fb_gc;
 static XImage* fb_image;
 static struct Bitmap fb_bmp;

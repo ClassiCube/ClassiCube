@@ -272,6 +272,10 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
 }
 
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
+
 static SDL_Surface* surface;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	surface = SDL_GetWindowSurface(win_handle);

@@ -384,7 +384,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ListScreen_UpdatePage(s);
 
 	if (!s->UploadClick) return;
-	ButtonWidget_SetConst(&s->upload, "Upload", &s->font);
+	ButtonWidget_SetConst(&s->upload, Input_TouchMode ? "Upload" : "Load file...", &s->font);
 }
 
 static void ListScreen_Reload(struct ListScreen* s) {
@@ -1764,14 +1764,12 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 	StringsBuffer_Sort(&s->entries);
 }
 
-#ifdef CC_BUILD_WEB
 static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom(path); }
 static void LoadLevelScreen_UploadFunc(void* s, void* w) {
-	Window_OpenFileDialog(".cw", LoadLevelScreen_UploadCallback);
+	Platform_LogConst("UPLOAD");
+	cc_result res = Window_OpenFileDialog(".cw", LoadLevelScreen_UploadCallback);
+	if (res) Logger_SimpleWarn(res, "showing open file dialog");
 }
-#else
-#define LoadLevelScreen_UploadFunc NULL
-#endif
 
 void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;

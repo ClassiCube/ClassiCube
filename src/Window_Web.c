@@ -549,7 +549,7 @@ cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callb
 	uploadCallback = callback;
 	/* Calls Window_OnFileUploaded on success */
 	interop_OpenFileDialog(filter);
-	return ERR_NOT_SUPPORTED;
+	return 0;
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }

@@ -260,6 +260,10 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
     [UIViewController attemptRotationToDeviceOrientation];
 }
 
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
+
 
 /*#########################################################################################################################*
  *--------------------------------------------------------2D window--------------------------------------------------------*

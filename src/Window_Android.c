@@ -363,6 +363,10 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
+
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");

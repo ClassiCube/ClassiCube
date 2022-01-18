@@ -22,6 +22,7 @@
 /* Hence the actual minimum supported OS is Windows 2000. This just avoids redeclaring structs. */
 #endif
 #include <windows.h>
+#include <commdlg.h>
 
 /* https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat */
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
@@ -136,7 +137,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEMOVE:
 		/* Set before position change, in case mouse buttons changed when outside window */
-		Input_SetNonRepeatable(KEY_LMOUSE, wParam & 0x01);
+		if (!(wParam & 0x01)) Input_SetReleased(KEY_LMOUSE);
+		//Input_SetNonRepeatable(KEY_LMOUSE, wParam & 0x01);
 		Input_SetNonRepeatable(KEY_RMOUSE, wParam & 0x02);
 		Input_SetNonRepeatable(KEY_MMOUSE, wParam & 0x10);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
@@ -533,6 +535,31 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 
 static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
+}
+
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+	cc_string path; char pathBuffer[MAX_PATH];
+	WCHAR str[MAX_PATH] = { 0 };
+	OPENFILENAMEW ofn   = { 0 };
+	int i;
+
+	ofn.lStructSize     = sizeof(ofn);
+	ofn.hwndOwner       = win_handle;
+	ofn.lpstrFile       = str;
+	ofn.nMaxFile        = MAX_PATH;
+	ofn.lpstrFilter     = L"All\0*.*\0CW files\0*.cw\0"; // TODO rethink
+	ofn.nFilterIndex    = 1;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+	if (!GetOpenFileNameW(&ofn))
+		return CommDlgExtendedError();
+	String_InitArray(path, pathBuffer);
+
+	for (i = 0; i < MAX_PATH && str[i]; i++) {
+		String_Append(&path, Convert_CodepointToCP437(str[i]));
+	}
+	callback(&path);
+	return 0;
 }
 
 static HDC draw_DC;
