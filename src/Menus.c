@@ -1587,7 +1587,8 @@ static void TexturePackScreen_UploadCallback(const cc_string* path) {
 }
 
 static void TexturePackScreen_UploadFunc(void* s, void* w) {
-	Window_OpenFileDialog(".zip", TexturePackScreen_UploadCallback);
+	static const char* const filters[] = { ".zip", NULL };
+	Window_OpenFileDialog(filters, TexturePackScreen_UploadCallback);
 }
 #else
 #define TexturePackScreen_UploadFunc NULL
@@ -1766,8 +1767,10 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 
 static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom(path); }
 static void LoadLevelScreen_UploadFunc(void* s, void* w) {
-	Platform_LogConst("UPLOAD");
-	cc_result res = Window_OpenFileDialog(".cw", LoadLevelScreen_UploadCallback);
+	static const char* const filters[] = { 
+		".cw", ".dat", ".lvl", ".mine", ".fcm", NULL 
+	};
+	cc_result res = Window_OpenFileDialog(filters, LoadLevelScreen_UploadCallback);
 	if (res) Logger_SimpleWarn(res, "showing open file dialog");
 }
 

@@ -537,18 +537,38 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
-cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
-	cc_string path; char pathBuffer[MAX_PATH];
+cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	WCHAR str[MAX_PATH] = { 0 };
 	OPENFILENAMEW ofn   = { 0 };
+	WCHAR filter[MAX_PATH];
 	int i;
 
-	ofn.lStructSize     = sizeof(ofn);
-	ofn.hwndOwner       = win_handle;
-	ofn.lpstrFile       = str;
-	ofn.nMaxFile        = MAX_PATH;
-	ofn.lpstrFilter     = L"All\0*.*\0CW files\0*.cw\0"; // TODO rethink
-	ofn.nFilterIndex    = 1;
+	/* Filter tokens are \0 separated - e.g. "Maps (*.cw;*.dat)\0*.cw;*.dat\0 */
+	String_InitArray(path, pathBuffer);
+	String_AppendConst(&path, "All supported files (");
+	for (i = 0; filters[i]; i++) 
+	{
+		if (i) String_Append(&path, ';');
+		String_Format1(&path, "*%c", filters[i]);
+	}
+	String_Append(&path, ')');
+	String_Append(&path, '\0');
+
+	for (i = 0; filters[i]; i++)
+	{
+		if (i) String_Append(&path, ';');
+		String_Format1(&path, "*%c", filters[i]);
+	}
+	String_Append(&path, '\0');
+	Platform_EncodeUtf16(filter, &path);
+
+	ofn.lStructSize  = sizeof(ofn);
+	ofn.hwndOwner    = win_handle;
+	ofn.lpstrFile    = str;
+	ofn.nMaxFile     = MAX_PATH;
+	ofn.lpstrFilter  = filter;
+	ofn.nFilterIndex = 1;
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
 	if (!GetOpenFileNameW(&ofn))

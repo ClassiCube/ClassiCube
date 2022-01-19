@@ -272,7 +272,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
 }
 
-cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
 	return ERR_NOT_SUPPORTED;
 }
 
