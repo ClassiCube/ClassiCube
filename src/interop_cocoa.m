@@ -114,7 +114,7 @@ void Clipboard_SetText(const cc_string* value) {
 	NSString* str;
 
 	Platform_EncodeUtf8(raw, value);
-	str        = [[NSString alloc] initWithUTF8String:raw];
+	str        = [NSString stringWithUTF8String:raw];
 	pasteboard = [NSPasteboard generalPasteboard];
 
 	[pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
@@ -299,7 +299,7 @@ void Window_SetTitle(const cc_string* title) {
 	NSString* str;
 	Platform_EncodeUtf8(raw, title);
 
-	str = [[NSString alloc] initWithUTF8String:raw];
+	str = [NSString stringWithUTF8String:raw];
 	[winHandle setTitle:str];
 	[str release];
 }
@@ -508,7 +508,36 @@ void ShowDialogCore(const char* title, const char* msg) {
 }
 
 cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-	return ERR_NOT_SUPPORTED;
+	NSOpenPanel* dlg = [NSOpenPanel openPanel];
+	NSArray* files;
+	NSString* str;
+	const char* src;
+	int len, i;
+
+	NSMutableArray* types = [NSMutableArray array];
+	for (i = 0; filters[i]; i++)
+	{
+		NSString* filter = [NSString stringWithUTF8String:filters[i]];
+		filter = [filter substringFromIndex:1];
+		[types addObject:filter];
+	}
+	
+	[dlg setCanChooseFiles: YES];
+	[dlg setAllowedFileTypes:types];
+	if ([dlg runModal] != NSOKButton) return 0;
+
+	files = [dlg URLs];
+	if ([files count] < 1) return 0;
+
+	str = [[files objectAtIndex:0] path];
+	src = [str UTF8String];
+	len = String_Length(src);
+
+	cc_string path; char pathBuffer[NATIVE_STR_LEN];
+	String_InitArray(path, pathBuffer);
+	String_AppendUtf8(&path, src, len);
+	callback(&path);
+ 	return 0;
 }
 
 static struct Bitmap fb_bmp;
