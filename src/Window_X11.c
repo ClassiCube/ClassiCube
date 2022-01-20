@@ -10,6 +10,7 @@
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <X11/extensions/XInput2.h>
+#include <stdio.h>
 
 #ifdef X_HAVE_UTF8_STRING
 #define CC_BUILD_XIM
@@ -964,6 +965,46 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	X11_MessageBox(title, msg, &m);
 	X11MessageBox_Free(&m);
 	XFlush(m.dpy); /* flush so window disappears immediately */
+}
+
+cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+	cc_string path; char pathBuffer[1024];
+	char result[4096] = { 0 };
+	int len, i;
+	FILE* fp;
+
+	String_InitArray_NT(path, pathBuffer);
+	String_AppendConst(&path, "zenity --file-selection --file-filter='All supported files (");
+
+	for (i = 0; filters[i]; i++)
+	{
+		if (i) String_Append(&path, ',');
+		String_Format1(&path, "*%c", filters[i]);
+	}
+	String_AppendConst(&path, ") |");
+
+	for (i = 0; filters[i]; i++)
+	{
+		String_Format1(&path, " *%c", filters[i]);
+	}
+	String_AppendConst(&path, "'");
+	path.buffer[path.length] = '\0';
+
+	/* TODO this doesn't detect when Zenity doesn't exist */
+	fp = popen(path.buffer, "r");
+	if (!fp) return 0;
+
+	/* result is normally just one string */
+	while (fgets(result, sizeof(result), fp)) { }
+	len = String_Length(result);
+
+	if (len) {
+		String_InitArray(path, pathBuffer);
+		String_AppendUtf8(&path, result, len);
+		callback(&path);
+	}
+	pclose(fp);
+	return 0;
 }
 
 static GC fb_gc;

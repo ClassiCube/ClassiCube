@@ -545,11 +545,24 @@ EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) {
 }
 
 extern void interop_OpenFileDialog(const char* filter);
-cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+	cc_string path; char pathBuffer[NATIVE_STR_LEN];
+	char filter[NATIVE_STR_LEN];
+	int i;
+
+	/* Filter tokens are , separated - e.g. ".cw,.dat */
+	String_InitArray(path, pathBuffer);
+	for (i = 0; filters[i]; i++)
+	{
+		if (i) String_Append(&path, ',');
+		String_AppendConst(&path, filters[i]);
+	}
+	Platform_EncodeUtf8(filter, &path);
+
 	uploadCallback = callback;
 	/* Calls Window_OnFileUploaded on success */
 	interop_OpenFileDialog(filter);
-	return ERR_NOT_SUPPORTED;
+	return 0;
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
