@@ -66,10 +66,6 @@ static void Menu_SetButtons(struct ButtonWidget* btns, struct FontDesc* font, co
 	}
 }
 
-static void Menu_InitBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
-	ButtonWidget_Init(btn, Gui.ClassicMenu ? 400 : 200, onClick);
-}
-
 static void Menu_LayoutBack(struct ButtonWidget* btn) {
 	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
@@ -329,7 +325,7 @@ static int ListScreen_MouseScroll(void* screen, float delta) {
 
 static void ListScreen_Init(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	int i;
+	int i, width;
 	s->widgets    = list_widgets;
 	s->numWidgets = Array_Elems(list_widgets);
 	s->wheelAcc   = 0.0f;
@@ -339,13 +335,14 @@ static void ListScreen_Init(void* screen) {
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Init(&s->btns[i], 300, s->EntryClick);
 	}
-	ButtonWidget_Init(&s->upload, 140, s->UploadClick);
+
+	width = s->UploadClick && Input_TouchMode ? 140 : 400;
+	ButtonWidget_Init(&s->upload, width, s->UploadClick);
+	ButtonWidget_Init(&s->done,   width, s->DoneClick);
 
 	if (s->UploadClick) {
-		ButtonWidget_Init(&s->done, 140, s->DoneClick);
 		s->widgets[9] = (struct Widget*)&s->upload;
 	} else {
-		Menu_InitBack(&s->done, s->DoneClick);
 		s->widgets[9] = NULL;
 	}
 
@@ -456,7 +453,7 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 static void PauseScreenBase_Init(struct PauseScreen* s, int width) {
 	s->maxVertices = PAUSE_MAX_VERTICES;
 	Menu_InitButtons(s->btns, width, s->descs, s->descsCount);
-	Menu_InitBack(&s->back, PauseScreenBase_Game);
+	ButtonWidget_Init(&s->back, 400, PauseScreenBase_Game);
 	TextWidget_Init(&s->title);
 }
 
@@ -469,7 +466,7 @@ static struct Widget* pause_widgets[] = {
 	(struct Widget*)&PauseScreen.btns[0], (struct Widget*)&PauseScreen.btns[1],
 	(struct Widget*)&PauseScreen.btns[2], (struct Widget*)&PauseScreen.btns[3],
 	(struct Widget*)&PauseScreen.btns[4], (struct Widget*)&PauseScreen.btns[5],
-	(struct Widget*)&PauseScreen.quit,    (struct Widget*)&PauseScreen.back
+	(struct Widget*)&PauseScreen.back,    (struct Widget*)&PauseScreen.quit
 };
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
@@ -688,7 +685,7 @@ static void OptionsGroupScreen_Init(void* screen) {
 
 	Menu_InitButtons(s->btns, 300, optsGroup_btns, 8);
 	TextWidget_Init(&s->desc);
-	Menu_InitBack(&s->done, Menu_SwitchPause);
+	ButtonWidget_Init(&s->done, 400, Menu_SwitchPause);
 }
 
 static void OptionsGroupScreen_Free(void* screen) {
@@ -968,7 +965,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 	} else { text = String_Empty; }
 
 	TextInputWidget_Create(&s->input, 500, &text, &desc);
-	Menu_InitBack(&s->cancel, Menu_SwitchHotkeys);
+	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchHotkeys);
 	s->input.onscreenPlaceholder = "Hotkey text";
 }
 
@@ -1173,7 +1170,7 @@ static void GenLevelScreen_Init(void* screen) {
 	TextWidget_Init(&s->title);
 	ButtonWidget_Init(&s->flatgrass, 200, GenLevelScreen_Flatgrass);
 	ButtonWidget_Init(&s->vanilla,   200, GenLevelScreen_Notchy);
-	Menu_InitBack(&s->cancel, Menu_SwitchPause);
+	ButtonWidget_Init(&s->cancel,    400, Menu_SwitchPause);
 }
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
@@ -1255,7 +1252,7 @@ static void ClassicGenScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->btns[0], 400, ClassicGenScreen_Small);
 	ButtonWidget_Init(&s->btns[1], 400, ClassicGenScreen_Medium);
 	ButtonWidget_Init(&s->btns[2], 400, ClassicGenScreen_Huge);
-	Menu_InitBack(&s->cancel, Menu_SwitchPause);
+	ButtonWidget_Init(&s->cancel,  400, Menu_SwitchPause);
 }
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
@@ -1519,7 +1516,7 @@ static void SaveLevelScreen_Init(void* screen) {
 	TextWidget_Init(&s->mcEdit);
 #endif
 
-	Menu_InitBack(&s->cancel, Menu_SwitchPause);
+	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
 	TextInputWidget_Create(&s->input, 500, &String_Empty, &desc);
 	TextWidget_Init(&s->desc);
 	s->input.onscreenPlaceholder = "Map name";
@@ -1924,7 +1921,7 @@ static void KeyBindsScreen_Init(void* screen) {
 
 	TextWidget_Init(&s->title);
 	TextWidget_Init(&s->msg);
-	Menu_InitBack(&s->back, Gui.ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions); 
+	ButtonWidget_Init(&s->back, 400, Gui.ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions);
 
 	ButtonWidget_Init(&s->left,  40, s->leftPage);
 	ButtonWidget_Init(&s->right, 40, s->rightPage);
@@ -2370,7 +2367,7 @@ static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const str
 		s->widgets[i] = (struct Widget*)btn;
 	}
 	s->numButtons = count;
-	Menu_InitBack(&s->done, backClick);
+	ButtonWidget_Init(&s->done, 400, backClick);
 }
 
 static void MenuOptionsScreen_Bool(void* screen, void* widget) {
