@@ -3825,7 +3825,7 @@ static void TouchOnscreenScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touchOnscreen_widgets);
 	s->maxVertices = TOUCHONSCREEN_MAX_VERTICES;
 
-	Menu_InitBack(&s->back, TouchOnscreen_More);
+	ButtonWidget_Init(&s->back, 400, TouchOnscreen_More);
 	ButtonWidget_Init(&s->left,  40, TouchOnscreen_Left);
 	ButtonWidget_Init(&s->right, 40, TouchOnscreen_Right);
 	TouchOnscreen_SetPage(s, true);
@@ -4002,7 +4002,7 @@ static void TouchCtrlsScreen_Init(void* screen) {
 
 	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     4);
 	Menu_InitButtons(s->btns + 4, 400, touchCtrls_btns + 4, 1);
-	Menu_InitBack(&s->back, TouchCtrls_More);
+	ButtonWidget_Init(&s->back,   400, TouchCtrls_More);
 }
 
 static const struct ScreenVTABLE TouchCtrlsScreen_VTABLE = {
@@ -4096,7 +4096,7 @@ static void TouchMoreScreen_Init(void* screen) {
 
 	Menu_InitButtons(s->btns,     195, touchMore_btns,     4);
 	Menu_InitButtons(s->btns + 4, 400, touchMore_btns + 4, 2);
-	Menu_InitBack(&s->back, TouchMore_Game);
+	ButtonWidget_Init(&s->back,   400, TouchMore_Game);
 }
 
 static const struct ScreenVTABLE TouchMoreScreen_VTABLE = {

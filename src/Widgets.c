@@ -1724,8 +1724,8 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
-		/* Cover whole window width to match original classic behaviour */
-		if (Gui.ClassicChat) { width = max(width, WindowInfo.Width - x * 4); }
+		/* Cover whole window width to match Minecraft behaviour */
+		width      = max(width, WindowInfo.Width - x * 4);
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backColor);
 		y += w->lineHeight;
