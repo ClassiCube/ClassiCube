@@ -201,16 +201,18 @@ static struct Widget* list_widgets[10] = {
 static void ListScreen_Layout(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i;
+
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		Widget_SetLocation(&s->btns[i],
 			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	}
 
-	if (s->UploadClick) {
+	if (s->UploadClick && Input_TouchMode) {
 		Widget_SetLocation(&s->done,   ANCHOR_CENTRE_MIN, ANCHOR_MAX, -150, 25);
 		Widget_SetLocation(&s->upload, ANCHOR_CENTRE_MAX, ANCHOR_MAX, -150, 25);
 	} else {
-		Menu_LayoutBack(&s->done);
+		Widget_SetLocation(&s->done,   ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
+		Widget_SetLocation(&s->upload, ANCHOR_CENTRE, ANCHOR_MAX, 0, 70);
 	}
 
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
@@ -384,7 +386,11 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ListScreen_UpdatePage(s);
 
 	if (!s->UploadClick) return;
-	ButtonWidget_SetConst(&s->upload, Input_TouchMode ? "Upload" : "Load file...", &s->font);
+#ifdef CC_BUILD_WEB
+	ButtonWidget_SetConst(&s->upload, "Upload", &s->font);
+#else
+	ButtonWidget_SetConst(&s->upload, "Load file...", &s->font);
+#endif
 }
 
 static void ListScreen_Reload(struct ListScreen* s) {

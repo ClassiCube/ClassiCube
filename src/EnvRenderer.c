@@ -21,7 +21,6 @@
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
-#define ENV_SMALL_VERTICES 4096
 static float CalcBlendFactor(float x) {
 	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
 	double blend = -0.13 + 0.28 * (Math_Log(x) * 0.25);
