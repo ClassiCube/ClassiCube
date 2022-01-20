@@ -339,11 +339,10 @@ static void ListScreen_Init(void* screen) {
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Init(&s->btns[i], 300, s->EntryClick);
 	}
-	if (Game_ClassicMode) s->UploadClick = NULL;
+	ButtonWidget_Init(&s->upload, 140, s->UploadClick);
 
 	if (s->UploadClick) {
-		ButtonWidget_Init(&s->done,   140, s->DoneClick);
-		ButtonWidget_Init(&s->upload, 140, s->UploadClick);
+		ButtonWidget_Init(&s->done, 140, s->DoneClick);
 		s->widgets[9] = (struct Widget*)&s->upload;
 	} else {
 		Menu_InitBack(&s->done, s->DoneClick);
