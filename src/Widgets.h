@@ -62,6 +62,7 @@ struct ScrollbarWidget {
 };
 /* Resets state of the given scrollbar widget to default. */
 CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
+CC_NOINLINE void ScrollbarWidget_ClampTopRow(struct ScrollbarWidget* w);
 
 /* A row of blocks with a background. */
 struct HotbarWidget {
