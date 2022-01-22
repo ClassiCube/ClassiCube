@@ -1400,15 +1400,10 @@ void ChatScreen_SetChatlines(int lines) {
 static struct InventoryScreen {
 	Screen_Body
 	struct FontDesc font;
-	struct TableWidget table;
 	cc_bool releasedInv, deferredSelect;
 
 	/* Table fields */
 	int x, y, width, height;
-	cc_bool active;
-	cc_bool disabled;
-	cc_uint8 horAnchor, verAnchor;
-	int xOffset, yOffset;
 	Widget_LeftClick MenuClick;
 	int blocksCount, blocksPerRow;
 	int rowsTotal, rowsVisible;
@@ -1436,6 +1431,15 @@ static int Table_Height(struct InventoryScreen* s) {
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
+CC_NOINLINE void TableWidget_Create(struct InventoryScreen* s);
+/* Sets the selected block in the table to the given block. */
+/* Also adjusts scrollbar and moves cursor to be over the given block. */
+CC_NOINLINE void TableWidget_SetBlockTo(struct InventoryScreen* s, BlockID block);
+CC_NOINLINE void TableWidget_RecreateBlocks(struct InventoryScreen* s);
+CC_NOINLINE void TableWidget_OnInventoryChanged(struct InventoryScreen* s);
+CC_NOINLINE void TableWidget_MakeDescTex(struct InventoryScreen* s, BlockID block);
+CC_NOINLINE void TableWidget_Recreate(struct InventoryScreen* s);
+
 static cc_bool TableWidget_GetCoords(struct InventoryScreen* s, int i, int* cellX, int* cellY) {
 	int x, y;
 	x = i % s->blocksPerRow;
@@ -1457,6 +1461,43 @@ static void TableWidget_MoveCursorToSelected(struct InventoryScreen* s) {
 	Cursor_SetPosition(x, y);
 }
 
+
+static void TableWidget_UpdateDescTexPos(struct InventoryScreen* s) {
+	s->descTex.X = s->x + s->width / 2 - s->descTex.Width / 2;
+	s->descTex.Y = s->y - s->descTex.Height - 5;
+}
+
+static void TableWidget_Reposition(void* widget) {
+	struct InventoryScreen* s = (struct InventoryScreen*)widget;
+	float scale = s->scale;
+	int cellSize;
+
+	cellSize     = (int)(50 * Math_SqrtF(scale));
+	s->cellSizeX = Display_ScaleX(cellSize);
+	s->cellSizeY = Display_ScaleY(cellSize);
+
+	s->selBlockExpand = 25.0f * Math_SqrtF(scale);
+	s->rowsVisible    = min(8, s->rowsTotal); /* 8 rows max */
+
+	do {
+		s->width  = s->cellSizeX * s->blocksPerRow;
+		s->height = s->cellSizeY * s->rowsVisible;
+		s->x = Gui_CalcPos(ANCHOR_CENTRE, 0, s->width,  WindowInfo.Width);
+		s->y = Gui_CalcPos(ANCHOR_CENTRE, 0, s->height, WindowInfo.Height);
+		TableWidget_UpdateDescTexPos(s);
+
+		/* Does the table fit on screen? */
+		if (Game_ClassicMode || Table_Y(s) >= 0) break;
+		s->rowsVisible--;
+	} while (s->rowsVisible > 1);
+
+	s->scroll.x = Table_X(s) + Table_Width(s);
+	s->scroll.y = Table_Y(s);
+	s->scroll.height      = Table_Height(s);
+	s->scroll.rowsTotal   = s->rowsTotal;
+	s->scroll.rowsVisible = s->rowsVisible;
+}
+
 static void TableWidget_MakeBlockDesc(struct InventoryScreen* s, cc_string* desc, BlockID block) {
 	cc_string name;
 	int block_ = block;
@@ -1471,11 +1512,6 @@ static void TableWidget_MakeBlockDesc(struct InventoryScreen* s, cc_string* desc
 	if (!Blocks.CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
 	if (!Blocks.CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
 	String_Append(desc, ')');
-}
-
-static void TableWidget_UpdateDescTexPos(struct InventoryScreen* s) {
-	s->descTex.X = s->x + s->width / 2 - s->descTex.Width / 2;
-	s->descTex.Y = s->y - s->descTex.Height - 5;
 }
 
 static void TableWidget_RecreateDescTex(struct InventoryScreen* s) {
@@ -1527,7 +1563,7 @@ void TableWidget_RecreateBlocks(struct InventoryScreen* s) {
 	}
 
 	s->rowsTotal = Math_CeilDiv(s->blocksCount, s->blocksPerRow);
-	Widget_Layout(s);
+	TableWidget_Reposition(s);
 }
 
 static void TableWidget_Render(void* widget, double delta) {
@@ -1599,39 +1635,9 @@ static void TableWidget_Free(void* widget) {
 }
 
 void TableWidget_Recreate(struct InventoryScreen* s) {
-	Elem_Free(s);
+	TableWidget_Free(s);
 	Gfx_RecreateDynamicVb(&s->vb, VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(s);
-}
-
-static void TableWidget_Reposition(void* widget) {
-	struct InventoryScreen* s = (struct InventoryScreen*)widget;
-	float scale = s->scale;
-	int cellSize;
-
-	cellSize     = (int)(50 * Math_SqrtF(scale));
-	s->cellSizeX = Display_ScaleX(cellSize);
-	s->cellSizeY = Display_ScaleY(cellSize);
-
-	s->selBlockExpand = 25.0f * Math_SqrtF(scale);
-	s->rowsVisible    = min(8, s->rowsTotal); /* 8 rows max */
-
-	do {
-		s->width  = s->cellSizeX * s->blocksPerRow;
-		s->height = s->cellSizeY * s->rowsVisible;
-		Widget_CalcPosition(s);
-		TableWidget_UpdateDescTexPos(s);
-
-		/* Does the table fit on screen? */
-		if (Game_ClassicMode || Table_Y(s) >= 0) break;
-		s->rowsVisible--;
-	} while (s->rowsVisible > 1);
-
-	s->scroll.x = Table_X(s) + Table_Width(s);
-	s->scroll.y = Table_Y(s);
-	s->scroll.height      = Table_Height(s);
-	s->scroll.rowsTotal   = s->rowsTotal;
-	s->scroll.rowsVisible = s->rowsVisible;
 }
 
 static void TableWidget_ScrollRelative(struct InventoryScreen* s, int delta) {
@@ -1692,7 +1698,7 @@ static int TableWidget_MouseScroll(void* widget, float delta) {
 }
 
 static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
-	struct InventoryScreen* s = (struct TableWidget*)widget;
+	struct InventoryScreen* s = (struct InventoryScreen*)widget;
 	int cellSizeX, cellSizeY, maxHeight;
 	int i, cellX, cellY;
 
@@ -1720,7 +1726,7 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 }
 
 static int TableWidget_KeyDown(void* widget, int key) {
-	struct InventoryScreen* s = (struct TableWidget*)widget;
+	struct InventoryScreen* s = (struct InventoryScreen*)widget;
 	if (s->selectedIndex == -1) return false;
 
 	if (key == KEY_LEFT || key == KEY_KP4) {
@@ -1738,12 +1744,8 @@ static int TableWidget_KeyDown(void* widget, int key) {
 }
 
 void TableWidget_Create(struct InventoryScreen* s) {
-	Widget_Reset(s);
 	s->lastCreatedIndex = -1000;
 	ScrollbarWidget_Create(&s->scroll);
-	
-	s->horAnchor = ANCHOR_CENTRE;
-	s->verAnchor = ANCHOR_CENTRE;
 	s->lastX = -20; s->lastY = -20;
 	s->scale = 1;
 
@@ -1789,7 +1791,7 @@ static void InventoryScreen_OnBlockChanged(void* screen) {
 static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Font_Free(&s->font);
-	Elem_Free(&s->table);
+	TableWidget_Free(s);
 }
 
 static void InventoryScreen_ContextRecreated(void* screen) {
@@ -1830,13 +1832,13 @@ static void InventoryScreen_Init(void* screen) {
 static void InventoryScreen_Render(void* screen, double delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	if (s->deferredSelect) InventoryScreen_MoveToSelected(s);
-	Elem_Render(&s->table, delta);
+	TableWidget_Render(s, delta);
 }
 
 static void InventoryScreen_Layout(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	s->table.scale = Gui_GetInventoryScale();
-	Widget_Layout(&s->table);
+	s->scale = Gui_GetInventoryScale();
+	TableWidget_Reposition(s);
 }
 
 static void InventoryScreen_Free(void* screen) {
@@ -1847,14 +1849,13 @@ static void InventoryScreen_Free(void* screen) {
 
 static int InventoryScreen_KeyDown(void* screen, int key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct TableWidget* table = &s->table;
 
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
 		Gui_Remove((struct Screen*)s);
-	} else if (key == KEY_ENTER && table->selectedIndex != -1) {
-		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
+	} else if (key == KEY_ENTER && s->selectedIndex != -1) {
+		Inventory_SetSelectedBlock(s->blocks[s->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
-	} else if (Elem_HandlesKeyDown(table, key)) {
+	} else if (TableWidget_KeyDown(s, key)) {
 	} else {
 		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key);
 	}
@@ -1874,14 +1875,13 @@ static void InventoryScreen_KeyUp(void* screen, int key) {
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct TableWidget* table = &s->table;
 	cc_bool handled, hotbar;
 
-	if (table->scroll.draggingId == id) return TOUCH_TYPE_GUI;
+	if (s->scroll.draggingId == id) return TOUCH_TYPE_GUI;
 	if (HUDscreen_PointerDown(Gui_HUD, id, x, y)) return TOUCH_TYPE_GUI;
-	handled = Elem_HandlesPointerDown(table, id, x, y);
+	handled = TableWidget_PointerDown(s, id, x, y);
 
-	if (!handled || table->pendingClose) {
+	if (!handled || s->pendingClose) {
 		hotbar = Key_IsCtrlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_Remove((struct Screen*)s);
 	}
@@ -1890,12 +1890,12 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 
 static void InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Elem_OnPointerUp(&s->table, id, x, y);
+	TableWidget_PointerUp(s, id, x, y);
 }
 
 static int InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	return Elem_HandlesPointerMove(&s->table, id, x, y);
+	return TableWidget_PointerMove(s, id, x, y);
 }
 
 static int InventoryScreen_MouseScroll(void* screen, float delta) {
@@ -1903,7 +1903,7 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 
 	cc_bool hotbar = Key_IsAltPressed() || Key_IsCtrlPressed() || Key_IsShiftPressed();
 	if (hotbar) return false;
-	return Elem_HandlesMouseScroll(&s->table, delta);
+	return TableWidget_MouseScroll(s, delta);
 }
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {

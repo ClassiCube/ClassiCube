@@ -1,10 +1,8 @@
 #ifndef CC_WIDGETS_H
 #define CC_WIDGETS_H
 #include "Gui.h"
-#include "BlockID.h"
 #include "Constants.h"
 #include "Entity.h"
-#include "Inventory.h"
 /* Contains all 2D widget implementations.
    Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
@@ -81,36 +79,6 @@ struct HotbarWidget {
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
-
-/* A table of blocks. */
-struct TableWidget {
-	Widget_Body
-	int blocksCount, blocksPerRow;
-	int rowsTotal, rowsVisible;
-	int lastCreatedIndex;
-	struct FontDesc* font;
-	int selectedIndex, cellSizeX, cellSizeY;
-	float selBlockExpand;
-	GfxResourceID vb;
-	cc_bool pendingClose;
-	float scale;
-
-	BlockID blocks[BLOCK_COUNT];
-	struct ScrollbarWidget scroll;
-	struct Texture descTex;
-	int lastX, lastY, paddingX;
-	int paddingTopY, paddingMaxY;
-};
-
-CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
-/* Sets the selected block in the table to the given block. */
-/* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
-CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
-CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-CC_NOINLINE void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
-CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
-
 
 #define INPUTWIDGET_MAX_LINES 3
 #define INPUTWIDGET_LEN STRING_SIZE
