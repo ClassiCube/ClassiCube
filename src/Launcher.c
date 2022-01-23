@@ -37,6 +37,8 @@ cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
 cc_string Launcher_Username = String_FromArray(userBuffer);
 
 static cc_bool useBitmappedFont, hasBitmappedFont;
+static struct Bitmap dirtBmp, stoneBmp;
+#define TILESIZE 48
 
 static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
@@ -410,12 +412,25 @@ void Launcher_SaveTheme(void) {
 
 
 /*########################################################################################################################*
-*----------------------------------------------------------Background-----------------------------------------------------*
+*---------------------------------------------------------Texture pack----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
 	return
 		String_CaselessEqualsConst(path, "default.png") ||
 		String_CaselessEqualsConst(path, "terrain.png");
+}
+
+static void ExtractTerrainTiles(struct Bitmap* bmp) {
+	int tileSize = bmp->width / 16;
+	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
+	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
+
+	/* Precompute the scaled background */
+	Bitmap_Scale(&dirtBmp,  bmp, 2 * tileSize, 0, tileSize, tileSize);
+	Bitmap_Scale(&stoneBmp, bmp, 1 * tileSize, 0, tileSize, tileSize);
+
+	Gradient_Tint(&dirtBmp, 128, 64, 0, 0, TILESIZE, TILESIZE);
+	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
 }
 
 static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipState* s) {
@@ -436,13 +451,13 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 			Mem_Free(bmp.scan0);
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
-		if (LBackend_HasTextures()) return 0;
+		if (dirtBmp.scan0 != NULL) return 0;
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
 			Logger_SysWarn(res, "decoding terrain.png"); return res;
 		} else {
-			LBackend_LoadTextures(&bmp);
+			ExtractTerrainTiles(&bmp);
 		}
 	}
 	return 0;
@@ -479,8 +494,47 @@ void Launcher_TryLoadTexturePack(void) {
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!hasBitmappedFont || !LBackend_HasTextures()) ExtractTexturePack(&defZip);
+	if (!hasBitmappedFont || dirtBmp.scan0 == NULL) ExtractTexturePack(&defZip);
 	Launcher_UpdateLogoFont();
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Background-----------------------------------------------------*
+*#########################################################################################################################*/
+/* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap */
+CC_NOINLINE static void ClearTile(int x, int y, int width, int height, 
+								struct Bitmap* dst, struct Bitmap* src) {
+	BitmapCol* dstRow;
+	BitmapCol* srcRow;
+	int xx, yy;
+	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
+
+	for (yy = 0; yy < height; yy++) {
+		srcRow = Bitmap_GetRow(src, (y + yy) % TILESIZE);
+		dstRow = Bitmap_GetRow(dst, y + yy) + x;
+
+		for (xx = 0; xx < width; xx++) {
+			dstRow[xx] = srcRow[(x + xx) % TILESIZE];
+		}
+	}
+}
+
+void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height) {
+	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
+		ClearTile(x, y, width, height, bmp, &stoneBmp);
+	} else {
+		Gradient_Noise(bmp, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
+	}
+}
+
+void Launcher_DrawBackgroundAll(struct Bitmap* bmp) {
+	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
+		ClearTile(0,        0, bmp->width,               TILESIZE, bmp, &dirtBmp);
+		ClearTile(0, TILESIZE, bmp->width, bmp->height - TILESIZE, bmp, &stoneBmp);
+	} else {
+		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
+	}
 }
 
 void Launcher_UpdateLogoFont(void) {
@@ -491,7 +545,7 @@ void Launcher_UpdateLogoFont(void) {
 }
 
 void Launcher_ResetArea(int x, int y, int width, int height) {
-	LBackend_ResetArea(x, y, width, height);
+	Launcher_DrawBackground(&Launcher_Framebuffer, x, y, width, height);
 	Launcher_MarkDirty(x, y, width, height);
 }
 

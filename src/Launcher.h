@@ -56,6 +56,11 @@ void Launcher_SaveTheme(void);
 void Launcher_UpdateLogoFont(void);
 /* Attempts to load font and terrain from texture pack. */
 void Launcher_TryLoadTexturePack(void);
+/* Fills the given region of the given bitmap with the default background */
+void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height);
+/* Fills the entire contents of the given bitmap with the default background */
+void Launcher_DrawBackgroundAll(struct Bitmap* bmp);
+
 /* Redraws all pixels with default background. */
 /* NOTE: Also draws titlebar at top, if current screen permits it. */
 void Launcher_ResetPixels(void);

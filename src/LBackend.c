@@ -18,63 +18,6 @@
 #include "Utils.h"
 #include "PackedCol.h"
 
-static struct Bitmap dirtBmp, stoneBmp;
-#define TILESIZE 48
-
-/*########################################################################################################################*
-*--------------------------------------------------------Launcher---------------------------------------------------------*
-*#########################################################################################################################*/
-cc_bool LBackend_HasTextures(void) { return dirtBmp.scan0 != NULL; }
-
-void LBackend_LoadTextures(struct Bitmap* bmp) {
-	int tileSize = bmp->width / 16;
-	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
-	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
-
-	/* Precompute the scaled background */
-	Bitmap_Scale(&dirtBmp,  bmp, 2 * tileSize, 0, tileSize, tileSize);
-	Bitmap_Scale(&stoneBmp, bmp, 1 * tileSize, 0, tileSize, tileSize);
-
-	Gradient_Tint(&dirtBmp, 128, 64, 0, 0, TILESIZE, TILESIZE);
-	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
-}
-
-/* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap */
-CC_NOINLINE static void ClearTile(int x, int y, int width, int height, struct Bitmap* src) {
-	struct Bitmap* dst = &Launcher_Framebuffer;
-	BitmapCol* dstRow;
-	BitmapCol* srcRow;
-	int xx, yy;
-	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
-
-	for (yy = 0; yy < height; yy++) {
-		srcRow = Bitmap_GetRow(src, (y + yy) % TILESIZE);
-		dstRow = Bitmap_GetRow(dst, y + yy) + x;
-
-		for (xx = 0; xx < width; xx++) {
-			dstRow[xx] = srcRow[(x + xx) % TILESIZE];
-		}
-	}
-}
-
-void LBackend_ResetArea(int x, int y, int width, int height) {
-	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
-		ClearTile(x, y, width, height, &stoneBmp);
-	} else {
-		Gradient_Noise(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
-	}
-}
-
-void LBackend_ResetPixels(void) {
-	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
-		ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
-		ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
-	} else {
-		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
-	}
-}
-
-
 /*########################################################################################################################*
 *---------------------------------------------------------LWidget---------------------------------------------------------*
 *#########################################################################################################################*/
