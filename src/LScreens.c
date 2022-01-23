@@ -177,13 +177,13 @@ static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
 	int x;
 
 	if (!s->title_fore) {
-		LBackend_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
+		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
 		return;
 	}
 	title_fore = String_FromReadonly(s->title_fore);
 	title_back = String_FromReadonly(s->title_back);
 
-	LBackend_ResetPixels();
+	Launcher_DrawBackgroundAll(bmp);
 	DrawTextArgs_Make(&args, &title_fore, &Launcher_LogoFont, false);
 	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
