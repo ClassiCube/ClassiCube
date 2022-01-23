@@ -339,10 +339,10 @@ void ChooseModeScreen_SetActive(cc_bool firstTime) {
 static struct ColoursScreen {
 	LScreen_Layout
 	struct LButton btnBack;
-	struct LLabel lblNames[5], lblRGB[3], lblClassic;
+	struct LLabel lblNames[5], lblRGB[3];
 	struct LInput iptColours[5 * 3];
 	struct LCheckbox cbClassic;
-	struct LWidget* _widgets[26];
+	struct LWidget* _widgets[25];
 	float colourAcc;
 } ColoursScreen_Instance;
 
@@ -470,8 +470,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_, &s->lblRGB[2], "Blue");
 	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
-	LLabel_Init(s_,    &s->lblClassic, "Classic style");
-	LCheckbox_Init(s_, &s->cbClassic);
+	LCheckbox_Init(s_, &s->cbClassic, "Classic style");
 	s->cbClassic.OnClick = ColoursScreen_ToggleBG;
 	s->btnBack.OnClick   = SwitchToThemes;
 }
@@ -503,8 +502,7 @@ static void ColoursScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->lblRGB[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, -130);
 	LWidget_SetLocation(&s->lblRGB[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, -130);
 
-	LWidget_SetLocation(&s->cbClassic,  ANCHOR_CENTRE, ANCHOR_CENTRE, -75, 130);
-	LWidget_SetLocation(&s->lblClassic, ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 130);
+	LWidget_SetLocation(&s->cbClassic,  ANCHOR_CENTRE, ANCHOR_CENTRE, -16, 130);
 	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 170);
 }
 
@@ -1095,13 +1093,12 @@ static void CheckResourcesScreen_ResetArea(int x, int y, int width, int height) 
 
 static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
 	int x, y, width, height;
-	Drawer2D_Clear(bmp, RESOURCES_BACK_COLOR,
-					0, 0, WindowInfo.Width, WindowInfo.Height);
+	Drawer2D_Clear(bmp, RESOURCES_BACK_COLOR, 0, 0, bmp->width, bmp->height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  WindowInfo.Width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, WindowInfo.Height);
+	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  bmp->width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, bmp->height);
 	Gradient_Noise(bmp, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
@@ -1428,10 +1425,9 @@ static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnUpdates, btnMode, btnColours, btnBack;
 	struct LLabel  lblUpdates, lblMode, lblColours;
-	struct LLabel lblExtra;
 	struct LCheckbox cbExtra;
 	struct LLine sep;
-	struct LWidget* _widgets[10];
+	struct LWidget* _widgets[9];
 } SettingsScreen_Instance;
 
 #if defined CC_BUILD_MOBILE
@@ -1466,12 +1462,10 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_,  &s->lblColours, "&eChange how the launcher looks");
 
 #if defined CC_BUILD_MOBILE
-	LLabel_Init(s_,    &s->lblExtra, "Force landscape");
-	LCheckbox_Init(s_, &s->cbExtra);
+	LCheckbox_Init(s_, &s->cbExtra, "Force landscape");
 	s->cbExtra.OnClick = SettingsScreen_LockOrientation;
 #else
-	LLabel_Init(s_,    &s->lblExtra, "Close this after game starts");
-	LCheckbox_Init(s_, &s->cbExtra);
+	LCheckbox_Init(s_, &s->cbExtra, "Close this after game starts");
 	s->cbExtra.OnClick = SettingsScreen_AutoClose;
 #endif
 
@@ -1508,11 +1502,9 @@ static void SettingsScreen_Layout(struct LScreen* s_) {
 
 	LWidget_SetLocation(&s->sep,      ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 15);
 #if defined CC_BUILD_MOBILE
-	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 44);
-	LWidget_SetLocation(&s->lblExtra, ANCHOR_CENTRE, ANCHOR_CENTRE,  -84, 44);
+	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE, -100, 44);
 #else
-	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 44);
-	LWidget_SetLocation(&s->lblExtra, ANCHOR_CENTRE, ANCHOR_CENTRE,  -42, 44);
+	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE,  -58, 44);
 #endif
 
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);

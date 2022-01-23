@@ -12,6 +12,9 @@ struct LLabel;
 struct LLine;
 struct LSlider;
 
+#define CB_SIZE  24
+#define CB_OFFSET 8
+
 /* Whether tiles have been extracted from a terrain atlas */
 cc_bool LBackend_HasTextures(void);
 /* Extracts tiles from the given terrain atlas bitmap */

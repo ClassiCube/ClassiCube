@@ -132,12 +132,19 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w) {
+void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w, const char* text) {
+	struct DrawTextArgs args;
 	w->VTABLE = &lcheckbox_VTABLE;
+	w->font   = &Launcher_TextFont;
 	w->tabSelectable = true;
-	w->width  = Display_ScaleX(24);
-	w->height = Display_ScaleY(24);
+
+	String_InitArray(w->text, w->_textBuffer);
+	String_AppendConst(&w->text, text);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
+
+	DrawTextArgs_Make(&args, &w->text, w->font, true);
+	w->width  = Display_ScaleX(CB_SIZE + CB_OFFSET) + Drawer2D_TextWidth(&args);
+	w->height = Display_ScaleY(CB_SIZE);
 }
 
 

@@ -248,20 +248,29 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 	PackedCol boxTop    = PackedCol_Make(255, 255, 255, 255);
 	PackedCol boxBottom = PackedCol_Make(240, 240, 240, 255);
 	PackedCol black = PackedCol_Make(0, 0, 0, 255);
-	int height      = w->height / 2;
+	struct DrawTextArgs args;
+	int x, y, width, height;
+
+	width  = Display_ScaleX(CB_SIZE);
+	height = Display_ScaleY(CB_SIZE);
 
 	Gradient_Vertical(&Launcher_Framebuffer, boxTop, boxBottom,
-						w->x, w->y,          w->width, height);
+						w->x, w->y,              width, height / 2);
 	Gradient_Vertical(&Launcher_Framebuffer, boxBottom, boxTop,
-						w->x, w->y + height, w->width, height);
+						w->x, w->y + height / 2, width, height / 2);
 
 	if (w->value) {
 		const int size = 12;
-		int x = w->x + w->width  / 2 - size / 2;
-		int y = w->y + w->height / 2 - size / 2;
+		x = w->x + width  / 2 - size / 2;
+		y = w->y + height / 2 - size / 2;
 		DrawIndexed(size, x, y, &Launcher_Framebuffer);
 	}
-	DrawBoxBounds(black, w->x, w->y, w->width, w->height);
+	DrawBoxBounds(black, w->x, w->y, width, height);
+
+	DrawTextArgs_Make(&args, &w->text, w->font, true);
+	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
+	y = w->y + (height - Drawer2D_TextHeight(&args)) / 2;
+	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, y);
 }
 
 
