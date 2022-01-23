@@ -496,7 +496,7 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 }
 
 void Launcher_Redraw(void) {
-	activeScreen->DrawBackground(activeScreen);
+	activeScreen->DrawBackground(activeScreen, &Launcher_Framebuffer);
 	activeScreen->Draw(activeScreen);
 	Launcher_MarkAllDirty();
 }

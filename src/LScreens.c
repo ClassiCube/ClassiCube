@@ -171,13 +171,13 @@ static void LScreen_MouseMove(struct LScreen* s, int idx) {
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
-static void LScreen_DrawBackground(struct LScreen* s) {
+static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
 	cc_string title_fore, title_back;
 	struct DrawTextArgs args;
 	int x;
 
 	if (!s->title_fore) {
-		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
+		LBackend_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 		return;
 	}
 	title_fore = String_FromReadonly(s->title_fore);
@@ -188,12 +188,9 @@ static void LScreen_DrawBackground(struct LScreen* s) {
 	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.text = title_back;
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
-		x + Display_ScaleX(4), Display_ScaleY(4));
-
+	Drawer2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
 	args.text = title_fore;
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
-		x,                     0);
+	Drawer2D_DrawText(bmp, &args, x,                     0);
 }
 
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
@@ -1088,22 +1085,24 @@ static void CheckResourcesScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnNo,  ANCHOR_CENTRE, ANCHOR_CENTRE,  70, 45);
 }
 
-CC_NOINLINE static void CheckResourcesScreen_ResetArea(int x, int y, int width, int height) {
-	BitmapCol boxColor = BitmapCol_Make(120, 85, 151, 255);
-	Gradient_Noise(&Launcher_Framebuffer, boxColor, 4, x, y, width, height);
+#define RESOURCES_BACK_COLOR BitmapCol_Make( 12,  12,  12, 255)
+#define RESOURCES_FORE_COLOR BitmapCol_Make(120,  85, 151, 255)
+
+static void CheckResourcesScreen_ResetArea(int x, int y, int width, int height) {
+	Gradient_Noise(&Launcher_Framebuffer, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 	Launcher_MarkDirty(x, y, width, height);
 }
 
-CC_NOINLINE static void CheckResourcesScreen_DrawBackground(struct LScreen* s) {
+static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
 	int x, y, width, height;
-	Drawer2D_Clear(&Launcher_Framebuffer, BitmapCol_Make(12, 12, 12, 255),
+	Drawer2D_Clear(bmp, RESOURCES_BACK_COLOR,
 					0, 0, WindowInfo.Width, WindowInfo.Height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
 	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  WindowInfo.Width);
 	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, WindowInfo.Height);
-	CheckResourcesScreen_ResetArea(x, y, width, height);
+	Gradient_Noise(bmp, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
 void CheckResourcesScreen_SetActive(void) {
