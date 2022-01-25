@@ -93,9 +93,9 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 	IDXGISwapChain_Release(swapchain);
 	ID3D11DeviceContext_Release(context);
+
 #ifndef _DEBUG
 	ID3D11Device_Release(device);
-
 #else
 	ULONG refCount = ID3D11Device_Release(device);
 	if (refCount == 0) return; // device destroyed with no issues
@@ -112,6 +112,9 @@ void Gfx_Free(void) {
 
 static cc_bool inited;
 cc_bool Gfx_TryRestoreContext(void) {
+	// https://docs.microsoft.com/en-us/windows/uwp/gaming/handling-device-lost-scenarios
+	Gfx_Free();
+	Gfx_Create();
 	return true;
 }
 
@@ -1029,9 +1032,13 @@ void Gfx_EndFrame(void) {
 	if (hr == DXGI_STATUS_OCCLUDED) {
 		TickReducedPerformance(); return;
 	}
-
 	EndReducedPerformance();
-	if (hr) Logger_Abort2(hr, "Failed to swap buffers");
+
+	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
+		Gfx_LoseContext(" (Direct3D11 device lost)");
+	} else if (hr) {
+		Logger_Abort2(hr, "Failed to swap buffers");
+	}
 	if (gfx_minFrameMs) LimitFPS();
 }
 
@@ -1097,6 +1104,6 @@ static void FreePipeline(void) {
 	//  https://stackoverflow.com/questions/44155133/directx11-com-object-with-0-references-not-released
 	//  https://stackoverflow.com/questions/20032816/can-someone-explain-why-i-still-have-live-objects-after-releasing-the-pointers-t
 	//  https://www.gamedev.net/forums/topic/659651-dxgi-leak-warnings/5172345/
-	//ID3D11DeviceContext_Flush(context);
+	ID3D11DeviceContext_Flush(context);
 }
 #endif

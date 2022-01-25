@@ -4,11 +4,12 @@
 /* Implements screens/menus for the launcher.
 	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
+struct Bitmap;
 struct LWidget;
 struct LScreen;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
-typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
+typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 
 #define LScreen_Layout \
 	LScreen_Func Init;   /* Initialises widgets and other data. Only called once. */ \
