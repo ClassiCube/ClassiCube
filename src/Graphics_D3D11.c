@@ -27,6 +27,8 @@ static const GUID guid_IXDGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0
 
 static int gfx_format = -1, depthBits; // TODO implement depthBits?? for ZNear calc
 static UINT gfx_stride;
+static GfxResourceID white_square;
+
 static ID3D11Device* device;
 static ID3D11DeviceContext* context;
 static IDXGIDevice1* dxgi_device;
@@ -124,6 +126,7 @@ static void Gfx_FreeState(void) {
 
 	FreeDefaultResources();
 	FreePipeline();
+	Gfx_DeleteTexture(&white_square);
 }
 
 static void Gfx_RestoreState(void) {
@@ -133,6 +136,12 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	gfx_format = -1;
 	InitPipeline();
+
+	/* 1x1 dummy white texture */
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOL_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }
 
 
@@ -768,6 +777,9 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	/* defasult texture is otherwise transparent black */
+	if (!texId) texId = white_square;
+
 	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)texId;
 	ID3D11DeviceContext_PSSetShaderResources(context, 0, 1, &view);
 }
