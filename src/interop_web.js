@@ -253,11 +253,13 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //--------------------------------------------------------Filesystem------------------------------------------------------
 //########################################################################################################################
+  interop_InitFilesystem__deps: ['interop_SaveNode'],
   interop_InitFilesystem: function(buffer) {
     if (!window.cc_idbErr) return;
     var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
     ccall('Platform_LogError', 'void', ['string'], [msg]);
   },
+  interop_LoadIndexedDB__deps: ['IDBFS_loadFS'],
   interop_LoadIndexedDB: function() {
     try {
       FS.lookupPath('/classicube');
@@ -267,13 +269,12 @@ mergeInto(LibraryManager.library, {
     
     addRunDependency('load-idb');
     FS.mkdir('/classicube');
-    FS.mount(IDBFS, {}, '/classicube');
-    FS.syncfs(true, function(err) { 
+    _IDBFS_loadFS(function(err) { 
       if (err) window.cc_idbErr = err;
       removeRunDependency('load-idb');
     });
   },
-  interop_InitFilesystem__deps: ['interop_SaveNode'],
+  interop_SaveNode__deps: ['IDBFS_getDB', 'IDBFS_storeRemoteEntry'],
   interop_SaveNode: function(path) {
     var callback = function(err) { 
       if (!err) return;
@@ -301,14 +302,14 @@ mergeInto(LibraryManager.library, {
       return callback(err);
     }
     
-    IDBFS.getDB('/classicube', function(err, db) {
+    _IDBFS_getDB(function(err, db) {
       if (err) return callback(err);
       var transaction, store;
       
       // can still throw errors here
       try {
-        transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
-        store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+        transaction = db.transaction([IDBFS_DB_STORE_NAME], 'readwrite');
+        store = transaction.objectStore(IDBFS_DB_STORE_NAME);
       } catch (err) {
         return callback(err);
       }
@@ -318,15 +319,169 @@ mergeInto(LibraryManager.library, {
         e.preventDefault();
       };
       
-      var req = store.put(entry, path);
-      req.onsuccess = function()  { callback(null); };
-      req.onerror   = function(e) {
-        callback(this.error);
-        e.preventDefault();
-      };
+      _IDBFS_storeRemoteEntry(store, path, entry, callback);
     });
   },
+//########################################################################################################################
+//--------------------------------------------------------IndexedDB-------------------------------------------------------
+//########################################################################################################################
+  IDBFS_loadFS__deps: ['IDBFS_getRemoteSet', 'IDBFS_reconcile'],
+  IDBFS_loadFS: function(callback) {
+    _IDBFS_getRemoteSet(function(err, remote) {
+      if (err) return callback(err);
+      _IDBFS_reconcile(remote, callback);
+    });
+  },
+  IDBFS_getDB: function(callback) {
+    var db = window.IDBFS_db;
+    if (db) return callback(null, db);
+    
+    IDBFS_DB_VERSION    = 21;
+    IDBFS_DB_STORE_NAME = "FILE_DATA";
 
+    var idb = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    if (!idb) return callback("IndexedDB unsupported");
+
+    var req;
+    try {
+      req = idb.open('/classicube', IDBFS_DB_VERSION);
+    } catch (e) {
+      return callback(e);
+    }
+    if (!req) return callback("Unable to connect to IndexedDB");
+
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      var transaction = e.target.transaction;  
+      var fileStore;
+
+      if (db.objectStoreNames.contains(IDBFS_DB_STORE_NAME)) {
+        fileStore = transaction.objectStore(IDBFS_DB_STORE_NAME);
+      } else {
+        fileStore = db.createObjectStore(IDBFS_DB_STORE_NAME);
+      }
+
+      if (!fileStore.indexNames.contains('timestamp')) {
+        fileStore.createIndex('timestamp', 'timestamp', { unique: false });
+      }
+    };
+    req.onsuccess = function() {
+      db = req.result;
+      window.IDBFS_db = db;
+      callback(null, db);
+    };
+    req.onerror = function(e) {
+      callback(this.error);
+      e.preventDefault();
+    };
+  },
+  IDBFS_getRemoteSet__deps: ['IDBFS_getDB'],
+  IDBFS_getRemoteSet: function(callback) {
+    var entries = {};
+
+    _IDBFS_getDB(function(err, db) {
+      if (err) return callback(err);
+
+      try {
+        var transaction = db.transaction([IDBFS_DB_STORE_NAME], 'readonly');
+        transaction.onerror = function(e) {
+          callback(this.error);
+          e.preventDefault();
+        };
+
+        var store = transaction.objectStore(IDBFS_DB_STORE_NAME);
+        var index = store.index('timestamp');
+
+        index.openKeyCursor().onsuccess = function(event) {
+          var cursor = event.target.result;
+
+          if (!cursor) {
+            return callback(null, { type: 'remote', db: db, entries: entries });
+          }
+
+          entries[cursor.primaryKey] = { timestamp: cursor.key };
+          cursor.continue();
+        };
+      } catch (e) {
+        return callback(e);
+      }
+    });
+  },
+  IDBFS_loadRemoteEntry: function(store, path, callback) {
+    var req = store.get(path);
+    req.onsuccess = function(event) { callback(null, event.target.result); };
+    req.onerror = function(e) {
+      callback(this.error);
+      e.preventDefault();
+    };
+  },
+  IDBFS_storeRemoteEntry: function(store, path, entry, callback) {
+    var req = store.put(entry, path);
+    req.onsuccess = function() { callback(null); };
+    req.onerror = function(e) {
+      callback(this.error);
+      e.preventDefault();
+    };
+  },
+  IDBFS_storeLocalEntry: function(path, entry, callback) {
+    try {
+      if (FS.isDir(entry.mode)) {
+        FS.mkdir(path, entry.mode);
+      } else {
+        FS.writeFile(path, entry.contents, { canOwn: true });
+      }
+  
+      FS.chmod(path, entry.mode);
+      FS.utime(path, entry.timestamp, entry.timestamp);
+    } catch (e) {
+      return callback(e);
+    }
+  
+    callback(null);
+  },
+  IDBFS_reconcile__deps: ['IDBFS_loadRemoteEntry', 'IDBFS_storeLocalEntry'],
+  IDBFS_reconcile: function(src, callback) {
+    var total  = 0;
+    var create = [];
+
+    Object.keys(src.entries).forEach(function (key) {
+      create.push(key);
+      total++;
+    });
+    if (!total) return callback(null);
+
+    var errored = false;
+    var completed = 0;
+    var transaction = src.db.transaction([IDBFS_DB_STORE_NAME], 'readwrite');
+    var store = transaction.objectStore(IDBFS_DB_STORE_NAME);
+
+    function done(err) {
+      if (err) {
+        if (!done.errored) {
+          done.errored = true;
+          return callback(err);
+        }
+        return;
+      }
+      if (++completed >= total) {
+        return callback(null);
+      }
+    };
+
+    transaction.onerror = function(e) {
+      done(this.error);
+      e.preventDefault();
+    };
+
+    // sort paths in ascending order so directory entries are created
+    // before the files inside them
+    create.sort().forEach(function (path) {
+      _IDBFS_loadRemoteEntry(store, path, function (err, entry) {
+        if (err) return done(err);
+        _IDBFS_storeLocalEntry(path, entry, done);
+      });
+    });
+  },
 
 //########################################################################################################################
 //---------------------------------------------------------Sockets--------------------------------------------------------
