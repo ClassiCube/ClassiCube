@@ -211,18 +211,29 @@ void Resources_CheckExistence(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Zip writer------------------------------------------------------*
 *#########################################################################################################################*/
+static void GetCurrentZipDate(int* modTime, int* modDate) {
+	struct DateTime now;
+	DateTime_CurrentLocal(&now);
+
+	*modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
+	*modDate = (now.day) | (now.month << 5) | ((now.year - 1980) << 9);
+}
+
 static cc_result ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* e) {
 	int filenameLen = String_Length(e->filename);
 	cc_uint8 header[30 + STRING_SIZE];
 	cc_result res;
+	int modTime, modDate;
+
+	GetCurrentZipDate(&modTime, &modDate);
 	if ((res = s->Position(s, &e->offset))) return res;
 
 	Stream_SetU32_LE(header + 0,  0x04034b50);  /* signature */
 	Stream_SetU16_LE(header + 4,  20);          /* version needed */
 	Stream_SetU16_LE(header + 6,  0);           /* bitflags */
 	Stream_SetU16_LE(header + 8,  0);           /* compression method */
-	Stream_SetU16_LE(header + 10, 0);           /* last modified */
-	Stream_SetU16_LE(header + 12, 0);           /* last modified */
+	Stream_SetU16_LE(header + 10, modTime);     /* last modified */
+	Stream_SetU16_LE(header + 12, modDate);     /* last modified */
 	
 	Stream_SetU32_LE(header + 14, e->crc32);    /* CRC32 */
 	Stream_SetU32_LE(header + 18, e->size);     /* Compressed size */
@@ -238,12 +249,8 @@ static cc_result ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* 
 static cc_result ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* e) {
 	int filenameLen = String_Length(e->filename);
 	cc_uint8 header[46 + STRING_SIZE];
-	struct DateTime now;
 	int modTime, modDate;
-
-	DateTime_CurrentLocal(&now);
-	modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
-	modDate = (now.day) | (now.month << 5) | ((now.year - 1980) << 9);
+	GetCurrentZipDate(&modTime, &modDate);
 
 	Stream_SetU32_LE(header + 0,  0x02014b50);  /* signature */
 	Stream_SetU16_LE(header + 4,  20);          /* version */
