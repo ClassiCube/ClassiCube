@@ -368,6 +368,11 @@ mergeInto(LibraryManager.library, {
     req.onsuccess = function() {
       db = req.result;
       window.IDBFS_db = db;
+      // browser will sometimes close connection behind the scenes
+      db.onclose = function(ev) { 
+        console.log('IndexedDB connection closed unexpectedly!');
+        window.IDBFS_db = null; 
+      }
       callback(null, db);
     };
     req.onerror = function(e) {
