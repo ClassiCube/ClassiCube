@@ -523,8 +523,11 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	}
 	
 	[dlg setCanChooseFiles: YES];
-	[dlg setAllowedFileTypes:types];
-	if ([dlg runModal] != NSOKButton) return 0;
+	if ([dlg runModalForTypes:types] != NSOKButton) return 0;
+	// unfortunately below code doesn't work when linked against SDK < 10.6
+	//   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
+	// [dlg setAllowedFileTypes:types];
+	// if ([dlg runModal] != NSOKButton) return 0;
 
 	files = [dlg URLs];
 	if ([files count] < 1) return 0;
