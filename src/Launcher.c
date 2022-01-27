@@ -366,6 +366,14 @@ const struct LauncherTheme Launcher_ClassicTheme = {
 	BitmapCol_Make(111, 111, 111, 255), /* button foreground */
 	BitmapCol_Make(168, 168, 168, 255), /* button highlight */
 };
+const struct LauncherTheme Launcher_NordicTheme = {
+	false,
+	BitmapCol_Make( 46,  52,  64, 255), /* background */
+	BitmapCol_Make( 59,  66,  82, 255), /* button border */
+	BitmapCol_Make( 66,  74,  90, 255), /* active button */
+	BitmapCol_Make( 59,  66,  82, 255), /* button foreground */
+	BitmapCol_Make( 76,  86, 106, 255), /* button highlight */
+};
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	cc_uint8 rgb[3];

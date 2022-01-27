@@ -1528,8 +1528,9 @@ void SettingsScreen_SetActive(void) {
 *#########################################################################################################################*/
 static struct ThemesScreen {
 	LScreen_Layout
-	struct LButton btnModern, btnClassic, btnCustom, btnBack;
-	struct LWidget* _widgets[4];
+	struct LButton btnModern, btnClassic, btnNordic;
+	struct LButton btnCustom, btnBack;
+	struct LWidget* _widgets[5];
 } ThemesScreen_Instance;
 
 static void ThemesScreen_Set(const struct LauncherTheme* theme) {
@@ -1544,6 +1545,9 @@ static void ThemesScreen_Modern(void* w, int idx) {
 static void ThemesScreen_Classic(void* w, int idx) {
 	ThemesScreen_Set(&Launcher_ClassicTheme);
 }
+static void ThemesScreen_Nordic(void* w, int idx) {
+	ThemesScreen_Set(&Launcher_NordicTheme);
+}
 
 static void ThemesScreen_Init(struct LScreen* s_) {
 	struct ThemesScreen* s = (struct ThemesScreen*)s_;
@@ -1551,11 +1555,13 @@ static void ThemesScreen_Init(struct LScreen* s_) {
 
 	LButton_Init(s_, &s->btnModern,  200, 35, "Modern");
 	LButton_Init(s_, &s->btnClassic, 200, 35, "Classic");
+	LButton_Init(s_, &s->btnNordic,  200, 35, "Nordic");
 	LButton_Init(s_, &s->btnCustom,  200, 35, "Custom");
 	LButton_Init(s_, &s->btnBack,     80, 35, "Back");
 
 	s->btnModern.OnClick  = ThemesScreen_Modern;
 	s->btnClassic.OnClick = ThemesScreen_Classic;
+	s->btnNordic.OnClick  = ThemesScreen_Nordic;
 	s->btnCustom.OnClick  = SwitchToColours;
 	s->btnBack.OnClick    = SwitchToSettings;
 }
@@ -1564,6 +1570,7 @@ static void ThemesScreen_Layout(struct LScreen* s_) {
 	struct ThemesScreen* s = (struct ThemesScreen*)s_;
 	LWidget_SetLocation(&s->btnModern,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
 	LWidget_SetLocation(&s->btnClassic, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70);
+	LWidget_SetLocation(&s->btnNordic,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -20);
 	LWidget_SetLocation(&s->btnCustom,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 120);
 	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }

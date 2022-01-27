@@ -45,6 +45,8 @@ extern struct LauncherTheme Launcher_Theme;
 extern const struct LauncherTheme Launcher_ModernTheme;
 /* Minecraft Classic theme */
 extern const struct LauncherTheme Launcher_ClassicTheme;
+/* Custom Nordic style theme */
+extern const struct LauncherTheme Launcher_NordicTheme;
 
 /* Loads theme from options. */
 void Launcher_LoadTheme(void);

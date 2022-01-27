@@ -88,7 +88,7 @@ static void LButton_Draw(void* widget) {
 }
 
 static void LButton_Hover(void* w, int idx, cc_bool wasOver) {
-	/* only need to redraw when changing from unhovered to hovered */	
+	/* only need to redraw when changing from unhovered to hovered */
 	if (!wasOver) LWidget_Draw(w); 
 }
 
