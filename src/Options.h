@@ -18,7 +18,6 @@
 #define OPT_SENSITIVITY "mousesensitivity"
 #define OPT_FPS_LIMIT "fpslimit"
 #define OPT_DEFAULT_TEX_PACK "defaulttexpack"
-#define OPT_AUTO_CLOSE_LAUNCHER "autocloselauncher"
 #define OPT_VIEW_BOBBING "viewbobbing"
 #define OPT_ENTITY_SHADOW "entityshadow"
 #define OPT_RENDER_TYPE "normal"
@@ -78,6 +77,9 @@
 #define LOPT_SESSION  "launcher-session"
 #define LOPT_USERNAME "launcher-cc-username"
 #define LOPT_PASSWORD "launcher-cc-password"
+
+#define LOPT_AUTO_CLOSE "autocloselauncher"
+#define LOPT_SHOW_EMPTY "launcher-show-empty"
 
 #define ROPT_SERVER "launcher-server"
 #define ROPT_USER   "launcher-username"

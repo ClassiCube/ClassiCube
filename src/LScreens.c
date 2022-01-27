@@ -1425,9 +1425,9 @@ static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnUpdates, btnMode, btnColours, btnBack;
 	struct LLabel  lblUpdates, lblMode, lblColours;
-	struct LCheckbox cbExtra;
+	struct LCheckbox cbExtra, cbEmpty;
 	struct LLine sep;
-	struct LWidget* _widgets[9];
+	struct LWidget* _widgets[10];
 } SettingsScreen_Instance;
 
 #if defined CC_BUILD_MOBILE
@@ -1442,10 +1442,18 @@ static void SettingsScreen_LockOrientation(void* w, int idx) {
 static void SettingsScreen_AutoClose(void* w, int idx) {
 	struct LCheckbox* cb = (struct LCheckbox*)w;
 	cb->value = !cb->value;
-	Options_SetBool(OPT_AUTO_CLOSE_LAUNCHER, cb->value);
-	Launcher_Redraw();
+	Options_SetBool(LOPT_AUTO_CLOSE, cb->value);
+	LWidget_Draw(cb);
 }
 #endif
+static void SettingsScreen_ShowEmpty(void* w, int idx) {
+	struct LCheckbox* cb = (struct LCheckbox*)w;
+	cb->value = !cb->value;
+	Launcher_ShowEmptyServers = cb->value;
+
+	Options_SetBool(LOPT_SHOW_EMPTY, cb->value);
+	LWidget_Draw(cb);
+}
 
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
@@ -1469,6 +1477,8 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	s->cbExtra.OnClick = SettingsScreen_AutoClose;
 #endif
 
+	LCheckbox_Init(s_, &s->cbEmpty, "Show empty servers in list");
+	s->cbEmpty.OnClick = SettingsScreen_ShowEmpty;
 	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
@@ -1485,8 +1495,9 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 #if defined CC_BUILD_MOBILE
 	s->cbExtra.value = Options_GetBool(OPT_LANDSCAPE_MODE, false);
 #else
-	s->cbExtra.value = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
+	s->cbExtra.value = Options_GetBool(LOPT_AUTO_CLOSE, false);
 #endif
+	s->cbEmpty.value = Launcher_ShowEmptyServers;
 }
 
 static void SettingsScreen_Layout(struct LScreen* s_) {
@@ -1506,6 +1517,7 @@ static void SettingsScreen_Layout(struct LScreen* s_) {
 #else
 	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE,  -58, 44);
 #endif
+	LWidget_SetLocation(&s->cbEmpty,  ANCHOR_CENTRE, ANCHOR_CENTRE,  -63, 84);
 
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }

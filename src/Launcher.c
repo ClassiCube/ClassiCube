@@ -35,6 +35,7 @@ cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE], userBuffer[STRING_SIZE];
 cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
 cc_string Launcher_Username = String_FromArray(userBuffer);
+cc_bool Launcher_ShowEmptyServers;
 
 static cc_bool useBitmappedFont, hasBitmappedFont;
 static struct Bitmap dirtBmp, stoneBmp;
@@ -115,7 +116,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 #ifdef CC_BUILD_MOBILE
 	Launcher_ShouldExit = true;
 #else
-	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
+	Launcher_ShouldExit = Options_GetBool(LOPT_AUTO_CLOSE, false);
 #endif
 	return true;
 }
@@ -298,7 +299,9 @@ void Launcher_Run(void) {
 	Drawer2D.BlackTextShadows = true;
 	InitFramebuffer();
 
+	Launcher_ShowEmptyServers = Options_GetBool(LOPT_SHOW_EMPTY, true);
 	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
+
 	LWebTasks_Init();
 	Session_Load();
 	Launcher_LoadTheme();

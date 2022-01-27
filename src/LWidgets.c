@@ -1001,12 +1001,17 @@ void LTable_Reset(struct LTable* w) {
 	w->_wheelAcc = 0.0f;
 }
 
+static int ShouldShowServer(struct LTable* w, struct ServerInfo* server) {
+	return String_CaselessContains(&server->name, w->filter) 
+		&& (Launcher_ShowEmptyServers || server->players > 0);
+}
+
 void LTable_ApplyFilter(struct LTable* w) {
 	int i, j, count;
 
 	count = FetchServersTask.numServers;
 	for (i = 0, j = 0; i < count; i++) {
-		if (String_CaselessContains(&Servers_Get(i)->name, w->filter)) {
+		if (ShouldShowServer(w, Servers_Get(i))) {
 			FetchServersTask.servers[j++]._order = FetchServersTask.orders[i];
 		}
 	}

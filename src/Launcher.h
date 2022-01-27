@@ -7,36 +7,38 @@
 struct LScreen;
 struct FontDesc;
 
-/* Contains the pixels that are drawn to the window. */
+/* Contains the pixels that are drawn to the window */
 extern struct Bitmap Launcher_Framebuffer;
-/* Default font for buttons and labels. */
+/* Default font for buttons and labels */
 extern struct FontDesc Launcher_TitleFont, Launcher_TextFont;
-/* Default font for input widget hints. */
+/* Default font for input widget hints */
 extern struct FontDesc Launcher_HintFont;
-/* Default font for screen/menu titles. */
+/* Default font for screen/menu titles */
 extern struct FontDesc Launcher_LogoFont;
 
-/* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. */
+/* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit */
 extern cc_bool Launcher_ShouldExit;
-/* Whether game should be updated on exit. */
+/* Whether game should be updated on exit */
 extern cc_bool Launcher_ShouldUpdate;
-/* (optional) Hash of the server the game should automatically try to connect to after signing in. */
+/* (optional) Hash of the server the game should automatically try to connect to after signing in */
 extern cc_string Launcher_AutoHash;
 /* The username of currently active user */
 extern cc_string Launcher_Username;
+/* Whether to show empty servers in the server list */
+extern cc_bool Launcher_ShowEmptyServers;
 
 struct LauncherTheme {
-	/* Whether to use stone tile background like minecraft.net. */
+	/* Whether to use stone tile background like minecraft.net */
 	cc_bool ClassicBackground;
-	/* Base colour of pixels before any widgets are drawn. */
+	/* Base colour of pixels before any widgets are drawn */
 	BitmapCol BackgroundColor;
-	/* Colour of pixels on the 4 line borders around buttons. */
+	/* Colour of pixels on the 4 line borders around buttons */
 	BitmapCol ButtonBorderColor;
-	/* Colour of button when user has mouse over it. */
+	/* Colour of button when user has mouse over it */
 	BitmapCol ButtonForeActiveColor;
-	/* Colour of button when user does not have mouse over it. */
+	/* Colour of button when user does not have mouse over it */
 	BitmapCol ButtonForeColor;
-	/* Colour of line at top of buttons to give them a less flat look.*/
+	/* Colour of line at top of buttons to give them a less flat look*/
 	BitmapCol ButtonHighlightColor;
 };
 /* Currently active theme */
@@ -61,11 +63,9 @@ void Launcher_TryLoadTexturePack(void);
 /* Fills the given region of the given bitmap with the default background */
 void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height);
 /* Fills the entire contents of the given bitmap with the default background */
+/* NOTE: Also draws titlebar at top, if current screen permits it */
 void Launcher_DrawBackgroundAll(struct Bitmap* bmp);
 
-/* Redraws all pixels with default background. */
-/* NOTE: Also draws titlebar at top, if current screen permits it. */
-void Launcher_ResetPixels(void);
 /* Redraws the specified region with the background pixels. */
 /* Also marks that area as neeing to be redrawn. */
 void Launcher_ResetArea(int x, int y, int width, int height);
