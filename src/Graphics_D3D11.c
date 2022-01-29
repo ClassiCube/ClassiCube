@@ -13,7 +13,6 @@
 #define NOIME
 #define COBJMACROS
 #include <d3d11.h>
-#pragma comment(lib, "d3d11.lib")
 static const GUID guid_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c } };
 static const GUID guid_IXDGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0x32, 0x88, 0xfd, 0x5f, 0x44, 0xc8, 0x4c } };
 
@@ -29,6 +28,12 @@ static int gfx_format = -1, depthBits; // TODO implement depthBits?? for ZNear c
 static UINT gfx_stride;
 static GfxResourceID white_square;
 
+#ifdef _MSC_VER
+#define CC_ALIGNED(x) __declspec(align(x))
+#else
+#define CC_ALIGNED(x) __attribute__((aligned(x)))
+#endif
+
 static ID3D11Device* device;
 static ID3D11DeviceContext* context;
 static IDXGIDevice1* dxgi_device;
@@ -42,6 +47,22 @@ static void VS_UpdateShader(void);
 static void PS_UpdateShader(void);
 static void InitPipeline(void);
 static void FreePipeline(void);
+
+static PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN _D3D11CreateDeviceAndSwapChain;
+
+static void LoadD3D11Library(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(D3D11CreateDeviceAndSwapChain)
+	};
+	static const cc_string path = String_FromConst("d3d11.dll");
+	void* lib = DynamicLib_Load2(&path);
+
+	if (!lib) {
+		Logger_DynamicLibWarn("loading", &path);
+		Logger_Abort("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
+	}
+	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+}
 
 static void CreateDeviceAndSwapChain(void) {
 	// https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
@@ -63,7 +84,7 @@ static void CreateDeviceAndSwapChain(void) {
 	desc.SampleDesc.Quality = 0;
 	desc.Windowed           = TRUE;
 
-	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
+	hr = _D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL,
 			createFlags, NULL, 0, D3D11_SDK_VERSION,
 			&desc, &swapchain, &device, &fl, &context);
 	if (hr) Logger_Abort2(hr, "Failed to create D3D11 device");
@@ -79,6 +100,7 @@ static void CreateDeviceAndSwapChain(void) {
 }
 
 void Gfx_Create(void) {
+	LoadD3D11Library();
 	CreateDeviceAndSwapChain();
 	Gfx.Created         = true;
 	customMipmapsLevels = true;
@@ -480,7 +502,7 @@ void Gfx_BindVb(GfxResourceID vb) {
 static ID3D11VertexShader* vs_shaders[3];
 static ID3D11Buffer* vs_cBuffer;
 
-static _declspec(align(64)) struct VSConstants {
+static struct CC_ALIGNED(64) VSConstants {
 	struct Matrix mvp;
 	float texX, texY;
 } vs_constants;
@@ -651,7 +673,7 @@ static float ps_fogEnd, ps_fogDensity;
 static PackedCol ps_fogColor;
 static int ps_fogMode;
 
-static _declspec(align(64)) struct PSConstants {
+static struct CC_ALIGNED(64) PSConstants {
 	float fogValue;
 	float fogR, fogG, fogB;
 } ps_constants;
