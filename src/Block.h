@@ -30,13 +30,13 @@ enum DrawType {
 
 /* Describes the interaction a block has with a player when they collide with it. */
 enum CollideType {
-	COLLIDE_GAS,          /* No interaction when player collides. */
+	COLLIDE_NONE,         /* No interaction when player collides. */
 	COLLIDE_LIQUID,       /* 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_SOLID,        /* Block completely stops the player when they are moving. */
 	COLLIDE_ICE,          /* Block is solid and partially slidable on. */
 	COLLIDE_SLIPPERY_ICE, /* Block is solid and fully slidable on. */
-	COLLIDE_LIQUID_WATER, /* Water style 'swimming'/'bobbing' interaction when player collides. */
-	COLLIDE_LIQUID_LAVA,  /* Lava style 'swimming'/'bobbing' interaction when player collides. */
+	COLLIDE_WATER,        /* Water style 'swimming'/'bobbing' interaction when player collides. */
+	COLLIDE_LAVA,         /* Lava style 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_CLIMB_ROPE    /* Rope/Ladder style climbing interaction when player collides. */
 };
 

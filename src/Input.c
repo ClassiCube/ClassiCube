@@ -745,7 +745,7 @@ void InputHandler_PlaceBlock(void) {
 	if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
 
 	/* undeletable gas blocks can't be replaced with other blocks */
-	if (Blocks.Collide[old] == COLLIDE_GAS && !Blocks.CanDelete[old]) return;
+	if (Blocks.Collide[old] == COLLIDE_NONE && !Blocks.CanDelete[old]) return;
 
 	if (!CheckIsFree(block)) return;
 

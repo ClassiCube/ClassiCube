@@ -18,104 +18,110 @@ const char* const Sound_Names[SOUND_COUNT] = {
 /*########################################################################################################################*
 *---------------------------------------------------Default properties----------------------------------------------------*
 *#########################################################################################################################*/
-static float DefaultSet_Height(BlockID b) {
-	if (b == BLOCK_SLAB)        return 0.50f;
-	if (b == BLOCK_COBBLE_SLAB) return 0.50f;
-	if (b == BLOCK_SNOW)        return 0.25f;
-	return 1.00f;
-}
+#define FOG_NONE  0
+#define FOG_WATER PackedCol_Make(  5,   5,  51, 255)
+#define FOG_LAVA  PackedCol_Make(153,  25,   0, 255)
 
-static cc_bool DefaultSet_FullBright(BlockID b) {
-	return b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA
-		|| b == BLOCK_MAGMA || b == BLOCK_FIRE;
-}
+struct SimpleBlockDef {
+	cc_uint8 topTexture, sideTexture, bottomTexture, height;
+	PackedCol fogColor; cc_uint8 fogDensity;
+	cc_bool fullBright, blocksLight;
+	cc_uint8 draw, collide, digSound, stepSound;
+};
+static const struct SimpleBlockDef invalid_blockDef = { 
+	0,0,0,16, FOG_NONE,0, false,true, DRAW_OPAQUE,COLLIDE_SOLID,0
+};
 
-static float DefaultSet_FogDensity(BlockID b) {
-	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return 0.1f;
-	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return 1.8f;
-	return 0.0f;
-}
+/* Properties for all Classic and CPE blocks */
+static const struct SimpleBlockDef core_blockDefs[BLOCK_CPE_COUNT] = {
+/*TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
+{  0,  0,  0, 16, FOG_NONE ,   0, false, false, DRAW_GAS,    COLLIDE_NONE,  SOUND_NONE,   SOUND_NONE   }, /* AIR */
+{  1,  1,  1, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* STONE */
+{  0,  3,  2, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  }, /* GRASS */
+{  2,  2,  2, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRAVEL, SOUND_GRAVEL }, /* DIRT */
+{ 16, 16, 16, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* COBBLE */
+{  4,  4,  4, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* WOOD */
+{ 15, 15, 15, 16, FOG_NONE ,   0, false, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* SAPLING */
+{ 17, 17, 17, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* BEDROCK */
 
-static PackedCol DefaultSet_FogColor(BlockID b) {
-	PackedCol colorWater = PackedCol_Make(  5,   5,  51, 255);
-	PackedCol colorLava  = PackedCol_Make(153,  25,   0, 255);
+{ 14, 14, 14, 16, FOG_WATER,  10, false,  true, DRAW_TRANSLUCENT, COLLIDE_WATER, SOUND_NONE, SOUND_NONE },/* WATER */
+{ 14, 14, 14, 16, FOG_WATER,  10, false,  true, DRAW_TRANSLUCENT, COLLIDE_WATER, SOUND_NONE, SOUND_NONE },/* STILL_WATER */
+{ 30, 30, 30, 16, FOG_LAVA , 180,  true,  true, DRAW_OPAQUE, COLLIDE_LAVA,  SOUND_NONE,   SOUND_NONE   }, /* LAVA */
+{ 30, 30, 30, 16, FOG_LAVA , 180,  true,  true, DRAW_OPAQUE, COLLIDE_LAVA,  SOUND_NONE,   SOUND_NONE   }, /* STILL_LAVA */
+{ 18, 18, 18, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_SAND,   SOUND_SAND   }, /* SAND */
+{ 19, 19, 19, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRAVEL, SOUND_GRAVEL }, /* GRAVEL */
+{ 32, 32, 32, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* GOLD_ORE */
+{ 33, 33, 33, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* IRON_ORE */
 
-	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return colorWater;
-	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return colorLava;
-	return 0;
-}
+{ 34, 34, 34, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* COAL_ORE */
+{ 21, 20, 21, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* LOG */
+{ 22, 22, 22, 16, FOG_NONE ,   0, false, false, DRAW_TRANSPARENT_THICK, COLLIDE_SOLID, SOUND_GRASS, SOUND_GRASS }, /* LEAVES */
+{ 48, 48, 48, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  }, /* SPONGE */
+{ 49, 49, 49, 16, FOG_NONE ,   0, false, false, DRAW_TRANSPARENT, COLLIDE_SOLID, SOUND_GLASS,SOUND_STONE},/* GLASS */
+{ 64, 64, 64, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* RED */
+{ 65, 65, 65, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* ORANGE */
+{ 66, 66, 66, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* YELLOW */
+	
+{ 67, 67, 67, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* LIME */
+{ 68, 68, 68, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* GREEN */
+{ 69, 69, 69, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* TEAL */
+{ 70, 70, 70, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* AQUA */
+{ 71, 71, 71, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* CYAN */
+{ 72, 72, 72, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* BLUE */
+{ 73, 73, 73, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* INDIGO */
+{ 74, 74, 74, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* VIOLET */
 
-static cc_uint8 DefaultSet_Draw(BlockID b) {
-	if (b == BLOCK_AIR)    return DRAW_GAS;
-	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
+{ 75, 75, 75, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* MAGNETA */
+{ 76, 76, 76, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* PINK */
+{ 77, 77, 77, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* BLACK */
+{ 78, 78, 78, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* GRAY */
+{ 79, 79, 79, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* WHITE */
+{ 13, 13, 13, 16, FOG_NONE ,   0, false, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* DANDELION */
+{ 12, 12, 12, 16, FOG_NONE ,   0, false, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* ROSE */
+{ 29, 29, 29, 16, FOG_NONE ,   0, false, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* BROWN_SHROOM */
 
-	if (b == BLOCK_ICE || b == BLOCK_WATER || b == BLOCK_STILL_WATER)
-		return DRAW_TRANSLUCENT;
-	if (b == BLOCK_GLASS || b == BLOCK_LEAVES)
-		return DRAW_TRANSPARENT;
+{ 28, 28, 28, 16, FOG_NONE ,   0, false, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* RED_SHROOM */
+{ 24, 40, 56, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_METAL,  SOUND_METAL  }, /* GOLD */
+{ 23, 39, 55, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_METAL,  SOUND_METAL  }, /* IRON */
+{  6,  5,  6, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* DOUBLE_SLAB */
+{  6,  5,  6,  8, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* SLAB */
+{  7,  7,  7, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* BRICK */
+{  9,  8, 10, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  }, /* TNT */
+{  4, 35,  4, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* BOOKSHELF */
 
-	if (b >= BLOCK_DANDELION && b <= BLOCK_RED_SHROOM)
-		return DRAW_SPRITE;
-	if (b == BLOCK_SAPLING || b == BLOCK_ROPE || b == BLOCK_FIRE)
-		return DRAW_SPRITE;
-	return DRAW_OPAQUE;
-}
+{ 36, 36, 36, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* MOSSY_ROCKS */
+{ 37, 37, 37, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* OBSIDIAN */
+{ 16, 16, 16,  8, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* COBBLE_SLAB */
+{ 11, 11, 11, 16, FOG_NONE ,   0, false, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_CLOTH,  SOUND_CLOTH  }, /* ROPE */
+{ 25, 41, 57, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* SANDSTONE */
+{ 50, 50, 50,  4, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_NONE,  SOUND_SNOW,   SOUND_SNOW   }, /* SNOW */
+{ 38, 38, 38, 16, FOG_NONE ,   0,  true, false, DRAW_SPRITE, COLLIDE_NONE,  SOUND_WOOD,   SOUND_NONE   }, /* FIRE */
+{ 80, 80, 80, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* LIGHT_PINK */
 
-static cc_bool DefaultSet_BlocksLight(BlockID b) {
-	return !(b == BLOCK_GLASS || b == BLOCK_LEAVES
-		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
-}
+{ 81, 81, 81, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* FOREST_GREEN */
+{ 82, 82, 82, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* BROWN */
+{ 83, 83, 83, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* DEEP_BLUE */
+{ 84, 84, 84, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* TURQUOISE */
+{ 51, 51, 51, 16, FOG_NONE ,   0, false,  true, DRAW_TRANSLUCENT, COLLIDE_ICE, SOUND_STONE, SOUND_STONE },/* ICE */
+{ 54, 54, 54, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* CERAMIC_TILE */
+{ 86, 86, 86, 16, FOG_NONE ,   0,  true,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* MAGMA */
+{ 26, 42, 58, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* PILLAR */
 
-static cc_uint8 DefaultSet_Collide(BlockID b) {
-	if (b == BLOCK_ICE) return COLLIDE_ICE;
-	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return COLLIDE_LIQUID_WATER;
-	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return COLLIDE_LIQUID_LAVA;
-
-	if (b == BLOCK_SNOW || b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE)
-		return COLLIDE_GAS;
-	return COLLIDE_SOLID;
-}
+{ 53, 53, 53, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* CRATE */
+{ 52, 52, 52, 16, FOG_NONE ,   0, false,  true, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }  /* STONE_BRICK */
+/*TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
+};
 
 /* Returns a backwards compatible collide type of a block. */
 static cc_uint8 DefaultSet_MapOldCollide(BlockID b, cc_uint8 collide) {
-	if (b == BLOCK_ROPE && collide == COLLIDE_GAS)   return COLLIDE_CLIMB_ROPE;
+	if (b == BLOCK_ROPE && collide == COLLIDE_NONE)   return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE  && collide == COLLIDE_SOLID) return COLLIDE_ICE;
 
 	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == COLLIDE_LIQUID)
-		return COLLIDE_LIQUID_WATER;
+		return COLLIDE_WATER;
 	if ((b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  && collide == COLLIDE_LIQUID)
-		return COLLIDE_LIQUID_LAVA;
+		return COLLIDE_LAVA;
 	return collide;
-}
-
-static cc_uint8 DefaultSet_DigSound(BlockID b) {
-	if (b >= BLOCK_RED && b <= BLOCK_WHITE)            return SOUND_CLOTH;
-	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE) return SOUND_CLOTH;
-	if (b == BLOCK_IRON || b == BLOCK_GOLD)            return SOUND_METAL;
-
-	if (b == BLOCK_BOOKSHELF || b == BLOCK_WOOD || b == BLOCK_LOG || b == BLOCK_CRATE || b == BLOCK_FIRE)
-		return SOUND_WOOD;
-
-	if (b == BLOCK_ROPE)  return SOUND_CLOTH;
-	if (b == BLOCK_SAND)  return SOUND_SAND;
-	if (b == BLOCK_SNOW)  return SOUND_SNOW;
-	if (b == BLOCK_GLASS) return SOUND_GLASS;
-
-	if (b == BLOCK_DIRT  || b == BLOCK_GRAVEL) return SOUND_GRAVEL;
-	if (b == BLOCK_GRASS || b == BLOCK_SAPLING || b == BLOCK_TNT || b == BLOCK_LEAVES || b == BLOCK_SPONGE)
-		return SOUND_GRASS;
-
-	if (b >= BLOCK_DANDELION && b <= BLOCK_RED_SHROOM)  return SOUND_GRASS;
-	if (b >= BLOCK_WATER     && b <= BLOCK_STILL_LAVA)  return SOUND_NONE;
-	if (b >= BLOCK_STONE     && b <= BLOCK_STONE_BRICK) return SOUND_STONE;
-	return SOUND_NONE;
-}
-
-static cc_uint8 DefaultSet_StepSound(BlockID b) {
-	if (b == BLOCK_GLASS) return SOUND_STONE;
-	if (b == BLOCK_ROPE)  return SOUND_CLOTH;
-	if (DefaultSet_Draw(b) == DRAW_SPRITE) return SOUND_NONE;
-	return DefaultSet_DigSound(b);
 }
 
 
@@ -125,21 +131,6 @@ static cc_uint8 DefaultSet_StepSound(BlockID b) {
 static cc_uint32 definedCustomBlocks[BLOCK_COUNT >> 5];
 static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
-
-static const cc_uint8 topTex[BLOCK_CPE_COUNT]     = { 0,  1,  0,  2, 16,  4, 15, 
-17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
-70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  
- 4, 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52 };
-
-static const cc_uint8 sideTex[BLOCK_CPE_COUNT]    = { 0,  1,  3,  2, 16,  4, 15, 
-17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
-70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 
-35, 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52 };
-
-static const cc_uint8 bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15, 
-17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
-70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  
- 4, 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 
 cc_bool Block_IsCustomDefined(BlockID block) {
 	return (definedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
@@ -171,8 +162,8 @@ void Block_DefineCustom(BlockID block) {
 static void Block_RecalcIsLiquid(BlockID b) {
 	cc_uint8 collide = Blocks.ExtendedCollide[b];
 	Blocks.IsLiquid[b] =
-		(collide == COLLIDE_LIQUID_WATER && Blocks.Draw[b] == DRAW_TRANSLUCENT) ||
-		(collide == COLLIDE_LIQUID_LAVA  && Blocks.Draw[b] == DRAW_TRANSPARENT);
+		(collide == COLLIDE_WATER && Blocks.Draw[b] == DRAW_TRANSLUCENT) ||
+		(collide == COLLIDE_LAVA  && Blocks.Draw[b] == DRAW_TRANSPARENT);
 }
 
 void Block_SetCollide(BlockID block, cc_uint8 collide) {
@@ -185,8 +176,8 @@ void Block_SetCollide(BlockID block, cc_uint8 collide) {
 	if (collide == COLLIDE_ICE)          collide = COLLIDE_SOLID;
 	if (collide == COLLIDE_SLIPPERY_ICE) collide = COLLIDE_SOLID;
 
-	if (collide == COLLIDE_LIQUID_WATER) collide = COLLIDE_LIQUID;
-	if (collide == COLLIDE_LIQUID_LAVA)  collide = COLLIDE_LIQUID;
+	if (collide == COLLIDE_WATER) collide = COLLIDE_LIQUID;
+	if (collide == COLLIDE_LAVA)  collide = COLLIDE_LIQUID;
 	Blocks.Collide[block] = collide;
 }
 
@@ -226,42 +217,37 @@ static const cc_string Block_DefaultName(BlockID block) {
 }
 
 void Block_ResetProps(BlockID block) {
+	const struct SimpleBlockDef* def = block < BLOCK_CPE_COUNT ? &core_blockDefs[block] : &invalid_blockDef;
 	const cc_string name = Block_DefaultName(block);
 
-	Blocks.BlocksLight[block] = DefaultSet_BlocksLight(block);
-	Blocks.FullBright[block] = DefaultSet_FullBright(block);
-	Blocks.FogCol[block] = DefaultSet_FogColor(block);
-	Blocks.FogDensity[block] = DefaultSet_FogDensity(block);
-	Block_SetCollide(block, DefaultSet_Collide(block));
-	Blocks.DigSounds[block] = DefaultSet_DigSound(block);
-	Blocks.StepSounds[block] = DefaultSet_StepSound(block);
+	Blocks.BlocksLight[block] = def->blocksLight;
+	Blocks.FullBright[block]  = def->fullBright;
+	Blocks.FogCol[block]      = def->fogColor;
+	Blocks.FogDensity[block]  = def->fogDensity / 100.0f;
+	Block_SetCollide(block,     def->collide);
+	Blocks.DigSounds[block]   = def->digSound;
+	Blocks.StepSounds[block]  = def->stepSound;
 	Blocks.SpeedMultiplier[block] = 1.0f;
 	Block_SetName(block, &name);
-	Blocks.Tinted[block] = false;
+	Blocks.Tinted[block]       = false;
 	Blocks.SpriteOffset[block] = 0;
 
-	Blocks.Draw[block] = DefaultSet_Draw(block);
-	if (Blocks.Draw[block] == DRAW_SPRITE) {
+	Blocks.Draw[block] = def->draw;
+	if (def->draw == DRAW_SPRITE) {
 		Vec3_Set(Blocks.MinBB[block], 2.50f/16.0f, 0, 2.50f/16.0f);
 		Vec3_Set(Blocks.MaxBB[block], 13.5f/16.0f, 1, 13.5f/16.0f);
 	} else {		
-		Vec3_Set(Blocks.MinBB[block], 0, 0,                        0);
-		Vec3_Set(Blocks.MaxBB[block], 1, DefaultSet_Height(block), 1);
+		Vec3_Set(Blocks.MinBB[block], 0, 0,                   0);
+		Vec3_Set(Blocks.MaxBB[block], 1, def->height / 16.0f, 1);
 	}
 
-	Block_SetDrawType(block, Blocks.Draw[block]);
+	Block_SetDrawType(block, def->draw);
 	Block_CalcRenderBounds(block);
 	Block_CalcLightOffset(block);
 
-	if (block >= BLOCK_CPE_COUNT) {
-		Block_Tex(block, FACE_YMAX) = 0;
-		Block_Tex(block, FACE_YMIN) = 0;
-		Block_SetSide(0, block);
-	} else {
-		Block_Tex(block, FACE_YMAX) = topTex[block];
-		Block_Tex(block, FACE_YMIN) = bottomTex[block];
-		Block_SetSide(sideTex[block], block);
-	}
+	Block_Tex(block, FACE_YMAX) = def->topTexture;
+	Block_Tex(block, FACE_YMIN) = def->bottomTexture;
+	Block_SetSide(def->sideTexture, block);
 }
 
 STRING_REF cc_string Block_UNSAFE_GetName(BlockID block) {
@@ -717,6 +703,7 @@ cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID other) {
 		&& String_CaselessEquals(&bName, &oName);
 }
 
+#include "Platform.h"
 /*########################################################################################################################*
 *----------------------------------------------------Blocks component-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -729,6 +716,7 @@ static void OnReset(void) {
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_ResetProps((BlockID)block);
 	}
+
 	Block_UpdateAllCulling();
 	Block_RecalculateAllSpriteBB();
 
