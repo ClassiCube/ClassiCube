@@ -449,45 +449,49 @@ static int ParseHost(void* dst, WCHAR* host, int port) {
 	return AF_INET;
 }
 
-static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
+static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, int port) {
 	SOCKADDR_IN*  addr4 =  (SOCKADDR_IN*)dst;
 	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)dst;
 	WCHAR str[NATIVE_STR_LEN];
-	INT size;
 	Platform_EncodeUtf16(str, address);
 
-	size = sizeof(*addr4);
-	if (!_WSAStringToAddressW(str, AF_INET, NULL, addr4, &size)) {
+	*size = sizeof(*addr4);
+	if (!_WSAStringToAddressW(str, AF_INET, NULL, addr4, size)) {
 		addr4->sin_port  = htons(port);
 		return AF_INET;
 	}
-	size = sizeof(*addr6);
-	if (!_WSAStringToAddressW(str, AF_INET6, NULL, (SOCKADDR*)addr6, &size)) {
+
+	*size = sizeof(*addr6);
+	if (!_WSAStringToAddressW(str, AF_INET6, NULL, (SOCKADDR*)addr6, size)) {
 		addr6->sin6_port = htons(port);
 		return AF_INET6;
 	}
+
+	*size = sizeof(*addr4);
 	return ParseHost(dst, str, port);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
 	SOCKADDR_STORAGE addr;
-	return Socket_ParseAddress(&addr, address, 0);
+	INT addrSize;
+	return Socket_ParseAddress(&addr, &addrSize, address, 0);
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	int family, blockingMode = -1; /* non-blocking mode */
 	SOCKADDR_STORAGE addr;
 	cc_result res;
+	INT addrSize;
 
 	*s = -1;
-	if (!(family = Socket_ParseAddress(&addr, address, port)))
+	if (!(family = Socket_ParseAddress(&addr, &addrSize, address, port)))
 		return ERR_INVALID_ARGUMENT;
 
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return WSAGetLastError();
 	ioctlsocket(*s, FIONBIO, &blockingMode);
 
-	res = connect(*s, (SOCKADDR*)&addr, sizeof(addr));
+	res = connect(*s, (SOCKADDR*)&addr, addrSize);
 	return res == -1 ? WSAGetLastError() : 0;
 }
 
