@@ -316,16 +316,6 @@ int Window_GetWindowState(void) {
 	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
 }
 
-// TODO: Only works on 10.7+
-cc_result Window_EnterFullscreen(void) {
-	[winHandle toggleFullScreen:appHandle];
-	return 0;
-}
-cc_result Window_ExitFullscreen(void) {
-	[winHandle toggleFullScreen:appHandle];
-	return 0;
-}
-
 // NOTE: Only defined since macOS 10.9 SDK
 #define _NSWindowOcclusionStateVisible (1 << 1)
 int Window_IsObscured(void) {
@@ -672,4 +662,38 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void GLContext_GetApiInfo(cc_string* info) { }
+
+static int SupportsNativeFullscreen(void) {
+	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
+}
+
+// TODO: Only works on 10.7+
+cc_result Window_EnterFullscreen(void) {
+	if (SupportsNativeFullscreen()) {
+		[winHandle toggleFullScreen:appHandle];
+		return 0;
+	}
+
+	[ctxHandle clearDrawable];
+	// setFullScreen doesn't return an error code, which is unfortunate
+	//  because if setFullscreen fails, you're left with a blank window
+	//  that's still rendering thousands of frames per second
+	//[ctxHandle setFullScreen];
+
+	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
+	if (res) Window_ExitFullscreen();
+	return res;
+}
+
+cc_result Window_ExitFullscreen(void) {
+	if (SupportsNativeFullscreen()) {
+		[winHandle toggleFullScreen:appHandle];
+		return 0;
+	}
+
+	[ctxHandle clearDrawable];
+	[ctxHandle setView:viewHandle];
+	return 0;
+}
+
 #endif
