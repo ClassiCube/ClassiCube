@@ -11,6 +11,7 @@ static NSApplication* appHandle;
 static NSWindow* winHandle;
 static NSView* viewHandle;
 static cc_bool canCheckOcclusion;
+static cc_bool legacy_fullscreen;
 
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
@@ -309,9 +310,13 @@ void Window_SetTitle(const cc_string* title) {
 int Window_GetWindowState(void) {
 	int flags;
 
+	// modern fullscreen using toggleFullScreen
 	flags = [winHandle styleMask];
 	if (flags & _NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
-	     
+
+	// legacy fullscreen using CGLSetFullscreen
+	if (legacy_fullscreen) return WINDOW_STATE_FULLSCREEN;
+
 	flags = [winHandle isMiniaturized];
 	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
 }
@@ -600,16 +605,17 @@ void Window_CloseKeyboard(void) { }
 static NSOpenGLContext* ctxHandle;
 
 static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
-	NSOpenGLPixelFormatAttribute attribs[7] = {
-		NSOpenGLPFAColorSize,    0,
+	NSOpenGLPixelFormatAttribute attribs[] = {
+		NSOpenGLPFAColorSize,    DisplayInfo.Depth,
 		NSOpenGLPFADepthSize,    24,
-		NSOpenGLPFADoubleBuffer, 0, 0
+		NSOpenGLPFADoubleBuffer,
+		fullscreen ? NSOpenGLPFAFullScreen : 0,
+		0
 	};
-
-	attribs[1] = DisplayInfo.Depth;
-	attribs[5] = fullscreen ? NSOpenGLPFAFullScreen : 0;
+	// NSOpenGLPFAScreenMask,   CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
 	return [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 }
+
 
 void GLContext_Create(void) {
 	NSOpenGLPixelFormat* fmt;
@@ -663,37 +669,41 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 
 void GLContext_GetApiInfo(cc_string* info) { }
 
-static int SupportsNativeFullscreen(void) {
+static int SupportsModernFullscreen(void) {
 	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
 }
 
-// TODO: Only works on 10.7+
 cc_result Window_EnterFullscreen(void) {
-	if (SupportsNativeFullscreen()) {
+	if (SupportsModernFullscreen()) {
 		[winHandle toggleFullScreen:appHandle];
 		return 0;
 	}
 
+	legacy_fullscreen = true;
 	[ctxHandle clearDrawable];
 	// setFullScreen doesn't return an error code, which is unfortunate
 	//  because if setFullscreen fails, you're left with a blank window
 	//  that's still rendering thousands of frames per second
 	//[ctxHandle setFullScreen];
-
+	//return 0;
 	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
+	// TODO doesn't seem to work on 10.7 or later??
+	//cc_result res = CGLSetFullScreenOnDisplay([ctxHandle CGLContextObj], CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()));
 	if (res) Window_ExitFullscreen();
 	return res;
 }
 
 cc_result Window_ExitFullscreen(void) {
-	if (SupportsNativeFullscreen()) {
+	if (SupportsModernFullscreen()) {
 		[winHandle toggleFullScreen:appHandle];
 		return 0;
 	}
 
+	legacy_fullscreen = false;
 	[ctxHandle clearDrawable];
 	[ctxHandle setView:viewHandle];
 	return 0;
 }
+
 
 #endif
