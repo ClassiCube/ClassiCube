@@ -157,10 +157,6 @@ void Clipboard_SetText(const cc_string* value) {
 /*########################################################################################################################*
 *----------------------------------------------------------Wwindow--------------------------------------------------------*
 *#########################################################################################################################*/
-/* fullscreen is tied to OpenGL context unfortunately */
-static cc_result GLContext_UnsetFullscreen(void);
-static cc_result GLContext_SetFullscreen(void);
-
 static void RefreshWindowBounds(void) {
 	Rect r;
 	if (win_fullscreen) return;
@@ -526,23 +522,6 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-static void UpdateWindowState(void) {
-	Event_RaiseVoid(&WindowEvents.StateChanged);
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
-}
-
-cc_result Window_EnterFullscreen(void) {
-	cc_result res = GLContext_SetFullscreen();
-	UpdateWindowState();
-	return res;
-}
-cc_result Window_ExitFullscreen(void) {
-	cc_result res = GLContext_UnsetFullscreen();
-	UpdateWindowState();
-	return res;
-}
-
 int Window_IsObscured(void) {
 	/* TODO: This isn't a complete fix because it doesn't check for occlusion - */
 	/*  so you'll still get 100% CPU usage when window is hidden in background */
@@ -710,37 +689,17 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, cc_b
 	attribs[i++] = 0;
 }
 
-static cc_result GLContext_UnsetFullscreen(void) {
-	int code;
-	Platform_LogConst("Unsetting fullscreen.");
-
-	code = aglSetDrawable(ctx_handle, NULL);
-	if (!code) return aglGetError();
-	/* TODO: I don't think this is necessary */
-	code = aglUpdateContext(ctx_handle);
-	if (!code) return aglGetError();
-
-	CGDisplayRelease(CGMainDisplayID());
-	GLContext_SetDrawable();
-
-	win_fullscreen = false;
-	/* TODO: Eliminate this if possible */
-	Window_SetSize(ctx_windowWidth, ctx_windowHeight);
-	return 0;
-}
-
-static cc_result GLContext_SetFullscreen(void) {
+cc_result Window_EnterFullscreen(void) {
 	int width  = DisplayInfo.Width;
 	int height = DisplayInfo.Height;
 	int code;
 
-	Platform_LogConst("Switching to fullscreen");
 	/* TODO: Does aglSetFullScreen capture the screen anyways? */
 	CGDisplayCapture(CGMainDisplayID());
 
 	if (!aglSetFullScreen(ctx_handle, width, height, 0, 0)) {
 		code = aglGetError();
-		GLContext_UnsetFullscreen();
+		Window_ExitFullscreen();
 		return code;
 	}
 
@@ -749,7 +708,27 @@ static cc_result GLContext_SetFullscreen(void) {
 	ctx_windowHeight = WindowInfo.Height;
 
 	windowX = DisplayInfo.X; WindowInfo.Width  = DisplayInfo.Width;
-	windowY = DisplayInfo.Y; WindowInfo.Height = DisplayInfo.Height;
+	windowY = DisplayInfo.Y; WindowInfo.Height = DisplayInfo.Height;	
+	
+	Event_RaiseVoid(&WindowEvents.Resized);
+	return 0;
+}
+
+cc_result Window_ExitFullscreen(void) {
+	int code;
+
+	code = aglSetDrawable(ctx_handle, NULL);
+	if (!code) return aglGetError();
+
+	CGDisplayRelease(CGMainDisplayID());
+	GLContext_SetDrawable();
+
+	win_fullscreen = false;
+	/* TODO: Eliminate this if possible */
+	Window_SetSize(ctx_windowWidth, ctx_windowHeight);
+	
+	RefreshWindowBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
 
@@ -782,18 +761,14 @@ void GLContext_Create(void) {
 
 	ctx_handle = aglCreateContext(fmt, NULL);
 	GLContext_Check(0, "Creating GL context");
-
 	aglDestroyPixelFormat(fmt);
-	GLContext_Check(0, "Destroying pixel format");
 
 	GLContext_SetDrawable();
-	GLContext_Update();
 	GLContext_MakeCurrent();
 }
 
 void GLContext_Update(void) {
 	if (win_fullscreen) return;
-	GLContext_SetDrawable();
 	aglUpdateContext(ctx_handle);
 }
 cc_bool GLContext_TryRestore(void) { return true; }
