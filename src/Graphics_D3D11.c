@@ -1096,20 +1096,30 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 	IDXGIAdapter* dxgi_adapter;
 	hr = IDXGIDevice_GetAdapter(dxgi_device, &dxgi_adapter);
-	if (hr || !dxgi_adapter) return;
+	if (hr || !dxgi_adapter) goto release_device;
 
 	DXGI_ADAPTER_DESC desc = { 0 };
 	hr = IDXGIAdapter_GetDesc(dxgi_adapter, &desc);
-	if (hr) return;
+	if (hr) goto release_adapter;
 
 	// desc.Description is a WCHAR, convert to char
 	char adapter[128] = { 0 };
 	for (int i = 0; i < 128; i++) { adapter[i] = desc.Description[i]; }
 
-	// TODO check what desc.DedicatedSystemMemory gives on intel laptop
-	float vram = desc.DedicatedVideoMemory / (1024.0 * 1024.0);
+	SIZE_T vram = desc.DedicatedVideoMemory;
+	SIZE_T dram = desc.DedicatedSystemMemory;
+	SIZE_T sram = desc.SharedSystemMemory;
+	float tram_ = (vram + dram + sram)  / (1024.0 * 1024.0);
+	float vram_ = vram                  / (1024.0 * 1024.0);
+
 	String_Format1(info, "Adapter: %c\n", adapter);
-	String_Format1(info, "Video memory: %f2 MB total\n", &vram);
+	String_Format2(info, "Graphics memory: %f2 MB total (%f2 MB VRAM)\n", &tram_, &vram_);
+	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+
+release_adapter:
+	IDXGIAdapter_Release(dxgi_adapter);
+release_device:
+	IDXGIDevice_Release(dxgi_device);
 }
 
 void Gfx_OnWindowResize(void) {
