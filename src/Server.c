@@ -215,7 +215,7 @@ static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8  net_writeBuffer[131];
 static cc_uint8* net_readCurrent;
 
-static cc_bool net_writeFailed;
+static cc_result net_writeFailure;
 static double lastPacket;
 static cc_uint8 lastOpcode;
 
@@ -335,6 +335,12 @@ static void MPConnection_SendPosition(Vec3 pos, float yaw, float pitch) {
 	Net_SendPacket();
 }
 
+static void MPConnection_Disconnect(void) {
+	static const cc_string title  = String_FromConst("Disconnected!");
+	static const cc_string reason = String_FromConst("You've lost connection to the server");
+	Game_Disconnect(&title, &reason);
+}
+
 static void MPConnection_CheckDisconnection(void) {
 	static const cc_string title  = String_FromConst("Disconnected!");
 	static const cc_string reason = String_FromConst("You've lost connection to the server");
@@ -346,8 +352,8 @@ static void MPConnection_CheckDisconnection(void) {
 	/* poll read returns true when socket is closed */
 	selectRes = Socket_Poll(net_socket, SOCKET_POLL_READ, &poll_read);
 
-	if (net_writeFailed || availRes || selectRes || (pending == 0 && poll_read)) {	
-		Game_Disconnect(&title, &reason);
+	if (net_writeFailure || availRes || selectRes || (pending == 0 && poll_read)) {
+		MPConnection_Disconnect();
 	}
 }
 
@@ -432,6 +438,11 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 	net_readCurrent = net_readBuffer + remaining;
 
+	if (net_writeFailure) {
+		Platform_Log1("Error from send: %i", &net_writeFailure);
+		MPConnection_Disconnect();
+	}
+
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((ticks % 3) == 0) {
 		TexturePack_CheckPending();
@@ -459,7 +470,9 @@ static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
 		}
 
 		/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-		if (res || !wrote) { net_writeFailed = true; return; }
+		if (res)    { net_writeFailure = res;                  return; }
+		if (!wrote) { net_writeFailure = ERR_INVALID_ARGUMENT; return; }
+
 		data += wrote; len -= wrote;
 	}
 }
@@ -519,7 +532,7 @@ static void OnInit(void) {
 
 static void OnReset(void) {
 	if (Server.IsSinglePlayer) return;
-	net_writeFailed = false;
+	net_writeFailure = 0;
 	OnClose();
 }
 
