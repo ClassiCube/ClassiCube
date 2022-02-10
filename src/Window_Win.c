@@ -45,8 +45,8 @@ static HWND win_handle;
 static HDC win_DC;
 static cc_bool suppress_resize;
 static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
+static cc_bool is_ansiWindow, grabCursor;
 static int windowX, windowY;
-static cc_bool is_ansiWindow;
 
 static const cc_uint8 key_map[14 * 16] = {
 	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
@@ -96,6 +96,14 @@ static void RefreshWindowBounds(void) {
 	windowX = topLeft.x; windowY = topLeft.y;
 }
 
+static void GrabCursor(void) {
+	RECT rect;
+	if (!grabCursor || !Input_RawMode) return;
+
+	GetWindowRect(win_handle, &rect);
+	ClipCursor(&rect);
+}
+
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	char keyChar;
 	float wheelDelta;
@@ -120,6 +128,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		if (pos->hwnd != win_handle) break;
 		cc_bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 
+		GrabCursor();
 		RefreshWindowBounds();
 		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
 	} break;
@@ -344,8 +353,10 @@ static void DoCreateWindow(int width, int height) {
 
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
+
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
+	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
@@ -635,7 +646,9 @@ void Window_CloseKeyboard(void) { }
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();
 	if (!rawMouseInited) InitRawMouse();
+
 	rawMouseInited = true;
+	GrabCursor();
 }
 
 void Window_UpdateRawMouse(void) {
@@ -647,7 +660,10 @@ void Window_UpdateRawMouse(void) {
 	}
 }
 
-void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+void Window_DisableRawMouse(void) { 
+	DefaultDisableRawMouse();
+	if (grabCursor) ClipCursor(NULL);
+}
 
 
 /*########################################################################################################################*
