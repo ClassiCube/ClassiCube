@@ -497,6 +497,7 @@ static void DoCreateWindow(int width, int height) {
 	Window_CommonCreate();
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
+	/* CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor */
 
 	conn  = _CGSDefaultConnection();
 	winId = GetNativeWindowFromWindowRef(win_handle);

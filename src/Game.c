@@ -624,6 +624,7 @@ void Game_Free(void* obj) {
 	Logger_WarnFunc = Logger_DialogWarn;
 	Gfx_Free();
 	Options_SaveIfChanged();
+	Window_DisableRawMouse();
 }
 
 #define Game_DoFrameBody() \

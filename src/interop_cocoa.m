@@ -283,6 +283,7 @@ static void DoCreateWindow(int width, int height) {
 	Window_CommonCreate();
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = winHandle;
+	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
 
 	del = [CCWindowDelegate alloc];
 	[winHandle setDelegate:del];

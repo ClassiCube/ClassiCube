@@ -496,7 +496,6 @@ void Window_Close(void) {
 	Window_ExitFullscreen();
 
 	/* Don't want cursor stuck on the dead 0,0 canvas */
-	Window_DisableRawMouse();
 	Window_SetSize(0, 0);
 	UnhookEvents();
 	/* Game_DoFrame doesn't do anything when WindowExists.False is false, */
