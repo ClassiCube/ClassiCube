@@ -39,12 +39,14 @@ static void DoCreateWindow(int width, int height, int flags) {
 	int x = Display_CentreX(width);
 	int y = Display_CentreY(height);
 
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, flags);
+	win_handle = SDL_CreateWindow(NULL, x, y, width, height, 
+					flags | SDL_WINDOW_RESIZABLE);
 	if (!win_handle) Window_SDLFail("creating window");
 
 	RefreshWindowBounds();
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
+	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
