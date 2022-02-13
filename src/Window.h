@@ -124,11 +124,6 @@ void Window_ProcessEvents(void);
 /* Sets the position of the cursor. */
 /* NOTE: This should be avoided because it is unsupported on some platforms. */
 void Cursor_SetPosition(int x, int y);
-/* Sets whether the cursor is visible when over this window. */
-/* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility, */
-/*  so setting invisible multiple times means you must then set visible multiple times. */
-void Cursor_SetVisible(cc_bool visible);
-
 /* Shows a dialog box window. */
 CC_API void Window_ShowDialog(const char* title, const char* msg);
 typedef void (*OpenFileDialogCallback)(const cc_string* path);

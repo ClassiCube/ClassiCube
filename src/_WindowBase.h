@@ -12,11 +12,15 @@ int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
 static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
-/* Gets the position of the cursor in screen or window coordinates. */
+/* Gets the position of the cursor in screen or window coordinates */
 static void Cursor_GetRawPos(int* x, int* y);
+/* Sets whether the cursor is visible when over this window */
+/* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility, */
+/*  so setting invisible multiple times means you must then set visible multiple times. */
 static void Cursor_DoSetVisible(cc_bool visible);
 
-void Cursor_SetVisible(cc_bool visible) {
+/* Sets whether the cursor is visible when over this window */
+static void Cursor_SetVisible(cc_bool visible) {
 	if (cursorVisible == visible) return;
 	cursorVisible = visible;
 	Cursor_DoSetVisible(visible);
@@ -55,12 +59,12 @@ static void DefaultDisableRawMouse(void) {
 /* The actual windowing system specific method to display a message box */
 static void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* Ensure cursor is visible while showing message box */
-	cc_bool visible = cursorVisible;
+	/* Ensure cursor is usable while showing message box */
+	cc_bool rawMode = Input_RawMode;
 
-	if (!visible) Cursor_SetVisible(true);
+	if (rawMode) Window_DisableRawMouse();
 	ShowDialogCore(title, msg);
-	if (!visible) Cursor_SetVisible(false);
+	if (rawMode) Window_EnableRawMouse();
 }
 
 void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
