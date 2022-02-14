@@ -78,8 +78,6 @@ enum BLOCKID {
 
 	/* Max block ID used in original classic */
 	BLOCK_MAX_ORIGINAL = BLOCK_OBSIDIAN,
-	/* Number of blocks in original classic. */
-	BLOCK_ORIGINAL_COUNT = (BLOCK_MAX_ORIGINAL + 1),
 	/* Max block ID used in original classic plus CPE blocks. */
 	BLOCK_MAX_CPE = BLOCK_STONE_BRICK,
 	/* Number of blocks in original classic plus CPE blocks. */

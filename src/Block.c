@@ -205,7 +205,7 @@ static const cc_string Block_DefaultName(BlockID block) {
 	static const cc_string invalid = String_FromConst("Invalid");
 	int i, beg = 0, end;
 
-	if (block >= BLOCK_CPE_COUNT) return invalid;
+	if (block > BLOCK_MAX_CPE) return invalid;
 	/* Find start and end of this particular block name. */
 	for (i = 0; i < block; i++) {
 		beg = String_IndexOfAt(&names, beg, '_') + 1;
@@ -217,7 +217,7 @@ static const cc_string Block_DefaultName(BlockID block) {
 }
 
 void Block_ResetProps(BlockID block) {
-	const struct SimpleBlockDef* def = block < BLOCK_CPE_COUNT ? &core_blockDefs[block] : &invalid_blockDef;
+	const struct SimpleBlockDef* def = block <= BLOCK_MAX_CPE ? &core_blockDefs[block] : &invalid_blockDef;
 	const cc_string name = Block_DefaultName(block);
 
 	Blocks.BlocksLight[block] = def->blocksLight;

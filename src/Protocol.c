@@ -1713,7 +1713,7 @@ static void BlockDefs_UndefineBlock(cc_uint8* data) {
 	Block_UpdateCulling(block);
 
 	Inventory_Remove(block);
-	if (block < BLOCK_CPE_COUNT) { Inventory_AddDefault(block); }
+	if (block <= BLOCK_MAX_CPE) { Inventory_AddDefault(block); }
 
 	Block_SetCustomDefined(block, false);
 	Event_RaiseVoid(&BlockEvents.BlockDefChanged);

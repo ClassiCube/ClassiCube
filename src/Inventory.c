@@ -111,7 +111,7 @@ void Inventory_ResetMapping(void) {
 
 void Inventory_AddDefault(BlockID block) {
 	int slot;
-	if (block >= BLOCK_CPE_COUNT) {
+	if (block > BLOCK_MAX_CPE) {
 		Inventory.Map[block - 1] = block; return;
 	}
 	

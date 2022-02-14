@@ -579,7 +579,7 @@ static cc_bool CuboidCommand_ParseArgs(const cc_string* args) {
 		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &value); return false;
 	}
 
-	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
+	if (block > BLOCK_MAX_CPE && !Block_IsCustomDefined(block)) {
 		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &value); return false;
 	}
 
