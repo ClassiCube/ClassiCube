@@ -225,7 +225,6 @@ void Gui_ShowPauseMenu(void);
 
 void Gui_LayoutAll(void);
 void Gui_RefreshAll(void);
-void Gui_RemoveAll(void);
 void Gui_Refresh(struct Screen* s);
 void Gui_RenderGui(double delta);
 

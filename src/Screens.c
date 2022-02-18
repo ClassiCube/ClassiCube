@@ -1949,6 +1949,7 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 	static const cc_string ban  = String_FromConst("Banned ");
 	cc_string why; char whyBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = &DisconnectScreen;
+	int i;
 
 	s->grabsInput  = true;
 	s->blocksWorld = true;
@@ -1964,9 +1965,13 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 	s->canReconnect = !(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
 	s->VTABLE       = &DisconnectScreen_VTABLE;
 
-	/* Remove all screens instead of just drawing over them to reduce GPU usage */
-	Gui_RemoveAll();
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_DISCONNECT);
+	/* Remove other screens instead of just drawing over them to reduce GPU usage */
+	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
+	{
+		if (Gui_Screens[i] == (struct Screen*)s) continue;
+		Gui_Remove(Gui_Screens[i]);
+	}
 }
 
 

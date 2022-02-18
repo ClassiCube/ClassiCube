@@ -145,10 +145,6 @@ void Gui_RefreshAll(void) {
 	OnResize(NULL);
 }
 
-void Gui_RemoveAll(void) {
-	while (Gui.ScreensCount) Gui_Remove(Gui_Screens[0]);
-}
-
 void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
@@ -572,7 +568,8 @@ static void OnReset(void) {
 }
 
 static void OnFree(void) {
-	Gui_RemoveAll();
+	while (Gui.ScreensCount) Gui_Remove(Gui_Screens[0]);
+
 	OnContextLost(NULL);
 	OnReset();
 }
