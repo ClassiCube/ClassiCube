@@ -3539,7 +3539,7 @@ void UrlWarningOverlay_Show(const cc_string* url) {
 *#########################################################################################################################*/
 static struct TexPackOverlay {
 	Screen_Body
-	cc_bool deny, alwaysDeny;
+	cc_bool deny, alwaysDeny, gotContent;
 	cc_uint32 contentLength;
 	cc_string url;
 	int reqID;
@@ -3613,6 +3613,8 @@ static void TexPackOverlay_UpdateLine3(struct TexPackOverlay* s) {
 		contentLengthMB = s->contentLength / (1024.0f * 1024.0f);
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
 		TextWidget_Set(&s->lbls[3], &contents, &s->textFont);
+	} else if (s->gotContent) {
+		TextWidget_SetConst(&s->lbls[3], "Download size: Unknown", &s->textFont);
 	} else {
 		TextWidget_SetConst(&s->lbls[3], "Download size: Determining...", &s->textFont);
 	}
@@ -3624,6 +3626,7 @@ static void TexPackOverlay_Update(void* screen, double delta) {
 	if (!Http_GetResult(s->reqID, &item)) return;
 
 	s->dirty         = true;
+	s->gotContent    = true;
 	s->contentLength = item.contentLength;
 	TexPackOverlay_UpdateLine3(s);
 }
@@ -3680,6 +3683,7 @@ static void TexPackOverlay_Init(void* screen) {
 	s->maxVertices = TEXPACK_MAX_VERTICES;
 
 	s->contentLength = 0;
+	s->gotContent    = false;
 	s->deny          = false;	
 	Overlay_InitLabels(s->lbls);
 
