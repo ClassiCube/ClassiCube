@@ -811,10 +811,23 @@ public class MainActivity extends Activity
 			conn.setDoInput(true);
 			conn.setRequestMethod(method);
 			conn.setInstanceFollowRedirects(true);
+			
+			httpAddMethodHeaders(method);
 			return 0;
 		} catch (Exception ex) {
 			return httpOnError(ex);
 		}
+	}
+	
+	static void httpAddMethodHeaders(String method) {
+		if (!method.equals("HEAD")) return;
+
+		// Ever since dropbox switched to to chunked transfer encoding,
+		//  sending a HEAD request to dropbox always seems to result in the
+		//  next GET request failing with 'Unexpected status line' ProtocolException
+		// Seems to be a known issue: https://github.com/square/okhttp/issues/3689
+		// Simplest workaround is to ask for connection to be closed after HEAD request
+		httpSetHeader("connection", "close");
 	}
 
 	public static void httpSetHeader(String name, String value) {
