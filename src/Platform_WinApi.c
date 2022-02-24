@@ -547,13 +547,13 @@ static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
 	return *len ? 0 : GetLastError();
 }
 
-cc_result Process_StartGame(const cc_string* args) {
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	WCHAR path[NATIVE_STR_LEN + 1], raw[NATIVE_STR_LEN];
 	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
 	STARTUPINFOW si        = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	cc_result res;
-	int len;
+	int len, i;
 
 	Process_RawGetExePath(path, &len);
 	path[len] = '\0';
@@ -561,8 +561,15 @@ cc_result Process_StartGame(const cc_string* args) {
 	
 	String_InitArray(argv, argvBuffer);
 	/* Game doesn't actually care about argv[0] */
-	String_Format1(&argv, "cc %s", args);
-	String_UNSAFE_TrimEnd(&argv);
+	String_AppendConst(&argv, "cc");
+	for (i = 0; i < numArgs; i++)
+	{
+		if (String_IndexOf(&args[i], ' ') >= 0) {
+			String_Format1(&argv, " \"%s\"", &args[i]);
+		} else {
+			String_Format1(&argv, " %s",     &args[i]);
+		}
+	}
 	Platform_EncodeUtf16(raw, &argv);
 
 	if (CreateProcessW(path, raw, NULL, NULL, 
@@ -636,7 +643,7 @@ cc_result Updater_Start(const char** action) {
 	if (!MoveFileExW(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 
 	*action = "Restarting game";
-	return Process_StartGame(&String_Empty);
+	return Process_StartGame2(NULL, 0);
 }
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {

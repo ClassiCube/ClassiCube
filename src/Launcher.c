@@ -86,7 +86,7 @@ static CC_NOINLINE void InitFramebuffer(void) {
 *#########################################################################################################################*/
 static cc_uint64 lastJoin;
 cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server) {
-	cc_string args; char argsBuffer[512];
+	cc_string args[4]; int numArgs;
 	TimeMS now;
 	cc_result res;
 	
@@ -106,11 +106,16 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	/* Otherwise can get 'file already in use' errors on startup */
 	Options_SaveIfChanged();
 
-	String_InitArray(args, argsBuffer);
-	String_AppendString(&args, user);
-	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
+	args[0] = *user;
+	numArgs = 1;
+	if (mppass->length) {
+		args[1] = *mppass;
+		args[2] = *ip;
+		args[3] = *port;
+		numArgs = 4;
+	}
 
-	res = Process_StartGame(&args);
+	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
 #ifdef CC_BUILD_MOBILE
