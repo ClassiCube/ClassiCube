@@ -85,7 +85,7 @@ static void LimitFPS(void) {
 		float cooldown = gfx_targetTime - gfx_actualTime;
 		Thread_Sleep((int)(cooldown + 0.5f));
 
-		/* also accumulate Thread_Sleep duration, as actual sleep  
+		/* also accumulate Thread_Sleep duration, as actual sleep */
 		/*  duration can significantly deviate from requested time */ 
 		/*  (e.g. requested 4ms, but actually slept for 8ms) */
 		cc_uint64 sleepEnd = Stopwatch_Measure();

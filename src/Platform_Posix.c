@@ -622,25 +622,20 @@ static cc_result Process_RawStart(const char* path, char** argv) {
 
 static cc_result Process_RawGetExePath(char* path, int* len);
 
-cc_result Process_StartGame(const cc_string* args) {
-	char path[NATIVE_STR_LEN], raw[NATIVE_STR_LEN];
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	char raw[GAME_MAX_CMDARGS][NATIVE_STR_LEN];
+	char path[NATIVE_STR_LEN];
 	int i, j, len = 0;
 	char* argv[15];
 
 	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
+	argv[0]   = path;
 
-	Platform_EncodeUtf8(raw, args);
-	argv[0] = path; argv[1] = raw;
-
-	/* need to null-terminate multiple arguments */
-	for (i = 0, j = 2; raw[i] && i < Array_Elems(raw); i++) {
-		if (raw[i] != ' ') continue;
-
-		/* null terminate previous argument */
-		raw[i] = '\0';
-		argv[j++] = &raw[i + 1];
+	for (i = 0, j = 1; i < numArgs; i++, j++) {
+		Platform_EncodeUtf8(raw[i], &args[i]);
+		argv[j] = raw[i];
 	}
 
 	if (defaultDirectory) { argv[j++] = defaultDirectory; }
