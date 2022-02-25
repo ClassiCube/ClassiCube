@@ -10,7 +10,7 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
-/*#define D3D_DISABLE_9EX causes compile errors*/
+/* NOTE: Direct3D9Ex backend was dropped on 2022-02-25 in favour of Direct3D11 */
 #include <d3d9.h>
 #include <d3d9caps.h>
 #include <d3d9types.h>
@@ -23,7 +23,6 @@ static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ 
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 
-static cc_bool using_d3d9Ex;
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags;
@@ -54,12 +53,10 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 }
 
 static IDirect3D9* (WINAPI *_Direct3DCreate9)(UINT SDKVersion);
-static HRESULT     (WINAPI *_Direct3DCreate9Ex)(UINT SDKVersion, IDirect3D9** __d3d9);
 
 static void LoadD3D9Library(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(Direct3DCreate9), 
-		DynamicLib_Sym(Direct3DCreate9Ex)
+		DynamicLib_Sym(Direct3DCreate9)
 	};
 	static const cc_string path = String_FromConst("d3d9.dll");
 	void* lib = DynamicLib_Load2(&path);
@@ -72,24 +69,9 @@ static void LoadD3D9Library(void) {
 }
 
 static void CreateD3D9Instance(void) {
-	cc_result res;
-	// still to check: managed texture perf, driver reset
-	//   consider optimised CreateTexture??
-	if (_Direct3DCreate9Ex && Options_GetBool("gfx-direct3d9ex", false)) {
-		res = _Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d);
-		if (res == D3DERR_NOTAVAILABLE) {
-			/* Direct3D9Ex not supported, fallback to normal Direct3D9 */
-		} else if (res) {
-			Logger_Abort2(res, "Direct3D9Create9Ex failed");
-		} else {
-			using_d3d9Ex = true;
-			/* NOTE: Direct3D9Ex does not support managed textures */
-			return;
-		}
-	}
-
 	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
 	/* Normal Direct3D9 supports POOL_MANAGED textures */
+	/*  (Direct3D9Ex does not support them however) */
 	Gfx.ManagedTextures = true;
 	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
 }
@@ -351,25 +333,14 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	}
 	if (Gfx.LostContext) return 0;
 
-	if ((flags & TEXTURE_FLAG_MANAGED) && !using_d3d9Ex) {
-		/* Direct3D9Ex doesn't support managed textures */
+	if (flags & TEXTURE_FLAG_MANAGED) {
 		tex = DoCreateTexture(bmp, levels, 0, D3DPOOL_MANAGED, NULL);
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
 	} else {
-		/* Direct3D9Ex requires this for dynamically updatable textures */
-		if ((flags & TEXTURE_FLAG_DYNAMIC) && using_d3d9Ex) usage = D3DUSAGE_DYNAMIC;
-
-		if (using_d3d9Ex && !mipmaps) {
-			/* Direct3D9Ex allows avoiding copying data altogether in some circumstances */
-			/* https://docs.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3ddevice9-createtexture */
-			void** pixels = &bmp->scan0;
-			sys = DoCreateTexture(bmp, levels, 0, D3DPOOL_SYSTEMMEM, pixels);
-		} else {
-			sys = DoCreateTexture(bmp, levels, 0, D3DPOOL_SYSTEMMEM, NULL);
-			D3D9_SetTextureData(sys, bmp, 0);
-			if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
-		}
+		sys = DoCreateTexture(bmp, levels, 0, D3DPOOL_SYSTEMMEM, NULL);
+		D3D9_SetTextureData(sys, bmp, 0);
+		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
 		
 		tex = DoCreateTexture(bmp, levels, usage, D3DPOOL_DEFAULT, NULL);
 		res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
@@ -777,17 +748,7 @@ finished:
 }
 
 static void UpdateSwapchain(const char* reason) {
-	D3DPRESENT_PARAMETERS args = { 0 };
-	if (using_d3d9Ex) {
-		/* Try to use ResetEx first to avoid resetting resources */
-		IDirect3DDevice9Ex* dev = (IDirect3DDevice9Ex*)device;
-		D3D9_FillPresentArgs(&args);
-
-		if (!IDirect3DDevice9Ex_ResetEx(dev, &args, NULL)) {
-			/* Fast path succeeded */
-			D3D9_UpdateCachedDimensions(); return;
-		}
-	}
+	/* TODO: Can Direct3D9Ex fast path still be used here? */
 	Gfx_LoseContext(reason);
 }
 
@@ -842,12 +803,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
 	curMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
-
-	if (using_d3d9Ex) {
-		String_Format1(info, "-- Using Direct3D9Ex (%i bit) --\n", &pointerSize);
-	} else {
-		String_Format1(info, "-- Using Direct3D9 (%i bit) --\n", &pointerSize);
-	}
+	String_Format1(info, "-- Using Direct3D9 (%i bit) --\n", &pointerSize);
 
 	String_Format1(info, "Adapter: %c\n",         adapter.Description);
 	String_Format1(info, "Processing mode: %c\n", D3D9_StrFlags());
