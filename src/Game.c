@@ -141,6 +141,17 @@ void Game_CycleViewDistance(void) {
 	}
 }
 
+cc_bool Game_ReduceVRAM(void) {
+	if (Game_UserViewDistance <= 16) return false;
+	Game_UserViewDistance /= 2;
+	Game_UserViewDistance = max(16, Game_UserViewDistance);
+
+	MapRenderer_Refresh();
+	Game_SetViewDistance(Game_UserViewDistance);
+	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
+	return true;
+}
+
 
 void Game_SetViewDistance(int distance) {
 	distance = min(distance, Game_MaxViewDistance);
@@ -263,16 +274,6 @@ static void HandleOnNewMapLoaded(void* obj) {
 	}
 }
 
-static void HandleLowVRAMDetected(void* obj) {
-	if (Game_UserViewDistance <= 16) Logger_Abort("Out of video memory!");
-	Game_UserViewDistance /= 2;
-	Game_UserViewDistance = max(16, Game_UserViewDistance);
-
-	MapRenderer_Refresh();
-	Game_SetViewDistance(Game_UserViewDistance);
-	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
-}
-
 static void HandleInactiveChanged(void* obj) {
 	if (WindowInfo.Inactive) {
 		Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
@@ -373,7 +374,6 @@ static void Game_Load(void) {
 
 	Event_Register_(&WorldEvents.NewMap,           NULL, HandleOnNewMap);
 	Event_Register_(&WorldEvents.MapLoaded,        NULL, HandleOnNewMapLoaded);
-	Event_Register_(&GfxEvents.LowVRAMDetected,    NULL, HandleLowVRAMDetected);
 	Event_Register_(&WindowEvents.Resized,         NULL, Game_OnResize);
 	Event_Register_(&WindowEvents.Closing,         NULL, Game_Free);
 	Event_Register_(&WindowEvents.InactiveChanged, NULL, HandleInactiveChanged);

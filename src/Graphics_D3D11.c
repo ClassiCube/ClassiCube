@@ -239,8 +239,16 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 		src = NULL;
 	}
 
-	hr = ID3D11Device_CreateTexture2D(device, &desc, src, &tex);
-	if (hr) Logger_Abort2(hr, "Failed to create texture");
+	while ((hr = ID3D11Device_CreateTexture2D(device, &desc, src, &tex)))
+	{
+		if (hr == E_OUTOFMEMORY) {
+			// insufficient VRAM or RAM left
+			if (!Game_ReduceVRAM()) return NULL;
+		} else {
+			// unknown issue, do not even try to handle it
+			Logger_Abort2(hr, "Failed to create texture");
+		}
+	}
 
 	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
 	if (hr) Logger_Abort2(hr, "Failed to create view");

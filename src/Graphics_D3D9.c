@@ -238,7 +238,7 @@ static cc_bool D3D9_CheckResult(cc_result res, const char* func) {
 	if (!res) return true;
 
 	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY) {
-		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
+		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory!");
 	} else {
 		Logger_Abort2(res, func);
 	}

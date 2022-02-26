@@ -55,6 +55,9 @@ extern const char* const FpsLimit_Names[FPS_LIMIT_COUNT];
 
 void Game_ToggleFullscreen(void);
 void Game_CycleViewDistance(void);
+/* Attempts to reduce VRAM usage (e.g. reducing view distance) */
+/* Returns false if VRAM cannot be reduced any further */
+cc_bool Game_ReduceVRAM(void);
 
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
