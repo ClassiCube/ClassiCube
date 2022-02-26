@@ -27,11 +27,15 @@ void Platform_Log(const char* msg, int len) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-static char gameArgsBuffer[512];
-static cc_string gameArgs = String_FromArray(gameArgsBuffer);
+static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
+static int gameNumArgs;
 
-cc_result Process_StartGame(const cc_string* args) {
-	String_Copy(&gameArgs, args);
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	for (int i = 0; i < numArgs; i++) {
+		String_CopyToRawArray(gameArgs[i], &args[i]);
+	}
+
+	gameNumArgs = numArgs;
 	return 0;
 }
 
@@ -94,13 +98,14 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int count = 0;
-	if (gameArgs.length) {
-		count = String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
-		/* clear arguments so after game is closed, launcher is started */
-		gameArgs.length = 0;
+	int count = gameNumArgs;
+	for (int i = 0; i < count; i++) {
+		args[i] = String_FromRawArray(gameArgs[i]);
 	}
-	return count;
+
+	// clear arguments so after game is closed, launcher is started
+    gameNumArgs = 0;
+    return count;
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {

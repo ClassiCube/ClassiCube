@@ -406,6 +406,9 @@ cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 /*########################################################################################################################*
  *--------------------------------------------------------Platform--------------------------------------------------------*
  *#########################################################################################################################*/
+static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
+static int gameNumArgs;
+
 cc_result Process_StartOpen(const cc_string* args) {
     char raw[NATIVE_STR_LEN];
     NSURL* url;
@@ -418,19 +421,23 @@ cc_result Process_StartOpen(const cc_string* args) {
     return 0;
 }
 
-static char gameArgsBuffer[512];
-static cc_string gameArgs = String_FromArray(gameArgsBuffer);
-cc_result Process_StartGame(const cc_string* args) {
-    String_Copy(&gameArgs, args);
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+    for (int i = 0; i < numArgs; i++) {
+        String_CopyToRawArray(gameArgs[i], &args[i]);
+    }
+
+    gameNumArgs = numArgs;
     return 0;
 }
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-    if (!gameArgs.length) return 0;
-    
-    int count = String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
-    // clear arguments so after game is closed, launcher is started again
-    gameArgs.length = 0;
+    int count = gameNumArgs;
+    for (int i = 0; i < count; i++) {
+        args[i] = String_FromRawArray(gameArgs[i]);
+    }
+
+    // clear arguments so after game is closed, launcher is started
+    gameNumArgs = 0;
     return count;
 }
 

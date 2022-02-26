@@ -63,7 +63,7 @@ describe exists (e.g. Http_DescribeError), that should be preferred. */
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst);
 
 /* Starts the game with the given arguments. */
-CC_API cc_result Process_StartGame(const cc_string* args);
+CC_API cc_result Process_StartGame2(const cc_string* args, int numArgs);
 /* Terminates the process with the given return code. */
 CC_API void Process_Exit(cc_result code);
 /* Starts the platform-specific program to open the given url or filename. */
