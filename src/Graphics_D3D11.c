@@ -213,7 +213,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
-	if (Gfx.LostContext) return 0;
+	if (Gfx.LostContext) return NULL;
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
 	desc.Width     = bmp->width;
@@ -242,10 +242,11 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	while ((hr = ID3D11Device_CreateTexture2D(device, &desc, src, &tex)))
 	{
 		if (hr == E_OUTOFMEMORY) {
-			// insufficient VRAM or RAM left
-			if (!Game_ReduceVRAM()) return NULL;
+			// insufficient VRAM or RAM left to allocate texture, try to reduce the memory in use first
+			//  if can't reduce, return 'empty' texture so that at least the game will continue running
+			if (!Game_ReduceVRAM()) return 0;
 		} else {
-			// unknown issue, do not even try to handle it
+			// unknown issue, so don't even try to handle the error
 			Logger_Abort2(hr, "Failed to create texture");
 		}
 	}

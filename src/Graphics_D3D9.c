@@ -307,13 +307,13 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int usage, int pool, void** data) {
+static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int pool) {
 	IDirect3DTexture9* tex;
 	cc_result res;
 	
 	for (;;) {
 		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-			usage, D3DFMT_A8R8G8B8, pool, &tex, data);
+			0, D3DFMT_A8R8G8B8, pool, &tex, NULL);
 		if (D3D9_CheckResult(res, "D3D9_CreateTexture failed")) break;
 	}
 	return tex;
@@ -322,7 +322,6 @@ static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int us
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
-	DWORD usage = 0;
 	cc_result res;
 
 	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
@@ -334,19 +333,33 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	if (Gfx.LostContext) return 0;
 
 	if (flags & TEXTURE_FLAG_MANAGED) {
-		tex = DoCreateTexture(bmp, levels, 0, D3DPOOL_MANAGED, NULL);
+		while ((res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
+				0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL))) 
+		{
+			if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY) {
+				/* insufficient VRAM or RAM left to allocate texture, try to reduce the memory in use first */
+				/*  if can't reduce, return 'empty' texture so that at least the game will continue running */
+				if (!Game_ReduceVRAM()) return 0;
+			} else {
+				/* unknown issue, so don't even try to handle the error */
+				Logger_Abort2(res, "D3D9_CreateManagedTexture failed");
+			}
+		}
+
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
-	} else {
-		sys = DoCreateTexture(bmp, levels, 0, D3DPOOL_SYSTEMMEM, NULL);
-		D3D9_SetTextureData(sys, bmp, 0);
-		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
-		
-		tex = DoCreateTexture(bmp, levels, usage, D3DPOOL_DEFAULT, NULL);
-		res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
-		if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
-		D3D9_FreeResource(&sys);
+		return tex;
 	}
+
+	sys = DoCreateTexture(bmp, levels, D3DPOOL_SYSTEMMEM);
+	D3D9_SetTextureData(sys, bmp, 0);
+	if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
+		
+	tex = DoCreateTexture(bmp, levels, D3DPOOL_DEFAULT);
+	res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
+	if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
+
+	D3D9_FreeResource(&sys);
 	return tex;
 }
 
