@@ -444,10 +444,6 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 	Menu_SetButtons(s->btns, titleFont, s->descs, s->descsCount);
 	ButtonWidget_SetConst(&s->back, "Back to game", titleFont);
 	TextWidget_SetConst(&s->title,  "Game menu", titleFont);
-
-	if (Server.IsSinglePlayer) return;
-	s->btns[1].disabled = true;
-	s->btns[2].disabled = true;
 }
 
 static void PauseScreenBase_Init(struct PauseScreen* s, int width) {
@@ -512,6 +508,10 @@ static void PauseScreen_Init(void* screen) {
 	s->descsCount = Array_Elems(descs);
 	ButtonWidget_Init(&s->quit, 120, PauseScreenBase_Quit);
 	PauseScreenBase_Init(s, 300);
+
+	if (Server.IsSinglePlayer) return;
+	s->btns[1].disabled = true;
+	s->btns[2].disabled = true;
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -575,6 +575,10 @@ static void ClassicPauseScreen_Init(void* screen) {
 	s->descsCount = Game_ClassicMode ? 4    : 5;
 	s->widgets[5] = Game_ClassicMode ? NULL : (struct Widget*)&s->btns[4];
 	PauseScreenBase_Init(s, 400);
+
+	if (Server.IsSinglePlayer) return;
+	s->btns[1].disabled = true;
+	s->btns[3].disabled = true;
 }
 
 static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
