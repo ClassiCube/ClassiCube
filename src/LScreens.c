@@ -532,6 +532,19 @@ static struct DirectConnectScreen {
 	struct LWidget* _widgets[6];
 } DirectConnectScreen_Instance;
 
+static void DirectConnectScreen_UrlFilter(cc_string* str) {
+	static const cc_string prefix = String_FromConst("mc://");
+	cc_string parts[6];
+	if (!String_CaselessStarts(str, &prefix)) return;
+	/* mc://[ip:port]/[username]/[mppass] */
+	if (String_UNSAFE_Split(str, '/', parts, 6) != 5) return;
+	
+	LInput_SetString(&DirectConnectScreen_Instance.iptAddress,  &parts[2]);
+	LInput_SetString(&DirectConnectScreen_Instance.iptUsername, &parts[3]);
+	LInput_SetString(&DirectConnectScreen_Instance.iptMppass,   &parts[4]);
+	str->length = 0;
+}
+
 CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* text) {
 	struct LLabel* w = &DirectConnectScreen_Instance.lblStatus;
 	LLabel_SetConst(w, text);
@@ -616,6 +629,10 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	LButton_Init(s_, &s->btnConnect, 110, 35, "Connect");
 	LButton_Init(s_, &s->btnBack,     80, 35, "Back");
 	LLabel_Init(s_,  &s->lblStatus, "");
+
+	s->iptUsername.ClipboardFilter = DirectConnectScreen_UrlFilter;
+	s->iptAddress.ClipboardFilter  = DirectConnectScreen_UrlFilter;
+	s->iptMppass.ClipboardFilter   = DirectConnectScreen_UrlFilter;
 
 	s->btnConnect.OnClick = DirectConnectScreen_StartClient;
 	s->btnBack.OnClick    = SwitchToMain;

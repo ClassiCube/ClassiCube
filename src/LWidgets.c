@@ -457,6 +457,12 @@ void LInput_Clear(struct LInput* w) {
 	LWidget_Redraw(w);
 }
 
+void LInput_SetString(struct LInput* w, const cc_string* str) {
+	LInput_SetText(w, str);
+	if (w->TextChanged) w->TextChanged(w);
+	LWidget_Redraw(w);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
