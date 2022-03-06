@@ -1386,6 +1386,7 @@ cc_result Cw_Save(struct Stream* stream) {
 	if ((res = Stream_Write(stream, tmp,      sizeof(cw_begin)))) return res;
 	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
 
+#ifdef EXTENDED_BLOCKS
 	if (World.Blocks != World.Blocks2) {
 		Mem_Copy(tmp, cw_map2, sizeof(cw_map2));
 		Stream_SetU32_BE(&tmp[14], World.Volume);
@@ -1393,6 +1394,7 @@ cc_result Cw_Save(struct Stream* stream) {
 		if ((res = Stream_Write(stream, tmp,        sizeof(cw_map2)))) return res;
 		if ((res = Stream_Write(stream, World.Blocks2, World.Volume))) return res;
 	}
+#endif
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{

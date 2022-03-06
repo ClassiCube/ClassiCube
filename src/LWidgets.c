@@ -315,6 +315,40 @@ static void LInput_CopyFromClipboard(struct LInput* w) {
 	LInput_AppendString(w, &text);
 }
 
+/* If caret position is now beyond end of text, resets to -1 */
+static CC_INLINE void LInput_ClampCaret(struct LInput* w) {
+	if (w->caretPos >= w->text.length) w->caretPos = -1;
+}
+
+/* Removes the character preceding the caret in the currently entered text */
+static void LInput_Backspace(struct LInput* w) {
+	if (!w->text.length || w->caretPos == 0) return;
+
+	if (w->caretPos == -1) {
+		String_DeleteAt(&w->text, w->text.length - 1);
+	} else {	
+		String_DeleteAt(&w->text, w->caretPos - 1);
+		w->caretPos--;
+		if (w->caretPos == -1) w->caretPos = 0;
+	}
+
+	if (w->TextChanged) w->TextChanged(w);
+	LInput_ClampCaret(w);
+	LWidget_Redraw(w);
+}
+
+/* Removes the character at the caret in the currently entered text */
+static void LInput_Delete(struct LInput* w) {
+	if (!w->text.length || w->caretPos == -1) return;
+
+	String_DeleteAt(&w->text, w->caretPos);
+	if (w->caretPos == -1) w->caretPos = 0;
+
+	if (w->TextChanged) w->TextChanged(w);
+	LInput_ClampCaret(w);
+	LWidget_Redraw(w);
+}
+
 static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	struct LInput* w = (struct LInput*)widget;
 	if (key == KEY_BACKSPACE) {
@@ -334,9 +368,26 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	}
 }
 
+/* Appends a character to the currently entered text */
+static CC_NOINLINE cc_bool LInput_Append(struct LInput* w, char c) {
+	if (w->TextFilter(c) && w->text.length < w->text.capacity) {
+		if (w->caretPos == -1) {
+			String_Append(&w->text, c);
+		} else {
+			String_InsertAt(&w->text, w->caretPos, c);
+			w->caretPos++;
+		}
+		return true;
+	}
+	return false;
+}
+
 static void LInput_KeyChar(void* widget, char c) {
 	struct LInput* w = (struct LInput*)widget;
-	LInput_Append(w, c);
+	cc_bool appended = LInput_Append(w, c);
+
+	if (appended && w->TextChanged) w->TextChanged(w);
+	if (appended) LWidget_Redraw(w);
 }
 
 static void LInput_TextChanged(void* widget, const cc_string* str) {
@@ -373,11 +424,6 @@ void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hin
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
-/* If caret position is now beyond end of text, resets to -1 */
-static CC_INLINE void LInput_ClampCaret(struct LInput* w) {
-	if (w->caretPos >= w->text.length) w->caretPos = -1;
-}
-
 void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	cc_string text; char textBuffer[STRING_SIZE];
 	String_Copy(&w->text, text_);
@@ -393,60 +439,14 @@ void LInput_ClearText(struct LInput* w) {
 	w->caretPos    = -1;
 }
 
-static CC_NOINLINE cc_bool LInput_AppendRaw(struct LInput* w, char c) {
-	if (w->TextFilter(c) && w->text.length < w->text.capacity) {
-		if (w->caretPos == -1) {
-			String_Append(&w->text, c);
-		} else {
-			String_InsertAt(&w->text, w->caretPos, c);
-			w->caretPos++;
-		}
-		return true;
-	}
-	return false;
-}
-
-void LInput_Append(struct LInput* w, char c) {
-	cc_bool appended = LInput_AppendRaw(w, c);
-	if (appended && w->TextChanged) w->TextChanged(w);
-	if (appended) LWidget_Redraw(w);
-}
-
 void LInput_AppendString(struct LInput* w, const cc_string* str) {
 	int i, appended = 0;
 	for (i = 0; i < str->length; i++) {
-		if (LInput_AppendRaw(w, str->buffer[i])) appended++;
+		if (LInput_Append(w, str->buffer[i])) appended++;
 	}
 
 	if (appended && w->TextChanged) w->TextChanged(w);
 	if (appended) LWidget_Redraw(w);
-}
-
-void LInput_Backspace(struct LInput* w) {
-	if (!w->text.length || w->caretPos == 0) return;
-
-	if (w->caretPos == -1) {
-		String_DeleteAt(&w->text, w->text.length - 1);
-	} else {	
-		String_DeleteAt(&w->text, w->caretPos - 1);
-		w->caretPos--;
-		if (w->caretPos == -1) w->caretPos = 0;
-	}
-
-	if (w->TextChanged) w->TextChanged(w);
-	LInput_ClampCaret(w);
-	LWidget_Redraw(w);
-}
-
-void LInput_Delete(struct LInput* w) {
-	if (!w->text.length || w->caretPos == -1) return;
-
-	String_DeleteAt(&w->text, w->caretPos);
-	if (w->caretPos == -1) w->caretPos = 0;
-
-	if (w->TextChanged) w->TextChanged(w);
-	LInput_ClampCaret(w);
-	LWidget_Redraw(w);
 }
 
 void LInput_Clear(struct LInput* w) {

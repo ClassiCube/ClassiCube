@@ -96,14 +96,8 @@ CC_NOINLINE void LInput_Init(struct LScreen* s, struct LInput* w, int width, con
 CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
 CC_NOINLINE void LInput_ClearText(struct LInput* w);
 
-/* Appends a character to the currently entered text */
-CC_NOINLINE void LInput_Append(struct LInput* w, char c);
 /* Appends a string to the currently entered text */
 CC_NOINLINE void LInput_AppendString(struct LInput* w, const cc_string* str);
-/* Removes the character preceding the caret in the currently entered text */
-CC_NOINLINE void LInput_Backspace(struct LInput* w);
-/* Removes the character at the caret in the currently entered text */
-CC_NOINLINE void LInput_Delete(struct LInput* w);
 /* Resets the currently entered text to an empty string */
 CC_NOINLINE void LInput_Clear(struct LInput* w);
 /* Sets the currently entered text to the given string */
