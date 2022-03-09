@@ -46,7 +46,6 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 	if (queue->capacity >= (Int32_MaxValue / 4)) {
 		Chat_AddRaw("&cToo many physics entries, clearing");
 		TickQueue_Clear(queue);
-		return;
 	}
 
 	capacity = queue->capacity * 2;
