@@ -500,9 +500,6 @@
     <ClCompile Include="_type1.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_type1cid.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_truetype.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>

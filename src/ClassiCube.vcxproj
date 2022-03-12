@@ -343,7 +343,6 @@
     <ClCompile Include="_smooth.c" />
     <ClCompile Include="_truetype.c" />
     <ClCompile Include="_type1.c" />
-    <ClCompile Include="_type1cid.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
