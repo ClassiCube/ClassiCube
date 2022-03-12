@@ -259,7 +259,7 @@ static int NotchyGen_CreateStrataFast(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState    = "Filling map";
 	/* Make lava layer at bottom */
-	Mem_Set(Gen_Blocks, BLOCK_LAVA, oneY);
+	Mem_Set(Gen_Blocks, BLOCK_STILL_LAVA, oneY);
 
 	/* Invariant: the lowest value dirtThickness can possible be is -14 */
 	stoneHeight = minHeight - 14;
@@ -409,8 +409,8 @@ static void NotchyGen_FloodFillWaterBorders(void) {
 	for (x = 0; x < World.Width; x++) {
 		Gen_CurrentProgress = 0.0f + ((float)x / World.Width) * 0.5f;
 
-		NotchyGen_FloodFill(index1, BLOCK_WATER);
-		NotchyGen_FloodFill(index2, BLOCK_WATER);
+		NotchyGen_FloodFill(index1, BLOCK_STILL_WATER);
+		NotchyGen_FloodFill(index2, BLOCK_STILL_WATER);
 		index1++; index2++;
 	}
 
@@ -419,8 +419,8 @@ static void NotchyGen_FloodFillWaterBorders(void) {
 	for (z = 0; z < World.Length; z++) {
 		Gen_CurrentProgress = 0.5f + ((float)z / World.Length) * 0.5f;
 
-		NotchyGen_FloodFill(index1, BLOCK_WATER);
-		NotchyGen_FloodFill(index2, BLOCK_WATER);
+		NotchyGen_FloodFill(index1, BLOCK_STILL_WATER);
+		NotchyGen_FloodFill(index2, BLOCK_STILL_WATER);
 		index1 += World.Width; index2 += World.Width;
 	}
 }
@@ -437,7 +437,7 @@ static void NotchyGen_FloodFillWater(void) {
 		x = Random_Next(&rnd, World.Width);
 		z = Random_Next(&rnd, World.Length);
 		y = waterLevel - Random_Range(&rnd, 1, 3);
-		NotchyGen_FloodFill(World_Pack(x, y, z), BLOCK_WATER);
+		NotchyGen_FloodFill(World_Pack(x, y, z), BLOCK_STILL_WATER);
 	}
 }
 
@@ -453,7 +453,7 @@ static void NotchyGen_FloodFillLava(void) {
 		x = Random_Next(&rnd, World.Width);
 		z = Random_Next(&rnd, World.Length);
 		y = (int)((waterLevel - 3) * Random_Float(&rnd) * Random_Float(&rnd));
-		NotchyGen_FloodFill(World_Pack(x, y, z), BLOCK_LAVA);
+		NotchyGen_FloodFill(World_Pack(x, y, z), BLOCK_STILL_LAVA);
 	}
 }
 
@@ -478,7 +478,7 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 			above = y >= World.MaxY ? BLOCK_AIR : Gen_Blocks[index + World.OneY];
 
 			/* TODO: update heightmap */
-			if (above == BLOCK_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
+			if (above == BLOCK_STILL_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
 				Gen_Blocks[index] = BLOCK_GRAVEL;
 			} else if (above == BLOCK_AIR) {
 				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(&n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;

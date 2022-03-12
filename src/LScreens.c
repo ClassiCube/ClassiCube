@@ -367,19 +367,19 @@ static struct LWidget* colours_widgets[] = {
 	(struct LWidget*)&ColoursScreen.btnBack,        (struct LWidget*)&ColoursScreen.cbClassic
 };
 
-CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol col) {
+CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol color) {
 	cc_string tmp; char tmpBuffer[3];
 
 	String_InitArray(tmp, tmpBuffer);
-	String_AppendInt(&tmp, BitmapCol_R(col));
+	String_AppendInt(&tmp, BitmapCol_R(color));
 	LInput_SetText(&s->iptColours[i + 0], &tmp);
 
 	tmp.length = 0;
-	String_AppendInt(&tmp, BitmapCol_G(col));
+	String_AppendInt(&tmp, BitmapCol_G(color));
 	LInput_SetText(&s->iptColours[i + 1], &tmp);
 
 	tmp.length = 0;
-	String_AppendInt(&tmp, BitmapCol_B(col));
+	String_AppendInt(&tmp, BitmapCol_B(color));
 	LInput_SetText(&s->iptColours[i + 2], &tmp);
 }
 
@@ -394,14 +394,14 @@ CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
 static void ColoursScreen_TextChanged(struct LInput* w) {
 	struct ColoursScreen* s = &ColoursScreen;
 	int index = LScreen_IndexOf((struct LScreen*)s, w);
-	BitmapCol* col;
+	BitmapCol* color;
 	cc_uint8 r, g, b;
 
-	if (index < 3)       col = &Launcher_Theme.BackgroundColor;
-	else if (index < 6)  col = &Launcher_Theme.ButtonBorderColor;
-	else if (index < 9)  col = &Launcher_Theme.ButtonHighlightColor;
-	else if (index < 12) col = &Launcher_Theme.ButtonForeColor;
-	else                 col = &Launcher_Theme.ButtonForeActiveColor;
+	if (index < 3)       color = &Launcher_Theme.BackgroundColor;
+	else if (index < 6)  color = &Launcher_Theme.ButtonBorderColor;
+	else if (index < 9)  color = &Launcher_Theme.ButtonHighlightColor;
+	else if (index < 12) color = &Launcher_Theme.ButtonForeColor;
+	else                 color = &Launcher_Theme.ButtonForeActiveColor;
 
 	/* if index of G input, changes to index of R input */
 	index = (index / 3) * 3;
@@ -409,27 +409,27 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->iptColours[index + 1].text, &g)) return;
 	if (!Convert_ParseUInt8(&s->iptColours[index + 2].text, &b)) return;
 
-	*col = BitmapCol_Make(r, g, b, 255);
+	*color = BitmapCol_Make(r, g, b, 255);
 	Launcher_SaveTheme();
 	Launcher_Redraw();
 }
 
 static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	struct LInput* w;
-	int index, newCol;
-	cc_uint8 col;
+	int index, newVal;
+	cc_uint8 value;
 
 	if (!s->selectedWidget) return;
 	index = LScreen_IndexOf(s, s->selectedWidget);
 	if (index >= 15) return;
 
 	w = (struct LInput*)s->selectedWidget;
-	if (!Convert_ParseUInt8(&w->text, &col)) return;
-	newCol = col + delta;
+	if (!Convert_ParseUInt8(&w->text, &value)) return;
+	newVal = value + delta;
 
-	Math_Clamp(newCol, 0, 255);
+	Math_Clamp(newVal, 0, 255);
 	w->text.length = 0;
-	String_AppendInt(&w->text, newCol);
+	String_AppendInt(&w->text, newVal);
 
 	if (w->caretPos >= w->text.length) w->caretPos = -1;
 	ColoursScreen_TextChanged(w);
