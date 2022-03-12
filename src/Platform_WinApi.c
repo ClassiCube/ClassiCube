@@ -615,11 +615,11 @@ const struct UpdaterInfo Updater_Info = {
 	"&eDirect3D 9 is recommended", 2,
 	{
 #if _WIN64
-		{ "OpenGL",    "ClassiCube.64-opengl.exe" },
-		{ "Direct3D9", "ClassiCube.64.exe" }
+		{ "Direct3D9", "ClassiCube.64.exe" },
+		{ "OpenGL",    "ClassiCube.64-opengl.exe" }
 #else
-		{ "OpenGL",    "ClassiCube.opengl.exe" },
-		{ "Direct3D9", "ClassiCube.exe" }
+		{ "Direct3D9", "ClassiCube.exe" },
+		{ "OpenGL",    "ClassiCube.opengl.exe" }
 #endif
 	}
 };
