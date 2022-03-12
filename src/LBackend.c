@@ -365,7 +365,7 @@ void LBackend_DrawSlider(struct LSlider* w) {
 	LSlider_DrawBox(w);
 
 	curWidth = (int)((w->width - xBorder2) * w->value / w->maxValue);
-	Drawer2D_Clear(&Launcher_Framebuffer, w->col,
+	Drawer2D_Clear(&Launcher_Framebuffer, w->color,
 				   w->x + xBorder, w->y + yBorder, 
 				   curWidth,       w->height - yBorder2);
 }

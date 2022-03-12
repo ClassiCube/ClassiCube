@@ -95,11 +95,7 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Hover, LWidget_Draw, /* Hover  */
 	NULL, NULL                   /* Select */
 };
-void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
-	LButton_Init2(w, width, height, text);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-void LButton_Init2(struct LButton* w, int width, int height, const char* text) {
+void LButton_Init(struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
 	w->tabSelectable = true;
 	w->width  = Display_ScaleX(width);
@@ -132,11 +128,7 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w, const char* text) {
-	LCheckbox_Init2(w, text);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-void LCheckbox_Init2(struct LCheckbox* w, const char* text) {
+void LCheckbox_Init(struct LCheckbox* w, const char* text) {
 	struct DrawTextArgs args;
 	w->VTABLE = &lcheckbox_VTABLE;
 	w->font   = &Launcher_TextFont;
@@ -411,11 +403,7 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Select, LInput_Unselect, /* Select */
 	NULL, LInput_TextChanged        /* TextChanged */
 };
-void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
-	LInput_Init2(w, width, hintText);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-void LInput_Init2(struct LInput* w, int width, const char* hintText) {
+void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
 	w->tabSelectable = true;
 	w->TextFilter    = LInput_DefaultInputFilter;
@@ -484,11 +472,7 @@ static const struct LWidgetVTABLE llabel_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text) {
-	LLabel_Init2(w, text);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-void LLabel_Init2(struct LLabel* w, const char* text) {
+void LLabel_Init(struct LLabel* w, const char* text) {
 	w->VTABLE = &llabel_VTABLE;
 	w->font   = &Launcher_TextFont;
 
@@ -526,11 +510,7 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLine_Init(struct LScreen* s, struct LLine* w, int width) {
-	LLine_Init2(w, width);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-void LLine_Init2(struct LLine* w, int width) {
+void LLine_Init(struct LLine* w, int width) {
 	w->VTABLE = &lline_VTABLE;
 	w->width  = Display_ScaleX(width);
 	w->height = Display_ScaleY(2);
@@ -551,16 +531,12 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, BitmapCol col) {
-	LSlider_Init2(w, width, height, col);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-void LSlider_Init2(struct LSlider* w, int width, int height, BitmapCol col) {
+void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
 	w->VTABLE   = &lslider_VTABLE;
 	w->width    = Display_ScaleX(width); 
 	w->height   = Display_ScaleY(height);
 	w->maxValue = 100;
-	w->col      = col;
+	w->color    = color;
 }
 
 

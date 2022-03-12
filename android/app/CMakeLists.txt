@@ -98,7 +98,6 @@ add_library(classicube SHARED
         ../../src/EnvRenderer.c
         ../../src/Animations.c
         ../../src/LBackend.c
-        ../../src/TouchUI.c
         )
 
 # add lib dependencies
