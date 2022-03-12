@@ -38,7 +38,6 @@ struct LWidgetVTABLE {
 	int x, y, width, height;       /* Top left corner and dimensions of this widget */ \
 	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
 	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
-	cc_bool hidden;                /* Whether this widget is hidden from view */ \
 	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
@@ -59,6 +58,7 @@ struct LButton {
 	int _textWidth, _textHeight;
 };
 CC_NOINLINE void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text);
+CC_NOINLINE void LButton_Init2(struct LButton* w, int width, int height, const char* text);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 
 struct LCheckbox {
@@ -69,6 +69,7 @@ struct LCheckbox {
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w, const char* text);
+CC_NOINLINE void LCheckbox_Init2(struct LCheckbox* w, const char* text);
 
 struct LInput;
 struct LInput {
@@ -93,6 +94,7 @@ struct LInput {
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText);
+CC_NOINLINE void LInput_Init2(struct LInput* w, int width, const char* hintText);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
 CC_NOINLINE void LInput_ClearText(struct LInput* w);
 
@@ -111,6 +113,7 @@ struct LLabel {
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text);
+CC_NOINLINE void LLabel_Init2(struct LLabel* w, const char* text);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const cc_string* text);
 CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
@@ -119,6 +122,7 @@ struct LLine {
 	LWidget_Layout
 };
 CC_NOINLINE void LLine_Init(struct LScreen* s, struct LLine* w, int width);
+CC_NOINLINE void LLine_Init2(struct LLine* w, int width);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {
@@ -127,6 +131,7 @@ struct LSlider {
 	BitmapCol col;
 };
 CC_NOINLINE void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, BitmapCol col);
+CC_NOINLINE void LSlider_Init2(struct LSlider* w, int width, int height, BitmapCol col);
 
 struct ServerInfo;
 struct DrawTextArgs;
