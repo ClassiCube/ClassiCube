@@ -548,16 +548,9 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	*modified = 0; return errno;
 }
 
-cc_result Socket_Close(cc_socket s) {
-	cc_result res = 0;
-	cc_result res1, res2;
-
-	res1 = shutdown(s, SHUT_RDWR);
-	if (res1 == -1) res = errno;
-
-	res2 = close(s);
-	if (res2 == -1) res = errno;
-	return res;
+void Socket_Close(cc_socket s) {
+	shutdown(s, SHUT_RDWR);
+	close(s);
 }
 
 #if defined CC_BUILD_DARWIN

@@ -334,9 +334,8 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 }
 
 extern int interop_SocketClose(int sock);
-cc_result Socket_Close(cc_socket s) {
-	/* returned result is negative for error */
-	return -interop_SocketClose(s);
+void Socket_Close(cc_socket s) {
+	interop_SocketClose(s);
 }
 
 extern int interop_SocketPoll(int sock);

@@ -241,7 +241,7 @@ CC_API cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_ui
 /* Attempts to write data to the given socket. */
 CC_API cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 /* Attempts to close the given socket. */
-CC_API cc_result Socket_Close(cc_socket s);
+CC_API void Socket_Close(cc_socket s);
 /* Attempts to poll the given socket for readability or writability. */
 /* NOTE: A closed socket is still considered readable. */
 /* NOTE: A socket is considered writable once it has finished connecting. */

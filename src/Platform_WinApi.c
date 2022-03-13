@@ -17,7 +17,6 @@
 #define _UNICODE
 #endif
 #include <windows.h>
-#include <winsock2.h>
 #include <ws2tcpip.h>
 
 /* === BEGIN shellapi.h === */
@@ -388,7 +387,25 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
+static int (WSAAPI *_WSAStartup)(WORD versionRequested, LPWSADATA wsaData);
+static int (WSAAPI *_WSACleanup)(void);
+static int (WSAAPI *_WSAGetLastError)(void);
+static int (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
+
+static int (WSAAPI *_socket)(int af, int type, int protocol);
+static int (WSAAPI *_closesocket)(SOCKET s);
+static int (WSAAPI *_connect)(SOCKET s, const struct sockaddr* name, int namelen);
+static int (WSAAPI *_shutdown)(SOCKET s, int how);
+
+static int (WSAAPI *_ioctlsocket)(SOCKET s, long cmd, u_long* argp);
+static int (WSAAPI *_getsockopt)(SOCKET s, int level, int optname, char* optval, int* optlen);
+static int (WSAAPI *_recv)(SOCKET s, char* buf, int len, int flags);
+static int (WSAAPI *_send)(SOCKET s, const char FAR * buf, int len, int flags);
+static int (WSAAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const struct timeval* timeout);
+
+static struct hostent* (WSAAPI *_gethostbyname)(const char* name);
+static unsigned short  (WSAAPI *_htons)(u_short hostshort);
+
 
 static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)address;
@@ -414,22 +431,32 @@ static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, 
 
 static void LoadWinsockFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(WSAStringToAddressW)
+		DynamicLib_Sym(WSAStartup),      DynamicLib_Sym(WSACleanup),
+		DynamicLib_Sym(WSAGetLastError), DynamicLib_Sym(WSAStringToAddressW),
+		DynamicLib_Sym(socket),          DynamicLib_Sym(closesocket),
+		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
+		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
+		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
+		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
 	};
+	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
+	static const cc_string winsock2 = String_FromConst("WS2_32.DLL");
 
-	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
-	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
+	LoadDynamicFuncs(&winsock2, funcs, Array_Elems(funcs));
+	/* Windows 95 is missing WS2_32 dll */
+	if (!_WSAStartup) LoadDynamicFuncs(&winsock1, funcs, Array_Elems(funcs));
+
 	/* Fallback for older OS versions which lack WSAStringToAddressW */
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
-	return ioctlsocket(s, FIONREAD, available);
+	return _ioctlsocket(s, FIONREAD, available);
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	int resultSize = sizeof(cc_result);
-	return getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)result, &resultSize);
+	return _getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)result, &resultSize);
 }
 
 static int ParseHost(void* dst, WCHAR* host, int port) {
@@ -437,14 +464,14 @@ static int ParseHost(void* dst, WCHAR* host, int port) {
 	struct hostent* res;
 
 	Platform_Utf16ToAnsi(host);
-	res = gethostbyname((char*)host);
+	res = _gethostbyname((char*)host);
 	if (!res || res->h_addrtype != AF_INET) return 0;
 
 	/* Must have at least one IPv4 address */
 	if (!res->h_addr_list[0]) return 0;
 
 	addr4->sin_family = AF_INET;
-	addr4->sin_port   = htons(port);
+	addr4->sin_port   = _htons(port);
 	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
 	return AF_INET;
 }
@@ -457,13 +484,13 @@ static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, i
 
 	*size = sizeof(*addr4);
 	if (!_WSAStringToAddressW(str, AF_INET, NULL, addr4, size)) {
-		addr4->sin_port  = htons(port);
+		addr4->sin_port  = _htons(port);
 		return AF_INET;
 	}
 
 	*size = sizeof(*addr6);
 	if (!_WSAStringToAddressW(str, AF_INET6, NULL, (SOCKADDR*)addr6, size)) {
-		addr6->sin6_port = htons(port);
+		addr6->sin6_port = _htons(port);
 		return AF_INET6;
 	}
 
@@ -487,36 +514,29 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	if (!(family = Socket_ParseAddress(&addr, &addrSize, address, port)))
 		return ERR_INVALID_ARGUMENT;
 
-	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return WSAGetLastError();
-	ioctlsocket(*s, FIONBIO, &blockingMode);
+	*s = _socket(family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s == -1) return _WSAGetLastError();
+	_ioctlsocket(*s, FIONBIO, &blockingMode);
 
-	res = connect(*s, (SOCKADDR*)&addr, addrSize);
-	return res == -1 ? WSAGetLastError() : 0;
+	res = _connect(*s, (SOCKADDR*)&addr, addrSize);
+	return res == -1 ? _WSAGetLastError() : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int recvCount = recv(s, (char*)data, count, 0);
+	int recvCount = _recv(s, (char*)data, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return WSAGetLastError();
+	*modified = 0; return _WSAGetLastError();
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(s, (const char*)data, count, 0);
+	int sentCount = _send(s, (const char*)data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return WSAGetLastError();
+	*modified = 0; return _WSAGetLastError();
 }
 
-cc_result Socket_Close(cc_socket s) {
-	cc_result res = 0;
-	cc_result res1, res2;
-
-	res1 = shutdown(s, SD_BOTH);
-	if (res1 == -1) res = WSAGetLastError();
-
-	res2 = closesocket(s);
-	if (res2 == -1) res = WSAGetLastError();
-	return res;
+void Socket_Close(cc_socket s) {
+	_shutdown(s, SD_BOTH);
+	_closesocket(s);
 }
 
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -528,12 +548,12 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	set.fd_array[0] = s;
 
 	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(1, &set, NULL, NULL, &time);
+		selectCount = _select(1, &set, NULL, NULL, &time);
 	} else {
-		selectCount = select(1, NULL, &set, NULL, &time);
+		selectCount = _select(1, NULL, &set, NULL, &time);
 	}
 
-	if (selectCount == -1) { *success = false; return WSAGetLastError(); }
+	if (selectCount == -1) { *success = false; return _WSAGetLastError(); }
 
 	*success = set.fd_count != 0; return 0;
 }
@@ -780,12 +800,12 @@ void Platform_Init(void) {
 
 	Platform_InitStopwatch();
 	heap = GetProcessHeap();
-	
-	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+	LoadWinsockFuncs();
+	res = _WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) Logger_SysWarn(res, "starting WSA");
 
 	LoadKernelFuncs();
-	LoadWinsockFuncs();
 	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
 	/* For when user runs from command prompt */
 	if (_AttachConsole) _AttachConsole(-1); /* ATTACH_PARENT_PROCESS */
@@ -795,7 +815,7 @@ void Platform_Init(void) {
 }
 
 void Platform_Free(void) {
-	WSACleanup();
+	_WSACleanup();
 	HeapDestroy(heap);
 }
 
