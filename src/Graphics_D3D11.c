@@ -97,6 +97,12 @@ static void CreateDeviceAndSwapChain(void) {
 	//  I decided to just not support GPUs that do not support at least feature level 10
 	if (fl < D3D_FEATURE_LEVEL_10_0)
 		Logger_Abort("Your GPU is too old to support the Direct3D11 version.\nTry using the Direct3D9 version instead.\n");
+
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-limits
+	//  see "Max Texture Dimension" row in Feature Support table
+	Gfx.MaxTexWidth  = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
+	Gfx.MaxTexHeight = fl < D3D_FEATURE_LEVEL_11_0 ? 8192 : 16384;
 }
 
 void Gfx_Create(void) {
@@ -105,12 +111,6 @@ void Gfx_Create(void) {
 	Gfx.Created         = true;
 	customMipmapsLevels = true;
 	Gfx_RestoreState();
-
-	// TODO need a better solution
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-limits
-	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
-	Gfx.MaxTexWidth  = 8192;
-	Gfx.MaxTexHeight = 8192;
 }
 
 void Gfx_Free(void) {

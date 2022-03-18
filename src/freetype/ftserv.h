@@ -986,14 +986,10 @@ FT_BEGIN_HEADER
    */
 
 #define FT_SERVICE_CFF_TABLE_LOAD_H     "svcfftl.h"
-#define FT_SERVICE_CID_H                "svcid.h"
-#define FT_SERVICE_CID_H_FT             "freetype/svcid.h"
 #define FT_SERVICE_FONT_FORMAT_H        "svfntfmt.h"
 #define FT_SERVICE_GLYPH_DICT_H         "svgldict.h"
 #define FT_SERVICE_METRICS_VARIATIONS_H "svmetric.h"
 #define FT_SERVICE_METRICS_VARIATIONS_H_FT "freetype/svmetric.h"
-#define FT_SERVICE_MULTIPLE_MASTERS_H   "svmm.h"
-#define FT_SERVICE_MULTIPLE_MASTERS_H_FT "freetype/svmm.h"
 #define FT_SERVICE_PFR_H                "svpfr.h"
 #define FT_SERVICE_PFR_H_FT             "freetype/svpfr.h"
 #define FT_SERVICE_POSTSCRIPT_CMAPS_H   "svpscmap.h"
