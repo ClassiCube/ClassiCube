@@ -83,7 +83,7 @@ static void FindCompatibleViewFormat(void) {
 
 	for (i = 0; i < Array_Elems(formats); i++) {
 		viewFormat = formats[i];
-		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_SW, viewFormat, viewFormat, true);
+		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, true);
 		if (!res) return;
 	}
 	Logger_FailToStart("Failed to create back buffer. Graphics drivers may not be installed.\n\nIf that still does not work, try the OpenGL build instead");
