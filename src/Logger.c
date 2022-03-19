@@ -984,3 +984,12 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 }
 
 void Logger_Abort(const char* raw_msg) { Logger_Abort2(0, raw_msg); }
+
+void Logger_FailToStart(const char* raw_msg) {
+	cc_string msg = String_FromReadonly(raw_msg);
+
+	Window_ShowDialog("Failed to start ClassiCube", raw_msg);
+	LogCrashHeader();
+	Logger_Log(&msg);
+	Process_Exit(1);
+}

@@ -63,7 +63,7 @@ static void LoadD3D9Library(void) {
 
 	if (!lib) {
 		Logger_DynamicLibWarn("loading", &path);
-		Logger_Abort("Failed to load d3d9.dll. You may need to install Direct3D9.");
+		Logger_FailToStart("Failed to load d3d9.dll. You may need to install Direct3D9.");
 	}
 	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
 }
@@ -83,10 +83,10 @@ static void FindCompatibleViewFormat(void) {
 
 	for (i = 0; i < Array_Elems(formats); i++) {
 		viewFormat = formats[i];
-		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, true);
+		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_SW, viewFormat, viewFormat, true);
 		if (!res) return;
 	}
-	Logger_Abort("Failed to create back buffer. Graphics drivers may not be installed.");
+	Logger_FailToStart("Failed to create back buffer. Graphics drivers may not be installed.\n\nIf that still does not work, try the OpenGL build instead");
 }
 
 static void FindCompatibleDepthFormat(void) {
@@ -99,7 +99,7 @@ static void FindCompatibleDepthFormat(void) {
 		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, depthFormat);
 		if (!res) return;
 	}
-	Logger_Abort("Failed to create depth buffer. Graphics drivers may not be installed.");
+	Logger_FailToStart("Failed to create depth buffer. Graphics drivers may not be installed.\n\nIf that still does not work, try the OpenGL build instead");
 }
 
 static void D3D9_FillPresentArgs(D3DPRESENT_PARAMETERS* args) {

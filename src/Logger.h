@@ -52,4 +52,5 @@ void Logger_Abort(const char* raw_msg);
 /* Displays a message box with raw_msg body, logs state to disc, then immediately terminates/quits. */
 /* Typically used to abort due to an unrecoverable error. (e.g. out of memory) */
 CC_NOINLINE void Logger_Abort2(cc_result result, const char* raw_msg);
+void Logger_FailToStart(const char* raw_msg);
 #endif

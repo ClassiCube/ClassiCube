@@ -558,7 +558,7 @@ static void OpenGL11Fallback(void) {
 #else
 /* No point in even trying for other systems */
 static void OpenGL11Fallback(void) {
-	Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
+	Logger_FailToStart("Only OpenGL 1.1 supported.\n\n" \
 		"Compile the game with CC_BUILD_GL11, or ask on the ClassiCube forums for it");
 }
 #endif

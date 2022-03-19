@@ -59,7 +59,7 @@ static void LoadD3D11Library(void) {
 
 	if (!lib) {
 		Logger_DynamicLibWarn("loading", &path);
-		Logger_Abort("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
+		Logger_FailToStart("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
 	}
 	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
 }
@@ -96,7 +96,7 @@ static void CreateDeviceAndSwapChain(void) {
 	//   https://github.com/MonoGame/MonoGame/issues/5789
 	//  I decided to just not support GPUs that do not support at least feature level 10
 	if (fl < D3D_FEATURE_LEVEL_10_0)
-		Logger_Abort("Your GPU is too old to support the Direct3D11 version.\nTry using the Direct3D9 version instead.\n");
+		Logger_FailToStart("Your GPU is too old to support the Direct3D11 version.\nTry using the Direct3D9 version instead.\n");
 
 	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-limits
