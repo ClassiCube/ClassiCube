@@ -59,7 +59,6 @@ static void LoadD3D11Library(void) {
 	DynamicLib_LoadAll(&path, funcs, Array_Elems(funcs), &lib);
 
 	if (lib) return;
-	Logger_DynamicLibWarn("loading", &path);
 	Logger_FailToStart("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
 }
 

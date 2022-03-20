@@ -260,17 +260,17 @@ static cc_bool LoadCurlFuncs(void) {
 		DynamicLib_Sym(curl_easy_setopt),    DynamicLib_Sym(curl_easy_cleanup),
 		DynamicLib_Sym(curl_slist_free_all), DynamicLib_Sym(curl_slist_append)
 	};
-	/* Non-essential function missing in older curl versions */
-	cc_bool res;
+	cc_bool success;
 	void* lib;
 
-	res = DynamicLib_LoadAll(&curlLib,     funcs, Array_Elems(funcs), &lib);
+	success = DynamicLib_LoadAll(&curlLib,     funcs, Array_Elems(funcs), &lib);
 	if (!lib) { 
-		res = DynamicLib_LoadAll(&curlAlt, funcs, Array_Elems(funcs), &lib);
+		success = DynamicLib_LoadAll(&curlAlt, funcs, Array_Elems(funcs), &lib);
 	}
 
+	/* Non-essential function missing in older curl versions */
 	_curl_easy_strerror = DynamicLib_Get2(lib, "curl_easy_strerror");
-	return res;
+	return success;
 }
 
 static CURL* curl;

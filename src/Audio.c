@@ -549,7 +549,7 @@ static cc_bool LoadSLFuncs(void) {
 	};
 	void* lib;
 	
-	return DynamicLib_GetAll(&slLib, funcs, Array_Elems(funcs), &lib);
+	return DynamicLib_LoadAll(&slLib, funcs, Array_Elems(funcs), &lib);
 }
 
 static cc_bool AudioBackend_Init(void) {

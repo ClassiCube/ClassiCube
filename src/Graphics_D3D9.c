@@ -63,7 +63,6 @@ static void LoadD3D9Library(void) {
 	DynamicLib_LoadAll(&path, funcs, Array_Elems(funcs), &lib);
 
 	if (lib) return;
-	Logger_DynamicLibWarn("loading", &path);
 	Logger_FailToStart("Failed to load d3d9.dll. You may need to install Direct3D9.");
 }
 
