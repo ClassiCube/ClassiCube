@@ -351,7 +351,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
-	wchar_t urlStr[NATIVE_STR_LEN];
+	char urlStr[NATIVE_STR_LEN];
 	void* post_data = req->data;
 	CURLcode res;
 	if (!curlSupported) return ERR_NOT_SUPPORTED;
@@ -402,6 +402,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #define _UNICODE
 #endif
 #include <windows.h>
+#include "Errors.h"
 
 /* === BEGIN wininet.h === */
 #define INETAPI DECLSPEC_IMPORT
@@ -427,17 +428,17 @@ typedef WORD INTERNET_PORT;
 #define HTTP_QUERY_RAW_HEADERS          21
 #define INTERNET_OPTION_SECURITY_FLAGS  31
 
-INETAPI BOOL WINAPI InternetCloseHandle(HINTERNET hInternet);
-INETAPI HINTERNET WINAPI InternetConnectA(HINTERNET hInternet, PCSTR serverName, INTERNET_PORT serverPort, PCSTR userName, PCSTR password, DWORD service, DWORD flags, DWORD_PTR context);
-INETAPI HINTERNET WINAPI InternetOpenA(PCSTR agent, DWORD accessType, PCSTR lpszProxy, PCSTR proxyBypass, DWORD flags);
-INETAPI BOOL WINAPI InternetQueryOptionA(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD* bufferLength);
-INETAPI BOOL WINAPI InternetSetOptionA(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD bufferLength);
-INETAPI BOOL WINAPI InternetQueryDataAvailable(HINTERNET hFile, DWORD* numBytesAvailable, DWORD flags, DWORD_PTR context);
-INETAPI BOOL WINAPI InternetReadFile(HINTERNET hFile, PVOID buffer, DWORD numBytesToRead, DWORD* numBytesRead);
-INETAPI BOOL WINAPI HttpQueryInfoA(HINTERNET hRequest, DWORD infoLevel, PVOID buffer, DWORD* bufferLength, DWORD* index);
-INETAPI BOOL WINAPI HttpAddRequestHeadersA(HINTERNET hRequest, PCSTR headers, DWORD headersLength, DWORD modifiers);
-INETAPI HINTERNET WINAPI HttpOpenRequestA(HINTERNET hConnect, PCSTR verb, PCSTR objectName, PCSTR version, PCSTR referrer, PCSTR* acceptTypes, DWORD flags, DWORD_PTR context);
-INETAPI BOOL WINAPI HttpSendRequestA(HINTERNET hRequest, PCSTR headers, DWORD headersLength, PVOID optional, DWORD optionalLength);
+static BOOL      (WINAPI *_InternetCloseHandle)(HINTERNET hInternet);
+static HINTERNET (WINAPI *_InternetConnectA)(HINTERNET hInternet, PCSTR serverName, INTERNET_PORT serverPort, PCSTR userName, PCSTR password, DWORD service, DWORD flags, DWORD_PTR context);
+static HINTERNET (WINAPI *_InternetOpenA)(PCSTR agent, DWORD accessType, PCSTR lpszProxy, PCSTR proxyBypass, DWORD flags);
+static BOOL      (WINAPI *_InternetQueryOptionA)(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD* bufferLength);
+static BOOL      (WINAPI *_InternetSetOptionA)(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD bufferLength);
+static BOOL      (WINAPI *_InternetQueryDataAvailable)(HINTERNET hFile, DWORD* numBytesAvailable, DWORD flags, DWORD_PTR context);
+static BOOL      (WINAPI *_InternetReadFile)(HINTERNET hFile, PVOID buffer, DWORD numBytesToRead, DWORD* numBytesRead);
+static BOOL      (WINAPI *_HttpQueryInfoA)(HINTERNET hRequest, DWORD infoLevel, PVOID buffer, DWORD* bufferLength, DWORD* index);
+static BOOL      (WINAPI *_HttpAddRequestHeadersA)(HINTERNET hRequest, PCSTR headers, DWORD headersLength, DWORD modifiers);
+static HINTERNET (WINAPI *_HttpOpenRequestA)(HINTERNET hConnect, PCSTR verb, PCSTR objectName, PCSTR version, PCSTR referrer, PCSTR* acceptTypes, DWORD flags, DWORD_PTR context);
+static BOOL      (WINAPI *_HttpSendRequestA)(HINTERNET hRequest, PCSTR headers, DWORD headersLength, PVOID optional, DWORD optionalLength);
 /* === END wininet.h === */
 
 /* caches connections to web servers */
@@ -498,7 +499,7 @@ static void HttpCache_MakeEntry(const cc_string* url, struct HttpCacheEntry* ent
 /* Inserts entry into the cache at the given index */
 static cc_result HttpCache_Insert(int i, struct HttpCacheEntry* e) {
 	HINTERNET conn;
-	conn = InternetConnectA(hInternet, e->Address.buffer, e->Port, NULL, NULL, 
+	conn = _InternetConnectA(hInternet, e->Address.buffer, e->Port, NULL, NULL, 
 				INTERNET_SERVICE_HTTP, e->Https ? INTERNET_FLAG_SECURE : 0, 0);
 	if (!conn) return GetLastError();
 
@@ -530,17 +531,31 @@ static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
 
 	/* TODO: Should we be consistent in which entry gets evicted? */
 	i = (cc_uint8)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
-	InternetCloseHandle(http_cache[i].Handle);
+	_InternetCloseHandle(http_cache[i].Handle);
 	return HttpCache_Insert(i, e);
 }
 
+static void* wininet_lib;
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
-	return Platform_DescribeErrorExt(res, dst, "wininet.dll");
+	return Platform_DescribeErrorExt(res, dst, wininet_lib);
 }
 
 static void HttpBackend_Init(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(InternetCloseHandle), 
+		DynamicLib_Sym(InternetConnectA),   DynamicLib_Sym(InternetOpenA),       
+		DynamicLib_Sym(InternetSetOptionA), DynamicLib_Sym(InternetQueryOptionA),
+		DynamicLib_Sym(InternetReadFile),   DynamicLib_Sym(InternetQueryDataAvailable),
+		DynamicLib_Sym(HttpOpenRequestA),   DynamicLib_Sym(HttpSendRequestA),   
+		DynamicLib_Sym(HttpQueryInfoA),     DynamicLib_Sym(HttpAddRequestHeadersA)
+
+	};
+	static const cc_string wininet = String_FromConst("wininet.dll");
+	DynamicLib_LoadAll(&wininet, funcs, Array_Elems(funcs), &wininet_lib);
+	if (!wininet_lib) return;
+
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
-	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+	hInternet = _InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
@@ -549,7 +564,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 	String_InitArray(tmp, tmpBuffer);
 
 	String_Format2(&tmp, "%c: %s\r\n", key, value);
-	HttpAddRequestHeadersA((HINTERNET)req->meta, tmp.buffer, tmp.length, 
+	_HttpAddRequestHeadersA((HINTERNET)req->meta, tmp.buffer, tmp.length, 
 							HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 }
 
@@ -565,31 +580,33 @@ static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url) {
 	String_InitArray_NT(path, pathBuffer);
 	HttpCache_MakeEntry(url, &entry, &path);
 	pathBuffer[path.length] = '\0';
+
+	if (!wininet_lib) return ERR_NOT_SUPPORTED;
 	if ((res = HttpCache_Lookup(&entry))) return res;
 
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
 
-	handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], pathBuffer, NULL, NULL, NULL, flags, 0);
+	handle = _HttpOpenRequestA(entry.Handle, verbs[req->requestType], pathBuffer, NULL, NULL, NULL, flags, 0);
 	/* Fallback for Windows 95 which returns ERROR_INVALID_PARAMETER */
 	if (!handle) {
 		flags &= ~INTERNET_FLAG_NO_UI; /* INTERNET_FLAG_NO_UI unsupported on Windows 95 */
-		handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], pathBuffer, NULL, NULL, NULL, flags, 0);
+		handle = _HttpOpenRequestA(entry.Handle, verbs[req->requestType], pathBuffer, NULL, NULL, NULL, flags, 0);
 		if (!handle) return GetLastError();
 	}
 	req->meta = handle;
 
 	bufferLen = sizeof(flags);
-	InternetQueryOptionA(handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
+	_InternetQueryOptionA(handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
 	/* Users have had issues in the past with revocation servers randomly being offline, */
 	/*  which caused all https:// requests to fail. So just skip revocation check. */
 	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
 
 	if (!httpsVerify) flags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
-	InternetSetOptionA(handle,   INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
+	_InternetSetOptionA(handle,   INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
 
 	Http_SetRequestHeaders(req);
-	return HttpSendRequestA(handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
+	return _HttpSendRequestA(handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
 }
 
 /* Gets headers from a HTTP response */
@@ -597,7 +614,7 @@ static cc_result Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) 
 	cc_string left, line;
 	char buffer[8192];
 	DWORD len = 8192;
-	if (!HttpQueryInfoA(handle, HTTP_QUERY_RAW_HEADERS, buffer, &len, NULL)) return GetLastError();
+	if (!_HttpQueryInfoA(handle, HTTP_QUERY_RAW_HEADERS, buffer, &len, NULL)) return GetLastError();
 
 	left = String_Init(buffer, len, len);
 	while (left.length) {
@@ -613,11 +630,11 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	Http_BufferInit(req);
 
 	for (;;) {
-		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) return GetLastError();
+		if (!_InternetQueryDataAvailable(handle, &avail, 0, 0)) return GetLastError();
 		if (!avail) break;
 		Http_BufferEnsure(req, avail);
 
-		if (!InternetReadFile(handle, &req->data[req->size], avail, &read)) return GetLastError();
+		if (!_InternetReadFile(handle, &req->data[req->size], avail, &read)) return GetLastError();
 		if (!read) break;
 		Http_BufferExpanded(req, read);
 	}
@@ -635,14 +652,14 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	handle = req->meta;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = Http_ProcessHeaders(req, handle);
-	if (res) { InternetCloseHandle(handle); return res; }
+	if (res) { _InternetCloseHandle(handle); return res; }
 
 	if (req->requestType != REQUEST_TYPE_HEAD) {
 		res = Http_DownloadData(req, handle);
-		if (res) { InternetCloseHandle(handle); return res; }
+		if (res) { _InternetCloseHandle(handle); return res; }
 	}
 
-	return InternetCloseHandle(handle) ? 0 : GetLastError();
+	return _InternetCloseHandle(handle) ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_ANDROID
 /*########################################################################################################################*

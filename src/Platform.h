@@ -37,7 +37,7 @@ extern const cc_result ReturnCode_DirectoryExists;
 int Platform_EncodeUtf16(void* data, const cc_string* src);
 /* Converts a null terminated WCHAR* to char* in-place */
 void Platform_Utf16ToAnsi(void* data);
-cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, const char* file);
+cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 #else
 /* Encodes a string in UTF8 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */

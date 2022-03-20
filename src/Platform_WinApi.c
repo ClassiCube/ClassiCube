@@ -360,10 +360,12 @@ void Platform_LoadSysFonts(void) {
 	char winFolder[FILENAME_SIZE];
 	WCHAR winTmp[FILENAME_SIZE];
 	UINT winLen;
-	/* System folder path may not be C:/Windows */
-	cc_string dirs[1];
+	
+	cc_string dirs[2];
 	String_InitArray(dirs[0], winFolder);
+	dirs[1] = String_FromReadonly("C:/WINNT35/system");
 
+	/* System folder path may not be C:/Windows */
 	winLen = GetWindowsDirectoryW(winTmp, FILENAME_SIZE);
 	if (winLen) {
 		String_AppendUtf16(&dirs[0], winTmp, winLen * 2);
@@ -815,13 +817,10 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
-cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, const char* file) {
+cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib) {
 	WCHAR chars[NATIVE_STR_LEN];
 	DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-	void* lib   = NULL;
-	
-	if (file) lib = GetModuleHandleA(file);
-	if (lib)  flags |= FORMAT_MESSAGE_FROM_HMODULE;
+	if (lib) flags |= FORMAT_MESSAGE_FROM_HMODULE;
 
 	res = FormatMessageW(flags, lib, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
 						 chars, NATIVE_STR_LEN, NULL);
