@@ -261,18 +261,16 @@ static cc_bool LoadCurlFuncs(void) {
 		DynamicLib_Sym(curl_slist_free_all), DynamicLib_Sym(curl_slist_append)
 	};
 	/* Non-essential function missing in older curl versions */
-	static const struct DynamicLibSym optFuncs[] = { DynamicLib_Sym(curl_easy_strerror) };
+	cc_bool res;
+	void* lib;
 
-	void* lib = DynamicLib_Load2(&curlLib);
+	res = DynamicLib_LoadAll(&curlLib,     funcs, Array_Elems(funcs), &lib);
 	if (!lib) { 
-		Logger_DynamicLibWarn("loading", &curlLib);
-
-		lib = DynamicLib_Load2(&curlAlt);
-		if (!lib) { Logger_DynamicLibWarn("loading", &curlAlt); return false; }
+		res = DynamicLib_LoadAll(&curlAlt, funcs, Array_Elems(funcs), &lib);
 	}
 
-	DynamicLib_GetAll(lib, optFuncs, Array_Elems(optFuncs));
-	return DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+	_curl_easy_strerror = DynamicLib_Get2(lib, "curl_easy_strerror");
+	return res;
 }
 
 static CURL* curl;
@@ -353,7 +351,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
-	char urlStr[NATIVE_STR_LEN];
+	wchar_t urlStr[NATIVE_STR_LEN];
 	void* post_data = req->data;
 	CURLcode res;
 	if (!curlSupported) return ERR_NOT_SUPPORTED;

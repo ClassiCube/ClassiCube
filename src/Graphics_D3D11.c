@@ -55,13 +55,12 @@ static void LoadD3D11Library(void) {
 		DynamicLib_Sym(D3D11CreateDeviceAndSwapChain)
 	};
 	static const cc_string path = String_FromConst("d3d11.dll");
-	void* lib = DynamicLib_Load2(&path);
+	void* lib;
+	DynamicLib_LoadAll(&path, funcs, Array_Elems(funcs), &lib);
 
-	if (!lib) {
-		Logger_DynamicLibWarn("loading", &path);
-		Logger_FailToStart("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
-	}
-	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+	if (lib) return;
+	Logger_DynamicLibWarn("loading", &path);
+	Logger_FailToStart("Failed to load d3d11.dll. You may need to install Direct3D11.\n\nNOTE: Direct3D11 requires Windows 7 or later\nYou may need to use the Direct3D9 version instead.\n");
 }
 
 static void CreateDeviceAndSwapChain(void) {

@@ -129,7 +129,7 @@ static const cc_string alLib = String_FromConst("libopenal.so.1");
 #endif
 
 static cc_bool LoadALFuncs(void) {
-	static const struct DynamicLibSym funcs[18] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(alcCreateContext),  DynamicLib_Sym(alcMakeContextCurrent),
 		DynamicLib_Sym(alcDestroyContext), DynamicLib_Sym(alcOpenDevice),
 		DynamicLib_Sym(alcCloseDevice),    DynamicLib_Sym(alcGetError),
@@ -141,10 +141,9 @@ static cc_bool LoadALFuncs(void) {
 		DynamicLib_Sym(alGenBuffers),      DynamicLib_Sym(alDeleteBuffers),
 		DynamicLib_Sym(alBufferData),      DynamicLib_Sym(alDistanceModel)
 	};
-
-	void* lib = DynamicLib_Load2(&alLib);
-	if (!lib) { Logger_DynamicLibWarn("loading", &alLib); return false; }
-	return DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+	void* lib;
+	
+	return DynamicLib_LoadAll(&alLib, funcs, Array_Elems(funcs), &lib);
 }
 
 static cc_result CreateALContext(void) {
@@ -548,10 +547,9 @@ static cc_bool LoadSLFuncs(void) {
 		DynamicLib_Sym(SL_IID_PLAY),        DynamicLib_Sym(SL_IID_ENGINE),
 		DynamicLib_Sym(SL_IID_BUFFERQUEUE), DynamicLib_Sym(SL_IID_PLAYBACKRATE)
 	};
-
-	void* lib = DynamicLib_Load2(&slLib);
-	if (!lib) { Logger_DynamicLibWarn("loading", &slLib); return false; }
-	return DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+	void* lib;
+	
+	return DynamicLib_GetAll(&slLib, funcs, Array_Elems(funcs), &lib);
 }
 
 static cc_bool AudioBackend_Init(void) {

@@ -59,13 +59,12 @@ static void LoadD3D9Library(void) {
 		DynamicLib_Sym(Direct3DCreate9)
 	};
 	static const cc_string path = String_FromConst("d3d9.dll");
-	void* lib = DynamicLib_Load2(&path);
+	void* lib;
+	DynamicLib_LoadAll(&path, funcs, Array_Elems(funcs), &lib);
 
-	if (!lib) {
-		Logger_DynamicLibWarn("loading", &path);
-		Logger_FailToStart("Failed to load d3d9.dll. You may need to install Direct3D9.");
-	}
-	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+	if (lib) return;
+	Logger_DynamicLibWarn("loading", &path);
+	Logger_FailToStart("Failed to load d3d9.dll. You may need to install Direct3D9.");
 }
 
 static void CreateD3D9Instance(void) {

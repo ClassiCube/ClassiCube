@@ -273,15 +273,13 @@ void Window_Init(void) {
 		DynamicLib_Sym(SetProcessDPIAware)
 	};
 	static const cc_string user32 = String_FromConst("USER32.DLL");
-	void* lib = DynamicLib_Load2(&user32);
+	void* lib;
 	HDC hdc;
 
-	if (lib) {
-		DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
-		/* Enable high DPI support */
-		/* TODO re-enable when this can be set via option */
-		/* if (_SetProcessDPIAware) _SetProcessDPIAware(); */
-	}
+	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
+	/* Enable high DPI support */
+	/* TODO re-enable when this can be set via option */
+	/* if (_SetProcessDPIAware) _SetProcessDPIAware(); */
 
 	hdc = GetDC(NULL);
 	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);

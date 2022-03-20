@@ -96,9 +96,14 @@ cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
 }
 
 
-cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count) {
+cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* syms, int count, void** _lib) {
 	int i, loaded = 0;
 	void* addr;
+	void* lib;
+
+	lib   = DynamicLib_Load2(path);
+	*_lib = lib;
+	if (!lib) { Logger_DynamicLibWarn("loading", path); return false; }
 
 	for (i = 0; i < count; i++) {
 		addr = DynamicLib_Get2(lib, syms[i].name);

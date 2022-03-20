@@ -37,12 +37,6 @@ const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 
-static void LoadDynamicFuncs(const cc_string* path, const struct DynamicLibSym* syms, int count) {
-	void* lib = DynamicLib_Load2(path);
-	if (!lib) { Logger_DynamicLibWarn("loading", path); return; }
-	DynamicLib_GetAll(lib, syms, count);
-}
-
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -441,10 +435,11 @@ static void LoadWinsockFuncs(void) {
 	};
 	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
 	static const cc_string winsock2 = String_FromConst("WS2_32.DLL");
+	void* lib;
 
-	LoadDynamicFuncs(&winsock2, funcs, Array_Elems(funcs));
+	DynamicLib_LoadAll(&winsock2, funcs, Array_Elems(funcs), &lib);
 	/* Windows 95 is missing WS2_32 dll */
-	if (!_WSAStartup) LoadDynamicFuncs(&winsock1, funcs, Array_Elems(funcs));
+	if (!_WSAStartup) DynamicLib_LoadAll(&winsock1, funcs, Array_Elems(funcs), &lib);
 
 	/* Fallback for older OS versions which lack WSAStringToAddressW */
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
@@ -791,7 +786,8 @@ static void LoadKernelFuncs(void) {
 	};
 
 	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
-	LoadDynamicFuncs(&kernel32, funcs, Array_Elems(funcs));
+	void* lib;
+	DynamicLib_LoadAll(&kernel32, funcs, Array_Elems(funcs), &lib);
 }
 
 void Platform_Init(void) {
@@ -852,7 +848,8 @@ static void LoadCryptFuncs(void) {
 	};
 
 	static const cc_string crypt32 = String_FromConst("CRYPT32.DLL");
-	LoadDynamicFuncs(&crypt32, funcs, Array_Elems(funcs));
+	void* lib;
+	DynamicLib_LoadAll(&crypt32, funcs, Array_Elems(funcs), &lib);
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {

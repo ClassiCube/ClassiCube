@@ -117,7 +117,7 @@ CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* 
 struct DynamicLibSym { const char* name; void** symAddr; };
 /* Loads all symbols using DynamicLib_Get2 in the given list */
 /* Returns true if all symbols were successfully retrieved */
-cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count);
+cc_bool DynamicLib_LoadAll(const cc_string* path, const struct DynamicLibSym* syms, int count, void** lib);
 
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);
