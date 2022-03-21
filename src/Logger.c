@@ -672,12 +672,14 @@ static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, vo
 	return true;
 }
 
+static BOOL (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
 static void DumpMisc(void* ctx) {
 	static const cc_string modules = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
 
+	if (!_EnumerateLoadedModules) return;
 	Logger_Log(&modules);
-	EnumerateLoadedModules(process, DumpModule, NULL);
+	_EnumerateLoadedModules(process, DumpModule, NULL);
 }
 
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS || defined CC_BUILD_ANDROID
@@ -815,7 +817,22 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	AbortCommon(0, msg.buffer, info->ContextRecord);
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
-void Logger_Hook(void) { SetUnhandledExceptionFilter(UnhandledFilter); }
+
+void Logger_Hook(void) {
+	static const struct DynamicLibSym funcs[] = {
+#ifdef _IMAGEHLP64
+		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
+#else
+		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
+#endif
+	};
+	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
+	void* lib;
+
+	SetUnhandledExceptionFilter(UnhandledFilter);
+	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
+	
+}
 
 #if __GNUC__
 /* Don't want compiler doing anything fancy with registers */
