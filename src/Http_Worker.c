@@ -484,6 +484,8 @@ static void HttpCache_MakeEntry(const cc_string* url, struct HttpCacheEntry* ent
 
 	String_UNSAFE_Separate(&path, '/', &addr, &_resource);
 	String_UNSAFE_Separate(&addr, ':', &name, &port);
+
+	String_Append(resource, '/');
 	/* Address may have unicode characters - need to percent encode them */
 	HttpCache_UrlEncodeUrl(resource, &_resource);
 
