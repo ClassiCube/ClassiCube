@@ -57,6 +57,7 @@ void LWidget_CalcPosition(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
 	w->x = Gui_CalcPos(w->horAnchor, Display_ScaleX(w->xOffset), w->width,  WindowInfo.Width);
 	w->y = Gui_CalcPos(w->verAnchor, Display_ScaleY(w->yOffset), w->height, WindowInfo.Height);
+	LBackend_WidgetRepositioned(w);
 }
 
 void LWidget_Draw(void* widget) {
@@ -98,18 +99,13 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 void LButton_Init(struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
 	w->tabSelectable = true;
-	w->width  = Display_ScaleX(width);
-	w->height = Display_ScaleY(height);
-
+	LBackend_InitButton(w, width, height);
 	LButton_SetConst(w, text);
 }
 
 void LButton_SetConst(struct LButton* w, const char* text) {
-	struct DrawTextArgs args;
 	w->text = String_FromReadonly(text);
-	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
-	w->_textWidth  = Drawer2D_TextWidth(&args);
-	w->_textHeight = Drawer2D_TextHeight(&args);
+	LBackend_UpdateButton(w);
 }
 
 
@@ -404,13 +400,10 @@ void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	w->TextFilter    = LInput_DefaultInputFilter;
 	String_InitArray(w->text, w->_textBuffer);
 	
-	w->width    = Display_ScaleX(width);
-	w->height   = Display_ScaleY(30);
-	w->minWidth = w->width;
-	LWidget_CalcPosition(w);
-
 	w->hintText = hintText;
 	w->caretPos = -1;
+	LBackend_InitInput(w, width);
+	w->minWidth = w->width;
 }
 
 void LInput_SetText(struct LInput* w, const cc_string* text_) {
@@ -472,6 +465,7 @@ void LLabel_Init(struct LLabel* w, const char* text) {
 	w->font   = &Launcher_TextFont;
 
 	String_InitArray(w->text, w->_textBuffer);
+	LBackend_InitLabel(w);
 	LLabel_SetConst(w, text);
 }
 
@@ -503,8 +497,7 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 };
 void LLine_Init(struct LLine* w, int width) {
 	w->VTABLE = &lline_VTABLE;
-	w->width  = Display_ScaleX(width);
-	w->height = Display_ScaleY(2);
+	LBackend_InitLine(w, width);
 }
 
 
@@ -524,9 +517,8 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 };
 void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
 	w->VTABLE = &lslider_VTABLE;
-	w->width  = Display_ScaleX(width); 
-	w->height = Display_ScaleY(height);
 	w->color  = color;
+	LBackend_InitSlider(w, width, height);
 }
 
 

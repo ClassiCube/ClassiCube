@@ -41,7 +41,8 @@ struct LWidgetVTABLE {
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget, int idx); /* Called when widget is clicked */ \
-	Rect2D last;                  /* Widget's last drawn area */
+	Rect2D last;                   /* Widget's last drawn area */ \
+	void* meta;                    /* Backend specific data */
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };

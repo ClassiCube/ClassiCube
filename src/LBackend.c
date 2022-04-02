@@ -1,5 +1,10 @@
 #include "LBackend.h"
-#ifndef CC_BUILD_WEB
+#if defined CC_BUILD_WEB
+/* Web backend doesn't use the launcher */
+#elif defined CC_BUILD_WIN_TEST
+/* Testing windows UI backend */
+#include "LBackend_Win.c"
+#else
 #include "Launcher.h"
 #include "Drawer2D.h"
 #include "Window.h"
@@ -48,10 +53,25 @@ static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
 		xBorder,             height);
 }
 
+void LBackend_WidgetRepositioned(struct LWidget* w) { }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
+void LBackend_InitButton(struct LButton* w, int width, int height) {	
+	w->width  = Display_ScaleX(width);
+	w->height = Display_ScaleY(height);
+}
+
+void LBackend_UpdateButton(struct LButton* w) {
+	struct DrawTextArgs args;
+	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
+
+	w->_textWidth  = Drawer2D_TextWidth(&args);
+	w->_textHeight = Drawer2D_TextHeight(&args);
+}
+
 static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 	int r, g, b;
 	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
@@ -231,6 +251,11 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
+void LBackend_InitInput(struct LInput* w, int width) {
+	w->width  = Display_ScaleX(width);
+	w->height = Display_ScaleY(30);
+}
+
 static void LInput_DrawOuterBorder(struct LInput* w) {
 	BitmapCol color = BitmapCol_Make(97, 81, 110, 255);
 
@@ -317,6 +342,8 @@ void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
 /*########################################################################################################################*
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
 *#########################################################################################################################*/
+void LBackend_InitLabel(struct LLabel* w) { }
+
 void LBackend_UpdateLabel(struct LLabel* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, w->font, true);
@@ -335,6 +362,11 @@ void LBackend_DrawLabel(struct LLabel* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------LineWidget--------------------------------------------------------*
 *#########################################################################################################################*/
+void LBackend_InitLine(struct LLine* w, int width) {
+	w->width  = Display_ScaleX(width);
+	w->height = Display_ScaleY(2);
+}
+
 #define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
 void LBackend_DrawLine(struct LLine* w) {
 	BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
@@ -345,6 +377,11 @@ void LBackend_DrawLine(struct LLine* w) {
 /*########################################################################################################################*
 *------------------------------------------------------SliderWidget-------------------------------------------------------*
 *#########################################################################################################################*/
+void LBackend_InitSlider(struct LSlider* w, int width, int height) {
+	w->width  = Display_ScaleX(width); 
+	w->height = Display_ScaleY(height);
+}
+
 static void LSlider_DrawBoxBounds(struct LSlider* w) {
 	BitmapCol boundsTop    = BitmapCol_Make(119, 100, 132, 255);
 	BitmapCol boundsBottom = BitmapCol_Make(150, 130, 165, 255);
