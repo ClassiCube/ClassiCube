@@ -61,7 +61,6 @@ CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 
 struct LCheckbox {
 	LWidget_Layout
-	struct FontDesc* font;
 	cc_bool value;
 	cc_string text;
 	char _textBuffer[STRING_SIZE];
@@ -121,7 +120,7 @@ CC_NOINLINE void LLine_Init(struct LLine* w, int width);
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {
 	LWidget_Layout
-	int value, maxValue;
+	int value;
 	BitmapCol color;
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color);

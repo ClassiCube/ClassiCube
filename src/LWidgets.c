@@ -129,17 +129,12 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 	NULL, NULL  /* Select */
 };
 void LCheckbox_Init(struct LCheckbox* w, const char* text) {
-	struct DrawTextArgs args;
 	w->VTABLE = &lcheckbox_VTABLE;
-	w->font   = &Launcher_TextFont;
 	w->tabSelectable = true;
 
 	String_InitArray(w->text, w->_textBuffer);
 	String_AppendConst(&w->text, text);
-
-	DrawTextArgs_Make(&args, &w->text, w->font, true);
-	w->width  = Display_ScaleX(CB_SIZE + CB_OFFSET) + Drawer2D_TextWidth(&args);
-	w->height = Display_ScaleY(CB_SIZE);
+	LBackend_InitCheckbox(w);
 }
 
 
@@ -481,12 +476,8 @@ void LLabel_Init(struct LLabel* w, const char* text) {
 }
 
 void LLabel_SetText(struct LLabel* w, const cc_string* text) {
-	struct DrawTextArgs args;
 	String_Copy(&w->text, text);
-
-	DrawTextArgs_Make(&args, &w->text, w->font, true);
-	w->width  = Drawer2D_TextWidth(&args);
-	w->height = Drawer2D_TextHeight(&args);
+	LBackend_UpdateLabel(w);
 	LWidget_CalcPosition(w);
 }
 
@@ -532,11 +523,10 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 	NULL, NULL  /* Select */
 };
 void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
-	w->VTABLE   = &lslider_VTABLE;
-	w->width    = Display_ScaleX(width); 
-	w->height   = Display_ScaleY(height);
-	w->maxValue = 100;
-	w->color    = color;
+	w->VTABLE = &lslider_VTABLE;
+	w->width  = Display_ScaleX(width); 
+	w->height = Display_ScaleY(height);
+	w->color  = color;
 }
 
 

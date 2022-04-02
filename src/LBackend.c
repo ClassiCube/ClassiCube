@@ -135,6 +135,17 @@ void LBackend_DrawButton(struct LButton* w) {
 /*########################################################################################################################*
 *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
 *#########################################################################################################################*/
+#define CB_SIZE  24
+#define CB_OFFSET 8
+
+void LBackend_InitCheckbox(struct LCheckbox* w) {
+	struct DrawTextArgs args;
+	DrawTextArgs_Make(&args, &w->text, &Launcher_TextFont, true);
+
+	w->width  = Display_ScaleX(CB_SIZE + CB_OFFSET) + Drawer2D_TextWidth(&args);
+	w->height = Display_ScaleY(CB_SIZE);
+}
+
 /* Based off checkbox from original ClassiCube Launcher */
 static const cc_uint8 checkbox_indices[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
@@ -210,7 +221,7 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 	}
 	DrawBoxBounds(black, w->x, w->y, width, height);
 
-	DrawTextArgs_Make(&args, &w->text, w->font, true);
+	DrawTextArgs_Make(&args, &w->text, &Launcher_TextFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
 	y = w->y + (height - Drawer2D_TextHeight(&args)) / 2;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, y);
@@ -306,6 +317,14 @@ void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
 /*########################################################################################################################*
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
 *#########################################################################################################################*/
+void LBackend_UpdateLabel(struct LLabel* w) {
+	struct DrawTextArgs args;
+	DrawTextArgs_Make(&args, &w->text, w->font, true);
+
+	w->width  = Drawer2D_TextWidth(&args);
+	w->height = Drawer2D_TextHeight(&args);
+}
+
 void LBackend_DrawLabel(struct LLabel* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, w->font, true);
@@ -359,12 +378,13 @@ static void LSlider_DrawBox(struct LSlider* w) {
 		              w->width - xBorder2, halfHeight);
 }
 
+#define LSLIDER_MAXVALUE 100
 void LBackend_DrawSlider(struct LSlider* w) {
 	int curWidth;
 	LSlider_DrawBoxBounds(w);
 	LSlider_DrawBox(w);
 
-	curWidth = (int)((w->width - xBorder2) * w->value / w->maxValue);
+	curWidth = (int)((w->width - xBorder2) * w->value / LSLIDER_MAXVALUE);
 	Drawer2D_Clear(&Launcher_Framebuffer, w->color,
 				   w->x + xBorder, w->y + yBorder, 
 				   curWidth,       w->height - yBorder2);
