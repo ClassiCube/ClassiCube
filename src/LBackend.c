@@ -21,7 +21,6 @@
 #include "LScreens.h"
 #include "Input.h"
 #include "Utils.h"
-#include "PackedCol.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------LWidget---------------------------------------------------------*
@@ -183,22 +182,22 @@ static const cc_uint8 checkbox_indices[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
-static const PackedCol checkbox_palette[] = {
-	PackedCol_Make(  0,   0,   0,   0), PackedCol_Make(144, 144, 144, 255),
-	PackedCol_Make( 61,  61,  61, 255), PackedCol_Make( 94,  94,  94, 255),
-	PackedCol_Make(197, 196, 197, 255), PackedCol_Make( 57,  57,  57, 255),
-	PackedCol_Make( 33,  33,  33, 255), PackedCol_Make(177, 177, 177, 255),
-	PackedCol_Make(189, 189, 189, 255), PackedCol_Make( 67,  67,  67, 255),
-	PackedCol_Make(108, 108, 108, 255), PackedCol_Make(171, 171, 171, 255),
-	PackedCol_Make(220, 220, 220, 255), PackedCol_Make( 43,  43,  43, 255),
-	PackedCol_Make( 63,  63,  63, 255), PackedCol_Make(100, 100, 100, 255),
-	PackedCol_Make(192, 192, 192, 255), PackedCol_Make(132, 132, 132, 255),
-	PackedCol_Make(175, 175, 175, 255), PackedCol_Make(217, 217, 217, 255),
-	PackedCol_Make( 42,  42,  42, 255), PackedCol_Make( 86,  86,  86, 255),
-	PackedCol_Make( 56,  56,  56, 255), PackedCol_Make( 76,  76,  76, 255),
-	PackedCol_Make(139, 139, 139, 255), PackedCol_Make(130, 130, 130, 255),
-	PackedCol_Make(181, 181, 181, 255), PackedCol_Make( 62,  62,  62, 255),
-	PackedCol_Make( 75,  75,  75, 255), PackedCol_Make(184, 184, 184, 255),
+static const BitmapCol checkbox_palette[] = {
+	BitmapCol_Make(  0,   0,   0,   0), BitmapCol_Make(144, 144, 144, 255),
+	BitmapCol_Make( 61,  61,  61, 255), BitmapCol_Make( 94,  94,  94, 255),
+	BitmapCol_Make(197, 196, 197, 255), BitmapCol_Make( 57,  57,  57, 255),
+	BitmapCol_Make( 33,  33,  33, 255), BitmapCol_Make(177, 177, 177, 255),
+	BitmapCol_Make(189, 189, 189, 255), BitmapCol_Make( 67,  67,  67, 255),
+	BitmapCol_Make(108, 108, 108, 255), BitmapCol_Make(171, 171, 171, 255),
+	BitmapCol_Make(220, 220, 220, 255), BitmapCol_Make( 43,  43,  43, 255),
+	BitmapCol_Make( 63,  63,  63, 255), BitmapCol_Make(100, 100, 100, 255),
+	BitmapCol_Make(192, 192, 192, 255), BitmapCol_Make(132, 132, 132, 255),
+	BitmapCol_Make(175, 175, 175, 255), BitmapCol_Make(217, 217, 217, 255),
+	BitmapCol_Make( 42,  42,  42, 255), BitmapCol_Make( 86,  86,  86, 255),
+	BitmapCol_Make( 56,  56,  56, 255), BitmapCol_Make( 76,  76,  76, 255),
+	BitmapCol_Make(139, 139, 139, 255), BitmapCol_Make(130, 130, 130, 255),
+	BitmapCol_Make(181, 181, 181, 255), BitmapCol_Make( 62,  62,  62, 255),
+	BitmapCol_Make( 75,  75,  75, 255), BitmapCol_Make(184, 184, 184, 255),
 };
 
 static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
@@ -221,9 +220,8 @@ static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
 }
 
 void LBackend_DrawCheckbox(struct LCheckbox* w) {
-	PackedCol boxTop    = PackedCol_Make(255, 255, 255, 255);
-	PackedCol boxBottom = PackedCol_Make(240, 240, 240, 255);
-	PackedCol black = PackedCol_Make(0, 0, 0, 255);
+	BitmapCol boxTop    = BitmapCol_Make(255, 255, 255, 255);
+	BitmapCol boxBottom = BitmapCol_Make(240, 240, 240, 255);
 	struct DrawTextArgs args;
 	int x, y, width, height;
 
@@ -241,7 +239,7 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 		y = w->y + height / 2 - size / 2;
 		DrawIndexed(size, x, y, &Launcher_Framebuffer);
 	}
-	DrawBoxBounds(black, w->x, w->y, width, height);
+	DrawBoxBounds(BITMAPCOL_BLACK, w->x, w->y, width, height);
 
 	DrawTextArgs_Make(&args, &w->text, &Launcher_TextFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);

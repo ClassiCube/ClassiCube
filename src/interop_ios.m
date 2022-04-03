@@ -5,6 +5,11 @@
 #include "Platform.h"
 #include "String.h"
 #include "Errors.h"
+#include "Drawer2D.h"
+#include "Launcher.h"
+#include "LBackend.h"
+#include "LWidgets.h"
+#include "LScreens.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
 #include <UIKit/UIPasteboard.h>
@@ -68,6 +73,13 @@ static void RemoveTouch(UITouch* t) {
 }
 
 - (BOOL)isOpaque { return YES; }
+
+// helpers for LBackend
+static void LBackend_HandleButton(id btn);
+
+- (void)handleButtonPress:(id)sender {
+    LBackend_HandleButton(sender);
+}
 
 @end
 
@@ -185,7 +197,6 @@ static CGRect DoCreateWindow(void) {
     WindowInfo.Height = bounds.size.height;
     return bounds;
 }
-void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_SetSize(int width, int height) { }
 
 void Window_Show(void) {
@@ -268,6 +279,14 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 /*#########################################################################################################################*
  *--------------------------------------------------------2D window--------------------------------------------------------*
  *#########################################################################################################################*/
+void Window_Create2D(int width, int height) {
+    CGRect bounds = DoCreateWindow();
+    
+    view_handle = [[UIView alloc] initWithFrame:bounds];
+    view_handle.multipleTouchEnabled = true;
+    controller.view = view_handle;
+}
+
 static CGContextRef win_ctx;
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
@@ -378,6 +397,7 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) { }
 void GLContext_GetApiInfo(cc_string* info) { }
+const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 
 
 /*########################################################################################################################*
@@ -482,4 +502,179 @@ void Platform_ShareScreenshot(const cc_string* filename) {
     act = [UIActivityViewController alloc];
     act = [act initWithActivityItems:@[ @"Share screenshot via", img] applicationActivities:Nil];
     [controller presentViewController:act animated:true completion:Nil];
+}
+
+
+
+
+void LBackend_Init(void) {
+}
+
+static void UpdateWidgetDimensions(void* widget) {
+    struct LWidget* w = widget;
+    UIView* view = (__bridge UIView*)w->meta;
+    
+    CGRect rect = [view frame];
+    w->width    = (int)rect.size.width;
+    w->height   = (int)rect.size.height;
+}
+
+void LBackend_WidgetRepositioned(struct LWidget* w) {
+    UIView* view   = (__bridge UIView*)w->meta;
+    
+    CGRect rect = [view frame];
+    rect.origin.x = w->x;
+    rect.origin.y = w->y;
+    [view setFrame:rect];
+}
+
+struct LScreen* active;
+void LBackend_SetScreen(struct LScreen* s)   {
+    active = s;
+    
+}
+
+void LBackend_CloseScreen(struct LScreen* s) {
+    if (!s) return;
+    
+    // remove all widgets from previous screen
+    NSArray<UIView*>* elems = [view_handle subviews];
+    for (UIView* view in elems) {
+        [view removeFromSuperview];
+    }
+}
+
+static struct LWidget* FindWidgetForView(id obj) {
+    for (int i = 0; i < active->numWidgets; i++) {
+        void* meta = active->widgets[i]->meta;
+        if (meta != (__bridge void*)obj) continue;
+        
+        return active->widgets[i];
+    }
+    return NULL;
+}
+
+/*########################################################################################################################*
+ *------------------------------------------------------ButtonWidget-------------------------------------------------------*
+ *#########################################################################################################################*/
+static void LBackend_HandleButton(id btn_id) {
+    struct LWidget* w = FindWidgetForView(btn_id);
+    if (w == NULL) return;
+    
+    struct LButton* btn = (struct LButton*)w;
+    btn->OnClick(btn, 0);
+}
+
+void LBackend_InitButton(struct LButton* w, int width, int height) {
+    UIButton* btn = [[UIButton alloc] init];
+    btn.frame = CGRectMake(0, 0, width, height);
+    // TODO should be app_handle, because win_handle can change
+    [btn addTarget:win_handle action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view_handle addSubview:btn];
+    w->meta = (__bridge void*)btn;
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_UpdateButton(struct LButton* w) {
+    UIButton* btn = (__bridge UIButton*)w->meta;
+    char raw[NATIVE_STR_LEN];
+    Platform_EncodeUtf8(raw, &w->text);
+    
+    NSString* str = [NSString stringWithUTF8String:raw];
+    [btn setTitle:str forState:UIControlStateNormal];
+    UpdateWidgetDimensions(w);
+}
+
+
+void LBackend_DrawButton(struct LButton* w) {
+}
+
+
+/*########################################################################################################################*
+ *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
+ *#########################################################################################################################*/
+#define CB_SIZE  24
+#define CB_OFFSET 8
+
+void LBackend_InitCheckbox(struct LCheckbox* w) {
+    UISwitch* swt = [[UISwitch alloc] init];
+    
+    [view_handle addSubview:swt];
+    w->meta = (__bridge void*)swt;
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_DrawCheckbox(struct LCheckbox* w) {
+}
+
+
+/*########################################################################################################################*
+ *------------------------------------------------------InputWidget--------------------------------------------------------*
+ *#########################################################################################################################*/
+void LBackend_InitInput(struct LInput* w, int width) {
+    UITextField* fld = [[UITextField alloc] init];
+    fld.frame = CGRectMake(0, 0, width, 30);
+    fld.borderStyle = UITextBorderStyleBezel;
+
+    [view_handle addSubview:fld];
+    w->meta = (__bridge void*)fld;
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
+}
+
+
+/*########################################################################################################################*
+ *------------------------------------------------------LabelWidget--------------------------------------------------------*
+ *#########################################################################################################################*/
+void LBackend_InitLabel(struct LLabel* w) {
+    UILabel* lbl = [[UILabel alloc] init];
+    
+    [view_handle addSubview:lbl];
+    w->meta = (__bridge void*)lbl;
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_UpdateLabel(struct LLabel* w) {
+    UILabel* lbl = (__bridge UILabel*)w->meta;
+    char raw[NATIVE_STR_LEN];
+    Platform_EncodeUtf8(raw, &w->text);
+    
+    NSString* str = [NSString stringWithUTF8String:raw];
+    lbl.text = str;
+    [lbl sizeToFit]; // adjust label to fit text
+    
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_DrawLabel(struct LLabel* w) {
+}
+
+
+/*########################################################################################################################*
+ *-------------------------------------------------------LineWidget--------------------------------------------------------*
+ *#########################################################################################################################*/
+void LBackend_InitLine(struct LLine* w, int width) {
+    w->width  = Display_ScaleX(width);
+    w->height = Display_ScaleY(2);
+}
+
+#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
+void LBackend_DrawLine(struct LLine* w) {
+    BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
+    Gradient_Blend(&Launcher_Framebuffer, color, 128, w->x, w->y, w->width, w->height);
+}
+
+
+/*########################################################################################################################*
+ *------------------------------------------------------SliderWidget-------------------------------------------------------*
+ *#########################################################################################################################*/
+void LBackend_InitSlider(struct LSlider* w, int width, int height) {
+    w->width  = Display_ScaleX(width);
+    w->height = Display_ScaleY(height);
+}
+
+void LBackend_DrawSlider(struct LSlider* w) {
 }
