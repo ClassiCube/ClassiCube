@@ -1609,15 +1609,11 @@ static void SettingsScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnColours, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -20);
 	LWidget_SetLocation(&s->lblColours, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -20);
 
-	LWidget_SetLocation(&s->sep,      ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 15);
-#if defined CC_BUILD_MOBILE
-	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE, -100, 44);
-#else
-	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE, ANCHOR_CENTRE,  -58, 44);
-#endif
-	LWidget_SetLocation(&s->cbEmpty,  ANCHOR_CENTRE, ANCHOR_CENTRE,  -63, 84);
+	LWidget_SetLocation(&s->sep,      ANCHOR_CENTRE,     ANCHOR_CENTRE,    0, 15);
+	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -190, 44);
+	LWidget_SetLocation(&s->cbEmpty,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -190, 84);
 
-	LWidget_SetLocation(&s->btnBack,  ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 170);
+	LWidget_SetLocation(&s->btnBack,  ANCHOR_CENTRE, ANCHOR_CENTRE,       0, 170);
 }
 
 void SettingsScreen_SetActive(void) {

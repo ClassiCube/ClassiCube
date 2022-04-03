@@ -30,7 +30,7 @@ static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
 static int xInputOffset, yInputOffset;
 
-void LBackend_CalcOffsets(void) {
+void LBackend_Init(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
 	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
 
@@ -54,6 +54,8 @@ static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
 }
 
 void LBackend_WidgetRepositioned(struct LWidget* w) { }
+void LBackend_SetScreen(struct LScreen* s)   { }
+void LBackend_CloseScreen(struct LScreen* s) { }
 
 
 /*########################################################################################################################*

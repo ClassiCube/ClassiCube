@@ -43,7 +43,10 @@ static struct Bitmap dirtBmp, stoneBmp;
 
 static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
-	if (activeScreen) activeScreen->Free(activeScreen);
+	if (!activeScreen) return;
+	
+	activeScreen->Free(activeScreen);
+	LBackend_CloseScreen(activeScreen);
 }
 
 void Launcher_SetScreen(struct LScreen* screen) {
@@ -59,6 +62,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 		screen->MouseMove(screen, i);
 	}
 
+	LBackend_SetScreen(screen);
 	Launcher_Redraw();
 }
 
@@ -290,7 +294,7 @@ void Launcher_Run(void) {
 	Window_SetTitle(&title);
 	Window_Show();
 	LWidget_CalcOffsets();
-	LBackend_CalcOffsets();
+	LBackend_Init();
 
 #ifdef CC_BUILD_WIN
 	/* clean leftover exe from updating */
