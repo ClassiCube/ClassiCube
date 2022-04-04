@@ -59,6 +59,7 @@ struct LButton {
 };
 CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
+CC_NOINLINE void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y);
 
 struct LCheckbox {
 	LWidget_Layout
@@ -81,8 +82,6 @@ struct LInput {
 	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
 	void (*TextChanged)(struct LInput* w);
-	/* Callback invoked whenever user attempts to append a character to the text. */
-	cc_bool (*TextFilter)(char c);
 	/* Specifies the position that characters are inserted/deleted from. */
 	/* NOTE: -1 to insert/delete characters at end of the text. */
 	int caretPos;
@@ -96,8 +95,6 @@ CC_NOINLINE void LInput_ClearText(struct LInput* w);
 
 /* Appends a string to the currently entered text */
 CC_NOINLINE void LInput_AppendString(struct LInput* w, const cc_string* str);
-/* Resets the currently entered text to an empty string */
-CC_NOINLINE void LInput_Clear(struct LInput* w);
 /* Sets the currently entered text to the given string */
 CC_NOINLINE void LInput_SetString(struct LInput* w, const cc_string* str);
 
@@ -117,6 +114,7 @@ struct LLine {
 	LWidget_Layout
 };
 CC_NOINLINE void LLine_Init(struct LLine* w, int width);
+CC_NOINLINE BitmapCol LLine_GetColor(void);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {

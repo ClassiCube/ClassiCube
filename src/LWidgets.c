@@ -14,16 +14,20 @@
 #include "Utils.h"
 #include "LBackend.h"
 
-static int xInputOffset, inputExpand;
+static int xInputOffset;
 static int caretOffset, caretWidth, caretHeight;
 static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
 static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
 static int cellXOffset, cellXPadding, cellMinWidth;
 static int flagXOffset, flagYOffset;
+static int xBorder, xBorder2, xBorder4;
+static int yBorder, yBorder2, yBorder4;
 
 void LWidget_CalcOffsets(void) {
+	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder4 = xBorder * 4;
+	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder4 = yBorder * 4;
+
 	xInputOffset = Display_ScaleX(5);
-	inputExpand  = Display_ScaleX(20);
 
 	caretOffset  = Display_ScaleY(5);
 	caretWidth   = Display_ScaleX(10);
@@ -79,6 +83,72 @@ void LWidget_Redraw(void* widget) {
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol LButton_Expand(BitmapCol a, int amount) {
+	int r, g, b;
+	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
+	g = BitmapCol_G(a) + amount; Math_Clamp(g, 0, 255);
+	b = BitmapCol_B(a) + amount; Math_Clamp(b, 0, 255);
+	return BitmapCol_Make(r, g, b, 255);
+}
+
+static void LButton_DrawBase(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+	BitmapCol color = w->hovered ? Launcher_Theme.ButtonForeActiveColor 
+								 : Launcher_Theme.ButtonForeColor;
+
+	if (Launcher_Theme.ClassicBackground) {
+		Gradient_Noise(bmp, color, 8,
+						x + xBorder,           y + yBorder,
+						w->width - xBorder2,   w->height - yBorder2);
+	} else {
+		
+		Gradient_Vertical(bmp, LButton_Expand(color, 8), LButton_Expand(color, -8),
+						  x + xBorder,         y + yBorder,
+						  w->width - xBorder2, w->height - yBorder2);
+	}
+}
+
+static void LButton_DrawBorder(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
+	Drawer2D_Clear(bmp, backColor, 
+					x + xBorder,            y,
+					w->width - xBorder2,    yBorder);
+	Drawer2D_Clear(bmp, backColor,
+					x + xBorder,            y + w->height - yBorder,
+					w->width - xBorder2,    yBorder);
+	Drawer2D_Clear(bmp, backColor,
+					x,                      y + yBorder,
+					xBorder,                w->height - yBorder2);
+	Drawer2D_Clear(bmp, backColor,
+					x + w->width - xBorder, y + yBorder,
+					xBorder,                w->height - yBorder2);
+}
+
+static void LButton_DrawHighlight(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
+	BitmapCol color       = Launcher_Theme.ButtonHighlightColor;
+
+	if (Launcher_Theme.ClassicBackground) {
+		if (w->hovered) color = activeColor;
+
+		Drawer2D_Clear(&Launcher_Framebuffer, color,
+						x + xBorder2,         y + yBorder,
+						w->width - xBorder4,  yBorder);
+		Drawer2D_Clear(&Launcher_Framebuffer, color,
+						x + xBorder,          y + yBorder2,
+						xBorder,              w->height - yBorder4);
+	} else if (!w->hovered) {
+		Drawer2D_Clear(&Launcher_Framebuffer, color,
+						x + xBorder2,         y + yBorder,
+						w->width - xBorder4,  yBorder);
+	}
+}
+
+void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+	LButton_DrawBase(w,      bmp, x, y);
+	LButton_DrawBorder(w,    bmp, x, y);
+	LButton_DrawHighlight(w, bmp, x, y);
+}
+
 static void LButton_Draw(void* widget) {
 	struct LButton* w = (struct LButton*)widget;
 	LBackend_DrawButton(w);
@@ -146,23 +216,12 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
 	}
 }
 
-CC_NOINLINE static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
-	struct DrawTextArgs args;
-	int textWidth;
-	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
-
-	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + inputExpand);
-	w->_textHeight = Drawer2D_TextHeight(&args);
-}
-
 static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
 	cc_string text; char textBuffer[STRING_SIZE];
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
-	LInput_UpdateDimensions(w, &text);
 	LBackend_DrawInput(w, &text);
 }
 
@@ -346,7 +405,7 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	} else if (key == INPUT_CLIPBOARD_PASTE) {
 		LInput_CopyFromClipboard(w);
 	} else if (key == KEY_ESCAPE) {
-		LInput_Clear(w);
+		if (w->text.length) LInput_SetString(w, &String_Empty);
 	} else if (key == KEY_LEFT) {
 		LInput_AdvanceCaretPos(w, false);
 	} else if (key == KEY_RIGHT) {
@@ -354,9 +413,19 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	}
 }
 
+static cc_bool LInput_CanAppend(struct LInput* w, char c) {
+	switch (w->type) {
+	case KEYBOARD_TYPE_PASSWORD:
+		return true; /* keyboard accepts all characters */
+	case KEYBOARD_TYPE_INTEGER:
+		return c >= '0' && c <= '9';
+	}
+	return c >= ' ' && c <= '~' && c != '&';
+}
+
 /* Appends a character to the currently entered text */
 static CC_NOINLINE cc_bool LInput_Append(struct LInput* w, char c) {
-	if (w->TextFilter(c) && w->text.length < w->text.capacity) {
+	if (LInput_CanAppend(w, c) && w->text.length < w->text.capacity) {
 		if (w->caretPos == -1) {
 			String_Append(&w->text, c);
 		} else {
@@ -382,10 +451,6 @@ static void LInput_TextChanged(void* widget, const cc_string* str) {
 	if (w->TextChanged) w->TextChanged(w);
 }
 
-static cc_bool LInput_DefaultInputFilter(char c) {
-	return c >= ' ' && c <= '~' && c != '&';
-}
-
 static const struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Draw, LInput_TickCaret,
 	LInput_KeyDown, LInput_KeyChar, /* Key    */
@@ -397,7 +462,6 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
 	w->tabSelectable = true;
-	w->TextFilter    = LInput_DefaultInputFilter;
 	String_InitArray(w->text, w->_textBuffer);
 	
 	w->hintText = hintText;
@@ -411,9 +475,9 @@ void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	String_Copy(&w->text, text_);
 	String_InitArray(text, textBuffer);
 
-	LInput_GetText(w, &text);
-	LInput_UpdateDimensions(w, &text);
 	LInput_ClampCaret(w);
+	LInput_GetText(w, &text);
+	LBackend_UpdateInput(w, &text);
 }
 
 void LInput_ClearText(struct LInput* w) {
@@ -429,14 +493,6 @@ void LInput_AppendString(struct LInput* w, const cc_string* str) {
 
 	if (appended && w->TextChanged) w->TextChanged(w);
 	if (appended) LWidget_Redraw(w);
-}
-
-void LInput_Clear(struct LInput* w) {
-	if (!w->text.length) return;
-	LInput_ClearText(w);
-
-	if (w->TextChanged) w->TextChanged(w);
-	LWidget_Redraw(w);
 }
 
 void LInput_SetString(struct LInput* w, const cc_string* str) {
@@ -498,6 +554,11 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 void LLine_Init(struct LLine* w, int width) {
 	w->VTABLE = &lline_VTABLE;
 	LBackend_InitLine(w, width);
+}
+
+#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
+BitmapCol LLine_GetColor(void) {
+	return Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
 }
 
 

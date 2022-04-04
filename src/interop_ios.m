@@ -76,9 +76,14 @@ static void RemoveTouch(UITouch* t) {
 
 // helpers for LBackend
 static void LBackend_HandleButton(id btn);
+static void LBackend_HandleInput(id ipt);
 
 - (void)handleButtonPress:(id)sender {
     LBackend_HandleButton(sender);
+}
+
+- (void)handleTextChanged:(id)sender {
+    LBackend_HandleInput(sender);
 }
 
 @end
@@ -494,6 +499,7 @@ void Platform_ShareScreenshot(const cc_string* filename) {
     String_Format1(&path, "screenshots/%s", filename);
     Platform_EncodeUtf8(tmp, &path);
     
+    // TODO unify with ToNSString
     NSString* pathStr = [NSString stringWithUTF8String:tmp];
     UIImage* img = [UIImage imageWithContentsOfFile:pathStr];
     
@@ -505,7 +511,21 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 }
 
 
+/*########################################################################################################################*
+ *------------------------------------------------------UI Backend--------------------------------------------------------*
+ *#########################################################################################################################*/
+static UIColor* ToUIColor(BitmapCol color, float A) {
+    float R = BitmapCol_R(color) / 255.0f;
+    float G = BitmapCol_G(color) / 255.0f;
+    float B = BitmapCol_B(color) / 255.0f;
+    return [UIColor colorWithRed:R green:G blue:B alpha:A];
+}
 
+static NSString* ToNSString(const cc_string* text) {
+    char raw[NATIVE_STR_LEN];
+    Platform_EncodeUtf8(raw, text);
+    return [NSString stringWithUTF8String:raw];
+}
 
 void LBackend_Init(void) {
 }
@@ -572,8 +592,8 @@ static struct LWidget* FindWidgetForView(id obj) {
 /*########################################################################################################################*
  *------------------------------------------------------ButtonWidget-------------------------------------------------------*
  *#########################################################################################################################*/
-static void LBackend_HandleButton(id btn_id) {
-    struct LWidget* w = FindWidgetForView(btn_id);
+static void LBackend_HandleButton(id btn_obj) {
+    struct LWidget* w = FindWidgetForView(btn_obj);
     if (w == NULL) return;
     
     struct LButton* btn = (struct LButton*)w;
@@ -588,14 +608,19 @@ void LBackend_InitButton(struct LButton* w, int width, int height) {
     
     AssignView(w, btn);
     UpdateWidgetDimensions(w);
+    
+    struct Bitmap bmp;//
+    //Bitmap_Allocate(&bmp, w->width, w->height);
+    //LButton_DrawBackground(w, &bmp, 0, 0);
+    
+    //UIImage* img = [UIImage i]
+    //[btn setBackgroundImage:img forState:UIControlStateNormal];
 }
 
 void LBackend_UpdateButton(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
-    char raw[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(raw, &w->text);
+    NSString* str = ToNSString(&w->text);
     
-    NSString* str = [NSString stringWithUTF8String:raw];
     [btn setTitle:str forState:UIControlStateNormal];
     UpdateWidgetDimensions(w);
 }
@@ -622,12 +647,39 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 /*########################################################################################################################*
  *------------------------------------------------------InputWidget--------------------------------------------------------*
  *#########################################################################################################################*/
+static void LBackend_HandleInput(id ipt_obj) {
+    struct LWidget* w = FindWidgetForView(ipt_obj);
+    if (w == NULL) return;
+    
+    UITextField* src = (UITextField*)ipt_obj;
+    const char* str  = [[src text] UTF8String];
+    
+    struct LInput* ipt = (struct LInput*)w;
+    ipt->text.length   = 0;
+    String_AppendUtf8(&ipt->text, str, String_Length(str));
+}
+
 void LBackend_InitInput(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
-    fld.frame        = CGRectMake(0, 0, width, 30);
-    fld.borderStyle  = UITextBorderStyleBezel;
+    fld.frame           = CGRectMake(0, 0, width, 30);
+    fld.borderStyle     = UITextBorderStyleBezel;
+    fld.backgroundColor = [UIColor whiteColor];
+    // TODO should be app_handle, because win_handle can change
+    [fld addTarget:win_handle action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
+    
+    if (w->type == KEYBOARD_TYPE_INTEGER) {
+        [fld setKeyboardType:UIKeyboardTypeNumberPad];
+    } else if (w->type == KEYBOARD_TYPE_PASSWORD) {
+        fld.secureTextEntry = YES;
+    }
     
     AssignView(w, fld);
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_UpdateInput(struct LInput* w, const cc_string* text) {
+    UITextField* fld = (__bridge UITextField*)w->meta;
+    fld.text         = ToNSString(&w->text);
     UpdateWidgetDimensions(w);
 }
 
@@ -639,7 +691,8 @@ void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
  *------------------------------------------------------LabelWidget--------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_InitLabel(struct LLabel* w) {
-    UILabel* lbl = [[UILabel alloc] init];
+    UILabel* lbl  = [[UILabel alloc] init];
+    lbl.textColor = [UIColor whiteColor];
     
     AssignView(w, lbl);
     UpdateWidgetDimensions(w);
@@ -668,11 +721,8 @@ void LBackend_InitLine(struct LLine* w, int width) {
     UIView* view = [[UIView alloc] init];
     view.frame   = CGRectMake(0, 0, width, 2);
     
-    BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
-    float R = BitmapCol_R(color) / 255.0f;
-    float G = BitmapCol_G(color) / 255.0f;
-    float B = BitmapCol_B(color) / 255.0f;
-    view.backgroundColor = [UIColor colorWithRed:R green:G blue:B alpha:0.5f];
+    BitmapCol color = LLine_GetColor();
+    view.backgroundColor = ToUIColor(color, 0.5f);
     
     AssignView(w, view);
     UpdateWidgetDimensions(w);

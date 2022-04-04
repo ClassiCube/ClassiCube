@@ -4,6 +4,8 @@
 #elif defined CC_BUILD_WIN_TEST
 /* Testing windows UI backend */
 #include "LBackend_Win.c"
+#elif defined CC_BUILD_IOS
+/* iOS uses custom UI backend */
 #else
 #include "Launcher.h"
 #include "Drawer2D.h"
@@ -27,7 +29,7 @@
 *#########################################################################################################################*/
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
-static int xInputOffset, yInputOffset;
+static int xInputOffset, yInputOffset, inputExpand;
 
 void LBackend_Init(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
@@ -35,6 +37,7 @@ void LBackend_Init(void) {
 
 	xInputOffset = Display_ScaleX(5);
 	yInputOffset = Display_ScaleY(2);
+	inputExpand  = Display_ScaleX(20);
 }
 
 static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
@@ -73,77 +76,14 @@ void LBackend_UpdateButton(struct LButton* w) {
 	w->_textHeight = Drawer2D_TextHeight(&args);
 }
 
-static BitmapCol LButton_Expand(BitmapCol a, int amount) {
-	int r, g, b;
-	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
-	g = BitmapCol_G(a) + amount; Math_Clamp(g, 0, 255);
-	b = BitmapCol_B(a) + amount; Math_Clamp(b, 0, 255);
-	return BitmapCol_Make(r, g, b, 255);
-}
-
-static void LButton_DrawBackground(struct LButton* w) {
-	BitmapCol color = w->hovered ? Launcher_Theme.ButtonForeActiveColor 
-								 : Launcher_Theme.ButtonForeColor;
-
-	if (Launcher_Theme.ClassicBackground) {
-		Gradient_Noise(&Launcher_Framebuffer, color, 8,
-						w->x + xBorder,      w->y + yBorder,
-						w->width - xBorder2, w->height - yBorder2);
-	} else {
-		
-		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(color, 8), LButton_Expand(color, -8),
-						  w->x + xBorder,      w->y + yBorder,
-						  w->width - xBorder2, w->height - yBorder2);
-	}
-}
-
-static void LButton_DrawBorder(struct LButton* w) {
-	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
-	Drawer2D_Clear(&Launcher_Framebuffer, backColor, 
-					w->x + xBorder,            w->y,
-					w->width - xBorder2,       yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, backColor, 
-					w->x + xBorder,            w->y + w->height - yBorder,
-					w->width - xBorder2,       yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, backColor, 
-					w->x,                      w->y + yBorder,
-					xBorder,                   w->height - yBorder2);
-	Drawer2D_Clear(&Launcher_Framebuffer, backColor, 
-					w->x + w->width - xBorder, w->y + yBorder,
-					xBorder,                   w->height - yBorder2);
-}
-
-static void LButton_DrawHighlight(struct LButton* w) {
-	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
-	BitmapCol color = Launcher_Theme.ButtonHighlightColor;
-
-	if (Launcher_Theme.ClassicBackground) {
-		if (w->hovered) color = activeColor;
-
-		Drawer2D_Clear(&Launcher_Framebuffer, color,
-						w->x + xBorder2,     w->y + yBorder,
-						w->width - xBorder4, yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, color,
-						w->x + xBorder,       w->y + yBorder2,
-						xBorder,              w->height - yBorder4);
-	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, color,
-						w->x + xBorder2,      w->y + yBorder,
-						w->width - xBorder4,  yBorder);
-	}
-}
-
 void LBackend_DrawButton(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
 
+	LButton_DrawBackground(w, &Launcher_Framebuffer, w->x, w->y);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
-
-	LButton_DrawBackground(w);
-	LButton_DrawBorder(w);
-	LButton_DrawHighlight(w);
 
 	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
@@ -322,10 +262,26 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 	}
 }
 
+CC_NOINLINE static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
+	struct DrawTextArgs args;
+	int textWidth;
+	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
+
+	textWidth      = Drawer2D_TextWidth(&args);
+	w->width       = max(w->minWidth, textWidth + inputExpand);
+	w->_textHeight = Drawer2D_TextHeight(&args);
+}
+
+void LBackend_UpdateInput(struct LInput* w, const cc_string* text) {
+	LInput_UpdateDimensions(w, text);
+}
+
 void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
 
+	/* TODO shouldn't be recalcing size in draw.... */
+	LInput_UpdateDimensions(w, text);
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
 	Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_WHITE,
@@ -368,7 +324,7 @@ void LBackend_InitLine(struct LLine* w, int width) {
 }
 
 void LBackend_DrawLine(struct LLine* w) {
-	BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
+	BitmapCol color = LLine_GetColor();
 	Gradient_Blend(&Launcher_Framebuffer, color, 128, w->x, w->y, w->width, w->height);
 }
 

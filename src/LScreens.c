@@ -464,10 +464,6 @@ static void ColoursScreen_ToggleBG(void* w, int idx) {
 	Launcher_Redraw();
 }
 
-static cc_bool ColoursScreen_InputFilter(char c) {
-	return c >= '0' && c <= '9';
-}
-
 static void ColoursScreen_Init(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i;
@@ -475,10 +471,9 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(colours_widgets);
 	
 	for (i = 0; i < 5 * 3; i++) {
-		LInput_Init(&s->iptColours[i], 55, NULL);
 		s->iptColours[i].type        = KEYBOARD_TYPE_INTEGER;
-		s->iptColours[i].TextFilter  = ColoursScreen_InputFilter;
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
+		LInput_Init(&s->iptColours[i], 55, NULL);
 	}
 
 	LLabel_Init( &s->lblNames[0], "Background");
@@ -865,13 +860,12 @@ static void MainScreen_Singleplayer(void* w, int idx) {
 	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
 }
 
-static cc_bool MainScreen_PasswordFilter(char c) { return true; }
-
 static void MainScreen_Init(struct LScreen* s_) {
 	cc_string user, pass; char passBuffer[STRING_SIZE];
 	struct MainScreen* s = (struct MainScreen*)s_;
-	s->widgets    = main_widgets;
-	s->numWidgets = Array_Elems(main_widgets);
+	s->widgets           = main_widgets;
+	s->numWidgets        = Array_Elems(main_widgets);
+	s->iptPassword.type  = KEYBOARD_TYPE_PASSWORD;
 
 	LInput_Init( &s->iptUsername, 280, "&gUsername..");
 	LInput_Init( &s->iptPassword, 280, "&gPassword..");
@@ -896,8 +890,6 @@ static void MainScreen_Init(struct LScreen* s_) {
 	/* need to set text here for right size */
 	s->lblUpdate.font = &Launcher_HintFont;
 	LLabel_SetConst(&s->lblUpdate, "&eChecking..");
-	s->iptPassword.type       = KEYBOARD_TYPE_PASSWORD;
-	s->iptPassword.TextFilter = MainScreen_PasswordFilter;
 	
 	String_InitArray(pass, passBuffer);
 	Options_UNSAFE_Get(LOPT_USERNAME, &user);
