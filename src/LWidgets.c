@@ -521,6 +521,12 @@ void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
 	LBackend_InitSlider(w, width, height);
 }
 
+void LSlider_SetProgress(struct LSlider* w, int progress) {
+	if (progress == w->value) return;
+	w->value = progress;
+	LBackend_UpdateSlider(w);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------TableWidget--------------------------------------------------------*

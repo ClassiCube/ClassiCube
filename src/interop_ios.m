@@ -529,9 +529,16 @@ void LBackend_WidgetRepositioned(struct LWidget* w) {
 }
 
 struct LScreen* active;
-void LBackend_SetScreen(struct LScreen* s)   {
+void LBackend_SetScreen(struct LScreen* s) {
     active = s;
     
+    for (int i = 0; i < s->numWidgets; i++) {
+        void* obj = s->widgets[i]->meta;
+        if (!obj) continue;
+        
+        UIView* view = (__bridge UIView*)obj;
+        [view_handle addSubview:view];
+    }
 }
 
 void LBackend_CloseScreen(struct LScreen* s) {
@@ -542,6 +549,14 @@ void LBackend_CloseScreen(struct LScreen* s) {
     for (UIView* view in elems) {
         [view removeFromSuperview];
     }
+}
+
+static void AssignView(void* widget, UIView* view) {
+    struct LWidget* w = widget;
+    // doesn't work, the view get auto garbage collected
+    //  after LBackend_CloseScreen removes the subviews
+    //w->meta = (__bridge void*)view;
+    w->meta = CFBridgingRetain(view);
 }
 
 static struct LWidget* FindWidgetForView(id obj) {
@@ -571,8 +586,7 @@ void LBackend_InitButton(struct LButton* w, int width, int height) {
     // TODO should be app_handle, because win_handle can change
     [btn addTarget:win_handle action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
     
-    [view_handle addSubview:btn];
-    w->meta = (__bridge void*)btn;
+    AssignView(w, btn);
     UpdateWidgetDimensions(w);
 }
 
@@ -594,14 +608,10 @@ void LBackend_DrawButton(struct LButton* w) {
 /*########################################################################################################################*
  *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
  *#########################################################################################################################*/
-#define CB_SIZE  24
-#define CB_OFFSET 8
-
 void LBackend_InitCheckbox(struct LCheckbox* w) {
     UISwitch* swt = [[UISwitch alloc] init];
     
-    [view_handle addSubview:swt];
-    w->meta = (__bridge void*)swt;
+    AssignView(w, swt);
     UpdateWidgetDimensions(w);
 }
 
@@ -614,11 +624,10 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
  *#########################################################################################################################*/
 void LBackend_InitInput(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
-    fld.frame = CGRectMake(0, 0, width, 30);
-    fld.borderStyle = UITextBorderStyleBezel;
-
-    [view_handle addSubview:fld];
-    w->meta = (__bridge void*)fld;
+    fld.frame        = CGRectMake(0, 0, width, 30);
+    fld.borderStyle  = UITextBorderStyleBezel;
+    
+    AssignView(w, fld);
     UpdateWidgetDimensions(w);
 }
 
@@ -632,8 +641,7 @@ void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
 void LBackend_InitLabel(struct LLabel* w) {
     UILabel* lbl = [[UILabel alloc] init];
     
-    [view_handle addSubview:lbl];
-    w->meta = (__bridge void*)lbl;
+    AssignView(w, lbl);
     UpdateWidgetDimensions(w);
 }
 
@@ -657,14 +665,20 @@ void LBackend_DrawLabel(struct LLabel* w) {
  *-------------------------------------------------------LineWidget--------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_InitLine(struct LLine* w, int width) {
-    w->width  = Display_ScaleX(width);
-    w->height = Display_ScaleY(2);
+    UIView* view = [[UIView alloc] init];
+    view.frame   = CGRectMake(0, 0, width, 2);
+    
+    BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
+    float R = BitmapCol_R(color) / 255.0f;
+    float G = BitmapCol_G(color) / 255.0f;
+    float B = BitmapCol_B(color) / 255.0f;
+    view.backgroundColor = [UIColor colorWithRed:R green:G blue:B alpha:0.5f];
+    
+    AssignView(w, view);
+    UpdateWidgetDimensions(w);
 }
 
-#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
 void LBackend_DrawLine(struct LLine* w) {
-    BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
-    Gradient_Blend(&Launcher_Framebuffer, color, 128, w->x, w->y, w->width, w->height);
 }
 
 
@@ -672,8 +686,17 @@ void LBackend_DrawLine(struct LLine* w) {
  *------------------------------------------------------SliderWidget-------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_InitSlider(struct LSlider* w, int width, int height) {
-    w->width  = Display_ScaleX(width);
-    w->height = Display_ScaleY(height);
+    UIProgressView* prg = [[UIProgressView alloc] init];
+    prg.frame = CGRectMake(0, 0, width, height);
+    
+    AssignView(w, prg);
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_UpdateSlider(struct LSlider* w) {
+    UIProgressView* lbl = (__bridge UIProgressView*)w->meta;
+    
+    lbl.progress = w->value / 100.0f;
 }
 
 void LBackend_DrawSlider(struct LSlider* w) {

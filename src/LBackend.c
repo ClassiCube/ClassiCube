@@ -367,7 +367,6 @@ void LBackend_InitLine(struct LLine* w, int width) {
 	w->height = Display_ScaleY(2);
 }
 
-#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
 void LBackend_DrawLine(struct LLine* w) {
 	BitmapCol color = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
 	Gradient_Blend(&Launcher_Framebuffer, color, 128, w->x, w->y, w->width, w->height);
@@ -380,6 +379,10 @@ void LBackend_DrawLine(struct LLine* w) {
 void LBackend_InitSlider(struct LSlider* w, int width, int height) {
 	w->width  = Display_ScaleX(width); 
 	w->height = Display_ScaleY(height);
+}
+
+void LBackend_UpdateSlider(struct LSlider* w) {
+	LWidget_Draw(w);
 }
 
 static void LSlider_DrawBoxBounds(struct LSlider* w) {

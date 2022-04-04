@@ -14,6 +14,8 @@ struct LLabel;
 struct LLine;
 struct LSlider;
 
+#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
+
 void LBackend_Init(void);
 void LBackend_WidgetRepositioned(struct LWidget* w);
 void LBackend_SetScreen(struct LScreen* s);
@@ -37,5 +39,6 @@ void LBackend_InitLine(struct LLine* w, int width);
 void LBackend_DrawLine(struct LLine* w);
 
 void LBackend_InitSlider(struct LSlider* w, int width, int height);
+void LBackend_UpdateSlider(struct LSlider* w);
 void LBackend_DrawSlider(struct LSlider* w);
 #endif

@@ -125,6 +125,7 @@ struct LSlider {
 	BitmapCol color;
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color);
+CC_NOINLINE void LSlider_SetProgress(struct LSlider* w, int progress);
 
 struct ServerInfo;
 struct DrawTextArgs;
