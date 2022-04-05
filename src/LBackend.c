@@ -257,12 +257,15 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 
 		hintHeight = Drawer2D_TextHeight(args);
 		y = w->y + (w->height - hintHeight) / 2;
+
+		Drawer2D.Colors['f'] = BitmapCol_Make(125, 125, 125, 255);
 		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
 							w->x + xInputOffset, y);
+		Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
 	}
 }
 
-CC_NOINLINE static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
+static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
 	struct DrawTextArgs args;
 	int textWidth;
 	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);

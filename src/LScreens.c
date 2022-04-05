@@ -645,9 +645,9 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	s->widgets    = directConnect_widgets;
 	s->numWidgets = Array_Elems(directConnect_widgets);
 
-	LInput_Init(&s->iptUsername, 330, "&gUsername..");
-	LInput_Init(&s->iptAddress,  330, "&gIP address:Port number..");
-	LInput_Init(&s->iptMppass,   330, "&gMppass..");
+	LInput_Init(&s->iptUsername, 330, "Username..");
+	LInput_Init(&s->iptAddress,  330, "IP address:Port number..");
+	LInput_Init(&s->iptMppass,   330, "Mppass..");
 
 	LButton_Init(&s->btnConnect, 110, 35, "Connect");
 	LButton_Init(&s->btnBack,     80, 35, "Back");
@@ -718,7 +718,7 @@ static void MFAScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(mfa_widgets);
 	
 	LLabel_Init( &s->lblTitle,  "");
-	LInput_Init( &s->iptCode,   280, "&gLogin code..");
+	LInput_Init( &s->iptCode,   280, "Login code..");
 	LButton_Init(&s->btnSignIn, 100, 35, "Sign in");
 	LButton_Init(&s->btnCancel, 100, 35, "Cancel");
 
@@ -867,8 +867,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->numWidgets        = Array_Elems(main_widgets);
 	s->iptPassword.type  = KEYBOARD_TYPE_PASSWORD;
 
-	LInput_Init( &s->iptUsername, 280, "&gUsername..");
-	LInput_Init( &s->iptPassword, 280, "&gPassword..");
+	LInput_Init( &s->iptUsername, 280, "Username..");
+	LInput_Init( &s->iptPassword, 280, "Password..");
 	LButton_Init(&s->btnLogin,    100, 35, "Sign in");
 	LButton_Init(&s->btnResume,   100, 35, "Resume");
 
@@ -1367,8 +1367,8 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->widgets    = servers_widgets;
 	s->numWidgets = Array_Elems(servers_widgets);
 
-	LInput_Init( &s->iptSearch, 370, "&gSearch servers..");
-	LInput_Init( &s->iptHash,   475, "&gclassicube.net/server/play/...");
+	LInput_Init( &s->iptSearch, 370, "Search servers..");
+	LInput_Init( &s->iptHash,   475, "classicube.net/server/play/...");
 
 	LButton_Init(&s->btnBack,    110, 30, "Back");
 	LButton_Init(&s->btnConnect, 130, 30, "Connect");

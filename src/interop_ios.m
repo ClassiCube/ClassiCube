@@ -527,6 +527,25 @@ static NSString* ToNSString(const cc_string* text) {
     return [NSString stringWithUTF8String:raw];
 }
 
+// TODO probably a better way..
+static UIImage* ToUIImage(struct Bitmap* bmp) {
+    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+    CGDataProviderRef provider;
+    CGImageRef image;
+
+    provider = CGDataProviderCreateWithData(NULL, bmp->scan0,
+                                            Bitmap_DataSize(bmp->width, bmp->height), NULL);
+    image    = CGImageCreate(bmp->width, bmp->height, 8, 32, bmp->width * 4, colorspace,
+                             kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+    
+    UIImage* img = [UIImage imageWithCGImage:image];
+    
+    CGImageRelease(image);
+    CGDataProviderRelease(provider);
+    CGColorSpaceRelease(colorspace);
+    return img;
+}
+
 void LBackend_Init(void) {
 }
 
@@ -609,12 +628,17 @@ void LBackend_InitButton(struct LButton* w, int width, int height) {
     AssignView(w, btn);
     UpdateWidgetDimensions(w);
     
-    struct Bitmap bmp;//
-    //Bitmap_Allocate(&bmp, w->width, w->height);
-    //LButton_DrawBackground(w, &bmp, 0, 0);
+    struct Bitmap bmp;
+    Bitmap_Allocate(&bmp, w->width, w->height);
     
-    //UIImage* img = [UIImage i]
-    //[btn setBackgroundImage:img forState:UIControlStateNormal];
+    LButton_DrawBackground(w, &bmp, 0, 0);
+    [btn setBackgroundImage:ToUIImage(&bmp) forState:UIControlStateNormal];
+    
+    w->hovered = true;
+    //LButton_DrawBackground(w, &bmp, 0, 0);
+    //[btn setBackgroundImage:ToUIImage(&bmp) forState:UIControlStateSelected];
+    
+    Mem_Free(bmp.scan0);
 }
 
 void LBackend_UpdateButton(struct LButton* w) {
@@ -657,6 +681,7 @@ static void LBackend_HandleInput(id ipt_obj) {
     struct LInput* ipt = (struct LInput*)w;
     ipt->text.length   = 0;
     String_AppendUtf8(&ipt->text, str, String_Length(str));
+    if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
 
 void LBackend_InitInput(struct LInput* w, int width) {
@@ -671,6 +696,11 @@ void LBackend_InitInput(struct LInput* w, int width) {
         [fld setKeyboardType:UIKeyboardTypeNumberPad];
     } else if (w->type == KEYBOARD_TYPE_PASSWORD) {
         fld.secureTextEntry = YES;
+    }
+    
+    if (w->hintText) {
+        cc_string hint  = String_FromReadonly(w->hintText);
+        fld.placeholder = ToNSString(&hint);
     }
     
     AssignView(w, fld);

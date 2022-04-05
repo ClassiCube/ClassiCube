@@ -266,7 +266,6 @@ static void Launcher_Init(void) {
 	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_FLAGS_NONE);
 	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_FLAGS_NONE);
 
-	Drawer2D.Colors['g'] = BitmapCol_Make(125, 125, 125, 255);
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
 }
