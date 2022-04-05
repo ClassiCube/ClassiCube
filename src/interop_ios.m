@@ -510,6 +510,15 @@ void Platform_ShareScreenshot(const cc_string* filename) {
     [controller presentViewController:act animated:true completion:Nil];
 }
 
+void GetDeviceUUID(cc_string* str) {
+    UIDevice* device = [UIDevice currentDevice];
+    NSString* string = [[device identifierForVendor] UUIDString];
+    
+    // TODO avoid code duplication
+    const char* src = [string UTF8String];
+    String_AppendUtf8(str, src, String_Length(src));
+}
+
 
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
@@ -527,6 +536,7 @@ static NSString* ToNSString(const cc_string* text) {
     return [NSString stringWithUTF8String:raw];
 }
 
+static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
 // TODO probably a better way..
 static UIImage* ToUIImage(struct Bitmap* bmp) {
     CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
@@ -534,7 +544,7 @@ static UIImage* ToUIImage(struct Bitmap* bmp) {
     CGImageRef image;
 
     provider = CGDataProviderCreateWithData(NULL, bmp->scan0,
-                                            Bitmap_DataSize(bmp->width, bmp->height), NULL);
+                                            Bitmap_DataSize(bmp->width, bmp->height), FreeContents);
     image    = CGImageCreate(bmp->width, bmp->height, 8, 32, bmp->width * 4, colorspace,
                              kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
     
@@ -627,18 +637,17 @@ void LBackend_InitButton(struct LButton* w, int width, int height) {
     
     AssignView(w, btn);
     UpdateWidgetDimensions(w);
+    // memory freeing deferred until UIImage is freed (see FreeContents)
+    struct Bitmap bmp1, bmp2;
     
-    struct Bitmap bmp;
-    Bitmap_Allocate(&bmp, w->width, w->height);
+    Bitmap_Allocate(&bmp1, w->width, w->height);
+    LButton_DrawBackground(w, &bmp1, 0, 0);
+    [btn setBackgroundImage:ToUIImage(&bmp1) forState:UIControlStateNormal];
     
-    LButton_DrawBackground(w, &bmp, 0, 0);
-    [btn setBackgroundImage:ToUIImage(&bmp) forState:UIControlStateNormal];
-    
+    Bitmap_Allocate(&bmp2, w->width, w->height);
     w->hovered = true;
-    //LButton_DrawBackground(w, &bmp, 0, 0);
-    //[btn setBackgroundImage:ToUIImage(&bmp) forState:UIControlStateSelected];
-    
-    Mem_Free(bmp.scan0);
+    LButton_DrawBackground(w, &bmp2, 0, 0);
+    [btn setBackgroundImage:ToUIImage(&bmp2) forState:UIControlStateHighlighted];
 }
 
 void LBackend_UpdateButton(struct LButton* w) {

@@ -1156,6 +1156,18 @@ static cc_result GetMachineID(cc_uint32* key) {
 	DecodeMachineID(dirBuffer, dir.length, key);
 	return 0;
 }
+#elif defined CC_BUILD_IOS
+extern void GetDeviceUUID(cc_string* str);
+static cc_result GetMachineID(cc_uint32* key) {
+    cc_string str; char strBuffer[STRING_SIZE];
+    String_InitArray(str, strBuffer);
+    
+    GetDeviceUUID(&str);
+    if (!str.length) return ERR_NOT_SUPPORTED;
+    
+    DecodeMachineID(strBuffer, str.length, key);
+    return 0;
+}
 #else
 static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
 #endif
