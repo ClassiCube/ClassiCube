@@ -27,8 +27,12 @@ void LBackend_InitCheckbox(struct LCheckbox* w);
 void LBackend_DrawCheckbox(struct LCheckbox* w);
 
 void LBackend_InitInput(struct LInput* w, int width);
-void LBackend_UpdateInput(struct LInput* w, const cc_string* text);
-void LBackend_DrawInput(struct LInput* w, const cc_string* text);
+void LBackend_UpdateInput(struct LInput* w);
+void LBackend_DrawInput(struct LInput* w);
+
+void LBackend_TickInput(struct LInput* w);
+void LBackend_SelectInput(struct LInput* w, int idx, cc_bool wasSelected);
+void LBackend_UnselectInput(struct LInput* w);
 
 void LBackend_InitLabel(struct LLabel* w);
 void LBackend_UpdateLabel(struct LLabel* w);

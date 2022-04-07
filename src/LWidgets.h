@@ -40,7 +40,9 @@ struct LWidgetVTABLE {
 	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
-	void (*OnClick)(void* widget, int idx); /* Called when widget is clicked */ \
+	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
+	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
+	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
 	Rect2D last;                   /* Widget's last drawn area */ \
 	void* meta;                    /* Backend specific data */
 
@@ -90,6 +92,7 @@ struct LInput {
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LInput_Init(struct LInput* w, int width, const char* hintText);
+CC_NOINLINE void LInput_UNSAFE_GetText(struct LInput* w, cc_string* text);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
 CC_NOINLINE void LInput_ClearText(struct LInput* w);
 

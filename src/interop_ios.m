@@ -626,7 +626,7 @@ static void LBackend_HandleButton(id btn_obj) {
     if (w == NULL) return;
     
     struct LButton* btn = (struct LButton*)w;
-    btn->OnClick(btn, 0);
+    btn->OnClick(btn);
 }
 
 void LBackend_InitButton(struct LButton* w, int width, int height) {
@@ -716,14 +716,18 @@ void LBackend_InitInput(struct LInput* w, int width) {
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_UpdateInput(struct LInput* w, const cc_string* text) {
+void LBackend_UpdateInput(struct LInput* w) {
     UITextField* fld = (__bridge UITextField*)w->meta;
     fld.text         = ToNSString(&w->text);
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
+void LBackend_DrawInput(struct LInput* w) {
 }
+
+void LBackend_TickInput(struct LInput* w) { }
+void LBackend_SelectInput(struct LInput* w, int idx, cc_bool wasSelected) { }
+void LBackend_UnselectInput(struct LInput* w) { }
 
 
 /*########################################################################################################################*

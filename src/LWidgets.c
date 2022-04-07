@@ -15,7 +15,6 @@
 #include "LBackend.h"
 
 static int xInputOffset;
-static int caretOffset, caretWidth, caretHeight;
 static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
 static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
 static int cellXOffset, cellXPadding, cellMinWidth;
@@ -28,10 +27,6 @@ void LWidget_CalcOffsets(void) {
 	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder4 = yBorder * 4;
 
 	xInputOffset = Display_ScaleX(5);
-
-	caretOffset  = Display_ScaleY(5);
-	caretWidth   = Display_ScaleX(10);
-	caretHeight  = Display_ScaleY(2);
 
 	scrollbarWidth = Display_ScaleX(10);
 	dragPad        = Display_ScaleX(8);
@@ -207,7 +202,7 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text) {
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
+void LInput_UNSAFE_GetText(struct LInput* w, cc_string* text) {
 	int i;
 	if (w->type != KEYBOARD_TYPE_PASSWORD) { *text = w->text; return; }
 
@@ -218,71 +213,22 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
 
 static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
-	cc_string text; char textBuffer[STRING_SIZE];
-
-	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	LBackend_DrawInput(w, &text);
+	LBackend_DrawInput(w);
 }
-
-static Rect2D LInput_MeasureCaret(struct LInput* w) {
-	cc_string text; char textBuffer[STRING_SIZE];
-	struct DrawTextArgs args;
-	Rect2D r;
-
-	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
-
-	r.X = w->x + xInputOffset;
-	r.Y = w->y + w->height - caretOffset; r.Height = caretHeight;
-
-	if (w->caretPos == -1) {
-		r.X += Drawer2D_TextWidth(&args);
-		r.Width = caretWidth;
-	} else {
-		args.text = String_UNSAFE_Substring(&text, 0, w->caretPos);
-		r.X += Drawer2D_TextWidth(&args);
-
-		args.text = String_UNSAFE_Substring(&text, w->caretPos, 1);
-		r.Width   = Drawer2D_TextWidth(&args);
-	}
-	return r;
-}
-
-static TimeMS caretStart;
-static cc_bool lastCaretShow;
-static Rect2D lastCaretRec;
-#define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
 
 static void LInput_TickCaret(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
-	int elapsed;
-	cc_bool caretShow;
-	Rect2D r;
+	LBackend_TickInput(w);
+}
 
-	if (!caretStart) return;
-	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
+static void LInput_Select(void* widget, int idx, cc_bool wasSelected) {
+	struct LInput* w = (struct LInput*)widget;
+	LBackend_SelectInput(w, idx, wasSelected);
+}
 
-	caretShow = (elapsed % 1000) < 500;
-	if (caretShow == lastCaretShow) return;
-	lastCaretShow = caretShow;
-
-	LInput_Draw(w);
-	r = LInput_MeasureCaret(w);
-
-	if (caretShow) {
-		Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_BLACK,
-					   r.X, r.Y, r.Width, r.Height);
-	}
-	
-	if (Rect2D_Equals(r, lastCaretRec)) {
-		/* Fast path, caret is blinking in same spot */
-		Launcher_MarkDirty(r.X, r.Y, r.Width, r.Height);
-	} else {
-		Launcher_MarkDirty(w->x, w->y, w->width, w->height);
-	}
-	lastCaretRec = r;
+static void LInput_Unselect(void* widget, int idx) {
+	struct LInput* w = (struct LInput*)widget;
+	LBackend_UnselectInput(w);
 }
 
 static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
@@ -294,58 +240,6 @@ static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
 	w->caretPos += (forwards ? 1 : -1);
 	if (w->caretPos < 0 || w->caretPos >= w->text.length) w->caretPos = -1;
 	LWidget_Redraw(w);
-}
-
-static void LInput_MoveCaretToCursor(struct LInput* w, int idx) {
-	cc_string text; char textBuffer[STRING_SIZE];
-	int x = Pointers[idx].x, y = Pointers[idx].y;
-	struct DrawTextArgs args;
-	int i, charX, charWidth;
-
-	/* Input widget may have been selected by pressing tab */
-	/* In which case cursor is completely outside, so ignore */
-	if (!Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return;
-	lastCaretShow = false;
-
-	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	x -= w->x; y -= w->y;
-
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
-	if (x >= Drawer2D_TextWidth(&args)) {
-		w->caretPos = -1; return; 
-	}
-
-	for (i = 0; i < text.length; i++) {
-		args.text = String_UNSAFE_Substring(&text, 0, i);
-		charX     = Drawer2D_TextWidth(&args);
-
-		args.text = String_UNSAFE_Substring(&text, i, 1);
-		charWidth = Drawer2D_TextWidth(&args);
-		if (x >= charX && x < charX + charWidth) {
-			w->caretPos = i; return;
-		}
-	}
-}
-
-static void LInput_Select(void* widget, int idx, cc_bool wasSelected) {
-	struct LInput* w = (struct LInput*)widget;
-	struct OpenKeyboardArgs args;
-	caretStart = DateTime_CurrentUTC_MS();
-	LInput_MoveCaretToCursor(w, idx);
-	/* TODO: Only draw outer border */
-	if (wasSelected) return;
-
-	LWidget_Draw(widget);
-	OpenKeyboardArgs_Init(&args, &w->text, w->type);
-	Window_OpenKeyboard(&args);
-}
-
-static void LInput_Unselect(void* widget, int idx) {
-	caretStart = 0;
-	/* TODO: Only draw outer border */
-	LWidget_Draw(widget);
-	Window_CloseKeyboard();
 }
 
 static void LInput_CopyFromClipboard(struct LInput* w) {
@@ -470,14 +364,10 @@ void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	w->minWidth = w->width;
 }
 
-void LInput_SetText(struct LInput* w, const cc_string* text_) {
-	cc_string text; char textBuffer[STRING_SIZE];
-	String_Copy(&w->text, text_);
-	String_InitArray(text, textBuffer);
-
+void LInput_SetText(struct LInput* w, const cc_string* text) {
+	String_Copy(&w->text, text);
 	LInput_ClampCaret(w);
-	LInput_GetText(w, &text);
-	LBackend_UpdateInput(w, &text);
+	LBackend_UpdateInput(w);
 }
 
 void LInput_ClearText(struct LInput* w) {

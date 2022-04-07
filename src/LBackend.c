@@ -30,6 +30,7 @@
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
 static int xInputOffset, yInputOffset, inputExpand;
+static int caretOffset, caretWidth, caretHeight;
 
 void LBackend_Init(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
@@ -38,6 +39,10 @@ void LBackend_Init(void) {
 	xInputOffset = Display_ScaleX(5);
 	yInputOffset = Display_ScaleY(2);
 	inputExpand  = Display_ScaleX(20);
+
+	caretOffset  = Display_ScaleY(5);
+	caretWidth   = Display_ScaleX(10);
+	caretHeight  = Display_ScaleY(2);
 }
 
 static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
@@ -275,16 +280,24 @@ static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
 	w->_textHeight = Drawer2D_TextHeight(&args);
 }
 
-void LBackend_UpdateInput(struct LInput* w, const cc_string* text) {
-	LInput_UpdateDimensions(w, text);
+void LBackend_UpdateInput(struct LInput* w) {
+	cc_string text; char textBuffer[STRING_SIZE];
+	String_InitArray(text, textBuffer);
+
+	LInput_UNSAFE_GetText(w, &text);
+	LInput_UpdateDimensions(w, &text);
 }
 
-void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
+void LBackend_DrawInput(struct LInput* w) {
+	cc_string text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
+
+	String_InitArray(text, textBuffer);
+	LInput_UNSAFE_GetText(w, &text);
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
 
 	/* TODO shouldn't be recalcing size in draw.... */
-	LInput_UpdateDimensions(w, text);
+	LInput_UpdateDimensions(w, &text);
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
 	Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_WHITE,
@@ -295,6 +308,117 @@ void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
 	Drawer2D.Colors['f'] = Drawer2D.Colors['0'];
 	LInput_DrawText(w, &args);
 	Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
+}
+
+
+static TimeMS caretStart;
+static cc_bool lastCaretShow;
+static Rect2D lastCaretRec;
+#define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
+
+static Rect2D LInput_MeasureCaret(struct LInput* w) {
+	cc_string text; char textBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+	Rect2D r;
+
+	String_InitArray(text, textBuffer);
+	LInput_UNSAFE_GetText(w, &text);
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
+
+	r.X = w->x + xInputOffset;
+	r.Y = w->y + w->height - caretOffset; r.Height = caretHeight;
+
+	if (w->caretPos == -1) {
+		r.X += Drawer2D_TextWidth(&args);
+		r.Width = caretWidth;
+	} else {
+		args.text = String_UNSAFE_Substring(&text, 0, w->caretPos);
+		r.X += Drawer2D_TextWidth(&args);
+
+		args.text = String_UNSAFE_Substring(&text, w->caretPos, 1);
+		r.Width   = Drawer2D_TextWidth(&args);
+	}
+	return r;
+}
+
+static void LInput_MoveCaretToCursor(struct LInput* w, int idx) {
+	cc_string text; char textBuffer[STRING_SIZE];
+	int x = Pointers[idx].x, y = Pointers[idx].y;
+	struct DrawTextArgs args;
+	int i, charX, charWidth;
+
+	/* Input widget may have been selected by pressing tab */
+	/* In which case cursor is completely outside, so ignore */
+	if (!Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return;
+	lastCaretShow = false;
+
+	String_InitArray(text, textBuffer);
+	LInput_UNSAFE_GetText(w, &text);
+	x -= w->x; y -= w->y;
+
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
+	if (x >= Drawer2D_TextWidth(&args)) {
+		w->caretPos = -1; return; 
+	}
+
+	for (i = 0; i < text.length; i++) {
+		args.text = String_UNSAFE_Substring(&text, 0, i);
+		charX     = Drawer2D_TextWidth(&args);
+
+		args.text = String_UNSAFE_Substring(&text, i, 1);
+		charWidth = Drawer2D_TextWidth(&args);
+		if (x >= charX && x < charX + charWidth) {
+			w->caretPos = i; return;
+		}
+	}
+}
+
+void LBackend_TickInput(struct LInput* w) {
+	int elapsed;
+	cc_bool caretShow;
+	Rect2D r;
+
+	if (!caretStart) return;
+	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
+
+	caretShow = (elapsed % 1000) < 500;
+	if (caretShow == lastCaretShow) return;
+	lastCaretShow = caretShow;
+
+	LBackend_DrawInput(w);
+	r = LInput_MeasureCaret(w);
+
+	if (caretShow) {
+		Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_BLACK,
+					   r.X, r.Y, r.Width, r.Height);
+	}
+	
+	if (Rect2D_Equals(r, lastCaretRec)) {
+		/* Fast path, caret is blinking in same spot */
+		Launcher_MarkDirty(r.X, r.Y, r.Width, r.Height);
+	} else {
+		Launcher_MarkDirty(w->x, w->y, w->width, w->height);
+	}
+	lastCaretRec = r;
+}
+
+void LBackend_SelectInput(struct LInput* w, int idx, cc_bool wasSelected) {
+	struct OpenKeyboardArgs args;
+	caretStart = DateTime_CurrentUTC_MS();
+	LInput_MoveCaretToCursor(w, idx);
+	/* TODO: Only draw outer border */
+	if (wasSelected) return;
+
+	LWidget_Draw(w);
+	OpenKeyboardArgs_Init(&args, &w->text, w->type);
+	Window_OpenKeyboard(&args);
+}
+
+void LBackend_UnselectInput(struct LInput* w) {
+	caretStart = 0;
+	/* TODO: Only draw outer border */
+	LWidget_Draw(w);
+	Window_CloseKeyboard();
 }
 
 
