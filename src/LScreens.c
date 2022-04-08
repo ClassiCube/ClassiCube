@@ -362,20 +362,18 @@ static struct LWidget* colours_widgets[] = {
 	(struct LWidget*)&ColoursScreen.btnBack,        (struct LWidget*)&ColoursScreen.cbClassic
 };
 
-CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol color) {
-	cc_string tmp; char tmpBuffer[3];
-
+CC_NOINLINE static void ColoursScreen_Set(struct LInput* w, cc_uint8 value) {
+	cc_string tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
-	String_AppendInt(&tmp, BitmapCol_R(color));
-	LInput_SetText(&s->iptColours[i + 0], &tmp);
 
-	tmp.length = 0;
-	String_AppendInt(&tmp, BitmapCol_G(color));
-	LInput_SetText(&s->iptColours[i + 1], &tmp);
+	String_AppendInt(&tmp, value);
+	LInput_SetText(w, &tmp);
+}
 
-	tmp.length = 0;
-	String_AppendInt(&tmp, BitmapCol_B(color));
-	LInput_SetText(&s->iptColours[i + 2], &tmp);
+CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol color) {
+	ColoursScreen_Set(&s->iptColours[i + 0], BitmapCol_R(color));
+	ColoursScreen_Set(&s->iptColours[i + 1], BitmapCol_G(color));
+	ColoursScreen_Set(&s->iptColours[i + 2], BitmapCol_B(color));
 }
 
 CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
@@ -423,10 +421,7 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	newVal = value + delta;
 
 	Math_Clamp(newVal, 0, 255);
-	w->text.length = 0;
-	String_AppendInt(&w->text, newVal);
-
-	if (w->caretPos >= w->text.length) w->caretPos = -1;
+	ColoursScreen_Set(w, newVal);
 	ColoursScreen_TextChanged(w);
 }
 
@@ -703,7 +698,7 @@ static void MFAScreen_SignIn(void* w) {
 	MainScreen_DoLogin();
 }
 static void MFAScreen_Cancel(void* w) {
-	MFAScreen.iptCode.text.length = 0;
+	LInput_ClearText(&MFAScreen.iptCode);
 	MainScreen_SetActive();
 }
 

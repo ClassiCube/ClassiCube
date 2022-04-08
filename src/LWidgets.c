@@ -15,9 +15,6 @@
 #include "LBackend.h"
 
 static int xInputOffset;
-static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
-static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
-static int cellXOffset, cellXPadding, cellMinWidth;
 static int flagXOffset, flagYOffset;
 static int xBorder, xBorder2, xBorder4;
 static int yBorder, yBorder2, yBorder4;
@@ -27,20 +24,6 @@ void LWidget_CalcOffsets(void) {
 	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder4 = yBorder * 4;
 
 	xInputOffset = Display_ScaleX(5);
-
-	scrollbarWidth = Display_ScaleX(10);
-	dragPad        = Display_ScaleX(8);
-	gridlineWidth  = Display_ScaleX(2);
-	gridlineHeight = Display_ScaleY(2);
-
-	hdrYOffset   = Display_ScaleY(3);
-	hdrYPadding  = Display_ScaleY(5);
-	rowYOffset   = Display_ScaleY(3);
-	rowYPadding  = Display_ScaleY(1);
-
-	cellXOffset  = Display_ScaleX(6);
-	cellXPadding = Display_ScaleX(5);
-	cellMinWidth = Display_ScaleX(20);
 	flagXOffset  = Display_ScaleX(2);
 	flagYOffset  = Display_ScaleY(6);
 }
@@ -146,7 +129,7 @@ void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y)
 
 static void LButton_Draw(void* widget) {
 	struct LButton* w = (struct LButton*)widget;
-	LBackend_DrawButton(w);
+	LBackend_ButtonDraw(w);
 	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
@@ -164,13 +147,13 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 void LButton_Init(struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
 	w->tabSelectable = true;
-	LBackend_InitButton(w, width, height);
+	LBackend_ButtonInit(w, width, height);
 	LButton_SetConst(w, text);
 }
 
 void LButton_SetConst(struct LButton* w, const char* text) {
 	w->text = String_FromReadonly(text);
-	LBackend_UpdateButton(w);
+	LBackend_ButtonUpdate(w);
 }
 
 
@@ -179,7 +162,7 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 *#########################################################################################################################*/
 static void LCheckbox_Draw(void* widget) {
 	struct LCheckbox* w = (struct LCheckbox*)widget;
-	LBackend_DrawCheckbox(w);
+	LBackend_CheckboxDraw(w);
 	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
@@ -195,7 +178,7 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text) {
 
 	String_InitArray(w->text, w->_textBuffer);
 	String_AppendConst(&w->text, text);
-	LBackend_InitCheckbox(w);
+	LBackend_CheckboxInit(w);
 }
 
 
@@ -213,22 +196,22 @@ void LInput_UNSAFE_GetText(struct LInput* w, cc_string* text) {
 
 static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
-	LBackend_DrawInput(w);
+	LBackend_InputDraw(w);
 }
 
 static void LInput_TickCaret(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
-	LBackend_TickInput(w);
+	LBackend_InputTick(w);
 }
 
 static void LInput_Select(void* widget, int idx, cc_bool wasSelected) {
 	struct LInput* w = (struct LInput*)widget;
-	LBackend_SelectInput(w, idx, wasSelected);
+	LBackend_InputSelect(w, idx, wasSelected);
 }
 
 static void LInput_Unselect(void* widget, int idx) {
 	struct LInput* w = (struct LInput*)widget;
-	LBackend_UnselectInput(w);
+	LBackend_InputUnselect(w);
 }
 
 static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
@@ -360,19 +343,20 @@ void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	
 	w->hintText = hintText;
 	w->caretPos = -1;
-	LBackend_InitInput(w, width);
+	LBackend_InputInit(w, width);
 	w->minWidth = w->width;
 }
 
 void LInput_SetText(struct LInput* w, const cc_string* text) {
 	String_Copy(&w->text, text);
 	LInput_ClampCaret(w);
-	LBackend_UpdateInput(w);
+	LBackend_InputUpdate(w);
 }
 
 void LInput_ClearText(struct LInput* w) {
 	w->text.length = 0;
 	w->caretPos    = -1;
+	LBackend_InputUpdate(w);
 }
 
 void LInput_AppendString(struct LInput* w, const cc_string* str) {
@@ -397,7 +381,7 @@ void LInput_SetString(struct LInput* w, const cc_string* str) {
 *#########################################################################################################################*/
 static void LLabel_Draw(void* widget) {
 	struct LLabel* w = (struct LLabel*)widget;
-	LBackend_DrawLabel(w);
+	LBackend_LabelDraw(w);
 }
 
 static const struct LWidgetVTABLE llabel_VTABLE = {
@@ -411,13 +395,13 @@ void LLabel_Init(struct LLabel* w, const char* text) {
 	w->font   = &Launcher_TextFont;
 
 	String_InitArray(w->text, w->_textBuffer);
-	LBackend_InitLabel(w);
+	LBackend_LabelInit(w);
 	LLabel_SetConst(w, text);
 }
 
 void LLabel_SetText(struct LLabel* w, const cc_string* text) {
 	String_Copy(&w->text, text);
-	LBackend_UpdateLabel(w);
+	LBackend_LabelUpdate(w);
 	LWidget_CalcPosition(w);
 }
 
@@ -432,7 +416,7 @@ void LLabel_SetConst(struct LLabel* w, const char* text) {
 *#########################################################################################################################*/
 static void LLine_Draw(void* widget) {
 	struct LLine* w = (struct LLine*)widget;
-	LBackend_DrawLine(w);
+	LBackend_LineDraw(w);
 }
 
 static const struct LWidgetVTABLE lline_VTABLE = {
@@ -443,7 +427,7 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 };
 void LLine_Init(struct LLine* w, int width) {
 	w->VTABLE = &lline_VTABLE;
-	LBackend_InitLine(w, width);
+	LBackend_LineInit(w, width);
 }
 
 #define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
@@ -457,7 +441,7 @@ BitmapCol LLine_GetColor(void) {
 *#########################################################################################################################*/
 static void LSlider_Draw(void* widget) {
 	struct LSlider* w = (struct LSlider*)widget;
-	LBackend_DrawSlider(w);
+	LBackend_SliderDraw(w);
 }
 
 static const struct LWidgetVTABLE lslider_VTABLE = {
@@ -469,13 +453,13 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
 	w->VTABLE = &lslider_VTABLE;
 	w->color  = color;
-	LBackend_InitSlider(w, width, height);
+	LBackend_SliderInit(w, width, height);
 }
 
 void LSlider_SetProgress(struct LSlider* w, int progress) {
 	if (progress == w->value) return;
 	w->value = progress;
-	LBackend_UpdateSlider(w);
+	LBackend_SliderUpdate(w);
 }
 
 
@@ -538,9 +522,7 @@ static struct LTableColumn tableColumns[5] = {
 };
 
 
-static int sortingCol = -1;
-/* Works out top and height of the scrollbar */
-static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
+void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
 	float scale;
 	if (!w->rowsCount) { *y = 0; *height = 0; return; }
 
@@ -550,16 +532,14 @@ static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
 	*height = min(*y + *height, w->height) - *y;
 }
 
-/* Ensures top/first visible row index lies within table */
-static void LTable_ClampTopRow(struct LTable* w) { 
+void LTable_ClampTopRow(struct LTable* w) { 
 	if (w->topRow > w->rowsCount - w->visibleRows) {
 		w->topRow = w->rowsCount - w->visibleRows;
 	}
 	if (w->topRow < 0) w->topRow = 0;
 }
 
-/* Returns index of selected row in currently visible rows */
-static int LTable_GetSelectedIndex(struct LTable* w) {
+int LTable_GetSelectedIndex(struct LTable* w) {
 	struct ServerInfo* entry;
 	int row;
 
@@ -570,8 +550,7 @@ static int LTable_GetSelectedIndex(struct LTable* w) {
 	return -1;
 }
 
-/* Sets selected row to given row, scrolling table if needed */
-static void LTable_SetSelectedTo(struct LTable* w, int index) {
+void LTable_SetSelectedTo(struct LTable* w, int index) {
 	if (!w->rowsCount) return;
 	if (index >= w->rowsCount) index = w->rowsCount - 1;
 	if (index < 0) index = 0;
@@ -579,166 +558,6 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 	String_Copy(w->selectedHash, &LTable_Get(index)->hash);
 	LTable_ShowSelected(w);
 	w->OnSelectedChanged();
-}
-
-/* Draws background behind column headers */
-static void LTable_DrawHeaderBackground(struct LTable* w) {
-	BitmapCol gridColor = BitmapCol_Make(20, 20, 10, 255);
-
-	if (!Launcher_Theme.ClassicBackground) {
-		Drawer2D_Clear(&Launcher_Framebuffer, gridColor,
-						w->x, w->y, w->width, w->hdrHeight);
-	} else {
-		Launcher_ResetArea(w->x, w->y, w->width, w->hdrHeight);
-	}
-}
-
-/* Works out the background color of the given row */
-static BitmapCol LTable_RowColor(struct LTable* w, int row) {
-	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
-	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);
-	BitmapCol selectedColor = BitmapCol_Make( 40,  40, 40, 255);
-	struct ServerInfo* entry;
-	cc_bool selected;
-	entry = row < w->rowsCount ? LTable_Get(row) : NULL;
-
-	if (entry) {
-		selected = String_Equals(&entry->hash, w->selectedHash);
-		if (entry->featured) {
-			return selected ? featSelColor : featuredColor;
-		} else if (selected) {
-			return selectedColor;
-		}
-	}
-
-	if (!Launcher_Theme.ClassicBackground) {
-		return BitmapCol_Make(20, 20, 10, 255);
-	} else {
-		return (row & 1) == 0 ? Launcher_Theme.BackgroundColor : 0;
-	}
-}
-
-/* Draws background behind each row in the table */
-static void LTable_DrawRowsBackground(struct LTable* w) {
-	int y, height, row;
-	BitmapCol color;
-
-	y = w->rowsBegY;
-	for (row = w->topRow; ; row++, y += w->rowHeight) {
-		color = LTable_RowColor(w, row);
-
-		/* last row may get chopped off */
-		height = min(y + w->rowHeight, w->rowsEndY) - y;
-		/* hit the end of the table */
-		if (height < 0) break;
-
-		if (color) {
-			Drawer2D_Clear(&Launcher_Framebuffer, color,
-				w->x, y, w->width, height);
-		} else {
-			Launcher_ResetArea(w->x, y, w->width, height);
-		}
-	}
-}
-
-/* Draws a gridline below column headers and gridlines after each column */
-static void LTable_DrawGridlines(struct LTable* w) {
-	int i, x;
-	if (Launcher_Theme.ClassicBackground) return;
-
-	x = w->x;
-	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor,
-				   x, w->y + w->hdrHeight, w->width, gridlineHeight);
-
-	for (i = 0; i < w->numColumns; i++) {
-		x += w->columns[i].width;
-		if (!w->columns[i].hasGridline) continue;
-			
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor,
-					   x, w->y, gridlineWidth, w->height);
-		x += gridlineWidth;
-	}
-}
-
-/* Draws the entire background of the table */
-static void LTable_DrawBackground(struct LTable* w) {
-	LTable_DrawHeaderBackground(w);
-	LTable_DrawRowsBackground(w);
-	LTable_DrawGridlines(w);
-}
-
-/* Draws title of each column at top of the table */
-static void LTable_DrawHeaders(struct LTable* w) {
-	struct DrawTextArgs args;
-	int i, x, y;
-
-	DrawTextArgs_MakeEmpty(&args, &Launcher_TextFont, true);
-	x = w->x; y = w->y;
-
-	for (i = 0; i < w->numColumns; i++) {
-		args.text = String_FromReadonly(w->columns[i].name);
-		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
-								x + cellXOffset, y + hdrYOffset, 
-								w->columns[i].width - cellXPadding);
-
-		x += w->columns[i].width;
-		if (w->columns[i].hasGridline) x += gridlineWidth;
-	}
-}
-
-/* Draws contents of the currently visible rows in the table */
-static void LTable_DrawRows(struct LTable* w) {
-	cc_string str; char strBuffer[STRING_SIZE];
-	struct ServerInfo* entry;
-	struct DrawTextArgs args;
-	struct LTableCell cell;
-	int i, x, y, row, end;
-
-	String_InitArray(str, strBuffer);
-	DrawTextArgs_Make(&args, &str, w->rowFont, true);
-	cell.table = w;
-	y   = w->rowsBegY;
-	end = w->topRow + w->visibleRows;
-
-	for (row = w->topRow; row < end; row++, y += w->rowHeight) {
-		x = w->x;
-
-		if (row >= w->rowsCount)            break;
-		if (y + w->rowHeight > w->rowsEndY) break;
-		entry = LTable_Get(row);
-
-		for (i = 0; i < w->numColumns; i++) {
-			args.text  = str; cell.x = x; cell.y = y;
-			cell.width = w->columns[i].width;
-			w->columns[i].DrawRow(entry, &args, &cell);
-
-			if (args.text.length) {
-				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
-										x + cellXOffset, y + rowYOffset, 
-										cell.width - cellXPadding);
-			}
-
-			x += w->columns[i].width;
-			if (w->columns[i].hasGridline) x += gridlineWidth;
-		}
-	}
-}
-
-/* Draws scrollbar on the right edge of the table */
-static void LTable_DrawScrollbar(struct LTable* w) {
-	BitmapCol classicBack   = BitmapCol_Make( 80,  80,  80, 255);
-	BitmapCol classicScroll = BitmapCol_Make(160, 160, 160, 255);
-	BitmapCol backCol   = Launcher_Theme.ClassicBackground ? classicBack   : Launcher_Theme.ButtonBorderColor;
-	BitmapCol scrollCol = Launcher_Theme.ClassicBackground ? classicScroll : Launcher_Theme.ButtonForeActiveColor;
-
-	int x, y, height;
-	x = w->x + w->width - scrollbarWidth;
-	LTable_GetScrollbarCoords(w, &y, &height);
-
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol,
-					x, w->y,     scrollbarWidth, w->height);		
-	Drawer2D_Clear(&Launcher_Framebuffer, scrollCol, 
-					x, w->y + y, scrollbarWidth, height);
 }
 
 cc_bool LTable_HandlesKey(int key) {
@@ -763,111 +582,19 @@ static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 	LTable_SetSelectedTo(w, index);
 }
 
+static void LTable_MouseDown(void* widget, int idx, cc_bool wasOver) {
+	struct LTable* w = (struct LTable*)widget;
+	LBackend_TableMouseDown(w, idx);
+}
+
 static void LTable_MouseMove(void* widget, int idx, cc_bool wasOver) {
 	struct LTable* w = (struct LTable*)widget;
-	int x = Pointers[idx].x - w->x, y = Pointers[idx].y - w->y;
-	int i, col, width, maxW;
-
-	if (w->draggingScrollbar) {
-		float scale = w->height / (float)w->rowsCount;
-		int row     = (int)((y - w->dragYOffset) / scale);
-		/* avoid expensive redraw when possible */
-		if (w->topRow == row) return;
-
-		w->topRow = row;
-		LTable_ClampTopRow(w);
-		LWidget_Draw(w);
-	} else if (w->draggingColumn >= 0) {
-		col   = w->draggingColumn;
-		width = x - w->dragXStart;
-
-		/* Ensure this column doesn't expand past right side of table */
-		maxW = w->width;
-		for (i = 0; i < col; i++) maxW -= w->columns[i].width;
-
-		Math_Clamp(width, cellMinWidth, maxW - cellMinWidth);
-		if (width == w->columns[col].width) return;
-		w->columns[col].width = width;
-		LWidget_Draw(w);
-	}
+	LBackend_TableMouseMove(w, idx);
 }
 
-static void LTable_RowsClick(struct LTable* w, int idx) {
-	int mouseY = Pointers[idx].y - w->rowsBegY;
-	int row    = w->topRow + mouseY / w->rowHeight;
-	cc_uint64 now;
-
-	LTable_SetSelectedTo(w, row);
-	now = Stopwatch_Measure();
-
-	/* double click on row to join */
-	if (Stopwatch_ElapsedMS(w->_lastClick, now) < 1000 && row == w->_lastRow) {
-		Launcher_ConnectToServer(&LTable_Get(row)->hash);
-	}
-
-	w->_lastRow   = LTable_GetSelectedIndex(w);
-	w->_lastClick = now;
-}
-
-/* Handles clicking on column headers (either resizes a column or sort rows) */
-static void LTable_HeadersClick(struct LTable* w, int idx) {
-	int x, i, mouseX = Pointers[idx].x;
-
-	for (i = 0, x = w->x; i < w->numColumns; i++) {
-		/* clicked on gridline, begin dragging */
-		if (mouseX >= (x - dragPad) && mouseX < (x + dragPad) && w->columns[i].interactable) {
-			w->draggingColumn = i - 1;
-			w->dragXStart = (mouseX - w->x) - w->columns[i - 1].width;
-			return;
-		}
-
-		x += w->columns[i].width;
-		if (w->columns[i].hasGridline) x += gridlineWidth;
-	}
-
-	for (i = 0, x = w->x; i < w->numColumns; i++) {
-		if (mouseX >= x && mouseX < (x + w->columns[i].width) && w->columns[i].interactable) {
-			sortingCol = i;
-			w->columns[i].invertSort = !w->columns[i].invertSort;
-			LTable_Sort(w);
-			return;
-		}
-
-		x += w->columns[i].width;
-		if (w->columns[i].hasGridline) x += gridlineWidth;
-	}
-}
-
-/* Handles clicking on the scrollbar on right edge of table */
-static void LTable_ScrollbarClick(struct LTable* w, int idx) {
-	int y, height, mouseY = Pointers[idx].y - w->y;
-	LTable_GetScrollbarCoords(w, &y, &height);
-
-	if (mouseY < y) {
-		w->topRow -= w->visibleRows;
-	} else if (mouseY >= y + height) {
-		w->topRow += w->visibleRows;
-	} else {
-		w->dragYOffset = mouseY - y;
-	}
-
-	w->draggingScrollbar = true;
-	LTable_ClampTopRow(w);
-}
-
-static void LTable_MouseDown(void* widget, int idx, cc_bool wasSelected) {
+static void LTable_MouseUp(void* widget, int idx) {
 	struct LTable* w = (struct LTable*)widget;
-
-	if (Pointers[idx].x >= WindowInfo.Width - scrollbarWidth) {
-		LTable_ScrollbarClick(w, idx);
-		w->_lastRow = -1;
-	} else if (Pointers[idx].y < w->rowsBegY) {
-		LTable_HeadersClick(w, idx);
-		w->_lastRow = -1;
-	} else {
-		LTable_RowsClick(w, idx);
-	}
-	LWidget_Draw(w);
+	LBackend_TableMouseUp(w, idx);
 }
 
 static void LTable_MouseWheel(void* widget, float delta) {
@@ -878,41 +605,21 @@ static void LTable_MouseWheel(void* widget, float delta) {
 	w->_lastRow = -1;
 }
 
-/* Stops an in-progress dragging of resizing column. */
-static void LTable_StopDragging(void* widget, int idx) {
-	struct LTable* w = (struct LTable*)widget;
-	w->draggingColumn    = -1;
-	w->draggingScrollbar = false;
-	w->dragYOffset       = 0;
-}
-
 void LTable_Reposition(struct LTable* w) {
-	int rowsHeight;
-	w->hdrHeight = Drawer2D_FontHeight(&Launcher_TextFont, true) + hdrYPadding;
-	w->rowHeight = Drawer2D_FontHeight(w->rowFont,         true) + rowYPadding;
-
-	w->rowsBegY = w->y + w->hdrHeight + gridlineHeight;
-	w->rowsEndY = w->y + w->height;
-	rowsHeight  = w->height - (w->rowsBegY - w->y);
-
-	w->visibleRows = rowsHeight / w->rowHeight;
+	LBackend_TableReposition(w);
 	LTable_ClampTopRow(w);
 }
 
 static void LTable_Draw(void* widget) {
 	struct LTable* w = (struct LTable*)widget;
-	LTable_DrawBackground(w);
-	LTable_DrawHeaders(w);
-	LTable_DrawRows(w);
-	LTable_DrawScrollbar(w);
-	Launcher_MarkAllDirty();
+	LBackend_TableDraw(w);
 }
 
 static const struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_Draw,      NULL,
 	LTable_KeyDown,   NULL, /* Key    */
 	LTable_MouseMove, NULL, /* Hover  */
-	LTable_MouseDown, LTable_StopDragging, /* Select */
+	LTable_MouseDown, LTable_MouseUp, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
 void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
@@ -921,6 +628,7 @@ void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 	w->columns    = tableColumns;
 	w->numColumns = Array_Elems(tableColumns);
 	w->rowFont    = rowFont;
+	w->sortingCol = -1;
 	
 	for (i = 0; i < w->numColumns; i++) {
 		w->columns[i].width = Display_ScaleX(w->columns[i].width);
@@ -928,13 +636,13 @@ void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 }
 
 void LTable_Reset(struct LTable* w) {
-	LTable_StopDragging(w, 0);
+	LBackend_TableMouseUp(w, 0);
 	LTable_Reposition(w);
 
-	w->topRow    = 0;
-	w->rowsCount = 0;
-	sortingCol   = -1;
-	w->_wheelAcc = 0.0f;
+	w->topRow     = 0;
+	w->rowsCount  = 0;
+	w->_wheelAcc  = 0.0f;
+	w->sortingCol = -1;
 }
 
 static int ShouldShowServer(struct LTable* w, struct ServerInfo* server) {
@@ -961,6 +669,7 @@ void LTable_ApplyFilter(struct LTable* w) {
 	LTable_ClampTopRow(w);
 }
 
+static int sortingCol;
 static int LTable_SortOrder(const struct ServerInfo* a, const struct ServerInfo* b) {
 	int order;
 	if (sortingCol >= 0) {
@@ -993,6 +702,8 @@ static void LTable_QuickSort(int left, int right) {
 
 void LTable_Sort(struct LTable* w) {
 	if (!FetchServersTask.numServers) return;
+
+	sortingCol = w->sortingCol;
 	FetchServersTask_ResetOrder();
 	LTable_QuickSort(0, FetchServersTask.numServers - 1);
 

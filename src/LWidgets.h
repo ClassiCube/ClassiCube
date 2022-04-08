@@ -188,6 +188,7 @@ struct LTable {
 	float _wheelAcc; /* mouse wheel accumulator */
 	int _lastRow;    /* last clicked row (for doubleclick join) */
 	cc_uint64 _lastClick; /* timestamp of last mouse click on a row */
+	int sortingCol;
 };
 
 struct LTableCell { struct LTable* table; int x, y, width; };
@@ -210,4 +211,13 @@ void LTable_ApplyFilter(struct LTable* table);
 void LTable_Sort(struct LTable* table);
 /* If selected row is not visible, adjusts top row so it does show. */
 void LTable_ShowSelected(struct LTable* table);
+
+/* Works out top and height of the scrollbar */
+void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height);
+/* Ensures top/first visible row index lies within table */
+void LTable_ClampTopRow(struct LTable* w);
+/* Returns index of selected row in currently visible rows */
+int LTable_GetSelectedIndex(struct LTable* w);
+/* Sets selected row to given row, scrolling table if needed */
+void LTable_SetSelectedTo(struct LTable* w, int index);
 #endif
