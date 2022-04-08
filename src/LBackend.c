@@ -532,7 +532,7 @@ void LBackend_SliderDraw(struct LSlider* w) {
 				   w->x + xBorder, w->y + yBorder, 
 				   curWidth,       w->height - yBorder2);
 }
-#endif
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
@@ -829,3 +829,4 @@ void LBackend_TableMouseUp(struct LTable* w, int idx) {
 	w->draggingScrollbar = false;
 	w->dragYOffset       = 0;
 }
+#endif

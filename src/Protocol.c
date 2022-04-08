@@ -556,6 +556,10 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 		Chat_AddRaw("   &cBlocks array size does not match volume of map");
 		FreeMapStates();
 	}
+	if (!map.blocks) {
+		Chat_AddRaw("&cFailed to load map, try joining a different map");
+		Chat_AddRaw("   &cAttempted to load map without a Blocks array");
+	}
 	
 #ifdef EXTENDED_BLOCKS
 	/* defer allocation of second map array if possible */
