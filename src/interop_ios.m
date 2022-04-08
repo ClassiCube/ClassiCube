@@ -629,7 +629,7 @@ static void LBackend_HandleButton(id btn_obj) {
     btn->OnClick(btn);
 }
 
-void LBackend_InitButton(struct LButton* w, int width, int height) {
+void LBackend_ButtonInit(struct LButton* w, int width, int height) {
     UIButton* btn = [[UIButton alloc] init];
     btn.frame = CGRectMake(0, 0, width, height);
     // TODO should be app_handle, because win_handle can change
@@ -650,7 +650,7 @@ void LBackend_InitButton(struct LButton* w, int width, int height) {
     [btn setBackgroundImage:ToUIImage(&bmp2) forState:UIControlStateHighlighted];
 }
 
-void LBackend_UpdateButton(struct LButton* w) {
+void LBackend_ButtonUpdate(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
     NSString* str = ToNSString(&w->text);
     
@@ -659,21 +659,21 @@ void LBackend_UpdateButton(struct LButton* w) {
 }
 
 
-void LBackend_DrawButton(struct LButton* w) {
+void LBackend_ButtonDraw(struct LButton* w) {
 }
 
 
 /*########################################################################################################################*
  *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_InitCheckbox(struct LCheckbox* w) {
+void LBackend_CheckboxInit(struct LCheckbox* w) {
     UISwitch* swt = [[UISwitch alloc] init];
     
     AssignView(w, swt);
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_DrawCheckbox(struct LCheckbox* w) {
+void LBackend_CheckboxDraw(struct LCheckbox* w) {
 }
 
 
@@ -693,7 +693,7 @@ static void LBackend_HandleInput(id ipt_obj) {
     if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
 
-void LBackend_InitInput(struct LInput* w, int width) {
+void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
     fld.frame           = CGRectMake(0, 0, width, 30);
     fld.borderStyle     = UITextBorderStyleBezel;
@@ -716,24 +716,24 @@ void LBackend_InitInput(struct LInput* w, int width) {
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_UpdateInput(struct LInput* w) {
+void LBackend_InputUpdate(struct LInput* w) {
     UITextField* fld = (__bridge UITextField*)w->meta;
     fld.text         = ToNSString(&w->text);
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_DrawInput(struct LInput* w) {
+void LBackend_InputDraw(struct LInput* w) {
 }
 
-void LBackend_TickInput(struct LInput* w) { }
-void LBackend_SelectInput(struct LInput* w, int idx, cc_bool wasSelected) { }
-void LBackend_UnselectInput(struct LInput* w) { }
+void LBackend_InputTick(struct LInput* w) { }
+void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) { }
+void LBackend_InputUnselect(struct LInput* w) { }
 
 
 /*########################################################################################################################*
  *------------------------------------------------------LabelWidget--------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_InitLabel(struct LLabel* w) {
+void LBackend_LabelInit(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     lbl.textColor = [UIColor whiteColor];
     
@@ -741,7 +741,7 @@ void LBackend_InitLabel(struct LLabel* w) {
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_UpdateLabel(struct LLabel* w) {
+void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
     char raw[NATIVE_STR_LEN];
     Platform_EncodeUtf8(raw, &w->text);
@@ -753,14 +753,14 @@ void LBackend_UpdateLabel(struct LLabel* w) {
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_DrawLabel(struct LLabel* w) {
+void LBackend_LabelDraw(struct LLabel* w) {
 }
 
 
 /*########################################################################################################################*
  *-------------------------------------------------------LineWidget--------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_InitLine(struct LLine* w, int width) {
+void LBackend_LineInit(struct LLine* w, int width) {
     UIView* view = [[UIView alloc] init];
     view.frame   = CGRectMake(0, 0, width, 2);
     
@@ -771,14 +771,14 @@ void LBackend_InitLine(struct LLine* w, int width) {
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_DrawLine(struct LLine* w) {
+void LBackend_LineDraw(struct LLine* w) {
 }
 
 
 /*########################################################################################################################*
  *------------------------------------------------------SliderWidget-------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_InitSlider(struct LSlider* w, int width, int height) {
+void LBackend_SliderInit(struct LSlider* w, int width, int height) {
     UIProgressView* prg = [[UIProgressView alloc] init];
     prg.frame = CGRectMake(0, 0, width, height);
     
@@ -786,11 +786,30 @@ void LBackend_InitSlider(struct LSlider* w, int width, int height) {
     UpdateWidgetDimensions(w);
 }
 
-void LBackend_UpdateSlider(struct LSlider* w) {
+void LBackend_SliderUpdate(struct LSlider* w) {
     UIProgressView* lbl = (__bridge UIProgressView*)w->meta;
     
     lbl.progress = w->value / 100.0f;
 }
 
-void LBackend_DrawSlider(struct LSlider* w) {
+void LBackend_SliderDraw(struct LSlider* w) {
 }
+
+
+/*########################################################################################################################*
+ *------------------------------------------------------TableWidget-------------------------------------------------------*
+ *#########################################################################################################################*/
+void LBackend_TableInit(struct LTableView* w) {
+    UITableView* tbl = [[UITableView alloc] init];
+    tbl.frame = CGRectMake(0, 0, 200, 30);
+    
+    AssignView(w, tbl);
+    UpdateWidgetDimensions(w);
+}
+
+void LBackend_TableDraw(struct LTable* w) { }
+void LBackend_TableReposition(struct LTable* w) { }
+
+void LBackend_TableMouseDown(struct LTable* w, int idx) { }
+void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
+void LBackend_TableMouseMove(struct LTable* w, int idx) { }

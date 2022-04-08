@@ -811,7 +811,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
     CFRelease(valCF);
 }
 
-static void Http_CheckHeader(void* k, void* v, void* ctx) {
+static void Http_CheckHeader(const void* k, const void* v, void* ctx) {
     cc_string line; char lineBuffer[2048];
     char keyBuf[128]  = { 0 };
     char valBuf[1024] = { 0 };
@@ -825,12 +825,27 @@ static void Http_CheckHeader(void* k, void* v, void* ctx) {
     ctx = NULL;
 }
 
+static cc_result ParseResponseHeaders(struct HttpRequest* req, CFReadStreamRef stream) {
+    CFHTTPMessageRef response = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
+    if (!response) return ERR_INVALID_ARGUMENT;
+    
+    CFDictionaryRef headers = CFHTTPMessageCopyAllHeaderFields(response);
+    CFDictionaryApplyFunction(headers, Http_CheckHeader, req);
+    req->statusCode = CFHTTPMessageGetResponseStatusCode(response);
+    
+    CFRelease(headers);
+    CFRelease(response);
+    return 0;
+}
+
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     static CFStringRef verbs[] = { CFSTR("GET"), CFSTR("HEAD"), CFSTR("POST") };
-    CFHTTPMessageRef request, response;
+    cc_bool gotHeaders = false;
     char tmp[NATIVE_STR_LEN];
+    CFHTTPMessageRef request;
     CFStringRef urlCF;
     CFURLRef urlRef;
+    cc_result result = 0;
     
     Platform_EncodeUtf8(tmp, url);
     urlCF  = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
@@ -839,6 +854,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     request = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
     req->meta = request;
     Http_SetRequestHeaders(req);
+    CFRelease(urlRef);
     
     if (req->data && req->size) {
         CFDataRef body = CFDataCreate(NULL, req->data, req->size);
@@ -854,12 +870,17 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     CFReadStreamSetProperty(stream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
     //CFHTTPReadStreamSetRedirectsAutomatically(stream, TRUE);
     CFReadStreamOpen(stream);
-    CFIndex read = 0;
-    char buf[1024];
+    UInt8 buf[1024];
     
     for (;;) {
         CFIndex read = CFReadStreamRead(stream, buf, sizeof(buf));
         if (read <= 0) break;
+        
+        // reading headers before for loop doesn't work
+        if (!gotHeaders) {
+            gotHeaders = true;
+            if ((result = ParseResponseHeaders(req, stream))) break;
+        }
         
         if (!req->_capacity) Http_BufferInit(req);
         Http_BufferEnsure(req, read);
@@ -868,17 +889,11 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
         Http_BufferExpanded(req, read);
     }
     
-    response = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
-    if (!response) return ERR_INVALID_ARGUMENT; /* TODO mem leak? */
+    if (!gotHeaders)
+        result = ParseResponseHeaders(req, stream);
     
-    CFDictionaryRef headers = CFHTTPMessageCopyAllHeaderFields(response);
-    CFDictionaryApplyFunction(headers, Http_CheckHeader, req);
-    req->statusCode = CFHTTPMessageGetResponseStatusCode(response);
-    
-    CFRelease(headers);
-    CFRelease(response);
     CFRelease(request);
-    return 0;
+    return result;
 }
 #endif
 
