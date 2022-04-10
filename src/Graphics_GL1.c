@@ -200,16 +200,19 @@ static void LoadCoreFuncs(void) {
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-static GLuint GL_GenAndBind(GLenum target) {
+static GfxResourceID GL_GenBuffer(void) {
 	GLuint id;
 	_glGenBuffers(1, &id);
-	_glBindBuffer(target, id);
 	return id;
 }
 
+static GfxResourceID (*_genBuffer)(void)    = GL_GenBuffer;
+
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	GLuint id     = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	cc_uint32 size = indicesCount * 2;
+	GfxResourceID id = _genBuffer();
+	cc_uint32 size   = indicesCount * 2;
+
+	_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
 }
@@ -234,7 +237,9 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return GL_GenAndBind(GL_ARRAY_BUFFER);
+	GfxResourceID id = _genBuffer();
+	_glBindBuffer(GL_ARRAY_BUFFER, id);
+	return id;
 }
 
 void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
@@ -306,12 +311,14 @@ GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GLuint id;
+	GfxResourceID id;
 	cc_uint32 size;
 	if (Gfx.LostContext) return 0;
 
-	id = GL_GenAndBind(GL_ARRAY_BUFFER);
+	id   = _genBuffer();
 	size = maxVertices * strideSizes[fmt];
+
+	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
@@ -509,10 +516,8 @@ static void APIENTRY fake_deleteBuffers(GLsizei n, const GLuint *buffers) {
 	Mem_Free((void*)buffers[0]);
 }
 
-static void APIENTRY fake_genBuffers(GLsizei n, GLuint *buffers) {
-	fake_buffer* buffer = (fake_buffer*)Mem_TryAlloc(1, sizeof(fake_buffer));
-	buffer->data = NULL;
-	buffers[0]   = (GLuint)buffer;
+static GfxResourceID GenFakeBuffer(void) {
+	return (GfxResourceID)Mem_TryAllocCleared(1, sizeof(fake_buffer));
 }
 
 static void APIENTRY fake_bufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {
@@ -549,7 +554,7 @@ static void OpenGL11Fallback(void) {
 	customMipmapsLevels = false;
 		
 	_glBindBuffer = fake_bindBuffer; _glDeleteBuffers = fake_deleteBuffers;
-	_glGenBuffers = fake_genBuffers; _glBufferData    = fake_bufferData;
+	_genBuffer    = GenFakeBuffer;   _glBufferData    = fake_bufferData;
 	_glBufferSubData = fake_bufferSubData;
 
 	_glDrawElements    = fake_drawElements;    _glColorPointer  = fake_colorPointer;

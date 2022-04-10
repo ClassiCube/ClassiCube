@@ -300,7 +300,7 @@ void Window_DrawFramebuffer(Rect2D r) {
     rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
     rect.size.width  = r.Width;
     rect.size.height = r.Height;
-    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
+    win_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
     // TODO always redraws entire launcher which is quite terrible performance wise
     //[win_handle setNeedsDisplayInRect:rect];
 }
@@ -621,8 +621,6 @@ static NSString* cellID = @"CC_Cell";
     btn->OnClick(btn);
 }
 
-<<<<<<< HEAD
-=======
 - (void)handleTextChanged:(id)sender {
     struct LWidget* w = FindWidgetForView(sender);
     if (w == NULL) return;
@@ -669,7 +667,6 @@ void LBackend_Init(void) {
 /*########################################################################################################################*
  *------------------------------------------------------ButtonWidget-------------------------------------------------------*
  *#########################################################################################################################*/
->>>>>>> b2e96605 (ios: WIP on native table widget)
 void LBackend_ButtonInit(struct LButton* w, int width, int height) {
     UIButton* btn = [[UIButton alloc] init];
     btn.frame = CGRectMake(0, 0, width, height);
@@ -720,22 +717,6 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 /*########################################################################################################################*
  *------------------------------------------------------InputWidget--------------------------------------------------------*
  *#########################################################################################################################*/
-<<<<<<< HEAD
-static void LBackend_HandleInput(id ipt_obj) {
-    struct LWidget* w = FindWidgetForView(ipt_obj);
-    if (w == NULL) return;
-    
-    UITextField* src = (UITextField*)ipt_obj;
-    const char* str  = [[src text] UTF8String];
-    
-    struct LInput* ipt = (struct LInput*)w;
-    ipt->text.length   = 0;
-    String_AppendUtf8(&ipt->text, str, String_Length(str));
-    if (ipt->TextChanged) ipt->TextChanged(ipt);
-}
-
-=======
->>>>>>> b2e96605 (ios: WIP on native table widget)
 void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
     fld.frame           = CGRectMake(0, 0, width, 30);
