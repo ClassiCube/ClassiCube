@@ -46,6 +46,8 @@ void LBackend_SliderInit(struct LSlider* w, int width, int height);
 void LBackend_SliderUpdate(struct LSlider* w);
 void LBackend_SliderDraw(struct LSlider* w);
 
+void LBackend_TableInit(struct LTable* w);
+void LBackend_TableUpdate(struct LTable* w);
 void LBackend_TableDraw(struct LTable* w);
 void LBackend_TableReposition(struct LTable* w);
 

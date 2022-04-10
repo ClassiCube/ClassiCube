@@ -212,6 +212,7 @@ void LTable_Sort(struct LTable* table);
 /* If selected row is not visible, adjusts top row so it does show. */
 void LTable_ShowSelected(struct LTable* table);
 
+void LTable_FormatUptime(cc_string* dst, int uptime);
 /* Works out top and height of the scrollbar */
 void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height);
 /* Ensures top/first visible row index lies within table */

@@ -487,17 +487,7 @@ static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInf
 }
 
 static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
-	int uptime = row->uptime;
-	char unit  = 's';
-
-	if (uptime >= SECS_PER_DAY * 7) {
-		uptime /= SECS_PER_DAY;  unit = 'd';
-	} else if (uptime >= SECS_PER_HOUR) {
-		uptime /= SECS_PER_HOUR; unit = 'h';
-	} else if (uptime >= SECS_PER_MIN) {
-		uptime /= SECS_PER_MIN;  unit = 'm';
-	}
-	String_Format2(&args->text, "%i%r", &uptime, &unit);
+	LTable_FormatUptime(&args->text, row->uptime);
 }
 static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->uptime - a->uptime;
@@ -513,7 +503,7 @@ static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerIn
 	return String_Compare(&b->software, &a->software);
 }
 
-static struct LTableColumn tableColumns[5] = {
+static struct LTableColumn tableColumns[] = {
 	{ "",          15, FlagColumn_Draw,     NULL,                false, false },
 	{ "Name",     328, NameColumn_Draw,     NameColumn_Sort,     true,  true  },
 	{ "Players",   73, PlayersColumn_Draw,  PlayersColumn_Sort,  true,  true  },
@@ -521,6 +511,19 @@ static struct LTableColumn tableColumns[5] = {
 	{ "Software", 143, SoftwareColumn_Draw, SoftwareColumn_Sort, false, true  }
 };
 
+
+void LTable_FormatUptime(cc_string* dst, int uptime) {
+	char unit = 's';
+
+	if (uptime >= SECS_PER_DAY * 7) {
+		uptime /= SECS_PER_DAY;  unit = 'd';
+	} else if (uptime >= SECS_PER_HOUR) {
+		uptime /= SECS_PER_HOUR; unit = 'h';
+	} else if (uptime >= SECS_PER_MIN) {
+		uptime /= SECS_PER_MIN;  unit = 'm';
+	}
+	String_Format2(dst, "%i%r", &uptime, &unit);
+}
 
 void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
 	float scale;
@@ -633,6 +636,7 @@ void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 	for (i = 0; i < w->numColumns; i++) {
 		w->columns[i].width = Display_ScaleX(w->columns[i].width);
 	}
+	LBackend_TableInit(w);
 }
 
 void LTable_Reset(struct LTable* w) {
@@ -667,6 +671,7 @@ void LTable_ApplyFilter(struct LTable* w) {
 
 	w->_lastRow = -1;
 	LTable_ClampTopRow(w);
+	LBackend_TableUpdate(w);
 }
 
 static int sortingCol;

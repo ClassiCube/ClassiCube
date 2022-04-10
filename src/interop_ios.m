@@ -10,6 +10,7 @@
 #include "LBackend.h"
 #include "LWidgets.h"
 #include "LScreens.h"
+#include "LWeb.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
 #include <UIKit/UIPasteboard.h>
@@ -73,19 +74,6 @@ static void RemoveTouch(UITouch* t) {
 }
 
 - (BOOL)isOpaque { return YES; }
-
-// helpers for LBackend
-static void LBackend_HandleButton(id btn);
-static void LBackend_HandleInput(id ipt);
-
-- (void)handleButtonPress:(id)sender {
-    LBackend_HandleButton(sender);
-}
-
-- (void)handleTextChanged:(id)sender {
-    LBackend_HandleInput(sender);
-}
-
 @end
 
 static cc_bool landscape_locked;
@@ -95,6 +83,10 @@ static cc_bool landscape_locked;
         return UIInterfaceOrientationMaskLandscape;
     return [super supportedInterfaceOrientations];
 }
+
+/*- (BOOL)prefersStatusBarHidden {
+    
+}*/
 @end
 
 @implementation CCAppDelegate
@@ -308,7 +300,7 @@ void Window_DrawFramebuffer(Rect2D r) {
     rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
     rect.size.width  = r.Width;
     rect.size.height = r.Height;
-    win_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
+    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
     // TODO always redraws entire launcher which is quite terrible performance wise
     //[win_handle setNeedsDisplayInRect:rect];
 }
@@ -556,9 +548,6 @@ static UIImage* ToUIImage(struct Bitmap* bmp) {
     return img;
 }
 
-void LBackend_Init(void) {
-}
-
 static void UpdateWidgetDimensions(void* widget) {
     struct LWidget* w = widget;
     UIView* view = (__bridge UIView*)w->meta;
@@ -618,22 +607,73 @@ static struct LWidget* FindWidgetForView(id obj) {
     return NULL;
 }
 
-/*########################################################################################################################*
- *------------------------------------------------------ButtonWidget-------------------------------------------------------*
- *#########################################################################################################################*/
-static void LBackend_HandleButton(id btn_obj) {
-    struct LWidget* w = FindWidgetForView(btn_obj);
+static NSString* cellID = @"CC_Cell";
+@interface CCUIController : NSObject<UITableViewDataSource>
+@end
+
+@implementation CCUIController
+
+- (void)handleButtonPress:(id)sender {
+    struct LWidget* w = FindWidgetForView(sender);
     if (w == NULL) return;
-    
+        
     struct LButton* btn = (struct LButton*)w;
     btn->OnClick(btn);
 }
 
+<<<<<<< HEAD
+=======
+- (void)handleTextChanged:(id)sender {
+    struct LWidget* w = FindWidgetForView(sender);
+    if (w == NULL) return;
+    
+    UITextField* src = (UITextField*)sender;
+    const char* str  = [[src text] UTF8String];
+    
+    struct LInput* ipt = (struct LInput*)w;
+    ipt->text.length   = 0;
+    String_AppendUtf8(&ipt->text, str, String_Length(str));
+    if (ipt->TextChanged) ipt->TextChanged(ipt);
+}
+
+- (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
+    //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
+    }
+    
+    struct ServerInfo* server = Servers_Get([indexPath row]);
+    char descBuffer[128];
+    cc_string desc = String_FromArray(descBuffer);
+    String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
+    LTable_FormatUptime(&desc, server->uptime);
+    
+    cell.textLabel.text = ToNSString(&server->name);
+    cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
+    return cell;
+}
+
+- (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return FetchServersTask.numServers;
+}
+
+@end
+
+static CCUIController* ui_controller;
+void LBackend_Init(void) {
+    ui_controller = [[CCUIController alloc] init];
+    CFBridgingRetain(ui_controller); // prevent GC TODO even needed?
+}
+
+/*########################################################################################################################*
+ *------------------------------------------------------ButtonWidget-------------------------------------------------------*
+ *#########################################################################################################################*/
+>>>>>>> b2e96605 (ios: WIP on native table widget)
 void LBackend_ButtonInit(struct LButton* w, int width, int height) {
     UIButton* btn = [[UIButton alloc] init];
     btn.frame = CGRectMake(0, 0, width, height);
-    // TODO should be app_handle, because win_handle can change
-    [btn addTarget:win_handle action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
+    [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
     
     AssignView(w, btn);
     UpdateWidgetDimensions(w);
@@ -680,6 +720,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 /*########################################################################################################################*
  *------------------------------------------------------InputWidget--------------------------------------------------------*
  *#########################################################################################################################*/
+<<<<<<< HEAD
 static void LBackend_HandleInput(id ipt_obj) {
     struct LWidget* w = FindWidgetForView(ipt_obj);
     if (w == NULL) return;
@@ -693,13 +734,14 @@ static void LBackend_HandleInput(id ipt_obj) {
     if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
 
+=======
+>>>>>>> b2e96605 (ios: WIP on native table widget)
 void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
     fld.frame           = CGRectMake(0, 0, width, 30);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = [UIColor whiteColor];
-    // TODO should be app_handle, because win_handle can change
-    [fld addTarget:win_handle action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
+    [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     if (w->type == KEYBOARD_TYPE_INTEGER) {
         [fld setKeyboardType:UIKeyboardTypeNumberPad];
@@ -799,12 +841,19 @@ void LBackend_SliderDraw(struct LSlider* w) {
 /*########################################################################################################################*
  *------------------------------------------------------TableWidget-------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_TableInit(struct LTableView* w) {
+void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.frame = CGRectMake(0, 0, 200, 30);
+    tbl.frame = CGRectMake(0, 50, 350, 570);
+    tbl.delegate   = ui_controller;
+    tbl.dataSource = ui_controller;
     
     AssignView(w, tbl);
     UpdateWidgetDimensions(w);
+}
+
+void LBackend_TableUpdate(struct LTable* w) {
+    UITableView* tbl = (__bridge UITableView*)w->meta;
+    [tbl reloadData];
 }
 
 void LBackend_TableDraw(struct LTable* w) { }

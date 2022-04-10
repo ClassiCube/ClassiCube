@@ -1236,9 +1236,7 @@ static void FetchResourcesScreen_UpdateProgress(struct FetchResourcesScreen* s) 
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
 
-	if (progress == s->sdrProgress.value) return;
-	s->sdrProgress.value = progress;
-	LWidget_Draw(&s->sdrProgress);
+	LSlider_SetProgress(&s->sdrProgress, progress);
 }
 
 static void FetchResourcesScreen_Error(struct FetchResourcesScreen* s) {

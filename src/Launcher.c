@@ -91,7 +91,7 @@ static CC_NOINLINE void InitFramebuffer(void) {
 static cc_uint64 lastJoin;
 cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server) {
 	cc_string args[4]; int numArgs;
-	TimeMS now;
+	cc_uint64 now;
 	cc_result res;
 	
 	now = Stopwatch_Measure();
