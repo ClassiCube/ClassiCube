@@ -180,7 +180,7 @@ static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
 
 	Launcher_DrawBackgroundAll(bmp);
 	DrawTextArgs_Make(&args, &title_fore, &Launcher_LogoFont, false);
-	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = bmp->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.text = title_back;
 	Drawer2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));

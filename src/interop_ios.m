@@ -53,6 +53,13 @@ static void RemoveTouch(UITouch* t) {
     Input_RemoveTouch((long)t, loc.x, loc.y);
 }
 
+static cc_bool landscape_locked;
+static UIInterfaceOrientationMask SupportedOrientations(void) {
+    if (landscape_locked)
+        return UIInterfaceOrientationMaskLandscape;
+    return UIInterfaceOrientationMaskAll;
+}
+
 @implementation CCWindow
 
 //- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
@@ -76,12 +83,14 @@ static void RemoveTouch(UITouch* t) {
 - (BOOL)isOpaque { return YES; }
 @end
 
-static cc_bool landscape_locked;
+
 @implementation CCViewController
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    if (landscape_locked)
-        return UIInterfaceOrientationMaskLandscape;
-    return [super supportedInterfaceOrientations];
+    return SupportedOrientations();
+}
+
+- (BOOL)shouldAutorotate {
+    return YES;
 }
 
 /*- (BOOL)prefersStatusBarHidden {
@@ -133,6 +142,10 @@ static cc_bool landscape_locked;
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     // TODO implement somehow, prob need a variable in Program.c
+}
+
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+    return SupportedOrientations();
 }
 @end
 
@@ -300,7 +313,7 @@ void Window_DrawFramebuffer(Rect2D r) {
     rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
     rect.size.width  = r.Width;
     rect.size.height = r.Height;
-    win_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
+    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
     // TODO always redraws entire launcher which is quite terrible performance wise
     //[win_handle setNeedsDisplayInRect:rect];
 }
@@ -824,9 +837,14 @@ void LBackend_SliderDraw(struct LSlider* w) {
  *#########################################################################################################################*/
 void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.frame = CGRectMake(0, 50, 350, 570);
+    //tbl.frame = CGRectMake(0, 50, 350, 570);
     tbl.delegate   = ui_controller;
     tbl.dataSource = ui_controller;
+    
+    //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
+    
+    CGRect total = [view_handle frame];
+    tbl.frame = CGRectMake(0, 0, total.size.width - 10, total.size.height - 50 - 50);
     
     AssignView(w, tbl);
     UpdateWidgetDimensions(w);
