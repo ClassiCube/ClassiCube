@@ -522,7 +522,9 @@ mergeInto(LibraryManager.library, {
     // create the actual websocket object and connect
     try {
       var parts = addr.split('/');
-      var url = 'ws://' + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
+      var proto = _interop_IsHttpsOnly() ? 'wss://' : 'ws://';
+      var url   = proto + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
+      
       ws = new WebSocket(url, 'ClassiCube');
       ws.binaryType = 'arraybuffer';
     } catch (e) {
