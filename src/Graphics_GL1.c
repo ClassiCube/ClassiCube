@@ -149,7 +149,7 @@ static void* dynamicListData;
 static cc_uint16 gl_indices[GFX_MAX_INDICES];
 #else
 /* OpenGL functions use stdcall instead of cdecl on Windows */
-static void (APIENTRY *_glBindBuffer)(GLenum target, GLuint buffer);
+static void (APIENTRY *_glBindBuffer)(GLenum target, GfxResourceID buffer); /* NOTE: buffer is actually a GLuint in OpenGL */
 static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
 static void (APIENTRY *_glGenBuffers)(GLsizei n, GLuint *buffers);
 static void (APIENTRY *_glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
@@ -206,7 +206,13 @@ static GfxResourceID GL_GenBuffer(void) {
 	return id;
 }
 
+static void GL_DelBuffer(GfxResourceID id) {
+	GLuint gl_id = (GLuint)id;
+	_glDeleteBuffers(1, &gl_id);
+}
+
 static GfxResourceID (*_genBuffer)(void)    = GL_GenBuffer;
+static void (*_delBuffer)(GfxResourceID id) = GL_DelBuffer;
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	GfxResourceID id = _genBuffer();
@@ -217,12 +223,12 @@ GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	return id;
 }
 
-void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
+void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib); }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-	GLuint id = (GLuint)(*ib);
+	GfxResourceID id = *ib;
 	if (!id) return;
-	_glDeleteBuffers(1, &id);
+	_delBuffer(id);
 	*ib = 0;
 }
 #else
@@ -242,12 +248,12 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	return id;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, vb); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
+	GfxResourceID id = *vb;
 	if (!id) return;
-	_glDeleteBuffers(1, &id);
+	_delBuffer(id);
 	*vb = 0;
 }
 
@@ -328,13 +334,13 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	_glBindBuffer(GL_ARRAY_BUFFER, vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
-	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	_glBindBuffer(GL_ARRAY_BUFFER, vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #else
@@ -497,7 +503,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
 #else
 
-#if defined CC_BUILD_WIN && defined(_M_IX86)
+#if defined CC_BUILD_WIN
 /* On 32 bit windows, can replace the gl function drawing with these 1.1 fallbacks  */
 /*  (note that this only works on 32 bit system, as OpenGL IDs are 32 bit integers) */
 
@@ -507,17 +513,17 @@ static fake_buffer* cur_ib;
 static fake_buffer* cur_vb;
 #define fake_GetBuffer(target) (target == GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
 
-static void APIENTRY fake_bindBuffer(GLenum target, GLuint src) {
+static void APIENTRY fake_bindBuffer(GLenum target, GfxResourceID src) {
 	fake_buffer** buffer = fake_GetBuffer(target);
 	*buffer = (fake_buffer*)src;
 }
 
-static void APIENTRY fake_deleteBuffers(GLsizei n, const GLuint *buffers) {
-	Mem_Free((void*)buffers[0]);
-}
-
 static GfxResourceID GenFakeBuffer(void) {
 	return (GfxResourceID)Mem_TryAllocCleared(1, sizeof(fake_buffer));
+}
+
+static void DelFakeBuffer(GfxResourceID id) {
+	Mem_Free((void*)id);
 }
 
 static void APIENTRY fake_bufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {
@@ -553,8 +559,8 @@ static void OpenGL11Fallback(void) {
 		"As such you will likely experience very poor performance");
 	customMipmapsLevels = false;
 		
-	_glBindBuffer = fake_bindBuffer; _glDeleteBuffers = fake_deleteBuffers;
-	_genBuffer    = GenFakeBuffer;   _glBufferData    = fake_bufferData;
+	_glBindBuffer = fake_bindBuffer; _delBuffer    = DelFakeBuffer;
+	_genBuffer    = GenFakeBuffer;   _glBufferData = fake_bufferData;
 	_glBufferSubData = fake_bufferSubData;
 
 	_glDrawElements    = fake_drawElements;    _glColorPointer  = fake_colorPointer;
