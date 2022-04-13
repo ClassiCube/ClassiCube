@@ -48,8 +48,9 @@ void LBackend_SliderDraw(struct LSlider* w);
 
 void LBackend_TableInit(struct LTable* w);
 void LBackend_TableUpdate(struct LTable* w);
-void LBackend_TableDraw(struct LTable* w);
 void LBackend_TableReposition(struct LTable* w);
+void LBackend_TableFlagAdded(struct LTable* w);
+void LBackend_TableDraw(struct LTable* w);
 
 void LBackend_TableMouseDown(struct LTable* w, int idx);
 void LBackend_TableMouseUp(struct   LTable* w, int idx);

@@ -467,9 +467,9 @@ void LSlider_SetProgress(struct LSlider* w, int progress) {
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
-	struct Bitmap* bmp = Flags_Get(row);
-	if (!bmp) return;
-	Drawer2D_BmpCopy(&Launcher_Framebuffer, cell->x + flagXOffset, cell->y + flagYOffset, bmp);
+	struct Flag* flag = Flags_Get(row);
+	if (!flag) return;
+	Drawer2D_BmpCopy(&Launcher_Framebuffer, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
 }
 
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {

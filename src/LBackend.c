@@ -553,6 +553,11 @@ void LBackend_TableReposition(struct LTable* w) {
 	LTable_ClampTopRow(w);
 }
 
+void LBackend_TableFlagAdded(struct LTable* w) {
+	/* TODO: Only redraw flags */
+	LWidget_Draw(w);
+}
+
 /* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridColor = BitmapCol_Make(20, 20, 10, 255);

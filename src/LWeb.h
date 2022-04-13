@@ -1,6 +1,7 @@
 #ifndef CC_LWEB_H
 #define CC_LWEB_H
 #include "Http.h"
+#include "Bitmap.h"
 /* Implements asynchronous web tasks for the launcher.
 	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
@@ -39,6 +40,13 @@ struct ServerInfo {
 	char _hashBuffer[32],   _nameBuffer[STRING_SIZE];
 	char _ipBuffer[16],     _mppassBuffer[STRING_SIZE];
 	char _softBuffer[STRING_SIZE];
+};
+
+/* Represents a country flag */
+struct Flag {
+	struct Bitmap bmp;
+	char country[2]; /* ISO 3166-1 alpha-2 */
+	void* meta; /* Backend specific meta */
 };
 
 struct LWebTask {
@@ -115,10 +123,11 @@ extern struct FetchFlagsData {
 	/* Number of flags downloaded. */
 	int count;
 } FetchFlagsTask;
+
 /* Asynchronously downloads the flag associated with the given server's country. */
 void FetchFlagsTask_Add(const struct ServerInfo* server);
-/* Gets the bitmap for the flag associated with the given server's country. */
-struct Bitmap* Flags_Get(const struct ServerInfo* server);
+/* Gets the country flag associated with the given server's country. */
+struct Flag* Flags_Get(const struct ServerInfo* server);
 /* Frees all flag bitmaps. */
 void Flags_Free(void);
 

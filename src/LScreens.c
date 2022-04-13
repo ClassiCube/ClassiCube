@@ -1401,8 +1401,7 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	count = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base);
-	/* TODO: Only redraw flags */
-	if (count != FetchFlagsTask.count) LWidget_Draw(&s->table);
+	if (count != FetchFlagsTask.count) LBackend_TableFlagAdded(&s->table);
 
 	if (!FetchServersTask.Base.working) return;
 	LWebTask_Tick(&FetchServersTask.Base);

@@ -655,12 +655,21 @@ static NSString* cellID = @"CC_Cell";
     }
     
     struct ServerInfo* server = Servers_Get([indexPath row]);
+    struct Flag* flag = Flags_Get(server);
+    
     char descBuffer[128];
     cc_string desc = String_FromArray(descBuffer);
     String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
     LTable_FormatUptime(&desc, server->uptime);
     
-    cell.textLabel.text = ToNSString(&server->name);
+    if (flag && !flag->meta && flag->bmp.scan0) {
+        UIImage* img = ToUIImage(&flag->bmp);
+        flag->meta   = CFBridgingRetain(img);
+    }
+    if (flag && flag->meta)
+        cell.imageView.image = (__bridge UIImage*)flag->meta;
+    
+    cell.textLabel.text       = ToNSString(&server->name);
     cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
     return cell;
 }
@@ -851,6 +860,12 @@ void LBackend_TableInit(struct LTable* w) {
 }
 
 void LBackend_TableUpdate(struct LTable* w) {
+    UITableView* tbl = (__bridge UITableView*)w->meta;
+    [tbl reloadData];
+}
+
+// TODO only redraw flags
+void LBackend_TableFlagAdded(struct LTable* w) {
     UITableView* tbl = (__bridge UITableView*)w->meta;
     [tbl reloadData];
 }

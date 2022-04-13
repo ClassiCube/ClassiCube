@@ -569,10 +569,6 @@ void FetchUpdateTask_Run(cc_bool release, int buildIndex) {
 struct FetchFlagsData FetchFlagsTask;
 static int flagsCount, flagsCapacity;
 
-struct Flag {
-	struct Bitmap bmp;
-	char country[2];
-};
 static struct Flag* flags;
 
 /* Scales up flag bitmap if necessary */
@@ -595,14 +591,16 @@ static void FetchFlagsTask_Scale(struct Bitmap* bmp) {
 
 static void FetchFlagsTask_DownloadNext(void);
 static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
+	struct Flag* flag = &flags[FetchFlagsTask.count];
 	struct Stream s;
 	cc_result res;
 
 	Stream_ReadonlyMemory(&s, data, len);
-	res = Png_Decode(&flags[FetchFlagsTask.count].bmp, &s);
+	res = Png_Decode(&flag->bmp, &s);
 	if (res) Logger_SysWarn(res, "decoding flag");
+	flag->meta = NULL;
 
-	FetchFlagsTask_Scale(&flags[FetchFlagsTask.count].bmp);
+	FetchFlagsTask_Scale(&flag->bmp);
 	FetchFlagsTask.count++;
 	FetchFlagsTask_DownloadNext();
 }
@@ -651,12 +649,12 @@ void FetchFlagsTask_Add(const struct ServerInfo* server) {
 	FetchFlagsTask_DownloadNext();
 }
 
-struct Bitmap* Flags_Get(const struct ServerInfo* server) {
+struct Flag* Flags_Get(const struct ServerInfo* server) {
 	int i;
 	for (i = 0; i < FetchFlagsTask.count; i++) {
 		if (flags[i].country[0] != server->country[0]) continue;
 		if (flags[i].country[1] != server->country[1]) continue;
-		return &flags[i].bmp;
+		return &flags[i];
 	}
 	return NULL;
 }
