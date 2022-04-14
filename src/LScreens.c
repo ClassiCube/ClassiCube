@@ -931,7 +931,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 static void MainScreen_Free(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	/* status should reset when user goes to another menu */
-	s->lblStatus.text.length = 0;
+	LLabel_SetConst(&s->lblStatus, "");
 }
 
 static void MainScreen_Layout(struct LScreen* s_) {

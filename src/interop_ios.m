@@ -621,7 +621,7 @@ static struct LWidget* FindWidgetForView(id obj) {
 }
 
 static NSString* cellID = @"CC_Cell";
-@interface CCUIController : NSObject<UITableViewDataSource>
+@interface CCUIController : NSObject<UITableViewDataSource, UITableViewDelegate>
 @end
 
 @implementation CCUIController
@@ -647,6 +647,7 @@ static NSString* cellID = @"CC_Cell";
     if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
 
+// === UITableViewDataSource ===
 - (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
@@ -676,6 +677,16 @@ static NSString* cellID = @"CC_Cell";
 
 - (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return FetchServersTask.numServers;
+}
+
+// === UITableViewDelegate ===
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    Platform_LogConst("CLIKO");
+    extern void LTable_ClickRow(struct LTable* w, int row);
+    
+    struct LTable* w = FindWidgetForView(tableView);
+    if (w == NULL) return;
+    LTable_ClickRow(w, [indexPath row]);
 }
 
 @end

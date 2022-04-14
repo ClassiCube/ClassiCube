@@ -221,4 +221,5 @@ void LTable_ClampTopRow(struct LTable* w);
 int LTable_GetSelectedIndex(struct LTable* w);
 /* Sets selected row to given row, scrolling table if needed */
 void LTable_SetSelectedTo(struct LTable* w, int index);
+void LTable_RowClick(struct LTable* w, int row);
 #endif

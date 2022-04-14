@@ -15,6 +15,7 @@
 #include "Logger.h"
 #include "Utils.h"
 #include "Chat.h" /* TODO avoid this include */
+#include "Errors.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------TerrainAtlas-------------------------------------------------------*
@@ -306,10 +307,7 @@ static cc_result ExtractZip(struct Stream* stream) {
 
 static cc_result ExtractPng(struct Stream* stream) {
 	struct Bitmap bmp;
-	cc_result res;
-	if ((res = stream->Seek(stream, 0))) return res;
-	
-	res = Png_Decode(&bmp, stream);
+	cc_result res = Png_Decode(&bmp, stream);
 	if (!res && Atlas_TryChange(&bmp)) return 0;
 
 	Mem_Free(bmp.scan0);
@@ -318,7 +316,6 @@ static cc_result ExtractPng(struct Stream* stream) {
 
 static cc_bool needReload;
 static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
-	cc_uint8 sig[PNG_SIG_SIZE];
 	cc_result res;
 
 	Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -327,18 +324,13 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	if (Gfx.LostContext) { needReload = true; return 0; }
 	needReload = false;
 
-	/* check for PNG signature/header */
-	res = Stream_Read(stream, sig, PNG_SIG_SIZE);
-	if (res) {
-		Logger_SysWarn2(res, "detecting", path); return res;
-	}
-
-	if (Png_Detect(sig, PNG_SIG_SIZE)) {
-		res = ExtractPng(stream);
-		if (res) Logger_SysWarn2(res, "decoding", path);
-	} else {
+	res = ExtractPng(stream);
+	if (res == PNG_ERR_INVALID_SIG) {
+		/* file isn't a .png, probably a .zip then */
 		res = ExtractZip(stream);
 		if (res) Logger_SysWarn2(res, "extracting", path);
+	} else if (res) {
+		Logger_SysWarn2(res, "decoding", path);
 	}
 	return res;
 }

@@ -730,18 +730,7 @@ void LBackend_TableDraw(struct LTable* w) {
 static void LTable_RowsClick(struct LTable* w, int idx) {
 	int mouseY = Pointers[idx].y - w->rowsBegY;
 	int row    = w->topRow + mouseY / w->rowHeight;
-	cc_uint64 now;
-
-	LTable_SetSelectedTo(w, row);
-	now = Stopwatch_Measure();
-
-	/* double click on row to join */
-	if (Stopwatch_ElapsedMS(w->_lastClick, now) < 1000 && row == w->_lastRow) {
-		Launcher_ConnectToServer(&LTable_Get(row)->hash);
-	}
-
-	w->_lastRow   = LTable_GetSelectedIndex(w);
-	w->_lastClick = now;
+	LTable_RowClick(w, row);
 }
 
 /* Handles clicking on column headers (either resizes a column or sort rows) */
