@@ -44,6 +44,7 @@ typedef cc_uint32 BitmapCol;
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };
 #define PNG_MAX_DIMS 0x8000
+#define PNG_SIG_SIZE 8
 
 /* Returns number of bytes a bitmap consumes. */
 #define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
