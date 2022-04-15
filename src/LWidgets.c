@@ -14,7 +14,6 @@
 #include "Utils.h"
 #include "LBackend.h"
 
-static int xInputOffset;
 static int flagXOffset, flagYOffset;
 static int xBorder, xBorder2, xBorder4;
 static int yBorder, yBorder2, yBorder4;
@@ -23,7 +22,6 @@ void LWidget_CalcOffsets(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder4 = xBorder * 4;
 	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder4 = yBorder * 4;
 
-	xInputOffset = Display_ScaleX(5);
 	flagXOffset  = Display_ScaleX(2);
 	flagYOffset  = Display_ScaleY(6);
 }
@@ -187,7 +185,7 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text) {
 *#########################################################################################################################*/
 void LInput_UNSAFE_GetText(struct LInput* w, cc_string* text) {
 	int i;
-	if (w->type != KEYBOARD_TYPE_PASSWORD) { *text = w->text; return; }
+	if (w->inputType != KEYBOARD_TYPE_PASSWORD) { *text = w->text; return; }
 
 	for (i = 0; i < w->text.length; i++) {
 		String_Append(text, '*');
@@ -291,7 +289,7 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 }
 
 static cc_bool LInput_CanAppend(struct LInput* w, char c) {
-	switch (w->type) {
+	switch (w->inputType) {
 	case KEYBOARD_TYPE_PASSWORD:
 		return true; /* keyboard accepts all characters */
 	case KEYBOARD_TYPE_INTEGER:
@@ -392,7 +390,6 @@ static const struct LWidgetVTABLE llabel_VTABLE = {
 };
 void LLabel_Init(struct LLabel* w, const char* text) {
 	w->VTABLE = &llabel_VTABLE;
-	w->font   = &Launcher_TextFont;
 
 	String_InitArray(w->text, w->_textBuffer);
 	LBackend_LabelInit(w);

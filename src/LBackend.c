@@ -23,10 +23,8 @@
 #include "LScreens.h"
 #include "Input.h"
 #include "Utils.h"
+struct FontDesc titleFont, textFont, hintFont;
 
-/*########################################################################################################################*
-*---------------------------------------------------------LWidget---------------------------------------------------------*
-*#########################################################################################################################*/
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
 static int xInputOffset, yInputOffset, inputExpand;
@@ -63,6 +61,16 @@ void LBackend_Init(void) {
 	cellMinWidth = Display_ScaleX(20);
 	flagXOffset  = Display_ScaleX(2);
 	flagYOffset  = Display_ScaleY(6);
+
+	Drawer2D_MakeFont(&titleFont, 16, FONT_FLAGS_BOLD);
+	Drawer2D_MakeFont(&textFont,  14, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&hintFont,  12, FONT_FLAGS_NONE);
+}
+
+void LBackend_Free(void) {
+	Font_Free(&titleFont);
+	Font_Free(&textFont);
+	Font_Free(&hintFont);
 }
 
 static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
@@ -95,7 +103,7 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
 
 void LBackend_ButtonUpdate(struct LButton* w) {
 	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
+	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
 
 	w->_textWidth  = Drawer2D_TextWidth(&args);
 	w->_textHeight = Drawer2D_TextHeight(&args);
@@ -108,7 +116,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
 	LButton_DrawBackground(w, &Launcher_Framebuffer, w->x, w->y);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
-	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
+	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
 
 	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
@@ -126,7 +134,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
 
 void LBackend_CheckboxInit(struct LCheckbox* w) {
 	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, &w->text, &Launcher_TextFont, true);
+	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 
 	w->width  = Display_ScaleX(CB_SIZE + CB_OFFSET) + Drawer2D_TextWidth(&args);
 	w->height = Display_ScaleY(CB_SIZE);
@@ -206,7 +214,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 	}
 	DrawBoxBounds(BITMAPCOL_BLACK, w->x, w->y, width, height);
 
-	DrawTextArgs_Make(&args, &w->text, &Launcher_TextFont, true);
+	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
 	y = w->y + (height - Drawer2D_TextHeight(&args)) / 2;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, y);
@@ -278,7 +286,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 							w->x + xInputOffset, y + yInputOffset);
 	} else {
 		args->text = String_FromReadonly(w->hintText);
-		args->font = &Launcher_HintFont;
+		args->font = &hintFont;
 
 		hintHeight = Drawer2D_TextHeight(args);
 		y = w->y + (w->height - hintHeight) / 2;
@@ -293,7 +301,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
 	struct DrawTextArgs args;
 	int textWidth;
-	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
+	DrawTextArgs_Make(&args, text, &textFont, false);
 
 	textWidth      = Drawer2D_TextWidth(&args);
 	w->width       = max(w->minWidth, textWidth + inputExpand);
@@ -314,7 +322,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	String_InitArray(text, textBuffer);
 	LInput_UNSAFE_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
+	DrawTextArgs_Make(&args, &text, &textFont, false);
 
 	/* TODO shouldn't be recalcing size in draw.... */
 	LInput_UpdateDimensions(w, &text);
@@ -343,7 +351,7 @@ static Rect2D LInput_MeasureCaret(struct LInput* w) {
 
 	String_InitArray(text, textBuffer);
 	LInput_UNSAFE_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
+	DrawTextArgs_Make(&args, &text, &textFont, true);
 
 	r.X = w->x + xInputOffset;
 	r.Y = w->y + w->height - caretOffset; r.Height = caretHeight;
@@ -376,7 +384,7 @@ static void LInput_MoveCaretToCursor(struct LInput* w, int idx) {
 	LInput_UNSAFE_GetText(w, &text);
 	x -= w->x; y -= w->y;
 
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
+	DrawTextArgs_Make(&args, &text, &textFont, true);
 	if (x >= Drawer2D_TextWidth(&args)) {
 		w->caretPos = -1; return; 
 	}
@@ -430,7 +438,7 @@ void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 	if (wasSelected) return;
 
 	LWidget_Draw(w);
-	OpenKeyboardArgs_Init(&args, &w->text, w->type);
+	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
 	Window_OpenKeyboard(&args);
 }
 
@@ -446,10 +454,11 @@ void LBackend_InputUnselect(struct LInput* w) {
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 void LBackend_LabelInit(struct LLabel* w) { }
+#define LLabel_GetFont(w) (w->small ? &hintFont : &textFont)
 
 void LBackend_LabelUpdate(struct LLabel* w) {
 	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, &w->text, w->font, true);
+	DrawTextArgs_Make(&args, &w->text, LLabel_GetFont(w), true);
 
 	w->width  = Drawer2D_TextWidth(&args);
 	w->height = Drawer2D_TextHeight(&args);
@@ -457,7 +466,7 @@ void LBackend_LabelUpdate(struct LLabel* w) {
 
 void LBackend_LabelDraw(struct LLabel* w) {
 	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, &w->text, w->font, true);
+	DrawTextArgs_Make(&args, &w->text, LLabel_GetFont(w), true);
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->x, w->y);
 }
 
@@ -542,7 +551,7 @@ void LBackend_TableUpdate(struct LTable* w) { }
 
 void LBackend_TableReposition(struct LTable* w) {
 	int rowsHeight;
-	w->hdrHeight = Drawer2D_FontHeight(&Launcher_TextFont, true) + hdrYPadding;
+	w->hdrHeight = Drawer2D_FontHeight(&textFont, true) + hdrYPadding;
 	w->rowHeight = Drawer2D_FontHeight(w->rowFont,         true) + rowYPadding;
 
 	w->rowsBegY = w->y + w->hdrHeight + gridlineHeight;
@@ -649,7 +658,7 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	struct DrawTextArgs args;
 	int i, x, y;
 
-	DrawTextArgs_MakeEmpty(&args, &Launcher_TextFont, true);
+	DrawTextArgs_MakeEmpty(&args, &textFont, true);
 	x = w->x; y = w->y;
 
 	for (i = 0; i < w->numColumns; i++) {

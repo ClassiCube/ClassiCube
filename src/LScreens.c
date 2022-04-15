@@ -461,7 +461,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(colours_widgets);
 	
 	for (i = 0; i < 5 * 3; i++) {
-		s->iptColours[i].type        = KEYBOARD_TYPE_INTEGER;
+		s->iptColours[i].inputType   = KEYBOARD_TYPE_INTEGER;
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
 		LInput_Init(&s->iptColours[i], 55, NULL);
 	}
@@ -714,7 +714,7 @@ static void MFAScreen_Init(struct LScreen* s_) {
 
 	s->btnSignIn.OnClick = MFAScreen_SignIn;
 	s->btnCancel.OnClick = MFAScreen_Cancel;
-	s->iptCode.type      = KEYBOARD_TYPE_INTEGER;
+	s->iptCode.inputType = KEYBOARD_TYPE_INTEGER;
 }
 
 static void MFAScreen_Show(struct LScreen* s_) {
@@ -885,7 +885,9 @@ static void MainScreen_Init(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	s->widgets           = main_widgets;
 	s->numWidgets        = Array_Elems(main_widgets);
-	s->iptPassword.type  = KEYBOARD_TYPE_PASSWORD;
+
+	s->iptPassword.inputType = KEYBOARD_TYPE_PASSWORD;
+	s->lblUpdate.small       = true;
 
 	LInput_Init( &s->iptUsername, 280, "Username..");
 	LInput_Init( &s->iptPassword, 280, "Password..");
@@ -896,7 +898,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LButton_Init(&s->btnDirect,  200, 35, "Direct connect");
 	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer");
 
-	LLabel_Init( &s->lblUpdate,   "");
+	LLabel_Init( &s->lblUpdate,   "&eChecking..");
 	LButton_Init(&s->btnRegister, 100, 35, "Register");
 	LButton_Init(&s->btnOptions,  100, 35, "Options");
 	
@@ -907,13 +909,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->btnOptions.OnClick  = SwitchToSettings;
 	s->btnRegister.OnClick = MainScreen_Register;
 
-	
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
-
-	/* need to set text here for right size */
-	s->lblUpdate.font = &Launcher_HintFont;
-	LLabel_SetConst(&s->lblUpdate, "&eChecking..");
 	
 	String_InitArray(pass, passBuffer);
 	Options_UNSAFE_Get(LOPT_USERNAME, &user);
@@ -1104,6 +1101,7 @@ static void CheckResourcesScreen_Init(struct LScreen* s_) {
 	struct CheckResourcesScreen* s = (struct CheckResourcesScreen*)s_;
 	s->widgets    = checkResources_widgets;
 	s->numWidgets = Array_Elems(checkResources_widgets);
+	s->lblStatus.small = true;
 
 	LLabel_Init( &s->lblLine1,  "Some required resources weren't found");
 	LLabel_Init( &s->lblLine2,  "Okay to download?");
@@ -1122,7 +1120,6 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 
 	String_InitArray(str, buffer);
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
-	s->lblStatus.font = &Launcher_HintFont;
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
@@ -1187,12 +1184,12 @@ static void FetchResourcesScreen_Init(struct LScreen* s_) {
 	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
 	s->widgets    = fetchResources_widgets;
 	s->numWidgets = Array_Elems(fetchResources_widgets);
+	s->lblStatus.small = true;
 
 	LLabel_Init( &s->lblStatus,   "");
 	LButton_Init(&s->btnCancel,   120, 35, "Cancel");
 	LSlider_Init(&s->sdrProgress, 200, 12, BitmapCol_Make(0, 220, 0, 255));
 
-	s->lblStatus.font    = &Launcher_HintFont;
 	s->btnCancel.OnClick = CheckResourcesScreen_Next;
 }
 static void FetchResourcesScreen_Show(struct LScreen* s_) { Fetcher_Run(); }

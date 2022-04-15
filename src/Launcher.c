@@ -27,8 +27,7 @@ static Rect2D dirty_rect;
 
 static struct LScreen* activeScreen;
 struct Bitmap Launcher_Framebuffer;
-struct FontDesc Launcher_TitleFont, Launcher_TextFont;
-struct FontDesc Launcher_HintFont, Launcher_LogoFont;
+struct FontDesc Launcher_LogoFont;
 static cc_bool pendingRedraw;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -262,20 +261,14 @@ static void Launcher_Init(void) {
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 
-	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_FLAGS_BOLD);
-	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_FLAGS_NONE);
-	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_FLAGS_NONE);
-
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
 }
 
 static void Launcher_Free(void) {
 	Event_UnregisterAll();
+	LBackend_Free();
 	Flags_Free();
-	Font_Free(&Launcher_TitleFont);
-	Font_Free(&Launcher_TextFont);
-	Font_Free(&Launcher_HintFont);
 	Font_Free(&Launcher_LogoFont);
 	hasBitmappedFont = false;
 
@@ -293,7 +286,6 @@ void Launcher_Run(void) {
 	Window_SetTitle(&title);
 	Window_Show();
 	LWidget_CalcOffsets();
-	LBackend_Init();
 
 #ifdef CC_BUILD_WIN
 	/* clean leftover exe from updating */
@@ -305,8 +297,9 @@ void Launcher_Run(void) {
 	Drawer2D_Component.Init();
 	Drawer2D.BitmappedText    = false;
 	Drawer2D.BlackTextShadows = true;
-	InitFramebuffer();
 
+	LBackend_Init();
+	InitFramebuffer();
 	Launcher_ShowEmptyServers = Options_GetBool(LOPT_SHOW_EMPTY, true);
 	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
 

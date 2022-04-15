@@ -79,7 +79,7 @@ struct LInput {
 	const char* hintText;
 	/* The type of this input (see KEYBOARD_TYPE_ enum in Window.h) */
 	/* If type is KEYBOARD_TYPE_PASSWORD, all characters are drawn as *. */
-	cc_uint8 type;
+	cc_uint8 inputType;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
@@ -104,7 +104,7 @@ CC_NOINLINE void LInput_SetString(struct LInput* w, const cc_string* str);
 /* Represents non-interactable text. */
 struct LLabel {
 	LWidget_Layout
-	struct FontDesc* font;
+	cc_bool small; /* whether to use 12pt instead of 14pt font size */
 	cc_string text;
 	char _textBuffer[STRING_SIZE];
 };

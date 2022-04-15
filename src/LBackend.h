@@ -16,6 +16,7 @@ struct LSlider;
 struct LTable;
 
 void LBackend_Init(void);
+void LBackend_Free(void);
 void LBackend_WidgetRepositioned(struct LWidget* w);
 void LBackend_SetScreen(struct LScreen* s);
 void LBackend_CloseScreen(struct LScreen* s);

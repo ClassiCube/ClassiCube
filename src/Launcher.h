@@ -9,10 +9,6 @@ struct FontDesc;
 
 /* Contains the pixels that are drawn to the window */
 extern struct Bitmap Launcher_Framebuffer;
-/* Default font for buttons and labels */
-extern struct FontDesc Launcher_TitleFont, Launcher_TextFont;
-/* Default font for input widget hints */
-extern struct FontDesc Launcher_HintFont;
 /* Default font for screen/menu titles */
 extern struct FontDesc Launcher_LogoFont;
 

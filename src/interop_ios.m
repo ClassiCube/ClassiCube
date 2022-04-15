@@ -655,7 +655,7 @@ static NSString* cellID = @"CC_Cell";
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    struct ServerInfo* server = Servers_Get([indexPath row]);
+    struct ServerInfo* server = LTable_Get([indexPath row]);
     struct Flag* flag = Flags_Get(server);
     
     char descBuffer[128];
@@ -757,9 +757,9 @@ void LBackend_InputInit(struct LInput* w, int width) {
     fld.backgroundColor = [UIColor whiteColor];
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
-    if (w->type == KEYBOARD_TYPE_INTEGER) {
+    if (w->inputType == KEYBOARD_TYPE_INTEGER) {
         [fld setKeyboardType:UIKeyboardTypeNumberPad];
-    } else if (w->type == KEYBOARD_TYPE_PASSWORD) {
+    } else if (w->inputType == KEYBOARD_TYPE_PASSWORD) {
         fld.secureTextEntry = YES;
     }
     
