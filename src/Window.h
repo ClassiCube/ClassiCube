@@ -34,8 +34,9 @@ struct Bitmap;
 struct DynamicLibSym;
 /* The states the window can be in. */
 enum WindowState  { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
-enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD, KEYBOARD_TYPE_INTEGER };
 enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT };
+enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD, KEYBOARD_TYPE_INTEGER };
+#define KEYBOARD_FLAG_SEND 0x100
 /* (can't name these structs Window/Display, as that conflicts with X11's Window/Display typedef) */
 
 /* Data for the display monitor. */

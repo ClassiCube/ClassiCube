@@ -488,7 +488,7 @@ public class MainActivity extends Activity
 			// BaseInputConnection, IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
 			attrs.actionLabel = null;
 			attrs.inputType   = MainActivity.this.getKeyboardType();
-			attrs.imeOptions  = EditorInfo.IME_ACTION_GO | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+			attrs.imeOptions  = MainActivity.this.getKeyboardOptions();
 
 			kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
 
@@ -621,9 +621,9 @@ public class MainActivity extends Activity
 	// setTitle - API level 1
 	public void setWindowTitle(String str) { setTitle(str); }
 
-	public void openKeyboard(String text, int type) {
+	public void openKeyboard(String text, int flags) {
 		// restartInput, showSoftInput - API level 3
-		keyboardType = type;
+		keyboardType = flags;
 		keyboardText = text;
 		//runOnUiThread(new Runnable() {
 			//public void run() {
@@ -669,10 +669,21 @@ public class MainActivity extends Activity
 
 	public int getKeyboardType() {
 		// TYPE_CLASS_TEXT, TYPE_CLASS_NUMBER, TYPE_TEXT_VARIATION_PASSWORD - API level 3
-		if (keyboardType == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
-		if (keyboardType == 1) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_NUMERIC
-		if (keyboardType == 3) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_INTEGER
+		int type = keyboardType & 0xFF;
+		
+		if (type == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
+		if (type == 1) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_NUMERIC
+		if (type == 3) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_INTEGER
 		return InputType.TYPE_CLASS_TEXT;
+	}
+	
+	public int getKeyboardOptions() {
+		// IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
+		if ((keyboardType & 0x100) != 0) {
+			return EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+		} else {
+			return EditorInfo.IME_ACTION_GO   | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+		}
 	}
 
 	public String getClipboardText() {

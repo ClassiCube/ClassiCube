@@ -245,10 +245,17 @@ void ShowDialogCore(const char* title, const char* msg) {
     }
 }
 
+static void LInput_SetKeyboardType(UITextField* fld, int flags);
+static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 static UITextField* text_input;
+
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
     text_input = [[UITextField alloc] initWithFrame:CGRectZero];
     text_input.hidden = YES;
+    
+    LInput_SetKeyboardType(text_input, args->type);
+    LInput_SetPlaceholder(text_input,  args->placeholder);
+    
     [view_handle addSubview:text_input];
     [text_input becomeFirstResponder];
 }
@@ -655,7 +662,7 @@ static NSString* cellID = @"CC_Cell";
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    struct ServerInfo* server = LTable_Get([indexPath row]);
+    struct ServerInfo* server = Servers_Get([indexPath row]);
     struct Flag* flag = Flags_Get(server);
     
     char descBuffer[128];
@@ -681,12 +688,9 @@ static NSString* cellID = @"CC_Cell";
 
 // === UITableViewDelegate ===
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    Platform_LogConst("CLIKO");
-    extern void LTable_ClickRow(struct LTable* w, int row);
-    
     struct LTable* w = FindWidgetForView(tableView);
     if (w == NULL) return;
-    LTable_ClickRow(w, [indexPath row]);
+    LTable_RowClick(w, [indexPath row]);
 }
 
 @end
@@ -750,6 +754,26 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 /*########################################################################################################################*
  *------------------------------------------------------InputWidget--------------------------------------------------------*
  *#########################################################################################################################*/
+static void LInput_SetKeyboardType(UITextField* fld, int flags) {
+    int type = flags & 0xFF;
+    if (type == KEYBOARD_TYPE_INTEGER) {
+        [fld setKeyboardType:UIKeyboardTypeNumberPad];
+    } else if (type == KEYBOARD_TYPE_PASSWORD) {
+        fld.secureTextEntry = YES;
+    }
+    
+    if (flags & KEYBOARD_FLAG_SEND) {
+        [fld setReturnKeyType:UIReturnKeySend];
+    }
+}
+
+static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder) {
+    if (!placeholder) return;
+    
+    cc_string hint  = String_FromReadonly(placeholder);
+    fld.placeholder = ToNSString(&hint);
+}
+
 void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
     fld.frame           = CGRectMake(0, 0, width, 30);
@@ -757,16 +781,8 @@ void LBackend_InputInit(struct LInput* w, int width) {
     fld.backgroundColor = [UIColor whiteColor];
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
-    if (w->inputType == KEYBOARD_TYPE_INTEGER) {
-        [fld setKeyboardType:UIKeyboardTypeNumberPad];
-    } else if (w->inputType == KEYBOARD_TYPE_PASSWORD) {
-        fld.secureTextEntry = YES;
-    }
-    
-    if (w->hintText) {
-        cc_string hint  = String_FromReadonly(w->hintText);
-        fld.placeholder = ToNSString(&hint);
-    }
+    LInput_SetKeyboardType(fld, w->type);
+    LInput_SetPlaceholder(fld,  w->hintText);
     
     AssignView(w, fld);
     UpdateWidgetDimensions(w);

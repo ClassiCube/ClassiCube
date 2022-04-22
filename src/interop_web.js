@@ -769,9 +769,11 @@ mergeInto(LibraryManager.library, {
   interop_ShowDialog: function(title, msg) {
     alert(UTF8ToString(title) + "\n\n" + UTF8ToString(msg));
   },
-  interop_OpenKeyboard: function(text, type, placeholder) {
+  interop_OpenKeyboard: function(text, flags, placeholder) {
     var elem  = window.cc_inputElem;
     var shown = true;
+    var type  = flags & 0xFF;
+    
     if (!elem) {
       if (type == 1) { // KEYBOARD_TYPE_NUMBER
         elem = document.createElement('input');
@@ -790,7 +792,8 @@ mergeInto(LibraryManager.library, {
       }
       shown = false;
     }
-
+    
+    if (flags & 0x100) { elem.setAttribute('enterkeyhint', 'send'); }
     elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
     elem.setAttribute('placeholder', UTF8ToString(placeholder));
     elem.value = UTF8ToString(text);
