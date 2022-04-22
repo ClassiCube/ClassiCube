@@ -63,11 +63,13 @@ CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const ch
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 CC_NOINLINE void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y);
 
+struct LCheckbox;
 struct LCheckbox {
 	LWidget_Layout
 	cc_bool value;
 	cc_string text;
 	char _textBuffer[STRING_SIZE];
+	void (*ValueChanged)(struct LCheckbox* w);
 };
 CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text);
 

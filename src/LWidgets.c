@@ -106,14 +106,14 @@ static void LButton_DrawHighlight(struct LButton* w, struct Bitmap* bmp, int x, 
 	if (Launcher_Theme.ClassicBackground) {
 		if (w->hovered) color = activeColor;
 
-		Drawer2D_Clear(&Launcher_Framebuffer, color,
+		Drawer2D_Clear(bmp, color,
 						x + xBorder2,         y + yBorder,
 						w->width - xBorder4,  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, color,
+		Drawer2D_Clear(bmp, color,
 						x + xBorder,          y + yBorder2,
 						xBorder,              w->height - yBorder4);
 	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, color,
+		Drawer2D_Clear(bmp, color,
 						x + xBorder2,         y + yBorder,
 						w->width - xBorder4,  yBorder);
 	}

@@ -654,6 +654,15 @@ static NSString* cellID = @"CC_Cell";
     if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
 
+- (void)handleValueChanged:(id)sender {
+    struct LWidget* w = FindWidgetForView(sender);
+    if (w == NULL) return;
+    
+    struct LCheckbox* cb = (struct LCheckbox*)w;
+    if (!cb->ValueChanged) return;
+    cb->ValueChanged(cb);
+}
+
 // === UITableViewDataSource ===
 - (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
@@ -662,7 +671,7 @@ static NSString* cellID = @"CC_Cell";
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    struct ServerInfo* server = Servers_Get([indexPath row]);
+    struct ServerInfo* server = LTable_Get([indexPath row]);
     struct Flag* flag = Flags_Get(server);
     
     char descBuffer[128];
@@ -742,6 +751,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
  *#########################################################################################################################*/
 void LBackend_CheckboxInit(struct LCheckbox* w) {
     UISwitch* swt = [[UISwitch alloc] init];
+    [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     AssignView(w, swt);
     UpdateWidgetDimensions(w);
@@ -781,7 +791,7 @@ void LBackend_InputInit(struct LInput* w, int width) {
     fld.backgroundColor = [UIColor whiteColor];
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
-    LInput_SetKeyboardType(fld, w->type);
+    LInput_SetKeyboardType(fld, w->inputType);
     LInput_SetPlaceholder(fld,  w->hintText);
     
     AssignView(w, fld);

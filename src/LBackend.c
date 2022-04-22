@@ -132,12 +132,21 @@ void LBackend_ButtonDraw(struct LButton* w) {
 #define CB_SIZE  24
 #define CB_OFFSET 8
 
+static void LCheckbox_OnClick(void* w) {
+	struct LCheckbox* cb = (struct LCheckbox*)w;
+	cb->value = !cb->value;
+
+	LWidget_Redraw(cb);
+	if (cb->ValueChanged) cb->ValueChanged(cb);
+}
+
 void LBackend_CheckboxInit(struct LCheckbox* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 
-	w->width  = Display_ScaleX(CB_SIZE + CB_OFFSET) + Drawer2D_TextWidth(&args);
-	w->height = Display_ScaleY(CB_SIZE);
+	w->width   = Display_ScaleX(CB_SIZE + CB_OFFSET) + Drawer2D_TextWidth(&args);
+	w->height  = Display_ScaleY(CB_SIZE);
+	w->OnClick = LCheckbox_OnClick;
 }
 
 /* Based off checkbox from original ClassiCube Launcher */

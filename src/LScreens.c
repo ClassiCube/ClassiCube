@@ -445,11 +445,8 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	}
 }
 
-static void ColoursScreen_ToggleBG(void* w) {
-	struct LCheckbox* cb = (struct LCheckbox*)w;
-	Launcher_Theme.ClassicBackground = !Launcher_Theme.ClassicBackground;
-	cb->value = Launcher_Theme.ClassicBackground;
-
+static void ColoursScreen_ToggleBG(struct LCheckbox* w) {
+	Launcher_Theme.ClassicBackground = w->value;
 	Launcher_SaveTheme();
 	Launcher_Redraw();
 }
@@ -478,8 +475,8 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	LButton_Init(&s->btnBack, 80, 35, "Back");
 
 	LCheckbox_Init(&s->cbClassic, "Classic style");
-	s->cbClassic.OnClick = ColoursScreen_ToggleBG;
-	s->btnBack.OnClick   = SwitchToThemes;
+	s->cbClassic.ValueChanged = ColoursScreen_ToggleBG;
+	s->btnBack.OnClick = SwitchToThemes;
 }
 
 static void ColoursScreen_Show(struct LScreen* s_) {
@@ -1502,28 +1499,19 @@ static struct LWidget* settings_classic[] = {
 };
 
 #if defined CC_BUILD_MOBILE
-static void SettingsScreen_LockOrientation(void* w) {
-	struct LCheckbox* cb = (struct LCheckbox*)w;
-	cb->value = !cb->value;
-	Options_SetBool(OPT_LANDSCAPE_MODE, cb->value);
-	Window_LockLandscapeOrientation(cb->value);
+static void SettingsScreen_LockOrientation(struct LCheckbox* w) {
+	Options_SetBool(OPT_LANDSCAPE_MODE, w->value);
+	Window_LockLandscapeOrientation(w->value);
 	Launcher_Redraw();
 }
 #else
-static void SettingsScreen_AutoClose(void* w) {
-	struct LCheckbox* cb = (struct LCheckbox*)w;
-	cb->value = !cb->value;
-	Options_SetBool(LOPT_AUTO_CLOSE, cb->value);
-	LWidget_Redraw(cb);
+static void SettingsScreen_AutoClose(struct LCheckbox* w) {
+	Options_SetBool(LOPT_AUTO_CLOSE, w->value);
 }
 #endif
-static void SettingsScreen_ShowEmpty(void* w) {
-	struct LCheckbox* cb = (struct LCheckbox*)w;
-	cb->value = !cb->value;
-	Launcher_ShowEmptyServers = cb->value;
-
-	Options_SetBool(LOPT_SHOW_EMPTY, cb->value);
-	LWidget_Redraw(cb);
+static void SettingsScreen_ShowEmpty(struct LCheckbox* w) {
+	Launcher_ShowEmptyServers = w->value;
+	Options_SetBool(LOPT_SHOW_EMPTY, w->value);
 }
 
 static void SettingsScreen_Init(struct LScreen* s_) {
@@ -1541,14 +1529,14 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 
 #if defined CC_BUILD_MOBILE
 	LCheckbox_Init(&s->cbExtra, "Force landscape");
-	s->cbExtra.OnClick = SettingsScreen_LockOrientation;
+	s->cbExtra.ValueChanged = SettingsScreen_LockOrientation;
 #else
 	LCheckbox_Init(&s->cbExtra, "Close this after game starts");
-	s->cbExtra.OnClick = SettingsScreen_AutoClose;
+	s->cbExtra.ValueChanged = SettingsScreen_AutoClose;
 #endif
 
 	LCheckbox_Init(&s->cbEmpty, "Show empty servers in list");
-	s->cbEmpty.OnClick = SettingsScreen_ShowEmpty;
+	s->cbEmpty.ValueChanged = SettingsScreen_ShowEmpty;
 	LButton_Init(  &s->btnBack, 80, 35, "Back");
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
