@@ -7,11 +7,8 @@
 struct LScreen;
 struct FontDesc;
 
-/* Contains the pixels that are drawn to the window */
-extern struct Bitmap Launcher_Framebuffer;
 /* Default font for screen/menu titles */
 extern struct FontDesc Launcher_LogoFont;
-
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit */
 extern cc_bool Launcher_ShouldExit;
 /* Whether game should be updated on exit */

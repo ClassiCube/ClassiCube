@@ -27,6 +27,8 @@
 
 struct FontDesc titleFont, textFont, hintFont;
 static struct LScreen* activeScreen;
+/* Contains the pixels that are drawn to the window */
+static struct Bitmap framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
 static Rect2D dirty_rect;
@@ -99,14 +101,14 @@ void LBackend_MarkDirty(void* widget) {
 
 /* Marks the entire window as needing to be redrawn. */
 static CC_NOINLINE void MarkAllDirty(void) {
-	dirty_rect.X = 0; dirty_rect.Width  = Launcher_Framebuffer.width;
-	dirty_rect.Y = 0; dirty_rect.Height = Launcher_Framebuffer.height;
+	dirty_rect.X = 0; dirty_rect.Width  = framebuffer.width;
+	dirty_rect.Y = 0; dirty_rect.Height = framebuffer.height;
 }
 
 /* Marks the given area/region as needing to be redrawn. */
 static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 	int x1, y1, x2, y2;
-	if (!Drawer2D_Clamp(&Launcher_Framebuffer, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(&framebuffer, &x, &y, &width, &height)) return;
 
 	/* union with existing dirty area */
 	if (dirty_rect.Width) {
@@ -124,21 +126,31 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 	dirty_rect.Y = y; dirty_rect.Height = height;
 }
 
+void LBackend_InitFramebuffer(void) {
+	framebuffer.width  = max(WindowInfo.Width,  1);
+	framebuffer.height = max(WindowInfo.Height, 1);
+	Window_AllocFramebuffer(&framebuffer);
+}
+
+void LBackend_FreeFramebuffer(void) {
+	Window_FreeFramebuffer(&framebuffer);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Base drawing-------------------------------------------------------*
 *#########################################################################################################################*/
 static void DrawBoxBounds(BitmapCol color, int x, int y, int width, int height) {
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		x,                   y, 
 		width,               yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		x,                   y + height - yBorder,
 		width,               yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		x,                   y, 
 		xBorder,             height);
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		x + width - xBorder, y, 
 		xBorder,             height);
 }
@@ -155,7 +167,7 @@ static CC_NOINLINE void DrawWidget(struct LWidget* w) {
 static CC_NOINLINE void RedrawAll(void) {
 	struct LScreen* s = activeScreen;
 	int i;
-	s->DrawBackground(s, &Launcher_Framebuffer);
+	s->DrawBackground(s, &framebuffer);
 	
 	for (i = 0; i < s->numWidgets; i++) {
 		DrawWidget(s->widgets[i]);
@@ -174,7 +186,7 @@ static CC_NOINLINE void RedrawDirty(void) {
 
 		/* check if widget might need redrawing of background behind */
 		if (!w->opaque || w->last.Width > w->width || w->last.Height > w->height) {
-			s->ResetArea(&Launcher_Framebuffer,
+			s->ResetArea(&framebuffer,
 						  w->last.X, w->last.Y, w->last.Width, w->last.Height);
 			MarkAreaDirty(w->last.X, w->last.Y, w->last.Width, w->last.Height);
 		}
@@ -253,13 +265,13 @@ void LBackend_ButtonDraw(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
 
-	LButton_DrawBackground(w, &Launcher_Framebuffer, w->x, w->y);
+	LButton_DrawBackground(w, &framebuffer, w->x, w->y);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
 
 	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
+	Drawer2D_DrawText(&framebuffer, &args, 
 					  w->x + xOffset / 2, w->y + yOffset / 2);
 
 	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
@@ -350,23 +362,23 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 	width  = Display_ScaleX(CB_SIZE);
 	height = Display_ScaleY(CB_SIZE);
 
-	Gradient_Vertical(&Launcher_Framebuffer, boxTop, boxBottom,
+	Gradient_Vertical(&framebuffer, boxTop, boxBottom,
 						w->x, w->y,              width, height / 2);
-	Gradient_Vertical(&Launcher_Framebuffer, boxBottom, boxTop,
+	Gradient_Vertical(&framebuffer, boxBottom, boxTop,
 						w->x, w->y + height / 2, width, height / 2);
 
 	if (w->value) {
 		const int size = 12;
 		x = w->x + width  / 2 - size / 2;
 		y = w->y + height / 2 - size / 2;
-		DrawIndexed(size, x, y, &Launcher_Framebuffer);
+		DrawIndexed(size, x, y, &framebuffer);
 	}
 	DrawBoxBounds(BITMAPCOL_BLACK, w->x, w->y, width, height);
 
 	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
 	y = w->y + (height - Drawer2D_TextHeight(&args)) / 2;
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, y);
+	Drawer2D_DrawText(&framebuffer, &args, x, y);
 }
 
 
@@ -380,7 +392,7 @@ void LBackend_InputInit(struct LInput* w, int width) {
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
 	struct LScreen* s  = activeScreen;
-	struct Bitmap* bmp = &Launcher_Framebuffer;
+	struct Bitmap* bmp = &framebuffer;
 	BitmapCol color    = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
@@ -400,16 +412,16 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 static void LInput_DrawInnerBorder(struct LInput* w) {
 	BitmapCol color = BitmapCol_Make(165, 142, 168, 255);
 
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
 		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + w->height - yBorder2,
 		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
 		xBorder,                    w->height - yBorder2);
-	Drawer2D_Clear(&Launcher_Framebuffer, color,
+	Drawer2D_Clear(&framebuffer, color,
 		w->x + w->width - xBorder2, w->y + yBorder,
 		xBorder,                    w->height - yBorder2);
 }
@@ -417,13 +429,13 @@ static void LInput_DrawInnerBorder(struct LInput* w) {
 static void LInput_BlendBoxTop(struct LInput* w) {
 	BitmapCol color = BitmapCol_Make(0, 0, 0, 255);
 
-	Gradient_Blend(&Launcher_Framebuffer, color, 75,
+	Gradient_Blend(&framebuffer, color, 75,
 		w->x + xBorder,      w->y + yBorder, 
 		w->width - xBorder2, yBorder);
-	Gradient_Blend(&Launcher_Framebuffer, color, 50,
+	Gradient_Blend(&framebuffer, color, 50,
 		w->x + xBorder,      w->y + yBorder2,
 		w->width - xBorder2, yBorder);
-	Gradient_Blend(&Launcher_Framebuffer, color, 25,
+	Gradient_Blend(&framebuffer, color, 25,
 		w->x + xBorder,      w->y + yBorder3, 
 		w->width - xBorder2, yBorder);
 }
@@ -433,7 +445,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 
 	if (w->text.length || !w->hintText) {
 		y = w->y + (w->height - w->_textHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
+		Drawer2D_DrawText(&framebuffer, args, 
 							w->x + xInputOffset, y + yInputOffset);
 	} else {
 		args->text = String_FromReadonly(w->hintText);
@@ -443,7 +455,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		y = w->y + (w->height - hintHeight) / 2;
 
 		Drawer2D.Colors['f'] = BitmapCol_Make(125, 125, 125, 255);
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
+		Drawer2D_DrawText(&framebuffer, args, 
 							w->x + xInputOffset, y);
 		Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
 	}
@@ -474,7 +486,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
-	Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_WHITE,
+	Drawer2D_Clear(&framebuffer, BITMAPCOL_WHITE,
 		w->x + xBorder2,     w->y + yBorder2,
 		w->width - xBorder4, w->height - yBorder4);
 	LInput_BlendBoxTop(w);
@@ -563,7 +575,7 @@ void LBackend_InputTick(struct LInput* w) {
 	r = LInput_MeasureCaret(w);
 
 	if (caretShow) {
-		Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_BLACK,
+		Drawer2D_Clear(&framebuffer, BITMAPCOL_BLACK,
 					   r.X, r.Y, r.Width, r.Height);
 	}
 	
@@ -612,7 +624,7 @@ void LBackend_LabelUpdate(struct LLabel* w) {
 void LBackend_LabelDraw(struct LLabel* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, LLabel_GetFont(w), true);
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->x, w->y);
+	Drawer2D_DrawText(&framebuffer, &args, w->x, w->y);
 }
 
 
@@ -626,7 +638,7 @@ void LBackend_LineInit(struct LLine* w, int width) {
 
 void LBackend_LineDraw(struct LLine* w) {
 	BitmapCol color = LLine_GetColor();
-	Gradient_Blend(&Launcher_Framebuffer, color, 128, w->x, w->y, w->width, w->height);
+	Gradient_Blend(&framebuffer, color, 128, w->x, w->y, w->width, w->height);
 }
 
 
@@ -647,17 +659,17 @@ static void LSlider_DrawBoxBounds(struct LSlider* w) {
 	BitmapCol boundsBottom = BitmapCol_Make(150, 130, 165, 255);
 
 	/* TODO: Check these are actually right */
-	Drawer2D_Clear(&Launcher_Framebuffer, boundsTop,
+	Drawer2D_Clear(&framebuffer, boundsTop,
 				  w->x,     w->y,
 				  w->width, yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, boundsBottom,
+	Drawer2D_Clear(&framebuffer, boundsBottom,
 				  w->x,	    w->y + w->height - yBorder,
 				  w->width, yBorder);
 
-	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
+	Gradient_Vertical(&framebuffer, boundsTop, boundsBottom,
 					 w->x,                      w->y,
 					 xBorder,                   w->height);
-	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
+	Gradient_Vertical(&framebuffer, boundsTop, boundsBottom,
 					 w->x + w->width - xBorder, w->y,
 					 xBorder,				    w->height);
 }
@@ -667,10 +679,10 @@ static void LSlider_DrawBox(struct LSlider* w) {
 	BitmapCol progBottom = BitmapCol_Make(207, 181, 216, 255);
 	int halfHeight = (w->height - yBorder2) / 2;
 
-	Gradient_Vertical(&Launcher_Framebuffer, progTop, progBottom,
+	Gradient_Vertical(&framebuffer, progTop, progBottom,
 					  w->x + xBorder,	   w->y + yBorder, 
 					  w->width - xBorder2, halfHeight);
-	Gradient_Vertical(&Launcher_Framebuffer, progBottom, progTop,
+	Gradient_Vertical(&framebuffer, progBottom, progTop,
 					  w->x + xBorder,	   w->y + yBorder + halfHeight, 
 		              w->width - xBorder2, halfHeight);
 }
@@ -682,7 +694,7 @@ void LBackend_SliderDraw(struct LSlider* w) {
 	LSlider_DrawBox(w);
 
 	curWidth = (int)((w->width - xBorder2) * w->value / LSLIDER_MAXVALUE);
-	Drawer2D_Clear(&Launcher_Framebuffer, w->color,
+	Drawer2D_Clear(&framebuffer, w->color,
 				   w->x + xBorder, w->y + yBorder, 
 				   curWidth,       w->height - yBorder2);
 }
@@ -717,10 +729,10 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridColor = BitmapCol_Make(20, 20, 10, 255);
 
 	if (!Launcher_Theme.ClassicBackground) {
-		Drawer2D_Clear(&Launcher_Framebuffer, gridColor,
+		Drawer2D_Clear(&framebuffer, gridColor,
 						w->x, w->y, w->width, w->hdrHeight);
 	} else {
-		Launcher_DrawBackground(&Launcher_Framebuffer,
+		Launcher_DrawBackground(&framebuffer,
 						w->x, w->y, w->width, w->hdrHeight);
 	}
 }
@@ -765,10 +777,10 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 		if (height < 0) break;
 
 		if (color) {
-			Drawer2D_Clear(&Launcher_Framebuffer, color,
+			Drawer2D_Clear(&framebuffer, color,
 							w->x, y, w->width, height);
 		} else {
-			Launcher_DrawBackground(&Launcher_Framebuffer, 
+			Launcher_DrawBackground(&framebuffer, 
 							w->x, y, w->width, height);
 		}
 	}
@@ -780,14 +792,14 @@ static void LTable_DrawGridlines(struct LTable* w) {
 	if (Launcher_Theme.ClassicBackground) return;
 
 	x = w->x;
-	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor,
+	Drawer2D_Clear(&framebuffer, Launcher_Theme.BackgroundColor,
 				   x, w->y + w->hdrHeight, w->width, gridlineHeight);
 
 	for (i = 0; i < w->numColumns; i++) {
 		x += w->columns[i].width;
 		if (!w->columns[i].hasGridline) continue;
 			
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor,
+		Drawer2D_Clear(&framebuffer, Launcher_Theme.BackgroundColor,
 					   x, w->y, gridlineWidth, w->height);
 		x += gridlineWidth;
 	}
@@ -810,7 +822,7 @@ static void LTable_DrawHeaders(struct LTable* w) {
 
 	for (i = 0; i < w->numColumns; i++) {
 		args.text = String_FromReadonly(w->columns[i].name);
-		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
+		Drawer2D_DrawClippedText(&framebuffer, &args, 
 								x + cellXOffset, y + hdrYOffset, 
 								w->columns[i].width - cellXPadding);
 
@@ -843,10 +855,10 @@ static void LTable_DrawRows(struct LTable* w) {
 		for (i = 0; i < w->numColumns; i++) {
 			args.text  = str; cell.x = x; cell.y = y;
 			cell.width = w->columns[i].width;
-			w->columns[i].DrawRow(entry, &args, &cell);
+			w->columns[i].DrawRow(entry, &args, &cell, &framebuffer);
 
 			if (args.text.length) {
-				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
+				Drawer2D_DrawClippedText(&framebuffer, &args, 
 										x + cellXOffset, y + rowYOffset, 
 										cell.width - cellXPadding);
 			}
@@ -868,9 +880,9 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 	x = w->x + w->width - scrollbarWidth;
 	LTable_GetScrollbarCoords(w, &y, &height);
 
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol,
+	Drawer2D_Clear(&framebuffer, backCol,
 					x, w->y,     scrollbarWidth, w->height);		
-	Drawer2D_Clear(&Launcher_Framebuffer, scrollCol, 
+	Drawer2D_Clear(&framebuffer, scrollCol, 
 					x, w->y + y, scrollbarWidth, height);
 }
 

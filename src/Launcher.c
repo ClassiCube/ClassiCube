@@ -22,7 +22,6 @@
 #include "PackedCol.h"
 
 static struct LScreen* activeScreen;
-struct Bitmap Launcher_Framebuffer;
 struct FontDesc Launcher_LogoFont;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -70,12 +69,6 @@ void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc
 	} else {
 		String_Format1(dst, "&cEmpty response when %c", action);
 	}
-}
-
-static CC_NOINLINE void InitFramebuffer(void) {
-	Launcher_Framebuffer.width  = max(WindowInfo.Width,  1);
-	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
-	Window_AllocFramebuffer(&Launcher_Framebuffer);
 }
 
 
@@ -172,8 +165,8 @@ cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 *---------------------------------------------------------Event handler---------------------------------------------------*
 *#########################################################################################################################*/
 static void OnResize(void* obj) {
-	Window_FreeFramebuffer(&Launcher_Framebuffer);
-	InitFramebuffer();
+	LBackend_FreeFramebuffer();
+	LBackend_InitFramebuffer();
 
 	if (activeScreen) activeScreen->Layout(activeScreen);
 	LBackend_Redraw();
@@ -233,7 +226,7 @@ static void Launcher_Free(void) {
 
 	CloseActiveScreen();
 	activeScreen = NULL;
-	Window_FreeFramebuffer(&Launcher_Framebuffer);
+	LBackend_FreeFramebuffer();
 }
 
 void Launcher_Run(void) {
@@ -258,7 +251,7 @@ void Launcher_Run(void) {
 	Drawer2D.BlackTextShadows = true;
 
 	LBackend_Init();
-	InitFramebuffer();
+	LBackend_InitFramebuffer();
 	Launcher_ShowEmptyServers = Options_GetBool(LOPT_SHOW_EMPTY, true);
 	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
 

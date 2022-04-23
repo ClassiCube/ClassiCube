@@ -26,6 +26,9 @@ void LBackend_Tick(void);
 void LBackend_WidgetRepositioned(struct LWidget* w);
 void LBackend_MarkDirty(void* widget);
 
+void LBackend_InitFramebuffer(void);
+void LBackend_FreeFramebuffer(void);
+
 void LBackend_ButtonInit(struct LButton* w, int width, int height);
 void LBackend_ButtonUpdate(struct LButton* w);
 void LBackend_ButtonDraw(struct LButton* w);

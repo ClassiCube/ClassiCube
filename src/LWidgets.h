@@ -142,7 +142,7 @@ struct LTableColumn {
 	/* Draws the value of this column for the given row. */
 	/* If args.Text is changed to something, that text gets drawn afterwards. */
 	/* Most of the time that's all you need to do. */
-	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell);
+	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp);
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */

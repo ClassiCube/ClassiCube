@@ -451,34 +451,34 @@ void LSlider_SetProgress(struct LSlider* w, int progress) {
 /*########################################################################################################################*
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
+static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
 	struct Flag* flag = Flags_Get(row);
 	if (!flag) return;
-	Drawer2D_BmpCopy(&Launcher_Framebuffer, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
+	Drawer2D_BmpCopy(bmp, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
 }
 
-static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
+static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
 	args->text = row->name;
 }
 static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&b->name, &a->name);
 }
 
-static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
+static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
 	String_Format2(&args->text, "%i/%i", &row->players, &row->maxPlayers);
 }
 static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->players - a->players;
 }
 
-static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
+static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
 	LTable_FormatUptime(&args->text, row->uptime);
 }
 static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->uptime - a->uptime;
 }
 
-static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
+static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
 	/* last column, so adjust to fit size of table */
 	int leftover = cell->table->width - cell->x;
 	cell->width  = max(cell->width, leftover);
