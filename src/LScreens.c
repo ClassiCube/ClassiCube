@@ -545,12 +545,6 @@ static void DirectConnectScreen_UrlFilter(cc_string* str) {
 	str->length = 0;
 }
 
-CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* text) {
-	struct LLabel* w = &DirectConnectScreen.lblStatus;
-	LLabel_SetConst(w, text);
-	LWidget_Redraw(w);
-}
-
 static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	cc_string addr; char addrBuffer[STRING_SIZE];
 	cc_string mppass; char mppassBuffer[STRING_SIZE];
@@ -580,13 +574,14 @@ static void DirectConnectScreen_StartClient(void* w) {
 	const cc_string* user   = &DirectConnectScreen.iptUsername.text;
 	const cc_string* addr   = &DirectConnectScreen.iptAddress.text;
 	const cc_string* mppass = &DirectConnectScreen.iptMppass.text;
+	struct LLabel* status   = &DirectConnectScreen.lblStatus;
 
 	cc_string ip, port;
 	cc_uint16 raw_port;
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
-		DirectConnectScreen_SetStatus("&eInvalid address"); return;
+		LLabel_SetConst(status, "&eInvalid address"); return;
 	}
 
 	/* support either "[IP]" or "[IP]:[PORT]" */
@@ -599,13 +594,13 @@ static void DirectConnectScreen_StartClient(void* w) {
 	}
 
 	if (!user->length) {
-		DirectConnectScreen_SetStatus("&eUsername required"); return;
+		LLabel_SetConst(status, "&eUsername required"); return;
 	}
 	if (!Socket_ValidAddress(&ip)) {
-		DirectConnectScreen_SetStatus("&eInvalid ip"); return;
+		LLabel_SetConst(status, "&eInvalid ip"); return;
 	}
 	if (!Convert_ParseUInt16(&port, &raw_port)) {
-		DirectConnectScreen_SetStatus("&eInvalid port"); return;
+		LLabel_SetConst(status, "&eInvalid port"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
 
@@ -614,7 +609,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	Options_Set("launcher-dc-port",     &port);
 	Options_SetSecure("launcher-dc-mppass", mppass);
 
-	DirectConnectScreen_SetStatus("");
+	LLabel_SetConst(status, "");
 	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
 }
 
@@ -787,7 +782,6 @@ CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* acti
 
 	LWebTask_DisplayError(task, action, &str);
 	LLabel_SetText(&s->lblStatus, &str);
-	LWidget_Redraw(&s->lblStatus);
 	s->signingIn = false;
 }
 
@@ -797,12 +791,10 @@ static void MainScreen_DoLogin(void) {
 	cc_string* pass = &s->iptPassword.text;
 
 	if (!user->length) {
-		LLabel_SetConst(&s->lblStatus, "&eUsername required");
-		LWidget_Redraw(&s->lblStatus); return;
+		LLabel_SetConst(&s->lblStatus, "&eUsername required"); return;
 	}
 	if (!pass->length) {
-		LLabel_SetConst(&s->lblStatus, "&ePassword required");
-		LWidget_Redraw(&s->lblStatus); return;
+		LLabel_SetConst(&s->lblStatus, "&ePassword required"); return;
 	}
 
 	if (GetTokenTask.Base.working) return;
@@ -811,7 +803,6 @@ static void MainScreen_DoLogin(void) {
 
 	GetTokenTask_Run();
 	LLabel_SetConst(&s->lblStatus, "&eSigning in..");
-	LWidget_Redraw(&s->lblStatus);
 	s->signingIn = true;
 }
 static void MainScreen_Login(void* w) { MainScreen_DoLogin(); }
@@ -855,9 +846,7 @@ static void MainScreen_ResumeHover(void* w) {
 	} else {
 		String_Format3(&str, "&eResume as %s to %s:%s", &info.user, &info.ip, &info.port);
 	}
-
 	LLabel_SetText(&s->lblStatus, &str);
-	LWidget_Redraw(&s->lblStatus);
 }
 
 static void MainScreen_ResumeUnhover(void* w) {
@@ -865,7 +854,6 @@ static void MainScreen_ResumeUnhover(void* w) {
 	if (s->signingIn) return;
 
 	LLabel_SetConst(&s->lblStatus, "");
-	LWidget_Redraw(&s->lblStatus);
 }
 
 static void MainScreen_Init(struct LScreen* s_) {
@@ -964,20 +952,17 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	} else {
 		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
 	}
-	LWidget_Redraw(&s->lblUpdate);
 }
 
 static void MainScreen_LoginPhase2(struct MainScreen* s, const cc_string* user) {
 	/* website returns case correct username */
 	if (!String_Equals(&s->iptUsername.text, user)) {
 		LInput_SetText(&s->iptUsername, user);
-		LWidget_Redraw(&s->iptUsername);
 	}
 	String_Copy(&Launcher_Username, user);
 
 	FetchServersTask_Run();
 	LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");
-	LWidget_Redraw(&s->lblStatus);
 }
 
 static void MainScreen_TickGetToken(struct MainScreen* s) {
@@ -1008,7 +993,6 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 
 	if (SignInTask.error) {
 		LLabel_SetConst(&s->lblStatus, SignInTask.error);
-		LWidget_Redraw(&s->lblStatus);
 	} else if (SignInTask.Base.success) {
 		MainScreen_LoginPhase2(s, &SignInTask.username);
 	} else {
@@ -1191,10 +1175,10 @@ static void FetchResourcesScreen_Layout(struct LScreen* s_) {
 
 static void FetchResourcesScreen_SetStatus(struct FetchResourcesScreen* s, const cc_string* str) {
 	struct LLabel* w = &s->lblStatus;
+	/* TODO FIXY FIXY FIXY */ w->opaque = true; /* need to rethink ResetArea for Launcher */
 	CheckResourcesScreen_ResetArea(w->last.X, w->last.Y,
 									w->last.Width, w->last.Height);
 	LLabel_SetText(w, str);
-	LWidget_Draw(w);
 }
 
 static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, int reqID) {
@@ -1293,7 +1277,6 @@ static void ServersScreen_Refresh(void* w) {
 	FetchServersTask_Run();
 	btn = &ServersScreen.btnRefresh;
 	LButton_SetConst(btn, "&eWorking..");
-	LWidget_Redraw(btn);
 }
 
 static void ServersScreen_HashFilter(cc_string* str) {
@@ -1313,19 +1296,19 @@ static void ServersScreen_HashFilter(cc_string* str) {
 static void ServersScreen_SearchChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ApplyFilter(&s->table);
-	LWidget_Draw(&s->table);
+	LBackend_MarkDirty(&s->table);
 }
 
 static void ServersScreen_HashChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen;
 	LTable_ShowSelected(&s->table);
-	LWidget_Draw(&s->table);
+	LBackend_MarkDirty(&s->table);
 }
 
 static void ServersScreen_OnSelectedChanged(void) {
 	struct ServersScreen* s = &ServersScreen;
-	LWidget_Redraw(&s->iptHash);
-	LWidget_Draw(&s->table);
+	LBackend_MarkDirty(&s->iptHash);
+	LBackend_MarkDirty(&s->table);
 }
 
 static void ServersScreen_ReloadServers(struct ServersScreen* s) {
@@ -1394,12 +1377,11 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	if (FetchServersTask.Base.success) {
 		ServersScreen_ReloadServers(s);
-		LWidget_Draw(&s->table);
+		LBackend_MarkDirty(&s->table);
 	}
 
 	LButton_SetConst(&s->btnRefresh, 
 				FetchServersTask.Base.success ? "Refresh" : "&cFailed");
-	LWidget_Redraw(&s->btnRefresh);
 }
 
 static void ServersScreen_Free(struct LScreen* s_) {
@@ -1718,7 +1700,6 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint
 		UpdatesScreen_FormatTime(&str, delta);
 	}
 	LLabel_SetText(lbl, &str);
-	LWidget_Redraw(lbl);
 }
 
 static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
@@ -1749,7 +1730,6 @@ static void UpdatesScreen_DoFetch(struct UpdatesScreen* s) {
 	UpdatesScreen_UpdateHeader(s, &str);
 	String_AppendConst(&str, "..");
 	LLabel_SetText(&s->lblStatus, &str);
-	LWidget_Redraw(&s->lblStatus);
 }
 
 static void UpdatesScreen_Get(cc_bool release, int buildIndex) {
@@ -1785,7 +1765,6 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 	UpdatesScreen_UpdateHeader(s, &str);
 	String_Format1(&str, " &a%i%%", &s->buildProgress);
 	LLabel_SetText(&s->lblStatus, &str);
-	LWidget_Redraw(&s->lblStatus);
 }
 
 static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
@@ -1800,7 +1779,6 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 		String_InitArray(str, strBuffer);
 		LWebTask_DisplayError(&FetchUpdateTask.Base, "fetching update", &str);
 		LLabel_SetText(&s->lblStatus, &str);
-		LWidget_Redraw(&s->lblStatus);
 	} else {
 		/* FetchUpdateTask handles saving the updated file for us */
 		Launcher_ShouldExit   = true;

@@ -40,21 +40,6 @@ void LWidget_CalcPosition(void* widget) {
 	LBackend_WidgetRepositioned(w);
 }
 
-void LWidget_Draw(void* widget) {
-	struct LWidget* w = (struct LWidget*)widget;
-	w->last.X = w->x; w->last.Width  = w->width;
-	w->last.Y = w->y; w->last.Height = w->height;
-
-	w->VTABLE->Draw(w);
-	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
-}
-
-void LWidget_Redraw(void* widget) {
-	struct LWidget* w = (struct LWidget*)widget;
-	Launcher_ResetArea(w->last.X, w->last.Y, w->last.Width, w->last.Height);
-	LWidget_Draw(w);
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -132,14 +117,18 @@ static void LButton_Draw(void* widget) {
 
 static void LButton_Hover(void* w, int idx, cc_bool wasOver) {
 	/* only need to redraw when changing from unhovered to hovered */
-	if (!wasOver) LWidget_Draw(w); 
+	if (!wasOver) LBackend_MarkDirty(w);
+}
+
+static void LButton_Unhover(void* w) {
+	LBackend_MarkDirty(w);
 }
 
 static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
-	NULL, NULL,                  /* Key    */
-	LButton_Hover, LWidget_Draw, /* Hover  */
-	NULL, NULL                   /* Select */
+	NULL, NULL,                     /* Key    */
+	LButton_Hover, LButton_Unhover, /* Hover  */
+	NULL, NULL                      /* Select */
 };
 void LButton_Init(struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
@@ -218,7 +207,7 @@ static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
 
 	w->caretPos += (forwards ? 1 : -1);
 	if (w->caretPos < 0 || w->caretPos >= w->text.length) w->caretPos = -1;
-	LWidget_Redraw(w);
+	LBackend_InputUpdate(w);
 }
 
 static void LInput_CopyFromClipboard(struct LInput* w) {
@@ -252,7 +241,7 @@ static void LInput_Backspace(struct LInput* w) {
 
 	if (w->TextChanged) w->TextChanged(w);
 	LInput_ClampCaret(w);
-	LWidget_Redraw(w);
+	LBackend_InputUpdate(w);
 }
 
 /* Removes the character at the caret in the currently entered text */
@@ -264,7 +253,7 @@ static void LInput_Delete(struct LInput* w) {
 
 	if (w->TextChanged) w->TextChanged(w);
 	LInput_ClampCaret(w);
-	LWidget_Redraw(w);
+	LBackend_InputUpdate(w);
 }
 
 static void LInput_KeyDown(void* widget, int key, cc_bool was) {
@@ -315,7 +304,7 @@ static void LInput_KeyChar(void* widget, char c) {
 	cc_bool appended = LInput_Append(w, c);
 
 	if (appended && w->TextChanged) w->TextChanged(w);
-	if (appended) LWidget_Redraw(w);
+	if (appended) LBackend_InputUpdate(w);
 }
 
 static void LInput_TextChanged(void* widget, const cc_string* str) {
@@ -335,6 +324,7 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
 	w->tabSelectable = true;
+	w->opaque = true;
 	String_InitArray(w->text, w->_textBuffer);
 	
 	w->hintText = hintText;
@@ -362,13 +352,12 @@ void LInput_AppendString(struct LInput* w, const cc_string* str) {
 	}
 
 	if (appended && w->TextChanged) w->TextChanged(w);
-	if (appended) LWidget_Redraw(w);
+	if (appended) LBackend_InputUpdate(w);
 }
 
 void LInput_SetString(struct LInput* w, const cc_string* str) {
 	LInput_SetText(w, str);
 	if (w->TextChanged) w->TextChanged(w);
-	LWidget_Redraw(w);
 }
 
 
@@ -448,6 +437,7 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
 	w->VTABLE = &lslider_VTABLE;
 	w->color  = color;
+	w->opaque = true;
 	LBackend_SliderInit(w, width, height);
 }
 
@@ -613,7 +603,7 @@ static void LTable_MouseWheel(void* widget, float delta) {
 	struct LTable* w = (struct LTable*)widget;
 	w->topRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
 	LTable_ClampTopRow(w);
-	LWidget_Draw(w);
+	LBackend_MarkDirty(w);
 	w->_lastRow = -1;
 }
 
@@ -641,6 +631,7 @@ void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 	w->numColumns = Array_Elems(tableColumns);
 	w->rowFont    = rowFont;
 	w->sortingCol = -1;
+	w->opaque     = true;
 	
 	for (i = 0; i < w->numColumns; i++) {
 		w->columns[i].width = Display_ScaleX(w->columns[i].width);

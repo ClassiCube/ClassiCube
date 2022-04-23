@@ -39,6 +39,8 @@ struct LWidgetVTABLE {
 	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
 	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
+	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
+	cc_bool opaque;                /* Whethe this widget completely obscures background behind it */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
@@ -50,8 +52,6 @@ struct LWidgetVTABLE {
 struct LWidget { LWidget_Layout };
 void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 void LWidget_CalcPosition(void* widget);
-void LWidget_Draw(void* widget);
-void LWidget_Redraw(void* widget);
 void LWidget_CalcOffsets(void);
 
 struct LButton {

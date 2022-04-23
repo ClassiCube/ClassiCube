@@ -24,6 +24,7 @@ void LBackend_CloseScreen(struct LScreen* s);
 void LBackend_Redraw(void);
 void LBackend_Tick(void);
 void LBackend_WidgetRepositioned(struct LWidget* w);
+void LBackend_MarkDirty(void* widget);
 
 void LBackend_ButtonInit(struct LButton* w, int width, int height);
 void LBackend_ButtonUpdate(struct LButton* w);
