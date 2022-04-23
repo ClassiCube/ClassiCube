@@ -65,13 +65,8 @@ void Launcher_DrawBackgroundAll(struct Bitmap* bmp);
 /* Redraws the specified region with the background pixels. */
 /* Also marks that area as neeing to be redrawn. */
 void Launcher_ResetArea(int x, int y, int width, int height);
-/* Resets pixels to default, then draws widgets of current screen over it. */
-/* Marks the entire window as needing to be redrawn. */
-void Launcher_Redraw(void);
 /* Marks the given area/region as needing to be redrawn. */
 CC_NOINLINE void Launcher_MarkDirty(int x, int y, int width, int height);
-/* Marks the entire window as needing to be redrawn. */
-CC_NOINLINE void Launcher_MarkAllDirty(void);
 
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);

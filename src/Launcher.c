@@ -23,12 +23,11 @@
 
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
-static Rect2D dirty_rect;
+Rect2D dirty_rect;
 
 static struct LScreen* activeScreen;
 struct Bitmap Launcher_Framebuffer;
 struct FontDesc Launcher_LogoFont;
-static cc_bool pendingRedraw;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE], userBuffer[STRING_SIZE];
@@ -62,7 +61,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	}
 
 	LBackend_SetScreen(screen);
-	Launcher_Redraw();
+	LBackend_Redraw();
 }
 
 void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc_string* dst) {
@@ -176,19 +175,12 @@ cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 /*########################################################################################################################*
 *---------------------------------------------------------Event handler---------------------------------------------------*
 *#########################################################################################################################*/
-static void ReqeustRedraw(void* obj) {
-	/* We may get multiple Redraw events in short timespan */
-	/* So we just request a redraw at next launcher tick */
-	pendingRedraw  = true;
-	Launcher_MarkAllDirty();
-}
-
 static void OnResize(void* obj) {
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 	InitFramebuffer();
 
 	if (activeScreen) activeScreen->Layout(activeScreen);
-	Launcher_Redraw();
+	LBackend_Redraw();
 }
 
 static cc_bool IsShutdown(int key) {
@@ -219,47 +211,18 @@ static void OnMouseWheel(void* obj, float delta) {
 	activeScreen->MouseWheel(activeScreen, delta);
 }
 
-static void OnPointerDown(void* obj, int idx) {
-	activeScreen->MouseDown(activeScreen, idx);
-}
-
-static void OnPointerUp(void* obj, int idx) {
-	activeScreen->MouseUp(activeScreen, idx);
-}
-
-static void OnPointerMove(void* obj, int idx) {
-	if (!activeScreen) return;
-	activeScreen->MouseMove(activeScreen, idx);
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------------Main body-----------------------------------------------------*
 *#########################################################################################################################*/
-static void Launcher_Display(void) {
-	if (pendingRedraw) {
-		Launcher_Redraw();
-		pendingRedraw = false;
-	}
-
-	Window_DrawFramebuffer(dirty_rect);
-	dirty_rect.X = 0; dirty_rect.Width   = 0;
-	dirty_rect.Y = 0; dirty_rect.Height  = 0;
-}
-
 static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, OnResize);
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
-	Event_Register_(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 
-	Event_Register_(&InputEvents.Down,        NULL, OnInputDown);
-	Event_Register_(&InputEvents.Press,       NULL, OnKeyPress);
-	Event_Register_(&InputEvents.Wheel,       NULL, OnMouseWheel);
-	Event_Register_(&InputEvents.TextChanged, NULL, OnTextChanged);
-
-	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
-	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
-	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
+	Event_Register_(&InputEvents.Down,          NULL, OnInputDown);
+	Event_Register_(&InputEvents.Press,         NULL, OnKeyPress);
+	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);
+	Event_Register_(&InputEvents.TextChanged,   NULL, OnTextChanged);
 
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
@@ -323,8 +286,7 @@ void Launcher_Run(void) {
 		Window_ProcessEvents();
 		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
-		activeScreen->Tick(activeScreen);
-		if (dirty_rect.Width) Launcher_Display();
+		LBackend_Tick();
 		Thread_Sleep(10);
 	}
 
@@ -561,10 +523,6 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 	Launcher_MarkDirty(x, y, width, height);
 }
 
-void Launcher_Redraw(void) {
-	LBackend_RedrawScreen(activeScreen);
-}
-
 void Launcher_MarkDirty(int x, int y, int width, int height) {
 	int x1, y1, x2, y2;
 	if (!Drawer2D_Clamp(&Launcher_Framebuffer, &x, &y, &width, &height)) return;
@@ -583,10 +541,5 @@ void Launcher_MarkDirty(int x, int y, int width, int height) {
 
 	dirty_rect.X = x; dirty_rect.Width  = width;
 	dirty_rect.Y = y; dirty_rect.Height = height;
-}
-
-void Launcher_MarkAllDirty(void) {
-	dirty_rect.X = 0; dirty_rect.Width  = Launcher_Framebuffer.width;
-	dirty_rect.Y = 0; dirty_rect.Height = Launcher_Framebuffer.height;
 }
 #endif

@@ -23,7 +23,15 @@
 #include "LScreens.h"
 #include "Input.h"
 #include "Utils.h"
+#include "Event.h"
+
 struct FontDesc titleFont, textFont, hintFont;
+static struct LScreen* activeScreen;
+static cc_uint8 pendingRedraw;
+extern Rect2D dirty_rect;
+
+#define REDRAW_ALL  0x02
+#define REDRAW_SOME 0x01
 
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
@@ -34,6 +42,7 @@ static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
 static int cellXOffset, cellXPadding, cellMinWidth;
 static int flagXOffset, flagYOffset;
 
+static void HookEvents(void);
 void LBackend_Init(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
 	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
@@ -65,6 +74,7 @@ void LBackend_Init(void) {
 	Drawer2D_MakeFont(&titleFont, 16, FONT_FLAGS_BOLD);
 	Drawer2D_MakeFont(&textFont,  14, FONT_FLAGS_NONE);
 	Drawer2D_MakeFont(&hintFont,  12, FONT_FLAGS_NONE);
+	HookEvents();
 }
 
 void LBackend_Free(void) {
@@ -73,33 +83,91 @@ void LBackend_Free(void) {
 	Font_Free(&hintFont);
 }
 
-static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
-	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+void LBackend_SetScreen(struct LScreen* s)   { activeScreen = s; }
+void LBackend_CloseScreen(struct LScreen* s) { activeScreen = NULL; }
+
+void LBackend_WidgetRepositioned(struct LWidget* w) { 
+}
+
+/* Marks the entire window as needing to be redrawn. */
+static CC_NOINLINE void MarkAllDirty(void) {
+	dirty_rect.X = 0; dirty_rect.Width  = Launcher_Framebuffer.width;
+	dirty_rect.Y = 0; dirty_rect.Height = Launcher_Framebuffer.height;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Base drawing-------------------------------------------------------*
+*#########################################################################################################################*/
+static void DrawBoxBounds(BitmapCol color, int x, int y, int width, int height) {
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		x,                   y, 
 		width,               yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		x,                   y + height - yBorder,
 		width,               yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		x,                   y, 
 		xBorder,             height);
-	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		x + width - xBorder, y, 
 		xBorder,             height);
 }
 
-void LBackend_WidgetRepositioned(struct LWidget* w) { }
-void LBackend_SetScreen(struct LScreen* s)   { }
-void LBackend_CloseScreen(struct LScreen* s) { }
-
-void LBackend_RedrawScreen(struct LScreen* s) {
+static CC_NOINLINE void RedrawAll(void) {
+	struct LScreen* s = activeScreen;
 	int i;
 	s->DrawBackground(s, &Launcher_Framebuffer);
 	
 	for (i = 0; i < s->numWidgets; i++) {
 		LWidget_Draw(s->widgets[i]);
 	}
-	Launcher_MarkAllDirty();
+	MarkAllDirty();
+}
+
+void LBackend_Redraw(void) {
+	pendingRedraw = REDRAW_ALL;
+	MarkAllDirty();
+}
+
+void LBackend_Tick(void) {
+	activeScreen->Tick(activeScreen);
+	if (!dirty_rect.Width) return;
+
+	if (pendingRedraw & REDRAW_ALL) {
+		RedrawAll();
+		pendingRedraw = 0;
+	}
+
+	Window_DrawFramebuffer(dirty_rect);
+	dirty_rect.X = 0; dirty_rect.Width   = 0;
+	dirty_rect.Y = 0; dirty_rect.Height  = 0;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Event handling------------------------------------------------------*
+*#########################################################################################################################*/
+static void ReqeustRedraw(void* obj) { LBackend_Redraw(); }
+
+static void OnPointerDown(void* obj, int idx) {
+	activeScreen->MouseDown(activeScreen, idx);
+}
+
+static void OnPointerUp(void* obj, int idx) {
+	activeScreen->MouseUp(activeScreen, idx);
+}
+
+static void OnPointerMove(void* obj, int idx) {
+	if (!activeScreen) return;
+	activeScreen->MouseMove(activeScreen, idx);
+}
+
+static void HookEvents(void) {
+	Event_Register_(&WindowEvents.Redraw, NULL, ReqeustRedraw);
+	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
+	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
+	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 }
 
 
@@ -753,7 +821,7 @@ void LBackend_TableDraw(struct LTable* w) {
 	LTable_DrawHeaders(w);
 	LTable_DrawRows(w);
 	LTable_DrawScrollbar(w);
-	Launcher_MarkAllDirty();
+	MarkAllDirty();
 }
 
 

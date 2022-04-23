@@ -201,6 +201,11 @@ IOS_FLAGS="-s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
 build_ios() {
   echo "Building ios.."
   $IOS_CC *.c interop_ios.m $IOS_FLAGS $IOS_LIBS -o cc-ios
+  mkdir -p Payload/ClassiCube.app
+  cp cc-ios Payload/ClassiCube.app/ClassiCube
+  # https://askubuntu.com/questions/681949/plutil-equivalent-in-ubuntu
+  plistutil -i $ROOT_DIR/ios/Info.plist -o Payload/ClassiCube.app/Info.plist -f bin
+  zip -r cc.ipa Payload 
 }
 
 # ----------------------------- driver
