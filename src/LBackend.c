@@ -27,9 +27,11 @@
 
 struct FontDesc titleFont, textFont, hintFont;
 static struct LScreen* activeScreen;
-static cc_uint8 pendingRedraw;
-extern Rect2D dirty_rect;
+/* The area/region of the window that needs to be redrawn and presented to the screen. */
+/* If width is 0, means no area needs to be redrawn. */
+static Rect2D dirty_rect;
 
+static cc_uint8 pendingRedraw;
 #define REDRAW_ALL  0x02
 #define REDRAW_SOME 0x01
 
@@ -101,6 +103,27 @@ static CC_NOINLINE void MarkAllDirty(void) {
 	dirty_rect.Y = 0; dirty_rect.Height = Launcher_Framebuffer.height;
 }
 
+/* Marks the given area/region as needing to be redrawn. */
+static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
+	int x1, y1, x2, y2;
+	if (!Drawer2D_Clamp(&Launcher_Framebuffer, &x, &y, &width, &height)) return;
+
+	/* union with existing dirty area */
+	if (dirty_rect.Width) {
+		x1 = min(x, dirty_rect.X);
+		y1 = min(y, dirty_rect.Y);
+
+		x2 = max(x +  width, dirty_rect.X + dirty_rect.Width);
+		y2 = max(y + height, dirty_rect.Y + dirty_rect.Height);
+
+		x = x1; width  = x2 - x1;
+		y = y1; height = y2 - y1;
+	}
+
+	dirty_rect.X = x; dirty_rect.Width  = width;
+	dirty_rect.Y = y; dirty_rect.Height = height;
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Base drawing-------------------------------------------------------*
@@ -126,7 +149,7 @@ static CC_NOINLINE void DrawWidget(struct LWidget* w) {
 
 	w->dirty = false;
 	w->VTABLE->Draw(w);
-	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
+	MarkAreaDirty(w->x, w->y, w->width, w->height);
 }
 
 static CC_NOINLINE void RedrawAll(void) {
@@ -151,8 +174,9 @@ static CC_NOINLINE void RedrawDirty(void) {
 
 		/* check if widget might need redrawing of background behind */
 		if (!w->opaque || w->last.Width > w->width || w->last.Height > w->height) {
-			Launcher_ResetArea(w->last.X, w->last.Y, w->last.Width, w->last.Height);
-			Launcher_MarkDirty(w->last.X, w->last.Y, w->last.Width, w->last.Height);
+			s->ResetArea(&Launcher_Framebuffer,
+						  w->last.X, w->last.Y, w->last.Width, w->last.Height);
+			MarkAreaDirty(w->last.X, w->last.Y, w->last.Width, w->last.Height);
 		}
 		DrawWidget(w);
 	}
@@ -355,19 +379,21 @@ void LBackend_InputInit(struct LInput* w, int width) {
 }
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
-	BitmapCol color = BitmapCol_Make(97, 81, 110, 255);
+	struct LScreen* s  = activeScreen;
+	struct Bitmap* bmp = &Launcher_Framebuffer;
+	BitmapCol color    = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
 		DrawBoxBounds(color, w->x, w->y, w->width, w->height);
 	} else {
-		Launcher_ResetArea(w->x,                      w->y, 
-						   w->width,                  yBorder);
-		Launcher_ResetArea(w->x,                      w->y + w->height - yBorder,
-						   w->width,                  yBorder);
-		Launcher_ResetArea(w->x,                      w->y, 
-						   xBorder,                   w->height);
-		Launcher_ResetArea(w->x + w->width - xBorder, w->y,
-						   xBorder,                   w->height);
+		s->ResetArea(bmp, w->x,                      w->y, 
+						  w->width,                  yBorder);
+		s->ResetArea(bmp, w->x,                      w->y + w->height - yBorder,
+						  w->width,                  yBorder);
+		s->ResetArea(bmp, w->x,                      w->y,
+						  xBorder,                   w->height);
+		s->ResetArea(bmp, w->x + w->width - xBorder, w->y,
+						  xBorder,                   w->height);
 	}
 }
 
@@ -543,9 +569,9 @@ void LBackend_InputTick(struct LInput* w) {
 	
 	if (Rect2D_Equals(r, lastCaretRec)) {
 		/* Fast path, caret is blinking in same spot */
-		Launcher_MarkDirty(r.X, r.Y, r.Width, r.Height);
+		MarkAreaDirty(r.X, r.Y, r.Width, r.Height);
 	} else {
-		Launcher_MarkDirty(w->x, w->y, w->width, w->height);
+		MarkAreaDirty(w->x, w->y, w->width, w->height);
 	}
 	lastCaretRec = r;
 }
@@ -694,7 +720,8 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 		Drawer2D_Clear(&Launcher_Framebuffer, gridColor,
 						w->x, w->y, w->width, w->hdrHeight);
 	} else {
-		Launcher_ResetArea(w->x, w->y, w->width, w->hdrHeight);
+		Launcher_DrawBackground(&Launcher_Framebuffer,
+						w->x, w->y, w->width, w->hdrHeight);
 	}
 }
 
@@ -739,9 +766,10 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 
 		if (color) {
 			Drawer2D_Clear(&Launcher_Framebuffer, color,
-				w->x, y, w->width, height);
+							w->x, y, w->width, height);
 		} else {
-			Launcher_ResetArea(w->x, y, w->width, height);
+			Launcher_DrawBackground(&Launcher_Framebuffer, 
+							w->x, y, w->width, height);
 		}
 	}
 }

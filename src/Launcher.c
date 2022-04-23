@@ -21,10 +21,6 @@
 #include "LBackend.h"
 #include "PackedCol.h"
 
-/* The area/region of the window that needs to be redrawn and presented to the screen. */
-/* If width is 0, means no area needs to be redrawn. */
-Rect2D dirty_rect;
-
 static struct LScreen* activeScreen;
 struct Bitmap Launcher_Framebuffer;
 struct FontDesc Launcher_LogoFont;
@@ -516,30 +512,5 @@ void Launcher_UpdateLogoFont(void) {
 	Drawer2D.BitmappedText = (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
 	Drawer2D_MakeFont(&Launcher_LogoFont, 32, FONT_FLAGS_NONE);
 	Drawer2D.BitmappedText = false;
-}
-
-void Launcher_ResetArea(int x, int y, int width, int height) {
-	Launcher_DrawBackground(&Launcher_Framebuffer, x, y, width, height);
-	Launcher_MarkDirty(x, y, width, height);
-}
-
-void Launcher_MarkDirty(int x, int y, int width, int height) {
-	int x1, y1, x2, y2;
-	if (!Drawer2D_Clamp(&Launcher_Framebuffer, &x, &y, &width, &height)) return;
-
-	/* union with existing dirty area */
-	if (dirty_rect.Width) {
-		x1 = min(x, dirty_rect.X);
-		y1 = min(y, dirty_rect.Y);
-
-		x2 = max(x +  width, dirty_rect.X + dirty_rect.Width);
-		y2 = max(y + height, dirty_rect.Y + dirty_rect.Height);
-
-		x = x1; width  = x2 - x1;
-		y = y1; height = y2 - y1;
-	}
-
-	dirty_rect.X = x; dirty_rect.Width  = width;
-	dirty_rect.Y = y; dirty_rect.Height = height;
 }
 #endif

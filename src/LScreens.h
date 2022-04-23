@@ -24,6 +24,7 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	void (*MouseMove)(struct LScreen* s,   int idx); \
 	void (*MouseWheel)(struct LScreen* s,  float delta); \
 	void (*TextChanged)(struct LScreen* s, const cc_string* str); \
+	void (*ResetArea)(struct Bitmap* bmp, int x, int y, int width, int height); \
 	struct LWidget* onEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
 	struct LWidget* hoveredWidget;  /* Widget the mouse is currently hovering over. */ \
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \

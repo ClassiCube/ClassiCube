@@ -195,6 +195,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->MouseWheel = LScreen_MouseWheel;
 	s->TextChanged    = LScreen_TextChanged;
 	s->DrawBackground = LScreen_DrawBackground;
+	s->ResetArea      = Launcher_DrawBackground;
 
 	/* reset all widgets mouse state */
 	for (i = 0; i < s->numWidgets; i++) { 
@@ -1109,9 +1110,8 @@ static void CheckResourcesScreen_Layout(struct LScreen* s_) {
 #define RESOURCES_BACK_COLOR BitmapCol_Make( 12,  12,  12, 255)
 #define RESOURCES_FORE_COLOR BitmapCol_Make(120,  85, 151, 255)
 
-static void CheckResourcesScreen_ResetArea(int x, int y, int width, int height) {
-	Gradient_Noise(&Launcher_Framebuffer, RESOURCES_FORE_COLOR, 4, x, y, width, height);
-	Launcher_MarkDirty(x, y, width, height);
+static void CheckResourcesScreen_ResetArea(struct Bitmap* bmp, int x, int y, int width, int height) {
+	Gradient_Noise(bmp, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
 static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
@@ -1122,7 +1122,7 @@ static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap
 
 	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  bmp->width);
 	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, bmp->height);
-	Gradient_Noise(bmp, RESOURCES_FORE_COLOR, 4, x, y, width, height);
+	CheckResourcesScreen_ResetArea(bmp, x, y, width, height);
 }
 
 void CheckResourcesScreen_SetActive(void) {
@@ -1132,6 +1132,7 @@ void CheckResourcesScreen_SetActive(void) {
 	s->Show   = CheckResourcesScreen_Show;
 	s->Layout = CheckResourcesScreen_Layout;
 	s->DrawBackground = CheckResourcesScreen_DrawBackground;
+	s->ResetArea      = CheckResourcesScreen_ResetArea;
 	s->onEnterWidget  = (struct LWidget*)&s->btnYes;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -1173,14 +1174,6 @@ static void FetchResourcesScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->sdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  15);
 }
 
-static void FetchResourcesScreen_SetStatus(struct FetchResourcesScreen* s, const cc_string* str) {
-	struct LLabel* w = &s->lblStatus;
-	/* TODO FIXY FIXY FIXY */ w->opaque = true; /* need to rethink ResetArea for Launcher */
-	CheckResourcesScreen_ResetArea(w->last.X, w->last.Y,
-									w->last.Width, w->last.Height);
-	LLabel_SetText(w, str);
-}
-
 static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, int reqID) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	const char* name;
@@ -1194,7 +1187,7 @@ static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, in
 	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
 
 	if (String_Equals(&str, &s->lblStatus.text)) return;
-	FetchResourcesScreen_SetStatus(s, &str);
+	LLabel_SetText(&s->lblStatus, &str);
 }
 
 static void FetchResourcesScreen_UpdateProgress(struct FetchResourcesScreen* s) {
@@ -1213,7 +1206,7 @@ static void FetchResourcesScreen_Error(struct FetchResourcesScreen* s) {
 	String_InitArray(str, buffer);
 
 	Launcher_DisplayHttpError(Fetcher_Result, Fetcher_StatusCode, "downloading resources", &str);
-	FetchResourcesScreen_SetStatus(s, &str);
+	LLabel_SetText(&s->lblStatus, &str);
 }
 
 static void FetchResourcesScreen_Tick(struct LScreen* s_) {
@@ -1238,6 +1231,7 @@ void FetchResourcesScreen_SetActive(void) {
 	s->Tick   = FetchResourcesScreen_Tick;
 	s->Layout = FetchResourcesScreen_Layout;
 	s->DrawBackground = CheckResourcesScreen_DrawBackground;
+	s->ResetArea      = CheckResourcesScreen_ResetArea;
 	Launcher_SetScreen((struct LScreen*)s);
 }
 

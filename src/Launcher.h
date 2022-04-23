@@ -62,12 +62,6 @@ void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int he
 /* NOTE: Also draws titlebar at top, if current screen permits it */
 void Launcher_DrawBackgroundAll(struct Bitmap* bmp);
 
-/* Redraws the specified region with the background pixels. */
-/* Also marks that area as neeing to be redrawn. */
-void Launcher_ResetArea(int x, int y, int width, int height);
-/* Marks the given area/region as needing to be redrawn. */
-CC_NOINLINE void Launcher_MarkDirty(int x, int y, int width, int height);
-
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);
 /* Attempts to start the game by connecting to the given server. */
