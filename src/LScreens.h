@@ -15,7 +15,6 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	LScreen_Func Show;   /* Called every time this screen is set as the active one. */ \
 	LScreen_Func Free;   /* Cleans up all native resources. */ \
 	LScreen_Func Layout; /* Positions the widgets on the screen. */ \
-	LScreen_Func Draw;   /* Draws all widgets and any other features such as lines/rectangles. */ \
 	LScreen_Func Tick;   /* Repeatedly called multiple times every second. */ \
 	void (*DrawBackground)(struct LScreen* s, struct Bitmap* bmp); \
 	void (*KeyDown)(struct LScreen* s,     int key, cc_bool wasDown); \

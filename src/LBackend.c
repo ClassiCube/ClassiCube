@@ -92,6 +92,16 @@ void LBackend_WidgetRepositioned(struct LWidget* w) { }
 void LBackend_SetScreen(struct LScreen* s)   { }
 void LBackend_CloseScreen(struct LScreen* s) { }
 
+void LBackend_RedrawScreen(struct LScreen* s) {
+	int i;
+	s->DrawBackground(s, &Launcher_Framebuffer);
+	
+	for (i = 0; i < s->numWidgets; i++) {
+		LWidget_Draw(s->widgets[i]);
+	}
+	Launcher_MarkAllDirty();
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -112,6 +122,7 @@ void LBackend_ButtonUpdate(struct LButton* w) {
 void LBackend_ButtonDraw(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
+	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 
 	LButton_DrawBackground(w, &Launcher_Framebuffer, w->x, w->y);
 	xOffset = w->width  - w->_textWidth;
@@ -206,6 +217,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 	BitmapCol boxBottom = BitmapCol_Make(240, 240, 240, 255);
 	struct DrawTextArgs args;
 	int x, y, width, height;
+	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 
 	width  = Display_ScaleX(CB_SIZE);
 	height = Display_ScaleY(CB_SIZE);

@@ -193,6 +193,16 @@ build_android() {
   $TOOLS_ROOT/zipalign -f 4 obj/cc-signed.apk $ROOT_DIR/src/cc.apk
 }
 
+# ----------------------------- compile ios
+IOS_CC="ios-cc"
+IOS_LIBS="-framework OpenGLES -framework CoreGraphics -framework IOKit -framework CoreFoundation -framework Foundation -framework UIKit -framework QuartzCore -framework CFNetwork -lobjc"
+IOS_FLAGS="-s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+  
+build_ios() {
+  echo "Building ios.."
+  $IOS_CC *.c interop_ios.m $IOS_FLAGS $IOS_LIBS -o cc-ios
+}
+
 # ----------------------------- driver
 cd $ROOT_DIR/src/
 echo $PWD

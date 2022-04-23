@@ -645,11 +645,11 @@ static NSString* cellID = @"CC_Cell";
     struct LWidget* w = FindWidgetForView(sender);
     if (w == NULL) return;
     
-    UITextField* src = (UITextField*)sender;
-    const char* str  = [[src text] UTF8String];
-    
+    UITextField* src   = (UITextField*)sender;
+    const char* str    = [[src text] UTF8String];
     struct LInput* ipt = (struct LInput*)w;
-    ipt->text.length   = 0;
+    
+    ipt->text.length = 0;
     String_AppendUtf8(&ipt->text, str, String_Length(str));
     if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
@@ -658,7 +658,10 @@ static NSString* cellID = @"CC_Cell";
     struct LWidget* w = FindWidgetForView(sender);
     if (w == NULL) return;
     
+    UISwitch* src        = (UISwitch*)sender;
     struct LCheckbox* cb = (struct LCheckbox*)w;
+    
+    cb->value = [src isOn];
     if (!cb->ValueChanged) return;
     cb->ValueChanged(cb);
 }
@@ -708,6 +711,13 @@ static CCUIController* ui_controller;
 void LBackend_Init(void) {
     ui_controller = [[CCUIController alloc] init];
     CFBridgingRetain(ui_controller); // prevent GC TODO even needed?
+}
+
+void LBackend_Free(void) { }
+
+void LBackend_RedrawScreen(struct LScreen* s) {
+    s->DrawBackground(s, &Launcher_Framebuffer);
+    Launcher_MarkAllDirty();
 }
 
 /*########################################################################################################################*
@@ -863,6 +873,7 @@ void LBackend_LineDraw(struct LLine* w) {
 void LBackend_SliderInit(struct LSlider* w, int width, int height) {
     UIProgressView* prg = [[UIProgressView alloc] init];
     prg.frame = CGRectMake(0, 0, width, height);
+    prg.progressTintColor = ToUIColor(w->color, 1.0f);
     
     AssignView(w, prg);
     UpdateWidgetDimensions(w);

@@ -128,7 +128,6 @@ void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y)
 static void LButton_Draw(void* widget) {
 	struct LButton* w = (struct LButton*)widget;
 	LBackend_ButtonDraw(w);
-	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
 static void LButton_Hover(void* w, int idx, cc_bool wasOver) {
@@ -161,7 +160,6 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 static void LCheckbox_Draw(void* widget) {
 	struct LCheckbox* w = (struct LCheckbox*)widget;
 	LBackend_CheckboxDraw(w);
-	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
 static const struct LWidgetVTABLE lcheckbox_VTABLE = {

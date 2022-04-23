@@ -41,14 +41,6 @@ CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int idx) 
 	return NULL;
 }
 
-static void LScreen_Draw(struct LScreen* s) {
-	int i;
-	for (i = 0; i < s->numWidgets; i++) {
-		LWidget_Draw(s->widgets[i]);
-	}
-	Launcher_MarkAllDirty();
-}
-
 static void LScreen_Tick(struct LScreen* s) {
 	struct LWidget* w = s->selectedWidget;
 	if (w && w->VTABLE->Tick) w->VTABLE->Tick(w);
@@ -194,7 +186,6 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->Init = NULL; /* screens should always override this */
 	s->Show = LScreen_NullFunc;
 	s->Free = LScreen_NullFunc;
-	s->Draw       = LScreen_Draw;
 	s->Tick       = LScreen_Tick;
 	s->KeyDown    = LScreen_KeyDown;
 	s->KeyPress   = LScreen_KeyPress;
