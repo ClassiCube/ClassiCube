@@ -21,7 +21,7 @@
 #include "LBackend.h"
 #include "PackedCol.h"
 
-static struct LScreen* activeScreen;
+struct LScreen* Launcher_Active;
 struct FontDesc Launcher_LogoFont;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -36,16 +36,17 @@ static struct Bitmap dirtBmp, stoneBmp;
 
 static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
-	if (!activeScreen) return;
+	if (!Launcher_Active) return;
 	
-	activeScreen->Free(activeScreen);
-	LBackend_CloseScreen(activeScreen);
+	Launcher_Active->Free(Launcher_Active);
+	LBackend_CloseScreen(Launcher_Active);
+	Launcher_Active = NULL;
 }
 
 void Launcher_SetScreen(struct LScreen* screen) {
 	int i;
 	CloseActiveScreen();
-	activeScreen = screen;
+	Launcher_Active = screen;
 	if (!screen->numWidgets) screen->Init(screen);
 
 	screen->Show(screen);
@@ -168,7 +169,7 @@ static void OnResize(void* obj) {
 	LBackend_FreeFramebuffer();
 	LBackend_InitFramebuffer();
 
-	if (activeScreen) activeScreen->Layout(activeScreen);
+	if (Launcher_Active) Launcher_Active->Layout(Launcher_Active);
 	LBackend_Redraw();
 }
 
@@ -185,19 +186,19 @@ static cc_bool IsShutdown(int key) {
 
 static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
-	activeScreen->KeyDown(activeScreen, key, was);
+	Launcher_Active->KeyDown(Launcher_Active, key, was);
 }
 
 static void OnKeyPress(void* obj, int c) {
-	activeScreen->KeyPress(activeScreen, c);
+	Launcher_Active->KeyPress(Launcher_Active, c);
 }
 
 static void OnTextChanged(void* obj, const cc_string* str) {
-	activeScreen->TextChanged(activeScreen, str);
+	Launcher_Active->TextChanged(Launcher_Active, str);
 }
 
 static void OnMouseWheel(void* obj, float delta) {
-	activeScreen->MouseWheel(activeScreen, delta);
+	Launcher_Active->MouseWheel(Launcher_Active, delta);
 }
 
 
@@ -225,7 +226,6 @@ static void Launcher_Free(void) {
 	hasBitmappedFont = false;
 
 	CloseActiveScreen();
-	activeScreen = NULL;
 	LBackend_FreeFramebuffer();
 }
 
@@ -275,6 +275,7 @@ void Launcher_Run(void) {
 		Window_ProcessEvents();
 		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
+		Launcher_Active->Tick(Launcher_Active);
 		LBackend_Tick();
 		Thread_Sleep(10);
 	}

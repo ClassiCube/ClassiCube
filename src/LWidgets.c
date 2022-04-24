@@ -161,8 +161,7 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text) {
 	w->VTABLE = &lcheckbox_VTABLE;
 	w->tabSelectable = true;
 
-	String_InitArray(w->text, w->_textBuffer);
-	String_AppendConst(&w->text, text);
+	w->text = String_FromReadonly(text);
 	LBackend_CheckboxInit(w);
 }
 

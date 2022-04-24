@@ -26,7 +26,6 @@
 #include "Event.h"
 
 struct FontDesc titleFont, textFont, hintFont;
-static struct LScreen* activeScreen;
 /* Contains the pixels that are drawn to the window */
 static struct Bitmap framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
@@ -87,8 +86,8 @@ void LBackend_Free(void) {
 	Font_Free(&hintFont);
 }
 
-void LBackend_SetScreen(struct LScreen* s)   { activeScreen = s; }
-void LBackend_CloseScreen(struct LScreen* s) { activeScreen = NULL; }
+void LBackend_SetScreen(struct LScreen* s)   { }
+void LBackend_CloseScreen(struct LScreen* s) { }
 
 void LBackend_WidgetRepositioned(struct LWidget* w) { 
 }
@@ -165,7 +164,7 @@ static CC_NOINLINE void DrawWidget(struct LWidget* w) {
 }
 
 static CC_NOINLINE void RedrawAll(void) {
-	struct LScreen* s = activeScreen;
+	struct LScreen* s = Launcher_Active;
 	int i;
 	s->DrawBackground(s, &framebuffer);
 	
@@ -176,7 +175,7 @@ static CC_NOINLINE void RedrawAll(void) {
 }
 
 static CC_NOINLINE void RedrawDirty(void) {
-	struct LScreen* s = activeScreen;
+	struct LScreen* s = Launcher_Active;
 	struct LWidget* w;
 	int i;
 	
@@ -201,8 +200,6 @@ void LBackend_Redraw(void) {
 }
 
 void LBackend_Tick(void) {
-	activeScreen->Tick(activeScreen);
-
 	if (pendingRedraw & REDRAW_ALL) {
 		RedrawAll();
 		pendingRedraw = 0;
@@ -224,16 +221,16 @@ void LBackend_Tick(void) {
 static void ReqeustRedraw(void* obj) { LBackend_Redraw(); }
 
 static void OnPointerDown(void* obj, int idx) {
-	activeScreen->MouseDown(activeScreen, idx);
+	Launcher_Active->MouseDown(Launcher_Active, idx);
 }
 
 static void OnPointerUp(void* obj, int idx) {
-	activeScreen->MouseUp(activeScreen, idx);
+	Launcher_Active->MouseUp(Launcher_Active, idx);
 }
 
 static void OnPointerMove(void* obj, int idx) {
-	if (!activeScreen) return;
-	activeScreen->MouseMove(activeScreen, idx);
+	if (!Launcher_Active) return;
+	Launcher_Active->MouseMove(Launcher_Active, idx);
 }
 
 static void HookEvents(void) {
@@ -391,7 +388,7 @@ void LBackend_InputInit(struct LInput* w, int width) {
 }
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
-	struct LScreen* s  = activeScreen;
+	struct LScreen* s  = Launcher_Active;
 	struct Bitmap* bmp = &framebuffer;
 	BitmapCol color    = BitmapCol_Make(97, 81, 110, 255);
 

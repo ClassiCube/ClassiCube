@@ -1469,7 +1469,7 @@ static struct LWidget* settings_classic[] = {
 static void SettingsScreen_LockOrientation(struct LCheckbox* w) {
 	Options_SetBool(OPT_LANDSCAPE_MODE, w->value);
 	Window_LockLandscapeOrientation(w->value);
-	Launcher_Redraw();
+	LBackend_Redraw();
 }
 #else
 static void SettingsScreen_AutoClose(struct LCheckbox* w) {

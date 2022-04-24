@@ -68,7 +68,6 @@ struct LCheckbox {
 	LWidget_Layout
 	cc_bool value;
 	cc_string text;
-	char _textBuffer[STRING_SIZE];
 	void (*ValueChanged)(struct LCheckbox* w);
 };
 CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text);

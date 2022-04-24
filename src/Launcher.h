@@ -7,8 +7,11 @@
 struct LScreen;
 struct FontDesc;
 
+/* The screen/menu currently being shown */
+extern struct LScreen* Launcher_Active;
 /* Default font for screen/menu titles */
 extern struct FontDesc Launcher_LogoFont;
+
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit */
 extern cc_bool Launcher_ShouldExit;
 /* Whether game should be updated on exit */

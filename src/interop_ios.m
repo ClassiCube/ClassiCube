@@ -11,6 +11,7 @@
 #include "LWidgets.h"
 #include "LScreens.h"
 #include "LWeb.h"
+#include "Funcs.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
 #include <UIKit/UIPasteboard.h>
@@ -304,32 +305,6 @@ void Window_Create2D(int width, int height) {
     controller.view = view_handle;
 }
 
-static CGContextRef win_ctx;
-static struct Bitmap fb_bmp;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-    bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-    fb_bmp = *bmp;
-    
-    win_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, bmp->height, 8, bmp->width * 4,
-                                    CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-}
-
-void Window_DrawFramebuffer(Rect2D r) {
-    CGRect rect;
-    rect.origin.x    = r.X;
-    rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
-    rect.size.width  = r.Width;
-    rect.size.height = r.Height;
-    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
-    // TODO always redraws entire launcher which is quite terrible performance wise
-    //[win_handle setNeedsDisplayInRect:rect];
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-    Mem_Free(bmp->scan0);
-    CGContextRelease(win_ctx);
-}
-
 
 /*#########################################################################################################################*
  *--------------------------------------------------------3D window--------------------------------------------------------*
@@ -459,7 +434,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-    for (int i = 0; i < numArgs; i++) {
+    for (int i = 0; i < numArgs; i++)
+    {
         String_CopyToRawArray(gameArgs[i], &args[i]);
     }
 
@@ -469,7 +445,8 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
     int count = gameNumArgs;
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++)
+    {
         args[i] = String_FromRawArray(gameArgs[i]);
     }
 
@@ -495,7 +472,8 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
     int len = String_CalcLen(path, NATIVE_STR_LEN);
     
     // get rid of filename at end of directory
-    for (int i = len - 1; i >= 0; i--, len--) {
+    for (int i = len - 1; i >= 0; i--, len--)
+    {
         if (path[i] == '/') break;
     }
 
@@ -586,11 +564,9 @@ void LBackend_WidgetRepositioned(struct LWidget* w) {
     [view setFrame:rect];
 }
 
-struct LScreen* active;
 void LBackend_SetScreen(struct LScreen* s) {
-    active = s;
-    
-    for (int i = 0; i < s->numWidgets; i++) {
+    for (int i = 0; i < s->numWidgets; i++)
+    {
         void* obj = s->widgets[i]->meta;
         if (!obj) continue;
         
@@ -604,7 +580,8 @@ void LBackend_CloseScreen(struct LScreen* s) {
     
     // remove all widgets from previous screen
     NSArray<UIView*>* elems = [view_handle subviews];
-    for (UIView* view in elems) {
+    for (UIView* view in elems)
+    {
         [view removeFromSuperview];
     }
 }
@@ -618,11 +595,13 @@ static void AssignView(void* widget, UIView* view) {
 }
 
 static struct LWidget* FindWidgetForView(id obj) {
-    for (int i = 0; i < active->numWidgets; i++) {
-        void* meta = active->widgets[i]->meta;
+    struct LScreen* s = Launcher_Active;
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        void* meta = s->widgets[i]->meta;
         if (meta != (__bridge void*)obj) continue;
         
-        return active->widgets[i];
+        return s->widgets[i];
     }
     return NULL;
 }
@@ -713,11 +692,29 @@ void LBackend_Init(void) {
     CFBridgingRetain(ui_controller); // prevent GC TODO even needed?
 }
 
+void LBackend_MarkDirty(void* widget) { }
+void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
 
-void LBackend_RedrawScreen(struct LScreen* s) {
-    s->DrawBackground(s, &Launcher_Framebuffer);
-    Launcher_MarkAllDirty();
+static CGContextRef win_ctx;
+void LBackend_InitFramebuffer(void) { }
+void LBackend_FreeFramebuffer(void) { }
+
+void LBackend_Redraw(void) {
+    struct Bitmap fb_bmp;
+    fb_bmp.width  = max(WindowInfo.Width,  1);
+    fb_bmp.height = max(WindowInfo.Height, 1);
+    fb_bmp.scan0  = (BitmapCol*)Mem_Alloc(fb_bmp.width * fb_bmp.height, 4, "window pixels");
+    
+    win_ctx = CGBitmapContextCreate(fb_bmp.scan0, fb_bmp.width, fb_bmp.height, 8, fb_bmp.width * 4,
+                                    CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+    
+    struct LScreen* s = Launcher_Active;
+    s->DrawBackground(s, &fb_bmp);
+    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
+    
+    Mem_Free(fb_bmp.scan0);
+    CGContextRelease(win_ctx);
 }
 
 /*########################################################################################################################*
