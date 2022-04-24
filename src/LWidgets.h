@@ -81,6 +81,8 @@ struct LInput {
 	/* The type of this input (see KEYBOARD_TYPE_ enum in Window.h) */
 	/* If type is KEYBOARD_TYPE_PASSWORD, all characters are drawn as *. */
 	cc_uint8 inputType;
+	/* Whether caret is currently visible */
+	cc_bool caretShow;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
