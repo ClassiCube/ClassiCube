@@ -17,10 +17,17 @@ struct LTable;
 
 void LBackend_Init(void);
 void LBackend_Free(void);
-void LBackend_WidgetRepositioned(struct LWidget* w);
 void LBackend_SetScreen(struct LScreen* s);
 void LBackend_CloseScreen(struct LScreen* s);
-void LBackend_RedrawScreen(struct LScreen* s);
+
+/* Resets pixels to default, then draws widgets of current screen over it */
+void LBackend_Redraw(void);
+void LBackend_Tick(void);
+void LBackend_WidgetRepositioned(struct LWidget* w);
+void LBackend_MarkDirty(void* widget);
+
+void LBackend_InitFramebuffer(void);
+void LBackend_FreeFramebuffer(void);
 
 void LBackend_ButtonInit(struct LButton* w, int width, int height);
 void LBackend_ButtonUpdate(struct LButton* w);

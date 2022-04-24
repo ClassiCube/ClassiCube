@@ -7,8 +7,8 @@
 struct LScreen;
 struct FontDesc;
 
-/* Contains the pixels that are drawn to the window */
-extern struct Bitmap Launcher_Framebuffer;
+/* The screen/menu currently being shown */
+extern struct LScreen* Launcher_Active;
 /* Default font for screen/menu titles */
 extern struct FontDesc Launcher_LogoFont;
 
@@ -61,17 +61,6 @@ void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int he
 /* Fills the entire contents of the given bitmap with the default background */
 /* NOTE: Also draws titlebar at top, if current screen permits it */
 void Launcher_DrawBackgroundAll(struct Bitmap* bmp);
-
-/* Redraws the specified region with the background pixels. */
-/* Also marks that area as neeing to be redrawn. */
-void Launcher_ResetArea(int x, int y, int width, int height);
-/* Resets pixels to default, then draws widgets of current screen over it. */
-/* Marks the entire window as needing to be redrawn. */
-void Launcher_Redraw(void);
-/* Marks the given area/region as needing to be redrawn. */
-CC_NOINLINE void Launcher_MarkDirty(int x, int y, int width, int height);
-/* Marks the entire window as needing to be redrawn. */
-CC_NOINLINE void Launcher_MarkAllDirty(void);
 
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);

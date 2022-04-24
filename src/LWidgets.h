@@ -39,6 +39,8 @@ struct LWidgetVTABLE {
 	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
 	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
+	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
+	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
@@ -50,8 +52,6 @@ struct LWidgetVTABLE {
 struct LWidget { LWidget_Layout };
 void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 void LWidget_CalcPosition(void* widget);
-void LWidget_Draw(void* widget);
-void LWidget_Redraw(void* widget);
 void LWidget_CalcOffsets(void);
 
 struct LButton {
@@ -68,7 +68,6 @@ struct LCheckbox {
 	LWidget_Layout
 	cc_bool value;
 	cc_string text;
-	char _textBuffer[STRING_SIZE];
 	void (*ValueChanged)(struct LCheckbox* w);
 };
 CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text);
@@ -82,6 +81,8 @@ struct LInput {
 	/* The type of this input (see KEYBOARD_TYPE_ enum in Window.h) */
 	/* If type is KEYBOARD_TYPE_PASSWORD, all characters are drawn as *. */
 	cc_uint8 inputType;
+	/* Whether caret is currently visible */
+	cc_bool caretShow;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
@@ -142,7 +143,7 @@ struct LTableColumn {
 	/* Draws the value of this column for the given row. */
 	/* If args.Text is changed to something, that text gets drawn afterwards. */
 	/* Most of the time that's all you need to do. */
-	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell);
+	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp);
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
