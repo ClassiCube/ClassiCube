@@ -771,6 +771,10 @@ enum ADV_MASK {
 	xP1_yM1_zP1, xP1_yCC_zP1, xP1_yP1_zP1,
 };
 
+/* Returns a 3 bit value where */
+/* - bit 0 set: Y-1 is in light */
+/* - bit 1 set: Y   is in light */
+/* - bit 2 set: Y+1 is in light */
 static int Adv_Lit(int x, int y, int z, int cIndex) {
 	int flags, offset, lightFlags;
 	BlockID block;
@@ -790,16 +794,17 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 	flags |= Lighting_IsLit_Fast(x, y - offset, z) ? 1 : 0;
 
 	/* Light is same for all the horizontal faces */
-	flags |= Lighting_IsLit_Fast(x, y, z) ? 2 : 0;
+	flags |= Lighting_IsLit_Fast(x, y, z) ? 1 << 1 : 0;
 
 	/* Use fact Light((Y+1).YMin) == Light(Y.YMax) */
 	offset = (lightFlags >> FACE_YMAX) & 1;
-	flags |= Lighting_IsLit_Fast(x, (y + 1) - offset, z) ? 4 : 0;
+	flags |= Lighting_IsLit_Fast(x, (y + 1) - offset, z) ? 1 << 2 : 0;
 
-	/* Dynamic lighting */
-	if (Blocks.FullBright[block])                       flags |= 5;
-	if (Blocks.FullBright[Builder_Chunk[cIndex + 324]]) flags |= 4;
+	/* If a block is fullbright, it should also look as if that spot is lit */
 	if (Blocks.FullBright[Builder_Chunk[cIndex - 324]]) flags |= 1;
+	if (Blocks.FullBright[block])                       flags |= 1 << 1;
+	if (Blocks.FullBright[Builder_Chunk[cIndex + 324]]) flags |= 1 << 2;
+	
 	return flags;
 }
 
