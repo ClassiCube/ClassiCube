@@ -383,7 +383,6 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static TimeMS caretStart;
-static cc_bool lastCaretShow;
 static Rect2D caretRect, lastCaretRect;
 #define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
 

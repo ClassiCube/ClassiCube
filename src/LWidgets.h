@@ -6,6 +6,10 @@
    Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
+enum LWIDGET_TYPE {
+	LWIDGET_BUTTON, LWIDGET_CHECKBOX, LWIDGET_INPUT,
+	LWIDGET_LABEL,  LWIDGET_LINE, LWIDGET_SLIDER, LWIDGET_TABLE
+};
 
 struct LWidgetVTABLE {
 	/* Called to draw contents of this widget */
@@ -41,6 +45,7 @@ struct LWidgetVTABLE {
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
 	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
 	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
+	cc_uint8 type;                 /* Type of this widget */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \

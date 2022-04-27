@@ -132,6 +132,7 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 };
 void LButton_Init(struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
+	w->type   = LWIDGET_BUTTON;
 	w->tabSelectable = true;
 	LBackend_ButtonInit(w, width, height);
 	LButton_SetConst(w, text);
@@ -159,6 +160,7 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 };
 void LCheckbox_Init(struct LCheckbox* w, const char* text) {
 	w->VTABLE = &lcheckbox_VTABLE;
+	w->type   = LWIDGET_CHECKBOX;
 	w->tabSelectable = true;
 
 	w->text = String_FromReadonly(text);
@@ -322,6 +324,7 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 };
 void LInput_Init(struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
+	w->type   = LWIDGET_INPUT;
 	w->tabSelectable = true;
 	w->opaque = true;
 	String_InitArray(w->text, w->_textBuffer);
@@ -376,6 +379,7 @@ static const struct LWidgetVTABLE llabel_VTABLE = {
 };
 void LLabel_Init(struct LLabel* w, const char* text) {
 	w->VTABLE = &llabel_VTABLE;
+	w->type   = LWIDGET_LABEL;
 
 	String_InitArray(w->text, w->_textBuffer);
 	LBackend_LabelInit(w);
@@ -410,6 +414,7 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 };
 void LLine_Init(struct LLine* w, int width) {
 	w->VTABLE = &lline_VTABLE;
+	w->type   = LWIDGET_LINE;
 	LBackend_LineInit(w, width);
 }
 
@@ -435,6 +440,7 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 };
 void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
 	w->VTABLE = &lslider_VTABLE;
+	w->type   = LWIDGET_SLIDER;
 	w->color  = color;
 	w->opaque = true;
 	LBackend_SliderInit(w, width, height);
@@ -626,6 +632,7 @@ static const struct LWidgetVTABLE ltable_VTABLE = {
 void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;
+	w->type       = LWIDGET_TABLE;
 	w->columns    = tableColumns;
 	w->numColumns = Array_Elems(tableColumns);
 	w->rowFont    = rowFont;
