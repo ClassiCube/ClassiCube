@@ -209,7 +209,7 @@ static cc_bool TerrainParticle_CanPass(BlockID block) {
 }
 
 static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
-	return PhysicsTick(&p->base, 5.4f, TerrainParticle_CanPass, delta);
+	return PhysicsTick(&p->base, Blocks.ParticleGravity[p->block], TerrainParticle_CanPass, delta);
 }
 
 static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct VertexTextured* vertices) {

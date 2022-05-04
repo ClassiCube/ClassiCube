@@ -100,6 +100,8 @@ CC_VAR extern struct _BlockLists {
 	cc_uint8 Hidden[BLOCK_COUNT * BLOCK_COUNT];
 	/* Bit flags of which faces of this block can stretch with greedy meshing. */
 	cc_uint8 CanStretch[BLOCK_COUNT];
+	/* Gravity of particles spawned when this block is broken */
+	float ParticleGravity[BLOCK_COUNT];
 } Blocks;
 
 #define Block_Tint(col, block)\
