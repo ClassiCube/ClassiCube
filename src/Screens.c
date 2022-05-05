@@ -801,7 +801,7 @@ static cc_string ChatScreen_GetChat(int i) {
 }
 
 static cc_string ChatScreen_GetStatus(int i)       { return Chat_Status[i]; }
-static cc_string ChatScreen_GetBottomRight(int i)  { return Chat_BottomRight[2 - i]; }
+static cc_string ChatScreen_GetBottomRight(int i)  { return Chat_BottomRight[5 - i]; }
 static cc_string ChatScreen_GetClientStatus(int i) { return Chat_ClientStatus[i]; }
 
 static void ChatScreen_FreeChatFonts(struct ChatScreen* s) {
@@ -937,12 +937,12 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 		s->chatIndex++;
 		if (!Gui.Chatlines) return;
 		TextGroupWidget_ShiftUp(&s->chat);
-	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
+	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_6) {
 		/* Status[0] is for texture pack downloading message */
 		TextGroupWidget_Redraw(&s->status, 1 + (type - MSG_TYPE_STATUS_1));
-	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
-		/* Bottom3 is top most line, so need to redraw index 0 */
-		TextGroupWidget_Redraw(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1));
+	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_6) {
+		/* Bottom5 is top most line, so need to redraw index 0 */
+		TextGroupWidget_Redraw(&s->bottomRight, 5 - (type - MSG_TYPE_BOTTOMRIGHT_1));
 	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
 		TextWidget_Set(&s->announcement, msg, &s->announcementFont);
 	} else if (type == MSG_TYPE_BIGANNOUNCEMENT) {
