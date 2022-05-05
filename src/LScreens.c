@@ -159,25 +159,12 @@ static void LScreen_MouseMove(struct LScreen* s, int idx) {
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
 static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
-	cc_string title_fore, title_back;
-	struct DrawTextArgs args;
-	int x;
-
-	if (!s->title_fore) {
+	if (!s->title) {
 		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
 		return;
 	}
-	title_fore = String_FromReadonly(s->title_fore);
-	title_back = String_FromReadonly(s->title_back);
-
 	Launcher_DrawBackgroundAll(bmp);
-	DrawTextArgs_Make(&args, &title_fore, &Launcher_LogoFont, false);
-	x = bmp->width / 2 - Drawer2D_TextWidth(&args) / 2;
-
-	args.text = title_back;
-	Drawer2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
-	args.text = title_fore;
-	Drawer2D_DrawText(bmp, &args, x,                     0);
+	LBackend_DrawLogo(bmp, s->title);
 }
 
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
@@ -248,7 +235,7 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 
 	Options_SaveIfChanged();
 	Launcher_LoadTheme();
-	Launcher_UpdateLogoFont();
+	LBackend_UpdateLogoFont();
 	MainScreen_SetActive();
 }
 
@@ -322,8 +309,7 @@ void ChooseModeScreen_SetActive(cc_bool firstTime) {
 	s->Layout    = ChooseModeScreen_Layout;
 	s->firstTime = firstTime;
 
-	s->title_fore    = "&fChoose mode";
-	s->title_back    = "&0Choose mode";
+	s->title         = "Choose mode";
 	s->onEnterWidget = (struct LWidget*)&s->btnEnhanced;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -511,8 +497,7 @@ void ColoursScreen_SetActive(void) {
 	s->KeyDown    = ColoursScreen_KeyDown;
 	s->MouseWheel = ColoursScreen_MouseWheel;
 
-	s->title_fore = "&fCustom theme";
-	s->title_back = "&0Custom theme";
+	s->title      = "Custom theme";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -654,8 +639,7 @@ void DirectConnectScreen_SetActive(void) {
 	s->Init          = DirectConnectScreen_Init;
 	s->Layout        = DirectConnectScreen_Layout;
 
-	s->title_fore    = "&fDirect connect";
-	s->title_back    = "&0Direct connect";
+	s->title         = "Direct connect";
 	s->onEnterWidget = (struct LWidget*)&s->btnConnect;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -723,8 +707,7 @@ void MFAScreen_SetActive(void) {
 	s->Show   = MFAScreen_Show;
 	s->Layout = MFAScreen_Layout;
 
-	s->title_fore    = "&fEnter login code";
-	s->title_back    = "&0Enter login code";
+	s->title         = "Enter login code";
 	s->onEnterWidget = (struct LWidget*)&s->btnSignIn;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -1038,8 +1021,7 @@ void MainScreen_SetActive(void) {
 	s->Tick   = MainScreen_Tick;
 	s->Layout = MainScreen_Layout;
 
-	s->title_fore    = "&fClassiCube";
-	s->title_back    = "&0ClassiCube";
+	s->title         = "ClassiCube";
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -1556,8 +1538,7 @@ void SettingsScreen_SetActive(void) {
 	s->Show   = SettingsScreen_Show;
 	s->Layout = SettingsScreen_Layout;
 
-	s->title_fore = "&fOptions";
-	s->title_back = "&0Options";
+	s->title  = "Options";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -1626,8 +1607,7 @@ void ThemesScreen_SetActive(void) {
 	s->Init   = ThemesScreen_Init;
 	s->Layout = ThemesScreen_Layout;
 
-	s->title_fore = "&fSelect theme";
-	s->title_back = "&0Select theme";
+	s->title  = "Select theme";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -1891,8 +1871,7 @@ void UpdatesScreen_SetActive(void) {
 	s->Free   = UpdatesScreen_Free;
 	s->Layout = UpdatesScreen_Layout;
 
-	s->title_fore = "&fUpdate game";
-	s->title_back = "&0Update game";
+	s->title  = "Update game";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 #endif

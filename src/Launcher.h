@@ -7,10 +7,9 @@
 struct LScreen;
 struct FontDesc;
 
+#define LOGO_FONT_SIZE 32
 /* The screen/menu currently being shown */
 extern struct LScreen* Launcher_Active;
-/* Default font for screen/menu titles */
-extern struct FontDesc Launcher_LogoFont;
 
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit */
 extern cc_bool Launcher_ShouldExit;
@@ -52,8 +51,10 @@ void Launcher_LoadTheme(void);
 /* NOTE: Does not save options file itself. */
 void Launcher_SaveTheme(void);
 
-/* Updates logo font. */
-void Launcher_UpdateLogoFont(void);
+/* Whether logo should be drawn using bitmapped text */
+cc_bool Launcher_BitmappedText(void);
+/* Draws logo styled text using the given font */
+void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* bmp);
 /* Attempts to load font and terrain from texture pack. */
 void Launcher_TryLoadTexturePack(void);
 /* Fills the given region of the given bitmap with the default background */

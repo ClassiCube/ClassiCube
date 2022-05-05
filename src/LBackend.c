@@ -25,7 +25,7 @@
 #include "Utils.h"
 #include "Event.h"
 
-struct FontDesc titleFont, textFont, hintFont;
+struct FontDesc titleFont, textFont, hintFont, logoFont;
 /* Contains the pixels that are drawn to the window */
 static struct Bitmap framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
@@ -84,6 +84,17 @@ void LBackend_Free(void) {
 	Font_Free(&titleFont);
 	Font_Free(&textFont);
 	Font_Free(&hintFont);
+	Font_Free(&logoFont);
+}
+
+void LBackend_UpdateLogoFont(void) {
+	Font_Free(&logoFont);
+	Drawer2D.BitmappedText = Launcher_BitmappedText();
+	Drawer2D_MakeFont(&logoFont, LOGO_FONT_SIZE, FONT_FLAGS_NONE);
+	Drawer2D.BitmappedText = false;
+}
+void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
+	Launcher_DrawLogo(&logoFont, title, bmp);
 }
 
 void LBackend_SetScreen(struct LScreen* s)   { }

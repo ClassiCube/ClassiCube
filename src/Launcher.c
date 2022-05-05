@@ -22,8 +22,6 @@
 #include "PackedCol.h"
 
 struct LScreen* Launcher_Active;
-struct FontDesc Launcher_LogoFont;
-
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE], userBuffer[STRING_SIZE];
 cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
@@ -222,7 +220,6 @@ static void Launcher_Free(void) {
 	Event_UnregisterAll();
 	LBackend_Free();
 	Flags_Free();
-	Font_Free(&Launcher_LogoFont);
 	hasBitmappedFont = false;
 
 	CloseActiveScreen();
@@ -459,7 +456,7 @@ void Launcher_TryLoadTexturePack(void) {
 
 	/* user selected texture pack is missing some required .png files */
 	if (!hasBitmappedFont || dirtBmp.scan0 == NULL) ExtractTexturePack(&defZip);
-	Launcher_UpdateLogoFont();
+	LBackend_UpdateLogoFont();
 }
 
 
@@ -501,10 +498,21 @@ void Launcher_DrawBackgroundAll(struct Bitmap* bmp) {
 	}
 }
 
-void Launcher_UpdateLogoFont(void) {
-	Font_Free(&Launcher_LogoFont);
-	Drawer2D.BitmappedText = (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
-	Drawer2D_MakeFont(&Launcher_LogoFont, 32, FONT_FLAGS_NONE);
-	Drawer2D.BitmappedText = false;
+cc_bool Launcher_BitmappedText(void) {
+	return (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
+}
+
+void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* bmp) {
+	cc_string title = String_FromReadonly(text);
+	struct DrawTextArgs args;
+	int x;
+
+	DrawTextArgs_Make(&args, &title, font, false);
+	x = bmp->width / 2 - Drawer2D_TextWidth(&args) / 2;
+
+	Drawer2D.Colors['f'] = BITMAPCOL_BLACK;
+	Drawer2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
+	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
+	Drawer2D_DrawText(bmp, &args, x,                     0);
 }
 #endif
