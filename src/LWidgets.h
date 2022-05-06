@@ -11,6 +11,13 @@ enum LWIDGET_TYPE {
 	LWIDGET_LABEL,  LWIDGET_LINE, LWIDGET_SLIDER, LWIDGET_TABLE
 };
 
+#define LCONSTRAINT_TYPE_X 0x0100
+#define LCONSTRAINT_TYPE_Y 0x0200
+#define LConstraint_None { 0, 0 }
+#define LConstraint_X(anchor, offset) { LCONSTRAINT_TYPE_X | anchor, offset }
+#define LConstraint_Y(anchor, offset) { LCONSTRAINT_TYPE_Y | anchor, offset }
+struct LConstraint { short type, offset; };
+
 struct LWidgetVTABLE {
 	/* Called to draw contents of this widget */
 	void (*Draw)(void* widget);
@@ -51,7 +58,8 @@ struct LWidgetVTABLE {
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
 	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
 	Rect2D last;                   /* Widget's last drawn area */ \
-	void* meta;                    /* Backend specific data */
+	void* meta;                    /* Backend specific data */ \
+	const struct LConstraint* constraints;
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
@@ -64,7 +72,7 @@ struct LButton {
 	cc_string text;
 	int _textWidth, _textHeight;
 };
-CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text);
+CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LConstraint* constraints);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 CC_NOINLINE void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y);
 
@@ -75,7 +83,7 @@ struct LCheckbox {
 	cc_string text;
 	void (*ValueChanged)(struct LCheckbox* w);
 };
-CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text);
+CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LConstraint* constraints);
 
 struct LInput;
 struct LInput {
@@ -99,7 +107,7 @@ struct LInput {
 	int _textHeight;
 	char _textBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LInput_Init(struct LInput* w, int width, const char* hintText);
+CC_NOINLINE void LInput_Init(struct LInput* w, int width, const char* hintText, const struct LConstraint* constraints);
 CC_NOINLINE void LInput_UNSAFE_GetText(struct LInput* w, cc_string* text);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
 CC_NOINLINE void LInput_ClearText(struct LInput* w);
@@ -116,7 +124,7 @@ struct LLabel {
 	cc_string text;
 	char _textBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LLabel_Init(struct LLabel* w, const char* text);
+CC_NOINLINE void LLabel_Init(struct LLabel* w, const char* text, const struct LConstraint* constraints);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const cc_string* text);
 CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
@@ -125,7 +133,7 @@ struct LLine {
 	LWidget_Layout
 	int _width;
 };
-CC_NOINLINE void LLine_Init(struct LLine* w, int width);
+CC_NOINLINE void LLine_Init(struct LLine* w, int width, const struct LConstraint* constraints);
 CC_NOINLINE BitmapCol LLine_GetColor(void);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
@@ -134,7 +142,7 @@ struct LSlider {
 	int value, _width, _height;
 	BitmapCol color;
 };
-CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color);
+CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color, const struct LConstraint* constraints);
 CC_NOINLINE void LSlider_SetProgress(struct LSlider* w, int progress);
 
 struct ServerInfo;

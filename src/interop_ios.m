@@ -740,19 +740,17 @@ void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
 void LBackend_Redraw(void) {
-    struct Bitmap fb_bmp;
-    fb_bmp.width  = max(WindowInfo.Width,  1);
-    fb_bmp.height = max(WindowInfo.Height, 1);
-    fb_bmp.scan0  = (BitmapCol*)Mem_Alloc(fb_bmp.width * fb_bmp.height, 4, "window pixels");
+    struct Bitmap bmp;
+    bmp.width  = max(WindowInfo.Width,  1);
+    bmp.height = max(WindowInfo.Height, 1);
+    bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, 4, "window pixels");
     
-    win_ctx = CGBitmapContextCreate(fb_bmp.scan0, fb_bmp.width, fb_bmp.height, 8, fb_bmp.width * 4,
+    win_ctx = CGBitmapContextCreate(bmp.scan0, bmp.width, bmp.height, 8, bmp.width * 4,
                                     CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-    
-    struct LScreen* s = Launcher_Active;
-    s->DrawBackground(s, &fb_bmp);
+    Launcher_Active->DrawBackground(Launcher_Active, &bmp);
     
     view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
-    Mem_Free(fb_bmp.scan0);
+    Mem_Free(bmp.scan0);
     CGContextRelease(win_ctx);
 }
 
