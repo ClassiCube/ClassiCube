@@ -17,6 +17,7 @@
 #include "Options.h"
 #include "Utils.h"
 #include "LBackend.h"
+#define LAYOUTS static const struct LLayout
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -39,6 +40,14 @@ CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int idx) 
 		if (Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return w;
 	}
 	return NULL;
+}
+
+static void LScreen_DoLayout(struct LScreen* s) {
+	int i;
+	for (i = 0; i < s->numWidgets; i++) 
+	{
+		LWidget_CalcPosition(s->widgets[i]);
+	}
 }
 
 static void LScreen_Tick(struct LScreen* s) {
@@ -173,6 +182,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->Init = NULL; /* screens should always override this */
 	s->Show = LScreen_NullFunc;
 	s->Free = LScreen_NullFunc;
+	s->Layout     = LScreen_DoLayout;
 	s->Tick       = LScreen_Tick;
 	s->KeyDown    = LScreen_KeyDown;
 	s->KeyPress   = LScreen_KeyPress;
@@ -732,7 +742,19 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions
 };
 
-static const struct LConstraint main_login[] = { LConstraint_X(ANCHOR_CENTRE, -90), LConstraint_Y(ANCHOR_CENTRE, -25), LConstraint_None };
+LAYOUTS main_iptUsername[] = { LLayout_X(ANCHOR_CENTRE_MIN, -140), LLayout_Y(ANCHOR_CENTRE, -120), LLayout_End };
+LAYOUTS main_iptPassword[] = { LLayout_X(ANCHOR_CENTRE_MIN, -140), LLayout_Y(ANCHOR_CENTRE,  -75), LLayout_End };
+
+LAYOUTS main_btnLogin[]  = { LLayout_X(ANCHOR_CENTRE, -90), LLayout_Y(ANCHOR_CENTRE, -25), LLayout_End };
+LAYOUTS main_lblStatus[] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE,  20), LLayout_End };
+
+LAYOUTS main_btnResume[]  = { LLayout_X(ANCHOR_CENTRE, 90), LLayout_Y(ANCHOR_CENTRE, -25), LLayout_End };
+LAYOUTS main_btnDirect[]  = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE,  60), LLayout_End };
+LAYOUTS main_btnSPlayer[] = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE, 110), LLayout_End };
+
+LAYOUTS main_lblUpdate[]   = { LLayout_X(ANCHOR_MAX, 10), LLayout_Y(ANCHOR_MAX, 45), LLayout_End };
+LAYOUTS main_btnOptions[]  = { LLayout_X(ANCHOR_MAX,  6), LLayout_Y(ANCHOR_MAX,  6), LLayout_End };
+LAYOUTS main_btnRegister[] = { LLayout_X(ANCHOR_MIN,  6), LLayout_Y(ANCHOR_MAX,  6), LLayout_End };
 
 struct ResumeInfo {
 	cc_string user, ip, port, server, mppass;
@@ -851,18 +873,18 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->iptPassword.inputType = KEYBOARD_TYPE_PASSWORD;
 	s->lblUpdate.small       = true;
 
-	LInput_Init( &s->iptUsername, 280, "Username..", NULL);
-	LInput_Init( &s->iptPassword, 280, "Password..", NULL);
-	LButton_Init(&s->btnLogin,    100, 35, "Sign in", main_login);
-	LButton_Init(&s->btnResume,   100, 35, "Resume", NULL);
+	LInput_Init( &s->iptUsername, 280, "Username..",  main_iptUsername);
+	LInput_Init( &s->iptPassword, 280, "Password..",  main_iptPassword);
+	LButton_Init(&s->btnLogin,    100, 35, "Sign in", main_btnLogin);
+	LButton_Init(&s->btnResume,   100, 35, "Resume",  main_btnResume);
 
-	LLabel_Init( &s->lblStatus,  "", NULL);
-	LButton_Init(&s->btnDirect,  200, 35, "Direct connect", NULL);
-	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer", NULL);
+	LLabel_Init( &s->lblStatus,  "",                        main_lblStatus);
+	LButton_Init(&s->btnDirect,  200, 35, "Direct connect", main_btnDirect);
+	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer",   main_btnSPlayer);
 
-	LLabel_Init( &s->lblUpdate,   "&eChecking..", NULL);
-	LButton_Init(&s->btnRegister, 100, 35, "Register", NULL);
-	LButton_Init(&s->btnOptions,  100, 35, "Options", NULL);
+	LLabel_Init( &s->lblUpdate,   "&eChecking..",      main_lblUpdate);
+	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
+	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
@@ -891,23 +913,6 @@ static void MainScreen_Free(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	/* status should reset when user goes to another menu */
 	LLabel_SetConst(&s->lblStatus, "");
-}
-
-static void MainScreen_Layout(struct LScreen* s_) {
-	struct MainScreen* s = (struct MainScreen*)s_;
-	LWidget_SetLocation(&s->iptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140, -120);
-	LWidget_SetLocation(&s->iptPassword, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140,  -75);
-
-	LWidget_SetLocation(&s->btnLogin,  ANCHOR_CENTRE, ANCHOR_CENTRE, -90, -25);
-	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE,   0,  20);
-
-	LWidget_SetLocation(&s->btnResume,  ANCHOR_CENTRE, ANCHOR_CENTRE, 90, -25);
-	LWidget_SetLocation(&s->btnDirect,  ANCHOR_CENTRE, ANCHOR_CENTRE,  0,  60);
-	LWidget_SetLocation(&s->btnSPlayer, ANCHOR_CENTRE, ANCHOR_CENTRE,  0, 110);
-
-	LWidget_SetLocation(&s->lblUpdate,  ANCHOR_MAX, ANCHOR_MAX,  10,  45);
-	LWidget_SetLocation(&s->btnOptions, ANCHOR_MAX, ANCHOR_MAX,   6,   6);
-	LWidget_SetLocation(&s->btnRegister, ANCHOR_MIN, ANCHOR_MAX,  6,   6);
 }
 
 CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
@@ -1018,10 +1023,9 @@ static void MainScreen_Tick(struct LScreen* s_) {
 void MainScreen_SetActive(void) {
 	struct MainScreen* s = &MainScreen;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init   = MainScreen_Init;
-	s->Free   = MainScreen_Free;
-	s->Tick   = MainScreen_Tick;
-	s->Layout = MainScreen_Layout;
+	s->Init = MainScreen_Init;
+	s->Free = MainScreen_Free;
+	s->Tick = MainScreen_Tick;\
 
 	s->title         = "ClassiCube";
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
