@@ -89,9 +89,7 @@ void LBackend_Free(void) {
 
 void LBackend_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
-	Drawer2D.BitmappedText = Launcher_BitmappedText();
-	Drawer2D_MakeFont(&logoFont, LOGO_FONT_SIZE, FONT_FLAGS_NONE);
-	Drawer2D.BitmappedText = false;
+	Launcher_MakeLogoFont(&logoFont);
 }
 void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
 	Launcher_DrawLogo(&logoFont, title, bmp);

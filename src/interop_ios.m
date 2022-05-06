@@ -691,12 +691,51 @@ void LBackend_Init(void) {
     ui_controller = [[CCUIController alloc] init];
     CFBridgingRetain(ui_controller); // prevent GC TODO even needed?
 }
+static CGContextRef win_ctx;
 
 void LBackend_MarkDirty(void* widget) { }
 void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
+void LBackend_UpdateLogoFont(void) { }
 
-static CGContextRef win_ctx;
+#include <CoreText/CoreText.h>
+static void DrawText(NSAttributedString* str, struct Bitmap* bmp, int x, int y) {
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
+    CGRect bounds  = CTLineGetImageBounds(line, win_ctx);
+    int centreX    = (int)(bmp->width / 2.0f - bounds.size.width / 2.0f);
+    
+    CGContextSetTextPosition(win_ctx, centreX + x, bmp->height - y);
+    CTLineDraw(line, win_ctx);
+}
+
+void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
+    if (Launcher_BitmappedText()) {
+        struct FontDesc font;
+        Launcher_MakeLogoFont(&font);
+        Launcher_DrawLogo(&font, title, bmp);
+        // bitmapped fonts don't need to be freed
+        return;
+    }
+    UIFont* font   = [UIFont systemFontOfSize:42 weight:0.2f]; //UIFontWeightSemibold
+    NSString* text = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
+        
+    NSDictionary* attrs_bg =
+    @{
+      NSFontAttributeName : font,
+      NSForegroundColorAttributeName : [UIColor blackColor]
+    };
+    NSAttributedString* str_bg = [[NSAttributedString alloc] initWithString:text attributes:attrs_bg];
+    DrawText(str_bg, bmp, 4, 42);
+        
+    NSDictionary* attrs_fg =
+    @{
+      NSFontAttributeName : font,
+      NSForegroundColorAttributeName : [UIColor whiteColor]
+    };
+    NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
+    DrawText(str_fg, bmp, 0, 38);
+}
+
 void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
@@ -711,8 +750,8 @@ void LBackend_Redraw(void) {
     
     struct LScreen* s = Launcher_Active;
     s->DrawBackground(s, &fb_bmp);
-    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
     
+    view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
     Mem_Free(fb_bmp.scan0);
     CGContextRelease(win_ctx);
 }

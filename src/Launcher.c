@@ -515,4 +515,10 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* b
 	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
 	Drawer2D_DrawText(bmp, &args, x,                     0);
 }
+
+void Launcher_MakeLogoFont(struct FontDesc* font) {
+	Drawer2D.BitmappedText = Launcher_BitmappedText();
+	Drawer2D_MakeFont(font, 32, FONT_FLAGS_NONE);
+	Drawer2D.BitmappedText = false;
+}
 #endif
