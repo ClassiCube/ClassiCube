@@ -15,12 +15,12 @@
 #include "LBackend.h"
 
 static int flagXOffset, flagYOffset;
-static int xBorder, xBorder2, xBorder4;
-static int yBorder, yBorder2, yBorder4;
+static int oneX, twoX, fourX;
+static int oneY, twoY, fourY;
 
 void LWidget_CalcOffsets(void) {
-	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder4 = xBorder * 4;
-	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder4 = yBorder * 4;
+	oneX = Display_ScaleX(1); twoX = oneX * 2; fourX = oneX * 4;
+	oneY = Display_ScaleY(1); twoY = oneY * 2; fourY = oneY * 4;
 
 	flagXOffset  = Display_ScaleX(2);
 	flagYOffset  = Display_ScaleY(6);
@@ -58,30 +58,36 @@ static void LButton_DrawBase(struct LButton* w, struct Bitmap* bmp, int x, int y
 
 	if (Launcher_Theme.ClassicBackground) {
 		Gradient_Noise(bmp, color, 8,
-						x + xBorder,           y + yBorder,
-						w->width - xBorder2,   w->height - yBorder2);
+						x + oneX,          y + oneY,
+						w->width - twoX,   w->height - twoY);
 	} else {
 		
 		Gradient_Vertical(bmp, LButton_Expand(color, 8), LButton_Expand(color, -8),
-						  x + xBorder,         y + yBorder,
-						  w->width - xBorder2, w->height - yBorder2);
+						  x + oneX,        y + oneY,
+						  w->width - twoX, w->height - twoY);
 	}
 }
 
 static void LButton_DrawBorder(struct LButton* w, struct Bitmap* bmp, int x, int y) {
 	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
+#ifdef CC_BUILD_IOS
+	int xoff = 0; /* TODO temp hack */
+#else
+	int xoff = oneX;
+#endif
+
 	Drawer2D_Clear(bmp, backColor, 
-					x + xBorder,            y,
-					w->width - xBorder2,    yBorder);
+					x + xoff,            y,
+					w->width - 2 * xoff, oneY);
 	Drawer2D_Clear(bmp, backColor,
-					x + xBorder,            y + w->height - yBorder,
-					w->width - xBorder2,    yBorder);
+					x + xoff,            y + w->height - oneY,
+					w->width - 2 * xoff, oneY);
 	Drawer2D_Clear(bmp, backColor,
-					x,                      y + yBorder,
-					xBorder,                w->height - yBorder2);
+					x,                   y + oneY,
+					oneX,                w->height - twoY);
 	Drawer2D_Clear(bmp, backColor,
-					x + w->width - xBorder, y + yBorder,
-					xBorder,                w->height - yBorder2);
+					x + w->width - oneX, y + oneY,
+					oneX,                w->height - twoY);
 }
 
 static void LButton_DrawHighlight(struct LButton* w, struct Bitmap* bmp, int x, int y) {
@@ -92,15 +98,15 @@ static void LButton_DrawHighlight(struct LButton* w, struct Bitmap* bmp, int x, 
 		if (w->hovered) color = activeColor;
 
 		Drawer2D_Clear(bmp, color,
-						x + xBorder2,         y + yBorder,
-						w->width - xBorder4,  yBorder);
+						x + twoX,         y + oneY,
+						w->width - fourX, oneY);
 		Drawer2D_Clear(bmp, color,
-						x + xBorder,          y + yBorder2,
-						xBorder,              w->height - yBorder4);
+						x + oneX,         y + twoY,
+						oneX,             w->height - fourY);
 	} else if (!w->hovered) {
 		Drawer2D_Clear(bmp, color,
-						x + xBorder2,         y + yBorder,
-						w->width - xBorder4,  yBorder);
+						x + twoX,         y + oneY,
+						w->width - fourX, oneY);
 	}
 }
 
