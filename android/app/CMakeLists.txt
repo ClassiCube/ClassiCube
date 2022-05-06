@@ -33,7 +33,6 @@ add_library(classicube SHARED
         ../../src/Window_Android.c
         ../../src/_ftbase.c
         ../../src/Graphics_GL2.c
-        ../../src/_type1cid.c
         ../../src/Deflate.c
         ../../src/_cff.c
         ../../src/_ftsynth.c
@@ -98,6 +97,7 @@ add_library(classicube SHARED
         ../../src/EnvRenderer.c
         ../../src/Animations.c
         ../../src/LBackend.c
+        ../../src/LBackend_Android.c
         )
 
 # add lib dependencies
@@ -106,4 +106,6 @@ target_link_libraries(classicube
     EGL
     GLESv2
     log
-    OpenSLES)
+    OpenSLES
+    jnigraphics)
+

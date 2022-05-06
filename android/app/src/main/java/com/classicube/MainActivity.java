@@ -6,7 +6,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -18,7 +17,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -27,10 +28,9 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
+import android.text.style.AbsoluteSizeSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.InputQueue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -38,13 +38,13 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.view.View;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.Window;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AbsoluteLayout;
+import android.widget.Button;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -66,6 +66,7 @@ public class MainActivity extends Activity
 	// static to persist across activity destroy/create
 	static Queue<NativeCmdArgs> pending  = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	static Queue<NativeCmdArgs> freeCmds = new ConcurrentLinkedQueue<NativeCmdArgs>();
+	static boolean launcher = true;
 	
 	NativeCmdArgs getCmdArgs() {
 		NativeCmdArgs args = freeCmds.poll();
@@ -133,6 +134,7 @@ public class MainActivity extends Activity
 	final static int CMD_LOST_FOCUS  = 16;
 	final static int CMD_CONFIG_CHANGED = 17;
 	final static int CMD_LOW_MEMORY  = 18;
+	final static int CMD_2D_CREATED  = 20;
 	
 	
 	// ====================================================================
@@ -285,7 +287,7 @@ public class MainActivity extends Activity
 	
 	@Override
 	protected void onResume() {
-		attachSurface();
+		create3DView();
 		super.onResume();
 		pushCmd(CMD_APP_RESUME); 
 	}
@@ -351,6 +353,7 @@ public class MainActivity extends Activity
 			case CMD_LOST_FOCUS:	 processOnLostFocus();	 break;
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
 			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
+			case CMD_2D_CREATED:	 processOn2DCreated();	 break;
 			}
 
 			c.str = null;
@@ -383,6 +386,7 @@ public class MainActivity extends Activity
 	native void processOnLostFocus();
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
+	native void processOn2DCreated();
 	
 	native void runGameAsync();
 	native void updateInstance();
@@ -394,11 +398,86 @@ public class MainActivity extends Activity
 	volatile boolean fullscreen;
 	// static to persist across activity destroy/create
 	static final Semaphore winDestroyedSem = new Semaphore(0, true);
+	View curView;
+
+
+	// ====================================================================
+	// ----------------------------- 2D view ------------------------------
+	// ====================================================================
+	public void create2DView_async() {
+		runOnUiThread(new Runnable() {
+			public void run() { create2DView(); }
+		});
+	}
+
+	void create2DView() {
+		// setContentView, requestFocus - API level 1
+		curView       = new AbsoluteLayout(this);
+		launcher	  = true;
+
+		setContentView(curView);
+		curView.requestFocus();
+		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
+		pushCmd(CMD_2D_CREATED);
+	}
+
+	void buttonAdd() {
+		final Button btn = new Button(this);
+		runOnUiThread(new Runnable() {
+			public void run() {
+				AbsoluteLayout al = (AbsoluteLayout)curView;
+				al.addView(btn);
+			}
+		});
+	}
+
+
+	// ====================================================================
+	// ----------------------------- 3D view ------------------------------
+	// ====================================================================
 	SurfaceHolder.Callback callback;
-	CCView curView;
-	
+	public void create3DView_async() {
+		// Once a surface has been locked for drawing with canvas, can't ever be detached
+		// This means trying to attach an OpenGL ES context to the surface will fail
+		// So just destroy the current surface and make a new one
+		runOnUiThread(new Runnable() {
+			public void run() { create3DView(); }
+		});
+	}
+
+	void create3DView() {
+		// setContentView, requestFocus, getHolder, addCallback, RGBX_8888 - API level 1
+		createSurfaceCallback();
+		GameView view3D = new GameView(this);
+		curView       = view3D;
+		launcher	  = false;
+
+		view3D.getHolder().addCallback(callback);
+		view3D.getHolder().setFormat(PixelFormat.RGBX_8888);
+
+		setContentView(view3D);
+		view3D.requestFocus();
+		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
+	}
+
+	void createSurfaceCallback() {
+		if (callback != null) return;
+		try {
+			callback = new CCSurfaceCallback2();
+		} catch (NoClassDefFoundError ex) {
+			ex.printStackTrace();
+			callback = new CCSurfaceCallback();
+		}
+	}
+
+	// Called by the game thread to notify the main thread
+	// that it is safe to destroy the window surface now
+	public void processedSurfaceDestroyed() { winDestroyedSem.release(); }
+
+
 	// SurfaceHolder.Callback - API level 1
-	class CCSurfaceCallback implements SurfaceHolder.Callback {
+	class CCSurfaceCallback implements SurfaceHolder.Callback
+	{
 		public void surfaceCreated(SurfaceHolder holder) {
 			// getSurface - API level 1
 			Log.i("CC_WIN", "win created " + holder.getSurface());
@@ -434,44 +513,20 @@ public class MainActivity extends Activity
 	}
 	
 	// SurfaceHolder.Callback2 - API level 9
-	class CCSurfaceCallback2 extends CCSurfaceCallback implements SurfaceHolder.Callback2 {
+	class CCSurfaceCallback2 extends CCSurfaceCallback implements SurfaceHolder.Callback2
+	{
 		public void surfaceRedrawNeeded(SurfaceHolder holder) {
 			// getSurface - API level 1
 			Log.i("CC_WIN", "win dirty " + holder.getSurface());
 			MainActivity.this.pushCmd(CMD_WIN_REDRAW);
 		}
 	}
-	
-	// Called by the game thread to notify the main thread
-	// that it is safe to destroy the window surface now
-	public void processedSurfaceDestroyed() { winDestroyedSem.release(); }
-	
-	void createSurfaceCallback() {
-		if (callback != null) return;
-		try {
-			callback = new CCSurfaceCallback2(); 
-		} catch (NoClassDefFoundError ex) {
-			ex.printStackTrace();
-			callback = new CCSurfaceCallback();
-		}
-	}
-	 
-	void attachSurface() {
-		// setContentView, requestFocus, getHolder, addCallback, RGBX_8888 - API level 1
-		createSurfaceCallback();
-		curView = new CCView(this);
-		curView.getHolder().addCallback(callback);
-		curView.getHolder().setFormat(PixelFormat.RGBX_8888);
-		
-		setContentView(curView);
-		curView.requestFocus();
-		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
-	}
 
-	class CCView extends SurfaceView {
+	class GameView extends SurfaceView
+	{
 		SpannableStringBuilder kbText;
 
-		public CCView(Context context) {
+		public GameView(Context context) {
 			// setFocusable, setFocusableInTouchMode - API level 1
 			super(context);
 			setFocusable(true);
@@ -567,17 +622,6 @@ public class MainActivity extends Activity
 	// ---------------------------- PLATFORM ----------------------------
 	// ==================================================================
 	//  Implements java Android side of the Android Platform backend (See Platform.c)
-	public void setupForGame() {
-		// Once a surface has been locked for drawing with canvas, can't ever be detached
-		// This means trying to attach an OpenGL ES context to the surface will fail
-		// So just destroy the current surface and make a new one
-		runOnUiThread(new Runnable() {
-			public void run() {
-				attachSurface();
-			}
-		});
-	}
-	
 	public void startOpen(String url) {
 		// ACTION_VIEW, resolveActivity, getPackageManager, startActivity - API level 1
 		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -654,8 +698,9 @@ public class MainActivity extends Activity
 		if (curView == null) return;
 
 		// Try to avoid restarting input if possible
-		if (curView.kbText != null) {
-			String curText = curView.kbText.toString();
+		GameView view3D = (GameView)curView;
+		if (view3D.kbText != null) {
+			String curText = view3D.kbText.toString();
 			if (text.equals(curText)) return;
 		}
 
@@ -913,4 +958,21 @@ public class MainActivity extends Activity
 
 	native static void httpParseHeader(String header);
 	native static void httpAppendData(byte[] data, int len);
+
+
+	// ======================================================================
+	// ----------------------------- UI Backend -----------------------------
+	// ======================================================================
+	native void drawBackground(Bitmap bmp);
+	public void redrawBackground() {
+		int width  = this.curView.getWidth();
+		int height = this.curView.getHeight();
+		Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		drawBackground(bmp);
+
+		final BitmapDrawable drawable = new BitmapDrawable(bmp);
+		runOnUiThread(new Runnable() {
+			public void run() { curView.setBackgroundDrawable(drawable); }
+		});
+	}
 }
