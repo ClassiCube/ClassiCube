@@ -629,13 +629,12 @@ static const struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseDown, LTable_MouseUp, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
-void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
+void LTable_Init(struct LTable* w) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;
 	w->type       = LWIDGET_TABLE;
 	w->columns    = tableColumns;
 	w->numColumns = Array_Elems(tableColumns);
-	w->rowFont    = rowFont;
 	w->sortingCol = -1;
 	w->opaque     = true;
 	

@@ -25,7 +25,7 @@
 #include "Utils.h"
 #include "Event.h"
 
-struct FontDesc titleFont, textFont, hintFont, logoFont;
+struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
 static struct Bitmap framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
@@ -85,6 +85,7 @@ void LBackend_Free(void) {
 	Font_Free(&textFont);
 	Font_Free(&hintFont);
 	Font_Free(&logoFont);
+	Font_Free(&rowFont);
 }
 
 void LBackend_UpdateLogoFont(void) {
@@ -706,13 +707,16 @@ void LBackend_SliderDraw(struct LSlider* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-void LBackend_TableInit(struct LTable* w) { }
+void LBackend_TableInit(struct LTable* w) { 
+	if (rowFont.handle) return;
+	Drawer2D_MakeFont(&rowFont, 11, FONT_FLAGS_NONE);
+}
 void LBackend_TableUpdate(struct LTable* w) { }
 
 void LBackend_TableReposition(struct LTable* w) {
 	int rowsHeight;
 	w->hdrHeight = Drawer2D_FontHeight(&textFont, true) + hdrYPadding;
-	w->rowHeight = Drawer2D_FontHeight(w->rowFont,         true) + rowYPadding;
+	w->rowHeight = Drawer2D_FontHeight(&rowFont,  true) + rowYPadding;
 
 	w->rowsBegY = w->y + w->hdrHeight + gridlineHeight;
 	w->rowsEndY = w->y + w->height;
@@ -843,7 +847,7 @@ static void LTable_DrawRows(struct LTable* w) {
 	int i, x, y, row, end;
 
 	String_InitArray(str, strBuffer);
-	DrawTextArgs_Make(&args, &str, w->rowFont, true);
+	DrawTextArgs_Make(&args, &str, &rowFont, true);
 	cell.table = w;
 	y   = w->rowsBegY;
 	end = w->topRow + w->visibleRows;

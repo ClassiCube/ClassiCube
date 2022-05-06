@@ -123,6 +123,7 @@ CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 /* Represents a coloured translucent line separator. */
 struct LLine {
 	LWidget_Layout
+	int _width;
 };
 CC_NOINLINE void LLine_Init(struct LLine* w, int width);
 CC_NOINLINE BitmapCol LLine_GetColor(void);
@@ -130,7 +131,7 @@ CC_NOINLINE BitmapCol LLine_GetColor(void);
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {
 	LWidget_Layout
-	int value;
+	int value, _width, _height;
 	BitmapCol color;
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color);
@@ -167,8 +168,6 @@ struct LTable {
 	struct LTableColumn* columns;
 	/* Number of columns in the table. */
 	int numColumns;
-	/* Fonts for text in rows. */
-	struct FontDesc* rowFont;
 	/* Y start and end of rows and height of each row. */
 	int rowsBegY, rowsEndY, rowHeight;
 	/* Y height of headers. */
@@ -205,7 +204,7 @@ struct LTableCell { struct LTable* table; int x, y, width; };
 
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */
-void LTable_Init(struct LTable* table, struct FontDesc* rowFont);
+void LTable_Init(struct LTable* table);
 /* Resets state of a table (reset sorter, filter, etc) */
 void LTable_Reset(struct LTable* table);
 /* Adjusts Y position of rows and number of visible rows. */

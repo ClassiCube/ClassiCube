@@ -1316,7 +1316,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->iptHash.TextChanged     = ServersScreen_HashChanged;
 	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;
 
-	LTable_Init(&s->table,  &s->rowFont);
+	LTable_Init(&s->table);
 	s->table.filter       = &s->iptSearch.text;
 	s->table.selectedHash = &s->iptHash.text;
 	s->table.OnSelectedChanged = ServersScreen_OnSelectedChanged;
@@ -1324,9 +1324,6 @@ static void ServersScreen_Init(struct LScreen* s_) {
 
 static void ServersScreen_Show(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	Drawer2D_MakeFont(&s->rowFont, 11, FONT_FLAGS_NONE);
-
-	s->table.rowFont = &s->rowFont;
 	LTable_Reset(&s->table);
 	LInput_ClearText(&s->iptHash);
 	LInput_ClearText(&s->iptSearch);
@@ -1358,11 +1355,6 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 
 	LButton_SetConst(&s->btnRefresh, 
 				FetchServersTask.Base.success ? "Refresh" : "&cFailed");
-}
-
-static void ServersScreen_Free(struct LScreen* s_) {
-	struct ServersScreen* s = (struct ServersScreen*)s_;
-	Font_Free(&s->rowFont);
 }
 
 static void ServersScreen_Layout(struct LScreen* s_) {
@@ -1410,7 +1402,6 @@ void ServersScreen_SetActive(void) {
 	s->Init       = ServersScreen_Init;
 	s->Show       = ServersScreen_Show;
 	s->Tick       = ServersScreen_Tick;
-	s->Free       = ServersScreen_Free;
 	s->Layout     = ServersScreen_Layout;
 	s->MouseWheel = ServersScreen_MouseWheel;
 	s->KeyDown    = ServersScreen_KeyDown;
