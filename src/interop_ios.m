@@ -756,20 +756,29 @@ void LBackend_Redraw(void) {
     CGContextRelease(win_ctx);
 }
 
+static void LButton_UpdateBackground(struct LButton* w);
+void LBackend_ThemeChanged(void) {
+    struct LScreen* s = Launcher_Active;
+    LBackend_Redraw();
+    
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        struct LWidget* w = s->widgets[i];
+        if (w->type != LWIDGET_BUTTON) continue;
+        LButton_UpdateBackground((struct LButton*)w);
+    }
+}
+
 /*########################################################################################################################*
  *------------------------------------------------------ButtonWidget-------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_ButtonInit(struct LButton* w, int width, int height) {
-    UIButton* btn = [[UIButton alloc] init];
-    btn.frame = CGRectMake(0, 0, width, height);
-    [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
-    
-    AssignView(w, btn);
-    UpdateWidgetDimensions(w);
+static void LButton_UpdateBackground(struct LButton* w) {
+    UIButton* btn = (__bridge UIButton*)w->meta;
     // memory freeing deferred until UIImage is freed (see FreeContents)
     struct Bitmap bmp1, bmp2;
     
     Bitmap_Allocate(&bmp1, w->width, w->height);
+    w->hovered = false;
     LButton_DrawBackground(w, &bmp1, 0, 0);
     [btn setBackgroundImage:ToUIImage(&bmp1) forState:UIControlStateNormal];
     
@@ -777,6 +786,16 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
     w->hovered = true;
     LButton_DrawBackground(w, &bmp2, 0, 0);
     [btn setBackgroundImage:ToUIImage(&bmp2) forState:UIControlStateHighlighted];
+}
+
+void LBackend_ButtonInit(struct LButton* w, int width, int height) {
+    UIButton* btn = [[UIButton alloc] init];
+    btn.frame = CGRectMake(0, 0, width, height);
+    [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
+    
+    AssignView(w, btn);
+    UpdateWidgetDimensions(w);
+    LButton_UpdateBackground(w);
 }
 
 void LBackend_ButtonUpdate(struct LButton* w) {

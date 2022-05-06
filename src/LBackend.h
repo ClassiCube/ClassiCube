@@ -25,6 +25,7 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title);
 
 /* Resets pixels to default, then draws widgets of current screen over it */
 void LBackend_Redraw(void);
+void LBackend_ThemeChanged(void);
 void LBackend_Tick(void);
 void LBackend_WidgetRepositioned(struct LWidget* w);
 void LBackend_MarkDirty(void* widget);

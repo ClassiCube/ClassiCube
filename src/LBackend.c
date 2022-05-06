@@ -208,6 +208,7 @@ void LBackend_Redraw(void) {
 	pendingRedraw = REDRAW_ALL;
 	MarkAllDirty();
 }
+void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
 void LBackend_Tick(void) {
 	if (pendingRedraw & REDRAW_ALL) {

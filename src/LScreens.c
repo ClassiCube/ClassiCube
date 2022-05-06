@@ -382,7 +382,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 
 	*color = BitmapCol_Make(r, g, b, 255);
 	Launcher_SaveTheme();
-	LBackend_Redraw();
+	LBackend_ThemeChanged();
 }
 
 static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
@@ -426,7 +426,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 static void ColoursScreen_ToggleBG(struct LCheckbox* w) {
 	Launcher_Theme.ClassicBackground = w->value;
 	Launcher_SaveTheme();
-	LBackend_Redraw();
+	LBackend_ThemeChanged();
 }
 
 static void ColoursScreen_Init(struct LScreen* s_) {
@@ -1552,7 +1552,7 @@ static struct LWidget* themes_widgets[] = {
 static void ThemesScreen_Set(const struct LauncherTheme* theme) {
 	Launcher_Theme = *theme;
 	Launcher_SaveTheme();
-	LBackend_Redraw();
+	LBackend_ThemeChanged();
 }
 
 static void ThemesScreen_Modern(void* w) {
