@@ -26,36 +26,24 @@ void LWidget_CalcOffsets(void) {
 	flagYOffset  = Display_ScaleY(6);
 }
 
-void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
-	struct LWidget* w = (struct LWidget*)widget;
-	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
-	w->xOffset   = xOffset;   w->yOffset   = yOffset;
-	LWidget_CalcPosition(widget);
-}
-
 void LWidget_CalcPosition(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
 	const struct LLayout* l = w->layouts;
 	int type, anchor;
 
-	if (l) {
-		while ((type = l->type & 0xFF00)) 
+	while ((type = l->type & 0xFF00)) 
+	{
+		anchor = l->type & 0xFF;
+		switch (type)
 		{
-			anchor = l->type & 0xFF;
-			switch (type)
-			{
-			case LLAYOUT_TYPE_X:
-				w->x = Gui_CalcPos(anchor, Display_ScaleX(l->offset), w->width,  WindowInfo.Width);
-				break;
-			case LLAYOUT_TYPE_Y:
-				w->y = Gui_CalcPos(anchor, Display_ScaleY(l->offset), w->height, WindowInfo.Height);
-				break;
-			}
-			l++;
+		case LLAYOUT_TYPE_X:
+			w->x = Gui_CalcPos(anchor, Display_ScaleX(l->offset), w->width,  WindowInfo.Width);
+			break;
+		case LLAYOUT_TYPE_Y:
+			w->y = Gui_CalcPos(anchor, Display_ScaleY(l->offset), w->height, WindowInfo.Height);
+			break;
 		}
-	} else {
-		w->x = Gui_CalcPos(w->horAnchor, Display_ScaleX(w->xOffset), w->width,  WindowInfo.Width);
-		w->y = Gui_CalcPos(w->verAnchor, Display_ScaleY(w->yOffset), w->height, WindowInfo.Height);
+		l++;
 	}
 	LBackend_WidgetRepositioned(w);
 }

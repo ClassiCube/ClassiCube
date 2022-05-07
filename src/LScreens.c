@@ -1603,6 +1603,26 @@ static struct LWidget* updates_widgets[] = {
 	(struct LWidget*)&UpdatesScreen.btnRel[1], (struct LWidget*)&UpdatesScreen.btnDev[1],
 };
 
+LAYOUTS upd_lblYour[3] = { LLayout_X(ANCHOR_CENTRE, -5), LLayout_Y(ANCHOR_CENTRE, -120) };
+LAYOUTS upd_seps0[3]   = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE, -100) };
+LAYOUTS upd_seps1[3]   = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE,   -5) };
+
+LAYOUTS upd_lblRel[3]    = { LLayout_X(ANCHOR_CENTRE, -20), LLayout_Y(ANCHOR_CENTRE, -75) };
+LAYOUTS upd_lblDev[3]    = { LLayout_X(ANCHOR_CENTRE, -30), LLayout_Y(ANCHOR_CENTRE,  20) };
+LAYOUTS upd_lblInfo[3]   = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, 105) };
+LAYOUTS upd_lblStatus[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, 130) };
+LAYOUTS upd_btnBack[3]   = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, 170) };
+
+/* Update button layouts when 1 build */
+LAYOUTS upd_btnRel0_1[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, -40) };
+LAYOUTS upd_btnDev0_1[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE,  55) };
+/* Update button layouts when 2 builds */
+LAYOUTS upd_btnRel0_2[3] = { LLayout_X(ANCHOR_CENTRE, -80), LLayout_Y(ANCHOR_CENTRE, -40) };
+LAYOUTS upd_btnRel1_2[3] = { LLayout_X(ANCHOR_CENTRE,  80), LLayout_Y(ANCHOR_CENTRE, -40) };
+LAYOUTS upd_btnDev0_2[3] = { LLayout_X(ANCHOR_CENTRE, -80), LLayout_Y(ANCHOR_CENTRE,  55) };
+LAYOUTS upd_btnDev1_2[3] = { LLayout_X(ANCHOR_CENTRE,  80), LLayout_Y(ANCHOR_CENTRE,  55) };
+
+
 CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, int delta) {
 	const char* span;
 	int unit, value = Math_AbsI(delta);
@@ -1736,30 +1756,33 @@ static void UpdatesScreen_Dev_1(void* w) { UpdatesScreen_Get(false, 1); }
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	int builds    = Updater_Info.numBuilds;
 	s->widgets    = updates_widgets;
 	s->numWidgets = Array_Elems(updates_widgets);
 
 	if (Updater_Info.numBuilds < 2) s->numWidgets -= 2;
 	if (Updater_Info.numBuilds < 1) s->numWidgets -= 2;
 
-	LLabel_Init(&s->lblYour, "Your build: (unknown)", NULL);
-	LLine_Init( &s->seps[0],   320, NULL);
-	LLine_Init( &s->seps[1],   320, NULL);
+	LLabel_Init(&s->lblYour, "Your build: (unknown)", upd_lblYour);
+	LLine_Init( &s->seps[0],   320,                   upd_seps0);
+	LLine_Init( &s->seps[1],   320,                   upd_seps1);
 
-	LLabel_Init( &s->lblRel, "Latest release: Checking..", NULL);
-	LLabel_Init( &s->lblDev, "Latest dev build: Checking..", NULL);
-	LLabel_Init( &s->lblStatus, "", NULL);
-	LButton_Init(&s->btnBack, 80, 35, "Back", NULL);
+	LLabel_Init( &s->lblRel, "Latest release: Checking..",   upd_lblRel);
+	LLabel_Init( &s->lblDev, "Latest dev build: Checking..", upd_lblDev);
+	LLabel_Init( &s->lblStatus, "",           upd_lblStatus);
+	LButton_Init(&s->btnBack, 80, 35, "Back", upd_btnBack);
 
-	if (Updater_Info.numBuilds >= 1) {
-		LButton_Init(&s->btnRel[0], 130, 35, Updater_Info.builds[0].name, NULL);
-		LButton_Init(&s->btnDev[0], 130, 35, Updater_Info.builds[0].name, NULL);
+	if (builds >= 1) {
+		LButton_Init(&s->btnRel[0], 130, 35, Updater_Info.builds[0].name, 
+							builds == 1 ? upd_btnRel0_1 : upd_btnRel0_2);
+		LButton_Init(&s->btnDev[0], 130, 35, Updater_Info.builds[0].name, 
+							builds == 1 ? upd_btnDev0_1 : upd_btnDev0_2);
 	}
-	if (Updater_Info.numBuilds >= 2) {
-		LButton_Init(&s->btnRel[1], 130, 35, Updater_Info.builds[1].name, NULL);
-		LButton_Init(&s->btnDev[1], 130, 35, Updater_Info.builds[1].name, NULL);
+	if (builds >= 2) {
+		LButton_Init(&s->btnRel[1], 130, 35, Updater_Info.builds[1].name, upd_btnRel1_2);
+		LButton_Init(&s->btnDev[1], 130, 35, Updater_Info.builds[1].name, upd_btnDev1_2);
 	}
-	LLabel_Init(&s->lblInfo, Updater_Info.info, NULL);
+	LLabel_Init(&s->lblInfo, Updater_Info.info, upd_lblInfo);
 
 	s->btnRel[0].OnClick = UpdatesScreen_Rel_0;
 	s->btnRel[1].OnClick = UpdatesScreen_Rel_1;
@@ -1783,35 +1806,6 @@ static void UpdatesScreen_Show(struct LScreen* s_) {
 	res = Updater_GetBuildTime(&buildTime);
 	if (res) { Logger_SysWarn(res, "getting build time"); return; }
 	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
-}
-
-static void UpdatesScreen_Layout(struct LScreen* s_) {
-	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	LWidget_SetLocation(&s->lblYour, ANCHOR_CENTRE, ANCHOR_CENTRE, -5, -120);
-	LWidget_SetLocation(&s->seps[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -100);
-	LWidget_SetLocation(&s->seps[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  0,   -5);
-
-	LWidget_SetLocation(&s->lblRel,    ANCHOR_CENTRE, ANCHOR_CENTRE, -20, -75);
-	LWidget_SetLocation(&s->btnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, -40);
-
-	if (Updater_Info.numBuilds >= 2) {
-		LWidget_SetLocation(&s->btnRel[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 80, -40);
-	} else {
-		LWidget_SetLocation(&s->btnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -40);
-	}
-
-	LWidget_SetLocation(&s->lblDev,    ANCHOR_CENTRE, ANCHOR_CENTRE, -30, 20);
-	LWidget_SetLocation(&s->btnDev[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, 55);
-
-	if (Updater_Info.numBuilds >= 2) {
-		LWidget_SetLocation(&s->btnDev[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 80, 55);
-	} else {
-		LWidget_SetLocation(&s->btnDev[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, 55);
-	}
-
-	LWidget_SetLocation(&s->lblInfo,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 105);
-	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 130);
-	LWidget_SetLocation(&s->btnBack,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
 static void UpdatesScreen_Tick(struct LScreen* s_) {
@@ -1838,7 +1832,6 @@ void UpdatesScreen_SetActive(void) {
 	s->Show   = UpdatesScreen_Show;
 	s->Tick   = UpdatesScreen_Tick;
 	s->Free   = UpdatesScreen_Free;
-	s->Layout = UpdatesScreen_Layout;
 
 	s->title  = "Update game";
 	Launcher_SetScreen((struct LScreen*)s);

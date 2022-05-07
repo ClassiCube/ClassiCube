@@ -48,11 +48,9 @@ struct LWidgetVTABLE {
 	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
 	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
 	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
-	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
 	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
 	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
 	cc_uint8 type;                 /* Type of this widget */ \
-	int xOffset, yOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
 	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
@@ -62,7 +60,6 @@ struct LWidgetVTABLE {
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
-void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 void LWidget_CalcPosition(void* widget);
 void LWidget_CalcOffsets(void);
 
