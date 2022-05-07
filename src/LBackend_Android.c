@@ -214,6 +214,17 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
 }
 
 void LBackend_ButtonUpdate(struct LButton* w) {
+    JNIEnv* env;
+    jvalue args[2];
+    JavaGetCurrentEnv(env);
+    if (!w->meta) return;
+
+    args[0].i = (int)w->meta;
+    args[1].l = JavaMakeString(env, &w->text);
+    jmethodID method = JavaGetIMethod(env, "buttonUpdate", "(ILjava/lang/String;)V");
+    JavaICall_Void(env, method, args);
+    //JavaCallVoid(env, "buttonUpdate", "(ILjava/lang/String;)V", args);
+    (*env)->DeleteLocalRef(env, args[1].l);
 }
 
 void LBackend_ButtonDraw(struct LButton* w) { }
@@ -244,7 +255,6 @@ void LBackend_InputInit(struct LInput* w, int width) {
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
-
 }
 
 void LBackend_InputTick(struct LInput* w) {

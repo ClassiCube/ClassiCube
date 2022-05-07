@@ -30,6 +30,7 @@ import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.style.AbsoluteSizeSpan;
+import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -423,7 +424,7 @@ public class MainActivity extends Activity
 
 	void create2DView() {
 		// setContentView, requestFocus - API level 1
-		curView  = new RelativeLayout(this);
+		curView  = new CC2DLayout(this);
 		launcher = true;
 
 		setContentView(curView);
@@ -432,65 +433,116 @@ public class MainActivity extends Activity
 		pushCmd(CMD_2D_CREATED);
 	}
 
-	RelativeLayout.LayoutParams make2DParams(int xMode, int xOffset, int yMode, int yOffset) {
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
-		if (xMode == ANCHOR_MIN) {
-			params.leftMargin  = xOffset;
-		} else if (xMode == ANCHOR_MAX) {
-			params.rightMargin = xOffset;
-			params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-		} else if (xMode == ANCHOR_CENTRE) {
-			params.leftMargin  = xOffset;
-			params.addRule(RelativeLayout.CENTER_HORIZONTAL);
-		} else if (xMode == ANCHOR_CENTRE_MIN) {
-			//params.leftMargin  = xOffset;
-			//params.addRule(RelativeLayout.CENTER_HORIZONTAL);
-		}
-
-		if (yMode == ANCHOR_MIN) {
-			params.topMargin    = yOffset;
-		} else if (yMode == ANCHOR_MAX) {
-			params.bottomMargin = yOffset;
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-		} else if (yMode == ANCHOR_CENTRE) {
-			params.topMargin    = yOffset;
-			params.addRule(RelativeLayout.CENTER_VERTICAL);
-		} else if (yMode == ANCHOR_CENTRE_MIN) {
-			params.topMargin    = yOffset;
-			params.addRule(RelativeLayout.CENTER_VERTICAL);
-		}
-		return params;
+	CC2DLayout.LayoutParams make2DParams(int xMode, int xOffset, int yMode, int yOffset) {
+		return new CC2DLayoutParams(
+				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+				xMode, xOffset, yMode, yOffset);
 	}
 
 	int buttonAdd(int xMode, int xOffset, int yMode, int yOffset) {
 		final Button btn = new Button(this);
-		final ViewGroup.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
+		final CC2DLayout.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
 		btn.setId(widgetID++);
 
 		runOnUiThread(new Runnable() {
 			public void run() {
-				RelativeLayout rl = (RelativeLayout)curView;
+				CC2DLayout rl = (CC2DLayout)curView;
 				rl.addView(btn, params);
 			}
 		});
 		return btn.getId();
 	}
 
+	void buttonUpdate(final int id, final String text) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view != null) { ((Button)view).setText(text); }
+			}
+		});
+	}
+
 	int inputAdd(int xMode, int xOffset, int yMode, int yOffset) {
 		final EditText ipt = new EditText(this);
-		final ViewGroup.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
+		final CC2DLayout.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
 		ipt.setBackgroundColor(Color.WHITE);
 		ipt.setId(widgetID++);
 
 		runOnUiThread(new Runnable() {
 			public void run() {
-				RelativeLayout rl = (RelativeLayout)curView;
+				CC2DLayout rl = (CC2DLayout)curView;
 				rl.addView(ipt, params);
 			}
 		});
 		return ipt.getId();
+	}
+
+	// TODO reuse native code
+	static int calcOffset(int anchor, int offset, int size, int axisLen) {
+		if (anchor == ANCHOR_MIN) return offset;
+		if (anchor == ANCHOR_MAX) return axisLen - size - offset;
+
+		if (anchor == ANCHOR_CENTRE_MIN) return (axisLen / 2) + offset;
+		if (anchor == ANCHOR_CENTRE_MAX) return (axisLen / 2) - size - offset;
+		return (axisLen - size) / 2 + offset;
+	}
+
+	class CC2DLayout extends ViewGroup
+	{
+		public CC2DLayout(Context context) { super(context, null); }
+
+		@Override
+		protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+			int maxWidth  = 0;
+			int maxHeight = 0;
+			measureChildren(widthMeasureSpec, heightMeasureSpec);
+
+			// Calculate bounds that encloses all children
+			for (int i = 0; i < getChildCount(); i++)
+			{
+				View child = getChildAt(i);
+				int childR = child.getLeft() + child.getMeasuredWidth();
+				int childB = child.getTop()  + child.getMeasuredHeight();
+
+				maxWidth   = Math.max(maxWidth,  childR);
+				maxHeight  = Math.max(maxHeight, childB);
+			}
+
+			setMeasuredDimension(
+					resolveSizeAndState(maxWidth,  widthMeasureSpec,  0),
+					resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
+		}
+
+		@Override
+		protected void onLayout(boolean changed, int l, int t, int r, int b) {
+			for (int i = 0; i < getChildCount(); i++)
+			{
+				View child = getChildAt(i);
+				int width  = child.getMeasuredWidth();
+				int height = child.getMeasuredHeight();
+
+				CC2DLayoutParams lp = (CC2DLayoutParams)child.getLayoutParams();
+				int x = calcOffset(lp.xMode, lp.xOffset, width,  getWidth());
+				int y = calcOffset(lp.yMode, lp.yOffset, height, getHeight());
+
+				child.layout(x, y,x  + width, y + height);
+			}
+		}
+
+		@Override
+		public boolean shouldDelayChildPressedState() { return false; }
+	}
+
+	static class CC2DLayoutParams extends ViewGroup.LayoutParams
+	{
+		public int xMode, xOffset;
+		public int yMode, yOffset;
+
+		public CC2DLayoutParams(int width, int height, int xm, int xo, int ym, int yo) {
+			super(width, height);
+			xMode = xm; xOffset = xo;
+			yMode = ym; yOffset = yo;
+		}
 	}
 
 
@@ -1027,8 +1079,8 @@ public class MainActivity extends Activity
 	// ======================================================================
 	native void drawBackground(Bitmap bmp);
 	public void redrawBackground() {
-		int width  = this.curView.getWidth();
-		int height = this.curView.getHeight();
+		int width  = Math.max(1, this.curView.getWidth());
+		int height = Math.max(1, this.curView.getHeight());
 		Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 		drawBackground(bmp);
 
