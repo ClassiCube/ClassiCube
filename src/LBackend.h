@@ -27,7 +27,7 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title);
 void LBackend_Redraw(void);
 void LBackend_ThemeChanged(void);
 void LBackend_Tick(void);
-void LBackend_WidgetRepositioned(struct LWidget* w);
+void LBackend_LayoutWidget(struct LWidget* w);
 void LBackend_MarkDirty(void* widget);
 
 void LBackend_InitFramebuffer(void);
@@ -61,6 +61,7 @@ void LBackend_SliderDraw(struct LSlider* w);
 
 void LBackend_TableInit(struct LTable* w);
 void LBackend_TableUpdate(struct LTable* w);
+/* Adjusts Y position of rows and number of visible rows */
 void LBackend_TableReposition(struct LTable* w);
 void LBackend_TableFlagAdded(struct LTable* w);
 void LBackend_TableDraw(struct LTable* w);

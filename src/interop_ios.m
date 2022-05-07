@@ -10,6 +10,7 @@
 #include "LBackend.h"
 #include "LWidgets.h"
 #include "LScreens.h"
+#include "Gui.h"
 #include "LWeb.h"
 #include "Funcs.h"
 #include <mach-o/dyld.h>
@@ -18,6 +19,7 @@
 #include <UIKit/UIKit.h>
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
+#include <CoreText/CoreText.h>
 
 @interface CCWindow : UIWindow
 @end
@@ -546,22 +548,37 @@ static UIImage* ToUIImage(struct Bitmap* bmp) {
     return img;
 }
 
-static void UpdateWidgetDimensions(void* widget) {
-    struct LWidget* w = widget;
-    UIView* view = (__bridge UIView*)w->meta;
-    
-    CGRect rect = [view frame];
-    w->width    = (int)rect.size.width;
-    w->height   = (int)rect.size.height;
+static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
+    const struct LLayout* l = w->layouts + 2;
+    while (l->type)
+    {
+        switch (l->type)
+        {
+            case LLAYOUT_WIDTH:
+                r->size.width  = WindowInfo.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
+                break;
+            case LLAYOUT_HEIGHT:
+                r->size.height = WindowInfo.Height - (int)r->origin.y - Display_ScaleY(l->offset);
+                break;
+        }
+        l++;
+    }
 }
 
-void LBackend_WidgetRepositioned(struct LWidget* w) {
-    UIView* view   = (__bridge UIView*)w->meta;
+void LBackend_LayoutWidget(struct LWidget* w) {
+    const struct LLayout* l = w->layouts;
+    UIView* view = (__bridge UIView*)w->meta;
+    CGRect r     = [view frame];
+    int width    = (int)r.size.width;
+    int height   = (int)r.size.height;
     
-    CGRect rect = [view frame];
-    rect.origin.x = w->x;
-    rect.origin.y = w->y;
-    [view setFrame:rect];
+    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
+    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
+    
+    /* e.g. Table widget needs adjusts width/height based on window */
+    if (l[1].type & LLAYOUT_EXTRA)
+        LBackend_LayoutDimensions(w, &r);
+    [view setFrame:r];
 }
 
 void LBackend_SetScreen(struct LScreen* s) {
@@ -698,7 +715,6 @@ void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
 void LBackend_UpdateLogoFont(void) { }
 
-#include <CoreText/CoreText.h>
 static void DrawText(NSAttributedString* str, struct Bitmap* bmp, int x, int y) {
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
     CGRect bounds  = CTLineGetImageBounds(line, win_ctx);
@@ -740,19 +756,17 @@ void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
 void LBackend_Redraw(void) {
-    struct Bitmap fb_bmp;
-    fb_bmp.width  = max(WindowInfo.Width,  1);
-    fb_bmp.height = max(WindowInfo.Height, 1);
-    fb_bmp.scan0  = (BitmapCol*)Mem_Alloc(fb_bmp.width * fb_bmp.height, 4, "window pixels");
+    struct Bitmap bmp;
+    bmp.width  = max(WindowInfo.Width,  1);
+    bmp.height = max(WindowInfo.Height, 1);
+    bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, 4, "window pixels");
     
-    win_ctx = CGBitmapContextCreate(fb_bmp.scan0, fb_bmp.width, fb_bmp.height, 8, fb_bmp.width * 4,
+    win_ctx = CGBitmapContextCreate(bmp.scan0, bmp.width, bmp.height, 8, bmp.width * 4,
                                     CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-    
-    struct LScreen* s = Launcher_Active;
-    s->DrawBackground(s, &fb_bmp);
+    Launcher_Active->DrawBackground(Launcher_Active, &bmp);
     
     view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
-    Mem_Free(fb_bmp.scan0);
+    Mem_Free(bmp.scan0);
     CGContextRelease(win_ctx);
 }
 
@@ -774,17 +788,18 @@ void LBackend_ThemeChanged(void) {
  *#########################################################################################################################*/
 static void LButton_UpdateBackground(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
+    CGRect rect   = [btn frame];
+    int width     = (int)rect.size.width;
+    int height    = (int)rect.size.height;
     // memory freeing deferred until UIImage is freed (see FreeContents)
     struct Bitmap bmp1, bmp2;
     
-    Bitmap_Allocate(&bmp1, w->width, w->height);
-    w->hovered = false;
-    LButton_DrawBackground(w, &bmp1, 0, 0);
+    Bitmap_Allocate(&bmp1, width, height);
+    LButton_DrawBackground(&bmp1, 0, 0, width, height, false);
     [btn setBackgroundImage:ToUIImage(&bmp1) forState:UIControlStateNormal];
     
-    Bitmap_Allocate(&bmp2, w->width, w->height);
-    w->hovered = true;
-    LButton_DrawBackground(w, &bmp2, 0, 0);
+    Bitmap_Allocate(&bmp2, width, height);
+    LButton_DrawBackground(&bmp2, 0, 0, width, height, true);
     [btn setBackgroundImage:ToUIImage(&bmp2) forState:UIControlStateHighlighted];
 }
 
@@ -794,7 +809,6 @@ void LBackend_ButtonInit(struct LButton* w, int width, int height) {
     [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
     
     AssignView(w, btn);
-    UpdateWidgetDimensions(w);
     LButton_UpdateBackground(w);
 }
 
@@ -803,7 +817,6 @@ void LBackend_ButtonUpdate(struct LButton* w) {
     NSString* str = ToNSString(&w->text);
     
     [btn setTitle:str forState:UIControlStateNormal];
-    UpdateWidgetDimensions(w);
 }
 
 
@@ -819,7 +832,6 @@ void LBackend_CheckboxInit(struct LCheckbox* w) {
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     AssignView(w, swt);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_CheckboxDraw(struct LCheckbox* w) {
@@ -860,13 +872,11 @@ void LBackend_InputInit(struct LInput* w, int width) {
     LInput_SetPlaceholder(fld,  w->hintText);
     
     AssignView(w, fld);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
     UITextField* fld = (__bridge UITextField*)w->meta;
     fld.text         = ToNSString(&w->text);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_InputDraw(struct LInput* w) {
@@ -885,7 +895,6 @@ void LBackend_LabelInit(struct LLabel* w) {
     lbl.textColor = [UIColor whiteColor];
     
     AssignView(w, lbl);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_LabelUpdate(struct LLabel* w) {
@@ -897,7 +906,6 @@ void LBackend_LabelUpdate(struct LLabel* w) {
     lbl.text = str;
     [lbl sizeToFit]; // adjust label to fit text
     
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_LabelDraw(struct LLabel* w) {
@@ -915,7 +923,6 @@ void LBackend_LineInit(struct LLine* w, int width) {
     view.backgroundColor = ToUIColor(color, 0.5f);
     
     AssignView(w, view);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_LineDraw(struct LLine* w) {
@@ -931,13 +938,12 @@ void LBackend_SliderInit(struct LSlider* w, int width, int height) {
     prg.progressTintColor = ToUIColor(w->color, 1.0f);
     
     AssignView(w, prg);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_SliderUpdate(struct LSlider* w) {
-    UIProgressView* lbl = (__bridge UIProgressView*)w->meta;
+    UIProgressView* prg = (__bridge UIProgressView*)w->meta;
     
-    lbl.progress = w->value / 100.0f;
+    prg.progress = w->value / 100.0f;
 }
 
 void LBackend_SliderDraw(struct LSlider* w) {
@@ -949,17 +955,11 @@ void LBackend_SliderDraw(struct LSlider* w) {
  *#########################################################################################################################*/
 void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    //tbl.frame = CGRectMake(0, 50, 350, 570);
     tbl.delegate   = ui_controller;
     tbl.dataSource = ui_controller;
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
-    
-    CGRect total = [view_handle frame];
-    tbl.frame = CGRectMake(0, 0, total.size.width - 10, total.size.height - 50 - 50);
-    
     AssignView(w, tbl);
-    UpdateWidgetDimensions(w);
 }
 
 void LBackend_TableUpdate(struct LTable* w) {

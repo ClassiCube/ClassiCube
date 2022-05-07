@@ -26,20 +26,6 @@ void LWidget_CalcOffsets(void) {
 	flagYOffset  = Display_ScaleY(6);
 }
 
-void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
-	struct LWidget* w = (struct LWidget*)widget;
-	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
-	w->xOffset   = xOffset;   w->yOffset   = yOffset;
-	LWidget_CalcPosition(widget);
-}
-
-void LWidget_CalcPosition(void* widget) {
-	struct LWidget* w = (struct LWidget*)widget;
-	w->x = Gui_CalcPos(w->horAnchor, Display_ScaleX(w->xOffset), w->width,  WindowInfo.Width);
-	w->y = Gui_CalcPos(w->verAnchor, Display_ScaleY(w->yOffset), w->height, WindowInfo.Height);
-	LBackend_WidgetRepositioned(w);
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -52,23 +38,22 @@ static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 	return BitmapCol_Make(r, g, b, 255);
 }
 
-static void LButton_DrawBase(struct LButton* w, struct Bitmap* bmp, int x, int y) {
-	BitmapCol color = w->hovered ? Launcher_Theme.ButtonForeActiveColor 
-								 : Launcher_Theme.ButtonForeColor;
+static void LButton_DrawBase(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
+	BitmapCol color = hovered ? Launcher_Theme.ButtonForeActiveColor 
+							  : Launcher_Theme.ButtonForeColor;
 
 	if (Launcher_Theme.ClassicBackground) {
 		Gradient_Noise(bmp, color, 8,
-						x + oneX,          y + oneY,
-						w->width - twoX,   w->height - twoY);
+						x + oneX,       y + oneY,
+						width - twoX,   height - twoY);
 	} else {
-		
 		Gradient_Vertical(bmp, LButton_Expand(color, 8), LButton_Expand(color, -8),
-						  x + oneX,        y + oneY,
-						  w->width - twoX, w->height - twoY);
+						  x + oneX,     y + oneY,
+						  width - twoX, height - twoY);
 	}
 }
 
-static void LButton_DrawBorder(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+static void LButton_DrawBorder(struct Bitmap* bmp, int x, int y, int width, int height) {
 	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
 #ifdef CC_BUILD_IOS
 	int xoff = 0; /* TODO temp hack */
@@ -77,43 +62,43 @@ static void LButton_DrawBorder(struct LButton* w, struct Bitmap* bmp, int x, int
 #endif
 
 	Drawer2D_Clear(bmp, backColor, 
-					x + xoff,            y,
-					w->width - 2 * xoff, oneY);
+					x + xoff,         y,
+					width - 2 * xoff, oneY);
 	Drawer2D_Clear(bmp, backColor,
-					x + xoff,            y + w->height - oneY,
-					w->width - 2 * xoff, oneY);
+					x + xoff,         y + height - oneY,
+					width - 2 * xoff, oneY);
 	Drawer2D_Clear(bmp, backColor,
-					x,                   y + oneY,
-					oneX,                w->height - twoY);
+					x,                y + oneY,
+					oneX,             height - twoY);
 	Drawer2D_Clear(bmp, backColor,
-					x + w->width - oneX, y + oneY,
-					oneX,                w->height - twoY);
+					x + width - oneX, y + oneY,
+					oneX,             height - twoY);
 }
 
-static void LButton_DrawHighlight(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+static void LButton_DrawHighlight(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
 	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
 	BitmapCol color       = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		if (w->hovered) color = activeColor;
+		if (hovered) color = activeColor;
 
 		Drawer2D_Clear(bmp, color,
-						x + twoX,         y + oneY,
-						w->width - fourX, oneY);
+						x + twoX,      y + oneY,
+						width - fourX, oneY);
 		Drawer2D_Clear(bmp, color,
-						x + oneX,         y + twoY,
-						oneX,             w->height - fourY);
-	} else if (!w->hovered) {
+						x + oneX,      y + twoY,
+						oneX,          height - fourY);
+	} else if (!hovered) {
 		Drawer2D_Clear(bmp, color,
-						x + twoX,         y + oneY,
-						w->width - fourX, oneY);
+						x + twoX,      y + oneY,
+						width - fourX, oneY);
 	}
 }
 
-void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y) {
-	LButton_DrawBase(w,      bmp, x, y);
-	LButton_DrawBorder(w,    bmp, x, y);
-	LButton_DrawHighlight(w, bmp, x, y);
+void LButton_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
+	LButton_DrawBase(     bmp, x, y, width, height, hovered);
+	LButton_DrawBorder(   bmp, x, y, width, height);
+	LButton_DrawHighlight(bmp, x, y, width, height, hovered);
 }
 
 static void LButton_Draw(void* widget) {
@@ -136,9 +121,10 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Hover, LButton_Unhover, /* Hover  */
 	NULL, NULL                      /* Select */
 };
-void LButton_Init(struct LButton* w, int width, int height, const char* text) {
-	w->VTABLE = &lbutton_VTABLE;
-	w->type   = LWIDGET_BUTTON;
+void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LLayout* layouts) {
+	w->VTABLE  = &lbutton_VTABLE;
+	w->type    = LWIDGET_BUTTON;
+	w->layouts = layouts;
 	w->tabSelectable = true;
 	LBackend_ButtonInit(w, width, height);
 	LButton_SetConst(w, text);
@@ -164,9 +150,10 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LCheckbox_Init(struct LCheckbox* w, const char* text) {
-	w->VTABLE = &lcheckbox_VTABLE;
-	w->type   = LWIDGET_CHECKBOX;
+void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout* layouts) {
+	w->VTABLE  = &lcheckbox_VTABLE;
+	w->type    = LWIDGET_CHECKBOX;
+	w->layouts = layouts;
 	w->tabSelectable = true;
 
 	w->text = String_FromReadonly(text);
@@ -328,17 +315,17 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Select, LInput_Unselect, /* Select */
 	NULL, LInput_TextChanged        /* TextChanged */
 };
-void LInput_Init(struct LInput* w, int width, const char* hintText) {
-	w->VTABLE = &linput_VTABLE;
-	w->type   = LWIDGET_INPUT;
+void LInput_Init(struct LInput* w, int width, const char* hintText, const struct LLayout* layouts) {
+	w->VTABLE  = &linput_VTABLE;
+	w->type    = LWIDGET_INPUT;
 	w->tabSelectable = true;
-	w->opaque = true;
+	w->opaque  = true;
+	w->layouts = layouts;
 	String_InitArray(w->text, w->_textBuffer);
 	
 	w->hintText = hintText;
 	w->caretPos = -1;
 	LBackend_InputInit(w, width);
-	w->minWidth = w->width;
 }
 
 void LInput_SetText(struct LInput* w, const cc_string* text) {
@@ -383,9 +370,10 @@ static const struct LWidgetVTABLE llabel_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLabel_Init(struct LLabel* w, const char* text) {
-	w->VTABLE = &llabel_VTABLE;
-	w->type   = LWIDGET_LABEL;
+void LLabel_Init(struct LLabel* w, const char* text, const struct LLayout* layouts) {
+	w->VTABLE  = &llabel_VTABLE;
+	w->type    = LWIDGET_LABEL;
+	w->layouts = layouts;
 
 	String_InitArray(w->text, w->_textBuffer);
 	LBackend_LabelInit(w);
@@ -395,7 +383,7 @@ void LLabel_Init(struct LLabel* w, const char* text) {
 void LLabel_SetText(struct LLabel* w, const cc_string* text) {
 	String_Copy(&w->text, text);
 	LBackend_LabelUpdate(w);
-	LWidget_CalcPosition(w);
+	LBackend_LayoutWidget((struct LWidget*)w);
 }
 
 void LLabel_SetConst(struct LLabel* w, const char* text) {
@@ -418,9 +406,10 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLine_Init(struct LLine* w, int width) {
-	w->VTABLE = &lline_VTABLE;
-	w->type   = LWIDGET_LINE;
+void LLine_Init(struct LLine* w, int width, const struct LLayout* layouts) {
+	w->VTABLE  = &lline_VTABLE;
+	w->type    = LWIDGET_LINE;
+	w->layouts = layouts;
 	LBackend_LineInit(w, width);
 }
 
@@ -444,11 +433,12 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color) {
-	w->VTABLE = &lslider_VTABLE;
-	w->type   = LWIDGET_SLIDER;
-	w->color  = color;
-	w->opaque = true;
+void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color, const struct LLayout* layouts) {
+	w->VTABLE  = &lslider_VTABLE;
+	w->type    = LWIDGET_SLIDER;
+	w->color   = color;
+	w->opaque  = true;
+	w->layouts = layouts;
 	LBackend_SliderInit(w, width, height);
 }
 
@@ -618,11 +608,6 @@ static void LTable_MouseWheel(void* widget, float delta) {
 	w->_lastRow = -1;
 }
 
-void LTable_Reposition(struct LTable* w) {
-	LBackend_TableReposition(w);
-	LTable_ClampTopRow(w);
-}
-
 static void LTable_Draw(void* widget) {
 	struct LTable* w = (struct LTable*)widget;
 	LBackend_TableDraw(w);
@@ -635,7 +620,7 @@ static const struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseDown, LTable_MouseUp, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
-void LTable_Init(struct LTable* w) {
+void LTable_Init(struct LTable* w, const struct LLayout* layouts) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;
 	w->type       = LWIDGET_TABLE;
@@ -643,6 +628,7 @@ void LTable_Init(struct LTable* w) {
 	w->numColumns = Array_Elems(tableColumns);
 	w->sortingCol = -1;
 	w->opaque     = true;
+	w->layouts    = layouts;
 	
 	for (i = 0; i < w->numColumns; i++) {
 		w->columns[i].width = Display_ScaleX(w->columns[i].width);
@@ -652,7 +638,7 @@ void LTable_Init(struct LTable* w) {
 
 void LTable_Reset(struct LTable* w) {
 	LBackend_TableMouseUp(w, 0);
-	LTable_Reposition(w);
+	LBackend_TableReposition(w);
 
 	w->topRow     = 0;
 	w->rowsCount  = 0;

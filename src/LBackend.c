@@ -99,7 +99,37 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
 void LBackend_SetScreen(struct LScreen* s)   { }
 void LBackend_CloseScreen(struct LScreen* s) { }
 
-void LBackend_WidgetRepositioned(struct LWidget* w) { 
+static void LBackend_LayoutDimensions(struct LWidget* w) {
+	const struct LLayout* l = w->layouts + 2;
+	while (l->type)
+	{
+		switch (l->type)
+		{
+		case LLAYOUT_WIDTH:
+			w->width  = WindowInfo.Width  - w->x - Display_ScaleX(l->offset);
+			w->width  = max(1, w->width);
+			break;
+		case LLAYOUT_HEIGHT:
+			w->height = WindowInfo.Height - w->y - Display_ScaleY(l->offset);
+			w->height = max(1, w->height);
+			break;
+		}
+		l++;
+	}
+}
+
+void LBackend_LayoutWidget(struct LWidget* w) {
+	const struct LLayout* l = w->layouts;
+
+	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  WindowInfo.Width);
+	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, WindowInfo.Height);
+
+	/* e.g. Table widget needs adjusts width/height based on window */
+	if (l[1].type & LLAYOUT_EXTRA)
+		LBackend_LayoutDimensions(w);
+
+	if (w->type != LWIDGET_TABLE) return;
+	LBackend_TableReposition((struct LTable*)w);
 }
 
 void LBackend_MarkDirty(void* widget) {
@@ -273,7 +303,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
 
-	LButton_DrawBackground(w, &framebuffer, w->x, w->y);
+	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, w->hovered);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
@@ -398,8 +428,9 @@ static Rect2D caretRect, lastCaretRect;
 #define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
 
 void LBackend_InputInit(struct LInput* w, int width) {
-	w->width  = Display_ScaleX(width);
-	w->height = Display_ScaleY(30);
+	w->width    = Display_ScaleX(width);
+	w->height   = Display_ScaleY(30);
+	w->minWidth = w->width;
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
