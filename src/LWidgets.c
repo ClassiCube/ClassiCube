@@ -27,40 +27,6 @@ void LWidget_CalcOffsets(void) {
 }
 
 
-static void LWidget_LayoutDimensions(struct LWidget* w) {
-	const struct LLayout* l = w->layouts + 2;
-	while (l->type)
-	{
-		switch (l->type)
-		{
-		case LLAYOUT_WIDTH:
-			w->width  = WindowInfo.Width  - w->x - Display_ScaleX(l->offset);
-			w->width  = max(1, w->width);
-			break;
-		case LLAYOUT_HEIGHT:
-			w->height = WindowInfo.Height - w->y - Display_ScaleY(l->offset);
-			w->height = max(1, w->height);
-			break;
-		}
-		l++;
-	}
-}
-
-void LWidget_CalcPosition(void* widget) {
-	struct LWidget* w = (struct LWidget*)widget;
-	const struct LLayout* l = w->layouts;
-
-	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  WindowInfo.Width);
-	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, WindowInfo.Height);
-
-	/* e.g. Table widget needs adjusts width/height based on window */
-	if (l[1].type & LLAYOUT_EXTRA) {
-		LWidget_LayoutDimensions(w);
-	}
-	LBackend_WidgetRepositioned(w);
-}
-
-
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
@@ -417,7 +383,7 @@ void LLabel_Init(struct LLabel* w, const char* text, const struct LLayout* layou
 void LLabel_SetText(struct LLabel* w, const cc_string* text) {
 	String_Copy(&w->text, text);
 	LBackend_LabelUpdate(w);
-	LWidget_CalcPosition(w);
+	LBackend_LayoutWidget((struct LWidget*)w);
 }
 
 void LLabel_SetConst(struct LLabel* w, const char* text) {

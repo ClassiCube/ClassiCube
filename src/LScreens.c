@@ -46,7 +46,7 @@ static void LScreen_DoLayout(struct LScreen* s) {
 	int i;
 	for (i = 0; i < s->numWidgets; i++) 
 	{
-		LWidget_CalcPosition(s->widgets[i]);
+		LBackend_LayoutWidget(s->widgets[i]);
 	}
 }
 

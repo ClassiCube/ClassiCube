@@ -27,7 +27,7 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title);
 void LBackend_Redraw(void);
 void LBackend_ThemeChanged(void);
 void LBackend_Tick(void);
-void LBackend_WidgetRepositioned(struct LWidget* w);
+void LBackend_LayoutWidget(struct LWidget* w);
 void LBackend_MarkDirty(void* widget);
 
 void LBackend_InitFramebuffer(void);

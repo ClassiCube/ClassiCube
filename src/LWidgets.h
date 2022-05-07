@@ -59,7 +59,6 @@ struct LWidgetVTABLE {
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
-void LWidget_CalcPosition(void* widget);
 void LWidget_CalcOffsets(void);
 
 struct LButton {
