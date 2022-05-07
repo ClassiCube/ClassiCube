@@ -26,32 +26,36 @@ void LWidget_CalcOffsets(void) {
 	flagYOffset  = Display_ScaleY(6);
 }
 
-void LWidget_CalcPosition(void* widget) {
-	struct LWidget* w = (struct LWidget*)widget;
-	const struct LLayout* l = w->layouts;
-	int type, anchor;
 
-	while ((type = l->type & 0xFF00)) 
+static void LWidget_LayoutDimensions(struct LWidget* w) {
+	const struct LLayout* l = w->layouts + 2;
+	while (l->type)
 	{
-		anchor = l->type & 0xFF;
-		switch (type)
+		switch (l->type)
 		{
-		case LLAYOUT_TYPE_X:
-			w->x = Gui_CalcPos(anchor, Display_ScaleX(l->offset), w->width,  WindowInfo.Width);
-			break;
-		case LLAYOUT_TYPE_Y:
-			w->y = Gui_CalcPos(anchor, Display_ScaleY(l->offset), w->height, WindowInfo.Height);
-			break;
-		case LLAYOUT_TYPE_W:
+		case LLAYOUT_WIDTH:
 			w->width  = WindowInfo.Width  - w->x - Display_ScaleX(l->offset);
 			w->width  = max(1, w->width);
 			break;
-		case LLAYOUT_TYPE_H:
+		case LLAYOUT_HEIGHT:
 			w->height = WindowInfo.Height - w->y - Display_ScaleY(l->offset);
 			w->height = max(1, w->height);
 			break;
 		}
 		l++;
+	}
+}
+
+void LWidget_CalcPosition(void* widget) {
+	struct LWidget* w = (struct LWidget*)widget;
+	const struct LLayout* l = w->layouts;
+
+	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  WindowInfo.Width);
+	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, WindowInfo.Height);
+
+	/* e.g. Table widget needs adjusts width/height based on window */
+	if (l[1].type & LLAYOUT_EXTRA) {
+		LWidget_LayoutDimensions(w);
 	}
 	LBackend_WidgetRepositioned(w);
 }
@@ -638,11 +642,6 @@ static void LTable_MouseWheel(void* widget, float delta) {
 	w->_lastRow = -1;
 }
 
-void LTable_Reposition(struct LTable* w) {
-	LBackend_TableReposition(w);
-	LTable_ClampTopRow(w);
-}
-
 static void LTable_Draw(void* widget) {
 	struct LTable* w = (struct LTable*)widget;
 	LBackend_TableDraw(w);
@@ -673,7 +672,7 @@ void LTable_Init(struct LTable* w, const struct LLayout* layouts) {
 
 void LTable_Reset(struct LTable* w) {
 	LBackend_TableMouseUp(w, 0);
-	LTable_Reposition(w);
+	LBackend_TableReposition(w);
 
 	w->topRow     = 0;
 	w->rowsCount  = 0;

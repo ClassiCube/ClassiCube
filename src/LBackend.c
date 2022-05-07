@@ -99,7 +99,9 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
 void LBackend_SetScreen(struct LScreen* s)   { }
 void LBackend_CloseScreen(struct LScreen* s) { }
 
-void LBackend_WidgetRepositioned(struct LWidget* w) { 
+void LBackend_WidgetRepositioned(struct LWidget* w) {
+	if (w->type != LWIDGET_TABLE) return;
+	LBackend_TableReposition((struct LTable*)w);
 }
 
 void LBackend_MarkDirty(void* widget) {

@@ -233,21 +233,21 @@ static struct LWidget* chooseMode_widgets[] = {
 	NULL
 };
 
-LAYOUTS mode_seps0[3] = { LLayout_X(ANCHOR_CENTRE, -5), LLayout_Y(ANCHOR_CENTRE, -85) };
-LAYOUTS mode_seps1[3] = { LLayout_X(ANCHOR_CENTRE, -5), LLayout_Y(ANCHOR_CENTRE, -15) };
+LAYOUTS mode_seps0[] = { { ANCHOR_CENTRE, -5 }, { ANCHOR_CENTRE, -85 } };
+LAYOUTS mode_seps1[] = { { ANCHOR_CENTRE, -5 }, { ANCHOR_CENTRE, -15 } };
 
-LAYOUTS mode_btnEnhanced[3]    = { LLayout_X(ANCHOR_CENTRE_MIN, -250), LLayout_Y(ANCHOR_CENTRE, -120     ) };
-LAYOUTS mode_lblEnhanced0[3]   = { LLayout_X(ANCHOR_CENTRE_MIN,  -85), LLayout_Y(ANCHOR_CENTRE, -120 - 12) };
-LAYOUTS mode_lblEnhanced1[3]   = { LLayout_X(ANCHOR_CENTRE_MIN,  -85), LLayout_Y(ANCHOR_CENTRE, -120 + 12) };
-LAYOUTS mode_btnClassicHax[3]  = { LLayout_X(ANCHOR_CENTRE_MIN, -250), LLayout_Y(ANCHOR_CENTRE,  -50     ) };
-LAYOUTS mode_lblClassicHax0[3] = { LLayout_X(ANCHOR_CENTRE_MIN,  -85), LLayout_Y(ANCHOR_CENTRE,  -50 - 12) };
-LAYOUTS mode_lblClassicHax1[3] = { LLayout_X(ANCHOR_CENTRE_MIN,  -85), LLayout_Y(ANCHOR_CENTRE,  -50 + 12) };
-LAYOUTS mode_btnClassic[3]     = { LLayout_X(ANCHOR_CENTRE_MIN, -250), LLayout_Y(ANCHOR_CENTRE,   20     ) };
-LAYOUTS mode_lblClassic0[3]    = { LLayout_X(ANCHOR_CENTRE_MIN,  -85), LLayout_Y(ANCHOR_CENTRE,   20 - 12) };
-LAYOUTS mode_lblClassic1[3]    = { LLayout_X(ANCHOR_CENTRE_MIN,  -85), LLayout_Y(ANCHOR_CENTRE,   20 + 12) };
+LAYOUTS mode_btnEnhanced[]    = { { ANCHOR_CENTRE_MIN, -250 }, { ANCHOR_CENTRE, -120      } };
+LAYOUTS mode_lblEnhanced0[]   = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE, -120 - 12 } };
+LAYOUTS mode_lblEnhanced1[]   = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE, -120 + 12 } };
+LAYOUTS mode_btnClassicHax[]  = { { ANCHOR_CENTRE_MIN, -250 }, { ANCHOR_CENTRE,  -50      } };
+LAYOUTS mode_lblClassicHax0[] = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,  -50 - 12 } };
+LAYOUTS mode_lblClassicHax1[] = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,  -50 + 12 } };
+LAYOUTS mode_btnClassic[]     = { { ANCHOR_CENTRE_MIN, -250 }, { ANCHOR_CENTRE,   20      } };
+LAYOUTS mode_lblClassic0[]    = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,   20 - 12 } };
+LAYOUTS mode_lblClassic1[]    = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,   20 + 12 } };
 
-LAYOUTS mode_lblHelp[3] = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE, 160) };
-LAYOUTS mode_btnBack[3] = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE, 170) };
+LAYOUTS mode_lblHelp[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, 160 } };
+LAYOUTS mode_btnBack[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, 170 } };
 
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
@@ -345,25 +345,25 @@ static struct LWidget* colours_widgets[] = {
 	(struct LWidget*)&ColoursScreen.btnBack,        (struct LWidget*)&ColoursScreen.cbClassic
 };
 
-#define IptColor_Layout(xx, yy) { LLayout_X(ANCHOR_CENTRE, xx), LLayout_Y(ANCHOR_CENTRE, yy) }
-LAYOUTS clr_iptColours[15][3] = {
+#define IptColor_Layout(xx, yy) { { ANCHOR_CENTRE, xx }, { ANCHOR_CENTRE, yy } }
+LAYOUTS clr_iptColours[15][2] = {
 	IptColor_Layout(30, -100), IptColor_Layout(95, -100), IptColor_Layout(160, -100),
 	IptColor_Layout(30,  -60), IptColor_Layout(95,  -60), IptColor_Layout(160,  -60),
 	IptColor_Layout(30,  -20), IptColor_Layout(95,  -20), IptColor_Layout(160,  -20),
 	IptColor_Layout(30,   20), IptColor_Layout(95,   20), IptColor_Layout(160,   20),
 	IptColor_Layout(30,   60), IptColor_Layout(95,   60), IptColor_Layout(160,   60),
 };
-LAYOUTS clr_lblNames0[3] = { LLayout_X(ANCHOR_CENTRE_MAX, 10), LLayout_Y(ANCHOR_CENTRE, -100) };
-LAYOUTS clr_lblNames1[3] = { LLayout_X(ANCHOR_CENTRE_MAX, 10), LLayout_Y(ANCHOR_CENTRE,  -60) };
-LAYOUTS clr_lblNames2[3] = { LLayout_X(ANCHOR_CENTRE_MAX, 10), LLayout_Y(ANCHOR_CENTRE,  -20) };
-LAYOUTS clr_lblNames3[3] = { LLayout_X(ANCHOR_CENTRE_MAX, 10), LLayout_Y(ANCHOR_CENTRE,   20) };
-LAYOUTS clr_lblNames4[3] = { LLayout_X(ANCHOR_CENTRE_MAX, 10), LLayout_Y(ANCHOR_CENTRE,   60) };
+LAYOUTS clr_lblNames0[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE, -100 } };
+LAYOUTS clr_lblNames1[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,  -60 } };
+LAYOUTS clr_lblNames2[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS clr_lblNames3[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,   20 } };
+LAYOUTS clr_lblNames4[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,   60 } };
 
-LAYOUTS clr_lblRGB0[3]   = { LLayout_X(ANCHOR_CENTRE,  30), LLayout_Y(ANCHOR_CENTRE, -130) };
-LAYOUTS clr_lblRGB1[3]   = { LLayout_X(ANCHOR_CENTRE,  95), LLayout_Y(ANCHOR_CENTRE, -130) };
-LAYOUTS clr_lblRGB2[3]   = { LLayout_X(ANCHOR_CENTRE, 160), LLayout_Y(ANCHOR_CENTRE, -130) };
-LAYOUTS clr_cbClassic[3] = { LLayout_X(ANCHOR_CENTRE, -16), LLayout_Y(ANCHOR_CENTRE,  130) };
-LAYOUTS clr_btnBack[3]   = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE,  170) };
+LAYOUTS clr_lblRGB0[]   = { { ANCHOR_CENTRE,  30 }, { ANCHOR_CENTRE, -130 } };
+LAYOUTS clr_lblRGB1[]   = { { ANCHOR_CENTRE,  95 }, { ANCHOR_CENTRE, -130 } };
+LAYOUTS clr_lblRGB2[]   = { { ANCHOR_CENTRE, 160 }, { ANCHOR_CENTRE, -130 } };
+LAYOUTS clr_cbClassic[] = { { ANCHOR_CENTRE, -16 }, { ANCHOR_CENTRE,  130 } };
+LAYOUTS clr_btnBack[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  170 } };
 
 
 CC_NOINLINE static void ColoursScreen_Set(struct LInput* w, cc_uint8 value) {
@@ -519,13 +519,13 @@ static struct LWidget* directConnect_widgets[] = {
 	(struct LWidget*)&DirectConnectScreen.btnBack,      (struct LWidget*)&DirectConnectScreen.lblStatus
 };
 
-LAYOUTS dc_iptUsername[3] = { LLayout_X(ANCHOR_CENTRE_MIN, -165), LLayout_Y(ANCHOR_CENTRE, -120) };
-LAYOUTS dc_iptAddress[3]  = { LLayout_X(ANCHOR_CENTRE_MIN, -165), LLayout_Y(ANCHOR_CENTRE,  -75) };
-LAYOUTS dc_iptMppass[3]   = { LLayout_X(ANCHOR_CENTRE_MIN, -165), LLayout_Y(ANCHOR_CENTRE,  -30) };
+LAYOUTS dc_iptUsername[] = { { ANCHOR_CENTRE_MIN, -165 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS dc_iptAddress[]  = { { ANCHOR_CENTRE_MIN, -165 }, { ANCHOR_CENTRE,  -75 } };
+LAYOUTS dc_iptMppass[]   = { { ANCHOR_CENTRE_MIN, -165 }, { ANCHOR_CENTRE,  -30 } };
 
-LAYOUTS dc_btnConnect[3]  = { LLayout_X(ANCHOR_CENTRE, -110), LLayout_Y(ANCHOR_CENTRE, 20) };
-LAYOUTS dc_btnBack[3]     = { LLayout_X(ANCHOR_CENTRE,  125), LLayout_Y(ANCHOR_CENTRE, 20) };
-LAYOUTS dc_lblStatus[3]   = { LLayout_X(ANCHOR_CENTRE,    0), LLayout_Y(ANCHOR_CENTRE, 70) };
+LAYOUTS dc_btnConnect[]  = { { ANCHOR_CENTRE, -110 }, { ANCHOR_CENTRE, 20 } };
+LAYOUTS dc_btnBack[]     = { { ANCHOR_CENTRE,  125 }, { ANCHOR_CENTRE, 20 } };
+LAYOUTS dc_lblStatus[]   = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE, 70 } };
 
 
 static void DirectConnectScreen_UrlFilter(cc_string* str) {
@@ -658,10 +658,10 @@ static struct LWidget* mfa_widgets[] = {
 	(struct LWidget*)&MFAScreen.btnSignIn, (struct LWidget*)&MFAScreen.btnCancel
 };
 
-LAYOUTS mfa_lblTitle[3]  = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, -115) };
-LAYOUTS mfa_iptCode[3]   = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE,  -75) };
-LAYOUTS mfa_btnSignIn[3] = { LLayout_X(ANCHOR_CENTRE, -90), LLayout_Y(ANCHOR_CENTRE,  -25) };
-LAYOUTS mfa_btnCancel[3] = { LLayout_X(ANCHOR_CENTRE,  90), LLayout_Y(ANCHOR_CENTRE,  -25) };
+LAYOUTS mfa_lblTitle[]  = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, -115 } };
+LAYOUTS mfa_iptCode[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  -75 } };
+LAYOUTS mfa_btnSignIn[] = { { ANCHOR_CENTRE, -90 }, { ANCHOR_CENTRE,  -25 } };
+LAYOUTS mfa_btnCancel[] = { { ANCHOR_CENTRE,  90 }, { ANCHOR_CENTRE,  -25 } };
 
 
 static void MainScreen_DoLogin(void);
@@ -727,19 +727,19 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions
 };
 
-LAYOUTS main_iptUsername[3] = { LLayout_X(ANCHOR_CENTRE_MIN, -140), LLayout_Y(ANCHOR_CENTRE, -120) };
-LAYOUTS main_iptPassword[3] = { LLayout_X(ANCHOR_CENTRE_MIN, -140), LLayout_Y(ANCHOR_CENTRE,  -75) };
+LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS main_iptPassword[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE,  -75 } };
 
-LAYOUTS main_btnLogin[3]  = { LLayout_X(ANCHOR_CENTRE, -90), LLayout_Y(ANCHOR_CENTRE, -25) };
-LAYOUTS main_lblStatus[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE,  20) };
+LAYOUTS main_btnLogin[]  = { { ANCHOR_CENTRE, -90 }, { ANCHOR_CENTRE, -25 } };
+LAYOUTS main_lblStatus[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  20 } };
 
-LAYOUTS main_btnResume[3]  = { LLayout_X(ANCHOR_CENTRE, 90), LLayout_Y(ANCHOR_CENTRE, -25) };
-LAYOUTS main_btnDirect[3]  = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE,  60) };
-LAYOUTS main_btnSPlayer[3] = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE, 110) };
+LAYOUTS main_btnResume[]  = { { ANCHOR_CENTRE, 90 }, { ANCHOR_CENTRE, -25 } };
+LAYOUTS main_btnDirect[]  = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,  60 } };
+LAYOUTS main_btnSPlayer[] = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 110 } };
 
-LAYOUTS main_lblUpdate[3]   = { LLayout_X(ANCHOR_MAX, 10), LLayout_Y(ANCHOR_MAX, 45) };
-LAYOUTS main_btnOptions[3]  = { LLayout_X(ANCHOR_MAX,  6), LLayout_Y(ANCHOR_MAX,  6) };
-LAYOUTS main_btnRegister[3] = { LLayout_X(ANCHOR_MIN,  6), LLayout_Y(ANCHOR_MAX,  6) };
+LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX, 10 }, { ANCHOR_MAX, 45 } };
+LAYOUTS main_btnOptions[]  = { { ANCHOR_MAX,  6 }, { ANCHOR_MAX,  6 } };
+LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,  6 }, { ANCHOR_MAX,  6 } };
 
 
 struct ResumeInfo {
@@ -1034,12 +1034,12 @@ static struct LWidget* checkResources_widgets[] = {
 	(struct LWidget*)&CheckResourcesScreen.btnNo
 };
 
-LAYOUTS cres_lblLine1[3]  = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE, -50) };
-LAYOUTS cres_lblLine2[3]  = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE, -30) };
-LAYOUTS cres_lblStatus[3] = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  10) };
+LAYOUTS cres_lblLine1[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -50 } };
+LAYOUTS cres_lblLine2[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -30 } };
+LAYOUTS cres_lblStatus[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  10 } };
 
-LAYOUTS cres_btnYes[3] = { LLayout_X(ANCHOR_CENTRE, -70), LLayout_Y(ANCHOR_CENTRE, 45) };
-LAYOUTS cres_btnNo[3]  = { LLayout_X(ANCHOR_CENTRE,  70), LLayout_Y(ANCHOR_CENTRE, 45) };
+LAYOUTS cres_btnYes[] = { { ANCHOR_CENTRE, -70 }, { ANCHOR_CENTRE, 45 } };
+LAYOUTS cres_btnNo[]  = { { ANCHOR_CENTRE,  70 }, { ANCHOR_CENTRE, 45 } };
 
 
 static void CheckResourcesScreen_Yes(void*  w) { FetchResourcesScreen_SetActive(); }
@@ -1123,9 +1123,9 @@ static struct LWidget* fetchResources_widgets[] = {
 	(struct LWidget*)&FetchResourcesScreen.sdrProgress
 };
 
-LAYOUTS fres_lblStatus[3]   = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE, -10) };
-LAYOUTS fres_btnCancel[3]   = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  45) };
-LAYOUTS fres_sdrProgress[3] = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  15) };
+LAYOUTS fres_lblStatus[]   = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -10 } };
+LAYOUTS fres_btnCancel[]   = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  45 } };
+LAYOUTS fres_sdrProgress[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  15 } };
 
 
 static void FetchResourcesScreen_Init(struct LScreen* s_) {
@@ -1221,13 +1221,13 @@ static struct LWidget* servers_widgets[] = {
 	(struct LWidget*)&ServersScreen.btnRefresh, (struct LWidget*)&ServersScreen.table
 };
 
-LAYOUTS srv_iptSearch[3] = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MIN, 10) };
-LAYOUTS srv_iptHash[3]   = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MAX, 10) };
-LAYOUTS srv_table[5]     = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MIN, 50), LLayout_W(0), LLayout_H(50) };
+LAYOUTS srv_iptSearch[] = { { ANCHOR_MIN, 10 }, { ANCHOR_MIN, 10 } };
+LAYOUTS srv_iptHash[]   = { { ANCHOR_MIN, 10 }, { ANCHOR_MAX, 10 } };
+LAYOUTS srv_table[5]    = { { ANCHOR_MIN, 10 }, { ANCHOR_MIN | LLAYOUT_EXTRA, 50 }, { LLAYOUT_WIDTH, 0 }, { LLAYOUT_HEIGHT, 50 } };
 
-LAYOUTS srv_btnBack[3]    = { LLayout_X(ANCHOR_MAX,  10), LLayout_Y(ANCHOR_MIN, 10) };
-LAYOUTS srv_btnConnect[3] = { LLayout_X(ANCHOR_MAX,  10), LLayout_Y(ANCHOR_MAX, 10) };
-LAYOUTS srv_btnRefresh[3] = { LLayout_X(ANCHOR_MAX, 135), LLayout_Y(ANCHOR_MIN, 10) };
+LAYOUTS srv_btnBack[]    = { { ANCHOR_MAX,  10 }, { ANCHOR_MIN, 10 } };
+LAYOUTS srv_btnConnect[] = { { ANCHOR_MAX,  10 }, { ANCHOR_MAX, 10 } };
+LAYOUTS srv_btnRefresh[] = { { ANCHOR_MAX, 135 }, { ANCHOR_MIN, 10 } };
 	
 
 static void ServersScreen_Connect(void* w) {
@@ -1351,12 +1351,6 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 				FetchServersTask.Base.success ? "Refresh" : "&cFailed");
 }
 
-static void ServersScreen_Layout(struct LScreen* s_) {
-	struct ServersScreen* s = (struct ServersScreen*)s_;
-	LScreen_DoLayout(s_);
-	LTable_Reposition(&s->table);
-}
-
 static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->table.VTABLE->MouseWheel(&s->table, delta);
@@ -1385,7 +1379,6 @@ void ServersScreen_SetActive(void) {
 	s->Init       = ServersScreen_Init;
 	s->Show       = ServersScreen_Show;
 	s->Tick       = ServersScreen_Tick;
-	s->Layout     = ServersScreen_Layout;
 	s->MouseWheel = ServersScreen_MouseWheel;
 	s->KeyDown    = ServersScreen_KeyDown;
 	s->MouseUp    = ServersScreen_MouseUp;
@@ -1421,17 +1414,17 @@ static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.btnBack
 };
 
-LAYOUTS set_btnUpdates[3] = { LLayout_X(ANCHOR_CENTRE,     -135), LLayout_Y(ANCHOR_CENTRE, -120) };
-LAYOUTS set_lblUpdates[3] = { LLayout_X(ANCHOR_CENTRE_MIN,  -70), LLayout_Y(ANCHOR_CENTRE, -120) };
-LAYOUTS set_btnMode[3]    = { LLayout_X(ANCHOR_CENTRE,     -135), LLayout_Y(ANCHOR_CENTRE,  -70) };
-LAYOUTS set_lblMode[3]    = { LLayout_X(ANCHOR_CENTRE_MIN,  -70), LLayout_Y(ANCHOR_CENTRE,  -70) };
-LAYOUTS set_btnColours[3] = { LLayout_X(ANCHOR_CENTRE,     -135), LLayout_Y(ANCHOR_CENTRE,  -20) };
-LAYOUTS set_lblColours[3] = { LLayout_X(ANCHOR_CENTRE_MIN,  -70), LLayout_Y(ANCHOR_CENTRE,  -20) };
+LAYOUTS set_btnUpdates[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS set_lblUpdates[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS set_lblMode[]    = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS set_btnColours[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS set_lblColours[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -20 } };
 
-LAYOUTS set_sep[3]     = { LLayout_X(ANCHOR_CENTRE,        0), LLayout_Y(ANCHOR_CENTRE,  15) };
-LAYOUTS set_cbExtra[3] = { LLayout_X(ANCHOR_CENTRE_MIN, -190), LLayout_Y(ANCHOR_CENTRE,  44) };
-LAYOUTS set_cbEmpty[3] = { LLayout_X(ANCHOR_CENTRE_MIN, -190), LLayout_Y(ANCHOR_CENTRE,  84) };
-LAYOUTS set_btnBack[3] = { LLayout_X(ANCHOR_CENTRE,        0), LLayout_Y(ANCHOR_CENTRE, 170) };
+LAYOUTS set_sep[]     = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE,  15 } };
+LAYOUTS set_cbExtra[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  44 } };
+LAYOUTS set_cbEmpty[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  84 } };
+LAYOUTS set_btnBack[] = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE, 170 } };
 
 
 #if defined CC_BUILD_MOBILE
@@ -1526,11 +1519,11 @@ static struct LWidget* themes_widgets[] = {
 	(struct LWidget*)&ThemesScreen.btnBack
 };
 
-LAYOUTS the_btnModern[3]  = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE, -120) };
-LAYOUTS the_btnClassic[3] = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  -70) };
-LAYOUTS the_btnNordic[3]  = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  -20) };
-LAYOUTS the_btnCustom[3]  = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  120) };
-LAYOUTS the_btnBack[3]    = { LLayout_X(ANCHOR_CENTRE, 0), LLayout_Y(ANCHOR_CENTRE,  170) };
+LAYOUTS the_btnModern[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS the_btnClassic[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS the_btnNordic[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS the_btnCustom[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  120 } };
+LAYOUTS the_btnBack[]    = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
 
 static void ThemesScreen_Set(const struct LauncherTheme* theme) {
@@ -1599,24 +1592,24 @@ static struct LWidget* updates_widgets[] = {
 	(struct LWidget*)&UpdatesScreen.btnRel[1], (struct LWidget*)&UpdatesScreen.btnDev[1],
 };
 
-LAYOUTS upd_lblYour[3] = { LLayout_X(ANCHOR_CENTRE, -5), LLayout_Y(ANCHOR_CENTRE, -120) };
-LAYOUTS upd_seps0[3]   = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE, -100) };
-LAYOUTS upd_seps1[3]   = { LLayout_X(ANCHOR_CENTRE,  0), LLayout_Y(ANCHOR_CENTRE,   -5) };
+LAYOUTS upd_lblYour[] = { { ANCHOR_CENTRE, -5 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS upd_seps0[]   = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, -100 } };
+LAYOUTS upd_seps1[]   = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,   -5 } };
 
-LAYOUTS upd_lblRel[3]    = { LLayout_X(ANCHOR_CENTRE, -20), LLayout_Y(ANCHOR_CENTRE, -75) };
-LAYOUTS upd_lblDev[3]    = { LLayout_X(ANCHOR_CENTRE, -30), LLayout_Y(ANCHOR_CENTRE,  20) };
-LAYOUTS upd_lblInfo[3]   = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, 105) };
-LAYOUTS upd_lblStatus[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, 130) };
-LAYOUTS upd_btnBack[3]   = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, 170) };
+LAYOUTS upd_lblRel[]    = { { ANCHOR_CENTRE, -20 }, { ANCHOR_CENTRE, -75 } };
+LAYOUTS upd_lblDev[]    = { { ANCHOR_CENTRE, -30 }, { ANCHOR_CENTRE,  20 } };
+LAYOUTS upd_lblInfo[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, 105 } };
+LAYOUTS upd_lblStatus[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, 130 } };
+LAYOUTS upd_btnBack[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, 170 } };
 
 /* Update button layouts when 1 build */
-LAYOUTS upd_btnRel0_1[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE, -40) };
-LAYOUTS upd_btnDev0_1[3] = { LLayout_X(ANCHOR_CENTRE,   0), LLayout_Y(ANCHOR_CENTRE,  55) };
+LAYOUTS upd_btnRel0_1[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, -40 } };
+LAYOUTS upd_btnDev0_1[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  55 } };
 /* Update button layouts when 2 builds */
-LAYOUTS upd_btnRel0_2[3] = { LLayout_X(ANCHOR_CENTRE, -80), LLayout_Y(ANCHOR_CENTRE, -40) };
-LAYOUTS upd_btnRel1_2[3] = { LLayout_X(ANCHOR_CENTRE,  80), LLayout_Y(ANCHOR_CENTRE, -40) };
-LAYOUTS upd_btnDev0_2[3] = { LLayout_X(ANCHOR_CENTRE, -80), LLayout_Y(ANCHOR_CENTRE,  55) };
-LAYOUTS upd_btnDev1_2[3] = { LLayout_X(ANCHOR_CENTRE,  80), LLayout_Y(ANCHOR_CENTRE,  55) };
+LAYOUTS upd_btnRel0_2[] = { { ANCHOR_CENTRE, -80 }, { ANCHOR_CENTRE, -40 } };
+LAYOUTS upd_btnRel1_2[] = { { ANCHOR_CENTRE,  80 }, { ANCHOR_CENTRE, -40 } };
+LAYOUTS upd_btnDev0_2[] = { { ANCHOR_CENTRE, -80 }, { ANCHOR_CENTRE,  55 } };
+LAYOUTS upd_btnDev1_2[] = { { ANCHOR_CENTRE,  80 }, { ANCHOR_CENTRE,  55 } };
 
 
 CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, int delta) {

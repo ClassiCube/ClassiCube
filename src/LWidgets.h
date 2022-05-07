@@ -11,15 +11,9 @@ enum LWIDGET_TYPE {
 	LWIDGET_LABEL,  LWIDGET_LINE, LWIDGET_SLIDER, LWIDGET_TABLE
 };
 
-#define LLAYOUT_TYPE_X 0x0100
-#define LLAYOUT_TYPE_Y 0x0200
-#define LLAYOUT_TYPE_W 0x0300
-#define LLAYOUT_TYPE_H 0x0400
-
-#define LLayout_X(anchor, offset) { LLAYOUT_TYPE_X | anchor, offset }
-#define LLayout_Y(anchor, offset) { LLAYOUT_TYPE_Y | anchor, offset }
-#define LLayout_W(offset)         { LLAYOUT_TYPE_W, offset }
-#define LLayout_H(offset)         { LLAYOUT_TYPE_H, offset }
+#define LLAYOUT_EXTRA  0x0100
+#define LLAYOUT_WIDTH  0x0200
+#define LLAYOUT_HEIGHT 0x0300
 struct LLayout { short type, offset; };
 
 struct LWidgetVTABLE {
@@ -216,8 +210,6 @@ struct LTableCell { struct LTable* table; int x, y, width; };
 void LTable_Init(struct LTable* table, const struct LLayout* layouts);
 /* Resets state of a table (reset sorter, filter, etc) */
 void LTable_Reset(struct LTable* table);
-/* Adjusts Y position of rows and number of visible rows. */
-void LTable_Reposition(struct LTable* table);
 /* Whether this table would handle the given key being pressed. */
 /* e.g. used so pressing up/down works even when another widget is selected */
 cc_bool LTable_HandlesKey(int key);

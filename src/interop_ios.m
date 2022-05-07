@@ -776,13 +776,11 @@ static void LButton_UpdateBackground(struct LButton* w) {
     struct Bitmap bmp1, bmp2;
     
     Bitmap_Allocate(&bmp1, w->width, w->height);
-    w->hovered = false;
-    LButton_DrawBackground(w, &bmp1, 0, 0);
+    LButton_DrawBackground(&bmp1, 0, 0, w->width, w->height, false);
     [btn setBackgroundImage:ToUIImage(&bmp1) forState:UIControlStateNormal];
     
     Bitmap_Allocate(&bmp2, w->width, w->height);
-    w->hovered = true;
-    LButton_DrawBackground(w, &bmp2, 0, 0);
+    LButton_DrawBackground(&bmp2, 0, 0, w->width, w->height, true);
     [btn setBackgroundImage:ToUIImage(&bmp2) forState:UIControlStateHighlighted];
 }
 
