@@ -13,7 +13,6 @@ enum LWIDGET_TYPE {
 
 #define LLAYOUT_TYPE_X 0x0100
 #define LLAYOUT_TYPE_Y 0x0200
-#define LLayout_End { 0, 0 }
 #define LLayout_X(anchor, offset) { LLAYOUT_TYPE_X | anchor, offset }
 #define LLayout_Y(anchor, offset) { LLAYOUT_TYPE_Y | anchor, offset }
 struct LLayout { short type, offset; };
@@ -212,7 +211,7 @@ struct LTableCell { struct LTable* table; int x, y, width; };
 
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */
-void LTable_Init(struct LTable* table);
+void LTable_Init(struct LTable* table, const struct LLayout* layouts);
 /* Resets state of a table (reset sorter, filter, etc) */
 void LTable_Reset(struct LTable* table);
 /* Adjusts Y position of rows and number of visible rows. */

@@ -398,8 +398,9 @@ static Rect2D caretRect, lastCaretRect;
 #define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
 
 void LBackend_InputInit(struct LInput* w, int width) {
-	w->width  = Display_ScaleX(width);
-	w->height = Display_ScaleY(30);
+	w->width    = Display_ScaleX(width);
+	w->height   = Display_ScaleY(30);
+	w->minWidth = w->width;
 }
 
 void LBackend_InputUpdate(struct LInput* w) {

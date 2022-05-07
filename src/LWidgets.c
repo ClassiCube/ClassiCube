@@ -361,7 +361,6 @@ void LInput_Init(struct LInput* w, int width, const char* hintText, const struct
 	w->hintText = hintText;
 	w->caretPos = -1;
 	LBackend_InputInit(w, width);
-	w->minWidth = w->width;
 }
 
 void LInput_SetText(struct LInput* w, const cc_string* text) {
@@ -661,7 +660,7 @@ static const struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseDown, LTable_MouseUp, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
-void LTable_Init(struct LTable* w) {
+void LTable_Init(struct LTable* w, const struct LLayout* layouts) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;
 	w->type       = LWIDGET_TABLE;
@@ -669,6 +668,7 @@ void LTable_Init(struct LTable* w) {
 	w->numColumns = Array_Elems(tableColumns);
 	w->sortingCol = -1;
 	w->opaque     = true;
+	w->layouts    = layouts;
 	
 	for (i = 0; i < w->numColumns; i++) {
 		w->columns[i].width = Display_ScaleX(w->columns[i].width);
