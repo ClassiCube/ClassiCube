@@ -273,7 +273,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
 
-	LButton_DrawBackground(w, &framebuffer, w->x, w->y);
+	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, w->hovered);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);

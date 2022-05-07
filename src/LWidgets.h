@@ -13,8 +13,13 @@ enum LWIDGET_TYPE {
 
 #define LLAYOUT_TYPE_X 0x0100
 #define LLAYOUT_TYPE_Y 0x0200
+#define LLAYOUT_TYPE_W 0x0300
+#define LLAYOUT_TYPE_H 0x0400
+
 #define LLayout_X(anchor, offset) { LLAYOUT_TYPE_X | anchor, offset }
 #define LLayout_Y(anchor, offset) { LLAYOUT_TYPE_Y | anchor, offset }
+#define LLayout_W(offset)         { LLAYOUT_TYPE_W, offset }
+#define LLayout_H(offset)         { LLAYOUT_TYPE_H, offset }
 struct LLayout { short type, offset; };
 
 struct LWidgetVTABLE {
@@ -70,7 +75,7 @@ struct LButton {
 };
 CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LLayout* layouts);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
-CC_NOINLINE void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y);
+CC_NOINLINE void LButton_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered);
 
 struct LCheckbox;
 struct LCheckbox {

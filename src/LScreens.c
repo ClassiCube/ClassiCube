@@ -1223,7 +1223,7 @@ static struct LWidget* servers_widgets[] = {
 
 LAYOUTS srv_iptSearch[3] = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MIN, 10) };
 LAYOUTS srv_iptHash[3]   = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MAX, 10) };
-LAYOUTS srv_table[3]     = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MIN, 50) };
+LAYOUTS srv_table[5]     = { LLayout_X(ANCHOR_MIN, 10), LLayout_Y(ANCHOR_MIN, 50), LLayout_W(0), LLayout_H(50) };
 
 LAYOUTS srv_btnBack[3]    = { LLayout_X(ANCHOR_MAX,  10), LLayout_Y(ANCHOR_MIN, 10) };
 LAYOUTS srv_btnConnect[3] = { LLayout_X(ANCHOR_MAX,  10), LLayout_Y(ANCHOR_MAX, 10) };
@@ -1354,10 +1354,6 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 static void ServersScreen_Layout(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	LScreen_DoLayout(s_);
-	s->table.width  = WindowInfo.Width  - s->table.x;
-	s->table.height = WindowInfo.Height - s->table.y * 2;
-	s->table.height = max(1, s->table.height);
-
 	LTable_Reposition(&s->table);
 }
 

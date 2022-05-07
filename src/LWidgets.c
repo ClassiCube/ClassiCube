@@ -42,6 +42,14 @@ void LWidget_CalcPosition(void* widget) {
 		case LLAYOUT_TYPE_Y:
 			w->y = Gui_CalcPos(anchor, Display_ScaleY(l->offset), w->height, WindowInfo.Height);
 			break;
+		case LLAYOUT_TYPE_W:
+			w->width  = WindowInfo.Width  - w->x - Display_ScaleX(l->offset);
+			w->width  = max(1, w->width);
+			break;
+		case LLAYOUT_TYPE_H:
+			w->height = WindowInfo.Height - w->y - Display_ScaleY(l->offset);
+			w->height = max(1, w->height);
+			break;
 		}
 		l++;
 	}
@@ -60,23 +68,22 @@ static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 	return BitmapCol_Make(r, g, b, 255);
 }
 
-static void LButton_DrawBase(struct LButton* w, struct Bitmap* bmp, int x, int y) {
-	BitmapCol color = w->hovered ? Launcher_Theme.ButtonForeActiveColor 
-								 : Launcher_Theme.ButtonForeColor;
+static void LButton_DrawBase(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
+	BitmapCol color = hovered ? Launcher_Theme.ButtonForeActiveColor 
+							  : Launcher_Theme.ButtonForeColor;
 
 	if (Launcher_Theme.ClassicBackground) {
 		Gradient_Noise(bmp, color, 8,
-						x + oneX,          y + oneY,
-						w->width - twoX,   w->height - twoY);
+						x + oneX,       y + oneY,
+						width - twoX,   height - twoY);
 	} else {
-		
 		Gradient_Vertical(bmp, LButton_Expand(color, 8), LButton_Expand(color, -8),
-						  x + oneX,        y + oneY,
-						  w->width - twoX, w->height - twoY);
+						  x + oneX,     y + oneY,
+						  width - twoX, height - twoY);
 	}
 }
 
-static void LButton_DrawBorder(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+static void LButton_DrawBorder(struct Bitmap* bmp, int x, int y, int width, int height) {
 	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
 #ifdef CC_BUILD_IOS
 	int xoff = 0; /* TODO temp hack */
@@ -85,43 +92,43 @@ static void LButton_DrawBorder(struct LButton* w, struct Bitmap* bmp, int x, int
 #endif
 
 	Drawer2D_Clear(bmp, backColor, 
-					x + xoff,            y,
-					w->width - 2 * xoff, oneY);
+					x + xoff,         y,
+					width - 2 * xoff, oneY);
 	Drawer2D_Clear(bmp, backColor,
-					x + xoff,            y + w->height - oneY,
-					w->width - 2 * xoff, oneY);
+					x + xoff,         y + height - oneY,
+					width - 2 * xoff, oneY);
 	Drawer2D_Clear(bmp, backColor,
-					x,                   y + oneY,
-					oneX,                w->height - twoY);
+					x,                y + oneY,
+					oneX,             height - twoY);
 	Drawer2D_Clear(bmp, backColor,
-					x + w->width - oneX, y + oneY,
-					oneX,                w->height - twoY);
+					x + width - oneX, y + oneY,
+					oneX,             height - twoY);
 }
 
-static void LButton_DrawHighlight(struct LButton* w, struct Bitmap* bmp, int x, int y) {
+static void LButton_DrawHighlight(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
 	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
 	BitmapCol color       = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		if (w->hovered) color = activeColor;
+		if (hovered) color = activeColor;
 
 		Drawer2D_Clear(bmp, color,
-						x + twoX,         y + oneY,
-						w->width - fourX, oneY);
+						x + twoX,      y + oneY,
+						width - fourX, oneY);
 		Drawer2D_Clear(bmp, color,
-						x + oneX,         y + twoY,
-						oneX,             w->height - fourY);
-	} else if (!w->hovered) {
+						x + oneX,      y + twoY,
+						oneX,          height - fourY);
+	} else if (!hovered) {
 		Drawer2D_Clear(bmp, color,
-						x + twoX,         y + oneY,
-						w->width - fourX, oneY);
+						x + twoX,      y + oneY,
+						width - fourX, oneY);
 	}
 }
 
-void LButton_DrawBackground(struct LButton* w, struct Bitmap* bmp, int x, int y) {
-	LButton_DrawBase(w,      bmp, x, y);
-	LButton_DrawBorder(w,    bmp, x, y);
-	LButton_DrawHighlight(w, bmp, x, y);
+void LButton_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
+	LButton_DrawBase(     bmp, x, y, width, height, hovered);
+	LButton_DrawBorder(   bmp, x, y, width, height);
+	LButton_DrawHighlight(bmp, x, y, width, height, hovered);
 }
 
 static void LButton_Draw(void* widget) {
