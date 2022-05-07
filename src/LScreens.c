@@ -1011,7 +1011,7 @@ void MainScreen_SetActive(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init = MainScreen_Init;
 	s->Free = MainScreen_Free;
-	s->Tick = MainScreen_Tick;\
+	s->Tick = MainScreen_Tick;
 
 	s->title         = "ClassiCube";
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;

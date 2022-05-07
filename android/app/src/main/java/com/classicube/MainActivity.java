@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -36,6 +37,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View;
 import android.view.Window;
@@ -45,6 +47,8 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RelativeLayout;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -404,6 +408,13 @@ public class MainActivity extends Activity
 	// ====================================================================
 	// ----------------------------- 2D view ------------------------------
 	// ====================================================================
+	static final int ANCHOR_MIN    = 0;     // offset
+	static final int ANCHOR_CENTRE = 1;     // (axis/2) - (size/2) - offset
+	static final int ANCHOR_MAX    = 2;     // axis - size - offset
+	static final int ANCHOR_CENTRE_MIN = 3; // (axis/2) + offset
+	static final int ANCHOR_CENTRE_MAX = 4; // (axis/2) - size - offset
+	static int widgetID = 200;
+
 	public void create2DView_async() {
 		runOnUiThread(new Runnable() {
 			public void run() { create2DView(); }
@@ -412,8 +423,8 @@ public class MainActivity extends Activity
 
 	void create2DView() {
 		// setContentView, requestFocus - API level 1
-		curView       = new AbsoluteLayout(this);
-		launcher	  = true;
+		curView  = new RelativeLayout(this);
+		launcher = true;
 
 		setContentView(curView);
 		curView.requestFocus();
@@ -421,14 +432,65 @@ public class MainActivity extends Activity
 		pushCmd(CMD_2D_CREATED);
 	}
 
-	void buttonAdd() {
+	RelativeLayout.LayoutParams make2DParams(int xMode, int xOffset, int yMode, int yOffset) {
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+		if (xMode == ANCHOR_MIN) {
+			params.leftMargin  = xOffset;
+		} else if (xMode == ANCHOR_MAX) {
+			params.rightMargin = xOffset;
+			params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+		} else if (xMode == ANCHOR_CENTRE) {
+			params.leftMargin  = xOffset;
+			params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+		} else if (xMode == ANCHOR_CENTRE_MIN) {
+			//params.leftMargin  = xOffset;
+			//params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+		}
+
+		if (yMode == ANCHOR_MIN) {
+			params.topMargin    = yOffset;
+		} else if (yMode == ANCHOR_MAX) {
+			params.bottomMargin = yOffset;
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		} else if (yMode == ANCHOR_CENTRE) {
+			params.topMargin    = yOffset;
+			params.addRule(RelativeLayout.CENTER_VERTICAL);
+		} else if (yMode == ANCHOR_CENTRE_MIN) {
+			params.topMargin    = yOffset;
+			params.addRule(RelativeLayout.CENTER_VERTICAL);
+		}
+		return params;
+	}
+
+	int buttonAdd(int xMode, int xOffset, int yMode, int yOffset) {
 		final Button btn = new Button(this);
+		final ViewGroup.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
+		btn.setId(widgetID++);
+
 		runOnUiThread(new Runnable() {
 			public void run() {
-				AbsoluteLayout al = (AbsoluteLayout)curView;
-				al.addView(btn);
+				RelativeLayout rl = (RelativeLayout)curView;
+				rl.addView(btn, params);
 			}
 		});
+		return btn.getId();
+	}
+
+	int inputAdd(int xMode, int xOffset, int yMode, int yOffset) {
+		final EditText ipt = new EditText(this);
+		final ViewGroup.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
+		ipt.setBackgroundColor(Color.WHITE);
+		ipt.setId(widgetID++);
+
+		runOnUiThread(new Runnable() {
+			public void run() {
+				RelativeLayout rl = (RelativeLayout)curView;
+				rl.addView(ipt, params);
+			}
+		});
+		return ipt.getId();
 	}
 
 
