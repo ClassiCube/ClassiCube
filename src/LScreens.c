@@ -17,6 +17,7 @@
 #include "Options.h"
 #include "Utils.h"
 #include "LBackend.h"
+#define LAYOUTS static const struct LLayout
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -39,6 +40,14 @@ CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int idx) 
 		if (Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return w;
 	}
 	return NULL;
+}
+
+static void LScreen_DoLayout(struct LScreen* s) {
+	int i;
+	for (i = 0; i < s->numWidgets; i++) 
+	{
+		LBackend_LayoutWidget(s->widgets[i]);
+	}
 }
 
 static void LScreen_Tick(struct LScreen* s) {
@@ -173,6 +182,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->Init = NULL; /* screens should always override this */
 	s->Show = LScreen_NullFunc;
 	s->Free = LScreen_NullFunc;
+	s->Layout     = LScreen_DoLayout;
 	s->Tick       = LScreen_Tick;
 	s->KeyDown    = LScreen_KeyDown;
 	s->KeyPress   = LScreen_KeyPress;
@@ -223,6 +233,23 @@ static struct LWidget* chooseMode_widgets[] = {
 	NULL
 };
 
+LAYOUTS mode_seps0[] = { { ANCHOR_CENTRE, -5 }, { ANCHOR_CENTRE, -85 } };
+LAYOUTS mode_seps1[] = { { ANCHOR_CENTRE, -5 }, { ANCHOR_CENTRE, -15 } };
+
+LAYOUTS mode_btnEnhanced[]    = { { ANCHOR_CENTRE_MIN, -250 }, { ANCHOR_CENTRE, -120      } };
+LAYOUTS mode_lblEnhanced0[]   = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE, -120 - 12 } };
+LAYOUTS mode_lblEnhanced1[]   = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE, -120 + 12 } };
+LAYOUTS mode_btnClassicHax[]  = { { ANCHOR_CENTRE_MIN, -250 }, { ANCHOR_CENTRE,  -50      } };
+LAYOUTS mode_lblClassicHax0[] = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,  -50 - 12 } };
+LAYOUTS mode_lblClassicHax1[] = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,  -50 + 12 } };
+LAYOUTS mode_btnClassic[]     = { { ANCHOR_CENTRE_MIN, -250 }, { ANCHOR_CENTRE,   20      } };
+LAYOUTS mode_lblClassic0[]    = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,   20 - 12 } };
+LAYOUTS mode_lblClassic1[]    = { { ANCHOR_CENTRE_MIN,  -85 }, { ANCHOR_CENTRE,   20 + 12 } };
+
+LAYOUTS mode_lblHelp[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, 160 } };
+LAYOUTS mode_btnBack[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, 170 } };
+
+
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
 	Options_SetBool(OPT_CLASSIC_MODE, classic);
 	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
@@ -248,23 +275,23 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	s->widgets     = chooseMode_widgets;
 	s->numWidgets  = Array_Elems(chooseMode_widgets);
 
-	LLine_Init(  &s->seps[0], 490);
-	LLine_Init(  &s->seps[1], 490);
+	LLine_Init(  &s->seps[0], 490, mode_seps0);
+	LLine_Init(  &s->seps[1], 490, mode_seps1);
 
-	LButton_Init(&s->btnEnhanced, 145, 35, "Enhanced");
-	LLabel_Init( &s->lblEnhanced[0], "&eEnables custom blocks, changing env");
-	LLabel_Init( &s->lblEnhanced[1], "&esettings, longer messages, and more");
+	LButton_Init(&s->btnEnhanced, 145, 35, "Enhanced",                        mode_btnEnhanced);
+	LLabel_Init( &s->lblEnhanced[0], "&eEnables custom blocks, changing env", mode_lblEnhanced0);
+	LLabel_Init( &s->lblEnhanced[1], "&esettings, longer messages, and more", mode_lblEnhanced1);
 
-	LButton_Init(&s->btnClassicHax, 145, 35, "Classic +hax");
-	LLabel_Init( &s->lblClassicHax[0], "&eSame as Classic mode, except that");
-	LLabel_Init( &s->lblClassicHax[1], "&ehacks (noclip/fly/speed) are enabled");
+	LButton_Init(&s->btnClassicHax, 145, 35, "Classic +hax",                     mode_btnClassicHax);
+	LLabel_Init( &s->lblClassicHax[0], "&eSame as Classic mode, except that",    mode_lblClassicHax0);
+	LLabel_Init( &s->lblClassicHax[1], "&ehacks (noclip/fly/speed) are enabled", mode_lblClassicHax1);
 
-	LButton_Init(&s->btnClassic, 145, 35, "Classic");
-	LLabel_Init( &s->lblClassic[0], "&eOnly uses blocks and features from");
-	LLabel_Init( &s->lblClassic[1], "&ethe original minecraft classic");
+	LButton_Init(&s->btnClassic, 145, 35, "Classic",                        mode_btnClassic);
+	LLabel_Init( &s->lblClassic[0], "&eOnly uses blocks and features from", mode_lblClassic0);
+	LLabel_Init( &s->lblClassic[1], "&ethe original minecraft classic",     mode_lblClassic1);
 
-	LLabel_Init( &s->lblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.");
-	LButton_Init(&s->btnBack, 80, 35, "Back");
+	LLabel_Init( &s->lblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.", mode_lblHelp);
+	LButton_Init(&s->btnBack, 80, 35, "Back",                                                  mode_btnBack);
 
 	s->btnEnhanced.OnClick   = UseModeEnhanced;
 	s->btnClassicHax.OnClick = UseModeClassicHax;
@@ -280,33 +307,11 @@ static void ChooseModeScreen_Show(struct LScreen* s_) {
 		(struct LWidget*)&ChooseModeScreen.btnBack;
 }
 
-static void ChooseModeScreen_Layout(struct LScreen* s_) {
-	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
-	LWidget_SetLocation(&s->seps[0],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -85);
-	LWidget_SetLocation(&s->seps[1],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -15);
-
-	LWidget_SetLocation(&s->btnEnhanced,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -120);
-	LWidget_SetLocation(&s->lblEnhanced[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -120 - 12);
-	LWidget_SetLocation(&s->lblEnhanced[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -120 + 12);
-
-	LWidget_SetLocation(&s->btnClassicHax,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -50);
-	LWidget_SetLocation(&s->lblClassicHax[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -50 - 12);
-	LWidget_SetLocation(&s->lblClassicHax[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -50 + 12);
-
-	LWidget_SetLocation(&s->btnClassic,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, 20);
-	LWidget_SetLocation(&s->lblClassic[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 20 - 12);
-	LWidget_SetLocation(&s->lblClassic[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 20 + 12);
-
-	LWidget_SetLocation(&s->lblHelp, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 160);
-	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
-}
-
 void ChooseModeScreen_SetActive(cc_bool firstTime) {
 	struct ChooseModeScreen* s = &ChooseModeScreen;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init      = ChooseModeScreen_Init;
 	s->Show      = ChooseModeScreen_Show;
-	s->Layout    = ChooseModeScreen_Layout;
 	s->firstTime = firstTime;
 
 	s->title         = "Choose mode";
@@ -339,6 +344,27 @@ static struct LWidget* colours_widgets[] = {
 	(struct LWidget*)&ColoursScreen.lblRGB[0],      (struct LWidget*)&ColoursScreen.lblRGB[1], (struct LWidget*)&ColoursScreen.lblRGB[2],
 	(struct LWidget*)&ColoursScreen.btnBack,        (struct LWidget*)&ColoursScreen.cbClassic
 };
+
+#define IptColor_Layout(xx, yy) { { ANCHOR_CENTRE, xx }, { ANCHOR_CENTRE, yy } }
+LAYOUTS clr_iptColours[15][2] = {
+	IptColor_Layout(30, -100), IptColor_Layout(95, -100), IptColor_Layout(160, -100),
+	IptColor_Layout(30,  -60), IptColor_Layout(95,  -60), IptColor_Layout(160,  -60),
+	IptColor_Layout(30,  -20), IptColor_Layout(95,  -20), IptColor_Layout(160,  -20),
+	IptColor_Layout(30,   20), IptColor_Layout(95,   20), IptColor_Layout(160,   20),
+	IptColor_Layout(30,   60), IptColor_Layout(95,   60), IptColor_Layout(160,   60),
+};
+LAYOUTS clr_lblNames0[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE, -100 } };
+LAYOUTS clr_lblNames1[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,  -60 } };
+LAYOUTS clr_lblNames2[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS clr_lblNames3[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,   20 } };
+LAYOUTS clr_lblNames4[] = { { ANCHOR_CENTRE_MAX, 10 }, { ANCHOR_CENTRE,   60 } };
+
+LAYOUTS clr_lblRGB0[]   = { { ANCHOR_CENTRE,  30 }, { ANCHOR_CENTRE, -130 } };
+LAYOUTS clr_lblRGB1[]   = { { ANCHOR_CENTRE,  95 }, { ANCHOR_CENTRE, -130 } };
+LAYOUTS clr_lblRGB2[]   = { { ANCHOR_CENTRE, 160 }, { ANCHOR_CENTRE, -130 } };
+LAYOUTS clr_cbClassic[] = { { ANCHOR_CENTRE, -16 }, { ANCHOR_CENTRE,  130 } };
+LAYOUTS clr_btnBack[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  170 } };
+
 
 CC_NOINLINE static void ColoursScreen_Set(struct LInput* w, cc_uint8 value) {
 	cc_string tmp; char tmpBuffer[STRING_SIZE];
@@ -434,25 +460,25 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	int i;
 	s->widgets    = colours_widgets;
 	s->numWidgets = Array_Elems(colours_widgets);
-	
+
 	for (i = 0; i < 5 * 3; i++) {
 		s->iptColours[i].inputType   = KEYBOARD_TYPE_INTEGER;
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
-		LInput_Init(&s->iptColours[i], 55, NULL);
+		LInput_Init(&s->iptColours[i], 55, NULL, clr_iptColours[i]);
 	}
 
-	LLabel_Init( &s->lblNames[0], "Background");
-	LLabel_Init( &s->lblNames[1], "Button border");
-	LLabel_Init( &s->lblNames[2], "Button highlight");
-	LLabel_Init( &s->lblNames[3], "Button");
-	LLabel_Init( &s->lblNames[4], "Active button");
+	LLabel_Init( &s->lblNames[0], "Background",       clr_lblNames0);
+	LLabel_Init( &s->lblNames[1], "Button border",    clr_lblNames1);
+	LLabel_Init( &s->lblNames[2], "Button highlight", clr_lblNames2);
+	LLabel_Init( &s->lblNames[3], "Button",           clr_lblNames3);
+	LLabel_Init( &s->lblNames[4], "Active button",    clr_lblNames4);
 
-	LLabel_Init( &s->lblRGB[0], "Red");
-	LLabel_Init( &s->lblRGB[1], "Green");
-	LLabel_Init( &s->lblRGB[2], "Blue");
-	LButton_Init(&s->btnBack, 80, 35, "Back");
+	LLabel_Init( &s->lblRGB[0], "Red",        clr_lblRGB0);
+	LLabel_Init( &s->lblRGB[1], "Green",      clr_lblRGB1);
+	LLabel_Init( &s->lblRGB[2], "Blue",       clr_lblRGB2);
+	LButton_Init(&s->btnBack, 80, 35, "Back", clr_btnBack);
 
-	LCheckbox_Init(&s->cbClassic, "Classic style");
+	LCheckbox_Init(&s->cbClassic, "Classic style", clr_cbClassic);
 	s->cbClassic.ValueChanged = ColoursScreen_ToggleBG;
 	s->btnBack.OnClick = SwitchToThemes;
 }
@@ -464,36 +490,11 @@ static void ColoursScreen_Show(struct LScreen* s_) {
 	ColoursScreen_UpdateAll(s);
 }
 
-static void ColoursScreen_Layout(struct LScreen* s_) {
-	struct ColoursScreen* s = (struct ColoursScreen*)s_;
-	int i, y;
-	for (i = 0; i < 5; i++) {
-		y = -100 + 40 * i;
-		LWidget_SetLocation(&s->iptColours[i*3 + 0], ANCHOR_CENTRE, ANCHOR_CENTRE,  30, y);
-		LWidget_SetLocation(&s->iptColours[i*3 + 1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, y);
-		LWidget_SetLocation(&s->iptColours[i*3 + 2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, y);
-	}
-
-	LWidget_SetLocation(&s->lblNames[0], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10, -100);
-	LWidget_SetLocation(&s->lblNames[1], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,  -60);
-	LWidget_SetLocation(&s->lblNames[2], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,  -20);
-	LWidget_SetLocation(&s->lblNames[3], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,   20);
-	LWidget_SetLocation(&s->lblNames[4], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,   60);
-
-	LWidget_SetLocation(&s->lblRGB[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  30, -130);
-	LWidget_SetLocation(&s->lblRGB[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, -130);
-	LWidget_SetLocation(&s->lblRGB[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, -130);
-
-	LWidget_SetLocation(&s->cbClassic,  ANCHOR_CENTRE, ANCHOR_CENTRE, -16, 130);
-	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 170);
-}
-
 void ColoursScreen_SetActive(void) {
 	struct ColoursScreen* s = &ColoursScreen;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = ColoursScreen_Init;
 	s->Show       = ColoursScreen_Show;
-	s->Layout     = ColoursScreen_Layout;
 	s->KeyDown    = ColoursScreen_KeyDown;
 	s->MouseWheel = ColoursScreen_MouseWheel;
 
@@ -517,6 +518,15 @@ static struct LWidget* directConnect_widgets[] = {
 	(struct LWidget*)&DirectConnectScreen.iptMppass,    (struct LWidget*)&DirectConnectScreen.btnConnect,
 	(struct LWidget*)&DirectConnectScreen.btnBack,      (struct LWidget*)&DirectConnectScreen.lblStatus
 };
+
+LAYOUTS dc_iptUsername[] = { { ANCHOR_CENTRE_MIN, -165 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS dc_iptAddress[]  = { { ANCHOR_CENTRE_MIN, -165 }, { ANCHOR_CENTRE,  -75 } };
+LAYOUTS dc_iptMppass[]   = { { ANCHOR_CENTRE_MIN, -165 }, { ANCHOR_CENTRE,  -30 } };
+
+LAYOUTS dc_btnConnect[]  = { { ANCHOR_CENTRE, -110 }, { ANCHOR_CENTRE, 20 } };
+LAYOUTS dc_btnBack[]     = { { ANCHOR_CENTRE,  125 }, { ANCHOR_CENTRE, 20 } };
+LAYOUTS dc_lblStatus[]   = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE, 70 } };
+
 
 static void DirectConnectScreen_UrlFilter(cc_string* str) {
 	static const cc_string prefix = String_FromConst("mc://");
@@ -604,13 +614,13 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	s->widgets    = directConnect_widgets;
 	s->numWidgets = Array_Elems(directConnect_widgets);
 
-	LInput_Init(&s->iptUsername, 330, "Username..");
-	LInput_Init(&s->iptAddress,  330, "IP address:Port number..");
-	LInput_Init(&s->iptMppass,   330, "Mppass..");
+	LInput_Init(&s->iptUsername, 330, "Username..",               dc_iptUsername);
+	LInput_Init(&s->iptAddress,  330, "IP address:Port number..", dc_iptAddress);
+	LInput_Init(&s->iptMppass,   330, "Mppass..",                 dc_iptMppass);
 
-	LButton_Init(&s->btnConnect, 110, 35, "Connect");
-	LButton_Init(&s->btnBack,     80, 35, "Back");
-	LLabel_Init( &s->lblStatus,  "");
+	LButton_Init(&s->btnConnect, 110, 35, "Connect", dc_btnConnect);
+	LButton_Init(&s->btnBack,     80, 35, "Back",    dc_btnBack);
+	LLabel_Init( &s->lblStatus,  "",                 dc_lblStatus);
 
 	s->iptUsername.ClipboardFilter = DirectConnectScreen_UrlFilter;
 	s->iptAddress.ClipboardFilter  = DirectConnectScreen_UrlFilter;
@@ -622,22 +632,10 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	DirectConnectScreen_Load(s);
 }
 
-static void DirectConnectScreen_Layout(struct LScreen* s_) {
-	struct DirectConnectScreen* s = (struct DirectConnectScreen*)s_;
-	LWidget_SetLocation(&s->iptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165, -120);
-	LWidget_SetLocation(&s->iptAddress,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165,  -75);
-	LWidget_SetLocation(&s->iptMppass,   ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165,  -30);
-
-	LWidget_SetLocation(&s->btnConnect, ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 20);
-	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE,  125, 20);
-	LWidget_SetLocation(&s->lblStatus,  ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 70);
-}
-
 void DirectConnectScreen_SetActive(void) {
 	struct DirectConnectScreen* s = &DirectConnectScreen;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init          = DirectConnectScreen_Init;
-	s->Layout        = DirectConnectScreen_Layout;
+	s->Init = DirectConnectScreen_Init;
 
 	s->title         = "Direct connect";
 	s->onEnterWidget = (struct LWidget*)&s->btnConnect;
@@ -660,6 +658,12 @@ static struct LWidget* mfa_widgets[] = {
 	(struct LWidget*)&MFAScreen.btnSignIn, (struct LWidget*)&MFAScreen.btnCancel
 };
 
+LAYOUTS mfa_lblTitle[]  = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, -115 } };
+LAYOUTS mfa_iptCode[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  -75 } };
+LAYOUTS mfa_btnSignIn[] = { { ANCHOR_CENTRE, -90 }, { ANCHOR_CENTRE,  -25 } };
+LAYOUTS mfa_btnCancel[] = { { ANCHOR_CENTRE,  90 }, { ANCHOR_CENTRE,  -25 } };
+
+
 static void MainScreen_DoLogin(void);
 static void MFAScreen_SignIn(void* w) {
 	MainScreen_SetActive();
@@ -675,10 +679,10 @@ static void MFAScreen_Init(struct LScreen* s_) {
 	s->widgets    = mfa_widgets;
 	s->numWidgets = Array_Elems(mfa_widgets);
 	
-	LLabel_Init( &s->lblTitle,  "");
-	LInput_Init( &s->iptCode,   280, "Login code..");
-	LButton_Init(&s->btnSignIn, 100, 35, "Sign in");
-	LButton_Init(&s->btnCancel, 100, 35, "Cancel");
+	LLabel_Init( &s->lblTitle,  "",                  mfa_lblTitle);
+	LInput_Init( &s->iptCode,   280, "Login code..", mfa_iptCode);
+	LButton_Init(&s->btnSignIn, 100, 35, "Sign in",  mfa_btnSignIn);
+	LButton_Init(&s->btnCancel, 100, 35, "Cancel",   mfa_btnCancel);
 
 	s->btnSignIn.OnClick = MFAScreen_SignIn;
 	s->btnCancel.OnClick = MFAScreen_Cancel;
@@ -692,20 +696,11 @@ static void MFAScreen_Show(struct LScreen* s_) {
 		"&cLogin code required (Check emails)");
 }
 
-static void MFAScreen_Layout(struct LScreen* s_) {
-	struct MFAScreen* s = (struct MFAScreen*)s_;
-	LWidget_SetLocation(&s->lblTitle,  ANCHOR_CENTRE, ANCHOR_CENTRE,   0, -115);
-	LWidget_SetLocation(&s->iptCode,   ANCHOR_CENTRE, ANCHOR_CENTRE,   0,  -75);
-	LWidget_SetLocation(&s->btnSignIn, ANCHOR_CENTRE, ANCHOR_CENTRE, -90,  -25);
-	LWidget_SetLocation(&s->btnCancel, ANCHOR_CENTRE, ANCHOR_CENTRE,  90,  -25);
-}
-
 void MFAScreen_SetActive(void) {
 	struct MFAScreen* s = &MFAScreen;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init   = MFAScreen_Init;
-	s->Show   = MFAScreen_Show;
-	s->Layout = MFAScreen_Layout;
+	s->Init = MFAScreen_Init;
+	s->Show = MFAScreen_Show;
 
 	s->title         = "Enter login code";
 	s->onEnterWidget = (struct LWidget*)&s->btnSignIn;
@@ -731,6 +726,21 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.lblUpdate,
 	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions
 };
+
+LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS main_iptPassword[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE,  -75 } };
+
+LAYOUTS main_btnLogin[]  = { { ANCHOR_CENTRE, -90 }, { ANCHOR_CENTRE, -25 } };
+LAYOUTS main_lblStatus[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  20 } };
+
+LAYOUTS main_btnResume[]  = { { ANCHOR_CENTRE, 90 }, { ANCHOR_CENTRE, -25 } };
+LAYOUTS main_btnDirect[]  = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,  60 } };
+LAYOUTS main_btnSPlayer[] = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 110 } };
+
+LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX, 10 }, { ANCHOR_MAX, 45 } };
+LAYOUTS main_btnOptions[]  = { { ANCHOR_MAX,  6 }, { ANCHOR_MAX,  6 } };
+LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,  6 }, { ANCHOR_MAX,  6 } };
+
 
 struct ResumeInfo {
 	cc_string user, ip, port, server, mppass;
@@ -849,18 +859,18 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->iptPassword.inputType = KEYBOARD_TYPE_PASSWORD;
 	s->lblUpdate.small       = true;
 
-	LInput_Init( &s->iptUsername, 280, "Username..");
-	LInput_Init( &s->iptPassword, 280, "Password..");
-	LButton_Init(&s->btnLogin,    100, 35, "Sign in");
-	LButton_Init(&s->btnResume,   100, 35, "Resume");
+	LInput_Init( &s->iptUsername, 280, "Username..",  main_iptUsername);
+	LInput_Init( &s->iptPassword, 280, "Password..",  main_iptPassword);
+	LButton_Init(&s->btnLogin,    100, 35, "Sign in", main_btnLogin);
+	LButton_Init(&s->btnResume,   100, 35, "Resume",  main_btnResume);
 
-	LLabel_Init( &s->lblStatus,  "");
-	LButton_Init(&s->btnDirect,  200, 35, "Direct connect");
-	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer");
+	LLabel_Init( &s->lblStatus,  "",                        main_lblStatus);
+	LButton_Init(&s->btnDirect,  200, 35, "Direct connect", main_btnDirect);
+	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer",   main_btnSPlayer);
 
-	LLabel_Init( &s->lblUpdate,   "&eChecking..");
-	LButton_Init(&s->btnRegister, 100, 35, "Register");
-	LButton_Init(&s->btnOptions,  100, 35, "Options");
+	LLabel_Init( &s->lblUpdate,   "&eChecking..",      main_lblUpdate);
+	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
+	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
@@ -889,23 +899,6 @@ static void MainScreen_Free(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	/* status should reset when user goes to another menu */
 	LLabel_SetConst(&s->lblStatus, "");
-}
-
-static void MainScreen_Layout(struct LScreen* s_) {
-	struct MainScreen* s = (struct MainScreen*)s_;
-	LWidget_SetLocation(&s->iptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140, -120);
-	LWidget_SetLocation(&s->iptPassword, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140,  -75);
-
-	LWidget_SetLocation(&s->btnLogin,  ANCHOR_CENTRE, ANCHOR_CENTRE, -90, -25);
-	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE,   0,  20);
-
-	LWidget_SetLocation(&s->btnResume,  ANCHOR_CENTRE, ANCHOR_CENTRE, 90, -25);
-	LWidget_SetLocation(&s->btnDirect,  ANCHOR_CENTRE, ANCHOR_CENTRE,  0,  60);
-	LWidget_SetLocation(&s->btnSPlayer, ANCHOR_CENTRE, ANCHOR_CENTRE,  0, 110);
-
-	LWidget_SetLocation(&s->lblUpdate,  ANCHOR_MAX, ANCHOR_MAX,  10,  45);
-	LWidget_SetLocation(&s->btnOptions, ANCHOR_MAX, ANCHOR_MAX,   6,   6);
-	LWidget_SetLocation(&s->btnRegister, ANCHOR_MIN, ANCHOR_MAX,  6,   6);
 }
 
 CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
@@ -1016,10 +1009,9 @@ static void MainScreen_Tick(struct LScreen* s_) {
 void MainScreen_SetActive(void) {
 	struct MainScreen* s = &MainScreen;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init   = MainScreen_Init;
-	s->Free   = MainScreen_Free;
-	s->Tick   = MainScreen_Tick;
-	s->Layout = MainScreen_Layout;
+	s->Init = MainScreen_Init;
+	s->Free = MainScreen_Free;
+	s->Tick = MainScreen_Tick;\
 
 	s->title         = "ClassiCube";
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
@@ -1042,6 +1034,14 @@ static struct LWidget* checkResources_widgets[] = {
 	(struct LWidget*)&CheckResourcesScreen.btnNo
 };
 
+LAYOUTS cres_lblLine1[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -50 } };
+LAYOUTS cres_lblLine2[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -30 } };
+LAYOUTS cres_lblStatus[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  10 } };
+
+LAYOUTS cres_btnYes[] = { { ANCHOR_CENTRE, -70 }, { ANCHOR_CENTRE, 45 } };
+LAYOUTS cres_btnNo[]  = { { ANCHOR_CENTRE,  70 }, { ANCHOR_CENTRE, 45 } };
+
+
 static void CheckResourcesScreen_Yes(void*  w) { FetchResourcesScreen_SetActive(); }
 static void CheckResourcesScreen_Next(void* w) {
 	Http_ClearPending();
@@ -1058,12 +1058,12 @@ static void CheckResourcesScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(checkResources_widgets);
 	s->lblStatus.small = true;
 
-	LLabel_Init( &s->lblLine1,  "Some required resources weren't found");
-	LLabel_Init( &s->lblLine2,  "Okay to download?");
-	LLabel_Init( &s->lblStatus, "");
+	LLabel_Init( &s->lblLine1,  "Some required resources weren't found", cres_lblLine1);
+	LLabel_Init( &s->lblLine2,  "Okay to download?", cres_lblLine2);
+	LLabel_Init( &s->lblStatus, "",                  cres_lblStatus);
 
-	LButton_Init(&s->btnYes, 70, 35, "Yes");
-	LButton_Init(&s->btnNo,  70, 35, "No");
+	LButton_Init(&s->btnYes, 70, 35, "Yes", cres_btnYes);
+	LButton_Init(&s->btnNo,  70, 35, "No",  cres_btnNo);
 	s->btnYes.OnClick = CheckResourcesScreen_Yes;
 	s->btnNo.OnClick  = CheckResourcesScreen_Next;
 }
@@ -1076,17 +1076,6 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 	String_InitArray(str, buffer);
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
 	LLabel_SetText(&s->lblStatus, &str);
-}
-
-static void CheckResourcesScreen_Layout(struct LScreen* s_) {
-	struct CheckResourcesScreen* s = (struct CheckResourcesScreen*)s_;
-	
-	LWidget_SetLocation(&s->lblLine1,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -50);
-	LWidget_SetLocation(&s->lblLine2,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
-
-	LWidget_SetLocation(&s->btnYes, ANCHOR_CENTRE, ANCHOR_CENTRE, -70, 45);
-	LWidget_SetLocation(&s->btnNo,  ANCHOR_CENTRE, ANCHOR_CENTRE,  70, 45);
 }
 
 #define RESOURCES_BACK_COLOR BitmapCol_Make( 12,  12,  12, 255)
@@ -1112,7 +1101,6 @@ void CheckResourcesScreen_SetActive(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = CheckResourcesScreen_Init;
 	s->Show   = CheckResourcesScreen_Show;
-	s->Layout = CheckResourcesScreen_Layout;
 	s->DrawBackground = CheckResourcesScreen_DrawBackground;
 	s->ResetArea      = CheckResourcesScreen_ResetArea;
 	s->onEnterWidget  = (struct LWidget*)&s->btnYes;
@@ -1135,26 +1123,24 @@ static struct LWidget* fetchResources_widgets[] = {
 	(struct LWidget*)&FetchResourcesScreen.sdrProgress
 };
 
+LAYOUTS fres_lblStatus[]   = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -10 } };
+LAYOUTS fres_btnCancel[]   = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  45 } };
+LAYOUTS fres_sdrProgress[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  15 } };
+
+
 static void FetchResourcesScreen_Init(struct LScreen* s_) {
 	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
 	s->widgets    = fetchResources_widgets;
 	s->numWidgets = Array_Elems(fetchResources_widgets);
 	s->lblStatus.small = true;
 
-	LLabel_Init( &s->lblStatus,   "");
-	LButton_Init(&s->btnCancel,   120, 35, "Cancel");
-	LSlider_Init(&s->sdrProgress, 200, 12, BitmapCol_Make(0, 220, 0, 255));
+	LLabel_Init( &s->lblStatus,   "",                                      fres_lblStatus);
+	LButton_Init(&s->btnCancel,   120, 35, "Cancel",                       fres_btnCancel);
+	LSlider_Init(&s->sdrProgress, 200, 12, BitmapCol_Make(0, 220, 0, 255), fres_sdrProgress);
 
 	s->btnCancel.OnClick = CheckResourcesScreen_Next;
 }
 static void FetchResourcesScreen_Show(struct LScreen* s_) { Fetcher_Run(); }
-
-static void FetchResourcesScreen_Layout(struct LScreen* s_) {
-	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
-	LWidget_SetLocation(&s->lblStatus,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -10);
-	LWidget_SetLocation(&s->btnCancel,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  45);
-	LWidget_SetLocation(&s->sdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  15);
-}
 
 static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, int reqID) {
 	cc_string str; char strBuffer[STRING_SIZE];
@@ -1208,10 +1194,9 @@ static void FetchResourcesScreen_Tick(struct LScreen* s_) {
 void FetchResourcesScreen_SetActive(void) {
 	struct FetchResourcesScreen* s = &FetchResourcesScreen;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init   = FetchResourcesScreen_Init;
-	s->Show   = FetchResourcesScreen_Show;
-	s->Tick   = FetchResourcesScreen_Tick;
-	s->Layout = FetchResourcesScreen_Layout;
+	s->Init = FetchResourcesScreen_Init;
+	s->Show = FetchResourcesScreen_Show;
+	s->Tick = FetchResourcesScreen_Tick;
 	s->DrawBackground = CheckResourcesScreen_DrawBackground;
 	s->ResetArea      = CheckResourcesScreen_ResetArea;
 	Launcher_SetScreen((struct LScreen*)s);
@@ -1235,6 +1220,15 @@ static struct LWidget* servers_widgets[] = {
 	(struct LWidget*)&ServersScreen.btnBack,    (struct LWidget*)&ServersScreen.btnConnect,
 	(struct LWidget*)&ServersScreen.btnRefresh, (struct LWidget*)&ServersScreen.table
 };
+
+LAYOUTS srv_iptSearch[] = { { ANCHOR_MIN, 10 }, { ANCHOR_MIN, 10 } };
+LAYOUTS srv_iptHash[]   = { { ANCHOR_MIN, 10 }, { ANCHOR_MAX, 10 } };
+LAYOUTS srv_table[5]    = { { ANCHOR_MIN, 10 }, { ANCHOR_MIN | LLAYOUT_EXTRA, 50 }, { LLAYOUT_WIDTH, 0 }, { LLAYOUT_HEIGHT, 50 } };
+
+LAYOUTS srv_btnBack[]    = { { ANCHOR_MAX,  10 }, { ANCHOR_MIN, 10 } };
+LAYOUTS srv_btnConnect[] = { { ANCHOR_MAX,  10 }, { ANCHOR_MAX, 10 } };
+LAYOUTS srv_btnRefresh[] = { { ANCHOR_MAX, 135 }, { ANCHOR_MIN, 10 } };
+	
 
 static void ServersScreen_Connect(void* w) {
 	struct LTable* table = &ServersScreen.table;
@@ -1301,12 +1295,12 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->widgets    = servers_widgets;
 	s->numWidgets = Array_Elems(servers_widgets);
 
-	LInput_Init( &s->iptSearch, 370, "Search servers..");
-	LInput_Init( &s->iptHash,   475, "classicube.net/server/play/...");
+	LInput_Init( &s->iptSearch, 370, "Search servers..",               srv_iptSearch);
+	LInput_Init( &s->iptHash,   475, "classicube.net/server/play/...", srv_iptHash);
 
-	LButton_Init(&s->btnBack,    110, 30, "Back");
-	LButton_Init(&s->btnConnect, 130, 30, "Connect");
-	LButton_Init(&s->btnRefresh, 110, 30, "Refresh");
+	LButton_Init(&s->btnBack,    110, 30, "Back",    srv_btnBack);
+	LButton_Init(&s->btnConnect, 130, 30, "Connect", srv_btnConnect);
+	LButton_Init(&s->btnRefresh, 110, 30, "Refresh", srv_btnRefresh);
 
 	s->btnBack.OnClick    = SwitchToMain;
 	s->btnConnect.OnClick = ServersScreen_Connect;
@@ -1316,7 +1310,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->iptHash.TextChanged     = ServersScreen_HashChanged;
 	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;
 
-	LTable_Init(&s->table);
+	LTable_Init(&s->table, srv_table);
 	s->table.filter       = &s->iptSearch.text;
 	s->table.selectedHash = &s->iptHash.text;
 	s->table.OnSelectedChanged = ServersScreen_OnSelectedChanged;
@@ -1357,23 +1351,6 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 				FetchServersTask.Base.success ? "Refresh" : "&cFailed");
 }
 
-static void ServersScreen_Layout(struct LScreen* s_) {
-	struct ServersScreen* s = (struct ServersScreen*)s_;
-	LWidget_SetLocation(&s->iptSearch, ANCHOR_MIN, ANCHOR_MIN, 10, 10);
-	LWidget_SetLocation(&s->iptHash,   ANCHOR_MIN, ANCHOR_MAX, 10, 10);
-
-	LWidget_SetLocation(&s->btnBack,    ANCHOR_MAX, ANCHOR_MIN,  10, 10);
-	LWidget_SetLocation(&s->btnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);
-	LWidget_SetLocation(&s->btnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
-	
-	LWidget_SetLocation(&s->table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
-	s->table.width  = WindowInfo.Width  - s->table.x;
-	s->table.height = WindowInfo.Height - s->table.y * 2;
-	s->table.height = max(1, s->table.height);
-
-	LTable_Reposition(&s->table);
-}
-
 static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->table.VTABLE->MouseWheel(&s->table, delta);
@@ -1402,7 +1379,6 @@ void ServersScreen_SetActive(void) {
 	s->Init       = ServersScreen_Init;
 	s->Show       = ServersScreen_Show;
 	s->Tick       = ServersScreen_Tick;
-	s->Layout     = ServersScreen_Layout;
 	s->MouseWheel = ServersScreen_MouseWheel;
 	s->KeyDown    = ServersScreen_KeyDown;
 	s->MouseUp    = ServersScreen_MouseUp;
@@ -1438,6 +1414,19 @@ static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.btnBack
 };
 
+LAYOUTS set_btnUpdates[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS set_lblUpdates[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS set_lblMode[]    = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS set_btnColours[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS set_lblColours[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -20 } };
+
+LAYOUTS set_sep[]     = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE,  15 } };
+LAYOUTS set_cbExtra[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  44 } };
+LAYOUTS set_cbEmpty[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  84 } };
+LAYOUTS set_btnBack[] = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE, 170 } };
+
+
 #if defined CC_BUILD_MOBILE
 static void SettingsScreen_LockOrientation(struct LCheckbox* w) {
 	Options_SetBool(OPT_LANDSCAPE_MODE, w->value);
@@ -1456,28 +1445,28 @@ static void SettingsScreen_ShowEmpty(struct LCheckbox* w) {
 
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-	LLine_Init(  &s->sep, 380);
+	LLine_Init(  &s->sep, 380, set_sep);
 
-	LButton_Init(&s->btnUpdates, 110, 35, "Updates");
-	LLabel_Init( &s->lblUpdates, "&eGet the latest stuff");
+	LButton_Init(&s->btnUpdates, 110, 35, "Updates", set_btnUpdates);
+	LLabel_Init( &s->lblUpdates, "&eGet the latest stuff", set_lblUpdates);
 
-	LButton_Init(&s->btnMode, 110, 35, "Mode");
-	LLabel_Init( &s->lblMode, "&eChange the enabled features");
+	LButton_Init(&s->btnMode, 110, 35, "Mode", set_btnMode);
+	LLabel_Init( &s->lblMode, "&eChange the enabled features", set_lblMode);
 
-	LButton_Init(&s->btnColours, 110, 35, "Theme");
-	LLabel_Init( &s->lblColours, "&eChange how the launcher looks");
+	LButton_Init(&s->btnColours, 110, 35, "Theme", set_btnColours);
+	LLabel_Init( &s->lblColours, "&eChange how the launcher looks", set_lblColours);
 
 #if defined CC_BUILD_MOBILE
-	LCheckbox_Init(&s->cbExtra, "Force landscape");
+	LCheckbox_Init(&s->cbExtra, "Force landscape", set_cbExtra);
 	s->cbExtra.ValueChanged = SettingsScreen_LockOrientation;
 #else
-	LCheckbox_Init(&s->cbExtra, "Close this after game starts");
+	LCheckbox_Init(&s->cbExtra, "Close this after game starts", set_cbExtra);
 	s->cbExtra.ValueChanged = SettingsScreen_AutoClose;
 #endif
 
-	LCheckbox_Init(&s->cbEmpty, "Show empty servers in list");
+	LCheckbox_Init(&s->cbEmpty, "Show empty servers in list", set_cbEmpty);
 	s->cbEmpty.ValueChanged = SettingsScreen_ShowEmpty;
-	LButton_Init(  &s->btnBack, 80, 35, "Back");
+	LButton_Init(  &s->btnBack, 80, 35, "Back", set_btnBack);
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
 	s->btnUpdates.OnClick = SwitchToUpdates;
@@ -1504,30 +1493,11 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	s->cbEmpty.value = Launcher_ShowEmptyServers;
 }
 
-static void SettingsScreen_Layout(struct LScreen* s_) {
-	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-	LWidget_SetLocation(&s->btnUpdates, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -120);
-	LWidget_SetLocation(&s->lblUpdates, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -120);
-
-	LWidget_SetLocation(&s->btnMode, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -70);
-	LWidget_SetLocation(&s->lblMode, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -70);
-
-	LWidget_SetLocation(&s->btnColours, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -20);
-	LWidget_SetLocation(&s->lblColours, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -20);
-
-	LWidget_SetLocation(&s->sep,      ANCHOR_CENTRE,     ANCHOR_CENTRE,    0, 15);
-	LWidget_SetLocation(&s->cbExtra,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -190, 44);
-	LWidget_SetLocation(&s->cbEmpty,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -190, 84);
-
-	LWidget_SetLocation(&s->btnBack,  ANCHOR_CENTRE, ANCHOR_CENTRE,       0, 170);
-}
-
 void SettingsScreen_SetActive(void) {
 	struct SettingsScreen* s = &SettingsScreen;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = SettingsScreen_Init;
 	s->Show   = SettingsScreen_Show;
-	s->Layout = SettingsScreen_Layout;
 
 	s->title  = "Options";
 	Launcher_SetScreen((struct LScreen*)s);
@@ -1548,6 +1518,13 @@ static struct LWidget* themes_widgets[] = {
 	(struct LWidget*)&ThemesScreen.btnNordic, (struct LWidget*)&ThemesScreen.btnCustom,
 	(struct LWidget*)&ThemesScreen.btnBack
 };
+
+LAYOUTS the_btnModern[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS the_btnClassic[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS the_btnNordic[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS the_btnCustom[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  120 } };
+LAYOUTS the_btnBack[]    = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
+
 
 static void ThemesScreen_Set(const struct LauncherTheme* theme) {
 	Launcher_Theme = *theme;
@@ -1570,11 +1547,11 @@ static void ThemesScreen_Init(struct LScreen* s_) {
 	s->widgets    = themes_widgets;
 	s->numWidgets = Array_Elems(themes_widgets);
 
-	LButton_Init(&s->btnModern,  200, 35, "Modern");
-	LButton_Init(&s->btnClassic, 200, 35, "Classic");
-	LButton_Init(&s->btnNordic,  200, 35, "Nordic");
-	LButton_Init(&s->btnCustom,  200, 35, "Custom");
-	LButton_Init(&s->btnBack,     80, 35, "Back");
+	LButton_Init(&s->btnModern,  200, 35, "Modern",  the_btnModern);
+	LButton_Init(&s->btnClassic, 200, 35, "Classic", the_btnClassic);
+	LButton_Init(&s->btnNordic,  200, 35, "Nordic",  the_btnNordic);
+	LButton_Init(&s->btnCustom,  200, 35, "Custom",  the_btnCustom);
+	LButton_Init(&s->btnBack,     80, 35, "Back",    the_btnBack);
 
 	s->btnModern.OnClick  = ThemesScreen_Modern;
 	s->btnClassic.OnClick = ThemesScreen_Classic;
@@ -1583,20 +1560,10 @@ static void ThemesScreen_Init(struct LScreen* s_) {
 	s->btnBack.OnClick    = SwitchToSettings;
 }
 
-static void ThemesScreen_Layout(struct LScreen* s_) {
-	struct ThemesScreen* s = (struct ThemesScreen*)s_;
-	LWidget_SetLocation(&s->btnModern,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
-	LWidget_SetLocation(&s->btnClassic, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70);
-	LWidget_SetLocation(&s->btnNordic,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -20);
-	LWidget_SetLocation(&s->btnCustom,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 120);
-	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
-}
-
 void ThemesScreen_SetActive(void) {
 	struct ThemesScreen* s = &ThemesScreen;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = ThemesScreen_Init;
-	s->Layout = ThemesScreen_Layout;
 
 	s->title  = "Select theme";
 	Launcher_SetScreen((struct LScreen*)s);
@@ -1624,6 +1591,26 @@ static struct LWidget* updates_widgets[] = {
 	(struct LWidget*)&UpdatesScreen.btnRel[0], (struct LWidget*)&UpdatesScreen.btnDev[0],
 	(struct LWidget*)&UpdatesScreen.btnRel[1], (struct LWidget*)&UpdatesScreen.btnDev[1],
 };
+
+LAYOUTS upd_lblYour[] = { { ANCHOR_CENTRE, -5 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS upd_seps0[]   = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, -100 } };
+LAYOUTS upd_seps1[]   = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,   -5 } };
+
+LAYOUTS upd_lblRel[]    = { { ANCHOR_CENTRE, -20 }, { ANCHOR_CENTRE, -75 } };
+LAYOUTS upd_lblDev[]    = { { ANCHOR_CENTRE, -30 }, { ANCHOR_CENTRE,  20 } };
+LAYOUTS upd_lblInfo[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, 105 } };
+LAYOUTS upd_lblStatus[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, 130 } };
+LAYOUTS upd_btnBack[]   = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, 170 } };
+
+/* Update button layouts when 1 build */
+LAYOUTS upd_btnRel0_1[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE, -40 } };
+LAYOUTS upd_btnDev0_1[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  55 } };
+/* Update button layouts when 2 builds */
+LAYOUTS upd_btnRel0_2[] = { { ANCHOR_CENTRE, -80 }, { ANCHOR_CENTRE, -40 } };
+LAYOUTS upd_btnRel1_2[] = { { ANCHOR_CENTRE,  80 }, { ANCHOR_CENTRE, -40 } };
+LAYOUTS upd_btnDev0_2[] = { { ANCHOR_CENTRE, -80 }, { ANCHOR_CENTRE,  55 } };
+LAYOUTS upd_btnDev1_2[] = { { ANCHOR_CENTRE,  80 }, { ANCHOR_CENTRE,  55 } };
+
 
 CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, int delta) {
 	const char* span;
@@ -1758,30 +1745,33 @@ static void UpdatesScreen_Dev_1(void* w) { UpdatesScreen_Get(false, 1); }
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	int builds    = Updater_Info.numBuilds;
 	s->widgets    = updates_widgets;
 	s->numWidgets = Array_Elems(updates_widgets);
 
 	if (Updater_Info.numBuilds < 2) s->numWidgets -= 2;
 	if (Updater_Info.numBuilds < 1) s->numWidgets -= 2;
 
-	LLabel_Init(&s->lblYour, "Your build: (unknown)");
-	LLine_Init( &s->seps[0],   320);
-	LLine_Init( &s->seps[1],   320);
+	LLabel_Init(&s->lblYour, "Your build: (unknown)", upd_lblYour);
+	LLine_Init( &s->seps[0],   320,                   upd_seps0);
+	LLine_Init( &s->seps[1],   320,                   upd_seps1);
 
-	LLabel_Init( &s->lblRel, "Latest release: Checking..");	
-	LLabel_Init( &s->lblDev, "Latest dev build: Checking..");
-	LLabel_Init( &s->lblStatus, "");
-	LButton_Init(&s->btnBack, 80, 35, "Back");
+	LLabel_Init( &s->lblRel, "Latest release: Checking..",   upd_lblRel);
+	LLabel_Init( &s->lblDev, "Latest dev build: Checking..", upd_lblDev);
+	LLabel_Init( &s->lblStatus, "",           upd_lblStatus);
+	LButton_Init(&s->btnBack, 80, 35, "Back", upd_btnBack);
 
-	if (Updater_Info.numBuilds >= 1) {
-		LButton_Init(&s->btnRel[0], 130, 35, Updater_Info.builds[0].name);
-		LButton_Init(&s->btnDev[0], 130, 35, Updater_Info.builds[0].name);
+	if (builds >= 1) {
+		LButton_Init(&s->btnRel[0], 130, 35, Updater_Info.builds[0].name, 
+							builds == 1 ? upd_btnRel0_1 : upd_btnRel0_2);
+		LButton_Init(&s->btnDev[0], 130, 35, Updater_Info.builds[0].name, 
+							builds == 1 ? upd_btnDev0_1 : upd_btnDev0_2);
 	}
-	if (Updater_Info.numBuilds >= 2) {
-		LButton_Init(&s->btnRel[1], 130, 35, Updater_Info.builds[1].name);
-		LButton_Init(&s->btnDev[1], 130, 35, Updater_Info.builds[1].name);
+	if (builds >= 2) {
+		LButton_Init(&s->btnRel[1], 130, 35, Updater_Info.builds[1].name, upd_btnRel1_2);
+		LButton_Init(&s->btnDev[1], 130, 35, Updater_Info.builds[1].name, upd_btnDev1_2);
 	}
-	LLabel_Init(&s->lblInfo, Updater_Info.info);
+	LLabel_Init(&s->lblInfo, Updater_Info.info, upd_lblInfo);
 
 	s->btnRel[0].OnClick = UpdatesScreen_Rel_0;
 	s->btnRel[1].OnClick = UpdatesScreen_Rel_1;
@@ -1805,35 +1795,6 @@ static void UpdatesScreen_Show(struct LScreen* s_) {
 	res = Updater_GetBuildTime(&buildTime);
 	if (res) { Logger_SysWarn(res, "getting build time"); return; }
 	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
-}
-
-static void UpdatesScreen_Layout(struct LScreen* s_) {
-	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	LWidget_SetLocation(&s->lblYour, ANCHOR_CENTRE, ANCHOR_CENTRE, -5, -120);
-	LWidget_SetLocation(&s->seps[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -100);
-	LWidget_SetLocation(&s->seps[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  0,   -5);
-
-	LWidget_SetLocation(&s->lblRel,    ANCHOR_CENTRE, ANCHOR_CENTRE, -20, -75);
-	LWidget_SetLocation(&s->btnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, -40);
-
-	if (Updater_Info.numBuilds >= 2) {
-		LWidget_SetLocation(&s->btnRel[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 80, -40);
-	} else {
-		LWidget_SetLocation(&s->btnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -40);
-	}
-
-	LWidget_SetLocation(&s->lblDev,    ANCHOR_CENTRE, ANCHOR_CENTRE, -30, 20);
-	LWidget_SetLocation(&s->btnDev[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, 55);
-
-	if (Updater_Info.numBuilds >= 2) {
-		LWidget_SetLocation(&s->btnDev[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 80, 55);
-	} else {
-		LWidget_SetLocation(&s->btnDev[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, 55);
-	}
-
-	LWidget_SetLocation(&s->lblInfo,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 105);
-	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 130);
-	LWidget_SetLocation(&s->btnBack,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
 static void UpdatesScreen_Tick(struct LScreen* s_) {
@@ -1860,7 +1821,6 @@ void UpdatesScreen_SetActive(void) {
 	s->Show   = UpdatesScreen_Show;
 	s->Tick   = UpdatesScreen_Tick;
 	s->Free   = UpdatesScreen_Free;
-	s->Layout = UpdatesScreen_Layout;
 
 	s->title  = "Update game";
 	Launcher_SetScreen((struct LScreen*)s);
