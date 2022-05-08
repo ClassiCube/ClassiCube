@@ -48,8 +48,10 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -88,6 +90,14 @@ public class MainActivity extends Activity
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd  = cmd;
 		args.arg1 = a1;
+		pending.add(args);
+	}
+
+	void pushCmd(int cmd, int a1, int a2) {
+		NativeCmdArgs args = getCmdArgs();
+		args.cmd  = cmd;
+		args.arg1 = a1;
+		args.arg2 = a2;
 		pending.add(args);
 	}
 	
@@ -139,7 +149,10 @@ public class MainActivity extends Activity
 	final static int CMD_LOST_FOCUS  = 16;
 	final static int CMD_CONFIG_CHANGED = 17;
 	final static int CMD_LOW_MEMORY  = 18;
-	final static int CMD_2D_CREATED  = 20;
+	final static int CMD_UI_CREATED  = 20;
+	final static int CMD_UI_EVENT    = 21;
+
+	final static int UI_EVENT_CLICKED = 1;
 	
 	
 	// ====================================================================
@@ -358,7 +371,8 @@ public class MainActivity extends Activity
 			case CMD_LOST_FOCUS:	 processOnLostFocus();	 break;
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
 			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
-			case CMD_2D_CREATED:	 processOn2DCreated();	 break;
+			case CMD_UI_CREATED:	 processOnUICreated();	 break;
+			case CMD_UI_EVENT:	     processOnUIEvent(c.arg1, c.arg2); break;
 			}
 
 			c.str = null;
@@ -391,7 +405,8 @@ public class MainActivity extends Activity
 	native void processOnLostFocus();
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
-	native void processOn2DCreated();
+	native void processOnUICreated();
+	native void processOnUIEvent(int id, int cmd);
 	
 	native void runGameAsync();
 	native void updateInstance();
@@ -415,6 +430,7 @@ public class MainActivity extends Activity
 	static final int ANCHOR_CENTRE_MIN = 3; // (axis/2) + offset
 	static final int ANCHOR_CENTRE_MAX = 4; // (axis/2) - size - offset
 	static int widgetID = 200;
+	static final int _WRAP_CONTENT = ViewGroup.LayoutParams.WRAP_CONTENT;
 
 	public void create2DView_async() {
 		runOnUiThread(new Runnable() {
@@ -430,51 +446,28 @@ public class MainActivity extends Activity
 		setContentView(curView);
 		curView.requestFocus();
 		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
-		pushCmd(CMD_2D_CREATED);
+		pushCmd(CMD_UI_CREATED);
 	}
 
-	CC2DLayout.LayoutParams make2DParams(int xMode, int xOffset, int yMode, int yOffset) {
-		return new CC2DLayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
-				xMode, xOffset, yMode, yOffset);
-	}
-
-	int buttonAdd(int xMode, int xOffset, int yMode, int yOffset) {
-		final Button btn = new Button(this);
-		final CC2DLayout.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
-		btn.setId(widgetID++);
+	int showWidgetAsync(final View widget, final CC2DLayoutParams lp) {
+		widget.setId(widgetID++);
 
 		runOnUiThread(new Runnable() {
 			public void run() {
-				CC2DLayout rl = (CC2DLayout)curView;
-				rl.addView(btn, params);
+				CC2DLayout view = (CC2DLayout)curView;
+				view.addView(widget, lp);
 			}
 		});
-		return btn.getId();
+		return widget.getId();
 	}
 
-	void buttonUpdate(final int id, final String text) {
+	void clearWidgetsAsync() {
 		runOnUiThread(new Runnable() {
 			public void run() {
-				View view = findViewById(id);
-				if (view != null) { ((Button)view).setText(text); }
+				CC2DLayout view = (CC2DLayout)curView;
+				view.removeAllViews();
 			}
 		});
-	}
-
-	int inputAdd(int xMode, int xOffset, int yMode, int yOffset) {
-		final EditText ipt = new EditText(this);
-		final CC2DLayout.LayoutParams params = make2DParams(xMode, xOffset, yMode, yOffset);
-		ipt.setBackgroundColor(Color.WHITE);
-		ipt.setId(widgetID++);
-
-		runOnUiThread(new Runnable() {
-			public void run() {
-				CC2DLayout rl = (CC2DLayout)curView;
-				rl.addView(ipt, params);
-			}
-		});
-		return ipt.getId();
 	}
 
 	// TODO reuse native code
@@ -538,11 +531,95 @@ public class MainActivity extends Activity
 		public int xMode, xOffset;
 		public int yMode, yOffset;
 
-		public CC2DLayoutParams(int width, int height, int xm, int xo, int ym, int yo) {
+		public CC2DLayoutParams(int xm, int xo, int ym, int yo, int width, int height) {
 			super(width, height);
 			xMode = xm; xOffset = xo;
 			yMode = ym; yOffset = yo;
 		}
+	}
+
+
+	// ====================================================================
+	// --------------------------- 2D widgets -----------------------------
+	// ====================================================================
+	int buttonAdd(int xMode, int xOffset, int yMode, int yOffset,
+				  int width, int height) {
+		final Button btn = new Button(this);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+														width, height);
+
+		btn.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				pushCmd(CMD_UI_EVENT, v.getId(), UI_EVENT_CLICKED);
+			}
+		});
+		return showWidgetAsync(btn, lp);
+	}
+
+	void buttonUpdate(final int id, final String text) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view != null) { ((Button)view).setText(text); }
+			}
+		});
+	}
+
+	int labelAdd(int xMode, int xOffset, int yMode, int yOffset) {
+		final TextView lbl = new TextView(this);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+														_WRAP_CONTENT, _WRAP_CONTENT);
+
+		return showWidgetAsync(lbl, lp);
+	}
+
+	void labelUpdate(final int id, final String text) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view != null) { ((TextView)view).setText(text); }
+			}
+		});
+	}
+
+	int inputAdd(int xMode, int xOffset, int yMode, int yOffset,
+				 int width) {
+		final EditText ipt = new EditText(this);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+														width, _WRAP_CONTENT);
+		ipt.setBackgroundColor(Color.WHITE);
+
+		return showWidgetAsync(ipt, lp);
+	}
+
+	void inputUpdate(final int id, final String text) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view != null) { ((EditText)view).setText(text); }
+			}
+		});
+	}
+
+	int lineAdd(int xMode, int xOffset, int yMode, int yOffset,
+				 int width, int height, int color) {
+		final View view = new View(this);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+														width, height);
+		view.setBackgroundColor(color);
+
+		return showWidgetAsync(view, lp);
+	}
+
+	int checkboxAdd(int xMode, int xOffset, int yMode, int yOffset,
+				  String title) {
+		final CheckBox cb = new CheckBox(this);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+				_WRAP_CONTENT, _WRAP_CONTENT);
+		cb.setText(title);
+		cb.setTextColor(Color.WHITE);
+
+		return showWidgetAsync(cb, lp);
 	}
 
 

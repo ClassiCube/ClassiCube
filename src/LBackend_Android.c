@@ -22,60 +22,17 @@
 #include <android/keycodes.h>
 #include <android/bitmap.h>
 
-struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
-
-static int xBorder, xBorder2, xBorder3, xBorder4;
-static int yBorder, yBorder2, yBorder3, yBorder4;
-static int xInputOffset, yInputOffset, inputExpand;
-static int caretOffset, caretWidth, caretHeight;
-static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
-static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
-static int cellXOffset, cellXPadding, cellMinWidth;
-static int flagXOffset, flagYOffset;
+struct FontDesc logoFont;
 
 static void HookEvents(void);
 static void LBackend_InitHooks(void);
 void LBackend_Init(void) {
-    xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
-    yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
-
-    xInputOffset = Display_ScaleX(5);
-    yInputOffset = Display_ScaleY(2);
-    inputExpand  = Display_ScaleX(20);
-
-    caretOffset  = Display_ScaleY(5);
-    caretWidth   = Display_ScaleX(10);
-    caretHeight  = Display_ScaleY(2);
-
-    scrollbarWidth = Display_ScaleX(10);
-    dragPad        = Display_ScaleX(8);
-    gridlineWidth  = Display_ScaleX(2);
-    gridlineHeight = Display_ScaleY(2);
-
-    hdrYOffset   = Display_ScaleY(3);
-    hdrYPadding  = Display_ScaleY(5);
-    rowYOffset   = Display_ScaleY(3);
-    rowYPadding  = Display_ScaleY(1);
-
-    cellXOffset  = Display_ScaleX(6);
-    cellXPadding = Display_ScaleX(5);
-    cellMinWidth = Display_ScaleX(20);
-    flagXOffset  = Display_ScaleX(2);
-    flagYOffset  = Display_ScaleY(6);
-
-    Drawer2D_MakeFont(&titleFont, 16, FONT_FLAGS_BOLD);
-    Drawer2D_MakeFont(&textFont,  14, FONT_FLAGS_NONE);
-    Drawer2D_MakeFont(&hintFont,  12, FONT_FLAGS_NONE);
     HookEvents();
     LBackend_InitHooks();
 }
 
 void LBackend_Free(void) {
-    Font_Free(&titleFont);
-    Font_Free(&textFont);
-    Font_Free(&hintFont);
     Font_Free(&logoFont);
-    Font_Free(&rowFont);
 }
 
 void LBackend_UpdateLogoFont(void) {
@@ -85,9 +42,6 @@ void LBackend_UpdateLogoFont(void) {
 void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
     Launcher_DrawLogo(&logoFont, title, bmp);
 }
-
-void LBackend_SetScreen(struct LScreen* s)   { }
-void LBackend_CloseScreen(struct LScreen* s) { }
 
 static void LBackend_LayoutDimensions(struct LWidget* w) {
     const struct LLayout* l = w->layouts + 2;
@@ -108,27 +62,23 @@ static void LBackend_LayoutDimensions(struct LWidget* w) {
     }
 }
 
-static void LBackend_GetLayoutArgs(struct LWidget* w, jvalue* args) {
+static void LBackend_GetLayoutArgs(void* widget, jvalue* args) {
+    struct LWidget* w = (struct LWidget*)widget;
     const struct LLayout* l = w->layouts;
 
     args[0].i = l[0].type & 0xFF;
-    args[1].i = l[0].offset;
+    args[1].i = Display_ScaleX(l[0].offset);
     args[2].i = l[1].type & 0xFF;
-    args[3].i = l[1].offset;
+    args[3].i = Display_ScaleY(l[1].offset);
 }
 
 void LBackend_LayoutWidget(struct LWidget* w) {
     const struct LLayout* l = w->layouts;
-
-    w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  WindowInfo.Width);
-    w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, WindowInfo.Height);
+    // TODO remove this? once Table is done
 
     /* e.g. Table widget needs adjusts width/height based on window */
     if (l[1].type & LLAYOUT_EXTRA)
         LBackend_LayoutDimensions(w);
-
-    if (w->type != LWIDGET_TABLE) return;
-    LBackend_TableReposition((struct LTable*)w);
 }
 
 void LBackend_MarkDirty(void* widget) { }
@@ -203,40 +153,54 @@ static void HookEvents(void) {
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 void LBackend_ButtonInit(struct LButton* w, int width, int height) {
-    JNIEnv* env;
-    JavaGetCurrentEnv(env);
-    jvalue args[4];
+    w->_textWidth  = Display_ScaleX(width);
+    w->_textHeight = Display_ScaleY(height);
+}
+
+static void LBackend_ButtonShow(struct LButton* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[6];
 
     LBackend_GetLayoutArgs(w, args);
-    jmethodID method = JavaGetIMethod(env, "buttonAdd", "(IIII)I");
+    args[4].i = w->_textWidth;
+    args[5].i = w->_textHeight;
+
+    jmethodID method = JavaGetIMethod(env, "buttonAdd", "(IIIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
-    //JavaCallVoid(env, "buttonAdd", "(IIII)V", args);
 }
 
 void LBackend_ButtonUpdate(struct LButton* w) {
-    JNIEnv* env;
+    JNIEnv* env; JavaGetCurrentEnv(env);
     jvalue args[2];
-    JavaGetCurrentEnv(env);
     if (!w->meta) return;
 
     args[0].i = (int)w->meta;
     args[1].l = JavaMakeString(env, &w->text);
+
+    // TODO share logic with LabelUpdate/ButtonUpdate
     jmethodID method = JavaGetIMethod(env, "buttonUpdate", "(ILjava/lang/String;)V");
     JavaICall_Void(env, method, args);
-    //JavaCallVoid(env, "buttonUpdate", "(ILjava/lang/String;)V", args);
     (*env)->DeleteLocalRef(env, args[1].l);
 }
-
 void LBackend_ButtonDraw(struct LButton* w) { }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
 *#########################################################################################################################*/
-void LBackend_CheckboxInit(struct LCheckbox* w) {
+void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
+static void LBackend_CheckboxShow(struct LLabel* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[5];
+
+    LBackend_GetLayoutArgs(w, args);
+    args[4].l = JavaMakeString(env, &w->text);
+
+    jmethodID method = JavaGetIMethod(env, "checkboxAdd", "(IIIILjava/lang/String;)I");
+    w->meta = (void*)JavaICall_Int(env, method, args);
+    (*env)->DeleteLocalRef(env, args[4].l);
 }
-
 void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
 
@@ -244,42 +208,67 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 void LBackend_InputInit(struct LInput* w, int width) {
-    JNIEnv* env;
-    JavaGetCurrentEnv(env);
-    jvalue args[4];
+    w->_textHeight = Display_ScaleX(width);
+}
+
+static void LBackend_InputShow(struct LInput* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[5];
 
     LBackend_GetLayoutArgs(w, args);
-    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIII)I");
+    args[4].i = w->_textHeight;
+
+    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
-    //JavaCallVoid(env, "inputAdd", "(IIII)V", args);
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[2];
+    if (!w->meta) return;
+
+    args[0].i = (int)w->meta;
+    args[1].l = JavaMakeString(env, &w->text);
+
+    // TODO share logic with LabelUpdate/ButtonUpdate
+    jmethodID method = JavaGetIMethod(env, "inputUpdate", "(ILjava/lang/String;)V");
+    JavaICall_Void(env, method, args);
+    (*env)->DeleteLocalRef(env, args[1].l);
 }
 
-void LBackend_InputTick(struct LInput* w) {
-}
-
-void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
-}
-
-void LBackend_InputUnselect(struct LInput* w) {
-}
-
+void LBackend_InputTick(struct LInput* w) { }
+void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) { }
+void LBackend_InputUnselect(struct LInput* w) { }
 void LBackend_InputDraw(struct LInput* w) { }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-void LBackend_LabelInit(struct LLabel* w) {
+void LBackend_LabelInit(struct LLabel* w) { }
 
+static void LBackend_LabelShow(struct LLabel* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[4];
+    LBackend_GetLayoutArgs(w, args);
+
+    jmethodID method = JavaGetIMethod(env, "labelAdd", "(IIII)I");
+    w->meta = (void*)JavaICall_Int(env, method, args);
 }
 
 void LBackend_LabelUpdate(struct LLabel* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[2];
+    if (!w->meta) return;
 
+    args[0].i = (int)w->meta;
+    args[1].l = JavaMakeString(env, &w->text);
+
+    // TODO share logic with LabelUpdate/ButtonUpdate
+    jmethodID method = JavaGetIMethod(env, "labelUpdate", "(ILjava/lang/String;)V");
+    JavaICall_Void(env, method, args);
+    (*env)->DeleteLocalRef(env, args[1].l);
 }
-
 void LBackend_LabelDraw(struct LLabel* w) { }
 
 
@@ -287,7 +276,20 @@ void LBackend_LabelDraw(struct LLabel* w) { }
 *-------------------------------------------------------LineWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 void LBackend_LineInit(struct LLine* w, int width) {
+    w->_width = Display_ScaleX(width);
+}
 
+static void LBackend_LineShow(struct LLine* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[7];
+
+    LBackend_GetLayoutArgs(w, args);
+    args[4].i = w->_width;
+    args[5].i = Display_ScaleY(2); // TODO LLINE_HEIGHT constant
+    args[6].i = LLine_GetColor();
+
+    jmethodID method = JavaGetIMethod(env, "lineAdd", "(IIIIIII)I");
+    w->meta = (void*)JavaICall_Int(env, method, args);
 }
 
 void LBackend_LineDraw(struct LLine* w) { }
@@ -329,4 +331,75 @@ void LBackend_TableDraw(struct LTable* w) { }
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
 void LBackend_TableMouseUp(struct LTable* w, int idx) { }
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------UIBackend--------------------------------------------------------*
+*#########################################################################################################################*/
+#define UI_EVENT_CLICKED 1
+
+static struct LWidget* FindWidgetForView(int id) {
+    struct LScreen* s = Launcher_Active;
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        void* meta = s->widgets[i]->meta;
+        if (meta != id) continue;
+
+        return s->widgets[i];
+    }
+    return NULL;
+}
+
+extern void LBackend_UIEvent(int id, int cmd) {
+    struct LWidget* w = FindWidgetForView(id);
+    if (!w) return;
+
+    switch (cmd) {
+        case UI_EVENT_CLICKED:
+            if (w->OnClick) w->OnClick(w);
+            break;
+    }
+}
+
+static void ShowWidget(struct LWidget* w) {
+    switch (w->type) {
+        case LWIDGET_BUTTON:
+            LBackend_ButtonShow((struct LButton*)w);
+            LBackend_ButtonUpdate((struct LButton*)w);
+            break;
+        case LWIDGET_CHECKBOX:
+            LBackend_CheckboxShow((struct LCheckbox*)w);
+            break;
+        case LWIDGET_INPUT:
+            LBackend_InputShow((struct LInput*)w);
+            LBackend_InputUpdate((struct LInput*)w);
+            break;
+        case LWIDGET_LABEL:
+            LBackend_LabelShow((struct LLabel*)w);
+            LBackend_LabelUpdate((struct LLabel*)w);
+            break;
+        case LWIDGET_LINE:
+            LBackend_LineShow((struct LLine*)w);
+            break;
+    }
+}
+
+void LBackend_SetScreen(struct LScreen* s) {
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        ShowWidget(s->widgets[i]);
+    }
+}
+
+void LBackend_CloseScreen(struct LScreen* s) {
+    // stop referencing widgets
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        s->widgets[i]->meta = NULL;
+    }
+
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jmethodID method = JavaGetIMethod(env, "clearWidgetsAsync", "()V");
+    JavaICall_Void(env, method, NULL);
+}
 #endif

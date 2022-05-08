@@ -16,7 +16,7 @@ static jmethodID JAVA_openKeyboard, JAVA_setKeyboardText, JAVA_closeKeyboard;
 static jmethodID JAVA_getWindowState, JAVA_enterFullscreen, JAVA_exitFullscreen;
 static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation;
 static jmethodID JAVA_processedSurfaceDestroyed, JAVA_processEvents;
-static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_setupForGame;
+static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_create2DView, JAVA_create3DView;
 
 static void RefreshWindowBounds(void) {
 	WindowInfo.Width  = ANativeWindow_getWidth(win_handle);
@@ -201,6 +201,20 @@ static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 	/* TODO: Low memory */
 }
 
+static void JNICALL java_UICreated(JNIEnv* env, jobject o) {
+	Platform_LogConst("WIN - 2D CREATED");
+	winCreated = true;
+	//RefreshWindowBounds(); TODO FIX FIX FIX
+	/* TODO: Restore context */
+	Event_RaiseVoid(&WindowEvents.Created);
+}
+
+extern void LBackend_UIEvent(int id, int cmd);
+static void JNICALL java_UIEvent(JNIEnv* env, jobject o, jint id, jint cmd) {
+	Platform_LogConst("WIN - 2D Event");
+	LBackend_UIEvent(id, cmd);
+}
+
 static const JNINativeMethod methods[] = {
 	{ "processKeyDown",   "(I)V", java_processKeyDown },
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
@@ -224,7 +238,9 @@ static const JNINativeMethod methods[] = {
 
 	{ "processOnGotFocus",  "()V", java_onGotFocus },
 	{ "processOnLostFocus", "()V", java_onLostFocus },
-	{ "processOnLowMemory", "()V", java_onLowMemory }
+	{ "processOnLowMemory", "()V", java_onLowMemory },
+	{ "processOnUICreated", "()V", java_UICreated },
+	{ "processOnUIEvent", "(II)V", java_UIEvent },
 };
 static void CacheMethodRefs(JNIEnv* env) {
 	JAVA_openKeyboard    = JavaGetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
@@ -237,7 +253,8 @@ static void CacheMethodRefs(JNIEnv* env) {
 
 	JAVA_getDpiX      = JavaGetIMethod(env, "getDpiX", "()F");
 	JAVA_getDpiY      = JavaGetIMethod(env, "getDpiY", "()F");
-	JAVA_setupForGame = JavaGetIMethod(env, "setupForGame", "()V");
+	JAVA_create2DView = JavaGetIMethod(env, "create2DView_async", "()V");
+	JAVA_create3DView = JavaGetIMethod(env, "create3DView_async", "()V");
 
 	JAVA_processedSurfaceDestroyed = JavaGetIMethod(env, "processedSurfaceDestroyed", "()V");
 	JAVA_processEvents             = JavaGetIMethod(env, "processEvents",             "()V");
@@ -261,14 +278,15 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = JavaICall_Float(env, JAVA_getDpiY, NULL);
 }
 
-static void RemakeWindowSurface(void) {
+static void RemakeWindowSurface(jmethodID createViewFunc) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	winCreated = false;
+	WindowInfo.Exists = true;
+	winCreated        = false;
 
 	/* Force window to be destroyed and re-created */
 	/* (see comments in setupForGame for why this has to be done) */
-	JavaICall_Void(env, JAVA_setupForGame, NULL);
+	JavaICall_Void(env, createViewFunc, NULL);
 	Platform_LogConst("Entering wait for window exist loop..");
 
 	/* Loop until window gets created by main UI thread */
@@ -279,16 +297,16 @@ static void RemakeWindowSurface(void) {
 	}
 
 	Platform_LogConst("OK window created..");
+	/* always start as fullscreen */
+	Window_EnterFullscreen();;
 }
 
-static void DoCreateWindow(void) {
-	WindowInfo.Exists = true;
-	RemakeWindowSurface();
-	/* always start as fullscreen */
-	Window_EnterFullscreen();
+void Window_Create2D(int width, int height) {
+	RemakeWindowSurface(JAVA_create2DView);
 }
-void Window_Create2D(int width, int height) { DoCreateWindow(); }
-void Window_Create3D(int width, int height) { DoCreateWindow(); }
+void Window_Create3D(int width, int height) {
+	RemakeWindowSurface(JAVA_create3DView);
+}
 
 void Window_SetTitle(const cc_string* title) {
 	/* TODO: Implement this somehow */
@@ -367,49 +385,9 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	return ERR_NOT_SUPPORTED;
 }
 
-static struct Bitmap fb_bmp;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
-}
-
-void Window_DrawFramebuffer(Rect2D r) {
-	ANativeWindow_Buffer buffer;
-	cc_uint32* src;
-	cc_uint32* dst;
-	ARect b;
-	int y, res, size;
-
-	/* window not created yet */
-	if (!win_handle) return;
-	b.left = r.X; b.right  = r.X + r.Width;
-	b.top  = r.Y; b.bottom = r.Y + r.Height;
-
-	/* Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
-	res  = ANativeWindow_lock(win_handle, &buffer, &b);
-	if (res) Logger_Abort2(res, "Locking window pixels");
-	/* Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
-
-	/* In some rare cases, the returned locked region will be entire area of the surface */
-	/* This can cause a crash if the surface has been resized (i.e. device rotated), */
-	/* but the framebuffer has not been resized yet. So always constrain bounds. */
-	b.left = min(b.left, fb_bmp.width);  b.right  = min(b.right,  fb_bmp.width);
-	b.top  = min(b.top,  fb_bmp.height); b.bottom = min(b.bottom, fb_bmp.height);
-
-	src  = (cc_uint32*)fb_bmp.scan0 + b.left;
-	dst  = (cc_uint32*)buffer.bits  + b.left;
-	size = (b.right - b.left) * 4;
-
-	for (y = b.top; y < b.bottom; y++) {
-		Mem_Copy(dst + y * buffer.stride, src + y * fb_bmp.width, size);
-	}
-	res = ANativeWindow_unlockAndPost(win_handle);
-	if (res) Logger_Abort2(res, "Unlocking window pixels");
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
-}
+void Window_AllocFramebuffer(struct Bitmap* bmp) { }
+void Window_DrawFramebuffer(Rect2D r) { }
+void Window_FreeFramebuffer(struct Bitmap* bmp) { }
 
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
