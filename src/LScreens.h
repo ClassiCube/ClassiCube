@@ -18,12 +18,8 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	LScreen_Func Tick;   /* Repeatedly called multiple times every second. */ \
 	void (*DrawBackground)(struct LScreen* s, struct Bitmap* bmp); \
 	void (*KeyDown)(struct LScreen* s,     int key, cc_bool wasDown); \
-	void (*KeyPress)(struct LScreen* s,    char c);  \
-	void (*MouseDown)(struct LScreen* s,   int idx); \
 	void (*MouseUp)(struct LScreen* s,     int idx); \
-	void (*MouseMove)(struct LScreen* s,   int idx); \
 	void (*MouseWheel)(struct LScreen* s,  float delta); \
-	void (*TextChanged)(struct LScreen* s, const cc_string* str); \
 	void (*ResetArea)(struct Bitmap* bmp, int x, int y, int width, int height); \
 	struct LWidget* onEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
 	struct LWidget* hoveredWidget;  /* Widget the mouse is currently hovering over. */ \
@@ -34,6 +30,9 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	const char* title;        /* Titlebar text */
 
 struct LScreen { LScreen_Layout };
+
+void LScreen_SelectWidget(struct LScreen* s, int idx, struct LWidget* w, cc_bool was);
+void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w);
 	
 void ChooseModeScreen_SetActive(cc_bool firstTime);
 void ColoursScreen_SetActive(void);

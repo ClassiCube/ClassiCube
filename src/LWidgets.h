@@ -110,6 +110,7 @@ CC_NOINLINE void LInput_ClearText(struct LInput* w);
 CC_NOINLINE void LInput_AppendString(struct LInput* w, const cc_string* str);
 /* Sets the currently entered text to the given string */
 CC_NOINLINE void LInput_SetString(struct LInput* w, const cc_string* str);
+#define LINPUT_HEIGHT 30
 
 /* Represents non-interactable text. */
 struct LLabel {
@@ -129,6 +130,7 @@ struct LLine {
 };
 CC_NOINLINE void LLine_Init(struct LLine* w, int width, const struct LLayout* layouts);
 CC_NOINLINE BitmapCol LLine_GetColor(void);
+#define LLINE_HEIGHT 2
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {

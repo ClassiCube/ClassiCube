@@ -31,17 +31,6 @@ CC_NOINLINE static int LScreen_IndexOf(struct LScreen* s, void* w) {
 	return -1;
 }
 
-CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int idx) {
-	struct LWidget* w;
-	int i = 0, x = Pointers[idx].x, y = Pointers[idx].y;
-
-	for (i = 0; i < s->numWidgets; i++) {
-		w = s->widgets[i];
-		if (Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return w;
-	}
-	return NULL;
-}
-
 static void LScreen_DoLayout(struct LScreen* s) {
 	int i;
 	for (i = 0; i < s->numWidgets; i++) 
@@ -55,14 +44,14 @@ static void LScreen_Tick(struct LScreen* s) {
 	if (w && w->VTABLE->Tick) w->VTABLE->Tick(w);
 }
 
-CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, int idx, struct LWidget* w, cc_bool was) {
+void LScreen_SelectWidget(struct LScreen* s, int idx, struct LWidget* w, cc_bool was) {
 	if (!w) return;
 	w->selected       = true;
 	s->selectedWidget = w;
 	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w, idx, was);
 }
 
-CC_NOINLINE static void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w) {
+void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w) {
 	if (!w) return;
 	w->selected       = false;
 	s->selectedWidget = NULL;
@@ -111,60 +100,7 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	}
 }
 
-static void LScreen_KeyPress(struct LScreen* s, char key) {
-	if (!s->selectedWidget) return;
-	if (!s->selectedWidget->VTABLE->KeyPress) return;
-	s->selectedWidget->VTABLE->KeyPress(s->selectedWidget, key);
-}
-
-static void LScreen_TextChanged(struct LScreen* s, const cc_string* str) {
-	if (!s->selectedWidget) return;
-	if (!s->selectedWidget->VTABLE->TextChanged) return;
-	s->selectedWidget->VTABLE->TextChanged(s->selectedWidget, str);
-}
-
-static void LScreen_MouseDown(struct LScreen* s, int idx) {
-	struct LWidget* over = LScreen_WidgetAt(s, idx);
-	struct LWidget* prev = s->selectedWidget;
-
-	if (prev && over != prev) LScreen_UnselectWidget(s, idx, prev);
-	if (over) LScreen_SelectWidget(s, idx, over, over == prev);
-}
-
-static void LScreen_MouseUp(struct LScreen* s, int idx) {
-	struct LWidget* over = LScreen_WidgetAt(s, idx);
-	struct LWidget* prev = s->selectedWidget;
-
-	/* if user moves mouse away, it doesn't count */
-	if (over != prev) {
-		LScreen_UnselectWidget(s, idx, prev);
-	} else if (over && over->OnClick) {
-		over->OnClick(over);
-	}
-}
-
-static void LScreen_MouseMove(struct LScreen* s, int idx) {
-	struct LWidget* over = LScreen_WidgetAt(s, idx);
-	struct LWidget* prev = s->hoveredWidget;
-	cc_bool overSame = prev == over;
-
-	if (prev && !overSame) {
-		prev->hovered    = false;
-		s->hoveredWidget = NULL;
-
-		if (prev->OnUnhover) prev->OnUnhover(prev);
-		if (prev->VTABLE->MouseLeft) prev->VTABLE->MouseLeft(prev);
-	}
-
-	if (over) {
-		over->hovered    = true;
-		s->hoveredWidget = over;
-
-		if (over->OnHover) over->OnHover(over);
-		if (!over->VTABLE->MouseMove) return;
-		over->VTABLE->MouseMove(over, idx, overSame);
-	}
-}
+static void LScreen_MouseUp(struct LScreen* s, int idx) { }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
 static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
@@ -185,12 +121,8 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->Layout     = LScreen_DoLayout;
 	s->Tick       = LScreen_Tick;
 	s->KeyDown    = LScreen_KeyDown;
-	s->KeyPress   = LScreen_KeyPress;
-	s->MouseDown  = LScreen_MouseDown;
 	s->MouseUp    = LScreen_MouseUp;
-	s->MouseMove  = LScreen_MouseMove;
 	s->MouseWheel = LScreen_MouseWheel;
-	s->TextChanged    = LScreen_TextChanged;
 	s->DrawBackground = LScreen_DrawBackground;
 	s->ResetArea      = Launcher_DrawBackground;
 
@@ -1368,7 +1300,6 @@ static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was) {
 static void ServersScreen_MouseUp(struct LScreen* s_, int idx) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->table.VTABLE->OnUnselect(&s->table, idx);
-	LScreen_MouseUp(s_, idx);
 }
 
 void ServersScreen_SetActive(void) {

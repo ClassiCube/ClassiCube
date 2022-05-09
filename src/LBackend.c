@@ -96,7 +96,15 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
 	Launcher_DrawLogo(&logoFont, title, bmp);
 }
 
-void LBackend_SetScreen(struct LScreen* s)   { }
+static void OnPointerMove(void* obj, int idx);
+void LBackend_SetScreen(struct LScreen* s) {
+	int i;
+	/* for hovering over active button etc */
+	for (i = 0; i < Pointers_Count; i++) {
+		OnPointerMove(s, i);
+	}
+}
+
 void LBackend_CloseScreen(struct LScreen* s) { }
 
 static void LBackend_LayoutDimensions(struct LWidget* w) {
@@ -261,17 +269,92 @@ void LBackend_Tick(void) {
 *#########################################################################################################################*/
 static void ReqeustRedraw(void* obj) { LBackend_Redraw(); }
 
+CC_NOINLINE static struct LWidget* GetWidgetAt(struct LScreen* s, int idx) {
+	struct LWidget* w;
+	int i, x = Pointers[idx].x, y = Pointers[idx].y;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		w = s->widgets[i];
+		if (Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return w;
+	}
+	return NULL;
+}
+
 static void OnPointerDown(void* obj, int idx) {
-	Launcher_Active->MouseDown(Launcher_Active, idx);
+	struct LScreen* s = Launcher_Active;
+	struct LWidget* over;
+	struct LWidget* prev;
+
+	if (!s) return;
+	over = GetWidgetAt(s, idx);
+	prev = s->selectedWidget;
+
+	if (prev && over != prev) LScreen_UnselectWidget(s, idx, prev);
+	if (over) LScreen_SelectWidget(s, idx, over, over == prev);
 }
 
 static void OnPointerUp(void* obj, int idx) {
-	Launcher_Active->MouseUp(Launcher_Active, idx);
+	struct LScreen* s = Launcher_Active;
+	struct LWidget* over;
+	struct LWidget* prev;
+
+	if (!s) return;
+	over = GetWidgetAt(s, idx);
+	prev = s->selectedWidget;
+
+	/* if user moves mouse away, it doesn't count */
+	if (over != prev) {
+		LScreen_UnselectWidget(s, idx, prev);
+	} else if (over && over->OnClick) {
+		over->OnClick(over);
+	}
+	/* TODO eliminate this hack */
+	s->MouseUp(s, idx);
 }
 
 static void OnPointerMove(void* obj, int idx) {
-	if (!Launcher_Active) return;
-	Launcher_Active->MouseMove(Launcher_Active, idx);
+	struct LScreen* s = Launcher_Active;
+	struct LWidget* over;
+	struct LWidget* prev;
+	cc_bool overSame;
+
+	if (!s) return;
+	over = GetWidgetAt(s, idx);
+	prev = s->hoveredWidget;
+	overSame = prev == over;
+
+	if (prev && !overSame) {
+		prev->hovered    = false;
+		s->hoveredWidget = NULL;
+
+		if (prev->OnUnhover) prev->OnUnhover(prev);
+		if (prev->VTABLE->MouseLeft) prev->VTABLE->MouseLeft(prev);
+	}
+
+	if (over) {
+		over->hovered    = true;
+		s->hoveredWidget = over;
+
+		if (over->OnHover) over->OnHover(over);
+		if (!over->VTABLE->MouseMove) return;
+		over->VTABLE->MouseMove(over, idx, overSame);
+	}
+}
+
+static void OnKeyPress(void* obj, int c) {
+	struct LWidget* selected = Launcher_Active->selectedWidget;
+	if (!selected) return;
+
+	if (!selected->VTABLE->KeyPress) return;
+	selected->VTABLE->KeyPress(selected, c);
+}
+
+static void OnTextChanged(void* obj, const cc_string* str) {
+	struct LWidget* selected = Launcher_Active->selectedWidget;
+	if (!selected) return;
+
+	if (!selected->VTABLE->TextChanged) return;
+	selected->VTABLE->TextChanged(selected, str);
 }
 
 static void HookEvents(void) {
@@ -279,6 +362,9 @@ static void HookEvents(void) {
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
+	
+	Event_Register_(&InputEvents.Press,         NULL, OnKeyPress);
+	Event_Register_(&InputEvents.TextChanged,   NULL, OnTextChanged);
 }
 
 
@@ -429,7 +515,7 @@ static Rect2D caretRect, lastCaretRect;
 
 void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
-	w->height   = Display_ScaleY(30);
+	w->height   = Display_ScaleY(LINPUT_HEIGHT);
 	w->minWidth = w->width;
 }
 
@@ -669,7 +755,7 @@ void LBackend_LabelDraw(struct LLabel* w) {
 *#########################################################################################################################*/
 void LBackend_LineInit(struct LLine* w, int width) {
 	w->width  = Display_ScaleX(width);
-	w->height = Display_ScaleY(2);
+	w->height = Display_ScaleY(LLINE_HEIGHT);
 }
 
 void LBackend_LineDraw(struct LLine* w) {
