@@ -417,8 +417,9 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 
 static void ColoursScreen_Show(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
-	s->colourAcc       = 0;
-	s->cbClassic.value = Launcher_Theme.ClassicBackground;
+	s->colourAcc = 0;
+
+	LCheckbox_Set(&s->cbClassic, Launcher_Theme.ClassicBackground);
 	ColoursScreen_UpdateAll(s);
 }
 
@@ -1417,11 +1418,11 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	}
 
 #if defined CC_BUILD_MOBILE
-	s->cbExtra.value = Options_GetBool(OPT_LANDSCAPE_MODE, false);
+	LCheckbox_Set(&s->cbExtra, Options_GetBool(OPT_LANDSCAPE_MODE, false));
 #else
-	s->cbExtra.value = Options_GetBool(LOPT_AUTO_CLOSE, false);
+	LCheckbox_Set(&s->cbExtra, Options_GetBool(LOPT_AUTO_CLOSE, false));
 #endif
-	s->cbEmpty.value = Launcher_ShowEmptyServers;
+	LCheckbox_Set(&s->cbEmpty, Launcher_ShowEmptyServers);
 }
 
 void SettingsScreen_SetActive(void) {

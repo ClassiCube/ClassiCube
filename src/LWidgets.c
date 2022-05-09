@@ -160,6 +160,11 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout*
 	LBackend_CheckboxInit(w);
 }
 
+void LCheckbox_Set(struct LCheckbox* w, cc_bool value) {
+	w->value = value;
+	LBackend_CheckboxUpdate(w);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*

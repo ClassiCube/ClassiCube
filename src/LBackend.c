@@ -425,6 +425,10 @@ void LBackend_CheckboxInit(struct LCheckbox* w) {
 	w->OnClick = LCheckbox_OnClick;
 }
 
+void LBackend_CheckboxUpdate(struct LCheckbox* w) {
+	LBackend_MarkDirty(w);
+}
+
 /* Based off checkbox from original ClassiCube Launcher */
 static const cc_uint8 checkbox_indices[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,

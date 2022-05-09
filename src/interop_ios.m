@@ -575,7 +575,7 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
     r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
     
-    /* e.g. Table widget needs adjusts width/height based on window */
+    // e.g. Table widget needs adjusts width/height based on window
     if (l[1].type & LLAYOUT_EXTRA)
         LBackend_LayoutDimensions(w, &r);
     [view setFrame:r];
@@ -589,6 +589,14 @@ void LBackend_SetScreen(struct LScreen* s) {
         
         UIView* view = (__bridge UIView*)obj;
         [view_handle addSubview:view];
+        
+        /*[view addConstraint:[NSLayoutConstraint constraintWithItem:view
+                                                        attribute: NSLayoutAttributeLeft
+                                                        relatedBy:NSLayoutRelationEqual
+                                                        toItem:view_handle
+                                                        attribute:NSLayoutAttributeLeft
+                                                        multiplier:1.0f
+                                                        constant:s->widgets[i]->layouts[0].offset]];*/
     }
 }
 
@@ -818,24 +826,54 @@ void LBackend_ButtonUpdate(struct LButton* w) {
     
     [btn setTitle:str forState:UIControlStateNormal];
 }
-
-
-void LBackend_ButtonDraw(struct LButton* w) {
-}
+void LBackend_ButtonDraw(struct LButton* w) { }
 
 
 /*########################################################################################################################*
  *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_CheckboxInit(struct LCheckbox* w) {
+    UIView* root  = [[UIView alloc] init];
     UISwitch* swt = [[UISwitch alloc] init];
+    [swt setOn:w->value];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
-    AssignView(w, swt);
+    UILabel* lbl  = [[UILabel alloc] init];
+    lbl.textColor = [UIColor whiteColor];
+    lbl.text      = ToNSString(&w->text);
+    lbl.translatesAutoresizingMaskIntoConstraints = false;
+    [lbl sizeToFit]; // adjust label to fit text
+                     
+    [root addSubview:swt];
+    [root addSubview:lbl];
+    
+    // label should be slightly to right of switch
+    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
+                                            attribute: NSLayoutAttributeLeft
+                                            relatedBy: NSLayoutRelationEqual
+                                            toItem:swt
+                                            attribute:NSLayoutAttributeRight
+                                            multiplier:1.0f
+                                            constant:10.0f]];
+    // label should be vertically aligned
+    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
+                                            attribute: NSLayoutAttributeCenterY
+                                            relatedBy: NSLayoutRelationEqual
+                                            toItem:root
+                                            attribute:NSLayoutAttributeCenterY
+                                            multiplier:1.0f
+                                            constant:0.0f]];
+    
+    // adjust root view height to enclose children
+    CGRect frame = root.frame;
+    frame.size.width  = lbl.frame.origin.x + lbl.frame.size.width;
+    frame.size.height = swt.frame.size.height;
+    root.frame   = frame;
+    
+    //root.userInteractionEnabled = YES;
+    AssignView(w, root);
 }
-
-void LBackend_CheckboxDraw(struct LCheckbox* w) {
-}
+void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
 
 /*########################################################################################################################*
@@ -863,7 +901,7 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder) {
 
 void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
-    fld.frame           = CGRectMake(0, 0, width, 30);
+    fld.frame           = CGRectMake(0, 0, width, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = [UIColor whiteColor];
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
@@ -879,9 +917,7 @@ void LBackend_InputUpdate(struct LInput* w) {
     fld.text         = ToNSString(&w->text);
 }
 
-void LBackend_InputDraw(struct LInput* w) {
-}
-
+void LBackend_InputDraw(struct LInput* w) { }
 void LBackend_InputTick(struct LInput* w) { }
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) { }
 void LBackend_InputUnselect(struct LInput* w) { }
@@ -899,17 +935,10 @@ void LBackend_LabelInit(struct LLabel* w) {
 
 void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
-    char raw[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(raw, &w->text);
-    
-    NSString* str = [NSString stringWithUTF8String:raw];
-    lbl.text = str;
+    lbl.text     = ToNSString(&w->text);
     [lbl sizeToFit]; // adjust label to fit text
-    
 }
-
-void LBackend_LabelDraw(struct LLabel* w) {
-}
+void LBackend_LabelDraw(struct LLabel* w) { }
 
 
 /*########################################################################################################################*
@@ -917,16 +946,14 @@ void LBackend_LabelDraw(struct LLabel* w) {
  *#########################################################################################################################*/
 void LBackend_LineInit(struct LLine* w, int width) {
     UIView* view = [[UIView alloc] init];
-    view.frame   = CGRectMake(0, 0, width, 2);
+    view.frame   = CGRectMake(0, 0, width, LLINE_HEIGHT);
     
     BitmapCol color = LLine_GetColor();
     view.backgroundColor = ToUIColor(color, 0.5f);
     
     AssignView(w, view);
 }
-
-void LBackend_LineDraw(struct LLine* w) {
-}
+void LBackend_LineDraw(struct LLine* w) { }
 
 
 /*########################################################################################################################*
@@ -934,9 +961,9 @@ void LBackend_LineDraw(struct LLine* w) {
  *#########################################################################################################################*/
 void LBackend_SliderInit(struct LSlider* w, int width, int height) {
     UIProgressView* prg = [[UIProgressView alloc] init];
-    prg.frame = CGRectMake(0, 0, width, height);
+    prg.frame           = CGRectMake(0, 0, width, height);
     prg.progressTintColor = ToUIColor(w->color, 1.0f);
-    
+
     AssignView(w, prg);
 }
 
@@ -945,9 +972,7 @@ void LBackend_SliderUpdate(struct LSlider* w) {
     
     prg.progress = w->value / 100.0f;
 }
-
-void LBackend_SliderDraw(struct LSlider* w) {
-}
+void LBackend_SliderDraw(struct LSlider* w) { }
 
 
 /*########################################################################################################################*
@@ -975,7 +1000,6 @@ void LBackend_TableFlagAdded(struct LTable* w) {
 
 void LBackend_TableDraw(struct LTable* w) { }
 void LBackend_TableReposition(struct LTable* w) { }
-
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
 void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }

@@ -78,6 +78,7 @@ struct LCheckbox {
 	void (*ValueChanged)(struct LCheckbox* w);
 };
 CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout* layouts);
+CC_NOINLINE void LCheckbox_Set(struct LCheckbox* w, cc_bool value);
 
 struct LInput;
 struct LInput {
