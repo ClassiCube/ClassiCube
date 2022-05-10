@@ -686,7 +686,8 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return FetchServersTask.numServers;
+    struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
+    return w ? w->rowsCount : 0;
 }
 
 // === UITableViewDelegate ===
@@ -708,10 +709,12 @@ static NSString* cellID = @"CC_Cell";
 
 // === UITextFieldDelegate ===
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    struct LWidget* w = Launcher_Active->onEnterWidget;
+    struct LWidget* w   = FindWidgetForView(textField);
+    if (w == NULL) return YES;
+    struct LWidget* sel = Launcher_Active->onEnterWidget;
     
-    if (w) {
-        w->OnClick(w);
+    if (sel && !w->skipsEnter) {
+        sel->OnClick(sel);
     } else {
         [textField resignFirstResponder];
     }

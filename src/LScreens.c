@@ -1239,6 +1239,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->btnConnect.OnClick = ServersScreen_Connect;
 	s->btnRefresh.OnClick = ServersScreen_Refresh;
 
+	s->iptSearch.skipsEnter    = true;
 	s->iptSearch.TextChanged   = ServersScreen_SearchChanged;
 	s->iptHash.TextChanged     = ServersScreen_HashChanged;
 	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;

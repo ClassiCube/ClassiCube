@@ -50,6 +50,7 @@ struct LWidgetVTABLE {
 	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
 	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
 	cc_uint8 type;                 /* Type of this widget */ \
+	cc_bool skipsEnter;            /* Whether clicking this widget DOESN'T trigger OnEnterWidget */ \
 	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
 	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
