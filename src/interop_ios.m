@@ -578,7 +578,7 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     // e.g. Table widget needs adjusts width/height based on window
     if (l[1].type & LLAYOUT_EXTRA)
         LBackend_LayoutDimensions(w, &r);
-    [view setFrame:r];
+    view.frame = r;
 }
 
 void LBackend_SetScreen(struct LScreen* s) {
@@ -632,10 +632,10 @@ static struct LWidget* FindWidgetForView(id obj) {
 }
 
 static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected);
-static void LTable_UpdateCell(UITableViewCell* cell, int row);
+static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row);
 
 static NSString* cellID = @"CC_Cell";
-@interface CCUIController : NSObject<UITableViewDataSource, UITableViewDelegate>
+@interface CCUIController : NSObject<UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate>
 @end
 
 @implementation CCUIController
@@ -674,7 +674,6 @@ static NSString* cellID = @"CC_Cell";
 }
 
 // === UITableViewDataSource ===
-static void LTable_ApplyFlag(UITableViewCell* cell, struct ServerInfo* server);
 - (nonnull UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
@@ -682,7 +681,7 @@ static void LTable_ApplyFlag(UITableViewCell* cell, struct ServerInfo* server);
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    LTable_UpdateCell(cell, (int)indexPath.row);
+    LTable_UpdateCell(tableView, cell, (int)indexPath.row);
     return cell;
 }
 
@@ -705,6 +704,18 @@ static void LTable_ApplyFlag(UITableViewCell* cell, struct ServerInfo* server);
     int row = (int)indexPath.row;
     struct ServerInfo* server = LTable_Get(row);
     LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, false);
+}
+
+// === UITextFieldDelegate ===
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    struct LWidget* w = Launcher_Active->onEnterWidget;
+    
+    if (w) {
+        w->OnClick(w);
+    } else {
+        [textField resignFirstResponder];
+    }
+    return YES;
 }
 
 @end
@@ -875,7 +886,7 @@ void LBackend_CheckboxUpdate(struct LCheckbox* w) {
     UIView* root  = (__bridge UIView*)w->meta;
     UISwitch* swt = (UISwitch*)root.subviews[0];
     
-    [swt setOn:w->value];
+    swt.on = w->value;
 }
 void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
@@ -886,13 +897,15 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 static void LInput_SetKeyboardType(UITextField* fld, int flags) {
     int type = flags & 0xFF;
     if (type == KEYBOARD_TYPE_INTEGER) {
-        [fld setKeyboardType:UIKeyboardTypeNumberPad];
+        fld.keyboardType = UIKeyboardTypeNumberPad;
     } else if (type == KEYBOARD_TYPE_PASSWORD) {
         fld.secureTextEntry = YES;
     }
     
     if (flags & KEYBOARD_FLAG_SEND) {
-        [fld setReturnKeyType:UIReturnKeySend];
+        fld.returnKeyType = UIReturnKeySend;
+    } else {
+        fld.returnKeyType = UIReturnKeyDone;
     }
 }
 
@@ -908,6 +921,7 @@ void LBackend_InputInit(struct LInput* w, int width) {
     fld.frame           = CGRectMake(0, 0, width, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = [UIColor whiteColor];
+    fld.delegate        = ui_controller;
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     LInput_SetKeyboardType(fld, w->inputType);
@@ -984,9 +998,8 @@ void LBackend_SliderDraw(struct LSlider* w) { }
  *#########################################################################################################################*/
 void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.delegate        = ui_controller;
-    tbl.dataSource      = ui_controller;
-    //tbl.backgroundColor = UIColor.clearColor;
+    tbl.delegate     = ui_controller;
+    tbl.dataSource   = ui_controller;
     LTable_UpdateCellColor(tbl, NULL, 0, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
@@ -1026,7 +1039,7 @@ static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int 
     }
 }
 
-static void LTable_UpdateCell(UITableViewCell* cell, int row) {
+static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row) {
     struct ServerInfo* server = LTable_Get(row);
     struct Flag* flag = Flags_Get(server);
     
@@ -1047,10 +1060,8 @@ static void LTable_UpdateCell(UITableViewCell* cell, int row) {
     cell.textLabel.textColor  = UIColor.whiteColor;
     cell.detailTextLabel.textColor = UIColor.whiteColor;
     cell.selectionStyle       = UITableViewCellSelectionStyleNone;
-        
-    // TODO doesn't work when reloading data
-    //NSIndexPath* sel = tableView.indexPathForSelectedRow;
-    //cc_bool selected = sel && sel.row == row;
-    //UpdateCellColor(cell, server, row, selected);
-    LTable_UpdateCellColor(cell, server, row, false);
+    
+    NSIndexPath* sel = table.indexPathForSelectedRow;
+    cc_bool selected = sel && sel.row == row;
+    LTable_UpdateCellColor(cell, server, row, selected);
 }
