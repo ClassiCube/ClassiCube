@@ -866,29 +866,11 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 	}
 }
 
-/* Works out the background color of the given row */
-static BitmapCol LTable_RowColor(struct LTable* w, int row) {
-	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
-	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);
-	BitmapCol selectedColor = BitmapCol_Make( 40,  40, 40, 255);
-	struct ServerInfo* entry;
-	cc_bool selected;
-	entry = row < w->rowsCount ? LTable_Get(row) : NULL;
+static BitmapCol LBackend_TableRowColor(struct LTable* w, int row) {
+	struct ServerInfo* entry = row < w->rowsCount ? LTable_Get(row) : NULL;
+	cc_bool selected         = entry && String_Equals(&entry->hash, w->selectedHash);
 
-	if (entry) {
-		selected = String_Equals(&entry->hash, w->selectedHash);
-		if (entry->featured) {
-			return selected ? featSelColor : featuredColor;
-		} else if (selected) {
-			return selectedColor;
-		}
-	}
-
-	if (!Launcher_Theme.ClassicBackground) {
-		return BitmapCol_Make(20, 20, 10, 255);
-	} else {
-		return (row & 1) == 0 ? Launcher_Theme.BackgroundColor : 0;
-	}
+	return LTable_RowColor(entry, row, selected);
 }
 
 /* Draws background behind each row in the table */
@@ -898,7 +880,7 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 
 	y = w->rowsBegY;
 	for (row = w->topRow; ; row++, y += w->rowHeight) {
-		color = LTable_RowColor(w, row);
+		color = LBackend_TableRowColor(w, row);
 
 		/* last row may get chopped off */
 		height = min(y + w->rowHeight, w->rowsEndY) - y;

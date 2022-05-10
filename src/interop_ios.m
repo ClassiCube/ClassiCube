@@ -631,6 +631,9 @@ static struct LWidget* FindWidgetForView(id obj) {
     return NULL;
 }
 
+static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected);
+static void LTable_UpdateCell(UITableViewCell* cell, int row);
+
 static NSString* cellID = @"CC_Cell";
 @interface CCUIController : NSObject<UITableViewDataSource, UITableViewDelegate>
 @end
@@ -659,42 +662,27 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (void)handleValueChanged:(id)sender {
-    struct LWidget* w = FindWidgetForView(sender);
+    UISwitch* swt     = (UISwitch*)sender;
+    UIView* parent    = swt.superview;
+    struct LWidget* w = FindWidgetForView(parent);
     if (w == NULL) return;
-    
-    UISwitch* src        = (UISwitch*)sender;
+
     struct LCheckbox* cb = (struct LCheckbox*)w;
-    
-    cb->value = [src isOn];
+    cb->value = [swt isOn];
     if (!cb->ValueChanged) return;
     cb->ValueChanged(cb);
 }
 
 // === UITableViewDataSource ===
-- (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
+static void LTable_ApplyFlag(UITableViewCell* cell, struct ServerInfo* server);
+- (nonnull UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    struct ServerInfo* server = LTable_Get([indexPath row]);
-    struct Flag* flag = Flags_Get(server);
-    
-    char descBuffer[128];
-    cc_string desc = String_FromArray(descBuffer);
-    String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
-    LTable_FormatUptime(&desc, server->uptime);
-    
-    if (flag && !flag->meta && flag->bmp.scan0) {
-        UIImage* img = ToUIImage(&flag->bmp);
-        flag->meta   = CFBridgingRetain(img);
-    }
-    if (flag && flag->meta)
-        cell.imageView.image = (__bridge UIImage*)flag->meta;
-    
-    cell.textLabel.text       = ToNSString(&server->name);
-    cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
+    LTable_UpdateCell(cell, (int)indexPath.row);
     return cell;
 }
 
@@ -704,9 +692,19 @@ static NSString* cellID = @"CC_Cell";
 
 // === UITableViewDelegate ===
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    struct LTable* w = FindWidgetForView(tableView);
+    int row = (int)indexPath.row;
+    struct ServerInfo* server = LTable_Get(row);
+    LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, true);
+    
+    struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     if (w == NULL) return;
-    LTable_RowClick(w, [indexPath row]);
+    LTable_RowClick(w, row);
+}
+
+- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath {
+    int row = (int)indexPath.row;
+    struct ServerInfo* server = LTable_Get(row);
+    LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, false);
 }
 
 @end
@@ -835,7 +833,6 @@ void LBackend_ButtonDraw(struct LButton* w) { }
 void LBackend_CheckboxInit(struct LCheckbox* w) {
     UIView* root  = [[UIView alloc] init];
     UISwitch* swt = [[UISwitch alloc] init];
-    [swt setOn:w->value];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     UILabel* lbl  = [[UILabel alloc] init];
@@ -872,6 +869,13 @@ void LBackend_CheckboxInit(struct LCheckbox* w) {
     
     //root.userInteractionEnabled = YES;
     AssignView(w, root);
+}
+
+void LBackend_CheckboxUpdate(struct LCheckbox* w) {
+    UIView* root  = (__bridge UIView*)w->meta;
+    UISwitch* swt = (UISwitch*)root.subviews[0];
+    
+    [swt setOn:w->value];
 }
 void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
@@ -980,8 +984,10 @@ void LBackend_SliderDraw(struct LSlider* w) { }
  *#########################################################################################################################*/
 void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.delegate   = ui_controller;
-    tbl.dataSource = ui_controller;
+    tbl.delegate        = ui_controller;
+    tbl.dataSource      = ui_controller;
+    //tbl.backgroundColor = UIColor.clearColor;
+    LTable_UpdateCellColor(tbl, NULL, 0, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
     AssignView(w, tbl);
@@ -995,7 +1001,12 @@ void LBackend_TableUpdate(struct LTable* w) {
 // TODO only redraw flags
 void LBackend_TableFlagAdded(struct LTable* w) {
     UITableView* tbl = (__bridge UITableView*)w->meta;
+    
+    // trying to update cell.imageView.image doesn't seem to work,
+    // so pointlessly reload entire table data instead
+    NSIndexPath* selected = [tbl indexPathForSelectedRow];
     [tbl reloadData];
+    [tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 void LBackend_TableDraw(struct LTable* w) { }
@@ -1003,3 +1014,43 @@ void LBackend_TableReposition(struct LTable* w) { }
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
 void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
+
+static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected) {
+    BitmapCol color = LTable_RowColor(server, row, selected);
+    if (color) {
+        view.backgroundColor = ToUIColor(color, 1.0f);
+        view.opaque          = YES;
+    } else {
+        view.backgroundColor = UIColor.clearColor;
+        view.opaque          = NO;
+    }
+}
+
+static void LTable_UpdateCell(UITableViewCell* cell, int row) {
+    struct ServerInfo* server = LTable_Get(row);
+    struct Flag* flag = Flags_Get(server);
+    
+    char descBuffer[128];
+    cc_string desc = String_FromArray(descBuffer);
+    String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
+    LTable_FormatUptime(&desc, server->uptime);
+    
+    if (flag && !flag->meta && flag->bmp.scan0) {
+        UIImage* img = ToUIImage(&flag->bmp);
+        flag->meta   = CFBridgingRetain(img);
+    }
+    if (flag && flag->meta)
+        cell.imageView.image = (__bridge UIImage*)flag->meta;
+        
+    cell.textLabel.text       = ToNSString(&server->name);
+    cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
+    cell.textLabel.textColor  = UIColor.whiteColor;
+    cell.detailTextLabel.textColor = UIColor.whiteColor;
+    cell.selectionStyle       = UITableViewCellSelectionStyleNone;
+        
+    // TODO doesn't work when reloading data
+    //NSIndexPath* sel = tableView.indexPathForSelectedRow;
+    //cc_bool selected = sel && sel.row == row;
+    //UpdateCellColor(cell, server, row, selected);
+    LTable_UpdateCellColor(cell, server, row, false);
+}
