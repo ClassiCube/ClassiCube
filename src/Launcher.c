@@ -42,17 +42,12 @@ static void CloseActiveScreen(void) {
 }
 
 void Launcher_SetScreen(struct LScreen* screen) {
-	int i;
 	CloseActiveScreen();
 	Launcher_Active = screen;
 	if (!screen->numWidgets) screen->Init(screen);
 
 	screen->Show(screen);
 	screen->Layout(screen);
-	/* for hovering over active button etc */
-	for (i = 0; i < Pointers_Count; i++) {
-		screen->MouseMove(screen, i);
-	}
 
 	LBackend_SetScreen(screen);
 	LBackend_Redraw();
@@ -187,14 +182,6 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	Launcher_Active->KeyDown(Launcher_Active, key, was);
 }
 
-static void OnKeyPress(void* obj, int c) {
-	Launcher_Active->KeyPress(Launcher_Active, c);
-}
-
-static void OnTextChanged(void* obj, const cc_string* str) {
-	Launcher_Active->TextChanged(Launcher_Active, str);
-}
-
 static void OnMouseWheel(void* obj, float delta) {
 	Launcher_Active->MouseWheel(Launcher_Active, delta);
 }
@@ -208,9 +195,7 @@ static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
 
 	Event_Register_(&InputEvents.Down,          NULL, OnInputDown);
-	Event_Register_(&InputEvents.Press,         NULL, OnKeyPress);
 	Event_Register_(&InputEvents.Wheel,         NULL, OnMouseWheel);
-	Event_Register_(&InputEvents.TextChanged,   NULL, OnTextChanged);
 
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");

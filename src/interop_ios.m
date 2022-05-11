@@ -575,10 +575,10 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
     r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
     
-    /* e.g. Table widget needs adjusts width/height based on window */
+    // e.g. Table widget needs adjusts width/height based on window
     if (l[1].type & LLAYOUT_EXTRA)
         LBackend_LayoutDimensions(w, &r);
-    [view setFrame:r];
+    view.frame = r;
 }
 
 void LBackend_SetScreen(struct LScreen* s) {
@@ -589,6 +589,14 @@ void LBackend_SetScreen(struct LScreen* s) {
         
         UIView* view = (__bridge UIView*)obj;
         [view_handle addSubview:view];
+        
+        /*[view addConstraint:[NSLayoutConstraint constraintWithItem:view
+                                                        attribute: NSLayoutAttributeLeft
+                                                        relatedBy:NSLayoutRelationEqual
+                                                        toItem:view_handle
+                                                        attribute:NSLayoutAttributeLeft
+                                                        multiplier:1.0f
+                                                        constant:s->widgets[i]->layouts[0].offset]];*/
     }
 }
 
@@ -623,8 +631,11 @@ static struct LWidget* FindWidgetForView(id obj) {
     return NULL;
 }
 
+static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected);
+static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row);
+
 static NSString* cellID = @"CC_Cell";
-@interface CCUIController : NSObject<UITableViewDataSource, UITableViewDelegate>
+@interface CCUIController : NSObject<UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate>
 @end
 
 @implementation CCUIController
@@ -651,54 +662,63 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (void)handleValueChanged:(id)sender {
-    struct LWidget* w = FindWidgetForView(sender);
+    UISwitch* swt     = (UISwitch*)sender;
+    UIView* parent    = swt.superview;
+    struct LWidget* w = FindWidgetForView(parent);
     if (w == NULL) return;
-    
-    UISwitch* src        = (UISwitch*)sender;
+
     struct LCheckbox* cb = (struct LCheckbox*)w;
-    
-    cb->value = [src isOn];
+    cb->value = [swt isOn];
     if (!cb->ValueChanged) return;
     cb->ValueChanged(cb);
 }
 
 // === UITableViewDataSource ===
-- (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
+- (nonnull UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellID];
     }
     
-    struct ServerInfo* server = LTable_Get([indexPath row]);
-    struct Flag* flag = Flags_Get(server);
-    
-    char descBuffer[128];
-    cc_string desc = String_FromArray(descBuffer);
-    String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
-    LTable_FormatUptime(&desc, server->uptime);
-    
-    if (flag && !flag->meta && flag->bmp.scan0) {
-        UIImage* img = ToUIImage(&flag->bmp);
-        flag->meta   = CFBridgingRetain(img);
-    }
-    if (flag && flag->meta)
-        cell.imageView.image = (__bridge UIImage*)flag->meta;
-    
-    cell.textLabel.text       = ToNSString(&server->name);
-    cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
+    LTable_UpdateCell(tableView, cell, (int)indexPath.row);
     return cell;
 }
 
 - (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return FetchServersTask.numServers;
+    struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
+    return w ? w->rowsCount : 0;
 }
 
 // === UITableViewDelegate ===
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    struct LTable* w = FindWidgetForView(tableView);
+    int row = (int)indexPath.row;
+    struct ServerInfo* server = LTable_Get(row);
+    LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, true);
+    
+    struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     if (w == NULL) return;
-    LTable_RowClick(w, [indexPath row]);
+    LTable_RowClick(w, row);
+}
+
+- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath {
+    int row = (int)indexPath.row;
+    struct ServerInfo* server = LTable_Get(row);
+    LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, false);
+}
+
+// === UITextFieldDelegate ===
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    struct LWidget* w   = FindWidgetForView(textField);
+    if (w == NULL) return YES;
+    struct LWidget* sel = Launcher_Active->onEnterWidget;
+    
+    if (sel && !w->skipsEnter) {
+        sel->OnClick(sel);
+    } else {
+        [textField resignFirstResponder];
+    }
+    return YES;
 }
 
 @end
@@ -818,24 +838,60 @@ void LBackend_ButtonUpdate(struct LButton* w) {
     
     [btn setTitle:str forState:UIControlStateNormal];
 }
-
-
-void LBackend_ButtonDraw(struct LButton* w) {
-}
+void LBackend_ButtonDraw(struct LButton* w) { }
 
 
 /*########################################################################################################################*
  *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_CheckboxInit(struct LCheckbox* w) {
+    UIView* root  = [[UIView alloc] init];
     UISwitch* swt = [[UISwitch alloc] init];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
-    AssignView(w, swt);
+    UILabel* lbl  = [[UILabel alloc] init];
+    lbl.textColor = [UIColor whiteColor];
+    lbl.text      = ToNSString(&w->text);
+    lbl.translatesAutoresizingMaskIntoConstraints = false;
+    [lbl sizeToFit]; // adjust label to fit text
+                     
+    [root addSubview:swt];
+    [root addSubview:lbl];
+    
+    // label should be slightly to right of switch
+    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
+                                            attribute: NSLayoutAttributeLeft
+                                            relatedBy: NSLayoutRelationEqual
+                                            toItem:swt
+                                            attribute:NSLayoutAttributeRight
+                                            multiplier:1.0f
+                                            constant:10.0f]];
+    // label should be vertically aligned
+    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
+                                            attribute: NSLayoutAttributeCenterY
+                                            relatedBy: NSLayoutRelationEqual
+                                            toItem:root
+                                            attribute:NSLayoutAttributeCenterY
+                                            multiplier:1.0f
+                                            constant:0.0f]];
+    
+    // adjust root view height to enclose children
+    CGRect frame = root.frame;
+    frame.size.width  = lbl.frame.origin.x + lbl.frame.size.width;
+    frame.size.height = swt.frame.size.height;
+    root.frame   = frame;
+    
+    //root.userInteractionEnabled = YES;
+    AssignView(w, root);
 }
 
-void LBackend_CheckboxDraw(struct LCheckbox* w) {
+void LBackend_CheckboxUpdate(struct LCheckbox* w) {
+    UIView* root  = (__bridge UIView*)w->meta;
+    UISwitch* swt = (UISwitch*)root.subviews[0];
+    
+    swt.on = w->value;
 }
+void LBackend_CheckboxDraw(struct LCheckbox* w) { }
 
 
 /*########################################################################################################################*
@@ -844,13 +900,15 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 static void LInput_SetKeyboardType(UITextField* fld, int flags) {
     int type = flags & 0xFF;
     if (type == KEYBOARD_TYPE_INTEGER) {
-        [fld setKeyboardType:UIKeyboardTypeNumberPad];
+        fld.keyboardType = UIKeyboardTypeNumberPad;
     } else if (type == KEYBOARD_TYPE_PASSWORD) {
         fld.secureTextEntry = YES;
     }
     
     if (flags & KEYBOARD_FLAG_SEND) {
-        [fld setReturnKeyType:UIReturnKeySend];
+        fld.returnKeyType = UIReturnKeySend;
+    } else {
+        fld.returnKeyType = UIReturnKeyDone;
     }
 }
 
@@ -863,9 +921,10 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder) {
 
 void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
-    fld.frame           = CGRectMake(0, 0, width, 30);
+    fld.frame           = CGRectMake(0, 0, width, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = [UIColor whiteColor];
+    fld.delegate        = ui_controller;
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     LInput_SetKeyboardType(fld, w->inputType);
@@ -879,9 +938,7 @@ void LBackend_InputUpdate(struct LInput* w) {
     fld.text         = ToNSString(&w->text);
 }
 
-void LBackend_InputDraw(struct LInput* w) {
-}
-
+void LBackend_InputDraw(struct LInput* w) { }
 void LBackend_InputTick(struct LInput* w) { }
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) { }
 void LBackend_InputUnselect(struct LInput* w) { }
@@ -899,17 +956,10 @@ void LBackend_LabelInit(struct LLabel* w) {
 
 void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
-    char raw[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(raw, &w->text);
-    
-    NSString* str = [NSString stringWithUTF8String:raw];
-    lbl.text = str;
+    lbl.text     = ToNSString(&w->text);
     [lbl sizeToFit]; // adjust label to fit text
-    
 }
-
-void LBackend_LabelDraw(struct LLabel* w) {
-}
+void LBackend_LabelDraw(struct LLabel* w) { }
 
 
 /*########################################################################################################################*
@@ -917,16 +967,14 @@ void LBackend_LabelDraw(struct LLabel* w) {
  *#########################################################################################################################*/
 void LBackend_LineInit(struct LLine* w, int width) {
     UIView* view = [[UIView alloc] init];
-    view.frame   = CGRectMake(0, 0, width, 2);
+    view.frame   = CGRectMake(0, 0, width, LLINE_HEIGHT);
     
     BitmapCol color = LLine_GetColor();
     view.backgroundColor = ToUIColor(color, 0.5f);
     
     AssignView(w, view);
 }
-
-void LBackend_LineDraw(struct LLine* w) {
-}
+void LBackend_LineDraw(struct LLine* w) { }
 
 
 /*########################################################################################################################*
@@ -934,9 +982,9 @@ void LBackend_LineDraw(struct LLine* w) {
  *#########################################################################################################################*/
 void LBackend_SliderInit(struct LSlider* w, int width, int height) {
     UIProgressView* prg = [[UIProgressView alloc] init];
-    prg.frame = CGRectMake(0, 0, width, height);
+    prg.frame           = CGRectMake(0, 0, width, height);
     prg.progressTintColor = ToUIColor(w->color, 1.0f);
-    
+
     AssignView(w, prg);
 }
 
@@ -945,9 +993,7 @@ void LBackend_SliderUpdate(struct LSlider* w) {
     
     prg.progress = w->value / 100.0f;
 }
-
-void LBackend_SliderDraw(struct LSlider* w) {
-}
+void LBackend_SliderDraw(struct LSlider* w) { }
 
 
 /*########################################################################################################################*
@@ -955,8 +1001,9 @@ void LBackend_SliderDraw(struct LSlider* w) {
  *#########################################################################################################################*/
 void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.delegate   = ui_controller;
-    tbl.dataSource = ui_controller;
+    tbl.delegate     = ui_controller;
+    tbl.dataSource   = ui_controller;
+    LTable_UpdateCellColor(tbl, NULL, 0, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
     AssignView(w, tbl);
@@ -970,12 +1017,54 @@ void LBackend_TableUpdate(struct LTable* w) {
 // TODO only redraw flags
 void LBackend_TableFlagAdded(struct LTable* w) {
     UITableView* tbl = (__bridge UITableView*)w->meta;
+    
+    // trying to update cell.imageView.image doesn't seem to work,
+    // so pointlessly reload entire table data instead
+    NSIndexPath* selected = [tbl indexPathForSelectedRow];
     [tbl reloadData];
+    [tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 void LBackend_TableDraw(struct LTable* w) { }
 void LBackend_TableReposition(struct LTable* w) { }
-
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
 void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
+
+static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected) {
+    BitmapCol color = LTable_RowColor(server, row, selected);
+    if (color) {
+        view.backgroundColor = ToUIColor(color, 1.0f);
+        view.opaque          = YES;
+    } else {
+        view.backgroundColor = UIColor.clearColor;
+        view.opaque          = NO;
+    }
+}
+
+static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row) {
+    struct ServerInfo* server = LTable_Get(row);
+    struct Flag* flag = Flags_Get(server);
+    
+    char descBuffer[128];
+    cc_string desc = String_FromArray(descBuffer);
+    String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
+    LTable_FormatUptime(&desc, server->uptime);
+    
+    if (flag && !flag->meta && flag->bmp.scan0) {
+        UIImage* img = ToUIImage(&flag->bmp);
+        flag->meta   = CFBridgingRetain(img);
+    }
+    if (flag && flag->meta)
+        cell.imageView.image = (__bridge UIImage*)flag->meta;
+        
+    cell.textLabel.text       = ToNSString(&server->name);
+    cell.detailTextLabel.text = ToNSString(&desc);//[ToNSString(&desc) stringByAppendingString:@"\nLine2"];
+    cell.textLabel.textColor  = UIColor.whiteColor;
+    cell.detailTextLabel.textColor = UIColor.whiteColor;
+    cell.selectionStyle       = UITableViewCellSelectionStyleNone;
+    
+    NSIndexPath* sel = table.indexPathForSelectedRow;
+    cc_bool selected = sel && sel.row == row;
+    LTable_UpdateCellColor(cell, server, row, selected);
+}

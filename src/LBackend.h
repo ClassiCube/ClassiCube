@@ -38,6 +38,7 @@ void LBackend_ButtonUpdate(struct LButton* w);
 void LBackend_ButtonDraw(struct LButton* w);
 
 void LBackend_CheckboxInit(struct LCheckbox* w);
+void LBackend_CheckboxUpdate(struct LCheckbox* w);
 void LBackend_CheckboxDraw(struct LCheckbox* w);
 
 void LBackend_InputInit(struct LInput* w, int width);

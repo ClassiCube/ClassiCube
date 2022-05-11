@@ -50,6 +50,7 @@ struct LWidgetVTABLE {
 	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
 	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
 	cc_uint8 type;                 /* Type of this widget */ \
+	cc_bool skipsEnter;            /* Whether clicking this widget DOESN'T trigger OnEnterWidget */ \
 	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
 	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
 	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
@@ -78,6 +79,7 @@ struct LCheckbox {
 	void (*ValueChanged)(struct LCheckbox* w);
 };
 CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout* layouts);
+CC_NOINLINE void LCheckbox_Set(struct LCheckbox* w, cc_bool value);
 
 struct LInput;
 struct LInput {
@@ -110,6 +112,7 @@ CC_NOINLINE void LInput_ClearText(struct LInput* w);
 CC_NOINLINE void LInput_AppendString(struct LInput* w, const cc_string* str);
 /* Sets the currently entered text to the given string */
 CC_NOINLINE void LInput_SetString(struct LInput* w, const cc_string* str);
+#define LINPUT_HEIGHT 30
 
 /* Represents non-interactable text. */
 struct LLabel {
@@ -129,6 +132,7 @@ struct LLine {
 };
 CC_NOINLINE void LLine_Init(struct LLine* w, int width, const struct LLayout* layouts);
 CC_NOINLINE BitmapCol LLine_GetColor(void);
+#define LLINE_HEIGHT 2
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {
@@ -229,4 +233,6 @@ int LTable_GetSelectedIndex(struct LTable* w);
 /* Sets selected row to given row, scrolling table if needed */
 void LTable_SetSelectedTo(struct LTable* w, int index);
 void LTable_RowClick(struct LTable* w, int row);
+/* Works out the background color of the given row */
+BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected);
 #endif

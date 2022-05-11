@@ -160,6 +160,11 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout*
 	LBackend_CheckboxInit(w);
 }
 
+void LCheckbox_Set(struct LCheckbox* w, cc_bool value) {
+	w->value = value;
+	LBackend_CheckboxUpdate(w);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
@@ -722,5 +727,23 @@ void LTable_ShowSelected(struct LTable* w) {
 	}
 	if (i < w->topRow) w->topRow = i;
 	LTable_ClampTopRow(w);
+}
+
+BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
+	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
+	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);
+	BitmapCol selectedColor = BitmapCol_Make( 40,  40, 40, 255);
+
+	if (entry && entry->featured) {
+		return selected ? featSelColor : featuredColor;
+	} else if (entry && selected) {
+		return selectedColor;
+	}
+
+	if (!Launcher_Theme.ClassicBackground) {
+		return BitmapCol_Make(20, 20, 10, 255);
+	} else {
+		return (row & 1) == 0 ? Launcher_Theme.BackgroundColor : 0;
+	}
 }
 #endif
