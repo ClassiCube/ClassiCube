@@ -128,24 +128,13 @@ void LBackend_Tick(void) {
 *#########################################################################################################################*/
 static void RequestRedraw(void* obj) { LBackend_Redraw(); }
 
-static void OnPointerDown(void* obj, int idx) {
-    Launcher_Active->MouseDown(Launcher_Active, idx);
-}
-
 static void OnPointerUp(void* obj, int idx) {
     Launcher_Active->MouseUp(Launcher_Active, idx);
 }
 
-static void OnPointerMove(void* obj, int idx) {
-    if (!Launcher_Active) return;
-    Launcher_Active->MouseMove(Launcher_Active, idx);
-}
-
 static void HookEvents(void) {
     Event_Register_(&WindowEvents.Redraw, NULL, RequestRedraw);
-    Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
     Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
-    Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 }
 
 
@@ -190,18 +179,32 @@ void LBackend_ButtonDraw(struct LButton* w) { }
 *#########################################################################################################################*/
 void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
-static void LBackend_CheckboxShow(struct LLabel* w) {
+static void LBackend_CheckboxShow(struct LCheckbox* w) {
     JNIEnv* env; JavaGetCurrentEnv(env);
-    jvalue args[5];
+    jvalue args[6];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].l = JavaMakeString(env, &w->text);
+    args[5].z = w->value;
 
-    jmethodID method = JavaGetIMethod(env, "checkboxAdd", "(IIIILjava/lang/String;)I");
+    jmethodID method = JavaGetIMethod(env, "checkboxAdd", "(IIIILjava/lang/String;Z)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
     (*env)->DeleteLocalRef(env, args[4].l);
 }
 void LBackend_CheckboxDraw(struct LCheckbox* w) { }
+
+void LBackend_CheckboxUpdate(struct LCheckbox* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[2];
+    if (!w->meta) return;
+
+    args[0].i = (int)w->meta;
+    args[1].z = w->value;
+
+    // TODO share logic with LabelUpdate/ButtonUpdate
+    jmethodID method = JavaGetIMethod(env, "checkboxUpdate", "(IZ)V");
+    JavaICall_Void(env, method, args);
+}
 
 
 /*########################################################################################################################*
@@ -213,12 +216,13 @@ void LBackend_InputInit(struct LInput* w, int width) {
 
 static void LBackend_InputShow(struct LInput* w) {
     JNIEnv* env; JavaGetCurrentEnv(env);
-    jvalue args[5];
+    jvalue args[6];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = w->_textHeight;
+    args[5].i = Display_ScaleY(LINPUT_HEIGHT);
 
-    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIIII)I");
+    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
 }
 
@@ -285,13 +289,12 @@ static void LBackend_LineShow(struct LLine* w) {
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = w->_width;
-    args[5].i = Display_ScaleY(2); // TODO LLINE_HEIGHT constant
+    args[5].i = Display_ScaleY(LLINE_HEIGHT);
     args[6].i = LLine_GetColor();
 
     jmethodID method = JavaGetIMethod(env, "lineAdd", "(IIIIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
 }
-
 void LBackend_LineDraw(struct LLine* w) { }
 
 

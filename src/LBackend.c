@@ -6,6 +6,7 @@
 #include "LBackend_Win.c"
 #elif defined CC_BUILD_IOS
 /* iOS uses custom UI backend */
+#elif defined CC_BUILD_ANDROID
 #else
 #include "Launcher.h"
 #include "Drawer2D.h"
