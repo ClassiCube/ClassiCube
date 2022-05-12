@@ -32,6 +32,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
+import android.text.TextWatcher;
 import android.text.style.AbsoluteSizeSpan;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -51,10 +52,13 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -106,12 +110,11 @@ public class MainActivity extends Activity
 		pending.add(args);
 	}
 
-	void pushCmd(int cmd, int a1, int a2, int a3) {
+	void pushCmd(int cmd, int a1, String str) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd  = cmd;
 		args.arg1 = a1;
-		args.arg2 = a2;
-		args.arg3 = a3;
+		args.str  = str;
 		pending.add(args);
 	}
 	
@@ -164,10 +167,9 @@ public class MainActivity extends Activity
 	final static int CMD_CONFIG_CHANGED = 17;
 	final static int CMD_LOW_MEMORY  = 18;
 	final static int CMD_UI_CREATED  = 20;
-	final static int CMD_UI_EVENT    = 21;
-
-	final static int UI_EVENT_CLICKED = 1;
-	final static int UI_EVENT_CHANGED = 2;
+	final static int CMD_UI_CLICKED  = 21;
+	final static int CMD_UI_CHANGED  = 22;
+	final static int CMD_UI_STRING   = 23;
 
 	
 	// ====================================================================
@@ -383,11 +385,13 @@ public class MainActivity extends Activity
 			case CMD_APP_DESTROY: processOnDestroy(); break;
 
 			case CMD_GOT_FOCUS:	  processOnGotFocus();	  break;
-			case CMD_LOST_FOCUS:	 processOnLostFocus();	 break;
+			case CMD_LOST_FOCUS:  processOnLostFocus();	 break;
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
-			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
-			case CMD_UI_CREATED:	 processOnUICreated();	 break;
-			case CMD_UI_EVENT:	     processOnUIEvent(c.arg1, c.arg2, c.arg3); break;
+			case CMD_LOW_MEMORY:  processOnLowMemory();	 break;
+			case CMD_UI_CREATED:  processOnUICreated();	 break;
+			case CMD_UI_CLICKED:  processOnUIClicked(c.arg1); break;
+			case CMD_UI_CHANGED:  processOnUIChanged(c.arg1, c.arg2); break;
+			case CMD_UI_STRING:	  processOnUIString(c.arg1, c.str); break;
 			}
 
 			c.str = null;
@@ -421,7 +425,9 @@ public class MainActivity extends Activity
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
 	native void processOnUICreated();
-	native void processOnUIEvent(int id, int cmd, int val);
+	native void processOnUIClicked(int id);
+	native void processOnUIChanged(int id, int val);
+	native void processOnUIString(int id, String str);
 	
 	native void runGameAsync();
 	native void updateInstance();
@@ -600,7 +606,7 @@ public class MainActivity extends Activity
 
 		btn.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				pushCmd(CMD_UI_EVENT, v.getId(), UI_EVENT_CLICKED);
+				pushCmd(CMD_UI_CLICKED, v.getId());
 			}
 		});
 		return showWidgetAsync(btn, lp, null);
@@ -658,6 +664,14 @@ public class MainActivity extends Activity
 		ipt.setInputType(calcKeyboardType(flags));
 		ipt.setImeOptions(calcKeyboardOptions(flags));
 
+		ipt.addTextChangedListener(new TextWatcher() {
+			public void afterTextChanged(Editable s) { }
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				pushCmd(CMD_UI_STRING, ipt.getId(), s.toString());
+			}
+		});
 		return showWidgetAsync(ipt, lp, null);
 	}
 
@@ -697,7 +711,7 @@ public class MainActivity extends Activity
 				cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 					@Override
 					public void onCheckedChanged(CompoundButton v, boolean isChecked) {
-						pushCmd(CMD_UI_EVENT, v.getId(), UI_EVENT_CHANGED, isChecked ? 1 : 0);
+						pushCmd(CMD_UI_CHANGED, v.getId(), isChecked ? 1 : 0);
 					}
 				});
 			}
@@ -711,6 +725,50 @@ public class MainActivity extends Activity
 				if (view != null) { ((CheckBox)view).setChecked(checked); }
 			}
 		});
+	}
+
+	int tableAdd(int xMode, int xOffset, int yMode, int yOffset) {
+		final ListView view = new ListView(this);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+														_WRAP_CONTENT, _WRAP_CONTENT);
+
+		String[] values = { "1", "2", "3" };
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+				android.R.layout.simple_list_item_1, android.R.id.text1, values);
+		//CCTableAdapter adapter = new CCTableAdapter(this, values);
+		view.setAdapter(adapter);
+
+		return showWidgetAsync(view, lp, null);
+	}
+
+	class CCTableAdapter extends BaseAdapter
+	{
+		Context ctx;
+		String[] vals;
+
+		public CCTableAdapter(Context context, String[] values) {
+			ctx  = context;
+			vals = values;
+		}
+
+		@Override
+		public int getCount() { return vals.length; }
+
+		@Override
+		public String getItem(int position) { return vals[position]; }
+
+		@Override
+		public long getItemId(int position) { return position; }
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			if (convertView == null)
+				convertView = new TextView(ctx);
+
+			final String item = getItem(position);
+			((TextView)convertView).setText(item);
+			return convertView;
+		}
 	}
 
 

@@ -349,6 +349,16 @@ void LBackend_TableInit(struct LTable* w) {
 
 }
 
+static void LBackend_TableShow(struct LTable* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[4];
+
+    LBackend_GetLayoutArgs(w, args);
+
+    jmethodID method = JavaGetIMethod(env, "tableAdd", "(IIII)I");
+    w->meta = (void*)JavaICall_Int(env, method, args);
+}
+
 void LBackend_TableUpdate(struct LTable* w) {
 
 }
@@ -384,19 +394,28 @@ static struct LWidget* FindWidgetForView(int id) {
     return NULL;
 }
 
-static void JNICALL java_UIEvent(JNIEnv* env, jobject o, jint id, jint cmd, jint val) {
-    struct LWidget* w    = FindWidgetForView(id);
-    struct LCheckbox* cb = (struct LCheckbox*)w;
+static void JNICALL java_UIClicked(JNIEnv* env, jobject o, jint id) {
+    struct LWidget* w = FindWidgetForView(id);
     if (!w) return;
 
-    switch (cmd) {
-        case UI_EVENT_CLICKED:
-            if (w->OnClick) w->OnClick(w);
-            break;
-        case UI_EVENT_CHANGED:
-            cb->value = val;
-            if (cb->ValueChanged) cb->ValueChanged(cb);
-    }
+    if (w->OnClick) w->OnClick(w);
+}
+
+static void JNICALL java_UIChanged(JNIEnv* env, jobject o, jint id, jint val) {
+    struct LCheckbox* cb = (struct LCheckbox*)FindWidgetForView(id);
+    if (!cb) return;
+
+    cb->value = val;
+    if (cb->ValueChanged) cb->ValueChanged(cb);
+}
+
+static void JNICALL java_UIString(JNIEnv* env, jobject o, jint id, jstring str) {
+    struct LInput* ipt = (struct LInput*)FindWidgetForView(id);
+    if (!ipt) return;
+
+    char buffer[NATIVE_STR_LEN];
+    cc_string text = JavaGetString(env, str, buffer);
+    String_Copy(&ipt->text, &text);
 }
 
 static void ShowWidget(struct LWidget* w) {
@@ -418,6 +437,9 @@ static void ShowWidget(struct LWidget* w) {
             break;
         case LWIDGET_LINE:
             LBackend_LineShow((struct LLine*)w);
+            break;
+        case LWIDGET_TABLE:
+            LBackend_TableShow((struct LTable*)w);
             break;
     }
 }
@@ -445,7 +467,9 @@ static const JNINativeMethod methods[] = {
         { "drawBackground",    "(Landroid/graphics/Bitmap;)V", java_drawBackground },
         { "makeButtonActive",  "(Landroid/graphics/Bitmap;)V", java_makeButtonActive },
         { "makeButtonDefault", "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault },
-        { "processOnUIEvent",  "(III)V", java_UIEvent },
+        { "processOnUIClicked",  "(I)V", java_UIClicked },
+        { "processOnUIChanged",  "(II)V", java_UIChanged },
+        { "processOnUIString",  "(ILjava/lang/String;)V", java_UIString },
 };
 
 static void LBackend_InitHooks(void) {
