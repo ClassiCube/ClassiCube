@@ -243,14 +243,17 @@ void LBackend_InputInit(struct LInput* w, int width) {
 
 static void LBackend_InputShow(struct LInput* w) {
     JNIEnv* env; JavaGetCurrentEnv(env);
-    jvalue args[6];
+    jvalue args[8];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = w->_textHeight;
     args[5].i = Display_ScaleY(LINPUT_HEIGHT);
+    args[6].i = w->inputType;
+    args[7].l = JavaMakeConst(env, w->hintText);
 
-    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIIIII)I");
+    jmethodID method = JavaGetIMethod(env, "inputAdd", "(IIIIIIILjava/lang/String;)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
+    (*env)->DeleteLocalRef(env, args[7].l);
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
@@ -367,6 +370,7 @@ void LBackend_TableMouseUp(struct LTable* w, int idx) { }
 *--------------------------------------------------------UIBackend--------------------------------------------------------*
 *#########################################################################################################################*/
 #define UI_EVENT_CLICKED 1
+#define UI_EVENT_CHANGED 2
 
 static struct LWidget* FindWidgetForView(int id) {
     struct LScreen* s = Launcher_Active;
@@ -380,14 +384,18 @@ static struct LWidget* FindWidgetForView(int id) {
     return NULL;
 }
 
-extern void LBackend_UIEvent(int id, int cmd) {
-    struct LWidget* w = FindWidgetForView(id);
+static void JNICALL java_UIEvent(JNIEnv* env, jobject o, jint id, jint cmd, jint val) {
+    struct LWidget* w    = FindWidgetForView(id);
+    struct LCheckbox* cb = (struct LCheckbox*)w;
     if (!w) return;
 
     switch (cmd) {
         case UI_EVENT_CLICKED:
             if (w->OnClick) w->OnClick(w);
             break;
+        case UI_EVENT_CHANGED:
+            cb->value = val;
+            if (cb->ValueChanged) cb->ValueChanged(cb);
     }
 }
 
@@ -436,7 +444,8 @@ void LBackend_CloseScreen(struct LScreen* s) {
 static const JNINativeMethod methods[] = {
         { "drawBackground",    "(Landroid/graphics/Bitmap;)V", java_drawBackground },
         { "makeButtonActive",  "(Landroid/graphics/Bitmap;)V", java_makeButtonActive },
-        { "makeButtonDefault", "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault }
+        { "makeButtonDefault", "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault },
+        { "processOnUIEvent",  "(III)V", java_UIEvent },
 };
 
 static void LBackend_InitHooks(void) {

@@ -209,12 +209,6 @@ static void JNICALL java_UICreated(JNIEnv* env, jobject o) {
 	Event_RaiseVoid(&WindowEvents.Created);
 }
 
-extern void LBackend_UIEvent(int id, int cmd);
-static void JNICALL java_UIEvent(JNIEnv* env, jobject o, jint id, jint cmd) {
-	Platform_LogConst("WIN - 2D Event");
-	LBackend_UIEvent(id, cmd);
-}
-
 static const JNINativeMethod methods[] = {
 	{ "processKeyDown",   "(I)V", java_processKeyDown },
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
@@ -240,7 +234,6 @@ static const JNINativeMethod methods[] = {
 	{ "processOnLostFocus", "()V", java_onLostFocus },
 	{ "processOnLowMemory", "()V", java_onLowMemory },
 	{ "processOnUICreated", "()V", java_UICreated },
-	{ "processOnUIEvent", "(II)V", java_UIEvent },
 };
 static void CacheMethodRefs(JNIEnv* env) {
 	JAVA_openKeyboard    = JavaGetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");

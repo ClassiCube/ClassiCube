@@ -36,6 +36,7 @@ import android.text.style.AbsoluteSizeSpan;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -52,6 +53,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -101,6 +103,15 @@ public class MainActivity extends Activity
 		args.cmd  = cmd;
 		args.arg1 = a1;
 		args.arg2 = a2;
+		pending.add(args);
+	}
+
+	void pushCmd(int cmd, int a1, int a2, int a3) {
+		NativeCmdArgs args = getCmdArgs();
+		args.cmd  = cmd;
+		args.arg1 = a1;
+		args.arg2 = a2;
+		args.arg3 = a3;
 		pending.add(args);
 	}
 	
@@ -156,7 +167,8 @@ public class MainActivity extends Activity
 	final static int CMD_UI_EVENT    = 21;
 
 	final static int UI_EVENT_CLICKED = 1;
-	
+	final static int UI_EVENT_CHANGED = 2;
+
 	
 	// ====================================================================
 	// ------------------------------ EVENTS ------------------------------
@@ -375,7 +387,7 @@ public class MainActivity extends Activity
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
 			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
 			case CMD_UI_CREATED:	 processOnUICreated();	 break;
-			case CMD_UI_EVENT:	     processOnUIEvent(c.arg1, c.arg2); break;
+			case CMD_UI_EVENT:	     processOnUIEvent(c.arg1, c.arg2, c.arg3); break;
 			}
 
 			c.str = null;
@@ -409,7 +421,7 @@ public class MainActivity extends Activity
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
 	native void processOnUICreated();
-	native void processOnUIEvent(int id, int cmd);
+	native void processOnUIEvent(int id, int cmd, int val);
 	
 	native void runGameAsync();
 	native void updateInstance();
@@ -422,6 +434,25 @@ public class MainActivity extends Activity
 	// static to persist across activity destroy/create
 	static final Semaphore winDestroyedSem = new Semaphore(0, true);
 	View curView;
+
+	static int calcKeyboardType(int flags) {
+		// TYPE_CLASS_TEXT, TYPE_CLASS_NUMBER, TYPE_TEXT_VARIATION_PASSWORD - API level 3
+		int type = flags & 0xFF;
+
+		if (type == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
+		if (type == 1) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_NUMERIC
+		if (type == 3) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_INTEGER
+		return InputType.TYPE_CLASS_TEXT;
+	}
+
+	static int calcKeyboardOptions(int flags) {
+		// IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
+		if ((flags & 0x100) != 0) {
+			return EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+		} else {
+			return EditorInfo.IME_ACTION_GO   | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+		}
+	}
 
 
 	// ====================================================================
@@ -558,11 +589,14 @@ public class MainActivity extends Activity
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														width, height);
 
+		// https://stackoverflow.com/questions/5092649/android-how-to-update-the-selectorstatelistdrawable-programmatically
         StateListDrawable sld = new StateListDrawable();
         sld.addState(new int[] { android.R.attr.state_pressed }, buttonMakeImage(btn, width, height, true));
         sld.addState(new int[] {}, buttonMakeImage(btn, width, height, false));
         btn.setBackgroundDrawable(sld);
         btn.setTextColor(Color.WHITE);
+		btn.setPadding(btn.getPaddingLeft(), 0, btn.getPaddingRight(), 0);
+		btn.setTransformationMethod(null); // get rid of all caps
 
 		btn.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -599,6 +633,7 @@ public class MainActivity extends Activity
 		final TextView lbl = new TextView(this);
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														_WRAP_CONTENT, _WRAP_CONTENT);
+		lbl.setTextColor(Color.WHITE);
 
 		return showWidgetAsync(lbl, lp, null);
 	}
@@ -613,11 +648,15 @@ public class MainActivity extends Activity
 	}
 
 	int inputAdd(int xMode, int xOffset, int yMode, int yOffset,
-				 int width, int height) {
+				 int width, int height, int flags, String placeholder) {
 		final EditText ipt = new EditText(this);
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														width, height);
 		ipt.setBackgroundColor(Color.WHITE);
+		ipt.setPadding(ipt.getPaddingLeft(), 0, ipt.getPaddingRight(), 0);
+		ipt.setHint(placeholder);
+		ipt.setInputType(calcKeyboardType(flags));
+		ipt.setImeOptions(calcKeyboardOptions(flags));
 
 		return showWidgetAsync(ipt, lp, null);
 	}
@@ -654,6 +693,13 @@ public class MainActivity extends Activity
 				// setChecked can't be called on render thread
 				//  (setChecked triggers an animation)
 				cb.setChecked(checked);
+
+				cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+					@Override
+					public void onCheckedChanged(CompoundButton v, boolean isChecked) {
+						pushCmd(CMD_UI_EVENT, v.getId(), UI_EVENT_CHANGED, isChecked ? 1 : 0);
+					}
+				});
 			}
 		});
 	}
@@ -778,8 +824,8 @@ public class MainActivity extends Activity
 		public InputConnection onCreateInputConnection(EditorInfo attrs) {
 			// BaseInputConnection, IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
 			attrs.actionLabel = null;
-			attrs.inputType   = MainActivity.this.getKeyboardType();
-			attrs.imeOptions  = MainActivity.this.getKeyboardOptions();
+			attrs.inputType   = calcKeyboardType(MainActivity.this.keyboardType);
+			attrs.imeOptions  = calcKeyboardOptions(MainActivity.this.keyboardType);
 
 			kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
 
@@ -946,25 +992,6 @@ public class MainActivity extends Activity
 		// TODO: Consider just doing kbText.replace instead
 		// (see https://chromium.googlesource.com/chromium/src/+/d1421a5faf9dc2d3b3cad10640576b24a092d9ba/content/public/android/java/src/org/chromium/content/browser/input/AdapterInputConnection.java)
 		input.restartInput(curView);
-	}
-
-	public int getKeyboardType() {
-		// TYPE_CLASS_TEXT, TYPE_CLASS_NUMBER, TYPE_TEXT_VARIATION_PASSWORD - API level 3
-		int type = keyboardType & 0xFF;
-		
-		if (type == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
-		if (type == 1) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_NUMERIC
-		if (type == 3) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_INTEGER
-		return InputType.TYPE_CLASS_TEXT;
-	}
-	
-	public int getKeyboardOptions() {
-		// IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
-		if ((keyboardType & 0x100) != 0) {
-			return EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
-		} else {
-			return EditorInfo.IME_ACTION_GO   | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
-		}
 	}
 
 	public String getClipboardText() {
