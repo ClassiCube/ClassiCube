@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
@@ -32,6 +33,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.AbsoluteSizeSpan;
 import android.util.AttributeSet;
@@ -58,9 +60,13 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.classicube.android.client.R;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -472,6 +478,7 @@ public class MainActivity extends Activity
 	// TODO move to native
 
 	static int widgetID = 200;
+	static final int _MATCH_PARENT = ViewGroup.LayoutParams.MATCH_PARENT;
 	static final int _WRAP_CONTENT = ViewGroup.LayoutParams.WRAP_CONTENT;
 	interface UICallback { void execute(); }
 
@@ -732,10 +739,10 @@ public class MainActivity extends Activity
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														_WRAP_CONTENT, _WRAP_CONTENT);
 
-		String[] values = { "1", "2", "3" };
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_list_item_1, android.R.id.text1, values);
-		//CCTableAdapter adapter = new CCTableAdapter(this, values);
+		String[] values = { "Not Android 2", "New Native UI", "Some server" };
+		//ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+		//		android.R.layout.simple_list_item_1, android.R.id.text1, values);
+		CCTableAdapter adapter = new CCTableAdapter(this, values);
 		view.setAdapter(adapter);
 
 		return showWidgetAsync(view, lp, null);
@@ -760,13 +767,54 @@ public class MainActivity extends Activity
 		@Override
 		public long getItemId(int position) { return position; }
 
+		// Offsets were calculated by trying to match iOS appearance
+		int Pixels(int x) { return (int)(MainActivity.this.getDpiX() * x); }
+		static final int FLAG_WIDTH  = 16;
+		static final int FLAG_HEIGHT = 11;
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			if (convertView == null)
-				convertView = new TextView(ctx);
+			if (convertView == null) {
+				ImageView image = new ImageView(ctx);
+				LinearLayout.LayoutParams imageLP = new LinearLayout.LayoutParams(
+							Pixels(FLAG_WIDTH), Pixels(FLAG_HEIGHT));
+				imageLP.gravity = Gravity.CENTER;
 
-			final String item = getItem(position);
-			((TextView)convertView).setText(item);
+				Bitmap bmp = Bitmap.createBitmap(FLAG_WIDTH, FLAG_HEIGHT, Bitmap.Config.ARGB_8888);
+				new Canvas(bmp).drawColor(Color.GREEN);
+				image.setImageBitmap(bmp);
+
+				TextView title = new TextView(ctx);
+				title.setSingleLine(true);
+				title.setEllipsize(TextUtils.TruncateAt.END);
+				title.setPadding(Pixels(15), Pixels(8), 0, 0);
+				title.setTextSize(16);
+				title.setTextColor(Color.WHITE);
+
+				TextView details = new TextView(ctx);
+				details.setSingleLine(true);
+				details.setEllipsize(TextUtils.TruncateAt.END);
+				details.setPadding(Pixels(15), Pixels(4), 0, Pixels(8));
+				details.setTextSize(14);
+				details.setTextColor(Color.WHITE);
+
+				LinearLayout text = new LinearLayout(ctx);
+				text.setOrientation(LinearLayout.VERTICAL);
+				text.addView(title, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
+				text.addView(details, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
+
+				LinearLayout root = new LinearLayout(ctx);
+				root.setPadding(Pixels(5), 0, Pixels(15), 0);
+				root.addView(image, imageLP);
+				root.addView(text, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
+
+				details.setText("Players 0/0, up for 200d     Players Players Players Players Players Players Players Players Players Players Players Players Players Players Players");
+				title.setText("Ply " + vals[position]);
+				convertView = root;
+			}
+
+			//final String item = getItem(position);
+			//((TextView)convertView).setText(item);
 			return convertView;
 		}
 	}
