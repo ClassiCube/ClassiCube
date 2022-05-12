@@ -21,6 +21,9 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -429,8 +432,11 @@ public class MainActivity extends Activity
 	static final int ANCHOR_MAX    = 2;     // axis - size - offset
 	static final int ANCHOR_CENTRE_MIN = 3; // (axis/2) + offset
 	static final int ANCHOR_CENTRE_MAX = 4; // (axis/2) - size - offset
+	// TODO move to native
+
 	static int widgetID = 200;
 	static final int _WRAP_CONTENT = ViewGroup.LayoutParams.WRAP_CONTENT;
+	interface UICallback { void execute(); }
 
 	public void create2DView_async() {
 		runOnUiThread(new Runnable() {
@@ -449,12 +455,13 @@ public class MainActivity extends Activity
 		pushCmd(CMD_UI_CREATED);
 	}
 
-	int showWidgetAsync(final View widget, final CC2DLayoutParams lp) {
+	int showWidgetAsync(final View widget, final CC2DLayoutParams lp, final UICallback callback) {
 		widget.setId(widgetID++);
 
 		runOnUiThread(new Runnable() {
 			public void run() {
 				CC2DLayout view = (CC2DLayout)curView;
+				if (callback != null) callback.execute();
 				view.addView(widget, lp);
 			}
 		});
@@ -520,6 +527,9 @@ public class MainActivity extends Activity
 
 				child.layout(x, y,x  + width, y + height);
 			}
+
+			// TODO should this be elsewhere?? in setFrame ??
+			if (changed) redrawBackground();
 		}
 
 		@Override
@@ -548,12 +558,32 @@ public class MainActivity extends Activity
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														width, height);
 
+        StateListDrawable sld = new StateListDrawable();
+        sld.addState(new int[] { android.R.attr.state_pressed }, buttonMakeImage(btn, width, height, true));
+        sld.addState(new int[] {}, buttonMakeImage(btn, width, height, false));
+        btn.setBackgroundDrawable(sld);
+        btn.setTextColor(Color.WHITE);
+
 		btn.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				pushCmd(CMD_UI_EVENT, v.getId(), UI_EVENT_CLICKED);
 			}
 		});
-		return showWidgetAsync(btn, lp);
+		return showWidgetAsync(btn, lp, null);
+	}
+
+	native static void makeButtonActive(Bitmap bmp);
+	native static void makeButtonDefault(Bitmap bmp);
+	Drawable buttonMakeImage(Button btn, int width, int height, boolean hovered) {
+		Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+		if (hovered) {
+			makeButtonActive(bmp);
+		} else {
+			makeButtonDefault(bmp);
+		}
+
+		return new BitmapDrawable(bmp);
 	}
 
 	void buttonUpdate(final int id, final String text) {
@@ -570,7 +600,7 @@ public class MainActivity extends Activity
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														_WRAP_CONTENT, _WRAP_CONTENT);
 
-		return showWidgetAsync(lbl, lp);
+		return showWidgetAsync(lbl, lp, null);
 	}
 
 	void labelUpdate(final int id, final String text) {
@@ -583,13 +613,13 @@ public class MainActivity extends Activity
 	}
 
 	int inputAdd(int xMode, int xOffset, int yMode, int yOffset,
-				 int width) {
+				 int width, int height) {
 		final EditText ipt = new EditText(this);
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														width, _WRAP_CONTENT);
+														width, height);
 		ipt.setBackgroundColor(Color.WHITE);
 
-		return showWidgetAsync(ipt, lp);
+		return showWidgetAsync(ipt, lp, null);
 	}
 
 	void inputUpdate(final int id, final String text) {
@@ -608,18 +638,33 @@ public class MainActivity extends Activity
 														width, height);
 		view.setBackgroundColor(color);
 
-		return showWidgetAsync(view, lp);
+		return showWidgetAsync(view, lp, null);
 	}
 
 	int checkboxAdd(int xMode, int xOffset, int yMode, int yOffset,
-				  String title) {
+				  String title, final boolean checked) {
 		final CheckBox cb = new CheckBox(this);
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-				_WRAP_CONTENT, _WRAP_CONTENT);
+														_WRAP_CONTENT, _WRAP_CONTENT);
 		cb.setText(title);
 		cb.setTextColor(Color.WHITE);
 
-		return showWidgetAsync(cb, lp);
+		return showWidgetAsync(cb, lp, new UICallback() {
+			public void execute() {
+				// setChecked can't be called on render thread
+				//  (setChecked triggers an animation)
+				cb.setChecked(checked);
+			}
+		});
+	}
+
+	void checkboxUpdate(final int id, final boolean checked) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view != null) { ((CheckBox)view).setChecked(checked); }
+			}
+		});
 	}
 
 
@@ -1154,7 +1199,7 @@ public class MainActivity extends Activity
 	// ======================================================================
 	// ----------------------------- UI Backend -----------------------------
 	// ======================================================================
-	native void drawBackground(Bitmap bmp);
+	native static void drawBackground(Bitmap bmp);
 	public void redrawBackground() {
 		int width  = Math.max(1, this.curView.getWidth());
 		int height = Math.max(1, this.curView.getHeight());

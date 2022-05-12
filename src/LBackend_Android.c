@@ -97,19 +97,11 @@ static void JNICALL java_drawBackground(JNIEnv* env, jobject o, jobject bmp) {
     pixels.scan0 = addr;
     pixels.width = info.width;
     pixels.height = info.height;
-    Launcher_Active->DrawBackground(Launcher_Active, &pixels);
+
+    struct LScreen* s = Launcher_Active;
+    if (s) s->DrawBackground(s, &pixels);
 
     AndroidBitmap_unlockPixels(env, bmp);
-}
-
-static const JNINativeMethod methods[] = {
-        { "drawBackground", "(Landroid/graphics/Bitmap;)V", java_drawBackground }
-};
-
-static void LBackend_InitHooks(void) {
-    JNIEnv* env;
-    JavaGetCurrentEnv(env);
-    JavaRegisterNatives(env, methods);
 }
 
 void LBackend_Redraw(void) {
@@ -119,8 +111,7 @@ void LBackend_Redraw(void) {
 }
 void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
-void LBackend_Tick(void) {
-}
+void LBackend_Tick(void) { }
 
 
 /*########################################################################################################################*
@@ -172,6 +163,42 @@ void LBackend_ButtonUpdate(struct LButton* w) {
     (*env)->DeleteLocalRef(env, args[1].l);
 }
 void LBackend_ButtonDraw(struct LButton* w) { }
+
+static void JNICALL java_makeButtonActive(JNIEnv* env, jobject o, jobject bmp) {
+    Platform_LogConst("---&&&--");
+    AndroidBitmapInfo info;
+    void* addr = NULL;
+
+    // TODO share code with drawBackground
+    AndroidBitmap_getInfo(env, bmp, &info);
+    AndroidBitmap_lockPixels(env, bmp, &addr);
+
+    struct Bitmap pixels;
+    pixels.scan0 = addr;
+    pixels.width = info.width;
+    pixels.height = info.height;
+    LButton_DrawBackground(&pixels, 0, 0, info.width, info.height, true);
+
+    AndroidBitmap_unlockPixels(env, bmp);
+}
+
+static void JNICALL java_makeButtonDefault(JNIEnv* env, jobject o, jobject bmp) {
+    Platform_LogConst("---####--");
+    AndroidBitmapInfo info;
+    void* addr = NULL;
+
+    // TODO share code with drawBackground
+    AndroidBitmap_getInfo(env, bmp, &info);
+    AndroidBitmap_lockPixels(env, bmp, &addr);
+
+    struct Bitmap pixels;
+    pixels.scan0 = addr;
+    pixels.width = info.width;
+    pixels.height = info.height;
+    LButton_DrawBackground(&pixels, 0, 0, info.width, info.height, false);
+
+    AndroidBitmap_unlockPixels(env, bmp);
+}
 
 
 /*########################################################################################################################*
@@ -404,5 +431,17 @@ void LBackend_CloseScreen(struct LScreen* s) {
     JNIEnv* env; JavaGetCurrentEnv(env);
     jmethodID method = JavaGetIMethod(env, "clearWidgetsAsync", "()V");
     JavaICall_Void(env, method, NULL);
+}
+
+static const JNINativeMethod methods[] = {
+        { "drawBackground",    "(Landroid/graphics/Bitmap;)V", java_drawBackground },
+        { "makeButtonActive",  "(Landroid/graphics/Bitmap;)V", java_makeButtonActive },
+        { "makeButtonDefault", "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault }
+};
+
+static void LBackend_InitHooks(void) {
+    JNIEnv* env;
+    JavaGetCurrentEnv(env);
+    JavaRegisterNatives(env, methods);
 }
 #endif
