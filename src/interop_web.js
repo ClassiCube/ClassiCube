@@ -1013,24 +1013,22 @@ mergeInto(LibraryManager.library, {
     var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
     var ctx  = window.FONT_CONTEXT;
     var data = ctx.measureText(text);
-    return Math.ceil(data.width)|0;
+    return data.width;
   },
-  interop_TextDraw: function(textStr, textLen, bmp, dstX, dstY, shadow) {
+  interop_TextDraw: function(textStr, textLen, bmp, dstX, dstY, shadow, hexStr) {
     var text = UTF8ArrayToString(HEAPU8, textStr, textLen);
+    var hex  = UTF8ArrayToString(HEAPU8, hexStr, 7);
     var ctx  = window.FONT_CONTEXT;
 
-    // resize canvas if necessary so test fits
+    // resize canvas if necessary so text fits
     var data = ctx.measureText(text);
     var text_width = Math.ceil(data.width)|0;
     if (text_width > ctx.canvas.width)
       ctx.canvas.width = text_width;
     
     var text_offset = 0.0;
-    ctx.fillStyle   = "#ffffff";
-    if (shadow) {
-      text_offset   = 1.3;
-      ctx.fillStyle = "#7f7f7f";
-    }
+    ctx.fillStyle   = hex;
+    if (shadow) { text_offset = 1.3; }
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.fillText(text, text_offset, text_offset);
@@ -1072,5 +1070,6 @@ mergeInto(LibraryManager.library, {
         HEAPU8[dst_row + (x<<2)+3] =                                          I  + ((HEAPU8[dst_row + (x<<2)+3] * invI) >> 8);
       }
     }
+    return data.width;
   },
 });

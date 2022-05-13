@@ -323,29 +323,53 @@ cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
 	return BitmapCol_A(Drawer2D_GetColor(text->buffer[i])) != 0;
 }
 
-cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
+cc_bool Drawer2D_NextPart(cc_string* left, cc_string* part, BitmapCol* color) {
+	BitmapCol c;
 	int i;
-	if (!text->length) return true;
-	
-	for (i = 0; i < text->length; i++) {
-		if (text->buffer[i] != '&') return false;
-		if (!Drawer2D_ValidColorCodeAt(text, i + 1)) return false;
-		i++; /* skip color code */
+
+	/* check if current part starts with a colour code */
+	if (left->length >= 2 && left->buffer[0] == '&') {
+		c = Drawer2D_GetColor(left->buffer[1]);
+		
+		if (BitmapCol_A(c)) {
+			*color = c;
+			left->buffer += 2;
+			left->length -= 2;
+		}
+	}
+
+	for (i = 0; i < left->length; i++) 
+	{
+		if (left->buffer[i] == '&' && Drawer2D_ValidColorCodeAt(left, i + 1)) break;
+	}
+
+	/* advance string starts and lengths */
+	part->buffer  = left->buffer;
+	part->length  = i;
+	left->buffer += i;
+	left->length -= i;
+
+	return part->length > 0 || left->length > 0;
+}
+
+cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
+	cc_string left = *text, part;
+	BitmapCol color;
+
+	while (Drawer2D_NextPart(&left, &part, &color)) 
+	{
+		if (part.length) return false;
 	}
 	return true;
 }
 
 void Drawer2D_WithoutColors(cc_string* str, const cc_string* src) {
-	char c;
-	int i;
-	for (i = 0; i < src->length; i++) {
-		c  = src->buffer[i];
+	cc_string left = *src, part;
+	BitmapCol color;
 
-		if (c == '&' && Drawer2D_ValidColorCodeAt(src, i + 1)) {
-			i++; /* skip color code */
-		} else {
-			String_Append(str, c);
-		}	
+	while (Drawer2D_NextPart(&left, &part, &color)) 
+	{
+		String_AppendString(str, &part);
 	}
 }
 
@@ -699,7 +723,7 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	desc->height = Drawer2D_AdjHeight(size);
 
 	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
-	if (!desc->handle) return 0;
+	if (!desc->handle) return ERR_OUT_OF_MEMORY;
 	
 	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
 	return 0;
@@ -720,29 +744,53 @@ void Font_Free(struct FontDesc* desc) {
 }
 
 void SysFonts_Register(const cc_string* path) { }
-extern void  interop_SetFont(const char* font, int size, int flags);
-extern int interop_TextWidth(const char* text, const int len);
-extern void interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow);
+extern void   interop_SetFont(const char* font, int size, int flags);
+extern double interop_TextWidth(const char* text, const int len);
+extern double interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow, const char* hex);
 
 static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	struct FontDesc* font = args->font;
-	char buffer[NATIVE_STR_LEN];
-	int len = Platform_EncodeUtf8(buffer, &args->text);
+	cc_string left = args->text, part;
+	double width   = 0;
+	BitmapCol color;
 
 	interop_SetFont(font->handle, font->size, font->flags);
-	return interop_TextWidth(buffer, len);
+	while (Drawer2D_NextPart(&left, &part, &color))
+	{
+		char buffer[NATIVE_STR_LEN];
+		int len = Platform_EncodeUtf8(buffer, &part);
+		width += interop_TextWidth(buffer, len);
+	}
+	return Math_Ceil(width);
 }
 
 static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
 	struct FontDesc* font = args->font;
-	char buffer[NATIVE_STR_LEN];
-	int len = Platform_EncodeUtf8(buffer, &args->text);
+	cc_string left  = args->text, part;
+	BitmapCol color = Drawer2D.Colors['f'];
+	double xOffset = 0;
+	char hexBuffer[7];
+	cc_string hex;
 
 	/* adjust y position to more closely match FreeType drawn text */
 	y += (args->font->height - args->font->size) / 2;
-
 	interop_SetFont(font->handle, font->size, font->flags);
-	interop_TextDraw(buffer, len, bmp, x, y, shadow);
+
+	while (Drawer2D_NextPart(&left, &part, &color))
+	{
+		char buffer[NATIVE_STR_LEN];
+		int len = Platform_EncodeUtf8(buffer, &part);
+		if (shadow) color = GetShadowColor(color);
+
+		String_InitArray(hex, hexBuffer);
+		String_Append(&hex, '#');
+		String_AppendHex(&hex, BitmapCol_R(color));
+		String_AppendHex(&hex, BitmapCol_G(color));
+		String_AppendHex(&hex, BitmapCol_B(color));
+
+		/* TODO pass as double directly instead of (int) ?*/
+		xOffset += interop_TextDraw(buffer, len, bmp, x + (int)xOffset, y, shadow, hexBuffer);
+	}
 }
 #else
 #include "freetype/ft2build.h"
