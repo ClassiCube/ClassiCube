@@ -323,7 +323,7 @@ cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
 	return BitmapCol_A(Drawer2D_GetColor(text->buffer[i])) != 0;
 }
 
-cc_bool Drawer2D_NextPart(cc_string* left, cc_string* part, BitmapCol* color) {
+cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, BitmapCol* color) {
 	BitmapCol c;
 	int i;
 
@@ -356,7 +356,7 @@ cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
 	cc_string left = *text, part;
 	BitmapCol color;
 
-	while (Drawer2D_NextPart(&left, &part, &color)) 
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color)) 
 	{
 		if (part.length) return false;
 	}
@@ -367,7 +367,7 @@ void Drawer2D_WithoutColors(cc_string* str, const cc_string* src) {
 	cc_string left = *src, part;
 	BitmapCol color;
 
-	while (Drawer2D_NextPart(&left, &part, &color)) 
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color)) 
 	{
 		String_AppendString(str, &part);
 	}
@@ -565,9 +565,10 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 		}
 		width += Drawer2D_Width(point, c) + xPadding;
 	}
+	if (!width) return 0;
 
 	/* Remove padding at end */
-	if (width && !(args->font->flags & FONT_FLAGS_PADDING)) width -= xPadding;
+	if (!(args->font->flags & FONT_FLAGS_PADDING)) width -= xPadding;
 
 	if (args->useShadow) { width += Drawer2D_ShadowOffset(point); }
 	return width;
@@ -582,7 +583,6 @@ void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int
 }
 
 int Drawer2D_TextWidth(struct DrawTextArgs* args) {
-	if (Drawer2D_IsEmptyText(&args->text)) return 0;
 	if (Font_IsBitmap(args->font)) return MeasureBitmappedWidth(args);
 	return Font_SysTextWidth(args);
 }
@@ -755,7 +755,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	BitmapCol color;
 
 	interop_SetFont(font->handle, font->size, font->flags);
-	while (Drawer2D_NextPart(&left, &part, &color))
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
 	{
 		char buffer[NATIVE_STR_LEN];
 		int len = Platform_EncodeUtf8(buffer, &part);
@@ -776,7 +776,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	y += (args->font->height - args->font->size) / 2;
 	interop_SetFont(font->handle, font->size, font->flags);
 
-	while (Drawer2D_NextPart(&left, &part, &color))
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
 	{
 		char buffer[NATIVE_STR_LEN];
 		int len = Platform_EncodeUtf8(buffer, &part);
@@ -1179,6 +1179,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 		}
 		width += charWidth;
 	}
+	if (!width) return 0;
 
 	width = TEXT_CEIL(width);
 	if (args->useShadow) width += 2;

@@ -528,6 +528,28 @@ static NSString* ToNSString(const cc_string* text) {
     return [NSString stringWithUTF8String:raw];
 }
 
+static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
+    cc_string left  = *text, part;
+    BitmapCol color = Drawer2D.Colors['f'];
+    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    {
+        char raw[NATIVE_STR_LEN];
+        Platform_EncodeUtf8(raw, &part);
+        NSString* bit = [NSString stringWithUTF8String:raw];
+        
+        NSDictionary* attrs =
+        @{
+          //NSFontAttributeName : font,
+          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+        };
+        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
+        [str appendAttributedString:attr_bit];
+    }
+    return str;
+}
+
 static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
 // TODO probably a better way..
 static UIImage* ToUIImage(struct Bitmap* bmp) {
@@ -758,7 +780,7 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
     NSDictionary* attrs_bg =
     @{
       NSFontAttributeName : font,
-      NSForegroundColorAttributeName : [UIColor blackColor]
+      NSForegroundColorAttributeName : UIColor.blackColor
     };
     NSAttributedString* str_bg = [[NSAttributedString alloc] initWithString:text attributes:attrs_bg];
     DrawText(str_bg, bmp, 4, 42);
@@ -766,7 +788,7 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
     NSDictionary* attrs_fg =
     @{
       NSFontAttributeName : font,
-      NSForegroundColorAttributeName : [UIColor whiteColor]
+      NSForegroundColorAttributeName : UIColor.whiteColor
     };
     NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
     DrawText(str_fg, bmp, 0, 38);
@@ -850,7 +872,7 @@ void LBackend_CheckboxInit(struct LCheckbox* w) {
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     UILabel* lbl  = [[UILabel alloc] init];
-    lbl.textColor = [UIColor whiteColor];
+    lbl.textColor = UIColor.whiteColor;
     lbl.text      = ToNSString(&w->text);
     lbl.translatesAutoresizingMaskIntoConstraints = false;
     [lbl sizeToFit]; // adjust label to fit text
@@ -923,7 +945,7 @@ void LBackend_InputInit(struct LInput* w, int width) {
     UITextField* fld = [[UITextField alloc] init];
     fld.frame           = CGRectMake(0, 0, width, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
-    fld.backgroundColor = [UIColor whiteColor];
+    fld.backgroundColor = UIColor.whiteColor;
     fld.delegate        = ui_controller;
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
@@ -951,12 +973,14 @@ void LBackend_LabelInit(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     lbl.textColor = [UIColor whiteColor];
     
+    if (w->small) lbl.font = [UIFont systemFontOfSize:14.0f];
+    
     AssignView(w, lbl);
 }
 
 void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
-    lbl.text     = ToNSString(&w->text);
+    lbl.attributedText = ToAttributedString(&w->text);
     [lbl sizeToFit]; // adjust label to fit text
 }
 void LBackend_LabelDraw(struct LLabel* w) { }
@@ -1003,7 +1027,7 @@ void LBackend_TableInit(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
     tbl.delegate     = ui_controller;
     tbl.dataSource   = ui_controller;
-    LTable_UpdateCellColor(tbl, NULL, 0, false);
+    LTable_UpdateCellColor(tbl, NULL, 1, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
     AssignView(w, tbl);

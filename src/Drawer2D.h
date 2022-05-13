@@ -95,7 +95,7 @@ void Drawer2D_WithoutColors(cc_string* str, const cc_string* src);
 char Drawer2D_LastColor(const cc_string* text, int start);
 /* Returns whether the color code is f, F or \0 */
 cc_bool Drawer2D_IsWhiteColor(char c);
-cc_bool Drawer2D_NextPart(cc_string* left, cc_string* part, BitmapCol* color);
+cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, BitmapCol* color);
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale);
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
