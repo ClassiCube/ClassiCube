@@ -113,6 +113,26 @@ void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
 void LBackend_Tick(void) { }
 
+static struct LWidget* FindWidgetForView(int id) {
+    struct LScreen* s = Launcher_Active;
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        void* meta = s->widgets[i]->meta;
+        if (meta != id) continue;
+
+        return s->widgets[i];
+    }
+    return NULL;
+}
+
+static int ToAndroidColor(BitmapCol color) {
+    int R = BitmapCol_R(color);
+    int G = BitmapCol_G(color);
+    int B = BitmapCol_B(color);
+    int A = BitmapCol_A(color);
+    return (A << 24) | (R << 16) | (G << 8) | B;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Event handling------------------------------------------------------*
@@ -320,7 +340,7 @@ static void LBackend_LineShow(struct LLine* w) {
     LBackend_GetLayoutArgs(w, args);
     args[4].i = w->_width;
     args[5].i = Display_ScaleY(LLINE_HEIGHT);
-    args[6].i = LLine_GetColor();
+    args[6].i = ToAndroidColor(LLine_GetColor());
 
     jmethodID method = JavaGetIMethod(env, "lineAdd", "(IIIIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
@@ -332,13 +352,34 @@ void LBackend_LineDraw(struct LLine* w) { }
 *------------------------------------------------------SliderWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 void LBackend_SliderInit(struct LSlider* w, int width, int height) {
+    w->_width  = Display_ScaleX(width);
+    w->_height = Display_ScaleY(height);
+}
 
+static void LBackend_SliderShow(struct LSlider* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[7];
+
+    LBackend_GetLayoutArgs(w, args);
+    args[4].i = w->_width;
+    args[5].i = w->_height;
+    args[6].i = ToAndroidColor(w->color);
+
+    jmethodID method = JavaGetIMethod(env, "sliderAdd", "(IIIIIII)I");
+    w->meta = (void*)JavaICall_Int(env, method, args);
 }
 
 void LBackend_SliderUpdate(struct LSlider* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[2];
+    if (!w->meta) return;
 
+    args[0].i = (int)w->meta;
+    args[1].i = w->value;
+
+    jmethodID method = JavaGetIMethod(env, "sliderUpdate", "(II)V");
+    JavaICall_Void(env, method, args);
 }
-
 void LBackend_SliderDraw(struct LSlider* w) {}
 
 
@@ -351,11 +392,12 @@ void LBackend_TableInit(struct LTable* w) {
 
 static void LBackend_TableShow(struct LTable* w) {
     JNIEnv* env; JavaGetCurrentEnv(env);
-    jvalue args[4];
+    jvalue args[5];
 
     LBackend_GetLayoutArgs(w, args);
+    args[4].i = ToAndroidColor(LTable_RowColor(NULL, 1, false));
 
-    jmethodID method = JavaGetIMethod(env, "tableAdd", "(IIII)I");
+    jmethodID method = JavaGetIMethod(env, "tableAdd", "(IIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
 }
 
@@ -375,24 +417,49 @@ void LBackend_TableMouseDown(struct LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
 void LBackend_TableMouseUp(struct LTable* w, int idx) { }
 
+static jint JNICALL java_tableGetCount(JNIEnv* env, jobject o, jint id) {
+    struct LTable* tbl = (struct LTable*)FindWidgetForView(id);
+    return tbl ? tbl->rowsCount : 0;
+}
+
+static jstring JNICALL java_tableGetTitle(JNIEnv* env, jobject o, jint id, jint row) {
+    char buffer[NATIVE_STR_LEN];
+    cc_string text = String_FromArray(buffer);
+    struct LTable* tbl      = (struct LTable*)FindWidgetForView(id);
+    struct ServerInfo* info = tbl && row < tbl->rowsCount ? LTable_Get(row) : NULL;
+
+    if (info) {
+        String_AppendString(&text, &info->name);
+    }
+    return JavaMakeString(env, &text);
+}
+
+static jstring JNICALL java_tableGetDetails(JNIEnv* env, jobject o, jint id, jint row) {
+    char buffer[NATIVE_STR_LEN];
+    cc_string text = String_FromArray(buffer);
+    struct LTable* tbl      = (struct LTable*)FindWidgetForView(id);
+    struct ServerInfo* info = tbl && row < tbl->rowsCount ? LTable_Get(row) : NULL;
+
+    if (info) {
+        String_Format2(&text, "%i/%i players, up for ", &info->players, &info->maxPlayers);
+        LTable_FormatUptime(&text, info->uptime);
+    }
+    return JavaMakeString(env, &text);
+}
+
+static jint JNICALL java_tableGetColor(JNIEnv* env, jobject o, jint id, jint row) {
+    struct LTable* tbl      = (struct LTable*)FindWidgetForView(id);
+    struct ServerInfo* info = tbl && row < tbl->rowsCount ? LTable_Get(row) : NULL;
+
+    return ToAndroidColor(LTable_RowColor(info, row, false));
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------UIBackend--------------------------------------------------------*
 *#########################################################################################################################*/
 #define UI_EVENT_CLICKED 1
 #define UI_EVENT_CHANGED 2
-
-static struct LWidget* FindWidgetForView(int id) {
-    struct LScreen* s = Launcher_Active;
-    for (int i = 0; i < s->numWidgets; i++)
-    {
-        void* meta = s->widgets[i]->meta;
-        if (meta != id) continue;
-
-        return s->widgets[i];
-    }
-    return NULL;
-}
 
 static void JNICALL java_UIClicked(JNIEnv* env, jobject o, jint id) {
     struct LWidget* w = FindWidgetForView(id);
@@ -438,6 +505,9 @@ static void ShowWidget(struct LWidget* w) {
         case LWIDGET_LINE:
             LBackend_LineShow((struct LLine*)w);
             break;
+        case LWIDGET_SLIDER:
+            LBackend_SliderShow((struct LSlider*)w);
+            break;
         case LWIDGET_TABLE:
             LBackend_TableShow((struct LTable*)w);
             break;
@@ -464,12 +534,16 @@ void LBackend_CloseScreen(struct LScreen* s) {
 }
 
 static const JNINativeMethod methods[] = {
-        { "drawBackground",    "(Landroid/graphics/Bitmap;)V", java_drawBackground },
-        { "makeButtonActive",  "(Landroid/graphics/Bitmap;)V", java_makeButtonActive },
-        { "makeButtonDefault", "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault },
-        { "processOnUIClicked",  "(I)V", java_UIClicked },
-        { "processOnUIChanged",  "(II)V", java_UIChanged },
+        { "drawBackground",     "(Landroid/graphics/Bitmap;)V", java_drawBackground },
+        { "makeButtonActive",   "(Landroid/graphics/Bitmap;)V", java_makeButtonActive },
+        { "makeButtonDefault",  "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault },
+        { "processOnUIClicked", "(I)V", java_UIClicked },
+        { "processOnUIChanged", "(II)V", java_UIChanged },
         { "processOnUIString",  "(ILjava/lang/String;)V", java_UIString },
+        { "tableGetCount",      "(I)I", java_tableGetCount },
+        { "tableGetTitle",      "(II)Ljava/lang/String;", java_tableGetTitle },
+        { "tableGetDetails",    "(II)Ljava/lang/String;", java_tableGetDetails },
+        { "tableGetColor",      "(II)I", java_tableGetColor },
 };
 
 static void LBackend_InitHooks(void) {

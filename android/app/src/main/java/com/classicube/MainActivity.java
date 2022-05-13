@@ -63,6 +63,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -734,35 +735,61 @@ public class MainActivity extends Activity
 		});
 	}
 
-	int tableAdd(int xMode, int xOffset, int yMode, int yOffset) {
-		final ListView view = new ListView(this);
+	int sliderAdd(int xMode, int xOffset, int yMode, int yOffset,
+				 int width, int height, int color) {
+		final ProgressBar prg = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
+														width, height);
+		// https://stackoverflow.com/questions/39771796/change-horizontal-progress-bar-color
+		prg.getProgressDrawable().setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+
+		return showWidgetAsync(prg, lp, null);
+	}
+
+	void sliderUpdate(final int id, final int progress) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view != null) { ((ProgressBar)view).setProgress(progress); }
+			}
+		});
+	}
+
+	int tableAdd(int xMode, int xOffset, int yMode, int yOffset,
+				 int color) {
+		final ListView list = new ListView(this);
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
 														_WRAP_CONTENT, _WRAP_CONTENT);
+		//list.setBackgroundColor(color);
 
-		String[] values = { "Not Android 2", "New Native UI", "Some server" };
-		//ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-		//		android.R.layout.simple_list_item_1, android.R.id.text1, values);
-		CCTableAdapter adapter = new CCTableAdapter(this, values);
-		view.setAdapter(adapter);
-
-		return showWidgetAsync(view, lp, null);
+		return showWidgetAsync(list, lp, new UICallback() {
+			public void execute() {
+				CCTableAdapter adapter = new CCTableAdapter(MainActivity.this, list.getId());
+				list.setAdapter(adapter);
+			}
+		});
 	}
+
+	native static int tableGetCount(int id);
+	native static String tableGetTitle(int id, int pos);
+	native static String tableGetDetails(int id, int pos);
+	native static int tableGetColor(int id, int pos);
 
 	class CCTableAdapter extends BaseAdapter
 	{
 		Context ctx;
-		String[] vals;
+		int listID;
 
-		public CCTableAdapter(Context context, String[] values) {
-			ctx  = context;
-			vals = values;
+		public CCTableAdapter(Context context, int id) {
+			ctx    = context;
+			listID = id;
 		}
 
 		@Override
-		public int getCount() { return vals.length; }
+		public int getCount() { return tableGetCount(listID); }
 
 		@Override
-		public String getItem(int position) { return vals[position]; }
+		public String getItem(int position) { return ""; }
 
 		@Override
 		public long getItemId(int position) { return position; }
@@ -774,48 +801,55 @@ public class MainActivity extends Activity
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			if (convertView == null) {
-				ImageView image = new ImageView(ctx);
-				LinearLayout.LayoutParams imageLP = new LinearLayout.LayoutParams(
-							Pixels(FLAG_WIDTH), Pixels(FLAG_HEIGHT));
-				imageLP.gravity = Gravity.CENTER;
+			if (convertView == null)
+				convertView = createRow(position);
 
-				Bitmap bmp = Bitmap.createBitmap(FLAG_WIDTH, FLAG_HEIGHT, Bitmap.Config.ARGB_8888);
-				new Canvas(bmp).drawColor(Color.GREEN);
-				image.setImageBitmap(bmp);
+			LinearLayout root = (LinearLayout)convertView;
+			LinearLayout text = (LinearLayout)root.getChildAt(1);
+			TextView title    = (TextView)text.getChildAt(0);
+			TextView details  = (TextView)text.getChildAt(1);
 
-				TextView title = new TextView(ctx);
-				title.setSingleLine(true);
-				title.setEllipsize(TextUtils.TruncateAt.END);
-				title.setPadding(Pixels(15), Pixels(8), 0, 0);
-				title.setTextSize(16);
-				title.setTextColor(Color.WHITE);
+			title.setText(tableGetTitle(listID, position));
+			details.setText(tableGetDetails(listID, position));
 
-				TextView details = new TextView(ctx);
-				details.setSingleLine(true);
-				details.setEllipsize(TextUtils.TruncateAt.END);
-				details.setPadding(Pixels(15), Pixels(4), 0, Pixels(8));
-				details.setTextSize(14);
-				details.setTextColor(Color.WHITE);
-
-				LinearLayout text = new LinearLayout(ctx);
-				text.setOrientation(LinearLayout.VERTICAL);
-				text.addView(title, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
-				text.addView(details, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
-
-				LinearLayout root = new LinearLayout(ctx);
-				root.setPadding(Pixels(5), 0, Pixels(15), 0);
-				root.addView(image, imageLP);
-				root.addView(text, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
-
-				details.setText("Players 0/0, up for 200d     Players Players Players Players Players Players Players Players Players Players Players Players Players Players Players");
-				title.setText("Ply " + vals[position]);
-				convertView = root;
-			}
-
-			//final String item = getItem(position);
-			//((TextView)convertView).setText(item);
+			convertView.setBackgroundColor(tableGetColor(listID, position));
 			return convertView;
+		}
+
+		View createRow(int position) {
+			ImageView image = new ImageView(ctx);
+			LinearLayout.LayoutParams imageLP = new LinearLayout.LayoutParams(
+						Pixels(FLAG_WIDTH), Pixels(FLAG_HEIGHT));
+			imageLP.gravity = Gravity.CENTER;
+
+			Bitmap bmp = Bitmap.createBitmap(FLAG_WIDTH, FLAG_HEIGHT, Bitmap.Config.ARGB_8888);
+			new Canvas(bmp).drawColor(Color.GREEN);
+			image.setImageBitmap(bmp);
+
+			TextView title = new TextView(ctx);
+			title.setSingleLine(true);
+			title.setEllipsize(TextUtils.TruncateAt.END);
+			title.setPadding(Pixels(15), Pixels(8), 0, 0);
+			title.setTextSize(16);
+			title.setTextColor(Color.WHITE);
+
+			TextView details = new TextView(ctx);
+			details.setSingleLine(true);
+			details.setEllipsize(TextUtils.TruncateAt.END);
+			details.setPadding(Pixels(15), Pixels(4), 0, Pixels(8));
+			details.setTextSize(14);
+			details.setTextColor(Color.WHITE);
+
+			LinearLayout text = new LinearLayout(ctx);
+			text.setOrientation(LinearLayout.VERTICAL);
+			text.addView(title, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
+			text.addView(details, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
+
+			LinearLayout root = new LinearLayout(ctx);
+			root.setPadding(Pixels(5), 0, Pixels(15), 0);
+			root.addView(image, imageLP);
+			root.addView(text, new LinearLayout.LayoutParams(_MATCH_PARENT, _WRAP_CONTENT));
+			return root;
 		}
 	}
 
