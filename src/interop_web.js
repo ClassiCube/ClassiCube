@@ -1023,8 +1023,14 @@ mergeInto(LibraryManager.library, {
     // resize canvas if necessary so text fits
     var data = ctx.measureText(text);
     var text_width = Math.ceil(data.width)|0;
-    if (text_width > ctx.canvas.width)
+    if (text_width > ctx.canvas.width) {
+      var font = ctx.font;
       ctx.canvas.width = text_width;
+      // resizing canvas also resets the properties of CanvasRenderingContext2D
+      ctx.font = font;
+      ctx.textAlign    = 'left';
+      ctx.textBaseline = 'top';
+    }
     
     var text_offset = 0.0;
     ctx.fillStyle   = hex;
