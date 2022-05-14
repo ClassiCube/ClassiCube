@@ -337,22 +337,22 @@ void Launcher_LoadTheme(void) {
 	ParseColor("launcher-btn-highlight-inactive-col", &Launcher_Theme.ButtonHighlightColor);
 }
 
-CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
-	cc_string value; char valueBuffer[8];
-	/* Component order might be different to BitmapCol */
-	PackedCol tmp = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), BitmapCol_B(col), 0);
+CC_NOINLINE static void SaveColor(const char* key, BitmapCol color) {
+	cc_string value; char valueBuffer[6];
 	
 	String_InitArray(value, valueBuffer);
-	PackedCol_ToHex(&value, tmp);
+	String_AppendHex(&value, BitmapCol_R(color));
+	String_AppendHex(&value, BitmapCol_G(color));
+	String_AppendHex(&value, BitmapCol_B(color));
 	Options_Set(key, &value);
 }
 
 void Launcher_SaveTheme(void) {
-	Launcher_SetCol("launcher-back-col",                   Launcher_Theme.BackgroundColor);
-	Launcher_SetCol("launcher-btn-border-col",             Launcher_Theme.ButtonBorderColor);
-	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_Theme.ButtonForeActiveColor);
-	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_Theme.ButtonForeColor);
-	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_Theme.ButtonHighlightColor);
+	SaveColor("launcher-back-col",                   Launcher_Theme.BackgroundColor);
+	SaveColor("launcher-btn-border-col",             Launcher_Theme.ButtonBorderColor);
+	SaveColor("launcher-btn-fore-active-col",        Launcher_Theme.ButtonForeActiveColor);
+	SaveColor("launcher-btn-fore-inactive-col",      Launcher_Theme.ButtonForeColor);
+	SaveColor("launcher-btn-highlight-inactive-col", Launcher_Theme.ButtonHighlightColor);
 	Options_SetBool("nostalgia-classicbg",                 Launcher_Theme.ClassicBackground);
 }
 

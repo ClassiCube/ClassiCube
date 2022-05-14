@@ -180,8 +180,10 @@ void Gfx_Create(void) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
+	static int availFails;
 	D3DPRESENT_PARAMETERS args = { 0 };
 	cc_result res;
+
 	/* Rarely can't even create device to begin with */
 	if (!deviceCreated) {
 		TryCreateDevice();
@@ -194,6 +196,12 @@ cc_bool Gfx_TryRestoreContext(void) {
 	D3D9_FillPresentArgs(&args);
 	res = IDirect3DDevice9_Reset(device, &args);
 	if (res == D3DERR_DEVICELOST) return false;
+
+	/* A user reported an issue where after changing some settings in */
+	/*  nvidia control panel, IDirect3DDevice9_Reset would return */
+	/*  D3DERR_NOTAVAILABLE and hence crash the game */
+	/* So try to workaround this by only crashing after 50 failures */
+	if (res == D3DERR_NOTAVAILABLE && availFails++ < 50) return false;
 
 	if (res) Logger_Abort2(res, "Error recreating D3D9 context");
 	D3D9_UpdateCachedDimensions();
