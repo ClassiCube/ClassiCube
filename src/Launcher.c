@@ -313,13 +313,13 @@ const struct LauncherTheme Launcher_NordicTheme = {
 	BitmapCol_Make( 76,  86, 106, 255), /* button highlight */
 };
 
-CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
+CC_NOINLINE static void ParseColor(const char* key, BitmapCol* color) {
 	cc_uint8 rgb[3];
 	cc_string value;
 	if (!Options_UNSAFE_Get(key, &value))    return;
 	if (!PackedCol_TryParseHex(&value, rgb)) return;
 
-	*col = BitmapCol_Make(rgb[0], rgb[1], rgb[2], 255);
+	*color = BitmapCol_Make(rgb[0], rgb[1], rgb[2], 255);
 }
 
 void Launcher_LoadTheme(void) {
@@ -330,11 +330,11 @@ void Launcher_LoadTheme(void) {
 	Launcher_Theme = Launcher_ModernTheme;
 	Launcher_Theme.ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
 
-	Launcher_GetCol("launcher-back-col",                   &Launcher_Theme.BackgroundColor);
-	Launcher_GetCol("launcher-btn-border-col",             &Launcher_Theme.ButtonBorderColor);
-	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_Theme.ButtonForeActiveColor);
-	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_Theme.ButtonForeColor);
-	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_Theme.ButtonHighlightColor);
+	ParseColor("launcher-back-col",                   &Launcher_Theme.BackgroundColor);
+	ParseColor("launcher-btn-border-col",             &Launcher_Theme.ButtonBorderColor);
+	ParseColor("launcher-btn-fore-active-col",        &Launcher_Theme.ButtonForeActiveColor);
+	ParseColor("launcher-btn-fore-inactive-col",      &Launcher_Theme.ButtonForeColor);
+	ParseColor("launcher-btn-highlight-inactive-col", &Launcher_Theme.ButtonHighlightColor);
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {

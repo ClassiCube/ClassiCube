@@ -510,7 +510,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
-		LLabel_SetConst(status, "&eInvalid address"); return;
+		LLabel_SetConst(status, "&cInvalid address"); return;
 	}
 
 	/* support either "[IP]" or "[IP]:[PORT]" */
@@ -523,13 +523,13 @@ static void DirectConnectScreen_StartClient(void* w) {
 	}
 
 	if (!user->length) {
-		LLabel_SetConst(status, "&eUsername required"); return;
+		LLabel_SetConst(status, "&cUsername required"); return;
 	}
 	if (!Socket_ValidAddress(&ip)) {
-		LLabel_SetConst(status, "&eInvalid ip"); return;
+		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
 	if (!Convert_ParseUInt16(&port, &raw_port)) {
-		LLabel_SetConst(status, "&eInvalid port"); return;
+		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
 
@@ -718,10 +718,10 @@ static void MainScreen_DoLogin(void) {
 	cc_string* pass = &s->iptPassword.text;
 
 	if (!user->length) {
-		LLabel_SetConst(&s->lblStatus, "&eUsername required"); return;
+		LLabel_SetConst(&s->lblStatus, "&cUsername required"); return;
 	}
 	if (!pass->length) {
-		LLabel_SetConst(&s->lblStatus, "&ePassword required"); return;
+		LLabel_SetConst(&s->lblStatus, "&cPassword required"); return;
 	}
 
 	if (GetTokenTask.Base.working) return;

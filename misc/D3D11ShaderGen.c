@@ -116,7 +116,7 @@ static void CompileShader(LPCSTR src, LPCSTR name, LPCSTR profile, const D3D_SHA
 
 	unsigned char* data = GetBlobPointer(shaderBlob);
 	SIZE_T size         = GetBlobSize(shaderBlob);
-	printf("static unsigned char %s[%i] = {\n", name, size);
+	printf("static const unsigned char %s[%i] = {\n", name, size);
 
 	for (int i = 0; i < size; )
 	{
