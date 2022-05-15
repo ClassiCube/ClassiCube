@@ -771,14 +771,22 @@ enum ADV_MASK {
 	xP1_yM1_zP1, xP1_yCC_zP1, xP1_yP1_zP1,
 };
 
+/* Bit-or the Adv_Lit flags with these to set the appropriate light values */
+#define LIT_M1 (1 << 0)
+#define LIT_CC (1 << 1)
+#define LIT_P1 (1 << 2)
+/* Returns a 3 bit value where */
+/* - bit 0 set: Y-1 is in light */
+/* - bit 1 set: Y   is in light */
+/* - bit 2 set: Y+1 is in light */
 static int Adv_Lit(int x, int y, int z, int cIndex) {
 	int flags, offset, lightFlags;
 	BlockID block;
-	if (y < 0 || y >= World.Height) return 7; /* all faces lit */
+	if (y < 0 || y >= World.Height) return LIT_M1 | LIT_CC | LIT_P1; /* all faces lit */
 
 	/* TODO: check sides height (if sides > edges), check if edge block casts a shadow */
 	if (!World_ContainsXZ(x, z)) {
-		return y >= Builder_EdgeLevel ? 7 : y == (Builder_EdgeLevel - 1) ? 6 : 0;
+		return y >= Builder_EdgeLevel ? LIT_M1 | LIT_CC | LIT_P1 : y == (Builder_EdgeLevel - 1) ? LIT_CC | LIT_P1 : 0;
 	}
 
 	flags = 0;
@@ -787,19 +795,20 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 
 	/* Use fact Light(Y.YMin) == Light((Y-1).YMax) */
 	offset = (lightFlags >> FACE_YMIN) & 1;
-	flags |= Lighting_IsLit_Fast(x, y - offset, z) ? 1 : 0;
+	flags |= Lighting_IsLit_Fast(x, y - offset, z) ? LIT_M1 : 0;
 
 	/* Light is same for all the horizontal faces */
-	flags |= Lighting_IsLit_Fast(x, y, z) ? 2 : 0;
+	flags |= Lighting_IsLit_Fast(x, y, z) ? LIT_CC : 0;
 
 	/* Use fact Light((Y+1).YMin) == Light(Y.YMax) */
 	offset = (lightFlags >> FACE_YMAX) & 1;
-	flags |= Lighting_IsLit_Fast(x, (y + 1) - offset, z) ? 4 : 0;
+	flags |= Lighting_IsLit_Fast(x, (y + 1) - offset, z) ? LIT_P1 : 0;
 
-	/* Dynamic lighting */
-	if (Blocks.FullBright[block])                       flags |= 5;
-	if (Blocks.FullBright[Builder_Chunk[cIndex + 324]]) flags |= 4;
-	if (Blocks.FullBright[Builder_Chunk[cIndex - 324]]) flags |= 1;
+	/* If a block is fullbright, it should also look as if that spot is lit */
+	if (Blocks.FullBright[Builder_Chunk[cIndex - 324]]) flags |= LIT_M1;
+	if (Blocks.FullBright[block])                       flags |= LIT_CC;
+	if (Blocks.FullBright[Builder_Chunk[cIndex + 324]]) flags |= LIT_P1;
+	
 	return flags;
 }
 
