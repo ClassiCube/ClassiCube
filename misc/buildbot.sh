@@ -122,15 +122,27 @@ build_web() {
 # ----------------------------- compile raspberry pi
 #   I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
 #   Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
-RPI_CC=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc-4.8.3
+#   I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
+#   Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
+RPI32_CC=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc-4.8.3
 RPI_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI"
+#   I cloned from https://github.com/abhiTronix/raspberry-pi-cross-compilers
+RPI64_CC=~/rpi64/cross-pi-gcc-9.4.0-64/bin/aarch64-linux-gnu-gcc
 
-build_rpi() {
-  echo "Building rpi.."
-  cp $ROOT_DIR/misc/CCicon_rpi $ROOT_DIR/src/CCicon_rpi.o
+build_rpi32() {
+  echo "Building rpi32.."
+  cp $ROOT_DIR/misc/CCicon_rpi32 $ROOT_DIR/src/CCicon_rpi32.o
   rm cc-rpi
-  $RPI_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
-  if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi" >> "$ERRS_FILE"; fi
+  $RPI32_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib CCicon_rpi32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 32 bit" >> "$ERRS_FILE"; fi
+}
+
+build_rpi64() {
+  echo "Building rpi64.."
+  cp $ROOT_DIR/misc/CCicon_rpi64 $ROOT_DIR/src/CCicon_rpi64.o
+  rm cc-rpi64
+  $RPI64_CC *.c $ALL_FLAGS $RPI64_FLAGS CCicon_rpi64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl
+  if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 64 bit" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile android

@@ -96,7 +96,7 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
+```gcc *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lm -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
 
 ## Compiling - macOS
 
