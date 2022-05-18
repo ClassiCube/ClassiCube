@@ -20,10 +20,12 @@ enum MsgType {
 	MSG_TYPE_BIGANNOUNCEMENT = 101,
 	MSG_TYPE_SMALLANNOUNCEMENT = 102,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
-	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
+	MSG_TYPE_CLIENTSTATUS_2 = 257, /* Tab list matching names */
+	MSG_TYPE_EXTRASTATUS_1  = 360,
+	MSG_TYPE_EXTRASTATUS_2  = 361
 };
 
-extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2];
+extern cc_string Chat_Status[5], Chat_BottomRight[3], Chat_ClientStatus[2];
 extern cc_string Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;
 /* All chat messages received. */
 extern struct StringsBuffer Chat_Log;

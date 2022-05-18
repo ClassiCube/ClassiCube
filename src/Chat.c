@@ -19,14 +19,20 @@
 #include "Options.h"
 #include "Drawer2D.h"
 
-static char msgs[12][STRING_SIZE];
-cc_string Chat_Status[4]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]) };
-cc_string Chat_BottomRight[3]  = { String_FromArray(msgs[4]), String_FromArray(msgs[5]), String_FromArray(msgs[6]) };
-cc_string Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
+static char _st[5][STRING_SIZE];
+static char _br[3][STRING_SIZE];
+static char _cs[2][STRING_SIZE];
+static char announcement[STRING_SIZE];
+static char bigAnnouncement[STRING_SIZE];
+static char smallAnnouncement[STRING_SIZE];
 
-cc_string Chat_Announcement = String_FromArray(msgs[9]);
-cc_string Chat_BigAnnouncement = String_FromArray(msgs[10]);
-cc_string Chat_SmallAnnouncement = String_FromArray(msgs[11]);
+cc_string Chat_Status[5]       = { String_FromArray(_st[0]), String_FromArray(_st[1]), String_FromArray(_st[2]), String_FromArray(_st[3]), String_FromArray(_st[4]) };
+cc_string Chat_BottomRight[3]  = { String_FromArray(_br[0]), String_FromArray(_br[1]), String_FromArray(_br[2]) };
+cc_string Chat_ClientStatus[2] = { String_FromArray(_cs[0]), String_FromArray(_cs[8]) };
+
+cc_string Chat_Announcement = String_FromArray(announcement);
+cc_string Chat_BigAnnouncement = String_FromArray(bigAnnouncement);
+cc_string Chat_SmallAnnouncement = String_FromArray(smallAnnouncement);
 
 double Chat_AnnouncementReceived;
 double Chat_BigAnnouncementReceived;
@@ -234,7 +240,8 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 		AppendChatLog(text);
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
-		String_Copy(&Chat_Status[1 + (msgType - MSG_TYPE_STATUS_1)], text);
+		/* Status[1] is for reduced performance mode message */
+		String_Copy(&Chat_Status[2 + (msgType - MSG_TYPE_STATUS_1)], text);
 	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {	
 		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
@@ -248,7 +255,9 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 		Chat_SmallAnnouncementReceived = Game.Time;
 	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_2) {
 		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
-	}
+	} else if (msgType >= MSG_TYPE_EXTRASTATUS_1 && msgType <= MSG_TYPE_EXTRASTATUS_2) {
+		String_Copy(&Chat_Status[msgType - MSG_TYPE_EXTRASTATUS_1], text);
+	} 
 
 	Event_RaiseChat(&ChatEvents.ChatReceived, text, msgType);
 }

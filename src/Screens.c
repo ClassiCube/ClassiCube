@@ -896,19 +896,20 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 
 static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
 	int progress = Http_CheckProgress(TexturePack_ReqID);
+	cc_string msg; char msgBuffer[STRING_SIZE];
 	if (progress == s->lastDownloadStatus) return;
 
 	s->lastDownloadStatus = progress;
-	Chat_Status[0].length = 0;
+	String_InitArray(msg, msgBuffer);
 
 	if (progress == HTTP_PROGRESS_MAKING_REQUEST) {
-		String_AppendConst(&Chat_Status[0], "&eRetrieving texture pack..");
+		String_AppendConst(&msg, "&eRetrieving texture pack..");
 	} else if (progress == HTTP_PROGRESS_FETCHING_DATA) {
-		String_AppendConst(&Chat_Status[0], "&eDownloading texture pack");
+		String_AppendConst(&msg, "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
-		String_Format1(&Chat_Status[0], "&eDownloading texture pack (&7%i&e%%)", &progress);
+		String_Format1(&msg, "&eDownloading texture pack (&7%i&e%%)", &progress);
 	}
-	TextGroupWidget_Redraw(&s->status, 0);
+	Chat_AddOf(&msg, MSG_TYPE_EXTRASTATUS_1);
 }
 
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
@@ -939,7 +940,8 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 		TextGroupWidget_ShiftUp(&s->chat);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
-		TextGroupWidget_Redraw(&s->status, 1 + (type - MSG_TYPE_STATUS_1));
+		/* Status[1] is for reduced performance mode message */
+		TextGroupWidget_Redraw(&s->status, 2 + (type - MSG_TYPE_STATUS_1));
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
 		/* Bottom3 is top most line, so need to redraw index 0 */
 		TextGroupWidget_Redraw(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1));
@@ -952,7 +954,11 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_2) {
 		TextGroupWidget_Redraw(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1);
 		ChatScreen_UpdateChatYOffsets(s);
-	}
+	} else if (type >= MSG_TYPE_EXTRASTATUS_1 && type <= MSG_TYPE_EXTRASTATUS_2) {
+		/* Status[0] is for texture pack downloading message */
+		/* Status[1] is for reduced performance mode message */
+		TextGroupWidget_Redraw(&s->status, type - MSG_TYPE_EXTRASTATUS_1);
+	} 
 }
 
 static void ChatScreen_DrawCrosshairs(void) {
@@ -1301,7 +1307,8 @@ static void ChatScreen_Init(void* screen) {
 	TextWidget_Init(&s->bigAnnouncement);
 	TextWidget_Init(&s->smallAnnouncement);
 
-	s->status.collapsible[0]       = true; /* Texture pack download status */
+	s->status.collapsible[0]       = true; /* Texture pack downloading status */
+	s->status.collapsible[1]       = true; /* Reduced performance mode status */
 	s->clientStatus.collapsible[0] = true;
 	s->clientStatus.collapsible[1] = true;
 

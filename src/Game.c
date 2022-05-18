@@ -276,11 +276,12 @@ static void HandleOnNewMapLoaded(void* obj) {
 
 static void HandleInactiveChanged(void* obj) {
 	if (WindowInfo.Inactive) {
-		Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
+		Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 		Gfx_SetFpsLimit(false, 1000 / 1.0f);
 	} else {
-		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
+		Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
 		Game_SetFpsLimit(Game_FpsLimit);
+		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
 	}
 
 #ifdef CC_BUILD_WEB

@@ -50,6 +50,7 @@ CC_VAR extern struct _GfxData {
 
 extern GfxResourceID Gfx_defaultIb;
 extern GfxResourceID Gfx_quadVb, Gfx_texVb;
+extern const cc_string Gfx_LowPerfMessage;
 
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define GFX_MAX_INDICES (65536 / 4 * 6)
@@ -60,7 +61,6 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 /* Texture should allow updating via Gfx_UpdateTexture */
 #define TEXTURE_FLAG_DYNAMIC 0x02
 
-#define LOWPERF_ENTER_MESSAGE "&eEntering reduced performance mode (game minimised or hidden)"
 #define LOWPERF_EXIT_MESSAGE  "&eExited reduced performance mode"
 
 void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
