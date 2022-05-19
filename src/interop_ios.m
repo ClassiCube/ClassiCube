@@ -96,6 +96,14 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
     return YES;
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
+    WindowInfo.Width  = size.width;
+    WindowInfo.Height = size.height;
+    
+    Event_RaiseVoid(&WindowEvents.Resized);
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+}
+
 /*- (BOOL)prefersStatusBarHidden {
     
 }*/
@@ -570,39 +578,6 @@ static UIImage* ToUIImage(struct Bitmap* bmp) {
     return img;
 }
 
-static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
-    const struct LLayout* l = w->layouts + 2;
-    while (l->type)
-    {
-        switch (l->type)
-        {
-            case LLAYOUT_WIDTH:
-                r->size.width  = WindowInfo.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
-                break;
-            case LLAYOUT_HEIGHT:
-                r->size.height = WindowInfo.Height - (int)r->origin.y - Display_ScaleY(l->offset);
-                break;
-        }
-        l++;
-    }
-}
-
-void LBackend_LayoutWidget(struct LWidget* w) {
-    const struct LLayout* l = w->layouts;
-    UIView* view = (__bridge UIView*)w->meta;
-    CGRect r     = [view frame];
-    int width    = (int)r.size.width;
-    int height   = (int)r.size.height;
-    
-    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
-    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
-    
-    // e.g. Table widget needs adjusts width/height based on window
-    if (l[1].type & LLAYOUT_EXTRA)
-        LBackend_LayoutDimensions(w, &r);
-    view.frame = r;
-}
-
 static struct LWidget* FindWidgetForView(id obj) {
     struct LScreen* s = Launcher_Active;
     for (int i = 0; i < s->numWidgets; i++)
@@ -927,7 +902,9 @@ static UIView* LBackend_InputShow(struct LInput* w) {
     
     LInput_SetKeyboardType(fld, w->inputType);
     LInput_SetPlaceholder(fld,  w->hintText);
+    
     w->meta = (__bridge void*)fld;
+    LBackend_InputUpdate(w);
     return fld;
 }
 
@@ -1089,6 +1066,40 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
+
+static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
+    const struct LLayout* l = w->layouts + 2;
+    while (l->type)
+    {
+        switch (l->type)
+        {
+            case LLAYOUT_WIDTH:
+                r->size.width  = WindowInfo.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
+                break;
+            case LLAYOUT_HEIGHT:
+                r->size.height = WindowInfo.Height - (int)r->origin.y - Display_ScaleY(l->offset);
+                break;
+        }
+        l++;
+    }
+}
+
+void LBackend_LayoutWidget(struct LWidget* w) {
+    const struct LLayout* l = w->layouts;
+    UIView* view = (__bridge UIView*)w->meta;
+    CGRect r     = [view frame];
+    int width    = (int)r.size.width;
+    int height   = (int)r.size.height;
+    
+    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
+    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
+    
+    // e.g. Table widget needs adjusts width/height based on window
+    if (l[1].type & LLAYOUT_EXTRA)
+        LBackend_LayoutDimensions(w, &r);
+    view.frame = r;
+}
+
 static UIView* ShowWidget(struct LWidget* w) {
     switch (w->type)
     {
@@ -1114,18 +1125,11 @@ void LBackend_SetScreen(struct LScreen* s) {
     for (int i = 0; i < s->numWidgets; i++)
     {
         struct LWidget* w = s->widgets[i];
-        UIView* view = ShowWidget(w);
-        [view_handle addSubview:view];
+        UIView* view      = ShowWidget(w);
         
-        /*[view addConstraint:[NSLayoutConstraint constraintWithItem:view
-         attribute: NSLayoutAttributeLeft
-         relatedBy:NSLayoutRelationEqual
-         toItem:view_handle
-         attribute:NSLayoutAttributeLeft
-         multiplier:1.0f
-         constant:s->widgets[i]->layouts[0].offset]];*/
+        [view_handle addSubview:view];
     }
-    // TODO remove this
+    // TODO replace with native constraints some day, maybe
     s->Layout(s);
 }
 
