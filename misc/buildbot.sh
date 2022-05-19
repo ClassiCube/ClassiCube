@@ -141,7 +141,7 @@ build_rpi64() {
   echo "Building rpi64.."
   cp $ROOT_DIR/misc/CCicon_rpi64 $ROOT_DIR/src/CCicon_rpi64.o
   rm cc-rpi64
-  $RPI64_CC *.c $ALL_FLAGS $RPI64_FLAGS CCicon_rpi64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl
+  $RPI64_CC *.c $ALL_FLAGS $RPI_FLAGS CCicon_rpi64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi64 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 64 bit" >> "$ERRS_FILE"; fi
 }
 
@@ -244,7 +244,8 @@ run_timed build_nix64
 run_timed build_mac32
 run_timed build_mac64
 run_timed build_web
-run_timed build_rpi
+run_timed build_rpi32
+run_timed build_rpi64
 run_timed build_android
 
 cd ~

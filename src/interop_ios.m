@@ -603,44 +603,6 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     view.frame = r;
 }
 
-void LBackend_SetScreen(struct LScreen* s) {
-    for (int i = 0; i < s->numWidgets; i++)
-    {
-        void* obj = s->widgets[i]->meta;
-        if (!obj) continue;
-        
-        UIView* view = (__bridge UIView*)obj;
-        [view_handle addSubview:view];
-        
-        /*[view addConstraint:[NSLayoutConstraint constraintWithItem:view
-                                                        attribute: NSLayoutAttributeLeft
-                                                        relatedBy:NSLayoutRelationEqual
-                                                        toItem:view_handle
-                                                        attribute:NSLayoutAttributeLeft
-                                                        multiplier:1.0f
-                                                        constant:s->widgets[i]->layouts[0].offset]];*/
-    }
-}
-
-void LBackend_CloseScreen(struct LScreen* s) {
-    if (!s) return;
-    
-    // remove all widgets from previous screen
-    NSArray<UIView*>* elems = [view_handle subviews];
-    for (UIView* view in elems)
-    {
-        [view removeFromSuperview];
-    }
-}
-
-static void AssignView(void* widget, UIView* view) {
-    struct LWidget* w = widget;
-    // doesn't work, the view get auto garbage collected
-    //  after LBackend_CloseScreen removes the subviews
-    //w->meta = (__bridge void*)view;
-    w->meta = CFBridgingRetain(view);
-}
-
 static struct LWidget* FindWidgetForView(id obj) {
     struct LScreen* s = Launcher_Active;
     for (int i = 0; i < s->numWidgets; i++)
@@ -812,7 +774,7 @@ void LBackend_Redraw(void) {
     CGContextRelease(win_ctx);
 }
 
-static void LButton_UpdateBackground(struct LButton* w);
+static void LBackend_ButtonUpdateBackground(struct LButton* w);
 void LBackend_ThemeChanged(void) {
     struct LScreen* s = Launcher_Active;
     LBackend_Redraw();
@@ -821,14 +783,14 @@ void LBackend_ThemeChanged(void) {
     {
         struct LWidget* w = s->widgets[i];
         if (w->type != LWIDGET_BUTTON) continue;
-        LButton_UpdateBackground((struct LButton*)w);
+        LBackend_ButtonUpdateBackground((struct LButton*)w);
     }
 }
 
 /*########################################################################################################################*
  *------------------------------------------------------ButtonWidget-------------------------------------------------------*
  *#########################################################################################################################*/
-static void LButton_UpdateBackground(struct LButton* w) {
+static void LBackend_ButtonUpdateBackground(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
     CGRect rect   = [btn frame];
     int width     = (int)rect.size.width;
@@ -846,18 +808,25 @@ static void LButton_UpdateBackground(struct LButton* w) {
 }
 
 void LBackend_ButtonInit(struct LButton* w, int width, int height) {
+    w->_textWidth  = width;
+    w->_textHeight = height;
+}
+
+static UIView* LBackend_ButtonShow(struct LButton* w) {
     UIButton* btn = [[UIButton alloc] init];
-    btn.frame = CGRectMake(0, 0, width, height);
+    btn.frame = CGRectMake(0, 0, w->_textWidth, w->_textHeight);
     [btn addTarget:ui_controller action:@selector(handleButtonPress:) forControlEvents:UIControlEventTouchUpInside];
     
-    AssignView(w, btn);
-    LButton_UpdateBackground(w);
+    w->meta = (__bridge void*)btn;
+    LBackend_ButtonUpdateBackground(w);
+    LBackend_ButtonUpdate(w);
+    return btn;
 }
 
 void LBackend_ButtonUpdate(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
-    NSString* str = ToNSString(&w->text);
     
+    NSString* str = ToNSString(&w->text);
     [btn setTitle:str forState:UIControlStateNormal];
 }
 void LBackend_ButtonDraw(struct LButton* w) { }
@@ -866,7 +835,9 @@ void LBackend_ButtonDraw(struct LButton* w) { }
 /*########################################################################################################################*
  *-----------------------------------------------------CheckboxWidget------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_CheckboxInit(struct LCheckbox* w) {
+void LBackend_CheckboxInit(struct LCheckbox* w) { }
+
+static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     UIView* root  = [[UIView alloc] init];
     UISwitch* swt = [[UISwitch alloc] init];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
@@ -904,7 +875,8 @@ void LBackend_CheckboxInit(struct LCheckbox* w) {
     root.frame   = frame;
     
     //root.userInteractionEnabled = YES;
-    AssignView(w, root);
+    w->meta = (__bridge void*)root;
+    return root;
 }
 
 void LBackend_CheckboxUpdate(struct LCheckbox* w) {
@@ -942,8 +914,12 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder) {
 }
 
 void LBackend_InputInit(struct LInput* w, int width) {
+    w->_textHeight = width;
+}
+
+static UIView* LBackend_InputShow(struct LInput* w) {
     UITextField* fld = [[UITextField alloc] init];
-    fld.frame           = CGRectMake(0, 0, width, LINPUT_HEIGHT);
+    fld.frame           = CGRectMake(0, 0, w->_textHeight, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = UIColor.whiteColor;
     fld.delegate        = ui_controller;
@@ -951,8 +927,8 @@ void LBackend_InputInit(struct LInput* w, int width) {
     
     LInput_SetKeyboardType(fld, w->inputType);
     LInput_SetPlaceholder(fld,  w->hintText);
-    
-    AssignView(w, fld);
+    w->meta = (__bridge void*)fld;
+    return fld;
 }
 
 void LBackend_InputUpdate(struct LInput* w) {
@@ -969,17 +945,21 @@ void LBackend_InputUnselect(struct LInput* w) { }
 /*########################################################################################################################*
  *------------------------------------------------------LabelWidget--------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_LabelInit(struct LLabel* w) {
+void LBackend_LabelInit(struct LLabel* w) { }
+
+static UIView* LBackend_LabelShow(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
-    lbl.textColor = [UIColor whiteColor];
+    w->meta       = (__bridge void*)lbl;
     
     if (w->small) lbl.font = [UIFont systemFontOfSize:14.0f];
-    
-    AssignView(w, lbl);
+    LBackend_LabelUpdate(w);
+    return lbl;
 }
 
 void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
+    if (!lbl) return;
+    
     lbl.attributedText = ToAttributedString(&w->text);
     [lbl sizeToFit]; // adjust label to fit text
 }
@@ -990,13 +970,17 @@ void LBackend_LabelDraw(struct LLabel* w) { }
  *-------------------------------------------------------LineWidget--------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_LineInit(struct LLine* w, int width) {
+    w->_width = width;
+}
+
+static UIView* LBackend_LineShow(struct LLine* w) {
     UIView* view = [[UIView alloc] init];
-    view.frame   = CGRectMake(0, 0, width, LLINE_HEIGHT);
+    view.frame   = CGRectMake(0, 0, w->_width, LLINE_HEIGHT);
+    w->meta      = (__bridge void*)view;
     
-    BitmapCol color = LLine_GetColor();
+    BitmapCol color      = LLine_GetColor();
     view.backgroundColor = ToUIColor(color, 0.5f);
-    
-    AssignView(w, view);
+    return view;
 }
 void LBackend_LineDraw(struct LLine* w) { }
 
@@ -1005,11 +989,17 @@ void LBackend_LineDraw(struct LLine* w) { }
  *------------------------------------------------------SliderWidget-------------------------------------------------------*
  *#########################################################################################################################*/
 void LBackend_SliderInit(struct LSlider* w, int width, int height) {
-    UIProgressView* prg = [[UIProgressView alloc] init];
-    prg.frame           = CGRectMake(0, 0, width, height);
-    prg.progressTintColor = ToUIColor(w->color, 1.0f);
+    w->_width  = width;
+    w->_height = height;
+}
 
-    AssignView(w, prg);
+static UIView* LBackend_SliderShow(struct LSlider* w) {
+    UIProgressView* prg = [[UIProgressView alloc] init];
+    prg.frame           = CGRectMake(0, 0, w->_width, w->_height);
+    prg.progressTintColor = ToUIColor(w->color, 1.0f);
+    
+    w->meta = (__bridge void*)prg;
+    return prg;
 }
 
 void LBackend_SliderUpdate(struct LSlider* w) {
@@ -1023,14 +1013,17 @@ void LBackend_SliderDraw(struct LSlider* w) { }
 /*########################################################################################################################*
  *------------------------------------------------------TableWidget-------------------------------------------------------*
  *#########################################################################################################################*/
-void LBackend_TableInit(struct LTable* w) {
+void LBackend_TableInit(struct LTable* w) { }
+
+static UIView* LBackend_TableShow(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
     tbl.delegate     = ui_controller;
     tbl.dataSource   = ui_controller;
     LTable_UpdateCellColor(tbl, NULL, 1, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
-    AssignView(w, tbl);
+    w->meta = (__bridge void*)tbl;
+    return tbl;
 }
 
 void LBackend_TableUpdate(struct LTable* w) {
@@ -1091,4 +1084,64 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     NSIndexPath* sel = table.indexPathForSelectedRow;
     cc_bool selected = sel && sel.row == row;
     LTable_UpdateCellColor(cell, server, row, selected);
+}
+
+/*########################################################################################################################*
+ *------------------------------------------------------UI Backend--------------------------------------------------------*
+ *#########################################################################################################################*/
+static UIView* ShowWidget(struct LWidget* w) {
+    switch (w->type)
+    {
+        case LWIDGET_BUTTON:
+            return LBackend_ButtonShow((struct LButton*)w);
+        case LWIDGET_CHECKBOX:
+            return LBackend_CheckboxShow((struct LCheckbox*)w);
+        case LWIDGET_INPUT:
+            return LBackend_InputShow((struct LInput*)w);
+        case LWIDGET_LABEL:
+            return LBackend_LabelShow((struct LLabel*)w);
+        case LWIDGET_LINE:
+            return LBackend_LineShow((struct LLine*)w);
+        case LWIDGET_SLIDER:
+            return LBackend_SliderShow((struct LSlider*)w);
+        case LWIDGET_TABLE:
+            return LBackend_TableShow((struct LTable*)w);
+    }
+    return NULL;
+}
+
+void LBackend_SetScreen(struct LScreen* s) {
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        struct LWidget* w = s->widgets[i];
+        UIView* view = ShowWidget(w);
+        [view_handle addSubview:view];
+        
+        /*[view addConstraint:[NSLayoutConstraint constraintWithItem:view
+         attribute: NSLayoutAttributeLeft
+         relatedBy:NSLayoutRelationEqual
+         toItem:view_handle
+         attribute:NSLayoutAttributeLeft
+         multiplier:1.0f
+         constant:s->widgets[i]->layouts[0].offset]];*/
+    }
+    // TODO remove this
+    s->Layout(s);
+}
+
+void LBackend_CloseScreen(struct LScreen* s) {
+    if (!s) return;
+    
+    // remove reference to soon to be garbage collected views
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        s->widgets[i]->meta = NULL;
+    }
+    
+    // remove all widgets from previous screen
+    NSArray<UIView*>* elems = [view_handle subviews];
+    for (UIView* view in elems)
+    {
+        [view removeFromSuperview];
+    }
 }
