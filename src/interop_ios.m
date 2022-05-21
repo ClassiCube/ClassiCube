@@ -122,6 +122,7 @@ static cc_bool kb_active;
     Platform_LogConst("APPEAR");
     [UIView animateWithDuration:interval animations:^{
         [view_handle layoutIfNeeded];
+        [controller viewWillTransitionToSize:view_handle.frame.size withTransitionCoordinator:nil];
     }];
 }
 
@@ -509,28 +510,14 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-    // TODO this is the API should actually be using.. eventually
-    /*NSArray* array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
-    if ([array count] <= 0) return ERR_NOT_SUPPORTED;
+    // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    if (array.count <= 0) return ERR_NOT_SUPPORTED;
     
-    NSString* str = [array objectAtIndex:0];
-    const char* name = [str fileSystemRepresentation];
-    return chdir(name) == -1 ? errno : 0;*/
+    NSString* str    = [array objectAtIndex:0];
+    const char* path = [str fileSystemRepresentation];
     
-    char path[NATIVE_STR_LEN + 1] = { 0 };
-    uint32_t size = NATIVE_STR_LEN;
-    if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
-    
-    // despite what you'd assume, size is NOT changed to length of path
-    int len = String_CalcLen(path, NATIVE_STR_LEN);
-    
-    // get rid of filename at end of directory
-    for (int i = len - 1; i >= 0; i--, len--)
-    {
-        if (path[i] == '/') break;
-    }
-
-    path[len] = '\0';
+    mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     return chdir(path) == -1 ? errno : 0;
 }
 

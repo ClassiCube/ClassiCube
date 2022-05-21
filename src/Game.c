@@ -417,7 +417,7 @@ static void Game_Load(void) {
 	}
 
 	Game_DefaultZipMissing = false;
-	TexturePack_ExtractCurrent(false);
+	TexturePack_ExtractCurrent(true);
 	if (Game_DefaultZipMissing) {
 		Window_ShowDialog("Missing file",
 			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
