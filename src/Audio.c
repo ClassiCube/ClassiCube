@@ -120,8 +120,10 @@ static void* audio_context;
 
 #if defined CC_BUILD_WIN
 static const cc_string alLib = String_FromConst("openal32.dll");
-#elif defined CC_BUILD_DARWIN
+#elif defined CC_BUILD_MACOS
 static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
+#elif defined CC_BUILD_IOS
+static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/OpenAL");
 #elif defined CC_BUILD_BSD
 static const cc_string alLib = String_FromConst("libopenal.so");
 #else

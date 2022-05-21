@@ -104,6 +104,45 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
+static cc_bool kb_active;
+- (void)keyboardDidShow:(NSNotification*)notification {
+    NSDictionary* info = notification.userInfo;
+    if (kb_active) return;
+    // TODO this is wrong
+    // TODO this doesn't actually trigger view resize???
+    kb_active = true;
+    
+    double interval = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    CGRect kbFrame  = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect winFrame = view_handle.frame;
+    
+    winFrame.size.height -= kbFrame.size.height;
+    view_handle.frame     = winFrame;
+    
+    Platform_LogConst("APPEAR");
+    [UIView animateWithDuration:interval animations:^{
+        [view_handle layoutIfNeeded];
+    }];
+}
+
+- (void)keyboardDidHide:(NSNotification*)notification {
+    NSDictionary* info = notification.userInfo;
+    if (!kb_active) return;
+    kb_active = false;
+    
+    double interval = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    CGRect kbFrame  = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect winFrame = view_handle.frame;
+    
+    winFrame.size.height += kbFrame.size.height;
+    view_handle.frame     = winFrame;
+    
+    Platform_LogConst("VANISH");
+    [UIView animateWithDuration:interval animations:^{
+        [view_handle layoutIfNeeded];
+    }];
+}
+
 /*- (BOOL)prefersStatusBarHidden {
     
 }*/
@@ -216,6 +255,10 @@ static CGRect DoCreateWindow(void) {
     WindowInfo.Exists = true;
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
+    
+    NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
+    [notifications addObserver:controller selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+    [notifications addObserver:controller selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
     return bounds;
 }
 void Window_SetSize(int width, int height) { }
