@@ -144,6 +144,17 @@ static cc_bool kb_active;
     }];
 }
 
+- (void)handleKBTextChanged:(id)sender {
+    UITextField* src = (UITextField*)sender;
+    const char* str  = src.text.UTF8String;
+    
+    char tmpBuffer[NATIVE_STR_LEN];
+    cc_string tmp = String_FromArray(tmpBuffer);
+    String_AppendUtf8(&tmp, str, String_Length(str));
+    
+    Event_RaiseString(&InputEvents.TextChanged, &tmp);
+}
+
 /*- (BOOL)prefersStatusBarHidden {
     
 }*/
@@ -206,29 +217,14 @@ int main(int argc, char * argv[]) {
     }
 }
 
-void Clipboard_GetText(cc_string* value) {
-	const char* raw;
-	NSString* str;
-
-	str = [UIPasteboard generalPasteboard].string;
-	if (!str) return;
-
-	raw = str.UTF8String;
-	String_AppendUtf8(value, raw, String_Length(raw));
-}
-
-void Clipboard_SetText(const cc_string* value) {
-	char raw[NATIVE_STR_LEN];
-	NSString* str;
-
-	Platform_EncodeUtf8(raw, value);
-	str = [NSString stringWithUTF8String:raw];
-	[UIPasteboard generalPasteboard].string = str;
-}
+// iOS textfields manage ctrl+c/v
+void Clipboard_GetText(cc_string* value) { }
+void Clipboard_SetText(const cc_string* value) { }
 
 /*########################################################################################################################*
 *---------------------------------------------------------Window----------------------------------------------------------*
 *#########################################################################################################################*/
+// no cursor on iOS
 void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
 void Cursor_DoSetVisible(cc_bool visible) { }
@@ -307,6 +303,7 @@ static UITextField* text_input;
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
     text_input = [[UITextField alloc] initWithFrame:CGRectZero];
     text_input.hidden = YES;
+    [text_input addTarget:controller action:@selector(handleKBTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     LInput_SetKeyboardType(text_input, args->type);
     LInput_SetPlaceholder(text_input,  args->placeholder);
@@ -541,11 +538,11 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 }
 
 void GetDeviceUUID(cc_string* str) {
-    UIDevice* device = [UIDevice currentDevice];
+    UIDevice* device = UIDevice.currentDevice;
     NSString* string = [[device identifierForVendor] UUIDString];
     
     // TODO avoid code duplication
-    const char* src = [string UTF8String];
+    const char* src = string.UTF8String;
     String_AppendUtf8(str, src, String_Length(src));
 }
 
@@ -642,7 +639,7 @@ static NSString* cellID = @"CC_Cell";
     if (w == NULL) return;
     
     UITextField* src   = (UITextField*)sender;
-    const char* str    = [[src text] UTF8String];
+    const char* str    = src.text.UTF8String;
     struct LInput* ipt = (struct LInput*)w;
     
     ipt->text.length = 0;

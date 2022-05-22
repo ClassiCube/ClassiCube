@@ -850,6 +850,9 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     Platform_EncodeUtf8(tmp, url);
     urlCF  = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
     urlRef = CFURLCreateWithString(NULL, urlCF, NULL);
+    // TODO e.g. "http://www.example.com/skin/1 2.png" causes this to return null
+    // TODO release urlCF
+    if (!urlRef) return ERR_INVALID_DATA_URL;
     
     request = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
     req->meta = request;
@@ -892,6 +895,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     if (!gotHeaders)
         result = ParseResponseHeaders(req, stream);
     
+    //Thread_Sleep(1000);
     CFRelease(request);
     return result;
 }
