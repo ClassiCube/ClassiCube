@@ -112,18 +112,16 @@ static cc_bool kb_active;
     // TODO this doesn't actually trigger view resize???
     kb_active = true;
     
-    double interval = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-    CGRect kbFrame  = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGRect winFrame = view_handle.frame;
-    
-    winFrame.size.height -= kbFrame.size.height;
-    view_handle.frame     = winFrame;
+    double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
+    CGRect kbFrame    = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect winFrame   = view_handle.frame;
+    winFrame.origin.y = -kbFrame.size.height;
     
     Platform_LogConst("APPEAR");
-    [UIView animateWithDuration:interval animations:^{
-        [view_handle layoutIfNeeded];
-        [controller viewWillTransitionToSize:view_handle.frame.size withTransitionCoordinator:nil];
-    }];
+    [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
+        view_handle.frame = winFrame;
+    } completion:nil];
 }
 
 - (void)keyboardDidHide:(NSNotification*)notification {
@@ -131,28 +129,15 @@ static cc_bool kb_active;
     if (!kb_active) return;
     kb_active = false;
     
-    double interval = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-    CGRect kbFrame  = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGRect winFrame = view_handle.frame;
-    
-    winFrame.size.height += kbFrame.size.height;
-    view_handle.frame     = winFrame;
+    double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
+    CGRect winFrame   = view_handle.frame;
+    winFrame.origin.y = 0;
     
     Platform_LogConst("VANISH");
-    [UIView animateWithDuration:interval animations:^{
-        [view_handle layoutIfNeeded];
-    }];
-}
-
-- (void)handleKBTextChanged:(id)sender {
-    UITextField* src = (UITextField*)sender;
-    const char* str  = src.text.UTF8String;
-    
-    char tmpBuffer[NATIVE_STR_LEN];
-    cc_string tmp = String_FromArray(tmpBuffer);
-    String_AppendUtf8(&tmp, str, String_Length(str));
-    
-    Event_RaiseString(&InputEvents.TextChanged, &tmp);
+    [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
+       view_handle.frame = winFrame;
+    } completion:nil];
 }
 
 /*- (BOOL)prefersStatusBarHidden {
@@ -234,7 +219,9 @@ void Window_SetTitle(const cc_string* title) {
 }
 
 void Window_Init(void) {
-    WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+    //WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+    // keyboard now shifts up
+    WindowInfo.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
     
     DisplayInfo.Depth  = 32;
@@ -254,8 +241,8 @@ static CGRect DoCreateWindow(void) {
     WindowInfo.Height = bounds.size.height;
     
     NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
-    [notifications addObserver:controller selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
-    [notifications addObserver:controller selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+    [notifications addObserver:controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
+    [notifications addObserver:controller selector:@selector(keyboardDidHide:) name:UIKeyboardWillHideNotification object:nil];
     return bounds;
 }
 void Window_SetSize(int width, int height) { }
@@ -296,14 +283,45 @@ void ShowDialogCore(const char* title, const char* msg) {
     }
 }
 
+
+@interface CCKBController : NSObject<UITextFieldDelegate>
+@end
+
+@implementation CCKBController
+- (void)handleTextChanged:(id)sender {
+    UITextField* src = (UITextField*)sender;
+    const char* str  = src.text.UTF8String;
+    
+    char tmpBuffer[NATIVE_STR_LEN];
+    cc_string tmp = String_FromArray(tmpBuffer);
+    String_AppendUtf8(&tmp, str, String_Length(str));
+    
+    Event_RaiseString(&InputEvents.TextChanged, &tmp);
+}
+
+// === UITextFieldDelegate ===
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    Input_SetPressed(KEY_ENTER);
+    Input_SetReleased(KEY_ENTER);
+    return YES;
+}
+@end
+
 static void LInput_SetKeyboardType(UITextField* fld, int flags);
 static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 static UITextField* text_input;
+static CCKBController* kb_controller;
 
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+    if (!kb_controller) {
+        kb_controller = [[CCKBController alloc] init];
+        CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
+    }
+    
     text_input = [[UITextField alloc] initWithFrame:CGRectZero];
-    text_input.hidden = YES;
-    [text_input addTarget:controller action:@selector(handleKBTextChanged:) forControlEvents:UIControlEventEditingChanged];
+    text_input.hidden   = YES;
+    text_input.delegate = kb_controller;
+    [text_input addTarget:kb_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
     LInput_SetKeyboardType(text_input, args->type);
     LInput_SetPlaceholder(text_input,  args->placeholder);
