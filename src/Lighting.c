@@ -9,6 +9,8 @@
 #include "Game.h"
 
 static cc_int16* light_heightmap;
+cc_bool Lighting_Modern;
+struct _LightEngine LightEngine;
 #define HEIGHT_UNCALCULATED Int16_MaxValue
 
 #define Lighting_CalcBody(get_block)\
@@ -48,45 +50,45 @@ static int Lighting_GetLightHeight(int x, int z) {
 }
 
 /* Outside color is same as sunlight color, so we reuse when possible */
-cc_bool Lighting_IsLit(int x, int y, int z) {
+cc_bool Classic_Lighting_IsLit(int x, int y, int z) {
 	return y > Lighting_GetLightHeight(x, z);
 }
 
-cc_bool Lighting_IsLit_Fast(int x, int y, int z) {
+cc_bool Classic_Lighting_IsLit_Fast(int x, int y, int z) {
 	return y > light_heightmap[Lighting_Pack(x, z)];
 }
 
-PackedCol Lighting_Color(int x, int y, int z) {
+PackedCol Classic_Lighting_Color(int x, int y, int z) {
 	if (!World_Contains(x, y, z)) return Env.SunCol;
 	return y > Lighting_GetLightHeight(x, z) ? Env.SunCol : Env.ShadowCol;
 }
 
-PackedCol Lighting_Color_XSide(int x, int y, int z) {
+PackedCol Classic_Lighting_Color_XSide(int x, int y, int z) {
 	if (!World_Contains(x, y, z)) return Env.SunXSide;
 	return y > Lighting_GetLightHeight(x, z) ? Env.SunXSide : Env.ShadowXSide;
 }
 
-PackedCol Lighting_Color_Sprite_Fast(int x, int y, int z) {
+PackedCol Classic_Lighting_Color_Sprite_Fast(int x, int y, int z) {
 	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
-PackedCol Lighting_Color_YMax_Fast(int x, int y, int z) {
+PackedCol Classic_Lighting_Color_YMax_Fast(int x, int y, int z) {
 	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
-PackedCol Lighting_Color_YMin_Fast(int x, int y, int z) {
+PackedCol Classic_Lighting_Color_YMin_Fast(int x, int y, int z) {
 	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunYMin : Env.ShadowYMin;
 }
 
-PackedCol Lighting_Color_XSide_Fast(int x, int y, int z) {
+PackedCol Classic_Lighting_Color_XSide_Fast(int x, int y, int z) {
 	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunXSide : Env.ShadowXSide;
 }
 
-PackedCol Lighting_Color_ZSide_Fast(int x, int y, int z) {
+PackedCol Classic_Lighting_Color_ZSide_Fast(int x, int y, int z) {
 	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
 }
 
-void Lighting_Refresh(void) {
+void Classic_Lighting_Refresh(void) {
 	int i;
 	for (i = 0; i < World.Width * World.Length; i++) {
 		light_heightmap[i] = HEIGHT_UNCALCULATED;
@@ -224,7 +226,7 @@ static void Lighting_RefreshAffected(int x, int y, int z, BlockID block, int old
 	}
 }
 
-void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+void Classic_Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 	int hIndex = Lighting_Pack(x, z);
 	int lightH = light_heightmap[hIndex];
 	int newHeight;
@@ -342,7 +344,7 @@ static void Lighting_FinishHeightmapCoverage(int x1, int z1, int xCount, int zCo
 	}
 }
 
-void Lighting_LightHint(int startX, int startZ) {
+void Classic_Lighting_LightHint(int startX, int startZ) {
 	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
@@ -358,6 +360,29 @@ void Lighting_LightHint(int startX, int startZ) {
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
+static void LightEngine_InitClassic(void) {
+	LightEngine.LightHint = Classic_Lighting_LightHint;
+	LightEngine.OnBlockChanged = Classic_Lighting_OnBlockChanged;
+	LightEngine.Refresh = Classic_Lighting_Refresh;
+	LightEngine.IsLit = Classic_Lighting_IsLit;
+	LightEngine.Color = Classic_Lighting_Color;
+	LightEngine.Color_XSide = Classic_Lighting_Color_XSide;
+	LightEngine.IsLit_Fast = Classic_Lighting_IsLit_Fast;
+	LightEngine.Color_Sprite_Fast = Classic_Lighting_Color_Sprite_Fast;
+	LightEngine.Color_YMax_Fast = Classic_Lighting_Color_YMax_Fast;
+	LightEngine.Color_YMin_Fast = Classic_Lighting_Color_YMin_Fast;
+	LightEngine.Color_XSide_Fast = Classic_Lighting_Color_XSide_Fast;
+	LightEngine.Color_ZSide_Fast = Classic_Lighting_Color_ZSide_Fast;
+}
+
+void Lighting_ApplyActive(void) {
+	LightEngine_InitClassic();
+}
+
+static void OnInit(void) {
+	Lighting_ApplyActive();
+}
+
 static void OnReset(void) {
 	Mem_Free(light_heightmap);
 	light_heightmap = NULL;
@@ -366,14 +391,14 @@ static void OnReset(void) {
 static void OnNewMapLoaded(void) {
 	light_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
 	if (light_heightmap) {
-		Lighting_Refresh();
+		Classic_Lighting_Refresh();
 	} else {
 		World_OutOfMemory();
 	}
 }
 
 struct IGameComponent Lighting_Component = {
-	NULL,    /* Init  */
+	OnInit,    /* Init  */
 	OnReset, /* Free  */
 	OnReset, /* Reset */
 	OnReset, /* OnNewMap */

@@ -190,7 +190,7 @@ void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 	if (Weather_Heightmap) {
 		EnvRenderer_OnBlockChanged(x, y, z, old, block);
 	}
-	Lighting_OnBlockChanged(x, y, z, old, block);
+	LightEngine.OnBlockChanged(x, y, z, old, block);
 	MapRenderer_OnBlockChanged(x, y, z, block);
 }
 
