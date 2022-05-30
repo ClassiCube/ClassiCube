@@ -114,7 +114,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	String_InitArray_NT(dir, dirBuffer);
 
 	JavaCall_Void_String("getExternalAppDir", &dir);
-	dir.buffer[dir.length] = '\0';=
+	dir.buffer[dir.length] = '\0';
 	Platform_Log1("EXTERNAL DIR: %s|", &dir);
 
 	int res = chdir(dir.buffer) == -1 ? errno : 0;
