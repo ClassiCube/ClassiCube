@@ -18,17 +18,18 @@
 #include "TexturePack.h"
 #include "Options.h"
 #include "Drawer2D.h"
-
-static char _st[5][STRING_SIZE];
-static char _br[3][STRING_SIZE];
-static char _cs[2][STRING_SIZE];
+ 
+static char status[5][STRING_SIZE];
+static char bottom[3][STRING_SIZE];
+static char client[2][STRING_SIZE];
 static char announcement[STRING_SIZE];
 static char bigAnnouncement[STRING_SIZE];
 static char smallAnnouncement[STRING_SIZE];
 
-cc_string Chat_Status[5]       = { String_FromArray(_st[0]), String_FromArray(_st[1]), String_FromArray(_st[2]), String_FromArray(_st[3]), String_FromArray(_st[4]) };
-cc_string Chat_BottomRight[3]  = { String_FromArray(_br[0]), String_FromArray(_br[1]), String_FromArray(_br[2]) };
-cc_string Chat_ClientStatus[2] = { String_FromArray(_cs[0]), String_FromArray(_cs[8]) };
+cc_string Chat_Status[5]       = { String_FromArray(status[0]), String_FromArray(status[1]), String_FromArray(status[2]),
+                                                                String_FromArray(status[3]), String_FromArray(status[4]) };
+cc_string Chat_BottomRight[3]  = { String_FromArray(bottom[0]), String_FromArray(bottom[1]), String_FromArray(bottom[2]) };
+cc_string Chat_ClientStatus[2] = { String_FromArray(client[0]), String_FromArray(client[8]) };
 
 cc_string Chat_Announcement = String_FromArray(announcement);
 cc_string Chat_BigAnnouncement = String_FromArray(bigAnnouncement);
