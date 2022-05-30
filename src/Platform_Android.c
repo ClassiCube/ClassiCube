@@ -108,14 +108,22 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
     return count;
 }
 
+#include "Window.h"
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 
 	JavaCall_Void_String("getExternalAppDir", &dir);
-	dir.buffer[dir.length] = '\0';
+	dir.buffer[dir.length] = '\0';=
 	Platform_Log1("EXTERNAL DIR: %s|", &dir);
-	return chdir(dir.buffer) == -1 ? errno : 0;
+
+	int res = chdir(dir.buffer) == -1 ? errno : 0;
+	if (!res) return 0;
+
+	// show the path to the user
+	// TODO there must be a better way
+	Window_ShowDialog("Failed to set working directory to", dir.buffer);
+	return res;
 }
 
 
