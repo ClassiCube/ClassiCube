@@ -46,6 +46,8 @@ CC_VAR extern struct _WorldData {
 	cc_bool Loaded;
 	/* Point in time the current world was last saved at */
 	double LastSave;
+	/* Default name of the world when saving */
+	cc_string Name;
 } World;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */

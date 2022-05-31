@@ -359,9 +359,10 @@ static cc_result MapState_Read(struct MapState* m) {
 
 		m->sizeIndex += read;
 		if (res) return res;
+
+		/* 0.01% chance to happen, but still possible */
+		if (m->sizeIndex < MAP_SIZE_LEN) return 0;
 	}
-	/* 0.01% chance to happen, but still possible */
-	if (m->sizeIndex < MAP_SIZE_LEN) return 0;
 
 	if (!map_volume) map_volume = Stream_GetU32_BE(m->size);
 
@@ -540,7 +541,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 		if (res) { DisconnectInvalidMap(res); return; }
 	}
 
-	progress = !map1.blocks ? 0.0f : (float)map1.index / map_volume;
+	progress = !map_volume ? 0.0f : (float)map1.index / map_volume;
 	Event_RaiseFloat(&WorldEvents.Loading, progress);
 }
 

@@ -1401,6 +1401,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
 	}
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, fmt, &file);
+	String_Copy(&World.Name,   &file);
 
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
@@ -1521,7 +1522,7 @@ static void SaveLevelScreen_Init(void* screen) {
 #endif
 
 	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
-	TextInputWidget_Create(&s->input, 500, &String_Empty, &desc);
+	TextInputWidget_Create(&s->input, 500, &World.Name, &desc);
 	TextWidget_Init(&s->desc);
 	s->input.onscreenPlaceholder = "Map name";
 }
@@ -1743,12 +1744,16 @@ void HotkeyListScreen_Show(void) {
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
+	cc_string relPath, fileName, fileExt;
 	cc_result res;
 
-	cc_string relPath = ListScreen_UNSAFE_GetCur(s, widget);
+	relPath = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "maps/%s", &relPath);
 	res = Map_LoadFrom(&path);
+
+	String_UNSAFE_Separate(&relPath, '.', &fileName, &fileExt);
+	String_Copy(&World.Name, &fileName);
 
 	/* FileNotFound error may be because user deleted maps from disc */
 	if (res != ReturnCode_FileNotFound) return;
