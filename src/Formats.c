@@ -16,6 +16,7 @@
 #include "Chat.h"
 #include "Inventory.h"
 #include "TexturePack.h"
+#include "Utils.h"
 
 
 /*########################################################################################################################*
@@ -55,6 +56,7 @@ IMapImporter Map_FindImporter(const cc_string* path) {
 }
 
 cc_result Map_LoadFrom(const cc_string* path) {
+	cc_string relPath, fileName, fileExt;
 	IMapImporter importer;
 	struct Stream stream;
 	cc_result res;
@@ -71,11 +73,16 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	}
 
 	/* No point logging error for closing readonly file */
-	stream.Close(&stream);
+	(void)stream.Close(&stream);
 	if (res) Logger_SysWarn2(res, "decoding", path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	LocalPlayer_MoveToSpawn();
+
+	relPath = *path;
+	Utils_UNSAFE_GetFilename(&relPath);
+	String_UNSAFE_Separate(&relPath, '.', &fileName, &fileExt);
+	String_Copy(&World.Name, &fileName);
 	return res;
 }
 

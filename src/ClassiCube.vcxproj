@@ -89,6 +89,9 @@
     <OutDir>$(SolutionDir)x64\Release\</OutDir>
     <IntDir>x64\Release\obj\</IntDir>
   </PropertyGroup>
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>

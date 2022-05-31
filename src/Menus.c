@@ -1744,16 +1744,12 @@ void HotkeyListScreen_Show(void) {
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
-	cc_string relPath, fileName, fileExt;
 	cc_result res;
 
-	relPath = ListScreen_UNSAFE_GetCur(s, widget);
+	cc_string relPath = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "maps/%s", &relPath);
 	res = Map_LoadFrom(&path);
-
-	String_UNSAFE_Separate(&relPath, '.', &fileName, &fileExt);
-	String_Copy(&World.Name, &fileName);
 
 	/* FileNotFound error may be because user deleted maps from disc */
 	if (res != ReturnCode_FileNotFound) return;
