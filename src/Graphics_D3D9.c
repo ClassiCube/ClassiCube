@@ -793,12 +793,6 @@ void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
 	cc_result res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
 
-	/* Direct3D9Ex returns S_PRESENT_OCCLUDED when e.g.window is minimised */
-	if (res == S_PRESENT_OCCLUDED) {
-		TickReducedPerformance(); return;
-	}
-	EndReducedPerformance();
-
 	if (res) {
 		if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
 		/* TODO: Make sure this actually works on all graphics cards. */

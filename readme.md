@@ -20,7 +20,7 @@ You can download the game [from here](https://www.classicube.net/download/) and 
 * It does not reimplement Minecraft Classic versions before 0.30
 
 #### System requirements
-* Windows: 98 or later
+* Windows: 95 or later
 * macOS: 10.5 or later (can be compiled to work with 10.3/10.4 though)
 * Linux: libcurl and libopenal
 * Android: 2.3 or later

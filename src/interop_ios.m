@@ -105,6 +105,7 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
 }
 
 static cc_bool kb_active;
+static UITextField* kb_widget;
 - (void)keyboardDidShow:(NSNotification*)notification {
     NSDictionary* info = notification.userInfo;
     if (kb_active) return;
@@ -116,7 +117,14 @@ static cc_bool kb_active;
     NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
     CGRect kbFrame    = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect winFrame   = view_handle.frame;
-    winFrame.origin.y = -kbFrame.size.height;
+    
+    cc_bool can_shift = true;
+    // would the active input widget be pushed offscreen?
+    if (kb_widget) {
+        can_shift = kb_widget.frame.origin.y > kbFrame.size.height;
+    }
+    if (can_shift) winFrame.origin.y = -kbFrame.size.height;
+    kb_widget = nil;
     
     Platform_LogConst("APPEAR");
     [UIView animateWithDuration:interval delay: 0.0 options:curve animations:^{
@@ -128,6 +136,7 @@ static cc_bool kb_active;
     NSDictionary* info = notification.userInfo;
     if (!kb_active) return;
     kb_active = false;
+    kb_widget = nil;
     
     double interval   = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     NSInteger curve   = [[info objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue];
@@ -723,6 +732,10 @@ static NSString* cellID = @"CC_Cell";
         [textField resignFirstResponder];
     }
     return YES;
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+    kb_widget = textField;
 }
 
 @end

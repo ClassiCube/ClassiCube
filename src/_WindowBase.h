@@ -172,9 +172,11 @@ void GLContext_Create(void) {
 	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	eglInitialize(ctx_display, NULL, NULL);
 	eglBindAPI(EGL_OPENGL_ES_API);
-	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
 
+	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
+	if (!ctx_context) Logger_Abort2(eglGetError(), "Failed to create EGL context");
+
 	GLContext_InitSurface();
 }
 
