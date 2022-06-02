@@ -66,7 +66,7 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float
 static PackedCol Entity_GetCol(struct Entity* e) {
 	Vec3 eyePos = Entity_GetEyePosition(e);
 	IVec3 pos; IVec3_Floor(&pos, &eyePos);
-	return LightEngine.Color(pos.X, pos.Y, pos.Z);
+	return Lighting.Color(pos.X, pos.Y, pos.Z);
 }
 
 void Entity_Init(struct Entity* e) {

@@ -268,7 +268,7 @@ static void Physics_HandleDirt(int index, BlockID block) {
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
-	if (LightEngine.IsLit(x, y, z)) {
+	if (Lighting.IsLit(x, y, z)) {
 		Game_UpdateBlock(x, y, z, BLOCK_GRASS);
 	}
 }
@@ -277,7 +277,7 @@ static void Physics_HandleGrass(int index, BlockID block) {
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
-	if (!LightEngine.IsLit(x, y, z)) {
+	if (!Lighting.IsLit(x, y, z)) {
 		Game_UpdateBlock(x, y, z, BLOCK_DIRT);
 	}
 }
@@ -287,7 +287,7 @@ static void Physics_HandleFlower(int index, BlockID block) {
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
-	if (!LightEngine.IsLit(x, y, z)) {
+	if (!Lighting.IsLit(x, y, z)) {
 		Game_UpdateBlock(x, y, z, BLOCK_AIR);
 		Physics_ActivateNeighbours(x, y, z, index);
 		return;
@@ -306,7 +306,7 @@ static void Physics_HandleMushroom(int index, BlockID block) {
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
-	if (LightEngine.IsLit(x, y, z)) {
+	if (Lighting.IsLit(x, y, z)) {
 		Game_UpdateBlock(x, y, z, BLOCK_AIR);
 		Physics_ActivateNeighbours(x, y, z, index);
 		return;

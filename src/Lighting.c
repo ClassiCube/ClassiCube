@@ -10,7 +10,7 @@
 
 static cc_int16* light_heightmap;
 cc_bool Lighting_Modern;
-struct _LightEngine LightEngine;
+struct _Lighting Lighting;
 #define HEIGHT_UNCALCULATED Int16_MaxValue
 
 #define Lighting_CalcBody(get_block)\
@@ -361,18 +361,18 @@ void Classic_Lighting_LightHint(int startX, int startZ) {
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
 static void LightEngine_InitClassic(void) {
-	LightEngine.LightHint = Classic_Lighting_LightHint;
-	LightEngine.OnBlockChanged = Classic_Lighting_OnBlockChanged;
-	LightEngine.Refresh = Classic_Lighting_Refresh;
-	LightEngine.IsLit = Classic_Lighting_IsLit;
-	LightEngine.Color = Classic_Lighting_Color;
-	LightEngine.Color_XSide = Classic_Lighting_Color_XSide;
-	LightEngine.IsLit_Fast = Classic_Lighting_IsLit_Fast;
-	LightEngine.Color_Sprite_Fast = Classic_Lighting_Color_Sprite_Fast;
-	LightEngine.Color_YMax_Fast = Classic_Lighting_Color_YMax_Fast;
-	LightEngine.Color_YMin_Fast = Classic_Lighting_Color_YMin_Fast;
-	LightEngine.Color_XSide_Fast = Classic_Lighting_Color_XSide_Fast;
-	LightEngine.Color_ZSide_Fast = Classic_Lighting_Color_ZSide_Fast;
+	Lighting.LightHint = Classic_Lighting_LightHint;
+	Lighting.OnBlockChanged = Classic_Lighting_OnBlockChanged;
+	Lighting.Refresh = Classic_Lighting_Refresh;
+	Lighting.IsLit = Classic_Lighting_IsLit;
+	Lighting.Color = Classic_Lighting_Color;
+	Lighting.Color_XSide = Classic_Lighting_Color_XSide;
+	Lighting.IsLit_Fast = Classic_Lighting_IsLit_Fast;
+	Lighting.Color_Sprite_Fast = Classic_Lighting_Color_Sprite_Fast;
+	Lighting.Color_YMax_Fast = Classic_Lighting_Color_YMax_Fast;
+	Lighting.Color_YMin_Fast = Classic_Lighting_Color_YMin_Fast;
+	Lighting.Color_XSide_Fast = Classic_Lighting_Color_XSide_Fast;
+	Lighting.Color_ZSide_Fast = Classic_Lighting_Color_ZSide_Fast;
 }
 
 void Lighting_ApplyActive(void) {

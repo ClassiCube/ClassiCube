@@ -150,7 +150,7 @@ static void RainParticle_Render(struct Particle* p, float t, struct VertexTextur
 	size.X = p->size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
-	col = LightEngine.Color(x, y, z);
+	col = Lighting.Color(x, y, z);
 	Particle_DoRender(&size, &pos, &rain_rec, col, vertices);
 }
 
@@ -223,7 +223,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct Ve
 	
 	if (!Blocks.FullBright[p->block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
-		col = LightEngine.Color_XSide(x, y, z);
+		col = Lighting.Color_XSide(x, y, z);
 	}
 
 	Block_Tint(col, p->block);
@@ -349,7 +349,7 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, struct Vert
 	size.X = p->base.size; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
-	col = e->fullBright ? PACKEDCOL_WHITE : LightEngine.Color(x, y, z);
+	col = e->fullBright ? PACKEDCOL_WHITE : Lighting.Color(x, y, z);
 	col = PackedCol_Tint(col, e->tintCol);
 
 	Particle_DoRender(&size, &pos, &rec, col, vertices);

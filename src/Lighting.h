@@ -13,7 +13,7 @@ extern cc_bool Lighting_Modern;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
 
 
-CC_VAR extern struct _LightEngine {
+CC_VAR extern struct _Lighting {
 	/* Equivalent to (but far more optimised form of)
 	* for x = startX; x < startX + 18; x++
 	*   for z = startZ; z < startZ + 18; z++
@@ -43,7 +43,7 @@ CC_VAR extern struct _LightEngine {
 	PackedCol (*Color_YMin_Fast)(int x, int y, int z);
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);
-} LightEngine;
+} Lighting;
 
 void Lighting_ApplyActive(void);
 #endif
