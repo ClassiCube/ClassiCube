@@ -462,6 +462,73 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 }
 #define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->name, tagName))
 
+static cc_uint8* Nbt_WriteConst(cc_uint8* data, const char* text) {
+	int i, len = String_Length(text);
+	*data++ = 0;
+	*data++ = (cc_uint8)len;
+
+	for (i = 0; i < len; i++) { *data++ = text[i]; }
+	return data;
+}
+
+static cc_uint8* Nbt_WriteString(cc_uint8* data, const char* name, const cc_string* text) {
+	cc_uint8* start; int i;
+
+	*data++ = NBT_STR;
+	data    = Nbt_WriteConst(data, name);
+	start   = data;
+	data += 2; /* length written later */
+
+	for (i = 0; i < text->length; i++) {
+		data = Convert_CP437ToUtf8(text->buffer[i], data) + data;
+	}
+
+	Stream_SetU16_BE(start, (int)(data - start) - 2);
+	return data;
+}
+
+static cc_uint8* Nbt_WriteDict(cc_uint8* data, const char* name) {
+	*data++ = NBT_DICT;
+	data    = Nbt_WriteConst(data, name);
+
+	return data;
+}
+
+static cc_uint8* Nbt_WriteArray(cc_uint8* data, const char* name, int size) {
+	*data++ = NBT_I8S;
+	data    = Nbt_WriteConst(data, name);
+
+	Stream_SetU32_BE(data, size);
+	return data + 4;
+}
+
+static cc_uint8* Nbt_WriteUInt8(cc_uint8* data, const char* name, cc_uint8 value) {
+	*data++ = NBT_I8;
+	data  = Nbt_WriteConst(data, name);
+
+	*data = value;
+	return data + 1;
+}
+
+static cc_uint8* Nbt_WriteUInt16(cc_uint8* data, const char* name, cc_uint16 value) {
+	*data++ = NBT_I16;
+	data    = Nbt_WriteConst(data, name);
+
+	Stream_SetU16_BE(data, value);
+	return data + 2;
+}
+
+static cc_uint8* Nbt_WriteFloat(cc_uint8* data, const char* name, float value) {
+	union IntAndFloat raw;
+	*data++ = NBT_F32;
+	data    = Nbt_WriteConst(data, name);
+
+	raw.f = value;
+	Stream_SetU32_BE(data, raw.u);
+	return data + 4;
+}
+
+
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
@@ -1217,216 +1284,170 @@ cc_result Dat_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld export----------------------------------------------------*
 *#########################################################################################################################*/
-#define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
+static cc_uint8* Cw_WriteColor(cc_uint8* data, const char* name, PackedCol color) {
+	data = Nbt_WriteDict(data, name);
+	{
+		data  = Nbt_WriteUInt16(data, "R", PackedCol_R(color));
+		data  = Nbt_WriteUInt16(data, "G", PackedCol_G(color));
+		data  = Nbt_WriteUInt16(data, "B", PackedCol_B(color));
+	} *data++ = NBT_END;
 
-static int Cw_WriteEndString(cc_uint8* data, const cc_string* text) {
-	cc_uint8* cur = data + 2;
-	int i, wrote, len = 0;
-
-	for (i = 0; i < text->length; i++) {
-		wrote = Convert_CP437ToUtf8(text->buffer[i], cur);
-		len += wrote; cur += wrote;
-	}
-
-	Stream_SetU16_BE(data, len);
-	*cur = NBT_END;
-	return len + 1;
+	return data;
 }
 
-static cc_uint8 cw_begin[131] = {
-NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
-	NBT_I8,   0,13, 'F','o','r','m','a','t','V','e','r','s','i','o','n', 1,
-	NBT_I8S,  0,4,  'U','U','I','D', 0,0,0,16, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-	NBT_I16,  0,1,  'X', 0,0,
-	NBT_I16,  0,1,  'Y', 0,0,
-	NBT_I16,  0,1,  'Z', 0,0,
-	NBT_DICT, 0,5,  'S','p','a','w','n',
-		NBT_I16,  0,1, 'X', 0,0,
-		NBT_I16,  0,1, 'Y', 0,0,
-		NBT_I16,  0,1, 'Z', 0,0,
-		NBT_I8,   0,1, 'H', 0,
-		NBT_I8,   0,1, 'P', 0,
-	NBT_END,
-	NBT_I8S,  0,10, 'B','l','o','c','k','A','r','r','a','y', 0,0,0,0,
-};
-static cc_uint8 cw_map2[18] = {
-	NBT_I8S,  0,11, 'B','l','o','c','k','A','r','r','a','y','2', 0,0,0,0,
-};
-static cc_uint8 cw_meta_cpe[303] = {
-	NBT_DICT, 0,8,  'M','e','t','a','d','a','t','a',
-		NBT_DICT, 0,3, 'C','P','E',
-			NBT_DICT, 0,13, 'C','l','i','c','k','D','i','s','t','a','n','c','e',
-				NBT_I16,  0,8,  'D','i','s','t','a','n','c','e', 0,0,
-			NBT_END,
-			NBT_DICT, 0,14, 'E','n','v','W','e','a','t','h','e','r','T','y','p','e',
-				NBT_I8,   0,11, 'W','e','a','t','h','e','r','T','y','p','e', 0,
-			NBT_END,
-			NBT_DICT, 0,9,  'E','n','v','C','o','l','o','r','s',
-				NBT_DICT, 0,3, 'S','k','y',                     CW_META_RGB
-				NBT_END,
-				NBT_DICT, 0,5, 'C','l','o','u','d',             CW_META_RGB
-				NBT_END,
-				NBT_DICT, 0,3, 'F','o','g',                     CW_META_RGB
-				NBT_END,
-				NBT_DICT, 0,7, 'A','m','b','i','e','n','t',     CW_META_RGB
-				NBT_END,
-				NBT_DICT, 0,8, 'S','u','n','l','i','g','h','t', CW_META_RGB
-				NBT_END,
-			NBT_END,
-			NBT_DICT, 0,16, 'E','n','v','M','a','p','A','p','p','e','a','r','a','n','c','e',
-				NBT_I8,   0,9,  'S','i','d','e','B','l','o','c','k',     0,
-				NBT_I8,   0,9,  'E','d','g','e','B','l','o','c','k',     0,
-				NBT_I16,  0,9,  'S','i','d','e','L','e','v','e','l',     0,0,
-				NBT_STR,  0,10, 'T','e','x','t','u','r','e','U','R','L', 0,0,
-};
-static cc_uint8 cw_meta_defs[19] = {
-			NBT_DICT, 0,16, 'B','l','o','c','k','D','e','f','i','n','i','t','i','o','n','s',
-};
-static cc_uint8 cw_meta_def[189] = {
-				NBT_DICT, 0,9,  'B','l','o','c','k','\0','\0','\0','\0',
-					NBT_I8,  0,2,  'I','D',                              0,
-					/* It would be have been better to just change ID to be a I16 */
-					/* Unfortunately this isn't backwards compatible with ClassicalSharp */
-					NBT_I16, 0,3,  'I','D','2',                          0,0,
-					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
-					NBT_F32, 0,5,  'S','p','e','e','d',                  0,0,0,0,
-					/* Ugly hack for supporting texture IDs over 255 */
-					/* First 6 elements are lower 8 bits, next 6 are upper 8 bits */
-					NBT_I8S, 0,8,  'T','e','x','t','u','r','e','s',      0,0,0,12, 0,0,0,0,0,0, 0,0,0,0,0,0,
-					NBT_I8,  0,14, 'T','r','a','n','s','m','i','t','s','L','i','g','h','t', 0,
-					NBT_I8,  0,9,  'W','a','l','k','S','o','u','n','d',  0,
-					NBT_I8,  0,10, 'F','u','l','l','B','r','i','g','h','t', 0,
-					NBT_I8,  0,5,  'S','h','a','p','e',                  0,
-					NBT_I8,  0,9,  'B','l','o','c','k','D','r','a','w',  0,
-					NBT_I8S, 0,3,  'F','o','g',                          0,0,0,4, 0,0,0,0,
-					NBT_I8S, 0,6,  'C','o','o','r','d','s',              0,0,0,6, 0,0,0,0,0,0,
-					NBT_STR, 0,4,  'N','a','m','e',                      0,0,
-};
-static cc_uint8 cw_end[4] = {
+static const cc_uint8 cw_end[4] = {
 			NBT_END,
 		NBT_END,
 	NBT_END,
 NBT_END,
 };
 
-
 static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
-	cc_uint8 tmp[512];
+	cc_uint8 buffer[1024], nameBuffer[10];
+	cc_uint8* cur;
 	cc_string name;
-	int len;
-
 	cc_bool sprite = Blocks.Draw[b] == DRAW_SPRITE;
-	union IntAndFloat speed;
 	TextureLoc tex;
 	cc_uint8 fog;
 	PackedCol col;
 	Vec3 minBB, maxBB;	
 
-	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
+	/* Hacky unique tag name for each by using hex of block */
+	String_InitArray_NT(name, nameBuffer);
+	String_AppendConst(&name, "Block");
+	String_AppendHex(&name, b >> 8);
+	String_AppendHex(&name, b);
+	nameBuffer[9] = '\0';
+
+	cur = buffer;
+	cur = Nbt_WriteDict(cur, nameBuffer);
 	{
-		/* Hacky unique tag name for each by using hex of block */
-		name = String_Init((char*)&tmp[8], 0, 4);
-		String_AppendHex(&name, b >> 8);
-		String_AppendHex(&name, b);
-
-		tmp[17] = b;
-		Stream_SetU16_BE(&tmp[24], b);
-
-		tmp[40] = Blocks.Collide[b];
-		speed.f = Blocks.SpeedMultiplier[b];
-		Stream_SetU32_BE(&tmp[49], speed.u);
+		cur  = Nbt_WriteUInt8(cur,  "ID", b);
+		/* It would be have been better to just change ID to be a I16 */
+		/* Unfortunately this isn't backwards compatible with ClassicalSharp */
+		cur  = Nbt_WriteUInt16(cur, "ID2", b);
+		cur  = Nbt_WriteUInt8(cur,  "CollideType", Blocks.Collide[b]);
+		cur  = Nbt_WriteFloat(cur,  "Speed", Blocks.SpeedMultiplier[b]);
 
 		/* Originally only up to 256 textures were supported, which used up 6 bytes total */
-		/* Later, support for more textures was added, which requires 2 bytes per texture */
-		/*  For backwards compatibility, the lower byte of each texture is */
-		/*  written into first 6 bytes, then higher byte into next 6 bytes */
-		tex = Block_Tex(b, FACE_YMAX); tmp[68] = (cc_uint8)tex; tmp[74] = (cc_uint8)(tex >> 8);
-		tex = Block_Tex(b, FACE_YMIN); tmp[69] = (cc_uint8)tex; tmp[75] = (cc_uint8)(tex >> 8);
-		tex = Block_Tex(b, FACE_XMIN); tmp[70] = (cc_uint8)tex; tmp[76] = (cc_uint8)(tex >> 8);
-		tex = Block_Tex(b, FACE_XMAX); tmp[71] = (cc_uint8)tex; tmp[77] = (cc_uint8)(tex >> 8);
-		tex = Block_Tex(b, FACE_ZMIN); tmp[72] = (cc_uint8)tex; tmp[78] = (cc_uint8)(tex >> 8);
-		tex = Block_Tex(b, FACE_ZMAX); tmp[73] = (cc_uint8)tex; tmp[79] = (cc_uint8)(tex >> 8);
+		/*  Later, support for more textures was added, which requires 2 bytes per texture */
+		/*   For backwards compatibility, the lower byte of each texture is */
+		/*   written into first 6 bytes, then higher byte into next 6 bytes (ugly hack) */
+		cur = Nbt_WriteArray(cur, "Textures", 12);
+		tex = Block_Tex(b, FACE_YMAX); cur[0] = (cc_uint8)tex; cur[ 6] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_YMIN); cur[1] = (cc_uint8)tex; cur[ 7] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_XMIN); cur[2] = (cc_uint8)tex; cur[ 8] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_XMAX); cur[3] = (cc_uint8)tex; cur[ 9] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_ZMIN); cur[4] = (cc_uint8)tex; cur[10] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_ZMAX); cur[5] = (cc_uint8)tex; cur[11] = (cc_uint8)(tex >> 8);
+		cur += 12;
 
-		tmp[97]  = Blocks.BlocksLight[b] ? 0 : 1;
-		tmp[110] = Blocks.DigSounds[b];
-		tmp[124] = Blocks.FullBright[b] ? 1 : 0;
-		tmp[133] = sprite ? 0 : (cc_uint8)(Blocks.MaxBB[b].Y * 16);
-		tmp[146] = sprite ? Blocks.SpriteOffset[b] : Blocks.Draw[b];
+		cur  = Nbt_WriteUInt8(cur,  "TransmitsLight", Blocks.BlocksLight[b] ? 0 : 1);
+		cur  = Nbt_WriteUInt8(cur,  "WalkSound",      Blocks.DigSounds[b]);
+		cur  = Nbt_WriteUInt8(cur,  "FullBright",     Blocks.FullBright[b] ? 1 : 0);
+		cur  = Nbt_WriteUInt8(cur,  "Shape",          sprite ? 0 : (cc_uint8)(Blocks.MaxBB[b].Y * 16));
+		cur  = Nbt_WriteUInt8(cur,  "BlockDraw",      sprite ? Blocks.SpriteOffset[b] : Blocks.Draw[b]);
 
+		cur = Nbt_WriteArray(cur, "Fog", 4);
 		fog = (cc_uint8)(128 * Blocks.FogDensity[b] - 1);
 		col = Blocks.FogCol[b];
-		tmp[157] = Blocks.FogDensity[b] ? fog : 0;
-		tmp[158] = PackedCol_R(col); tmp[159] = PackedCol_G(col); tmp[160] = PackedCol_B(col);
+		cur[0] = Blocks.FogDensity[b] ? fog : 0;
+		cur[1] = PackedCol_R(col); cur[2] = PackedCol_G(col); cur[3] = PackedCol_B(col);
+		cur += 4;
 
-		minBB = Blocks.MinBB[b]; maxBB = Blocks.MaxBB[b];
-		tmp[174] = (cc_uint8)(minBB.X * 16); tmp[175] = (cc_uint8)(minBB.Y * 16); tmp[176] = (cc_uint8)(minBB.Z * 16);
-		tmp[177] = (cc_uint8)(maxBB.X * 16); tmp[178] = (cc_uint8)(maxBB.Y * 16); tmp[179] = (cc_uint8)(maxBB.Z * 16);
-	}
+		cur  = Nbt_WriteArray(cur,  "Coords", 6);
+		minBB  = Blocks.MinBB[b]; maxBB = Blocks.MaxBB[b];
+		cur[0] = (cc_uint8)(minBB.X * 16); cur[1] = (cc_uint8)(minBB.Y * 16); cur[2] = (cc_uint8)(minBB.Z * 16);
+		cur[3] = (cc_uint8)(maxBB.X * 16); cur[4] = (cc_uint8)(maxBB.Y * 16); cur[5] = (cc_uint8)(maxBB.Z * 16);
+		cur += 6;
 
-	name = Block_UNSAFE_GetName(b);
-	len  = Cw_WriteEndString(&tmp[187], &name);
-	return Stream_Write(stream, tmp, sizeof(cw_meta_def) + len);
+		name = Block_UNSAFE_GetName(b);
+		cur  = Nbt_WriteString(cur, "Name", &name);
+	} *cur++ = NBT_END;
+
+	return Stream_Write(stream, buffer, (int)(cur - buffer));
 }
 
 cc_result Cw_Save(struct Stream* stream) {
-	cc_uint8 tmp[768];
-	PackedCol col;
+	cc_uint8 buffer[1024];
+	cc_uint8* cur;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	cc_result res;
-	int b, len;
+	int b;
 
-	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
+	cur = buffer;
+	cur = Nbt_WriteDict(cur,   "ClassicWorld");
+	cur = Nbt_WriteUInt8(cur,  "FormatVersion", 1);
+	cur = Nbt_WriteArray(cur,  "UUID", WORLD_UUID_LEN); Mem_Copy(cur, World.Uuid, WORLD_UUID_LEN); cur += WORLD_UUID_LEN;
+	cur = Nbt_WriteUInt16(cur, "X", World.Width );
+	cur = Nbt_WriteUInt16(cur, "Y", World.Height);
+	cur = Nbt_WriteUInt16(cur, "Z", World.Length);
+
+	cur = Nbt_WriteDict(cur, "Spawn");
 	{
-		Mem_Copy(&tmp[43], World.Uuid, WORLD_UUID_LEN);
-		Stream_SetU16_BE(&tmp[63], World.Width);
-		Stream_SetU16_BE(&tmp[69], World.Height);
-		Stream_SetU16_BE(&tmp[75], World.Length);
-		Stream_SetU32_BE(&tmp[127], World.Volume);
-		
-		/* TODO: Maybe keep real spawn too? */
-		Stream_SetU16_BE(&tmp[89],  (cc_uint16)p->Base.Position.X);
-		Stream_SetU16_BE(&tmp[95],  (cc_uint16)p->Base.Position.Y);
-		Stream_SetU16_BE(&tmp[101], (cc_uint16)p->Base.Position.Z);
-		tmp[107] = Math_Deg2Packed(p->SpawnYaw);
-		tmp[112] = Math_Deg2Packed(p->SpawnPitch);
-	}
-	if ((res = Stream_Write(stream, tmp,      sizeof(cw_begin)))) return res;
-	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
+		cur  = Nbt_WriteUInt16(cur, "X", (cc_uint16)p->Base.Position.X);
+		cur  = Nbt_WriteUInt16(cur, "Y", (cc_uint16)p->Base.Position.Y);
+		cur  = Nbt_WriteUInt16(cur, "Z", (cc_uint16)p->Base.Position.Z);
+		cur  = Nbt_WriteUInt8(cur,  "H", Math_Deg2Packed(p->SpawnYaw));
+		cur  = Nbt_WriteUInt8(cur,  "P", Math_Deg2Packed(p->SpawnPitch));
+	} *cur++ = NBT_END;
+	cur = Nbt_WriteArray(cur, "BlockArray", World.Volume);
+
+	if ((res = Stream_Write(stream, buffer, (int)(cur - buffer)))) return res;
+	if ((res = Stream_Write(stream, World.Blocks, World.Volume)))  return res;
 
 #ifdef EXTENDED_BLOCKS
 	if (World.Blocks != World.Blocks2) {
-		Mem_Copy(tmp, cw_map2, sizeof(cw_map2));
-		Stream_SetU32_BE(&tmp[14], World.Volume);
+		cur = buffer;
+		cur = Nbt_WriteArray(cur, "BlockArray2", World.Volume);
 
-		if ((res = Stream_Write(stream, tmp,        sizeof(cw_map2)))) return res;
+		if ((res = Stream_Write(stream, buffer, (int)(cur - buffer)))) return res;
 		if ((res = Stream_Write(stream, World.Blocks2, World.Volume))) return res;
 	}
 #endif
 
-	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
+	cur = buffer;
+	cur = Nbt_WriteDict(cur, "Metadata");
+	cur = Nbt_WriteDict(cur, "CPE");
 	{
-		Stream_SetU16_BE(&tmp[44], (cc_uint16)(LocalPlayer_Instance.ReachDistance * 32));
-		tmp[78] = Env.Weather;
+		cur = Nbt_WriteDict(cur, "ClickDistance");
+		{
+			cur  = Nbt_WriteUInt16(cur, "Distance", (cc_uint16)(LocalPlayer_Instance.ReachDistance * 32));
+		} *cur++ = NBT_END;
 
-		col = Env.SkyCol;    tmp[103] = PackedCol_R(col); tmp[109] = PackedCol_G(col); tmp[115] = PackedCol_B(col);
-		col = Env.CloudsCol; tmp[130] = PackedCol_R(col); tmp[136] = PackedCol_G(col); tmp[142] = PackedCol_B(col);
-		col = Env.FogCol;    tmp[155] = PackedCol_R(col); tmp[161] = PackedCol_G(col); tmp[167] = PackedCol_B(col);
-		col = Env.ShadowCol; tmp[184] = PackedCol_R(col); tmp[190] = PackedCol_G(col); tmp[196] = PackedCol_B(col);
-		col = Env.SunCol;    tmp[214] = PackedCol_R(col); tmp[220] = PackedCol_G(col); tmp[226] = PackedCol_B(col);
+		cur = Nbt_WriteDict(cur, "EnvWeatherType");
+		{
+			cur  = Nbt_WriteUInt8(cur, "WeatherType", Env.Weather);
+		} *cur++ = NBT_END;
 
-		tmp[260] = (BlockRaw)Env.SidesBlock;
-		tmp[273] = (BlockRaw)Env.EdgeBlock;
-		Stream_SetU16_BE(&tmp[286], Env.EdgeHeight);
-	}
-	len = Cw_WriteEndString(&tmp[301], &TexturePack_Url);
-	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
+		cur = Nbt_WriteDict(cur, "EnvColors");
+		{
+			cur = Cw_WriteColor(cur, "Sky",      Env.SkyCol);
+			cur = Cw_WriteColor(cur, "Cloud",    Env.CloudsCol);
+			cur = Cw_WriteColor(cur, "Fog",      Env.FogCol);
+			cur = Cw_WriteColor(cur, "Ambient",  Env.ShadowCol);
+			cur = Cw_WriteColor(cur, "Sunlight", Env.SunCol);
+		} *cur++ = NBT_END;
 
-	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;
-	/* Write block definitions in reverse order so that software that only reads byte 'ID' */
-	/* still loads correct first 256 block defs when saving a map with over 256 block defs */
-	for (b = BLOCK_MAX_DEFINED; b >= 1; b--) {
-		if (!Block_IsCustomDefined(b)) continue;
-		if ((res = Cw_WriteBockDef(stream, b))) return res;
+		cur = Nbt_WriteDict(cur, "EnvMapAppearance");
+		{
+			cur  = Nbt_WriteUInt8(cur, "SideBlock", (BlockRaw)Env.SidesBlock);
+			cur  = Nbt_WriteUInt8(cur, "EdgeBlock", (BlockRaw)Env.EdgeBlock);
+			cur  = Nbt_WriteUInt16(cur, "SideLevel", Env.EdgeHeight);
+			cur  = Nbt_WriteString(cur, "TextureURL", &TexturePack_Url);
+		} *cur++ = NBT_END;
+
+		cur = Nbt_WriteDict(cur, "BlockDefinitions");
+		if ((res = Stream_Write(stream, buffer, (int)(cur - buffer)))) return res;
+
+		{
+			/* Write block definitions in reverse order so that software that only reads byte 'ID' */
+			/* still loads correct first 256 block defs when saving a map with over 256 block defs */
+			for (b = BLOCK_MAX_DEFINED; b >= 1; b--) {
+				if (!Block_IsCustomDefined(b)) continue;
+				if ((res = Cw_WriteBockDef(stream, b))) return res;
+			}
+		}
 	}
 	return Stream_Write(stream, cw_end, sizeof(cw_end));
 }
