@@ -1383,6 +1383,7 @@ cc_result Cw_Save(struct Stream* stream) {
 	cur = Nbt_WriteUInt16(cur, "Y", World.Height);
 	cur = Nbt_WriteUInt16(cur, "Z", World.Length);
 
+	/* TODO: Maybe keep real spawn too? */
 	cur = Nbt_WriteDict(cur, "Spawn");
 	{
 		cur  = Nbt_WriteUInt16(cur, "X", (cc_uint16)p->Base.Position.X);
