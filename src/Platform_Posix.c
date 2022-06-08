@@ -92,8 +92,10 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
-#ifdef CC_BUILD_ANDROID
+#if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #else
 void Platform_Log(const char* msg, int len) {
 	write(STDOUT_FILENO, msg,  len);

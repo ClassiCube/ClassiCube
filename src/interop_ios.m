@@ -24,14 +24,14 @@
 @interface CCWindow : UIWindow
 @end
 
-@interface CCViewController : UIViewController
+@interface CCViewController : UIViewController<UIDocumentPickerDelegate>
 @end
 
 @interface CCAppDelegate : UIResponder<UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow *window;
 @end
 
-static CCViewController* controller;
+static CCViewController* cc_controller;
 static UIWindow* win_handle;
 static UIView* view_handle;
 
@@ -102,6 +102,11 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
     
     Event_RaiseVoid(&WindowEvents.Resized);
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+}
+
+static OpenFileDialogCallback open_dlg_callback;
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
+    NSString* str = url.path;
 }
 
 static cc_bool kb_active;
@@ -215,6 +220,19 @@ int main(int argc, char * argv[]) {
 void Clipboard_GetText(cc_string* value) { }
 void Clipboard_SetText(const cc_string* value) { }
 
+
+/*########################################################################################################################*
+ *------------------------------------------------------Logging/Time-------------------------------------------------------*
+ *#########################################################################################################################*/
+void Platform_Log(const char* msg, int len) {
+    char tmp[2048 + 1];
+    len = min(len, 2048);
+    
+    Mem_Copy(tmp, msg, len); tmp[len] = '\0';
+    NSLog(@"%s", tmp);
+}
+
+
 /*########################################################################################################################*
 *---------------------------------------------------------Window----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -240,18 +258,18 @@ void Window_Init(void) {
 
 static CGRect DoCreateWindow(void) {
     CGRect bounds = UIScreen.mainScreen.bounds;
-    controller = [CCViewController alloc];
-    win_handle = [[CCWindow alloc] initWithFrame:bounds];
+    cc_controller = [CCViewController alloc];
+    win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
-    win_handle.rootViewController = controller;
+    win_handle.rootViewController = cc_controller;
     win_handle.backgroundColor = UIColor.blueColor;
     WindowInfo.Exists = true;
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
     
     NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
-    [notifications addObserver:controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
-    [notifications addObserver:controller selector:@selector(keyboardDidHide:) name:UIKeyboardWillHideNotification object:nil];
+    [notifications addObserver:cc_controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
+    [notifications addObserver:cc_controller selector:@selector(keyboardDidHide:) name:UIKeyboardWillHideNotification object:nil];
     return bounds;
 }
 void Window_SetSize(int width, int height) { }
@@ -282,7 +300,7 @@ void ShowDialogCore(const char* title, const char* msg) {
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { completed = true; }];
     [alert addAction:okBtn];
-    [controller presentViewController:alert animated:YES completion: Nil];
+    [cc_controller presentViewController:alert animated:YES completion: Nil];
     
     // TODO clicking outside message box crashes launcher
     // loop until alert is closed TODO avoid sleeping
@@ -368,7 +386,15 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 }
 
 cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-	return ERR_NOT_SUPPORTED;
+    NSArray<NSString*>* types = @[ @"public.png" ]; // TODO fill in
+    
+    UIDocumentPickerViewController* dlg;
+    dlg = [UIDocumentPickerViewController alloc];
+    dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
+    
+    dlg.delegate = cc_controller;
+    [cc_controller presentViewController:dlg animated:YES completion: Nil];
+    return 0; // TODO still unfinished
 }
 
 
@@ -380,7 +406,7 @@ void Window_Create2D(int width, int height) {
     
     view_handle = [[UIView alloc] initWithFrame:bounds];
     view_handle.multipleTouchEnabled = true;
-    controller.view = view_handle;
+    cc_controller.view = view_handle;
 }
 
 
@@ -399,9 +425,9 @@ void Window_Create2D(int width, int height) {
 
 void Window_Create3D(int width, int height) {
     CGRect bounds = DoCreateWindow();
-    view_handle = [[CCGLView alloc] initWithFrame:bounds];
+    view_handle   = [[CCGLView alloc] initWithFrame:bounds];
     view_handle.multipleTouchEnabled = true;
-    controller.view = view_handle;
+    cc_controller.view = view_handle;
     
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
     layer.opaque = YES;
@@ -561,7 +587,7 @@ void Platform_ShareScreenshot(const cc_string* filename) {
     UIActivityViewController* act;
     act = [UIActivityViewController alloc];
     act = [act initWithActivityItems:@[ @"Share screenshot via", img] applicationActivities:Nil];
-    [controller presentViewController:act animated:true completion:Nil];
+    [cc_controller presentViewController:act animated:true completion:Nil];
 }
 
 void GetDeviceUUID(cc_string* str) {
