@@ -431,7 +431,16 @@ void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
-    // TODO doesn't work
+    // TODO doesn't work properly.. setting 'UIInterfaceOrientationUnknown' apparently
+    //  restores orientation, but doesn't actually do that when I tried it
+    if (lock) {
+        //NSInteger ori    = lock ? UIInterfaceOrientationLandscapeRight : UIInterfaceOrientationUnknown;
+        NSInteger ori    = UIInterfaceOrientationLandscapeRight;
+        UIDevice* device = UIDevice.currentDevice;
+        NSNumber* value  = [NSNumber numberWithInteger:ori];
+        [device setValue:value forKey:@"orientation"];
+    }
+    
     landscape_locked = lock;
     [UIViewController attemptRotationToDeviceOrientation];
 }
@@ -525,13 +534,25 @@ void GLContext_Create(void) {
     CreateFramebuffer();
 }
                   
-void GLContext_Update(void) { }
-cc_bool GLContext_TryRestore(void) { return false; }
+void GLContext_Update(void) {
+    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, WindowInfo.Width, WindowInfo.Height);
+}
 
 void GLContext_Free(void) {
+    glDeleteRenderbuffers(1, &color_renderbuffer); color_renderbuffer = 0;
+    glDeleteRenderbuffers(1, &depth_renderbuffer); depth_renderbuffer = 0;
+    glDeleteFramebuffers(1, &framebuffer);         framebuffer        = 0;
+    
     [EAGLContext setCurrentContext:Nil];
 }
 
+cc_bool GLContext_TryRestore(void) { return false; }
 void* GLContext_GetAddress(const char* function) { return NULL; }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -925,6 +946,7 @@ static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     
     //root.userInteractionEnabled = YES;
     w->meta = (__bridge void*)root;
+    LBackend_CheckboxUpdate(w);
     return root;
 }
 
