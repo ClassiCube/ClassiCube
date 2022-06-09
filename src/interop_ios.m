@@ -222,6 +222,62 @@ void Clipboard_SetText(const cc_string* value) { }
 
 
 /*########################################################################################################################*
+ *------------------------------------------------------Common helpers--------------------------------------------------------*
+ *#########################################################################################################################*/
+static UIColor* ToUIColor(BitmapCol color, float A) {
+    float R = BitmapCol_R(color) / 255.0f;
+    float G = BitmapCol_G(color) / 255.0f;
+    float B = BitmapCol_B(color) / 255.0f;
+    return [UIColor colorWithRed:R green:G blue:B alpha:A];
+}
+
+static NSString* ToNSString(const cc_string* text) {
+    char raw[NATIVE_STR_LEN];
+    Platform_EncodeUtf8(raw, text);
+    return [NSString stringWithUTF8String:raw];
+}
+
+static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
+    cc_string left  = *text, part;
+    BitmapCol color = Drawer2D.Colors['f'];
+    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    {
+        NSString* bit = ToNSString(&part);
+        NSDictionary* attrs =
+        @{
+          //NSFontAttributeName : font,
+          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+        };
+        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
+        [str appendAttributedString:attr_bit];
+    }
+    return str;
+}
+
+static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
+// TODO probably a better way..
+static UIImage* ToUIImage(struct Bitmap* bmp) {
+    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+    CGDataProviderRef provider;
+    CGImageRef image;
+
+    provider = CGDataProviderCreateWithData(NULL, bmp->scan0,
+                                            Bitmap_DataSize(bmp->width, bmp->height), FreeContents);
+    image    = CGImageCreate(bmp->width, bmp->height, 8, 32, bmp->width * 4, colorspace,
+                             kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+    
+    UIImage* img = [UIImage imageWithCGImage:image];
+    
+    CGImageRelease(image);
+    CGDataProviderRelease(provider);
+    CGColorSpaceRelease(colorspace);
+    return img;
+}
+
+
+/*########################################################################################################################*
  *------------------------------------------------------Logging/Time-------------------------------------------------------*
  *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
@@ -358,12 +414,7 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 }
 
 void Window_SetKeyboardText(const cc_string* text) {
-    char raw[NATIVE_STR_LEN];
-    NSString* str;
-    
-    Platform_EncodeUtf8(raw, text);
-    str = [NSString stringWithUTF8String:raw];
-    text_input.text = str;
+    text_input.text = ToNSString(text);
 }
 
 void Window_CloseKeyboard(void) {
@@ -375,9 +426,9 @@ cc_result Window_EnterFullscreen(void) { return ERR_NOT_SUPPORTED; }
 cc_result Window_ExitFullscreen(void) { return ERR_NOT_SUPPORTED; }
 int Window_IsObscured(void) { return 0; }
 
-void Window_EnableRawMouse(void)  { }
+void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
 void Window_UpdateRawMouse(void)  { }
-void Window_DisableRawMouse(void) { }
+void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
     // TODO doesn't work
@@ -526,12 +577,10 @@ static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
 
 cc_result Process_StartOpen(const cc_string* args) {
-    char raw[NATIVE_STR_LEN];
     NSURL* url;
     NSString* str;
     
-    Platform_EncodeUtf8(raw, args);
-    str = [NSString stringWithUTF8String:raw];
+    str = ToNSString(args);
     url = [[NSURL alloc] initWithString:str];
     [UIApplication.sharedApplication openURL:url];
     return 0;
@@ -574,13 +623,9 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 void Platform_ShareScreenshot(const cc_string* filename) {
     cc_string path; char pathBuffer[FILENAME_SIZE];
     String_InitArray(path, pathBuffer);
-    char tmp[NATIVE_STR_LEN];
-    
     String_Format1(&path, "screenshots/%s", filename);
-    Platform_EncodeUtf8(tmp, &path);
     
-    // TODO unify with ToNSString
-    NSString* pathStr = [NSString stringWithUTF8String:tmp];
+    NSString* pathStr = ToNSString(&path);
     UIImage* img = [UIImage imageWithContentsOfFile:pathStr];
     
     // https://stackoverflow.com/questions/31955140/sharing-image-using-uiactivityviewcontroller
@@ -603,61 +648,6 @@ void GetDeviceUUID(cc_string* str) {
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
-static UIColor* ToUIColor(BitmapCol color, float A) {
-    float R = BitmapCol_R(color) / 255.0f;
-    float G = BitmapCol_G(color) / 255.0f;
-    float B = BitmapCol_B(color) / 255.0f;
-    return [UIColor colorWithRed:R green:G blue:B alpha:A];
-}
-
-static NSString* ToNSString(const cc_string* text) {
-    char raw[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(raw, text);
-    return [NSString stringWithUTF8String:raw];
-}
-
-static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
-    cc_string left  = *text, part;
-    BitmapCol color = Drawer2D.Colors['f'];
-    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
-    
-    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
-    {
-        char raw[NATIVE_STR_LEN];
-        Platform_EncodeUtf8(raw, &part);
-        NSString* bit = [NSString stringWithUTF8String:raw];
-        
-        NSDictionary* attrs =
-        @{
-          //NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
-        };
-        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
-        [str appendAttributedString:attr_bit];
-    }
-    return str;
-}
-
-static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
-// TODO probably a better way..
-static UIImage* ToUIImage(struct Bitmap* bmp) {
-    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
-    CGDataProviderRef provider;
-    CGImageRef image;
-
-    provider = CGDataProviderCreateWithData(NULL, bmp->scan0,
-                                            Bitmap_DataSize(bmp->width, bmp->height), FreeContents);
-    image    = CGImageCreate(bmp->width, bmp->height, 8, 32, bmp->width * 4, colorspace,
-                             kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
-    
-    UIImage* img = [UIImage imageWithCGImage:image];
-    
-    CGImageRelease(image);
-    CGDataProviderRelease(provider);
-    CGColorSpaceRelease(colorspace);
-    return img;
-}
-
 static struct LWidget* FindWidgetForView(id obj) {
     struct LScreen* s = Launcher_Active;
     for (int i = 0; i < s->numWidgets; i++)
