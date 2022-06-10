@@ -766,7 +766,7 @@ static struct ChatScreen {
 	struct Texture statusTextures[CHAT_MAX_STATUS];
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
-	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
+	struct Texture chatTextures[GUI_MAX_CHATLINES];
 } ChatScreen_Instance;
 #define CH_EXTENT 16
 
@@ -1012,7 +1012,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_LogTime[logIdx] + 10 >= now) Texture_Render(&tex);
+			if (Chat_GetLogTime(logIdx) + 10 >= now) Texture_Render(&tex);
 		}
 	}
 
@@ -1245,7 +1245,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 		i = TextGroupWidget_GetSelected(&s->chat, &text, x, y);
 		if (!Utils_IsUrlPrefix(&text)) return false;
 
-		if (Chat_LogTime[s->chatIndex + i] + 10 < Game.Time) return false;
+		if (Chat_GetLogTime(s->chatIndex + i) + 10 < Game.Time) return false;
 		UrlWarningOverlay_Show(&text); return TOUCH_TYPE_GUI;
 	}
 

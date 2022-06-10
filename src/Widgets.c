@@ -2060,8 +2060,8 @@ static void TextGroupWidget_Output(struct Portion bit, int lineBeg, int lineEnd,
 
 static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int target, struct Portion* portions) {
 	struct Portion* start = portions;	
-	int begs[TEXTGROUPWIDGET_MAX_LINES];
-	int ends[TEXTGROUPWIDGET_MAX_LINES];
+	int begs[GUI_MAX_CHATLINES];
+	int ends[GUI_MAX_CHATLINES];
 	struct Portion bit;
 	cc_string line;
 	int nextStart, i, total = 0, end;
@@ -2112,7 +2112,7 @@ static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 }
 
 static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text, int index, int mouseX) {
-	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
+	char chars[GUI_MAX_CHATLINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
 	struct DrawTextArgs args = { 0 };
@@ -2176,7 +2176,7 @@ static cc_bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
 }
 
 static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Texture* tex, struct DrawTextArgs* args, int index, const cc_string* text) {
-	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
+	char chars[GUI_MAX_CHATLINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
 	int width, height;

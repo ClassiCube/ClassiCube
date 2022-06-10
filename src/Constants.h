@@ -48,6 +48,8 @@
 #define GAME_DEF_TICKS (1.0 / 20)
 #define GAME_NET_TICKS (1.0 / 60)
 
+#define GUI_MAX_CHATLINES 30
+
 enum FACE_CONSTS {
 	FACE_XMIN = 0, /* Face X = 0 */
 	FACE_XMAX = 1, /* Face X = 1 */

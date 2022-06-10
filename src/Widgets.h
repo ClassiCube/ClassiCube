@@ -229,7 +229,6 @@ CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontD
 
 /* Retrieves the text for the i'th line in the group */
 typedef cc_string (*TextGroupWidget_Get)(int i);
-#define TEXTGROUPWIDGET_MAX_LINES 30
 #define TEXTGROUPWIDGET_LEN (STRING_SIZE + (STRING_SIZE / 2))
 
 /* A group of text labels. */
@@ -238,7 +237,7 @@ struct TextGroupWidget {
 	int lines, defaultHeight;
 	struct FontDesc* font;
 	/* Whether a line has zero height when that line has no text in it. */
-	cc_bool collapsible[TEXTGROUPWIDGET_MAX_LINES];
+	cc_bool collapsible[GUI_MAX_CHATLINES];
 	cc_bool underlineUrls;
 	struct Texture* textures;
 	TextGroupWidget_Get GetLine;

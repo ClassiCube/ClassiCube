@@ -45,27 +45,10 @@ cc_bool Chat_Logging;
 /*########################################################################################################################*
 *-------------------------------------------------------Chat logging------------------------------------------------------*
 *#########################################################################################################################*/
-#define CHAT_LOGTIMES_DEF_ELEMS 256
-static double defaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-static int logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS, logTimesCount;
-double* Chat_LogTime = defaultLogTimes;
-
-static void AppendChatLogTime(void) {
-	double now = Game.Time;
-
-	if (logTimesCount == logTimesCapacity) {
-		Utils_Resize((void**)&Chat_LogTime, &logTimesCapacity,
-					sizeof(double), CHAT_LOGTIMES_DEF_ELEMS, 512);
-	}
-	Chat_LogTime[logTimesCount++] = now;
-}
+double Chat_RecentLogTimes[CHATLOG_TIME_MASK + 1];
 
 static void ClearChatLogs(void) {
-	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);
-	Chat_LogTime     = defaultLogTimes;
-	logTimesCount    = 0;
-	logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS;
-
+	Mem_Set(Chat_RecentLogTimes, 0, sizeof(Chat_RecentLogTimes));
 	StringsBuffer_Clear(&Chat_Log);
 }
 
@@ -236,8 +219,8 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 			Chat_AddRaw("&cChat log cleared as it hit 8.3 million character limit");
 		}
 
+		Chat_GetLogTime(Chat_Log.count) = Game.Time;
 		StringsBuffer_Add(&Chat_Log, text);
-		AppendChatLogTime();
 		AppendChatLog(text);
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
