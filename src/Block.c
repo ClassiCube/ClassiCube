@@ -484,10 +484,6 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 	Blocks.Hidden[(block * BLOCK_COUNT) + other] = f;
 }
 
-cc_bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
-	return (Blocks.Hidden[(block * BLOCK_COUNT) + other] & (1 << face)) != 0;
-}
-
 void Block_UpdateAllCulling(void) {
 	int block, neighbour;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {

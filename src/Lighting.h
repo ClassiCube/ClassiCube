@@ -9,6 +9,8 @@ struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
 
 CC_VAR extern struct _Lighting {
+	void (*HandleReset)(void);
+	void (*HandleNewMapLoaded)(void);
 	/* Equivalent to (but far more optimised form of)
 	* for x = startX; x < startX + 18; x++
 	*   for z = startZ; z < startZ + 18; z++

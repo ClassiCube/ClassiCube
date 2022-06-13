@@ -347,6 +347,7 @@ static void Heightmap_FinishCoverage(int x1, int z1, int xCount, int zCount) {
 	}
 }
 
+
 static void ClassicLighting_LightHint(int startX, int startZ) {
 	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
@@ -359,8 +360,21 @@ static void ClassicLighting_LightHint(int startX, int startZ) {
 	}
 }
 
+static void ClassicLighting_OnReset(void) {
+	Mem_Free(classic_heightmap);
+	classic_heightmap = NULL;
+}
+
+static void ClassicLighting_OnNewMapLoaded(void) {
+	classic_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
+	if (classic_heightmap) {
+		ClassicLighting_Refresh();
+	} else {
+		World_OutOfMemory();
+	}
+}
+
 static void ClassicLighting_SetActive(void) {
-	Lighting.LightHint      = ClassicLighting_LightHint;
 	Lighting.OnBlockChanged = ClassicLighting_OnBlockChanged;
 	Lighting.Refresh        = ClassicLighting_Refresh;
 	Lighting.IsLit          = ClassicLighting_IsLit;
@@ -373,6 +387,10 @@ static void ClassicLighting_SetActive(void) {
 	Lighting.Color_YMin_Fast   = ClassicLighting_Color_YMin_Fast;
 	Lighting.Color_XSide_Fast  = ClassicLighting_Color_XSide_Fast;
 	Lighting.Color_ZSide_Fast  = ClassicLighting_Color_ZSide_Fast;
+
+	Lighting.HandleReset = ClassicLighting_OnReset;
+	Lighting.HandleNewMapLoaded = ClassicLighting_OnNewMapLoaded;
+	Lighting.LightHint   = ClassicLighting_LightHint;
 }
 
 
@@ -380,23 +398,9 @@ static void ClassicLighting_SetActive(void) {
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
 
-static void OnInit(void) {
-	ClassicLighting_SetActive();
-}
-
-static void OnReset(void) {
-	Mem_Free(classic_heightmap);
-	classic_heightmap = NULL;
-}
-
-static void OnNewMapLoaded(void) {
-	classic_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
-	if (classic_heightmap) {
-		ClassicLighting_Refresh();
-	} else {
-		World_OutOfMemory();
-	}
-}
+static void OnInit(void)  { ClassicLighting_SetActive(); }
+static void OnReset(void) { Lighting.HandleReset(); }
+static void OnNewMapLoaded(void) { Lighting.HandleNewMapLoaded(); }
 
 struct IGameComponent Lighting_Component = {
 	OnInit,  /* Init  */
