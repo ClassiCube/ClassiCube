@@ -1303,7 +1303,8 @@ NBT_END,
 };
 
 static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
-	cc_uint8 buffer[1024], nameBuffer[10];
+	cc_uint8 buffer[1024];
+	char nameBuffer[10];
 	cc_uint8* cur;
 	cc_string name;
 	cc_bool sprite = Blocks.Draw[b] == DRAW_SPRITE;

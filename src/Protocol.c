@@ -507,8 +507,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	struct MapState* m;
 	int usedLength;
 	float progress;
-	cc_uint32 left, read;
-	cc_uint8 value;
+	cc_uint32 read;
 	cc_result res;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
@@ -523,7 +522,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 #ifndef EXTENDED_BLOCKS
 	m = &map1;
 #else
-	/* progress in original classic, but we ignore it */
+	/* progress byte in original classic, but we ignore it */
 	if (cpe_extBlocks && data[1026]) {
 		m = &map2;
 	} else {
@@ -1634,7 +1633,7 @@ static void CPE_Tick(void) {
 static void BlockDefs_OnBlockUpdated(BlockID block, cc_bool didBlockLight) {
 	if (!World.Loaded) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
-	if (Blocks.BlocksLight[block] != didBlockLight) Lighting_Refresh();
+	if (Blocks.BlocksLight[block] != didBlockLight) Lighting.Refresh();
 }
 
 static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
