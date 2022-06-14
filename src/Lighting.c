@@ -360,12 +360,12 @@ static void ClassicLighting_LightHint(int startX, int startZ) {
 	}
 }
 
-static void ClassicLighting_OnReset(void) {
+static void ClassicLighting_FreeState(void) {
 	Mem_Free(classic_heightmap);
 	classic_heightmap = NULL;
 }
 
-static void ClassicLighting_OnNewMapLoaded(void) {
+static void ClassicLighting_AllocState(void) {
 	classic_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
 	if (classic_heightmap) {
 		ClassicLighting_Refresh();
@@ -388,9 +388,9 @@ static void ClassicLighting_SetActive(void) {
 	Lighting.Color_XSide_Fast  = ClassicLighting_Color_XSide_Fast;
 	Lighting.Color_ZSide_Fast  = ClassicLighting_Color_ZSide_Fast;
 
-	Lighting.HandleReset = ClassicLighting_OnReset;
-	Lighting.HandleNewMapLoaded = ClassicLighting_OnNewMapLoaded;
-	Lighting.LightHint   = ClassicLighting_LightHint;
+	Lighting.FreeState  = ClassicLighting_FreeState;
+	Lighting.AllocState = ClassicLighting_AllocState;
+	Lighting.LightHint  = ClassicLighting_LightHint;
 }
 
 
@@ -398,9 +398,9 @@ static void ClassicLighting_SetActive(void) {
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
 
-static void OnInit(void)  { ClassicLighting_SetActive(); }
-static void OnReset(void) { Lighting.HandleReset(); }
-static void OnNewMapLoaded(void) { Lighting.HandleNewMapLoaded(); }
+static void OnInit(void)         { ClassicLighting_SetActive(); }
+static void OnReset(void)        { Lighting.FreeState(); }
+static void OnNewMapLoaded(void) { Lighting.AllocState(); }
 
 struct IGameComponent Lighting_Component = {
 	OnInit,  /* Init  */

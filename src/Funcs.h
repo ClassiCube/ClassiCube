@@ -1,9 +1,10 @@
 #ifndef CC_FUNCS_H
 #define CC_FUNCS_H
 #include "Core.h"
-/* Simple function implementations
-   NOTE: doing min(x++, y) etc will increment x twice!
-  Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Simple function implementations
+  NOTE: doing min(x++, y) etc will increment x twice!
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 #define min(x, y) ((x) < (y) ? (x) : (y))

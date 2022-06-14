@@ -1,16 +1,22 @@
 #ifndef CC_WORLDLIGHTING_H
 #define CC_WORLDLIGHTING_H
 #include "PackedCol.h"
-/* Manages lighting of blocks in the world
-ClassicLighting: Uses a simple heightmap, where each block is either in sun or shadow.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/*
+Abstracts lighting of blocks in the world
+  Built-in lighting engines:
+  - ClassicLighting: Uses a simple heightmap, where each block is either in sun or shadow
+
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
 
 CC_VAR extern struct _Lighting {
-	void (*HandleReset)(void);
-	void (*HandleNewMapLoaded)(void);
+	/* Releases/Frees the per-level lighting state */
+	void (*FreeState)(void);
+	/* Allocates the per-level lighting state */
+	/*  (called after map has been fully loaded) */
+	void (*AllocState)(void);
 	/* Equivalent to (but far more optimised form of)
 	* for x = startX; x < startX + 18; x++
 	*   for z = startZ; z < startZ + 18; z++
@@ -20,6 +26,8 @@ CC_VAR extern struct _Lighting {
 	/* Called when a block is changed to update internal lighting state. */
 	/* NOTE: Implementations ***MUST*** mark all chunks affected by this lighting change as needing to be refreshed. */
 	void (*OnBlockChanged)(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
+	/* Invalidates/Resets lighting state for all of the blocks in the world */
+	/*  (e.g. because a block changed whether it is full bright or not) */
 	void (*Refresh)(void);
 
 	/* Returns whether the block at the given coordinates is fully in sunlight. */

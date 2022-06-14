@@ -1,11 +1,12 @@
 #ifndef CC_PHYSICS_H
 #define CC_PHYSICS_H
 #include "Vectors.h"
-/* Contains:
+/* 
+Provides various physics related structs and methods such as:
    - An axis aligned bounding box, and various methods related to them.
    - Various methods for intersecting geometry.
-   - Calculates all possible blocks that a moving entity can intersect with.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   - Calculates all possible blocks that a moving entity can intersect with
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct Entity;
 

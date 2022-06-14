@@ -1,9 +1,9 @@
 #ifndef CC_INPUT_H
 #define CC_INPUT_H
 #include "Core.h"
-/* Manages keyboard, mouse, and touch state.
-   Raises events when keys are pressed etc, and implements base handlers for them.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Manages input state, raising input related events, and base input handling
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct StringsBuffer;

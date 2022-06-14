@@ -1,8 +1,9 @@
 #ifndef CC_LOGGER_H
 #define CC_LOGGER_H
 #include "Core.h"
-/* Support methods for logging errors.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Logs warnings/errors and also abstracts platform specific logging for fatal errors
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 typedef cc_bool (*Logger_DescribeError)(cc_result res, cc_string* dst);

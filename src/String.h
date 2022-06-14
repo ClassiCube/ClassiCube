@@ -1,11 +1,12 @@
 #ifndef CC_STRING_H
 #define CC_STRING_H
 #include "Core.h"
-/* Implements operations for a string.
-   Also implements conversions betweens strings and numbers.
-   Also implements converting code page 437 indices to/from unicode.
-   Also implements wrapping a single line of text into multiple lines.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Provides various string related operations
+   Also provides conversions betweens strings and numbers
+   Also provides converting code page 437 indices to/from unicode
+   Also provides wrapping a single line of text into multiple lines
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 #define STRING_INT_CHARS 24

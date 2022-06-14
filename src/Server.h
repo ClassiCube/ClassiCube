@@ -1,8 +1,9 @@
 #ifndef CC_SERVERCONNECTION_H
 #define CC_SERVERCONNECTION_H
 #include "Vectors.h"
-/* Represents a connection to either a multiplayer or an internal singleplayer server.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Represents a connection to either a multiplayer or an internal singleplayer server
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;
