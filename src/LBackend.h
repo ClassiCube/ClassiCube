@@ -1,8 +1,9 @@
 #ifndef CC_LBACKEND_H
 #define CC_LBACKEND_H
 #include "Core.h"
-/* Implements the gui drawing backend for the Launcher
-	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Abstracts the gui drawing backend for the Launcher
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct Bitmap;
 struct LScreen;

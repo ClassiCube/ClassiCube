@@ -683,7 +683,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
 
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cRedBits   = mode->R;
+	pfd.cRedBits   = mode->R; // TODO unnecessary??
 	pfd.cGreenBits = mode->G;
 	pfd.cBlueBits  = mode->B;
 	pfd.cAlphaBits = mode->A;

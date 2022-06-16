@@ -2,9 +2,9 @@
 #define CC_GFXAPI_H
 #include "Vectors.h"
 #include "PackedCol.h"
-
-/* Abstracts a 3D graphics rendering API.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Abstracts a 3D graphics rendering API
+Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct Bitmap;
 struct Stream;

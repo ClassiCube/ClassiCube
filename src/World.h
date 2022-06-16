@@ -2,9 +2,9 @@
 #define CC_WORLD_H
 #include "Vectors.h"
 #include "PackedCol.h"
-/* Represents a fixed size 3D array of blocks.
-   Also contains associated environment metadata.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Represents a fixed size 3D array of blocks and associated metadata
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct AABB;
 extern struct IGameComponent World_Component;

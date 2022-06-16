@@ -153,7 +153,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #ifndef CC_BUILD_MANUAL
 #if defined _WIN32
 #define CC_BUILD_WIN
-#define CC_BUILD_D3D9
+#define CC_BUILD_GL
 #define CC_BUILD_WINGUI
 #define CC_BUILD_WININET
 #define CC_BUILD_WINMM

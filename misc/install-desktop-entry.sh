@@ -14,6 +14,7 @@ else
 fi
 
 # create ClassiCube desktop entry
+echo 'Creating ClassiCube.desktop..'
 echo "[Desktop Entry]" >> $DESKTOP_FILE
 echo "Type=Application" >> $DESKTOP_FILE
 echo "Comment=Minecraft Classic inspired sandbox game" >> $DESKTOP_FILE
@@ -24,6 +25,7 @@ echo "Terminal=false" >> $DESKTOP_FILE
 echo "Categories=Game;" >> $DESKTOP_FILE
 chmod +x $DESKTOP_FILE
 
+echo 'Installing ClassiCube.desktop..'
 # install ClassiCube desktop entry into the system
-desktop-file-install --dir=/usr/share/applications ClassiCube.desktop
-update-desktop-database /usr/share/applications
+sudo desktop-file-install --dir=/usr/share/applications ClassiCube.desktop
+sudo update-desktop-database /usr/share/applications
