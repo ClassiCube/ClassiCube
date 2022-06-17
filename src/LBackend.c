@@ -74,9 +74,9 @@ void LBackend_Init(void) {
 	flagXOffset  = Display_ScaleX(2);
 	flagYOffset  = Display_ScaleY(6);
 
-	Drawer2D_MakeFont(&titleFont, 16, FONT_FLAGS_BOLD);
-	Drawer2D_MakeFont(&textFont,  14, FONT_FLAGS_NONE);
-	Drawer2D_MakeFont(&hintFont,  12, FONT_FLAGS_NONE);
+	Font_Make(&titleFont, 16, FONT_FLAGS_BOLD);
+	Font_Make(&textFont,  14, FONT_FLAGS_NONE);
+	Font_Make(&hintFont,  12, FONT_FLAGS_NONE);
 	HookEvents();
 }
 
@@ -831,14 +831,14 @@ void LBackend_SliderDraw(struct LSlider* w) {
 *#########################################################################################################################*/
 void LBackend_TableInit(struct LTable* w) { 
 	if (rowFont.handle) return;
-	Drawer2D_MakeFont(&rowFont, 11, FONT_FLAGS_NONE);
+	Font_Make(&rowFont, 11, FONT_FLAGS_NONE);
 }
 void LBackend_TableUpdate(struct LTable* w) { }
 
 void LBackend_TableReposition(struct LTable* w) {
 	int rowsHeight;
-	w->hdrHeight = Drawer2D_FontHeight(&textFont, true) + hdrYPadding;
-	w->rowHeight = Drawer2D_FontHeight(&rowFont,  true) + rowYPadding;
+	w->hdrHeight = Font_CalcHeight(&textFont, true) + hdrYPadding;
+	w->rowHeight = Font_CalcHeight(&rowFont,  true) + rowYPadding;
 
 	w->rowsBegY = w->y + w->hdrHeight + gridlineHeight;
 	w->rowsEndY = w->y + w->height;

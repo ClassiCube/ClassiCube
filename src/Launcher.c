@@ -390,7 +390,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 
 		if (res) {
 			Logger_SysWarn(res, "decoding default.png"); return res;
-		} else if (Drawer2D_SetFontBitmap(&bmp)) {
+		} else if (Font_SetBitmapAtlas(&bmp)) {
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
 			hasBitmappedFont = true;
 		} else {
@@ -503,7 +503,7 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* b
 
 void Launcher_MakeLogoFont(struct FontDesc* font) {
 	Drawer2D.BitmappedText = Launcher_BitmappedText();
-	Drawer2D_MakeFont(font, 32, FONT_FLAGS_NONE);
+	Font_Make(font, 32, FONT_FLAGS_NONE);
 	Drawer2D.BitmappedText = false;
 }
 #endif

@@ -81,7 +81,7 @@ void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc
 
 	/* Give text widget default height when text is empty */
 	if (!w->tex.Height) {
-		w->tex.Height = Drawer2D_FontHeight(font, true);
+		w->tex.Height = Font_CalcHeight(font, true);
 	}
 
 	w->width = w->tex.Width; w->height = w->tex.Height;
@@ -237,7 +237,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct Font
 
 	/* Give button default height when text is empty */
 	if (!w->tex.Height) {
-		w->tex.Height = Drawer2D_FontHeight(font, true);
+		w->tex.Height = Font_CalcHeight(font, true);
 	}
 	Widget_Layout(w);
 }
@@ -1649,7 +1649,7 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 
 void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font) {
 	w->base.font       = font;
-	w->base.lineHeight = Drawer2D_FontHeight(font, false);
+	w->base.lineHeight = Font_CalcHeight(font, false);
 	InputWidget_UpdateText(&w->base);
 }
 
@@ -2267,7 +2267,7 @@ void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
 void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 	int i, height;
 	
-	height = Drawer2D_FontHeight(font, true);
+	height = Font_CalcHeight(font, true);
 	Drawer2D_ReducePadding_Height(&height, font->size, 3);
 	w->defaultHeight = height;
 

@@ -54,8 +54,8 @@ float Gui_GetChatScale(void) {
 	return Gui_Scale(GetWindowScale() * Gui.RawChatScale);
 }
 
-void Gui_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_FLAGS_BOLD); }
-void Gui_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_FLAGS_NONE); }
+void Gui_MakeTitleFont(struct FontDesc* font) { Font_Make(font, 16, FONT_FLAGS_BOLD); }
+void Gui_MakeBodyFont(struct FontDesc* font)  { Font_Make(font, 16, FONT_FLAGS_NONE); }
 
 int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen) {
 	if (anchor == ANCHOR_MIN) return offset;

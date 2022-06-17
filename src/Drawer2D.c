@@ -49,14 +49,14 @@ static cc_string font_candidates[12] = {
 	String_FromConst("Droid Sans") /* for old Android versions */
 };
 
-void Drawer2D_SetDefaultFont(const cc_string* fontName) {
+void Font_SetDefault(const cc_string* fontName) {
 	String_Copy(&font_candidates[0], fontName);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
 /* adjusts height to be closer to system fonts */
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
-void Drawer2D_MakeBitmappedFont(struct FontDesc* desc, int size, int flags) {
+void Font_MakeBitmapped(struct FontDesc* desc, int size, int flags) {
 	/* TODO: Scale X and Y independently */
 	size = Display_ScaleY(size);
 	desc->handle = NULL;
@@ -65,11 +65,11 @@ void Drawer2D_MakeBitmappedFont(struct FontDesc* desc, int size, int flags) {
 	desc->height = Drawer2D_AdjHeight(size);
 }
 
-void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
+void Font_Make(struct FontDesc* desc, int size, int flags) {
 	if (Drawer2D.BitmappedText) {
-		Drawer2D_MakeBitmappedFont(desc, size, flags);
+		Font_MakeBitmapped(desc, size, flags);
 	} else {
-		Font_MakeDefault(desc, size, flags);
+		SysFont_MakeDefault(desc, size, flags);
 	}
 }
 
@@ -111,7 +111,7 @@ static void FreeFontBitmap(void) {
 	Mem_Free(fontBitmap.scan0);
 }
 
-cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
+cc_bool Font_SetBitmapAtlas(struct Bitmap* bmp) {
 	/* If not all of these cases are accounted for, end up overwriting memory after tileWidths */
 	if (bmp->width != bmp->height) {
 		static const cc_string msg = String_FromConst("&cWidth of default.png must equal its height");
@@ -588,10 +588,10 @@ int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 }
 
 int Drawer2D_TextHeight(struct DrawTextArgs* args) {
-	return Drawer2D_FontHeight(args->font, args->useShadow);
+	return Font_CalcHeight(args->font, args->useShadow);
 }
 
-int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow) {
+int Font_CalcHeight(const struct FontDesc* font, cc_bool useShadow) {
 	int height = font->height;
 	if (Font_IsBitmap(font)) {
 		if (useShadow) { height += Drawer2D_ShadowOffset(font->size); }
@@ -668,7 +668,7 @@ static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) 
 	if ((res = Png_Decode(&bmp, src))) {
 		Logger_SysWarn2(res, "decoding", name);
 		Mem_Free(bmp.scan0);
-	} else if (Drawer2D_SetFontBitmap(&bmp)) {
+	} else if (Font_SetBitmapAtlas(&bmp)) {
 		Event_RaiseVoid(&ChatEvents.FontChanged);
 	} else {
 		Mem_Free(bmp.scan0);
@@ -701,9 +701,9 @@ struct IGameComponent Drawer2D_Component = {
 *------------------------------------------------------System fonts-------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
-const cc_string* Font_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
+const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
 
-void Font_GetNames(struct StringsBuffer* buffer) {
+void SysFonts_GetNames(struct StringsBuffer* buffer) {
 	static const char* font_names[] = { 
 		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
 		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
@@ -717,7 +717,7 @@ void Font_GetNames(struct StringsBuffer* buffer) {
 	}
 }
 
-cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
 	desc->flags  = flags;
 	desc->height = Drawer2D_AdjHeight(size);
@@ -729,12 +729,12 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	return 0;
 }
 
-void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
 	cc_string str = font_candidates[0];
 	/* Fallback to arial */
 	if (!str.length) str = font_candidates[1];
 
-	Font_Make(desc, &str, size, flags); 
+	SysFont_Make(desc, &str, size, flags); 
 }
 
 void Font_Free(struct FontDesc* desc) {
@@ -1021,7 +1021,7 @@ void SysFonts_Register(const cc_string* path) {
 	}
 }
 
-const cc_string* Font_UNSAFE_GetDefault(void) {
+const cc_string* SysFonts_UNSAFE_GetDefault(void) {
 	cc_string* font, path;
 	int i;
 
@@ -1035,7 +1035,7 @@ const cc_string* Font_UNSAFE_GetDefault(void) {
 	return &String_Empty;
 }
 
-void Font_GetNames(struct StringsBuffer* buffer) {
+void SysFonts_GetNames(struct StringsBuffer* buffer) {
 	cc_string entry, name, path;
 	int i;
 	if (!font_list.count) SysFonts_Load();
@@ -1079,7 +1079,7 @@ cc_string Font_Lookup(const cc_string* fontName, int flags) {
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
-cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	struct SysFont* font;
 	cc_string value, path, index;
 	int faceIndex, dpiX, dpiY;
@@ -1114,7 +1114,7 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	return 0;
 }
 
-void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
 	cc_string* font;
 	cc_result res;
 	int i;
@@ -1122,7 +1122,7 @@ void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
 	for (i = 0; i < Array_Elems(font_candidates); i++) {
 		font = &font_candidates[i];
 		if (!font->length) continue;
-		res  = Font_Make(desc, &font_candidates[i], size, flags);
+		res  = SysFont_Make(desc, &font_candidates[i], size, flags);
 
 		if (res == ERR_INVALID_ARGUMENT) {
 			/* Fon't doesn't exist in list, skip over it */

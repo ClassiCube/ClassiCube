@@ -8,7 +8,7 @@
 
 enum FONT_FLAGS { FONT_FLAGS_NONE = 0x00, FONT_FLAGS_BOLD = 0x01, FONT_FLAGS_UNDERLINE = 0x02, FONT_FLAGS_PADDING = 0x04 };
 struct FontDesc { void* handle; cc_uint16 size, flags; int height; };
-struct DrawTextArgs { cc_string text; struct FontDesc* font; cc_bool useShadow; };
+struct DrawTextArgs { cc_string textm; struct FontDesc* font; cc_bool useShadow; };
 struct Texture;
 struct IGameComponent;
 struct StringsBuffer;
@@ -27,13 +27,6 @@ CC_VAR extern struct _Drawer2DData {
 #define Drawer2D_GetColor(c) Drawer2D.Colors[(cc_uint8)c]
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
-
-/* Sets default system font name and raises ChatEvents.FontChanged */
-void Drawer2D_SetDefaultFont(const cc_string* fontName);
-/* Initialises the given font for drawing bitmapped text using default.png */
-void Drawer2D_MakeBitmappedFont(struct FontDesc* desc, int size, int flags);
-/* Initialises the given font. Uses Drawer2D_MakeBitmappedFont or Font_MakeDefault depending on Drawer2D_BitmappedText. */
-CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags);
 
 /* Clamps the given rectangle to lie inside the bitmap */
 /* Returns false if rectangle is completely outside bitmap's rectangle */
@@ -67,13 +60,11 @@ CC_API void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int
 /* Returns how wide the given text would be when drawn */
 CC_API int Drawer2D_TextWidth(struct DrawTextArgs* args);
 /* Returns how tall the given text would be when drawn */
-/*  NOTE: Height returned only depends on the font. (see Drawer2D_FontHeight) */
+/*  NOTE: Height returned only depends on the font. (see Font_CalcHeight) */
 CC_API int Drawer2D_TextHeight(struct DrawTextArgs* args);
 /* Similar to Drawer2D_DrawText, but trims the text with trailing ".." if wider than maxWidth */
 void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args, 
 								int x, int y, int maxWidth);
-/* Returns the line height for drawing any character in the font. */
-int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow);
 
 /* Creates a texture consisting only of the given text drawn onto it */
 /*  NOTE: The returned texture is always padded up to nearest power of two dimensions */
@@ -97,27 +88,37 @@ char Drawer2D_LastColor(const cc_string* text, int start);
 cc_bool Drawer2D_IsWhiteColor(char c);
 cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, BitmapCol* color);
 
+/* Allocates a new instance of the default font using the given size and flags
+/*  Uses Font_MakeBitmapped or SysFont_MakeDefault depending on Drawer2D_BitmappedText */
+CC_API void Font_Make(struct FontDesc* desc, int size, int flags);
+/* Frees an allocated font */
+CC_API void Font_Free(struct FontDesc* desc);
+/* Sets default system font name and raises ChatEvents.FontChanged */
+void Font_SetDefault(const cc_string* fontName);
+/* Returns the line height for drawing text using the given font */
+int Font_CalcHeight(const struct FontDesc* font, cc_bool useShadow);
+
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale);
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
 /* Sets the bitmap used for drawing bitmapped fonts. (i.e. default.png) */
-/* The bitmap must be square and consist of a 16x16 tile layout. */
-cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp);
-
-/* Gets the name of the default system font used */
-const cc_string* Font_UNSAFE_GetDefault(void);
-/* Gets the list of all supported system font names on this platform */
-CC_API void Font_GetNames(struct StringsBuffer* buffer);
-
+/* The bitmap must be square and consist of a 16x16 tile layout */
+cc_bool Font_SetBitmapAtlas(struct Bitmap* bmp);
 /* Sets padding for a bitmapped font */
 void Font_SetPadding(struct FontDesc* desc, int amount);
+/* Initialises the given font for drawing bitmapped text using default.png */
+void Font_MakeBitmapped(struct FontDesc* desc, int size, int flags);
+
 /* Allocates a new system font from the given arguments */
-cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
 /* Allocates a new system font from the given arguments using default system font */
-/*  NOTE: Unlike Font_Make, this may fallback onto other system fonts (e.g. Arial, Roboto, etc) */
-void Font_MakeDefault(struct FontDesc* desc, int size, int flags);
-/* Frees an allocated font */
-CC_API void Font_Free(struct FontDesc* desc);
-/* Attempts to decode one or fonts from the given file */
+/*  NOTE: Unlike SysFont_Make, this may fallback onto other system fonts (e.g. Arial, Roboto, etc) */
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags);
+
+/* Gets the name of the default system font used */
+const cc_string* SysFonts_UNSAFE_GetDefault(void);
+/* Gets the list of all supported system font names on this platform */
+CC_API void SysFonts_GetNames(struct StringsBuffer* buffer);
+/* Attempts to decode one or more fonts from the given file */
 /*  NOTE: If this file has been decoded before (fontscache.txt), does nothing */
 void SysFonts_Register(const cc_string* path);
 #endif
