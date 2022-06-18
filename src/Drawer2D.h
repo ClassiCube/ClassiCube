@@ -9,6 +9,7 @@
 enum FONT_FLAGS { FONT_FLAGS_NONE = 0x00, FONT_FLAGS_BOLD = 0x01, FONT_FLAGS_UNDERLINE = 0x02, FONT_FLAGS_PADDING = 0x04 };
 struct FontDesc { void* handle; cc_uint16 size, flags; int height; };
 struct DrawTextArgs { cc_string text; struct FontDesc* font; cc_bool useShadow; };
+struct Context2D { struct Bitmap bmp; int width, height; void* meta; };
 struct Texture;
 struct IGameComponent;
 struct StringsBuffer;
@@ -32,6 +33,22 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 /* Returns false if rectangle is completely outside bitmap's rectangle */
 cc_bool Drawer2D_Clamp(struct Bitmap* bmp, int* x, int* y, int* width, int* height);
 
+/* Allocates a new context for 2D drawing */
+/*  Note: Allocates a power-of-2 sized backing bitmap equal to or greater than the given size */
+CC_API void Context2D_Alloc(struct Context2D* ctx, int width, int height);
+/* Frees/Releases a previously allocatedcontext for 2D drawing */
+CC_API void Context2D_Free(struct Context2D* ctx);
+/* Creates a texture consisting of the pixels from the bitmap underlying the given 2D context */
+CC_API void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx);
+
+/* Draws text using the given font at the given coordinates */
+CC_API void Context2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
+/* Fills the given area using pixels from the source bitmap */
+CC_API void Context2D_DrawPixels(struct Bitmap* dst, int x, int y, struct Bitmap* src);
+/* Fills the area with the given color */
+CC_API void Context2D_Clear(struct Bitmap* bmp, BitmapCol color,
+							int x, int y, int width, int height);
+
 /* Fills the given area with a simple noisy pattern */
 /* Variation determines how 'visible/obvious' the noise is */
 CC_API void Gradient_Noise(struct Bitmap* bmp, BitmapCol color, int variation,
@@ -49,30 +66,18 @@ CC_API void Gradient_Blend(struct Bitmap* bmp, BitmapCol color, int blend,
 CC_API void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 						  int x, int y, int width, int height);
 
-/* Fills the given area using pixels from the source bitmap */
-CC_API void Drawer2D_BmpCopy(struct Bitmap* dst, int x, int y, struct Bitmap* src);
-/* Fills the area with the given color */
-CC_API void Drawer2D_Clear(struct Bitmap* bmp, BitmapCol color,
-							int x, int y, int width, int height);
-
-/* Draws text using the given font at the given coordinates */
-CC_API void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
 /* Returns how wide the given text would be when drawn */
 CC_API int Drawer2D_TextWidth(struct DrawTextArgs* args);
 /* Returns how tall the given text would be when drawn */
 /*  NOTE: Height returned only depends on the font. (see Font_CalcHeight) */
 CC_API int Drawer2D_TextHeight(struct DrawTextArgs* args);
-/* Similar to Drawer2D_DrawText, but trims the text with trailing ".." if wider than maxWidth */
+/* Similar to Context2D_DrawText, but trims the text with trailing ".." if wider than maxWidth */
 void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args, 
 								int x, int y, int maxWidth);
 
 /* Creates a texture consisting only of the given text drawn onto it */
 /*  NOTE: The returned texture is always padded up to nearest power of two dimensions */
 CC_API void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args);
-/* Creates a texture consisting of the pixels from the given bitmap */
-/*  NOTE: bmp must always have power of two dimensions */
-/* width/height specifies what region of the texture actually should be drawn */
-CC_API void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, int height);
 
 /* Returns whether the given color code is used/valid */
 /* NOTE: This can change if the server defines custom color codes */

@@ -1020,7 +1020,7 @@ static void CheckResourcesScreen_ResetArea(struct Bitmap* bmp, int x, int y, int
 
 static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
 	int x, y, width, height;
-	Drawer2D_Clear(bmp, RESOURCES_BACK_COLOR, 0, 0, bmp->width, bmp->height);
+	Context2D_Clear(bmp, RESOURCES_BACK_COLOR, 0, 0, bmp->width, bmp->height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 

@@ -496,9 +496,9 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* b
 	x = bmp->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	Drawer2D.Colors['f'] = BITMAPCOL_BLACK;
-	Drawer2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
+	Context2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
 	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
-	Drawer2D_DrawText(bmp, &args, x,                     0);
+	Context2D_DrawText(bmp, &args, x,                     0);
 }
 
 void Launcher_MakeLogoFont(struct FontDesc* font) {

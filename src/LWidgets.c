@@ -61,16 +61,16 @@ static void LButton_DrawBorder(struct Bitmap* bmp, int x, int y, int width, int 
 	int xoff = oneX;
 #endif
 
-	Drawer2D_Clear(bmp, backColor, 
+	Context2D_Clear(bmp, backColor, 
 					x + xoff,         y,
 					width - 2 * xoff, oneY);
-	Drawer2D_Clear(bmp, backColor,
+	Context2D_Clear(bmp, backColor,
 					x + xoff,         y + height - oneY,
 					width - 2 * xoff, oneY);
-	Drawer2D_Clear(bmp, backColor,
+	Context2D_Clear(bmp, backColor,
 					x,                y + oneY,
 					oneX,             height - twoY);
-	Drawer2D_Clear(bmp, backColor,
+	Context2D_Clear(bmp, backColor,
 					x + width - oneX, y + oneY,
 					oneX,             height - twoY);
 }
@@ -82,14 +82,14 @@ static void LButton_DrawHighlight(struct Bitmap* bmp, int x, int y, int width, i
 	if (Launcher_Theme.ClassicBackground) {
 		if (hovered) color = activeColor;
 
-		Drawer2D_Clear(bmp, color,
+		Context2D_Clear(bmp, color,
 						x + twoX,      y + oneY,
 						width - fourX, oneY);
-		Drawer2D_Clear(bmp, color,
+		Context2D_Clear(bmp, color,
 						x + oneX,      y + twoY,
 						oneX,          height - fourY);
 	} else if (!hovered) {
-		Drawer2D_Clear(bmp, color,
+		Context2D_Clear(bmp, color,
 						x + twoX,      y + oneY,
 						width - fourX, oneY);
 	}
@@ -460,7 +460,7 @@ void LSlider_SetProgress(struct LSlider* w, int progress) {
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
 	struct Flag* flag = Flags_Get(row);
 	if (!flag) return;
-	Drawer2D_BmpCopy(bmp, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
+	Context2D_DrawPixels(bmp, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
 }
 
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {

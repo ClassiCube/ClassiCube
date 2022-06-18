@@ -27,22 +27,6 @@ void Bitmap_TryAllocate(struct Bitmap* bmp, int width, int height) {
 	bmp->scan0 = (BitmapCol*)Mem_TryAlloc(width * height, 4);
 }
 
-void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, int width, int height) {
-	width  = Math_NextPowOf2(width);
-	height = Math_NextPowOf2(height);
-
-	bmp->width = width; bmp->height = height;
-	bmp->scan0 = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
-}
-
-void Bitmap_TryAllocateClearedPow2(struct Bitmap* bmp, int width, int height) {
-	width  = Math_NextPowOf2(width);
-	height = Math_NextPowOf2(height);
-
-	bmp->width = width; bmp->height = height;
-	bmp->scan0 = (BitmapCol*)Mem_TryAllocCleared(width * height, 4);
-}
-
 void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src, 
 					int srcX, int srcY, int srcWidth, int srcHeight) {
 	BitmapCol* dstRow;

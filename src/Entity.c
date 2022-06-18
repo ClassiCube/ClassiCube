@@ -231,7 +231,7 @@ static void MakeNameTexture(struct Entity* e) {
 
 	struct DrawTextArgs args;
 	struct FontDesc font;
-	struct Bitmap bmp;
+	struct Context2D ctx;
 	int width, height;
 	cc_string name;
 
@@ -252,21 +252,21 @@ static void MakeNameTexture(struct Entity* e) {
 		width  += NAME_OFFSET; 
 		height = Drawer2D_TextHeight(&args) + NAME_OFFSET;
 
-		Bitmap_AllocateClearedPow2(&bmp, width, height);
+		Context2D_Alloc(&ctx, width, height);
 		{
 			origWhiteColor = Drawer2D.Colors['f'];
 
 			Drawer2D.Colors['f'] = shadowColor;
 			Drawer2D_WithoutColors(&colorlessName, &name);
 			args.text = colorlessName;
-			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
+			Context2D_DrawText(&ctx, &args, NAME_OFFSET, NAME_OFFSET);
 
 			Drawer2D.Colors['f'] = origWhiteColor;
 			args.text = name;
-			Drawer2D_DrawText(&bmp, &args, 0, 0);
+			Context2D_DrawText(&ctx, &args, 0, 0);
 		}
-		Drawer2D_MakeTexture(&e->NameTex, &bmp, width, height);
-		Mem_Free(bmp.scan0);
+		Context2D_MakeTexture(&e->NameTex, &ctx);
+		Context2D_Free(&ctx);
 	}
 }
 

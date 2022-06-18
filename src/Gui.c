@@ -284,8 +284,8 @@ void Gui_RenderGui(double delta) {
 *#########################################################################################################################*/
 void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct FontDesc* font, const cc_string* prefix) {
 	struct DrawTextArgs args; 
+	struct Context2D ctx;
 	int width, height;
-	struct Bitmap bmp;
 	int i, charWidth;
 
 	Gfx_DeleteTexture(&atlas->tex.ID);
@@ -304,20 +304,20 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	}
 	height = Drawer2D_TextHeight(&args);
 
-	Bitmap_AllocateClearedPow2(&bmp, width, height);
+	Context2D_Alloc(&ctx, width, height);
 	{
 		args.text = *prefix;
-		Drawer2D_DrawText(&bmp, &args, 0, 0);	
+		Context2D_DrawText(&ctx, &args, 0, 0);
 
 		for (i = 0; i < chars->length; i++) {
 			args.text = String_UNSAFE_Substring(chars, i, 1);
-			Drawer2D_DrawText(&bmp, &args, atlas->offsets[i], 0);
+			Context2D_DrawText(&ctx, &args, atlas->offsets[i], 0);
 		}
-		Drawer2D_MakeTexture(&atlas->tex, &bmp, width, height);
+		Context2D_MakeTexture(&atlas->tex, &ctx);
 	}	
-	Mem_Free(bmp.scan0);
+	Context2D_Free(&ctx);
 
-	atlas->uScale = 1.0f / (float)bmp.width;
+	atlas->uScale = 1.0f / (float)ctx.bmp.width;
 	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
 	atlas->tex.Width = atlas->offset;	
 }
