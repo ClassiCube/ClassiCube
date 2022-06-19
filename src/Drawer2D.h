@@ -31,14 +31,16 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 
 /* Clamps the given rectangle to lie inside the bitmap */
 /* Returns false if rectangle is completely outside bitmap's rectangle */
-cc_bool Drawer2D_Clamp(struct Bitmap* bmp, int* x, int* y, int* width, int* height);
+cc_bool Drawer2D_Clamp(struct Context2D* ctx, int* x, int* y, int* width, int* height);
 
 /* Allocates a new context for 2D drawing */
 /*  Note: Allocates a power-of-2 sized backing bitmap equal to or greater than the given size */
 CC_API void Context2D_Alloc(struct Context2D* ctx, int width, int height);
+/* Allocates a new context for 2D drawing, using an existing bimap as backing bitmap */
+CC_API void Context2D_Wrap(struct Context2D* ctx, struct Bitmap* bmp);
 /* Frees/Releases a previously allocatedcontext for 2D drawing */
 CC_API void Context2D_Free(struct Context2D* ctx);
-/* Creates a texture consisting of the pixels from the bitmap underlying the given 2D context */
+/* Creates a texture consisting of the pixels from the backing bitmap of the given 2D context */
 CC_API void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx);
 
 /* Draws text using the given font at the given coordinates */
@@ -61,10 +63,6 @@ CC_API void Gradient_Vertical(struct Context2D* ctx, BitmapCol a, BitmapCol b,
 /*  Note that this only blends RGB, A is not blended */
 CC_API void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 						   int x, int y, int width, int height);
-/* Tints the given area, linearly interpolating from a to b */
-/*  Note that this only tints RGB, A is not tinted */
-CC_API void Gradient_Tint(struct Context2D* ctx, cc_uint8 tintA, cc_uint8 tintB,
-						  int x, int y, int width, int height);
 
 /* Returns how wide the given text would be when drawn */
 CC_API int Drawer2D_TextWidth(struct DrawTextArgs* args);

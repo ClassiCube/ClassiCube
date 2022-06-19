@@ -6,6 +6,7 @@
 */
 struct LScreen;
 struct FontDesc;
+struct Context2D;
 
 /* The screen/menu currently being shown */
 extern struct LScreen* Launcher_Active;

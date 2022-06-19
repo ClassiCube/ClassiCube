@@ -150,15 +150,15 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 /*########################################################################################################################*
 *---------------------------------------------------Drawing functions-----------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Drawer2D_Clamp(struct Bitmap* bmp, int* x, int* y, int* width, int* height) {
-	if (*x >= bmp->width || *y >= bmp->height) return false;
+cc_bool Drawer2D_Clamp(struct Context2D* ctx, int* x, int* y, int* width, int* height) {
+	if (*x >= ctx->width || *y >= ctx->height) return false;
 
 	/* origin is negative, move inside */
 	if (*x < 0) { *width  += *x; *x = 0; }
 	if (*y < 0) { *height += *y; *y = 0; }
 
-	*width  = min(*x + *width,  bmp->width)  - *x;
-	*height = min(*y + *height, bmp->height) - *y;
+	*width  = min(*x + *width,  ctx->width)  - *x;
+	*height = min(*y + *height, ctx->height) - *y;
 	return *width > 0 && *height > 0;
 }
 #define Drawer2D_ClampPixel(p) p = (p < 0 ? 0 : (p > 255 ? 255 : p))
@@ -177,6 +177,13 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 	ctx->bmp.scan0  = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
 }
 
+void Context2D_Wrap(struct Context2D* ctx, struct Bitmap* bmp) {
+	ctx->bmp    = *bmp;
+	ctx->width  = bmp->width;
+	ctx->height = bmp->height;
+	ctx->meta   = NULL;
+}
+
 void Context2D_Free(struct Context2D* ctx) {
 	Mem_Free(ctx->bmp.scan0);
 }
@@ -187,7 +194,7 @@ void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 	BitmapCol* dst;
 	int R, G, B, xx, yy, n;
 	float noise;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
@@ -212,7 +219,7 @@ void Gradient_Vertical(struct Context2D* ctx, BitmapCol a, BitmapCol b,
 	BitmapCol* row, color;
 	int xx, yy;
 	float t;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;
@@ -233,7 +240,7 @@ void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* dst;
 	int R, G, B, xx, yy;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	/* Pre compute the alpha blended source color */
 	/* TODO: Avoid shift when multiplying */
@@ -258,38 +265,13 @@ void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 	}
 }
 
-void Gradient_Tint(struct Context2D* ctx, cc_uint8 tintA, cc_uint8 tintB,
-				   int x, int y, int width, int height) {
-	struct Bitmap* bmp = (struct Bitmap*)ctx;
-	BitmapCol* row, color;
-	cc_uint8 tint;
-	int xx, yy;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
-
-	for (yy = 0; yy < height; yy++) {
-		row  = Bitmap_GetRow(bmp, y + yy) + x;
-		tint = (cc_uint8)Math_Lerp(tintA, tintB, (float)yy / height);
-
-		for (xx = 0; xx < width; xx++) {
-			/* TODO: Not shift when multiplying */
-			color = BitmapCol_Make(
-				BitmapCol_R(row[xx]) * tint / 255,
-				BitmapCol_G(row[xx]) * tint / 255,
-				BitmapCol_B(row[xx]) * tint / 255,
-				0);
-
-			row[xx] = color | (row[xx] & BITMAPCOL_A_MASK);
-		}
-	}
-}
-
 void Context2D_DrawPixels(struct Context2D* ctx, int x, int y, struct Bitmap* src) {
 	struct Bitmap* dst = (struct Bitmap*)ctx;
 	int width = src->width, height = src->height;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
-	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		srcRow = Bitmap_GetRow(src, yy);
@@ -304,7 +286,7 @@ void Context2D_Clear(struct Context2D* ctx, BitmapCol color,
 	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row;
 	int xx, yy;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;

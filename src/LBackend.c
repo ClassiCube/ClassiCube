@@ -155,7 +155,7 @@ static CC_NOINLINE void MarkAllDirty(void) {
 /* Marks the given area/region as needing to be redrawn. */
 static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 	int x1, y1, x2, y2;
-	if (!Drawer2D_Clamp(&framebuffer.bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(&framebuffer, &x, &y, &width, &height)) return;
 
 	/* union with existing dirty area */
 	if (dirty_rect.Width) {
@@ -174,12 +174,12 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 }
 
 void LBackend_InitFramebuffer(void) {
-	framebuffer.bmp.width  = max(WindowInfo.Width,  1);
-	framebuffer.bmp.height = max(WindowInfo.Height, 1);
+	struct Bitmap bmp;
+	bmp.width  = max(WindowInfo.Width,  1);
+	bmp.height = max(WindowInfo.Height, 1);
 
-	Window_AllocFramebuffer(&framebuffer.bmp);
-	framebuffer.width  = framebuffer.bmp.width;
-	framebuffer.height = framebuffer.bmp.height;
+	Window_AllocFramebuffer(&bmp);
+	Context2D_Wrap(&framebuffer, &bmp);
 }
 
 void LBackend_FreeFramebuffer(void) {
