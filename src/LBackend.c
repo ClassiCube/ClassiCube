@@ -27,7 +27,7 @@
 
 struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
-static struct Bitmap framebuffer;
+static struct Context2D framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
 static Rect2D dirty_rect;
@@ -92,8 +92,8 @@ void LBackend_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
 	Launcher_MakeLogoFont(&logoFont);
 }
-void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
-	Launcher_DrawLogo(&logoFont, title, bmp);
+void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
+	Launcher_DrawLogo(&logoFont, title, ctx);
 }
 
 static void OnPointerMove(void* obj, int idx);
@@ -155,7 +155,7 @@ static CC_NOINLINE void MarkAllDirty(void) {
 /* Marks the given area/region as needing to be redrawn. */
 static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 	int x1, y1, x2, y2;
-	if (!Drawer2D_Clamp(&framebuffer, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(&framebuffer.bmp, &x, &y, &width, &height)) return;
 
 	/* union with existing dirty area */
 	if (dirty_rect.Width) {
@@ -174,13 +174,16 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 }
 
 void LBackend_InitFramebuffer(void) {
-	framebuffer.width  = max(WindowInfo.Width,  1);
-	framebuffer.height = max(WindowInfo.Height, 1);
-	Window_AllocFramebuffer(&framebuffer);
+	framebuffer.bmp.width  = max(WindowInfo.Width,  1);
+	framebuffer.bmp.height = max(WindowInfo.Height, 1);
+
+	Window_AllocFramebuffer(&framebuffer.bmp);
+	framebuffer.width  = framebuffer.bmp.width;
+	framebuffer.height = framebuffer.bmp.height;
 }
 
 void LBackend_FreeFramebuffer(void) {
-	Window_FreeFramebuffer(&framebuffer);
+	Window_FreeFramebuffer(&framebuffer.bmp);
 }
 
 
@@ -462,7 +465,8 @@ static const BitmapCol checkbox_palette[] = {
 	BitmapCol_Make( 75,  75,  75, 255), BitmapCol_Make(184, 184, 184, 255),
 };
 
-static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
+static void DrawIndexed(int size, int x, int y, struct Context2D* ctx) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row, color;
 	int i, xx, yy;
 
@@ -636,20 +640,20 @@ void LBackend_InputUnselect(struct LInput* w) {
 
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
-	struct LScreen* s  = Launcher_Active;
-	struct Bitmap* bmp = &framebuffer;
-	BitmapCol color    = BitmapCol_Make(97, 81, 110, 255);
+	struct LScreen* s     = Launcher_Active;
+	struct Context2D* ctx = &framebuffer;
+	BitmapCol color       = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
 		DrawBoxBounds(color, w->x, w->y, w->width, w->height);
 	} else {
-		s->ResetArea(bmp, w->x,                      w->y, 
+		s->ResetArea(ctx, w->x,                      w->y, 
 						  w->width,                  yBorder);
-		s->ResetArea(bmp, w->x,                      w->y + w->height - yBorder,
+		s->ResetArea(ctx, w->x,                      w->y + w->height - yBorder,
 						  w->width,                  yBorder);
-		s->ResetArea(bmp, w->x,                      w->y,
+		s->ResetArea(ctx, w->x,                      w->y,
 						  xBorder,                   w->height);
-		s->ResetArea(bmp, w->x + w->width - xBorder, w->y,
+		s->ResetArea(ctx, w->x + w->width - xBorder, w->y,
 						  xBorder,                   w->height);
 	}
 }

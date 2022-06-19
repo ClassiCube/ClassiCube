@@ -6,6 +6,7 @@
    Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
+struct Context2D;
 enum LWIDGET_TYPE {
 	LWIDGET_BUTTON, LWIDGET_CHECKBOX, LWIDGET_INPUT,
 	LWIDGET_LABEL,  LWIDGET_LINE, LWIDGET_SLIDER, LWIDGET_TABLE
@@ -69,7 +70,7 @@ struct LButton {
 };
 CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LLayout* layouts);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
-CC_NOINLINE void LButton_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered);
+CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered);
 
 struct LCheckbox;
 struct LCheckbox {
@@ -155,7 +156,7 @@ struct LTableColumn {
 	/* Draws the value of this column for the given row. */
 	/* If args.Text is changed to something, that text gets drawn afterwards. */
 	/* Most of the time that's all you need to do. */
-	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp);
+	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Context2D* ctx);
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */

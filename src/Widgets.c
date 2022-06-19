@@ -2182,7 +2182,6 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	int width, height;
 	int partWidths[Array_Elems(portions)];
 	struct Context2D ctx;
-	struct Bitmap bmp;
 	int portionsCount;
 	int i, x, ul;
 
@@ -2207,7 +2206,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 			args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
 			if (ul) args->font->flags |= FONT_FLAGS_UNDERLINE;
-			Context2D_DrawText(&bmp, args, x, 0);
+			Context2D_DrawText(&ctx, args, x, 0);
 			if (ul) args->font->flags &= ~FONT_FLAGS_UNDERLINE;
 
 			x += partWidths[i];

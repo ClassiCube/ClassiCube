@@ -450,7 +450,8 @@ void Launcher_TryLoadTexturePack(void) {
 *#########################################################################################################################*/
 /* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap */
 CC_NOINLINE static void ClearTile(int x, int y, int width, int height, 
-								struct Bitmap* dst, struct Bitmap* src) {
+								struct Context2D* ctx, struct Bitmap* src) {
+	struct Bitmap* dst = (struct Bitmap*)ctx;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
@@ -466,20 +467,20 @@ CC_NOINLINE static void ClearTile(int x, int y, int width, int height,
 	}
 }
 
-void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height) {
+void Launcher_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height) {
 	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
-		ClearTile(x, y, width, height, bmp, &stoneBmp);
+		ClearTile(x, y, width, height, ctx, &stoneBmp);
 	} else {
-		Gradient_Noise(bmp, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
+		Gradient_Noise(ctx, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
 	}
 }
 
-void Launcher_DrawBackgroundAll(struct Bitmap* bmp) {
+void Launcher_DrawBackgroundAll(struct Context2D* ctx) {
 	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
-		ClearTile(0,        0, bmp->width,               TILESIZE, bmp, &dirtBmp);
-		ClearTile(0, TILESIZE, bmp->width, bmp->height - TILESIZE, bmp, &stoneBmp);
+		ClearTile(0,        0, ctx->width,               TILESIZE, ctx, &dirtBmp);
+		ClearTile(0, TILESIZE, ctx->width, ctx->height - TILESIZE, ctx, &stoneBmp);
 	} else {
-		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
+		Launcher_DrawBackground(ctx, 0, 0, ctx->width, ctx->height);
 	}
 }
 
@@ -487,18 +488,18 @@ cc_bool Launcher_BitmappedText(void) {
 	return (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
 }
 
-void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* bmp) {
+void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D* ctx) {
 	cc_string title = String_FromReadonly(text);
 	struct DrawTextArgs args;
 	int x;
 
 	DrawTextArgs_Make(&args, &title, font, false);
-	x = bmp->width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	Drawer2D.Colors['f'] = BITMAPCOL_BLACK;
-	Context2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
+	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
 	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
-	Context2D_DrawText(bmp, &args, x,                     0);
+	Context2D_DrawText(ctx, &args, x,                     0);
 }
 
 void Launcher_MakeLogoFont(struct FontDesc* font) {

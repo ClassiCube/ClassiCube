@@ -42,28 +42,28 @@ CC_API void Context2D_Free(struct Context2D* ctx);
 CC_API void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx);
 
 /* Draws text using the given font at the given coordinates */
-CC_API void Context2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
+CC_API void Context2D_DrawText(struct Context2D* ctx, struct DrawTextArgs* args, int x, int y);
 /* Fills the given area using pixels from the source bitmap */
-CC_API void Context2D_DrawPixels(struct Bitmap* dst, int x, int y, struct Bitmap* src);
+CC_API void Context2D_DrawPixels(struct Context2D* ctx, int x, int y, struct Bitmap* src);
 /* Fills the area with the given color */
-CC_API void Context2D_Clear(struct Bitmap* bmp, BitmapCol color,
+CC_API void Context2D_Clear(struct Context2D* ctx, BitmapCol color,
 							int x, int y, int width, int height);
 
 /* Fills the given area with a simple noisy pattern */
 /* Variation determines how 'visible/obvious' the noise is */
-CC_API void Gradient_Noise(struct Bitmap* bmp, BitmapCol color, int variation,
+CC_API void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 						   int x, int y, int width, int height);
 /* Fills the given area with a vertical gradient, linerarly interpolating from a to b */
 /* First drawn row is filled with 'a', while last drawn is filled with 'b' */
-CC_API void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
+CC_API void Gradient_Vertical(struct Context2D* ctx, BitmapCol a, BitmapCol b,
 							  int x, int y, int width, int height);
 /* Blends the given area with the given color */
 /*  Note that this only blends RGB, A is not blended */
-CC_API void Gradient_Blend(struct Bitmap* bmp, BitmapCol color, int blend,
+CC_API void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 						   int x, int y, int width, int height);
 /* Tints the given area, linearly interpolating from a to b */
 /*  Note that this only tints RGB, A is not tinted */
-CC_API void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
+CC_API void Gradient_Tint(struct Context2D* ctx, cc_uint8 tintA, cc_uint8 tintB,
 						  int x, int y, int width, int height);
 
 /* Returns how wide the given text would be when drawn */
@@ -72,7 +72,7 @@ CC_API int Drawer2D_TextWidth(struct DrawTextArgs* args);
 /*  NOTE: Height returned only depends on the font. (see Font_CalcHeight) */
 CC_API int Drawer2D_TextHeight(struct DrawTextArgs* args);
 /* Similar to Context2D_DrawText, but trims the text with trailing ".." if wider than maxWidth */
-void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args, 
+void Drawer2D_DrawClippedText(struct Context2D* ctx, struct DrawTextArgs* args, 
 								int x, int y, int maxWidth);
 
 /* Creates a texture consisting only of the given text drawn onto it */

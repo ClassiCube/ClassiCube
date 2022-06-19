@@ -181,8 +181,9 @@ void Context2D_Free(struct Context2D* ctx) {
 	Mem_Free(ctx->bmp.scan0);
 }
 
-void Gradient_Noise(struct Bitmap* bmp, BitmapCol color, int variation,
+void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 					int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* dst;
 	int R, G, B, xx, yy, n;
 	float noise;
@@ -205,8 +206,9 @@ void Gradient_Noise(struct Bitmap* bmp, BitmapCol color, int variation,
 	}
 }
 
-void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
+void Gradient_Vertical(struct Context2D* ctx, BitmapCol a, BitmapCol b,
 					   int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row, color;
 	int xx, yy;
 	float t;
@@ -226,8 +228,9 @@ void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
 	}
 }
 
-void Gradient_Blend(struct Bitmap* bmp, BitmapCol color, int blend,
+void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 					int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* dst;
 	int R, G, B, xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
@@ -255,8 +258,9 @@ void Gradient_Blend(struct Bitmap* bmp, BitmapCol color, int blend,
 	}
 }
 
-void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
+void Gradient_Tint(struct Context2D* ctx, cc_uint8 tintA, cc_uint8 tintB,
 				   int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row, color;
 	cc_uint8 tint;
 	int xx, yy;
@@ -279,7 +283,8 @@ void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 	}
 }
 
-void Context2D_DrawPixels(struct Bitmap* dst, int x, int y, struct Bitmap* src) {
+void Context2D_DrawPixels(struct Context2D* ctx, int x, int y, struct Bitmap* src) {
+	struct Bitmap* dst = (struct Bitmap*)ctx;
 	int width = src->width, height = src->height;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
@@ -294,8 +299,9 @@ void Context2D_DrawPixels(struct Bitmap* dst, int x, int y, struct Bitmap* src) 
 	}
 }
 
-void Context2D_Clear(struct Bitmap* bmp, BitmapCol color, 
+void Context2D_Clear(struct Context2D* ctx, BitmapCol color,
 					int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row;
 	int xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
@@ -592,7 +598,8 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	return width;
 }
 
-void Context2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
+void Context2D_DrawText(struct Context2D* ctx, struct DrawTextArgs* args, int x, int y) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	if (Drawer2D_IsEmptyText(&args->text)) return;
 	if (Font_IsBitmap(args->font)) { DrawBitmappedText(bmp, args, x, y); return; }
 
@@ -619,7 +626,7 @@ int Font_CalcHeight(const struct FontDesc* font, cc_bool useShadow) {
 	return height;
 }
 
-void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args, 
+void Drawer2D_DrawClippedText(struct Context2D* ctx, struct DrawTextArgs* args,
 								int x, int y, int maxWidth) {
 	char strBuffer[512];
 	struct DrawTextArgs part;
@@ -627,7 +634,7 @@ void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args,
 
 	width = Drawer2D_TextWidth(args);
 	/* No clipping needed */
-	if (width <= maxWidth) { Context2D_DrawText(bmp, args, x, y); return; }
+	if (width <= maxWidth) { Context2D_DrawText(ctx, args, x, y); return; }
 	part = *args;
 
 	String_InitArray(part.text, strBuffer);
@@ -641,13 +648,13 @@ void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args,
 
 		part.text.length = i + 2;
 		width            = Drawer2D_TextWidth(&part);
-		if (width <= maxWidth) { Context2D_DrawText(bmp, &part, x, y); return; }
+		if (width <= maxWidth) { Context2D_DrawText(ctx, &part, x, y); return; }
 
 		/* If down to <= 2 chars, try omitting the .. */
 		if (i > 2) continue;
 		part.text.length = i;
 		width            = Drawer2D_TextWidth(&part);
-		if (width <= maxWidth) { Context2D_DrawText(bmp, &part, x, y); return; }
+		if (width <= maxWidth) { Context2D_DrawText(ctx, &part, x, y); return; }
 	}
 }
 

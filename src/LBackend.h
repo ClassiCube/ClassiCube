@@ -5,7 +5,7 @@
 Abstracts the gui drawing backend for the Launcher
 Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
-struct Bitmap;
+struct Context2D;
 struct LScreen;
 struct LWidget;
 struct LButton;
@@ -22,7 +22,7 @@ void LBackend_SetScreen(struct LScreen* s);
 void LBackend_CloseScreen(struct LScreen* s);
 
 void LBackend_UpdateLogoFont(void);
-void LBackend_DrawLogo(struct Bitmap* bmp, const char* title);
+void LBackend_DrawLogo(struct Context2D* ctx, const char* title);
 
 /* Resets pixels to default, then draws widgets of current screen over it */
 void LBackend_Redraw(void);

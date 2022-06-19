@@ -103,13 +103,13 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 static void LScreen_MouseUp(struct LScreen* s, int idx) { }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
-static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
+static void LScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 	if (!s->title) {
-		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
+		Launcher_DrawBackground(ctx, 0, 0, ctx->width, ctx->height);
 		return;
 	}
-	Launcher_DrawBackgroundAll(bmp);
-	LBackend_DrawLogo(bmp, s->title);
+	Launcher_DrawBackgroundAll(ctx);
+	LBackend_DrawLogo(ctx, s->title);
 }
 
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
@@ -1014,19 +1014,19 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 #define RESOURCES_BACK_COLOR BitmapCol_Make( 12,  12,  12, 255)
 #define RESOURCES_FORE_COLOR BitmapCol_Make(120,  85, 151, 255)
 
-static void CheckResourcesScreen_ResetArea(struct Bitmap* bmp, int x, int y, int width, int height) {
-	Gradient_Noise(bmp, RESOURCES_FORE_COLOR, 4, x, y, width, height);
+static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
+	Gradient_Noise(ctx, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
-static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
+static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 	int x, y, width, height;
-	Context2D_Clear(bmp, RESOURCES_BACK_COLOR, 0, 0, bmp->width, bmp->height);
+	Context2D_Clear(ctx, RESOURCES_BACK_COLOR, 0, 0, ctx->width, ctx->height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  bmp->width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, bmp->height);
-	CheckResourcesScreen_ResetArea(bmp, x, y, width, height);
+	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  ctx->width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, ctx->height);
+	CheckResourcesScreen_ResetArea(ctx, x, y, width, height);
 }
 
 void CheckResourcesScreen_SetActive(void) {
