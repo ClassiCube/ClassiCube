@@ -34,23 +34,10 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 *-----------------------------------------------------Font functions------------------------------------------------------*
 *#########################################################################################################################*/
 static char defaultBuffer[STRING_SIZE];
-static cc_string font_candidates[12] = {
-	String_FromArray(defaultBuffer),     /* Filled in with user's default font */
-	String_FromConst("Arial"),           /* preferred font on all platforms */
-	String_FromConst("Liberation Sans"), /* nice looking fallbacks for linux */
-	String_FromConst("Nimbus Sans"),
-	String_FromConst("Bitstream Charter"),
-	String_FromConst("Cantarell"),
-	String_FromConst("DejaVu Sans Book"), 
-	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
-	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
-	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
-	String_FromConst("Geneva"), /* for ancient macOS versions */
-	String_FromConst("Droid Sans") /* for old Android versions */
-};
+static cc_string font_default = String_FromArray(defaultBuffer);
 
 void Font_SetDefault(const cc_string* fontName) {
-	String_Copy(&font_candidates[0], fontName);
+	String_Copy(&font_default, fontName);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
@@ -687,8 +674,8 @@ static void OnInit(void) {
 	Drawer2D.BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D.BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 
-	Options_Get(OPT_FONT_NAME, &font_candidates[0], "");
-	if (Game_ClassicMode) font_candidates[0].length = 0;
+	Options_Get(OPT_FONT_NAME, &font_default, "");
+	if (Game_ClassicMode) font_default.length = 0;
 	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
@@ -707,99 +694,7 @@ struct IGameComponent Drawer2D_Component = {
 /*########################################################################################################################*
 *------------------------------------------------------System fonts-------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
-const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
-
-void SysFonts_GetNames(struct StringsBuffer* buffer) {
-	static const char* font_names[] = { 
-		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
-		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
-		"cursive", "fantasy", "monospace", "sans-serif", "serif", "system-ui"
-	};
-	int i;
-
-	for (i = 0; i < Array_Elems(font_names); i++) {
-		cc_string str = String_FromReadonly(font_names[i]);
-		StringsBuffer_Add(buffer, &str);
-	}
-}
-
-cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
-	desc->size   = size;
-	desc->flags  = flags;
-	desc->height = Drawer2D_AdjHeight(size);
-
-	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
-	if (!desc->handle) return ERR_OUT_OF_MEMORY;
-	
-	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
-	return 0;
-}
-
-void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
-	cc_string str = font_candidates[0];
-	/* Fallback to arial */
-	if (!str.length) str = font_candidates[1];
-
-	SysFont_Make(desc, &str, size, flags); 
-}
-
-void Font_Free(struct FontDesc* desc) {
-	Mem_Free(desc->handle);
-	desc->handle = NULL;
-	desc->size   = 0;
-}
-
-void SysFonts_Register(const cc_string* path) { }
-extern void   interop_SetFont(const char* font, int size, int flags);
-extern double interop_TextWidth(const char* text, const int len);
-extern double interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow, const char* hex);
-
-static int Font_SysTextWidth(struct DrawTextArgs* args) {
-	struct FontDesc* font = args->font;
-	cc_string left = args->text, part;
-	double width   = 0;
-	BitmapCol color;
-
-	interop_SetFont(font->handle, font->size, font->flags);
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
-	{
-		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
-		width += interop_TextWidth(buffer, len);
-	}
-	return Math_Ceil(width);
-}
-
-static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
-	struct FontDesc* font = args->font;
-	cc_string left  = args->text, part;
-	BitmapCol color = Drawer2D.Colors['f'];
-	double xOffset = 0;
-	char hexBuffer[7];
-	cc_string hex;
-
-	/* adjust y position to more closely match FreeType drawn text */
-	y += (args->font->height - args->font->size) / 2;
-	interop_SetFont(font->handle, font->size, font->flags);
-
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
-	{
-		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
-		if (shadow) color = GetShadowColor(color);
-
-		String_InitArray(hex, hexBuffer);
-		String_Append(&hex, '#');
-		String_AppendHex(&hex, BitmapCol_R(color));
-		String_AppendHex(&hex, BitmapCol_G(color));
-		String_AppendHex(&hex, BitmapCol_B(color));
-
-		/* TODO pass as double directly instead of (int) ?*/
-		xOffset += interop_TextDraw(buffer, len, bmp, x + (int)xOffset, y, shadow, hexBuffer);
-	}
-}
-#else
+#if defined CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
@@ -909,7 +804,23 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 	return Mem_TryRealloc(block, new_size, 1);
 }
 
+
 #define FONT_CACHE_FILE "fontscache.txt"
+static cc_string font_candidates[] = {
+	String_FromConst(""),                /* replaced with font_default */
+	String_FromConst("Arial"),           /* preferred font on all platforms */
+	String_FromConst("Liberation Sans"), /* ice looking fallbacks for linux */
+	String_FromConst("Nimbus Sans"),
+	String_FromConst("Bitstream Charter"),
+	String_FromConst("Cantarell"),
+	String_FromConst("DejaVu Sans Book"), 
+	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
+	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
+	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
+	String_FromConst("Geneva"), /* for ancient macOS versions */
+	String_FromConst("Droid Sans") /* for old Android versions */
+};
+
 static void SysFonts_InitLibrary(void) {
 	FT_Error err;
 	if (ft_lib) return;
@@ -1031,6 +942,7 @@ void SysFonts_Register(const cc_string* path) {
 const cc_string* SysFonts_UNSAFE_GetDefault(void) {
 	cc_string* font, path;
 	int i;
+	font_candidates[0] = font_default;
 
 	for (i = 0; i < Array_Elems(font_candidates); i++) {
 		font = &font_candidates[i];
@@ -1077,7 +989,7 @@ static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
-cc_string Font_Lookup(const cc_string* fontName, int flags) {
+static cc_string Font_Lookup(const cc_string* fontName, int flags) {
 	cc_string path = Font_DoLookup(fontName, flags);
 	if (path.length) return path;
 
@@ -1125,6 +1037,7 @@ void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
 	cc_string* font;
 	cc_result res;
 	int i;
+	font_candidates[0] = font_default;
 
 	for (i = 0; i < Array_Elems(font_candidates); i++) {
 		font = &font_candidates[i];
@@ -1320,5 +1233,99 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	}
 
 	if (shadow) FT_Set_Transform(face, NULL, NULL);
+}
+#elif defined CC_BUILD_WEB
+static cc_string font_arial = String_FromConst("Arial");
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) {
+	/* Fallback to Arial as default font */
+	/* TODO use serif instead?? */
+	return font_default.length ? &font_default : &font_arial;
+}
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) {
+	static const char* font_names[] = { 
+		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
+		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
+		"cursive", "fantasy", "monospace", "sans-serif", "serif", "system-ui"
+	};
+	int i;
+
+	for (i = 0; i < Array_Elems(font_names); i++) {
+		cc_string str = String_FromReadonly(font_names[i]);
+		StringsBuffer_Add(buffer, &str);
+	}
+}
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
+
+	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
+	if (!desc->handle) return ERR_OUT_OF_MEMORY;
+	
+	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
+	return 0;
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	SysFont_Make(desc, SysFonts_UNSAFE_GetDefault(), size, flags);
+}
+
+void Font_Free(struct FontDesc* desc) {
+	Mem_Free(desc->handle);
+	desc->handle = NULL;
+	desc->size   = 0;
+}
+
+void SysFonts_Register(const cc_string* path) { }
+extern void   interop_SetFont(const char* font, int size, int flags);
+extern double interop_TextWidth(const char* text, const int len);
+extern double interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow, const char* hex);
+
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+	struct FontDesc* font = args->font;
+	cc_string left = args->text, part;
+	double width   = 0;
+	BitmapCol color;
+
+	interop_SetFont(font->handle, font->size, font->flags);
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+	{
+		char buffer[NATIVE_STR_LEN];
+		int len = Platform_EncodeUtf8(buffer, &part);
+		width += interop_TextWidth(buffer, len);
+	}
+	return Math_Ceil(width);
+}
+
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	struct FontDesc* font = args->font;
+	cc_string left  = args->text, part;
+	BitmapCol color = Drawer2D.Colors['f'];
+	double xOffset = 0;
+	char hexBuffer[7];
+	cc_string hex;
+
+	/* adjust y position to more closely match FreeType drawn text */
+	y += (args->font->height - args->font->size) / 2;
+	interop_SetFont(font->handle, font->size, font->flags);
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+	{
+		char buffer[NATIVE_STR_LEN];
+		int len = Platform_EncodeUtf8(buffer, &part);
+		if (shadow) color = GetShadowColor(color);
+
+		String_InitArray(hex, hexBuffer);
+		String_Append(&hex, '#');
+		String_AppendHex(&hex, BitmapCol_R(color));
+		String_AppendHex(&hex, BitmapCol_G(color));
+		String_AppendHex(&hex, BitmapCol_B(color));
+
+		/* TODO pass as double directly instead of (int) ?*/
+		xOffset += interop_TextDraw(buffer, len, bmp, x + (int)xOffset, y, shadow, hexBuffer);
+	}
 }
 #endif
