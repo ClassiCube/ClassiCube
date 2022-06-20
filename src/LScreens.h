@@ -5,9 +5,9 @@
 Implements all of the screens/menus in the launcher
 Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
-struct Bitmap;
 struct LWidget;
 struct LScreen;
+struct Context2D;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
 
@@ -17,11 +17,11 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	LScreen_Func Free;   /* Cleans up all native resources. */ \
 	LScreen_Func Layout; /* Positions the widgets on the screen. */ \
 	LScreen_Func Tick;   /* Repeatedly called multiple times every second. */ \
-	void (*DrawBackground)(struct LScreen* s, struct Bitmap* bmp); \
+	void (*DrawBackground)(struct LScreen* s, struct Context2D* ctx); \
 	void (*KeyDown)(struct LScreen* s,     int key, cc_bool wasDown); \
 	void (*MouseUp)(struct LScreen* s,     int idx); \
 	void (*MouseWheel)(struct LScreen* s,  float delta); \
-	void (*ResetArea)(struct Bitmap* bmp, int x, int y, int width, int height); \
+	void (*ResetArea)(struct Context2D* ctx, int x, int y, int width, int height); \
 	struct LWidget* onEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
 	struct LWidget* hoveredWidget;  /* Widget the mouse is currently hovering over. */ \
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \

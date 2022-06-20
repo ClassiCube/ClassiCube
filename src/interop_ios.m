@@ -789,20 +789,20 @@ void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
 void LBackend_UpdateLogoFont(void) { }
 
-static void DrawText(NSAttributedString* str, struct Bitmap* bmp, int x, int y) {
+static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int y) {
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
     CGRect bounds  = CTLineGetImageBounds(line, win_ctx);
-    int centreX    = (int)(bmp->width / 2.0f - bounds.size.width / 2.0f);
+    int centreX    = (int)(ctx->width / 2.0f - bounds.size.width / 2.0f);
     
-    CGContextSetTextPosition(win_ctx, centreX + x, bmp->height - y);
+    CGContextSetTextPosition(win_ctx, centreX + x, ctx->height - y);
     CTLineDraw(line, win_ctx);
 }
 
-void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
+void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
     if (Launcher_BitmappedText()) {
         struct FontDesc font;
         Launcher_MakeLogoFont(&font);
-        Launcher_DrawLogo(&font, title, bmp);
+        Launcher_DrawLogo(&font, title, ctx);
         // bitmapped fonts don't need to be freed
         return;
     }
@@ -815,7 +815,7 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
       NSForegroundColorAttributeName : UIColor.blackColor
     };
     NSAttributedString* str_bg = [[NSAttributedString alloc] initWithString:text attributes:attrs_bg];
-    DrawText(str_bg, bmp, 4, 42);
+    DrawText(str_bg, ctx, 4, 42);
         
     NSDictionary* attrs_fg =
     @{
@@ -823,24 +823,26 @@ void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
       NSForegroundColorAttributeName : UIColor.whiteColor
     };
     NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
-    DrawText(str_fg, bmp, 0, 38);
+    DrawText(str_fg, ctx, 0, 38);
 }
 
 void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
 void LBackend_Redraw(void) {
+    struct Context2D ctx;
     struct Bitmap bmp;
     bmp.width  = max(WindowInfo.Width,  1);
     bmp.height = max(WindowInfo.Height, 1);
     bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, 4, "window pixels");
     
+    Context2D_Wrap(&ctx, &bmp);
     win_ctx = CGBitmapContextCreate(bmp.scan0, bmp.width, bmp.height, 8, bmp.width * 4,
                                     CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-    Launcher_Active->DrawBackground(Launcher_Active, &bmp);
+    Launcher_Active->DrawBackground(Launcher_Active, &ctx);
     
     view_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
-    Mem_Free(bmp.scan0);
+    Mem_Free(bmp.scan0); // TODO Context2D_Free
     CGContextRelease(win_ctx);
 }
 
@@ -867,13 +869,16 @@ static void LBackend_ButtonUpdateBackground(struct LButton* w) {
     int height    = (int)rect.size.height;
     // memory freeing deferred until UIImage is freed (see FreeContents)
     struct Bitmap bmp1, bmp2;
+    struct Context2D ctx1, ctx2;
     
     Bitmap_Allocate(&bmp1, width, height);
-    LButton_DrawBackground(&bmp1, 0, 0, width, height, false);
+    Context2D_Wrap(&ctx1, &bmp1);
+    LButton_DrawBackground(&ctx1, 0, 0, width, height, false);
     [btn setBackgroundImage:ToUIImage(&bmp1) forState:UIControlStateNormal];
     
     Bitmap_Allocate(&bmp2, width, height);
-    LButton_DrawBackground(&bmp2, 0, 0, width, height, true);
+    Context2D_Wrap(&ctx2, &bmp2);
+    LButton_DrawBackground(&ctx2, 0, 0, width, height, true);
     [btn setBackgroundImage:ToUIImage(&bmp2) forState:UIControlStateHighlighted];
 }
 

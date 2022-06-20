@@ -360,10 +360,26 @@ void Launcher_SaveTheme(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Texture pack----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
-	return
-		String_CaselessEqualsConst(path, "default.png") ||
-		String_CaselessEqualsConst(path, "terrain.png");
+/* Tints the given area, linearly interpolating from a to b */
+/*  Note that this only tints RGB, A is not tinted */
+static void TintBitmap(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB, int width, int height) {
+	BitmapCol* row;
+	cc_uint8 tint;
+	int xx, yy;
+
+	for (yy = 0; yy < height; yy++) {
+		row  = Bitmap_GetRow(bmp, yy);
+		tint = (cc_uint8)Math_Lerp(tintA, tintB, (float)yy / height);
+
+		for (xx = 0; xx < width; xx++) {
+			/* TODO: Not shift when multiplying */
+			row[xx] = BitmapCol_Make(
+				BitmapCol_R(row[xx]) * tint / 255,
+				BitmapCol_G(row[xx]) * tint / 255,
+				BitmapCol_B(row[xx]) * tint / 255,
+				255);
+		}
+	}
 }
 
 static void ExtractTerrainTiles(struct Bitmap* bmp) {
@@ -375,8 +391,14 @@ static void ExtractTerrainTiles(struct Bitmap* bmp) {
 	Bitmap_Scale(&dirtBmp,  bmp, 2 * tileSize, 0, tileSize, tileSize);
 	Bitmap_Scale(&stoneBmp, bmp, 1 * tileSize, 0, tileSize, tileSize);
 
-	Gradient_Tint(&dirtBmp, 128, 64, 0, 0, TILESIZE, TILESIZE);
-	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
+	TintBitmap(&dirtBmp, 128, 64, TILESIZE, TILESIZE);
+	TintBitmap(&stoneBmp, 96, 96, TILESIZE, TILESIZE);
+}
+
+static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
+	return
+		String_CaselessEqualsConst(path, "default.png") ||
+		String_CaselessEqualsConst(path, "terrain.png");
 }
 
 static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipState* s) {
@@ -450,11 +472,12 @@ void Launcher_TryLoadTexturePack(void) {
 *#########################################################################################################################*/
 /* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap */
 CC_NOINLINE static void ClearTile(int x, int y, int width, int height, 
-								struct Bitmap* dst, struct Bitmap* src) {
+								struct Context2D* ctx, struct Bitmap* src) {
+	struct Bitmap* dst = (struct Bitmap*)ctx;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
-	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		srcRow = Bitmap_GetRow(src, (y + yy) % TILESIZE);
@@ -466,20 +489,20 @@ CC_NOINLINE static void ClearTile(int x, int y, int width, int height,
 	}
 }
 
-void Launcher_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height) {
+void Launcher_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height) {
 	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
-		ClearTile(x, y, width, height, bmp, &stoneBmp);
+		ClearTile(x, y, width, height, ctx, &stoneBmp);
 	} else {
-		Gradient_Noise(bmp, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
+		Gradient_Noise(ctx, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
 	}
 }
 
-void Launcher_DrawBackgroundAll(struct Bitmap* bmp) {
+void Launcher_DrawBackgroundAll(struct Context2D* ctx) {
 	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
-		ClearTile(0,        0, bmp->width,               TILESIZE, bmp, &dirtBmp);
-		ClearTile(0, TILESIZE, bmp->width, bmp->height - TILESIZE, bmp, &stoneBmp);
+		ClearTile(0,        0, ctx->width,               TILESIZE, ctx, &dirtBmp);
+		ClearTile(0, TILESIZE, ctx->width, ctx->height - TILESIZE, ctx, &stoneBmp);
 	} else {
-		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
+		Launcher_DrawBackground(ctx, 0, 0, ctx->width, ctx->height);
 	}
 }
 
@@ -487,18 +510,18 @@ cc_bool Launcher_BitmappedText(void) {
 	return (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
 }
 
-void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Bitmap* bmp) {
+void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D* ctx) {
 	cc_string title = String_FromReadonly(text);
 	struct DrawTextArgs args;
 	int x;
 
 	DrawTextArgs_Make(&args, &title, font, false);
-	x = bmp->width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	Drawer2D.Colors['f'] = BITMAPCOL_BLACK;
-	Drawer2D_DrawText(bmp, &args, x + Display_ScaleX(4), Display_ScaleY(4));
+	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
 	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
-	Drawer2D_DrawText(bmp, &args, x,                     0);
+	Context2D_DrawText(ctx, &args, x,                     0);
 }
 
 void Launcher_MakeLogoFont(struct FontDesc* font) {

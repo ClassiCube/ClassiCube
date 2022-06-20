@@ -34,23 +34,10 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 *-----------------------------------------------------Font functions------------------------------------------------------*
 *#########################################################################################################################*/
 static char defaultBuffer[STRING_SIZE];
-static cc_string font_candidates[12] = {
-	String_FromArray(defaultBuffer),     /* Filled in with user's default font */
-	String_FromConst("Arial"),           /* preferred font on all platforms */
-	String_FromConst("Liberation Sans"), /* nice looking fallbacks for linux */
-	String_FromConst("Nimbus Sans"),
-	String_FromConst("Bitstream Charter"),
-	String_FromConst("Cantarell"),
-	String_FromConst("DejaVu Sans Book"), 
-	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
-	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
-	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
-	String_FromConst("Geneva"), /* for ancient macOS versions */
-	String_FromConst("Droid Sans") /* for old Android versions */
-};
+static cc_string font_default = String_FromArray(defaultBuffer);
 
 void Font_SetDefault(const cc_string* fontName) {
-	String_Copy(&font_candidates[0], fontName);
+	String_Copy(&font_default, fontName);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
@@ -150,25 +137,51 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 /*########################################################################################################################*
 *---------------------------------------------------Drawing functions-----------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Drawer2D_Clamp(struct Bitmap* bmp, int* x, int* y, int* width, int* height) {
-	if (*x >= bmp->width || *y >= bmp->height) return false;
+cc_bool Drawer2D_Clamp(struct Context2D* ctx, int* x, int* y, int* width, int* height) {
+	if (*x >= ctx->width || *y >= ctx->height) return false;
 
 	/* origin is negative, move inside */
 	if (*x < 0) { *width  += *x; *x = 0; }
 	if (*y < 0) { *height += *y; *y = 0; }
 
-	*width  = min(*x + *width,  bmp->width)  - *x;
-	*height = min(*y + *height, bmp->height) - *y;
+	*width  = min(*x + *width,  ctx->width)  - *x;
+	*height = min(*y + *height, ctx->height) - *y;
 	return *width > 0 && *height > 0;
 }
 #define Drawer2D_ClampPixel(p) p = (p < 0 ? 0 : (p > 255 ? 255 : p))
 
-void Gradient_Noise(struct Bitmap* bmp, BitmapCol color, int variation,
+void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
+	ctx->width  = width;
+	ctx->height = height;
+	ctx->meta   = NULL;
+
+	/* Allocates a power-of-2 sized bitmap equal to or greater than the given size, and clears it to 0 */
+	width  = Math_NextPowOf2(width);
+	height = Math_NextPowOf2(height);
+
+	ctx->bmp.width  = width; 
+	ctx->bmp.height = height;
+	ctx->bmp.scan0  = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
+}
+
+void Context2D_Wrap(struct Context2D* ctx, struct Bitmap* bmp) {
+	ctx->bmp    = *bmp;
+	ctx->width  = bmp->width;
+	ctx->height = bmp->height;
+	ctx->meta   = NULL;
+}
+
+void Context2D_Free(struct Context2D* ctx) {
+	Mem_Free(ctx->bmp.scan0);
+}
+
+void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 					int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* dst;
 	int R, G, B, xx, yy, n;
 	float noise;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
@@ -187,12 +200,13 @@ void Gradient_Noise(struct Bitmap* bmp, BitmapCol color, int variation,
 	}
 }
 
-void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
+void Gradient_Vertical(struct Context2D* ctx, BitmapCol a, BitmapCol b,
 					   int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row, color;
 	int xx, yy;
 	float t;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;
@@ -208,11 +222,12 @@ void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
 	}
 }
 
-void Gradient_Blend(struct Bitmap* bmp, BitmapCol color, int blend,
+void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 					int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* dst;
 	int R, G, B, xx, yy;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	/* Pre compute the alpha blended source color */
 	/* TODO: Avoid shift when multiplying */
@@ -237,36 +252,13 @@ void Gradient_Blend(struct Bitmap* bmp, BitmapCol color, int blend,
 	}
 }
 
-void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
-				   int x, int y, int width, int height) {
-	BitmapCol* row, color;
-	cc_uint8 tint;
-	int xx, yy;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
-
-	for (yy = 0; yy < height; yy++) {
-		row  = Bitmap_GetRow(bmp, y + yy) + x;
-		tint = (cc_uint8)Math_Lerp(tintA, tintB, (float)yy / height);
-
-		for (xx = 0; xx < width; xx++) {
-			/* TODO: Not shift when multiplying */
-			color = BitmapCol_Make(
-				BitmapCol_R(row[xx]) * tint / 255,
-				BitmapCol_G(row[xx]) * tint / 255,
-				BitmapCol_B(row[xx]) * tint / 255,
-				0);
-
-			row[xx] = color | (row[xx] & BITMAPCOL_A_MASK);
-		}
-	}
-}
-
-void Drawer2D_BmpCopy(struct Bitmap* dst, int x, int y, struct Bitmap* src) {
+void Context2D_DrawPixels(struct Context2D* ctx, int x, int y, struct Bitmap* src) {
+	struct Bitmap* dst = (struct Bitmap*)ctx;
 	int width = src->width, height = src->height;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
-	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		srcRow = Bitmap_GetRow(src, yy);
@@ -276,11 +268,12 @@ void Drawer2D_BmpCopy(struct Bitmap* dst, int x, int y, struct Bitmap* src) {
 	}
 }
 
-void Drawer2D_Clear(struct Bitmap* bmp, BitmapCol color, 
+void Context2D_Clear(struct Context2D* ctx, BitmapCol color,
 					int x, int y, int width, int height) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row;
 	int xx, yy;
-	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;
@@ -291,7 +284,7 @@ void Drawer2D_Clear(struct Bitmap* bmp, BitmapCol color,
 
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 	static struct Texture empty = { 0, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
-	struct Bitmap bmp;
+	struct Context2D ctx;
 	int width, height;
 	/* pointless to draw anything when context is lost */
 	if (Gfx.LostContext) { *tex = empty; return; }
@@ -300,22 +293,22 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 	if (!width) { *tex = empty; return; }
 	height = Drawer2D_TextHeight(args);
 
-	Bitmap_AllocateClearedPow2(&bmp, width, height);
+	Context2D_Alloc(&ctx, width, height);
 	{
-		Drawer2D_DrawText(&bmp, args, 0, 0);
-		Drawer2D_MakeTexture(tex, &bmp, width, height);
+		Context2D_DrawText(&ctx, args, 0, 0);
+		Context2D_MakeTexture(tex, &ctx);
 	}
-	Mem_Free(bmp.scan0);
+	Context2D_Free(&ctx);
 }
 
-void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, int height) {
-	Gfx_RecreateTexture(&tex->ID, bmp, 0, false);
-	tex->Width  = width;
-	tex->Height = height;
+void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
+	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, 0, false);
+	tex->Width  = ctx->width;
+	tex->Height = ctx->height;
 
 	tex->uv.U1 = 0.0f; tex->uv.V1 = 0.0f;
-	tex->uv.U2 = (float)width  / (float)bmp->width;
-	tex->uv.V2 = (float)height / (float)bmp->height;
+	tex->uv.U2 = (float)ctx->width  / (float)ctx->bmp.width;
+	tex->uv.V2 = (float)ctx->height / (float)ctx->bmp.height;
 }
 
 cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
@@ -574,7 +567,8 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	return width;
 }
 
-void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
+void Context2D_DrawText(struct Context2D* ctx, struct DrawTextArgs* args, int x, int y) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	if (Drawer2D_IsEmptyText(&args->text)) return;
 	if (Font_IsBitmap(args->font)) { DrawBitmappedText(bmp, args, x, y); return; }
 
@@ -601,7 +595,7 @@ int Font_CalcHeight(const struct FontDesc* font, cc_bool useShadow) {
 	return height;
 }
 
-void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args, 
+void Drawer2D_DrawClippedText(struct Context2D* ctx, struct DrawTextArgs* args,
 								int x, int y, int maxWidth) {
 	char strBuffer[512];
 	struct DrawTextArgs part;
@@ -609,7 +603,7 @@ void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args,
 
 	width = Drawer2D_TextWidth(args);
 	/* No clipping needed */
-	if (width <= maxWidth) { Drawer2D_DrawText(bmp, args, x, y); return; }
+	if (width <= maxWidth) { Context2D_DrawText(ctx, args, x, y); return; }
 	part = *args;
 
 	String_InitArray(part.text, strBuffer);
@@ -623,13 +617,13 @@ void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args,
 
 		part.text.length = i + 2;
 		width            = Drawer2D_TextWidth(&part);
-		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
+		if (width <= maxWidth) { Context2D_DrawText(ctx, &part, x, y); return; }
 
 		/* If down to <= 2 chars, try omitting the .. */
 		if (i > 2) continue;
 		part.text.length = i;
 		width            = Drawer2D_TextWidth(&part);
-		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
+		if (width <= maxWidth) { Context2D_DrawText(ctx, &part, x, y); return; }
 	}
 }
 
@@ -680,8 +674,8 @@ static void OnInit(void) {
 	Drawer2D.BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D.BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 
-	Options_Get(OPT_FONT_NAME, &font_candidates[0], "");
-	if (Game_ClassicMode) font_candidates[0].length = 0;
+	Options_Get(OPT_FONT_NAME, &font_default, "");
+	if (Game_ClassicMode) font_default.length = 0;
 	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
@@ -700,99 +694,7 @@ struct IGameComponent Drawer2D_Component = {
 /*########################################################################################################################*
 *------------------------------------------------------System fonts-------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
-const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
-
-void SysFonts_GetNames(struct StringsBuffer* buffer) {
-	static const char* font_names[] = { 
-		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
-		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
-		"cursive", "fantasy", "monospace", "sans-serif", "serif", "system-ui"
-	};
-	int i;
-
-	for (i = 0; i < Array_Elems(font_names); i++) {
-		cc_string str = String_FromReadonly(font_names[i]);
-		StringsBuffer_Add(buffer, &str);
-	}
-}
-
-cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
-	desc->size   = size;
-	desc->flags  = flags;
-	desc->height = Drawer2D_AdjHeight(size);
-
-	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
-	if (!desc->handle) return ERR_OUT_OF_MEMORY;
-	
-	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
-	return 0;
-}
-
-void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
-	cc_string str = font_candidates[0];
-	/* Fallback to arial */
-	if (!str.length) str = font_candidates[1];
-
-	SysFont_Make(desc, &str, size, flags); 
-}
-
-void Font_Free(struct FontDesc* desc) {
-	Mem_Free(desc->handle);
-	desc->handle = NULL;
-	desc->size   = 0;
-}
-
-void SysFonts_Register(const cc_string* path) { }
-extern void   interop_SetFont(const char* font, int size, int flags);
-extern double interop_TextWidth(const char* text, const int len);
-extern double interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow, const char* hex);
-
-static int Font_SysTextWidth(struct DrawTextArgs* args) {
-	struct FontDesc* font = args->font;
-	cc_string left = args->text, part;
-	double width   = 0;
-	BitmapCol color;
-
-	interop_SetFont(font->handle, font->size, font->flags);
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
-	{
-		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
-		width += interop_TextWidth(buffer, len);
-	}
-	return Math_Ceil(width);
-}
-
-static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
-	struct FontDesc* font = args->font;
-	cc_string left  = args->text, part;
-	BitmapCol color = Drawer2D.Colors['f'];
-	double xOffset = 0;
-	char hexBuffer[7];
-	cc_string hex;
-
-	/* adjust y position to more closely match FreeType drawn text */
-	y += (args->font->height - args->font->size) / 2;
-	interop_SetFont(font->handle, font->size, font->flags);
-
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
-	{
-		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
-		if (shadow) color = GetShadowColor(color);
-
-		String_InitArray(hex, hexBuffer);
-		String_Append(&hex, '#');
-		String_AppendHex(&hex, BitmapCol_R(color));
-		String_AppendHex(&hex, BitmapCol_G(color));
-		String_AppendHex(&hex, BitmapCol_B(color));
-
-		/* TODO pass as double directly instead of (int) ?*/
-		xOffset += interop_TextDraw(buffer, len, bmp, x + (int)xOffset, y, shadow, hexBuffer);
-	}
-}
-#else
+#if defined CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
@@ -902,7 +804,23 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 	return Mem_TryRealloc(block, new_size, 1);
 }
 
+
 #define FONT_CACHE_FILE "fontscache.txt"
+static cc_string font_candidates[] = {
+	String_FromConst(""),                /* replaced with font_default */
+	String_FromConst("Arial"),           /* preferred font on all platforms */
+	String_FromConst("Liberation Sans"), /* ice looking fallbacks for linux */
+	String_FromConst("Nimbus Sans"),
+	String_FromConst("Bitstream Charter"),
+	String_FromConst("Cantarell"),
+	String_FromConst("DejaVu Sans Book"), 
+	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
+	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
+	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
+	String_FromConst("Geneva"), /* for ancient macOS versions */
+	String_FromConst("Droid Sans") /* for old Android versions */
+};
+
 static void SysFonts_InitLibrary(void) {
 	FT_Error err;
 	if (ft_lib) return;
@@ -1024,6 +942,7 @@ void SysFonts_Register(const cc_string* path) {
 const cc_string* SysFonts_UNSAFE_GetDefault(void) {
 	cc_string* font, path;
 	int i;
+	font_candidates[0] = font_default;
 
 	for (i = 0; i < Array_Elems(font_candidates); i++) {
 		font = &font_candidates[i];
@@ -1070,7 +989,7 @@ static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
-cc_string Font_Lookup(const cc_string* fontName, int flags) {
+static cc_string Font_Lookup(const cc_string* fontName, int flags) {
 	cc_string path = Font_DoLookup(fontName, flags);
 	if (path.length) return path;
 
@@ -1118,6 +1037,7 @@ void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
 	cc_string* font;
 	cc_result res;
 	int i;
+	font_candidates[0] = font_default;
 
 	for (i = 0; i < Array_Elems(font_candidates); i++) {
 		font = &font_candidates[i];
@@ -1313,5 +1233,99 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	}
 
 	if (shadow) FT_Set_Transform(face, NULL, NULL);
+}
+#elif defined CC_BUILD_WEB
+static cc_string font_arial = String_FromConst("Arial");
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) {
+	/* Fallback to Arial as default font */
+	/* TODO use serif instead?? */
+	return font_default.length ? &font_default : &font_arial;
+}
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) {
+	static const char* font_names[] = { 
+		"Arial", "Arial Black", "Courier New", "Comic Sans MS", "Georgia", "Garamond", 
+		"Helvetica", "Impact", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
+		"cursive", "fantasy", "monospace", "sans-serif", "serif", "system-ui"
+	};
+	int i;
+
+	for (i = 0; i < Array_Elems(font_names); i++) {
+		cc_string str = String_FromReadonly(font_names[i]);
+		StringsBuffer_Add(buffer, &str);
+	}
+}
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
+
+	desc->handle = Mem_TryAlloc(fontName->length + 1, 1);
+	if (!desc->handle) return ERR_OUT_OF_MEMORY;
+	
+	String_CopyToRaw(desc->handle, fontName->length + 1, fontName);
+	return 0;
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	SysFont_Make(desc, SysFonts_UNSAFE_GetDefault(), size, flags);
+}
+
+void Font_Free(struct FontDesc* desc) {
+	Mem_Free(desc->handle);
+	desc->handle = NULL;
+	desc->size   = 0;
+}
+
+void SysFonts_Register(const cc_string* path) { }
+extern void   interop_SetFont(const char* font, int size, int flags);
+extern double interop_TextWidth(const char* text, const int len);
+extern double interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow, const char* hex);
+
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+	struct FontDesc* font = args->font;
+	cc_string left = args->text, part;
+	double width   = 0;
+	BitmapCol color;
+
+	interop_SetFont(font->handle, font->size, font->flags);
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+	{
+		char buffer[NATIVE_STR_LEN];
+		int len = Platform_EncodeUtf8(buffer, &part);
+		width += interop_TextWidth(buffer, len);
+	}
+	return Math_Ceil(width);
+}
+
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	struct FontDesc* font = args->font;
+	cc_string left  = args->text, part;
+	BitmapCol color = Drawer2D.Colors['f'];
+	double xOffset = 0;
+	char hexBuffer[7];
+	cc_string hex;
+
+	/* adjust y position to more closely match FreeType drawn text */
+	y += (args->font->height - args->font->size) / 2;
+	interop_SetFont(font->handle, font->size, font->flags);
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+	{
+		char buffer[NATIVE_STR_LEN];
+		int len = Platform_EncodeUtf8(buffer, &part);
+		if (shadow) color = GetShadowColor(color);
+
+		String_InitArray(hex, hexBuffer);
+		String_Append(&hex, '#');
+		String_AppendHex(&hex, BitmapCol_R(color));
+		String_AppendHex(&hex, BitmapCol_G(color));
+		String_AppendHex(&hex, BitmapCol_B(color));
+
+		/* TODO pass as double directly instead of (int) ?*/
+		xOffset += interop_TextDraw(buffer, len, bmp, x + (int)xOffset, y, shadow, hexBuffer);
+	}
 }
 #endif

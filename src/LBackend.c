@@ -27,7 +27,7 @@
 
 struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
-static struct Bitmap framebuffer;
+static struct Context2D framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
 static Rect2D dirty_rect;
@@ -92,8 +92,8 @@ void LBackend_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
 	Launcher_MakeLogoFont(&logoFont);
 }
-void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
-	Launcher_DrawLogo(&logoFont, title, bmp);
+void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
+	Launcher_DrawLogo(&logoFont, title, ctx);
 }
 
 static void OnPointerMove(void* obj, int idx);
@@ -174,13 +174,16 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 }
 
 void LBackend_InitFramebuffer(void) {
-	framebuffer.width  = max(WindowInfo.Width,  1);
-	framebuffer.height = max(WindowInfo.Height, 1);
-	Window_AllocFramebuffer(&framebuffer);
+	struct Bitmap bmp;
+	bmp.width  = max(WindowInfo.Width,  1);
+	bmp.height = max(WindowInfo.Height, 1);
+
+	Window_AllocFramebuffer(&bmp);
+	Context2D_Wrap(&framebuffer, &bmp);
 }
 
 void LBackend_FreeFramebuffer(void) {
-	Window_FreeFramebuffer(&framebuffer);
+	Window_FreeFramebuffer(&framebuffer.bmp);
 }
 
 
@@ -188,16 +191,16 @@ void LBackend_FreeFramebuffer(void) {
 *------------------------------------------------------Base drawing-------------------------------------------------------*
 *#########################################################################################################################*/
 static void DrawBoxBounds(BitmapCol color, int x, int y, int width, int height) {
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		x,                   y, 
 		width,               yBorder);
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		x,                   y + height - yBorder,
 		width,               yBorder);
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		x,                   y, 
 		xBorder,             height);
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		x + width - xBorder, y, 
 		xBorder,             height);
 }
@@ -395,7 +398,7 @@ void LBackend_ButtonDraw(struct LButton* w) {
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
 
 	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
-	Drawer2D_DrawText(&framebuffer, &args, 
+	Context2D_DrawText(&framebuffer, &args, 
 					  w->x + xOffset / 2, w->y + yOffset / 2);
 
 	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
@@ -462,7 +465,8 @@ static const BitmapCol checkbox_palette[] = {
 	BitmapCol_Make( 75,  75,  75, 255), BitmapCol_Make(184, 184, 184, 255),
 };
 
-static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
+static void DrawIndexed(int size, int x, int y, struct Context2D* ctx) {
+	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* row, color;
 	int i, xx, yy;
 
@@ -506,7 +510,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
 	y = w->y + (height - Drawer2D_TextHeight(&args)) / 2;
-	Drawer2D_DrawText(&framebuffer, &args, x, y);
+	Context2D_DrawText(&framebuffer, &args, x, y);
 }
 
 
@@ -636,20 +640,20 @@ void LBackend_InputUnselect(struct LInput* w) {
 
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
-	struct LScreen* s  = Launcher_Active;
-	struct Bitmap* bmp = &framebuffer;
-	BitmapCol color    = BitmapCol_Make(97, 81, 110, 255);
+	struct LScreen* s     = Launcher_Active;
+	struct Context2D* ctx = &framebuffer;
+	BitmapCol color       = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
 		DrawBoxBounds(color, w->x, w->y, w->width, w->height);
 	} else {
-		s->ResetArea(bmp, w->x,                      w->y, 
+		s->ResetArea(ctx, w->x,                      w->y, 
 						  w->width,                  yBorder);
-		s->ResetArea(bmp, w->x,                      w->y + w->height - yBorder,
+		s->ResetArea(ctx, w->x,                      w->y + w->height - yBorder,
 						  w->width,                  yBorder);
-		s->ResetArea(bmp, w->x,                      w->y,
+		s->ResetArea(ctx, w->x,                      w->y,
 						  xBorder,                   w->height);
-		s->ResetArea(bmp, w->x + w->width - xBorder, w->y,
+		s->ResetArea(ctx, w->x + w->width - xBorder, w->y,
 						  xBorder,                   w->height);
 	}
 }
@@ -657,16 +661,16 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 static void LInput_DrawInnerBorder(struct LInput* w) {
 	BitmapCol color = BitmapCol_Make(165, 142, 168, 255);
 
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
 		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + w->height - yBorder2,
 		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
 		xBorder,                    w->height - yBorder2);
-	Drawer2D_Clear(&framebuffer, color,
+	Context2D_Clear(&framebuffer, color,
 		w->x + w->width - xBorder2, w->y + yBorder,
 		xBorder,                    w->height - yBorder2);
 }
@@ -690,7 +694,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 
 	if (w->text.length || !w->hintText) {
 		y = w->y + (w->height - w->_textHeight) / 2;
-		Drawer2D_DrawText(&framebuffer, args, 
+		Context2D_DrawText(&framebuffer, args, 
 							w->x + xInputOffset, y + yInputOffset);
 	} else {
 		args->text = String_FromReadonly(w->hintText);
@@ -700,7 +704,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		y = w->y + (w->height - hintHeight) / 2;
 
 		Drawer2D.Colors['f'] = BitmapCol_Make(125, 125, 125, 255);
-		Drawer2D_DrawText(&framebuffer, args, 
+		Context2D_DrawText(&framebuffer, args, 
 							w->x + xInputOffset, y);
 		Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
 	}
@@ -716,7 +720,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
-	Drawer2D_Clear(&framebuffer, BITMAPCOL_WHITE,
+	Context2D_Clear(&framebuffer, BITMAPCOL_WHITE,
 		w->x + xBorder2,     w->y + yBorder2,
 		w->width - xBorder4, w->height - yBorder4);
 	LInput_BlendBoxTop(w);
@@ -727,7 +731,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	caretRect = LInput_MeasureCaret(w, &text);
 	if (!w->caretShow) return;
-	Drawer2D_Clear(&framebuffer, BITMAPCOL_BLACK,
+	Context2D_Clear(&framebuffer, BITMAPCOL_BLACK,
 					caretRect.X, caretRect.Y, caretRect.Width, caretRect.Height);
 }
 
@@ -750,7 +754,7 @@ void LBackend_LabelUpdate(struct LLabel* w) {
 void LBackend_LabelDraw(struct LLabel* w) {
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &w->text, LLabel_GetFont(w), true);
-	Drawer2D_DrawText(&framebuffer, &args, w->x, w->y);
+	Context2D_DrawText(&framebuffer, &args, w->x, w->y);
 }
 
 
@@ -785,10 +789,10 @@ static void LSlider_DrawBoxBounds(struct LSlider* w) {
 	BitmapCol boundsBottom = BitmapCol_Make(150, 130, 165, 255);
 
 	/* TODO: Check these are actually right */
-	Drawer2D_Clear(&framebuffer, boundsTop,
+	Context2D_Clear(&framebuffer, boundsTop,
 				  w->x,     w->y,
 				  w->width, yBorder);
-	Drawer2D_Clear(&framebuffer, boundsBottom,
+	Context2D_Clear(&framebuffer, boundsBottom,
 				  w->x,	    w->y + w->height - yBorder,
 				  w->width, yBorder);
 
@@ -820,7 +824,7 @@ void LBackend_SliderDraw(struct LSlider* w) {
 	LSlider_DrawBox(w);
 
 	curWidth = (int)((w->width - xBorder2) * w->value / LSLIDER_MAXVALUE);
-	Drawer2D_Clear(&framebuffer, w->color,
+	Context2D_Clear(&framebuffer, w->color,
 				   w->x + xBorder, w->y + yBorder, 
 				   curWidth,       w->height - yBorder2);
 }
@@ -858,7 +862,7 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridColor = BitmapCol_Make(20, 20, 10, 255);
 
 	if (!Launcher_Theme.ClassicBackground) {
-		Drawer2D_Clear(&framebuffer, gridColor,
+		Context2D_Clear(&framebuffer, gridColor,
 						w->x, w->y, w->width, w->hdrHeight);
 	} else {
 		Launcher_DrawBackground(&framebuffer,
@@ -888,7 +892,7 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 		if (height < 0) break;
 
 		if (color) {
-			Drawer2D_Clear(&framebuffer, color,
+			Context2D_Clear(&framebuffer, color,
 							w->x, y, w->width, height);
 		} else {
 			Launcher_DrawBackground(&framebuffer, 
@@ -903,14 +907,14 @@ static void LTable_DrawGridlines(struct LTable* w) {
 	if (Launcher_Theme.ClassicBackground) return;
 
 	x = w->x;
-	Drawer2D_Clear(&framebuffer, Launcher_Theme.BackgroundColor,
+	Context2D_Clear(&framebuffer, Launcher_Theme.BackgroundColor,
 				   x, w->y + w->hdrHeight, w->width, gridlineHeight);
 
 	for (i = 0; i < w->numColumns; i++) {
 		x += w->columns[i].width;
 		if (!w->columns[i].hasGridline) continue;
 			
-		Drawer2D_Clear(&framebuffer, Launcher_Theme.BackgroundColor,
+		Context2D_Clear(&framebuffer, Launcher_Theme.BackgroundColor,
 					   x, w->y, gridlineWidth, w->height);
 		x += gridlineWidth;
 	}
@@ -991,9 +995,9 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 	x = w->x + w->width - scrollbarWidth;
 	LTable_GetScrollbarCoords(w, &y, &height);
 
-	Drawer2D_Clear(&framebuffer, backCol,
+	Context2D_Clear(&framebuffer, backCol,
 					x, w->y,     scrollbarWidth, w->height);		
-	Drawer2D_Clear(&framebuffer, scrollCol, 
+	Context2D_Clear(&framebuffer, scrollCol, 
 					x, w->y + y, scrollbarWidth, height);
 }
 
