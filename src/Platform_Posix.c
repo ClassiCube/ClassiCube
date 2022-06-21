@@ -421,28 +421,34 @@ static void FontDirCallback(const cc_string* path, void* obj) {
 void Platform_LoadSysFonts(void) { 
 	int i;
 #if defined CC_BUILD_ANDROID
-	static const cc_string dirs[3] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/system/fonts"),
 		String_FromConst("/system/font"),
 		String_FromConst("/data/fonts"),
 	};
 #elif defined CC_BUILD_NETBSD
-	static const cc_string dirs[3] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/usr/X11R7/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/share/fonts")
 	};
+#elif defined CC_BUILD_OPENBSD
+	static const cc_string dirs[] = {
+		String_FromConst("/usr/X11R6/lib/X11/fonts"),
+		String_FromConst("/usr/share/fonts"),
+		String_FromConst("/usr/local/share/fonts")
+	};
 #elif defined CC_BUILD_HAIKU
-	static const cc_string dirs[1] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/system/data/fonts")
 	};
 #elif defined CC_BUILD_DARWIN
-	static const cc_string dirs[2] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
 #else
-	static const cc_string dirs[2] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
 	};

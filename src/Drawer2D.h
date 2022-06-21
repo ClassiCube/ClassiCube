@@ -91,7 +91,7 @@ char Drawer2D_LastColor(const cc_string* text, int start);
 cc_bool Drawer2D_IsWhiteColor(char c);
 cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, BitmapCol* color);
 
-/* Allocates a new instance of the default font using the given size and flags
+/* Allocates a new instance of the default font using the given size and flags */
 /*  Uses Font_MakeBitmapped or SysFont_MakeDefault depending on Drawer2D_BitmappedText */
 CC_API void Font_Make(struct FontDesc* desc, int size, int flags);
 /* Frees an allocated font */

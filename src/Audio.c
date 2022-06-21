@@ -1306,13 +1306,10 @@ static void Music_RunLoop(void) {
 		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
 
 		res = Music_PlayOgg(&stream);
-		if (res) { 
-			Logger_SimpleWarn2(res, "playing", &path); 
-			stream.Close(&stream); break;
-		}
+		if (res) { Logger_SimpleWarn2(res, "playing", &path); }
 
-		res = stream.Close(&stream);
-		if (res) { Logger_SysWarn2(res, "closing", &path); break; }
+		/* No point logging error for closing readonly file */
+		(void)stream.Close(&stream);
 
 		if (music_stopping) break;
 		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);
