@@ -124,6 +124,8 @@ static const cc_string alLib = String_FromConst("openal32.dll");
 static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
 #elif defined CC_BUILD_IOS
 static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/OpenAL");
+#elif defined CC_BUILD_NETBSD
+static const cc_string alLib = String_FromConst("/usr/pkg/lib/libopenal.so");
 #elif defined CC_BUILD_BSD
 static const cc_string alLib = String_FromConst("libopenal.so");
 #else
