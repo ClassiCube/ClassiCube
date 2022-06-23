@@ -24,15 +24,6 @@
 #include FT_FREETYPE_H
 
 
-#ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
-
-#include <hb.h>
-#include <hb-ot.h>
-#include <hb-ft.h>
-
-#endif
-
-
 FT_BEGIN_HEADER
 
   FT_Error

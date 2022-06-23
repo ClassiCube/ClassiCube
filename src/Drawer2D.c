@@ -1328,4 +1328,46 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 		xOffset += interop_TextDraw(buffer, len, bmp, x + (int)xOffset, y, shadow, hexBuffer);
 	}
 }
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
+extern void interop_GetFontNames(struct StringsBuffer* buffer);
+extern cc_result interop_SysFontMake(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
+extern void interop_SysMakeDefault(struct FontDesc* desc, int size, int flags);
+extern void interop_SysFontFree(void* handle);
+extern int interop_SysTextWidth(struct DrawTextArgs* args);
+extern void interop_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow);
+
+void SysFonts_Register(const cc_string* path) { }
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) {
+    return &String_Empty;
+}
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) {
+    interop_GetFontNames(buffer);
+}
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+    return interop_SysFontMake(desc, fontName, size, flags);
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+    interop_SysMakeDefault(desc, size, flags);
+}
+
+void Font_Free(struct FontDesc* desc) {
+    desc->size = 0;
+    if (Font_IsBitmap(desc)) return;
+    
+    interop_SysFontFree(desc->handle);
+    desc->handle = NULL;
+}
+
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+    return interop_SysTextWidth(args);
+}
+
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+    interop_SysTextDraw(args, bmp, x, y, shadow);
+}
 #endif

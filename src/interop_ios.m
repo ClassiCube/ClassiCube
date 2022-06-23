@@ -667,6 +667,110 @@ void GetDeviceUUID(cc_string* str) {
 
 
 /*########################################################################################################################*
+ *-----------------------------------------------------Font handling-------------------------------------------------------*
+ *#########################################################################################################################*/
+#ifndef CC_BUILD_FREETYPE
+#include "ExtMath.h"
+
+void interop_GetFontNames(struct StringsBuffer* buffer) {
+    NSArray<NSString*>* families = UIFont.familyNames;
+    NSLog(@"Families: %@", families);
+    char tmpBuffer[NATIVE_STR_LEN];
+    cc_string tmp = String_FromArray(tmpBuffer);
+    
+    for (NSString* family in families)
+    {
+        const char* str = family.UTF8String;
+        String_AppendUtf8(&tmp, str, String_Length(str));
+        StringsBuffer_Add(buffer, &tmp);
+        tmp.length = 0;
+    }
+    StringsBuffer_Sort(buffer);
+}
+
+static void InitFont(struct FontDesc* desc, UIFont* font) {
+    desc->handle = CFBridgingRetain(font);
+    desc->height = Math_Ceil(Math_AbsF(font.ascender) + Math_AbsF(font.descender));
+}
+
+cc_result interop_SysFontMake(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+    CGFloat uiSize = size * 96.0f / 72.0f; // convert from point size
+    NSString* name = ToNSString(fontName);
+    UIFont* font   = [UIFont fontWithName:name size:uiSize];
+    if (!font) return ERR_NOT_SUPPORTED;
+    
+    InitFont(desc, font);
+    return 0;
+}
+
+void interop_SysMakeDefault(struct FontDesc* desc, int size, int flags) {
+    CGFloat uiSize = size * 96.0f / 72.0f; // convert from point size
+    UIFont* font   = [UIFont systemFontOfSize:uiSize];
+    InitFont(desc, font);
+}
+
+void interop_SysFontFree(void* handle) {
+    CFBridgingRelease(handle);
+}
+
+int interop_SysTextWidth(struct DrawTextArgs* args) {
+    UIFont* font    = (__bridge UIFont*)args->font->handle;
+    cc_string left  = args->text, part;
+    BitmapCol color = Drawer2D.Colors['f'];
+    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    {
+        NSString* bit = ToNSString(&part);
+        NSDictionary* attrs =
+        @{
+          NSFontAttributeName : font,
+          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+          };
+        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
+        [str appendAttributedString:attr_bit];
+    }
+    
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
+    CGRect bounds  = CTLineGetImageBounds(line, NULL);
+    
+    CGFloat ascent, descent, leading;
+    double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+    return Math_Ceil(width);
+}
+
+void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
+    UIFont* font    = (__bridge UIFont*)args->font->handle;
+    cc_string left  = args->text, part;
+    BitmapCol color = Drawer2D.Colors['f'];
+    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    {
+        NSString* bit = ToNSString(&part);
+        NSDictionary* attrs =
+        @{
+          NSFontAttributeName : font,
+          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+          };
+        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
+        [str appendAttributedString:attr_bit];
+    }
+    
+    if (shadow) return;
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
+    struct Bitmap* bmp = &ctx->bmp;
+    
+    CGContextRef cg_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, ctx->height, 8, bmp->width * 4,
+                          CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+    CGContextSetTextPosition(cg_ctx, x, y);
+    CTLineDraw(line, cg_ctx);
+    CGContextRelease(cg_ctx);
+}
+#endif
+
+
+/*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
 static struct LWidget* FindWidgetForView(id obj) {
