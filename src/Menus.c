@@ -27,6 +27,7 @@
 #include "Deflate.h"
 #include "Stream.h"
 #include "Builder.h"
+#include "Lighting.h"
 #include "Logger.h"
 #include "Options.h"
 #include "Input.h"
@@ -2739,6 +2740,13 @@ static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }
+static void GraphicsOptionsScreen_GetModernLighting(cc_string* v) { Menu_GetBool(v, Lighting_Modern); }
+static void GraphicsOptionsScreen_SetModernLighting(const cc_string* v) {
+	Lighting_Modern = Menu_SetBool(v, OPT_MODERN_LIGHTING);
+	Lighting_SwitchActive();
+	Builder_ApplyActive();
+	MapRenderer_Refresh();
+}
 
 static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
 static void GraphicsOptionsScreen_SetCamera(const cc_string* v) { Camera.Smooth = Menu_SetBool(v, OPT_CAMERA_SMOOTH); }
@@ -2767,34 +2775,37 @@ static void GraphicsOptionsScreen_SetCameraMass(const cc_string* c) {
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 
+#define GraphicsOptionsButtonCount 9
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[8] = {
-		{ -1, -100, "Camera Mass",       MenuOptionsScreen_Input,
+	static const struct MenuOptionDesc buttons[GraphicsOptionsButtonCount] = {
+		{ -1, -150, "Camera Mass",       MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass },
-		{ -1, -50,  "FPS mode",          MenuOptionsScreen_Enum,
+		{ -1, -100,  "FPS mode",          MenuOptionsScreen_Enum,
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
-		{ -1,   0,  "View distance",     MenuOptionsScreen_Input,
+		{ -1,  -50,  "View distance",     MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
-		{ -1,  50,  "Advanced lighting", MenuOptionsScreen_Bool,
+		{ -1,  0,  "Smooth lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
+		{ -1,  50,  "Modern lighting", MenuOptionsScreen_Bool,
+			GraphicsOptionsScreen_GetModernLighting,     GraphicsOptionsScreen_SetModernLighting },
 
-		{ 1, -100, "Smooth camera", MenuOptionsScreen_Bool,
+		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
-		{ 1, -50,  "Names",   MenuOptionsScreen_Enum,
+		{ 1, -100,  "Names",   MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetNames,   GraphicsOptionsScreen_SetNames },
-		{ 1,   0,  "Shadows", MenuOptionsScreen_Enum,
+		{ 1,  -50,  "Shadows", MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows },
-		{ 1,  50,  "Mipmaps", MenuOptionsScreen_Bool,
+		{ 1,    0,  "Mipmaps", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
 	};
 
-	s->numCore      = 8;
-	s->maxVertices += 8 * BUTTONWIDGET_MAX;
+	s->numCore      = GraphicsOptionsButtonCount;
+	s->maxVertices += GraphicsOptionsButtonCount * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void GraphicsOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[8];
+	static struct MenuInputDesc descs[GraphicsOptionsButtonCount];
 	static const char* extDescs[Array_Elems(descs)];
 
 	extDescs[0] = "&eChange the smoothness of the smooth camera.";
@@ -2804,13 +2815,14 @@ void GraphicsOptionsScreen_Show(void) {
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
 	extDescs[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	extDescs[5] = \
+	extDescs[4] = "&cNote: &eModern lighting will reduce performance and increase memory usage.";
+	extDescs[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	extDescs[6] = \
+	extDescs[7] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \

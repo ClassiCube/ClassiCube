@@ -10,6 +10,12 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
+/* Whether MC-style 16-level lighting should be used. */
+extern cc_bool Lighting_Modern;
+/* How many unique "levels" of light there are when modern lighting is used. */
+#define MODERN_LIGHTING_LEVELS 16
+/* How many bits to shift sunlight level to the left when storing it in a byte along with blocklight level*/
+#define MODERN_LIGHTING_SUN_SHIFT 4
 
 CC_VAR extern struct _Lighting {
 	/* Releases/Frees the per-level lighting state */
@@ -49,4 +55,6 @@ CC_VAR extern struct _Lighting {
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);
 } Lighting;
+
+void Lighting_SwitchActive(void);
 #endif

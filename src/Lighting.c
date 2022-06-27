@@ -7,6 +7,11 @@
 #include "Logger.h"
 #include "Event.h"
 #include "Game.h"
+#include "String.h"
+#include "Chat.h"
+#include "ExtMath.h"
+#include "Options.h"
+cc_bool Lighting_Modern;
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
 
@@ -98,6 +103,156 @@ static void ClassicLighting_Refresh(void) {
 	}
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------Modern lighting------------------------------------------------------*
+*#########################################################################################################################*/
+/* TODO: Evil goodly hack, move chunk variables to World.h */
+int ModernLighting_ChunkCount;
+int ModernLighting_ChunksX;
+int ModernLighting_ChunksY;
+int ModernLighting_ChunksZ;
+
+/* A 16x16 palette of sun and block light colors. */
+/* It is indexed by a byte where the leftmost 4 bits represent sunlight level and the rightmost 4 bits represent blocklight level */
+/* E.G. modernLighting_palette[0b_0010_0001] will give us the color for sun level 2 and block level 1 (lowest level is 0) */
+static PackedCol modernLighting_palette[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
+
+typedef cc_uint8* LightingChunk;
+static cc_uint8* chunkLightingDataFlags;
+#define CHUNK_UNCALCULATED 0
+#define CHUNK_CALCULATED 1
+#define CHUNK_ALL_DARK 2
+static LightingChunk* chunkLightingData;
+static cc_uint8 allDarkChunkLightingData[CHUNK_SIZE_3];
+
+#define Modern_MakePaletteIndex(sun, block) ((sun << MODERN_LIGHTING_SUN_SHIFT) | block)
+
+/* Fill in modernLighting_palette with values based on the current environment colors in lieu of recieving a palette from the server */
+static void ModernLighting_InitPalette(void) {
+	PackedCol darkestShadow, defaultBlockLight, blockColor, sunColor, invertedBlockColor, invertedSunColor, finalColor;
+	int sunLevel, blockLevel;
+	float blockLerp;
+	cc_uint8 R, G, B;
+
+	defaultBlockLight = PackedCol_Make(255, 238, 204, 255); /* A very mildly orange tinted light color */
+	darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
+
+	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
+		for (blockLevel = 0; blockLevel < MODERN_LIGHTING_LEVELS; blockLevel++) {
+			/* We want the brightest light level to be the sun env color, with all other 15 levels being interpolation */
+			/* between shadow color and darkest shadow color */
+			if (sunLevel == MODERN_LIGHTING_LEVELS-1) { 
+				sunColor = Env.SunCol;
+			}
+			else {
+				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 2) );
+			}
+			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS-1);
+			blockLerp *= blockLerp;
+			blockLerp *= (MATH_PI / 2);
+			blockLerp = Math_Cos(blockLerp);
+			blockColor = PackedCol_Lerp(0, defaultBlockLight, 1 - blockLerp);
+
+			/* With Screen blend mode, the values of the pixels in the two layers are inverted, multiplied, and then inverted again. */
+			R = 255 - PackedCol_R(sunColor);
+			G = 255 - PackedCol_G(sunColor);
+			B = 255 - PackedCol_B(sunColor);
+			invertedSunColor = PackedCol_Make(R, G, B, 255);
+			R = 255 - PackedCol_R(blockColor);
+			G = 255 - PackedCol_G(blockColor);
+			B = 255 - PackedCol_B(blockColor);
+			invertedBlockColor = PackedCol_Make(R, G, B, 255);
+			
+			finalColor = PackedCol_Tint(invertedSunColor, invertedBlockColor);
+			R = 255 - PackedCol_R(finalColor);
+			G = 255 - PackedCol_G(finalColor);
+			B = 255 - PackedCol_B(finalColor);
+			modernLighting_palette[Modern_MakePaletteIndex(sunLevel, blockLevel)] = PackedCol_Make(R, G, B, 255);
+		}
+	}
+}
+
+static void ModernLighting_AllocState(void) {
+	ModernLighting_InitPalette();
+	ModernLighting_ChunksX = (World.Width + CHUNK_MAX) >> CHUNK_SHIFT;
+	ModernLighting_ChunksY = (World.Height + CHUNK_MAX) >> CHUNK_SHIFT;
+	ModernLighting_ChunksZ = (World.Length + CHUNK_MAX) >> CHUNK_SHIFT;
+	ModernLighting_ChunkCount = ModernLighting_ChunksX * ModernLighting_ChunksY * ModernLighting_ChunksZ;
+
+	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(ModernLighting_ChunkCount, sizeof(cc_uint8));
+	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(ModernLighting_ChunkCount, sizeof(LightingChunk));
+}
+static void ModernLighting_FreeState(void) {
+	int i;
+	/* This function can be called multiple times without calling ModernLighting_AllocState, so... */
+	if (chunkLightingDataFlags == NULL) { return; }
+
+	for (i = 0; i < ModernLighting_ChunkCount; i++) {
+		if (chunkLightingDataFlags[i] > CHUNK_CALCULATED || chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) { continue; }
+		Mem_Free(chunkLightingData[i]);
+	}
+	Mem_Free(chunkLightingDataFlags);
+	Mem_Free(chunkLightingData);
+	chunkLightingDataFlags = NULL;
+	chunkLightingData = NULL;
+}
+
+/* Gives the index into array of chunk pointers based on chunk x y z */
+#define ChunkIndex(x, y, z) (((y) * ModernLighting_ChunksZ + (z)) * ModernLighting_ChunksX + (x))
+/* Gives the index into array of chunk data */
+#define ChunkDataIndex(x, y, z) (((y) * CHUNK_SIZE + (z)) * CHUNK_SIZE + (x))
+
+static void CalculateChunkLighting(int chunkIndex) {
+	int i;
+	chunkLightingData[chunkIndex] = (cc_uint8*)Mem_TryAlloc(CHUNK_SIZE_3, sizeof(cc_uint8));
+
+	for (i = 0; i < CHUNK_SIZE_3; i++) {
+		chunkLightingData[chunkIndex][i] = i % 256;
+	}
+}
+static void ModernLighting_LightHint(void) { } /* ??? */
+static void ModernLighting_OnBlockChanged(void) { }
+static void ModernLighting_Refresh(void) {
+	ModernLighting_InitPalette();
+	/* Set all the chunk lighting data flags to CHUNK_UNCALCULATED? */
+}
+static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
+static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
+
+static PackedCol ModernLighting_Color(int x, int y, int z) {
+	if (!World_Contains(x, y, z)) return Env.SunCol;
+	//cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
+	//cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
+	//return y * z * x;
+	int cx, cy, cz;
+	int dx, dy, dz;
+	int chunkIndex;
+	int chunkDataIndex;
+
+	cx = x / CHUNK_SIZE;
+	cy = y / CHUNK_SIZE;
+	cz = z / CHUNK_SIZE;
+	chunkIndex = ChunkIndex(cx, cy, cz);
+
+	//cc_string msg; char msgBuffer[STRING_SIZE * 2]; String_InitArray(msg, msgBuffer);	
+	//String_Format3(&msg, "Hi x %i, y %i, z %i", &cx, &cy, &cz);
+	//Logger_Log(&msg);
+
+	if (chunkLightingDataFlags[chunkIndex] == CHUNK_UNCALCULATED) {
+		CalculateChunkLighting(chunkIndex);
+		chunkLightingDataFlags[chunkIndex] = CHUNK_CALCULATED;
+	}
+	/* Get coordinates into the chunk data*/
+	dx = x % CHUNK_SIZE;
+	dy = y % CHUNK_SIZE;
+	dz = z % CHUNK_SIZE;
+	chunkDataIndex = ChunkDataIndex(dx, dy, dz);
+	cc_uint8 lightData = chunkLightingData[chunkIndex]
+		[chunkDataIndex];
+
+	return modernLighting_palette[lightData];
+}
 
 /*########################################################################################################################*
 *----------------------------------------------------Lighting update------------------------------------------------------*
@@ -392,13 +547,46 @@ static void ClassicLighting_SetActive(void) {
 	Lighting.AllocState = ClassicLighting_AllocState;
 	Lighting.LightHint  = ClassicLighting_LightHint;
 }
+static void ModernLighting_SetActive(void) {
+	Lighting.OnBlockChanged = ModernLighting_OnBlockChanged;
+	Lighting.Refresh        = ModernLighting_Refresh;
+	Lighting.IsLit          = ModernLighting_IsLit;
+	Lighting.Color          = ModernLighting_Color;
+	Lighting.Color_XSide    = ModernLighting_Color;
 
+	Lighting.IsLit_Fast        = ModernLighting_IsLit_Fast;
+	Lighting.Color_Sprite_Fast = ModernLighting_Color;
+	Lighting.Color_YMax_Fast   = ModernLighting_Color;
+	Lighting.Color_YMin_Fast   = ModernLighting_Color;
+	Lighting.Color_XSide_Fast  = ModernLighting_Color;
+	Lighting.Color_ZSide_Fast  = ModernLighting_Color;
+
+	Lighting.FreeState  = ModernLighting_FreeState;
+	Lighting.AllocState = ModernLighting_AllocState;
+	Lighting.LightHint  = ModernLighting_LightHint;
+}
+static void Lighting_ApplyActive(void) {
+	if (Lighting_Modern) {
+		ModernLighting_SetActive();
+	}
+	else {
+		ClassicLighting_SetActive();
+	}
+}
+void Lighting_SwitchActive(void) {
+	Lighting.FreeState();
+	Lighting_ApplyActive();
+	Lighting.AllocState();
+}
 
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
 
-static void OnInit(void)         { ClassicLighting_SetActive(); }
+static void OnInit(void) {
+	if (!Game_ClassicMode) Lighting_Modern = Options_GetBool(OPT_MODERN_LIGHTING, false);
+	Lighting_ApplyActive();
+}
 static void OnReset(void)        { Lighting.FreeState(); }
 static void OnNewMapLoaded(void) { Lighting.AllocState(); }
 
