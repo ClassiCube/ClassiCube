@@ -2831,8 +2831,8 @@ void GraphicsOptionsScreen_Show(void) {
 	MenuInput_Float(descs[0], 1, 100, 20);
 	MenuInput_Enum(descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(descs[2],  8, 4096, 512);
-	MenuInput_Enum(descs[5], NameMode_Names,   NAME_MODE_COUNT);
-	MenuInput_Enum(descs[6], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(descs[6], NameMode_Names,   NAME_MODE_COUNT);
+	MenuInput_Enum(descs[7], ShadowMode_Names, SHADOW_MODE_COUNT);
 
 	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), GraphicsOptionsScreen_InitWidgets);
 }
