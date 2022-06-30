@@ -87,7 +87,7 @@ void Event_UnregisterAll(void) {
 	ChatEvents.ChatSending.Count    = 0;
 	ChatEvents.ColCodeChanged.Count = 0;
 
-	WindowEvents.Redraw.Count  = 0;
+	WindowEvents.RedrawNeeded.Count = 0;
 	WindowEvents.Resized.Count = 0;
 	WindowEvents.Closing.Count = 0;
 	WindowEvents.FocusChanged.Count = 0;

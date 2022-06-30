@@ -154,7 +154,7 @@ static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject s
 
 static void JNICALL java_processSurfaceRedrawNeeded(JNIEnv* env, jobject o) {
 	Platform_LogConst("WIN - REDRAW");
-	Event_RaiseVoid(&WindowEvents.Redraw);
+	Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 }
 
 static void JNICALL java_onStart(JNIEnv* env, jobject o) {

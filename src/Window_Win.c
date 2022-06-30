@@ -119,7 +119,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_PAINT:
 		ValidateRect(win_handle, NULL);
-		Event_RaiseVoid(&WindowEvents.Redraw);
+		Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 		return 0;
 
 	case WM_WINDOWPOSCHANGED:

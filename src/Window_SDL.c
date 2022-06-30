@@ -197,7 +197,7 @@ static void OnTextEvent(const SDL_Event* e) {
 static void OnWindowEvent(const SDL_Event* e) {
 	switch (e->window.event) {
 		case SDL_WINDOWEVENT_EXPOSED:
-			Event_RaiseVoid(&WindowEvents.Redraw);
+			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
 		case SDL_WINDOWEVENT_SIZE_CHANGED:
 			RefreshWindowBounds();

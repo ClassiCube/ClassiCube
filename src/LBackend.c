@@ -245,13 +245,7 @@ static CC_NOINLINE void RedrawDirty(void) {
 	MarkAllDirty();
 }
 
-void LBackend_Redraw(void) {
-	pendingRedraw = REDRAW_ALL;
-	MarkAllDirty();
-}
-void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
-
-void LBackend_Tick(void) {
+static CC_NOINLINE void DoRedraw(void) {
 	if (pendingRedraw & REDRAW_ALL) {
 		RedrawAll();
 		pendingRedraw = 0;
@@ -259,8 +253,18 @@ void LBackend_Tick(void) {
 		RedrawDirty();
 		pendingRedraw = 0;
 	}
+}
 
+void LBackend_Redraw(void) {
+	pendingRedraw = REDRAW_ALL;
+	MarkAllDirty();
+}
+void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
+
+void LBackend_Tick(void) {
+	DoRedraw();
 	if (!dirty_rect.Width) return;
+
 	Window_DrawFramebuffer(dirty_rect);
 	dirty_rect.X = 0; dirty_rect.Width   = 0;
 	dirty_rect.Y = 0; dirty_rect.Height  = 0;
@@ -270,7 +274,8 @@ void LBackend_Tick(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Event handling------------------------------------------------------*
 *#########################################################################################################################*/
-static void ReqeustRedraw(void* obj) { LBackend_Redraw(); }
+static void ReqeustRedraw(void* obj)  { LBackend_Redraw(); }
+static void RedrawContents(void* obj) { DoRedraw(); }
 
 CC_NOINLINE static struct LWidget* GetWidgetAt(struct LScreen* s, int idx) {
 	struct LWidget* w;
@@ -361,13 +366,15 @@ static void OnTextChanged(void* obj, const cc_string* str) {
 }
 
 static void HookEvents(void) {
-	Event_Register_(&WindowEvents.Redraw, NULL, ReqeustRedraw);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	
 	Event_Register_(&InputEvents.Press,         NULL, OnKeyPress);
 	Event_Register_(&InputEvents.TextChanged,   NULL, OnTextChanged);
+
+	Event_Register_(&WindowEvents.RedrawNeeded, NULL, ReqeustRedraw);
+	Event_Register_(&WindowEvents.Redrawing,    NULL, RedrawContents);
 }
 
 
