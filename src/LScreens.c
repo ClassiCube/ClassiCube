@@ -338,7 +338,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->iptColours[index + 1].text, &g)) return;
 	if (!Convert_ParseUInt8(&s->iptColours[index + 2].text, &b)) return;
 
-	*color = BitmapCol_Make(r, g, b, 255);
+	*color = BitmapColor_RGB(r, g, b);
 	Launcher_SaveTheme();
 	LBackend_ThemeChanged();
 }
@@ -1011,8 +1011,8 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
-#define RESOURCES_BACK_COLOR BitmapCol_Make( 12,  12,  12, 255)
-#define RESOURCES_FORE_COLOR BitmapCol_Make(120,  85, 151, 255)
+#define RESOURCES_BACK_COLOR BitmapColor_RGB( 12,  12,  12)
+#define RESOURCES_FORE_COLOR BitmapColor_RGB(120,  85, 151)
 
 static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
 	Gradient_Noise(ctx, RESOURCES_FORE_COLOR, 4, x, y, width, height);
@@ -1067,9 +1067,9 @@ static void FetchResourcesScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(fetchResources_widgets);
 	s->lblStatus.small = true;
 
-	LLabel_Init( &s->lblStatus,   "",                                      fres_lblStatus);
-	LButton_Init(&s->btnCancel,   120, 35, "Cancel",                       fres_btnCancel);
-	LSlider_Init(&s->sdrProgress, 200, 12, BitmapCol_Make(0, 220, 0, 255), fres_sdrProgress);
+	LLabel_Init( &s->lblStatus,   "",                                  fres_lblStatus);
+	LButton_Init(&s->btnCancel,   120, 35, "Cancel",                   fres_btnCancel);
+	LSlider_Init(&s->sdrProgress, 200, 12, BitmapColor_RGB(0, 220, 0), fres_sdrProgress);
 
 	s->btnCancel.OnClick = CheckResourcesScreen_Next;
 }

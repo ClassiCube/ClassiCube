@@ -35,7 +35,7 @@ static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
 	g = BitmapCol_G(a) + amount; Math_Clamp(g, 0, 255);
 	b = BitmapCol_B(a) + amount; Math_Clamp(b, 0, 255);
-	return BitmapCol_Make(r, g, b, 255);
+	return BitmapColor_RGB(r, g, b);
 }
 
 static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
@@ -76,7 +76,7 @@ static void LButton_DrawBorder(struct Context2D* ctx, int x, int y, int width, i
 }
 
 static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
-	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
+	BitmapCol activeColor = BitmapColor_RGB(189, 198, 255);
 	BitmapCol color       = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
@@ -418,7 +418,7 @@ void LLine_Init(struct LLine* w, int width, const struct LLayout* layouts) {
 	LBackend_LineInit(w, width);
 }
 
-#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
+#define CLASSIC_LINE_COLOR BitmapColor_RGB(128, 128, 128)
 BitmapCol LLine_GetColor(void) {
 	return Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
 }
@@ -730,9 +730,9 @@ void LTable_ShowSelected(struct LTable* w) {
 }
 
 BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
-	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
-	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);
-	BitmapCol selectedColor = BitmapCol_Make( 40,  40, 40, 255);
+	BitmapCol featSelColor  = BitmapColor_RGB( 50,  53,  0);
+	BitmapCol featuredColor = BitmapColor_RGB(101, 107,  0);
+	BitmapCol selectedColor = BitmapColor_RGB( 40,  40, 40);
 
 	if (entry && entry->featured) {
 		return selected ? featSelColor : featuredColor;
@@ -741,7 +741,7 @@ BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
 	}
 
 	if (!Launcher_Theme.ClassicBackground) {
-		return BitmapCol_Make(20, 20, 10, 255);
+		return BitmapColor_RGB(20, 20, 10);
 	} else {
 		return (row & 1) == 0 ? Launcher_Theme.BackgroundColor : 0;
 	}

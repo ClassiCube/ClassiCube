@@ -36,10 +36,11 @@ typedef cc_uint32 BitmapCol;
 #define BitmapCol_A_Bits(color) ((cc_uint8)(color) << BITMAPCOL_A_SHIFT)
 
 #define BitmapCol_Make(r, g, b, a) (BitmapCol_R_Bits(r) | BitmapCol_G_Bits(g) | BitmapCol_B_Bits(b) | BitmapCol_A_Bits(a))
+#define BitmapColor_RGB(r, g, b)   (BitmapCol_R_Bits(r) | BitmapCol_G_Bits(g) | BitmapCol_B_Bits(b) | BITMAPCOL_A_MASK)
 #define BITMAPCOL_RGB_MASK (BITMAPCOL_R_MASK | BITMAPCOL_G_MASK | BITMAPCOL_B_MASK)
 
-#define BITMAPCOL_BLACK BitmapCol_Make(  0,   0,   0, 255)
-#define BITMAPCOL_WHITE BitmapCol_Make(255, 255, 255, 255)
+#define BITMAPCOL_BLACK BitmapColor_RGB(  0,   0,   0)
+#define BITMAPCOL_WHITE BitmapColor_RGB(255, 255, 255)
 
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };

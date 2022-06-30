@@ -195,7 +195,7 @@ void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 			G = BitmapCol_G(color) + (int)(noise * variation); Drawer2D_ClampPixel(G);
 			B = BitmapCol_B(color) + (int)(noise * variation); Drawer2D_ClampPixel(B);
 
-			*dst = BitmapCol_Make(R, G, B, 255);
+			*dst = BitmapColor_RGB(R, G, B);
 		}
 	}
 }
@@ -247,7 +247,7 @@ void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 			G = BitmapCol_G(color) + (BitmapCol_G(*dst) * blend) / 255;
 			B = BitmapCol_B(color) + (BitmapCol_B(*dst) * blend) / 255;
 
-			*dst = BitmapCol_Make(R, G, B, 255);
+			*dst = BitmapColor_RGB(R, G, B);
 		}
 	}
 }
@@ -632,11 +632,10 @@ void Drawer2D_DrawClippedText(struct Context2D* ctx, struct DrawTextArgs* args,
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
 static void InitHexEncodedColor(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
-	Drawer2D.Colors[i] = BitmapCol_Make(
+	Drawer2D.Colors[i] = BitmapColor_RGB(
 		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
 		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
-		lo * ((hex >> 0) & 1) + hi * (hex >> 3),
-		255);
+		lo * ((hex >> 0) & 1) + hi * (hex >> 3));
 }
 
 static void OnReset(void) {
