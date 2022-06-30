@@ -94,6 +94,7 @@ void Event_UnregisterAll(void) {
 	WindowEvents.StateChanged.Count = 0;
 	WindowEvents.Created.Count      = 0;
 	WindowEvents.InactiveChanged.Count = 0;
+	WindowEvents.Redrawing.Count    = 0;
 
 	InputEvents.Press.Count = 0;
 	InputEvents.Down.Count  = 0;
