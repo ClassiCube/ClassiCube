@@ -71,8 +71,6 @@ static CGRect GetViewFrame(void) {
 
 @implementation CCWindow
 
-//- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
-
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     for (UITouch* t in touches) AddTouch(t);
 }
@@ -162,6 +160,14 @@ static UITextField* kb_widget;
 
 - (BOOL)prefersStatusBarHidden {
     return fullscreen;
+}
+
+- (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
+    // recent iOS versions have a 'bottom home bar', which when swiped up,
+    //  switches out of ClassiCube and to the app list menu
+    // overriding this forces the user to swipe up twice, which should
+    //  significantly the chance of accidentally triggering this gesture
+    return UIRectEdgeBottom;
 }
 @end
 
@@ -499,6 +505,8 @@ void Window_Create2D(int width, int height) {
 /*#########################################################################################################################*
  *--------------------------------------------------------3D window--------------------------------------------------------*
  *#########################################################################################################################*/
+static void GLContext_OnLayout(void);
+
 @interface CCGLView : UIView
 @end
 
@@ -506,6 +514,11 @@ void Window_Create2D(int width, int height) {
 
 + (Class)layerClass {
     return [CAEAGLLayer class];
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    GLContext_OnLayout();
 }
 @end
 
@@ -531,6 +544,7 @@ void Window_Create3D(int width, int height) {
 static EAGLContext* ctx_handle;
 static GLuint framebuffer;
 static GLuint color_renderbuffer, depth_renderbuffer;
+static int fb_width, fb_height;
 
 static void CreateFramebuffer(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
@@ -550,6 +564,9 @@ static void CreateFramebuffer(void) {
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
         Logger_Abort2(status, "Failed to create renderbuffer");
+    
+    fb_width  = WindowInfo.Width;
+    fb_height = WindowInfo.Height;
 }
 
 void GLContext_Create(void) {
@@ -561,7 +578,17 @@ void GLContext_Create(void) {
 }
                   
 void GLContext_Update(void) {
+    // trying to update renderbuffer here results in garbage output,
+    //  so do instead when layoutSubviews method is called
+}
+
+static void GLContext_OnLayout(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    
+    // only resize buffers when absolutely have to
+    if (fb_width == WindowInfo.Width && fb_height == WindowInfo.Height) return;
+    fb_width  = WindowInfo.Width;
+    fb_height = WindowInfo.Height;
     
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
