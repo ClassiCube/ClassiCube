@@ -181,23 +181,31 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_INPUT:
 	{
-		RAWINPUT raw;
+		int dx, dy, width, height, absX, absY, isVirtual;
 		UINT ret, rawSize = sizeof(RAWINPUT);
-		int dx, dy;
+		RAWINPUT raw;
 
 		ret = _GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER));
 		if (ret == -1 || raw.header.dwType != RIM_TYPEMOUSE) break;		
 
 		if (raw.data.mouse.usFlags == MOUSE_MOVE_RELATIVE) {
+			/* Majority of mouse input devices provide relative coordinates */
 			dx = raw.data.mouse.lLastX;
 			dy = raw.data.mouse.lLastY;
-		} else if (raw.data.mouse.usFlags == MOUSE_MOVE_ABSOLUTE) {
+		} else if (raw.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) {
+			/* This mouse mode is produced by VirtualBox with Mouse Integration on */
+			/* To understand reasoning behind the following code, see Remarks in */
+			/*  https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawmouse */
 			static int prevPosX, prevPosY;
-			dx = raw.data.mouse.lLastX - prevPosX;
-			dy = raw.data.mouse.lLastY - prevPosY;
+			isVirtual = (raw.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP);
 
-			prevPosX = raw.data.mouse.lLastX;
-			prevPosY = raw.data.mouse.lLastY;
+			width  = GetSystemMetrics(isVirtual ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
+			height = GetSystemMetrics(isVirtual ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
+			absX   = (int)((raw.data.mouse.lLastX / 65535.0f) * width);
+			absY   = (int)((raw.data.mouse.lLastY / 65535.0f) * height);
+
+			dx = absX - prevPosX; prevPosX = absX;
+			dy = absY - prevPosY; prevPosY = absY;
 		} else { break; }
 
 		if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, (float)dx, (float)dy);
