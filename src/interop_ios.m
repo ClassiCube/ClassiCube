@@ -15,8 +15,8 @@
 #include "Funcs.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
-#include <UIKit/UIPasteboard.h>
 #include <UIKit/UIKit.h>
+#include <UIKit/UIPasteboard.h>
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
 #include <CoreText/CoreText.h>
@@ -61,6 +61,12 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
     if (landscape_locked)
         return UIInterfaceOrientationMaskLandscape;
     return UIInterfaceOrientationMaskAll;
+}
+
+static cc_bool fullscreen = true;
+static CGRect GetViewFrame(void) {
+    UIScreen* screen = UIScreen.mainScreen;
+    return fullscreen ? screen.bounds : screen.applicationFrame;
 }
 
 @implementation CCWindow
@@ -154,9 +160,9 @@ static UITextField* kb_widget;
     } completion:nil];
 }
 
-/*- (BOOL)prefersStatusBarHidden {
-    
-}*/
+- (BOOL)prefersStatusBarHidden {
+    return fullscreen;
+}
 @end
 
 @implementation CCAppDelegate
@@ -312,13 +318,20 @@ void Window_Init(void) {
     DisplayInfo.ScaleY = 1; // TODO dpi scale
 }
 
+static UIColor* CalcBackgroundColor(void) {
+    // default to purple if no themed background color yet
+    if (!Launcher_Theme.BackgroundColor)
+        return UIColor.purpleColor;
+    return ToUIColor(Launcher_Theme.BackgroundColor, 1.0f);
+}
+
 static CGRect DoCreateWindow(void) {
-    CGRect bounds = UIScreen.mainScreen.bounds;
+    CGRect bounds = GetViewFrame();
     cc_controller = [CCViewController alloc];
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
     win_handle.rootViewController = cc_controller;
-    win_handle.backgroundColor = UIColor.blueColor;
+    win_handle.backgroundColor = CalcBackgroundColor();
     WindowInfo.Exists = true;
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
@@ -421,9 +434,22 @@ void Window_CloseKeyboard(void) {
     [text_input resignFirstResponder];
 }
 
-int Window_GetWindowState(void) { return WINDOW_STATE_NORMAL; }
-cc_result Window_EnterFullscreen(void) { return ERR_NOT_SUPPORTED; }
-cc_result Window_ExitFullscreen(void) { return ERR_NOT_SUPPORTED; }
+int Window_GetWindowState(void) {
+    return fullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
+}
+
+static void ToggleFullscreen(cc_bool isFullscreen) {
+    fullscreen = isFullscreen;
+    [cc_controller setNeedsStatusBarAppearanceUpdate];
+    view_handle.frame = GetViewFrame();
+}
+
+cc_result Window_EnterFullscreen(void) {
+    ToggleFullscreen(true); return 0;
+}
+cc_result Window_ExitFullscreen(void) {
+    ToggleFullscreen(false); return 0;
+}
 int Window_IsObscured(void) { return 0; }
 
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
@@ -670,8 +696,6 @@ void GetDeviceUUID(cc_string* str) {
  *-----------------------------------------------------Font handling-------------------------------------------------------*
  *#########################################################################################################################*/
 #ifndef CC_BUILD_FREETYPE
-#include "ExtMath.h"
-
 void interop_GetFontNames(struct StringsBuffer* buffer) {
     NSArray<NSString*>* families = UIFont.familyNames;
     NSLog(@"Families: %@", families);
@@ -688,6 +712,7 @@ void interop_GetFontNames(struct StringsBuffer* buffer) {
     StringsBuffer_Sort(buffer);
 }
 
+#include "ExtMath.h"
 static void InitFont(struct FontDesc* desc, UIFont* font) {
     desc->handle = CFBridgingRetain(font);
     desc->height = Math_Ceil(Math_AbsF(font.ascender) + Math_AbsF(font.descender));
@@ -1102,6 +1127,7 @@ static UIView* LBackend_InputShow(struct LInput* w) {
     fld.frame           = CGRectMake(0, 0, w->_textHeight, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = UIColor.whiteColor;
+    fld.textColor       = UIColor.blackColor;
     fld.delegate        = ui_controller;
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     
