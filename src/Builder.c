@@ -555,7 +555,7 @@ static PackedCol Normal_LightColor(int x, int y, int z, Face face, BlockID block
 	case FACE_YMIN:
 		return Lighting.Color_YMin_Fast(x, y - offset, z);		
 	case FACE_YMAX:
-		return Lighting.Color_YMax_Fast(x, (y + 1) - offset, z);
+		return Lighting.Color_YMax_Fast(x, (y + 1), z); //TODO fix this...
 	}
 	return 0; /* should never happen */
 }
@@ -723,7 +723,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		offset = (lightFlags >> FACE_YMAX) & 1;
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
-		col = fullBright ? PACKEDCOL_WHITE : Lighting.Color_YMax_Fast(x, (y + 1) - offset, z);
+		col = fullBright ? PACKEDCOL_WHITE : Lighting.Color_YMax_Fast(x, y + 1, z); //TODO fix this...
 		Drawer_YMax(count_YMax, col, loc, &part->fVertices[FACE_YMAX]);
 	}
 }

@@ -42,7 +42,8 @@ static int ClassicLighting_CalcHeightAt(int x, int maxY, int z, int hIndex) {
 #else
 	if (World.IDMask <= 0xFF) {
 		ClassicLighting_CalcBody(World.Blocks[i]);
-	} else {
+	}
+	else {
 		ClassicLighting_CalcBody(World.Blocks[i] | (World.Blocks2[i] << 8));
 	}
 #endif
@@ -121,8 +122,8 @@ static PackedCol modernLighting_palette[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING
 typedef cc_uint8* LightingChunk;
 static cc_uint8* chunkLightingDataFlags;
 #define CHUNK_UNCALCULATED 0
-#define CHUNK_CALCULATED 1
-#define CHUNK_ALL_DARK 2
+#define CHUNK_SELF_CALCULATED 1
+#define CHUNK_ALL_CALCULATED 2
 static LightingChunk* chunkLightingData;
 static cc_uint8 allDarkChunkLightingData[CHUNK_SIZE_3];
 
@@ -142,13 +143,13 @@ static void ModernLighting_InitPalette(void) {
 		for (blockLevel = 0; blockLevel < MODERN_LIGHTING_LEVELS; blockLevel++) {
 			/* We want the brightest light level to be the sun env color, with all other 15 levels being interpolation */
 			/* between shadow color and darkest shadow color */
-			if (sunLevel == MODERN_LIGHTING_LEVELS-1) { 
+			if (sunLevel == MODERN_LIGHTING_LEVELS - 1) {
 				sunColor = Env.SunCol;
 			}
 			else {
-				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 2) );
+				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 2));
 			}
-			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS-1);
+			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
 			blockLerp *= blockLerp;
 			blockLerp *= (MATH_PI / 2);
 			blockLerp = Math_Cos(blockLerp);
@@ -163,7 +164,7 @@ static void ModernLighting_InitPalette(void) {
 			G = 255 - PackedCol_G(blockColor);
 			B = 255 - PackedCol_B(blockColor);
 			invertedBlockColor = PackedCol_Make(R, G, B, 255);
-			
+
 			finalColor = PackedCol_Tint(invertedSunColor, invertedBlockColor);
 			R = 255 - PackedCol_R(finalColor);
 			G = 255 - PackedCol_G(finalColor);
@@ -189,7 +190,7 @@ static void ModernLighting_FreeState(void) {
 	if (chunkLightingDataFlags == NULL) { return; }
 
 	for (i = 0; i < ModernLighting_ChunkCount; i++) {
-		if (chunkLightingDataFlags[i] > CHUNK_CALCULATED || chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) { continue; }
+		if (chunkLightingDataFlags[i] > CHUNK_SELF_CALCULATED || chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) { continue; }
 		Mem_Free(chunkLightingData[i]);
 	}
 	Mem_Free(chunkLightingDataFlags);
@@ -199,18 +200,124 @@ static void ModernLighting_FreeState(void) {
 }
 
 /* Gives the index into array of chunk pointers based on chunk x y z */
-#define ChunkIndex(x, y, z) (((y) * ModernLighting_ChunksZ + (z)) * ModernLighting_ChunksX + (x))
+#define ChunkCoordsToChunkIndex(cx, cy, cz) (((cy) * ModernLighting_ChunksZ + (cz)) * ModernLighting_ChunksX + (cx))
 /* Gives the index into array of chunk data */
-#define ChunkDataIndex(x, y, z) (((y) * CHUNK_SIZE + (z)) * CHUNK_SIZE + (x))
+#define ChunkDataCoordsToChunkDataIndex(x, y, z) (((y) * CHUNK_SIZE + (z)) * CHUNK_SIZE + (x))
 
-static void CalculateChunkLighting(int chunkIndex) {
-	int i;
-	chunkLightingData[chunkIndex] = (cc_uint8*)Mem_TryAlloc(CHUNK_SIZE_3, sizeof(cc_uint8));
+#define ChunkIndexToChunkCoords(idx, x, y, z) x = idx % ModernLighting_ChunksX; z = (idx / ModernLighting_ChunksX) % ModernLighting_ChunksZ; y = (idx / ModernLighting_ChunksX) / ModernLighting_ChunksZ;
+//#define World_Unpack         (idx, x, y, z) x = idx % World.Width;            z = (idx / World.Width)            % World.Length;           y = (idx / World.Width)            / World.Length;
 
-	for (i = 0; i < CHUNK_SIZE_3; i++) {
-		chunkLightingData[chunkIndex][i] = i % 256;
+#define WorldCoordsToChunkDataIndex(x, y, z) (ChunkDataCoordsToChunkDataIndex(x % CHUNK_SIZE, y % CHUNK_SIZE, z % CHUNK_SIZE))
+
+#define WorldCoordsToChunkCoords(x, y, z, cx, cy, cz) cx = x / CHUNK_SIZE; cy = y / CHUNK_SIZE; cz = z / CHUNK_SIZE;
+
+
+static void SetLightData(cc_uint8 sunLight, cc_uint8 blockLight, int x, int y, int z) {
+	int cx, cy, cz;
+	int chunkIndex;
+	int chunkDataIndex;
+	WorldCoordsToChunkCoords(x, y, z, cx, cy, cz);
+	chunkIndex = ChunkCoordsToChunkIndex(cx, cy, cz);
+	chunkDataIndex = WorldCoordsToChunkDataIndex(x, y, z);
+
+	if (chunkLightingData[chunkIndex] == NULL) {
+		chunkLightingData[chunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
 	}
+	if (chunkLightingData[chunkIndex][chunkDataIndex] < blockLight) { chunkLightingData[chunkIndex][chunkDataIndex] = blockLight; }
 }
+static void CalcBlockLight(cc_uint8 lightLevel, int x, int y, int z) {
+	if (!World_Contains(x, y, z)) { return; }
+	
+	if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
+
+	SetLightData(0, lightLevel, x, y, z);
+	if (lightLevel <= 3) { return; }
+	CalcBlockLight(lightLevel - 1, x - 1, y, z);
+	CalcBlockLight(lightLevel - 1, x + 1, y, z);
+	CalcBlockLight(lightLevel - 1, x, y, z - 1);
+	CalcBlockLight(lightLevel - 1, x, y, z + 1);
+	CalcBlockLight(lightLevel - 1, x, y - 1, z);
+	CalcBlockLight(lightLevel - 1, x, y + 1, z);
+}
+static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
+	int x, y, z;
+	int chunkStartX, chunkStartY, chunkStartZ; //world coords
+	int chunkEndX, chunkEndY, chunkEndZ; //world coords
+	chunkStartX = cx * CHUNK_SIZE;
+	chunkStartY = cy * CHUNK_SIZE;
+	chunkStartZ = cz * CHUNK_SIZE;
+	chunkEndX = chunkStartX + CHUNK_SIZE;
+	chunkEndY = chunkStartY + CHUNK_SIZE;
+	chunkEndZ = chunkStartZ + CHUNK_SIZE;
+	if (chunkEndX > World.Width ) { chunkEndX = World.Width;  }
+	if (chunkEndY > World.Height) { chunkEndY = World.Height; }
+	if (chunkEndZ > World.Length) { chunkEndZ = World.Length; }
+
+	cc_string msg; char msgBuffer[STRING_SIZE * 2]; String_InitArray(msg, msgBuffer);
+
+	for (y = chunkStartY; y < chunkEndY; y++) {
+		for (z = chunkStartZ; z < chunkEndZ; z++) {
+			for (x = chunkStartX; x < chunkEndX; x++) {
+
+				BlockID curBlock = World_GetBlock(x, y, z);
+				if (Blocks.FullBright[curBlock]) {
+
+					String_InitArray(msg, msgBuffer);
+					String_Format3(&msg, "found bright block at %i %i %i", &x, &y, &z);
+					Chat_Add(&msg);
+
+					CalcBlockLight(MODERN_LIGHTING_MAX_LEVEL, x, y, z);
+				}
+			}
+		}
+	}
+	chunkLightingDataFlags[chunkIndex] = CHUNK_SELF_CALCULATED;
+}
+static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
+	int x, y, z;
+	int chunkStartX, chunkStartY, chunkStartZ; //chunk coords
+	int chunkEndX, chunkEndY, chunkEndZ; //chunk coords
+
+	chunkStartX = cx - 1;
+	chunkStartY = cx - 1;
+	chunkStartZ = cx - 1;
+	chunkEndX = cx + 1;
+	chunkEndY = cx + 1;
+	chunkEndZ = cx + 1;
+
+	if (chunkStartX == -1) { chunkStartX++; }
+	if (chunkStartY == -1) { chunkStartY++; }
+	if (chunkStartZ == -1) { chunkStartZ++; }
+	if (chunkEndX == ModernLighting_ChunksX) { chunkEndX--; }
+	if (chunkEndY == ModernLighting_ChunksX) { chunkEndY--; }
+	if (chunkEndZ == ModernLighting_ChunksX) { chunkEndZ--; }
+
+
+	cc_string msg; char msgBuffer[STRING_SIZE * 2]; String_InitArray(msg, msgBuffer);
+
+	for (y = chunkStartY; y <= chunkEndY; y++) {
+		for (z = chunkStartZ; z <= chunkEndZ; z++) {
+			for (x = chunkStartX; x <= chunkEndX; x++) {
+				int loopChunkIndex = ChunkCoordsToChunkIndex(x, y, z);
+
+				if (chunkLightingData[loopChunkIndex] == NULL) {
+					chunkLightingData[loopChunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
+				}
+
+				if (chunkLightingDataFlags[loopChunkIndex] == CHUNK_UNCALCULATED) {
+					CalculateChunkLightingSelf(loopChunkIndex, x, y, z);
+				}
+				//String_InitArray(msg, msgBuffer);
+				//String_Format3(&msg, "doing chunk at %i %i %i", &x, &y, &z);
+				//Chat_Add(&msg);
+			}
+		}
+	}
+
+	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
+}
+
+
 static void ModernLighting_LightHint(void) { } /* ??? */
 static void ModernLighting_OnBlockChanged(void) { }
 static void ModernLighting_Refresh(void) {
@@ -222,46 +329,46 @@ static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 
 static PackedCol ModernLighting_Color(int x, int y, int z) {
 	if (!World_Contains(x, y, z)) return Env.SunCol;
-	//cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
-	//cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
-	//return y * z * x;
+
 	int cx, cy, cz;
-	int dx, dy, dz;
 	int chunkIndex;
 	int chunkDataIndex;
 
-	cx = x / CHUNK_SIZE;
-	cy = y / CHUNK_SIZE;
-	cz = z / CHUNK_SIZE;
-	chunkIndex = ChunkIndex(cx, cy, cz);
+	WorldCoordsToChunkCoords(x, y, z, cx, cy, cz)
+	chunkIndex = ChunkCoordsToChunkIndex(cx, cy, cz);
 
-	//cc_string msg; char msgBuffer[STRING_SIZE * 2]; String_InitArray(msg, msgBuffer);	
-	//String_Format3(&msg, "Hi x %i, y %i, z %i", &cx, &cy, &cz);
-	//Logger_Log(&msg);
-
-	if (chunkLightingDataFlags[chunkIndex] == CHUNK_UNCALCULATED) {
-		CalculateChunkLighting(chunkIndex);
-		chunkLightingDataFlags[chunkIndex] = CHUNK_CALCULATED;
+	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) {
+		CalculateChunkLightingAll(chunkIndex, cx, cy, cz);
 	}
+
 	/* Get coordinates into the chunk data*/
-	dx = x % CHUNK_SIZE;
-	dy = y % CHUNK_SIZE;
-	dz = z % CHUNK_SIZE;
-	chunkDataIndex = ChunkDataIndex(dx, dy, dz);
+	chunkDataIndex = WorldCoordsToChunkDataIndex(x, y, z);
 	cc_uint8 lightData = chunkLightingData[chunkIndex]
 		[chunkDataIndex];
 
 	return modernLighting_palette[lightData];
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 /*########################################################################################################################*
 *----------------------------------------------------Lighting update------------------------------------------------------*
 *#########################################################################################################################*/
 static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, BlockID newBlock, int index, int lightH) {
-	cc_bool didBlock  = Blocks.BlocksLight[oldBlock];
+	cc_bool didBlock = Blocks.BlocksLight[oldBlock];
 	cc_bool nowBlocks = Blocks.BlocksLight[newBlock];
-	int oldOffset     = (Blocks.LightOffset[oldBlock] >> FACE_YMAX) & 1;
-	int newOffset     = (Blocks.LightOffset[newBlock] >> FACE_YMAX) & 1;
+	int oldOffset = (Blocks.LightOffset[oldBlock] >> FACE_YMAX) & 1;
+	int newOffset = (Blocks.LightOffset[newBlock] >> FACE_YMAX) & 1;
 	BlockID above;
 
 	/* Two cases we need to handle here: */
@@ -273,12 +380,14 @@ static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock
 	if ((y - newOffset) >= lightH) {
 		if (nowBlocks) {
 			classic_heightmap[index] = y - newOffset;
-		} else {
+		}
+		else {
 			/* Part of the column is now visible to light, we don't know how exactly how high it should be though. */
 			/* However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y */
 			ClassicLighting_CalcHeightAt(x, y, z, index);
 		}
-	} else if (y == lightH && oldOffset == 0) {
+	}
+	else if (y == lightH && oldOffset == 0) {
 		/* For a solid block on top of an upside down slab, they will both have the same light height. */
 		/* So we need to account for this particular case. */
 		above = y == (World.Height - 1) ? BLOCK_AIR : World_GetBlock(x, y + 1, z);
@@ -286,7 +395,8 @@ static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock
 
 		if (nowBlocks) {
 			classic_heightmap[index] = y - newOffset;
-		} else {
+		}
+		else {
 			ClassicLighting_CalcHeightAt(x, y - 1, z, index);
 		}
 	}
@@ -313,7 +423,8 @@ static cc_bool ClassicLighting_NeedsNeighour(BlockID block, int i, int minY, int
 #else
 	if (World.IDMask <= 0xFF) {
 		ClassicLighting_NeedsNeighourBody(World.Blocks[i]);
-	} else {
+	}
+	else {
 		ClassicLighting_NeedsNeighourBody(World.Blocks[i] | (World.Blocks2[i] << 8));
 	}
 #endif
@@ -329,9 +440,10 @@ static void ClassicLighting_ResetNeighbour(int x, int y, int z, BlockID block, i
 		if (ClassicLighting_NeedsNeighour(block, World_Pack(x, y, z), minY, y, y)) {
 			MapRenderer_RefreshChunk(cx, cy, cz);
 		}
-	} else {
+	}
+	else {
 		for (cy = maxCy; cy >= minCy; cy--) {
-			minY = (cy << CHUNK_SHIFT); 
+			minY = (cy << CHUNK_SHIFT);
 			maxY = (cy << CHUNK_SHIFT) + CHUNK_MAX;
 			if (maxY > World.MaxY) maxY = World.MaxY;
 
@@ -345,7 +457,8 @@ static void ClassicLighting_ResetNeighbour(int x, int y, int z, BlockID block, i
 static void ClassicLighting_ResetColumn(int cx, int cy, int cz, int minCy, int maxCy) {
 	if (minCy == maxCy) {
 		MapRenderer_RefreshChunk(cx, cy, cz);
-	} else {
+	}
+	else {
 		for (cy = maxCy; cy >= minCy; cy--) {
 			MapRenderer_RefreshChunk(cx, cy, cz);
 		}
@@ -415,7 +528,8 @@ static int Heightmap_InitialCoverage(int x1, int z1, int xCount, int zCount, int
 			if (lightH == HEIGHT_UNCALCULATED) {
 				elemsLeft++;
 				curRunCount = 0;
-			} else {
+			}
+			else {
 				skip[index - curRunCount]++;
 				curRunCount++;
 			}
@@ -480,7 +594,8 @@ static cc_bool Heightmap_CalculateCoverage(int x1, int z1, int xCount, int zCoun
 #else
 	if (World.IDMask <= 0xFF) {
 		Heightmap_CalculateBody(World.Blocks[mapIndex]);
-	} else {
+	}
+	else {
 		Heightmap_CalculateBody(World.Blocks[mapIndex] | (World.Blocks2[mapIndex] << 8));
 	}
 #endif
@@ -504,7 +619,7 @@ static void Heightmap_FinishCoverage(int x1, int z1, int xCount, int zCount) {
 
 
 static void ClassicLighting_LightHint(int startX, int startZ) {
-	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
+	int x1 = max(startX, 0), x2 = min(World.Width, startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
 	int skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
@@ -524,46 +639,47 @@ static void ClassicLighting_AllocState(void) {
 	classic_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
 	if (classic_heightmap) {
 		ClassicLighting_Refresh();
-	} else {
+	}
+	else {
 		World_OutOfMemory();
 	}
 }
 
 static void ClassicLighting_SetActive(void) {
 	Lighting.OnBlockChanged = ClassicLighting_OnBlockChanged;
-	Lighting.Refresh        = ClassicLighting_Refresh;
-	Lighting.IsLit          = ClassicLighting_IsLit;
-	Lighting.Color          = ClassicLighting_Color;
-	Lighting.Color_XSide    = ClassicLighting_Color_XSide;
+	Lighting.Refresh = ClassicLighting_Refresh;
+	Lighting.IsLit = ClassicLighting_IsLit;
+	Lighting.Color = ClassicLighting_Color;
+	Lighting.Color_XSide = ClassicLighting_Color_XSide;
 
-	Lighting.IsLit_Fast        = ClassicLighting_IsLit_Fast;
+	Lighting.IsLit_Fast = ClassicLighting_IsLit_Fast;
 	Lighting.Color_Sprite_Fast = ClassicLighting_Color_Sprite_Fast;
-	Lighting.Color_YMax_Fast   = ClassicLighting_Color_YMax_Fast;
-	Lighting.Color_YMin_Fast   = ClassicLighting_Color_YMin_Fast;
-	Lighting.Color_XSide_Fast  = ClassicLighting_Color_XSide_Fast;
-	Lighting.Color_ZSide_Fast  = ClassicLighting_Color_ZSide_Fast;
+	Lighting.Color_YMax_Fast = ClassicLighting_Color_YMax_Fast;
+	Lighting.Color_YMin_Fast = ClassicLighting_Color_YMin_Fast;
+	Lighting.Color_XSide_Fast = ClassicLighting_Color_XSide_Fast;
+	Lighting.Color_ZSide_Fast = ClassicLighting_Color_ZSide_Fast;
 
-	Lighting.FreeState  = ClassicLighting_FreeState;
+	Lighting.FreeState = ClassicLighting_FreeState;
 	Lighting.AllocState = ClassicLighting_AllocState;
-	Lighting.LightHint  = ClassicLighting_LightHint;
+	Lighting.LightHint = ClassicLighting_LightHint;
 }
 static void ModernLighting_SetActive(void) {
 	Lighting.OnBlockChanged = ModernLighting_OnBlockChanged;
-	Lighting.Refresh        = ModernLighting_Refresh;
-	Lighting.IsLit          = ModernLighting_IsLit;
-	Lighting.Color          = ModernLighting_Color;
-	Lighting.Color_XSide    = ModernLighting_Color;
+	Lighting.Refresh = ModernLighting_Refresh;
+	Lighting.IsLit = ModernLighting_IsLit;
+	Lighting.Color = ModernLighting_Color;
+	Lighting.Color_XSide = ModernLighting_Color;
 
-	Lighting.IsLit_Fast        = ModernLighting_IsLit_Fast;
+	Lighting.IsLit_Fast = ModernLighting_IsLit_Fast;
 	Lighting.Color_Sprite_Fast = ModernLighting_Color;
-	Lighting.Color_YMax_Fast   = ModernLighting_Color;
-	Lighting.Color_YMin_Fast   = ModernLighting_Color;
-	Lighting.Color_XSide_Fast  = ModernLighting_Color;
-	Lighting.Color_ZSide_Fast  = ModernLighting_Color;
+	Lighting.Color_YMax_Fast = ModernLighting_Color;
+	Lighting.Color_YMin_Fast = ModernLighting_Color;
+	Lighting.Color_XSide_Fast = ModernLighting_Color;
+	Lighting.Color_ZSide_Fast = ModernLighting_Color;
 
-	Lighting.FreeState  = ModernLighting_FreeState;
+	Lighting.FreeState = ModernLighting_FreeState;
 	Lighting.AllocState = ModernLighting_AllocState;
-	Lighting.LightHint  = ModernLighting_LightHint;
+	Lighting.LightHint = ModernLighting_LightHint;
 }
 static void Lighting_ApplyActive(void) {
 	if (Lighting_Modern) {
@@ -584,10 +700,10 @@ void Lighting_SwitchActive(void) {
 *#########################################################################################################################*/
 
 static void OnInit(void) {
-	if (!Game_ClassicMode) Lighting_Modern = Options_GetBool(OPT_MODERN_LIGHTING, false);
+	//if (!Game_ClassicMode) Lighting_Modern = Options_GetBool(OPT_MODERN_LIGHTING, false);
 	Lighting_ApplyActive();
 }
-static void OnReset(void)        { Lighting.FreeState(); }
+static void OnReset(void) { Lighting.FreeState(); }
 static void OnNewMapLoaded(void) { Lighting.AllocState(); }
 
 struct IGameComponent Lighting_Component = {
