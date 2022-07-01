@@ -245,13 +245,7 @@ static CC_NOINLINE void RedrawDirty(void) {
 	MarkAllDirty();
 }
 
-void LBackend_Redraw(void) {
-	pendingRedraw = REDRAW_ALL;
-	MarkAllDirty();
-}
-void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
-
-void LBackend_Tick(void) {
+static CC_NOINLINE void DoRedraw(void) {
 	if (pendingRedraw & REDRAW_ALL) {
 		RedrawAll();
 		pendingRedraw = 0;
@@ -259,8 +253,18 @@ void LBackend_Tick(void) {
 		RedrawDirty();
 		pendingRedraw = 0;
 	}
+}
 
+void LBackend_Redraw(void) {
+	pendingRedraw = REDRAW_ALL;
+	MarkAllDirty();
+}
+void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
+
+void LBackend_Tick(void) {
+	DoRedraw();
 	if (!dirty_rect.Width) return;
+
 	Window_DrawFramebuffer(dirty_rect);
 	dirty_rect.X = 0; dirty_rect.Width   = 0;
 	dirty_rect.Y = 0; dirty_rect.Height  = 0;
@@ -270,7 +274,8 @@ void LBackend_Tick(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Event handling------------------------------------------------------*
 *#########################################################################################################################*/
-static void ReqeustRedraw(void* obj) { LBackend_Redraw(); }
+static void ReqeustRedraw(void* obj)  { LBackend_Redraw(); }
+static void RedrawContents(void* obj) { DoRedraw(); }
 
 CC_NOINLINE static struct LWidget* GetWidgetAt(struct LScreen* s, int idx) {
 	struct LWidget* w;
@@ -361,13 +366,15 @@ static void OnTextChanged(void* obj, const cc_string* str) {
 }
 
 static void HookEvents(void) {
-	Event_Register_(&WindowEvents.Redraw, NULL, ReqeustRedraw);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	
 	Event_Register_(&InputEvents.Press,         NULL, OnKeyPress);
 	Event_Register_(&InputEvents.TextChanged,   NULL, OnTextChanged);
+
+	Event_Register_(&WindowEvents.RedrawNeeded, NULL, ReqeustRedraw);
+	Event_Register_(&WindowEvents.Redrawing,    NULL, RedrawContents);
 }
 
 
@@ -448,21 +455,21 @@ static const cc_uint8 checkbox_indices[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 static const BitmapCol checkbox_palette[] = {
-	BitmapCol_Make(  0,   0,   0,   0), BitmapCol_Make(144, 144, 144, 255),
-	BitmapCol_Make( 61,  61,  61, 255), BitmapCol_Make( 94,  94,  94, 255),
-	BitmapCol_Make(197, 196, 197, 255), BitmapCol_Make( 57,  57,  57, 255),
-	BitmapCol_Make( 33,  33,  33, 255), BitmapCol_Make(177, 177, 177, 255),
-	BitmapCol_Make(189, 189, 189, 255), BitmapCol_Make( 67,  67,  67, 255),
-	BitmapCol_Make(108, 108, 108, 255), BitmapCol_Make(171, 171, 171, 255),
-	BitmapCol_Make(220, 220, 220, 255), BitmapCol_Make( 43,  43,  43, 255),
-	BitmapCol_Make( 63,  63,  63, 255), BitmapCol_Make(100, 100, 100, 255),
-	BitmapCol_Make(192, 192, 192, 255), BitmapCol_Make(132, 132, 132, 255),
-	BitmapCol_Make(175, 175, 175, 255), BitmapCol_Make(217, 217, 217, 255),
-	BitmapCol_Make( 42,  42,  42, 255), BitmapCol_Make( 86,  86,  86, 255),
-	BitmapCol_Make( 56,  56,  56, 255), BitmapCol_Make( 76,  76,  76, 255),
-	BitmapCol_Make(139, 139, 139, 255), BitmapCol_Make(130, 130, 130, 255),
-	BitmapCol_Make(181, 181, 181, 255), BitmapCol_Make( 62,  62,  62, 255),
-	BitmapCol_Make( 75,  75,  75, 255), BitmapCol_Make(184, 184, 184, 255),
+	BitmapCol_Make(0,0,0,0),        BitmapColor_RGB(144, 144, 144),
+	BitmapColor_RGB( 61,  61,  61), BitmapColor_RGB( 94,  94,  94),
+	BitmapColor_RGB(197, 196, 197), BitmapColor_RGB( 57,  57,  57),
+	BitmapColor_RGB( 33,  33,  33), BitmapColor_RGB(177, 177, 177),
+	BitmapColor_RGB(189, 189, 189), BitmapColor_RGB( 67,  67,  67),
+	BitmapColor_RGB(108, 108, 108), BitmapColor_RGB(171, 171, 171),
+	BitmapColor_RGB(220, 220, 220), BitmapColor_RGB( 43,  43,  43),
+	BitmapColor_RGB( 63,  63,  63), BitmapColor_RGB(100, 100, 100),
+	BitmapColor_RGB(192, 192, 192), BitmapColor_RGB(132, 132, 132),
+	BitmapColor_RGB(175, 175, 175), BitmapColor_RGB(217, 217, 217),
+	BitmapColor_RGB( 42,  42,  42), BitmapColor_RGB( 86,  86,  86),
+	BitmapColor_RGB( 56,  56,  56), BitmapColor_RGB( 76,  76,  76),
+	BitmapColor_RGB(139, 139, 139), BitmapColor_RGB(130, 130, 130),
+	BitmapColor_RGB(181, 181, 181), BitmapColor_RGB( 62,  62,  62),
+	BitmapColor_RGB( 75,  75,  75), BitmapColor_RGB(184, 184, 184),
 };
 
 static void DrawIndexed(int size, int x, int y, struct Context2D* ctx) {
@@ -486,8 +493,8 @@ static void DrawIndexed(int size, int x, int y, struct Context2D* ctx) {
 }
 
 void LBackend_CheckboxDraw(struct LCheckbox* w) {
-	BitmapCol boxTop    = BitmapCol_Make(255, 255, 255, 255);
-	BitmapCol boxBottom = BitmapCol_Make(240, 240, 240, 255);
+	BitmapCol boxTop    = BitmapColor_RGB(255, 255, 255);
+	BitmapCol boxBottom = BitmapColor_RGB(240, 240, 240);
 	struct DrawTextArgs args;
 	int x, y, width, height;
 
@@ -505,7 +512,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 		y = w->y + height / 2 - size / 2;
 		DrawIndexed(size, x, y, &framebuffer);
 	}
-	DrawBoxBounds(BITMAPCOL_BLACK, w->x, w->y, width, height);
+	DrawBoxBounds(BITMAPCOLOR_BLACK, w->x, w->y, width, height);
 
 	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
@@ -642,7 +649,7 @@ void LBackend_InputUnselect(struct LInput* w) {
 static void LInput_DrawOuterBorder(struct LInput* w) {
 	struct LScreen* s     = Launcher_Active;
 	struct Context2D* ctx = &framebuffer;
-	BitmapCol color       = BitmapCol_Make(97, 81, 110, 255);
+	BitmapCol color       = Launcher_Theme.ButtonBorderColor;
 
 	if (w->selected) {
 		DrawBoxBounds(color, w->x, w->y, w->width, w->height);
@@ -659,7 +666,8 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 }
 
 static void LInput_DrawInnerBorder(struct LInput* w) {
-	BitmapCol color = BitmapCol_Make(165, 142, 168, 255);
+	/* e.g. for modern theme: 162,131,186 --> 165,142,168 */
+	BitmapCol color = BitmapColor_Offset(Launcher_Theme.ButtonHighlightColor, 3,11,-18);
 
 	Context2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
@@ -676,7 +684,7 @@ static void LInput_DrawInnerBorder(struct LInput* w) {
 }
 
 static void LInput_BlendBoxTop(struct LInput* w) {
-	BitmapCol color = BitmapCol_Make(0, 0, 0, 255);
+	BitmapCol color = BitmapColor_RGB(0, 0, 0);
 
 	Gradient_Blend(&framebuffer, color, 75,
 		w->x + xBorder,      w->y + yBorder, 
@@ -703,10 +711,10 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		hintHeight = Drawer2D_TextHeight(args);
 		y = w->y + (w->height - hintHeight) / 2;
 
-		Drawer2D.Colors['f'] = BitmapCol_Make(125, 125, 125, 255);
+		Drawer2D.Colors['f'] = BitmapColor_RGB(125, 125, 125);
 		Context2D_DrawText(&framebuffer, args, 
 							w->x + xInputOffset, y);
-		Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
+		Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
 	}
 }
 
@@ -720,7 +728,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
-	Context2D_Clear(&framebuffer, BITMAPCOL_WHITE,
+	Context2D_Clear(&framebuffer, BITMAPCOLOR_WHITE,
 		w->x + xBorder2,     w->y + yBorder2,
 		w->width - xBorder4, w->height - yBorder4);
 	LInput_BlendBoxTop(w);
@@ -731,7 +739,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	caretRect = LInput_MeasureCaret(w, &text);
 	if (!w->caretShow) return;
-	Context2D_Clear(&framebuffer, BITMAPCOL_BLACK,
+	Context2D_Clear(&framebuffer, BITMAPCOLOR_BLACK,
 					caretRect.X, caretRect.Y, caretRect.Width, caretRect.Height);
 }
 
@@ -785,8 +793,8 @@ void LBackend_SliderUpdate(struct LSlider* w) {
 }
 
 static void LSlider_DrawBoxBounds(struct LSlider* w) {
-	BitmapCol boundsTop    = BitmapCol_Make(119, 100, 132, 255);
-	BitmapCol boundsBottom = BitmapCol_Make(150, 130, 165, 255);
+	BitmapCol boundsTop    = BitmapColor_RGB(119, 100, 132);
+	BitmapCol boundsBottom = BitmapColor_RGB(150, 130, 165);
 
 	/* TODO: Check these are actually right */
 	Context2D_Clear(&framebuffer, boundsTop,
@@ -805,8 +813,8 @@ static void LSlider_DrawBoxBounds(struct LSlider* w) {
 }
 
 static void LSlider_DrawBox(struct LSlider* w) {
-	BitmapCol progTop    = BitmapCol_Make(220, 204, 233, 255);
-	BitmapCol progBottom = BitmapCol_Make(207, 181, 216, 255);
+	BitmapCol progTop    = BitmapColor_RGB(220, 204, 233);
+	BitmapCol progBottom = BitmapColor_RGB(207, 181, 216);
 	int halfHeight = (w->height - yBorder2) / 2;
 
 	Gradient_Vertical(&framebuffer, progTop, progBottom,
@@ -859,7 +867,7 @@ void LBackend_TableFlagAdded(struct LTable* w) {
 
 /* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
-	BitmapCol gridColor = BitmapCol_Make(20, 20, 10, 255);
+	BitmapCol gridColor = BitmapColor_RGB(20, 20, 10);
 
 	if (!Launcher_Theme.ClassicBackground) {
 		Context2D_Clear(&framebuffer, gridColor,
@@ -986,8 +994,8 @@ static void LTable_DrawRows(struct LTable* w) {
 
 /* Draws scrollbar on the right edge of the table */
 static void LTable_DrawScrollbar(struct LTable* w) {
-	BitmapCol classicBack   = BitmapCol_Make( 80,  80,  80, 255);
-	BitmapCol classicScroll = BitmapCol_Make(160, 160, 160, 255);
+	BitmapCol classicBack   = BitmapColor_RGB( 80,  80,  80);
+	BitmapCol classicScroll = BitmapColor_RGB(160, 160, 160);
 	BitmapCol backCol   = Launcher_Theme.ClassicBackground ? classicBack   : Launcher_Theme.ButtonBorderColor;
 	BitmapCol scrollCol = Launcher_Theme.ClassicBackground ? classicScroll : Launcher_Theme.ButtonForeActiveColor;
 

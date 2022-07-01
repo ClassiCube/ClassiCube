@@ -541,7 +541,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case Expose:
-			if (e.xexpose.count == 0) Event_RaiseVoid(&WindowEvents.Redraw);
+			if (e.xexpose.count == 0) Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
 
 		case LeaveNotify:

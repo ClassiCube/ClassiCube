@@ -15,8 +15,8 @@
 #include "Funcs.h"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
-#include <UIKit/UIPasteboard.h>
 #include <UIKit/UIKit.h>
+#include <UIKit/UIPasteboard.h>
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
 #include <CoreText/CoreText.h>
@@ -63,9 +63,13 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
     return UIInterfaceOrientationMaskAll;
 }
 
-@implementation CCWindow
+static cc_bool fullscreen = true;
+static CGRect GetViewFrame(void) {
+    UIScreen* screen = UIScreen.mainScreen;
+    return fullscreen ? screen.bounds : screen.applicationFrame;
+}
 
-//- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
+@implementation CCWindow
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     for (UITouch* t in touches) AddTouch(t);
@@ -154,9 +158,17 @@ static UITextField* kb_widget;
     } completion:nil];
 }
 
-/*- (BOOL)prefersStatusBarHidden {
-    
-}*/
+- (BOOL)prefersStatusBarHidden {
+    return fullscreen;
+}
+
+- (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
+    // recent iOS versions have a 'bottom home bar', which when swiped up,
+    //  switches out of ClassiCube and to the app list menu
+    // overriding this forces the user to swipe up twice, which should
+    //  significantly the chance of accidentally triggering this gesture
+    return UIRectEdgeBottom;
+}
 @end
 
 @implementation CCAppDelegate
@@ -312,13 +324,20 @@ void Window_Init(void) {
     DisplayInfo.ScaleY = 1; // TODO dpi scale
 }
 
+static UIColor* CalcBackgroundColor(void) {
+    // default to purple if no themed background color yet
+    if (!Launcher_Theme.BackgroundColor)
+        return UIColor.purpleColor;
+    return ToUIColor(Launcher_Theme.BackgroundColor, 1.0f);
+}
+
 static CGRect DoCreateWindow(void) {
-    CGRect bounds = UIScreen.mainScreen.bounds;
+    CGRect bounds = GetViewFrame();
     cc_controller = [CCViewController alloc];
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
     win_handle.rootViewController = cc_controller;
-    win_handle.backgroundColor = UIColor.blueColor;
+    win_handle.backgroundColor = CalcBackgroundColor();
     WindowInfo.Exists = true;
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
@@ -421,9 +440,22 @@ void Window_CloseKeyboard(void) {
     [text_input resignFirstResponder];
 }
 
-int Window_GetWindowState(void) { return WINDOW_STATE_NORMAL; }
-cc_result Window_EnterFullscreen(void) { return ERR_NOT_SUPPORTED; }
-cc_result Window_ExitFullscreen(void) { return ERR_NOT_SUPPORTED; }
+int Window_GetWindowState(void) {
+    return fullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
+}
+
+static void ToggleFullscreen(cc_bool isFullscreen) {
+    fullscreen = isFullscreen;
+    [cc_controller setNeedsStatusBarAppearanceUpdate];
+    view_handle.frame = GetViewFrame();
+}
+
+cc_result Window_EnterFullscreen(void) {
+    ToggleFullscreen(true); return 0;
+}
+cc_result Window_ExitFullscreen(void) {
+    ToggleFullscreen(false); return 0;
+}
 int Window_IsObscured(void) { return 0; }
 
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
@@ -473,6 +505,8 @@ void Window_Create2D(int width, int height) {
 /*#########################################################################################################################*
  *--------------------------------------------------------3D window--------------------------------------------------------*
  *#########################################################################################################################*/
+static void GLContext_OnLayout(void);
+
 @interface CCGLView : UIView
 @end
 
@@ -480,6 +514,11 @@ void Window_Create2D(int width, int height) {
 
 + (Class)layerClass {
     return [CAEAGLLayer class];
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    GLContext_OnLayout();
 }
 @end
 
@@ -505,6 +544,7 @@ void Window_Create3D(int width, int height) {
 static EAGLContext* ctx_handle;
 static GLuint framebuffer;
 static GLuint color_renderbuffer, depth_renderbuffer;
+static int fb_width, fb_height;
 
 static void CreateFramebuffer(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
@@ -524,6 +564,9 @@ static void CreateFramebuffer(void) {
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
         Logger_Abort2(status, "Failed to create renderbuffer");
+    
+    fb_width  = WindowInfo.Width;
+    fb_height = WindowInfo.Height;
 }
 
 void GLContext_Create(void) {
@@ -535,7 +578,17 @@ void GLContext_Create(void) {
 }
                   
 void GLContext_Update(void) {
+    // trying to update renderbuffer here results in garbage output,
+    //  so do instead when layoutSubviews method is called
+}
+
+static void GLContext_OnLayout(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    
+    // only resize buffers when absolutely have to
+    if (fb_width == WindowInfo.Width && fb_height == WindowInfo.Height) return;
+    fb_width  = WindowInfo.Width;
+    fb_height = WindowInfo.Height;
     
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
@@ -670,8 +723,6 @@ void GetDeviceUUID(cc_string* str) {
  *-----------------------------------------------------Font handling-------------------------------------------------------*
  *#########################################################################################################################*/
 #ifndef CC_BUILD_FREETYPE
-#include "ExtMath.h"
-
 void interop_GetFontNames(struct StringsBuffer* buffer) {
     NSArray<NSString*>* families = UIFont.familyNames;
     NSLog(@"Families: %@", families);
@@ -688,6 +739,7 @@ void interop_GetFontNames(struct StringsBuffer* buffer) {
     StringsBuffer_Sort(buffer);
 }
 
+#include "ExtMath.h"
 static void InitFont(struct FontDesc* desc, UIFont* font) {
     desc->handle = CFBridgingRetain(font);
     desc->height = Math_Ceil(Math_AbsF(font.ascender) + Math_AbsF(font.descender));
@@ -1102,6 +1154,7 @@ static UIView* LBackend_InputShow(struct LInput* w) {
     fld.frame           = CGRectMake(0, 0, w->_textHeight, LINPUT_HEIGHT);
     fld.borderStyle     = UITextBorderStyleBezel;
     fld.backgroundColor = UIColor.whiteColor;
+    fld.textColor       = UIColor.blackColor;
     fld.delegate        = ui_controller;
     [fld addTarget:ui_controller action:@selector(handleTextChanged:) forControlEvents:UIControlEventEditingChanged];
     

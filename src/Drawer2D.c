@@ -195,7 +195,7 @@ void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 			G = BitmapCol_G(color) + (int)(noise * variation); Drawer2D_ClampPixel(G);
 			B = BitmapCol_B(color) + (int)(noise * variation); Drawer2D_ClampPixel(B);
 
-			*dst = BitmapCol_Make(R, G, B, 255);
+			*dst = BitmapColor_RGB(R, G, B);
 		}
 	}
 }
@@ -247,7 +247,7 @@ void Gradient_Blend(struct Context2D* ctx, BitmapCol color, int blend,
 			G = BitmapCol_G(color) + (BitmapCol_G(*dst) * blend) / 255;
 			B = BitmapCol_B(color) + (BitmapCol_B(*dst) * blend) / 255;
 
-			*dst = BitmapCol_Make(R, G, B, 255);
+			*dst = BitmapColor_RGB(R, G, B);
 		}
 	}
 }
@@ -381,15 +381,15 @@ char Drawer2D_LastColor(const cc_string* text, int start) {
 cc_bool Drawer2D_IsWhiteColor(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 /* Divides R/G/B by 4 */
-#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
+#define SHADOW_MASK ((0x3F << BITMAPCOLOR_R_SHIFT) | (0x3F << BITMAPCOLOR_G_SHIFT) | (0x3F << BITMAPCOLOR_B_SHIFT))
 CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
-	if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
+	if (Drawer2D.BlackTextShadows) return BITMAPCOLOR_BLACK;
 
 	/* Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb */
 	/* Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb */
 	/* And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb */
 	/* Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb */
-	return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
+	return (c & BITMAPCOLOR_A_MASK) | ((c >> 2) & SHADOW_MASK);
 }
 
 /* TODO: Needs to account for DPI */
@@ -632,11 +632,10 @@ void Drawer2D_DrawClippedText(struct Context2D* ctx, struct DrawTextArgs* args,
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
 static void InitHexEncodedColor(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
-	Drawer2D.Colors[i] = BitmapCol_Make(
+	Drawer2D.Colors[i] = BitmapColor_RGB(
 		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
 		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
-		lo * ((hex >> 0) & 1) + hi * (hex >> 3),
-		255);
+		lo * ((hex >> 0) & 1) + hi * (hex >> 3));
 }
 
 static void OnReset(void) {
@@ -1151,7 +1150,7 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, struct Bitmap* bmp, int x, int y
 
 			/* TODO: transparent text (don't set A to 255) */
 			if (intensity & (1 << (7 - (xx & 7)))) {
-				*dst = col | BitmapCol_A_Bits(255);
+				*dst = col | BitmapColor_A_Bits(255);
 			}
 		}
 	}

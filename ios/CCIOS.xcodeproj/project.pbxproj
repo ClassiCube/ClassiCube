@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
 		9A89D4F227F802F600FF3F80 /* LWidgets.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37827F802F500FF3F80 /* LWidgets.c */; };
 		9A89D4F327F802F600FF3F80 /* Graphics_GL2.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37A27F802F500FF3F80 /* Graphics_GL2.c */; };
 		9A89D4F427F802F600FF3F80 /* Vorbis.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D37C27F802F500FF3F80 /* Vorbis.c */; };
@@ -98,7 +99,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		9A89D35727F802B100FF3F80 /* CCIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CCIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
+		9A89D35727F802B100FF3F80 /* ClassiCube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassiCube.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A89D36827F802B400FF3F80 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A89D37827F802F500FF3F80 /* LWidgets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LWidgets.c; sourceTree = "<group>"; };
 		9A89D37927F802F500FF3F80 /* AxisLinesRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisLinesRenderer.h; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 		9A89D34E27F802B100FF3F80 = {
 			isa = PBXGroup;
 			children = (
+				9A62ADF4286D906F00E5E3DE /* Assets.xcassets */,
 				9A89D36827F802B400FF3F80 /* Info.plist */,
 				9A89D37727F802F500FF3F80 /* src */,
 				9A89D35827F802B100FF3F80 /* Products */,
@@ -282,7 +285,7 @@
 		9A89D35827F802B100FF3F80 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9A89D35727F802B100FF3F80 /* CCIOS.app */,
+				9A89D35727F802B100FF3F80 /* ClassiCube.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -454,9 +457,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9A89D35627F802B100FF3F80 /* CCIOS */ = {
+		9A89D35627F802B100FF3F80 /* ClassiCube */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9A89D36D27F802B400FF3F80 /* Build configuration list for PBXNativeTarget "CCIOS" */;
+			buildConfigurationList = 9A89D36D27F802B400FF3F80 /* Build configuration list for PBXNativeTarget "ClassiCube" */;
 			buildPhases = (
 				9A89D35327F802B100FF3F80 /* Sources */,
 				9A89D35427F802B100FF3F80 /* Frameworks */,
@@ -466,9 +469,9 @@
 			);
 			dependencies = (
 			);
-			name = CCIOS;
-			productName = CCIOS;
-			productReference = 9A89D35727F802B100FF3F80 /* CCIOS.app */;
+			name = ClassiCube;
+			productName = CCIOS2;
+			productReference = 9A89D35727F802B100FF3F80 /* ClassiCube.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -498,7 +501,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9A89D35627F802B100FF3F80 /* CCIOS */,
+				9A89D35627F802B100FF3F80 /* ClassiCube */,
 			);
 		};
 /* End PBXProject section */
@@ -508,6 +511,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -730,6 +734,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -746,6 +751,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -768,7 +774,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9A89D36D27F802B400FF3F80 /* Build configuration list for PBXNativeTarget "CCIOS" */ = {
+		9A89D36D27F802B400FF3F80 /* Build configuration list for PBXNativeTarget "ClassiCube" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9A89D36E27F802B400FF3F80 /* Debug */,

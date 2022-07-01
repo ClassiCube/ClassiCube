@@ -290,27 +290,27 @@ void Launcher_Run(void) {
 struct LauncherTheme Launcher_Theme;
 const struct LauncherTheme Launcher_ModernTheme = {
 	false,
-	BitmapCol_Make(153, 127, 172, 255), /* background */
-	BitmapCol_Make( 97,  81, 110, 255), /* button border */
-	BitmapCol_Make(189, 168, 206, 255), /* active button */
-	BitmapCol_Make(141, 114, 165, 255), /* button foreground */
-	BitmapCol_Make(162, 131, 186, 255), /* button highlight */
+	BitmapColor_RGB(153, 127, 172), /* background */
+	BitmapColor_RGB( 97,  81, 110), /* button border */
+	BitmapColor_RGB(189, 168, 206), /* active button */
+	BitmapColor_RGB(141, 114, 165), /* button foreground */
+	BitmapColor_RGB(162, 131, 186), /* button highlight */
 };
 const struct LauncherTheme Launcher_ClassicTheme = {
 	true,
-	BitmapCol_Make( 41,  41,  41, 255), /* background */
-	BitmapCol_Make(  0,   0,   0, 255), /* button border */
-	BitmapCol_Make(126, 136, 191, 255), /* active button */
-	BitmapCol_Make(111, 111, 111, 255), /* button foreground */
-	BitmapCol_Make(168, 168, 168, 255), /* button highlight */
+	BitmapColor_RGB( 41,  41,  41), /* background */
+	BitmapColor_RGB(  0,   0,   0), /* button border */
+	BitmapColor_RGB(126, 136, 191), /* active button */
+	BitmapColor_RGB(111, 111, 111), /* button foreground */
+	BitmapColor_RGB(168, 168, 168), /* button highlight */
 };
 const struct LauncherTheme Launcher_NordicTheme = {
 	false,
-	BitmapCol_Make( 46,  52,  64, 255), /* background */
-	BitmapCol_Make( 59,  66,  82, 255), /* button border */
-	BitmapCol_Make( 66,  74,  90, 255), /* active button */
-	BitmapCol_Make( 59,  66,  82, 255), /* button foreground */
-	BitmapCol_Make( 76,  86, 106, 255), /* button highlight */
+	BitmapColor_RGB( 46,  52,  64), /* background */
+	BitmapColor_RGB( 59,  66,  82), /* button border */
+	BitmapColor_RGB( 66,  74,  90), /* active button */
+	BitmapColor_RGB( 59,  66,  82), /* button foreground */
+	BitmapColor_RGB( 76,  86, 106), /* button highlight */
 };
 
 CC_NOINLINE static void ParseColor(const char* key, BitmapCol* color) {
@@ -319,7 +319,7 @@ CC_NOINLINE static void ParseColor(const char* key, BitmapCol* color) {
 	if (!Options_UNSAFE_Get(key, &value))    return;
 	if (!PackedCol_TryParseHex(&value, rgb)) return;
 
-	*color = BitmapCol_Make(rgb[0], rgb[1], rgb[2], 255);
+	*color = BitmapColor_RGB(rgb[0], rgb[1], rgb[2]);
 }
 
 void Launcher_LoadTheme(void) {
@@ -373,11 +373,10 @@ static void TintBitmap(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB, int w
 
 		for (xx = 0; xx < width; xx++) {
 			/* TODO: Not shift when multiplying */
-			row[xx] = BitmapCol_Make(
+			row[xx] = BitmapColor_RGB(
 				BitmapCol_R(row[xx]) * tint / 255,
 				BitmapCol_G(row[xx]) * tint / 255,
-				BitmapCol_B(row[xx]) * tint / 255,
-				255);
+				BitmapCol_B(row[xx]) * tint / 255);
 		}
 	}
 }
@@ -518,9 +517,9 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
-	Drawer2D.Colors['f'] = BITMAPCOL_BLACK;
+	Drawer2D.Colors['f'] = BITMAPCOLOR_BLACK;
 	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
-	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
+	Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
 	Context2D_DrawText(ctx, &args, x,                     0);
 }
 
