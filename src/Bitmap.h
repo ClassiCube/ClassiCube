@@ -9,38 +9,40 @@ struct Stream;
 /* Represents a packed 32 bit RGBA colour, suitable for native graphics API texture pixels. */
 typedef cc_uint32 BitmapCol;
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-#define BITMAPCOL_R_SHIFT  0
-#define BITMAPCOL_G_SHIFT  8
-#define BITMAPCOL_B_SHIFT 16
-#define BITMAPCOL_A_SHIFT 24
+#define BITMAPCOLOR_R_SHIFT  0
+#define BITMAPCOLOR_G_SHIFT  8
+#define BITMAPCOLOR_B_SHIFT 16
+#define BITMAPCOLOR_A_SHIFT 24
 #else
-#define BITMAPCOL_B_SHIFT  0
-#define BITMAPCOL_G_SHIFT  8
-#define BITMAPCOL_R_SHIFT 16
-#define BITMAPCOL_A_SHIFT 24
+#define BITMAPCOLOR_B_SHIFT  0
+#define BITMAPCOLOR_G_SHIFT  8
+#define BITMAPCOLOR_R_SHIFT 16
+#define BITMAPCOLOR_A_SHIFT 24
 #endif
 
-#define BITMAPCOL_R_MASK (0xFFU << BITMAPCOL_R_SHIFT)
-#define BITMAPCOL_G_MASK (0xFFU << BITMAPCOL_G_SHIFT)
-#define BITMAPCOL_B_MASK (0xFFU << BITMAPCOL_B_SHIFT)
-#define BITMAPCOL_A_MASK (0xFFU << BITMAPCOL_A_SHIFT)
+#define BITMAPCOLOR_R_MASK (0xFFU << BITMAPCOLOR_R_SHIFT)
+#define BITMAPCOLOR_G_MASK (0xFFU << BITMAPCOLOR_G_SHIFT)
+#define BITMAPCOLOR_B_MASK (0xFFU << BITMAPCOLOR_B_SHIFT)
+#define BITMAPCOLOR_A_MASK (0xFFU << BITMAPCOLOR_A_SHIFT)
 
-#define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOL_R_SHIFT))
-#define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOL_G_SHIFT))
-#define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOL_B_SHIFT))
-#define BitmapCol_A(color) ((cc_uint8)(color >> BITMAPCOL_A_SHIFT))
+#define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT))
+#define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT))
+#define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT))
+#define BitmapCol_A(color) ((cc_uint8)(color >> BITMAPCOLOR_A_SHIFT))
 
-#define BitmapCol_R_Bits(color) ((cc_uint8)(color) << BITMAPCOL_R_SHIFT)
-#define BitmapCol_G_Bits(color) ((cc_uint8)(color) << BITMAPCOL_G_SHIFT)
-#define BitmapCol_B_Bits(color) ((cc_uint8)(color) << BITMAPCOL_B_SHIFT)
-#define BitmapCol_A_Bits(color) ((cc_uint8)(color) << BITMAPCOL_A_SHIFT)
+#define BitmapColor_R_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_R_SHIFT)
+#define BitmapColor_G_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_G_SHIFT)
+#define BitmapColor_B_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_B_SHIFT)
+#define BitmapColor_A_Bits(color) ((cc_uint8)(color) << BITMAPCOLOR_A_SHIFT)
 
-#define BitmapCol_Make(r, g, b, a) (BitmapCol_R_Bits(r) | BitmapCol_G_Bits(g) | BitmapCol_B_Bits(b) | BitmapCol_A_Bits(a))
-#define BitmapColor_RGB(r, g, b)   (BitmapCol_R_Bits(r) | BitmapCol_G_Bits(g) | BitmapCol_B_Bits(b) | BITMAPCOL_A_MASK)
-#define BITMAPCOL_RGB_MASK (BITMAPCOL_R_MASK | BITMAPCOL_G_MASK | BITMAPCOL_B_MASK)
+#define BitmapCol_Make(r, g, b, a) (BitmapColor_R_Bits(r) | BitmapColor_G_Bits(g) | BitmapColor_B_Bits(b) | BitmapColor_A_Bits(a))
+#define BitmapColor_RGB(r, g, b)   (BitmapColor_R_Bits(r) | BitmapColor_G_Bits(g) | BitmapColor_B_Bits(b) | BITMAPCOLOR_A_MASK)
+#define BITMAPCOLOR_RGB_MASK (BITMAPCOLOR_R_MASK | BITMAPCOLOR_G_MASK | BITMAPCOLOR_B_MASK)
 
-#define BITMAPCOL_BLACK BitmapColor_RGB(  0,   0,   0)
-#define BITMAPCOL_WHITE BitmapColor_RGB(255, 255, 255)
+#define BITMAPCOLOR_BLACK BitmapColor_RGB(  0,   0,   0)
+#define BITMAPCOLOR_WHITE BitmapColor_RGB(255, 255, 255)
+
+BitmapCol BitmapColor_Offset(BitmapCol color, int rBy, int gBy, int bBy);
 
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };

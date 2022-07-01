@@ -381,15 +381,15 @@ char Drawer2D_LastColor(const cc_string* text, int start) {
 cc_bool Drawer2D_IsWhiteColor(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 /* Divides R/G/B by 4 */
-#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
+#define SHADOW_MASK ((0x3F << BITMAPCOLOR_R_SHIFT) | (0x3F << BITMAPCOLOR_G_SHIFT) | (0x3F << BITMAPCOLOR_B_SHIFT))
 CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
-	if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
+	if (Drawer2D.BlackTextShadows) return BITMAPCOLOR_BLACK;
 
 	/* Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb */
 	/* Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb */
 	/* And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb */
 	/* Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb */
-	return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
+	return (c & BITMAPCOLOR_A_MASK) | ((c >> 2) & SHADOW_MASK);
 }
 
 /* TODO: Needs to account for DPI */
@@ -1150,7 +1150,7 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, struct Bitmap* bmp, int x, int y
 
 			/* TODO: transparent text (don't set A to 255) */
 			if (intensity & (1 << (7 - (xx & 7)))) {
-				*dst = col | BitmapCol_A_Bits(255);
+				*dst = col | BitmapColor_A_Bits(255);
 			}
 		}
 	}

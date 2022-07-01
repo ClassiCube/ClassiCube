@@ -517,9 +517,9 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
-	Drawer2D.Colors['f'] = BITMAPCOL_BLACK;
+	Drawer2D.Colors['f'] = BITMAPCOLOR_BLACK;
 	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
-	Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
+	Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
 	Context2D_DrawText(ctx, &args, x,                     0);
 }
 

@@ -512,7 +512,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 		y = w->y + height / 2 - size / 2;
 		DrawIndexed(size, x, y, &framebuffer);
 	}
-	DrawBoxBounds(BITMAPCOL_BLACK, w->x, w->y, width, height);
+	DrawBoxBounds(BITMAPCOLOR_BLACK, w->x, w->y, width, height);
 
 	DrawTextArgs_Make(&args, &w->text, &textFont, true);
 	x = w->x + Display_ScaleX(CB_SIZE + CB_OFFSET);
@@ -666,7 +666,8 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 }
 
 static void LInput_DrawInnerBorder(struct LInput* w) {
-	BitmapCol color = BitmapColor_RGB(165, 142, 168);
+	/* e.g. for modern theme: 162,131,186 --> 165,142,168 */
+	BitmapCol color = BitmapColor_Offset(Launcher_Theme.ButtonHighlightColor, 3,11,-18);
 
 	Context2D_Clear(&framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
@@ -713,7 +714,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		Drawer2D.Colors['f'] = BitmapColor_RGB(125, 125, 125);
 		Context2D_DrawText(&framebuffer, args, 
 							w->x + xInputOffset, y);
-		Drawer2D.Colors['f'] = BITMAPCOL_WHITE;
+		Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
 	}
 }
 
@@ -727,7 +728,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
-	Context2D_Clear(&framebuffer, BITMAPCOL_WHITE,
+	Context2D_Clear(&framebuffer, BITMAPCOLOR_WHITE,
 		w->x + xBorder2,     w->y + yBorder2,
 		w->width - xBorder4, w->height - yBorder4);
 	LInput_BlendBoxTop(w);
@@ -738,7 +739,7 @@ void LBackend_InputDraw(struct LInput* w) {
 
 	caretRect = LInput_MeasureCaret(w, &text);
 	if (!w->caretShow) return;
-	Context2D_Clear(&framebuffer, BITMAPCOL_BLACK,
+	Context2D_Clear(&framebuffer, BITMAPCOLOR_BLACK,
 					caretRect.X, caretRect.Y, caretRect.Width, caretRect.Height);
 }
 
