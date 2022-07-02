@@ -91,6 +91,12 @@ CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
 	World.MaxX = width  - 1;
 	World.MaxY = height - 1;
 	World.MaxZ = length - 1;
+
+	World.ChunksX = (width  + CHUNK_MAX) >> CHUNK_SHIFT;
+	World.ChunksY = (height + CHUNK_MAX) >> CHUNK_SHIFT;
+	World.ChunksZ = (length + CHUNK_MAX) >> CHUNK_SHIFT;
+
+	World.ChunksCount = World.ChunksX * World.ChunksY * World.ChunksZ;
 }
 
 #ifdef EXTENDED_BLOCKS

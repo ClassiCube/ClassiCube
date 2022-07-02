@@ -412,14 +412,14 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	hasMesh = BuildChunk(x, y, z, info);
 	if (!hasMesh) return;
 
-	partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	partsIndex = World_ChunkPack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
 	offset  = 0;
 	hasNorm = false;
 	hasTran = false;
 
 	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
 		j = i + ATLAS1D_MAX_ATLASES;
-		curIdx = partsIndex + i * MapRenderer_ChunksCount;
+		curIdx = partsIndex + i * World.ChunksCount;
 
 		SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
 		SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTran);

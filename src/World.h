@@ -15,6 +15,10 @@ extern struct IGameComponent World_Component;
 #define World_Pack(x, y, z) (((y) * World.Length + (z)) * World.Width + (x))
 #define WORLD_UUID_LEN 16
 
+#define World_ChunkPack(cx, cy, cz) (((cz) * World.ChunksY + (cy)) * World.ChunksX + (cx))
+/* TODO: Swap Y and Z? Make sure to update MapRenderer's ResetChunkCache and ClearChunkCache methods! */
+
+
 CC_VAR extern struct _WorldData {
 	/* The blocks in the world. */
 	BlockRaw* Blocks;
@@ -48,6 +52,10 @@ CC_VAR extern struct _WorldData {
 	double LastSave;
 	/* Default name of the world when saving */
 	cc_string Name;
+	/* Number of chunks on each axis the world is subdivided into */
+	int ChunksX, ChunksY, ChunksZ;
+	/* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
+	int ChunksCount;
 } World;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */
