@@ -104,10 +104,83 @@ static void ClassicLighting_Refresh(void) {
 	}
 }
 
+/*########################################################################################################################*
+*----------------------------------------------------Queue thing ---------------------------------------------------------*
+*#########################################################################################################################*/
+
+struct LightQueue {
+	IVec3* entries;     /* Buffer holding the items in the Block queue */
+	int capacity; /* Max number of elements in the buffer */
+	int mask;     /* capacity - 1, as capacity is always a power of two */
+	int count;    /* Number of used elements */
+	int head;     /* Head index into the buffer */
+	int tail;     /* Tail index into the buffer */
+};
+IVec3 LightQueue_EntryAtIndex(struct LightQueue* queue, int index) {
+	return queue->entries[(queue->head + index) & queue->mask];
+}
+void LightQueue_Init(struct LightQueue* queue) {
+	queue->entries = NULL;
+	queue->capacity = 0;
+	queue->mask = 0;
+	queue->count = 0;
+	queue->head = 0;
+	queue->tail = 0;
+}
+static void LightQueue_Clear(struct LightQueue* queue) {
+	if (!queue->entries) return;
+	Mem_Free(queue->entries);
+	LightQueue_Init(queue);
+}
+static void LightQueue_Resize(struct LightQueue* queue) {
+	IVec3* entries;
+	int i, idx, capacity;
+	if (queue->capacity >= (Int32_MaxValue / 4)) {
+		Chat_AddRaw("&cToo many block queue entries, clearing");
+		LightQueue_Clear(queue);
+		return;
+	}
+	capacity = queue->capacity * 2;
+	if (capacity < 32) capacity = 32;
+	entries = (IVec3*)Mem_Alloc(capacity, sizeof(IVec3), "Block queue");
+	for (i = 0; i < queue->count; i++) {
+		idx = (queue->head + i) & queue->mask;
+		entries[i] = queue->entries[idx];
+	}
+	Mem_Free(queue->entries);
+	queue->entries = entries;
+	queue->capacity = capacity;
+	queue->mask = capacity - 1; /* capacity is power of two */
+	queue->head = 0;
+	queue->tail = queue->count;
+}
+/* Appends an entry to the end of the queue, resizing if necessary. */
+void LightQueue_Enqueue(struct LightQueue* queue, IVec3 item) {
+	if (queue->count == queue->capacity)
+		LightQueue_Resize(queue);
+	queue->entries[queue->tail] = item;
+	queue->tail = (queue->tail + 1) & queue->mask;
+	queue->count++;
+}
+/* Retrieves the entry from the front of the queue. */
+IVec3 LightQueue_Dequeue(struct LightQueue* queue) {
+	IVec3 result = queue->entries[queue->head];
+	queue->head = (queue->head + 1) & queue->mask;
+	queue->count--;
+	return result;
+}
+static struct LightQueue lightQueue;
+
 
 /*########################################################################################################################*
 *----------------------------------------------------Modern lighting------------------------------------------------------*
 *#########################################################################################################################*/
+/* How many unique "levels" of light there are when modern lighting is used. */
+#define MODERN_LIGHTING_LEVELS 16
+#define MODERN_LIGHTING_MAX_LEVEL MODERN_LIGHTING_LEVELS - 1
+/* How many bits to shift sunlight level to the left when storing it in a byte along with blocklight level*/
+#define MODERN_LIGHTING_SUN_SHIFT 4
+
 /* TODO: Evil goodly hack, move chunk variables to World.h */
 int ModernLighting_ChunkCount;
 int ModernLighting_ChunksX;
@@ -183,6 +256,7 @@ static void ModernLighting_AllocState(void) {
 
 	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(ModernLighting_ChunkCount, sizeof(cc_uint8));
 	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(ModernLighting_ChunkCount, sizeof(LightingChunk));
+	LightQueue_Init(&lightQueue);
 }
 static void ModernLighting_FreeState(void) {
 	int i;
@@ -197,47 +271,126 @@ static void ModernLighting_FreeState(void) {
 	Mem_Free(chunkLightingData);
 	chunkLightingDataFlags = NULL;
 	chunkLightingData = NULL;
+	LightQueue_Clear(&lightQueue);
 }
 
-/* Gives the index into array of chunk pointers based on chunk x y z */
-#define ChunkCoordsToChunkIndex(cx, cy, cz) (((cy) * ModernLighting_ChunksZ + (cz)) * ModernLighting_ChunksX + (cx))
-/* Gives the index into array of chunk data */
-#define ChunkDataCoordsToChunkDataIndex(x, y, z) (((y) * CHUNK_SIZE + (z)) * CHUNK_SIZE + (x))
+/* Converts chunk x/y/z coordinates to the corresponding index in chunks array/list */
+#define ChunkCoordsToIndex(cx, cy, cz) (((cy) * ModernLighting_ChunksZ + (cz)) * ModernLighting_ChunksX + (cx))
+/* Converts local x/y/z coordinates to the corresponding index in a chunk */
+#define LocalCoordsToIndex(lx, ly, lz) ((lx) | ((lz) << CHUNK_SHIFT) | ((ly) << (CHUNK_SHIFT * 2)))
 
-#define ChunkIndexToChunkCoords(idx, x, y, z) x = idx % ModernLighting_ChunksX; z = (idx / ModernLighting_ChunksX) % ModernLighting_ChunksZ; y = (idx / ModernLighting_ChunksX) / ModernLighting_ChunksZ;
-//#define World_Unpack         (idx, x, y, z) x = idx % World.Width;            z = (idx / World.Width)            % World.Length;           y = (idx / World.Width)            / World.Length;
+static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z) {
+	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
+	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
+	int cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
 
-#define WorldCoordsToChunkDataIndex(x, y, z) (ChunkDataCoordsToChunkDataIndex(x % CHUNK_SIZE, y % CHUNK_SIZE, z % CHUNK_SIZE))
-
-#define WorldCoordsToChunkCoords(x, y, z, cx, cy, cz) cx = x / CHUNK_SIZE; cy = y / CHUNK_SIZE; cz = z / CHUNK_SIZE;
-
-
-static void SetLightData(cc_uint8 sunLight, cc_uint8 blockLight, int x, int y, int z) {
-	int cx, cy, cz;
-	int chunkIndex;
-	int chunkDataIndex;
-	WorldCoordsToChunkCoords(x, y, z, cx, cy, cz);
-	chunkIndex = ChunkCoordsToChunkIndex(cx, cy, cz);
-	chunkDataIndex = WorldCoordsToChunkDataIndex(x, y, z);
-
+	int chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
 	if (chunkLightingData[chunkIndex] == NULL) {
 		chunkLightingData[chunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
 	}
-	if (chunkLightingData[chunkIndex][chunkDataIndex] < blockLight) { chunkLightingData[chunkIndex][chunkDataIndex] = blockLight; }
-}
-static void CalcBlockLight(cc_uint8 lightLevel, int x, int y, int z) {
-	if (!World_Contains(x, y, z)) { return; }
-	
-	if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
 
-	SetLightData(0, lightLevel, x, y, z);
-	if (lightLevel <= 3) { return; }
-	CalcBlockLight(lightLevel - 1, x - 1, y, z);
-	CalcBlockLight(lightLevel - 1, x + 1, y, z);
-	CalcBlockLight(lightLevel - 1, x, y, z - 1);
-	CalcBlockLight(lightLevel - 1, x, y, z + 1);
-	CalcBlockLight(lightLevel - 1, x, y - 1, z);
-	CalcBlockLight(lightLevel - 1, x, y + 1, z);
+	int localIndex = LocalCoordsToIndex(lx, ly, lz);
+	if (chunkLightingData[chunkIndex][localIndex] < blockLight) { chunkLightingData[chunkIndex][localIndex] = blockLight; }
+}
+static cc_uint8 GetBlocklight(int x, int y, int z) {
+	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
+	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
+	int cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
+
+	int chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
+	if (chunkLightingData[chunkIndex] == NULL) { return 0; }
+	int localIndex = LocalCoordsToIndex(lx, ly, lz);
+	return chunkLightingData[chunkIndex][localIndex] & MODERN_LIGHTING_MAX_LEVEL;
+}
+
+static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
+
+	SetBlocklight(blockLight, x, y, z);
+	IVec3 entry = { x, y, z };
+	LightQueue_Enqueue(&lightQueue, entry);
+
+	//if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
+
+	while (lightQueue.count > 0) {
+		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
+		cc_uint8 curBlockLight = GetBlocklight(curNode.X, curNode.Y, curNode.Z);
+		if (curBlockLight <= 1) {
+			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
+			return;
+		}
+
+		curNode.X--;
+		if (curNode.X > 0 &&
+			curBlockLight-1 > 1 &&
+			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight-1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.X += 2;
+		if (curNode.X < World.MaxX &&
+			curBlockLight - 1 > 1 &&
+			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.X--;
+
+		curNode.Y--;
+		if (curNode.Y > 0 &&
+			curBlockLight - 1 > 1 &&
+			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.Y += 2;
+		if (curNode.Y < World.MaxY &&
+			curBlockLight - 1 > 1 &&
+			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.Y--;
+
+		curNode.Z--;
+		if (curNode.Z > 0 &&
+			curBlockLight - 1 > 1 &&
+			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.Z += 2;
+		if (curNode.Z < World.MaxZ &&
+			curBlockLight - 1 > 1 &&
+			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+
+		//Step 5: Look at all neighbouring voxels to that node.
+		//  if that node is in bounds of the world
+		//  AND if light is allowed to spread to that node,
+		//  AND if that node's light level is 2 or more levels less than the current node,
+		//  then set their light level to the current nodes light level - 1,
+		//  and then add that node to the queue.
+	}
 }
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
@@ -249,11 +402,13 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	chunkEndX = chunkStartX + CHUNK_SIZE;
 	chunkEndY = chunkStartY + CHUNK_SIZE;
 	chunkEndZ = chunkStartZ + CHUNK_SIZE;
-	if (chunkEndX > World.Width ) { chunkEndX = World.Width;  }
+	if (chunkEndX > World.Width) { chunkEndX = World.Width; }
 	if (chunkEndY > World.Height) { chunkEndY = World.Height; }
 	if (chunkEndZ > World.Length) { chunkEndZ = World.Length; }
 
-	cc_string msg; char msgBuffer[STRING_SIZE * 2]; String_InitArray(msg, msgBuffer);
+	//Platform_Log3("  calcing %i %i %i", &cx, &cy, &cz);
+
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 
 	for (y = chunkStartY; y < chunkEndY; y++) {
 		for (z = chunkStartZ; z < chunkEndZ; z++) {
@@ -262,11 +417,10 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 				BlockID curBlock = World_GetBlock(x, y, z);
 				if (Blocks.FullBright[curBlock]) {
 
-					String_InitArray(msg, msgBuffer);
-					String_Format3(&msg, "found bright block at %i %i %i", &x, &y, &z);
-					Chat_Add(&msg);
-
-					CalcBlockLight(MODERN_LIGHTING_MAX_LEVEL, x, y, z);
+					//String_InitArray(msg, msgBuffer);
+					//String_Format3(&msg, "found bright block at %i %i %i", &x, &y, &z);
+					//Chat_Add(&msg);
+					CalcBlockLight(15, x, y, z);
 				}
 			}
 		}
@@ -279,36 +433,35 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	int chunkEndX, chunkEndY, chunkEndZ; //chunk coords
 
 	chunkStartX = cx - 1;
-	chunkStartY = cx - 1;
-	chunkStartZ = cx - 1;
+	chunkStartY = cy - 1;
+	chunkStartZ = cz - 1;
 	chunkEndX = cx + 1;
-	chunkEndY = cx + 1;
-	chunkEndZ = cx + 1;
+	chunkEndY = cy + 1;
+	chunkEndZ = cz + 1;
 
 	if (chunkStartX == -1) { chunkStartX++; }
 	if (chunkStartY == -1) { chunkStartY++; }
 	if (chunkStartZ == -1) { chunkStartZ++; }
 	if (chunkEndX == ModernLighting_ChunksX) { chunkEndX--; }
-	if (chunkEndY == ModernLighting_ChunksX) { chunkEndY--; }
-	if (chunkEndZ == ModernLighting_ChunksX) { chunkEndZ--; }
+	if (chunkEndY == ModernLighting_ChunksY) { chunkEndY--; }
+	if (chunkEndZ == ModernLighting_ChunksZ) { chunkEndZ--; }
 
-
-	cc_string msg; char msgBuffer[STRING_SIZE * 2]; String_InitArray(msg, msgBuffer);
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 
 	for (y = chunkStartY; y <= chunkEndY; y++) {
 		for (z = chunkStartZ; z <= chunkEndZ; z++) {
 			for (x = chunkStartX; x <= chunkEndX; x++) {
-				int loopChunkIndex = ChunkCoordsToChunkIndex(x, y, z);
+				int curChunkIndex = ChunkCoordsToIndex(x, y, z);
 
-				if (chunkLightingData[loopChunkIndex] == NULL) {
-					chunkLightingData[loopChunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
+				if (chunkLightingData[curChunkIndex] == NULL) {
+					chunkLightingData[curChunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
 				}
 
-				if (chunkLightingDataFlags[loopChunkIndex] == CHUNK_UNCALCULATED) {
-					CalculateChunkLightingSelf(loopChunkIndex, x, y, z);
+				if (chunkLightingDataFlags[curChunkIndex] == CHUNK_UNCALCULATED) {
+					CalculateChunkLightingSelf(curChunkIndex, x, y, z);
 				}
 				//String_InitArray(msg, msgBuffer);
-				//String_Format3(&msg, "doing chunk at %i %i %i", &x, &y, &z);
+
 				//Chat_Add(&msg);
 			}
 		}
@@ -330,22 +483,18 @@ static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 static PackedCol ModernLighting_Color(int x, int y, int z) {
 	if (!World_Contains(x, y, z)) return Env.SunCol;
 
-	int cx, cy, cz;
-	int chunkIndex;
-	int chunkDataIndex;
+	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
+	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
+	int cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
 
-	WorldCoordsToChunkCoords(x, y, z, cx, cy, cz)
-	chunkIndex = ChunkCoordsToChunkIndex(cx, cy, cz);
-
+	int chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
 	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) {
+		//Platform_Log3("CALC ALL: %i,%i,%i", &cx, &cy, &cz);
 		CalculateChunkLightingAll(chunkIndex, cx, cy, cz);
 	}
 
-	/* Get coordinates into the chunk data*/
-	chunkDataIndex = WorldCoordsToChunkDataIndex(x, y, z);
-	cc_uint8 lightData = chunkLightingData[chunkIndex]
-		[chunkDataIndex];
-
+	int localIndex = LocalCoordsToIndex(lx, ly, lz);
+	cc_uint8 lightData = chunkLightingData[chunkIndex][localIndex];
 	return modernLighting_palette[lightData];
 }
 
