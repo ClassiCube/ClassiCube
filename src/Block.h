@@ -107,6 +107,8 @@ CC_VAR extern struct _BlockLists {
 #define Block_Tint(col, block)\
 if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 
+#define BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB 6
+
 /* Returns whether the given block has been changed from default. */
 cc_bool Block_IsCustomDefined(BlockID block);
 /* Sets whether the given block has been changed from default. */

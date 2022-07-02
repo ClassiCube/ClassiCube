@@ -26,7 +26,7 @@ for (y = maxY; y >= 0; y--, i -= World.OneY) {\
 	block = get_block;\
 \
 	if (Blocks.BlocksLight[block]) {\
-		offset = (Blocks.LightOffset[block] >> FACE_YMAX) & 1;\
+		offset = (Blocks.LightOffset[block] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;\
 		classic_heightmap[hIndex] = y - offset;\
 		return y - offset;\
 	}\
@@ -181,12 +181,6 @@ static struct LightQueue lightQueue;
 /* How many bits to shift sunlight level to the left when storing it in a byte along with blocklight level*/
 #define MODERN_LIGHTING_SUN_SHIFT 4
 
-/* TODO: Evil goodly hack, move chunk variables to World.h */
-int ModernLighting_ChunkCount;
-int ModernLighting_ChunksX;
-int ModernLighting_ChunksY;
-int ModernLighting_ChunksZ;
-
 /* A 16x16 palette of sun and block light colors. */
 /* It is indexed by a byte where the leftmost 4 bits represent sunlight level and the rightmost 4 bits represent blocklight level */
 /* E.G. modernLighting_palette[0b_0010_0001] will give us the color for sun level 2 and block level 1 (lowest level is 0) */
@@ -249,13 +243,9 @@ static void ModernLighting_InitPalette(void) {
 
 static void ModernLighting_AllocState(void) {
 	ModernLighting_InitPalette();
-	ModernLighting_ChunksX = (World.Width + CHUNK_MAX) >> CHUNK_SHIFT;
-	ModernLighting_ChunksY = (World.Height + CHUNK_MAX) >> CHUNK_SHIFT;
-	ModernLighting_ChunksZ = (World.Length + CHUNK_MAX) >> CHUNK_SHIFT;
-	ModernLighting_ChunkCount = ModernLighting_ChunksX * ModernLighting_ChunksY * ModernLighting_ChunksZ;
 
-	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(ModernLighting_ChunkCount, sizeof(cc_uint8));
-	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(ModernLighting_ChunkCount, sizeof(LightingChunk));
+	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(World.ChunksCount, sizeof(cc_uint8));
+	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(World.ChunksCount, sizeof(LightingChunk));
 	LightQueue_Init(&lightQueue);
 }
 static void ModernLighting_FreeState(void) {
@@ -263,7 +253,7 @@ static void ModernLighting_FreeState(void) {
 	/* This function can be called multiple times without calling ModernLighting_AllocState, so... */
 	if (chunkLightingDataFlags == NULL) { return; }
 
-	for (i = 0; i < ModernLighting_ChunkCount; i++) {
+	for (i = 0; i < World.ChunksCount; i++) {
 		if (chunkLightingDataFlags[i] > CHUNK_SELF_CALCULATED || chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) { continue; }
 		Mem_Free(chunkLightingData[i]);
 	}
@@ -275,7 +265,7 @@ static void ModernLighting_FreeState(void) {
 }
 
 /* Converts chunk x/y/z coordinates to the corresponding index in chunks array/list */
-#define ChunkCoordsToIndex(cx, cy, cz) (((cy) * ModernLighting_ChunksZ + (cz)) * ModernLighting_ChunksX + (cx))
+#define ChunkCoordsToIndex(cx, cy, cz) (((cy) * World.ChunksZ + (cz)) * World.ChunksX + (cx))
 /* Converts local x/y/z coordinates to the corresponding index in a chunk */
 #define LocalCoordsToIndex(lx, ly, lz) ((lx) | ((lz) << CHUNK_SHIFT) | ((ly) << (CHUNK_SHIFT * 2)))
 
@@ -442,9 +432,9 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	if (chunkStartX == -1) { chunkStartX++; }
 	if (chunkStartY == -1) { chunkStartY++; }
 	if (chunkStartZ == -1) { chunkStartZ++; }
-	if (chunkEndX == ModernLighting_ChunksX) { chunkEndX--; }
-	if (chunkEndY == ModernLighting_ChunksY) { chunkEndY--; }
-	if (chunkEndZ == ModernLighting_ChunksZ) { chunkEndZ--; }
+	if (chunkEndX == World.ChunksX) { chunkEndX--; }
+	if (chunkEndY == World.ChunksY) { chunkEndY--; }
+	if (chunkEndZ == World.ChunksZ) { chunkEndZ--; }
 
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 
@@ -516,8 +506,8 @@ static PackedCol ModernLighting_Color(int x, int y, int z) {
 static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, BlockID newBlock, int index, int lightH) {
 	cc_bool didBlock = Blocks.BlocksLight[oldBlock];
 	cc_bool nowBlocks = Blocks.BlocksLight[newBlock];
-	int oldOffset = (Blocks.LightOffset[oldBlock] >> FACE_YMAX) & 1;
-	int newOffset = (Blocks.LightOffset[newBlock] >> FACE_YMAX) & 1;
+	int oldOffset = (Blocks.LightOffset[oldBlock] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;
+	int newOffset = (Blocks.LightOffset[newBlock] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;
 	BlockID above;
 
 	/* Two cases we need to handle here: */
@@ -703,7 +693,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 			x += curRunCount; mapIndex += curRunCount; index += curRunCount;\
 \
 			if (x < xCount && Blocks.BlocksLight[get_block]) {\
-				lightOffset = (Blocks.LightOffset[get_block] >> FACE_YMAX) & 1;\
+				lightOffset = (Blocks.LightOffset[get_block] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;\
 				classic_heightmap[hIndex + x] = (cc_int16)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\

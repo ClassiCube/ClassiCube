@@ -314,9 +314,11 @@ void Block_CalcLightOffset(BlockID block) {
 	if (min.Z != 0) flags &= ~(1 << FACE_ZMIN);
 	if (max.Z != 1) flags &= ~(1 << FACE_ZMAX);
 
+	if (min.Y != 0) flags &= ~(1 << FACE_YMIN);
+	if (max.Y != 1) flags &= ~(1 << FACE_YMAX);
+
 	if ((min.Y != 0 && max.Y == 1) && Blocks.Draw[block] != DRAW_GAS) {
-		flags &= ~(1 << FACE_YMAX);
-		flags &= ~(1 << FACE_YMIN);
+		flags &= ~(1 << BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB);
 	}
 	Blocks.LightOffset[block] = flags;
 }
