@@ -10,14 +10,8 @@
 struct IGameComponent;
 extern struct IGameComponent MapRenderer_Component;
 
-extern int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
-#define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
-/* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
-
 /* Max used 1D atlases. (i.e. Atlas1D_Index(maxTextureLoc) + 1) */
 extern int MapRenderer_1DUsedCount;
-/* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
-extern int MapRenderer_ChunksCount;
 
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) parts in the buffer,
 with parts for 'normal' buffer being in lower half. */

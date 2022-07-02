@@ -197,7 +197,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			/* To understand reasoning behind the following code, see Remarks in */
 			/*  https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawmouse */
 			static int prevPosX, prevPosY;
-			isVirtual = (raw.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP);
+			isVirtual = raw.data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP;
 
 			width  = GetSystemMetrics(isVirtual ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
 			height = GetSystemMetrics(isVirtual ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);

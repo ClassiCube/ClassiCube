@@ -635,13 +635,13 @@ static void ClassicLighting_RefreshAffected(int x, int y, int z, BlockID block, 
 		ClassicLighting_ResetNeighbour(x, y, z - 1, block, cx, cy, cz - 1, minCy, maxCy);
 	}
 
-	if (bX == 15 && cx < MapRenderer_ChunksX - 1) {
+	if (bX == 15 && cx < World.ChunksX - 1) {
 		ClassicLighting_ResetNeighbour(x + 1, y, z, block, cx + 1, cy, cz, minCy, maxCy);
 	}
-	if (bY == 15 && cy < MapRenderer_ChunksY - 1 && ClassicLighting_Needs(block, World_GetBlock(x, y + 1, z))) {
+	if (bY == 15 && cy < World.ChunksY - 1 && ClassicLighting_Needs(block, World_GetBlock(x, y + 1, z))) {
 		MapRenderer_RefreshChunk(cx, cy + 1, cz);
 	}
-	if (bZ == 15 && cz < MapRenderer_ChunksZ - 1) {
+	if (bZ == 15 && cz < World.ChunksZ - 1) {
 		ClassicLighting_ResetNeighbour(x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy);
 	}
 }

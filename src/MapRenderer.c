@@ -15,8 +15,7 @@
 #include "World.h"
 #include "Options.h"
 
-int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
-int MapRenderer_1DUsedCount, MapRenderer_ChunksCount;
+int MapRenderer_1DUsedCount;
 struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
@@ -117,7 +116,7 @@ if (drawMin && drawMax) { \
 }
 
 static void RenderNormalBatch(int batch) {
-	int batchOffset = MapRenderer_ChunksCount * batch;
+	int batchOffset = World.ChunksCount * batch;
 	struct ChunkInfo* info;
 	struct ChunkPartInfo part;
 	cc_bool drawMin, drawMax;
@@ -221,7 +220,7 @@ if (drawMin && drawMax) { \
 }
 
 static void RenderTranslucentBatch(int batch) {
-	int batchOffset = MapRenderer_ChunksCount * batch;
+	int batchOffset = World.ChunksCount * batch;
 	struct ChunkInfo* info;
 	struct ChunkPartInfo part;
 	cc_bool drawMin, drawMax;
@@ -324,7 +323,7 @@ static void DeleteChunk(struct ChunkInfo* info) {
 
 	if (info->NormalParts) {
 		ptr = info->NormalParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += World.ChunksCount) {
 			if (ptr->Offset < 0) continue; 
 			normPartsCount[i]--;
 #ifdef CC_BUILD_GL11
@@ -336,7 +335,7 @@ static void DeleteChunk(struct ChunkInfo* info) {
 
 	if (info->TranslucentParts) {
 		ptr = info->TranslucentParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += World.ChunksCount) {
 			if (ptr->Offset < 0) continue;
 			tranPartsCount[i]--;
 #ifdef CC_BUILD_GL11
@@ -363,14 +362,14 @@ static void BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 	
 	if (info->NormalParts) {
 		ptr = info->NormalParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += World.ChunksCount) {
 			if (ptr->Offset >= 0) normPartsCount[i]++;
 		}
 	}
 
 	if (info->TranslucentParts) {
 		ptr = info->TranslucentParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += World.ChunksCount) {
 			if (ptr->Offset >= 0) tranPartsCount[i]++;
 		}
 	}
@@ -400,7 +399,7 @@ static void FreeChunks(void) {
 
 static void AllocateParts(void) {
 	struct ChunkPartInfo* ptr;
-	cc_uint32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
+	cc_uint32 count = World.ChunksCount * MapRenderer_1DUsedCount;
 
 	ptr = (struct ChunkPartInfo*)Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
 	MapRenderer_PartsNormal      = ptr;
@@ -408,10 +407,10 @@ static void AllocateParts(void) {
 }
 
 static void AllocateChunks(void) {
-	mapChunks    = (struct ChunkInfo*) Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo),  "chunk info");
-	sortedChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
-	renderChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
-	distances    = (cc_uint32*)Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
+	mapChunks    = (struct ChunkInfo*) Mem_Alloc(World.ChunksCount, sizeof(struct ChunkInfo),  "chunk info");
+	sortedChunks = (struct ChunkInfo**)Mem_Alloc(World.ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
+	renderChunks = (struct ChunkInfo**)Mem_Alloc(World.ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
+	distances    = (cc_uint32*)Mem_Alloc(World.ChunksCount, 4, "chunk distances");
 }
 
 static void ResetPartFlags(void) {
@@ -463,7 +462,7 @@ static void DeleteChunks(void) {
 	int i;
 	if (!mapChunks) return;
 
-	for (i = 0; i < MapRenderer_ChunksCount; i++) {
+	for (i = 0; i < World.ChunksCount; i++) {
 		DeleteChunk(&mapChunks[i]);
 	}
 	ResetPartCounts();
@@ -496,10 +495,10 @@ static void RefreshBorderChunks(int maxHeight) {
 	chunkPos = IVec3_MaxValue();
 	if (!mapChunks || !World.Blocks) return;
 
-	for (cz = 0; cz < MapRenderer_ChunksZ; cz++) {
-		for (cy = 0; cy < MapRenderer_ChunksY; cy++) {
-			for (cx = 0; cx < MapRenderer_ChunksX; cx++) {
-				onBorder = cx == 0 || cz == 0 || cx == (MapRenderer_ChunksX - 1) || cz == (MapRenderer_ChunksZ - 1);
+	for (cz = 0; cz < World.ChunksZ; cz++) {
+		for (cy = 0; cy < World.ChunksY; cy++) {
+			for (cx = 0; cx < World.ChunksX; cx++) {
+				onBorder = cx == 0 || cz == 0 || cx == (World.ChunksX - 1) || cz == (World.ChunksZ - 1);
 
 				if (onBorder && (cy * CHUNK_SIZE) < maxHeight) {
 					MapRenderer_RefreshChunk(cx, cy, cz);
@@ -543,7 +542,7 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 	int i, j = 0, distSqr;
 	cc_bool noData;
 
-	for (i = 0; i < MapRenderer_ChunksCount; i++) {
+	for (i = 0; i < World.ChunksCount; i++) {
 		info = sortedChunks[i];
 		if (info->Empty) continue;
 
@@ -576,7 +575,7 @@ static int UpdateChunksStill(int* chunkUpdates) {
 	int i, j = 0, distSqr;
 	cc_bool noData;
 
-	for (i = 0; i < MapRenderer_ChunksCount; i++) {
+	for (i = 0; i < World.ChunksCount; i++) {
 		info = sortedChunks[i];
 		if (info->Empty) continue;
 
@@ -661,9 +660,9 @@ static void UpdateSortOrder(void) {
 	/* If in same chunk, don't need to recalculate sort order */
 	if (pos.X == chunkPos.X && pos.Y == chunkPos.Y && pos.Z == chunkPos.Z) return;
 	chunkPos = pos;
-	if (!MapRenderer_ChunksCount) return;
+	if (!World.ChunksCount) return;
 
-	for (i = 0; i < MapRenderer_ChunksCount; i++) {
+	for (i = 0; i < World.ChunksCount; i++) {
 		info = sortedChunks[i];
 		/* Calculate distance to chunk centre */
 		dx = info->CentreX - pos.X; dy = info->CentreY - pos.Y; dz = info->CentreZ - pos.Z;
@@ -682,7 +681,7 @@ static void UpdateSortOrder(void) {
 		info->DrawYMin = dy >= 0; info->DrawYMax = dy <= 0;
 	}
 
-	SortMapChunks(0, MapRenderer_ChunksCount - 1);
+	SortMapChunks(0, World.ChunksCount - 1);
 	ResetPartFlags();
 	/*SimpleOcclusionCulling();*/
 }
@@ -699,10 +698,9 @@ void MapRenderer_Update(double delta) {
 *#########################################################################################################################*/
 void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
 	struct ChunkInfo* info;
-	if (cx < 0 || cy < 0 || cz < 0 || cx >= MapRenderer_ChunksX 
-		|| cy >= MapRenderer_ChunksY || cz >= MapRenderer_ChunksZ) return;
+	if (cx < 0 || cy < 0 || cz < 0 || cx >= World.ChunksX || cy >= World.ChunksY || cz >= World.ChunksZ) return;
 
-	info = &mapChunks[MapRenderer_Pack(cx, cy, cz)];
+	info = &mapChunks[World_ChunkPack(cx, cy, cz)];
 	if (info->AllAir) return; /* do not recreate chunks completely air */
 	info->Empty         = false;
 	info->PendingDelete = true;
@@ -712,7 +710,7 @@ void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
 	int cx = x >> CHUNK_SHIFT, cy = y >> CHUNK_SHIFT, cz = z >> CHUNK_SHIFT;
 	struct ChunkInfo* chunk;
 
-	chunk = &mapChunks[MapRenderer_Pack(cx, cy, cz)];
+	chunk = &mapChunks[World_ChunkPack(cx, cy, cz)];
 	chunk->AllAir &= Blocks.Draw[block] == DRAW_GAS;
 	/* TODO: Don't lookup twice, refresh directly using chunk pointer */
 	MapRenderer_RefreshChunk(cx, cy, cz);
@@ -767,15 +765,9 @@ static void OnNewMap(void) {
 }
 
 static void OnNewMapLoaded(void) {
-	int count;
-	MapRenderer_ChunksX = (World.Width  + CHUNK_MAX) >> CHUNK_SHIFT;
-	MapRenderer_ChunksY = (World.Height + CHUNK_MAX) >> CHUNK_SHIFT;
-	MapRenderer_ChunksZ = (World.Length + CHUNK_MAX) >> CHUNK_SHIFT;
-
-	count = MapRenderer_ChunksX * MapRenderer_ChunksY * MapRenderer_ChunksZ;
 	/* TODO: Only perform reallocation when map volume has changed */
-	/*if (MapRenderer_ChunksCount != count) { */
-		MapRenderer_ChunksCount = count;
+	/*if (MapRenderer_ChunksCount != World.ChunksCount) { */
+		/* MapRenderer_ChunksCount = World.ChunksCount; */
 		FreeChunks();
 		FreeParts();
 		AllocateChunks();
