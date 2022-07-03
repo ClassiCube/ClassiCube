@@ -185,6 +185,9 @@ static struct LightQueue lightQueue;
 /* It is indexed by a byte where the leftmost 4 bits represent sunlight level and the rightmost 4 bits represent blocklight level */
 /* E.G. modernLighting_palette[0b_0010_0001] will give us the color for sun level 2 and block level 1 (lowest level is 0) */
 static PackedCol modernLighting_palette[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
+static PackedCol modernLighting_paletteX[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
+static PackedCol modernLighting_paletteZ[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
+static PackedCol modernLighting_paletteY[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
 
 typedef cc_uint8* LightingChunk;
 static cc_uint8* chunkLightingDataFlags;
@@ -197,7 +200,7 @@ static cc_uint8 allDarkChunkLightingData[CHUNK_SIZE_3];
 #define Modern_MakePaletteIndex(sun, block) ((sun << MODERN_LIGHTING_SUN_SHIFT) | block)
 
 /* Fill in modernLighting_palette with values based on the current environment colors in lieu of recieving a palette from the server */
-static void ModernLighting_InitPalette(void) {
+static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 	PackedCol darkestShadow, defaultBlockLight, blockColor, sunColor, invertedBlockColor, invertedSunColor, finalColor;
 	int sunLevel, blockLevel;
 	float blockLerp;
@@ -233,22 +236,38 @@ static void ModernLighting_InitPalette(void) {
 			invertedBlockColor = PackedCol_Make(R, G, B, 255);
 
 			finalColor = PackedCol_Tint(invertedSunColor, invertedBlockColor);
+			
 			R = 255 - PackedCol_R(finalColor);
 			G = 255 - PackedCol_G(finalColor);
 			B = 255 - PackedCol_B(finalColor);
-			modernLighting_palette[Modern_MakePaletteIndex(sunLevel, blockLevel)] = PackedCol_Make(R, G, B, 255);
+			palette[Modern_MakePaletteIndex(sunLevel, blockLevel)] =
+			//	PackedCol_Scale(PackedCol_Make(R, G, B, 255), shaded);
+				PackedCol_Scale(PackedCol_Make(R, G, B, 255),
+					shaded + ((1-shaded) * ((MODERN_LIGHTING_LEVELS - sunLevel+1) / (float)MODERN_LIGHTING_LEVELS))
+				);
 		}
 	}
 }
+static void ModernLighting_InitPalettes(void) {
+	ModernLighting_InitPalette(modernLighting_palette, 1);
+	ModernLighting_InitPalette(modernLighting_paletteX, PACKEDCOL_SHADE_X);
+	ModernLighting_InitPalette(modernLighting_paletteZ, PACKEDCOL_SHADE_Z);
+	ModernLighting_InitPalette(modernLighting_paletteY, PACKEDCOL_SHADE_YMIN);
+}
 
+static void ClassicLighting_AllocState(void);
 static void ModernLighting_AllocState(void) {
-	ModernLighting_InitPalette();
+	ClassicLighting_AllocState();
+	ModernLighting_InitPalettes();
 
 	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(World.ChunksCount, sizeof(cc_uint8));
 	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(World.ChunksCount, sizeof(LightingChunk));
 	LightQueue_Init(&lightQueue);
+
 }
+static void ClassicLighting_FreeState(void);
 static void ModernLighting_FreeState(void) {
+	ClassicLighting_FreeState();
 	int i;
 	/* This function can be called multiple times without calling ModernLighting_AllocState, so... */
 	if (chunkLightingDataFlags == NULL) { return; }
@@ -269,7 +288,10 @@ static void ModernLighting_FreeState(void) {
 /* Converts local x/y/z coordinates to the corresponding index in a chunk */
 #define LocalCoordsToIndex(lx, ly, lz) ((lx) | ((lz) << CHUNK_SHIFT) | ((ly) << (CHUNK_SHIFT * 2)))
 
-static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z) {
+static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun) {
+	cc_uint8 clearMask;
+	cc_uint8 shift = sun ? MODERN_LIGHTING_SUN_SHIFT : 0;
+
 	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
 	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
 	int cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
@@ -280,9 +302,14 @@ static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z) {
 	}
 
 	int localIndex = LocalCoordsToIndex(lx, ly, lz);
-	if (chunkLightingData[chunkIndex][localIndex] < blockLight) { chunkLightingData[chunkIndex][localIndex] = blockLight; }
+
+	/* 00001111 if sun, otherwise 11110000*/
+	clearMask = ~(MODERN_LIGHTING_MAX_LEVEL << shift);
+
+	chunkLightingData[chunkIndex][localIndex] &= clearMask;
+	chunkLightingData[chunkIndex][localIndex] |= blockLight << shift;
 }
-static cc_uint8 GetBlocklight(int x, int y, int z) {
+static cc_uint8 GetBlocklight(int x, int y, int z, cc_bool sun) {
 	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
 	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
 	int cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
@@ -290,7 +317,10 @@ static cc_uint8 GetBlocklight(int x, int y, int z) {
 	int chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
 	if (chunkLightingData[chunkIndex] == NULL) { return 0; }
 	int localIndex = LocalCoordsToIndex(lx, ly, lz);
-	return chunkLightingData[chunkIndex][localIndex] & MODERN_LIGHTING_MAX_LEVEL;
+
+	return sun ?
+		chunkLightingData[chunkIndex][localIndex] >> MODERN_LIGHTING_SUN_SHIFT :
+		chunkLightingData[chunkIndex][localIndex] & MODERN_LIGHTING_MAX_LEVEL;
 }
 
 static cc_bool CanLightPass(BlockID thisBlock, Face face) {
@@ -306,9 +336,10 @@ static cc_bool CanLightPass(BlockID thisBlock, Face face) {
 	/* Is stone's face hidden by thisBlock? */
 	return !Block_IsFaceHidden(BLOCK_STONE, thisBlock, face);
 }
-static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 
-	SetBlocklight(blockLight, x, y, z);
+static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun) {
+
+	SetBlocklight(blockLight, x, y, z, sun);
 	IVec3 entry = { x, y, z };
 	LightQueue_Enqueue(&lightQueue, entry);
 
@@ -316,8 +347,8 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 
 	while (lightQueue.count > 0) {
 		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
-		cc_uint8 curBlockLight = GetBlocklight(curNode.X, curNode.Y, curNode.Z);
-		if (curBlockLight <= 1) {
+		cc_uint8 curBlockLight = GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun);
+		if (curBlockLight <= 0) {
 			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
 			return;
 		}
@@ -326,23 +357,23 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 
 		curNode.X--;
 		if (curNode.X > 0 &&
-			curBlockLight-1 > 1 &&
+			curBlockLight-1 > 0 &&
 			CanLightPass(thisBlock, FACE_XMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight-1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight-1
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
 		curNode.X += 2;
 		if (curNode.X < World.MaxX &&
-			curBlockLight - 1 > 1 &&
+			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_XMIN) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
@@ -350,23 +381,23 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 
 		curNode.Y--;
 		if (curNode.Y > 0 &&
-			curBlockLight - 1 > 1 &&
+			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_YMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
 		curNode.Y += 2;
 		if (curNode.Y < World.MaxY &&
-			curBlockLight - 1 > 1 &&
+			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_YMIN) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
@@ -374,27 +405,42 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 		
 		curNode.Z--;
 		if (curNode.Z > 0 &&
-			curBlockLight - 1 > 1 &&
+			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_ZMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
 		curNode.Z += 2;
 		if (curNode.Z < World.MaxZ &&
-			curBlockLight - 1 > 1 &&
+			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_ZMIN) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
 	}
+}
+static cc_bool BlocksSun(int x, int y, int z) {
+	BlockID thisBlock = World_GetBlock(x, y, z);
+	if (Blocks.BlocksLight[thisBlock]) { return true; }
+	return false;
+}
+static cc_bool InSun(int x, int y, int z) {
+	int topY = World.Height - 1;
+	while (!BlocksSun(x, topY, z)) {
+		topY--;
+		if (topY == 0) {
+			return true;
+		}
+	}
+	return y > topY;
 }
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
@@ -420,7 +466,10 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 
 				BlockID curBlock = World_GetBlock(x, y, z);
 				if (Blocks.FullBright[curBlock]) {
-					CalcBlockLight(15, x, y, z);
+					CalcBlockLight(15, x, y, z, false);
+				}
+				if (y > ClassicLighting_GetLightHeight(x, z)) {
+					CalcBlockLight(15, x, y, z, true);
 				}
 			}
 		}
@@ -470,18 +519,20 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
-
-static void ModernLighting_LightHint(void) { } /* ??? */
+static void ClassicLighting_LightHint(int startX, int startZ);
+static void ModernLighting_LightHint(int startX, int startZ) {
+	ClassicLighting_LightHint(startX, startZ);
+}
 static void ModernLighting_OnBlockChanged(void) { }
 static void ModernLighting_Refresh(void) {
-	ModernLighting_InitPalette();
+	ModernLighting_InitPalettes();
 	/* Set all the chunk lighting data flags to CHUNK_UNCALCULATED? */
 }
 static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
 static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 
-static PackedCol ModernLighting_Color(int x, int y, int z) {
-	if (!World_Contains(x, y, z)) return Env.SunCol;
+static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palette, PackedCol outOfBoundsColor) {
+	if (!World_Contains(x, y, z)) return outOfBoundsColor;
 
 	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
 	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
@@ -495,11 +546,26 @@ static PackedCol ModernLighting_Color(int x, int y, int z) {
 
 	int localIndex = LocalCoordsToIndex(lx, ly, lz);
 	cc_uint8 lightData = chunkLightingData[chunkIndex][localIndex];
-	return modernLighting_palette[lightData];
+	return palette[lightData];
+
+	////palette test
+	//cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
+	//cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
+	//return modernLighting_palette[thing | (thing2 << 4)];
 }
 
-
-
+static PackedCol ModernLighting_Color(int x, int y, int z) {
+	return ModernLighting_Color_Core(x, y, z, modernLighting_palette, Env.SunCol);
+}
+static PackedCol ModernLighting_Color_XSide(int x, int y, int z) {
+	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteX, Env.SunXSide);
+}
+static PackedCol ModernLighting_Color_ZSide(int x, int y, int z) {
+	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteZ, Env.SunZSide);
+}
+static PackedCol ModernLighting_Color_YMinSide(int x, int y, int z) {
+	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteY, Env.SunYMin);
+}
 
 
 
@@ -817,14 +883,14 @@ static void ModernLighting_SetActive(void) {
 	Lighting.Refresh = ModernLighting_Refresh;
 	Lighting.IsLit = ModernLighting_IsLit;
 	Lighting.Color = ModernLighting_Color;
-	Lighting.Color_XSide = ModernLighting_Color;
+	Lighting.Color_XSide = ModernLighting_Color_XSide;
 
 	Lighting.IsLit_Fast = ModernLighting_IsLit_Fast;
 	Lighting.Color_Sprite_Fast = ModernLighting_Color;
 	Lighting.Color_YMax_Fast = ModernLighting_Color;
-	Lighting.Color_YMin_Fast = ModernLighting_Color;
-	Lighting.Color_XSide_Fast = ModernLighting_Color;
-	Lighting.Color_ZSide_Fast = ModernLighting_Color;
+	Lighting.Color_YMin_Fast = ModernLighting_Color_YMinSide;
+	Lighting.Color_XSide_Fast = ModernLighting_Color_XSide;
+	Lighting.Color_ZSide_Fast = ModernLighting_Color_ZSide;
 
 	Lighting.FreeState = ModernLighting_FreeState;
 	Lighting.AllocState = ModernLighting_AllocState;
