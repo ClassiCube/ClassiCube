@@ -427,21 +427,6 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun
 		}
 	}
 }
-static cc_bool BlocksSun(int x, int y, int z) {
-	BlockID thisBlock = World_GetBlock(x, y, z);
-	if (Blocks.BlocksLight[thisBlock]) { return true; }
-	return false;
-}
-static cc_bool InSun(int x, int y, int z) {
-	int topY = World.Height - 1;
-	while (!BlocksSun(x, topY, z)) {
-		topY--;
-		if (topY == 0) {
-			return true;
-		}
-	}
-	return y > topY;
-}
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
