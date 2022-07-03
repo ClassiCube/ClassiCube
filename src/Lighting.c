@@ -241,10 +241,10 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 			G = 255 - PackedCol_G(finalColor);
 			B = 255 - PackedCol_B(finalColor);
 			palette[Modern_MakePaletteIndex(sunLevel, blockLevel)] =
-			//	PackedCol_Scale(PackedCol_Make(R, G, B, 255), shaded);
-				PackedCol_Scale(PackedCol_Make(R, G, B, 255),
-					shaded + ((1-shaded) * ((MODERN_LIGHTING_LEVELS - sunLevel+1) / (float)MODERN_LIGHTING_LEVELS))
-				);
+				PackedCol_Scale(PackedCol_Make(R, G, B, 255), shaded);
+			//	PackedCol_Scale(PackedCol_Make(R, G, B, 255),
+			//		shaded + ((1-shaded) * ((MODERN_LIGHTING_LEVELS - sunLevel+1) / (float)MODERN_LIGHTING_LEVELS))
+			//	);
 		}
 	}
 }
@@ -453,8 +453,24 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 				if (Blocks.FullBright[curBlock]) {
 					CalcBlockLight(15, x, y, z, false);
 				}
+
+
+				//this cell is exposed to sunlight
 				if (y > ClassicLighting_GetLightHeight(x, z)) {
-					CalcBlockLight(15, x, y, z, true);
+					//if all of this is true, then it means this cel is completely surrounded by sunlit blocks and we should not bother propagating it
+					if (
+						x + 1 < World.Width && y > ClassicLighting_GetLightHeight(x + 1, z) &&
+						z + 1 < World.Length && y > ClassicLighting_GetLightHeight(x, z + 1) &&
+						x - 1 > 0 && y > ClassicLighting_GetLightHeight(x - 1, z) &&
+						z - 1 > 0 && y > ClassicLighting_GetLightHeight(x, z - 1) &&
+						y - 1 > 0 && y - 1 > ClassicLighting_GetLightHeight(x, z)
+						) {
+						SetBlocklight(15, x, y, z, true);
+					}
+					else {
+						//propagate it
+						CalcBlockLight(15, x, y, z, true);
+					}
 				}
 			}
 		}
