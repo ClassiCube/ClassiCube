@@ -142,7 +142,7 @@ static void LightQueue_Resize(struct LightQueue* queue) {
 	}
 	capacity = queue->capacity * 2;
 	if (capacity < 32) capacity = 32;
-	entries = (IVec3*)Mem_Alloc(capacity, sizeof(IVec3), "Block queue");
+	entries = (IVec3*)Mem_Alloc(capacity, sizeof(IVec3), "Light queue");
 	for (i = 0; i < queue->count; i++) {
 		idx = (queue->head + i) & queue->mask;
 		entries[i] = queue->entries[idx];
@@ -203,7 +203,7 @@ static void ModernLighting_InitPalette(void) {
 	float blockLerp;
 	cc_uint8 R, G, B;
 
-	defaultBlockLight = PackedCol_Make(255, 238, 204, 255); /* A very mildly orange tinted light color */
+	defaultBlockLight = PackedCol_Make(150, 112, 79, 255); /* A very mildly orange tinted light color */
 	darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
 
 	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
@@ -217,7 +217,7 @@ static void ModernLighting_InitPalette(void) {
 				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 2));
 			}
 			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
-			blockLerp *= blockLerp;
+			//blockLerp *= blockLerp;
 			blockLerp *= (MATH_PI / 2);
 			blockLerp = Math_Cos(blockLerp);
 			blockColor = PackedCol_Lerp(0, defaultBlockLight, 1 - blockLerp);
@@ -293,6 +293,19 @@ static cc_uint8 GetBlocklight(int x, int y, int z) {
 	return chunkLightingData[chunkIndex][localIndex] & MODERN_LIGHTING_MAX_LEVEL;
 }
 
+static cc_bool CanLightPass(BlockID thisBlock, Face face) {
+	/* If it's not opaque and it doesn't block light, or it's fullbright, we can always pass through */
+	if ((Blocks.Draw[thisBlock] > DRAW_OPAQUE && !Blocks.BlocksLight[thisBlock]) || Blocks.FullBright[thisBlock]) { return true; }
+	/* Light can always pass through leaves and water */
+	if (Blocks.Draw[thisBlock] == DRAW_TRANSPARENT_THICK || Blocks.Draw[thisBlock] == DRAW_TRANSLUCENT) { return true; }
+
+	/* Light can never pass through a block that's full sized and blocks light */
+	/* We can assume a block is full sized if none of the LightOffset flags are 0 */
+	if (Blocks.BlocksLight[thisBlock] && Blocks.LightOffset[thisBlock] == 0xFF) { return false; }
+
+	/* Is stone's face hidden by thisBlock? */
+	return !Block_IsFaceHidden(BLOCK_STONE, thisBlock, face);
+}
 static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 
 	SetBlocklight(blockLight, x, y, z);
@@ -308,11 +321,14 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
 			return;
 		}
+		BlockID thisBlock = World_GetBlock(curNode.X, curNode.Y, curNode.Z);
+
 
 		curNode.X--;
 		if (curNode.X > 0 &&
 			curBlockLight-1 > 1 &&
-			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			CanLightPass(thisBlock, FACE_XMAX) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
 			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight-1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
@@ -322,7 +338,8 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 		curNode.X += 2;
 		if (curNode.X < World.MaxX &&
 			curBlockLight - 1 > 1 &&
-			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			CanLightPass(thisBlock, FACE_XMIN) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMAX) &&
 			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
@@ -334,7 +351,8 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 		curNode.Y--;
 		if (curNode.Y > 0 &&
 			curBlockLight - 1 > 1 &&
-			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			CanLightPass(thisBlock, FACE_YMAX) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMIN) &&
 			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
@@ -344,7 +362,8 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 		curNode.Y += 2;
 		if (curNode.Y < World.MaxY &&
 			curBlockLight - 1 > 1 &&
-			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			CanLightPass(thisBlock, FACE_YMIN) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMAX) &&
 			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
@@ -352,11 +371,12 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
 		curNode.Y--;
-
+		
 		curNode.Z--;
 		if (curNode.Z > 0 &&
 			curBlockLight - 1 > 1 &&
-			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			CanLightPass(thisBlock, FACE_ZMAX) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMIN) &&
 			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
@@ -366,20 +386,14 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 		curNode.Z += 2;
 		if (curNode.Z < World.MaxZ &&
 			curBlockLight - 1 > 1 &&
-			!Blocks.BlocksLight[World_GetBlock(curNode.X, curNode.Y, curNode.Z)] &&
+			CanLightPass(thisBlock, FACE_ZMIN) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMAX) &&
 			GetBlocklight(curNode.X, curNode.Y, curNode.Z) < curBlockLight - 1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
-
-		//Step 5: Look at all neighbouring voxels to that node.
-		//  if that node is in bounds of the world
-		//  AND if light is allowed to spread to that node,
-		//  AND if that node's light level is 2 or more levels less than the current node,
-		//  then set their light level to the current nodes light level - 1,
-		//  and then add that node to the queue.
 	}
 }
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
@@ -406,10 +420,6 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 
 				BlockID curBlock = World_GetBlock(x, y, z);
 				if (Blocks.FullBright[curBlock]) {
-
-					//String_InitArray(msg, msgBuffer);
-					//String_Format3(&msg, "found bright block at %i %i %i", &x, &y, &z);
-					//Chat_Add(&msg);
 					CalcBlockLight(15, x, y, z);
 				}
 			}
