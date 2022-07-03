@@ -240,7 +240,7 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 			invertedBlockColor = PackedCol_Make(R, G, B, 255);
 
 			finalColor = PackedCol_Tint(invertedSunColor, invertedBlockColor);
-			
+
 			R = 255 - PackedCol_R(finalColor);
 			G = 255 - PackedCol_G(finalColor);
 			B = 255 - PackedCol_B(finalColor);
@@ -361,10 +361,10 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun
 
 		curNode.X--;
 		if (curNode.X > 0 &&
-			curBlockLight-1 > 0 &&
+			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_XMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight-1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
 			) {
 			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
 			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
@@ -406,7 +406,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
 		curNode.Y--;
-		
+
 		curNode.Z--;
 		if (curNode.Z > 0 &&
 			curBlockLight - 1 > 0 &&
@@ -431,6 +431,104 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun
 		}
 	}
 }
+static void CalcBlockLightWithHackySunException(cc_uint8 blockLight, int x, int y, int z, cc_bool sun) {
+
+	SetBlocklight(blockLight, x, y, z, sun);
+	IVec3 entry = { x, y, z };
+	LightQueue_Enqueue(&lightQueue, entry);
+
+	//if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
+
+	while (lightQueue.count > 0) {
+		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
+		cc_uint8 curBlockLight = GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun);
+		if (curBlockLight <= 0) {
+			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
+			return;
+		}
+		BlockID thisBlock = World_GetBlock(curNode.X, curNode.Y, curNode.Z);
+
+
+		curNode.X--;
+		if (curNode.X > 0 &&
+			curNode.Y <= ClassicLighting_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+			curBlockLight - 1 > 0 &&
+			CanLightPass(thisBlock, FACE_XMAX) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.X += 2;
+		if (curNode.X < World.MaxX &&
+			curNode.Y <= ClassicLighting_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+			curBlockLight - 1 > 0 &&
+			CanLightPass(thisBlock, FACE_XMIN) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMAX) &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.X--;
+
+		curNode.Y--;
+		if (curNode.Y > 0 &&
+			curNode.Y <= ClassicLighting_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+			curBlockLight - 1 > 0 &&
+			CanLightPass(thisBlock, FACE_YMAX) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMIN) &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.Y += 2;
+		if (curNode.Y < World.MaxY &&
+			curNode.Y <= ClassicLighting_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+			curBlockLight - 1 > 0 &&
+			CanLightPass(thisBlock, FACE_YMIN) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMAX) &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.Y--;
+
+		curNode.Z--;
+		if (curNode.Z > 0 &&
+			curNode.Y <= ClassicLighting_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+			curBlockLight - 1 > 0 &&
+			CanLightPass(thisBlock, FACE_ZMAX) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMIN) &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+		curNode.Z += 2;
+		if (curNode.Z < World.MaxZ &&
+			curNode.Y <= ClassicLighting_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+			curBlockLight - 1 > 0 &&
+			CanLightPass(thisBlock, FACE_ZMIN) &&
+			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMAX) &&
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			) {
+			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
+			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			LightQueue_Enqueue(&lightQueue, entry);
+		}
+	}
+}
+
+
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
@@ -458,23 +556,9 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 					CalcBlockLight(15, x, y, z, false);
 				}
 
-
 				//this cell is exposed to sunlight
 				if (y > ClassicLighting_GetLightHeight(x, z)) {
-					//if all of this is true, then it means this cel is completely surrounded by sunlit blocks and we should not bother propagating it
-					if (
-						x + 1 < World.Width && y > ClassicLighting_GetLightHeight(x + 1, z) &&
-						z + 1 < World.Length && y > ClassicLighting_GetLightHeight(x, z + 1) &&
-						x - 1 > 0 && y > ClassicLighting_GetLightHeight(x - 1, z) &&
-						z - 1 > 0 && y > ClassicLighting_GetLightHeight(x, z - 1) &&
-						y - 1 > 0 && y - 1 > ClassicLighting_GetLightHeight(x, z)
-						) {
-						SetBlocklight(15, x, y, z, true);
-					}
-					else {
-						//propagate it
-						CalcBlockLight(15, x, y, z, true);
-					}
+					CalcBlockLightWithHackySunException(15, x, y, z, true);
 				}
 			}
 		}
