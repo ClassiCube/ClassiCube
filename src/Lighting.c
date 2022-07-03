@@ -216,9 +216,13 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 			if (sunLevel == MODERN_LIGHTING_LEVELS - 1) {
 				sunColor = Env.SunCol;
 			}
-			else {
-				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 2));
+			else if (sunLevel == MODERN_LIGHTING_LEVELS - 2) {
+				sunColor = PackedCol_Lerp(Env.SunCol, Env.ShadowCol, 0.5F);
 			}
+			else {
+				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3));
+			}
+
 			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
 			//blockLerp *= blockLerp;
 			blockLerp *= (MATH_PI / 2);
