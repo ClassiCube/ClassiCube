@@ -318,6 +318,7 @@ struct NbtTag {
 		cc_uint8  u8;
 		cc_int16  i16;
 		cc_uint16 u16;
+		cc_int32  i32;
 		cc_uint32 u32;
 		float     f32;
 		cc_uint8  small[NBT_SMALL_SIZE];
@@ -341,6 +342,11 @@ static cc_int16 NbtTag_I16(struct NbtTag* tag) {
 static cc_uint16 NbtTag_U16(struct NbtTag* tag) {
 	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
 	return tag->value.u16;
+}
+
+static int NbtTag_I32(struct NbtTag* tag) {
+	if (tag->type != NBT_I32) Logger_Abort("Expected I32 NBT tag");
+	return tag->value.i32;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
@@ -518,6 +524,14 @@ static cc_uint8* Nbt_WriteUInt16(cc_uint8* data, const char* name, cc_uint16 val
 	return data + 2;
 }
 
+static cc_uint8* Nbt_WriteInt32(cc_uint8* data, const char* name, int value) {
+	*data++ = NBT_I32;
+	data    = Nbt_WriteConst(data, name);
+
+	Stream_SetU32_BE(data, value);
+	return data + 4;
+}
+
 static cc_uint8* Nbt_WriteFloat(cc_uint8* data, const char* name, float value) {
 	union IntAndFloat raw;
 	*data++ = NBT_F32;
@@ -652,6 +666,20 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		}
 	}
 
+	if (IsTag(tag->parent, "EnvMapAspect")) {
+		if (IsTag(tag, "EdgeBlock"))    { Env.EdgeBlock    = NbtTag_U16(tag); return; }
+		if (IsTag(tag, "SideBlock"))    { Env.SidesBlock   = NbtTag_U16(tag); return; }
+		if (IsTag(tag, "EdgeHeight"))   { Env.EdgeHeight   = NbtTag_I32(tag); return; }
+		if (IsTag(tag, "SidesOffset"))  { Env.SidesOffset  = NbtTag_I32(tag); return; }
+		if (IsTag(tag, "CloudsHeight")) { Env.CloudsHeight = NbtTag_I32(tag); return; }
+		if (IsTag(tag, "CloudsSpeed"))  { Env.CloudsSpeed  = NbtTag_F32(tag); return; }
+		if (IsTag(tag, "WeatherSpeed")) { Env.WeatherSpeed   = NbtTag_F32(tag); return; }
+		if (IsTag(tag, "WeatherFade"))  { Env.WeatherFade    = NbtTag_F32(tag); return; }
+		if (IsTag(tag, "ExpFog"))       { Env.ExpFog         = NbtTag_U8(tag);  return; }
+		if (IsTag(tag, "SkyboxHor"))    { Env.SkyboxHorSpeed = NbtTag_F32(tag); return; }
+		if (IsTag(tag, "SkyboxVer"))    { Env.SkyboxVerSpeed = NbtTag_F32(tag); return; }
+	}
+
 	/* Callback for compound tag is called after all its children have been processed */
 	if (IsTag(tag->parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
@@ -664,7 +692,9 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 			Env_SetSunCol(Cw_ParseColor(ENV_DEFAULT_SUN_COLOR)); return;
 		} else if (IsTag(tag, "Ambient")) {
 			Env_SetShadowCol(Cw_ParseColor(ENV_DEFAULT_SHADOW_COLOR)); return;
-		}
+		} else if (IsTag(tag, "Skybox")) {
+			Env.SkyboxCol = Cw_ParseColor(ENV_DEFAULT_SKYBOX_COLOR); return;
+		} 
 	}
 
 	if (IsTag(tag->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
@@ -1370,7 +1400,7 @@ static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 }
 
 cc_result Cw_Save(struct Stream* stream) {
-	cc_uint8 buffer[1024];
+	cc_uint8 buffer[2048];
 	cc_uint8* cur;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	cc_result res;
@@ -1429,6 +1459,7 @@ cc_result Cw_Save(struct Stream* stream) {
 			cur = Cw_WriteColor(cur, "Fog",      Env.FogCol);
 			cur = Cw_WriteColor(cur, "Ambient",  Env.ShadowCol);
 			cur = Cw_WriteColor(cur, "Sunlight", Env.SunCol);
+			cur = Cw_WriteColor(cur, "Skybox",   Env.SkyboxCol);
 		} *cur++ = NBT_END;
 
 		cur = Nbt_WriteDict(cur, "EnvMapAppearance");
@@ -1437,6 +1468,21 @@ cc_result Cw_Save(struct Stream* stream) {
 			cur  = Nbt_WriteUInt8(cur, "EdgeBlock", (BlockRaw)Env.EdgeBlock);
 			cur  = Nbt_WriteUInt16(cur, "SideLevel", Env.EdgeHeight);
 			cur  = Nbt_WriteString(cur, "TextureURL", &TexturePack_Url);
+		} *cur++ = NBT_END;
+
+		cur = Nbt_WriteDict(cur, "EnvMapAspect");
+		{
+			cur  = Nbt_WriteUInt16(cur, "EdgeBlock",    Env.EdgeBlock);
+			cur  = Nbt_WriteUInt16(cur, "SideBlock",    Env.SidesBlock);
+			cur  = Nbt_WriteInt32(cur,  "EdgeHeight",   Env.EdgeHeight);
+			cur  = Nbt_WriteInt32(cur,  "SidesOffset",  Env.SidesOffset);
+			cur  = Nbt_WriteInt32(cur,  "CloudsHeight", Env.CloudsHeight);
+			cur  = Nbt_WriteFloat(cur,  "CloudsSpeed",  Env.CloudsSpeed);
+			cur  = Nbt_WriteFloat(cur,  "WeatherSpeed", Env.WeatherSpeed);
+			cur  = Nbt_WriteFloat(cur,  "WeatherFade",  Env.WeatherFade);
+			cur  = Nbt_WriteUInt8(cur,  "ExpFog",       (cc_uint8)Env.ExpFog);
+			cur  = Nbt_WriteFloat(cur,  "SkyboxHor",    Env.SkyboxHorSpeed);
+			cur  = Nbt_WriteFloat(cur,  "SkyboxVer",    Env.SkyboxVerSpeed);
 		} *cur++ = NBT_END;
 
 		cur = Nbt_WriteDict(cur, "BlockDefinitions");
