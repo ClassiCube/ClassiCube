@@ -946,7 +946,7 @@ void MainScreen_SetActive(void) {
 	s->Free = MainScreen_Free;
 	s->Tick = MainScreen_Tick;\
 
-	s->title         = "ClassiCube";
+	s->title         = "DebugCube";
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
 	Launcher_SetScreen((struct LScreen*)s);
 }

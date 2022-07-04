@@ -31,6 +31,68 @@ static int cachedWidth, cachedHeight;
 static int depthBits;
 static float totalMem;
 
+#include "Stream.h"
+struct D3D9Alloc {
+	void* Obj;
+	char* Type;
+	cc_string Backtrace;
+} allocs[50000];
+
+static void D3D9_LogAlloc(void* obj, char* type) {
+	char tmpBuffer[2048]; cc_string tmp = String_FromArray(tmpBuffer);
+	CONTEXT ctx;
+
+	for (int i = 0; i < Array_Elems(allocs); i++) {
+		if (allocs[i].Obj) continue;
+
+		Mem_Free(allocs[i].Backtrace.buffer);
+		allocs[i].Obj  = obj;
+		allocs[i].Type = type;
+		RtlCaptureContext(&ctx);		
+
+		Logger_Backtrace(&tmp, &ctx);
+		allocs[i].Backtrace.buffer = Mem_Alloc(tmp.length, 1, "d3d9 backtrace");
+		allocs[i].Backtrace.capacity = tmp.length;
+		allocs[i].Backtrace.length = 0;
+		String_Copy(&allocs[i].Backtrace, &tmp);
+		return;
+	}
+}
+
+static void D3D9_Dump(void) {
+	cc_string tmp; char tmpBuffer[128];
+	const static cc_string path = String_FromConst("d3d9dump.log");
+	struct Stream s;
+	Stream_CreateFile(&s, &path);
+
+	cc_string traces[80];
+
+	for (int i = 0; i < Array_Elems(allocs); i++) {
+		if (!allocs[i].Obj) continue;
+		String_InitArray(tmp, tmpBuffer);
+		String_Format2(&tmp, "D3D9 obj %x of %c type", allocs[i].Obj, allocs[i].Type);
+
+		int count = String_UNSAFE_Split(&allocs[i].Backtrace, '\n', traces, 80);
+		Stream_WriteLine(&s, &tmp);
+		for (int j = 0; j < count; j++) {
+			Stream_WriteLine(&s, &traces[j]);
+		}
+		Stream_WriteLine(&s, &String_Empty);
+	}
+	s.Close(&s);
+}
+
+static void D3D9_RemAlloc(void* obj) {
+	for (int i = 0; i < Array_Elems(allocs); i++) {
+		if (allocs[i].Obj != obj) continue;
+
+		Mem_Free(allocs[i].Backtrace.buffer);
+		allocs[i].Obj       = NULL;
+		allocs[i].Type      = NULL;
+		allocs[i].Backtrace = String_Empty;
+	}
+}
+
 static void D3D9_RestoreRenderStates(void);
 static void D3D9_FreeResource(GfxResourceID* resource) {
 	cc_uintptr addr;
@@ -39,6 +101,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 	
 	unk = (IUnknown*)(*resource);
 	if (!unk) return;
+	D3D9_RemAlloc(unk);
 	*resource = 0;
 
 #ifdef __cplusplus
@@ -203,7 +266,10 @@ cc_bool Gfx_TryRestoreContext(void) {
 	/* So try to workaround this by only crashing after 50 failures */
 	if (res == D3DERR_NOTAVAILABLE && availFails++ < 50) return false;
 
-	if (res) Logger_Abort2(res, "Error recreating D3D9 context");
+	if (res) {
+		D3D9_Dump();
+		Logger_Abort2(res, "Error recreating D3D9 context");
+	}
 	D3D9_UpdateCachedDimensions();
 	return true;
 }
@@ -354,6 +420,8 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
+
+		D3D9_LogAlloc(tex, "(managed tex)");
 		return tex;
 	}
 
@@ -366,6 +434,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
 
 	D3D9_FreeResource(&sys);
+	D3D9_LogAlloc(tex, "texture");
 	return tex;
 }
 
@@ -547,6 +616,8 @@ GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	if (res) Logger_Abort2(res, "D3D9_CreateIb");
 
 	D3D9_SetIbData(ibuffer, indices, size);
+
+	D3D9_LogAlloc(ibuffer, "Index buffer");
 	return ibuffer;
 }
 
@@ -596,7 +667,9 @@ static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lock
 }
 
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
+	void* vbuffer = D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
+	D3D9_LogAlloc(vbuffer, "Vertex buffer");
+	return vbuffer;
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
@@ -653,7 +726,10 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	if (Gfx.LostContext) return 0;
-	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+
+	void* vbuffer = D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+	D3D9_LogAlloc(vbuffer, "Dynamic vertex buffer");
+	return vbuffer;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {

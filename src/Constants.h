@@ -10,15 +10,15 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
-#define GAME_APP_ALT   "ClassiCube 1.3.2 web mobile"
-#define GAME_APP_NAME  "ClassiCube 1.3.2 web"
-#define GAME_APP_TITLE "ClassiCube"
+#define GAME_APP_ALT   "DebugCube 1.3.2 web mobile"
+#define GAME_APP_NAME  "DebugCube 1.3.2 web"
+#define GAME_APP_TITLE "DebugCube"
 #elif defined CC_BUILD_ANDROID
-#define GAME_APP_NAME  "ClassiCube 1.3.2 android alpha"
-#define GAME_APP_TITLE "ClassiCube 1.3.2 android alpha"
+#define GAME_APP_NAME  "DebugCube 1.3.2 android alpha"
+#define GAME_APP_TITLE "DebugCube 1.3.2 android alpha"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.3.2"
-#define GAME_APP_TITLE "ClassiCube 1.3.2"
+#define GAME_APP_NAME  "DebugCube 1.3.2"
+#define GAME_APP_TITLE "DebugCube 1.3.2"
 #endif
 
 /* Max number of characters strings can have. */

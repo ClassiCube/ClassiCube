@@ -208,7 +208,6 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 		String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
 	}
 #endif
-	Logger_Log(&str);
 }
 #elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
 /* dladdr does not exist prior to macOS tiger */
@@ -348,6 +347,7 @@ static void DumpBacktrace(cc_string* str, void* ctx) {
 	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
 	Logger_Log(&backtrace);
 	Logger_Backtrace(str, ctx);
+	Logger_Log(str);
 }
 
 
