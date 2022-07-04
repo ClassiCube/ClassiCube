@@ -357,77 +357,67 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun
 			return;
 		}
 		BlockID thisBlock = World_GetBlock(curNode.X, curNode.Y, curNode.Z);
+		curBlockLight--; // 1 level less in each neighbour
+		if (curBlockLight == 0) continue;
 
 
 		curNode.X--;
 		if (curNode.X > 0 &&
-			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_XMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			SetBlocklight(curBlockLight, curNode.X, curNode.Y, curNode.Z, sun);
+			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 		curNode.X += 2;
 		if (curNode.X < World.MaxX &&
-			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_XMIN) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			SetBlocklight(curBlockLight, curNode.X, curNode.Y, curNode.Z, sun);
+			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 		curNode.X--;
 
 		curNode.Y--;
 		if (curNode.Y > 0 &&
-			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_YMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			SetBlocklight(curBlockLight, curNode.X, curNode.Y, curNode.Z, sun);
+			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 		curNode.Y += 2;
 		if (curNode.Y < World.MaxY &&
-			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_YMIN) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			SetBlocklight(curBlockLight, curNode.X, curNode.Y, curNode.Z, sun);
+			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 		curNode.Y--;
 
 		curNode.Z--;
 		if (curNode.Z > 0 &&
-			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_ZMAX) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			SetBlocklight(curBlockLight, curNode.X, curNode.Y, curNode.Z, sun);
+			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 		curNode.Z += 2;
 		if (curNode.Z < World.MaxZ &&
-			curBlockLight - 1 > 0 &&
 			CanLightPass(thisBlock, FACE_ZMIN) &&
 			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight - 1
+			GetBlocklight(curNode.X, curNode.Y, curNode.Z, sun) < curBlockLight
 			) {
-			SetBlocklight(curBlockLight - 1, curNode.X, curNode.Y, curNode.Z, sun);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			SetBlocklight(curBlockLight, curNode.X, curNode.Y, curNode.Z, sun);
+			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 	}
 }
@@ -586,6 +576,8 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 
+	//cc_uint64 BEG = Stopwatch_Measure();
+
 	for (y = chunkStartY; y <= chunkEndY; y++) {
 		for (z = chunkStartZ; z <= chunkEndZ; z++) {
 			for (x = chunkStartX; x <= chunkEndX; x++) {
@@ -605,6 +597,11 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 		}
 	}
 
+	//cc_uint64 END = Stopwatch_Measure();
+
+	//static float ELAPSED;
+	//ELAPSED += Stopwatch_ElapsedMicroseconds(BEG, END) / 1000.0;
+	//Platform_Log1("CALC TIME: %f3", &ELAPSED);
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
