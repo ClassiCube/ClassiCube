@@ -103,13 +103,13 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 static void LScreen_MouseUp(struct LScreen* s, int idx) { }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
-static void LScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
+static void LScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 	if (!s->title) {
-		Launcher_DrawBackground(bmp, 0, 0, bmp->width, bmp->height);
+		Launcher_DrawBackground(ctx, 0, 0, ctx->width, ctx->height);
 		return;
 	}
-	Launcher_DrawBackgroundAll(bmp);
-	LBackend_DrawLogo(bmp, s->title);
+	Launcher_DrawBackgroundAll(ctx);
+	LBackend_DrawLogo(ctx, s->title);
 }
 
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
@@ -338,7 +338,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->iptColours[index + 1].text, &g)) return;
 	if (!Convert_ParseUInt8(&s->iptColours[index + 2].text, &b)) return;
 
-	*color = BitmapCol_Make(r, g, b, 255);
+	*color = BitmapColor_RGB(r, g, b);
 	Launcher_SaveTheme();
 	LBackend_ThemeChanged();
 }
@@ -510,7 +510,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
-		LLabel_SetConst(status, "&eInvalid address"); return;
+		LLabel_SetConst(status, "&cInvalid address"); return;
 	}
 
 	/* support either "[IP]" or "[IP]:[PORT]" */
@@ -523,13 +523,13 @@ static void DirectConnectScreen_StartClient(void* w) {
 	}
 
 	if (!user->length) {
-		LLabel_SetConst(status, "&eUsername required"); return;
+		LLabel_SetConst(status, "&cUsername required"); return;
 	}
 	if (!Socket_ValidAddress(&ip)) {
-		LLabel_SetConst(status, "&eInvalid ip"); return;
+		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
 	if (!Convert_ParseUInt16(&port, &raw_port)) {
-		LLabel_SetConst(status, "&eInvalid port"); return;
+		LLabel_SetConst(status, "&cInvalid port"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;
 
@@ -718,10 +718,10 @@ static void MainScreen_DoLogin(void) {
 	cc_string* pass = &s->iptPassword.text;
 
 	if (!user->length) {
-		LLabel_SetConst(&s->lblStatus, "&eUsername required"); return;
+		LLabel_SetConst(&s->lblStatus, "&cUsername required"); return;
 	}
 	if (!pass->length) {
-		LLabel_SetConst(&s->lblStatus, "&ePassword required"); return;
+		LLabel_SetConst(&s->lblStatus, "&cPassword required"); return;
 	}
 
 	if (GetTokenTask.Base.working) return;
@@ -1011,22 +1011,22 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
-#define RESOURCES_BACK_COLOR BitmapCol_Make( 12,  12,  12, 255)
-#define RESOURCES_FORE_COLOR BitmapCol_Make(120,  85, 151, 255)
+#define RESOURCES_BACK_COLOR BitmapColor_RGB( 12,  12,  12)
+#define RESOURCES_FORE_COLOR BitmapColor_RGB(120,  85, 151)
 
-static void CheckResourcesScreen_ResetArea(struct Bitmap* bmp, int x, int y, int width, int height) {
-	Gradient_Noise(bmp, RESOURCES_FORE_COLOR, 4, x, y, width, height);
+static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
+	Gradient_Noise(ctx, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
-static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Bitmap* bmp) {
+static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 	int x, y, width, height;
-	Drawer2D_Clear(bmp, RESOURCES_BACK_COLOR, 0, 0, bmp->width, bmp->height);
+	Context2D_Clear(ctx, RESOURCES_BACK_COLOR, 0, 0, ctx->width, ctx->height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  bmp->width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, bmp->height);
-	CheckResourcesScreen_ResetArea(bmp, x, y, width, height);
+	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  ctx->width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, ctx->height);
+	CheckResourcesScreen_ResetArea(ctx, x, y, width, height);
 }
 
 void CheckResourcesScreen_SetActive(void) {
@@ -1067,9 +1067,9 @@ static void FetchResourcesScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(fetchResources_widgets);
 	s->lblStatus.small = true;
 
-	LLabel_Init( &s->lblStatus,   "",                                      fres_lblStatus);
-	LButton_Init(&s->btnCancel,   120, 35, "Cancel",                       fres_btnCancel);
-	LSlider_Init(&s->sdrProgress, 200, 12, BitmapCol_Make(0, 220, 0, 255), fres_sdrProgress);
+	LLabel_Init( &s->lblStatus,   "",                                  fres_lblStatus);
+	LButton_Init(&s->btnCancel,   120, 35, "Cancel",                   fres_btnCancel);
+	LSlider_Init(&s->sdrProgress, 200, 12, BitmapColor_RGB(0, 220, 0), fres_sdrProgress);
 
 	s->btnCancel.OnClick = CheckResourcesScreen_Next;
 }

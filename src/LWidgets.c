@@ -30,30 +30,22 @@ void LWidget_CalcOffsets(void) {
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static BitmapCol LButton_Expand(BitmapCol a, int amount) {
-	int r, g, b;
-	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
-	g = BitmapCol_G(a) + amount; Math_Clamp(g, 0, 255);
-	b = BitmapCol_B(a) + amount; Math_Clamp(b, 0, 255);
-	return BitmapCol_Make(r, g, b, 255);
-}
-
-static void LButton_DrawBase(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
+static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
 	BitmapCol color = hovered ? Launcher_Theme.ButtonForeActiveColor 
 							  : Launcher_Theme.ButtonForeColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		Gradient_Noise(bmp, color, 8,
+		Gradient_Noise(ctx, color, 8,
 						x + oneX,       y + oneY,
 						width - twoX,   height - twoY);
 	} else {
-		Gradient_Vertical(bmp, LButton_Expand(color, 8), LButton_Expand(color, -8),
+		Gradient_Vertical(ctx, BitmapColor_Offset(color, 8,8,8), BitmapColor_Offset(color, -8,-8,-8),
 						  x + oneX,     y + oneY,
 						  width - twoX, height - twoY);
 	}
 }
 
-static void LButton_DrawBorder(struct Bitmap* bmp, int x, int y, int width, int height) {
+static void LButton_DrawBorder(struct Context2D* ctx, int x, int y, int width, int height) {
 	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
 #ifdef CC_BUILD_IOS
 	int xoff = 0; /* TODO temp hack */
@@ -61,44 +53,44 @@ static void LButton_DrawBorder(struct Bitmap* bmp, int x, int y, int width, int 
 	int xoff = oneX;
 #endif
 
-	Drawer2D_Clear(bmp, backColor, 
+	Context2D_Clear(ctx, backColor, 
 					x + xoff,         y,
 					width - 2 * xoff, oneY);
-	Drawer2D_Clear(bmp, backColor,
+	Context2D_Clear(ctx, backColor,
 					x + xoff,         y + height - oneY,
 					width - 2 * xoff, oneY);
-	Drawer2D_Clear(bmp, backColor,
+	Context2D_Clear(ctx, backColor,
 					x,                y + oneY,
 					oneX,             height - twoY);
-	Drawer2D_Clear(bmp, backColor,
+	Context2D_Clear(ctx, backColor,
 					x + width - oneX, y + oneY,
 					oneX,             height - twoY);
 }
 
-static void LButton_DrawHighlight(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
-	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
+static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
+	BitmapCol activeColor = BitmapColor_RGB(189, 198, 255);
 	BitmapCol color       = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
 		if (hovered) color = activeColor;
 
-		Drawer2D_Clear(bmp, color,
+		Context2D_Clear(ctx, color,
 						x + twoX,      y + oneY,
 						width - fourX, oneY);
-		Drawer2D_Clear(bmp, color,
+		Context2D_Clear(ctx, color,
 						x + oneX,      y + twoY,
 						oneX,          height - fourY);
 	} else if (!hovered) {
-		Drawer2D_Clear(bmp, color,
+		Context2D_Clear(ctx, color,
 						x + twoX,      y + oneY,
 						width - fourX, oneY);
 	}
 }
 
-void LButton_DrawBackground(struct Bitmap* bmp, int x, int y, int width, int height, cc_bool hovered) {
-	LButton_DrawBase(     bmp, x, y, width, height, hovered);
-	LButton_DrawBorder(   bmp, x, y, width, height);
-	LButton_DrawHighlight(bmp, x, y, width, height, hovered);
+void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
+	LButton_DrawBase(     ctx, x, y, width, height, hovered);
+	LButton_DrawBorder(   ctx, x, y, width, height);
+	LButton_DrawHighlight(ctx, x, y, width, height, hovered);
 }
 
 static void LButton_Draw(void* widget) {
@@ -418,7 +410,7 @@ void LLine_Init(struct LLine* w, int width, const struct LLayout* layouts) {
 	LBackend_LineInit(w, width);
 }
 
-#define CLASSIC_LINE_COLOR BitmapCol_Make(128,128,128, 255)
+#define CLASSIC_LINE_COLOR BitmapColor_RGB(128, 128, 128)
 BitmapCol LLine_GetColor(void) {
 	return Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COLOR : Launcher_Theme.ButtonBorderColor;
 }
@@ -457,34 +449,34 @@ void LSlider_SetProgress(struct LSlider* w, int progress) {
 /*########################################################################################################################*
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
+static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Context2D* ctx) {
 	struct Flag* flag = Flags_Get(row);
 	if (!flag) return;
-	Drawer2D_BmpCopy(bmp, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
+	Context2D_DrawPixels(ctx, cell->x + flagXOffset, cell->y + flagYOffset, &flag->bmp);
 }
 
-static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
+static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Context2D* ctx) {
 	args->text = row->name;
 }
 static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&b->name, &a->name);
 }
 
-static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
+static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Context2D* ctx) {
 	String_Format2(&args->text, "%i/%i", &row->players, &row->maxPlayers);
 }
 static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->players - a->players;
 }
 
-static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
+static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Context2D* ctx) {
 	LTable_FormatUptime(&args->text, row->uptime);
 }
 static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->uptime - a->uptime;
 }
 
-static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Bitmap* bmp) {
+static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell, struct Context2D* ctx) {
 	/* last column, so adjust to fit size of table */
 	int leftover = cell->table->width - cell->x;
 	cell->width  = max(cell->width, leftover);
@@ -730,9 +722,9 @@ void LTable_ShowSelected(struct LTable* w) {
 }
 
 BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
-	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
-	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);
-	BitmapCol selectedColor = BitmapCol_Make( 40,  40, 40, 255);
+	BitmapCol featSelColor  = BitmapColor_RGB( 50,  53,  0);
+	BitmapCol featuredColor = BitmapColor_RGB(101, 107,  0);
+	BitmapCol selectedColor = BitmapColor_RGB( 40,  40, 40);
 
 	if (entry && entry->featured) {
 		return selected ? featSelColor : featuredColor;
@@ -741,7 +733,7 @@ BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
 	}
 
 	if (!Launcher_Theme.ClassicBackground) {
-		return BitmapCol_Make(20, 20, 10, 255);
+		return BitmapColor_RGB(20, 20, 10);
 	} else {
 		return (row & 1) == 0 ? Launcher_Theme.BackgroundColor : 0;
 	}

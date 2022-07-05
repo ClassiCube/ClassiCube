@@ -552,6 +552,8 @@ static void DoDrawFramebuffer(CGRect dirty) {
 	NSGraphicsContext* nsContext;
 	CGImageRef image;
 	CGRect rect;
+	
+	Event_RaiseVoid(&WindowEvents.Redrawing);
 
 	// Unfortunately CGImageRef is immutable, so changing the
 	//  underlying data doesn't change what shows when drawing.

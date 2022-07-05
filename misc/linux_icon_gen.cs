@@ -5,8 +5,8 @@ using System.IO;
 namespace test {
 	public static class Program {
 		
-		const string src = "CCIcon.ico";
-		const string dst = "CCIcon.c";
+		const string src = "CCicon.ico";
+		const string dst = "CCicon.c";
 		
 		static void DumpIcon(StreamWriter sw, int width, int height) {
 			sw.WriteLine(width + "," + height + ",");

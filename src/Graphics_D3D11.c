@@ -159,7 +159,7 @@ static void Gfx_RestoreState(void) {
 
 	/* 1x1 dummy white texture */
 	struct Bitmap bmp;
-	BitmapCol pixels[1] = { BITMAPCOL_WHITE };
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
 	Bitmap_Init(bmp, 1, 1, pixels);
 	Gfx_RecreateTexture(&white_square, &bmp, 0, false);
 }

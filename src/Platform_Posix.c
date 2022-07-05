@@ -92,8 +92,10 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
-#ifdef CC_BUILD_ANDROID
+#if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #else
 void Platform_Log(const char* msg, int len) {
 	write(STDOUT_FILENO, msg,  len);
@@ -419,28 +421,34 @@ static void FontDirCallback(const cc_string* path, void* obj) {
 void Platform_LoadSysFonts(void) { 
 	int i;
 #if defined CC_BUILD_ANDROID
-	static const cc_string dirs[3] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/system/fonts"),
 		String_FromConst("/system/font"),
 		String_FromConst("/data/fonts"),
 	};
 #elif defined CC_BUILD_NETBSD
-	static const cc_string dirs[3] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/usr/X11R7/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/share/fonts")
 	};
+#elif defined CC_BUILD_OPENBSD
+	static const cc_string dirs[] = {
+		String_FromConst("/usr/X11R6/lib/X11/fonts"),
+		String_FromConst("/usr/share/fonts"),
+		String_FromConst("/usr/local/share/fonts")
+	};
 #elif defined CC_BUILD_HAIKU
-	static const cc_string dirs[1] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/system/data/fonts")
 	};
 #elif defined CC_BUILD_DARWIN
-	static const cc_string dirs[2] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
 #else
-	static const cc_string dirs[2] = {
+	static const cc_string dirs[] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
 	};
@@ -769,50 +777,54 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 const char* const Updater_D3D9 = NULL;
 cc_bool Updater_Clean(void) { return true; }
 
-#if defined CC_BUILD_LINUX
-#if __x86_64__
-const struct UpdaterInfo Updater_Info = {
-	"&eModernGL is recommended for newer machines (2010 or later)", 2,
-	{
-		{ "ModernGL", "cc-nix64-gl2" },
-		{ "OpenGL",   "ClassiCube" }
-	}
-};
-#elif __i386__
-const struct UpdaterInfo Updater_Info = {
-	"&eModernGL is recommended for newer machines (2010 or later)", 2,
-	{
-		{ "ModernGL", "cc-nix32-gl2" },
-		{ "OpenGL",   "ClassiCube.32" }
-	}
-};
-#elif CC_BUILD_RPI
-const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "ClassiCube.rpi" } } };
-#else
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-#endif
+#if defined CC_BUILD_RPI
+	#if __aarch64__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL ES", "cc-rpi64" } } };
+	#else
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL ES", "ClassiCube.rpi" } } };
+	#endif
+#elif defined CC_BUILD_LINUX
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = {
+		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		{
+			{ "ModernGL", "cc-nix64-gl2" },
+			{ "OpenGL",   "ClassiCube" }
+		}
+	};
+	#elif __i386__
+	const struct UpdaterInfo Updater_Info = {
+		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		{
+			{ "ModernGL", "cc-nix32-gl2" },
+			{ "OpenGL",   "ClassiCube.32" }
+		}
+	};
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
 #elif defined CC_BUILD_MACOS
-#if __x86_64__
-const struct UpdaterInfo Updater_Info = {
-	"&eModernGL is recommended for newer machines (2010 or later)", 2,
-	{
-		{ "ModernGL", "cc-osx64-gl2" },
-		{ "OpenGL",   "ClassiCube.64.osx" }
-	}
-};
-#elif __i386__
-const struct UpdaterInfo Updater_Info = {
-	"&eModernGL is recommended for newer machines (2010 or later)", 2,
-	{
-		{ "ModernGL", "cc-osx32-gl2" },
-		{ "OpenGL",   "ClassiCube.osx" }
-	}
-};
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = {
+		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		{
+			{ "ModernGL", "cc-osx64-gl2" },
+			{ "OpenGL",   "ClassiCube.64.osx" }
+		}
+	};
+	#elif __i386__
+	const struct UpdaterInfo Updater_Info = {
+		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		{
+			{ "ModernGL", "cc-osx32-gl2" },
+			{ "OpenGL",   "ClassiCube.osx" }
+		}
+	};
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
 #else
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-#endif
-#else
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 #endif
 
 cc_result Updater_Start(const char** action) {

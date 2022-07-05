@@ -1,8 +1,10 @@
 #ifndef CC_PICKING_H
 #define CC_PICKING_H
 #include "Vectors.h"
-/* Data for picking/selecting block by the user, and clipping the camera.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Provides ray tracer functionality for calculating picking/selecting intersection
+  e.g. calculating block selected in the world by the user, clipping the camera
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 /* Implements a voxel ray tracer

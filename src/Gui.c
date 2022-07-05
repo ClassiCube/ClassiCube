@@ -54,8 +54,8 @@ float Gui_GetChatScale(void) {
 	return Gui_Scale(GetWindowScale() * Gui.RawChatScale);
 }
 
-void Gui_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_FLAGS_BOLD); }
-void Gui_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_FLAGS_NONE); }
+void Gui_MakeTitleFont(struct FontDesc* font) { Font_Make(font, 16, FONT_FLAGS_BOLD); }
+void Gui_MakeBodyFont(struct FontDesc* font)  { Font_Make(font, 16, FONT_FLAGS_NONE); }
 
 int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen) {
 	if (anchor == ANCHOR_MIN) return offset;
@@ -90,7 +90,7 @@ void Gui_ShowDefault(void) {
 
 static void LoadOptions(void) {
 	Gui.DefaultLines    = Game_ClassicMode ? 10 : 12;
-	Gui.Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, Gui.DefaultLines);
+	Gui.Chatlines       = Options_GetInt(OPT_CHATLINES, 0, GUI_MAX_CHATLINES, Gui.DefaultLines);
 	Gui.ClickableChat   = !Game_ClassicMode && Options_GetBool(OPT_CLICKABLE_CHAT,   !Input_TouchMode);
 	Gui.TabAutocomplete = !Game_ClassicMode && Options_GetBool(OPT_TAB_AUTOCOMPLETE, true);
 
@@ -284,8 +284,8 @@ void Gui_RenderGui(double delta) {
 *#########################################################################################################################*/
 void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct FontDesc* font, const cc_string* prefix) {
 	struct DrawTextArgs args; 
+	struct Context2D ctx;
 	int width, height;
-	struct Bitmap bmp;
 	int i, charWidth;
 
 	Gfx_DeleteTexture(&atlas->tex.ID);
@@ -304,20 +304,20 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	}
 	height = Drawer2D_TextHeight(&args);
 
-	Bitmap_AllocateClearedPow2(&bmp, width, height);
+	Context2D_Alloc(&ctx, width, height);
 	{
 		args.text = *prefix;
-		Drawer2D_DrawText(&bmp, &args, 0, 0);	
+		Context2D_DrawText(&ctx, &args, 0, 0);
 
 		for (i = 0; i < chars->length; i++) {
 			args.text = String_UNSAFE_Substring(chars, i, 1);
-			Drawer2D_DrawText(&bmp, &args, atlas->offsets[i], 0);
+			Context2D_DrawText(&ctx, &args, atlas->offsets[i], 0);
 		}
-		Drawer2D_MakeTexture(&atlas->tex, &bmp, width, height);
+		Context2D_MakeTexture(&atlas->tex, &ctx);
 	}	
-	Mem_Free(bmp.scan0);
+	Context2D_Free(&ctx);
 
-	atlas->uScale = 1.0f / (float)bmp.width;
+	atlas->uScale = 1.0f / (float)ctx.bmp.width;
 	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
 	atlas->tex.Width = atlas->offset;	
 }

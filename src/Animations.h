@@ -1,8 +1,9 @@
 #ifndef CC_ANIMATIONS_H
 #define CC_ANIMATIONS_H
-/* Contains everything relating to texture animations (including default water/lava ones)
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3 
- */
+/* 
+Contains everything relating to texture animations (including default water/lava ones)
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+*/
 
 struct IGameComponent;
 extern struct IGameComponent Animations_Component;

@@ -1,7 +1,8 @@
 #ifndef CC_CORE_H
 #define CC_CORE_H
-/* Core fixed-size integer types, automatic platform detection, and common small structs.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Core fixed-size integer types, automatic platform detection, and common small structs
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 #if _MSC_VER
@@ -148,6 +149,7 @@ typedef struct cc_string_ {
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
 
+#define CC_BUILD_FREETYPE
 /*#define CC_BUILD_GL11*/
 #ifndef CC_BUILD_MANUAL
 #if defined _WIN32
@@ -246,6 +248,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_WEBAUDIO
 #define CC_BUILD_NOMUSIC
 #define CC_BUILD_MINFILES
+#undef  CC_BUILD_FREETYPE
 #endif
 #endif
 

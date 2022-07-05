@@ -146,7 +146,7 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 /* The texture for the given face of the given block. */
 #define Block_Tex(block, face) Blocks.Textures[(block) * FACE_COUNT + (face)]
 
-cc_bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
+#define Block_IsFaceHidden(block, other, face) (Blocks.Hidden[((block) * BLOCK_COUNT) + (other)] & (1 << (face)))
 /* Updates culling data of all blocks. */
 void Block_UpdateAllCulling(void);
 /* Updates culling data just for this block. */

@@ -108,7 +108,8 @@ void Event_UnregisterAll(void);
 /* NOTE: Event_UnregisterAll MUST be updated when events lists are changed */
 
 /* Event API version supported by the client */
-/*  Version 1 - Added NetEvents.PluginMessageReceived, */
+/*  Version 1 - Added NetEvents.PluginMessageReceived */
+/*  Version 2 - Added WindowEvents.Redrawing */
 /* You MUST CHECK the event API version before attempting to use the events listed above, */
 /*  as otherwise if the player is using an older client that lacks some of the above events, */
 /*  you will be calling Event_Register on random data instead of the expected EventsList struct */
@@ -166,13 +167,14 @@ CC_VAR extern struct _ChatEventsList {
 } ChatEvents;
 
 CC_VAR extern struct _WindowEventsList {
-	struct Event_Void Redraw;       /* Window contents invalidated, should be redrawn */
+	struct Event_Void RedrawNeeded; /* Window contents invalidated and will need to be redrawn */
 	struct Event_Void Resized;      /* Window is resized */
 	struct Event_Void Closing;      /* Window is about to close (should free resources/save state/etc here) */
 	struct Event_Void FocusChanged; /* Focus of the window changed */
 	struct Event_Void StateChanged; /* State of the window changed (e.g. minimised, fullscreen) */
 	struct Event_Void Created;      /* Window has been created, Window_Handle is valid now. */
 	struct Event_Void InactiveChanged; /* Inactive/background state of the window changed */
+	struct Event_Void Redrawing;    /* Window contents should be redrawn (as they are about to be displayed) */
 } WindowEvents;
 
 CC_VAR extern struct _InputEventsList {

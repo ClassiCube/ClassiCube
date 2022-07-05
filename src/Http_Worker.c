@@ -245,6 +245,9 @@ static const cc_string curlAlt = String_FromConst("curl.dll");
 #elif defined CC_BUILD_DARWIN
 static const cc_string curlLib = String_FromConst("/usr/lib/libcurl.4.dylib");
 static const cc_string curlAlt = String_FromConst("/usr/lib/libcurl.dylib");
+#elif defined CC_BUILD_NETBSD
+static const cc_string curlLib = String_FromConst("libcurl.so");
+static const cc_string curlAlt = String_FromConst("/usr/pkg/lib/libcurl.so");
 #elif defined CC_BUILD_BSD
 static const cc_string curlLib = String_FromConst("libcurl.so");
 static const cc_string curlAlt = String_FromConst("libcurl.so");
@@ -850,6 +853,9 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     Platform_EncodeUtf8(tmp, url);
     urlCF  = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
     urlRef = CFURLCreateWithString(NULL, urlCF, NULL);
+    // TODO e.g. "http://www.example.com/skin/1 2.png" causes this to return null
+    // TODO release urlCF
+    if (!urlRef) return ERR_INVALID_DATA_URL;
     
     request = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
     req->meta = request;
@@ -892,6 +898,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     if (!gotHeaders)
         result = ParseResponseHeaders(req, stream);
     
+    //Thread_Sleep(1000);
     CFRelease(request);
     return result;
 }

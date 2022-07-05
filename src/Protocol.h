@@ -1,8 +1,9 @@
 #ifndef CC_PROTOCOL_H
 #define CC_PROTOCOL_H
 #include "Vectors.h"
-/* Implements network protocols for original classic, CPE, and WoM textures.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Implements network protocols for original classic, CPE, and WoM textures
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct RayTracer;
 

@@ -926,18 +926,5 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return i;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	WCHAR path[NATIVE_STR_LEN + 1];
-	int i, len;
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-
-	/* Get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/' || path[i] == '\\') break;
-	}
-
-	path[len] = '\0';
-	return SetCurrentDirectoryW(path) ? 0 : GetLastError();
-}
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
 #endif

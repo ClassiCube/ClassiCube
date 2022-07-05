@@ -74,7 +74,7 @@ static cc_bool IsAllBlack(const struct Bitmap* bmp, int x1, int y1, int width, i
 		BitmapCol* row = Bitmap_GetRow(bmp, y);
 
 		for (x = x1; x < x1 + width; x++) {
-			if (row[x] != BITMAPCOL_BLACK) return false;
+			if (row[x] != BITMAPCOLOR_BLACK) return false;
 		}
 	}
 	return true;

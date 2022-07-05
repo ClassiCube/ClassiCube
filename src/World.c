@@ -12,6 +12,7 @@
 #include "Window.h"
 
 struct _WorldData World;
+static char nameBuffer[STRING_SIZE];
 /*########################################################################################################################*
 *----------------------------------------------------------World----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -44,6 +45,7 @@ void World_Reset(void) {
 #endif
 	Mem_Free(World.Blocks);
 	World.Blocks = NULL;
+	String_InitArray(World.Name, nameBuffer);
 
 	World_SetDimensions(0, 0, 0);
 	World.Loaded   = false;
@@ -61,7 +63,8 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 	if (!blocks) { width = 0; height = 0; length = 0; }
 
 	World_SetDimensions(width, height, length);
-	World.Blocks = blocks;
+	World.Blocks      = blocks;
+	World.Name.length = 0;
 
 	if (!World.Volume) World.Blocks = NULL;
 #ifdef EXTENDED_BLOCKS
@@ -88,6 +91,12 @@ CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
 	World.MaxX = width  - 1;
 	World.MaxY = height - 1;
 	World.MaxZ = length - 1;
+
+	World.ChunksX = (width  + CHUNK_MAX) >> CHUNK_SHIFT;
+	World.ChunksY = (height + CHUNK_MAX) >> CHUNK_SHIFT;
+	World.ChunksZ = (length + CHUNK_MAX) >> CHUNK_SHIFT;
+
+	World.ChunksCount = World.ChunksX * World.ChunksY * World.ChunksZ;
 }
 
 #ifdef EXTENDED_BLOCKS

@@ -1,8 +1,9 @@
 #ifndef CC_HELDBLOCKRENDERER_H
 #define CC_HELDBLOCKRENDERER_H
 #include "Core.h"
-/* Implements rendering of held block/arm at bottom right of game.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Renders the held block/arm at bottom right of game
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent HeldBlockRenderer_Component;

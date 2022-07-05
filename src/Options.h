@@ -1,8 +1,9 @@
 #ifndef CC_OPTIONS_H
 #define CC_OPTIONS_H
 #include "Core.h"
-/* Manages loading and saving options.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Manages loading and saving options
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 #define OPT_MUSIC_VOLUME "musicvolume"

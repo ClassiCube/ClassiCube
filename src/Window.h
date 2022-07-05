@@ -1,8 +1,9 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
 #include "Core.h"
-/* Abstracts creating and managing the native window.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
+/* 
+Abstracts interaction with a windowing system (creating window, moving cursor, etc)
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 /*

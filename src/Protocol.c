@@ -42,21 +42,7 @@ static cc_bool classic_receivedFirstPos;
 static cc_bool map_begunLoading;
 static cc_uint64 map_receiveBeg;
 static struct Stream map_part;
-static struct GZipHeader map_gzHeader;
-static int map_sizeIndex, map_volume;
-static cc_uint8 map_size[4];
-
-struct MapState {
-	struct InflateState inflateState;
-	struct Stream stream;
-	BlockRaw* blocks;
-	int index;
-	cc_bool allocFailed;
-};
-static struct MapState map;
-#ifdef EXTENDED_BLOCKS
-static struct MapState map2;
-#endif
+static int map_volume;
 
 /* CPE state */
 cc_bool cpe_needD3Fix;
@@ -311,9 +297,96 @@ static void WoM_Tick(void) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------Map decompressor-----------------------------------------------------*
+*#########################################################################################################################*/
+#define MAP_SIZE_LEN 4
+
+struct MapState {
+	struct InflateState inflateState;
+	struct Stream stream;
+	BlockRaw* blocks;
+	struct GZipHeader gzHeader;
+	cc_uint8 size[MAP_SIZE_LEN];
+	int index, sizeIndex;
+	cc_bool allocFailed;
+};
+static struct MapState map1;
+#ifdef EXTENDED_BLOCKS
+static struct MapState map2;
+#endif
+
+static void DisconnectInvalidMap(cc_result res) {
+	static const cc_string title  = String_FromConst("Disconnected");
+	cc_string tmp; char tmpBuffer[STRING_SIZE];
+	String_InitArray(tmp, tmpBuffer);
+
+	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
+	Game_Disconnect(&title, &tmp); return;
+}
+
+static void MapState_Init(struct MapState* m) {
+	Inflate_MakeStream2(&m->stream, &m->inflateState, &map_part);
+	GZipHeader_Init(&m->gzHeader);
+
+	m->index       = 0;
+	m->blocks      = NULL;
+	m->sizeIndex   = 0;
+	m->allocFailed = false;
+}
+
+static CC_INLINE void MapState_SkipHeader(struct MapState* m) {
+	m->gzHeader.done = true;
+	m->sizeIndex     = MAP_SIZE_LEN;
+}
+
+static void FreeMapStates(void) {
+	Mem_Free(map1.blocks);
+	map1.blocks = NULL;
+#ifdef EXTENDED_BLOCKS
+	Mem_Free(map2.blocks);
+	map2.blocks = NULL;
+#endif
+}
+
+static cc_result MapState_Read(struct MapState* m) {
+	cc_uint32 left, read;
+	cc_result res;
+	if (m->allocFailed) return 0;
+
+	if (m->sizeIndex < MAP_SIZE_LEN) {
+		left = MAP_SIZE_LEN - m->sizeIndex;
+		res  = m->stream.Read(&m->stream, &m->size[m->sizeIndex], left, &read); 
+
+		m->sizeIndex += read;
+		if (res) return res;
+
+		/* 0.01% chance to happen, but still possible */
+		if (m->sizeIndex < MAP_SIZE_LEN) return 0;
+	}
+
+	if (!map_volume) map_volume = Stream_GetU32_BE(m->size);
+
+	if (!m->blocks) {
+		m->blocks = (BlockRaw*)Mem_TryAlloc(map_volume, 1);
+		/* unlikely but possible */
+		if (!m->blocks) {
+			Window_ShowDialog("Out of memory", "Not enough free memory to join that map.\nTry joining a different map.");
+			m->allocFailed = true;
+			return 0;
+		}
+	}
+
+	left = map_volume - m->index;
+	res  = m->stream.Read(&m->stream, &m->blocks[m->index], left, &read);
+
+	m->index += read;
+	return res;
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
-
 void Classic_SendChat(const cc_string* text, cc_bool partial) {
 	cc_uint8 data[66];
 	data[0] = OPCODE_MESSAGE;
@@ -399,69 +472,17 @@ static void Classic_Handshake(cc_uint8* data) {
 
 static void Classic_Ping(cc_uint8* data) { }
 
-#define MAP_SIZE_LEN 4
-static void DisconnectInvalidMap(cc_result res) {
-	static const cc_string title  = String_FromConst("Disconnected");
-	cc_string tmp; char tmpBuffer[STRING_SIZE];
-	String_InitArray(tmp, tmpBuffer);
-
-	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
-	Game_Disconnect(&title, &tmp); return;
-}
-
-static void MapState_Init(struct MapState* m) {
-	Inflate_MakeStream2(&m->stream, &m->inflateState, &map_part);
-	m->index  = 0;
-	m->blocks = NULL;
-	m->allocFailed = false;
-}
-
-static void FreeMapStates(void) {
-	Mem_Free(map.blocks);
-	map.blocks  = NULL;
-#ifdef EXTENDED_BLOCKS
-	Mem_Free(map2.blocks);
-	map2.blocks = NULL;
-#endif
-}
-
-static void MapState_Read(struct MapState* m) {
-	cc_uint32 left, read;
-	cc_result res;
-	if (m->allocFailed) return;
-
-	if (!m->blocks) {
-		m->blocks = (BlockRaw*)Mem_TryAlloc(map_volume, 1);
-		/* unlikely but possible */
-		if (!m->blocks) {
-			Window_ShowDialog("Out of memory", "Not enough free memory to join that map.\nTry joining a different map.");
-			m->allocFailed = true;
-			return;
-		}
-	}
-
-	left = map_volume - m->index;
-	res  = m->stream.Read(&m->stream, &m->blocks[m->index], left, &read);
-
-	if (res) DisconnectInvalidMap(res);
-	m->index += read;
-}
-
 static void Classic_StartLoading(void) {
 	World_NewMap();
-	Stream_ReadonlyMemory(&map_part, NULL, 0);
-
 	LoadingScreen_Show(&Server.Name, &Server.MOTD);
 	WoM_CheckMotd();
 	classic_receivedFirstPos = false;
 
-	GZipHeader_Init(&map_gzHeader);
 	map_begunLoading = true;
-	map_sizeIndex    = 0;
 	map_receiveBeg   = Stopwatch_Measure();
 	map_volume       = 0;
 
-	MapState_Init(&map);
+	MapState_Init(&map1);
 #ifdef EXTENDED_BLOCKS
 	MapState_Init(&map2);
 #endif
@@ -475,60 +496,51 @@ static void Classic_LevelInit(cc_uint8* data) {
 	if (!cpe_fastMap) return;
 
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
-	map_volume    = Stream_GetU32_BE(data);
-	map_gzHeader.done = true;
-	map_sizeIndex = MAP_SIZE_LEN;
+	map_volume = Stream_GetU32_BE(data);
+	MapState_SkipHeader(&map1);
+#ifdef EXTENDED_BLOCKS
+	MapState_SkipHeader(&map2);
+#endif
 }
 
 static void Classic_LevelDataChunk(cc_uint8* data) {
+	struct MapState* m;
 	int usedLength;
 	float progress;
-	cc_uint32 left, read;
-	cc_uint8 value;
+	cc_uint32 read;
 	cc_result res;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();
-	usedLength = Stream_GetU16_BE(data); data += 2;
+	usedLength = Stream_GetU16_BE(data);
 
-	map_part.Meta.Mem.Cur    = data;
-	map_part.Meta.Mem.Base   = data;
+	map_part.Meta.Mem.Cur    = data + 2;
+	map_part.Meta.Mem.Base   = data + 2;
 	map_part.Meta.Mem.Left   = usedLength;
 	map_part.Meta.Mem.Length = usedLength;
 
-	data += 1024;
-	value = *data; /* progress in original classic, but we ignore it */
+#ifndef EXTENDED_BLOCKS
+	m = &map1;
+#else
+	/* progress byte in original classic, but we ignore it */
+	if (cpe_extBlocks && data[1026]) {
+		m = &map2;
+	} else {
+		m = &map1;
+	}
+#endif
 
-	if (!map_gzHeader.done) {
-		res = GZipHeader_Read(&map_part, &map_gzHeader);
+	if (!m->gzHeader.done) {
+		res = GZipHeader_Read(&map_part, &m->gzHeader);
 		if (res && res != ERR_END_OF_STREAM) { DisconnectInvalidMap(res); return; }
 	}
 
-	if (map_gzHeader.done) {
-		if (map_sizeIndex < MAP_SIZE_LEN) {
-			left = MAP_SIZE_LEN - map_sizeIndex;
-			res  = map.stream.Read(&map.stream, &map_size[map_sizeIndex], left, &read); 
-
-			if (res) { DisconnectInvalidMap(res); return; }
-			map_sizeIndex += read;
-		}
-
-		if (map_sizeIndex == MAP_SIZE_LEN) {
-			if (!map_volume) map_volume = Stream_GetU32_BE(map_size);
-
-#ifndef EXTENDED_BLOCKS
-			MapState_Read(&map);
-#else
-			if (cpe_extBlocks && value) {
-				MapState_Read(&map2);
-			} else {
-				MapState_Read(&map);
-			}
-#endif
-		}
+	if (m->gzHeader.done) {
+		res = MapState_Read(m);
+		if (res) { DisconnectInvalidMap(res); return; }
 	}
 
-	progress = !map.blocks ? 0.0f : (float)map.index / map_volume;
+	progress = !map_volume ? 0.0f : (float)map1.index / map_volume;
 	Event_RaiseFloat(&WorldEvents.Loading, progress);
 }
 
@@ -552,7 +564,7 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	length = Stream_GetU16_BE(data + 4);
 	volume = width * height * length;
 
-	if (!map.blocks) {
+	if (!map1.blocks) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_AddRaw("   &cAttempted to load map without a Blocks array");
 	}
@@ -567,8 +579,8 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	if (cpe_extBlocks && map2.blocks) World_SetMapUpper(map2.blocks);
 	map2.blocks = NULL;
 #endif
-	World_SetNewMap(map.blocks, width, height, length);
-	map.blocks  = NULL;
+	World_SetNewMap(map1.blocks, width, height, length);
+	map1.blocks  = NULL;
 }
 
 static void Classic_SetBlock(cc_uint8* data) {
@@ -722,6 +734,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 }
 
 static void Classic_Reset(void) {
+	Stream_ReadonlyMemory(&map_part, NULL, 0);
 	map_begunLoading = false;
 	classic_receivedFirstPos = false;
 
@@ -1620,7 +1633,7 @@ static void CPE_Tick(void) {
 static void BlockDefs_OnBlockUpdated(BlockID block, cc_bool didBlockLight) {
 	if (!World.Loaded) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
-	if (Blocks.BlocksLight[block] != didBlockLight) Lighting_Refresh();
+	if (Blocks.BlocksLight[block] != didBlockLight) Lighting.Refresh();
 }
 
 static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {

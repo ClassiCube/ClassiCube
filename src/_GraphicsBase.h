@@ -13,6 +13,7 @@
 struct _GfxData Gfx;
 GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
+const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced performance mode (game minimised or hidden)");
 
 static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
@@ -116,12 +117,13 @@ static void TickReducedPerformance(void) {
 
 	if (reducedPerformance) return;
 	reducedPerformance = true;
-	Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
+	Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 }
 
 static void EndReducedPerformance(void) {
 	if (!reducedPerformance) return;
 	reducedPerformance = false;
+	Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
 	Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
 }
 

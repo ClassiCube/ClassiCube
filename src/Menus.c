@@ -1401,6 +1401,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
 	}
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, fmt, &file);
+	String_Copy(&World.Name,   &file);
 
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
@@ -1521,7 +1522,7 @@ static void SaveLevelScreen_Init(void* screen) {
 #endif
 
 	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
-	TextInputWidget_Create(&s->input, 500, &String_Empty, &desc);
+	TextInputWidget_Create(&s->input, 500, &World.Name, &desc);
 	TextWidget_Init(&s->desc);
 	s->input.onscreenPlaceholder = "Map name";
 }
@@ -1620,7 +1621,7 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 	cc_string fontName   = ListScreen_UNSAFE_GetCur(s, widget);
 
 	Options_Set(OPT_FONT_NAME, &fontName);
-	Drawer2D_SetDefaultFont(&fontName);
+	Font_SetDefault(&fontName);
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {
@@ -1630,7 +1631,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 	if (String_CaselessEqualsConst(text, LISTSCREEN_EMPTY)) {
 		ButtonWidget_Set(button, text, &s->font); return;
 	}
-	res = Font_Make(&font, text, 16, FONT_FLAGS_NONE);
+	res = SysFont_Make(&font, text, 16, FONT_FLAGS_NONE);
 
 	if (!res) {
 		ButtonWidget_Set(button, text, &font);
@@ -1642,8 +1643,8 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 }
 
 static void FontListScreen_LoadEntries(struct ListScreen* s) {
-	Font_GetNames(&s->entries);
-	ListScreen_Select(s, Font_UNSAFE_GetDefault());
+	SysFonts_GetNames(&s->entries);
+	ListScreen_Select(s, SysFonts_UNSAFE_GetDefault());
 }
 
 void FontListScreen_Show(void) {
@@ -3299,7 +3300,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	struct FontDesc textFont, titleFont;
 
 	Screen_UpdateVb(screen);
-	Drawer2D_MakeFont(&textFont, 8, FONT_FLAGS_PADDING);
+	Font_Make(&textFont, 8, FONT_FLAGS_PADDING);
 	Font_SetPadding(&textFont, 1);
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
 	Font_Free(&textFont);

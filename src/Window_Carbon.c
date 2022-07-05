@@ -237,7 +237,7 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 			return eventNotHandledErr;
 			
 		case kEventWindowDrawContent:
-			Event_RaiseVoid(&WindowEvents.Redraw);
+			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;

@@ -1,8 +1,9 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
 #include "Core.h"
-/* Implements various utility functions.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Provides various utility functions
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;

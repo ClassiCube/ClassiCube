@@ -32,6 +32,8 @@ void Gfx_Create(void) {
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 	Gfx.Created      = true;
+	/* necessary for android which "loses" context when window is closed */
+	Gfx.LostContext  = false;
 
 	GLBackend_Init();
 	Gfx_RestoreState();

@@ -189,7 +189,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
 
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_PADDING);
+	Font_Make(&s->font, 16, FONT_FLAGS_PADDING);
 	Font_SetPadding(&s->font, 2);
 	HotbarWidget_SetFont(&s->hotbar, &s->font);
 
@@ -664,7 +664,7 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 	int size, id;
 
 	size = Drawer2D.BitmappedText ? 16 : 11;
-	Drawer2D_MakeFont(&s->font, size, FONT_FLAGS_PADDING);
+	Font_Make(&s->font, size, FONT_FLAGS_PADDING);
 	s->namesCount = 0;
 
 	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
@@ -766,7 +766,7 @@ static struct ChatScreen {
 	struct Texture statusTextures[CHAT_MAX_STATUS];
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
-	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
+	struct Texture chatTextures[GUI_MAX_CHATLINES];
 } ChatScreen_Instance;
 #define CH_EXTENT 16
 
@@ -819,13 +819,13 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	/* TODO: Add function for this, don't use Display_ScaleY (Drawer2D_SameFontSize ??) */
 	if (Display_ScaleY(size) == s->chatFont.size) return false;
 	ChatScreen_FreeChatFonts(s);
-	Drawer2D_MakeFont(&s->chatFont, size, FONT_FLAGS_PADDING);
+	Font_Make(&s->chatFont, size, FONT_FLAGS_PADDING);
 
 	size = (int)(16 * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
-	Drawer2D_MakeFont(&s->announcementFont, size, FONT_FLAGS_NONE);
-	Drawer2D_MakeFont(&s->bigAnnouncementFont, size * 1.33, FONT_FLAGS_NONE);
-	Drawer2D_MakeFont(&s->smallAnnouncementFont, size * 0.67, FONT_FLAGS_NONE);
+	Font_Make(&s->announcementFont, size, FONT_FLAGS_NONE);
+	Font_Make(&s->bigAnnouncementFont, size * 1.33, FONT_FLAGS_NONE);
+	Font_Make(&s->smallAnnouncementFont, size * 0.67, FONT_FLAGS_NONE);
 
 	ChatInputWidget_SetFont(&s->input,        &s->chatFont);
 	TextGroupWidget_SetFont(&s->status,       &s->chatFont);
@@ -896,19 +896,20 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 
 static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
 	int progress = Http_CheckProgress(TexturePack_ReqID);
+	cc_string msg; char msgBuffer[STRING_SIZE];
 	if (progress == s->lastDownloadStatus) return;
 
 	s->lastDownloadStatus = progress;
-	Chat_Status[0].length = 0;
+	String_InitArray(msg, msgBuffer);
 
 	if (progress == HTTP_PROGRESS_MAKING_REQUEST) {
-		String_AppendConst(&Chat_Status[0], "&eRetrieving texture pack..");
+		String_AppendConst(&msg, "&eRetrieving texture pack..");
 	} else if (progress == HTTP_PROGRESS_FETCHING_DATA) {
-		String_AppendConst(&Chat_Status[0], "&eDownloading texture pack");
+		String_AppendConst(&msg, "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
-		String_Format1(&Chat_Status[0], "&eDownloading texture pack (&7%i&e%%)", &progress);
+		String_Format1(&msg, "&eDownloading texture pack (&7%i&e%%)", &progress);
 	}
-	TextGroupWidget_Redraw(&s->status, 0);
+	Chat_AddOf(&msg, MSG_TYPE_EXTRASTATUS_1);
 }
 
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
@@ -939,7 +940,8 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 		TextGroupWidget_ShiftUp(&s->chat);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
-		TextGroupWidget_Redraw(&s->status, 1 + (type - MSG_TYPE_STATUS_1));
+		/* Status[1] is for reduced performance mode message */
+		TextGroupWidget_Redraw(&s->status, 2 + (type - MSG_TYPE_STATUS_1));
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
 		/* Bottom3 is top most line, so need to redraw index 0 */
 		TextGroupWidget_Redraw(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1));
@@ -952,7 +954,11 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_2) {
 		TextGroupWidget_Redraw(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1);
 		ChatScreen_UpdateChatYOffsets(s);
-	}
+	} else if (type >= MSG_TYPE_EXTRASTATUS_1 && type <= MSG_TYPE_EXTRASTATUS_2) {
+		/* Status[0] is for texture pack downloading message */
+		/* Status[1] is for reduced performance mode message */
+		TextGroupWidget_Redraw(&s->status, type - MSG_TYPE_EXTRASTATUS_1);
+	} 
 }
 
 static void ChatScreen_DrawCrosshairs(void) {
@@ -1006,7 +1012,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_LogTime[logIdx] + 10 >= now) Texture_Render(&tex);
+			if (Chat_GetLogTime(logIdx) + 10 >= now) Texture_Render(&tex);
 		}
 	}
 
@@ -1239,7 +1245,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 		i = TextGroupWidget_GetSelected(&s->chat, &text, x, y);
 		if (!Utils_IsUrlPrefix(&text)) return false;
 
-		if (Chat_LogTime[s->chatIndex + i] + 10 < Game.Time) return false;
+		if (Chat_GetLogTime(s->chatIndex + i) + 10 < Game.Time) return false;
 		UrlWarningOverlay_Show(&text); return TOUCH_TYPE_GUI;
 	}
 
@@ -1301,7 +1307,8 @@ static void ChatScreen_Init(void* screen) {
 	TextWidget_Init(&s->bigAnnouncement);
 	TextWidget_Init(&s->smallAnnouncement);
 
-	s->status.collapsible[0]       = true; /* Texture pack download status */
+	s->status.collapsible[0]       = true; /* Texture pack downloading status */
+	s->status.collapsible[1]       = true; /* Reduced performance mode status */
 	s->clientStatus.collapsible[0] = true;
 	s->clientStatus.collapsible[1] = true;
 

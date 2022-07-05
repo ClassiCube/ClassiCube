@@ -2,8 +2,9 @@
 #define CC_PARTICLE_H
 #include "Vectors.h"
 #include "PackedCol.h"
-/* Represents particle effects, and manages rendering and spawning particles.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/* 
+Represents particle effects, and manages rendering and spawning particles
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;

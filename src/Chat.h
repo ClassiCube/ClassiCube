@@ -20,24 +20,30 @@ enum MsgType {
 	MSG_TYPE_BIGANNOUNCEMENT = 101,
 	MSG_TYPE_SMALLANNOUNCEMENT = 102,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
-	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
+	MSG_TYPE_CLIENTSTATUS_2 = 257, /* Tab list matching names */
+	MSG_TYPE_EXTRASTATUS_1  = 360,
+	MSG_TYPE_EXTRASTATUS_2  = 361
 };
 
-extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2];
-extern cc_string Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;
-/* All chat messages received. */
-extern struct StringsBuffer Chat_Log;
-/* Time each chat message was received at. */
-extern double* Chat_LogTime;
-/* All chat entered by the user. */
-extern struct StringsBuffer Chat_InputLog;
-/* Whether chat messages are logged to disc. */
-extern cc_bool Chat_Logging;
+/* NOTE: this must be: (next power of next larger than GUI_MAX_CHATLINES) - 1 */
+#define CHATLOG_TIME_MASK 31
+/* Time most recent chat message were received at */
+extern double Chat_RecentLogTimes[CHATLOG_TIME_MASK + 1];
+#define Chat_GetLogTime(i) Chat_RecentLogTimes[(i) & CHATLOG_TIME_MASK]
 
-/* Times at which last announcement messages were received. */
+/* Times at which last announcement messages were received */
 extern double Chat_AnnouncementReceived;
 extern double Chat_BigAnnouncementReceived;
 extern double Chat_SmallAnnouncementReceived;
+
+extern cc_string Chat_Status[5], Chat_BottomRight[3], Chat_ClientStatus[2];
+extern cc_string Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;
+/* All chat messages received */
+extern struct StringsBuffer Chat_Log;
+/* All chat entered by the user */
+extern struct StringsBuffer Chat_InputLog;
+/* Whether chat messages are logged to disc */
+extern cc_bool Chat_Logging;
 
 /* This command is only available in singleplayer */
 #define COMMAND_FLAG_SINGLEPLAYER_ONLY 0x01

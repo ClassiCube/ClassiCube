@@ -120,8 +120,12 @@ static void* audio_context;
 
 #if defined CC_BUILD_WIN
 static const cc_string alLib = String_FromConst("openal32.dll");
-#elif defined CC_BUILD_DARWIN
+#elif defined CC_BUILD_MACOS
 static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
+#elif defined CC_BUILD_IOS
+static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/OpenAL");
+#elif defined CC_BUILD_NETBSD
+static const cc_string alLib = String_FromConst("/usr/pkg/lib/libopenal.so");
 #elif defined CC_BUILD_BSD
 static const cc_string alLib = String_FromConst("libopenal.so");
 #else
@@ -1302,13 +1306,10 @@ static void Music_RunLoop(void) {
 		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
 
 		res = Music_PlayOgg(&stream);
-		if (res) { 
-			Logger_SimpleWarn2(res, "playing", &path); 
-			stream.Close(&stream); break;
-		}
+		if (res) { Logger_SimpleWarn2(res, "playing", &path); }
 
-		res = stream.Close(&stream);
-		if (res) { Logger_SysWarn2(res, "closing", &path); break; }
+		/* No point logging error for closing readonly file */
+		(void)stream.Close(&stream);
 
 		if (music_stopping) break;
 		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);

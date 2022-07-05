@@ -20,7 +20,7 @@ You can download the game [from here](https://www.classicube.net/download/) and 
 * It does not reimplement Minecraft Classic versions before 0.30
 
 #### System requirements
-* Windows: 98 or later
+* Windows: 95 or later
 * macOS: 10.5 or later (can be compiled to work with 10.3/10.4 though)
 * Linux: libcurl and libopenal
 * Android: 2.3 or later
@@ -96,7 +96,7 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
+```gcc *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lm -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
 
 ## Compiling - macOS
 

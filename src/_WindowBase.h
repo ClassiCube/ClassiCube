@@ -146,7 +146,7 @@ void GLContext_Create(void) {
 #else
 	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 1, EGL_NONE };
 #endif
-	static EGLint attribs[19] = {
+	static EGLint attribs[] = {
 		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
 		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
 		EGL_DEPTH_SIZE,        GLCONTEXT_DEFAULT_DEPTH,
@@ -172,9 +172,16 @@ void GLContext_Create(void) {
 	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	eglInitialize(ctx_display, NULL, NULL);
 	eglBindAPI(EGL_OPENGL_ES_API);
+
 	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+	if (!ctx_config) {
+		attribs[9] = 16; // some older devices only support 16 bit depth buffer
+		eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+	}
+	if (!ctx_config) Window_ShowDialog("Warning", "Failed to choose EGL config, ClassiCube may be unable to start");
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, context_attribs);
+	if (!ctx_context) Logger_Abort2(eglGetError(), "Failed to create EGL context");
 	GLContext_InitSurface();
 }
 

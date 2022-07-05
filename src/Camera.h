@@ -1,9 +1,9 @@
 #ifndef CC_CAMERA_H
 #define CC_CAMERA_H
 #include "Vectors.h"
-
-/* Represents a camera, may be first or third person.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+/*
+Represents a camera, may be first or third person
+Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct RayTracer;
 struct Camera;

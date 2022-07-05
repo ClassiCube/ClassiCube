@@ -190,7 +190,7 @@ void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 	if (Weather_Heightmap) {
 		EnvRenderer_OnBlockChanged(x, y, z, old, block);
 	}
-	Lighting_OnBlockChanged(x, y, z, old, block);
+	Lighting.OnBlockChanged(x, y, z, old, block);
 	MapRenderer_OnBlockChanged(x, y, z, block);
 }
 
@@ -276,11 +276,12 @@ static void HandleOnNewMapLoaded(void* obj) {
 
 static void HandleInactiveChanged(void* obj) {
 	if (WindowInfo.Inactive) {
-		Chat_AddRaw(LOWPERF_ENTER_MESSAGE);
+		Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 		Gfx_SetFpsLimit(false, 1000 / 1.0f);
 	} else {
-		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
+		Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
 		Game_SetFpsLimit(Game_FpsLimit);
+		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
 	}
 
 #ifdef CC_BUILD_WEB
@@ -416,7 +417,7 @@ static void Game_Load(void) {
 	}
 
 	Game_DefaultZipMissing = false;
-	TexturePack_ExtractCurrent(false);
+	TexturePack_ExtractCurrent(true);
 	if (Game_DefaultZipMissing) {
 		Window_ShowDialog("Missing file",
 			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");

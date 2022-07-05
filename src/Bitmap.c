@@ -7,6 +7,14 @@
 #include "Errors.h"
 #include "Utils.h"
 
+BitmapCol BitmapColor_Offset(BitmapCol color, int rBy, int gBy, int bBy) {
+	int r, g, b;
+	r = BitmapCol_R(color) + rBy; Math_Clamp(r, 0, 255);
+	g = BitmapCol_G(color) + gBy; Math_Clamp(g, 0, 255);
+	b = BitmapCol_B(color) + bBy; Math_Clamp(b, 0, 255);
+	return BitmapColor_RGB(r, g, b);
+}
+
 void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, 
 							struct Bitmap* src, struct Bitmap* dst, int size) {
 	int x, y;
@@ -25,22 +33,6 @@ void Bitmap_Allocate(struct Bitmap* bmp, int width, int height) {
 void Bitmap_TryAllocate(struct Bitmap* bmp, int width, int height) {
 	bmp->width = width; bmp->height = height;
 	bmp->scan0 = (BitmapCol*)Mem_TryAlloc(width * height, 4);
-}
-
-void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, int width, int height) {
-	width  = Math_NextPowOf2(width);
-	height = Math_NextPowOf2(height);
-
-	bmp->width = width; bmp->height = height;
-	bmp->scan0 = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
-}
-
-void Bitmap_TryAllocateClearedPow2(struct Bitmap* bmp, int width, int height) {
-	width  = Math_NextPowOf2(width);
-	height = Math_NextPowOf2(height);
-
-	bmp->width = width; bmp->height = height;
-	bmp->scan0 = (BitmapCol*)Mem_TryAllocCleared(width * height, 4);
 }
 
 void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src, 
@@ -315,13 +307,13 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 
 /* Sets alpha to 0 for any pixels in the bitmap whose RGB is same as col */
 static void ComputeTransparency(struct Bitmap* bmp, BitmapCol col) {
-	BitmapCol trnsRGB = col & BITMAPCOL_RGB_MASK;
+	BitmapCol trnsRGB = col & BITMAPCOLOR_RGB_MASK;
 	int x, y, width = bmp->width, height = bmp->height;
 
 	for (y = 0; y < height; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y);
 		for (x = 0; x < width; x++) {
-			BitmapCol rgb = row[x] & BITMAPCOL_RGB_MASK;
+			BitmapCol rgb = row[x] & BITMAPCOLOR_RGB_MASK;
 			row[x] = (rgb == trnsRGB) ? trnsRGB : row[x];
 		}
 	}
@@ -366,8 +358,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
-	trnsCol = BITMAPCOL_BLACK;
-	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOL_BLACK; }
+	trnsCol = BITMAPCOLOR_BLACK;
+	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 
 	Inflate_MakeStream2(&compStream, &inflate, stream);
 	ZLibHeader_Init(&zlibHeader);
@@ -417,10 +409,10 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			if (res) return res;
 
 			for (i = 0; i < dataSize; i += 3) {
-				palette[i / 3] &= BITMAPCOL_A_MASK; /* set RGB to 0 */
-				palette[i / 3] |= tmp[i    ] << BITMAPCOL_R_SHIFT;
-				palette[i / 3] |= tmp[i + 1] << BITMAPCOL_G_SHIFT;
-				palette[i / 3] |= tmp[i + 2] << BITMAPCOL_B_SHIFT;
+				palette[i / 3] &= BITMAPCOLOR_A_MASK; /* set RGB to 0 */
+				palette[i / 3] |= tmp[i    ] << BITMAPCOLOR_R_SHIFT;
+				palette[i / 3] |= tmp[i + 1] << BITMAPCOLOR_G_SHIFT;
+				palette[i / 3] |= tmp[i + 2] << BITMAPCOLOR_B_SHIFT;
 			}
 		} break;
 
@@ -439,8 +431,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 				/* set alpha component of palette */
 				for (i = 0; i < dataSize; i++) {
-					palette[i] &= BITMAPCOL_RGB_MASK; /* set A to 0 */
-					palette[i] |= tmp[i] << BITMAPCOL_A_SHIFT;
+					palette[i] &= BITMAPCOLOR_RGB_MASK; /* set A to 0 */
+					palette[i] |= tmp[i] << BITMAPCOLOR_A_SHIFT;
 				}
 			} else if (col == PNG_COLOR_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
