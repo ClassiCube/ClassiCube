@@ -206,7 +206,7 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 	float blockLerp;
 	cc_uint8 R, G, B;
 
-	defaultBlockLight = PackedCol_Make(175, 137, 114, 255); /* A very mildly orange tinted light color */
+	defaultBlockLight = PackedCol_Make(255, 235, 198, 255); /* A very mildly orange tinted light color */
 	darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
 
 	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
