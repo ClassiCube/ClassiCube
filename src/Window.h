@@ -55,6 +55,8 @@ CC_VAR extern struct _DisplayData {
 	int X, Y;
 	/* Size/Dimensions of this display in pixels. */
 	int Width, Height;
+	/* Whether accounting for system DPI scaling is enabled */
+	cc_bool DPIScaling;
 } DisplayInfo;
 
 /* Scales the given X coordinate from 96 dpi to current display dpi. */

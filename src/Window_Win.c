@@ -284,10 +284,10 @@ void Window_Init(void) {
 	void* lib;
 	HDC hdc;
 
+	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
 	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
 	/* Enable high DPI support */
-	/* TODO re-enable when this can be set via option */
-	/* if (_SetProcessDPIAware) _SetProcessDPIAware(); */
+	if (DisplayInfo.DPIScaling && _SetProcessDPIAware) _SetProcessDPIAware();
 
 	hdc = GetDC(NULL);
 	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);
