@@ -206,7 +206,7 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 	float blockLerp;
 	cc_uint8 R, G, B;
 
-	defaultBlockLight = PackedCol_Make(150, 112, 79, 255); /* A very mildly orange tinted light color */
+	defaultBlockLight = PackedCol_Make(175, 137, 114, 255); /* A very mildly orange tinted light color */
 	darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
 
 	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
@@ -220,7 +220,12 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 				sunColor = PackedCol_Lerp(Env.SunCol, Env.ShadowCol, 0.5F);
 			}
 			else {
-				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3));
+				//sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3));
+				blockLerp = sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3);
+				//blockLerp *= blockLerp;
+				blockLerp *= (MATH_PI / 2);
+				blockLerp = Math_Cos(blockLerp);
+				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, 1 - blockLerp);
 			}
 
 			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
