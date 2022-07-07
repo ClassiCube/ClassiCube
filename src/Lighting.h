@@ -50,7 +50,7 @@ CC_VAR extern struct _Lighting {
 	/* _Fast functions also do NOT check coordinates are inside the map */
 
 	cc_bool   (*IsLit_Fast)(int x, int y, int z);
-	PackedCol (*Color_Sprite_Fast)(int x, int y, int z);
+	PackedCol (*Color_Fast)(int x, int y, int z);
 	PackedCol (*Color_YMax_Fast)(int x, int y, int z);
 	PackedCol (*Color_YMin_Fast)(int x, int y, int z);
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);

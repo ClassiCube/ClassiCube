@@ -501,7 +501,7 @@ static void Builder_DrawSprite(int x, int y, int z) {
 	
 	bright = Blocks.FullBright[Builder_Block];
 	part   = &Builder_Parts[Atlas1D_Index(loc)];
-	v.Col  = bright ? PACKEDCOL_WHITE : Lighting.Color_Sprite_Fast(x, y, z);
+	v.Col  = bright ? PACKEDCOL_WHITE : Lighting.Color_Fast(x, y, z);
 	Block_Tint(v.Col, Builder_Block);
 
 	/* Draw Z axis */
