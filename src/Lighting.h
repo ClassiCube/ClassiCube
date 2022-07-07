@@ -24,11 +24,9 @@ CC_VAR extern struct _Lighting {
 	/* Allocates the per-level lighting state */
 	/*  (called after map has been fully loaded) */
 	void (*AllocState)(void);
-	/* Equivalent to (but far more optimised form of)
-	* for x = startX; x < startX + 18; x++
-	*   for z = startZ; z < startZ + 18; z++
-	*      CalcLight(x, maxY, z)                         */
-	void (*LightHint)(int startX, int startZ);
+	/* Quickly calculates lighting between 
+	/*  (startX, startY, startZ) to (startX + 18, startY + 18, startZ + 18) */
+	void (*LightHint)(int startX, int startY, int startZ);
 
 	/* Called when a block is changed to update internal lighting state. */
 	/* NOTE: Implementations ***MUST*** mark all chunks affected by this lighting change as needing to be refreshed. */
@@ -51,7 +49,6 @@ CC_VAR extern struct _Lighting {
 
 	cc_bool   (*IsLit_Fast)(int x, int y, int z);
 	PackedCol (*Color_Fast)(int x, int y, int z);
-	PackedCol (*Color_YMax_Fast)(int x, int y, int z);
 	PackedCol (*Color_YMin_Fast)(int x, int y, int z);
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);

@@ -195,7 +195,6 @@ static void Heightmap_Allocate(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Classic lighting-----------------------------------------------------*
 *#########################################################################################################################*/
-
 /* Outside color is same as sunlight color, so we reuse when possible */
 static cc_bool ClassicLighting_IsLit(int x, int y, int z) {
 	return y > Heightmap_GetLightHeight(x, z);
@@ -219,10 +218,6 @@ static PackedCol ClassicLighting_Color_Fast(int x, int y, int z) {
 	return y > heightmap[Heightmap_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
-static PackedCol ClassicLighting_Color_YMax_Fast(int x, int y, int z) {
-	return y > heightmap[Heightmap_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
-}
-
 static PackedCol ClassicLighting_Color_YMin_Fast(int x, int y, int z) {
 	return y > heightmap[Heightmap_Pack(x, z)] ? Env.SunYMin : Env.ShadowYMin;
 }
@@ -234,6 +229,11 @@ static PackedCol ClassicLighting_Color_XSide_Fast(int x, int y, int z) {
 static PackedCol ClassicLighting_Color_ZSide_Fast(int x, int y, int z) {
 	return y > heightmap[Heightmap_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
 }
+
+static void ClassicLighting_LightHint(int startX, int startY, int startZ) {
+	Heightmap_PreCalcColumns(startX, startZ);
+}
+
 
 static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, BlockID newBlock, int index, int lightH) {
 	cc_bool didBlock = Blocks.BlocksLight[oldBlock];
@@ -385,14 +385,13 @@ static void ClassicLighting_SetActive(void) {
 
 	Lighting.IsLit_Fast = ClassicLighting_IsLit_Fast;
 	Lighting.Color_Fast = ClassicLighting_Color_Fast;
-	Lighting.Color_YMax_Fast  = ClassicLighting_Color_YMax_Fast;
 	Lighting.Color_YMin_Fast  = ClassicLighting_Color_YMin_Fast;
 	Lighting.Color_XSide_Fast = ClassicLighting_Color_XSide_Fast;
 	Lighting.Color_ZSide_Fast = ClassicLighting_Color_ZSide_Fast;
 
 	Lighting.FreeState  = Heightmap_Free;
 	Lighting.AllocState = Heightmap_Allocate;
-	Lighting.LightHint  = Heightmap_PreCalcColumns;
+	Lighting.LightHint  = ClassicLighting_LightHint;
 }
 
 
@@ -554,12 +553,14 @@ static void ModernLighting_InitPalettes(void) {
 	ModernLighting_InitPalette(modernLighting_paletteY, PACKEDCOL_SHADE_YMIN);
 }
 
+static int chunksCount;
 static void ModernLighting_AllocState(void) {
 	Heightmap_Allocate();
 	ModernLighting_InitPalettes();
+	chunksCount = World.ChunksCount;
 
-	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(World.ChunksCount, sizeof(cc_uint8));
-	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(World.ChunksCount, sizeof(LightingChunk));
+	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(chunksCount, sizeof(cc_uint8));
+	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(chunksCount, sizeof(LightingChunk));
 	LightQueue_Init(&lightQueue);
 
 }
@@ -568,16 +569,17 @@ static void ModernLighting_FreeState(void) {
 	Heightmap_Free();
 	int i;
 	/* This function can be called multiple times without calling ModernLighting_AllocState, so... */
-	if (chunkLightingDataFlags == NULL) { return; }
+	if (!chunkLightingDataFlags) return;
 
-	for (i = 0; i < World.ChunksCount; i++) {
-		if (chunkLightingDataFlags[i] > CHUNK_SELF_CALCULATED || chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) { continue; }
+	for (i = 0; i < chunksCount; i++) {
+		if (chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) continue;
 		Mem_Free(chunkLightingData[i]);
 	}
+
 	Mem_Free(chunkLightingDataFlags);
 	Mem_Free(chunkLightingData);
 	chunkLightingDataFlags = NULL;
-	chunkLightingData = NULL;
+	chunkLightingData      = NULL;
 	LightQueue_Clear(&lightQueue);
 }
 
@@ -849,6 +851,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	}
 	chunkLightingDataFlags[chunkIndex] = CHUNK_SELF_CALCULATED;
 }
+
 static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //chunk coords
@@ -943,8 +946,10 @@ static PackedCol ModernLighting_Color_YMinSide(int x, int y, int z) {
 	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteY, Env.SunYMin);
 }
 
-static void ModernLighting_LightHint(int startX, int startZ) {
+static void ModernLighting_LightHint(int startX, int startY, int startZ) {
+	int cx, cy, cz, x, y, z;
 	Heightmap_PreCalcColumns(startX, startZ);
+
 }
 
 static void ModernLighting_SetActive(void) {
@@ -956,7 +961,6 @@ static void ModernLighting_SetActive(void) {
 
 	Lighting.IsLit_Fast = ModernLighting_IsLit_Fast;
 	Lighting.Color_Fast = ModernLighting_Color;
-	Lighting.Color_YMax_Fast   = ModernLighting_Color;
 	Lighting.Color_YMin_Fast   = ModernLighting_Color_YMinSide;
 	Lighting.Color_XSide_Fast  = ModernLighting_Color_XSide;
 	Lighting.Color_ZSide_Fast  = ModernLighting_Color_ZSide;
