@@ -360,9 +360,8 @@ static int MapNativeMouse(int button) {
 }
 
 static void ProcessKeyChars(id ev) {
-	char buffer[128];
 	const char* src;
-	cc_string str;
+	cc_codepoint cp;
 	NSString* chars;
 	int i, len, flags;
 
@@ -375,11 +374,13 @@ static void ProcessKeyChars(id ev) {
 	chars = [ev characters];
 	src   = [chars UTF8String];
 	len   = String_Length(src);
-	String_InitArray(str, buffer);
 
-	String_AppendUtf8(&str, src, len);
-	for (i = 0; i < str.length; i++) {
-		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
+	while (len > 0) {
+		i = Convert_Utf8ToCodepoint(&cp, src, len);
+		if (!i) break;
+
+		Event_RaiseInt(&InputEvents.Press, cp);
+		src += i; len -= i;
 	}
 }
 
