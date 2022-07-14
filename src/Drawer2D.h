@@ -15,6 +15,8 @@ struct IGameComponent;
 struct StringsBuffer;
 extern struct IGameComponent Drawer2D_Component;
 
+#define DRAWER2D_MAX_TEXT_LENGTH 256
+
 CC_VAR extern struct _Drawer2DData {
 	/* Whether text should be drawn and measured using the currently set font bitmap */
 	/* If false, then text is instead draw using platform/system fonts */
