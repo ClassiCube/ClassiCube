@@ -1240,19 +1240,17 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
-#else
+#elif defined CC_BUILD_MACOS
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
 
-#ifdef CC_BUILD_MACOS
 	/* Sometimes a "-psn_0_[number]" argument is added before actual args */
 	if (argc) {
 		static const cc_string psn = String_FromConst("-psn_0_");
 		cc_string arg0 = String_FromReadonly(argv[0]);
 		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
 	}
-#endif
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) {
@@ -1291,7 +1289,6 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 		if (path[i] == '/') break;
 	}
 
-#ifdef CC_BUILD_MACOS
 	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
 	cc_string raw = String_Init(path, len, 0);
 
@@ -1303,10 +1300,30 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 			if (path[i] == '/') break;
 		}
 	}
-#endif
 
 	path[len] = '\0';
 	return chdir(path) == -1 ? errno : 0;
+}
+#else
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	int i, count;
+	argc--; argv++; /* skip executable path argument */
+
+	count = min(argc, GAME_MAX_CMDARGS);
+	for (i = 0; i < count; i++) {
+		/* -d[directory] argument used to change directory data is stored in */
+		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
+			Logger_Abort("-d argument no longer supported - cd to desired working directory instead");
+			continue;
+		}
+		args[i] = String_FromReadonly(argv[i]);
+	}
+	return count;
+}
+
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
 }
 #endif
 #endif
