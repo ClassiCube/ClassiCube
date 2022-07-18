@@ -176,7 +176,7 @@ cc_unichar Convert_CP437ToUnicode(char c);
 /* Converts a unicode codepoint to its code page 437 equivalent, or '?' if no match. */
 char Convert_CodepointToCP437(cc_codepoint cp);
 /* Attempts to convert a unicode codepoint to its code page 437 equivalent. */
-cc_bool Convert_TryCodepointToCP437(cc_codepoint cp, char* c);
+CC_API cc_bool Convert_TryCodepointToCP437(cc_codepoint cp, char* c);
 /* Decodes a unicode codepoint from UTF8, returning number of bytes read. */
 /* Returns 0 if not enough input data to read the character. */
 int Convert_Utf8ToCodepoint(cc_codepoint* cp, const cc_uint8* data, cc_uint32 len);

@@ -1,7 +1,7 @@
 #include "Event.h"
 #include "Logger.h"
 
-int EventAPIVersion = 1;
+int EventAPIVersion = 3;
 struct _EntityEventsList        EntityEvents;
 struct _TabListEventsList       TabListEvents;
 struct _TextureEventsList       TextureEvents;

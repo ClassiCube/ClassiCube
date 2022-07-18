@@ -298,9 +298,7 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	/*  (otherwise copy/paste doesn't work, as it uses Win+C / Win+V) */
 	if (ev->metaKey) return false;
 
-	if (Convert_TryCodepointToCP437(ev->charCode, &keyChar)) {
-		Event_RaiseInt(&InputEvents.Press, keyChar);
-	}
+	Event_RaiseInt(&InputEvents.Press, ev->charCode);
 	return true;
 }
 

@@ -15,7 +15,8 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#include "Core.h"
+#ifdef CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
 #include FT_INTERNAL_DEBUG_H_FT
 
@@ -807,5 +808,5 @@
     return FT_Err_Ok;
   }
 
-
+#endif
 /* END */

@@ -105,7 +105,6 @@ static void GrabCursor(void) {
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
-	char keyChar;
 	float wheelDelta;
 
 	switch (message) {
@@ -139,9 +138,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CHAR:
 		/* TODO: Use WM_UNICHAR instead, as WM_CHAR is just utf16 */
-		if (Convert_TryCodepointToCP437((cc_unichar)wParam, &keyChar)) {
-			Event_RaiseInt(&InputEvents.Press, keyChar);
-		}
+		Event_RaiseInt(&InputEvents.Press, (cc_unichar)wParam);
 		break;
 
 	case WM_MOUSEMOVE:

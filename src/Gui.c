@@ -509,13 +509,15 @@ static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* nam
 	}
 }
 
-static void OnKeyPress(void* obj, int keyChar) {
+static void OnKeyPress(void* obj, int cp) {
 	struct Screen* s;
-	int i;
+	int i; 
+	char c;
+	if (!Convert_TryCodepointToCP437(cp, &c)) return;
 
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesKeyPress(s, keyChar)) return;
+		if (s->VTABLE->HandlesKeyPress(s, c)) return;
 	}
 }
 
