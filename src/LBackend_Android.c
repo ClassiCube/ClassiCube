@@ -39,8 +39,8 @@ void LBackend_UpdateLogoFont(void) {
     Font_Free(&logoFont);
     Launcher_MakeLogoFont(&logoFont);
 }
-void LBackend_DrawLogo(struct Bitmap* bmp, const char* title) {
-    Launcher_DrawLogo(&logoFont, title, bmp);
+void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
+    Launcher_DrawLogo(&logoFont, title, ctx);
 }
 
 static void LBackend_LayoutDimensions(struct LWidget* w) {
@@ -93,13 +93,16 @@ static void JNICALL java_drawBackground(JNIEnv* env, jobject o, jobject bmp) {
     AndroidBitmap_getInfo(env, bmp, &info);
     AndroidBitmap_lockPixels(env, bmp, &addr);
 
+    // TODO refactor this
+    struct Context2D ctx;
     struct Bitmap pixels;
-    pixels.scan0 = addr;
-    pixels.width = info.width;
+    pixels.scan0  = addr;
+    pixels.width  = info.width;
     pixels.height = info.height;
+    Context2D_Wrap(&ctx, &pixels);
 
     struct LScreen* s = Launcher_Active;
-    if (s) s->DrawBackground(s, &pixels);
+    if (s) s->DrawBackground(s, &ctx);
 
     AndroidBitmap_unlockPixels(env, bmp);
 }
@@ -144,8 +147,8 @@ static void OnPointerUp(void* obj, int idx) {
 }
 
 static void HookEvents(void) {
-    Event_Register_(&WindowEvents.Redraw, NULL, RequestRedraw);
-    Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
+    Event_Register_(&WindowEvents.RedrawNeeded, NULL, RequestRedraw);
+    Event_Register_(&PointerEvents.Up,          NULL, OnPointerUp);
 }
 
 
@@ -193,12 +196,15 @@ static void JNICALL java_makeButtonActive(JNIEnv* env, jobject o, jobject bmp) {
     AndroidBitmap_getInfo(env, bmp, &info);
     AndroidBitmap_lockPixels(env, bmp, &addr);
 
+    // TODO refactor this
+    struct Context2D ctx;
     struct Bitmap pixels;
-    pixels.scan0 = addr;
-    pixels.width = info.width;
+    pixels.scan0  = addr;
+    pixels.width  = info.width;
     pixels.height = info.height;
-    LButton_DrawBackground(&pixels, 0, 0, info.width, info.height, true);
+    Context2D_Wrap(&ctx, &pixels);
 
+    LButton_DrawBackground(&ctx, 0, 0, info.width, info.height, true);
     AndroidBitmap_unlockPixels(env, bmp);
 }
 
@@ -211,12 +217,15 @@ static void JNICALL java_makeButtonDefault(JNIEnv* env, jobject o, jobject bmp) 
     AndroidBitmap_getInfo(env, bmp, &info);
     AndroidBitmap_lockPixels(env, bmp, &addr);
 
+    // TODO refactor this
+    struct Context2D ctx;
     struct Bitmap pixels;
-    pixels.scan0 = addr;
-    pixels.width = info.width;
+    pixels.scan0  = addr;
+    pixels.width  = info.width;
     pixels.height = info.height;
-    LButton_DrawBackground(&pixels, 0, 0, info.width, info.height, false);
+    Context2D_Wrap(&ctx, &pixels);
 
+    LButton_DrawBackground(&ctx, 0, 0, info.width, info.height, false);
     AndroidBitmap_unlockPixels(env, bmp);
 }
 
