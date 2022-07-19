@@ -57,13 +57,14 @@ static void SetupProgram(int argc, char** argv) {
 	cc_result res;
 	Logger_Hook();
 	Platform_Init();
+	res = Platform_SetDefaultCurrentDirectory(argc, argv);
+
+	Options_Load();
 	Window_Init();
 	
-	res = Platform_SetDefaultCurrentDirectory(argc, argv);
 	if (res) Logger_SysWarn(res, "setting current directory");
 	Platform_LogConst("Starting " GAME_APP_NAME " ..");
 	String_InitArray(Server.Address, ipBuffer);
-	Options_Load();
 }
 
 static int RunProgram(int argc, char** argv) {

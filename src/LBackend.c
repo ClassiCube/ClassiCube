@@ -350,8 +350,12 @@ static void OnPointerMove(void* obj, int idx) {
 	}
 }
 
-static void OnKeyPress(void* obj, int c) {
-	struct LWidget* selected = Launcher_Active->selectedWidget;
+static void OnKeyPress(void* obj, int cp) {
+	struct LWidget* selected;
+	char c;
+	if (!Convert_TryCodepointToCP437(cp, &c)) return;
+
+	selected = Launcher_Active->selectedWidget;
 	if (!selected) return;
 
 	if (!selected->VTABLE->KeyPress) return;

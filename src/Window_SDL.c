@@ -181,16 +181,19 @@ static void OnMouseEvent(const SDL_Event* e) {
 }
 
 static void OnTextEvent(const SDL_Event* e) {
-	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
-	cc_string str;
+	cc_codepoint cp;
+	const char* src;
 	int i, len;
 
-	String_InitArray(str, buffer);
-	len = String_CalcLen(e->text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE);
-	String_AppendUtf8(&str, e->text.text, len);
+	src = e->text.text;
+	len = String_CalcLen(src, SDL_TEXTINPUTEVENT_TEXT_SIZE);
 
-	for (i = 0; i < str.length; i++) {
-		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
+	while (len > 0) {
+		i = Convert_Utf8ToCodepoint(&cp, src, len);
+		if (!i) break;
+
+		Event_RaiseInt(&InputEvents.Press, cp);
+		src += i; len -= i;
 	}
 }
 

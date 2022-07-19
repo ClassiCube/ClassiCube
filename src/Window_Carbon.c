@@ -340,9 +340,7 @@ static OSStatus Window_ProcessTextEvent(EventRef inEvent) {
 
 	for (i = 0; i < 16 && chars[i]; i++) {
 		/* TODO: UTF16 to codepoint conversion */
-		if (Convert_TryCodepointToCP437(chars[i], &keyChar)) {
-			Event_RaiseInt(&InputEvents.Press, keyChar);
-		}
+		Event_RaiseInt(&InputEvents.Press, chars[i]);
 	}
 	return eventNotHandledErr;
 }

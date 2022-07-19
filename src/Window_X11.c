@@ -560,7 +560,7 @@ void Window_ProcessEvents(void) {
 
 		case KeyPress:
 		{
-			char data[64], c;
+			char data[64];
 			key = TryGetKey(&e.xkey);
 			if (key) Input_SetPressed(key);
 			
@@ -570,19 +570,19 @@ void Window_ProcessEvents(void) {
 			Status status_type;
 
 			status = Xutf8LookupString(win_xic, &e.xkey, data, Array_Elems(data), NULL, &status_type);
-			for (; status > 0; status -= i) {
+			while (status > 0) {
 				i = Convert_Utf8ToCodepoint(&cp, chars, status);
 				if (!i) break;
 
-				if (Convert_TryCodepointToCP437(cp, &c)) Event_RaiseInt(&InputEvents.Press, c);
-				chars += i;
+				Event_RaiseInt(&InputEvents.Press, cp);
+				status -= i; chars += i;
 			}
 #else
+			/* Treat the 8 bit characters as first 256 unicode codepoints */
 			/* This only really works for latin keys (e.g. so some finnish keys still work) */
 			status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
 			for (i = 0; i < status; i++) {
-				if (!Convert_TryCodepointToCP437((cc_uint8)data[i], &c)) continue;
-				Event_RaiseInt(&InputEvents.Press, c);
+				Event_RaiseInt(&InputEvents.Press, (cc_uint8)data[i]);
 			}
 #endif
 		} break;

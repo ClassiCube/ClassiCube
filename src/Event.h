@@ -110,6 +110,7 @@ void Event_UnregisterAll(void);
 /* Event API version supported by the client */
 /*  Version 1 - Added NetEvents.PluginMessageReceived */
 /*  Version 2 - Added WindowEvents.Redrawing */
+/*  Version 3 - Changed InputEvent.Press from code page 437 to unicode character */
 /* You MUST CHECK the event API version before attempting to use the events listed above, */
 /*  as otherwise if the player is using an older client that lacks some of the above events, */
 /*  you will be calling Event_Register on random data instead of the expected EventsList struct */
@@ -178,7 +179,7 @@ CC_VAR extern struct _WindowEventsList {
 } WindowEvents;
 
 CC_VAR extern struct _InputEventsList {
-	struct Event_Int    Press; /* Key input character is typed. Arg is a character */
+	struct Event_Int    Press; /* Key input character is typed. Arg is a unicode character */
 	struct Event_Input  Down;  /* Key or button is pressed. Arg is a member of Key enumeration */
 	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */

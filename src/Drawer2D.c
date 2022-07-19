@@ -449,9 +449,9 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 	BitmapCol* srcRow, src;
 	BitmapCol* dstRow;
 
-	cc_uint8 coords[256];
-	BitmapCol colors[256];
-	cc_uint16 dstWidths[256];
+	cc_uint8 coords[DRAWER2D_MAX_TEXT_LENGTH];
+	BitmapCol colors[DRAWER2D_MAX_TEXT_LENGTH];
+	cc_uint16 dstWidths[DRAWER2D_MAX_TEXT_LENGTH];
 
 	color = Drawer2D.Colors['f'];
 	if (shadow) color = GetShadowColor(color);

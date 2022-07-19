@@ -2,7 +2,7 @@ This document details how to compile a basic plugin in Visual Studio, MinGW, or 
 
 To find the functions and variables available for use in plugins, look for CC_API/CC_VAR in the .h files.
 
-[Source code of some actual plugins](https://github.com/UnknownShadow200/ClassiCube-Plugins/tree/master/src)
+[Source code of some actual plugins](https://github.com/UnknownShadow200/ClassiCube-Plugins/)
 
 ### Setup
 

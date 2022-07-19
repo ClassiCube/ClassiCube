@@ -94,13 +94,9 @@ static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
 }
 
 static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
-	char keyChar;
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - PRESS %i,%i", &code, &key);
-
-	if (Convert_TryCodepointToCP437(code, &keyChar)) {
-		Event_RaiseInt(&InputEvents.Press, keyChar);
-	}
+	Event_RaiseInt(&InputEvents.Press, code);
 }
 
 static void JNICALL java_processKeyText(JNIEnv* env, jobject o, jstring str) {

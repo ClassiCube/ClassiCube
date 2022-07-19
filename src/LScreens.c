@@ -1327,7 +1327,7 @@ static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnUpdates, btnMode, btnColours, btnBack;
 	struct LLabel  lblUpdates, lblMode, lblColours;
-	struct LCheckbox cbExtra, cbEmpty;
+	struct LCheckbox cbExtra, cbEmpty, cbScale;
 	struct LLine sep;
 } SettingsScreen;
 
@@ -1337,14 +1337,14 @@ static struct LWidget* settings_widgets[] = {
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.btnColours, (struct LWidget*)&SettingsScreen.lblColours,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
-	(struct LWidget*)&SettingsScreen.btnBack
+	(struct LWidget*)&SettingsScreen.btnBack,    (struct LWidget*)&SettingsScreen.cbScale
 };
 static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.sep,
 	(struct LWidget*)&SettingsScreen.btnUpdates, (struct LWidget*)&SettingsScreen.lblUpdates,
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
-	(struct LWidget*)&SettingsScreen.btnBack
+	(struct LWidget*)&SettingsScreen.btnBack,    (struct LWidget*)&SettingsScreen.cbScale
 };
 
 LAYOUTS set_btnUpdates[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE, -120 } };
@@ -1357,6 +1357,7 @@ LAYOUTS set_lblColours[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -20 
 LAYOUTS set_sep[]     = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE,  15 } };
 LAYOUTS set_cbExtra[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  44 } };
 LAYOUTS set_cbEmpty[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  84 } };
+LAYOUTS set_cbScale[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE, 124 } };
 LAYOUTS set_btnBack[] = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE, 170 } };
 
 
@@ -1374,6 +1375,16 @@ static void SettingsScreen_AutoClose(struct LCheckbox* w) {
 static void SettingsScreen_ShowEmpty(struct LCheckbox* w) {
 	Launcher_ShowEmptyServers = w->value;
 	Options_SetBool(LOPT_SHOW_EMPTY, w->value);
+}
+
+static void SettingsScreen_DPIScaling(struct LCheckbox* w) {
+#if defined CC_BUILD_WIN
+	DisplayInfo.DPIScaling = w->value;
+	Options_SetBool(OPT_DPI_SCALING, w->value);
+	Window_ShowDialog("Restart required", "You must restart ClassiCube before display scaling takes effect");
+#else
+	Window_ShowDialog("Restart required", "Display scaling is currently only supported on Windows");
+#endif
 }
 
 static void SettingsScreen_Init(struct LScreen* s_) {
@@ -1401,6 +1412,10 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	s->cbEmpty.ValueChanged = SettingsScreen_ShowEmpty;
 	LButton_Init(  &s->btnBack, 80, 35, "Back", set_btnBack);
 
+
+	LCheckbox_Init(&s->cbScale, "Use display scaling", set_cbScale);
+	s->cbScale.ValueChanged = SettingsScreen_DPIScaling;
+
 	s->btnMode.OnClick    = SwitchToChooseMode;
 	s->btnUpdates.OnClick = SwitchToUpdates;
 	s->btnColours.OnClick = SwitchToThemes;
@@ -1424,6 +1439,7 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	LCheckbox_Set(&s->cbExtra, Options_GetBool(LOPT_AUTO_CLOSE, false));
 #endif
 	LCheckbox_Set(&s->cbEmpty, Launcher_ShowEmptyServers);
+	LCheckbox_Set(&s->cbScale, DisplayInfo.DPIScaling);
 }
 
 void SettingsScreen_SetActive(void) {

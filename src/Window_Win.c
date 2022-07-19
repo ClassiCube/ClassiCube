@@ -105,7 +105,6 @@ static void GrabCursor(void) {
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
-	char keyChar;
 	float wheelDelta;
 
 	switch (message) {
@@ -139,9 +138,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CHAR:
 		/* TODO: Use WM_UNICHAR instead, as WM_CHAR is just utf16 */
-		if (Convert_TryCodepointToCP437((cc_unichar)wParam, &keyChar)) {
-			Event_RaiseInt(&InputEvents.Press, keyChar);
-		}
+		Event_RaiseInt(&InputEvents.Press, (cc_unichar)wParam);
 		break;
 
 	case WM_MOUSEMOVE:
@@ -284,10 +281,10 @@ void Window_Init(void) {
 	void* lib;
 	HDC hdc;
 
+	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
 	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
 	/* Enable high DPI support */
-	/* TODO re-enable when this can be set via option */
-	/* if (_SetProcessDPIAware) _SetProcessDPIAware(); */
+	if (DisplayInfo.DPIScaling && _SetProcessDPIAware) _SetProcessDPIAware();
 
 	hdc = GetDC(NULL);
 	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);

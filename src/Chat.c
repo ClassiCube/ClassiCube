@@ -159,7 +159,7 @@ static void OpenChatLog(struct DateTime* now) {
 }
 
 static void AppendChatLog(const cc_string* text) {
-	cc_string str; char strBuffer[STRING_SIZE * 2];
+	cc_string str; char strBuffer[DRAWER2D_MAX_TEXT_LENGTH];
 	struct DateTime now;
 	cc_result res;	
 
@@ -209,6 +209,7 @@ void Chat_AddRaw(const char* raw) {
 void Chat_Add(const cc_string* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
 void Chat_AddOf(const cc_string* text, int msgType) {
+	cc_string str;
 	if (msgType == MSG_TYPE_NORMAL) {
 		/* Check for chat overflow (see issue #837) */
 		/* This happens because Offset/Length are packed into a single 32 bit value, */
@@ -219,9 +220,13 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 			Chat_AddRaw("&cChat log cleared as it hit 8.3 million character limit");
 		}
 
+		/* StringsBuffer_Add will abort game if try to add string > 511 characters */
+		str        = *text; 
+		str.length = min(str.length, DRAWER2D_MAX_TEXT_LENGTH);
+
 		Chat_GetLogTime(Chat_Log.count) = Game.Time;
-		StringsBuffer_Add(&Chat_Log, text);
-		AppendChatLog(text);
+		AppendChatLog(&str);
+		StringsBuffer_Add(&Chat_Log, &str);
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
 		/* Status[1] is for reduced performance mode message */

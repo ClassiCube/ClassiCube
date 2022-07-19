@@ -36,7 +36,8 @@
   /*                                                                       */
   /*************************************************************************/
 
-
+#include "Core.h"
+#ifdef CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
 #include FT_CONFIG_CONFIG_H_FT
 #include FT_INTERNAL_OBJECTS_H_FT
@@ -100,4 +101,5 @@
     }
   }
 
+#endif
 /* END */
