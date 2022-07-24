@@ -21,6 +21,7 @@ echo "Comment=Minecraft Classic inspired sandbox game" >> $DESKTOP_FILE
 echo "Name=ClassiCube" >> $DESKTOP_FILE
 echo "Exec=$GAME_DIR/ClassiCube" >> $DESKTOP_FILE
 echo "Icon=$GAME_DIR/CCicon.png" >> $DESKTOP_FILE
+echo "Path=$GAME_DIR" >> $DESKTOP_FILE
 echo "Terminal=false" >> $DESKTOP_FILE
 echo "Categories=Game;" >> $DESKTOP_FILE
 chmod +x $DESKTOP_FILE
