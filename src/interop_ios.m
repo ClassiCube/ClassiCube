@@ -250,13 +250,14 @@ static NSString* ToNSString(const cc_string* text) {
 }
 
 static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
-    cc_string left  = *text, part;
-    BitmapCol color = Drawer2D.Colors['f'];
+    cc_string left = *text, part;
+    char colorCode = 'f';
     NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
     
-    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
     {
-        NSString* bit = ToNSString(&part);
+        BitmapCol color = Drawer2D_GetColor(colorCode);
+        NSString* bit   = ToNSString(&part);
         NSDictionary* attrs =
         @{
           //NSFontAttributeName : font,
@@ -766,14 +767,15 @@ void interop_SysFontFree(void* handle) {
 }
 
 int interop_SysTextWidth(struct DrawTextArgs* args) {
-    UIFont* font    = (__bridge UIFont*)args->font->handle;
-    cc_string left  = args->text, part;
-    BitmapCol color = Drawer2D.Colors['f'];
+    UIFont* font   = (__bridge UIFont*)args->font->handle;
+    cc_string left = args->text, part;
+    char colorCode = 'f';
     NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
     
-    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
     {
-        NSString* bit = ToNSString(&part);
+        BitmapCol color = Drawer2D_GetColor(colorCode);
+        NSString* bit   = ToNSString(&part);
         NSDictionary* attrs =
         @{
           NSFontAttributeName : font,
@@ -792,14 +794,15 @@ int interop_SysTextWidth(struct DrawTextArgs* args) {
 }
 
 void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
-    UIFont* font    = (__bridge UIFont*)args->font->handle;
-    cc_string left  = args->text, part;
-    BitmapCol color = Drawer2D.Colors['f'];
+    UIFont* font   = (__bridge UIFont*)args->font->handle;
+    cc_string left = args->text, part;
+    char colorCode = 'f';
     NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
     
-    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
     {
-        NSString* bit = ToNSString(&part);
+        BitmapCol color = Drawer2D_GetColor(colorCode);
+        NSString* bit   = ToNSString(&part);
         NSDictionary* attrs =
         @{
           NSFontAttributeName : font,
