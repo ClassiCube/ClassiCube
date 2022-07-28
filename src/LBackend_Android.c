@@ -180,9 +180,16 @@ static void OnPointerUp(void* obj, int idx) {
     Launcher_Active->MouseUp(Launcher_Active, idx);
 }
 
+static void OnWindowCreated(void* obj) {
+    // e.g. after pause and resume
+    // TODO should pause/resume not trigger launcher screen recreation?
+    if (Launcher_Active) Launcher_SetScreen(Launcher_Active);
+}
+
 static void HookEvents(void) {
     Event_Register_(&WindowEvents.RedrawNeeded, NULL, RequestRedraw);
     Event_Register_(&PointerEvents.Up,          NULL, OnPointerUp);
+    Event_Register_(&WindowEvents.Created,      NULL, OnWindowCreated);
 }
 
 

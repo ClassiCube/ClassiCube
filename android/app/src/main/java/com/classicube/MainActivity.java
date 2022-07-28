@@ -72,14 +72,14 @@ import android.widget.TextView;
 import com.classicube.android.client.R;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
-// Some functionality is only available on later Android versions - try {} catch {} is used in such places 
+// Some functionality is only available on later Android versions - try {} catch {} is used in such places
 //   to ensure that the game can still run on earlier Android versions (albeit with reduced functionality)
-// Currently the minimum required API level to run the game is level 9 (Android 2.3). 
-// When using Android functionality, always aim to add a comment with the API level that the functionality 
+// Currently the minimum required API level to run the game is level 9 (Android 2.3).
+// When using Android functionality, always aim to add a comment with the API level that the functionality
 //   was added in, as this will make things easier if the minimum required API level is ever changed again
 
 // implements InputQueue.Callback
-public class MainActivity extends Activity 
+public class MainActivity extends Activity
 {
 	// ==================================================================
 	// ---------------------------- COMMANDS ----------------------------
@@ -92,18 +92,18 @@ public class MainActivity extends Activity
 	static Queue<NativeCmdArgs> pending  = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	static Queue<NativeCmdArgs> freeCmds = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	static boolean launcher = true;
-	
+
 	NativeCmdArgs getCmdArgs() {
 		NativeCmdArgs args = freeCmds.poll();
 		return args != null ? args : new NativeCmdArgs();
 	}
-	
+
 	void pushCmd(int cmd) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
 		pending.add(args);
 	}
-	
+
 	void pushCmd(int cmd, int a1) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd  = cmd;
@@ -126,7 +126,7 @@ public class MainActivity extends Activity
 		args.str  = str;
 		pending.add(args);
 	}
-	
+
 	void pushCmd(int cmd, int a1, int a2, int a3, int a4) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
@@ -143,23 +143,23 @@ public class MainActivity extends Activity
 		args.str = text;
 		pending.add(args);
 	}
-	
+
 	void pushCmd(int cmd, Surface surface) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
 		args.sur = surface;
 		pending.add(args);
 	}
-	
+
 	final static int CMD_KEY_DOWN = 0;
-	
+
 	final static int CMD_POINTER_DOWN = 3;
 	final static int CMD_POINTER_UP   = 4;
 	final static int CMD_KEY_UP   = 1;
 	final static int CMD_KEY_CHAR = 2;
 	final static int CMD_KEY_TEXT = 19;
 	final static int CMD_POINTER_MOVE = 5;
-	
+
 	final static int CMD_WIN_CREATED   = 6;
 	final static int CMD_WIN_DESTROYED = 7;
 	final static int CMD_WIN_RESIZED   = 8;
@@ -180,7 +180,7 @@ public class MainActivity extends Activity
 	final static int CMD_UI_CHANGED  = 22;
 	final static int CMD_UI_STRING   = 23;
 
-	
+
 	// ====================================================================
 	// ------------------------------ EVENTS ------------------------------
 	// ====================================================================
@@ -197,11 +197,11 @@ public class MainActivity extends Activity
 			showAlertAsync("Failed to start", ex.getMessage());
 			return;
 		}
-		
+
 		gameRunning = true;
 		runGameAsync();
 	}
-	
+
 	void HACK_avoidFileUriExposedErrors() {
 		// StrictMode - API level 9
 		// disableDeathOnFileUriExposure - API level 24 ?????
@@ -214,7 +214,7 @@ public class MainActivity extends Activity
 			ex.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// requestWindowFeature - API level 1
@@ -245,15 +245,15 @@ public class MainActivity extends Activity
 		super.onCreate(savedInstanceState);
 	}
 
-	
+
 	/*@Override
 	public boolean dispatchKeyEvent(KeyEvent event) {
 		int action = event.getAction();
 		int code   = event.getKeyCode();
-		
+
 		if (action == KeyEvent.ACTION_DOWN) {
 			pushCmd(CMD_KEY_DOWN, keyCode);
-		
+
 			int keyChar = event.getUnicodeChar();
 			if (keyChar != 0) pushCmd(CMD_KEY_CHAR, keyChar);
 			return true;
@@ -263,7 +263,7 @@ public class MainActivity extends Activity
 		}
 		return super.dispatchKeyEvent(event);
 	}*/
-	
+
 	void pushTouch(int cmd, MotionEvent event, int i) {
 		// getPointerId, getX, getY - API level 5
 		int id = event.getPointerId(i);
@@ -272,7 +272,7 @@ public class MainActivity extends Activity
 		int y  = (int)event.getY(i);
 		pushCmd(cmd, id, x, y, 0);
 	}
-	
+
 	boolean handleTouchEvent(MotionEvent event) {
 		// getPointerCount - API level 5
 		// getActionMasked, getActionIndex - API level 8
@@ -281,12 +281,12 @@ public class MainActivity extends Activity
 		case MotionEvent.ACTION_POINTER_DOWN:
 			pushTouch(CMD_POINTER_DOWN, event, event.getActionIndex());
 			break;
-			
+
 		case MotionEvent.ACTION_UP:
 		case MotionEvent.ACTION_POINTER_UP:
 			pushTouch(CMD_POINTER_UP, event, event.getActionIndex());
 			break;
-			
+
 		case MotionEvent.ACTION_MOVE:
 			for (int i = 0; i < event.getPointerCount(); i++) {
 				pushTouch(CMD_POINTER_MOVE, event, i);
@@ -294,57 +294,59 @@ public class MainActivity extends Activity
 		}
 		return true;
 	}
-	
+
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		// Ignore volume keys
 		if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) return false;
 		if (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) return false;
 		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP)   return false;
-		
+
 		// TODO: not always handle (use Window_MapKey)
 		pushCmd(CMD_KEY_DOWN, keyCode);
-		
+
 		int keyChar = event.getUnicodeChar();
 		if (keyChar != 0) pushCmd(CMD_KEY_CHAR, keyChar);
 		return true;
 	}
-	
+
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		// TODO: not always handle (use Window_MapKey)
 		pushCmd(CMD_KEY_UP, keyCode);
 		return true;
 	}
-	
+
 	@Override
-	protected void onStart() { 
-		super.onStart();  
-		pushCmd(CMD_APP_START); 
+	protected void onStart() {
+		super.onStart();
+		pushCmd(CMD_APP_START);
 	}
-	
+
 	@Override
-	protected void onStop() { 
+	protected void onStop() {
 		super.onStop();
 		pushCmd(CMD_APP_STOP);
 		// In case game thread is blocked on showing dialog
 		releaseDialogSem();
 	}
-	
+
 	@Override
 	protected void onResume() {
-		create3DView();
+		if (launcher) create2DView();
+		else create3DView();
+
 		super.onResume();
-		pushCmd(CMD_APP_RESUME); 
+		pushCmd(CMD_APP_RESUME);
 	}
-	
+
 	@Override
 	protected void onPause() {
 		// setContentView - API level 1
 		// Can't use null.. TODO is there a better way?
 		setContentView(new View(this));
 		super.onPause();
-		pushCmd(CMD_APP_PAUSE); 
+		pushCmd(CMD_APP_PAUSE);
 	}
-	
+
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
@@ -358,30 +360,30 @@ public class MainActivity extends Activity
 	}
 	@Override
 	public void onLowMemory() { super.onLowMemory(); pushCmd(CMD_LOW_MEMORY); }
-	
+
 	@Override
 	public void onDestroy() {
 		Log.i("CC_WIN", "APP DESTROYED");
 		super.onDestroy();
 		pushCmd(CMD_APP_DESTROY);
 	}
-	
+
 	// Called by the game thread to actually process events
 	public void processEvents() {
 		for (;;) {
 			NativeCmdArgs c = pending.poll();
 			if (c == null) return;
-			
+
 			switch (c.cmd) {
 			case CMD_KEY_DOWN: processKeyDown(c.arg1); break;
 			case CMD_KEY_UP:   processKeyUp(c.arg1);   break;
 			case CMD_KEY_CHAR: processKeyChar(c.arg1); break;
 			case CMD_KEY_TEXT: processKeyText(c.str);  break;
-	
+
 			case CMD_POINTER_DOWN: processPointerDown(c.arg1, c.arg2, c.arg3, c.arg4); break;
 			case CMD_POINTER_UP:   processPointerUp(  c.arg1, c.arg2, c.arg3, c.arg4); break;
 			case CMD_POINTER_MOVE: processPointerMove(c.arg1, c.arg2, c.arg3, c.arg4); break;
-	
+
 			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur);   break;
 			case CMD_WIN_DESTROYED: processSurfaceDestroyed();      break;
 			case CMD_WIN_RESIZED:   processSurfaceResized(c.sur);   break;
@@ -408,12 +410,12 @@ public class MainActivity extends Activity
 			freeCmds.add(c);
 		}
 	}
-	
+
 	native void processKeyDown(int code);
 	native void processKeyUp(int code);
 	native void processKeyChar(int code);
 	native void processKeyText(String str);
-	
+
 	native void processPointerDown(int id, int x, int y, int isMouse);
 	native void processPointerUp(  int id, int x, int y, int isMouse);
 	native void processPointerMove(int id, int x, int y, int isMouse);
@@ -437,11 +439,11 @@ public class MainActivity extends Activity
 	native void processOnUIClicked(int id);
 	native void processOnUIChanged(int id, int val);
 	native void processOnUIString(int id, String str);
-	
+
 	native void runGameAsync();
 	native void updateInstance();
-	
-	
+
+
 	// ====================================================================
 	// ------------------------------ VIEWS -------------------------------
 	// ====================================================================
@@ -803,8 +805,16 @@ public class MainActivity extends Activity
 				 int color) {
 		final ListView list = new ListView(this);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															_WRAP_CONTENT, _WRAP_CONTENT);
+															_MATCH_PARENT, _WRAP_CONTENT); //_MATCH_PARENT
 		//list.setBackgroundColor(color);
+		/*list.setScrollIndicators(
+				View.SCROLL_INDICATOR_TOP |
+				View.SCROLL_INDICATOR_BOTTOM |
+				View.SCROLL_INDICATOR_LEFT |
+				View.SCROLL_INDICATOR_RIGHT |
+				View.SCROLL_INDICATOR_START |
+				View.SCROLL_INDICATOR_END);
+		list.setScrollbarFadingEnabled(false);*/
 
 		return showWidgetAsync(list, lp, new UICallback() {
 			public void execute() {
@@ -949,26 +959,26 @@ public class MainActivity extends Activity
 			Log.i("CC_WIN", "win created " + holder.getSurface());
 			MainActivity.this.pushCmd(CMD_WIN_CREATED, holder.getSurface());
 		}
-		
+
 		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 			// getSurface - API level 1
 			Log.i("CC_WIN", "win changed " + holder.getSurface());
 			MainActivity.this.pushCmd(CMD_WIN_RESIZED, holder.getSurface());
 		}
-		
+
 		public void surfaceDestroyed(SurfaceHolder holder) {
 			// getSurface, removeCallback - API level 1
 			Log.i("CC_WIN", "win destroyed " + holder.getSurface());
 			Log.i("CC_WIN", "cur view " + curView);
 			holder.removeCallback(this);
-			
+
 			//08-02 21:03:02.967: E/BufferQueueProducer(1350): [SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0] disconnect: not connected (req=2)
 			//08-02 21:03:02.968: E/SurfaceFlinger(1350): Failed to find layer (SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0) in layer parent (no-parent).
-	
+
 			MainActivity.this.pushCmd(CMD_WIN_DESTROYED);
 			// In case game thread is blocked showing a dialog on main thread
 			releaseDialogSem();
-			
+
 			// per the android docs for SurfaceHolder.Callback
 			// "If you have a rendering thread that directly accesses the surface, you must ensure
 			// that thread is no longer touching the Surface before returning from this function."
@@ -977,7 +987,7 @@ public class MainActivity extends Activity
 			} catch (InterruptedException e) { }
 		}
 	}
-	
+
 	// SurfaceHolder.Callback2 - API level 9
 	class CCSurfaceCallback2 extends CCSurfaceCallback implements SurfaceHolder.Callback2
 	{
@@ -1037,7 +1047,7 @@ public class MainActivity extends Activity
 
 				@Override
 				public boolean deleteSurroundingText(int beforeLength, int afterLength) {
-					
+
 					boolean success = super.deleteSurroundingText(beforeLength, afterLength);
 					updateText();
 					return success;
@@ -1082,8 +1092,8 @@ public class MainActivity extends Activity
 			return ic;
 		}
 	}
-	
-	
+
+
 	// ==================================================================
 	// ---------------------------- PLATFORM ----------------------------
 	// ==================================================================
@@ -1095,24 +1105,24 @@ public class MainActivity extends Activity
 			startActivity(intent);
 		}
 	}
-	
+
 	public String getExternalAppDir() {
 		// getExternalFilesDir - API level 8
 		return getExternalFilesDir(null).getAbsolutePath();
 	}
-	
+
 	public String getUUID() {
 		// getContentResolver - API level 1
 		// getString, ANDROID_ID - API level 3
 		return Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 	}
-	
+
 	public long getApkUpdateTime() {
 		try {
 			// getApplicationInfo - API level 4
 			ApplicationInfo info = getApplicationInfo();
 			File apkFile = new File(info.sourceDir);
-			
+
 			// https://developer.android.com/reference/java/io/File#lastModified()
 			//  lastModified is returned in milliseconds
 			return apkFile.lastModified() / 1000;
@@ -1120,7 +1130,7 @@ public class MainActivity extends Activity
 			return 0;
 		}
 	}
-	
+
 
 	// ====================================================================
 	// ------------------------------ WINDOW ------------------------------
@@ -1190,7 +1200,7 @@ public class MainActivity extends Activity
 		ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
 		clipboard.setText(str);
 	}
-	
+
 	DisplayMetrics getMetrics() {
 		// getDefaultDisplay, getMetrics - API level 1
 		DisplayMetrics dm = new DisplayMetrics();
@@ -1204,7 +1214,7 @@ public class MainActivity extends Activity
 	public float getDpiY() { return getMetrics().density; }
 
 	final Semaphore dialogSem = new Semaphore(0, true);
-	
+
 	void releaseDialogSem() {
 		// Only release when no waiting threads (otherwise showAlert doesn't block when called)
 		if (!dialogSem.hasQueuedThreads()) return;
@@ -1235,7 +1245,7 @@ public class MainActivity extends Activity
 				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this);
 				dlg.setTitle(title);
 				dlg.setMessage(message);
-				
+
 				dlg.setPositiveButton("Close", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) { releaseDialogSem(); }
 				});
@@ -1245,7 +1255,7 @@ public class MainActivity extends Activity
 		});
 	}
 
-	
+
 	public void showAlert(final String title, final String message) {
 		showAlertAsync(title, message);
 		try {
@@ -1258,7 +1268,7 @@ public class MainActivity extends Activity
 	// SYSTEM_UI_FLAG_FULLSCREEN - API level 16
 	// SYSTEM_UI_FLAG_IMMERSIVE_STICKY - API level 19
 	final static int FULLSCREEN_FLAGS = View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-	
+
 	void setUIVisibility(int flags) {
 		if (curView == null) return;
 		// setSystemUiVisibility - API level 11
@@ -1282,12 +1292,12 @@ public class MainActivity extends Activity
 			public void run() { setUIVisibility(View.SYSTEM_UI_FLAG_VISIBLE); }
 		});
     }
-	
+
 	public String shareScreenshot(String path) {
 		try {
 			File file = new File(getExternalAppDir() + "/screenshots/" + path);
 			Intent intent = new Intent();
-			
+
 			intent.setAction(Intent.ACTION_SEND);
 			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
 			intent.setType("image/png");
@@ -1314,14 +1324,14 @@ public class MainActivity extends Activity
 			conn.setDoInput(true);
 			conn.setRequestMethod(method);
 			conn.setInstanceFollowRedirects(true);
-			
+
 			httpAddMethodHeaders(method);
 			return 0;
 		} catch (Exception ex) {
 			return httpOnError(ex);
 		}
 	}
-	
+
 	static void httpAddMethodHeaders(String method) {
 		if (!method.equals("HEAD")) return;
 
@@ -1354,13 +1364,13 @@ public class MainActivity extends Activity
 			conn.connect();
 			// Some implementations also provide this as getHeaderField(0), but some don't
 			httpParseHeader("HTTP/1.1 " + conn.getResponseCode() + " MSG");
-			
+
 			// Legitimate webservers aren't going to reply with over 200 headers
 			for (int i = 0; i < 200; i++) {
 				String key = conn.getHeaderFieldKey(i);
 				String val = conn.getHeaderField(i);
 				if (key == null && val == null) break;
-				
+
 				if (key == null) {
 					httpParseHeader(val);
 				} else {
