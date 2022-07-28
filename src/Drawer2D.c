@@ -316,16 +316,18 @@ cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
 	return BitmapCol_A(Drawer2D_GetColor(text->buffer[i])) != 0;
 }
 
-cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, BitmapCol* color) {
-	BitmapCol c;
+cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, char* colorCode) {
+	BitmapCol color;
+	char cur;
 	int i;
 
 	/* check if current part starts with a colour code */
 	if (left->length >= 2 && left->buffer[0] == '&') {
-		c = Drawer2D_GetColor(left->buffer[1]);
+		cur   = left->buffer[1];
+		color = Drawer2D_GetColor(cur);
 		
-		if (BitmapCol_A(c)) {
-			*color = c;
+		if (BitmapCol_A(color)) {
+			*colorCode = cur;
 			left->buffer += 2;
 			left->length -= 2;
 		}
@@ -347,9 +349,9 @@ cc_bool Drawer2D_UNSAFE_NextPart(cc_string* left, cc_string* part, BitmapCol* co
 
 cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
 	cc_string left = *text, part;
-	BitmapCol color;
+	char colorCode;
 
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color)) 
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		if (part.length) return false;
 	}
@@ -358,9 +360,9 @@ cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
 
 void Drawer2D_WithoutColors(cc_string* str, const cc_string* src) {
 	cc_string left = *src, part;
-	BitmapCol color;
+	char colorCode;
 
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color)) 
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		String_AppendString(str, &part);
 	}
@@ -1287,10 +1289,10 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	struct FontDesc* font = args->font;
 	cc_string left = args->text, part;
 	double width   = 0;
-	BitmapCol color;
+	char colorCode;
 
 	interop_SetFont(font->handle, font->size, font->flags);
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		char buffer[NATIVE_STR_LEN];
 		int len = Platform_EncodeUtf8(buffer, &part);
@@ -1302,7 +1304,8 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
 	struct FontDesc* font = args->font;
 	cc_string left  = args->text, part;
-	BitmapCol color = Drawer2D.Colors['f'];
+	BitmapCol color;
+	char colorCode = 'f';
 	double xOffset = 0;
 	char hexBuffer[7];
 	cc_string hex;
@@ -1311,10 +1314,12 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	y += (args->font->height - args->font->size) / 2;
 	interop_SetFont(font->handle, font->size, font->flags);
 
-	while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		char buffer[NATIVE_STR_LEN];
 		int len = Platform_EncodeUtf8(buffer, &part);
+
+		color = Drawer2D_GetColor(colorCode);
 		if (shadow) color = GetShadowColor(color);
 
 		String_InitArray(hex, hexBuffer);
