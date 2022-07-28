@@ -137,6 +137,28 @@ static int ToAndroidColor(BitmapCol color) {
 }
 
 
+static jstring JNICALL java_nextTextPart(JNIEnv* env, jobject o, jstring total, jintArray state) {
+    char buffer[NATIVE_STR_LEN];
+    cc_string text = JavaGetString(env, total, buffer);
+
+    jint* state_ = (*env)->GetIntArrayElements(env, state, NULL);
+    text.buffer += state_[0];
+    text.length -= state_[0];
+
+    cc_string left = text, part;
+    char colorCode = 'f';
+
+    Drawer2D_UNSAFE_NextPart(&text, &part, &colorCode);
+    BitmapCol color = Drawer2D_GetColor(colorCode);
+
+    state_[0] += left.length - text.length;
+    state_[1] = ToAndroidColor(color);
+
+    (*env)->ReleaseIntArrayElements(env, state, state_, 0);
+    return JavaMakeString(env, &part);
+}
+
+
 /*########################################################################################################################*
 *-----------------------------------------------------Event handling------------------------------------------------------*
 *#########################################################################################################################*/
@@ -456,11 +478,11 @@ static jstring JNICALL java_tableGetDetails(JNIEnv* env, jobject o, jint id, jin
     return JavaMakeString(env, &text);
 }
 
-static jint JNICALL java_tableGetColor(JNIEnv* env, jobject o, jint id, jint row) {
+static jint JNICALL java_tableGetColor(JNIEnv* env, jobject o, jint id, jint row, jboolean selected) {
     struct LTable* tbl      = (struct LTable*)FindWidgetForView(id);
     struct ServerInfo* info = tbl && row < tbl->rowsCount ? LTable_Get(row) : NULL;
 
-    return ToAndroidColor(LTable_RowColor(info, row, false));
+    return ToAndroidColor(LTable_RowColor(info, row, selected));
 }
 
 
@@ -543,6 +565,7 @@ void LBackend_CloseScreen(struct LScreen* s) {
 }
 
 static const JNINativeMethod methods[] = {
+        { "nextTextPart",       "(Ljava/lang/String;[I)Ljava/lang/String;", java_nextTextPart },
         { "drawBackground",     "(Landroid/graphics/Bitmap;)V", java_drawBackground },
         { "makeButtonActive",   "(Landroid/graphics/Bitmap;)V", java_makeButtonActive },
         { "makeButtonDefault",  "(Landroid/graphics/Bitmap;)V", java_makeButtonDefault },
@@ -552,7 +575,7 @@ static const JNINativeMethod methods[] = {
         { "tableGetCount",      "(I)I", java_tableGetCount },
         { "tableGetTitle",      "(II)Ljava/lang/String;", java_tableGetTitle },
         { "tableGetDetails",    "(II)Ljava/lang/String;", java_tableGetDetails },
-        { "tableGetColor",      "(II)I", java_tableGetColor },
+        { "tableGetColor",      "(IIZ)I", java_tableGetColor },
 };
 
 static void LBackend_InitHooks(void) {

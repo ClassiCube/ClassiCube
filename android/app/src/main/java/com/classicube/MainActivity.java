@@ -32,10 +32,12 @@ import android.provider.Settings.Secure;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
+import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -467,6 +469,23 @@ public class MainActivity extends Activity
 		}
 	}
 
+	native static String nextTextPart(String total, int[] state);
+	CharSequence makeColoredText(String input) {
+		int[] state = new int[2];
+		SpannableStringBuilder sb = new SpannableStringBuilder();
+
+		for (;;) {
+			String left = nextTextPart(input, state);
+			if (left.length() == 0) break;
+
+			sb.append(left);
+			sb.setSpan(new ForegroundColorSpan(state[1]),
+					sb.length() - left.length(), sb.length(),
+					Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		}
+		return sb;
+	}
+
 
 	// ====================================================================
 	// ----------------------------- 2D view ------------------------------
@@ -500,7 +519,8 @@ public class MainActivity extends Activity
 		pushCmd(CMD_UI_CREATED);
 	}
 
-	int showWidgetAsync(final View widget, final CC2DLayoutParams lp, final UICallback callback) {
+	int showWidgetAsync(final View widget, final ViewGroup.LayoutParams lp,
+						final UICallback callback) {
 		widget.setId(widgetID++);
 
 		runOnUiThread(new Runnable() {
@@ -520,6 +540,11 @@ public class MainActivity extends Activity
 				view.removeAllViews();
 			}
 		});
+	}
+
+	ViewGroup.LayoutParams makeLayoutParams(int xMode, int xOffset, int yMode, int yOffset,
+				  							int width, int height) {
+		return new CC2DLayoutParams(xMode, xOffset, yMode, yOffset, width, height);
 	}
 
 	// TODO reuse native code
@@ -600,8 +625,8 @@ public class MainActivity extends Activity
 	int buttonAdd(int xMode, int xOffset, int yMode, int yOffset,
 				  int width, int height) {
 		final Button btn = new Button(this);
-		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														width, height);
+		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
+															width, height);
 
 		// https://stackoverflow.com/questions/5092649/android-how-to-update-the-selectorstatelistdrawable-programmatically
         StateListDrawable sld = new StateListDrawable();
@@ -645,8 +670,8 @@ public class MainActivity extends Activity
 
 	int labelAdd(int xMode, int xOffset, int yMode, int yOffset) {
 		final TextView lbl = new TextView(this);
-		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														_WRAP_CONTENT, _WRAP_CONTENT);
+		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
+															_WRAP_CONTENT, _WRAP_CONTENT);
 		lbl.setTextColor(Color.WHITE);
 
 		return showWidgetAsync(lbl, lp, null);
@@ -656,7 +681,9 @@ public class MainActivity extends Activity
 		runOnUiThread(new Runnable() {
 			public void run() {
 				View view = findViewById(id);
-				if (view != null) { ((TextView)view).setText(text); }
+				if (view == null) return;
+
+				((TextView)view).setText(makeColoredText(text));
 			}
 		});
 	}
@@ -664,8 +691,8 @@ public class MainActivity extends Activity
 	int inputAdd(int xMode, int xOffset, int yMode, int yOffset,
 				 int width, int height, int flags, String placeholder) {
 		final EditText ipt = new EditText(this);
-		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														width, height);
+		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
+															width, height);
 		ipt.setBackgroundColor(Color.WHITE);
 		ipt.setPadding(ipt.getPaddingLeft(), 0, ipt.getPaddingRight(), 0);
 		ipt.setHint(placeholder);
@@ -695,8 +722,8 @@ public class MainActivity extends Activity
 	int lineAdd(int xMode, int xOffset, int yMode, int yOffset,
 				 int width, int height, int color) {
 		final View view = new View(this);
-		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														width, height);
+		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
+															width, height);
 		view.setBackgroundColor(color);
 
 		return showWidgetAsync(view, lp, null);
@@ -738,8 +765,8 @@ public class MainActivity extends Activity
 	int sliderAdd(int xMode, int xOffset, int yMode, int yOffset,
 				 int width, int height, int color) {
 		final ProgressBar prg = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														width, height);
+		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
+															width, height);
 		// https://stackoverflow.com/questions/39771796/change-horizontal-progress-bar-color
 		prg.getProgressDrawable().setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
 
@@ -758,8 +785,8 @@ public class MainActivity extends Activity
 	int tableAdd(int xMode, int xOffset, int yMode, int yOffset,
 				 int color) {
 		final ListView list = new ListView(this);
-		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														_WRAP_CONTENT, _WRAP_CONTENT);
+		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
+															_WRAP_CONTENT, _WRAP_CONTENT);
 		//list.setBackgroundColor(color);
 
 		return showWidgetAsync(list, lp, new UICallback() {
@@ -773,7 +800,7 @@ public class MainActivity extends Activity
 	native static int tableGetCount(int id);
 	native static String tableGetTitle(int id, int pos);
 	native static String tableGetDetails(int id, int pos);
-	native static int tableGetColor(int id, int pos);
+	native static int tableGetColor(int id, int pos, boolean selected);
 
 	class CCTableAdapter extends BaseAdapter
 	{
@@ -812,7 +839,7 @@ public class MainActivity extends Activity
 			title.setText(tableGetTitle(listID, position));
 			details.setText(tableGetDetails(listID, position));
 
-			convertView.setBackgroundColor(tableGetColor(listID, position));
+			convertView.setBackgroundColor(tableGetColor(listID, position, false));
 			return convertView;
 		}
 
