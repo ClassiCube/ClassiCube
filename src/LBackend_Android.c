@@ -112,7 +112,19 @@ void LBackend_Redraw(void) {
     JavaGetCurrentEnv(env);
     JavaCallVoid(env, "redrawBackground", "()V", NULL);
 }
-void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
+
+static void LBackend_ButtonUpdateBackground(struct LButton* btn);
+void LBackend_ThemeChanged(void) {
+    struct LScreen* s = Launcher_Active;
+    LBackend_Redraw();
+
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+        struct LWidget* w = s->widgets[i];
+        if (w->type != LWIDGET_BUTTON) continue;
+        LBackend_ButtonUpdateBackground((struct LButton*)w);
+    }
+}
 
 void LBackend_Tick(void) { }
 
@@ -249,6 +261,16 @@ static void JNICALL java_makeButtonDefault(JNIEnv* env, jobject o, jobject bmp) 
 
     LButton_DrawBackground(&ctx, 0, 0, info.width, info.height, false);
     AndroidBitmap_unlockPixels(env, bmp);
+}
+
+static void LBackend_ButtonUpdateBackground(struct LButton* w) {
+    JNIEnv* env; JavaGetCurrentEnv(env);
+    jvalue args[1];
+    if (!w->meta) return;
+
+    args[0].i = (int)w->meta;
+    jmethodID method = JavaGetIMethod(env, "buttonUpdateBackground", "(I)V");
+    JavaICall_Void(env, method, args);
 }
 
 
@@ -514,6 +536,7 @@ static void JNICALL java_UIString(JNIEnv* env, jobject o, jint id, jstring str) 
     char buffer[NATIVE_STR_LEN];
     cc_string text = JavaGetString(env, str, buffer);
     String_Copy(&ipt->text, &text);
+    if (ipt->TextChanged) ipt->TextChanged(ipt);
 }
 
 static void ShowWidget(struct LWidget* w) {

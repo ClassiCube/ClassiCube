@@ -628,11 +628,7 @@ public class MainActivity extends Activity
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
 															width, height);
 
-		// https://stackoverflow.com/questions/5092649/android-how-to-update-the-selectorstatelistdrawable-programmatically
-        StateListDrawable sld = new StateListDrawable();
-        sld.addState(new int[] { android.R.attr.state_pressed }, buttonMakeImage(btn, width, height, true));
-        sld.addState(new int[] {}, buttonMakeImage(btn, width, height, false));
-        btn.setBackgroundDrawable(sld);
+        buttonUpdateBackground(btn, width, height);
         btn.setTextColor(Color.WHITE);
 		btn.setPadding(btn.getPaddingLeft(), 0, btn.getPaddingRight(), 0);
 		btn.setTransformationMethod(null); // get rid of all caps
@@ -645,9 +641,17 @@ public class MainActivity extends Activity
 		return showWidgetAsync(btn, lp, null);
 	}
 
+	static void buttonUpdateBackground(Button btn, int width, int height) {
+		// https://stackoverflow.com/questions/5092649/android-how-to-update-the-selectorstatelistdrawable-programmatically
+		StateListDrawable sld = new StateListDrawable();
+		sld.addState(new int[] { android.R.attr.state_pressed }, buttonMakeImage(btn, width, height, true));
+		sld.addState(new int[] {}, buttonMakeImage(btn, width, height, false));
+		btn.setBackgroundDrawable(sld);
+	}
+
 	native static void makeButtonActive(Bitmap bmp);
 	native static void makeButtonDefault(Bitmap bmp);
-	Drawable buttonMakeImage(Button btn, int width, int height, boolean hovered) {
+	static Drawable buttonMakeImage(Button btn, int width, int height, boolean hovered) {
 		Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
 		if (hovered) {
@@ -663,7 +667,20 @@ public class MainActivity extends Activity
 		runOnUiThread(new Runnable() {
 			public void run() {
 				View view = findViewById(id);
-				if (view != null) { ((Button)view).setText(text); }
+				if (view == null) return;
+
+				((Button)view).setText(makeColoredText(text));
+			}
+		});
+	}
+
+	void buttonUpdateBackground(final int id) {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view == null) return;
+
+				buttonUpdateBackground((Button)view, view.getWidth(), view.getHeight());
 			}
 		});
 	}
