@@ -426,6 +426,10 @@ extern void interop_TryGetClipboardText(void);
 void Clipboard_GetText(cc_string* value) {
 	/* Window_StoreClipboardText may or may not be called by this */
 	interop_TryGetClipboardText();
+
+	/* If text input is active, then let it handle pasting text */
+	/*  (otherwise text gets pasted twice on mobile) */
+	if (Input_TouchMode && keyboardOpen) pasteStr.length = 0;
 	
 	String_Copy(value, &pasteStr);
 	pasteStr.length = 0;
@@ -572,7 +576,7 @@ extern void interop_CloseKeyboard(void);
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
 	cc_string str; char buffer[800];
 	String_InitArray(str, buffer);
-
+	
 	String_AppendUtf8(&str, src, String_CalcLen(src, 3200));
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }

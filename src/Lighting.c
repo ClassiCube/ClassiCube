@@ -59,7 +59,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 			x += curRunCount; mapIndex += curRunCount; index += curRunCount;\
 \
 			if (x < xCount && Blocks.BlocksLight[get_block]) {\
-				lightOffset = (Blocks.LightOffset[get_block] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;\
+				lightOffset = (Blocks.LightOffset[get_block] >> LIGHT_FLAG_SHADES_FROM_BELOW) & 1;\
 				heightmap[hIndex + x] = (cc_int16)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\
@@ -139,7 +139,7 @@ for (y = maxY; y >= 0; y--, i -= World.OneY) {\
 	block = get_block;\
 \
 	if (Blocks.BlocksLight[block]) {\
-		offset = (Blocks.LightOffset[block] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;\
+		offset = (Blocks.LightOffset[block] >> LIGHT_FLAG_SHADES_FROM_BELOW) & 1;\
 		heightmap[hIndex] = y - offset;\
 		return y - offset;\
 	}\
@@ -238,8 +238,8 @@ static void ClassicLighting_LightHint(int startX, int startY, int startZ) {
 static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, BlockID newBlock, int index, int lightH) {
 	cc_bool didBlock = Blocks.BlocksLight[oldBlock];
 	cc_bool nowBlocks = Blocks.BlocksLight[newBlock];
-	int oldOffset = (Blocks.LightOffset[oldBlock] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;
-	int newOffset = (Blocks.LightOffset[newBlock] >> BLOCK_LIGHT_OFFSET_IS_UPPER_SLAB) & 1;
+	int oldOffset = (Blocks.LightOffset[oldBlock] >> LIGHT_FLAG_SHADES_FROM_BELOW) & 1;
+	int newOffset = (Blocks.LightOffset[newBlock] >> LIGHT_FLAG_SHADES_FROM_BELOW) & 1;
 	BlockID above;
 
 	/* Two cases we need to handle here: */
