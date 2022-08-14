@@ -1772,7 +1772,9 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Done   = false;
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
+
 	Gen_Blocks = NULL;
+	World.Seed = Gen_Seed;
 
 	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
