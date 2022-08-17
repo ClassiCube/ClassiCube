@@ -347,11 +347,6 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #endif
-static void DumpBacktrace(cc_string* str, void* ctx) {
-	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
-	Logger_Log(&backtrace);
-	Logger_Backtrace(str, ctx);
-}
 
 
 /*########################################################################################################################*
@@ -973,7 +968,8 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Unknown)"
 #endif
 
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {	
+static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
+	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
 	cc_string msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
@@ -992,9 +988,14 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
 	String_AppendConst(&msg, "Please report this on the ClassiCube forums or to UnknownShadow200.\n\n");
-
 	if (ctx) DumpRegisters(ctx);
-	DumpBacktrace(&msg, ctx);
+
+	/* These two function calls used to be in a separate DumpBacktrace function */
+	/*  However that was not always inlined by the compiler, which resulted in a */
+	/*  useless strackframe being logged - so manually inline Logger_Backtrace call */
+	Logger_Log(&backtrace);
+	Logger_Backtrace(&msg, ctx);
+
 	DumpMisc(ctx);
 	CloseLogFile();
 
