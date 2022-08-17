@@ -169,7 +169,7 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 
 	module = String_FromReadonly(modName);
 	Utils_UNSAFE_GetFilename(&module);
-	String_Format2(str, "0x%x - %s", &addr, &module);
+	String_Format2(str, "%x - %s", &addr, &module);
 	
 	if (symName && symName[0]) {
 		offset = (int)(addr - symAddr);
@@ -327,7 +327,10 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	extern void thread_stack_pcs(void** buffer, unsigned max, unsigned* nb);
 
 	thread_stack_pcs(addrs, MAX_BACKTRACE_FRAMES, &frames);
-	for (i = 1; i < frames; i++) { /* 1 to skip thread_stack_pcs frame */
+	/* Skip frames don't want to include in backtrace */
+	/*  frame 0 = thread_stack_pcs */
+	/*  frame 1 = Logger_Backtrace */
+	for (i = 2; i < frames; i++) {
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
@@ -800,7 +803,7 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
 
 	String_InitArray_NT(msg, msgBuffer);
-	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
+	String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
 
 	numArgs = info->ExceptionRecord->NumberParameters;
 	if (numArgs) {
@@ -885,7 +888,7 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	addr = (cc_uintptr)info->si_addr;
 
 	String_InitArray_NT(msg, msgBuffer);
-	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
+	String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
 #if defined CC_BUILD_ANDROID

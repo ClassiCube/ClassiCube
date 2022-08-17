@@ -624,8 +624,7 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 static void Cw_Callback_2(struct NbtTag* tag) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 
-	if (IsTag(tag->parent, "MapGenerator"))
-	{
+	if (IsTag(tag->parent, "MapGenerator")) {
 		if (IsTag(tag, "Seed")) { World.Seed = NbtTag_I32(tag); return; }
 		return;
 	}
