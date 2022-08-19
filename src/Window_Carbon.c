@@ -243,6 +243,16 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 	return eventNotHandledErr;
 }
 
+static int MapNativeMouse(EventMouseButton button) {
+	if (button == kEventMouseButtonPrimary)   return KEY_LMOUSE;
+	if (button == kEventMouseButtonSecondary) return KEY_RMOUSE;
+	if (button == kEventMouseButtonTertiary)  return KEY_MMOUSE;
+
+	if (button == 4) return KEY_XBUTTON1;
+	if (button == 5) return KEY_XBUTTON2;
+	return 0;
+}
+
 static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	int mouseX, mouseY;
 	HIPoint pt, raw;
@@ -251,6 +261,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	EventMouseButton button;
 	SInt32 delta;
 	OSStatus res;	
+	int btn;
 	
 	res = GetEventParameter(inEvent, kEventParamMouseLocation, typeHIPoint,
 							NULL, sizeof(HIPoint), NULL, &pt);
@@ -287,14 +298,9 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 									 NULL, sizeof(EventMouseButton), NULL, &button);
 			if (res) Logger_Abort2(res, "Getting mouse button");
 			
-			switch (button) {
-				case kEventMouseButtonPrimary:
-					Input_Set(KEY_LMOUSE, down); break;
-				case kEventMouseButtonSecondary:
-					Input_Set(KEY_RMOUSE, down); break;
-				case kEventMouseButtonTertiary:
-					Input_Set(KEY_MMOUSE, down); break;
-			}		
+			btn = MapNativeMouse(button);
+			if (btn) Input_Set(btn, down); break;
+	
 			return eventNotHandledErr;
 			
 		case kEventMouseWheelMoved:

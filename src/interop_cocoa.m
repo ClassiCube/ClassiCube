@@ -356,6 +356,8 @@ static int MapNativeMouse(int button) {
 	if (button == 0) return KEY_LMOUSE;
 	if (button == 1) return KEY_RMOUSE;
 	if (button == 2) return KEY_MMOUSE;
+	if (button == 3) return KEY_XBUTTON1;
+	if (button == 4) return KEY_XBUTTON2;
 	return 0;
 }
 

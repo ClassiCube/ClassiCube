@@ -555,7 +555,7 @@ static PackedCol Normal_LightColor(int x, int y, int z, Face face, BlockID block
 	case FACE_YMIN:
 		return Lighting.Color_YMin_Fast(x, y - offset, z);		
 	case FACE_YMAX:
-		return Lighting.Color_YMax_Fast(x, (y + 1) - offset, z);
+		return Lighting.Color_YMax_Fast(x, y + offset, z);
 	}
 	return 0; /* should never happen */
 }
@@ -723,7 +723,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		offset = (lightFlags >> FACE_YMAX) & 1;
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
-		col = fullBright ? PACKEDCOL_WHITE : Lighting.Color_YMax_Fast(x, (y + 1) - offset, z);
+		col = fullBright ? PACKEDCOL_WHITE : Lighting.Color_YMax_Fast(x, y + offset, z);
 		Drawer_YMax(count_YMax, col, loc, &part->fVertices[FACE_YMAX]);
 	}
 }
@@ -794,15 +794,18 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 	block = Builder_Chunk[cIndex];
 	lightFlags = Blocks.LightOffset[block];
 
+	/* TODO using LIGHT_FLAG_SHADES_FROM_BELOW is wrong here, */
+	/*  but still produces less broken results than YMIN/YMAX */
+
 	/* Use fact Light(Y.YMin) == Light((Y-1).YMax) */
-	offset = (lightFlags >> FACE_YMIN) & 1;
+	offset = (lightFlags >> LIGHT_FLAG_SHADES_FROM_BELOW) & 1;
 	flags |= Lighting.IsLit_Fast(x, y - offset, z) ? LIT_M1 : 0;
 
 	/* Light is same for all the horizontal faces */
 	flags |= Lighting.IsLit_Fast(x, y, z) ? LIT_CC : 0;
 
 	/* Use fact Light((Y+1).YMin) == Light(Y.YMax) */
-	offset = (lightFlags >> FACE_YMAX) & 1;
+	offset = (lightFlags >> LIGHT_FLAG_SHADES_FROM_BELOW) & 1;
 	flags |= Lighting.IsLit_Fast(x, (y + 1) - offset, z) ? LIT_P1 : 0;
 
 	/* If a block is fullbright, it should also look as if that spot is lit */

@@ -362,7 +362,7 @@ static void Commands_Execute(const cc_string* input) {
 		cmd->Execute(&value, value.length != 0);
 	} else {
 		count = String_UNSAFE_Split(&value, ' ', args, Array_Elems(args));
-		cmd->Execute(args, count);
+		cmd->Execute(args,   value.length ? count : 0);
 	}
 }
 

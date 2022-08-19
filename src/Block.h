@@ -61,8 +61,8 @@ CC_VAR extern struct _BlockLists {
 	/* Can be < 1 to slow player down, or > 1 to speed up. */
 	float SpeedMultiplier[BLOCK_COUNT];
 	/* Bit flags of which faces of this block uses light colour from neighbouring blocks. */
-	/* e.g. a block with Min.X of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
-	/* e.g. a block with Min.X of 0.1 uses light colour at X,Y,Z   for XMIN face. */
+	/*   e.g. a block with Min.X of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
+	/*   e.g. a block with Min.X of 0.1 uses light colour at X,Y,Z   for XMIN face. */
 	cc_uint8 LightOffset[BLOCK_COUNT];
 	/* Draw method used when rendering this block. See DrawType enum. */
 	cc_uint8 Draw[BLOCK_COUNT];
@@ -106,6 +106,12 @@ CC_VAR extern struct _BlockLists {
 
 #define Block_Tint(col, block)\
 if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
+
+/* Most blocks which 'stop' light actually stop the light starting at block below */
+/*  except for e.g. upside down slabs which 'stop' the light at same block level */
+/* The difference can be seen by placing a lower and upper slab block on a wall, */
+/*  and comparing whether the block directly behind them is in shadow or not */
+#define LIGHT_FLAG_SHADES_FROM_BELOW 6
 
 /* Returns whether the given block has been changed from default. */
 cc_bool Block_IsCustomDefined(BlockID block);

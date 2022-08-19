@@ -623,6 +623,11 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 static void Cw_Callback_2(struct NbtTag* tag) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+
+	if (IsTag(tag->parent, "MapGenerator")) {
+		if (IsTag(tag, "Seed")) { World.Seed = NbtTag_I32(tag); return; }
+		return;
+	}
 	if (!IsTag(tag->parent, "Spawn")) return;
 	
 	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return; }
@@ -1410,9 +1415,15 @@ cc_result Cw_Save(struct Stream* stream) {
 	cur = Nbt_WriteDict(cur,   "ClassicWorld");
 	cur = Nbt_WriteUInt8(cur,  "FormatVersion", 1);
 	cur = Nbt_WriteArray(cur,  "UUID", WORLD_UUID_LEN); Mem_Copy(cur, World.Uuid, WORLD_UUID_LEN); cur += WORLD_UUID_LEN;
-	cur = Nbt_WriteUInt16(cur, "X", World.Width );
+	cur = Nbt_WriteUInt16(cur, "X", World.Width);
 	cur = Nbt_WriteUInt16(cur, "Y", World.Height);
 	cur = Nbt_WriteUInt16(cur, "Z", World.Length);
+
+	cur = Nbt_WriteDict(cur, "MapGenerator");
+	{
+		cur  = Nbt_WriteInt32(cur, "Seed", World.Seed);
+	} *cur++ = NBT_END;
+	
 
 	/* TODO: Maybe keep real spawn too? */
 	cur = Nbt_WriteDict(cur, "Spawn");

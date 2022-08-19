@@ -846,14 +846,17 @@ void LBackend_SliderDraw(struct LSlider* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-void LBackend_TableInit(struct LTable* w) { 
+static void InitRowFont(void) {
 	if (rowFont.handle) return;
 	Font_Make(&rowFont, 11, FONT_FLAGS_NONE);
 }
+
+void LBackend_TableInit(struct LTable* w) { }
 void LBackend_TableUpdate(struct LTable* w) { }
 
 void LBackend_TableReposition(struct LTable* w) {
 	int rowsHeight;
+	InitRowFont();
 	w->hdrHeight = Font_CalcHeight(&textFont, true) + hdrYPadding;
 	w->rowHeight = Font_CalcHeight(&rowFont,  true) + rowYPadding;
 
@@ -967,6 +970,7 @@ static void LTable_DrawRows(struct LTable* w) {
 	struct LTableCell cell;
 	int i, x, y, row, end;
 
+	InitRowFont();
 	String_InitArray(str, strBuffer);
 	DrawTextArgs_Make(&args, &str, &rowFont, true);
 	cell.table = w;
