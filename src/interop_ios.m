@@ -766,7 +766,7 @@ void interop_SysFontFree(void* handle) {
     CFBridgingRelease(handle);
 }
 
-int interop_SysTextWidth(struct DrawTextArgs* args) {
+static NSMutableAttributedString* GetAttributedString(struct DrawTextArgs* args, cc_bool shadow) {
     UIFont* font   = (__bridge UIFont*)args->font->handle;
     cc_string left = args->text, part;
     char colorCode = 'f';
@@ -774,53 +774,54 @@ int interop_SysTextWidth(struct DrawTextArgs* args) {
     
     while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
     {
-        BitmapCol color = Drawer2D_GetColor(colorCode);
-        NSString* bit   = ToNSString(&part);
-        NSDictionary* attrs =
-        @{
-          NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
-          };
-        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
-        [str appendAttributedString:attr_bit];
+        BitmapCol color   = Drawer2D_GetColor(colorCode);
+        if (shadow) color = GetShadowColor(color);
+        
+        NSString* bit = ToNSString(&part);
+        NSRange range = NSMakeRange(str.length, bit.length);
+        [str.mutableString appendString:bit];
+        
+        [str addAttribute:NSFontAttributeName            value:font                   range:range];
+        [str addAttribute:NSForegroundColorAttributeName value:ToUIColor(color, 1.0f) range:range];
+        
+        if (args->font->flags & FONT_FLAGS_UNDERLINE) {
+            NSNumber* style = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
+            [str addAttribute:NSUnderlineStyleAttributeName value:style range:range];
+        }
     }
+    return str;
+}
+
+int interop_SysTextWidth(struct DrawTextArgs* args) {
+    NSMutableAttributedString* str = GetAttributedString(args, false);
     
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
     CGRect bounds  = CTLineGetImageBounds(line, NULL);
     
     CGFloat ascent, descent, leading;
     double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+    
+    CFRelease(line);
     return Math_Ceil(width);
 }
 
 void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
-    UIFont* font   = (__bridge UIFont*)args->font->handle;
-    cc_string left = args->text, part;
-    char colorCode = 'f';
-    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    UIFont* font = (__bridge UIFont*)args->font->handle;
+    NSMutableAttributedString* str = GetAttributedString(args, shadow);
     
-    while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
-    {
-        BitmapCol color = Drawer2D_GetColor(colorCode);
-        NSString* bit   = ToNSString(&part);
-        NSDictionary* attrs =
-        @{
-          NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
-          };
-        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
-        [str appendAttributedString:attr_bit];
-    }
+    float X = x, Y = y;
+    if (shadow) { X += 1.3f; Y -= 1.3f; }
     
-    if (shadow) return;
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
     struct Bitmap* bmp = &ctx->bmp;
     
     CGContextRef cg_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, ctx->height, 8, bmp->width * 4,
-                          CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-    CGContextSetTextPosition(cg_ctx, x, y);
+                                                CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+    CGContextSetTextPosition(cg_ctx, X, Y - font.descender);
     CTLineDraw(line, cg_ctx);
     CGContextRelease(cg_ctx);
+    
+    CFRelease(line);
 }
 #endif
 
