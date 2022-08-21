@@ -533,6 +533,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	}
 	if (!mppass->length) mppass = &defMppass;
 
+	Options_PauseSaving();
 	Options_Set("launcher-dc-username", user);
 	Options_Set("launcher-dc-ip",       &ip);
 	Options_Set("launcher-dc-port",     &port);
