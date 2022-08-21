@@ -293,8 +293,8 @@ void Block_CalcRenderBounds(BlockID block) {
 	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
 	if (Blocks.IsLiquid[block]) {
-		min.X -= 0.1f/16.0f; max.X -= 0.1f/16.0f;
-		min.Z -= 0.1f/16.0f; max.Z -= 0.1f/16.0f;
+		min.X += 0.1f/16.0f; max.X += 0.1f/16.0f;
+		min.Z += 0.1f/16.0f; max.Z += 0.1f/16.0f;
 		min.Y -= 1.5f/16.0f; max.Y -= 1.5f/16.0f;
 	} else if (Blocks.Draw[block] == DRAW_TRANSLUCENT && Blocks.Collide[block] != COLLIDE_SOLID) {
 		min.X += 0.1f/16.0f; max.X += 0.1f/16.0f;
