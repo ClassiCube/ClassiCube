@@ -87,11 +87,11 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 
 ##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Cross compiling for Windows (64 bit):
 
-```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
