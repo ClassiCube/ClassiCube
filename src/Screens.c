@@ -768,7 +768,6 @@ static struct ChatScreen {
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[GUI_MAX_CHATLINES];
 } ChatScreen_Instance;
-#define CH_EXTENT 16
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
@@ -963,17 +962,22 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 
 static void ChatScreen_DrawCrosshairs(void) {
 	static struct Texture tex = { 0, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
-	int extent;
+	struct Crosshairs crosshairs[INPUT_MAX_POINTERS];
+	int i, extent, numCrosshairs;
+
 	if (!Gui.IconsTex) return;
+	numCrosshairs = Input_GetCrosshairs(crosshairs);
 
-	extent = (int)(CH_EXTENT * Gui_Scale(WindowInfo.Height / 480.0f));
-	tex.ID = Gui.IconsTex;
-	tex.X  = (WindowInfo.Width  / 2) - extent;
-	tex.Y  = (WindowInfo.Height / 2) - extent;
+	for (i = 0; i < numCrosshairs; i++) {
+		extent = crosshairs[i].radius;
+		tex.ID = Gui.IconsTex;
+		tex.X  = crosshairs[i].centreX - extent;
+		tex.Y  = crosshairs[i].centreY - extent;
 
-	tex.Width  = extent * 2;
-	tex.Height = extent * 2;
-	Texture_Render(&tex);
+		tex.Width  = extent * 2;
+		tex.Height = extent * 2;
+		Texture_Render(&tex);
+	}
 }
 
 static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {

@@ -118,6 +118,10 @@ void Mouse_ScrollWheel(float delta);
 void Pointer_SetPosition(int idx, int x, int y);
 
 
+struct Crosshairs { int centreX, centreY, radius; };
+int Input_GetCrosshairs(struct Crosshairs* buffer);
+
+
 /* Enumeration of all key bindings. */
 enum KeyBind_ {
 	KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_LEFT, KEYBIND_RIGHT,

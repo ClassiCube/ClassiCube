@@ -313,6 +313,40 @@ void Pointer_SetPosition(int idx, int x, int y) {
 
 
 /*########################################################################################################################*
+*--------------------------------------------------------Crosshairs-------------------------------------------------------*
+*#########################################################################################################################*/
+#define CH_EXTENT 16
+
+#ifdef CC_BUILD_TOUCH
+static int GetTouchCrosshairs(struct Crosshairs* buffer) {
+	int i, count = 0;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (!(touches[i].type & TOUCH_TYPE_BLOCKS)) continue;
+		if (  touches[i].type == TOUCH_TYPE_ALL)    continue;
+
+		buffer[count].centreX = Pointers[i].x;
+		buffer[count].centreY = Pointers[i].y;
+		buffer[count].radius  = Display_ScaleX(80);
+		count++;
+	}
+	return count;
+}
+#endif
+
+int Input_GetCrosshairs(struct Crosshairs* buffer) {
+#ifdef CC_BUILD_TOUCH
+	if (Input_TouchMode) return GetTouchCrosshairs(buffer);
+#endif
+
+	buffer->radius  = (int)(CH_EXTENT * Gui_Scale(WindowInfo.Height / 480.0f));
+	buffer->centreX = WindowInfo.Width  / 2;
+	buffer->centreY = WindowInfo.Height / 2;
+
+	return 1;
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_uint8 KeyBinds[KEYBIND_COUNT];
