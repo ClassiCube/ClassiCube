@@ -231,21 +231,22 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 /* No real threading support with emscripten backend */
-void Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Start(Thread_StartFunc func) { func(); return NULL; }
-void Thread_Detach(void* handle) { }
-void Thread_Join(void* handle) { }
+void  Thread_Sleep(cc_uint32 milliseconds) { }
+void* Thread_Create(Thread_StartFunc func) { return NULL; }
+void  Thread_Start2(void* handle, Thread_StartFunc func) { func(); }
+void  Thread_Detach(void* handle) { }
+void  Thread_Join(void* handle) { }
 
 void* Mutex_Create(void) { return NULL; }
-void Mutex_Free(void* handle) { }
-void Mutex_Lock(void* handle) { }
-void Mutex_Unlock(void* handle) { }
+void  Mutex_Free(void* handle) { }
+void  Mutex_Lock(void* handle) { }
+void  Mutex_Unlock(void* handle) { }
 
 void* Waitable_Create(void) { return NULL; }
-void Waitable_Free(void* handle) { }
-void Waitable_Signal(void* handle) { }
-void Waitable_Wait(void* handle) { }
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
+void  Waitable_Free(void* handle) { }
+void  Waitable_Signal(void* handle) { }
+void  Waitable_Wait(void* handle) { }
+void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
 
 
 /*########################################################################################################################*

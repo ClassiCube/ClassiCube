@@ -973,6 +973,8 @@ static void Http_Init(void) {
 	pendingMutex    = Mutex_Create();
 	processedMutex  = Mutex_Create();
 	curRequestMutex = Mutex_Create();
-	workerThread    = Thread_Start(WorkerLoop);
+	workerThread    = Thread_Create(WorkerLoop);
+
+	Thread_Start2(workerThread, WorkerLoop);
 }
 #endif
