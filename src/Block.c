@@ -23,98 +23,99 @@ const char* const Sound_Names[SOUND_COUNT] = {
 #define FOG_LAVA  PackedCol_Make(153,  25,   0, 255)
 
 struct SimpleBlockDef {
+	const char* name;
 	cc_uint8 topTexture, sideTexture, bottomTexture, height;
 	PackedCol fogColor; cc_uint8 fogDensity;
 	cc_bool fullBright, blocksLight; cc_uint8 gravity;
 	cc_uint8 draw, collide, digSound, stepSound;
 };
 static const struct SimpleBlockDef invalid_blockDef = { 
-	0,0,0,16, FOG_NONE,0, false,true, 100, DRAW_OPAQUE,COLLIDE_SOLID,0
+	"Invalid", 0,0,0,16, FOG_NONE,0, false,true, 100, DRAW_OPAQUE,COLLIDE_SOLID,0
 };
 
 /* Properties for all Classic and CPE blocks */
 static const struct SimpleBlockDef core_blockDefs[BLOCK_CPE_COUNT] = {
-/*TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
-{  0,  0,  0, 16, FOG_NONE ,   0, false, false, 100, DRAW_GAS,    COLLIDE_NONE,  SOUND_NONE,   SOUND_NONE   }, /* AIR */
-{  1,  1,  1, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* STONE */
-{  0,  3,  2, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  }, /* GRASS */
-{  2,  2,  2, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRAVEL, SOUND_GRAVEL }, /* DIRT */
-{ 16, 16, 16, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* COBBLE */
-{  4,  4,  4, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* WOOD */
-{ 15, 15, 15, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* SAPLING */
-{ 17, 17, 17, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* BEDROCK */
+/*NAME                TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
+{ "Air",               0,  0,  0, 16, FOG_NONE ,   0, false, false, 100, DRAW_GAS,    COLLIDE_NONE,  SOUND_NONE,   SOUND_NONE   },
+{ "Stone",             1,  1,  1, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Grass",             0,  3,  2, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  },
+{ "Dirt",              2,  2,  2, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRAVEL, SOUND_GRAVEL },
+{ "Cobblestone",      16, 16, 16, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Wood",              4,  4,  4, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   },
+{ "Sapling",          15, 15, 15, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   },
+{ "Bedrock",          17, 17, 17, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
 
-{ 14, 14, 14, 16, FOG_WATER,  10, false,  true, 100, DRAW_TRANSLUCENT, COLLIDE_WATER, SOUND_NONE, SOUND_NONE },/* WATER */
-{ 14, 14, 14, 16, FOG_WATER,  10, false,  true, 100, DRAW_TRANSLUCENT, COLLIDE_WATER, SOUND_NONE, SOUND_NONE },/* STILL_WATER */
-{ 30, 30, 30, 16, FOG_LAVA , 180,  true,  true, 100, DRAW_OPAQUE, COLLIDE_LAVA,  SOUND_NONE,   SOUND_NONE   }, /* LAVA */
-{ 30, 30, 30, 16, FOG_LAVA , 180,  true,  true, 100, DRAW_OPAQUE, COLLIDE_LAVA,  SOUND_NONE,   SOUND_NONE   }, /* STILL_LAVA */
-{ 18, 18, 18, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_SAND,   SOUND_SAND   }, /* SAND */
-{ 19, 19, 19, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRAVEL, SOUND_GRAVEL }, /* GRAVEL */
-{ 32, 32, 32, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* GOLD_ORE */
-{ 33, 33, 33, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* IRON_ORE */
+{ "Water",            14, 14, 14, 16, FOG_WATER,  10, false,  true, 100, DRAW_TRANSLUCENT, COLLIDE_WATER, SOUND_NONE, SOUND_NONE },
+{ "Still water",      14, 14, 14, 16, FOG_WATER,  10, false,  true, 100, DRAW_TRANSLUCENT, COLLIDE_WATER, SOUND_NONE, SOUND_NONE },
+{ "Lava",             30, 30, 30, 16, FOG_LAVA , 180,  true,  true, 100, DRAW_OPAQUE, COLLIDE_LAVA,  SOUND_NONE,   SOUND_NONE   },
+{ "Still lava",       30, 30, 30, 16, FOG_LAVA , 180,  true,  true, 100, DRAW_OPAQUE, COLLIDE_LAVA,  SOUND_NONE,   SOUND_NONE   },
+{ "Sand",             18, 18, 18, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_SAND,   SOUND_SAND   },
+{ "Gravel",           19, 19, 19, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRAVEL, SOUND_GRAVEL },
+{ "Gold ore",         32, 32, 32, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Iron ore",         33, 33, 33, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
 
-{ 34, 34, 34, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* COAL_ORE */
-{ 21, 20, 21, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* LOG */
-{ 22, 22, 22, 16, FOG_NONE ,   0, false, false,  40, DRAW_TRANSPARENT_THICK, COLLIDE_SOLID, SOUND_GRASS, SOUND_GRASS }, /* LEAVES */
-{ 48, 48, 48, 16, FOG_NONE ,   0, false,  true,  90, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  }, /* SPONGE */
-{ 49, 49, 49, 16, FOG_NONE ,   0, false, false, 100, DRAW_TRANSPARENT, COLLIDE_SOLID, SOUND_GLASS,SOUND_STONE},/* GLASS */
-{ 64, 64, 64, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* RED */
-{ 65, 65, 65, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* ORANGE */
-{ 66, 66, 66, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* YELLOW */
+{ "Coal ore",         34, 34, 34, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Log",              21, 20, 21, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   },
+{ "Leaves",           22, 22, 22, 16, FOG_NONE ,   0, false, false,  40, DRAW_TRANSPARENT_THICK, COLLIDE_SOLID, SOUND_GRASS, SOUND_GRASS },
+{ "Sponge",           48, 48, 48, 16, FOG_NONE ,   0, false,  true,  90, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  },
+{ "Glass",            49, 49, 49, 16, FOG_NONE ,   0, false, false, 100, DRAW_TRANSPARENT, COLLIDE_SOLID, SOUND_GLASS,SOUND_STONE},
+{ "Red",              64, 64, 64, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Orange",           65, 65, 65, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Yellow",           66, 66, 66, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
 	
-{ 67, 67, 67, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* LIME */
-{ 68, 68, 68, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* GREEN */
-{ 69, 69, 69, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* TEAL */
-{ 70, 70, 70, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* AQUA */
-{ 71, 71, 71, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* CYAN */
-{ 72, 72, 72, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* BLUE */
-{ 73, 73, 73, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* INDIGO */
-{ 74, 74, 74, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* VIOLET */
+{ "Lime",             67, 67, 67, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Green",            68, 68, 68, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Teal",             69, 69, 69, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Aqua",             70, 70, 70, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Cyan",             71, 71, 71, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Blue",             72, 72, 72, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Indigo",           73, 73, 73, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Violet",           74, 74, 74, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
 
-{ 75, 75, 75, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* MAGNETA */
-{ 76, 76, 76, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* PINK */
-{ 77, 77, 77, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* BLACK */
-{ 78, 78, 78, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* GRAY */
-{ 79, 79, 79, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* WHITE */
-{ 13, 13, 13, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* DANDELION */
-{ 12, 12, 12, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* ROSE */
-{ 29, 29, 29, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* BROWN_SHROOM */
+{ "Magenta",          75, 75, 75, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Pink",             76, 76, 76, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Black",            77, 77, 77, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Gray",             78, 78, 78, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "White",            79, 79, 79, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Dandelion",        13, 13, 13, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   },
+{ "Rose",             12, 12, 12, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   },
+{ "Brown mushroom",   29, 29, 29, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   },
 
-{ 28, 28, 28, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   }, /* RED_SHROOM */
-{ 24, 40, 56, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_METAL,  SOUND_METAL  }, /* GOLD */
-{ 23, 39, 55, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_METAL,  SOUND_METAL  }, /* IRON */
-{  6,  5,  6, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* DOUBLE_SLAB */
-{  6,  5,  6,  8, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* SLAB */
-{  7,  7,  7, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* BRICK */
-{  9,  8, 10, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  }, /* TNT */
-{  4, 35,  4, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* BOOKSHELF */
+{ "Red mushroom",     28, 28, 28, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_GRASS,  SOUND_NONE   },
+{ "Gold",             24, 40, 56, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_METAL,  SOUND_METAL  },
+{ "Iron",             23, 39, 55, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_METAL,  SOUND_METAL  },
+{ "Double slab",       6,  5,  6, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Slab",              6,  5,  6,  8, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Brick",             7,  7,  7, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "TNT",               9,  8, 10, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_GRASS,  SOUND_GRASS  },
+{ "Bookshelf",         4, 35,  4, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   },
 
-{ 36, 36, 36, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* MOSSY_ROCKS */
-{ 37, 37, 37, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* OBSIDIAN */
-{ 16, 16, 16,  8, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* COBBLE_SLAB */
-{ 11, 11, 11, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_CLOTH,  SOUND_CLOTH  }, /* ROPE */
-{ 25, 41, 57, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* SANDSTONE */
-{ 50, 50, 50,  4, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_NONE,  SOUND_SNOW,   SOUND_SNOW   }, /* SNOW */
-{ 38, 38, 38, 16, FOG_NONE ,   0,  true, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_WOOD,   SOUND_NONE   }, /* FIRE */
-{ 80, 80, 80, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* LIGHT_PINK */
+{ "Mossy rocks",      36, 36, 36, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Obsidian",         37, 37, 37, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Cobblestone slab", 16, 16, 16,  8, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Rope",             11, 11, 11, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Sandstone",        25, 41, 57, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Snow",             50, 50, 50,  4, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_NONE,  SOUND_SNOW,   SOUND_SNOW   },
+{ "Fire",             38, 38, 38, 16, FOG_NONE ,   0,  true, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_WOOD,   SOUND_NONE   },
+{ "Light pink",       80, 80, 80, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
 
-{ 81, 81, 81, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* FOREST_GREEN */
-{ 82, 82, 82, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* BROWN */
-{ 83, 83, 83, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* DEEP_BLUE */
-{ 84, 84, 84, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  }, /* TURQUOISE */
-{ 51, 51, 51, 16, FOG_NONE ,   0, false,  true, 100, DRAW_TRANSLUCENT, COLLIDE_ICE, SOUND_STONE, SOUND_STONE },/* ICE */
-{ 54, 54, 54, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* CERAMIC_TILE */
-{ 86, 86, 86, 16, FOG_NONE ,   0,  true,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* MAGMA */
-{ 26, 42, 58, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }, /* PILLAR */
+{ "Forest green",     81, 81, 81, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Brown",            82, 82, 82, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Deep blue",        83, 83, 83, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Turquoise",        84, 84, 84, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Ice",              51, 51, 51, 16, FOG_NONE ,   0, false,  true, 100, DRAW_TRANSLUCENT, COLLIDE_ICE, SOUND_STONE, SOUND_STONE },
+{ "Ceramic tile",     54, 54, 54, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Magma",            86, 86, 86, 16, FOG_NONE ,   0,  true,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
+{ "Pillar",           26, 42, 58, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
 
-{ 53, 53, 53, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   }, /* CRATE */
-{ 52, 52, 52, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }  /* STONE_BRICK */
-/*TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
+{ "Crate",            53, 53, 53, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_WOOD,   SOUND_WOOD   },
+{ "Stone brick",      52, 52, 52, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  }
+/*NAME                TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
 };
 
 /* Returns a backwards compatible collide type of a block. */
 static cc_uint8 DefaultSet_MapOldCollide(BlockID b, cc_uint8 collide) {
-	if (b == BLOCK_ROPE && collide == COLLIDE_NONE)   return COLLIDE_CLIMB_ROPE;
+	if (b == BLOCK_ROPE && collide == COLLIDE_NONE)  return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE  && collide == COLLIDE_SOLID) return COLLIDE_ICE;
 
 	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == COLLIDE_LIQUID)
@@ -194,31 +195,9 @@ void Block_SetDrawType(BlockID block, cc_uint8 draw) {
 }
 
 
-#define BLOCK_RAW_NAMES "Air_Stone_Grass_Dirt_Cobblestone_Wood_Sapling_Bedrock_Water_Still water_Lava"\
-"_Still lava_Sand_Gravel_Gold ore_Iron ore_Coal ore_Log_Leaves_Sponge_Glass_Red_Orange_Yellow_Lime_Green_Teal"\
-"_Aqua_Cyan_Blue_Indigo_Violet_Magenta_Pink_Black_Gray_White_Dandelion_Rose_Brown mushroom_Red mushroom_Gold"\
-"_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone_Snow_Fire_Light pink"\
-"_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
-
-static const cc_string Block_DefaultName(BlockID block) {
-	static const cc_string names   = String_FromConst(BLOCK_RAW_NAMES);
-	static const cc_string invalid = String_FromConst("Invalid");
-	int i, beg = 0, end;
-
-	if (block > BLOCK_MAX_CPE) return invalid;
-	/* Find start and end of this particular block name. */
-	for (i = 0; i < block; i++) {
-		beg = String_IndexOfAt(&names, beg, '_') + 1;
-	}
-
-	end = String_IndexOfAt(&names, beg, '_');
-	if (end == -1) end = names.length;
-	return String_UNSAFE_Substring(&names, beg, end - beg);
-}
-
 void Block_ResetProps(BlockID block) {
 	const struct SimpleBlockDef* def = block <= Game_Version.MaxBlock ? &core_blockDefs[block] : &invalid_blockDef;
-	const cc_string name = Block_DefaultName(block);
+	const cc_string name = String_FromReadonly(def->name);
 
 	Blocks.BlocksLight[block] = def->blocksLight;
 	Blocks.FullBright[block]  = def->fullBright;
