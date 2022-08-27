@@ -197,7 +197,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	TextAtlas_Make(&s->posAtlas, &chars, &s->font, &prefix);
 
 	if (Game_ClassicMode) {
-		TextWidget_SetConst(line2, "0.30", &s->font);
+		TextWidget_SetConst(line2, Game_Version.Name, &s->font);
 	} else {
 		HUDScreen_UpdateHackState(s);
 	}

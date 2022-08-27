@@ -40,7 +40,6 @@ static void Server_ResetState(void) {
 	Server.SupportsPlayerClick     = false;
 	Server.SupportsPartialMessages = false;
 	Server.SupportsFullCP437       = false;
-	Server.ProtocolVersion         = PROTOCOL_0030;
 }
 
 void Server_RetrieveTexturePack(const cc_string* url) {

@@ -439,12 +439,12 @@ void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 	Server.WriteBuffer = data;
 }
 
-#define Classic_HandshakeSize() (Server.ProtocolVersion > PROTOCOL_0019 ? 131 : 130)
+#define Classic_HandshakeSize() (Game_Version.Protocol > PROTOCOL_0019 ? 131 : 130)
 void Classic_SendLogin(void) {
 	cc_uint8 data[131];
 	data[0] = OPCODE_HANDSHAKE;
 	{
-		data[1]   = Server.ProtocolVersion;
+		data[1]   = Game_Version.Protocol;
 		WriteString(&data[2],  &Game_Username);
 		WriteString(&data[66], &Game_Mppass);
 		data[130] = Game_UseCPE ? 0x42 : 0x00;

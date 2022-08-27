@@ -217,7 +217,7 @@ static const cc_string Block_DefaultName(BlockID block) {
 }
 
 void Block_ResetProps(BlockID block) {
-	const struct SimpleBlockDef* def = block <= BLOCK_MAX_CPE ? &core_blockDefs[block] : &invalid_blockDef;
+	const struct SimpleBlockDef* def = block <= Game_Version.MaxBlock ? &core_blockDefs[block] : &invalid_blockDef;
 	const cc_string name = Block_DefaultName(block);
 
 	Blocks.BlocksLight[block] = def->blocksLight;

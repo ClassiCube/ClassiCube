@@ -590,5 +590,8 @@
     <ClCompile Include="Graphics_GL2.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="GameVersion.c">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
