@@ -439,16 +439,17 @@ void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 	Server.WriteBuffer = data;
 }
 
+#define Classic_HandshakeSize() (Server.ProtocolVersion > PROTOCOL_0019 ? 131 : 130)
 void Classic_SendLogin(void) {
 	cc_uint8 data[131];
 	data[0] = OPCODE_HANDSHAKE;
 	{
-		data[1] = 7; /* protocol version */
+		data[1]   = Server.ProtocolVersion;
 		WriteString(&data[2],  &Game_Username);
 		WriteString(&data[66], &Game_Mppass);
 		data[130] = Game_UseCPE ? 0x42 : 0x00;
 	}
-	Server.SendData(data, 131);
+	Server.SendData(data, Classic_HandshakeSize());
 }
 
 static void Classic_Handshake(cc_uint8* data) {
@@ -507,7 +508,6 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	struct MapState* m;
 	int usedLength;
 	float progress;
-	cc_uint32 read;
 	cc_result res;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
@@ -738,7 +738,7 @@ static void Classic_Reset(void) {
 	map_begunLoading = false;
 	classic_receivedFirstPos = false;
 
-	Net_Set(OPCODE_HANDSHAKE, Classic_Handshake, 131);
+	Net_Set(OPCODE_HANDSHAKE, Classic_Handshake, Classic_HandshakeSize());
 	Net_Set(OPCODE_PING, Classic_Ping, 1);
 	Net_Set(OPCODE_LEVEL_BEGIN, Classic_LevelInit, 1);
 	Net_Set(OPCODE_LEVEL_DATA, Classic_LevelDataChunk, 1028);

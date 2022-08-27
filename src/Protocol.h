@@ -41,6 +41,11 @@ enum OPCODE_ {
 	OPCODE_COUNT
 };
 
+enum PROTOCOL_VERSION_ {
+	PROTOCOL_0017 = 4, PROTOCOL_0019 = 5,
+	PROTOCOL_0020 = 6, PROTOCOL_0030 = 7,
+};
+
 
 typedef void (*Net_Handler)(cc_uint8* data);
 #define Net_Set(opcode, handler, size) Protocol.Handlers[opcode] = handler; Protocol.Sizes[opcode] = size;
