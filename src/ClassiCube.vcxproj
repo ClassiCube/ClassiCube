@@ -342,7 +342,6 @@
     <ClCompile Include="_psaux.c" />
     <ClCompile Include="_pshinter.c" />
     <ClCompile Include="_psmodule.c" />
-    <ClCompile Include="_raster.c" />
     <ClCompile Include="_sfnt.c" />
     <ClCompile Include="_smooth.c" />
     <ClCompile Include="_truetype.c" />

@@ -834,18 +834,6 @@ FT_BEGIN_HEADER
                                     FT_String*  glyph_name );
 
 
-
-  /* Define default raster's interface.  The default raster is located in  */
-  /* `src/base/ftraster.c'.                                                */
-  /*                                                                       */
-  /* Client applications can register new rasters through the              */
-  /* FT_Set_Raster() API.                                                  */
-
-#ifndef FT_NO_DEFAULT_RASTER
-  FT_EXPORT_VAR( FT_Raster_Funcs )  ft_default_raster;
-#endif
-
-
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/

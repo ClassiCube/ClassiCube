@@ -488,9 +488,6 @@
     <ClCompile Include="_psmodule.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_raster.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_sfnt.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
