@@ -714,7 +714,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 			Blocks.SpriteOffset[id] = 0;
 		}
 
-		Block_DefineCustom(id);
+		Block_DefineCustom(id, false);
 		Blocks.CanPlace[id]  = true;
 		Blocks.CanDelete[id] = true;
 		Event_RaiseVoid(&BlockEvents.PermissionsChanged);
@@ -740,7 +740,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 	if (IsTag(tag->parent->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag);  return; }
 		if (IsTag(tag, "ID2"))            { cw_curID = NbtTag_U16(tag); return; }
-		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
+		if (IsTag(tag, "CollideType"))    { Blocks.Collide[id] = NbtTag_U8(tag); return; }
 		if (IsTag(tag, "Speed"))          { Blocks.SpeedMultiplier[id] = NbtTag_F32(tag); return; }
 		if (IsTag(tag, "TransmitsLight")) { Blocks.BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
 		if (IsTag(tag, "FullBright"))     { Blocks.FullBright[id] = NbtTag_U8(tag) != 0; return; }

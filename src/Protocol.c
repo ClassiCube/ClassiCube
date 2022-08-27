@@ -1663,7 +1663,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSi
 	
 	name = UNSAFE_GetString(data); data += STRING_SIZE;
 	Block_SetName(block, &name);
-	Block_SetCollide(block, *data++);
+	Blocks.Collide[block] = *data++;
 
 	speedLog2 = (*data++ - 128) / 64.0f;
 	#define LOG_2 0.693147180559945
@@ -1703,7 +1703,6 @@ static void BlockDefs_DefineBlockCommonEnd(cc_uint8* data, cc_uint8 shape, Block
 
 	Blocks.FogDensity[block] = data[1] == 0 ? 0.0f : (data[1] + 1) / 128.0f;
 	Blocks.FogCol[block]     = PackedCol_Make(data[2], data[3], data[4], 255);
-	Block_DefineCustom(block);
 }
 
 static void BlockDefs_DefineBlock(cc_uint8* data) {
@@ -1715,8 +1714,7 @@ static void BlockDefs_DefineBlock(cc_uint8* data) {
 	}
 
 	BlockDefs_DefineBlockCommonEnd(data, shape, block);
-	/* Update sprite BoundingBox if necessary */
-	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
+	Block_DefineCustom(block, true);
 }
 
 static void BlockDefs_UndefineBlock(cc_uint8* data) {
@@ -1745,6 +1743,7 @@ static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 	Blocks.MinBB[block] = minBB;
 	Blocks.MaxBB[block] = maxBB;
 	BlockDefs_DefineBlockCommonEnd(data, 1, block);
+	Block_DefineCustom(block, false);
 }
 
 static void BlockDefs_Reset(void) {

@@ -194,7 +194,7 @@ cc_bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition
 	return false;
 }
 
-static cc_bool IsRopeCollide(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
+static cc_bool IsRopeCollide(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB; }
 cc_bool Entity_TouchesAnyRope(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;

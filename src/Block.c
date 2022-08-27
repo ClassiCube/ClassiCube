@@ -93,7 +93,7 @@ static const struct SimpleBlockDef core_blockDefs[] = {
 { "Mossy rocks",      36, 36, 36, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
 { "Obsidian",         37, 37, 37, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
 { "Cobblestone slab", 16, 16, 16,  8, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
-{ "Rope",             11, 11, 11, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_CLOTH,  SOUND_CLOTH  },
+{ "Rope",             11, 11, 11, 16, FOG_NONE ,   0, false, false, 100, DRAW_SPRITE, COLLIDE_CLIMB, SOUND_CLOTH,  SOUND_CLOTH  },
 { "Sandstone",        25, 41, 57, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
 { "Snow",             50, 50, 50,  4, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_NONE,  SOUND_SNOW,   SOUND_SNOW   },
 { "Fire",             38, 38, 38, 16, FOG_NONE ,   0,  true, false, 100, DRAW_SPRITE, COLLIDE_NONE,  SOUND_WOOD,   SOUND_NONE   },
@@ -113,9 +113,9 @@ static const struct SimpleBlockDef core_blockDefs[] = {
 /*NAME                TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
 };
 
-/* Returns a backwards compatible collide type of a block. */
+/* Returns a backwards compatible collide type of a block */
 static cc_uint8 DefaultSet_MapOldCollide(BlockID b, cc_uint8 collide) {
-	if (b == BLOCK_ROPE && collide == COLLIDE_NONE)  return COLLIDE_CLIMB_ROPE;
+	if (b == BLOCK_ROPE && collide == COLLIDE_NONE)  return COLLIDE_CLIMB;
 	if (b == BLOCK_ICE  && collide == COLLIDE_SOLID) return COLLIDE_ICE;
 
 	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == COLLIDE_LIQUID)
@@ -136,9 +136,8 @@ static void Block_RecalcIsLiquid(BlockID b) {
 		(collide == COLLIDE_LAVA  && Blocks.Draw[b] == DRAW_TRANSPARENT);
 }
 
-void Block_SetCollide(BlockID block, cc_uint8 collide) {
-	/* necessary if servers redefined core blocks, before extended collide types were added */
-	collide = DefaultSet_MapOldCollide(block, collide);
+/* Sets the basic and extended collide types of the given block */
+static void Block_SetCollide(BlockID block, cc_uint8 collide) {
 	Blocks.ExtendedCollide[block] = collide;
 	Block_RecalcIsLiquid(block);
 
@@ -212,15 +211,6 @@ static void Block_CalcLightOffset(BlockID block) {
 	Blocks.LightOffset[block] = flags;
 }
 
-/* Recalculates bounding boxes of all sprite blocks */
-static void Block_RecalculateAllSpriteBB(void) {
-	int block;
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		if (Blocks.Draw[block] != DRAW_SPRITE) continue;
-
-		Block_RecalculateBB((BlockID)block);
-	}
-}
 
 static float GetSpriteBB_MinX(int size, int tileX, int tileY, const struct Bitmap* bmp) {
 	BitmapCol* row;
@@ -274,7 +264,8 @@ static float GetSpriteBB_MaxY(int size, int tileX, int tileY, const struct Bitma
 	return 0.0f;
 }
 
-void Block_RecalculateBB(BlockID block) {
+/* Recalculates bounding box of the given sprite block */
+static void Block_RecalculateBB(BlockID block) {
 	struct Bitmap* bmp = &Atlas2D.Bmp;
 	int tileSize = Atlas2D.TileSize;
 	TextureLoc texLoc = Block_Tex(block, FACE_XMAX);
@@ -296,6 +287,16 @@ void Block_RecalculateBB(BlockID block) {
 	Vec3_Add(&Blocks.MinBB[block], &minRaw, &centre);
 	Vec3_Add(&Blocks.MaxBB[block], &maxRaw, &centre);
 	Block_CalcRenderBounds(block);
+}
+
+/* Recalculates bounding boxes of all sprite blocks */
+static void Block_RecalculateAllSpriteBB(void) {
+	int block;
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+		if (Blocks.Draw[block] != DRAW_SPRITE) continue;
+
+		Block_RecalculateBB((BlockID)block);
+	}
 }
 
 
@@ -420,11 +421,14 @@ static void Block_SetCustomDefined(BlockID block, cc_bool defined) {
 	}
 }
 
-void Block_DefineCustom(BlockID block) {
-	PackedCol black = PackedCol_Make(0, 0, 0, 255);
-	cc_string name  = Block_UNSAFE_GetName(block);
+void Block_DefineCustom(BlockID block, cc_bool checkSprite) {
+	PackedCol black  = PackedCol_Make(0, 0, 0, 255);
+	cc_string name   = Block_UNSAFE_GetName(block);
+	/* necessary if servers redefined core blocks, before extended collide types were added */
+	cc_uint8 collide = DefaultSet_MapOldCollide(block, Blocks.Collide[block]);
 	Blocks.Tinted[block] = Blocks.FogCol[block] != black && String_IndexOf(&name, '#') >= 0;
 
+	Block_SetCollide(block,  collide);
 	Block_SetDrawType(block, Blocks.Draw[block]);
 	Block_CalcRenderBounds(block);
 	Block_UpdateCulling(block);
@@ -433,6 +437,10 @@ void Block_DefineCustom(BlockID block) {
 	Inventory_AddDefault(block);
 	Block_SetCustomDefined(block, true);
 	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
+
+	if (!checkSprite) return; /* TODO eliminate this */
+	/* Update sprite BoundingBox if necessary */
+	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
 }
 
 void Block_UndefineCustom(BlockID block) {
