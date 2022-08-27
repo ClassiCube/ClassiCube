@@ -33,8 +33,8 @@ static const struct SimpleBlockDef invalid_blockDef = {
 	"Invalid", 0,0,0,16, FOG_NONE,0, false,true, 100, DRAW_OPAQUE,COLLIDE_SOLID,0
 };
 
-/* Properties for all Classic and CPE blocks */
-static const struct SimpleBlockDef core_blockDefs[BLOCK_CPE_COUNT] = {
+/* Properties for all built-in blocks (Classic and CPE blocks) */
+static const struct SimpleBlockDef core_blockDefs[] = {
 /*NAME                TOP SID BOT HEI FOG_COLOR  DENS  FULL  BLOCKS GRAV DRAW_MODE    COLLIDE_MODE   DIG_SOUND     STEP_SOUND   */
 { "Air",               0,  0,  0, 16, FOG_NONE ,   0, false, false, 100, DRAW_GAS,    COLLIDE_NONE,  SOUND_NONE,   SOUND_NONE   },
 { "Stone",             1,  1,  1, 16, FOG_NONE ,   0, false,  true, 100, DRAW_OPAQUE, COLLIDE_SOLID, SOUND_STONE,  SOUND_STONE  },
