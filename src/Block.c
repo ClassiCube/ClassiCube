@@ -127,39 +127,8 @@ static cc_uint8 DefaultSet_MapOldCollide(BlockID b, cc_uint8 collide) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Block-----------------------------------------------------------*
+*---------------------------------------------------Block properties------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint32 definedCustomBlocks[BLOCK_COUNT >> 5];
-static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
-#define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
-
-cc_bool Block_IsCustomDefined(BlockID block) {
-	return (definedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
-}
-
-void Block_SetCustomDefined(BlockID block, cc_bool defined) {
-	if (defined) {
-		definedCustomBlocks[block >> 5] |=  (1u << (block & 0x1F));
-	} else {
-		definedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
-	}
-}
-
-void Block_DefineCustom(BlockID block) {
-	PackedCol black = PackedCol_Make(0, 0, 0, 255);
-	cc_string name  = Block_UNSAFE_GetName(block);
-	Blocks.Tinted[block] = Blocks.FogCol[block] != black && String_IndexOf(&name, '#') >= 0;
-
-	Block_SetDrawType(block, Blocks.Draw[block]);
-	Block_CalcRenderBounds(block);
-	Block_UpdateCulling(block);
-	Block_CalcLightOffset(block);
-
-	Inventory_AddDefault(block);
-	Block_SetCustomDefined(block, true);
-	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
-}
-
 static void Block_RecalcIsLiquid(BlockID b) {
 	cc_uint8 collide = Blocks.ExtendedCollide[b];
 	Blocks.IsLiquid[b] =
@@ -182,7 +151,8 @@ void Block_SetCollide(BlockID block, cc_uint8 collide) {
 	Blocks.Collide[block] = collide;
 }
 
-void Block_SetDrawType(BlockID block, cc_uint8 draw) {
+/* Sets draw type and updates related state (e.g. FullOpaque) for the given block */
+static void Block_SetDrawType(BlockID block, cc_uint8 draw) {
 	if (draw == DRAW_OPAQUE && Blocks.Collide[block] != COLLIDE_SOLID) draw = DRAW_TRANSPARENT;
 	Blocks.Draw[block] = draw;
 	Block_RecalcIsLiquid(block);
@@ -192,68 +162,6 @@ void Block_SetDrawType(BlockID block, cc_uint8 draw) {
 	Blocks.FullOpaque[block] = draw == DRAW_OPAQUE
 		&& Blocks.MinBB[block].X == 0 && Blocks.MinBB[block].Y == 0 && Blocks.MinBB[block].Z == 0
 		&& Blocks.MaxBB[block].X == 1 && Blocks.MaxBB[block].Y == 1 && Blocks.MaxBB[block].Z == 1;
-}
-
-
-void Block_ResetProps(BlockID block) {
-	const struct SimpleBlockDef* def = block <= Game_Version.MaxBlock ? &core_blockDefs[block] : &invalid_blockDef;
-	const cc_string name = String_FromReadonly(def->name);
-
-	Blocks.BlocksLight[block] = def->blocksLight;
-	Blocks.FullBright[block]  = def->fullBright;
-	Blocks.FogCol[block]      = def->fogColor;
-	Blocks.FogDensity[block]  = def->fogDensity / 100.0f;
-	Block_SetCollide(block,     def->collide);
-	Blocks.DigSounds[block]   = def->digSound;
-	Blocks.StepSounds[block]  = def->stepSound;
-	Blocks.SpeedMultiplier[block] = 1.0f;
-	Block_SetName(block, &name);
-	Blocks.Tinted[block]       = false;
-	Blocks.SpriteOffset[block] = 0;
-
-	Blocks.Draw[block] = def->draw;
-	if (def->draw == DRAW_SPRITE) {
-		Vec3_Set(Blocks.MinBB[block], 2.50f/16.0f, 0, 2.50f/16.0f);
-		Vec3_Set(Blocks.MaxBB[block], 13.5f/16.0f, 1, 13.5f/16.0f);
-	} else {		
-		Vec3_Set(Blocks.MinBB[block], 0, 0,                   0);
-		Vec3_Set(Blocks.MaxBB[block], 1, def->height / 16.0f, 1);
-	}
-
-	Block_SetDrawType(block, def->draw);
-	Block_CalcRenderBounds(block);
-	Block_CalcLightOffset(block);
-
-	Block_Tex(block, FACE_YMAX) = def->topTexture;
-	Block_Tex(block, FACE_YMIN) = def->bottomTexture;
-	Block_SetSide(def->sideTexture, block);
-
-	Blocks.ParticleGravity[block] = 5.4f * (def->gravity / 100.0f);
-}
-
-STRING_REF cc_string Block_UNSAFE_GetName(BlockID block) {
-	return String_FromRaw(Block_NamePtr(block), STRING_SIZE);
-}
-
-void Block_SetName(BlockID block, const cc_string* name) {
-	String_CopyToRaw(Block_NamePtr(block), STRING_SIZE, name);
-}
-
-int Block_FindID(const cc_string* name) {
-	cc_string blockName;
-	int block;
-
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		blockName = Block_UNSAFE_GetName(block);
-		if (String_CaselessEquals(&blockName, name)) return block;
-	}
-	return -1;
-}
-
-int Block_Parse(const cc_string* name) {
-	int b;
-	if (Convert_ParseInt(name, &b) && b < BLOCK_COUNT) return b;
-	return Block_FindID(name);
 }
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
@@ -268,7 +176,9 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
 /*########################################################################################################################*
 *--------------------------------------------------Block bounds/culling---------------------------------------------------*
 *#########################################################################################################################*/
-void Block_CalcRenderBounds(BlockID block) {
+/* Calculates render min/max corners of this block */
+/* Works by slightly offsetting collision min/max corners */
+static void Block_CalcRenderBounds(BlockID block) {
 	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
 	if (Blocks.IsLiquid[block]) {
@@ -284,7 +194,8 @@ void Block_CalcRenderBounds(BlockID block) {
 	Blocks.RenderMinBB[block] = min; Blocks.RenderMaxBB[block] = max;
 }
 
-void Block_CalcLightOffset(BlockID block) {
+/* Calculates light colour offset for each face of the given block */
+static void Block_CalcLightOffset(BlockID block) {
 	int flags = 0xFF;
 	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
@@ -301,7 +212,8 @@ void Block_CalcLightOffset(BlockID block) {
 	Blocks.LightOffset[block] = flags;
 }
 
-void Block_RecalculateAllSpriteBB(void) {
+/* Recalculates bounding boxes of all sprite blocks */
+static void Block_RecalculateAllSpriteBB(void) {
 	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		if (Blocks.Draw[block] != DRAW_SPRITE) continue;
@@ -464,7 +376,8 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 	Blocks.Hidden[(block * BLOCK_COUNT) + other] = f;
 }
 
-void Block_UpdateAllCulling(void) {
+/* Updates culling data of all blocks */
+static void Block_UpdateAllCulling(void) {
 	int block, neighbour;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_CalcStretch((BlockID)block);
@@ -474,7 +387,9 @@ void Block_UpdateAllCulling(void) {
 	}
 }
 
-void Block_UpdateCulling(BlockID block) {
+/* Updates culling data just for this block */
+/* (e.g. whether block can be stretched, visibility with other blocks) */
+static void Block_UpdateCulling(BlockID block) {
 	int neighbour;
 	Block_CalcStretch(block);
 	
@@ -482,6 +397,117 @@ void Block_UpdateCulling(BlockID block) {
 		Block_CalcCulling(block, (BlockID)neighbour);
 		Block_CalcCulling((BlockID)neighbour, block);
 	}
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Block-----------------------------------------------------------*
+*#########################################################################################################################*/
+static cc_uint32 definedCustomBlocks[BLOCK_COUNT >> 5];
+static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
+#define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
+
+cc_bool Block_IsCustomDefined(BlockID block) {
+	return (definedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
+}
+
+/* Sets whether the given block has been changed from default */
+static void Block_SetCustomDefined(BlockID block, cc_bool defined) {
+	if (defined) {
+		definedCustomBlocks[block >> 5] |=  (1u << (block & 0x1F));
+	} else {
+		definedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
+	}
+}
+
+void Block_DefineCustom(BlockID block) {
+	PackedCol black = PackedCol_Make(0, 0, 0, 255);
+	cc_string name  = Block_UNSAFE_GetName(block);
+	Blocks.Tinted[block] = Blocks.FogCol[block] != black && String_IndexOf(&name, '#') >= 0;
+
+	Block_SetDrawType(block, Blocks.Draw[block]);
+	Block_CalcRenderBounds(block);
+	Block_UpdateCulling(block);
+	Block_CalcLightOffset(block);
+
+	Inventory_AddDefault(block);
+	Block_SetCustomDefined(block, true);
+	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
+}
+
+void Block_UndefineCustom(BlockID block) {
+	Block_ResetProps(block);
+	Block_UpdateCulling(block);
+
+	Inventory_Remove(block);
+	if (block <= BLOCK_MAX_CPE) { Inventory_AddDefault(block); }
+
+	Block_SetCustomDefined(block, false);
+	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
+
+	/* Update sprite BoundingBox if necessary */
+	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
+}
+
+void Block_ResetProps(BlockID block) {
+	const struct SimpleBlockDef* def = block <= Game_Version.MaxBlock ? &core_blockDefs[block] : &invalid_blockDef;
+	const cc_string name = String_FromReadonly(def->name);
+
+	Blocks.BlocksLight[block] = def->blocksLight;
+	Blocks.FullBright[block]  = def->fullBright;
+	Blocks.FogCol[block]      = def->fogColor;
+	Blocks.FogDensity[block]  = def->fogDensity / 100.0f;
+	Block_SetCollide(block,     def->collide);
+	Blocks.DigSounds[block]   = def->digSound;
+	Blocks.StepSounds[block]  = def->stepSound;
+	Blocks.SpeedMultiplier[block] = 1.0f;
+	Block_SetName(block, &name);
+	Blocks.Tinted[block]       = false;
+	Blocks.SpriteOffset[block] = 0;
+
+	Blocks.Draw[block] = def->draw;
+	if (def->draw == DRAW_SPRITE) {
+		Vec3_Set(Blocks.MinBB[block], 2.50f/16.0f, 0, 2.50f/16.0f);
+		Vec3_Set(Blocks.MaxBB[block], 13.5f/16.0f, 1, 13.5f/16.0f);
+	} else {		
+		Vec3_Set(Blocks.MinBB[block], 0, 0,                   0);
+		Vec3_Set(Blocks.MaxBB[block], 1, def->height / 16.0f, 1);
+	}
+
+	Block_SetDrawType(block, def->draw);
+	Block_CalcRenderBounds(block);
+	Block_CalcLightOffset(block);
+
+	Block_Tex(block, FACE_YMAX) = def->topTexture;
+	Block_Tex(block, FACE_YMIN) = def->bottomTexture;
+	Block_SetSide(def->sideTexture, block);
+
+	Blocks.ParticleGravity[block] = 5.4f * (def->gravity / 100.0f);
+}
+
+STRING_REF cc_string Block_UNSAFE_GetName(BlockID block) {
+	return String_FromRaw(Block_NamePtr(block), STRING_SIZE);
+}
+
+void Block_SetName(BlockID block, const cc_string* name) {
+	String_CopyToRaw(Block_NamePtr(block), STRING_SIZE, name);
+}
+
+int Block_FindID(const cc_string* name) {
+	cc_string blockName;
+	int block;
+
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+		blockName = Block_UNSAFE_GetName(block);
+		if (String_CaselessEquals(&blockName, name)) return block;
+	}
+	return -1;
+}
+
+int Block_Parse(const cc_string* name) {
+	int b;
+	if (Convert_ParseInt(name, &b) && b < BLOCK_COUNT) return b;
+	return Block_FindID(name);
 }
 
 
@@ -681,7 +707,7 @@ cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID other) {
 		&& String_CaselessEquals(&bName, &oName);
 }
 
-#include "Platform.h"
+
 /*########################################################################################################################*
 *----------------------------------------------------Blocks component-----------------------------------------------------*
 *#########################################################################################################################*/

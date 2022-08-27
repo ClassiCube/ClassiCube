@@ -115,14 +115,13 @@ if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 
 /* Returns whether the given block has been changed from default. */
 cc_bool Block_IsCustomDefined(BlockID block);
-/* Sets whether the given block has been changed from default. */
-void Block_SetCustomDefined(BlockID block, cc_bool defined);
+/* Updates state and raises event after the given block has been defined */
 void Block_DefineCustom(BlockID block);
+/* Resets the given block to default */
+void Block_UndefineCustom(BlockID block);
 
 /* Sets the basic and extended collide types of the given block. */
 void Block_SetCollide(BlockID block, cc_uint8 collide);
-/* Sets draw type and updates related state (e.g. FullOpaque) for the given block. */
-void Block_SetDrawType(BlockID block, cc_uint8 draw);
 /* Resets all the properties of the given block to default. */
 void Block_ResetProps(BlockID block);
 
@@ -137,13 +136,6 @@ CC_API int Block_FindID(const cc_string* name);
 /* Falls back to Block_FindID if this fails. */
 CC_API int Block_Parse(const cc_string* name);
 
-/* Calculates render min/max corners of this block. */
-/* Works by slightly offsetting collision min/max corners. */
-void Block_CalcRenderBounds(BlockID block);
-/* Calculates light colour offset for each face of the given block. */
-void Block_CalcLightOffset(BlockID block);
-/* Recalculates bounding boxes of all sprite blocks. */
-void Block_RecalculateAllSpriteBB(void);
 /* Recalculates bounding box of the given sprite block. */
 void Block_RecalculateBB(BlockID block);
 
@@ -152,12 +144,8 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 /* The texture for the given face of the given block. */
 #define Block_Tex(block, face) Blocks.Textures[(block) * FACE_COUNT + (face)]
 
+/* Whether the given face of this block is occluded/hidden */
 #define Block_IsFaceHidden(block, other, face) (Blocks.Hidden[((block) * BLOCK_COUNT) + (other)] & (1 << (face)))
-/* Updates culling data of all blocks. */
-void Block_UpdateAllCulling(void);
-/* Updates culling data just for this block. */
-/* (e.g. whether block can be stretched, visibility with other blocks) */
-void Block_UpdateCulling(BlockID block);
 
 /* Whether blocks can be automatically rotated. */
 extern cc_bool AutoRotate_Enabled;

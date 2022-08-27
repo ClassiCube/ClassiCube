@@ -41,7 +41,7 @@ static const cc_uint8 v4_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
 
 static const struct GameVersion version_cpe  = { 
 	"0.30",    PROTOCOL_0030, BLOCK_MAX_CPE, 10,
-	sizeof(v7_inventory), v7_inventory, v7_hotbar
+	sizeof(v7_inventory), NULL,         v7_hotbar
 };
 static const struct GameVersion version_0030 = {
 	"0.30",    PROTOCOL_0030, BLOCK_OBSIDIAN, 9,
@@ -49,7 +49,7 @@ static const struct GameVersion version_0030 = {
 };
 static const struct GameVersion version_0023 = {
 	"0.0.23a", PROTOCOL_0020, BLOCK_GOLD, 8,
-	sizeof(v6_inventory), v6_inventory, v5_hotbar
+	sizeof(v6_inventory), v6_inventory, v6_hotbar
 };
 static const struct GameVersion version_0019 = {
 	"0.0.19a", PROTOCOL_0019, BLOCK_GLASS, 6,

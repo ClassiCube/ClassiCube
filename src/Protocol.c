@@ -1726,17 +1726,8 @@ static void BlockDefs_UndefineBlock(cc_uint8* data) {
 	ReadBlock(data, block);
 	didBlockLight = Blocks.BlocksLight[block];
 
-	Block_ResetProps(block);
+	Block_UndefineCustom(block);
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
-	Block_UpdateCulling(block);
-
-	Inventory_Remove(block);
-	if (block <= BLOCK_MAX_CPE) { Inventory_AddDefault(block); }
-
-	Block_SetCustomDefined(block, false);
-	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
-	/* Update sprite BoundingBox if necessary */
-	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
 }
 
 static void BlockDefs_DefineBlockExt(cc_uint8* data) {
