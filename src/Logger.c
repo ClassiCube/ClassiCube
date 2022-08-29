@@ -397,6 +397,16 @@ String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25
 String_Format4(str, "r28=%x fp =%x lr =%x sp =%x" _NL, REG_GNUM(28), REG_GET_FP(), REG_GET_LR(), REG_GET_SP()); \
 String_Format1(str, "pc =%x" _NL,                      REG_GET_PC());
 
+#define Dump_Alpha() \
+String_Format4(str, "v0 =%x t0 =%x t1 =%x t2 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
+String_Format4(str, "t3 =%x t4 =%x t5 =%x t6 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
+String_Format4(str, "t7 =%x s0 =%x s1 =%x s2 =%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
+String_Format4(str, "s3 =%x s4 =%x s5 =%x a0 =%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(16)); \
+String_Format4(str, "a1 =%x a2 =%x a3 =%x a4 =%x" _NL, REG_GNUM(17), REG_GNUM(18), REG_GNUM(19), REG_GNUM(20)); \
+String_Format4(str, "a5 =%x t8 =%x t9 =%x t10=%x" _NL, REG_GNUM(21), REG_GNUM(22), REG_GNUM(23), REG_GNUM(24)); \
+String_Format4(str, "t11=%x ra =%x pv =%x at =%x" _NL, REG_GNUM(25), REG_GNUM(26), REG_GNUM(27), REG_GNUM(28)); \
+String_Format4(str, "gp =%x fp =%x sp =%x pc =%x" _NL, REG_GNUM(29), REG_GET_FP(), REG_GET_SP(), REG_GET_PC());
+
 #define Dump_SPARC() \
 String_Format4(str, "o0=%x o1=%x o2=%x o3=%x" _NL, REG_GET(o0,O0), REG_GET(o1,O1), REG_GET(o2,O2), REG_GET(o3,O3)); \
 String_Format4(str, "o4=%x o5=%x o6=%x o7=%x" _NL, REG_GET(o4,O4), REG_GET(o5,O5), REG_GET(o6,O6), REG_GET(o7,O7)); \
@@ -542,6 +552,12 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r.arm_lr
 	#define REG_GET_PC()      &r.arm_pc
 	Dump_ARM32()
+#elif defined __alpha__
+	#define REG_GNUM(num)     &r.sc_regs[num]
+	#define REG_GET_FP()      &r.sc_regs[15]
+	#define REG_GET_PC()      &r.sc_pc
+	#define REG_GET_SP()      &r.sc_regs[30]
+	Dump_Alpha()
 #elif defined __sparc__
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
 	Dump_SPARC()
