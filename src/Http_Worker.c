@@ -842,6 +842,7 @@ static cc_result ParseResponseHeaders(struct HttpRequest* req, CFReadStreamRef s
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
+    static const cc_string userAgent = String_FromConst(GAME_APP_NAME);
     static CFStringRef verbs[] = { CFSTR("GET"), CFSTR("HEAD"), CFSTR("POST") };
     cc_bool gotHeaders = false;
     char tmp[NATIVE_STR_LEN];
@@ -860,6 +861,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     request = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
     req->meta = request;
     Http_SetRequestHeaders(req);
+    Http_AddHeader(req, "User-Agent", &userAgent);
     CFRelease(urlRef);
     
     if (req->data && req->size) {

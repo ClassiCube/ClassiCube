@@ -63,7 +63,6 @@
 		9A89D56D27F802F600FF3F80 /* Window_X11.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4A127F802F600FF3F80 /* Window_X11.c */; };
 		9A89D56E27F802F600FF3F80 /* Platform_WinApi.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4A327F802F600FF3F80 /* Platform_WinApi.c */; };
 		9A89D56F27F802F600FF3F80 /* Input.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4A627F802F600FF3F80 /* Input.c */; };
-		9A89D57127F802F600FF3F80 /* _raster.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4A827F802F600FF3F80 /* _raster.c */; };
 		9A89D57227F802F600FF3F80 /* Picking.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4AA27F802F600FF3F80 /* Picking.c */; };
 		9A89D57327F802F600FF3F80 /* Utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4AB27F802F600FF3F80 /* Utils.c */; };
 		9A89D57427F802F600FF3F80 /* MapRenderer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4AE27F802F600FF3F80 /* MapRenderer.c */; };
@@ -191,7 +190,6 @@
 		9A89D4A427F802F600FF3F80 /* Gui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gui.h; sourceTree = "<group>"; };
 		9A89D4A527F802F600FF3F80 /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		9A89D4A627F802F600FF3F80 /* Input.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Input.c; sourceTree = "<group>"; };
-		9A89D4A827F802F600FF3F80 /* _raster.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _raster.c; sourceTree = "<group>"; };
 		9A89D4A927F802F600FF3F80 /* Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Game.h; sourceTree = "<group>"; };
 		9A89D4AA27F802F600FF3F80 /* Picking.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Picking.c; sourceTree = "<group>"; };
 		9A89D4AB27F802F600FF3F80 /* Utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Utils.c; sourceTree = "<group>"; };
@@ -304,7 +302,6 @@
 				9A89D47727F802F500FF3F80 /* _psaux.c */,
 				9A89D4B127F802F600FF3F80 /* _pshinter.c */,
 				9A89D48627F802F600FF3F80 /* _psmodule.c */,
-				9A89D4A827F802F600FF3F80 /* _raster.c */,
 				9A89D48827F802F600FF3F80 /* _sfnt.c */,
 				9A89D4BD27F802F600FF3F80 /* _smooth.c */,
 				9A89D38E27F802F500FF3F80 /* _truetype.c */,
@@ -607,7 +604,6 @@
 				9A89D55E27F802F600FF3F80 /* World.c in Sources */,
 				9A89D58627F802F600FF3F80 /* Screens.c in Sources */,
 				9A89D4F927F802F600FF3F80 /* Http_Worker.c in Sources */,
-				9A89D57127F802F600FF3F80 /* _raster.c in Sources */,
 				9A89D58B27F802F600FF3F80 /* Launcher.c in Sources */,
 				9A89D59027F802F600FF3F80 /* Stream.c in Sources */,
 			);
