@@ -551,7 +551,6 @@ void Entities_Tick(struct ScheduledTask* task) {
 
 void Entities_RenderModels(double delta, float t) {
 	int i;
-	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
@@ -572,7 +571,6 @@ void Entities_RenderNames(void) {
 	entities_closestId = Entities_GetClosest(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
 
-	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
@@ -598,7 +596,6 @@ void Entities_RenderHoveredNames(void) {
 	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
 		&& p->Hacks.CanSeeAllNames;
 
-	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	Gfx_SetDepthTest(false);
 	hadFog = Gfx_GetFog();
@@ -679,7 +676,6 @@ void Entities_DrawShadows(void) {
 	Gfx_SetAlphaArgBlend(true);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
-	Gfx_SetTexturing(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	ShadowComponent_Draw(Entities.List[ENTITIES_SELF_ID]);

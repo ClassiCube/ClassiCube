@@ -509,6 +509,11 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, enabled);
 }
 
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+}
+
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,   gfx_alphaTesting);

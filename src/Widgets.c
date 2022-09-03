@@ -770,7 +770,6 @@ static void TableWidget_Render(void* widget, double delta) {
 		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
 			size, size, topSelColor, bottomSelColor);
 	}
-	Gfx_SetTexturing(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
 	IsometricDrawer_BeginBatch(vertices, w->vb);
@@ -1731,7 +1730,6 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		y += w->lineHeight;
 	}
 
-	Gfx_SetTexturing(true);
 	Texture_Render(&w->inputTex);
 	InputWidget_RenderCaret(w, delta);
 }

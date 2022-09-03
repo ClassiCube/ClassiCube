@@ -82,6 +82,7 @@ CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to 0. */
 CC_API void Gfx_DeleteTexture(GfxResourceID* texId);
 /* Sets whether texture colour is used when rendering vertices. */
+/* NOTE: Mostly useless now. Only Gfx_SetTexturing(false) does anything */
 CC_API void Gfx_SetTexturing(cc_bool enabled);
 /* Turns on mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
@@ -122,6 +123,9 @@ CC_API void Gfx_SetDepthTest(cc_bool enabled);
 CC_API void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer. */
 CC_API void Gfx_SetDepthWrite(cc_bool enabled);
+/* Sets whether the game should only write output to depth buffer */
+/*  NOTE: Implicitly calls Gfx_SetColWriteMask */
+CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
 
 /* Creates a new index buffer and fills out its contents. */
 CC_API GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);

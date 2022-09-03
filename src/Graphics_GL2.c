@@ -495,6 +495,11 @@ void Gfx_SetFogMode(FogFunc func) {
 void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*

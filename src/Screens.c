@@ -296,7 +296,6 @@ static void HUDScreen_Render(void* screen, double delta) {
 	if (Game_HideGui) return;
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
-	Gfx_SetTexturing(true);
 	if (Gui.ShowFPS) Elem_Render(&s->line1, delta);
 
 	if (Game_ClassicMode) {
@@ -693,7 +692,6 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
-	Gfx_SetTexturing(true);
 	Elem_Render(title, delta);
 	grabbed = Gui.InputGrab;
 
@@ -1329,14 +1327,12 @@ static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 
 	if (Game_HideGui && s->grabsInput) {
-		Gfx_SetTexturing(true);
 		Elem_Render(&s->input.base, delta);
 		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
 
 	if (!TabListOverlay_Instance.active && !Gui_GetBlocksWorld()) {
-		Gfx_SetTexturing(true);
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
@@ -1344,7 +1340,6 @@ static void ChatScreen_Render(void* screen, double delta) {
 		ChatScreen_DrawChatBackground(s);
 	}
 
-	Gfx_SetTexturing(true);
 	ChatScreen_DrawChat(s, delta);
 	Gfx_SetTexturing(false);
 }
@@ -1676,7 +1671,6 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	int offset, filledWidth;
 	TextureLoc loc;
 
-	Gfx_SetTexturing(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
@@ -1941,7 +1935,6 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
 	Gfx_Draw2DGradient(0, 0, WindowInfo.Width, WindowInfo.Height, top, bottom);
 
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
@@ -2145,7 +2138,6 @@ static void TouchScreen_ContextRecreated(void* screen) {
 
 static void TouchScreen_Render(void* screen, double delta) {
 	if (Gui.InputGrab) return;
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
