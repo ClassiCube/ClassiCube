@@ -648,10 +648,21 @@ static struct ChatCommand TeleportCommand = {
 /*########################################################################################################################*
 *-------------------------------------------------------Generic chat------------------------------------------------------*
 *#########################################################################################################################*/
+static void LogInputUsage(const cc_string* text) {
+	/* Simplify navigating through input history by not logging duplicate entries */
+	if (Chat_InputLog.count) {
+		int lastIndex  = Chat_InputLog.count - 1;
+		cc_string last = StringsBuffer_UNSAFE_Get(&Chat_InputLog, lastIndex);
+
+		if (String_Equals(text, &last)) return;
+	}
+	StringsBuffer_Add(&Chat_InputLog, text);
+}
+
 void Chat_Send(const cc_string* text, cc_bool logUsage) {
 	if (!text->length) return;
 	Event_RaiseChat(&ChatEvents.ChatSending, text, 0);
-	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);
+	if (logUsage) LogInputUsage(text);
 
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);
