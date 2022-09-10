@@ -36,9 +36,6 @@ void AxisLinesRenderer_Render(void) {
 	if (!axisLines_vb) {
 		Gfx_RecreateDynamicVb(&axisLines_vb, VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	}
-
-	Gfx_SetTexturing(false);
-	
 	
 	if (Camera.Active->isThirdPerson) {
 		pos = LocalPlayer_Instance.Base.Position;

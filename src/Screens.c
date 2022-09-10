@@ -689,7 +689,6 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
-	Gfx_SetTexturing(false);
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
 	Elem_Render(title, delta);

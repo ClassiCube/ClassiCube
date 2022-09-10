@@ -51,6 +51,12 @@ void Inventory_PickBlock(BlockID block) {
 	int i;
 	if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == block) return;
 
+	/* Vanilla classic client doesn't let you select these blocks */
+	if (Game_PureClassic) {
+		if (block == BLOCK_GRASS)       block = BLOCK_DIRT;
+		if (block == BLOCK_DOUBLE_SLAB) block = BLOCK_SLAB;
+	}
+
 	/* Try to replace same block */
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
