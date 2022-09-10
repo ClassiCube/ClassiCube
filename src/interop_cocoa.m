@@ -599,7 +599,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 

@@ -68,9 +68,10 @@ void Window_ShowDialog(const char* title, const char* msg) {
 }
 
 void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
-	args->text = text;
-	args->type = type;
+	args->text   = text;
+	args->type   = type;
 	args->placeholder = "";
+	args->opaque = false;
 }
 
 

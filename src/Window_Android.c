@@ -407,7 +407,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* kArgs) {
+void Window_OpenKeyboard(struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);

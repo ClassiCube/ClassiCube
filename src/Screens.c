@@ -1376,6 +1376,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	Window_OpenKeyboard(&args);
+	s->input.base.disabled = args.opaque;
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);

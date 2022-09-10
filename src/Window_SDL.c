@@ -306,7 +306,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 

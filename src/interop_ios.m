@@ -415,7 +415,7 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 static UITextField* text_input;
 static CCKBController* kb_controller;
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     if (!kb_controller) {
         kb_controller = [[CCKBController alloc] init];
         CFBridgingRetain(kb_controller); // prevent GC TODO even needed?

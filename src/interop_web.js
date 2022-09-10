@@ -794,7 +794,8 @@ mergeInto(LibraryManager.library, {
     }
     
     if (flags & 0x100) { elem.setAttribute('enterkeyhint', 'send'); }
-    elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
+    //elem.setAttribute('style', 'position:absolute; left:0.5%; bottom:1%; margin: 0px; width: 99%; background-color: #080808; border: none; color: white; opacity: 0.7');
+    elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%; background-color: #222222; border: none; color: white;');
     elem.setAttribute('placeholder', UTF8ToString(placeholder));
     elem.value = UTF8ToString(text);
   

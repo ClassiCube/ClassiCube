@@ -581,7 +581,7 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	char str[NATIVE_STR_LEN];
 	keyboardOpen = true;
 	if (!Input_TouchMode) return;
@@ -589,6 +589,7 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 	Platform_EncodeUtf8(str, args->text);
 	Platform_LogConst("OPEN SESAME");
 	interop_OpenKeyboard(str, args->type, args->placeholder);
+	args->opaque = true;
 }
 
 void Window_SetKeyboardText(const cc_string* text) {
