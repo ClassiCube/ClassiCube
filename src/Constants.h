@@ -16,6 +16,9 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #elif defined CC_BUILD_ANDROID
 #define GAME_APP_NAME  "ClassiCube 1.3.2 android alpha"
 #define GAME_APP_TITLE "ClassiCube 1.3.2 android alpha"
+#elif defined CC_BUILD_IOS
+#define GAME_APP_NAME  "ClassiCube 1.3.2 iOS alpha"
+#define GAME_APP_TITLE "ClassiCube 1.3.2 iOS alpha"
 #else
 #define GAME_APP_NAME  "ClassiCube 1.3.2"
 #define GAME_APP_TITLE "ClassiCube 1.3.2"

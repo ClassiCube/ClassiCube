@@ -1338,7 +1338,9 @@ static void Music_Start(void) {
 
 	music_joining  = false;
 	music_stopping = false;
-	music_thread   = Thread_Start(Music_RunLoop);
+
+	music_thread = Thread_Create(Music_RunLoop);
+	Thread_Start2(music_thread, Music_RunLoop);
 }
 
 static void Music_Stop(void) {

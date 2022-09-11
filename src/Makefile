@@ -36,7 +36,7 @@ CC=gcc
 OEXT=.exe
 CFLAGS=-g -pipe -DUNICODE -fno-math-errno
 LDFLAGS=-g
-LIBS=-mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
+LIBS=-mwindows -lwinmm -limagehlp
 endif
 
 ifeq ($(PLAT),linux)

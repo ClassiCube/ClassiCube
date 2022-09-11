@@ -80,8 +80,6 @@ enum BLOCKID {
 	BLOCK_MAX_ORIGINAL = BLOCK_OBSIDIAN,
 	/* Max block ID used in original classic plus CPE blocks. */
 	BLOCK_MAX_CPE = BLOCK_STONE_BRICK,
-	/* Number of blocks in original classic plus CPE blocks. */
-	BLOCK_CPE_COUNT = (BLOCK_MAX_CPE + 1),
 
 #ifdef EXTENDED_BLOCKS
 	BLOCK_MAX_DEFINED = 0x2FF,

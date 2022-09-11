@@ -1009,6 +1009,11 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	OM_UpdateBlendState();
 }
 
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*

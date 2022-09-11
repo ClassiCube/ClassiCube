@@ -362,7 +362,7 @@ static void Commands_Execute(const cc_string* input) {
 		cmd->Execute(&value, value.length != 0);
 	} else {
 		count = String_UNSAFE_Split(&value, ' ', args, Array_Elems(args));
-		cmd->Execute(args, count);
+		cmd->Execute(args,   value.length ? count : 0);
 	}
 }
 
@@ -577,7 +577,7 @@ static cc_bool CuboidCommand_ParseArgs(const cc_string* args) {
 		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &value); return false;
 	}
 
-	if (block > BLOCK_MAX_CPE && !Block_IsCustomDefined(block)) {
+	if (block > Game_Version.MaxBlock && !Block_IsCustomDefined(block)) {
 		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &value); return false;
 	}
 
@@ -648,10 +648,21 @@ static struct ChatCommand TeleportCommand = {
 /*########################################################################################################################*
 *-------------------------------------------------------Generic chat------------------------------------------------------*
 *#########################################################################################################################*/
+static void LogInputUsage(const cc_string* text) {
+	/* Simplify navigating through input history by not logging duplicate entries */
+	if (Chat_InputLog.count) {
+		int lastIndex  = Chat_InputLog.count - 1;
+		cc_string last = StringsBuffer_UNSAFE_Get(&Chat_InputLog, lastIndex);
+
+		if (String_Equals(text, &last)) return;
+	}
+	StringsBuffer_Add(&Chat_InputLog, text);
+}
+
 void Chat_Send(const cc_string* text, cc_bool logUsage) {
 	if (!text->length) return;
 	Event_RaiseChat(&ChatEvents.ChatSending, text, 0);
-	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);
+	if (logUsage) LogInputUsage(text);
 
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);

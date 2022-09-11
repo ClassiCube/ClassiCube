@@ -137,7 +137,6 @@ void EnvRenderer_RenderClouds(void) {
 
 	Gfx_EnableTextureOffset(offset, 0);
 	Gfx_SetAlphaTest(true);
-	Gfx_SetTexturing(true);
 	Gfx_BindTexture(clouds_tex);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindVb(clouds_vb);
@@ -281,7 +280,6 @@ void EnvRenderer_RenderSkybox(void) {
 	if (!skybox_vb) return;
 
 	Gfx_SetDepthWrite(false);
-	Gfx_SetTexturing(true);
 	Gfx_BindTexture(skybox_tex);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
@@ -532,7 +530,6 @@ static TextureLoc edges_lastTexLoc, sides_lastTexLoc;
 static void RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {
 	if (!vb) return;
 
-	Gfx_SetTexturing(true);
 	Gfx_SetupAlphaState(Blocks.Draw[block]);
 	Gfx_EnableMipmaps();
 

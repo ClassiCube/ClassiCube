@@ -144,11 +144,11 @@ void Window_DrawFramebuffer(Rect2D r);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
-struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; };
+struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque; };
 void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type);
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args);
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args);
 /* Sets the text used for keyboard input. */
 /* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
 /*  because it is backed by a HTML input, rather than true keyboard input events. */

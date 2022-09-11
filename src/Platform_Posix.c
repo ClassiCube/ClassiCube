@@ -285,11 +285,14 @@ static void* ExecThread(void* param) {
 }
 #endif
 
-void* Thread_Start(Thread_StartFunc func) {
-	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
+void* Thread_Create(Thread_StartFunc func) {
+	return Mem_Alloc(1, sizeof(pthread_t), "thread");
+}
+
+void Thread_Start2(void* handle, Thread_StartFunc func) {
+	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_create(ptr, NULL, ExecThread, (void*)func);
 	if (res) Logger_Abort2(res, "Creating thread");
-	return ptr;
 }
 
 void Thread_Detach(void* handle) {

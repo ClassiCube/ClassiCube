@@ -415,7 +415,7 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 static UITextField* text_input;
 static CCKBController* kb_controller;
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     if (!kb_controller) {
         kb_controller = [[CCKBController alloc] init];
         CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
@@ -741,46 +741,69 @@ void interop_GetFontNames(struct StringsBuffer* buffer) {
 }
 
 #include "ExtMath.h"
-static void InitFont(struct FontDesc* desc, UIFont* font) {
-    desc->handle = CFBridgingRetain(font);
-    desc->height = Math_Ceil(Math_AbsF(font.ascender) + Math_AbsF(font.descender));
+/*static void InitFont(struct FontDesc* desc, CTFontRef font) {
+    CGFloat ascender  = CTFontGetAscent(font);
+    CGFloat descender = CTFontGetDescent(font);
+    
+    desc->handle = font;
+    desc->height = Math_Ceil(Math_AbsF(ascender) + Math_AbsF(descender));
 }
-
+ 
+static CTFontRef TryCreateBoldFont(NSString* name, CGFloat uiSize) {
+    NSArray<NSString*>* fontNames = [UIFont fontNamesForFamilyName:name];
+    for (NSString* fontName in fontNames)
+    {
+        if ([fontName rangeOfString:@"Bold" options:NSCaseInsensitiveSearch].location != NSNotFound)
+            return CTFontCreateWithName((__bridge CFStringRef)name, uiSize, NULL);
+    }
+    return NULL;
+}
+ 
 cc_result interop_SysFontMake(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
     CGFloat uiSize = size * 96.0f / 72.0f; // convert from point size
     NSString* name = ToNSString(fontName);
-    UIFont* font   = [UIFont fontWithName:name size:uiSize];
+    CTFontRef font = (flags & FONT_FLAGS_BOLD) ? TryCreateBoldFont(name, uiSize) : NULL;
+    
+    if (!font) font = CTFontCreateWithName((__bridge CFStringRef)name, uiSize, NULL);
     if (!font) return ERR_NOT_SUPPORTED;
     
     InitFont(desc, font);
     return 0;
 }
-
+ 
 void interop_SysMakeDefault(struct FontDesc* desc, int size, int flags) {
-    CGFloat uiSize = size * 96.0f / 72.0f; // convert from point size
-    UIFont* font   = [UIFont systemFontOfSize:uiSize];
-    InitFont(desc, font);
+    char nameBuffer[256];
+    cc_string name = String_FromArray(nameBuffer);
+    
+    NSString* defaultName = [UIFont systemFontOfSize:1.0f].fontName;
+    const char* str = defaultName.UTF8String;
+                             
+    String_AppendUtf8(&name, str, String_Length(str));
+    interop_SysFontMake(desc, &name, size, flags);
 }
-
+ 
 void interop_SysFontFree(void* handle) {
     CFBridgingRelease(handle);
 }
-
+ 
 int interop_SysTextWidth(struct DrawTextArgs* args) {
-    UIFont* font   = (__bridge UIFont*)args->font->handle;
+    CTFontRef font = (CTFontRef)args->font->handle;
     cc_string left = args->text, part;
     char colorCode = 'f';
-    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    CFMutableAttributedStringRef str = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
     
     while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
     {
         BitmapCol color = Drawer2D_GetColor(colorCode);
-        NSString* bit   = ToNSString(&part);
-        NSDictionary* attrs =
-        @{
-          NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
-          };
+        NSString* bit = ToNSString(&part);
+        CFRange range = CFRangeMake(CFAttributedStringGetLength(str), bit.length);
+        
+        CFAttributedStringReplaceString(str, range, (__bridge CFStringRef)bit);
+        
+        CFAttributedStringSetAttribute(str, range, kCTFontAttributeName, font);
+        CFAttributedStringSetAttribute(str, range, kCTForegroundColorAttributeName, ToUIColor(color, 1.0f));
+        
         NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
         [str appendAttributedString:attr_bit];
     }
@@ -790,10 +813,118 @@ int interop_SysTextWidth(struct DrawTextArgs* args) {
     
     CGFloat ascent, descent, leading;
     double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+    
+    CFRelease(line);
+    CFRelease(str);
     return Math_Ceil(width);
 }
 
+#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
+CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
+    if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
+    
+    // Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb
+    // Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb
+    // And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb
+    // Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb
+    return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
+}
+
 void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
+    CTFontRef font  = (CTFontRef)args->font->handle;
+    cc_string left  = args->text, part;
+    BitmapCol color = Drawer2D.Colors['f'];
+    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    float X = x, Y = y;
+    if (shadow) { X += 1.3f; Y -= 1.3f; }
+    
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    {
+        if (shadow) color = GetShadowColor(color);
+        NSString* bit = ToNSString(&part);
+        NSDictionary* attrs =
+        @{
+          NSFontAttributeName : font,
+          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+          };
+        
+        if (args->font->flags & FONT_FLAGS_UNDERLINE) {
+            NSNumber* value = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
+            [attrs setValue:value forKey:NSUnderlineStyleAttributeName];
+        }
+        
+        NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
+        [str appendAttributedString:attr_bit];
+    }
+    
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
+    struct Bitmap* bmp = &ctx->bmp;
+    
+    CGContextRef cg_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, ctx->height, 8, bmp->width * 4,
+                                                CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+    CGContextSetTextPosition(cg_ctx, X, Y - font.descender);
+    CTLineDraw(line, cg_ctx);
+    CGContextRelease(cg_ctx);
+    
+    CFRelease(line);
+}*/
+ 
+ static void InitFont(struct FontDesc* desc, UIFont* font) {
+    desc->handle = CFBridgingRetain(font);
+    desc->height = Math_Ceil(Math_AbsF(font.ascender) + Math_AbsF(font.descender));
+}
+
+static UIFont* TryCreateBoldFont(NSString* name, CGFloat uiSize) {
+    NSArray<NSString*>* fontNames = [UIFont fontNamesForFamilyName:name];
+    for (NSString* fontName in fontNames)
+    {
+        if ([fontName rangeOfString:@"Bold" options:NSCaseInsensitiveSearch].location != NSNotFound)
+            return [UIFont fontWithName:fontName size:uiSize];
+    }
+    return nil;
+}
+
+cc_result interop_SysFontMake(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+    CGFloat uiSize = size * 96.0f / 72.0f; // convert from point size
+    NSString* name = ToNSString(fontName);
+    UIFont* font   = (flags & FONT_FLAGS_BOLD) ? TryCreateBoldFont(name, uiSize) : nil;
+    
+    if (!font) font = [UIFont fontWithName:name size:uiSize];
+    if (!font) return ERR_NOT_SUPPORTED;
+    
+    InitFont(desc, font);
+    return 0;
+}
+
+void interop_SysMakeDefault(struct FontDesc* desc, int size, int flags) {
+    CGFloat uiSize = size * 96.0f / 72.0f; // convert from point size
+    UIFont* font;
+    
+    if (flags & FONT_FLAGS_BOLD) {
+        font = [UIFont boldSystemFontOfSize:uiSize];
+    } else {
+        font = [UIFont systemFontOfSize:uiSize];
+    }
+    InitFont(desc, font);
+}
+
+void interop_SysFontFree(void* handle) {
+    CFBridgingRelease(handle);
+}
+
+#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
+CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
+    if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
+    
+    // Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb
+    // Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb
+    // And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb
+    // Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb
+    return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
+}
+
+static NSMutableAttributedString* GetAttributedString(struct DrawTextArgs* args, cc_bool shadow) {
     UIFont* font   = (__bridge UIFont*)args->font->handle;
     cc_string left = args->text, part;
     char colorCode = 'f';
@@ -801,8 +932,69 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
     
     while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
     {
-        BitmapCol color = Drawer2D_GetColor(colorCode);
-        NSString* bit   = ToNSString(&part);
+        BitmapCol color   = Drawer2D_GetColor(colorCode);
+        if (shadow) color = GetShadowColor(color);
+        
+        NSString* bit = ToNSString(&part);
+        NSRange range = NSMakeRange(str.length, bit.length);
+        [str.mutableString appendString:bit];
+        
+        [str addAttribute:NSFontAttributeName            value:font                   range:range];
+        [str addAttribute:NSForegroundColorAttributeName value:ToUIColor(color, 1.0f) range:range];
+        
+        if (args->font->flags & FONT_FLAGS_UNDERLINE) {
+            NSNumber* style = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
+            [str addAttribute:NSUnderlineStyleAttributeName value:style range:range];
+        }
+    }
+    return str;
+}
+
+int interop_SysTextWidth(struct DrawTextArgs* args) {
+    NSMutableAttributedString* str = GetAttributedString(args, false);
+    
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
+    CGRect bounds  = CTLineGetImageBounds(line, NULL);
+    
+    CGFloat ascent, descent, leading;
+    double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+    
+    CFRelease(line);
+    return Math_Ceil(width);
+}
+
+void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
+    UIFont* font = (__bridge UIFont*)args->font->handle;
+    NSMutableAttributedString* str = GetAttributedString(args, shadow);
+    
+    float X = x, Y = y;
+    if (shadow) { X += 1.3f; Y -= 1.3f; }
+    
+    CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
+    struct Bitmap* bmp = &ctx->bmp;
+    
+    CGContextRef cg_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, ctx->height, 8, bmp->width * 4,
+                                                CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
+    CGContextSetTextPosition(cg_ctx, X, Y - font.descender);
+    CTLineDraw(line, cg_ctx);
+    CGContextRelease(cg_ctx);
+    
+    CFRelease(line);
+}
+
+/*void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
+    UIFont* font    = (__bridge UIFont*)args->font->handle;
+    cc_string left  = args->text, part;
+    BitmapCol color = Drawer2D.Colors['f'];
+    NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
+    
+    float X = x, Y = y;
+    if (shadow) { X += 1.3f; Y -= 1.3f; }
+    
+    while (Drawer2D_UNSAFE_NextPart(&left, &part, &color))
+    {
+        if (shadow) color = GetShadowColor(color);
+        NSString* bit = ToNSString(&part);
         NSDictionary* attrs =
         @{
           NSFontAttributeName : font,
@@ -812,16 +1004,16 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
         [str appendAttributedString:attr_bit];
     }
     
-    if (shadow) return;
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
     struct Bitmap* bmp = &ctx->bmp;
     
     CGContextRef cg_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, ctx->height, 8, bmp->width * 4,
                           CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
-    CGContextSetTextPosition(cg_ctx, x, y);
+    CGContextSetTextPosition(cg_ctx, X, Y - font.descender);
+    //CGContextSetTextPosition(cg_ctx, x, y + font.ascender + font.descender);
     CTLineDraw(line, cg_ctx);
     CGContextRelease(cg_ctx);
-}
+}*/
 #endif
 
 

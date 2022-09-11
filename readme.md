@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, macOS, Linux, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, and in a web browser.<br>
+ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, macOS, Linux, Android, iOS, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, and in a web browser.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -87,11 +87,11 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 
 ##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Cross compiling for Windows (64 bit):
 
-```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
@@ -107,6 +107,28 @@ Although the regular linux compiliation flags will work fine, to take full advan
 ##### Using gcc/clang (64 bit)
 
 ```cc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+
+## Compiling - for Android
+
+##### Using Android Studio GUI
+
+Open `android` folder in Android Studio (TODO explain more detailed)
+
+##### Using command line (gradle)
+
+Run `gradlew` in android folder (TODO explain more detailed)
+
+## Compiling - for iOS
+
+iOS version will have issues as it's incomplete and only tested in iOS Simulator
+
+##### Using Xcode GUI
+
+Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
+
+##### Using command line (Xcode)
+
+`xcodebuild -sdk iphoneos -configuration Debug` (TODO explain more detailed)
 
 ## Compiling - other desktop OSes
 
@@ -149,17 +171,6 @@ Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed
 ```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js --preload-file texpacks/default.zip```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
-
-#### Android
-
-Use Android Studio or run gradlew in android folder (TODO explain more detailed)
-
-#### iOS
-
-```clang *.c interop_ios.m -framework UIKit -framework OpenGLES -framework CoreGraphics -framework QuartzCore -framework Foundation```
-
-iOS version will have issues as it's incomplete and only tested in iOS Simulator
-
 
 ##### Other
 

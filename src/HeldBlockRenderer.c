@@ -25,7 +25,6 @@ static void HeldBlockRenderer_RenderModel(void) {
 	struct Model* model;
 
 	Gfx_SetFaceCulling(true);
-	Gfx_SetTexturing(true);
 	Gfx_SetDepthTest(false);
 	
 	if (Blocks.Draw[held_block] == DRAW_GAS) {

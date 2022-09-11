@@ -56,6 +56,8 @@ CC_VAR extern struct _WorldData {
 	int ChunksX, ChunksY, ChunksZ;
 	/* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
 	int ChunksCount;
+	/* Seed world was generated with. May be 0 (unknown) */
+	int Seed;
 } World;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */

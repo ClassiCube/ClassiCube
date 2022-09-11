@@ -81,6 +81,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 
 	/* Save resume info */
 	if (server->length) {
+		Options_PauseSaving();
 		Options_Set(ROPT_SERVER, server);
 		Options_Set(ROPT_USER,   user);
 		Options_Set(ROPT_IP,     ip);

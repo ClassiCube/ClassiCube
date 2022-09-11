@@ -54,6 +54,7 @@ cc_bool Game_AllowServerTextures;
 
 cc_bool Game_ViewBobbing, Game_HideGui, Game_DefaultZipMissing;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
+struct GameVersion Game_Version;
 
 static char usernameBuffer[FILENAME_SIZE];
 static char mppassBuffer[STRING_SIZE];
@@ -371,6 +372,7 @@ static void Game_Load(void) {
 	Gfx_Create();
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
+	GameVersion_Load();
 	Utils_EnsureDirectory("maps");
 
 	Event_Register_(&WorldEvents.NewMap,           NULL, HandleOnNewMap);

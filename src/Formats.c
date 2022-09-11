@@ -623,6 +623,11 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 static void Cw_Callback_2(struct NbtTag* tag) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+
+	if (IsTag(tag->parent, "MapGenerator")) {
+		if (IsTag(tag, "Seed")) { World.Seed = NbtTag_I32(tag); return; }
+		return;
+	}
 	if (!IsTag(tag->parent, "Spawn")) return;
 	
 	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return; }
@@ -709,7 +714,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 			Blocks.SpriteOffset[id] = 0;
 		}
 
-		Block_DefineCustom(id);
+		Block_DefineCustom(id, false);
 		Blocks.CanPlace[id]  = true;
 		Blocks.CanDelete[id] = true;
 		Event_RaiseVoid(&BlockEvents.PermissionsChanged);
@@ -735,7 +740,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 	if (IsTag(tag->parent->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag);  return; }
 		if (IsTag(tag, "ID2"))            { cw_curID = NbtTag_U16(tag); return; }
-		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
+		if (IsTag(tag, "CollideType"))    { Blocks.Collide[id] = NbtTag_U8(tag); return; }
 		if (IsTag(tag, "Speed"))          { Blocks.SpeedMultiplier[id] = NbtTag_F32(tag); return; }
 		if (IsTag(tag, "TransmitsLight")) { Blocks.BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
 		if (IsTag(tag, "FullBright"))     { Blocks.FullBright[id] = NbtTag_U8(tag) != 0; return; }
@@ -1410,9 +1415,15 @@ cc_result Cw_Save(struct Stream* stream) {
 	cur = Nbt_WriteDict(cur,   "ClassicWorld");
 	cur = Nbt_WriteUInt8(cur,  "FormatVersion", 1);
 	cur = Nbt_WriteArray(cur,  "UUID", WORLD_UUID_LEN); Mem_Copy(cur, World.Uuid, WORLD_UUID_LEN); cur += WORLD_UUID_LEN;
-	cur = Nbt_WriteUInt16(cur, "X", World.Width );
+	cur = Nbt_WriteUInt16(cur, "X", World.Width);
 	cur = Nbt_WriteUInt16(cur, "Y", World.Height);
 	cur = Nbt_WriteUInt16(cur, "Z", World.Length);
+
+	cur = Nbt_WriteDict(cur, "MapGenerator");
+	{
+		cur  = Nbt_WriteInt32(cur, "Seed", World.Seed);
+	} *cur++ = NBT_END;
+	
 
 	/* TODO: Maybe keep real spawn too? */
 	cur = Nbt_WriteDict(cur, "Spawn");

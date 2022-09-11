@@ -50,6 +50,7 @@ void World_Reset(void) {
 	World_SetDimensions(0, 0, 0);
 	World.Loaded   = false;
 	World.LastSave = -200;
+	World.Seed     = 0;
 	Env_Reset();
 }
 

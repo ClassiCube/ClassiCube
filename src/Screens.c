@@ -197,7 +197,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	TextAtlas_Make(&s->posAtlas, &chars, &s->font, &prefix);
 
 	if (Game_ClassicMode) {
-		TextWidget_SetConst(line2, "0.30", &s->font);
+		TextWidget_SetConst(line2, Game_Version.Name, &s->font);
 	} else {
 		HUDScreen_UpdateHackState(s);
 	}
@@ -296,7 +296,6 @@ static void HUDScreen_Render(void* screen, double delta) {
 	if (Game_HideGui) return;
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
-	Gfx_SetTexturing(true);
 	if (Gui.ShowFPS) Elem_Render(&s->line1, delta);
 
 	if (Game_ClassicMode) {
@@ -690,10 +689,8 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
-	Gfx_SetTexturing(false);
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
-	Gfx_SetTexturing(true);
 	Elem_Render(title, delta);
 	grabbed = Gui.InputGrab;
 
@@ -1329,14 +1326,12 @@ static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 
 	if (Game_HideGui && s->grabsInput) {
-		Gfx_SetTexturing(true);
 		Elem_Render(&s->input.base, delta);
 		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
 
 	if (!TabListOverlay_Instance.active && !Gui_GetBlocksWorld()) {
-		Gfx_SetTexturing(true);
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
@@ -1344,7 +1339,6 @@ static void ChatScreen_Render(void* screen, double delta) {
 		ChatScreen_DrawChatBackground(s);
 	}
 
-	Gfx_SetTexturing(true);
 	ChatScreen_DrawChat(s, delta);
 	Gfx_SetTexturing(false);
 }
@@ -1381,6 +1375,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	Window_OpenKeyboard(&args);
+	s->input.base.disabled = args.opaque;
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);
@@ -1676,7 +1671,6 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	int offset, filledWidth;
 	TextureLoc loc;
 
-	Gfx_SetTexturing(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
@@ -1752,10 +1746,12 @@ static void GeneratingScreen_Init(void* screen) {
 		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
 		Gen_Done = true;
 	} else if (Gen_Vanilla) {
-		thread = Thread_Start(NotchyGen_Generate);
+		thread = Thread_Create(NotchyGen_Generate);
+		Thread_Start2(thread,  NotchyGen_Generate);
 		Thread_Detach(thread);
 	} else {
-		thread = Thread_Start(FlatgrassGen_Generate);
+		thread = Thread_Create(FlatgrassGen_Generate);
+		Thread_Start2(thread,  FlatgrassGen_Generate);
 		Thread_Detach(thread);
 	}
 	Event_Register_(&TextureEvents.AtlasChanged,   NULL, GeneratingScreen_AtlasChanged);
@@ -1772,7 +1768,9 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Done   = false;
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
+
 	Gen_Blocks = NULL;
+	World.Seed = Gen_Seed;
 
 	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
@@ -1937,7 +1935,6 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
 	Gfx_Draw2DGradient(0, 0, WindowInfo.Width, WindowInfo.Height, top, bottom);
 
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
@@ -2141,7 +2138,6 @@ static void TouchScreen_ContextRecreated(void* screen) {
 
 static void TouchScreen_Render(void* screen, double delta) {
 	if (Gui.InputGrab) return;
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }

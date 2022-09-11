@@ -355,7 +355,6 @@ static void ListScreen_Init(void* screen) {
 
 static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
@@ -417,7 +416,6 @@ void ListScreen_Show(void) {
 *#########################################################################################################################*/
 static void MenuScreen_Render2(void* screen, double delta) {
 	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
@@ -2162,7 +2160,6 @@ static void MenuInputOverlay_Render(void* screen, double delta) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (s->screenMode) Menu_RenderBounds();
 
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
@@ -2473,7 +2470,6 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DFlat(w->x - EXTHELP_PAD, w->y - EXTHELP_PAD, 
 		w->width + EXTHELP_PAD * 2, w->height + EXTHELP_PAD * 2, tableColor);
 
-	Gfx_SetTexturing(true);
 	Elem_Render(&s->extHelp, delta);
 	Gfx_SetTexturing(false);
 }
@@ -3428,9 +3424,7 @@ static void TexIdsOverlay_Free(void* screen) {
 static void TexIdsOverlay_Render(void* screen, double delta) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int offset = 0;
-
 	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);

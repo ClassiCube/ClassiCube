@@ -923,10 +923,6 @@
       FT_Render_Mode  mode = FT_LOAD_TARGET_MODE( load_flags );
 
 
-      if ( mode == FT_RENDER_MODE_NORMAL   &&
-           load_flags & FT_LOAD_MONOCHROME )
-        mode = FT_RENDER_MODE_MONO;
-
       if ( load_flags & FT_LOAD_RENDER )
         error = FT_Render_Glyph( slot, mode );
       else

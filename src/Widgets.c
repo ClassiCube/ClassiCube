@@ -770,7 +770,6 @@ static void TableWidget_Render(void* widget, double delta) {
 		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
 			size, size, topSelColor, bottomSelColor);
 	}
-	Gfx_SetTexturing(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
 	IsometricDrawer_BeginBatch(vertices, w->vb);
@@ -1659,23 +1658,13 @@ void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font) {
 *#########################################################################################################################*/
 static const cc_string chatInputPrefix = String_FromConst("> ");
 
-static void ChatInputWidget_RemakeTexture(void* widget) {
+static void ChatInputWidget_MakeTexture(struct InputWidget* w, int width, int height) {
 	cc_string line; char lineBuffer[STRING_SIZE + 2];
-	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
-	int width = 0, height = 0;
 	struct Context2D ctx;
 	char lastCol;
 	int i, x, y;
 
-	for (i = 0; i < w->GetMaxLines(); i++) {
-		if (!w->lines[i].length) break;
-		height += w->lineHeight;
-		width   = max(width, w->lineWidths[i]);
-	}
-
-	if (!width)  width  = w->prefixWidth;
-	if (!height) height = w->lineHeight;
 	Context2D_Alloc(&ctx, width, height);
 
 	DrawTextArgs_Make(&args, &chatInputPrefix, w->font, true);
@@ -1702,6 +1691,27 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 	Context2D_MakeTexture(&w->inputTex, &ctx);
 	Context2D_Free(&ctx);
+}
+
+static void ChatInputWidget_RemakeTexture(void* widget) {
+	struct InputWidget* w = (struct InputWidget*)widget;
+	int width = 0, height = 0;
+	int i;
+
+	for (i = 0; i < w->GetMaxLines(); i++) {
+		if (!w->lines[i].length) break;
+		height += w->lineHeight;
+		width   = max(width, w->lineWidths[i]);
+	}
+
+	if (!width)  width  = w->prefixWidth;
+	if (!height) height = w->lineHeight;
+	
+	if (w->disabled) {
+		Gfx_DeleteTexture(&w->inputTex.ID);
+	} else {
+		ChatInputWidget_MakeTexture(w, width, height);
+	}
 	w->caretAccumulator = 0;
 
 	w->width  = width;
@@ -1717,8 +1727,8 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 	int x = w->x, y = w->y;
 	cc_bool caretAtEnd;
 	int i, width;
+	if (w->disabled) return;
 
-	Gfx_SetTexturing(false);
 	for (i = 0; i < INPUTWIDGET_MAX_LINES; i++) {
 		if (i > 0 && !w->lines[i].length) break;
 
@@ -1731,7 +1741,6 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		y += w->lineHeight;
 	}
 
-	Gfx_SetTexturing(true);
 	Texture_Render(&w->inputTex);
 	InputWidget_RenderCaret(w, delta);
 }

@@ -169,7 +169,7 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 
 	module = String_FromReadonly(modName);
 	Utils_UNSAFE_GetFilename(&module);
-	String_Format2(str, "0x%x - %s", &addr, &module);
+	String_Format2(str, "%x - %s", &addr, &module);
 	
 	if (symName && symName[0]) {
 		offset = (int)(addr - symAddr);
@@ -327,7 +327,10 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	extern void thread_stack_pcs(void** buffer, unsigned max, unsigned* nb);
 
 	thread_stack_pcs(addrs, MAX_BACKTRACE_FRAMES, &frames);
-	for (i = 1; i < frames; i++) { /* 1 to skip thread_stack_pcs frame */
+	/* Skip frames don't want to include in backtrace */
+	/*  frame 0 = thread_stack_pcs */
+	/*  frame 1 = Logger_Backtrace */
+	for (i = 2; i < frames; i++) {
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
@@ -344,11 +347,6 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #endif
-static void DumpBacktrace(cc_string* str, void* ctx) {
-	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
-	Logger_Log(&backtrace);
-	Logger_Backtrace(str, ctx);
-}
 
 
 /*########################################################################################################################*
@@ -398,6 +396,16 @@ String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21
 String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
 String_Format4(str, "r28=%x fp =%x lr =%x sp =%x" _NL, REG_GNUM(28), REG_GET_FP(), REG_GET_LR(), REG_GET_SP()); \
 String_Format1(str, "pc =%x" _NL,                      REG_GET_PC());
+
+#define Dump_Alpha() \
+String_Format4(str, "v0 =%x t0 =%x t1 =%x t2 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
+String_Format4(str, "t3 =%x t4 =%x t5 =%x t6 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
+String_Format4(str, "t7 =%x s0 =%x s1 =%x s2 =%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
+String_Format4(str, "s3 =%x s4 =%x s5 =%x a0 =%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(16)); \
+String_Format4(str, "a1 =%x a2 =%x a3 =%x a4 =%x" _NL, REG_GNUM(17), REG_GNUM(18), REG_GNUM(19), REG_GNUM(20)); \
+String_Format4(str, "a5 =%x t8 =%x t9 =%x t10=%x" _NL, REG_GNUM(21), REG_GNUM(22), REG_GNUM(23), REG_GNUM(24)); \
+String_Format4(str, "t11=%x ra =%x pv =%x at =%x" _NL, REG_GNUM(25), REG_GNUM(26), REG_GNUM(27), REG_GNUM(28)); \
+String_Format4(str, "gp =%x fp =%x sp =%x pc =%x" _NL, REG_GNUM(29), REG_GET_FP(), REG_GET_SP(), REG_GET_PC());
 
 #define Dump_SPARC() \
 String_Format4(str, "o0=%x o1=%x o2=%x o3=%x" _NL, REG_GET(o0,O0), REG_GET(o1,O1), REG_GET(o2,O2), REG_GET(o3,O3)); \
@@ -544,6 +552,12 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r.arm_lr
 	#define REG_GET_PC()      &r.arm_pc
 	Dump_ARM32()
+#elif defined __alpha__
+	#define REG_GNUM(num)     &r.sc_regs[num]
+	#define REG_GET_FP()      &r.sc_regs[15]
+	#define REG_GET_PC()      &r.sc_pc
+	#define REG_GET_SP()      &r.sc_regs[30]
+	Dump_Alpha()
 #elif defined __sparc__
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
 	Dump_SPARC()
@@ -800,7 +814,7 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
 
 	String_InitArray_NT(msg, msgBuffer);
-	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
+	String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
 
 	numArgs = info->ExceptionRecord->NumberParameters;
 	if (numArgs) {
@@ -885,7 +899,7 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	addr = (cc_uintptr)info->si_addr;
 
 	String_InitArray_NT(msg, msgBuffer);
-	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
+	String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
 #if defined CC_BUILD_ANDROID
@@ -970,7 +984,8 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Unknown)"
 #endif
 
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {	
+static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
+	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
 	cc_string msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
@@ -989,9 +1004,14 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
 	String_AppendConst(&msg, "Please report this on the ClassiCube forums or to UnknownShadow200.\n\n");
-
 	if (ctx) DumpRegisters(ctx);
-	DumpBacktrace(&msg, ctx);
+
+	/* These two function calls used to be in a separate DumpBacktrace function */
+	/*  However that was not always inlined by the compiler, which resulted in a */
+	/*  useless strackframe being logged - so manually inline Logger_Backtrace call */
+	Logger_Log(&backtrace);
+	Logger_Backtrace(&msg, ctx);
+
 	DumpMisc(ctx);
 	CloseLogFile();
 
