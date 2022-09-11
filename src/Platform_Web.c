@@ -13,11 +13,14 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
 #include <sys/time.h>
-#include <stdio.h>
+
+#define O_RDONLY 0x000
+#define O_WRONLY 0x001
+#define O_RDWR   0x002
+#define O_CREAT  0x040
+#define O_EXCL   0x080
+#define O_TRUNC  0x200
 
 /* Unfortunately, errno constants are different in some older emscripten versions */
 /*  (linux errno numbers compared to WASI errno numbers) */
@@ -98,15 +101,9 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 extern void interop_InitFilesystem(void);
 extern void interop_LoadIndexedDB(void);
-extern int interop_DirectoryCreate(const char* path, int perms);
 cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
-	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
-	/* TODO: Is the default mode in all cases */
-
-	/* returned result is negative for error */
-	return -interop_DirectoryCreate(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	/* Web filesystem doesn't need directories */
+	return 0;
 }
 
 extern int interop_FileExists(const char* path);
@@ -137,12 +134,12 @@ cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallbac
 	return -interop_DirectoryIter(str);
 }
 
-extern int interop_FileCreate(const char* path, int mode, int perms);
+extern int interop_FileCreate(const char* path, int mode);
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	int res;
 	Platform_EncodeUtf8(str, path);
-	res = interop_FileCreate(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	res = interop_FileCreate(str, mode);
 
 	/* returned result is negative for error */
 	if (res >= 0) {
@@ -194,15 +191,15 @@ cc_result File_Close(cc_file file) {
 
 extern int interop_FileSeek(int fd, int offset, int whence);
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	/* returned result is negative for error */
-	int res = interop_FileSeek(file, offset, modes[seekType]);
+	int res = interop_FileSeek(file, offset, seekType);
 	/* FileSeek returns current position, discard that */
 	return res >= 0 ? 0 : -res;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	int res = interop_FileSeek(file, 0, SEEK_CUR);
+	/* FILE_SEEKFROM_CURRENT is same as SEEK_CUR */
+	int res = interop_FileSeek(file, 0, FILE_SEEKFROM_CURRENT);
 	/* returned result is negative for error */
 	if (res >= 0) {
 		*pos = res; return 0;

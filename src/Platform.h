@@ -22,6 +22,7 @@ typedef int cc_file;
 #define UPDATE_FILE "ClassiCube.update"
 
 /* Origin points for when seeking in a file. */
+/*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
 /* Number of milliseconds since 01/01/0001 to start of unix time. */
 #define UNIX_EPOCH 62135596800000ULL

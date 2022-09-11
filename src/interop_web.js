@@ -144,30 +144,13 @@ mergeInto(LibraryManager.library, {
   },
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
-    try {
-      CCFS.chdir(path);
-      return 0;
-    } catch (e) {
-      if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
-    }
+    CCFS.chdir(path);
+    return 0;
   },
-  interop_DirectoryCreate: function(raw, mode) {
-    var path = UTF8ToString(raw);
-    try {
-      CCFS.mkdir(path, mode, 0);
-      _interop_SaveNode(path);
-      return 0;
-    } catch (e) {
-      if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
-    }
-  },
-  interop_DirectoryCreate__deps: ['interop_SaveNode'],
   interop_DirectoryIter: function(raw) {
     var path = UTF8ToString(raw);
     try {
-      var entries = CCFS.readdir(path);	  
+      var entries = CCFS.readdir(path);
       for (var i = 0; i < entries.length; i++) {
         ccall('Directory_IterCallback', 'void', ['string'], [entries[i]]);
       }
@@ -179,19 +162,14 @@ mergeInto(LibraryManager.library, {
   },
   interop_FileExists: function (raw) {
     var path = UTF8ToString(raw);
-    try {
-      var lookup = CCFS.lookupPath(path);
-      if (!lookup.node) return false;
-    } catch (e) {
-      if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return false;
-    }
-    return true;
+
+    path = CCFS.resolvePath(path);
+    return path in CCFS.entries;
   },
-  interop_FileCreate: function(raw, flags, mode) {
+  interop_FileCreate: function(raw, flags) {
     var path = UTF8ToString(raw);
     try {
-      var stream = CCFS.open(path, flags, mode);
+      var stream = CCFS.open(path, flags);
       return stream.fd|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
@@ -228,8 +206,7 @@ mergeInto(LibraryManager.library, {
   interop_FileLength: function(fd) {
     try {
       var stream = CCFS.getStream(fd);
-      var attrs  = MEMFS.node_getattr(stream.node);
-      return attrs.size|0;
+      return stream.node.usedBytes|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
       return -e.errno;
@@ -267,7 +244,6 @@ mergeInto(LibraryManager.library, {
     CCFS.preloaded = true;
     
     addRunDependency('load-idb');
-    CCFS.mkdir('/classicube');
     _IDBFS_loadFS(function(err) { 
       if (err) window.cc_idbErr = err;
       removeRunDependency('load-idb');
@@ -285,18 +261,12 @@ mergeInto(LibraryManager.library, {
     var stat, node, entry;
     try {
       var lookup = CCFS.lookupPath(path);
-      path = lookup.path;
       node = lookup.node;
-      stat = MEMFS.node_getattr(node);
     
-      if (CCFS.isDir(stat.mode)) {
-        entry = { timestamp: stat.mtime, mode: stat.mode };
-      } else {
-        // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
-        // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
-        node.contents = MEMFS.getFileDataAsTypedArray(node);
-        entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
-      }
+      // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+      // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+      node.contents = MEMFS.getFileDataAsTypedArray(node);
+      entry = { timestamp: node.mtime, mode: CCFS.MODE_TYPE_FILE, contents: node.contents };
     } catch (err) {
       return callback(err);
     }
@@ -429,14 +399,11 @@ mergeInto(LibraryManager.library, {
   },
   IDBFS_storeLocalEntry: function(path, entry, callback) {
     try {
-      if (CCFS.isDir(entry.mode)) {
-        CCFS.mkdir(path, entry.mode);
-      } else {
+      // ignore directories from IndexedDB created in older game versions
+      if (CCFS.isFile(entry.mode)) {
         CCFS.writeFile(path, entry.contents, { canOwn: true });
+        CCFS.utime(path, entry.timestamp);
       }
-  
-      CCFS.chmod(path, entry.mode);
-      CCFS.utime(path, entry.timestamp);
     } catch (e) {
       return callback(e);
     }
@@ -855,7 +822,7 @@ mergeInto(LibraryManager.library, {
 
             reader.onload = function(e) { 
               var data = new Uint8Array(e.target.result);
-              CCFS.createDataFile('/', name, data, true, true, true);
+              CCFS.createDataFile('/' + name, data, true);
               ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
               CCFS.unlink('/' + name);
             };
@@ -1085,75 +1052,16 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
   FS_Init: function() {
     if (window.CCFS) return;
-	
-  var PATH={
-      normalizeArray:function(parts, allowAboveRoot) {
-        // if the path tries to go above the root, `up` ends up > 0
-        var up = 0;
-        for (var i = parts.length - 1; i >= 0; i--) {
-          var last = parts[i];
-          if (last === '.') {
-            parts.splice(i, 1);
-          } else if (last === '..') {
-            parts.splice(i, 1);
-            up++;
-          } else if (up) {
-            parts.splice(i, 1);
-            up--;
-          }
-        }
-        // if the path is allowed to go above the root, restore leading ..s
-        if (allowAboveRoot) {
-          for (; up; up--) {
-            parts.unshift('..');
-          }
-        }
-        return parts;
-      },
-      normalize:function(path) {
-        var isAbsolute = path.charAt(0) === '/',
-            trailingSlash = path.substr(-1) === '/';
-        // Normalize the path
-        path = PATH.normalizeArray(path.split('/').filter(function(p) {
-          return !!p;
-        }), !isAbsolute).join('/');
-        if (!path && !isAbsolute) {
-          path = '.';
-        }
-        if (path && trailingSlash) {
-          path += '/';
-        }
-        return (isAbsolute ? '/' : '') + path;
-      },
-      basename:function(path) {
-        // EMSCRIPTEN return '/'' for '/', not an empty string
-        if (path === '/') return '/';
-        var lastSlash = path.lastIndexOf('/');
-        if (lastSlash === -1) return path;
-        return path.substr(lastSlash+1);
-      },
-      join2:function(l, r) {
-        return PATH.normalize(l + '/' + r);
-      }
-    };
 
   window.MEMFS={
-      createNode:function(parent, name, mode) {
-        var node = CCFS.createNode(parent, name, mode);
-        if (CCFS.isDir(node.mode)) {
-          node.contents = {};
-        } else if (CCFS.isFile(node.mode)) {
-          node.usedBytes = 0; // The actual number of bytes used in the typed array, as opposed to contents.length which gives the whole capacity.
-          // When the byte data of the file is populated, this will point to either a typed array, or a normal JS array. Typed arrays are preferred
-          // for performance, and used by default. However, typed arrays are not resizable like normal JS arrays are, so there is a small disk size
-          // penalty involved for appending file writes that continuously grow a file similar to std::vector capacity vs used -scheme.
-          node.contents = null; 
-        }
+      createNode:function(path) {
+        var node = CCFS.createNode(path);
+        node.usedBytes = 0; // The actual number of bytes used in the typed array, as opposed to contents.length which gives the whole capacity.
+        // When the byte data of the file is populated, this will point to either a typed array, or a normal JS array. Typed arrays are preferred
+        // for performance, and used by default. However, typed arrays are not resizable like normal JS arrays are, so there is a small disk size
+        // penalty involved for appending file writes that continuously grow a file similar to std::vector capacity vs used -scheme.
+        node.contents = null; 
         node.timestamp = Date.now();
-        // add the new node to the parent
-        if (parent) {
-          parent.contents[name] = node;
-        }
         return node;
       },
       getFileDataAsTypedArray:function(node) {
@@ -1175,51 +1083,9 @@ mergeInto(LibraryManager.library, {
         if (node.usedBytes > 0) node.contents.set(oldContents.subarray(0, node.usedBytes), 0); // Copy old data over to the new storage.
         return;
       },
-      resizeFileStorage:function(node, newSize) {
-        if (node.usedBytes == newSize) return;
-        if (newSize == 0) {
-          node.contents = null; // Fully decommit when requesting a resize to zero.
-          node.usedBytes = 0;
-          return;
-        }
-        if (!node.contents || node.contents.subarray) { // Resize a typed array if that is being used as the backing store.
-          var oldContents = node.contents;
-          node.contents = new Uint8Array(new ArrayBuffer(newSize)); // Allocate new storage.
-          if (oldContents) {
-            node.contents.set(oldContents.subarray(0, Math.min(newSize, node.usedBytes))); // Copy old data over to the new storage.
-          }
-          node.usedBytes = newSize;
-          return;
-        }
-        // Backing with a JS array.
-        if (!node.contents) node.contents = [];
-        if (node.contents.length > newSize) node.contents.length = newSize;
-        else while (node.contents.length < newSize) node.contents.push(0);
-        node.usedBytes = newSize;
-      },
-      node_getattr:function(node) {
-        var attr = {};
-        attr.mode = node.mode;
-        if (CCFS.isDir(node.mode)) {
-          attr.size = 4096;
-        } else if (CCFS.isFile(node.mode)) {
-          attr.size = node.usedBytes;
-        } else {
-          attr.size = 0;
-        }
-        attr.mtime = new Date(node.timestamp);
-        return attr;
-      },
-      node_setattr:function(node, attr) {
-        if (attr.mode !== undefined) {
-          node.mode = attr.mode;
-        }
-        if (attr.timestamp !== undefined) {
-          node.timestamp = attr.timestamp;
-        }
-        if (attr.size !== undefined) {
-          MEMFS.resizeFileStorage(node, attr.size);
-        }
+      clearFileStorage:function(node) {
+        node.contents = null; // Fully decommit when requesting a resize to zero.
+        node.usedBytes = 0;
       },
       stream_read:function(stream, buffer, offset, length, position) {
         var contents = stream.node.contents;
@@ -1276,144 +1142,35 @@ mergeInto(LibraryManager.library, {
         }
         node.usedBytes = Math.max(node.usedBytes, position+length);
         return length;
-      },
-      stream_seek:function(stream, offset, whence) {
-        var position = offset;
-        if (whence === 1) {  // SEEK_CUR.
-          position += stream.position;
-        } else if (whence === 2) {  // SEEK_END.
-          position += stream.node.usedBytes;
-        }
-        if (position < 0) {
-          throw new CCFS.ErrnoError(22);
-        }
-        return position;
       }
     };
   
   
-  window.CCFS={root:null,streams:[],nextInode:1,nameTable:null,currentPath:"/",ErrnoError:null,genericErrors:{},
+  window.CCFS={
+      streams:[],entries:{},currentPath:"/",ErrnoError:null,
       resolvePath:function(path) {
         if (path.charAt(0) !== '/') {
-          path = PATH.join2(CCFS.currentPath, path);
+          path = CCFS.currentPath + '/' + path;
         }
         return path;
       },
-      lookupPath:function(path, opts) {
+      lookupPath:function(path) {
         path = CCFS.resolvePath(path);
-        opts = opts || {}; 
-        if (!path) return { path: '', node: null };
-  
-        // split the path
-        var parts = PATH.normalizeArray(path.split('/').filter(function(p) {
-          return !!p;
-        }), false);
-  
-        // start at the root
-        var current = CCFS.root;
-        var current_path = '/';
-  
-        for (var i = 0; i < parts.length; i++) {
-          var islast = (i === parts.length-1);
-          if (islast && opts.parent) {
-            // stop resolving
-            break;
-          }
-  
-          current = CCFS.lookupNode(current, parts[i]);
-          current_path = PATH.join2(current_path, parts[i]);
-        }
-  
-        return { path: current_path, node: current };
-      },getPath:function(node) {
-        var path;
-        while (true) {
-          if (CCFS.isRoot(node)) {
-            return '/' + path;
-          }
-          path = path ? node.name + '/' + path : node.name;
-          node = node.parent;
-        }
-      },hashName:function(parentid, name) {
-        var hash = 0;
-  
-        for (var i = 0; i < name.length; i++) {
-          hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
-        }
-        return ((parentid + hash) >>> 0) % CCFS.nameTable.length;
-      },hashAddNode:function(node) {
-        var hash = CCFS.hashName(node.parent.id, node.name);
-        node.name_next = CCFS.nameTable[hash];
-        CCFS.nameTable[hash] = node;
-      },hashRemoveNode:function(node) {
-        var hash = CCFS.hashName(node.parent.id, node.name);
-        if (CCFS.nameTable[hash] === node) {
-          CCFS.nameTable[hash] = node.name_next;
-        } else {
-          var current = CCFS.nameTable[hash];
-          while (current) {
-            if (current.name_next === node) {
-              current.name_next = node.name_next;
-              break;
-            }
-            current = current.name_next;
-          }
-        }
-      },lookupNode:function(parent, name) {
-        if (CCFS.isFile(parent.mode)) {
-          throw new CCFS.ErrnoError(13);
-        }
+        var node = CCFS.entries[path];
         
-        var hash = CCFS.hashName(parent.id, name);
-        for (var node = CCFS.nameTable[hash]; node; node = node.name_next) {
-          var nodeName = node.name;
-          if (node.parent.id === parent.id && nodeName === name) {
-            return node;
-          }
-        }
-
-        throw CCFS.genericErrors[2];
-      },createNode:function(parent, name, mode) {
-        if (!CCFS.FSNode) {
-          CCFS.FSNode = function(parent, name, mode) {
-            if (!parent) {
-              parent = this;  // root node sets parent to itself
-            }
-            this.parent = parent;
-            this.id = CCFS.nextInode++;
-            this.name = name;
-            this.mode = mode;
-          };
-  
-          CCFS.FSNode.prototype = {};
-        }
-  
-        var node = new CCFS.FSNode(parent, name, mode);  
-        CCFS.hashAddNode(node); 
+        if (!node) throw new CCFS.ErrnoError(2);
+        return { path: path, node: node };
+      },
+      createNode:function(path) {
+        var node = { path: path };
+        CCFS.entries[path] = node; 
         return node;
-      },destroyNode:function(node) {
-        CCFS.hashRemoveNode(node);
-      },isRoot:function(node) {
-        return node === node.parent;
-      },isFile:function(mode) {
-        return (mode & 61440) === 32768;
-      },isDir:function(mode) {
-        return (mode & 61440) === 16384;
-      },flagModes:{"r":0,"rs":1052672,"r+":2,"w":577,"wx":705,"xw":705,"w+":578,"wx+":706,"xw+":706,"a":1089,"ax":1217,"xa":1217,"a+":1090,"ax+":1218,"xa+":1218},
-      modeStringToFlags:function(str) {
-        var flags = CCFS.flagModes[str];
-        if (typeof flags === 'undefined') {
-          throw new Error('Unknown file open mode: ' + str);
-        }
-        return flags;
-      },mayCreate:function(dir, name) {
-        try {
-          var node = CCFS.lookupNode(dir, name);
-          return 17;
-        } catch (e) {
-        }
-        return 0;
-      },nextfd:function() {
+      },
+      MODE_TYPE_FILE:32768,
+      isFile:function(mode) {
+        return (mode & 61440) === CCFS.MODE_TYPE_FILE;
+      },
+      nextfd:function() {
          // max 4096 open files
         for (var fd = 0; fd <= 4096; fd++) {
           if (!CCFS.streams[fd]) {
@@ -1421,109 +1178,42 @@ mergeInto(LibraryManager.library, {
           }
         }
         throw new CCFS.ErrnoError(24);
-      },getStream:function(fd) {
+      },
+      getStream:function(fd) {
         return CCFS.streams[fd];
-      },createStream:function(stream) {
+      },
+      createStream:function(stream) {
         var fd = CCFS.nextfd();
         stream.fd = fd;
         CCFS.streams[fd] = stream;
         return stream;
-      },mknod:function(path, mode) {
-        var lookup = CCFS.lookupPath(path, { parent: true });
-        var parent = lookup.node;
-        var name = PATH.basename(path);
-        if (!name || name === '.' || name === '..') {
-          throw new CCFS.ErrnoError(22);
-        }
-        var err = CCFS.mayCreate(parent, name);
-        if (err) {
-          throw new CCFS.ErrnoError(err);
-        }
-        if (!CCFS.isDir(parent.mode)) {
-          throw new CCFS.ErrnoError(1);
-        }
-        return MEMFS.createNode(parent, name, mode);
-      },create:function(path, mode) {
-        mode = mode !== undefined ? mode : 438 /* 0666 */;
-        mode &= 4095;
-        mode |= 32768;
-        return CCFS.mknod(path, mode);
-      },mkdir:function(path, mode) {
-        mode = mode !== undefined ? mode : 511 /* 0777 */;
-        mode &= 511 | 512;
-        mode |= 16384;
-        return CCFS.mknod(path, mode);
-      },readdir:function(path) {
-        var lookup = CCFS.lookupPath(path);
-        var node = lookup.node;
-        if (!CCFS.isDir(node.mode)) {
-          throw new CCFS.ErrnoError(20);
-        }
+      },
+      readdir:function(path) {
+        path = CCFS.resolvePath(path) + '/';
 
+        // all entries starting with given directory
         var entries = [];
-        for (var key in node.contents) {
-          if (!node.contents.hasOwnProperty(key)) {
-            continue;
-          }
-          entries.push(key);
+        for (var entry in CCFS.entries) 
+        {
+          if (entry.indexOf(path) !== 0) continue;
+          entries.push(entry);
         }
         return entries;
-      },unlink:function(path) {
-        var lookup = CCFS.lookupPath(path, { parent: true });
-        var parent = lookup.node;
-        var name = PATH.basename(path);
-        var node = CCFS.lookupNode(parent, name);
-
-        if (CCFS.isDir(node.mode)) {
-          // According to POSIX, we should map EISDIR to EPERM, but
-          // we instead do what Linux does (and we must, as we use
-          // the musl linux libc).
-          throw new CCFS.ErrnoError(21);
-        }
-        if (!CCFS.isDir(parent.mode)) {
-          throw new CCFS.ErrnoError(1);
-        }
-
-        delete parent.contents[name];
-        CCFS.destroyNode(node);
-      },chmod:function(path, mode) {
+      },
+      unlink:function(path) {
+        var lookup = CCFS.lookupPath(path);
+        delete CCFS.entries[lookup.path];
+      },
+      utime:function(path, mtime) {
         var lookup = CCFS.lookupPath(path);
         var node = lookup.node;
         
-        MEMFS.node_setattr(node, {
-          mode: (mode & 4095) | (node.mode & ~4095),
-          timestamp: Date.now()
-        });
-      },utime:function(path, mtime) {
-        var lookup = CCFS.lookupPath(path);
-        var node = lookup.node;
-        
-        MEMFS.node_setattr(node, {
-          timestamp: mtime
-        });
-      },open:function(path, flags, mode) {
-        if (path === "") {
-          throw new CCFS.ErrnoError(2);
-        }
-        flags = typeof flags === 'string' ? CCFS.modeStringToFlags(flags) : flags;
-        mode = typeof mode === 'undefined' ? 438 /* 0666 */ : mode;
-        if ((flags & 64)) {
-          mode = (mode & 4095) | 32768;
-        } else {
-          mode = 0;
-        }
-        var node;
-        if (typeof path === 'object') {
-          node = path;
-        } else {
-          path = PATH.normalize(path);
-          try {
-            var lookup = CCFS.lookupPath(path);
-            node = lookup.node;
-          } catch (e) {
-            // ignore
-          }
-        }
+        node.timestamp = mtime;
+      },
+      open:function(path, flags) {
+        path  = CCFS.resolvePath(path);
+
+        var node = CCFS.entries[path];
         // perhaps we need to create the node
         var created = false;
         if ((flags & 64)) {
@@ -1534,7 +1224,7 @@ mergeInto(LibraryManager.library, {
             }
           } else {
             // node doesn't exist, try to create it
-            node = CCFS.mknod(path, mode);
+            node = MEMFS.createNode(path);
             created = true;
           }
         }
@@ -1542,19 +1232,10 @@ mergeInto(LibraryManager.library, {
           throw new CCFS.ErrnoError(2);
         }
         
-        // check permissions, if this is not a file we just created now (it is ok to
-        // create and write to a file with read-only permissions; it is read-only
-        // for later use)
-        if (!created && CCFS.isDir(node.mode)) {
-          throw new CCFS.ErrnoError(21);
-        }
-        
         // do truncation if necessary
         if ((flags & 512)) {
-          MEMFS.node_setattr(node, {
-            size: 0,
-            timestamp: Date.now()
-          });
+          MEMFS.clearFileStorage(node);
+          node.timestamp = Date.now();
         }
         
         // we've already handled these, don't pass down to the underlying vfs
@@ -1563,30 +1244,44 @@ mergeInto(LibraryManager.library, {
         // register the stream with the filesystem
         var stream = CCFS.createStream({
           node: node,
-          path: CCFS.getPath(node),  // we want the absolute path to the node
+          path: path,
           flags: flags,
           position: 0
         });
         return stream;
-      },close:function(stream) {
+      },
+      close:function(stream) {
         if (CCFS.isClosed(stream)) {
           throw new CCFS.ErrnoError(9);
         }
         
         CCFS.streams[stream.fd] = null;
         stream.fd = null;
-      },isClosed:function(stream) {
+      },
+      isClosed:function(stream) {
         return stream.fd === null;
-      },llseek:function(stream, offset, whence) {
+      },
+      llseek:function(stream, offset, whence) {
         if (CCFS.isClosed(stream)) {
           throw new CCFS.ErrnoError(9);
         }
-        if (whence != 0 /* SEEK_SET */ && whence != 1 /* SEEK_CUR */ && whence != 2 /* SEEK_END */) {
+        
+        var position = offset;
+        if (whence === 0) { // SEEK_SET
+          // beginning of file, no need to add anything
+        } else if (whence === 1) { // SEEK_CUR
+          position += stream.position;
+        } else if (whence === 2) { // SEEK_END
+          position += stream.node.usedBytes;
+        }
+
+        if (position < 0) {
           throw new CCFS.ErrnoError(22);
         }
-        stream.position = MEMFS.stream_seek(stream, offset, whence);
+        stream.position = position;
         return stream.position;
-      },read:function(stream, buffer, offset, length, position) {
+      },
+      read:function(stream, buffer, offset, length, position) {
         if (length < 0 || position < 0) {
           throw new CCFS.ErrnoError(22);
         }
@@ -1603,7 +1298,8 @@ mergeInto(LibraryManager.library, {
         var bytesRead = MEMFS.stream_read(stream, buffer, offset, length, position);
         if (!seeking) stream.position += bytesRead;
         return bytesRead;
-      },write:function(stream, buffer, offset, length, position, canOwn) {
+      },
+      write:function(stream, buffer, offset, length, position, canOwn) {
         if (length < 0 || position < 0) {
           throw new CCFS.ErrnoError(22);
         }
@@ -1624,16 +1320,15 @@ mergeInto(LibraryManager.library, {
         var bytesWritten = MEMFS.stream_write(stream, buffer, offset, length, position, canOwn);
         if (!seeking) stream.position += bytesWritten;
         return bytesWritten;
-      },readFile:function(path, opts) {
+      },
+      readFile:function(path, opts) {
         opts = opts || {};
-        opts.flags = opts.flags || 'r';
         opts.encoding = opts.encoding || 'binary';
         
         var ret;
-        var stream = CCFS.open(path, opts.flags);
-        var stat = MEMFS.node_getattr(stream.node);
-        var length = stat.size;
-        var buf = new Uint8Array(length);
+        var stream = CCFS.open(path, 0); // O_RDONLY
+        var length = stream.node.usedBytes;
+        var buf    = new Uint8Array(length);
         CCFS.read(stream, buf, 0, length, 0);
         
         if (opts.encoding === 'utf8') {
@@ -1646,11 +1341,11 @@ mergeInto(LibraryManager.library, {
         
         CCFS.close(stream);
         return ret;
-      },writeFile:function(path, data, opts) {
+      },
+      writeFile:function(path, data, opts) {
         opts = opts || {};
-        opts.flags = opts.flags || 'w';
-        
-        var stream = CCFS.open(path, opts.flags, opts.mode);
+        var stream = CCFS.open(path, 577); // O_WRONLY | O_CREAT | O_TRUNC
+
         if (typeof data === 'string') {
           var buf = new Uint8Array(lengthBytesUTF8(data)+1);
           var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
@@ -1661,56 +1356,38 @@ mergeInto(LibraryManager.library, {
           throw new Error('Unsupported data type');
         }
         CCFS.close(stream);
-      },chdir:function(path) {
-        var lookup = CCFS.lookupPath(path);
-        if (lookup.node === null) {
-          throw new CCFS.ErrnoError(2);
-        }
-        if (!CCFS.isDir(lookup.node.mode)) {
-          throw new CCFS.ErrnoError(20);
-        }
-        CCFS.currentPath = lookup.path;
-      },ensureErrnoError:function() {
-        if (CCFS.ErrnoError) return;
+      },
+      chdir:function(path) {
+        CCFS.currentPath = CCFS.resolvePath(path);
+      },
+      ensureErrnoError:function() {
         CCFS.ErrnoError = function ErrnoError(errno, node) {
-          this.node = node;
+          this.node  = node;
           this.errno = errno;
         };
         CCFS.ErrnoError.prototype = new Error();
         CCFS.ErrnoError.prototype.constructor = CCFS.ErrnoError;
-        
-        // Some errors may happen quite a bit, to avoid overhead we reuse them (and suffer a lack of stack info)
-        CCFS.genericErrors[2] = new CCFS.ErrnoError(2);
-        CCFS.genericErrors[2].stack = '<generic error, no stack>';
-      },getMode:function(canRead, canWrite) {
-        var mode = 0;
-        if (canRead) mode |= 292 | 73;
-        if (canWrite) mode |= 146;
-        return mode;
-      },createDataFile:function(parent, name, data, canRead, canWrite, canOwn) {
-        var path = name ? PATH.join2(typeof parent === 'string' ? parent : CCFS.getPath(parent), name) : parent;
-        var mode = CCFS.getMode(canRead, canWrite);
-        var node = CCFS.create(path, mode);
-        
-        if (data) {
-          if (typeof data === 'string') {
-            var arr = new Array(data.length);
-            for (var i = 0, len = data.length; i < len; ++i) arr[i] = data.charCodeAt(i);
-            data = arr;
-          }
-            
-          var stream = CCFS.open(node, 'w');
-          CCFS.write(stream, data, 0, data.length, 0, canOwn);
-          CCFS.close(stream);
+      },
+      createDataFile:function(path, data, canOwn) {
+        if (!data) return;
+
+        if (typeof data === 'string') {
+          var arr = new Array(data.length);
+          for (var i = 0, len = data.length; i < len; ++i) arr[i] = data.charCodeAt(i);
+          data = arr;
         }
-        return node;
-      },createPreloadedFile:function(parent, name, url, canRead, canWrite, onload, onerror, canOwn, preFinish) {
+
+        var stream = CCFS.open(path, 577); // O_WRONLY | O_CREAT | O_TRUNC
+        CCFS.write(stream, data, 0, data.length, 0, canOwn);
+        CCFS.close(stream);
+      },
+      createPreloadedFile:function(path, url, onload, onerror, canOwn, preFinish) {
         Browser.init(); // XXX perhaps this method should move onto Browser?
         var dep = getUniqueRunDependency('cp ' + name);
         
         function processData(byteArray) {
           if (preFinish) preFinish();
-          CCFS.createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
+          CCFS.createDataFile(path, byteArray, canOwn);
           if (onload) onload();
           removeRunDependency(dep)
         }
@@ -1721,9 +1398,6 @@ mergeInto(LibraryManager.library, {
         }, onerror);
       }};
   
-  CCFS.ensureErrnoError();
-  CCFS.nameTable = new Array(4096);
-  // create a root node for the fs
-  CCFS.root = MEMFS.createNode(null, '/', 16384 | 511 /* 0777 */)
+    CCFS.ensureErrnoError();
   },
 });
