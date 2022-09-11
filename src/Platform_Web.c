@@ -121,10 +121,6 @@ static Directory_EnumCallback enum_callback;
 EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 
-	/* ignore . and .. entry */
-	if (src[0] == '.' && src[1] == '\0') return;
-	if (src[0] == '.' && src[1] == '.' && src[2] == '\0') return;
-
 	String_InitArray(path, pathBuffer);
 	String_AppendUtf8(&path, src, String_Length(src));
 	enum_callback(&path, enum_obj);
