@@ -228,7 +228,7 @@ mergeInto(LibraryManager.library, {
   interop_FileLength: function(fd) {
     try {
       var stream = CCFS.getStream(fd);
-      var attrs  = stream.node.node_ops.getattr(stream.node);
+      var attrs  = MEMFS.node_getattr(stream.node);
       return attrs.size|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
@@ -289,7 +289,7 @@ mergeInto(LibraryManager.library, {
       var lookup = CCFS.lookupPath(path);
       path = lookup.path;
       node = lookup.node;
-      stat = node.node_ops.getattr(node);
+      stat = MEMFS.node_getattr(node);
     
       if (CCFS.isDir(stat.mode)) {
         entry = { timestamp: stat.mtime, mode: stat.mode };
@@ -438,7 +438,7 @@ mergeInto(LibraryManager.library, {
       }
   
       CCFS.chmod(path, entry.mode);
-      CCFS.utime(path, entry.timestamp, entry.timestamp);
+      CCFS.utime(path, entry.timestamp);
     } catch (e) {
       return callback(e);
     }
@@ -1177,40 +1177,20 @@ mergeInto(LibraryManager.library, {
         if (!MEMFS.ops_table) {
           MEMFS.ops_table = {
             dir: {
-              node: {
-                getattr: MEMFS.node_ops.getattr,
-                setattr: MEMFS.node_ops.setattr,
-                lookup: MEMFS.node_ops.lookup,
-                mknod: MEMFS.node_ops.mknod,
-                unlink: MEMFS.node_ops.unlink,
-                readdir: MEMFS.node_ops.readdir
-              },
-              stream: {
-                llseek: MEMFS.stream_ops.llseek
-              }
+              lookup: MEMFS.node_lookup,
+              mknod: MEMFS.node_mknod,
+              unlink: MEMFS.node_unlink
             },
             file: {
-              node: {
-                getattr: MEMFS.node_ops.getattr,
-                setattr: MEMFS.node_ops.setattr
-              },
-              stream: {
-                llseek: MEMFS.stream_ops.llseek,
-                read: MEMFS.stream_ops.read,
-                write: MEMFS.stream_ops.write,
-                allocate: MEMFS.stream_ops.allocate
-              }
             }
           };
         }
         var node = CCFS.createNode(parent, name, mode, dev);
         if (CCFS.isDir(node.mode)) {
-          node.node_ops = MEMFS.ops_table.dir.node;
-          node.stream_ops = MEMFS.ops_table.dir.stream;
+          node.node_ops = MEMFS.ops_table.dir;
           node.contents = {};
         } else if (CCFS.isFile(node.mode)) {
-          node.node_ops = MEMFS.ops_table.file.node;
-          node.stream_ops = MEMFS.ops_table.file.stream;
+          node.node_ops = MEMFS.ops_table.file;
           node.usedBytes = 0; // The actual number of bytes used in the typed array, as opposed to contents.length which gives the whole capacity.
           // When the byte data of the file is populated, this will point to either a typed array, or a normal JS array. Typed arrays are preferred
           // for performance, and used by default. However, typed arrays are not resizable like normal JS arrays are, so there is a small disk size
@@ -1265,126 +1245,122 @@ mergeInto(LibraryManager.library, {
         else while (node.contents.length < newSize) node.contents.push(0);
         node.usedBytes = newSize;
       },
-      node_ops:{
-        getattr:function(node) {
-          var attr = {};
-          attr.mode = node.mode;
-          if (CCFS.isDir(node.mode)) {
-            attr.size = 4096;
-          } else if (CCFS.isFile(node.mode)) {
-            attr.size = node.usedBytes;
-          } else {
-            attr.size = 0;
-          }
-          attr.mtime = new Date(node.timestamp);
-          return attr;
-        },
-        setattr:function(node, attr) {
-          if (attr.mode !== undefined) {
-            node.mode = attr.mode;
-          }
-          if (attr.timestamp !== undefined) {
-            node.timestamp = attr.timestamp;
-          }
-          if (attr.size !== undefined) {
-            MEMFS.resizeFileStorage(node, attr.size);
-          }
-        },
-        lookup:function(parent, name) {
-          throw CCFS.genericErrors[2];
-        },
-        mknod:function(parent, name, mode, dev) {
-          return MEMFS.createNode(parent, name, mode, dev);
-        },
-        unlink:function(parent, name) {
-          delete parent.contents[name];
-        },
-        readdir:function(node) {
-          var entries = [];
-          for (var key in node.contents) {
-            if (!node.contents.hasOwnProperty(key)) {
-              continue;
-            }
-            entries.push(key);
-          }
-          return entries;
+      node_getattr:function(node) {
+        var attr = {};
+        attr.mode = node.mode;
+        if (CCFS.isDir(node.mode)) {
+          attr.size = 4096;
+        } else if (CCFS.isFile(node.mode)) {
+          attr.size = node.usedBytes;
+        } else {
+          attr.size = 0;
+        }
+        attr.mtime = new Date(node.timestamp);
+        return attr;
+      },
+      node_setattr:function(node, attr) {
+        if (attr.mode !== undefined) {
+          node.mode = attr.mode;
+        }
+        if (attr.timestamp !== undefined) {
+          node.timestamp = attr.timestamp;
+        }
+        if (attr.size !== undefined) {
+          MEMFS.resizeFileStorage(node, attr.size);
         }
       },
-      stream_ops:{
-        read:function(stream, buffer, offset, length, position) {
-          var contents = stream.node.contents;
-          if (position >= stream.node.usedBytes) return 0;
-          var size = Math.min(stream.node.usedBytes - position, length);
-          assert(size >= 0);
-          if (size > 8 && contents.subarray) { // non-trivial, and typed array
-            buffer.set(contents.subarray(position, position + size), offset);
-          } else {
-            for (var i = 0; i < size; i++) buffer[offset + i] = contents[position + i];
+      node_lookup:function(parent, name) {
+        throw CCFS.genericErrors[2];
+      },
+      node_mknod:function(parent, name, mode, dev) {
+        return MEMFS.createNode(parent, name, mode, dev);
+      },
+      node_unlink:function(parent, name) {
+        delete parent.contents[name];
+      },
+      node_readdir:function(node) {
+        var entries = [];
+        for (var key in node.contents) {
+          if (!node.contents.hasOwnProperty(key)) {
+            continue;
           }
-          return size;
-        },
-        write:function(stream, buffer, offset, length, position, canOwn) {
-          // If memory can grow, we don't want to hold on to references of
-          // the memory Buffer, as they may get invalidated. That means
-          // we need to do a copy here.
-          // FIXME: this is inefficient as the file packager may have
-          //        copied the data into memory already - we may want to
-          //        integrate more there and let the file packager loading
-          //        code be able to query if memory growth is on or off.
-          if (canOwn) {
-            warnOnce('file packager has copied file data into memory, but in memory growth we are forced to copy it again (see --no-heap-copy)');
-          }
-          canOwn = false;
-  
-          if (!length) return 0;
-          var node = stream.node;
-          node.timestamp = Date.now();
-  
-          if (buffer.subarray && (!node.contents || node.contents.subarray)) { // This write is from a typed array to a typed array?
-            if (canOwn) {
-              assert(position === 0, 'canOwn must imply no weird position inside the file');
-              node.contents = buffer.subarray(offset, offset + length);
-              node.usedBytes = length;
-              return length;
-            } else if (node.usedBytes === 0 && position === 0) { // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
-              node.contents = new Uint8Array(buffer.subarray(offset, offset + length));
-              node.usedBytes = length;
-              return length;
-            } else if (position + length <= node.usedBytes) { // Writing to an already allocated and used subrange of the file?
-              node.contents.set(buffer.subarray(offset, offset + length), position);
-              return length;
-            }
-          }
-  
-          // Appending to an existing file and we need to reallocate, or source data did not come as a typed array.
-          MEMFS.expandFileStorage(node, position+length);
-          if (node.contents.subarray && buffer.subarray) node.contents.set(buffer.subarray(offset, offset + length), position); // Use typed array write if available.
-          else {
-            for (var i = 0; i < length; i++) {
-             node.contents[position + i] = buffer[offset + i]; // Or fall back to manual write if not.
-            }
-          }
-          node.usedBytes = Math.max(node.usedBytes, position+length);
-          return length;
-        },
-        llseek:function(stream, offset, whence) {
-          var position = offset;
-          if (whence === 1) {  // SEEK_CUR.
-            position += stream.position;
-          } else if (whence === 2) {  // SEEK_END.
-            if (CCFS.isFile(stream.node.mode)) {
-              position += stream.node.usedBytes;
-            }
-          }
-          if (position < 0) {
-            throw new CCFS.ErrnoError(22);
-          }
-          return position;
-        },
-        allocate:function(stream, offset, length) {
-          MEMFS.expandFileStorage(stream.node, offset + length);
-          stream.node.usedBytes = Math.max(stream.node.usedBytes, offset + length);
+          entries.push(key);
         }
+        return entries;
+      },
+      stream_read:function(stream, buffer, offset, length, position) {
+        var contents = stream.node.contents;
+        if (position >= stream.node.usedBytes) return 0;
+        var size = Math.min(stream.node.usedBytes - position, length);
+        assert(size >= 0);
+        if (size > 8 && contents.subarray) { // non-trivial, and typed array
+          buffer.set(contents.subarray(position, position + size), offset);
+        } else {
+          for (var i = 0; i < size; i++) buffer[offset + i] = contents[position + i];
+        }
+        return size;
+      },
+      stream_write:function(stream, buffer, offset, length, position, canOwn) {
+        // If memory can grow, we don't want to hold on to references of
+        // the memory Buffer, as they may get invalidated. That means
+        // we need to do a copy here.
+        // FIXME: this is inefficient as the file packager may have
+        //        copied the data into memory already - we may want to
+        //        integrate more there and let the file packager loading
+        //        code be able to query if memory growth is on or off.
+        if (canOwn) {
+          warnOnce('file packager has copied file data into memory, but in memory growth we are forced to copy it again (see --no-heap-copy)');
+        }
+        canOwn = false;
+  
+        if (!length) return 0;
+        var node = stream.node;
+        node.timestamp = Date.now();
+  
+        if (buffer.subarray && (!node.contents || node.contents.subarray)) { // This write is from a typed array to a typed array?
+          if (canOwn) {
+            assert(position === 0, 'canOwn must imply no weird position inside the file');
+            node.contents = buffer.subarray(offset, offset + length);
+            node.usedBytes = length;
+            return length;
+          } else if (node.usedBytes === 0 && position === 0) { // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
+            node.contents = new Uint8Array(buffer.subarray(offset, offset + length));
+            node.usedBytes = length;
+            return length;
+          } else if (position + length <= node.usedBytes) { // Writing to an already allocated and used subrange of the file?
+            node.contents.set(buffer.subarray(offset, offset + length), position);
+            return length;
+          }
+        }
+  
+        // Appending to an existing file and we need to reallocate, or source data did not come as a typed array.
+        MEMFS.expandFileStorage(node, position+length);
+        if (node.contents.subarray && buffer.subarray) node.contents.set(buffer.subarray(offset, offset + length), position); // Use typed array write if available.
+        else {
+          for (var i = 0; i < length; i++) {
+           node.contents[position + i] = buffer[offset + i]; // Or fall back to manual write if not.
+          }
+        }
+        node.usedBytes = Math.max(node.usedBytes, position+length);
+        return length;
+      },
+      stream_seek:function(stream, offset, whence) {
+        var position = offset;
+        if (whence === 1) {  // SEEK_CUR.
+          position += stream.position;
+        } else if (whence === 2) {  // SEEK_END.
+          if (CCFS.isFile(stream.node.mode)) {
+            position += stream.node.usedBytes;
+          }
+        }
+        if (position < 0) {
+          throw new CCFS.ErrnoError(22);
+        }
+        return position;
+      },
+      stream_allocate:function(stream, offset, length) {
+        MEMFS.expandFileStorage(stream.node, offset + length);
+        stream.node.usedBytes = Math.max(stream.node.usedBytes, offset + length);
       }
     };
   
@@ -1495,7 +1471,6 @@ mergeInto(LibraryManager.library, {
             this.name = name;
             this.mode = mode;
             this.node_ops = {};
-            this.stream_ops = {};
             this.rdev = rdev;
           };
   
@@ -1568,10 +1543,9 @@ mergeInto(LibraryManager.library, {
           }
         }
         return 0;
-      },MAX_OPEN_FDS:4096,nextfd:function(fd_start, fd_end) {
-        fd_start = fd_start || 0;
-        fd_end = fd_end || CCFS.MAX_OPEN_FDS;
-        for (var fd = fd_start; fd <= fd_end; fd++) {
+      },nextfd:function() {
+         // max 4096 open files
+        for (var fd = 0; fd <= 4096; fd++) {
           if (!CCFS.streams[fd]) {
             return fd;
           }
@@ -1579,7 +1553,7 @@ mergeInto(LibraryManager.library, {
         throw new CCFS.ErrnoError(24);
       },getStream:function(fd) {
         return CCFS.streams[fd];
-      },createStream:function(stream, fd_start, fd_end) {
+      },createStream:function(stream) {
         if (!CCFS.FSStream) {
           CCFS.FSStream = function(){};
           CCFS.FSStream.prototype = {};
@@ -1590,12 +1564,10 @@ mergeInto(LibraryManager.library, {
           newStream[p] = stream[p];
         }
         stream = newStream;
-        var fd = CCFS.nextfd(fd_start, fd_end);
+        var fd = CCFS.nextfd();
         stream.fd = fd;
         CCFS.streams[fd] = stream;
         return stream;
-      },closeStream:function(fd) {
-        CCFS.streams[fd] = null;
       },mount:function(type, opts, mountpoint) {
         var root = mountpoint === '/';
         var pseudo = !mountpoint;
@@ -1683,12 +1655,20 @@ mergeInto(LibraryManager.library, {
           }
         }
       },readdir:function(path) {
-        var lookup = CCFS.lookupPath(path, { follow: true });
+        var lookup = CCFS.lookupPath(path);
         var node = lookup.node;
-        if (!node.node_ops.readdir) {
+        if (!CCFS.isDir(node.mode)) {
           throw new CCFS.ErrnoError(20);
         }
-        return node.node_ops.readdir(node);
+
+        var entries = [];
+        for (var key in node.contents) {
+          if (!node.contents.hasOwnProperty(key)) {
+            continue;
+          }
+          entries.push(key);
+        }
+        return entries;
       },unlink:function(path) {
         var lookup = CCFS.lookupPath(path, { parent: true });
         var parent = lookup.node;
@@ -1710,28 +1690,23 @@ mergeInto(LibraryManager.library, {
 
         parent.node_ops.unlink(parent, name);
         CCFS.destroyNode(node);
-      },stat:function(path, dontFollow) {
-        var lookup = CCFS.lookupPath(path, { follow: !dontFollow });
+      },stat:function(path) {
+        var lookup = CCFS.lookupPath(path);
         var node = lookup.node;
         if (!node) {
           throw new CCFS.ErrnoError(2);
         }
-        if (!node.node_ops.getattr) {
-          throw new CCFS.ErrnoError(1);
-        }
-        return node.node_ops.getattr(node);
-      },chmod:function(path, mode, dontFollow) {
+        return MEMFS.node_getattr(node);
+      },chmod:function(path, mode) {
         var node;
         if (typeof path === 'string') {
-          var lookup = CCFS.lookupPath(path, { follow: !dontFollow });
+          var lookup = CCFS.lookupPath(path);
           node = lookup.node;
         } else {
           node = path;
         }
-        if (!node.node_ops.setattr) {
-          throw new CCFS.ErrnoError(1);
-        }
-        node.node_ops.setattr(node, {
+        
+        MEMFS.node_setattr(node, {
           mode: (mode & 4095) | (node.mode & ~4095),
           timestamp: Date.now()
         });
@@ -1741,13 +1716,10 @@ mergeInto(LibraryManager.library, {
         }
         var node;
         if (typeof path === 'string') {
-          var lookup = CCFS.lookupPath(path, { follow: true });
+          var lookup = CCFS.lookupPath(path);
           node = lookup.node;
         } else {
           node = path;
-        }
-        if (!node.node_ops.setattr) {
-          throw new CCFS.ErrnoError(1);
         }
         if (CCFS.isDir(node.mode)) {
           throw new CCFS.ErrnoError(21);
@@ -1755,17 +1727,17 @@ mergeInto(LibraryManager.library, {
         if (!CCFS.isFile(node.mode)) {
           throw new CCFS.ErrnoError(22);
         }
-        node.node_ops.setattr(node, {
+        MEMFS.node_setattr(node, {
           size: len,
           timestamp: Date.now()
         });
-      },utime:function(path, atime, mtime) {
-        var lookup = CCFS.lookupPath(path, { follow: true });
+      },utime:function(path, mtime) {
+        var lookup = CCFS.lookupPath(path);
         var node = lookup.node;
-        node.node_ops.setattr(node, {
-          timestamp: Math.max(atime, mtime)
+        MEMFS.node_setattr(node, {
+          timestamp: mtime
         });
-      },open:function(path, flags, mode, fd_start, fd_end) {
+      },open:function(path, flags, mode) {
         if (path === "") {
           throw new CCFS.ErrnoError(2);
         }
@@ -1782,9 +1754,7 @@ mergeInto(LibraryManager.library, {
         } else {
           path = PATH.normalize(path);
           try {
-            var lookup = CCFS.lookupPath(path, {
-              follow: !(flags & 131072)
-            });
+            var lookup = CCFS.lookupPath(path);
             node = lookup.node;
           } catch (e) {
             // ignore
@@ -1834,15 +1804,15 @@ mergeInto(LibraryManager.library, {
           path: CCFS.getPath(node),  // we want the absolute path to the node
           flags: flags,
           position: 0,
-          stream_ops: node.stream_ops,
           error: false
-        }, fd_start, fd_end);
+        });
         return stream;
       },close:function(stream) {
         if (CCFS.isClosed(stream)) {
           throw new CCFS.ErrnoError(9);
         }
-        CCFS.closeStream(stream.fd);
+        
+        CCFS.streams[stream.fd] = null;
         stream.fd = null;
       },isClosed:function(stream) {
         return stream.fd === null;
@@ -1850,13 +1820,10 @@ mergeInto(LibraryManager.library, {
         if (CCFS.isClosed(stream)) {
           throw new CCFS.ErrnoError(9);
         }
-        if (!stream.stream_ops.llseek) {
-          throw new CCFS.ErrnoError(29);
-        }
         if (whence != 0 /* SEEK_SET */ && whence != 1 /* SEEK_CUR */ && whence != 2 /* SEEK_END */) {
           throw new CCFS.ErrnoError(22);
         }
-        stream.position = stream.stream_ops.llseek(stream, offset, whence);
+        stream.position = MEMFS.stream_seek(stream, offset, whence);
         return stream.position;
       },read:function(stream, buffer, offset, length, position) {
         if (length < 0 || position < 0) {
@@ -1868,17 +1835,11 @@ mergeInto(LibraryManager.library, {
         if ((stream.flags & 2097155) === 1) {
           throw new CCFS.ErrnoError(9);
         }
-        if (CCFS.isDir(stream.node.mode)) {
-          throw new CCFS.ErrnoError(21);
-        }
-        if (!stream.stream_ops.read) {
-          throw new CCFS.ErrnoError(22);
-        }
         var seeking = typeof position !== 'undefined';
         if (!seeking) {
           position = stream.position;
         }
-        var bytesRead = stream.stream_ops.read(stream, buffer, offset, length, position);
+        var bytesRead = MEMFS.stream_read(stream, buffer, offset, length, position);
         if (!seeking) stream.position += bytesRead;
         return bytesRead;
       },write:function(stream, buffer, offset, length, position, canOwn) {
@@ -1891,12 +1852,6 @@ mergeInto(LibraryManager.library, {
         if ((stream.flags & 2097155) === 0) {
           throw new CCFS.ErrnoError(9);
         }
-        if (CCFS.isDir(stream.node.mode)) {
-          throw new CCFS.ErrnoError(21);
-        }
-        if (!stream.stream_ops.write) {
-          throw new CCFS.ErrnoError(22);
-        }
         if (stream.flags & 1024) {
           // seek to the end before writing in append mode
           CCFS.llseek(stream, 0, 2);
@@ -1905,7 +1860,7 @@ mergeInto(LibraryManager.library, {
         if (!seeking) {
           position = stream.position;
         }
-        var bytesWritten = stream.stream_ops.write(stream, buffer, offset, length, position, canOwn);
+        var bytesWritten = MEMFS.stream_write(stream, buffer, offset, length, position, canOwn);
         if (!seeking) stream.position += bytesWritten;
         return bytesWritten;
       },allocate:function(stream, offset, length) {
@@ -1918,13 +1873,7 @@ mergeInto(LibraryManager.library, {
         if ((stream.flags & 2097155) === 0) {
           throw new CCFS.ErrnoError(9);
         }
-        if (!CCFS.isFile(stream.node.mode) && !CCFS.isDir(stream.node.mode)) {
-          throw new CCFS.ErrnoError(19);
-        }
-        if (!stream.stream_ops.allocate) {
-          throw new CCFS.ErrnoError(95);
-        }
-        stream.stream_ops.allocate(stream, offset, length);
+        MEMFS.stream_allocate(stream, offset, length);
       },readFile:function(path, opts) {
         opts = opts || {};
         opts.flags = opts.flags || 'r';
@@ -1962,7 +1911,7 @@ mergeInto(LibraryManager.library, {
       },cwd:function() {
         return CCFS.currentPath;
       },chdir:function(path) {
-        var lookup = CCFS.lookupPath(path, { follow: true });
+        var lookup = CCFS.lookupPath(path);
         if (lookup.node === null) {
           throw new CCFS.ErrnoError(2);
         }
