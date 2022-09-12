@@ -1574,7 +1574,7 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string path = String_FromConst(TEXPACKS_DIR);
+	static const cc_string path = String_FromConst("texpacks");
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
 	StringsBuffer_Sort(&s->entries);
 }

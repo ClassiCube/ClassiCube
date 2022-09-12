@@ -341,7 +341,7 @@ static cc_result ExtractFromFile(const cc_string* filename) {
 	cc_result res;
 
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, TEXPACKS_DIR "/%s", filename);
+	String_Format1(&path, "texpacks/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res) {

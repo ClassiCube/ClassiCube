@@ -100,7 +100,6 @@ cc_uint64 Stopwatch_Measure(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 extern void interop_InitFilesystem(void);
-extern void interop_LoadIndexedDB(void);
 cc_result Directory_Create(const cc_string* path) {
 	/* Web filesystem doesn't need directories */
 	return 0;
@@ -354,10 +353,10 @@ cc_result Process_StartGame(const cc_string* args, int numArgs) {
 	return ERR_NOT_SUPPORTED; 
 }
 void Process_Exit(cc_result code) {
-	/* Window isn't implicitly closed when process is exited */
+	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
 	if (code) Window_Close();
-
-	exit(code);
+	/* game normally calls exit with code = 0 due to async IndexedDB loading */
+	if (code) exit(code);
 }
 
 extern int interop_OpenTab(const char* url);
@@ -435,13 +434,7 @@ extern void interop_InitModule(void);
 void Platform_Init(void) {
 	interop_InitModule();
 	interop_InitFilesystem();
-	interop_LoadIndexedDB();
 	interop_InitSockets();
-	
-	/* NOTE: You must pre-load IndexedDB before main() */
-	/* (because pre-loading only works asynchronously) */
-	/* If you don't, you'll get errors later trying to sync local to remote */
-	/* See doc/hosting-webclient.md for example preloading IndexedDB code */
 }
 void Platform_Free(void) { }
 
@@ -454,7 +447,7 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { return E
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
+*------------------------------------------------------Main driver--------------------------------------------------------*
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
@@ -465,9 +458,40 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
-extern int interop_DirectorySetWorking(const char* path);
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	/* returned result is negative for error */
-	return -interop_DirectorySetWorking("/classicube");
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
+static int _argc;
+static char** _argv;
+
+extern void interop_FS_Init(void);
+extern void interop_DirectorySetWorking(const char* path);
+extern void interop_AsyncDownloadTexturePack(const char* path, const char* url);
+
+int main(int argc, char** argv) {
+	_argc = argc; _argv = argv;
+
+	/* Game loads resources asynchronously, then actually starts itself */
+	/* main 
+	/*  > texture pack download (async) */
+	/*     > load indexedDB (async) */
+	/*        > web_main (game actually starts) */
+
+	interop_FS_Init();
+	interop_DirectorySetWorking("/classicube");
+	interop_AsyncDownloadTexturePack("texpacks/default.zip", "static/default.zip");
+}
+
+extern void interop_LoadIndexedDB(void);
+extern void interop_AsyncLoadIndexedDB(void);
+/* Asynchronous callback after texture pack is downloaded */
+EMSCRIPTEN_KEEPALIVE void main_phase1(void) {
+	interop_LoadIndexedDB(); /* legacy compatibility */
+	interop_AsyncLoadIndexedDB();
+}
+
+extern int web_main(int argc, char** argv);
+/* Asynchronous callback after IndexedDB is loaded */
+EMSCRIPTEN_KEEPALIVE void main_phase2(void) {
+	web_main(_argc, _argv);
 }
 #endif

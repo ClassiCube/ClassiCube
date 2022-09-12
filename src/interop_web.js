@@ -112,7 +112,37 @@ mergeInto(LibraryManager.library, {
     // TODO: This is pretty awful and should be rewritten
     var name = UTF8ToString(path);
     var data = CCFS.readFile(name);
-    CCFS.writeFile('/texpacks/' + name.substring(1), data);
+    CCFS.writeFile('texpacks/' + name.substring(1), data);
+  },
+  
+  
+//########################################################################################################################
+//-------------------------------------------------------Main driver------------------------------------------------------
+//########################################################################################################################
+  interop_AsyncDownloadTexturePack: function (rawPath, rawUrl) {
+    var path = UTF8ToString(rawPath);
+    var url  = UTF8ToString(rawUrl);
+    Module.setStatus('Downloading textures.. (1/2)');
+    
+    Module.readAsync(url, 
+      function(buffer) { // onload   TODO avoid new UInt8Array
+        CCFS.writeFile(path, new Uint8Array(buffer), { canOwn: true });
+        ccall('main_phase1', 'void');
+      },
+      function() { // onerror
+        ccall('main_phase1', 'void');
+      }
+    );
+  },
+  interop_AsyncLoadIndexedDB__deps: ['IDBFS_loadFS'],
+  interop_AsyncLoadIndexedDB: function() {
+    Module.setStatus('Loading IndexedDB filesystem.. (2/2)');
+    
+    _IDBFS_loadFS(function(err) { 
+      if (err) window.cc_idbErr = err;
+      Module.setStatus('');
+      ccall('main_phase2', 'void');
+    });
   },
 
 
@@ -145,14 +175,19 @@ mergeInto(LibraryManager.library, {
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
     CCFS.chdir(path);
-    return 0;
   },
   interop_DirectoryIter: function(raw) {
     var path = UTF8ToString(raw);
     try {
       var entries = CCFS.readdir(path);
-      for (var i = 0; i < entries.length; i++) {
-        ccall('Directory_IterCallback', 'void', ['string'], [entries[i]]);
+      for (var i = 0; i < entries.length; i++) 
+      {
+        var path = entries[i];
+        // absolute path to root relative path
+        if (path.indexOf(CCFS.currentPath) === 0) {
+          path = path.substring(CCFS.currentPath.length + 1);
+        }
+        ccall('Directory_IterCallback', 'void', ['string'], [path]);
       }
       return 0;
     } catch (e) {
@@ -236,18 +271,12 @@ mergeInto(LibraryManager.library, {
     var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
     ccall('Platform_LogError', 'void', ['string'], [msg]);
   },
-  interop_LoadIndexedDB__deps: ['IDBFS_loadFS', 'FS_Init'],
   interop_LoadIndexedDB: function() {
-    _FS_Init();
-    // already loaded IndexDB? do nothing then
-    if (CCFS.preloaded) return;
-    CCFS.preloaded = true;
-    
-    addRunDependency('load-idb');
-    _IDBFS_loadFS(function(err) { 
-      if (err) window.cc_idbErr = err;
-      removeRunDependency('load-idb');
-    });
+    // previously you were required to add interop_LoadIndexedDB to Module.preRun array
+    //  to load the indexedDB asynchronously *before* starting ClassiCube, because it
+    //  could not load indexedDB asynchronously
+    // however, as ClassiCube now loads IndexedDB asynchronously itself, this is no longer
+    //  necessary, but is kept arounf foe backwards compatibility
   },
   interop_SaveNode__deps: ['IDBFS_getDB', 'IDBFS_storeRemoteEntry'],
   interop_SaveNode: function(path) {
@@ -822,7 +851,7 @@ mergeInto(LibraryManager.library, {
 
             reader.onload = function(e) { 
               var data = new Uint8Array(e.target.result);
-              CCFS.createDataFile('/' + name, data, true);
+              CCFS.writeFile('/' + name, data, { canOwn: true });
               ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
               CCFS.unlink('/' + name);
             };
@@ -1050,10 +1079,10 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //------------------------------------------------------------FS----------------------------------------------------------
 //########################################################################################################################
-  FS_Init: function() {
+  interop_FS_Init: function() {
     if (window.CCFS) return;
 
-  window.MEMFS={
+    window.MEMFS={
       createNode:function(path) {
         var node = CCFS.createNode(path);
         node.usedBytes = 0; // The actual number of bytes used in the typed array, as opposed to contents.length which gives the whole capacity.
@@ -1171,11 +1200,10 @@ mergeInto(LibraryManager.library, {
         return (mode & 61440) === CCFS.MODE_TYPE_FILE;
       },
       nextfd:function() {
-         // max 4096 open files
-        for (var fd = 0; fd <= 4096; fd++) {
-          if (!CCFS.streams[fd]) {
-            return fd;
-          }
+        // max 4096 open files
+        for (var fd = 0; fd <= 4096; fd++) 
+        {
+          if (!CCFS.streams[fd]) return fd;
         }
         throw new CCFS.ErrnoError(24);
       },
@@ -1367,35 +1395,6 @@ mergeInto(LibraryManager.library, {
         };
         CCFS.ErrnoError.prototype = new Error();
         CCFS.ErrnoError.prototype.constructor = CCFS.ErrnoError;
-      },
-      createDataFile:function(path, data, canOwn) {
-        if (!data) return;
-
-        if (typeof data === 'string') {
-          var arr = new Array(data.length);
-          for (var i = 0, len = data.length; i < len; ++i) arr[i] = data.charCodeAt(i);
-          data = arr;
-        }
-
-        var stream = CCFS.open(path, 577); // O_WRONLY | O_CREAT | O_TRUNC
-        CCFS.write(stream, data, 0, data.length, 0, canOwn);
-        CCFS.close(stream);
-      },
-      createPreloadedFile:function(path, url, onload, onerror, canOwn, preFinish) {
-        Browser.init(); // XXX perhaps this method should move onto Browser?
-        var dep = getUniqueRunDependency('cp ' + name);
-        
-        function processData(byteArray) {
-          if (preFinish) preFinish();
-          CCFS.createDataFile(path, byteArray, canOwn);
-          if (onload) onload();
-          removeRunDependency(dep)
-        }
-        
-        addRunDependency(dep);
-        Browser.asyncLoad(url, function(byteArray) {
-          processData(byteArray);
-        }, onerror);
       }};
   
     CCFS.ensureErrnoError();
