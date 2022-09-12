@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <emscripten.h>
 
 #define O_RDONLY 0x000
 #define O_WRONLY 0x001
@@ -34,8 +35,6 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-#include <emscripten.h>
-#include "Chat.h"
 
 
 /*########################################################################################################################*
@@ -66,11 +65,9 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-/* TODO: check this is actually accurate */
-static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
+	return end - beg;
 }
 
 extern void interop_Log(const char* msg, int len);
@@ -92,6 +89,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 cc_uint64 Stopwatch_Measure(void) {
 	/* time is a milliseconds double */
+	/*  convert to microseconds */
 	return (cc_uint64)(emscripten_get_now() * 1000);
 }
 
@@ -349,9 +347,6 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Process_StartGame(const cc_string* args, int numArgs) {
-	return ERR_NOT_SUPPORTED; 
-}
 void Process_Exit(cc_result code) {
 	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
 	if (code) Window_Close();
@@ -370,26 +365,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 	if (res == 1) res = ERR_INVALID_OPEN_URL;
 	return res;
 }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-const struct UpdaterInfo Updater_Info = { "", 0 };
-
-cc_result Updater_GetBuildTime(cc_uint64* t)   { return ERR_NOT_SUPPORTED; }
-cc_bool Updater_Clean(void)                    { return true; }
-cc_result Updater_Start(const char** action)   { return ERR_NOT_SUPPORTED; }
-cc_result Updater_MarkExecutable(void)         { return 0; }
-cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
 
 
 /*########################################################################################################################*
@@ -471,11 +446,10 @@ int main(int argc, char** argv) {
 	_argc = argc; _argv = argv;
 
 	/* Game loads resources asynchronously, then actually starts itself */
-	/* main 
+	/* main */
 	/*  > texture pack download (async) */
 	/*     > load indexedDB (async) */
 	/*        > web_main (game actually starts) */
-
 	interop_FS_Init();
 	interop_DirectorySetWorking("/classicube");
 	interop_AsyncDownloadTexturePack("texpacks/default.zip", "static/default.zip");

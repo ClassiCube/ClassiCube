@@ -180,7 +180,7 @@ static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 }
 
 static EM_BOOL OnVisibilityChanged(int eventType, const EmscriptenVisibilityChangeEvent* ev, void* data) {
-	cc_bool inactive = ev->visibilityState == EMSCRIPTEN_VISIBILITY_HIDDEN;\
+	cc_bool inactive = ev->visibilityState == EMSCRIPTEN_VISIBILITY_HIDDEN;
 	if (WindowInfo.Inactive == inactive) return false;
 
 	WindowInfo.Inactive = inactive;
