@@ -174,14 +174,14 @@ static UITextField* kb_widget;
 @implementation CCAppDelegate
 
 - (void)runMainLoop {
-    extern int main_real(int argc, char** argv);
-    main_real(1, NULL);
+    extern int ios_main(int argc, char** argv);
+    ios_main(1, NULL);
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     // schedule the actual main loop to run in next CFRunLoop iteration
-    //  (as calling main_real here doesn't work properly)
+    //  (as calling ios_main here doesn't work properly)
     [self performSelector:@selector(runMainLoop) withObject:nil afterDelay:0.0];
     return YES;
 }

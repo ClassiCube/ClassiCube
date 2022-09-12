@@ -168,7 +168,7 @@ Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed
 
 #### Web
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js --preload-file texpacks/default.zip```
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 

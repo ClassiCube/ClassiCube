@@ -295,7 +295,7 @@ mergeInto(LibraryManager.library, {
       // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
       // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
       node.contents = MEMFS.getFileDataAsTypedArray(node);
-      entry = { timestamp: node.mtime, mode: CCFS.MODE_TYPE_FILE, contents: node.contents };
+      entry = { timestamp: node.timestamp, mode: CCFS.MODE_TYPE_FILE, contents: node.contents };
     } catch (err) {
       return callback(err);
     }
