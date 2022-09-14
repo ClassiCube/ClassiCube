@@ -297,8 +297,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_SetTexturing(cc_bool enabled) {
-}
+void Gfx_SetTexturing(cc_bool enabled) { }
 
 
 /*########################################################################################################################*

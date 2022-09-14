@@ -355,7 +355,6 @@ static void ListScreen_Init(void* screen) {
 static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void ListScreen_Free(void* screen) {
@@ -416,7 +415,6 @@ void ListScreen_Show(void) {
 static void MenuScreen_Render2(void* screen, double delta) {
 	Menu_RenderBounds();
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 
@@ -2160,7 +2158,6 @@ static void MenuInputOverlay_Render(void* screen, double delta) {
 	if (s->screenMode) Menu_RenderBounds();
 
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void MenuInputOverlay_Free(void* screen) {
@@ -2470,7 +2467,6 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 		w->width + EXTHELP_PAD * 2, w->height + EXTHELP_PAD * 2, tableColor);
 
 	Elem_Render(&s->extHelp, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void MenuOptionsScreen_Free(void* screen) {
@@ -3422,7 +3418,6 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 
 	Gfx_BindTexture(s->idAtlas.tex.ID);
 	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset);
-	Gfx_SetTexturing(false);
 }
 
 static int TexIdsOverlay_KeyDown(void* screen, int key) {

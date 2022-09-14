@@ -404,7 +404,6 @@ void Particles_Render(float t) {
 	Custom_Render(t);
 
 	Gfx_SetAlphaTest(false);
-	Gfx_SetTexturing(false);
 }
 
 static void Particles_Tick(struct ScheduledTask* task) {

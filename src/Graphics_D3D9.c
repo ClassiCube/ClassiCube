@@ -386,11 +386,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
 
-void Gfx_SetTexturing(cc_bool enabled) {
-	if (enabled) return;
-	cc_result res = IDirect3DDevice9_SetTexture(device, 0, NULL);
-	if (res) Logger_Abort2(res, "D3D9_SetTexturing");
-}
+void Gfx_SetTexturing(cc_bool enabled) { }
 
 void Gfx_EnableMipmaps(void) {
 	if (!Gfx.Mipmaps) return;
@@ -512,6 +508,7 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
 	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	if (depthOnly) IDirect3DDevice9_SetTexture(device, 0, NULL);
 }
 
 static void D3D9_RestoreRenderStates(void) {
@@ -626,6 +623,15 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	cc_result res;
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
+
+	if (fmt == VERTEX_FORMAT_COLOURED) {
+		/* it's necessary to unbind the texture, otherwise the alpha from the last bound texture */
+		/*  gets used - because D3DTSS_ALPHAOP texture stage state is still set to D3DTOP_SELECTARG1 */
+		IDirect3DDevice9_SetTexture(device, 0, NULL);
+		/*  IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_COLOROP, fmt == VERTEX_FORMAT_COLOURED ? D3DTOP_DISABLE : D3DTOP_MODULATE); */
+		/*  IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, fmt == VERTEX_FORMAT_COLOURED ? D3DTOP_DISABLE : D3DTOP_SELECTARG1); */
+		/* SetTexture(NULL) seems to be enough, not really required to call SetTextureStageState */
+	}
 
 	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) Logger_Abort2(res, "D3D9_SetVertexFormat");

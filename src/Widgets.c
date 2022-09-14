@@ -794,7 +794,6 @@ static void TableWidget_Render(void* widget, double delta) {
 	IsometricDrawer_EndBatch();
 
 	if (w->descTex.ID) { Texture_Render(&w->descTex); }
-	Gfx_SetTexturing(false);
 }
 
 static void TableWidget_Free(void* widget) {

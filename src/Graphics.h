@@ -81,8 +81,8 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to 0. */
 CC_API void Gfx_DeleteTexture(GfxResourceID* texId);
-/* Sets whether texture colour is used when rendering vertices. */
-/* NOTE: Mostly useless now. Only Gfx_SetTexturing(false) does anything */
+/* NOTE: Completely useless now, and does nothing in all graphics backends */
+/*  (used to set whether texture colour is used when rendering vertices) */
 CC_API void Gfx_SetTexturing(cc_bool enabled);
 /* Turns on mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */

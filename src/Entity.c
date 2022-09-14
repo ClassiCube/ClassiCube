@@ -557,7 +557,6 @@ void Entities_RenderModels(double delta, float t) {
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
 	}
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
 }
 	
@@ -582,7 +581,6 @@ void Entities_RenderNames(void) {
 		}
 	}
 
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
 	if (hadFog) Gfx_SetFog(true);
 }
@@ -608,7 +606,6 @@ void Entities_RenderHoveredNames(void) {
 		}
 	}
 
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthTest(true);
 	if (hadFog) Gfx_SetFog(true);
@@ -690,7 +687,6 @@ void Entities_DrawShadows(void) {
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
-	Gfx_SetTexturing(false);
 }
 
 
