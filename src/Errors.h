@@ -120,5 +120,8 @@ enum CC_ERRORS {
 	NBT_ERR_EXPECTED_I16 = 0xCCDED061UL, /* Expected I16 NBT tag */
 	NBT_ERR_EXPECTED_I32 = 0xCCDED062UL, /* Expected I32 NBT tag */
 	NBT_ERR_EXPECTED_F32 = 0xCCDED063UL, /* Expected F32 NBT tag */
+	NBT_ERR_EXPECTED_STR = 0xCCDED064UL, /* Expected String NBT tag */
+	NBT_ERR_EXPECTED_ARR = 0xCCDED065UL, /* Expected Byte Array NBT tag */
+	NBT_ERR_ARR_TOO_SMALL= 0xCCDED066UL, /* Byte Array NBT tag length is < expected length */
 };
 #endif

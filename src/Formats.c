@@ -300,7 +300,7 @@ cc_result Fcm_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 enum NbtTagType { 
 	NBT_END, NBT_I8,  NBT_I16, NBT_I32,  NBT_I64, NBT_F32, 
-	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT
+	NBT_F64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT
 };
 
 #define NBT_SMALL_SIZE  STRING_SIZE
@@ -365,15 +365,17 @@ static float NbtTag_F32(struct NbtTag* tag) {
 }
 
 static cc_uint8* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
-	if (tag->type != NBT_I8S) Logger_Abort("Expected I8_Array NBT tag");
-	if (tag->dataSize < minSize) Logger_Abort("I8_Array NBT tag too small");
+	if (tag->type != NBT_I8S)    { tag->result = NBT_ERR_EXPECTED_ARR;  return NULL; }
+	if (tag->dataSize < minSize) { tag->result = NBT_ERR_ARR_TOO_SMALL; return NULL; }
 
 	return NbtTag_IsSmall(tag) ? tag->value.small : tag->value.big;
 }
 
 static cc_string NbtTag_String(struct NbtTag* tag) {
-	if (tag->type != NBT_STR) Logger_Abort("Expected String NBT tag");
-	return tag->value.str.text;
+	if (tag->type == NBT_STR) return tag->value.str.text;
+
+	tag->result = NBT_ERR_EXPECTED_STR;
+	return String_Empty;
 }
 
 static cc_result Nbt_ReadString(struct Stream* stream, cc_string* str) {
@@ -423,7 +425,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 		res = Stream_ReadU32_BE(stream, &tag.value.u32);
 		break;
 	case NBT_I64:
-	case NBT_R64:
+	case NBT_F64:
 		res = stream->Skip(stream, 8);
 		break; /* (8) data */
 
@@ -765,6 +767,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Textures")) {
 			arr = NbtTag_U8_Array(tag, 6);
+			if (!arr) return;
+
 			Block_Tex(id, FACE_YMAX) = arr[0]; Block_Tex(id, FACE_YMIN) = arr[1];
 			Block_Tex(id, FACE_XMIN) = arr[2]; Block_Tex(id, FACE_XMAX) = arr[3];
 			Block_Tex(id, FACE_ZMIN) = arr[4]; Block_Tex(id, FACE_ZMAX) = arr[5];
@@ -788,6 +792,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Fog")) {
 			arr = NbtTag_U8_Array(tag, 4);
+			if (!arr) return;
+
 			Blocks.FogDensity[id] = (arr[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
 			if (arr[0] == 0xFF) Blocks.FogDensity[id] = 0.0f;
@@ -797,6 +803,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Coords")) {
 			arr = NbtTag_U8_Array(tag, 6);
+			if (!arr) return;
+
 			Blocks.MinBB[id].X = (cc_int8)arr[0] / 16.0f; Blocks.MaxBB[id].X = (cc_int8)arr[3] / 16.0f;
 			Blocks.MinBB[id].Y = (cc_int8)arr[1] / 16.0f; Blocks.MaxBB[id].Y = (cc_int8)arr[4] / 16.0f;
 			Blocks.MinBB[id].Z = (cc_int8)arr[2] / 16.0f; Blocks.MaxBB[id].Z = (cc_int8)arr[5] / 16.0f;
