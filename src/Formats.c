@@ -330,28 +330,38 @@ struct NbtTag {
 };
 
 static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
-	if (tag->type != NBT_I8) Logger_Abort("Expected I8 NBT tag");
-	return tag->value.u8;
+	if (tag->type == NBT_I8) return tag->value.u8; 
+	
+	tag->result = NBT_ERR_EXPECTED_I8;
+	return 0;
 }
 
 static cc_int16 NbtTag_I16(struct NbtTag* tag) {
-	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
-	return tag->value.i16;
+	if (tag->type == NBT_I16) return tag->value.i16;
+
+	tag->result = NBT_ERR_EXPECTED_I16;
+	return 0;
 }
 
 static cc_uint16 NbtTag_U16(struct NbtTag* tag) {
-	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
-	return tag->value.u16;
+	if (tag->type == NBT_I16) return tag->value.u16;
+
+	tag->result = NBT_ERR_EXPECTED_I16;
+	return 0;
 }
 
 static int NbtTag_I32(struct NbtTag* tag) {
-	if (tag->type != NBT_I32) Logger_Abort("Expected I32 NBT tag");
-	return tag->value.i32;
+	if (tag->type == NBT_I32) return tag->value.i32;
+
+	tag->result = NBT_ERR_EXPECTED_I32;
+	return 0;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
-	if (tag->type != NBT_F32) Logger_Abort("Expected F32 NBT tag");
-	return tag->value.f32;
+	if (tag->type == NBT_F32) return tag->value.f32;
+
+	tag->result = NBT_ERR_EXPECTED_F32;
+	return 0;
 }
 
 static cc_uint8* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {

@@ -115,5 +115,10 @@ enum CC_ERRORS {
 	ERR_NO_AUDIO_OUTPUT  = 0xCCDED05DUL, /* No audio output devices are connected */
 	ERR_INVALID_DATA_URL = 0xCCDED05EUL, /* Invalid URL provided to download from */
 	ERR_INVALID_OPEN_URL = 0xCCDED05FUL, /* Invalid URL provided to open in new tab */
+
+	NBT_ERR_EXPECTED_I8  = 0xCCDED060UL, /* Expected I8 NBT tag  */
+	NBT_ERR_EXPECTED_I16 = 0xCCDED061UL, /* Expected I16 NBT tag */
+	NBT_ERR_EXPECTED_I32 = 0xCCDED062UL, /* Expected I32 NBT tag */
+	NBT_ERR_EXPECTED_F32 = 0xCCDED063UL, /* Expected F32 NBT tag */
 };
 #endif
