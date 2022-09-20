@@ -14,9 +14,9 @@
 #include "Errors.h"
 #include "Stream.h"
 #include "Chat.h"
-#include "Inventory.h"
 #include "TexturePack.h"
 #include "Utils.h"
+static cc_bool calcDefaultSpawn;
 
 
 /*########################################################################################################################*
@@ -62,6 +62,7 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	cc_result res;
 	Game_Reset();
 	
+	calcDefaultSpawn = false;
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
@@ -77,6 +78,7 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	if (res) Logger_SysWarn2(res, "decoding", path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
+	if (calcDefaultSpawn) LocalPlayer_CalcDefaultSpawn();
 	LocalPlayer_MoveToSpawn();
 
 	relPath = *path;
@@ -1201,15 +1203,18 @@ Classic 0.15 to Classic 0.30:
 	VAR "Level"      (Java serialised level object instance)
 }*/
 
-static void UseClassic013Env(void) {
-	/* Similiar env to how it appears in 0.13 classic client */
+static void Dat_Format0And1(void) {
+	/* Formats 0 and 1 don't store spawn position, so use default of map centre */
+	calcDefaultSpawn = true;
+
+	/* Similiar env to how it appears in preclassic - 0.13 classic client */
 	Env.CloudsHeight = -30000;
 	Env.SkyCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);
 	Env.FogCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);
 }
 
 static cc_result Dat_LoadFormat0(struct Stream* stream) {
-	UseClassic013Env();
+	Dat_Format0And1();
 	/* Similiar env to how it appears in preclassic client */
 	Env.EdgeBlock  = BLOCK_AIR;
 	Env.SidesBlock = BLOCK_AIR;
@@ -1235,7 +1240,7 @@ static cc_result Dat_LoadFormat1(struct Stream* stream) {
 	cc_uint8 header[8 + 2 + 2 + 2];
 	cc_result res;
 
-	UseClassic013Env();
+	Dat_Format0And1();
 	if ((res = Java_ReadString(stream,   level_name))) return res;
 	if ((res = Java_ReadString(stream, level_author))) return res;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;

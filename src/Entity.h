@@ -212,6 +212,7 @@ void LocalPlayer_ResetJumpVelocity(void);
 cc_bool LocalPlayer_CheckCanZoom(void);
 /* Moves local player back to spawn point. */
 void LocalPlayer_MoveToSpawn(void);
+void LocalPlayer_CalcDefaultSpawn(void);
 
 cc_bool LocalPlayer_HandleRespawn(void);
 cc_bool LocalPlayer_HandleSetSpawn(void);

@@ -1115,6 +1115,16 @@ void LocalPlayer_MoveToSpawn(void) {
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
 
+void LocalPlayer_CalcDefaultSpawn(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	float x = (World.Width  / 2) + 0.5f; 
+	float z = (World.Length / 2) + 0.5f;
+
+	p->Spawn      = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+	p->SpawnYaw   = 0.0f;
+	p->SpawnPitch = 0.0f;
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*

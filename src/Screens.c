@@ -1756,9 +1756,6 @@ static void GeneratingScreen_Free(void* screen) {
 }
 
 static void GeneratingScreen_EndGeneration(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	float x, z;
-
 	Gen_Done   = false;
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
@@ -1766,11 +1763,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Blocks = NULL;
 	World.Seed = Gen_Seed;
 
-	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
-	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-
-	p->SpawnYaw   = 0.0f;
-	p->SpawnPitch = 0.0f;
+	LocalPlayer_CalcDefaultSpawn();
 	LocalPlayer_MoveToSpawn();
 }
 
