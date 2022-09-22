@@ -1,7 +1,7 @@
 #ifndef CC_LWEB_H
 #define CC_LWEB_H
-#include "Http.h"
 #include "Bitmap.h"
+#include "Constants.h"
 /* Implements asynchronous web tasks for the launcher.
 	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */

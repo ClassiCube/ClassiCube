@@ -113,6 +113,7 @@ mergeInto(LibraryManager.library, {
     var name = UTF8ToString(path);
     var data = CCFS.readFile(name);
     CCFS.writeFile('texpacks/' + name.substring(1), data);
+    _interop_SaveNode('texpacks/' + name.substring(1));
   },
   
   
@@ -136,7 +137,7 @@ mergeInto(LibraryManager.library, {
   },
   interop_AsyncLoadIndexedDB__deps: ['IDBFS_loadFS'],
   interop_AsyncLoadIndexedDB: function() {
-    Module.setStatus('Loading IndexedDB filesystem.. (2/2)');
+    Module.setStatus('Preloading filesystem.. (2/2)');
     
     _IDBFS_loadFS(function(err) { 
       if (err) window.cc_idbErr = err;
@@ -1309,8 +1310,8 @@ mergeInto(LibraryManager.library, {
         stream.position = position;
         return stream.position;
       },
-      read:function(stream, buffer, offset, length, position) {
-        if (length < 0 || position < 0) {
+      read:function(stream, buffer, offset, length) {
+        if (length < 0) {
           throw new CCFS.ErrnoError(22);
         }
         if (CCFS.isClosed(stream)) {
@@ -1319,16 +1320,14 @@ mergeInto(LibraryManager.library, {
         if ((stream.flags & 2097155) === 1) {
           throw new CCFS.ErrnoError(9);
         }
-        var seeking = typeof position !== 'undefined';
-        if (!seeking) {
-          position = stream.position;
-        }
+        
+        var position  = stream.position;
         var bytesRead = MEMFS.stream_read(stream, buffer, offset, length, position);
-        if (!seeking) stream.position += bytesRead;
+        stream.position += bytesRead;
         return bytesRead;
       },
-      write:function(stream, buffer, offset, length, position, canOwn) {
-        if (length < 0 || position < 0) {
+      write:function(stream, buffer, offset, length, canOwn) {
+        if (length < 0) {
           throw new CCFS.ErrnoError(22);
         }
         if (CCFS.isClosed(stream)) {
@@ -1341,12 +1340,10 @@ mergeInto(LibraryManager.library, {
           // seek to the end before writing in append mode
           CCFS.llseek(stream, 0, 2);
         }
-        var seeking = typeof position !== 'undefined';
-        if (!seeking) {
-          position = stream.position;
-        }
+        
+        var position = stream.position;
         var bytesWritten = MEMFS.stream_write(stream, buffer, offset, length, position, canOwn);
-        if (!seeking) stream.position += bytesWritten;
+        stream.position += bytesWritten;
         return bytesWritten;
       },
       readFile:function(path, opts) {
@@ -1357,7 +1354,7 @@ mergeInto(LibraryManager.library, {
         var stream = CCFS.open(path, 0); // O_RDONLY
         var length = stream.node.usedBytes;
         var buf    = new Uint8Array(length);
-        CCFS.read(stream, buf, 0, length, 0);
+        CCFS.read(stream, buf, 0, length);
         
         if (opts.encoding === 'utf8') {
           ret = UTF8ArrayToString(buf, 0);
@@ -1377,9 +1374,9 @@ mergeInto(LibraryManager.library, {
         if (typeof data === 'string') {
           var buf = new Uint8Array(lengthBytesUTF8(data)+1);
           var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
-          CCFS.write(stream, buf, 0, actualNumBytes, undefined, opts.canOwn);
+          CCFS.write(stream, buf, 0, actualNumBytes, opts.canOwn);
         } else if (ArrayBuffer.isView(data)) {
-          CCFS.write(stream, data, 0, data.byteLength, undefined, opts.canOwn);
+          CCFS.write(stream, data, 0, data.byteLength, opts.canOwn);
         } else {
           throw new Error('Unsupported data type');
         }

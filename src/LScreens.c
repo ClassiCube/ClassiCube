@@ -17,6 +17,7 @@
 #include "Options.h"
 #include "Utils.h"
 #include "LBackend.h"
+#include "Http.h"
 #define LAYOUTS static const struct LLayout
 
 /*########################################################################################################################*
