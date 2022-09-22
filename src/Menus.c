@@ -1572,7 +1572,7 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string path = String_FromConst(TEXPACKS_DIR);
+	static const cc_string path = String_FromConst("texpacks");
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
 	StringsBuffer_Sort(&s->entries);
 }
@@ -1581,11 +1581,13 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 extern void interop_UploadTexPack(const char* path);
 static void TexturePackScreen_UploadCallback(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	cc_string relPath = *path;
+	Platform_EncodeUtf8(str, path); 
+	Utils_UNSAFE_GetFilename(&relPath);
 
 	interop_UploadTexPack(str);
 	TexturePackScreen_Show();
-	TexturePack_SetDefault(path);
+	TexturePack_SetDefault(&relPath);
 	TexturePack_ExtractCurrent(true);
 }
 

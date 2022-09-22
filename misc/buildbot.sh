@@ -110,10 +110,8 @@ WEB_CC="/home/buildbot/emsdk/emscripten/1.38.31/emcc"
 build_web() {
   echo "Building web.."
   rm cc.js
-  $WEB_CC *.c -O1 -o cc.js --js-library interop_web.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web --preload-file texpacks/default.zip -w
+  $WEB_CC *.c -O1 -o cc.js --js-library interop_web.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web -w
   if [ $? -ne 0 ]; then echo "Failed to compile Webclient" >> "$ERRS_FILE"; fi
-  # so game loads textures from classicube.net/static/default.zip
-  sed -i 's#cc.data#/static/default.zip#g' cc.js
   # fix mouse wheel scrolling page not being properly prevented
   # "[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."
   sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' cc.js

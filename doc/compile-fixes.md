@@ -23,36 +23,6 @@ Add ```-lexecinfo``` when compiling. Occurs when using musl.
 
 Webclient patches
 ---------------------
-#### Starting game **Error 00000002 when setting current directory**
-This is caused by IndexedDB not being initialised, which also means saved maps are lost when the tab is closed.
-
-Due to how IndexedDB works, you must load and initialise it before the game starts. Change:
-
-```
-    <script type='text/javascript'>
-      var Module = {
-        preRun: [],
-...
-```
-to
-```
-    <script type='text/javascript'>
-      // need to load IndexedDB before running the game
-      function preloadIndexedDB() {
-        addRunDependency('load-idb');
-        FS.mkdir('/classicube');
-        FS.mount(IDBFS, {}, '/classicube');
-        FS.syncfs(true, function(err) { 
-            if (err) window.cc_idbErr = err; 
-            removeRunDependency('load-idb');
-        })
-      }
-
-      var Module = {
-        preRun: [ preloadIndexedDB ],
-...
-```
-
 #### Mouse scrolling not properly prevented
 With recent chrome/firefox versions, page is still scrolled and console is spammed with\
 ```"[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."```
