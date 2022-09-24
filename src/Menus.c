@@ -1562,11 +1562,6 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 	cc_string relPath = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
-#ifdef CC_BUILD_WEB
-	/* Web client texture pack dir starts with /, so need to get rid of that */
-	if (relPath.buffer[0] == '/') { relPath.buffer++; relPath.length--; }
-#endif
-
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
 	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
 }
@@ -1577,17 +1572,20 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 	StringsBuffer_Sort(&s->entries);
 }
 
-#ifdef CC_BUILD_WEB
 extern void interop_UploadTexPack(const char* path);
 static void TexturePackScreen_UploadCallback(const cc_string* path) {
+#ifdef CC_BUILD_WEB
 	char str[NATIVE_STR_LEN];
 	cc_string relPath = *path;
 	Platform_EncodeUtf8(str, path); 
 	Utils_UNSAFE_GetFilename(&relPath);
 
 	interop_UploadTexPack(str);
-	TexturePackScreen_Show();
+	ListScreen_Reload(&ListScreen);
 	TexturePack_SetDefault(&relPath);
+#else
+	String_Copy(&TexturePack_Path, path);
+#endif
 	TexturePack_ExtractCurrent(true);
 }
 
@@ -1595,9 +1593,6 @@ static void TexturePackScreen_UploadFunc(void* s, void* w) {
 	static const char* const filters[] = { ".zip", NULL };
 	Window_OpenFileDialog(filters, TexturePackScreen_UploadCallback);
 }
-#else
-#define TexturePackScreen_UploadFunc NULL
-#endif
 
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;

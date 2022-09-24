@@ -51,7 +51,10 @@ CC_VAR extern struct _Atlas1DData {
 	GfxResourceID TexIds[ATLAS1D_MAX_ATLASES];
 } Atlas1D;
 
+/* URL of the current custom texture pack, can be empty */
 extern cc_string TexturePack_Url;
+/* Path to the default texture pack to use */
+extern cc_string TexturePack_Path;
 
 #define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */
 #define Atlas2D_TileY(texLoc) ((texLoc) >> ATLAS2D_SHIFT) /* texLoc / ATLAS2D_TILES_PER_ROW */

@@ -280,15 +280,16 @@ static void UpdateCache(struct HttpRequest* req) {
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-static char defTexPackBuffer[STRING_SIZE];
 static char textureUrlBuffer[STRING_SIZE];
-static cc_string texpackPath = String_FromArray(defTexPackBuffer);
-cc_string TexturePack_Url    = String_FromArray(textureUrlBuffer);
+static char texpackPathBuffer[FILENAME_SIZE];
+
+cc_string TexturePack_Url  = String_FromArray(textureUrlBuffer);
+cc_string TexturePack_Path = String_FromArray(texpackPathBuffer);
 static const cc_string defaultPath = String_FromConst("texpacks/default.zip");
 
 void TexturePack_SetDefault(const cc_string* texPack) {
-	texpackPath.length = 0;
-	String_Format1(&texpackPath, "texpacks/%s", texPack);
+	TexturePack_Path.length = 0;
+	String_Format1(&TexturePack_Path, "texpacks/%s", texPack);
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
@@ -356,7 +357,7 @@ static cc_result ExtractFromFile(const cc_string* path) {
 }
 
 static cc_result ExtractDefault(void) {
-	cc_string path = Game_ClassicMode ? defaultPath : texpackPath;
+	cc_string path = Game_ClassicMode ? defaultPath : TexturePack_Path;
 	cc_result res  = ExtractFromFile(&defaultPath);
 
 	/* override default.zip with user's default texture pack */
@@ -478,11 +479,11 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
-	texpackPath.length = 0;
+	TexturePack_Path.length = 0;
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &file)) {
-		String_Format1(&texpackPath,      "texpacks/%s", &file);
+		String_Format1(&TexturePack_Path,      "texpacks/%s", &file);
 	} else {
-		String_AppendString(&texpackPath, &defaultPath);
+		String_AppendString(&TexturePack_Path, &defaultPath);
 	}
 
 	Utils_EnsureDirectory("texpacks");
