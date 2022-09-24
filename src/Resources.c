@@ -13,6 +13,7 @@
 #include "Logger.h"
 #include "LWeb.h"
 #include "Http.h"
+int Resources_Count, Resources_Size;
 
 /*########################################################################################################################*
 *--------------------------------------------------------Resources list---------------------------------------------------*
@@ -54,11 +55,73 @@ static struct ResourceTexture {
 #endif
 };
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Music resources--------------------------------------------------*
+*#########################################################################################################################*/
+static struct MusicResource {
+	const char* name;
+	const char* hash;
+	short size;
+	cc_bool downloaded;
+	int reqID;
+} musicResources[] = {
+	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
+	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
+	{ "calm3.ogg", "14ae57a6bce3d4254daa8be2b098c2d99743cc3f", 2181 },
+	{ "hal1.ogg",  "df1ff11b79757432c5c3f279e5ecde7b63ceda64", 1926 },
+	{ "hal2.ogg",  "ceaaaa1d57dfdfbb0bd4da5ea39628b42897a687", 1714 },
+	{ "hal3.ogg",  "dd85fb564e96ee2dbd4754f711ae9deb08a169f9", 1879 },
+	{ "hal4.ogg",  "5e7d63e75c6e042f452bc5e151276911ef92fed8", 2499 }
+};
+
+static void MusicResources_CheckExistence(void) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	int i;
+	String_InitArray(path, pathBuffer);
+
+	for (i = 0; i < Array_Elems(musicResources); i++) {
+		path.length = 0;
+		String_Format1(&path, "audio/%c", musicResources[i].name);
+
+		musicResources[i].downloaded = File_Exists(&path);
+		if (musicResources[i].downloaded) continue;
+
+		Resources_Size += musicResources[i].size;
+		Resources_Count++;
+	}
+}
+
+
+static void MusicResource_Save(const char* name, struct HttpRequest* req) {
+	cc_string path; char pathBuffer[STRING_SIZE];
+	cc_result res;
+
+	String_InitArray(path, pathBuffer);
+	String_Format1(&path, "audio/%c", name);
+
+	res = Stream_WriteAllTo(&path, req->data, req->size);
+	if (res) Logger_SysWarn(res, "saving music file");
+}
+
+CC_NOINLINE static int MusicResource_Download(const char* hash) {
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
+
+	String_InitArray(url, urlBuffer);
+	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
+					&hash[0], &hash[1], hash);
+	return Http_AsyncGetData(&url, 0);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Sound resources--------------------------------------------------*
+*#########################################################################################################################*/
 static struct SoundResource {
 	const char* name;
 	const char* hash;
 	int reqID;
-} soundResources[59] = {
+} soundResources[] = {
 	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
 	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
 	{ "dig_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
@@ -91,60 +154,9 @@ static struct SoundResource {
 	{ "step_wood1",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "step_wood2",   "98102533e6085617a2962157b4f3658f59aea018" },
 	{ "step_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4",   "dc66978374a46ab2b87db6472804185824868095" }
 };
+static cc_bool allSoundsExist;
 
-static struct MusicResource {
-	const char* name;
-	const char* hash;
-	short size;
-	cc_bool downloaded;
-	int reqID;
-} musicResources[7] = {
-	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
-	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
-	{ "calm3.ogg", "14ae57a6bce3d4254daa8be2b098c2d99743cc3f", 2181 },
-	{ "hal1.ogg",  "df1ff11b79757432c5c3f279e5ecde7b63ceda64", 1926 },
-	{ "hal2.ogg",  "ceaaaa1d57dfdfbb0bd4da5ea39628b42897a687", 1714 },
-	{ "hal3.ogg",  "dd85fb564e96ee2dbd4754f711ae9deb08a169f9", 1879 },
-	{ "hal4.ogg",  "5e7d63e75c6e042f452bc5e151276911ef92fed8", 2499 }
-};
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------List/Checker----------------------------------------------------*
-*#########################################################################################################################*/
-int Resources_Count, Resources_Size;
-static cc_bool allSoundsExist, allTexturesExist;
-static int texturesFound;
-
-CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const cc_string* name) {
-	struct ResourceTexture* tex;
-	int i;
-
-	for (i = 0; i < Array_Elems(textureResources); i++) {
-		tex = &textureResources[i];
-		if (String_CaselessEqualsConst(name, tex->filename)) return tex;
-	}
-	return NULL;
-}
-
-static void Resources_CheckMusic(void) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	String_InitArray(path, pathBuffer);
-
-	for (i = 0; i < Array_Elems(musicResources); i++) {
-		path.length = 0;
-		String_Format1(&path, "audio/%c", musicResources[i].name);
-
-		musicResources[i].downloaded = File_Exists(&path);
-		if (musicResources[i].downloaded) continue;
-
-		Resources_Size += musicResources[i].size;
-		Resources_Count++;
-	}
-}
-
-static void Resources_CheckSounds(void) {
+static void SoundResources_CheckExistence(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	String_InitArray(path, pathBuffer);
@@ -163,6 +175,113 @@ static void Resources_CheckSounds(void) {
 	allSoundsExist = true;
 }
 
+
+#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
+#define WAV_HDR_SIZE 44
+
+/* Fixes up the .WAV header after having written all samples */
+static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 len) {
+	cc_uint8 header[WAV_HDR_SIZE];
+	cc_result res = s->Seek(s, 0);
+	if (res) { Logger_SysWarn(res, "seeking to .wav start"); return; }
+
+	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(header +  4, len - 8);
+	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
+	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
+	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
+	Stream_SetU16_LE(header + 22, ctx->channels);
+	Stream_SetU32_LE(header + 24, ctx->sampleRate);
+
+	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
+	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
+	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
+	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
+
+	res = Stream_Write(s, header, WAV_HDR_SIZE);
+	if (res) Logger_SysWarn(res, "fixing .wav header");
+}
+
+/* Decodes all samples, then produces a .WAV file from them */
+static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
+	cc_int16* samples;
+	cc_uint32 len = WAV_HDR_SIZE;
+	cc_result res;
+	int count;
+
+	/* ctx is all 0, so reuse here for empty header */
+	res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE);
+	if (res) { Logger_SysWarn(res, "writing .wav header"); return; }
+
+	res = Vorbis_DecodeHeaders(ctx);
+	if (res) { Logger_SysWarn(res, "decoding .ogg header"); return; }
+
+	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
+	if (!samples) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
+
+	for (;;) {
+		res = Vorbis_DecodeFrame(ctx);
+		if (res == ERR_END_OF_STREAM) {
+			/* reached end of samples, so done */
+			SoundPatcher_FixupHeader(s, ctx, len); break;
+		}
+		if (res) { Logger_SysWarn(res, "decoding .ogg"); break; }
+
+		count = Vorbis_OutputFrame(ctx, samples);
+		len  += count * 2;
+		/* TODO: Do we need to account for big endian */
+		res = Stream_Write(s, samples, count * 2);
+		if (res) { Logger_SysWarn(res, "writing samples"); break; }
+	}
+	Mem_Free(samples);
+}
+
+/* Converts an OGG sound to a WAV sound for faster decoding later */
+static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
+	cc_string path; char pathBuffer[STRING_SIZE];
+	struct OggState ogg;
+	struct Stream src, dst;
+	struct VorbisState ctx = { 0 };
+	cc_result res;
+
+	Stream_ReadonlyMemory(&src, req->data, req->size);
+	String_InitArray(path, pathBuffer);
+	String_Format1(&path, "audio/%c.wav", name);
+
+	res = Stream_CreateFile(&dst, &path);
+	if (res) { Logger_SysWarn(res, "creating .wav file"); return; }
+
+	Ogg_Init(&ogg, &src);
+	ctx.source = &ogg;
+	SoundPatcher_WriteWav(&dst, &ctx);
+
+	res = dst.Close(&dst);
+	if (res) Logger_SysWarn(res, "closing .wav file");
+	Vorbis_Free(&ctx);
+}
+
+#define SoundResource_Download(hash) MusicResource_Download(hash)
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------List/Checker----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_bool allTexturesExist;
+static int texturesFound;
+
+CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const cc_string* name) {
+	struct ResourceTexture* tex;
+	int i;
+
+	for (i = 0; i < Array_Elems(textureResources); i++) {
+		tex = &textureResources[i];
+		if (String_CaselessEqualsConst(name, tex->filename)) return tex;
+	}
+	return NULL;
+}
+
 static cc_bool Resources_SelectZipEntry(const cc_string* path) {
 	cc_string name = *path;
 	Utils_UNSAFE_GetFilename(&name);
@@ -171,7 +290,7 @@ static cc_bool Resources_SelectZipEntry(const cc_string* path) {
 	return false;
 }
 
-static void Resources_CheckTextures(void) {
+static void Resources_CheckZip(void) {
 	static const cc_string path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
 	struct ZipState state;
@@ -192,20 +311,24 @@ static void Resources_CheckTextures(void) {
 	allTexturesExist = texturesFound >= Array_Elems(textureResources);
 }
 
-void Resources_CheckExistence(void) {
+static void Resources_CheckTextures(void) {
 	int i;
-	Resources_Count = 0;
-	Resources_Size  = 0;
-
-	Resources_CheckTextures();
-	Resources_CheckMusic();
-	Resources_CheckSounds();
-
+	Resources_CheckZip();
 	if (allTexturesExist) return;
+
 	for (i = 0; i < Array_Elems(fileResources); i++) {
 		Resources_Count++;
 		Resources_Size += fileResources[i].size;
 	}
+}
+
+void Resources_CheckExistence(void) {
+	Resources_Count = 0;
+	Resources_Size  = 0;
+
+	Resources_CheckTextures();
+	MusicResources_CheckExistence();
+	SoundResources_CheckExistence();
 }
 
 
@@ -648,120 +771,11 @@ static void TexPatcher_MakeDefaultZip(void) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Audio patcher----------------------------------------------------*
-*#########################################################################################################################*/
-#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
-#define WAV_HDR_SIZE 44
-
-/* Fixes up the .WAV header after having written all samples */
-static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 len) {
-	cc_uint8 header[WAV_HDR_SIZE];
-	cc_result res = s->Seek(s, 0);
-	if (res) { Logger_SysWarn(res, "seeking to .wav start"); return; }
-
-	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(header +  4, len - 8);
-	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
-	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
-	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
-	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
-	Stream_SetU16_LE(header + 22, ctx->channels);
-	Stream_SetU32_LE(header + 24, ctx->sampleRate);
-
-	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
-	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
-	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
-	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
-
-	res = Stream_Write(s, header, WAV_HDR_SIZE);
-	if (res) Logger_SysWarn(res, "fixing .wav header");
-}
-
-/* Decodes all samples, then produces a .WAV file from them */
-static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
-	cc_int16* samples;
-	cc_uint32 len = WAV_HDR_SIZE;
-	cc_result res;
-	int count;
-
-	/* ctx is all 0, so reuse here for empty header */
-	res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE);
-	if (res) { Logger_SysWarn(res, "writing .wav header"); return; }
-
-	res = Vorbis_DecodeHeaders(ctx);
-	if (res) { Logger_SysWarn(res, "decoding .ogg header"); return; }
-
-	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
-	if (!samples) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
-
-	for (;;) {
-		res = Vorbis_DecodeFrame(ctx);
-		if (res == ERR_END_OF_STREAM) {
-			/* reached end of samples, so done */
-			SoundPatcher_FixupHeader(s, ctx, len); break;
-		}
-		if (res) { Logger_SysWarn(res, "decoding .ogg"); break; }
-
-		count = Vorbis_OutputFrame(ctx, samples);
-		len  += count * 2;
-		/* TODO: Do we need to account for big endian */
-		res = Stream_Write(s, samples, count * 2);
-		if (res) { Logger_SysWarn(res, "writing samples"); break; }
-	}
-	Mem_Free(samples);
-}
-
-static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
-	cc_string path; char pathBuffer[STRING_SIZE];
-	struct OggState ogg;
-	struct Stream src, dst;
-	struct VorbisState ctx = { 0 };
-	cc_result res;
-
-	Stream_ReadonlyMemory(&src, req->data, req->size);
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c.wav", name);
-
-	res = Stream_CreateFile(&dst, &path);
-	if (res) { Logger_SysWarn(res, "creating .wav file"); return; }
-
-	Ogg_Init(&ogg, &src);
-	ctx.source = &ogg;
-	SoundPatcher_WriteWav(&dst, &ctx);
-
-	res = dst.Close(&dst);
-	if (res) Logger_SysWarn(res, "closing .wav file");
-	Vorbis_Free(&ctx);
-}
-
-static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
-	cc_string path; char pathBuffer[STRING_SIZE];
-	cc_result res;
-
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c", name);
-
-	res = Stream_WriteAllTo(&path, req->data, req->size);
-	if (res) Logger_SysWarn(res, "saving music file");
-}
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int  Fetcher_StatusCode, Fetcher_Downloaded;
 cc_result Fetcher_Result;
-
-CC_NOINLINE static int Fetcher_DownloadAudio(const char* hash) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
-
-	String_InitArray(url, urlBuffer);
-	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
-					&hash[0], &hash[1], hash);
-	return Http_AsyncGetData(&url, 0);
-}
 
 const char* Fetcher_RequestName(int reqID) {
 	int i;
@@ -796,11 +810,11 @@ void Fetcher_Run(void) {
 
 	for (i = 0; i < Array_Elems(musicResources); i++) {
 		if (musicResources[i].downloaded) continue;
-		musicResources[i].reqID = Fetcher_DownloadAudio(musicResources[i].hash);
+		musicResources[i].reqID = MusicResource_Download(musicResources[i].hash);
 	}
 	for (i = 0; i < Array_Elems(soundResources); i++) {
 		if (allSoundsExist) continue;
-		soundResources[i].reqID = Fetcher_DownloadAudio(soundResources[i].hash);
+		soundResources[i].reqID = SoundResource_Download(soundResources[i].hash);
 	}
 }
 
@@ -839,7 +853,7 @@ static void Fetcher_CheckMusic(struct MusicResource* music) {
 	if (!Fetcher_Get(music->reqID, &req)) return;
 
 	music->downloaded = true;
-	MusicPatcher_Save(music->name, &req);
+	MusicResource_Save(music->name, &req);
 	Mem_Free(req.data);
 }
 
@@ -852,7 +866,7 @@ static void Fetcher_CheckSound(const struct SoundResource* sound) {
 }
 
 /* TODO: Implement this.. */
-/* TODO: How expensive is it to constantly do 'Get' over and make all these strings */
+/* TODO: How expensive is it to constantly do 'Get' over and over */
 void Fetcher_Update(void) {
 	int i;
 

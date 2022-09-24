@@ -245,8 +245,8 @@ void Launcher_Run(void) {
 	Launcher_TryLoadTexturePack();
 
 	Http_Component.Init();
-	Resources_CheckExistence();
 	CheckUpdateTask_Run();
+	Resources_CheckExistence();
 
 	if (Resources_Count) {
 		CheckResourcesScreen_SetActive();
