@@ -277,7 +277,7 @@ static cc_bool LoadCurlFuncs(void) {
 }
 
 static CURL* curl;
-static cc_bool curlSupported;
+static cc_bool curlSupported, curlVerbose;
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	const char* err;
@@ -300,7 +300,9 @@ static void HttpBackend_Init(void) {
 
 	curl = _curl_easy_init();
 	if (!curl) { Logger_SimpleWarn(res, "initing curl_easy"); return; }
+
 	curlSupported = true;
+	curlVerbose = Options_GetBool("curl-verbose", false);
 }
 
 static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) {
@@ -348,6 +350,8 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
 	_curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_ProcessData);
 	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+
+	if (curlVerbose) _curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 	if (httpsVerify) return;
 	_curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
