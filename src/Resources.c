@@ -449,7 +449,7 @@ static struct ZipfileSource {
 	const char* url;
 	cc_result (*Process)(struct HttpRequest* req);
 	short size;
-	cc_bool downloaded;
+	cc_bool downloaded, last;
 	int reqID;
 } defaultZipSources[] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },

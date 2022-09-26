@@ -221,6 +221,9 @@ typedef int CURLcode;
 #define CURLOPT_HEADERFUNCTION (20000 + 79)
 #define CURLOPT_HTTPGET        (0     + 80)
 #define CURLOPT_SSL_VERIFYHOST (0     + 81)
+#define CURLOPT_HTTP_VERSION   (0     + 84)
+
+#define CURL_HTTP_VERSION_1_1   2L /* stick to HTTP 1.1 */
 
 #if defined _WIN32
 #define APIENTRY __cdecl
@@ -345,6 +348,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	_curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	_curl_easy_setopt(curl, CURLOPT_MAXREDIRS,      20L);
+	_curl_easy_setopt(curl, CURLOPT_HTTP_VERSION,   CURL_HTTP_VERSION_1_1);
 
 	_curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
 	_curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
