@@ -378,7 +378,7 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Resources list---------------------------------------------------*
+*----------------------------------------------------default.zip resources------------------------------------------------*
 *#########################################################################################################################*/
 #define ANIMS_TXT \
 "# This file defines the animations used in a texture pack for ClassiCube.\r\n" \
@@ -399,7 +399,7 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 "# fire\r\n" \
 "6 2 0 0 16 32 0"
 
-static struct ResourceZipEntry textureResources[] = {
+static struct ResourceZipEntry defaultZipEntries[] = {
 	/* classic jar files */
 	{ "char.png",     RESOURCE_TYPE_DATA }, { "clouds.png",      RESOURCE_TYPE_DATA }, 
 	{ "default.png",  RESOURCE_TYPE_DATA }, { "particles.png",   RESOURCE_TYPE_DATA },
@@ -418,106 +418,58 @@ static struct ResourceZipEntry textureResources[] = {
 #endif
 };
 
+CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* name) {
+	struct ResourceZipEntry* e;
+	int i;
+
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
+		e = &defaultZipEntries[i];
+		if (String_CaselessEqualsConst(name, e->filename)) return e;
+	}
+	return NULL;
+}
+
+static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct ZipState* state, struct Stream* src) {
+	cc_uint32 size = state->_curEntry->UncompressedSize;
+	e->value.data  = Mem_TryAlloc(size, 1);
+	e->size        = size;
+
+	if (!e->value.data) return ERR_OUT_OF_MEMORY;
+	return Stream_Read(src, e->value.data, size);
+}
+
+
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
-static cc_result TexPatcher_Terrain(struct HttpRequest* req);
-static cc_result TexPactcher_ExtractGui(struct HttpRequest* req);
+static cc_result TerrainPatcher_Process(struct HttpRequest* req);
+static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
 
-static struct FileResource {
+static struct ZipfileSource {
 	const char* name;
 	const char* url;
 	cc_result (*Process)(struct HttpRequest* req);
 	short size;
 	cc_bool downloaded;
 	int reqID;
-} fileResources[4] = {
+} defaultZipSources[] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     ModernPatcher_ExtractFiles, 4621 },
-	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TexPatcher_Terrain, 7 },
+	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TerrainPatcher_Process, 7 },
 #ifdef CC_BUILD_MOBILE
-	{ "new textures",      RESOURCE_SERVER "/default.zip",        TexPactcher_ExtractGui, 87 }
+	{ "new textures",      RESOURCE_SERVER "/default.zip",        NewTextures_ExtractGui, 87 }
 #else
-	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            TexPactcher_ExtractGui, 21 }
+	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 }
 #endif
 };
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------List/Checker----------------------------------------------------*
+*------------------------------------------------default.zip entry generators---------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool allTexturesExist;
-static int texturesFound;
-
-CC_NOINLINE static struct ResourceZipEntry* Resources_FindTex(const cc_string* name) {
-	struct ResourceZipEntry* tex;
-	int i;
-
-	for (i = 0; i < Array_Elems(textureResources); i++) {
-		tex = &textureResources[i];
-		if (String_CaselessEqualsConst(name, tex->filename)) return tex;
-	}
-	return NULL;
-}
-
-static cc_result Resources_ExtractData(struct ResourceZipEntry* tex, struct ZipState* state, struct Stream* src) {
-	cc_uint32 size  = state->_curEntry->UncompressedSize;
-	tex->value.data = Mem_TryAlloc(size, 1);
-	tex->size       = size;
-
-	if (!tex->value.data) return ERR_OUT_OF_MEMORY;
-	return Stream_Read(src, tex->value.data, size);
-}
-
-
-static cc_bool Resources_SelectZipEntry(const cc_string* path) {
-	cc_string name = *path;
-	Utils_UNSAFE_GetFilename(&name);
-
-	if (Resources_FindTex(&name)) texturesFound++;
-	return false;
-}
-
-static void ZipResources_CountEntries(void) {
-	static const cc_string path = String_FromConst("texpacks/default.zip");
-	struct Stream stream;
-	struct ZipState state;
-	cc_result res;
-
-	res = Stream_OpenFile(&stream, &path);
-	if (res == ReturnCode_FileNotFound) return;
-
-	if (res) { Logger_SysWarn(res, "checking default.zip"); return; }
-	Zip_Init(&state, &stream);
-	state.SelectEntry = Resources_SelectZipEntry;
-
-	res = Zip_Extract(&state);
-	stream.Close(&stream);
-	if (res) Logger_SysWarn(res, "inspecting default.zip");
-
-	/* >= in case somehow have say "gui.png", "GUI.png" */
-	allTexturesExist = texturesFound >= Array_Elems(textureResources);
-}
-
-static void ZipResources_CheckExistence(void) {
-	int i;
-	ZipResources_CountEntries();
-	if (allTexturesExist) return;
-
-	for (i = 0; i < Array_Elems(fileResources); i++) {
-		Resources_Count++;
-		Resources_Size += fileResources[i].size;
-	}
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Texture patcher---------------------------------------------------*
-*#########################################################################################################################*/\
-
 static cc_bool ClassicPatcher_SelectEntry(const cc_string* path) {
 	cc_string name = *path;
 	Utils_UNSAFE_GetFilename(&name);
-	return Resources_FindTex(&name) != NULL;
+	return ZipEntries_Find(&name) != NULL;
 }
 
 static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
@@ -529,13 +481,13 @@ static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Strea
 	Utils_UNSAFE_GetFilename(&name);
 	if (String_CaselessEqualsConst(&name, "gui.png")) name = guiClassicPng;
 
-	entry = Resources_FindTex(&name);
+	entry = ZipEntries_Find(&name);
 
 	/* terrain.png requires special handling */
 	if (String_CaselessEqualsConst(path, "terrain.png")) {
 		return Png_Decode(&entry->value.bmp, data);
 	}
-	return Resources_ExtractData(entry, state, data);
+	return ZipEntry_ExtractData(entry, state, data);
 }
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
@@ -578,7 +530,7 @@ static cc_result ModernPatcher_PatchTile(struct Stream* data, const struct TileP
 	static const cc_string terrainPng = String_FromConst("terrain.png");
 	struct Bitmap bmp;
 	cc_result res;
-	struct ResourceZipEntry* e = Resources_FindTex(&terrainPng);
+	struct ResourceZipEntry* e = ZipEntries_Find(&terrainPng);
 	struct Bitmap* terrainBmp  = &e->value.bmp;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
@@ -610,7 +562,7 @@ static cc_result ModernPatcher_MakeAnimations(struct Stream* data) {
 	cc_result res;
 	int i;
 
-	entry = Resources_FindTex(&animsPng);
+	entry = ZipEntries_Find(&animsPng);
 	anim  = &entry->value.bmp;
 	Bitmap_TryAllocate(anim, 512, 16);
 
@@ -635,8 +587,8 @@ static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream
 		name = *path;
 		Utils_UNSAFE_GetFilename(&name);
 
-		entry = Resources_FindTex(&name);
-		return Resources_ExtractData(entry, state, data);
+		entry = ZipEntries_Find(&name);
+		return ZipEntry_ExtractData(entry, state, data);
 	}
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png")) {
@@ -662,29 +614,29 @@ static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
 #ifdef CC_BUILD_MOBILE
 /* Android has both a gui.png and a touch.png */
 /* TODO: Unify both android and desktop platforms to both just extract from default.zip */
-static cc_bool TexPatcher_SelectEntry(const cc_string* path) {
+static cc_bool NewTextures_SelectEntry(const cc_string* path) {
 	return String_CaselessEqualsConst(path, "gui.png") || String_CaselessEqualsConst(path, "touch.png");
 }
-static cc_result TexPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
-	struct ResourceZipEntry* entry = Resources_FindTex(path);
-	return Resources_ExtractData(entry, state, data);
+static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
+	struct ResourceZipEntry* entry = ZipEntries_Find(path);
+	return ZipEntry_ExtractData(entry, state, data);
 }
 
-static cc_result TexPactcher_ExtractGui(struct HttpRequest* req) {
+static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	struct ZipState zip;
 	struct Stream src;
 
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	Zip_Init(&zip, &src);
 
-	zip.SelectEntry  = TexPatcher_SelectEntry;
-	zip.ProcessEntry = TexPatcher_ProcessEntry;
+	zip.SelectEntry  = NewTextures_SelectEntry;
+	zip.ProcessEntry = NewTextures_ProcessEntry;
 	return Zip_Extract(&zip);
 }
 #else
-static cc_result TexPactcher_ExtractGui(struct HttpRequest* req) {
+static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	static const cc_string guiPng = String_FromConst("gui.png");
-	struct ResourceZipEntry* entry = Resources_FindTex(&guiPng);
+	struct ResourceZipEntry* entry = ZipEntries_Find(&guiPng);
 
 	entry->value.data = req->data;
 	entry->size       = req->size;
@@ -694,11 +646,12 @@ static cc_result TexPactcher_ExtractGui(struct HttpRequest* req) {
 }
 #endif
 
-static void TexPatcher_PatchTile(struct Bitmap* dst, struct Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
+static void TerrainPatcher_PatchTile(struct Bitmap* dst, struct Bitmap* src, 
+									int srcX, int srcY, int dstX, int dstY) {
 	Bitmap_UNSAFE_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, dst, 16);
 }
 
-static cc_result TexPatcher_Terrain(struct HttpRequest* req) {
+static cc_result TerrainPatcher_Process(struct HttpRequest* req) {
 	static const cc_string terrainPng = String_FromConst("terrain.png");
 	struct ResourceZipEntry* entry;
 	struct Bitmap* dst;
@@ -709,47 +662,51 @@ static cc_result TexPatcher_Terrain(struct HttpRequest* req) {
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	if ((res = Png_Decode(&bmp, &src))) return res;
 
-	entry = Resources_FindTex(&terrainPng);
+	entry = ZipEntries_Find(&terrainPng);
 	dst   = &entry->value.bmp;
 
-	TexPatcher_PatchTile(dst, &bmp,  0,0, 3,3);
-	TexPatcher_PatchTile(dst, &bmp, 16,0, 6,3);
-	TexPatcher_PatchTile(dst, &bmp, 32,0, 6,2);
+	TerrainPatcher_PatchTile(dst, &bmp,  0,0, 3,3);
+	TerrainPatcher_PatchTile(dst, &bmp, 16,0, 6,3);
+	TerrainPatcher_PatchTile(dst, &bmp, 32,0, 6,2);
 
-	TexPatcher_PatchTile(dst, &bmp,  0,16,  5,3);
-	TexPatcher_PatchTile(dst, &bmp, 16,16,  6,5);
-	TexPatcher_PatchTile(dst, &bmp, 32,16, 11,0);
+	TerrainPatcher_PatchTile(dst, &bmp,  0,16,  5,3);
+	TerrainPatcher_PatchTile(dst, &bmp, 16,16,  6,5);
+	TerrainPatcher_PatchTile(dst, &bmp, 32,16, 11,0);
 
 	Mem_Free(bmp.scan0);
 	return 0;
 }
 
-static cc_result TexPatcher_WriteEntries(struct Stream* s) {
-	struct ResourceZipEntry* tex;
+
+/*########################################################################################################################*
+*------------------------------------------------------default.zip writer-------------------------------------------------*
+*#########################################################################################################################*/
+static cc_result DefaultZip_WriteEntries(struct Stream* s) {
+	struct ResourceZipEntry* e;
 	cc_uint32 beg, end;
 	int i;
 	cc_result res;
 
-	for (i = 0; i < Array_Elems(textureResources); i++) {
-		tex = &textureResources[i];
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
+		e = &defaultZipEntries[i];
 
-		if (tex->type == RESOURCE_TYPE_PNG) {
-			if ((res = ZipWriter_WritePng(s,  tex))) return res;
+		if (e->type == RESOURCE_TYPE_PNG) {
+			if ((res = ZipWriter_WritePng(s,  e))) return res;
 		} else {
-			if ((res = ZipWriter_WriteData(s, tex))) return res;
+			if ((res = ZipWriter_WriteData(s, e))) return res;
 		}
 	}
 	
 	if ((res = s->Position(s, &beg))) return res;
-	for (i = 0; i < Array_Elems(textureResources); i++) {
-		if ((res = ZipWriter_CentralDir(s, &textureResources[i]))) return res;
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
+		if ((res = ZipWriter_CentralDir(s, &defaultZipEntries[i]))) return res;
 	}
 
 	if ((res = s->Position(s, &end))) return res;
-	return ZipWriter_EndOfCentralDir(s, Array_Elems(textureResources), beg, end);
+	return ZipWriter_EndOfCentralDir(s, Array_Elems(defaultZipEntries), beg, end);
 }
 
-static void TexPatcher_MakeDefaultZip(void) {
+static void DefaultZip_Create(void) {
 	static const cc_string path = String_FromConst("texpacks/default.zip");
 	struct Stream s;
 	cc_result res;
@@ -759,7 +716,7 @@ static void TexPatcher_MakeDefaultZip(void) {
 		Logger_SysWarn(res, "creating default.zip"); return;
 	}
 		
-	res = TexPatcher_WriteEntries(&s);
+	res = DefaultZip_WriteEntries(&s);
 	if (res) Logger_SysWarn(res, "making default.zip");
 
 	res = s.Close(&s);
@@ -768,13 +725,56 @@ static void TexPatcher_MakeDefaultZip(void) {
 
 
 /*########################################################################################################################*
-*----------------------------------------------------------Resources------------------------------------------------------*
+*------------------------------------------------------Resources checker--------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool allZipEntriesExist;
+static int zipEntriesFound;
+
+static cc_bool DefaultZip_SelectEntry(const cc_string* path) {
+	cc_string name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+
+	if (ZipEntries_Find(&name)) zipEntriesFound++;
+	return false;
+}
+
+static void DefaultZip_CountEntries(void) {
+	static const cc_string path = String_FromConst("texpacks/default.zip");
+	struct Stream stream;
+	struct ZipState state;
+	cc_result res;
+
+	res = Stream_OpenFile(&stream, &path);
+	if (res == ReturnCode_FileNotFound) return;
+
+	if (res) { Logger_SysWarn(res, "checking default.zip"); return; }
+	Zip_Init(&state, &stream);
+	state.SelectEntry = DefaultZip_SelectEntry;
+
+	res = Zip_Extract(&state);
+	stream.Close(&stream);
+	if (res) Logger_SysWarn(res, "inspecting default.zip");
+
+	/* >= in case somehow have say "gui.png", "GUI.png" */
+	allZipEntriesExist = zipEntriesFound >= Array_Elems(defaultZipEntries);
+}
+
+static void DefaultZip_CheckExistence(void) {
+	int i;
+	DefaultZip_CountEntries();
+	if (allZipEntriesExist) return;
+
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
+		Resources_Count++;
+		Resources_Size += defaultZipSources[i].size;
+	}
+}
+
 void Resources_CheckExistence(void) {
 	Resources_Count = 0;
 	Resources_Size  = 0;
 
-	ZipResources_CheckExistence();
+	DefaultZip_CheckExistence();
 	MusicResources_CheckExistence();
 	SoundResources_CheckExistence();
 }
@@ -790,8 +790,8 @@ cc_result Fetcher_Result;
 const char* Fetcher_RequestName(int reqID) {
 	int i;
 
-	for (i = 0; i < Array_Elems(fileResources); i++) {
-		if (reqID == fileResources[i].reqID)  return fileResources[i].name;
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
+		if (reqID == defaultZipSources[i].reqID)  return defaultZipSources[i].name;
 	}
 	for (i = 0; i < Array_Elems(musicResources); i++) {
 		if (reqID == musicResources[i].reqID) return musicResources[i].name;
@@ -811,11 +811,11 @@ void Fetcher_Run(void) {
 	Fetcher_Working    = true;
 	Fetcher_Completed  = false;
 
-	for (i = 0; i < Array_Elems(fileResources); i++) {
-		if (allTexturesExist) continue;
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
+		if (allZipEntriesExist) continue;
 
-		url = String_FromReadonly(fileResources[i].url);
-		fileResources[i].reqID = Http_AsyncGetData(&url, 0);
+		url = String_FromReadonly(defaultZipSources[i].url);
+		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
 	}
 
 	for (i = 0; i < Array_Elems(musicResources); i++) {
@@ -833,13 +833,13 @@ static void Fetcher_Finish(void) {
 	Fetcher_Completed = true;
 	Fetcher_Working   = false;
 
-	for (i = 0; i < Array_Elems(textureResources); i++) {
-		if (textureResources[i].type == RESOURCE_TYPE_CONST) continue;
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
+		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
 
 		/* can reuse value.data for value.bmp case too */
-		Mem_Free(textureResources[i].value.data);
-		textureResources[i].value.data = NULL;
-		textureResources[i].size       = 0;
+		Mem_Free(defaultZipEntries[i].value.data);
+		defaultZipEntries[i].value.data = NULL;
+		defaultZipEntries[i].size       = 0;
 	}
 }
 
@@ -858,7 +858,7 @@ CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* req) {
 	return false;
 }
 
-static void Fetcher_CheckFile(struct FileResource* file) {
+static void Fetcher_CheckFile(struct ZipfileSource* file) {
 	struct HttpRequest req;
 	cc_result res;
 	if (!Fetcher_Get(file->reqID, &req)) return;
@@ -871,6 +871,8 @@ static void Fetcher_CheckFile(struct FileResource* file) {
 		Logger_SysWarn2(res, "making", &name);
 	}
 	Mem_Free(req.data);
+
+	if (defaultZipSources[3].downloaded) DefaultZip_Create();
 }
 
 static void Fetcher_CheckMusic(struct MusicResource* music) {
@@ -895,11 +897,10 @@ static void Fetcher_CheckSound(const struct SoundResource* sound) {
 void Fetcher_Update(void) {
 	int i;
 
-	for (i = 0; i < Array_Elems(fileResources); i++) {
-		if (fileResources[i].downloaded) continue;
-		Fetcher_CheckFile(&fileResources[i]);
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
+		if (defaultZipSources[i].downloaded) continue;
+		Fetcher_CheckFile(&defaultZipSources[i]);
 	}
-	if (fileResources[3].downloaded) TexPatcher_MakeDefaultZip();
 
 	for (i = 0; i < Array_Elems(musicResources); i++) {
 		if (musicResources[i].downloaded) continue;
