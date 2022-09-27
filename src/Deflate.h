@@ -115,40 +115,15 @@ struct ZLibState { struct DeflateState Base; cc_uint32 Adler32; };
 /* ZLIB compression is ZLIB header, followed by DEFLATE compressed data, followed by ZLIB footer. */
 CC_API void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
-/* Minimal data needed to describe an entry in a .zip archive. */
+/* Minimal data needed to describe an entry in a .zip archive */
 struct ZipEntry { cc_uint32 CompressedSize, UncompressedSize, LocalHeaderOffset, CRC32; };
-#define ZIP_MAX_ENTRIES 1024
-struct ZipState;
+/* Callback function to process the data in a .zip archive entry */
+/* Return non-zero to indicate an error and stop further processing */
+/* NOTE: data stream MAY NOT be seekable (i.e. entry data might be compressed) */
+typedef cc_result (*Zip_ProcessEntry)(const cc_string* path, struct Stream* data, struct ZipEntry* entry);
+/* Predicate used to select which entries in a .zip archive get processed */
+/* NOTE: returning false entirely skips the entry (avoids pointless seek to entry) */
+typedef cc_bool (*Zip_SelectEntry)(const cc_string* path);
 
-/* Stores state for reading and processing entries in a .zip archive. */
-struct ZipState {
-	/* Source of the .zip archive data. Must be seekable. */
-	struct Stream* input;
-	/* Callback function to process the data in a .zip archive entry. */
-	/* Return non-zero to indicate an error and stop further processing. */
-	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
-	cc_result (*ProcessEntry)(const cc_string* path, struct Stream* data, struct ZipState* state);
-	/* Predicate used to select which entries in a .zip archive get processed. */
-	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
-	cc_bool (*SelectEntry)(const cc_string* path);
-	/* Generic object/pointer for ProcessEntry callback. */
-	void* obj;
-
-	/* (internal) Number of entries selected by SelectEntry. */
-	int _usedEntries;
-	/* (internal) Total number of entries in the archive. */
-	int _totalEntries;
-	/* (internal) Offset to central directory entries. */
-	cc_uint32 _centralDirBeg;
-	/* (internal) Current entry being processed. */
-	struct ZipEntry* _curEntry;
-	/* Data for each entry in the .zip archive. */
-	struct ZipEntry entries[ZIP_MAX_ENTRIES];
-};
-
-/* Initialises .zip archive reader state to defaults. */
-CC_API void Zip_Init(struct ZipState* state, struct Stream* input);
-/* Reads and processes the entries in a .zip archive. */
-/* NOTE: Must have been initialised with Zip_Init first. */
-CC_API cc_result Zip_Extract(struct ZipState* state);
+CC_API cc_result Zip_Extract(struct Stream* source, Zip_SelectEntry selector, Zip_ProcessEntry processor);
 #endif

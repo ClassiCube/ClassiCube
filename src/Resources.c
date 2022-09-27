@@ -399,6 +399,7 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 "# fire\r\n" \
 "6 2 0 0 16 32 0"
 
+/* The entries that are required to exist within default.zip */
 static struct ResourceZipEntry defaultZipEntries[] = {
 	/* classic jar files */
 	{ "char.png",     RESOURCE_TYPE_DATA }, { "clouds.png",      RESOURCE_TYPE_DATA }, 
@@ -429,13 +430,13 @@ CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* nam
 	return NULL;
 }
 
-static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct ZipState* state, struct Stream* src) {
-	cc_uint32 size = state->_curEntry->UncompressedSize;
+static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
+	cc_uint32 size = source->UncompressedSize;
 	e->value.data  = Mem_TryAlloc(size, 1);
 	e->size        = size;
 
 	if (!e->value.data) return ERR_OUT_OF_MEMORY;
-	return Stream_Read(src, e->value.data, size);
+	return Stream_Read(data, e->value.data, size);
 }
 
 
@@ -444,6 +445,7 @@ static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result TerrainPatcher_Process(struct HttpRequest* req);
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
 
+/* URLs which data is downloaded from in order to generate the entries in default.zip */
 static struct ZipfileSource {
 	const char* name;
 	const char* url;
@@ -472,34 +474,30 @@ static cc_bool ClassicPatcher_SelectEntry(const cc_string* path) {
 	return ZipEntries_Find(&name) != NULL;
 }
 
-static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
+static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
 	static const cc_string guiClassicPng = String_FromConst("gui_classic.png");
-	struct ResourceZipEntry* entry;
+	struct ResourceZipEntry* e;
 	cc_string name;
 
 	name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	if (String_CaselessEqualsConst(&name, "gui.png")) name = guiClassicPng;
 
-	entry = ZipEntries_Find(&name);
+	e = ZipEntries_Find(&name);
 
 	/* terrain.png requires special handling */
 	if (String_CaselessEqualsConst(path, "terrain.png")) {
-		return Png_Decode(&entry->value.bmp, data);
+		return Png_Decode(&e->value.bmp, data);
 	}
-	return ZipEntry_ExtractData(entry, state, data);
+	return ZipEntry_ExtractData(e, data, source);
 }
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
-	struct ZipState zip;
 	struct Stream src;
-
 	Stream_ReadonlyMemory(&src, req->data, req->size);
-	Zip_Init(&zip, &src);
 
-	zip.SelectEntry  = ClassicPatcher_SelectEntry;
-	zip.ProcessEntry = ClassicPatcher_ProcessEntry;
-	return Zip_Extract(&zip);
+	return Zip_Extract(&src, 
+			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry);
 }
 
 /* the x,y of tiles in terrain.png which get patched */
@@ -577,8 +575,8 @@ static cc_result ModernPatcher_MakeAnimations(struct Stream* data) {
 	return 0;
 }
 
-static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
-	struct ResourceZipEntry* entry;
+static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
+	struct ResourceZipEntry* e;
 	const struct TilePatch* tile;
 	cc_string name;
 
@@ -587,8 +585,8 @@ static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream
 		name = *path;
 		Utils_UNSAFE_GetFilename(&name);
 
-		entry = ZipEntries_Find(&name);
-		return ZipEntry_ExtractData(entry, state, data);
+		e = ZipEntries_Find(&name);
+		return ZipEntry_ExtractData(e, data, source);
 	}
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png")) {
@@ -600,15 +598,11 @@ static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream
 }
 
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
-	struct ZipState zip;
 	struct Stream src;
-
 	Stream_ReadonlyMemory(&src, req->data, req->size);
-	Zip_Init(&zip, &src);
 
-	zip.SelectEntry  = ModernPatcher_SelectEntry;
-	zip.ProcessEntry = ModernPatcher_ProcessEntry;
-	return Zip_Extract(&zip);
+	return Zip_Extract(&src, 
+			ModernPatcher_SelectEntry, ModernPatcher_ProcessEntry);
 }
 
 #ifdef CC_BUILD_MOBILE
@@ -617,18 +611,17 @@ static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
 static cc_bool NewTextures_SelectEntry(const cc_string* path) {
 	return String_CaselessEqualsConst(path, "gui.png") || String_CaselessEqualsConst(path, "touch.png");
 }
-static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
-	struct ResourceZipEntry* entry = ZipEntries_Find(path);
-	return ZipEntry_ExtractData(entry, state, data);
+static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
+	struct ResourceZipEntry* e = ZipEntries_Find(path);
+	return ZipEntry_ExtractData(e, data, source);
 }
 
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	struct ZipState zip;
 	struct Stream src;
-
 	Stream_ReadonlyMemory(&src, req->data, req->size);
-	Zip_Init(&zip, &src);
 
+	zip.input        = &src;
 	zip.SelectEntry  = NewTextures_SelectEntry;
 	zip.ProcessEntry = NewTextures_ProcessEntry;
 	return Zip_Extract(&zip);
@@ -741,20 +734,17 @@ static cc_bool DefaultZip_SelectEntry(const cc_string* path) {
 static void DefaultZip_CountEntries(void) {
 	static const cc_string path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
-	struct ZipState state;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
+	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
 
-	if (res) { Logger_SysWarn(res, "checking default.zip"); return; }
-	Zip_Init(&state, &stream);
-	state.SelectEntry = DefaultZip_SelectEntry;
+	res = Zip_Extract(&stream, DefaultZip_SelectEntry, NULL);
+	if (res) Logger_SysWarn2(res, "inspecting", &path);
 
-	res = Zip_Extract(&state);
-	stream.Close(&stream);
-	if (res) Logger_SysWarn(res, "inspecting default.zip");
-
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
 	/* >= in case somehow have say "gui.png", "GUI.png" */
 	allZipEntriesExist = zipEntriesFound >= Array_Elems(defaultZipEntries);
 }

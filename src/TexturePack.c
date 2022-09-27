@@ -293,18 +293,12 @@ void TexturePack_SetDefault(const cc_string* texPack) {
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
-static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, struct ZipState* s) {
+static cc_bool SelectZipEntry(const cc_string* path) { return true; }
+static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, struct ZipEntry* source) {
 	cc_string name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	Event_RaiseEntry(&TextureEvents.FileChanged, stream, &name);
 	return 0;
-}
-
-static cc_result ExtractZip(struct Stream* stream) {
-	struct ZipState state;
-	Zip_Init(&state, stream);
-	state.ProcessEntry = ProcessZipEntry;
-	return Zip_Extract(&state);
 }
 
 static cc_result ExtractPng(struct Stream* stream) {
@@ -328,8 +322,9 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 
 	res = ExtractPng(stream);
 	if (res == PNG_ERR_INVALID_SIG) {
-		/* file isn't a .png, probably a .zip then */
-		res = ExtractZip(stream);
+		/* file isn't a .png image, probably a .zip archive then */
+		res = Zip_Extract(stream, SelectZipEntry, ProcessZipEntry);
+
 		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else if (res) {
 		Logger_SysWarn2(res, "decoding", path);
