@@ -617,14 +617,11 @@ static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* 
 }
 
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
-	struct ZipState zip;
 	struct Stream src;
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 
-	zip.input        = &src;
-	zip.SelectEntry  = NewTextures_SelectEntry;
-	zip.ProcessEntry = NewTextures_ProcessEntry;
-	return Zip_Extract(&zip);
+	return Zip_Extract(&src, 
+			NewTextures_SelectEntry, NewTextures_ProcessEntry);
 }
 #else
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
