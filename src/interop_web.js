@@ -126,8 +126,8 @@ mergeInto(LibraryManager.library, {
     Module.setStatus('Downloading textures.. (1/2)');
     
     Module.readAsync(url, 
-      function(buffer) { // onload   TODO avoid new UInt8Array
-        CCFS.writeFile(path, new Uint8Array(buffer), { canOwn: true });
+      function(buffer) { // onload
+        CCFS.writeFile(path, new Uint8Array(buffer));
         ccall('main_phase1', 'void');
       },
       function() { // onerror
@@ -431,7 +431,7 @@ mergeInto(LibraryManager.library, {
     try {
       // ignore directories from IndexedDB created in older game versions
       if (CCFS.isFile(entry.mode)) {
-        CCFS.writeFile(path, entry.contents, { canOwn: true });
+        CCFS.writeFile(path, entry.contents);
         CCFS.utime(path, entry.timestamp);
       }
     } catch (e) {
@@ -852,7 +852,7 @@ mergeInto(LibraryManager.library, {
 
             reader.onload = function(e) { 
               var data = new Uint8Array(e.target.result);
-              CCFS.writeFile('/' + name, data, { canOwn: true });
+              CCFS.writeFile('/' + name, data);
               ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
               CCFS.unlink('/' + name);
             };
@@ -1130,47 +1130,31 @@ mergeInto(LibraryManager.library, {
         return size;
       },
       stream_write:function(stream, buffer, offset, length, position, canOwn) {
-        // If memory can grow, we don't want to hold on to references of
-        // the memory Buffer, as they may get invalidated. That means
-        // we need to do a copy here.
-        // FIXME: this is inefficient as the file packager may have
-        //        copied the data into memory already - we may want to
-        //        integrate more there and let the file packager loading
-        //        code be able to query if memory growth is on or off.
-        if (canOwn) {
-          warnOnce('file packager has copied file data into memory, but in memory growth we are forced to copy it again (see --no-heap-copy)');
-        }
-        canOwn = false;
-  
         if (!length) return 0;
-        var node = stream.node;
+        var node  = stream.node;
+        var chunk = buffer.subarray(offset, offset + length);
         node.timestamp = Date.now();
   
-        if (buffer.subarray && (!node.contents || node.contents.subarray)) { // This write is from a typed array to a typed array?
-          if (canOwn) {
-            assert(position === 0, 'canOwn must imply no weird position inside the file');
-            node.contents = buffer.subarray(offset, offset + length);
-            node.usedBytes = length;
-            return length;
-          } else if (node.usedBytes === 0 && position === 0) { // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
-            node.contents = new Uint8Array(buffer.subarray(offset, offset + length));
-            node.usedBytes = length;
-            return length;
-          } else if (position + length <= node.usedBytes) { // Writing to an already allocated and used subrange of the file?
-            node.contents.set(buffer.subarray(offset, offset + length), position);
-            return length;
-          }
+        if (canOwn) {
+          // NOTE: buffer cannot be a part of the memory buffer (i.e. HEAP8)
+          //  - don't want to hold on to references of the memory Buffer, 
+          //  as they may get invalidated.
+          assert(position === 0, 'canOwn must imply no weird position inside the file');
+          node.contents  = chunk;
+          node.usedBytes = length;
+        } else if (node.usedBytes === 0 && position === 0) { 
+          // First write to an empty file, do a fast set since don't need to care about old data
+          node.contents  = new Uint8Array(chunk);
+          node.usedBytes = length;
+        } else if (position + length <= node.usedBytes) { 
+          // Writing to an already allocated and used subrange of the file
+          node.contents.set(chunk, position);
+        } else {
+          // Appending to an existing file and we need to reallocate
+          MEMFS.expandFileStorage(node, position+length);
+          node.contents.set(chunk, position); 
+          node.usedBytes = Math.max(node.usedBytes, position+length);
         }
-  
-        // Appending to an existing file and we need to reallocate, or source data did not come as a typed array.
-        MEMFS.expandFileStorage(node, position+length);
-        if (node.contents.subarray && buffer.subarray) node.contents.set(buffer.subarray(offset, offset + length), position); // Use typed array write if available.
-        else {
-          for (var i = 0; i < length; i++) {
-           node.contents[position + i] = buffer[offset + i]; // Or fall back to manual write if not.
-          }
-        }
-        node.usedBytes = Math.max(node.usedBytes, position+length);
         return length;
       }
     };
@@ -1367,16 +1351,15 @@ mergeInto(LibraryManager.library, {
         CCFS.close(stream);
         return ret;
       },
-      writeFile:function(path, data, opts) {
-        opts = opts || {};
+      writeFile:function(path, data) {
         var stream = CCFS.open(path, 577); // O_WRONLY | O_CREAT | O_TRUNC
 
         if (typeof data === 'string') {
           var buf = new Uint8Array(lengthBytesUTF8(data)+1);
           var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
-          CCFS.write(stream, buf, 0, actualNumBytes, opts.canOwn);
+          CCFS.write(stream, buf, 0, actualNumBytes, true);
         } else if (ArrayBuffer.isView(data)) {
-          CCFS.write(stream, data, 0, data.byteLength, opts.canOwn);
+          CCFS.write(stream, data, 0, data.byteLength, true);
         } else {
           throw new Error('Unsupported data type');
         }
