@@ -7,6 +7,9 @@
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
 
+#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
+#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
+
 int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
 int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 

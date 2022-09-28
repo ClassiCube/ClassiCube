@@ -478,7 +478,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
-		flags = e == &LocalPlayer_Instance ? HTTP_FLAG_NOCACHE : 0;
+		flags = e == &LocalPlayer_Instance.Base ? HTTP_FLAG_NOCACHE : 0;
 
 		if (!first) {
 			e->_skinReqID     = Http_AsyncGetSkin(&skin, flags);
