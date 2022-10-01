@@ -24,7 +24,7 @@ static BGLView* view_3D;
 enum CCEventType {
 	CC_NONE,
 	CC_MOUSE_SCROLL, CC_MOUSE_DOWN, CC_MOUSE_UP, CC_MOUSE_MOVE,
-	CC_KEY_DOWN, CC_KEY_UP,
+	CC_KEY_DOWN, CC_KEY_UP, CC_KEY_INPUT,
 	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT
 };
 union CCEventValue { float f32; int i32; void* ptr; };
@@ -113,6 +113,19 @@ class CC_BWindow : public BWindow
 CC_BWindow::CC_BWindow(BRect frame) : BWindow(frame, "", B_TITLED_WINDOW, 0) {
 }
 
+static void ProcessKeyInput(BMessage* msg) {
+	CCEvent event;
+	const char* value;
+	cc_codepoint cp;
+	
+	if (msg->FindString("bytes", &value) != B_OK) return;
+	if (!Convert_Utf8ToCodepoint(&cp, (const cc_uint8*)value, String_Length(value))) return;
+	
+	event.type = CC_KEY_INPUT;
+	event.v1.i32 = cp;
+	Events_Push(&event);
+}
+
 static int last_buttons;
 static void UpdateMouseButton(int btn, int pressed) {
 	CCEvent event;
@@ -145,40 +158,49 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 	
 	switch (msg->what)
 	{
-	case B_MOUSE_UP:
+	case B_KEY_DOWN:
+	case B_UNMAPPED_KEY_DOWN:
+		if (msg->FindInt32("key", &value) == B_OK) {
+			event.type   = CC_KEY_DOWN;
+			event.v1.i32 = value;
+		} break;
+	case B_KEY_UP:
+	case B_UNMAPPED_KEY_UP:
+		if (msg->FindInt32("key", &value) == B_OK) {
+			event.type   = CC_KEY_UP;
+			event.v1.i32 = value;
+		} break;
 	case B_MOUSE_DOWN:
+	case B_MOUSE_UP:
 		if (msg->FindInt32("buttons", &value) == B_OK) {
 			UpdateMouseButtons(value);
-		}
-		break;
+		} break;
 	case B_MOUSE_MOVED:
 		if (msg->FindPoint("where", &where) == B_OK) {
 			event.type   = CC_MOUSE_MOVE;
 			event.v1.i32 = where.x;
 			event.v2.i32 = where.y;
-		}
-		break;
+		} break;
 	case B_MOUSE_WHEEL_CHANGED:
 		if (msg->FindFloat("be:wheel_delay_y", &delta) == B_OK) {
 			event.type   = CC_MOUSE_SCROLL;
 			event.v1.f32 = delta;
-		}
-		break;
+		} break;
 		
 	case B_WINDOW_ACTIVATED:
 		if (msg->FindBool("active", &active) == B_OK) {
 			event.type   = CC_WIN_FOCUS;
 			event.v1.i32 = active;
-		}
-		break;
+		} break;
+	case B_WINDOW_MOVED:
+		break; // avoid unhandled message spam
 	case B_WINDOW_RESIZED:
 		if (msg->FindInt32("width",  &width)  == B_OK &&
 			msg->FindInt32("height", &height) == B_OK) {
 			event.type   = CC_WIN_RESIZED;
 			event.v1.i32 = width;
 			event.v2.i32 = height;
-		}
-		break;
+		} break;
 	case B_QUIT_REQUESTED:
 		Platform_LogConst("WIN_QUIT");
 		break;
@@ -190,7 +212,9 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 		msg->PrintToStream();
 		break;
 	}
+	
 	if (event.type) Events_Push(&event);
+	if (msg->what == B_KEY_DOWN) ProcessKeyInput(msg);
 	BWindow::DispatchMessage(msg, handler);
 }
 
@@ -213,8 +237,6 @@ static void RunApp(void) {
 	} while (!app_handle || app_handle->IsLaunching());
 	
 	Platform_LogConst("App initialised");
-	pthread_t tid = pthread_self();
-	Platform_Log1("MAIN THREAD: %x", (cc_uintptr*)&tid);
 }
 
 void Window_Init(void) {
@@ -223,8 +245,10 @@ void Window_Init(void) {
 	BScreen screen(B_MAIN_SCREEN_ID);
 	BRect frame = screen.Frame();
 	
-	DisplayInfo.Width  = (int)frame.Width();
-	DisplayInfo.Height = (int)frame.Height();
+	// e.g. frame = (l:0.0, t:0.0, r:1023.0, b:767.0)
+	//  so have to add 1 here for actual width/height
+	DisplayInfo.Width  = frame.IntegerWidth()  + 1;
+	DisplayInfo.Height = frame.IntegerHeight() + 1;
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 }
@@ -240,6 +264,7 @@ static void DoCreateWindow(int width, int height) {
 	frame = win_handle->Bounds();
 	WindowInfo.Width  = (int)frame.Width();
 	WindowInfo.Height = (int)frame.Height();
+	Platform_Log2("WINDOW: %i, %i", &WindowInfo.Width, &WindowInfo.Height);
 }
 
 void Window_Create2D(int width, int height) {
@@ -253,7 +278,7 @@ void Window_Create3D(int width, int height) {
 	DoCreateWindow(width, height);
 	view_3D = new BGLView(win_handle->Bounds(), "CC_GAME",
 						B_FOLLOW_LEFT | B_FOLLOW_TOP, 
-						BGL_RGB | BGL_ALPHA | BGL_DOUBLE | BGL_DEPTH, 0);
+						0, BGL_RGB | BGL_ALPHA | BGL_DOUBLE | BGL_DEPTH);
 	view_handle = view_3D;
 	win_handle->AddChild(view_handle);
 }
@@ -301,9 +326,32 @@ void Window_Close(void) {
 	app_handle->PostMessage(msg);
 }
 
+static const cc_uint8 key_map[] = {
+	/* 0x00 */ 0,KEY_ESCAPE,KEY_F1,KEY_F2, KEY_F3,KEY_F4,KEY_F5,KEY_F6, 
+	/* 0x08 */ KEY_F7,KEY_F8,KEY_F9,KEY_F10, KEY_F11,KEY_F12,0,KEY_SCROLLLOCK,
+	/* 0x10 */ KEY_PAUSE,KEY_TILDE,'1','2', '3','4','5','6',
+	/* 0x18 */ '7','8','9','0', KEY_MINUS,KEY_EQUALS,KEY_BACKSPACE,KEY_INSERT,
+	/* 0x20 */ KEY_HOME,KEY_PAGEUP,KEY_NUMLOCK,KEY_KP_DIVIDE, KEY_KP_MULTIPLY,KEY_KP_MINUS,KEY_TAB,'Q',
+	/* 0x28 */ 'W','E','R','T', 'Y','U','I','O',
+	/* 0x30 */ 'P',KEY_LBRACKET,KEY_RBRACKET,KEY_BACKSLASH, KEY_DELETE,KEY_END,KEY_PAGEDOWN,KEY_KP7,
+	/* 0x38 */ KEY_KP8,KEY_KP9,KEY_KP_PLUS,KEY_CAPSLOCK, 'A','S','D','F',
+	/* 0x40 */ 'G','H','J','K', 'L',KEY_SEMICOLON,KEY_QUOTE,KEY_ENTER,	
+	/* 0x48 */ KEY_KP4,KEY_KP5,KEY_KP6,KEY_LSHIFT, 'Z','X','C','V',	
+	/* 0x50 */ 'B','N','M',KEY_COMMA, KEY_PERIOD,KEY_SLASH,KEY_RSHIFT,KEY_UP,	
+	/* 0x58 */ KEY_KP1,KEY_KP2,KEY_KP3,KEY_KP_ENTER, KEY_LCTRL,KEY_LALT,KEY_SPACE,KEY_RALT,	
+	/* 0x60 */ KEY_RCTRL,KEY_LEFT,KEY_DOWN,KEY_RIGHT, KEY_KP0,KEY_KP_DECIMAL,KEY_LWIN,0,	
+	/* 0x68 */ KEY_RWIN,0,0,0, 0,0,0,0,
+};
+
+static int MapNativeKey(int raw) {
+	int key = raw >= 0 && raw < Array_Elems(key_map) ? key_map[raw] : 0;
+	if (!key) Platform_Log2("Unknown key: %i (%h)", &raw, &raw);
+	return key;
+}
+
 void Window_ProcessEvents(void) {
 	CCEvent event;
-	int btn, key;
+	int key;
 	
 	while (Events_Pull(&event))
 	{
@@ -324,8 +372,15 @@ void Window_ProcessEvents(void) {
 			Pointer_SetPosition(0, event.v1.i32, event.v2.i32);
 			break;
 		case CC_KEY_DOWN:
+			key = MapNativeKey(event.v1.i32);
+			if (key) Input_SetPressed(key);
 			break; 
 		case CC_KEY_UP:
+			key = MapNativeKey(event.v1.i32);
+			if (key) Input_SetReleased(key);
+			break;
+		case CC_KEY_INPUT:
+			Event_RaiseInt(&InputEvents.Press, event.v1.i32);
 			break;
 		case CC_WIN_RESIZED:
 			WindowInfo.Width  = event.v1.i32;
@@ -356,7 +411,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	view_handle->GetMouse(&where, &buttons, false);
 	win_handle->Unlock();
 	
-	// TODO: Should checkQueue should be true
+	// TODO: Should checkQueue be true
 	*x = (int)where.x;
 	*y = (int)where.y;
 }
@@ -397,6 +452,10 @@ void Window_DrawFramebuffer(Rect2D r) {
 	void* dst_pixels = win_framebuffer->Bits();
 	int32 dst_stride = win_framebuffer->BytesPerRow();
 	
+	Platform_Log4("DRAW: %i,%i -- %i,%i", &r.X, &r.Y, &r.Width, &r.Height);
+	int BL = win_framebuffer->BitsLength(), BR = win_framebuffer->BytesPerRow();
+	Platform_Log2("   %i / %i", &BR, &BL);
+	
 	// TODO redo Bitmap so it supports strides
 	for (int y = r.Y; y < r.Y + r.Height; y++)
 	{
@@ -421,18 +480,9 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) {  }
 
-void Window_EnableRawMouse(void) {
-	RegrabMouse();
-	//SDL_SetRelativeMouseMode(true);
-	Input_RawMode = true;
-}
-void Window_UpdateRawMouse(void) { CentreMousePosition(); }
-
-void Window_DisableRawMouse(void) {
-	RegrabMouse();
-	//SDL_SetRelativeMouseMode(false);
-	Input_RawMode = false;
-}
+void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
+void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse(); }
+void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 
 /*########################################################################################################################*
