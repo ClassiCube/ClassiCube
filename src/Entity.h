@@ -144,6 +144,7 @@ void Entities_RenderNames(void);
 /* Renders hovered entity name tags. (these appears through blocks) */
 void Entities_RenderHoveredNames(void);
 /* Removes the given entity, raising EntityEvents.Removed event. */
+/*  NOTE: Does nothing if there is currently no entity with the given ID */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity. */
 EntityID Entities_GetClosest(struct Entity* src);
@@ -160,6 +161,9 @@ CC_VAR extern struct _TabListData {
 	/* Position/Order of this entry within the group. */
 	cc_uint8  GroupRanks[TABLIST_MAX_NAMES];
 	struct StringsBuffer _buffer;
+	/* Whether the tablist entry is automatically removed */
+	/*  when the entity with the same ID is removed */
+	cc_uint8 _entityLinked[TABLIST_MAX_NAMES >> 3];
 } TabList;
 
 /* Removes the tab list entry with the given ID, raising TabListEvents.Removed event. */
@@ -174,6 +178,11 @@ CC_API void TabList_Set(EntityID id, const cc_string* player, const cc_string* l
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 2)
 /* Name of the group this entry is in (e.g. rank name, map name) */
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 1)
+
+#define TabList_EntityLinked_Get(id)   (TabList._entityLinked[id >> 3] & (1 << (id & 0x7)))
+#define TabList_EntityLinked_Set(id)   (TabList._entityLinked[id >> 3] |=  (cc_uint8)(1 << (id & 0x7)))
+#define TabList_EntityLinked_Reset(id) (TabList._entityLinked[id >> 3] &= (cc_uint8)~(1 << (id & 0x7)))
+
 
 /* Represents another entity in multiplayer */
 struct NetPlayer {

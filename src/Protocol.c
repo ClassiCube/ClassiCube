@@ -35,7 +35,6 @@
 struct _ProtocolData Protocol;
 
 /* Classic state */
-static cc_uint8 classic_tabList[ENTITIES_MAX_COUNT >> 3];
 static cc_bool classic_receivedFirstPos;
 
 /* Map state */
@@ -54,9 +53,6 @@ static cc_bool cpe_twoWayPing, cpe_pluginMessages, cpe_extTextures, cpe_extBlock
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-#define Classic_TabList_Get(id)   (classic_tabList[id >> 3] & (1 << (id & 0x7)))
-#define Classic_TabList_Set(id)   (classic_tabList[id >> 3] |=  (cc_uint8)(1 << (id & 0x7)))
-#define Classic_TabList_Reset(id) (classic_tabList[id >> 3] &= (cc_uint8)~(1 << (id & 0x7)))
 
 #ifndef EXTENDED_BLOCKS
 #define ReadBlock(data, value) value = *data++;
@@ -123,14 +119,6 @@ static void RemoveEndPlus(cc_string* value) {
 	value->length--;
 }
 
-static void AddTablistEntry(EntityID id, const cc_string* playerName, const cc_string* listName, const cc_string* groupName, cc_uint8 groupRank) {
-	cc_string rawName; char rawBuffer[STRING_SIZE];
-	String_InitArray(rawName, rawBuffer);
-
-	String_AppendColorless(&rawName, playerName);
-	TabList_Set(id, &rawName, listName, groupName, groupRank);
-}
-
 static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
 
@@ -175,13 +163,9 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 
 void Protocol_RemoveEntity(EntityID id) {
 	struct Entity* e = Entities.List[id];
-	if (!e) return;
-	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
+	if (!e || id == ENTITIES_SELF_ID) return;
 
-	/* See comment about some servers in Classic_AddEntity */
-	if (!Classic_TabList_Get(id)) return;
-	TabList_Remove(id);
-	Classic_TabList_Reset(id);
+	Entities_Remove(id);
 }
 
 static void UpdateLocation(EntityID id, struct LocationUpdate* update, cc_bool interpolate) {
@@ -612,8 +596,8 @@ static void Classic_AddEntity(cc_uint8* data) {
 	AddEntity(data, id, &name, &skin, true);
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
-	AddTablistEntry(id, &name, &name, &group, 0);
-	Classic_TabList_Set(id);
+	TabList_Set(id, &name, &name, &group, 0);
+	TabList_EntityLinked_Set(id);
 }
 
 static void Classic_EntityTeleport(cc_uint8* data) {
@@ -1052,8 +1036,8 @@ static void CPE_ExtAddPlayerName(cc_uint8* data) {
 	RemoveEndPlus(&listName);
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
-	Classic_TabList_Reset(id);
-	AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
+	TabList_EntityLinked_Reset(id);
+	TabList_Set(id, &playerName, &listName, &groupName, groupRank);
 }
 
 static void CPE_ExtAddEntity(cc_uint8* data) {

@@ -642,6 +642,12 @@ void Entities_Remove(EntityID id) {
 	Event_RaiseInt(&EntityEvents.Removed, id);
 	Entities.List[id]->VTABLE->Despawn(Entities.List[id]);
 	Entities.List[id] = NULL;
+
+	/* TODO: Move to EntityEvents.Removed callback instead */
+	if (TabList_EntityLinked_Get(id)) {
+		TabList_Remove(id);
+		TabList_EntityLinked_Reset(id);
+	}
 }
 
 EntityID Entities_GetClosest(struct Entity* src) {
@@ -718,10 +724,16 @@ void TabList_Remove(EntityID id) {
 	Event_RaiseInt(&TabListEvents.Removed, id);
 }
 
-void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, const cc_string* group, cc_uint8 rank) {
+void TabList_Set(EntityID id, const cc_string* player_, const cc_string* list, const cc_string* group, cc_uint8 rank) {
 	cc_string oldPlayer, oldList, oldGroup;
 	cc_uint8 oldRank;
 	struct Event_Int* events;
+
+	/* Player name shouldn't have colour codes */
+	/*  (intended for e.g. tab autocomplete) */
+	cc_string player; char playerBuffer[STRING_SIZE];
+	String_InitArray(player, playerBuffer);
+	String_AppendColorless(&player, player_);
 	
 	if (TabList.NameOffsets[id]) {
 		oldPlayer = TabList_UNSAFE_GetPlayer(id);
@@ -729,8 +741,8 @@ void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, co
 		oldGroup  = TabList_UNSAFE_GetGroup(id);
 		oldRank   = TabList.GroupRanks[id];
 
-		/* Don't redraw the tab list if nothing changed. */
-		if (String_Equals(player, &oldPlayer)  && String_Equals(list, &oldList)
+		/* Don't redraw the tab list if nothing changed */
+		if (String_Equals(&player, &oldPlayer) && String_Equals(list, &oldList)
 			&& String_Equals(group, &oldGroup) && rank == oldRank) return;
 
 		events = &TabListEvents.Changed;
@@ -739,7 +751,7 @@ void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, co
 	}
 	TabList_Delete(id);
 
-	StringsBuffer_Add(&TabList._buffer, player);
+	StringsBuffer_Add(&TabList._buffer, &player);
 	StringsBuffer_Add(&TabList._buffer, list);
 	StringsBuffer_Add(&TabList._buffer, group);
 
