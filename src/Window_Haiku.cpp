@@ -182,9 +182,9 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 			event.v2.i32 = where.y;
 		} break;
 	case B_MOUSE_WHEEL_CHANGED:
-		if (msg->FindFloat("be:wheel_delay_y", &delta) == B_OK) {
+		if (msg->FindFloat("be:wheel_delta_y", &delta) == B_OK) {
 			event.type   = CC_MOUSE_SCROLL;
-			event.v1.f32 = delta;
+			event.v1.f32 = -delta; // negate to match other platforms
 		} break;
 		
 	case B_WINDOW_ACTIVATED:
@@ -220,10 +220,10 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 
 
 static void AppThread(void) {
-		app_handle = new CC_BApp();
-		// runs forever
-		app_handle->Run();
-		delete app_handle;
+	app_handle = new CC_BApp();
+	// runs forever
+	app_handle->Run();
+	delete app_handle;
 }
 
 static void RunApp(void) {
@@ -254,16 +254,19 @@ void Window_Init(void) {
 }
 
 static void DoCreateWindow(int width, int height) {
+	// https://www.haiku-os.org/docs/api/classBRect.html#details
+	// right/bottom coordinates are inclusive of the coordinates,
+	//  so need to subtract 1 to end up with correct width/height
 	int x = Display_CentreX(width), y = Display_CentreY(height);
-	BRect frame(x, y, x + width, y + height);
+	BRect frame(x, y, x + width - 1, y + height - 1);
 	win_handle = new CC_BWindow(frame);
 	
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
 	
 	frame = win_handle->Bounds();
-	WindowInfo.Width  = (int)frame.Width();
-	WindowInfo.Height = (int)frame.Height();
+	WindowInfo.Width  = frame.IntegerWidth()  + 1;
+	WindowInfo.Height = frame.IntegerHeight() + 1;
 	Platform_Log2("WINDOW: %i, %i", &WindowInfo.Width, &WindowInfo.Height);
 }
 
@@ -271,14 +274,16 @@ void Window_Create2D(int width, int height) {
 	DoCreateWindow(width, height);
 	view_handle = new BView(win_handle->Bounds(), "CC_LAUNCHER",
 						B_FOLLOW_LEFT | B_FOLLOW_TOP, 0);
+						// B_FOLLOW_ALL, B_FRAME_EVENTS);
 	win_handle->AddChild(view_handle);
 }
 
 void Window_Create3D(int width, int height) {
 	DoCreateWindow(width, height);
 	view_3D = new BGLView(win_handle->Bounds(), "CC_GAME",
-						B_FOLLOW_LEFT | B_FOLLOW_TOP, 
-						0, BGL_RGB | BGL_ALPHA | BGL_DOUBLE | BGL_DEPTH);
+						B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, 
+						// B_FOLLOW_ALL, B_FRAME_EVENTS,
+						BGL_RGB | BGL_ALPHA | BGL_DOUBLE | BGL_DEPTH);
 	view_handle = view_3D;
 	win_handle->AddChild(view_handle);
 }
@@ -316,8 +321,9 @@ void Window_Show(void) {
 }
 
 void Window_SetSize(int width, int height) {
+	// ee reason for -1 in DoCreateWindow
 	win_handle->Lock(); // TODO even need to lock/unlock ?
-	win_handle->ResizeTo(width, height);
+	win_handle->ResizeTo(width - 1, height - 1);
 	win_handle->Unlock();
 }
 
@@ -328,7 +334,7 @@ void Window_Close(void) {
 
 static const cc_uint8 key_map[] = {
 	/* 0x00 */ 0,KEY_ESCAPE,KEY_F1,KEY_F2, KEY_F3,KEY_F4,KEY_F5,KEY_F6, 
-	/* 0x08 */ KEY_F7,KEY_F8,KEY_F9,KEY_F10, KEY_F11,KEY_F12,0,KEY_SCROLLLOCK,
+	/* 0x08 */ KEY_F7,KEY_F8,KEY_F9,KEY_F10, KEY_F11,KEY_F12,KEY_PRINTSCREEN,KEY_SCROLLLOCK,
 	/* 0x10 */ KEY_PAUSE,KEY_TILDE,'1','2', '3','4','5','6',
 	/* 0x18 */ '7','8','9','0', KEY_MINUS,KEY_EQUALS,KEY_BACKSPACE,KEY_INSERT,
 	/* 0x20 */ KEY_HOME,KEY_PAGEUP,KEY_NUMLOCK,KEY_KP_DIVIDE, KEY_KP_MULTIPLY,KEY_KP_MINUS,KEY_TAB,'Q',
@@ -416,7 +422,9 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	*y = (int)where.y;
 }
 void Cursor_SetPosition(int x, int y) {
-	// TODO no API for this?
+	// https://discourse.libsdl.org/t/sdl-mouse-bug/597/11
+	BRect frame = win_handle->Frame();
+	set_mouse_position(frame.left + x, frame.top + y);
 }
 
 static void Cursor_DoSetVisible(cc_bool visible) {

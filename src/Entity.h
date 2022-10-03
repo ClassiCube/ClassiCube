@@ -117,7 +117,7 @@ CC_API void Entity_SetModel(struct Entity* e, const cc_string* model);
 /* Entity_SetModel already calls this method. */
 void Entity_UpdateModelBounds(struct Entity* e);
 
-/* Whether the given entity is touching any blocks meeting the given condition .*/
+/* Whether the given entity is touching any blocks meeting the given condition */
 CC_API cc_bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
 cc_bool Entity_TouchesAnyRope(struct Entity* e);
 cc_bool Entity_TouchesAnyLava(struct Entity* e);
@@ -135,18 +135,17 @@ CC_VAR extern struct _EntitiesData {
 	cc_uint8 NamesMode, ShadowsMode;
 } Entities;
 
-/* Ticks all entities. */
+/* Ticks all entities */
 void Entities_Tick(struct ScheduledTask* task);
-/* Renders all entities. */
+/* Renders all entities */
 void Entities_RenderModels(double delta, float t);
-/* Renders the name tags of entities, depending on Entities.NamesMode. */
+/* Renders the name tags of entities, depending on Entities.NamesMode */
 void Entities_RenderNames(void);
-/* Renders hovered entity name tags. (these appears through blocks) */
+/* Renders hovered entity name tags (these appears through blocks) */
 void Entities_RenderHoveredNames(void);
-/* Removes the given entity, raising EntityEvents.Removed event. */
-/*  NOTE: Does nothing if there is currently no entity with the given ID */
+/* Removes the given entity, raising EntityEvents.Removed event */
 void Entities_Remove(EntityID id);
-/* Gets the ID of the closest entity to the given entity. */
+/* Gets the ID of the closest entity to the given entity */
 EntityID Entities_GetClosest(struct Entity* src);
 /* Draws shadows under entities, depending on Entities.ShadowsMode */
 void Entities_DrawShadows(void);
@@ -154,11 +153,11 @@ void Entities_DrawShadows(void);
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */
 CC_VAR extern struct _TabListData {
-	/* Buffer indices for player/list/group names. */
-	/* Use TabList_UNSAFE_GetPlayer/List/Group to get these names. */
-	/* NOTE: An Offset of 0 means the entry is unused. */
+	/* Buffer indices for player/list/group names */
+	/* Use TabList_UNSAFE_GetPlayer/List/Group to get these names */
+	/* NOTE: An Offset of 0 means the entry is unused */
 	cc_uint16 NameOffsets[TABLIST_MAX_NAMES];
-	/* Position/Order of this entry within the group. */
+	/* Position/Order of this entry within the group */
 	cc_uint8  GroupRanks[TABLIST_MAX_NAMES];
 	struct StringsBuffer _buffer;
 	/* Whether the tablist entry is automatically removed */
@@ -166,15 +165,15 @@ CC_VAR extern struct _TabListData {
 	cc_uint8 _entityLinked[TABLIST_MAX_NAMES >> 3];
 } TabList;
 
-/* Removes the tab list entry with the given ID, raising TabListEvents.Removed event. */
+/* Removes the tab list entry with the given ID, raising TabListEvents.Removed event */
 CC_API void TabList_Remove(EntityID id);
-/* Sets the data for the tab list entry with the given id. */
-/* Raises TabListEvents.Changed if replacing, TabListEvents.Added if a new entry. */
+/* Sets the data for the tab list entry with the given id */
+/* Raises TabListEvents.Changed if replacing, TabListEvents.Added if a new entry */
 CC_API void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, const cc_string* group, cc_uint8 rank);
 
 /* Raw unformatted name (for Tab name auto complete) */
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 3)
-/* Formatted name for display in tab list. */
+/* Formatted name for display in tab list */
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 2)
 /* Name of the group this entry is in (e.g. rank name, map name) */
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 1)
