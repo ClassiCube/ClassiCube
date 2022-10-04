@@ -198,11 +198,12 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 		if (msg->FindInt32("width",  &width)  == B_OK &&
 			msg->FindInt32("height", &height) == B_OK) {
 			event.type   = CC_WIN_RESIZED;
-			event.v1.i32 = width;
-			event.v2.i32 = height;
+			// width/height is 1 less than actual width/height
+			event.v1.i32 = width  + 1;
+			event.v2.i32 = height + 1;
 		} break;
 	case B_QUIT_REQUESTED:
-		Platform_LogConst("WIN_QUIT");
+		event.type = CC_WIN_QUIT;
 		break;
 	case _UPDATE_:
 		event.type = CC_WIN_REDRAW;
@@ -223,7 +224,10 @@ static void AppThread(void) {
 	app_handle = new CC_BApp();
 	// runs forever
 	app_handle->Run();
-	delete app_handle;
+	// because there are multiple other threads relying
+	//  on BApp connection, trying to delete the reference
+	//  tends to break them and crash the game at exit
+	//delete app_handle;
 }
 
 static void RunApp(void) {
@@ -273,16 +277,14 @@ static void DoCreateWindow(int width, int height) {
 void Window_Create2D(int width, int height) {
 	DoCreateWindow(width, height);
 	view_handle = new BView(win_handle->Bounds(), "CC_LAUNCHER",
-						B_FOLLOW_LEFT | B_FOLLOW_TOP, 0);
-						// B_FOLLOW_ALL, B_FRAME_EVENTS);
+						B_FOLLOW_ALL, 0);
 	win_handle->AddChild(view_handle);
 }
 
 void Window_Create3D(int width, int height) {
 	DoCreateWindow(width, height);
 	view_3D = new BGLView(win_handle->Bounds(), "CC_GAME",
-						B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, 
-						// B_FOLLOW_ALL, B_FRAME_EVENTS,
+						B_FOLLOW_ALL, B_FRAME_EVENTS,
 						BGL_RGB | BGL_ALPHA | BGL_DOUBLE | BGL_DEPTH);
 	view_handle = view_3D;
 	win_handle->AddChild(view_handle);
@@ -298,9 +300,30 @@ void Window_SetTitle(const cc_string* title) {
 }
 
 void Clipboard_GetText(cc_string* value) {
+	if (!be_clipboard->Lock()) return;
+	
+	BMessage* clip  = be_clipboard->Data();
+	char* str       = NULL;
+	ssize_t str_len = 0;
+	
+	clip->FindData("text/plain", B_MIME_TYPE, (const void**)&str, &str_len);
+	if (str) String_AppendUtf8(value, str, str_len);
+		
+	be_clipboard->Unlock();
 }
 
 void Clipboard_SetText(const cc_string* value) {
+	char str[NATIVE_STR_LEN];
+	int str_len = Platform_EncodeUtf8(str, value);
+	
+	if (!be_clipboard->Lock()) return;
+	be_clipboard->Clear();
+	
+	BMessage* clip = be_clipboard->Data();
+	clip->AddData("text/plain", B_MIME_TYPE, str, str_len);
+	be_clipboard->Commit();
+	
+	be_clipboard->Unlock();
 }
 
 int Window_GetWindowState(void) {
@@ -321,7 +344,7 @@ void Window_Show(void) {
 }
 
 void Window_SetSize(int width, int height) {
-	// ee reason for -1 in DoCreateWindow
+	// See reason for -1 in DoCreateWindow
 	win_handle->Lock(); // TODO even need to lock/unlock ?
 	win_handle->ResizeTo(width - 1, height - 1);
 	win_handle->Unlock();
@@ -374,7 +397,6 @@ void Window_ProcessEvents(void) {
 			Input_SetReleased(event.v1.i32);
 			break; 
 		case CC_MOUSE_MOVE:
-			//Platform_Log2("POS: %i,%i", &event.v1.i32, &event.v2.i32);
 			Pointer_SetPosition(0, event.v1.i32, event.v2.i32);
 			break;
 		case CC_KEY_DOWN:
