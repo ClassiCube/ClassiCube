@@ -78,12 +78,9 @@ static cc_bool Events_Pull(CCEvent* event) {
 class CC_BApp : public BApplication
 {
 public:
-	CC_BApp();
+	CC_BApp() : BApplication("application/x-ClassiCube") { }
 	void DispatchMessage(BMessage* msg, BHandler* handler);
 };
-
-CC_BApp::CC_BApp() : BApplication("application/x-ClassiCube") {
-}
 
 static void CallOpenFileCallback(const char* path);
 void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
@@ -104,7 +101,8 @@ void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 		}
 		break;
 	default:
-		//Platform_Log1("APP DISPATCH: %i", &msg->what);
+		//Platform_LogConst("UNHANDLED APP MESSAGE:");
+		//msg->PrintToStream();
 		break;
 	}
 	if (event.type) Events_Push(&event);
@@ -115,12 +113,9 @@ void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 class CC_BWindow : public BWindow
 {
 	public:
-		CC_BWindow(BRect frame);
+		CC_BWindow(BRect frame) : BWindow(frame, "", B_TITLED_WINDOW, 0) { }
 		void DispatchMessage(BMessage* msg, BHandler* handler);
 };
-
-CC_BWindow::CC_BWindow(BRect frame) : BWindow(frame, "", B_TITLED_WINDOW, 0) {
-}
 
 static void ProcessKeyInput(BMessage* msg) {
 	CCEvent event;
@@ -219,8 +214,8 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 		event.type = CC_WIN_REDRAW;
 		break;
 	default:
-		Platform_LogConst("UNHANDLED MESSAGE:");
-		msg->PrintToStream();
+		//Platform_LogConst("UNHANDLED WIN MESSAGE:");
+		//msg->PrintToStream();
 		break;
 	}
 	
@@ -419,7 +414,6 @@ void Window_ProcessEvents(void) {
 	
 	while (Events_Pull(&event))
 	{
-		//Platform_Log1("GO: %i", &event.type);
 		switch (event.type)
 		{
 		case CC_MOUSE_SCROLL:
@@ -500,6 +494,27 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 static BFilePanel* open_panel;
 static OpenFileDialogCallback open_callback;
+static const char* const* open_filters;
+
+class CC_BRefFilter : public BRefFilter
+{
+public:
+	CC_BRefFilter() : BRefFilter() { }
+	
+	bool Filter(const entry_ref* ref, BNode* node, stat_beos* st, const char* filetype) override {
+		if (node->IsDirectory()) return true;
+		
+		BPath path(ref);
+		cc_string str = String_FromReadonly(path.Path());
+		
+		for (int i = 0; open_filters[i]; i++)
+		{
+			cc_string ext = String_FromReadonly(open_filters[i]);
+			if (String_CaselessEnds(&str, &ext)) return true;
+		}
+		return false;
+	}
+};
 
 static void CallOpenFileCallback(const char* rawPath) {
 	cc_string path; char pathBuffer[1024];
@@ -512,11 +527,15 @@ static void CallOpenFileCallback(const char* rawPath) {
 }
 
 cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-	if (!open_panel) 
+	if (!open_panel) {
 		open_panel = new BFilePanel(B_OPEN_PANEL);
+		open_panel->SetRefFilter(new CC_BRefFilter());
+		// NOTE: the CC_BRefFilter is NOT owned by the BFilePanel,
+		//  so this is technically a memory leak.. but meh
+	}
 	
 	open_callback = callback;
-	// TODO iuse BRefFilter to only show desired filetypes that match filters
+	open_filters  = filters;
 	open_panel->Show();
 	return 0;
 }
