@@ -761,7 +761,7 @@ void TabList_Set(EntityID id, const cc_string* player_, const cc_string* list, c
 }
 
 static void Tablist_Init(void) {
-
+	TabList_Set(ENTITIES_SELF_ID, &Game_Username, &Game_Username, &String_Empty, 0);
 }
 
 static void TabList_Clear(void) {
