@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_HAIKU
+#if defined CC_BUILD_HAIKU && !defined CC_BUILD_SDL
 extern "C" {
 #include "_WindowBase.h"
 #include "Graphics.h"
@@ -13,12 +13,12 @@ extern "C" {
 #include <AppKit.h>
 #include <InterfaceKit.h>
 #include <OpenGLKit.h>
+#include <StorageKit.h>
 
 static BApplication* app_handle;
 static BWindow* win_handle;
 static BView* view_handle;
 static BGLView* view_3D;
-#include <pthread.h>
 
 // Event management
 enum CCEventType {
@@ -85,9 +85,10 @@ public:
 CC_BApp::CC_BApp() : BApplication("application/x-ClassiCube") {
 }
 
+static void CallOpenFileCallback(const char* path);
 void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 	CCEvent event = { 0 };
-	int what = msg->what;
+	entry_ref fileRef;
 	
 	switch (msg->what)
 	{
@@ -95,8 +96,15 @@ void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 		Platform_LogConst("APP QUIT");
 		event.type = CC_WIN_QUIT;
 		break;
+	case B_REFS_RECEIVED:
+		// TODO do we need to support more than 1 ref?
+		if (msg->FindRef("refs", 0, &fileRef) == B_OK) {
+			BPath path(&fileRef);
+			CallOpenFileCallback(path.Path());
+		}
+		break;
 	default:
-		//Platform_Log1("APP DISPATCH: %i", &what);
+		//Platform_Log1("APP DISPATCH: %i", &msg->what);
 		break;
 	}
 	if (event.type) Events_Push(&event);
@@ -490,36 +498,41 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	alert->Go();
 }
 
+static BFilePanel* open_panel;
+static OpenFileDialogCallback open_callback;
+
+static void CallOpenFileCallback(const char* rawPath) {
+	cc_string path; char pathBuffer[1024];
+	String_InitArray(path, pathBuffer);
+	if (!open_callback) return;
+	
+	String_AppendUtf8(&path, rawPath, String_Length(rawPath));
+	open_callback(&path);
+	open_callback = NULL;
+}
+
 cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-	return ERR_NOT_SUPPORTED;
+	if (!open_panel) 
+		open_panel = new BFilePanel(B_OPEN_PANEL);
+	
+	open_callback = callback;
+	// TODO iuse BRefFilter to only show desired filetypes that match filters
+	open_panel->Show();
+	return 0;
 }
 
 static BBitmap* win_framebuffer;
-static struct Bitmap win_fb;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	BRect bounds(0, 0, bmp->width, bmp->height);
-	win_framebuffer = new BBitmap(bounds, B_RGB32);
+	// right/bottom coordinates are inclusive of the coordinates,
+	//  so need to subtract 1 to end up with correct width/height
+	BRect bounds(0, 0, bmp->width - 1, bmp->height - 1);
 	
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "framebuffer pixels");
-	win_fb = *bmp;
+	win_framebuffer = new BBitmap(bounds, B_RGB32);
+	bmp->scan0 = (BitmapCol*)win_framebuffer->Bits();
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
-	void* dst_pixels = win_framebuffer->Bits();
-	int32 dst_stride = win_framebuffer->BytesPerRow();
-	
-	Platform_Log4("DRAW: %i,%i -- %i,%i", &r.X, &r.Y, &r.Width, &r.Height);
-	int BL = win_framebuffer->BitsLength(), BR = win_framebuffer->BytesPerRow();
-	Platform_Log2("   %i / %i", &BR, &BL);
-	
-	// TODO redo Bitmap so it supports strides
-	for (int y = r.Y; y < r.Y + r.Height; y++)
-	{
-		BitmapCol* src = Bitmap_GetRow(&win_fb, y) + r.X;
-		char*  dst     = (char*)dst_pixels + dst_stride * y + r.X * 4;
-		Mem_Copy(dst, src, r.Width * 4);
-	}
-	
+	// TODO rect should maybe subtract -1 too ????
 	BRect rect(r.X, r.Y, r.X + r.Width, r.Y + r.Height);
 	win_handle->Lock();
 	view_handle->DrawBitmap(win_framebuffer, rect, rect);
@@ -528,7 +541,6 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	delete win_framebuffer;
-	Mem_Free(bmp->scan0);
 	bmp->scan0 = NULL;
 }
 

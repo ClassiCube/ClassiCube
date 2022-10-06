@@ -89,7 +89,7 @@ endif
 ifeq ($(PLAT),haiku)
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
-LIBS=-lm -lexecinfo -lGL -lnetwork -lSDL2
+LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(OS),Windows_NT)

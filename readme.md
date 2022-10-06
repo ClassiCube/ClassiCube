@@ -160,9 +160,9 @@ Install libexecinfo, curl and openal-soft package if needed
 
 #### Haiku
 
-Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed
+Install openal_devel and libexecinfo_devel package if needed
 
-```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
+```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 ## Compiling - other
 
