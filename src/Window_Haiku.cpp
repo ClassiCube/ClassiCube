@@ -92,6 +92,7 @@ void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 	switch (msg->what)
 	{
 	case B_QUIT_REQUESTED:
+		Platform_LogConst("APP QUIT");
 		event.type = CC_WIN_QUIT;
 		break;
 	default:
@@ -204,6 +205,7 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 		} break;
 	case B_QUIT_REQUESTED:
 		event.type = CC_WIN_QUIT;
+		Platform_LogConst("WINQUIT");
 		break;
 	case _UPDATE_:
 		event.type = CC_WIN_REDRAW;
@@ -271,7 +273,6 @@ static void DoCreateWindow(int width, int height) {
 	frame = win_handle->Bounds();
 	WindowInfo.Width  = frame.IntegerWidth()  + 1;
 	WindowInfo.Height = frame.IntegerHeight() + 1;
-	Platform_Log2("WINDOW: %i, %i", &WindowInfo.Width, &WindowInfo.Height);
 }
 
 void Window_Create2D(int width, int height) {
@@ -326,14 +327,40 @@ void Clipboard_SetText(const cc_string* value) {
 	be_clipboard->Unlock();
 }
 
+static BRect win_rect;
+static cc_bool win_fullscreen;
+
 int Window_GetWindowState(void) {
-	return WINDOW_STATE_NORMAL;
+	return win_fullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
 cc_result Window_EnterFullscreen(void) {
-	return ERR_NOT_SUPPORTED;
+	// TODO is there a better fullscreen API to use
+	win_fullscreen = true;
+	win_rect = win_handle->Frame();
+	
+	BScreen screen(B_MAIN_SCREEN_ID);
+	BRect screen_frame = screen.Frame();
+	
+	win_handle->Lock();
+	win_handle->MoveTo(screen_frame.left, screen_frame.top);
+	win_handle->ResizeTo(screen_frame.Width(), screen_frame.Height());
+	win_handle->SetFlags(win_handle->Flags() & ~(B_NOT_RESIZABLE | B_NOT_ZOOMABLE));
+	//win_handle->SetLook(B_NO_BORDER_WINDOW_LOOK); // TODO unnecessary?
+	win_handle->Unlock();
+	return 0;
 }
-cc_result Window_ExitFullscreen(void) { return ERR_NOT_SUPPORTED; }
+cc_result Window_ExitFullscreen(void) {
+	win_fullscreen = false;
+	
+	win_handle->Lock();
+	win_handle->MoveTo(win_rect.left, win_rect.top);
+	win_handle->ResizeTo(win_rect.Width(), win_rect.Height());
+	win_handle->SetFlags(win_handle->Flags() | (B_NOT_RESIZABLE | B_NOT_ZOOMABLE));
+	//win_handle->SetLook(B_TITLED_WINDOW_LOOK);
+	win_handle->Unlock();
+	return 0; 
+}
 
 int Window_IsObscured(void) { return 0; }
 
@@ -413,7 +440,6 @@ void Window_ProcessEvents(void) {
 		case CC_WIN_RESIZED:
 			WindowInfo.Width  = event.v1.i32;
 			WindowInfo.Height = event.v2.i32;
-			Platform_Log2("WINIE: %i,%i", &WindowInfo.Width, &WindowInfo.Height);
 			Event_RaiseVoid(&WindowEvents.Resized);
 			break;
 		case CC_WIN_FOCUS:
@@ -525,7 +551,15 @@ void GLContext_Create(void) {
 	view_3D->LockGL();
 }
 
-void GLContext_Update(void) { }
+void GLContext_Update(void) { 
+	// it's necessary to call UnlockGL then LockGL, otherwise resizing doesn't work
+	//  (backbuffer rendering is performed to doesn't get resized)
+	//  https://github.com/anholt/mesa/blob/01e511233b24872b08bff862ff692dfb5b22c1f4/src/gallium/targets/haiku-softpipe/SoftwareRenderer.cpp#L120..L127
+	// might be fixed in newer MESA though?
+	view_3D->UnlockGL();
+	view_3D->LockGL();
+}
+
 cc_bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	view_3D->UnlockGL();

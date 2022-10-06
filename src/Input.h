@@ -60,7 +60,10 @@ extern const char* const Input_DisplayNames[INPUT_COUNT];
 #define Key_IsCtrlPressed()  (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
 #define Key_IsShiftPressed() (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
 
-#ifdef CC_BUILD_DARWIN
+#if defined CC_BUILD_HAIKU
+/* Haiku uses ALT instead of CTRL for clipboard and stuff */
+#define Key_IsActionPressed() Key_IsAltPressed()
+#elif defined CC_BUILD_DARWIN
 /* macOS uses CMD instead of CTRL for clipboard and stuff */
 #define Key_IsActionPressed() Key_IsWinPressed()
 #else
