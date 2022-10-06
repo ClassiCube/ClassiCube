@@ -444,6 +444,7 @@ static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result TerrainPatcher_Process(struct HttpRequest* req);
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
+static cc_result NewTextures_ExtractZip(struct HttpRequest* req);
 
 /* URLs which data is downloaded from in order to generate the entries in default.zip */
 static struct ZipfileSource {
@@ -457,11 +458,8 @@ static struct ZipfileSource {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     ModernPatcher_ExtractFiles, 4621 },
 	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TerrainPatcher_Process, 7 },
-#ifdef CC_BUILD_MOBILE
-	{ "new textures",      RESOURCE_SERVER "/default.zip",        NewTextures_ExtractGui, 87 }
-#else
-	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 }
-#endif
+	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 },
+	{ "new textures",      RESOURCE_SERVER "/default.zip",        NewTextures_ExtractZip, 83, false,true }
 };
 
 
@@ -605,37 +603,6 @@ static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
 			ModernPatcher_SelectEntry, ModernPatcher_ProcessEntry);
 }
 
-#ifdef CC_BUILD_MOBILE
-/* Android has both a gui.png and a touch.png */
-/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
-static cc_bool NewTextures_SelectEntry(const cc_string* path) {
-	return String_CaselessEqualsConst(path, "gui.png") || String_CaselessEqualsConst(path, "touch.png");
-}
-static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
-	struct ResourceZipEntry* e = ZipEntries_Find(path);
-	return ZipEntry_ExtractData(e, data, source);
-}
-
-static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
-	struct Stream src;
-	Stream_ReadonlyMemory(&src, req->data, req->size);
-
-	return Zip_Extract(&src, 
-			NewTextures_SelectEntry, NewTextures_ProcessEntry);
-}
-#else
-static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
-	static const cc_string guiPng = String_FromConst("gui.png");
-	struct ResourceZipEntry* entry = ZipEntries_Find(&guiPng);
-
-	entry->value.data = req->data;
-	entry->size       = req->size;
-
-	req->data = NULL; /* don't free memory yet */
-	return 0;
-}
-#endif
-
 static void TerrainPatcher_PatchTile(struct Bitmap* dst, struct Bitmap* src, 
 									int srcX, int srcY, int dstX, int dstY) {
 	Bitmap_UNSAFE_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, dst, 16);
@@ -666,6 +633,46 @@ static cc_result TerrainPatcher_Process(struct HttpRequest* req) {
 	Mem_Free(bmp.scan0);
 	return 0;
 }
+
+
+static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
+	static const cc_string guiPng = String_FromConst("gui.png");
+	struct ResourceZipEntry* entry = ZipEntries_Find(&guiPng);
+
+	entry->value.data = req->data;
+	entry->size       = req->size;
+
+	req->data = NULL; /* don't free memory yet */
+	return 0;
+}
+
+static const cc_string ccTexPack = String_FromConst("texpacks/classicube.zip");
+#ifdef CC_BUILD_MOBILE
+/* Android needs the touch.png */
+/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
+static cc_bool NewTextures_SelectEntry(const cc_string* path) {
+	return String_CaselessEqualsConst(path, "touch.png");
+}
+static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
+	struct ResourceZipEntry* e = ZipEntries_Find(path);
+	return ZipEntry_ExtractData(e, data, source);
+}
+
+static cc_result NewTextures_ExtractZip(struct HttpRequest* req) {
+	struct Stream src;
+	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
+	Stream_ReadonlyMemory(&src,   req->data, req->size);
+
+	return Zip_Extract(&src, 
+			NewTextures_SelectEntry, NewTextures_ProcessEntry);
+}
+#else
+static cc_result NewTextures_ExtractZip(struct HttpRequest* req) {
+	/* it's alright to fail to create alternate texture pack */
+	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
+	return 0;
+}
+#endif
 
 
 /*########################################################################################################################*
@@ -859,7 +866,7 @@ static void Fetcher_CheckFile(struct ZipfileSource* file) {
 	}
 	Mem_Free(req.data);
 
-	if (defaultZipSources[3].downloaded) DefaultZip_Create();
+	if (file->last) DefaultZip_Create();
 }
 
 static void Fetcher_CheckMusic(struct MusicResource* music) {
