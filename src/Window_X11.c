@@ -1293,7 +1293,8 @@ static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
 	/* for the attribute declarations. Note that the attributes are different than those used in glxChooseVisual */
 
-	if (!mode->IsIndexed) { attribs[i++] = GLX_RGBA; }
+	/* TODO always use RGBA? need to test 8bpp displays */
+	if (DisplayInfo.Depth >= 15) { attribs[i++] = GLX_RGBA; }
 	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = mode->R;
 	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
 	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;

@@ -78,13 +78,12 @@ void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_st
 }
 
 
-struct GraphicsMode { int R, G, B, A, IsIndexed; };
+struct GraphicsMode { int R, G, B, A; };
 /* Creates a GraphicsMode compatible with the default display device */
 static void InitGraphicsMode(struct GraphicsMode* m) {
 	int bpp = DisplayInfo.Depth;
-	m->IsIndexed = bpp < 15;
-
 	m->A = 0;
+
 	switch (bpp) {
 	case 32:
 		m->R =  8; m->G =  8; m->B =  8; m->A = 8; break;

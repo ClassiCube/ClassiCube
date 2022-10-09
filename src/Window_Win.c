@@ -712,8 +712,6 @@ void GLContext_Create(void) {
 	GLContext_SelectGraphicsMode(&mode);
 
 	ctx_handle = wglCreateContext(win_DC);
-	if (!ctx_handle) ctx_handle = wglCreateContext(win_DC);
-
 	if (!ctx_handle) {
 		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}
