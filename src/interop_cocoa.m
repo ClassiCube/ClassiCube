@@ -610,18 +610,26 @@ void Window_CloseKeyboard(void) { }
 #if defined CC_BUILD_GL && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 
+static int SupportsModernFullscreen(void) {
+	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
+}
+
 static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
+	// TODO: Is there a penalty for fullscreen contexts in 10.7 and later?
+	// Need to test whether there is a performance penalty or not
+	if (SupportsModernFullscreen()) fullscreen = false;
+	
 	NSOpenGLPixelFormatAttribute attribs[] = {
 		NSOpenGLPFAColorSize,    DisplayInfo.Depth,
 		NSOpenGLPFADepthSize,    24,
 		NSOpenGLPFADoubleBuffer,
 		fullscreen ? NSOpenGLPFAFullScreen : 0,
+		// TODO do we have to mask to main display? or can we just use -1 for all displays?
+		NSOpenGLPFAScreenMask,   CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
 		0
 	};
-	// NSOpenGLPFAScreenMask,   CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
 	return [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 }
-
 
 void GLContext_Create(void) {
 	NSOpenGLPixelFormat* fmt;
@@ -675,26 +683,37 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 
 void GLContext_GetApiInfo(cc_string* info) { }
 
-static int SupportsModernFullscreen(void) {
-	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
-}
-
 cc_result Window_EnterFullscreen(void) {
 	if (SupportsModernFullscreen()) {
 		[winHandle toggleFullScreen:appHandle];
 		return 0;
 	}
 
+	Platform_LogConst("Falling back to legacy fullscreen..");
 	legacy_fullscreen = true;
 	[ctxHandle clearDrawable];
 	// setFullScreen doesn't return an error code, which is unfortunate
-	//  because if setFullscreen fails, you're left with a blank window
+	//  because if setFullScreen fails, you're left with a blank window
 	//  that's still rendering thousands of frames per second
 	//[ctxHandle setFullScreen];
 	//return 0;
-	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
-	// TODO doesn't seem to work on 10.7 or later??
+	
+	
+	// CGLSetFullScreenOnDisplay is the preferable API, because it  
+	//  works properly on macOS 10.7 and all later versions
+	// However, because this API was only introduced in 10.7, it 
+	//  is essentially useless for us - because the superior 
+	//  toggleFullScreen API is already used in macOS 10.7+
 	//cc_result res = CGLSetFullScreenOnDisplay([ctxHandle CGLContextObj], CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()));
+	
+	// CGLSetFullsScreen has existed since macOS 10.1, however
+	//  it was deprecated in 10.6 - and by deprecated, Apple
+	//  REALLY means deprecated. If the SDK ClassiCube is compiled
+	//  against is 10.6 or later, then CGLSetFullScreen will always
+	//  fail to work (CGLSetFullScreenOnDisplay still works) though
+	// So make sure you compile ClassiCube with an older SDK version
+	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
+	// TODO do we need to capture the display?
 	if (res) Window_ExitFullscreen();
 	return res;
 }
