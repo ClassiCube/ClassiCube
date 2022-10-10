@@ -681,7 +681,56 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
-void GLContext_GetApiInfo(cc_string* info) { }
+static const char* GetAccelerationMode(CGLContextObj ctx) {
+	GLint fGPU, vGPU;
+	
+	// NOTE: only macOS 10.4 or later
+	if (CGLGetParameter(ctx, kCGLCPGPUFragmentProcessing, &fGPU)) return NULL;
+	if (CGLGetParameter(ctx, kCGLCPGPUVertexProcessing,   &vGPU)) return NULL;
+	
+	if (fGPU && vGPU) return "Fully";
+	if (fGPU || vGPU) return "Partially";
+	return "Not";
+}
+
+void GLContext_GetApiInfo(cc_string* info) {
+	CGLContextObj ctx = [ctxHandle CGLContextObj];
+	GLint rendererID;
+	CGLGetParameter(ctx, kCGLCPCurrentRendererID, &rendererID);
+	
+	GLint nRenders = 0;
+	CGLRendererInfoObj rend;
+	CGLQueryRendererInfo(-1, &rend, &nRenders);
+	
+	for (int i = 0; i < nRenders; i++)
+	{
+		GLint curID = -1;
+		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
+		if (curID != rendererID) continue;
+		
+		GLint acc = 0;
+		CGLDescribeRenderer(rend, i, kCGLRPAcceleratedCompute, &acc);
+		const char* mode = GetAccelerationMode(ctx);
+		
+		GLint vram = 0;
+		if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemoryMegabytes, &vram)) {
+			// preferred path (macOS 10.7 or later)
+		} else if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemory, &vram)) {
+			vram /= (1024 * 1024); // TODO: use float instead?
+		} else {
+			vram = -1; // TODO show a better error?
+		}
+		
+		if (mode && acc) {
+			String_Format2(info, "VRAM: %i MB, %c HW accelerated\n", &vram, mode);
+		} else {
+			String_Format2(info, "VRAM: %i MB, %c\n",
+						   &vram, acc ? "HW accelerated" : "no HW acceleration");
+		}
+		break;
+	}
+	CGLDestroyRendererInfo(rend);
+}
 
 cc_result Window_EnterFullscreen(void) {
 	if (SupportsModernFullscreen()) {
