@@ -609,6 +609,12 @@ void Window_CloseKeyboard(void) { }
 *#########################################################################################################################*/
 #if defined CC_BUILD_GL && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
+#include <OpenGL/OpenGL.h>
+
+// SDKs < 10.7 do not have this defined
+#ifndef kCGLRPVideoMemoryMegabytes
+#define kCGLRPVideoMemoryMegabytes 131
+#endif
 
 static int SupportsModernFullscreen(void) {
 	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
@@ -709,7 +715,7 @@ void GLContext_GetApiInfo(cc_string* info) {
 		if (curID != rendererID) continue;
 		
 		GLint acc = 0;
-		CGLDescribeRenderer(rend, i, kCGLRPAcceleratedCompute, &acc);
+		CGLDescribeRenderer(rend, i, kCGLRPAccelerated, &acc);
 		const char* mode = GetAccelerationMode(ctx);
 		
 		GLint vram = 0;
@@ -778,6 +784,4 @@ cc_result Window_ExitFullscreen(void) {
 	[ctxHandle setView:viewHandle];
 	return 0;
 }
-
-
 #endif
