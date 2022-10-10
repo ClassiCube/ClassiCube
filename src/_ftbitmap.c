@@ -18,11 +18,11 @@
 #include "Core.h"
 #ifdef CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
-#include FT_INTERNAL_DEBUG_H_FT
+#include "freetype/ftdebug.h"
 
-#include FT_BITMAP_H_FT
-#include FT_IMAGE_H_FT
-#include FT_INTERNAL_OBJECTS_H_FT
+#include "freetype/ftbitmap.h"
+#include "freetype/ftimage.h"
+#include "freetype/ftobjs.h"
 
 
   static

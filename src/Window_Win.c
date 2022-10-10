@@ -124,8 +124,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_WINDOWPOSCHANGED:
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
+		cc_bool sized  = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 		if (pos->hwnd != win_handle) break;
-		cc_bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 
 		GrabCursor();
 		RefreshWindowBounds();
@@ -625,7 +625,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
-	static const cc_string user32 = String_FromConst("USER32.DLL");
 	RAWINPUTDEVICE rid;
 
 	rawMouseSupported = _RegisterRawInputDevices && _GetRawInputData;
@@ -680,9 +679,11 @@ static FP_SWAPINTERVAL wglSwapIntervalEXT;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
+	int modeIndex;
+
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+	pfd.dwFlags  = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
 	pfd.cColorBits = mode->R + mode->G + mode->B;
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
@@ -693,7 +694,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.cBlueBits  = mode->B;
 	pfd.cAlphaBits = mode->A;
 
-	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
+	modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
 
 	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));

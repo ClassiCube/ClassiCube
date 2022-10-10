@@ -39,10 +39,10 @@
 #include "Core.h"
 #ifdef CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
-#include FT_CONFIG_CONFIG_H_FT
-#include FT_INTERNAL_OBJECTS_H_FT
-#include FT_INTERNAL_DEBUG_H_FT
-#include FT_MODULE_H_FT
+#include "freetype/ftconfig.h"
+#include "freetype/ftobjs.h"
+#include "freetype/ftdebug.h"
+#include "freetype/ftmodapi.h"
 
 
   /*************************************************************************/
@@ -62,7 +62,7 @@
 #define FT_USE_MODULE( type, x )  extern const type  x;
 #endif
 
-#include FT_CONFIG_MODULES_H_FT
+#include "freetype/ftmodule.h"
 
 #undef  FT_USE_MODULE
 #define FT_USE_MODULE( type, x )  (const FT_Module_Class*)&(x),
@@ -70,7 +70,7 @@
   static
   const FT_Module_Class*  const ft_default_modules[] =
   {
-#include FT_CONFIG_MODULES_H_FT
+#include "freetype/ftmodule.h"
     0
   };
 
