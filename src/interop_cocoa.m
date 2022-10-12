@@ -141,11 +141,20 @@ void Window_Init(void) {
 #endif
 
 static void RefreshWindowBounds(void) {
-	NSRect win, view;
-	int viewY;
+	if (legacy_fullscreen) {
+		CGRect rect = CGDisplayBounds(CGMainDisplayID());
+		windowX = (int)rect.origin.x; // usually 0
+		windowY = (int)rect.origin.y; // usually 0
+		// TODO is it correct to use display bounds and not just 0?
+		
+		WindowInfo.Width  = (int)rect.size.width;
+		WindowInfo.Height = (int)rect.size.height;
+		return;
+	}
 
-	win  = [winHandle frame];
-	view = [viewHandle frame];
+	NSRect win  = [winHandle frame];
+	NSRect view = [viewHandle frame];
+	int viewY;
 
 	// For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen.
 	// To get window's real Y screen position, first need to find Y of top. (win.y + win.height)
@@ -167,7 +176,7 @@ static void RefreshWindowBounds(void) {
 - (void)keyDown:(NSEvent *)event { }
 @end
 
-@interface CCWindowDelegate : NSObject { }
+@interface CCWindowDelegate : NSObject<NSWindowDelegate> { }
 @end
 @implementation CCWindowDelegate
 - (void)windowDidResize:(NSNotification *)notification {
@@ -290,8 +299,8 @@ static void DoCreateWindow(int width, int height) {
 	RefreshWindowBounds();
 	MakeContentView();
 	ApplyIcon();
-    
-    canCheckOcclusion = [winHandle respondsToSelector:@selector(occlusionState)];
+
+	canCheckOcclusion = [winHandle respondsToSelector:@selector(occlusionState)];
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
@@ -352,7 +361,7 @@ void Window_Close(void) {
 	[winHandle close];
 }
 
-static int MapNativeMouse(int button) {
+static int MapNativeMouse(NSInteger button) {
 	if (button == 0) return KEY_LMOUSE;
 	if (button == 1) return KEY_RMOUSE;
 	if (button == 2) return KEY_MMOUSE;
@@ -747,12 +756,13 @@ cc_result Window_EnterFullscreen(void) {
 	Platform_LogConst("Falling back to legacy fullscreen..");
 	legacy_fullscreen = true;
 	[ctxHandle clearDrawable];
+	CGDisplayCapture(CGMainDisplayID());
+
 	// setFullScreen doesn't return an error code, which is unfortunate
 	//  because if setFullScreen fails, you're left with a blank window
 	//  that's still rendering thousands of frames per second
 	//[ctxHandle setFullScreen];
 	//return 0;
-	
 	
 	// CGLSetFullScreenOnDisplay is the preferable API, because it  
 	//  works properly on macOS 10.7 and all later versions
@@ -768,8 +778,10 @@ cc_result Window_EnterFullscreen(void) {
 	//  fail to work (CGLSetFullScreenOnDisplay still works) though
 	// So make sure you compile ClassiCube with an older SDK version
 	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
-	// TODO do we need to capture the display?
+
 	if (res) Window_ExitFullscreen();
+	RefreshWindowBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
 	return res;
 }
 
@@ -780,8 +792,12 @@ cc_result Window_ExitFullscreen(void) {
 	}
 
 	legacy_fullscreen = false;
+	CGDisplayRelease(CGMainDisplayID());
 	[ctxHandle clearDrawable];
 	[ctxHandle setView:viewHandle];
+
+	RefreshWindowBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
 #endif
