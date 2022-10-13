@@ -617,10 +617,6 @@
   }
 
 
-  static FT_Renderer
-  ft_lookup_glyph_renderer( FT_GlyphSlot  slot );
-
-
 #ifdef GRID_FIT_METRICS
   static void
   ft_glyphslot_grid_fit_metrics( FT_GlyphSlot  slot,
@@ -888,7 +884,10 @@
       if ( internal->transform_flags )
       {
         /* get renderer */
-        FT_Renderer  renderer = ft_lookup_glyph_renderer( slot );
+        /* NOTE: Support for multiple renderers was removed */
+        FT_Renderer renderer = library->cur_renderer;
+        if ( renderer->glyph_format != slot->format )
+          renderer = NULL;
 
 
         if ( renderer )
@@ -2845,154 +2844,22 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  /* lookup a renderer by glyph format in the library's list */
-  FT_BASE_DEF( FT_Renderer )
-  FT_Lookup_Renderer( FT_Library       library,
-                      FT_Glyph_Format  format,
-                      FT_ListNode*     node )
-  {
-    FT_ListNode  cur;
-    FT_Renderer  result = NULL;
-
-
-    if ( !library )
-      goto Exit;
-
-    cur = library->renderers.head;
-
-    if ( node )
-    {
-      if ( *node )
-        cur = (*node)->next;
-      *node = NULL;
-    }
-
-    while ( cur )
-    {
-      FT_Renderer  renderer = FT_RENDERER( cur->data );
-
-
-      if ( renderer->glyph_format == format )
-      {
-        if ( node )
-          *node = cur;
-
-        result = renderer;
-        break;
-      }
-      cur = cur->next;
-    }
-
-  Exit:
-    return result;
-  }
-
-
-  static FT_Renderer
-  ft_lookup_glyph_renderer( FT_GlyphSlot  slot )
-  {
-    FT_Face      face    = slot->face;
-    FT_Library   library = FT_FACE_LIBRARY( face );
-    FT_Renderer  result  = library->cur_renderer;
-
-
-    if ( !result || result->glyph_format != slot->format )
-      result = FT_Lookup_Renderer( library, slot->format, 0 );
-
-    return result;
-  }
-
-
   static void
-  ft_set_current_renderer( FT_Library  library )
-  {
-    FT_Renderer  renderer;
-
-
-    renderer = FT_Lookup_Renderer( library, FT_GLYPH_FORMAT_OUTLINE, 0 );
-    library->cur_renderer = renderer;
-  }
-
-
-  static FT_Error
   ft_add_renderer( FT_Module  module )
   {
     FT_Library   library = module->library;
-    FT_Memory    memory  = library->memory;
-    FT_Error     error;
-    FT_ListNode  node    = NULL;
+
+    FT_Renderer         render = FT_RENDERER( module );
+    FT_Renderer_Class*  clazz  = (FT_Renderer_Class*)module->clazz;
 
 
-    if ( FT_NEW( node ) )
-      goto Exit;
+    render->clazz         = clazz;
+    render->glyph_format  = clazz->glyph_format;
 
-    {
-      FT_Renderer         render = FT_RENDERER( module );
-      FT_Renderer_Class*  clazz  = (FT_Renderer_Class*)module->clazz;
+    render->raster_render = clazz->raster_class->raster_render;
+    render->render        = clazz->render_glyph;
 
-
-      render->clazz        = clazz;
-      render->glyph_format = clazz->glyph_format;
-
-      /* allocate raster object if needed */
-      if ( clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
-           clazz->raster_class->raster_new                )
-      {
-        error = clazz->raster_class->raster_new( memory, &render->raster );
-        if ( error )
-          goto Fail;
-
-        render->raster_render = clazz->raster_class->raster_render;
-        render->render        = clazz->render_glyph;
-      }
-
-      /* add to list */
-      node->data = module;
-      FT_List_Add( &library->renderers, node );
-
-      ft_set_current_renderer( library );
-    }
-
-  Fail:
-    if ( error )
-      FT_FREE( node );
-
-  Exit:
-    return error;
-  }
-
-
-  static void
-  ft_remove_renderer( FT_Module  module )
-  {
-    FT_Library   library;
-    FT_Memory    memory;
-    FT_ListNode  node;
-
-
-    library = module->library;
-    if ( !library )
-      return;
-
-    memory = library->memory;
-
-    node = FT_List_Find( &library->renderers, module );
-    if ( node )
-    {
-      FT_Renderer  render = FT_RENDERER( module );
-
-
-      /* release raster object, if any */
-      if ( render->clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
-           render->raster                                         )
-        render->clazz->raster_class->raster_done( render->raster );
-
-      /* remove from list */
-      FT_List_Remove( &library->renderers, node );
-      FT_FREE( node );
-
-      ft_set_current_renderer( library );
-    }
+    library->cur_renderer = render;
   }
 
 
@@ -3011,37 +2878,13 @@
     case FT_GLYPH_FORMAT_BITMAP:   /* already a bitmap, don't do anything */
       break;
 
+    case FT_GLYPH_FORMAT_OUTLINE:  /* small shortcut for the very common case */
+      renderer = library->cur_renderer; /* NOTE: Multiple renderer support removed */
+      error    = renderer->render( renderer, slot, render_mode, NULL );
+      break;
+
     default:
-      {
-        FT_ListNode  node = NULL;
-
-
-        /* small shortcut for the very common case */
-        if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
-        {
-          renderer = library->cur_renderer;
-          node     = library->renderers.head;
-        }
-        else
-          renderer = FT_Lookup_Renderer( library, slot->format, &node );
-
-        error = FT_ERR( Unimplemented_Feature );
-        while ( renderer )
-        {
-          error = renderer->render( renderer, slot, render_mode, NULL );
-          if ( !error                                   ||
-               FT_ERR_NEQ( error, Cannot_Render_Glyph ) )
-            break;
-
-          /* FT_Err_Cannot_Render_Glyph is returned if the render mode   */
-          /* is unsupported by the current renderer for this glyph image */
-          /* format.                                                     */
-
-          /* now, look for another renderer that supports the same */
-          /* format.                                               */
-          renderer = FT_Lookup_Renderer( library, slot->format, &node );
-        }
-      }
+      error = FT_ERR( Unimplemented_Feature );
     }
 
     return error;
@@ -3106,8 +2949,8 @@
       library->auto_hinter = NULL;
 
     /* if the module is a renderer */
-    if ( FT_MODULE_IS_RENDERER( module ) )
-      ft_remove_renderer( module );
+    if ( library && FT_MODULE_IS_RENDERER( module ) )
+      library->cur_renderer = NULL;
 
     /* if the module is a font driver, add some steps */
     if ( FT_MODULE_IS_DRIVER( module ) )
@@ -3187,9 +3030,7 @@
     if ( FT_MODULE_IS_RENDERER( module ) )
     {
       /* add to the renderers list */
-      error = ft_add_renderer( module );
-      if ( error )
-        goto Fail;
+      ft_add_renderer( module );
     }
 
     /* is the module a auto-hinter? */
@@ -3219,17 +3060,6 @@
     return error;
 
   Fail:
-    if ( FT_MODULE_IS_RENDERER( module ) )
-    {
-      FT_Renderer  renderer = FT_RENDERER( module );
-
-
-      if ( renderer->clazz                                          &&
-           renderer->clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
-           renderer->raster                                         )
-        renderer->clazz->raster_class->raster_done( renderer->raster );
-    }
-
     FT_FREE( module );
     goto Exit;
   }

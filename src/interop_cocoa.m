@@ -176,7 +176,7 @@ static void RefreshWindowBounds(void) {
 - (void)keyDown:(NSEvent *)event { }
 @end
 
-@interface CCWindowDelegate : NSWindowDelegate { }
+@interface CCWindowDelegate : NSObject { }
 @end
 @implementation CCWindowDelegate
 - (void)windowDidResize:(NSNotification *)notification {

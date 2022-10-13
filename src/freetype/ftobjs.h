@@ -662,7 +662,6 @@ FT_BEGIN_HEADER
     FT_Glyph_Format         glyph_format;
     FT_Glyph_Class          glyph_class;
 
-    FT_Raster               raster;
     FT_Raster_Render_Func   raster_render;
     FT_Renderer_RenderFunc  render;
 
@@ -748,12 +747,6 @@ FT_BEGIN_HEADER
   /*    memory           :: The library's memory object.  Manages memory   */
   /*                        allocation.                                    */
   /*                                                                       */
-  /*    version_major    :: The major version number of the library.       */
-  /*                                                                       */
-  /*    version_minor    :: The minor version number of the library.       */
-  /*                                                                       */
-  /*    version_patch    :: The current patch level of the library.        */
-  /*                                                                       */
   /*    num_modules      :: The number of modules currently registered     */
   /*                        within this library.  This is set to 0 for new */
   /*                        libraries.  New modules are added through the  */
@@ -763,30 +756,11 @@ FT_BEGIN_HEADER
   /*                        registered modules. Note that each font driver */
   /*                        contains a list of its opened faces.           */
   /*                                                                       */
-  /*    renderers        :: The list of renderers currently registered     */
-  /*                        within the library.                            */
-  /*                                                                       */
-  /*    cur_renderer     :: The current outline renderer.  This is a       */
-  /*                        shortcut used to avoid parsing the list on     */
-  /*                        each call to FT_Outline_Render().  It is a     */
+  /*    cur_renderer     :: The current outline renderer.  It is a         */
   /*                        handle to the current renderer for the         */
   /*                        FT_GLYPH_FORMAT_OUTLINE format.                */
   /*                                                                       */
   /*    auto_hinter      :: The auto-hinter module interface.              */
-  /*                                                                       */
-  /*    debug_hooks      :: An array of four function pointers that allow  */
-  /*                        debuggers to hook into a font format's         */
-  /*                        interpreter.  Currently, only the TrueType     */
-  /*                        bytecode debugger uses this.                   */
-  /*                                                                       */
-  /*    lcd_weights      :: If subpixel rendering is activated, the LCD    */
-  /*                        filter weights, if any.                        */
-  /*                                                                       */
-  /*    lcd_filter_func  :: If subpixel rendering is activated, the LCD    */
-  /*                        filtering callback function.                   */
-  /*                                                                       */
-  /*    pic_container    :: Contains global structs and tables, instead    */
-  /*                        of defining them globally.                     */
   /*                                                                       */
   /*    refcount         :: A counter initialized to~1 at the time an      */
   /*                        @FT_Library structure is created.              */
@@ -802,7 +776,6 @@ FT_BEGIN_HEADER
     FT_UInt            num_modules;
     FT_Module          modules[FT_MAX_MODULES];  /* module objects  */
 
-    FT_ListRec         renderers;        /* list of renderers        */
     FT_Renderer        cur_renderer;     /* current outline renderer */
     FT_Module          auto_hinter;
     FT_Int             refcount;
@@ -810,10 +783,6 @@ FT_BEGIN_HEADER
   } FT_LibraryRec;
 
 
-  FT_BASE( FT_Renderer )
-  FT_Lookup_Renderer( FT_Library       library,
-                      FT_Glyph_Format  format,
-                      FT_ListNode*     node );
 
   FT_BASE( FT_Error )
   FT_Render_Glyph_Internal( FT_Library      library,
@@ -887,20 +856,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
 #define FT_DEFINE_RASTER_FUNCS(    \
           class_,                  \
-          glyph_format_,           \
-          raster_new_,             \
-          raster_reset_,           \
-          raster_set_mode_,        \
-          raster_render_,          \
-          raster_done_ )           \
+          raster_render_ )         \
   const FT_Raster_Funcs  class_ =  \
   {                                \
-    glyph_format_,                 \
-    raster_new_,                   \
-    raster_reset_,                 \
-    raster_set_mode_,              \
-    raster_render_,                \
-    raster_done_                   \
+    raster_render_                 \
   };
 
 

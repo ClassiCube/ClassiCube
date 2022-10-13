@@ -301,16 +301,7 @@
 
     else
     {
-      /* try to find a renderer that supports the glyph image format */
-      FT_Renderer  render = FT_Lookup_Renderer( library, slot->format, 0 );
-
-
-      if ( render )
-        clazz = &render->glyph_class;
-    }
-
-    if ( !clazz )
-    {
+      /* NOTE: Support for other renderers removed */
       error = FT_THROW( Invalid_Glyph_Format );
       goto Exit;
     }
