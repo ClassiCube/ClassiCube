@@ -340,6 +340,7 @@ static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
 
 static cc_int16 NbtTag_I16(struct NbtTag* tag) {
 	if (tag->type == NBT_I16) return tag->value.i16;
+	if (tag->type == NBT_I8)  return tag->value.u8;
 
 	tag->result = NBT_ERR_EXPECTED_I16;
 	return 0;
@@ -347,6 +348,7 @@ static cc_int16 NbtTag_I16(struct NbtTag* tag) {
 
 static cc_uint16 NbtTag_U16(struct NbtTag* tag) {
 	if (tag->type == NBT_I16) return tag->value.u16;
+	if (tag->type == NBT_I8)  return tag->value.u8;
 
 	tag->result = NBT_ERR_EXPECTED_I16;
 	return 0;
@@ -354,6 +356,8 @@ static cc_uint16 NbtTag_U16(struct NbtTag* tag) {
 
 static int NbtTag_I32(struct NbtTag* tag) {
 	if (tag->type == NBT_I32) return tag->value.i32;
+	if (tag->type == NBT_I16) return tag->value.i16;
+	if (tag->type == NBT_I8)  return tag->value.u8;
 
 	tag->result = NBT_ERR_EXPECTED_I32;
 	return 0;
