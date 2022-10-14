@@ -3,6 +3,7 @@
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "String.h"
+#include "Options.h"
 #include <Cocoa/Cocoa.h>
 #include <ApplicationServices/ApplicationServices.h>
 
@@ -12,6 +13,7 @@ static NSWindow* winHandle;
 static NSView* viewHandle;
 static cc_bool canCheckOcclusion;
 static cc_bool legacy_fullscreen;
+static cc_bool scroll_debugging;
 
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
@@ -36,6 +38,7 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 }
 
 static void Window_CommonCreate(void) {
+	scroll_debugging = Options_GetBool("scroll-debug", false);
 	// for quit buttons in dock and menubar
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
 		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
@@ -412,6 +415,18 @@ static int TryGetKey(NSEvent* ev) {
 	return 0;
 }
 
+static void DebugScrollEvent(NSEvent* ev) {
+	float dy = [ev deltaY];
+	float ds = [ev scrollingDeltaY];
+	int steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
+	
+	CGEventRef ref = [ev CGEvent];
+	if (!ref) return;
+	int raw = CGEventGetIntegerValueField(ref, kCGScrollWheelEventDeltaAxis1);
+	
+	Platform_Log4("SCROLL: %i.0 = (%i, %f3, %f3)", &steps, &raw, &dy, &ds);
+}
+
 void Window_ProcessEvents(void) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
@@ -468,6 +483,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: // NSScrollWheel
+			if (scroll_debugging) DebugScrollEvent(ev);
 			dy    = [ev deltaY];
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175
 			//  delta is in 'line height' units, but I don't know how to map that to actual units.

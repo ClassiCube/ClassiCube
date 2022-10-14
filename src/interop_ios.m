@@ -915,6 +915,7 @@ void interop_SysFontFree(void* handle) {
 
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
 CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
+	// TODO move to Drawer2D.h
     if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
     
     // Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb
