@@ -107,14 +107,6 @@ mergeInto(LibraryManager.library, {
     }
   },
   interop_DownloadMap__deps: ['interop_SaveBlob'],
-  interop_UploadTexPack: function(path) {
-    // Move from temp into texpacks folder
-    // TODO: This is pretty awful and should be rewritten
-    var name = UTF8ToString(path);
-    var data = CCFS.readFile(name);
-    CCFS.writeFile('texpacks/' + name.substring(1), data);
-    _interop_SaveNode('texpacks/' + name.substring(1));
-  },
   
   
 //########################################################################################################################
@@ -835,8 +827,10 @@ mergeInto(LibraryManager.library, {
     window.cc_divElem   = null;
     window.cc_inputElem = null;
   },
-  interop_OpenFileDialog: function(filter) {
+  interop_OpenFileDialog: function(filter, action, folder) {
     var elem = window.cc_uploadElem;
+    var root = UTF8ToString(folder);
+
     if (!elem) {
       elem = document.createElement('input');
       elem.setAttribute('type', 'file');
@@ -852,9 +846,12 @@ mergeInto(LibraryManager.library, {
 
             reader.onload = function(e) { 
               var data = new Uint8Array(e.target.result);
-              CCFS.writeFile('/' + name, data);
-              ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
-              CCFS.unlink('/' + name);
+              var path = root + '/' + name;
+              CCFS.writeFile(path, data);
+              ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+              
+              if (action == 0) CCFS.unlink(path); // OFD_UPLOAD_DELETE
+              if (action == 1) _interop_SaveNode(path); // OFD_UPLOAD_PERSIST
             };
             reader.readAsArrayBuffer(files[i]);
           }

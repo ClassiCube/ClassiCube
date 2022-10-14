@@ -526,7 +526,7 @@ static void CallOpenFileCallback(const char* rawPath) {
 	open_callback = NULL;
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	if (!open_panel) {
 		open_panel = new BFilePanel(B_OPEN_PANEL);
 		open_panel->SetRefFilter(new CC_BRefFilter());
@@ -534,8 +534,8 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 		//  so this is technically a memory leak.. but meh
 	}
 	
-	open_callback = callback;
-	open_filters  = filters;
+	open_callback = args->Callback;
+	open_filters  = args->filters;
 	open_panel->Show();
 	return 0;
 }

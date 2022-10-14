@@ -359,7 +359,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 

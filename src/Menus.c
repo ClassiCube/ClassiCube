@@ -1572,15 +1572,11 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 	StringsBuffer_Sort(&s->entries);
 }
 
-extern void interop_UploadTexPack(const char* path);
 static void TexturePackScreen_UploadCallback(const cc_string* path) {
 #ifdef CC_BUILD_WEB
-	char str[NATIVE_STR_LEN];
 	cc_string relPath = *path;
-	Platform_EncodeUtf8(str, path); 
 	Utils_UNSAFE_GetFilename(&relPath);
 
-	interop_UploadTexPack(str);
 	ListScreen_Reload(&ListScreen);
 	TexturePack_SetDefault(&relPath);
 #else
@@ -1590,8 +1586,15 @@ static void TexturePackScreen_UploadCallback(const cc_string* path) {
 }
 
 static void TexturePackScreen_UploadFunc(void* s, void* w) {
-	static const char* const filters[] = { ".zip", NULL };
-	Window_OpenFileDialog(filters, TexturePackScreen_UploadCallback);
+	static const char* const filters[] = { 
+		".zip", NULL 
+	};
+	static struct OpenFileDialogArgs args = {
+		"Texture packs", filters,
+		TexturePackScreen_UploadCallback,
+		OFD_UPLOAD_PERSIST, "texpacks"
+	};
+	Window_OpenFileDialog(&args);
 }
 
 void TexturePackScreen_Show(void) {
@@ -1770,7 +1773,13 @@ static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 	static const char* const filters[] = { 
 		".cw", ".dat", ".lvl", ".mine", ".fcm", NULL 
 	};
-	cc_result res = Window_OpenFileDialog(filters, LoadLevelScreen_UploadCallback);
+	static struct OpenFileDialogArgs args = {
+		"Classic map files", filters,
+		LoadLevelScreen_UploadCallback,
+		OFD_UPLOAD_DELETE, "tmp"
+	};
+
+	cc_result res = Window_OpenFileDialog(&args);
 	if (res) Logger_SimpleWarn(res, "showing open file dialog");
 }
 

@@ -551,7 +551,8 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	WCHAR str[MAX_PATH] = { 0 };
 	OPENFILENAMEW ofn   = { 0 };
@@ -560,7 +561,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 
 	/* Filter tokens are \0 separated - e.g. "Maps (*.cw;*.dat)\0*.cw;*.dat\0 */
 	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, "All supported files (");
+	String_Format1(&path, "%c (", args->description);
 	for (i = 0; filters[i]; i++) 
 	{
 		if (i) String_Append(&path, ';');
@@ -592,7 +593,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	for (i = 0; i < MAX_PATH && str[i]; i++) {
 		String_Append(&path, Convert_CodepointToCP437(str[i]));
 	}
-	callback(&path);
+	args->Callback(&path);
 	return 0;
 }
 

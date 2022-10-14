@@ -478,8 +478,8 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
     [UIViewController attemptRotationToDeviceOrientation];
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-    NSArray<NSString*>* types = @[ @"public.png" ]; // TODO fill in
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+    NSArray<NSString*>* types = @[ @"public.png" ]; // TODO fill in with args->filters
     
     UIDocumentPickerViewController* dlg;
     dlg = [UIDocumentPickerViewController alloc];

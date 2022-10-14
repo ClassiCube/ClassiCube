@@ -515,7 +515,8 @@ void ShowDialogCore(const char* title, const char* msg) {
 	CFRelease(msgCF);
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
 	NSOpenPanel* dlg = [NSOpenPanel openPanel];
 	NSArray* files;
 	NSString* str;
@@ -547,7 +548,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	String_InitArray(path, pathBuffer);
 	String_AppendUtf8(&path, src, len);
-	callback(&path);
+	args->Callback(&path);
  	return 0;
 }
 

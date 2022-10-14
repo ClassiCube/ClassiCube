@@ -967,14 +967,15 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	XFlush(m.dpy); /* flush so window disappears immediately */
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
 	cc_string path; char pathBuffer[1024];
 	char result[4096] = { 0 };
 	int len, i;
 	FILE* fp;
 
 	String_InitArray_NT(path, pathBuffer);
-	String_AppendConst(&path, "zenity --file-selection --file-filter='All supported files (");
+	String_Format1(&path, "zenity --file-selection --file-filter='%c (", args->description);
 
 	for (i = 0; filters[i]; i++)
 	{
@@ -1001,7 +1002,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	if (len) {
 		String_InitArray(path, pathBuffer);
 		String_AppendUtf8(&path, result, len);
-		callback(&path);
+		args->Callback(&path);
 	}
 	pclose(fp);
 	return 0;
