@@ -15,6 +15,13 @@ BitmapCol BitmapColor_Offset(BitmapCol color, int rBy, int gBy, int bBy) {
 	return BitmapColor_RGB(r, g, b);
 }
 
+BitmapCol BitmapColor_Scale(BitmapCol a, float t) {
+	cc_uint8 R = (cc_uint8)(BitmapCol_R(a) * t);
+	cc_uint8 G = (cc_uint8)(BitmapCol_G(a) * t);
+	cc_uint8 B = (cc_uint8)(BitmapCol_B(a) * t);
+	return (a & BITMAPCOLOR_A_MASK) | BitmapColor_R_Bits(R) | BitmapColor_G_Bits(G) | BitmapColor_B_Bits(B);
+}
+
 void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, 
 							struct Bitmap* src, struct Bitmap* dst, int size) {
 	int x, y;

@@ -2477,7 +2477,7 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 }
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
-	BitmapCol col = BitmapCol_Make(30, 30, 30, 200);
+	BitmapCol color = BitmapCol_Make(30, 30, 30, 200);
 	int titlesWidth, titlesHeight;
 	int contentWidth, contentHeight;
 	struct Context2D ctx;
@@ -2495,7 +2495,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 	Context2D_Alloc(&ctx, width, height);
 	{
 		SpecialInputWidget_DrawTitles(w, &ctx);
-		Context2D_Clear(&ctx, col, 0, titlesHeight, width, contentHeight);
+		Context2D_Clear(&ctx, color, 0, titlesHeight, width, contentHeight);
 		SpecialInputWidget_DrawContent(w, tab, &ctx, titlesHeight);
 	}
 	Context2D_MakeTexture(&w->tex, &ctx);
