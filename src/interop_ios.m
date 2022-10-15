@@ -110,7 +110,13 @@ static CGRect GetViewFrame(void) {
 
 static OpenFileDialogCallback open_dlg_callback;
 - (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
-    NSString* str = url.path;
+    NSString* str    = url.path;
+    const char* utf8 = str.UTF8String;
+    
+    char tmpBuffer[NATIVE_STR_LEN];
+    cc_string tmp = String_FromArray(tmpBuffer);
+    String_AppendUtf8(&tmp, utf8, String_Length(utf8));
+    open_dlg_callback(&tmp);
 }
 
 static cc_bool kb_active;
@@ -479,12 +485,30 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-    NSArray<NSString*>* types = @[ @"public.png" ]; // TODO fill in with args->filters
+	// see the custom UTITypes declared in Info.plist 
+    NSDictionary<NSString*, NSString*>* fileExt_map =
+    @{
+      @".cw"  : @"com.classicube.client.ios-cw",
+      @".dat" : @"com.classicube.client.ios-dat",
+      @".lvl" : @"com.classicube.client.ios-lvl",
+      @".fcm" : @"com.classicube.client.ios-fcm",
+      @".zip" : @"public.zip-archive"
+    };
+    NSMutableArray<NSString*>* types = [NSMutableArray array];
+    const char* const* filters = args->filters;
+
+    for (int i = 0; filters[i]; i++) {
+        NSString* fileExt = [NSString stringWithUTF8String:filters[i]];
+        NSString* utType  = [fileExt_map objectForKey:fileExt];
+        if (utType) [types addObject:utType];
+    }
     
     UIDocumentPickerViewController* dlg;
     dlg = [UIDocumentPickerViewController alloc];
     dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
+    //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
     
+    open_dlg_callback = args->Callback;
     dlg.delegate = cc_controller;
     [cc_controller presentViewController:dlg animated:YES completion: Nil];
     return 0; // TODO still unfinished

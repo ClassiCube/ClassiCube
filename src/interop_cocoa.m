@@ -417,14 +417,13 @@ static int TryGetKey(NSEvent* ev) {
 
 static void DebugScrollEvent(NSEvent* ev) {
 	float dy = [ev deltaY];
-	float ds = [ev scrollingDeltaY];
 	int steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
 	
 	CGEventRef ref = [ev CGEvent];
 	if (!ref) return;
 	int raw = CGEventGetIntegerValueField(ref, kCGScrollWheelEventDeltaAxis1);
 	
-	Platform_Log4("SCROLL: %i.0 = (%i, %f3, %f3)", &steps, &raw, &dy, &ds);
+	Platform_Log3("SCROLL: %i.0 = (%i, %f3)", &steps, &raw, &dy);
 }
 
 void Window_ProcessEvents(void) {
