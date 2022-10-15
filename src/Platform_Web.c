@@ -97,6 +97,10 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+	String_AppendConst(path, folder);
+}
+
 extern void interop_InitFilesystem(void);
 cc_result Directory_Create(const cc_string* path) {
 	/* Web filesystem doesn't need directories */

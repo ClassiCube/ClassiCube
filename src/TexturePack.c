@@ -197,7 +197,8 @@ CC_NOINLINE static void MakeCachePath(cc_string* path, const cc_string* url) {
 	String_InitArray(key, keyBuffer);
 
 	HashUrl(&key, url);
-	String_Format1(path, "texturecache/%s", &key);
+	Directory_GetCachePath(path, "texturecache");
+	String_Format1(path, "/%s", &key);
 }
 
 /* Returns non-zero if given URL has been cached */

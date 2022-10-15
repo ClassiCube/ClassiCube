@@ -485,7 +485,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	// see the custom UTITypes declared in Info.plist 
+    // see the custom UTITypes declared in Info.plist 
     NSDictionary<NSString*, NSString*>* fileExt_map =
     @{
       @".cw"  : @"com.classicube.client.ios-cw",

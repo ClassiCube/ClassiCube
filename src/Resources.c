@@ -24,8 +24,8 @@ struct ResourceZipEntry {
 	/* zip data */
 	cc_uint32 type : 3;
 	cc_uint32 size : 29;
-	cc_uint32 offset, crc32;
 	union ResourceValue value;
+	cc_uint32 offset, crc32;
 };
 #define RESOURCE_TYPE_DATA  1
 #define RESOURCE_TYPE_PNG   2
@@ -413,7 +413,7 @@ static struct ResourceZipEntry defaultZipEntries[] = {
 	/* other files */
 	{ "snow.png", RESOURCE_TYPE_DATA }, { "chicken.png",    RESOURCE_TYPE_DATA },
 	{ "gui.png",  RESOURCE_TYPE_DATA }, { "animations.png", RESOURCE_TYPE_PNG  }, 
-	{ "animations.txt", RESOURCE_TYPE_CONST, sizeof(ANIMS_TXT) - 1, 0,0, (const cc_uint8*)ANIMS_TXT },
+	{ "animations.txt", RESOURCE_TYPE_CONST, sizeof(ANIMS_TXT) - 1, (const cc_uint8*)ANIMS_TXT },
 #ifdef CC_BUILD_MOBILE
 	{ "touch.png", RESOURCE_TYPE_DATA }
 #endif

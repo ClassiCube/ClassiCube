@@ -2581,7 +2581,7 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* fo
 static void ThumbstickWidget_Rotate(void* widget, struct VertexTextured** vertices, int offset) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	struct VertexTextured* ptr;
-	int i, x, y;
+	int i;
 
 	ptr = *vertices - 4;
 	for (i = 0; i < 4; i++) {

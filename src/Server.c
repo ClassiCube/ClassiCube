@@ -342,8 +342,6 @@ static void MPConnection_Disconnect(void) {
 }
 
 static void MPConnection_CheckDisconnection(void) {
-	static const cc_string title  = String_FromConst("Disconnected!");
-	static const cc_string reason = String_FromConst("You've lost connection to the server");
 	cc_result availRes, selectRes;
 	int pending = 0;
 	cc_bool poll_read;

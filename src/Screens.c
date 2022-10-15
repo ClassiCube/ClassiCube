@@ -186,7 +186,6 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	static const cc_string prefix = String_FromConst("Position: ");
 
 	struct HUDScreen* s      = (struct HUDScreen*)screen;
-	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
 
 	Font_Make(&s->font, 16, FONT_FLAGS_PADDING);
