@@ -709,7 +709,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
     // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
-    NSArray* array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     if (array.count <= 0) return ERR_NOT_SUPPORTED;
     
     NSString* str    = [array objectAtIndex:0];
@@ -741,6 +741,22 @@ void GetDeviceUUID(cc_string* str) {
     // TODO avoid code duplication
     const char* src = string.UTF8String;
     String_AppendUtf8(str, src, String_Length(src));
+}
+
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    if (array.count > 0) {
+        // try to use iOS app cache folder if possible
+        // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
+        NSString* str    = [array objectAtIndex:0];
+        const char* utf8 = [str UTF8String];
+        
+        String_AppendUtf8(path, utf8, String_Length(utf8));
+        String_Format1(path, "/%c", folder);
+        Directory_Create(path);
+    } else {
+        String_AppendConst(path, folder);
+    }
 }
 
 

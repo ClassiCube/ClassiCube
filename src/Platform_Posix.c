@@ -143,9 +143,13 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+#if defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
+#else
 void Directory_GetCachePath(cc_string* path, const char* folder) {
 	String_AppendConst(path, folder);
 }
+#endif
 
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
