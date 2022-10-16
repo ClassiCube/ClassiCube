@@ -1,6 +1,9 @@
 package com.classicube;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -18,10 +21,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.OpenableColumns;
 import android.provider.Settings.Secure;
 import android.text.Editable;
 import android.text.InputType;
@@ -110,12 +115,10 @@ public class MainActivity extends Activity
 	}
 	
 	final static int CMD_KEY_DOWN = 0;
-	
-	final static int CMD_POINTER_DOWN = 3;
-	final static int CMD_POINTER_UP   = 4;
 	final static int CMD_KEY_UP   = 1;
 	final static int CMD_KEY_CHAR = 2;
-	final static int CMD_KEY_TEXT = 19;
+	final static int CMD_POINTER_DOWN = 3;
+	final static int CMD_POINTER_UP   = 4;
 	final static int CMD_POINTER_MOVE = 5;
 	
 	final static int CMD_WIN_CREATED   = 6;
@@ -133,6 +136,9 @@ public class MainActivity extends Activity
 	final static int CMD_LOST_FOCUS  = 16;
 	final static int CMD_CONFIG_CHANGED = 17;
 	final static int CMD_LOW_MEMORY  = 18;
+
+	final static int CMD_KEY_TEXT   = 19;
+	final static int CMD_OFD_RESULT = 20;
 	
 	
 	// ====================================================================
@@ -351,6 +357,8 @@ public class MainActivity extends Activity
 			case CMD_LOST_FOCUS:	 processOnLostFocus();	 break;
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
 			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
+
+			case CMD_OFD_RESULT: processOFDResult(c.str); break;
 			}
 
 			c.str = null;
@@ -383,6 +391,8 @@ public class MainActivity extends Activity
 	native void processOnLostFocus();
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
+
+	native void processOFDResult(String path);
 	
 	native void runGameAsync();
 	native void updateInstance();
@@ -805,6 +815,76 @@ public class MainActivity extends Activity
 			return ex.toString();
 		}
 		return "";
+	}
+
+
+	static String uploadFolder;
+	// https://stackoverflow.com/questions/36557879/how-to-use-native-android-file-open-dialog
+	// https://developer.android.com/guide/topics/providers/document-provider
+	// https://developer.android.com/training/data-storage/shared/documents-files#java
+	// https://stackoverflow.com/questions/5657411/android-getting-a-file-uri-from-a-content-uri
+	public int openFileDialog(String folder) {
+		uploadFolder = folder;
+
+		try {
+			Intent intent = new Intent()
+					.setType("*/*")
+					.setAction(Intent.ACTION_GET_CONTENT);
+
+			startActivityForResult(Intent.createChooser(intent, "Select a file"), 0x55530200);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return 0;// TODO log error to in-game
+		}
+		return 1;
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode != 0x55530200 || resultCode != RESULT_OK) return;
+
+		try {
+			Uri selected = data.getData();
+			String name  = getContentFilename(selected);
+			String path  = saveContentToTemp(selected, uploadFolder, name);
+			pushCmd(CMD_OFD_RESULT, uploadFolder + "/" + name);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			// TODO log error to in-game
+		}
+	}
+
+	String getContentFilename(Uri uri) {
+		Cursor cursor = getContentResolver().query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			int cIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+			if (cIndex != -1) return cursor.getString(cIndex);
+		}
+		return null;
+	}
+
+	String saveContentToTemp(Uri uri, String folder, String name) throws IOException {
+		//File file = new File(getExternalFilesDir(null), folder + "/" + name);
+		File file = new File(getExternalAppDir() + "/" + folder + "/" + name);
+		file.getParentFile().mkdirs();
+
+		OutputStream output = null;
+		InputStream input   = null;
+
+		try {
+			output = new FileOutputStream(file);
+			input  = getContentResolver().openInputStream(uri);
+
+			byte[] temp = new byte[8192];
+			int length;
+			while ((length = input.read(temp)) > 0)
+				output.write(temp, 0, length);
+		} finally {
+			if (output != null) output.close();
+			if (input != null)  input.close();
+		}
+		return file.getAbsolutePath();
 	}
 
 

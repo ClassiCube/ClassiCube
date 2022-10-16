@@ -14,7 +14,7 @@ static ANativeWindow* win_handle;
 static cc_bool winCreated;
 static jmethodID JAVA_openKeyboard, JAVA_setKeyboardText, JAVA_closeKeyboard;
 static jmethodID JAVA_getWindowState, JAVA_enterFullscreen, JAVA_exitFullscreen;
-static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation;
+static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation, JAVA_openFileDialog;
 static jmethodID JAVA_processedSurfaceDestroyed, JAVA_processEvents;
 static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_setupForGame;
 
@@ -197,6 +197,8 @@ static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 	/* TODO: Low memory */
 }
 
+static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str);
+
 static const JNINativeMethod methods[] = {
 	{ "processKeyDown",   "(I)V", java_processKeyDown },
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
@@ -220,7 +222,9 @@ static const JNINativeMethod methods[] = {
 
 	{ "processOnGotFocus",  "()V", java_onGotFocus },
 	{ "processOnLostFocus", "()V", java_onLostFocus },
-	{ "processOnLowMemory", "()V", java_onLowMemory }
+	{ "processOnLowMemory", "()V", java_onLowMemory },
+
+	{ "processOFDResult",   "(Ljava/lang/String;)V", java_processOFDResult },
 };
 static void CacheMethodRefs(JNIEnv* env) {
 	JAVA_openKeyboard    = JavaGetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
@@ -240,8 +244,10 @@ static void CacheMethodRefs(JNIEnv* env) {
 
 	JAVA_showAlert = JavaGetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
 	JAVA_setRequestedOrientation = JavaGetIMethod(env, "setRequestedOrientation", "(I)V");
+	JAVA_openFileDialog = JavaGetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
 }
 
+// TODO move to bottom of file?
 void Window_Init(void) {
 	JNIEnv* env;
 	/* TODO: ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0); */
@@ -359,8 +365,37 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
+static OpenFileDialogCallback ofd_callback;
+static int ofd_action;
+static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str) {
+    const char* raw;
+
+    char buffer[NATIVE_STR_LEN];
+	cc_string path = JavaGetString(env, str, buffer);
+	ofd_callback(&path);
+
+	if (ofd_action == OFD_UPLOAD_DELETE) {
+	    // TODO better way of doing this?
+	    raw = (*env)->GetStringUTFChars(env, str, NULL);
+	    unlink(raw);
+	    (*env)->ReleaseStringUTFChars(env, str, raw);
+	}
+    ofd_callback = NULL;
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* open_args) {
+    JNIEnv* env;
+    jvalue args[1];
+    JavaGetCurrentEnv(env);
+
+    ofd_callback = open_args->Callback;
+    ofd_action   = open_args->uploadAction;
+
+    args[0].l = JavaMakeConst(env, open_args->uploadFolder);
+    int OK = JavaICall_Int(env, JAVA_openFileDialog, args);
+    (*env)->DeleteLocalRef(env, args[0].l);
+    // TODO: Better error handling
+    return OK ? 0 : ERR_INVALID_ARGUMENT;
 }
 
 static struct Bitmap fb_bmp;
