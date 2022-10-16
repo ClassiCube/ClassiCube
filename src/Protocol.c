@@ -35,7 +35,6 @@
 struct _ProtocolData Protocol;
 
 /* Classic state */
-static cc_uint8 classic_tabList[ENTITIES_MAX_COUNT >> 3];
 static cc_bool classic_receivedFirstPos;
 
 /* Map state */
@@ -54,9 +53,6 @@ static cc_bool cpe_twoWayPing, cpe_pluginMessages, cpe_extTextures, cpe_extBlock
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-#define Classic_TabList_Get(id)   (classic_tabList[id >> 3] & (1 << (id & 0x7)))
-#define Classic_TabList_Set(id)   (classic_tabList[id >> 3] |=  (cc_uint8)(1 << (id & 0x7)))
-#define Classic_TabList_Reset(id) (classic_tabList[id >> 3] &= (cc_uint8)~(1 << (id & 0x7)))
 
 #ifndef EXTENDED_BLOCKS
 #define ReadBlock(data, value) value = *data++;
@@ -123,14 +119,6 @@ static void RemoveEndPlus(cc_string* value) {
 	value->length--;
 }
 
-static void AddTablistEntry(EntityID id, const cc_string* playerName, const cc_string* listName, const cc_string* groupName, cc_uint8 groupRank) {
-	cc_string rawName; char rawBuffer[STRING_SIZE];
-	String_InitArray(rawName, rawBuffer);
-
-	String_AppendColorless(&rawName, playerName);
-	TabList_Set(id, &rawName, listName, groupName, groupRank);
-}
-
 static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
 
@@ -175,13 +163,9 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 
 void Protocol_RemoveEntity(EntityID id) {
 	struct Entity* e = Entities.List[id];
-	if (!e) return;
-	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
+	if (!e || id == ENTITIES_SELF_ID) return;
 
-	/* See comment about some servers in Classic_AddEntity */
-	if (!Classic_TabList_Get(id)) return;
-	TabList_Remove(id);
-	Classic_TabList_Reset(id);
+	Entities_Remove(id);
 }
 
 static void UpdateLocation(EntityID id, struct LocationUpdate* update, cc_bool interpolate) {
@@ -439,16 +423,17 @@ void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 	Server.WriteBuffer = data;
 }
 
+#define Classic_HandshakeSize() (Game_Version.Protocol > PROTOCOL_0019 ? 131 : 130)
 void Classic_SendLogin(void) {
 	cc_uint8 data[131];
 	data[0] = OPCODE_HANDSHAKE;
 	{
-		data[1] = 7; /* protocol version */
+		data[1]   = Game_Version.Protocol;
 		WriteString(&data[2],  &Game_Username);
 		WriteString(&data[66], &Game_Mppass);
 		data[130] = Game_UseCPE ? 0x42 : 0x00;
 	}
-	Server.SendData(data, 131);
+	Server.SendData(data, Classic_HandshakeSize());
 }
 
 static void Classic_Handshake(cc_uint8* data) {
@@ -507,7 +492,6 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	struct MapState* m;
 	int usedLength;
 	float progress;
-	cc_uint32 read;
 	cc_result res;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
@@ -612,8 +596,8 @@ static void Classic_AddEntity(cc_uint8* data) {
 	AddEntity(data, id, &name, &skin, true);
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
-	AddTablistEntry(id, &name, &name, &group, 0);
-	Classic_TabList_Set(id);
+	TabList_Set(id, &name, &name, &group, 0);
+	TabList_EntityLinked_Set(id);
 }
 
 static void Classic_EntityTeleport(cc_uint8* data) {
@@ -738,7 +722,7 @@ static void Classic_Reset(void) {
 	map_begunLoading = false;
 	classic_receivedFirstPos = false;
 
-	Net_Set(OPCODE_HANDSHAKE, Classic_Handshake, 131);
+	Net_Set(OPCODE_HANDSHAKE, Classic_Handshake, Classic_HandshakeSize());
 	Net_Set(OPCODE_PING, Classic_Ping, 1);
 	Net_Set(OPCODE_LEVEL_BEGIN, Classic_LevelInit, 1);
 	Net_Set(OPCODE_LEVEL_DATA, Classic_LevelDataChunk, 1028);
@@ -1052,8 +1036,8 @@ static void CPE_ExtAddPlayerName(cc_uint8* data) {
 	RemoveEndPlus(&listName);
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
-	Classic_TabList_Reset(id);
-	AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
+	TabList_EntityLinked_Reset(id);
+	TabList_Set(id, &playerName, &listName, &groupName, groupRank);
 }
 
 static void CPE_ExtAddEntity(cc_uint8* data) {
@@ -1663,7 +1647,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSi
 	
 	name = UNSAFE_GetString(data); data += STRING_SIZE;
 	Block_SetName(block, &name);
-	Block_SetCollide(block, *data++);
+	Blocks.Collide[block] = *data++;
 
 	speedLog2 = (*data++ - 128) / 64.0f;
 	#define LOG_2 0.693147180559945
@@ -1703,7 +1687,6 @@ static void BlockDefs_DefineBlockCommonEnd(cc_uint8* data, cc_uint8 shape, Block
 
 	Blocks.FogDensity[block] = data[1] == 0 ? 0.0f : (data[1] + 1) / 128.0f;
 	Blocks.FogCol[block]     = PackedCol_Make(data[2], data[3], data[4], 255);
-	Block_DefineCustom(block);
 }
 
 static void BlockDefs_DefineBlock(cc_uint8* data) {
@@ -1715,8 +1698,7 @@ static void BlockDefs_DefineBlock(cc_uint8* data) {
 	}
 
 	BlockDefs_DefineBlockCommonEnd(data, shape, block);
-	/* Update sprite BoundingBox if necessary */
-	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
+	Block_DefineCustom(block, true);
 }
 
 static void BlockDefs_UndefineBlock(cc_uint8* data) {
@@ -1726,17 +1708,8 @@ static void BlockDefs_UndefineBlock(cc_uint8* data) {
 	ReadBlock(data, block);
 	didBlockLight = Blocks.BlocksLight[block];
 
-	Block_ResetProps(block);
+	Block_UndefineCustom(block);
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
-	Block_UpdateCulling(block);
-
-	Inventory_Remove(block);
-	if (block <= BLOCK_MAX_CPE) { Inventory_AddDefault(block); }
-
-	Block_SetCustomDefined(block, false);
-	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
-	/* Update sprite BoundingBox if necessary */
-	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
 }
 
 static void BlockDefs_DefineBlockExt(cc_uint8* data) {
@@ -1754,6 +1727,7 @@ static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 	Blocks.MinBB[block] = minBB;
 	Blocks.MaxBB[block] = maxBB;
 	BlockDefs_DefineBlockCommonEnd(data, 1, block);
+	Block_DefineCustom(block, false);
 }
 
 static void BlockDefs_Reset(void) {

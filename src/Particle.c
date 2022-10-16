@@ -396,7 +396,6 @@ void Particles_Render(float t) {
 	if (!terrain_count && !rain_count && !custom_count) return;
 	if (Gfx.LostContext) return;
 
-	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -405,7 +404,6 @@ void Particles_Render(float t) {
 	Custom_Render(t);
 
 	Gfx_SetAlphaTest(false);
-	Gfx_SetTexturing(false);
 }
 
 static void Particles_Tick(struct ScheduledTask* task) {

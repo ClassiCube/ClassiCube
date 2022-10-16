@@ -277,36 +277,56 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
-static SDL_Surface* surface;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	surface = SDL_GetWindowSurface(win_handle);
-	if (!surface) Window_SDLFail("getting window surface");
+static SDL_Surface* win_surface;
+static SDL_Surface* blit_surface;
 
-	if (SDL_MUSTLOCK(surface)) {
-		int ret = SDL_LockSurface(surface);
-		if (ret < 0) Window_SDLFail("locking window surface");
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
+	SDL_PixelFormat* fmt;
+	win_surface = SDL_GetWindowSurface(win_handle);
+	if (!win_surface) Window_SDLFail("getting window surface");
+
+	fmt = win_surface->format;
+	if (fmt->BitsPerPixel != 32) {
+		/* Slow path: e.g. 15 or 16 bit pixels */
+		Platform_Log1("Slow color depth: %b bpp", &fmt->BitsPerPixel);
+		blit_surface = SDL_CreateRGBSurface(0, win_surface->w, win_surface->h, 32, 0, 0, 0, 0);
+		if (!blit_surface) Window_SDLFail("creating blit surface");
+
+		SDL_SetSurfaceBlendMode(blit_surface, SDL_BLENDMODE_NONE);
+		bmp->scan0 = blit_surface->pixels;
+	} else {
+		/* Fast path: 32 bit pixels */
+		if (SDL_MUSTLOCK(win_surface)) {
+			int ret = SDL_LockSurface(win_surface);
+			if (ret < 0) Window_SDLFail("locking window surface");
+		}
+		bmp->scan0 = win_surface->pixels;
 	}
-	bmp->scan0 = surface->pixels;
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
 	SDL_Rect rect;
 	rect.x = r.X; rect.w = r.Width;
 	rect.y = r.Y; rect.h = r.Height;
+
+	if (blit_surface) SDL_BlitSurface(blit_surface, &rect, win_surface, &rect);
 	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	/* SDL docs explicitly say to NOT free the surface */
+	if (blit_surface) SDL_FreeSurface(blit_surface);
+	blit_surface = NULL;
+
+	/* SDL docs explicitly say to NOT free window surface */
 	/* https://wiki.libsdl.org/SDL_GetWindowSurface */
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 

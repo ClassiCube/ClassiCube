@@ -297,8 +297,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_SetTexturing(cc_bool enabled) {
-}
+void Gfx_SetTexturing(cc_bool enabled) { }
 
 
 /*########################################################################################################################*
@@ -1007,6 +1006,11 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	gfx_colorEnabled = r;
 	OM_UpdateBlendState();
+}
+
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 }
 
 

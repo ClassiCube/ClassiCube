@@ -103,6 +103,9 @@ void Options_Load(void);
 CC_API void Options_Reload(void);
 /* Saves options to disc, if any were changed via Options_SetXYZ since last save. */
 CC_API void Options_SaveIfChanged(void);
+/* Temporarily prevents saving options until Options_SaveIfChanged is called */
+/*  NOTE: Only makes a difference for web/Android/iOS versions */
+void Options_PauseSaving(void);
 
 /* Sets value to value of option directly in Options.Buffer if found, String_Empty if not. */
 /* Returns whether the option was actually found. */

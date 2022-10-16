@@ -21,7 +21,6 @@
 #define GLAPI extern
 #define APIENTRY
 #endif
-
 /* === BEGIN OPENGL HEADERS === */
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
@@ -428,11 +427,16 @@ void Gfx_SetFogMode(FogFunc func) {
 	gfx_fogMode = func;
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { 
-	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
-}
+void Gfx_SetTexturing(cc_bool enabled) { }
+
 void Gfx_SetAlphaTest(cc_bool enabled) { 
 	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
+}
+
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
 
 
@@ -652,10 +656,14 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
+
 		gfx_setupVBFunc      = GL_SetupVbTextured;
 		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
+
 		gfx_setupVBFunc      = GL_SetupVbColoured;
 		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
 	}

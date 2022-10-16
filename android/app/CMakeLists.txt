@@ -55,7 +55,6 @@ add_library(classicube SHARED
         ../../src/Model.c
         ../../src/_autofit.c
         ../../src/Vectors.c
-        ../../src/_raster.c
         ../../src/HeldBlockRenderer.c
         ../../src/Inventory.c
         ../../src/Launcher.c

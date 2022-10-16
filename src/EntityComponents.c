@@ -590,7 +590,7 @@ static cc_bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, 
 #define sh_half (sh_size / 2)
 static void ShadowComponent_MakeTex(void) {
 	BitmapCol pixels[sh_size * sh_size];
-	BitmapCol col = BitmapCol_Make(0, 0, 0, 200);
+	BitmapCol color = BitmapCol_Make(0, 0, 0, 200);
 	struct Bitmap bmp;
 	cc_uint32 x, y;
 
@@ -602,7 +602,7 @@ static void ShadowComponent_MakeTex(void) {
 			double dist = 
 				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +
 				(sh_half - (y + 0.5)) * (sh_half - (y + 0.5));
-			row[x] = dist < sh_half * sh_half ? col : 0;
+			row[x] = dist < sh_half * sh_half ? color : 0;
 		}
 	}
 	Gfx_RecreateTexture(&ShadowComponent_ShadowTex, &bmp, 0, false);

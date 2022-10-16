@@ -22,6 +22,7 @@ typedef int cc_file;
 #define UPDATE_FILE "ClassiCube.update"
 
 /* Origin points for when seeking in a file. */
+/*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
 /* Number of milliseconds since 01/01/0001 to start of unix time. */
 #define UNIX_EPOCH 62135596800000ULL
@@ -171,6 +172,7 @@ typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj);
 CC_API cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback);
 /* Returns non-zero if the given file exists. */
 CC_API int File_Exists(const cc_string* path);
+void Directory_GetCachePath(cc_string* path, const char* folder);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
@@ -192,12 +194,15 @@ cc_result File_Position(cc_file file, cc_uint32* pos);
 /* Attempts to retrieve the length of the given file. */
 cc_result File_Length(cc_file file, cc_uint32* len);
 
+typedef void (*Thread_StartFunc)(void);
 /* Blocks the current thread for the given number of milliseconds. */
 CC_API void Thread_Sleep(cc_uint32 milliseconds);
-typedef void (*Thread_StartFunc)(void);
-/* Starts a new thread and then runs the given function in that thread. */
+/* Initialises a new thread that will run the given function. */
+/* Because of backend differences, func must also be provided in Thread_Start2 */
+CC_API void* Thread_Create(Thread_StartFunc func);
+/* Starts a new thread that runs the given function. */
 /* NOTE: Threads must either be detached or joined, otherwise data leaks. */
-CC_API void* Thread_Start(Thread_StartFunc func);
+CC_API void Thread_Start2(void* handle, Thread_StartFunc func);
 /* Frees the platform specific persistent data associated with the thread. */
 /* NOTE: Once a thread has been detached, Thread_Join can no longer be used. */
 CC_API void Thread_Detach(void* handle);

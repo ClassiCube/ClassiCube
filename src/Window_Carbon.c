@@ -591,7 +591,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	showingDialog = false;
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -646,7 +646,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	CGColorSpaceRelease(colorSpace);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
@@ -677,21 +677,6 @@ static void GLContext_SetDrawable(void) {
 	CGrafPtr windowPort = GetWindowPort(win_handle);
 	int code = aglSetDrawable(ctx_handle, windowPort);
 	GLContext_Check(code, "Attaching GL context");
-}
-
-static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, cc_bool fullscreen) {
-	int i = 0;
-
-	if (!mode->IsIndexed) { attribs[i++] = AGL_RGBA; }
-	attribs[i++] = AGL_RED_SIZE;   attribs[i++] = mode->R;
-	attribs[i++] = AGL_GREEN_SIZE; attribs[i++] = mode->G;
-	attribs[i++] = AGL_BLUE_SIZE;  attribs[i++] = mode->B;
-	attribs[i++] = AGL_ALPHA_SIZE; attribs[i++] = mode->A;
-	attribs[i++] = AGL_DEPTH_SIZE; attribs[i++] = GLCONTEXT_DEFAULT_DEPTH;
-
-	attribs[i++] = AGL_DOUBLEBUFFER;
-	if (fullscreen) { attribs[i++] = AGL_FULLSCREEN; }
-	attribs[i++] = 0;
 }
 
 cc_result Window_EnterFullscreen(void) {
@@ -735,6 +720,21 @@ cc_result Window_ExitFullscreen(void) {
 	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
+}
+
+static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, cc_bool fullscreen) {
+	int i = 0;
+
+	attribs[i++] = AGL_RGBA;
+	attribs[i++] = AGL_RED_SIZE;   attribs[i++] = mode->R;
+	attribs[i++] = AGL_GREEN_SIZE; attribs[i++] = mode->G;
+	attribs[i++] = AGL_BLUE_SIZE;  attribs[i++] = mode->B;
+	attribs[i++] = AGL_ALPHA_SIZE; attribs[i++] = mode->A;
+	attribs[i++] = AGL_DEPTH_SIZE; attribs[i++] = GLCONTEXT_DEFAULT_DEPTH;
+
+	attribs[i++] = AGL_DOUBLEBUFFER;
+	if (fullscreen) { attribs[i++] = AGL_FULLSCREEN; }
+	attribs[i++] = 0;
 }
 
 void GLContext_Create(void) {

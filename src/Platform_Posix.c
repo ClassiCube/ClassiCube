@@ -31,7 +31,6 @@
 #include <netdb.h>
 
 #define Socket__Error() errno
-static char* defaultDirectory;
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -144,6 +143,14 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+#if defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
+#else
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+	String_AppendConst(path, folder);
+}
+#endif
+
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);
@@ -285,11 +292,14 @@ static void* ExecThread(void* param) {
 }
 #endif
 
-void* Thread_Start(Thread_StartFunc func) {
-	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
+void* Thread_Create(Thread_StartFunc func) {
+	return Mem_Alloc(1, sizeof(pthread_t), "thread");
+}
+
+void Thread_Start2(void* handle, Thread_StartFunc func) {
+	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_create(ptr, NULL, ExecThread, (void*)func);
 	if (res) Logger_Abort2(res, "Creating thread");
-	return ptr;
 }
 
 void Thread_Detach(void* handle) {
@@ -639,7 +649,6 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 		argv[j] = raw[i];
 	}
 
-	if (defaultDirectory) { argv[j++] = defaultDirectory; }
 	argv[j] = NULL;
 	return Process_RawStart(path, argv);
 }
@@ -1240,74 +1249,20 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
-#elif defined CC_BUILD_MACOS
+#else
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
+	
 
+	#if defined CC_BUILD_MACOS
 	/* Sometimes a "-psn_0_[number]" argument is added before actual args */
 	if (argc) {
 		static const cc_string psn = String_FromConst("-psn_0_");
 		cc_string arg0 = String_FromReadonly(argv[0]);
 		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
 	}
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
-		/* -d[directory] argument to change directory data is stored in */
-		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
-			--count;
-			continue;
-		}
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	return count;
-}
-
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	char path[NATIVE_STR_LEN];
-	int i, len = 0;
-	cc_result res;
-
-	for (i = 1; i < argc; ++i) {
-		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
-			defaultDirectory = argv[i];
-			break;
-		}
-	}
-
-	if (defaultDirectory) {
-		return chdir(defaultDirectory + 2) == -1 ? errno : 0;
-	}
-
-	res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-
-	/* get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/') break;
-	}
-
-	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
-	cc_string raw = String_Init(path, len, 0);
-
-	/* If running from within a bundle, set data folder to folder containing bundle */
-	if (String_CaselessEnds(&raw, &bundle)) {
-		len -= bundle.length;
-
-		for (i = len - 1; i >= 0; i--, len--) {
-			if (path[i] == '/') break;
-		}
-	}
-
-	path[len] = '\0';
-	return chdir(path) == -1 ? errno : 0;
-}
-#else
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
+	#endif
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) {
@@ -1321,9 +1276,62 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
+/* Detects if the game is running in $HOME directory */
+static cc_bool IsProblematicWorkingDirectory(void) {
+	#ifdef CC_BUILD_MACOS
+	/* TODO: Only change working directory when necessary */
+	/* When running from bundle, working directory is "/" */
+	return true;
+	#else
+	cc_string curDir, homeDir;
+	char path[2048] = { 0 };
+	const char* home;
+
+	getcwd(path, 2048);
+	curDir = String_FromReadonly(path);
+	
+	home = getenv("HOME");
+	if (!home) return false;
+	homeDir = String_FromReadonly(home);
+	
+	if (String_Equals(&curDir, &homeDir)) {
+		Platform_LogConst("Working directory is $HOME! Changing to executable directory..");
+		return true;
+	}
+	return false;
+	#endif
+}
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
+	char path[NATIVE_STR_LEN];
+	int i, len = 0;
+	cc_result res;
+	if (!IsProblematicWorkingDirectory()) return 0;
+	
+	res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+
+	/* get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '/') break;
+	}
+
+	#ifdef CC_BUILD_MACOS
+	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
+	cc_string raw = String_Init(path, len, 0);
+
+	/* If running from within a bundle, set data folder to folder containing bundle */
+	if (String_CaselessEnds(&raw, &bundle)) {
+		len -= bundle.length;
+
+		for (i = len - 1; i >= 0; i--, len--) {
+			if (path[i] == '/') break;
+		}
+	}
+	#endif
+
+	path[len] = '\0';
+	return chdir(path) == -1 ? errno : 0;
 }
 #endif
 #endif

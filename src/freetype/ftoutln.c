@@ -555,9 +555,7 @@
                      FT_Outline*        outline,
                      FT_Raster_Params*  params )
   {
-    FT_Error     error;
     FT_Renderer  renderer;
-    FT_ListNode  node;
 
 
     if ( !library )
@@ -570,28 +568,10 @@
       return FT_THROW( Invalid_Argument );
 
     renderer = library->cur_renderer;
-    node     = library->renderers.head;
 
     params->source = (void*)outline;
 
-    error = FT_ERR( Cannot_Render_Glyph );
-    while ( renderer )
-    {
-      error = renderer->raster_render( renderer->raster, params );
-      if ( !error || FT_ERR_NEQ( error, Cannot_Render_Glyph ) )
-        break;
-
-      /* FT_Err_Cannot_Render_Glyph is returned if the render mode   */
-      /* is unsupported by the current renderer for this glyph image */
-      /* format                                                      */
-
-      /* now, look for another renderer that supports the same */
-      /* format                                                */
-      renderer = FT_Lookup_Renderer( library, FT_GLYPH_FORMAT_OUTLINE,
-                                     &node );
-    }
-
-    return error;
+    return renderer->raster_render( params );
   }
 
 

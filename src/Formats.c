@@ -14,9 +14,9 @@
 #include "Errors.h"
 #include "Stream.h"
 #include "Chat.h"
-#include "Inventory.h"
 #include "TexturePack.h"
 #include "Utils.h"
+static cc_bool calcDefaultSpawn;
 
 
 /*########################################################################################################################*
@@ -62,6 +62,7 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	cc_result res;
 	Game_Reset();
 	
+	calcDefaultSpawn = false;
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
@@ -77,6 +78,7 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	if (res) Logger_SysWarn2(res, "decoding", path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
+	if (calcDefaultSpawn) LocalPlayer_CalcDefaultSpawn();
 	LocalPlayer_MoveToSpawn();
 
 	relPath = *path;
@@ -300,7 +302,7 @@ cc_result Fcm_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 enum NbtTagType { 
 	NBT_END, NBT_I8,  NBT_I16, NBT_I32,  NBT_I64, NBT_F32, 
-	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT
+	NBT_F64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT
 };
 
 #define NBT_SMALL_SIZE  STRING_SIZE
@@ -330,40 +332,56 @@ struct NbtTag {
 };
 
 static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
-	if (tag->type != NBT_I8) Logger_Abort("Expected I8 NBT tag");
-	return tag->value.u8;
+	if (tag->type == NBT_I8) return tag->value.u8; 
+	
+	tag->result = NBT_ERR_EXPECTED_I8;
+	return 0;
 }
 
 static cc_int16 NbtTag_I16(struct NbtTag* tag) {
-	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
-	return tag->value.i16;
+	if (tag->type == NBT_I16) return tag->value.i16;
+	if (tag->type == NBT_I8)  return tag->value.u8;
+
+	tag->result = NBT_ERR_EXPECTED_I16;
+	return 0;
 }
 
 static cc_uint16 NbtTag_U16(struct NbtTag* tag) {
-	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
-	return tag->value.u16;
+	if (tag->type == NBT_I16) return tag->value.u16;
+	if (tag->type == NBT_I8)  return tag->value.u8;
+
+	tag->result = NBT_ERR_EXPECTED_I16;
+	return 0;
 }
 
 static int NbtTag_I32(struct NbtTag* tag) {
-	if (tag->type != NBT_I32) Logger_Abort("Expected I32 NBT tag");
-	return tag->value.i32;
+	if (tag->type == NBT_I32) return tag->value.i32;
+	if (tag->type == NBT_I16) return tag->value.i16;
+	if (tag->type == NBT_I8)  return tag->value.u8;
+
+	tag->result = NBT_ERR_EXPECTED_I32;
+	return 0;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
-	if (tag->type != NBT_F32) Logger_Abort("Expected F32 NBT tag");
-	return tag->value.f32;
+	if (tag->type == NBT_F32) return tag->value.f32;
+
+	tag->result = NBT_ERR_EXPECTED_F32;
+	return 0;
 }
 
 static cc_uint8* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
-	if (tag->type != NBT_I8S) Logger_Abort("Expected I8_Array NBT tag");
-	if (tag->dataSize < minSize) Logger_Abort("I8_Array NBT tag too small");
+	if (tag->type != NBT_I8S)    { tag->result = NBT_ERR_EXPECTED_ARR;  return NULL; }
+	if (tag->dataSize < minSize) { tag->result = NBT_ERR_ARR_TOO_SMALL; return NULL; }
 
 	return NbtTag_IsSmall(tag) ? tag->value.small : tag->value.big;
 }
 
 static cc_string NbtTag_String(struct NbtTag* tag) {
-	if (tag->type != NBT_STR) Logger_Abort("Expected String NBT tag");
-	return tag->value.str.text;
+	if (tag->type == NBT_STR) return tag->value.str.text;
+
+	tag->result = NBT_ERR_EXPECTED_STR;
+	return String_Empty;
 }
 
 static cc_result Nbt_ReadString(struct Stream* stream, cc_string* str) {
@@ -413,7 +431,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 		res = Stream_ReadU32_BE(stream, &tag.value.u32);
 		break;
 	case NBT_I64:
-	case NBT_R64:
+	case NBT_F64:
 		res = stream->Skip(stream, 8);
 		break; /* (8) data */
 
@@ -714,7 +732,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 			Blocks.SpriteOffset[id] = 0;
 		}
 
-		Block_DefineCustom(id);
+		Block_DefineCustom(id, false);
 		Blocks.CanPlace[id]  = true;
 		Blocks.CanDelete[id] = true;
 		Event_RaiseVoid(&BlockEvents.PermissionsChanged);
@@ -740,7 +758,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 	if (IsTag(tag->parent->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag);  return; }
 		if (IsTag(tag, "ID2"))            { cw_curID = NbtTag_U16(tag); return; }
-		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
+		if (IsTag(tag, "CollideType"))    { Blocks.Collide[id] = NbtTag_U8(tag); return; }
 		if (IsTag(tag, "Speed"))          { Blocks.SpeedMultiplier[id] = NbtTag_F32(tag); return; }
 		if (IsTag(tag, "TransmitsLight")) { Blocks.BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
 		if (IsTag(tag, "FullBright"))     { Blocks.FullBright[id] = NbtTag_U8(tag) != 0; return; }
@@ -755,6 +773,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Textures")) {
 			arr = NbtTag_U8_Array(tag, 6);
+			if (!arr) return;
+
 			Block_Tex(id, FACE_YMAX) = arr[0]; Block_Tex(id, FACE_YMIN) = arr[1];
 			Block_Tex(id, FACE_XMIN) = arr[2]; Block_Tex(id, FACE_XMAX) = arr[3];
 			Block_Tex(id, FACE_ZMIN) = arr[4]; Block_Tex(id, FACE_ZMAX) = arr[5];
@@ -778,6 +798,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Fog")) {
 			arr = NbtTag_U8_Array(tag, 4);
+			if (!arr) return;
+
 			Blocks.FogDensity[id] = (arr[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
 			if (arr[0] == 0xFF) Blocks.FogDensity[id] = 0.0f;
@@ -787,6 +809,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Coords")) {
 			arr = NbtTag_U8_Array(tag, 6);
+			if (!arr) return;
+
 			Blocks.MinBB[id].X = (cc_int8)arr[0] / 16.0f; Blocks.MaxBB[id].X = (cc_int8)arr[3] / 16.0f;
 			Blocks.MinBB[id].Y = (cc_int8)arr[1] / 16.0f; Blocks.MaxBB[id].Y = (cc_int8)arr[4] / 16.0f;
 			Blocks.MinBB[id].Z = (cc_int8)arr[2] / 16.0f; Blocks.MaxBB[id].Z = (cc_int8)arr[5] / 16.0f;
@@ -1183,15 +1207,18 @@ Classic 0.15 to Classic 0.30:
 	VAR "Level"      (Java serialised level object instance)
 }*/
 
-static void UseClassic013Env(void) {
-	/* Similiar env to how it appears in 0.13 classic client */
+static void Dat_Format0And1(void) {
+	/* Formats 0 and 1 don't store spawn position, so use default of map centre */
+	calcDefaultSpawn = true;
+
+	/* Similiar env to how it appears in preclassic - 0.13 classic client */
 	Env.CloudsHeight = -30000;
 	Env.SkyCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);
 	Env.FogCol       = PackedCol_Make(0x7F, 0xCC, 0xFF, 0xFF);
 }
 
 static cc_result Dat_LoadFormat0(struct Stream* stream) {
-	UseClassic013Env();
+	Dat_Format0And1();
 	/* Similiar env to how it appears in preclassic client */
 	Env.EdgeBlock  = BLOCK_AIR;
 	Env.SidesBlock = BLOCK_AIR;
@@ -1217,7 +1244,7 @@ static cc_result Dat_LoadFormat1(struct Stream* stream) {
 	cc_uint8 header[8 + 2 + 2 + 2];
 	cc_result res;
 
-	UseClassic013Env();
+	Dat_Format0And1();
 	if ((res = Java_ReadString(stream,   level_name))) return res;
 	if ((res = Java_ReadString(stream, level_author))) return res;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;

@@ -39,7 +39,7 @@ static void PerspectiveCamera_GetView(struct Matrix* mat) {
 
 static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD);
+	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD + Camera.TiltPitch);
 	Vec3 eyePos = Entity_GetEyePosition(p);
 	float reach = LocalPlayer_Instance.ReachDistance;
 	Picking_CalcPickedBlock(&eyePos, &dir, reach, t);
@@ -110,8 +110,12 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	struct Entity* e = &p->Base;
 
 	struct Matrix tiltY, velX;
-	float vel;
-	if (!Game_ViewBobbing) { Camera.TiltM = Matrix_Identity; return; }
+	float vel, fall;
+	if (!Game_ViewBobbing) { 
+		Camera.TiltM     = Matrix_Identity;
+		Camera.TiltPitch = 0.0f;
+		return; 
+	}
 
 	Matrix_RotateZ(&Camera.TiltM, -p->Tilt.TiltX                  * e->Anim.BobStrength);
 	Matrix_RotateX(&tiltY,        Math_AbsF(p->Tilt.TiltY) * 3.0f * e->Anim.BobStrength);
@@ -120,9 +124,12 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	Camera.BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
 	Camera.BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
 
-	vel = Math_Lerp(p->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
-	Matrix_RotateX(&velX, -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale);
+	vel  = Math_Lerp(p->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
+	fall = -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale;
+
+	Matrix_RotateX(&velX, fall);
 	Matrix_MulBy(&Camera.TiltM, &velX);
+	if (!Game_ClassicMode) Camera.TiltPitch = fall;
 }
 
 

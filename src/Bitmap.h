@@ -43,6 +43,7 @@ typedef cc_uint32 BitmapCol;
 #define BITMAPCOLOR_WHITE BitmapColor_RGB(255, 255, 255)
 
 BitmapCol BitmapColor_Offset(BitmapCol color, int rBy, int gBy, int bBy);
+BitmapCol BitmapColor_Scale(BitmapCol a, float t);
 
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };

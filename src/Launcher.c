@@ -81,6 +81,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 
 	/* Save resume info */
 	if (server->length) {
+		Options_PauseSaving();
 		Options_Set(ROPT_SERVER, server);
 		Options_Set(ROPT_USER,   user);
 		Options_Set(ROPT_IP,     ip);
@@ -244,8 +245,8 @@ void Launcher_Run(void) {
 	Launcher_TryLoadTexturePack();
 
 	Http_Component.Init();
-	Resources_CheckExistence();
 	CheckUpdateTask_Run();
+	Resources_CheckExistence();
 
 	if (Resources_Count) {
 		CheckResourcesScreen_SetActive();
@@ -400,7 +401,7 @@ static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
 		String_CaselessEqualsConst(path, "terrain.png");
 }
 
-static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipState* s) {
+static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
 	struct Bitmap bmp;
 	cc_result res;
 
@@ -431,7 +432,6 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 }
 
 static void ExtractTexturePack(const cc_string* path) {
-	struct ZipState state;
 	struct Stream stream;
 	cc_result res;
 
@@ -439,10 +439,8 @@ static void ExtractTexturePack(const cc_string* path) {
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Logger_SysWarn(res, "opening texture pack"); return; }
 
-	Zip_Init(&state, &stream);
-	state.SelectEntry  = Launcher_SelectZipEntry;
-	state.ProcessEntry = Launcher_ProcessZipEntry;
-	res = Zip_Extract(&state);
+	res = Zip_Extract(&stream, 
+			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
 
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */

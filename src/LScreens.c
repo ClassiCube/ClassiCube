@@ -17,6 +17,7 @@
 #include "Options.h"
 #include "Utils.h"
 #include "LBackend.h"
+#include "Http.h"
 #define LAYOUTS static const struct LLayout
 
 /*########################################################################################################################*
@@ -533,6 +534,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	}
 	if (!mppass->length) mppass = &defMppass;
 
+	Options_PauseSaving();
 	Options_Set("launcher-dc-username", user);
 	Options_Set("launcher-dc-ip",       &ip);
 	Options_Set("launcher-dc-port",     &port);
@@ -646,7 +648,7 @@ void MFAScreen_SetActive(void) {
 *#########################################################################################################################*/
 static struct MainScreen {
 	LScreen_Layout
-	struct LButton btnLogin, btnResume, btnDirect, btnSPlayer, btnOptions, btnRegister;
+	struct LButton btnLogin, btnResume, btnDirect, btnSPlayer, btnRegister, btnOptions, btnUpdates;
 	struct LInput iptUsername, iptPassword;
 	struct LLabel lblStatus, lblUpdate;
 	cc_bool signingIn;
@@ -657,7 +659,8 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.btnLogin,    (struct LWidget*)&MainScreen.btnResume,
 	(struct LWidget*)&MainScreen.lblStatus,   (struct LWidget*)&MainScreen.btnDirect,
 	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.lblUpdate,
-	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions
+	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions,
+	(struct LWidget*)&MainScreen.btnUpdates
 };
 
 LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
@@ -670,9 +673,10 @@ LAYOUTS main_btnResume[]  = { { ANCHOR_CENTRE, 90 }, { ANCHOR_CENTRE, -25 } };
 LAYOUTS main_btnDirect[]  = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,  60 } };
 LAYOUTS main_btnSPlayer[] = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 110 } };
 
-LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX, 10 }, { ANCHOR_MAX, 45 } };
-LAYOUTS main_btnOptions[]  = { { ANCHOR_MAX,  6 }, { ANCHOR_MAX,  6 } };
-LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,  6 }, { ANCHOR_MAX,  6 } };
+LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
+LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,    6 }, { ANCHOR_MAX,  6 } };
+LAYOUTS main_btnOptions[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_MAX,  6 } };
+LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
 
 
 struct ResumeInfo {
@@ -804,13 +808,15 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LLabel_Init( &s->lblUpdate,   "&eChecking..",      main_lblUpdate);
 	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
 	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
+	LButton_Init(&s->btnUpdates,  100, 35, "Updates",  main_btnUpdates);
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
 	s->btnDirect.OnClick   = SwitchToDirectConnect;
 	s->btnSPlayer.OnClick  = MainScreen_Singleplayer;
-	s->btnOptions.OnClick  = SwitchToSettings;
 	s->btnRegister.OnClick = MainScreen_Register;
+	s->btnOptions.OnClick  = SwitchToSettings;
+	s->btnUpdates.OnClick  = SwitchToUpdates;
 
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
@@ -1011,16 +1017,15 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
-#define RESOURCES_BACK_COLOR BitmapColor_RGB( 12,  12,  12)
 #define RESOURCES_FORE_COLOR BitmapColor_RGB(120,  85, 151)
-
 static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
 	Gradient_Noise(ctx, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
 static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 	int x, y, width, height;
-	Context2D_Clear(ctx, RESOURCES_BACK_COLOR, 0, 0, ctx->width, ctx->height);
+	BitmapCol color = BitmapColor_Scale(Launcher_Theme.BackgroundColor, 0.2f);
+	Context2D_Clear(ctx, color, 0, 0, ctx->width, ctx->height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
@@ -1325,15 +1330,14 @@ void ServersScreen_SetActive(void) {
 *#########################################################################################################################*/
 static struct SettingsScreen {
 	LScreen_Layout
-	struct LButton btnUpdates, btnMode, btnColours, btnBack;
-	struct LLabel  lblUpdates, lblMode, lblColours;
+	struct LButton btnMode, btnColours, btnBack;
+	struct LLabel  lblMode, lblColours;
 	struct LCheckbox cbExtra, cbEmpty, cbScale;
 	struct LLine sep;
 } SettingsScreen;
 
 static struct LWidget* settings_widgets[] = {
 	(struct LWidget*)&SettingsScreen.sep,
-	(struct LWidget*)&SettingsScreen.btnUpdates, (struct LWidget*)&SettingsScreen.lblUpdates,
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.btnColours, (struct LWidget*)&SettingsScreen.lblColours,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
@@ -1341,14 +1345,11 @@ static struct LWidget* settings_widgets[] = {
 };
 static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.sep,
-	(struct LWidget*)&SettingsScreen.btnUpdates, (struct LWidget*)&SettingsScreen.lblUpdates,
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
 	(struct LWidget*)&SettingsScreen.btnBack,    (struct LWidget*)&SettingsScreen.cbScale
 };
 
-LAYOUTS set_btnUpdates[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE, -120 } };
-LAYOUTS set_lblUpdates[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE, -120 } };
 LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };
 LAYOUTS set_lblMode[]    = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -70 } };
 LAYOUTS set_btnColours[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -20 } };
@@ -1391,9 +1392,6 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	LLine_Init(  &s->sep, 380, set_sep);
 
-	LButton_Init(&s->btnUpdates, 110, 35, "Updates", set_btnUpdates);
-	LLabel_Init( &s->lblUpdates, "&eGet the latest stuff", set_lblUpdates);
-
 	LButton_Init(&s->btnMode, 110, 35, "Mode", set_btnMode);
 	LLabel_Init( &s->lblMode, "&eChange the enabled features", set_lblMode);
 
@@ -1417,7 +1415,6 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	s->cbScale.ValueChanged = SettingsScreen_DPIScaling;
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
-	s->btnUpdates.OnClick = SwitchToUpdates;
 	s->btnColours.OnClick = SwitchToThemes;
 	s->btnBack.OnClick    = SwitchToMain;
 }
@@ -1726,7 +1723,7 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	s->btnRel[1].OnClick = UpdatesScreen_Rel_1;
 	s->btnDev[0].OnClick = UpdatesScreen_Dev_0;
 	s->btnDev[1].OnClick = UpdatesScreen_Dev_1;
-	s->btnBack.OnClick   = SwitchToSettings;
+	s->btnBack.OnClick   = SwitchToMain;
 }
 
 static void UpdatesScreen_Show(struct LScreen* s_) {

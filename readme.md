@@ -52,7 +52,7 @@ If you get a ```The Windows SDK version 5.1 was not found``` compilation error, 
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
 2. Navigate to directory with game's source code
-3. Enter `cl.exe *.c /link user32.lib gdi32.lib crypt32.lib ws2_32.lib wininet.lib winmm.lib dbghelp.lib shell32.lib /out:ClassiCube.exe`
+3. Enter `cl.exe *.c /link user32.lib gdi32.lib crypt32.lib ws2_32.lib wininet.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
 
 ##### Using MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
@@ -87,11 +87,11 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 
 ##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Cross compiling for Windows (64 bit):
 
-```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32```
+```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
@@ -160,15 +160,15 @@ Install libexecinfo, curl and openal-soft package if needed
 
 #### Haiku
 
-Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed
+Install openal_devel and libexecinfo_devel package if needed
 
-```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
+```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 ## Compiling - other
 
 #### Web
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js --preload-file texpacks/default.zip```
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 

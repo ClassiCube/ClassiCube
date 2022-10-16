@@ -51,6 +51,12 @@ void Inventory_PickBlock(BlockID block) {
 	int i;
 	if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == block) return;
 
+	/* Vanilla classic client doesn't let you select these blocks */
+	if (Game_PureClassic) {
+		if (block == BLOCK_GRASS)       block = BLOCK_DIRT;
+		if (block == BLOCK_DOUBLE_SLAB) block = BLOCK_SLAB;
+	}
+
 	/* Try to replace same block */
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
@@ -84,18 +90,10 @@ void Inventory_PickBlock(BlockID block) {
 	Inventory_SetSelectedBlock(block);
 }
 
-static const cc_uint8 classicInventory[42] = {
-	BLOCK_STONE, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB,
-	BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM, BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE,
-	BLOCK_RED, BLOCK_ORANGE, BLOCK_YELLOW, BLOCK_LIME, BLOCK_GREEN, BLOCK_TEAL, BLOCK_AQUA, BLOCK_CYAN, BLOCK_BLUE,
-	BLOCK_INDIGO, BLOCK_VIOLET, BLOCK_MAGENTA, BLOCK_PINK, BLOCK_BLACK, BLOCK_GRAY, BLOCK_WHITE, BLOCK_COAL_ORE, BLOCK_IRON_ORE,
-	BLOCK_GOLD_ORE, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
-};
-
 /* Returns default block that should go in the given inventory slot */
 static BlockID DefaultMapping(int slot) {
 	if (Game_ClassicMode) {
-		if (slot < 9 * 4 + 6) return classicInventory[slot];
+		if (slot < Game_Version.InventorySize) return Game_Version.Inventory[slot];
 	}else if (slot < BLOCK_MAX_CPE) {
 		return (BlockID)(slot + 1);
 	}
@@ -139,13 +137,14 @@ static void OnReset(void) {
 }
 
 static void OnInit(void) {
+	int i;
 	BlockID* inv = Inventory.Table;
 	OnReset();
-	Inventory.BlocksPerRow = Game_ClassicMode ? 9 : 10;
+	Inventory.BlocksPerRow = Game_Version.BlocksPerRow;
 	
-	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
-	inv[3] = BLOCK_DIRT;   inv[4] = BLOCK_WOOD;   inv[5] = BLOCK_LOG;
-	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GLASS;  inv[8] = BLOCK_SLAB;
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		inv[i] = Game_Version.Hotbar[i];
+	}
 }
 
 struct IGameComponent Inventory_Component = {

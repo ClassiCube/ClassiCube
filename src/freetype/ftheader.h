@@ -108,7 +108,6 @@
    */
 #ifndef FT_CONFIG_CONFIG_H
 #define FT_CONFIG_CONFIG_H  "ftconfig.h"
-#define FT_CONFIG_CONFIG_H_FT  "freetype/ftconfig.h"
 #endif
 
 
@@ -155,7 +154,6 @@
    */
 #ifndef FT_CONFIG_MODULES_H
 #define FT_CONFIG_MODULES_H  "ftmodule.h"
-#define FT_CONFIG_MODULES_H_FT  "freetype/ftmodule.h"
 #endif
 
   /* */
@@ -188,7 +186,6 @@
    *
    */
 #define FT_ERRORS_H  "fterrors.h"
-#define FT_ERRORS_H_FT  "freetype/fterrors.h"
 
 
   /*************************************************************************
@@ -218,7 +215,6 @@
    *
    */
 #define FT_SYSTEM_H  "ftsystem.h"
-#define FT_SYSTEM_H_FT  "freetype/ftsystem.h"
 
 
   /*************************************************************************
@@ -235,7 +231,6 @@
    *
    */
 #define FT_IMAGE_H  "ftimage.h"
-#define FT_IMAGE_H_FT  "freetype/ftimage.h"
 
 
   /*************************************************************************
@@ -251,7 +246,6 @@
    *
    */
 #define FT_TYPES_H  "fttypes.h"
-#define FT_TYPES_H_FT  "freetype/fttypes.h"
 
 
   /*************************************************************************
@@ -280,7 +274,6 @@
    *
    */
 #define FT_OUTLINE_H  "ftoutln.h"
-#define FT_OUTLINE_H_FT  "freetype/ftoutln.h"
 
 
   /*************************************************************************
@@ -307,7 +300,6 @@
    *
    */
 #define FT_MODULE_H  "ftmodapi.h"
-#define FT_MODULE_H_FT  "freetype/ftmodapi.h"
 
 
   /*************************************************************************
@@ -392,7 +384,6 @@
    *
    */
 #define FT_TYPE1_TABLES_H  "t1tables.h"
-#define FT_TYPE1_TABLES_H_FT  "freetype/t1tables.h"
 
 
   /*************************************************************************
@@ -421,7 +412,6 @@
    *
    */
 #define FT_TRUETYPE_TABLES_H  "tttables.h"
-#define FT_TRUETYPE_TABLES_H_FT  "freetype/tttables.h"
 
 
   /*************************************************************************
@@ -450,7 +440,6 @@
    *
    */
 #define FT_CID_H  "ftcid.h"
-#define FT_CID_H_FT  "freetype/ftcid.h"
 
 
   /*************************************************************************
@@ -464,7 +453,6 @@
    *
    */
 #define FT_GLYPH_H  "ftglyph.h"
-#define FT_GLYPH_H_FT  "freetype/ftglyph.h"
 
 
   /*************************************************************************
@@ -478,7 +466,6 @@
    *
    */
 #define FT_BITMAP_H  "ftbitmap.h"
-#define FT_BITMAP_H_FT  "freetype/ftbitmap.h"
 
 
   /*************************************************************************
@@ -492,7 +479,6 @@
    *
    */
 #define FT_BBOX_H  "ftbbox.h"
-#define FT_BBOX_H_FT  "freetype/ftbbox.h"
 
 
   /*************************************************************************
@@ -536,7 +522,6 @@
    *
    */
 #define FT_MULTIPLE_MASTERS_H  "ftmm.h"
-#define FT_MULTIPLE_MASTERS_H_FT  "freetype/ftmm.h"
 
 
   /*************************************************************************
@@ -576,7 +561,6 @@
    *   FreeType~2 API which provides functions to stroke outline paths.
    */
 #define FT_STROKER_H  "ftstroke.h"
-#define FT_STROKER_H_FT "freetype/ftstroke.h"
 
 
   /*************************************************************************
@@ -589,7 +573,6 @@
    *   FreeType~2 API which performs artificial obliquing and emboldening.
    */
 #define FT_SYNTHESIS_H  "ftsynth.h"
-#define FT_SYNTHESIS_H_FT "freetype/ftsynth.h"
 
 
   /*************************************************************************
@@ -615,7 +598,6 @@
    *   cosines and arc tangents).
    */
 #define FT_TRIGONOMETRY_H  "fttrigon.h"
-#define FT_TRIGONOMETRY_H_FT "freetype/fttrigon.h"
 
 
   /*************************************************************************

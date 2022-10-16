@@ -1125,6 +1125,7 @@ static void OnInit(void) {
 
 static void OnFree(void) {
 	ClearTouches();
+	HotkeysText.count = 0;
 }
 
 struct IGameComponent Input_Component = {

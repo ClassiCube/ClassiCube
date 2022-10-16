@@ -488,9 +488,6 @@
     <ClCompile Include="_psmodule.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_raster.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_sfnt.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
@@ -589,6 +586,9 @@
     </ClCompile>
     <ClCompile Include="Graphics_GL2.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="GameVersion.c">
+      <Filter>Source Files\Game</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

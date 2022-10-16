@@ -57,6 +57,7 @@ I don't really test these platforms at all, only when I suspect some changes to 
 |Linux PPC | Debian | Issues with colour channels incorrectly swapped? |
 |Linux ARM | Raspberry pi | ARM64 should work too |
 |Linux SPARC | Debian | Didn't really work due to lack of 24-bit colours |
+|Linux Alpha | Debian | 
 |HaikuOS | Nightly | Requires SDL for windowing
 
 ## Porting

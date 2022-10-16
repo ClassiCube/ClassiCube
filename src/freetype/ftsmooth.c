@@ -30,8 +30,6 @@
   static FT_Error
   ft_smooth_init( FT_Renderer  render )
   {
-    render->clazz->raster_class->raster_reset( render->raster, NULL, 0 );
-
     return 0;
   }
 
@@ -42,10 +40,7 @@
                       FT_ULong     mode_tag,
                       FT_Pointer   data )
   {
-    /* we simply pass it to the raster */
-    return render->clazz->raster_class->raster_set_mode( render->raster,
-                                                         mode_tag,
-                                                         data );
+    return 0;
   }
 
   /* transform a given glyph image */
@@ -155,7 +150,7 @@
     params.flags  = FT_RASTER_FLAG_AA;
 
     /* grayscale */
-    error = render->raster_render( render->raster, &params );
+    error = render->raster_render( &params );
 
   Exit:
     if ( !error )

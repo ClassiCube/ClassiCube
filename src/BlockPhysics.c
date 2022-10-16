@@ -470,11 +470,13 @@ static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
 }
 
 
-static const cc_uint8 blocksTnt[BLOCK_CPE_COUNT] = {
-	0, 1, 0, 0, 1, 0, 0, 1,  1, 1, 1, 1, 0, 0, 1, 1,  1, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 1, 1, 1, 0, 0,
-	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,
-};
+/* TODO: should this be moved into a precomputed lookup table, instead of calculating every time? */
+/*  performance difference probably isn't enough to really matter */
+static cc_bool BlocksTNT(BlockID b) {
+	/* NOTE: A bit hacky, but works well enough */
+	return (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA) || 
+		(Blocks.ExtendedCollide[b] == COLLIDE_SOLID && (Blocks.DigSounds[b] == SOUND_METAL || Blocks.DigSounds[b] == SOUND_STONE));
+}
 
 #define TNT_POWER 4
 #define TNT_POWER_SQUARED (TNT_POWER * TNT_POWER)
@@ -496,7 +498,7 @@ static void Physics_HandleTnt(int index, BlockID block) {
 				index = World_Pack(xx, yy, zz);
 
 				block = World.Blocks[index];
-				if (block < BLOCK_CPE_COUNT && blocksTnt[block]) continue;
+				if (BlocksTNT(block)) continue;
 
 				Game_UpdateBlock(xx, yy, zz, BLOCK_AIR);
 				Physics_ActivateNeighbours(xx, yy, zz, index);

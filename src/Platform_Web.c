@@ -13,11 +13,15 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
 #include <sys/time.h>
-#include <stdio.h>
+#include <emscripten.h>
+
+#define O_RDONLY 0x000
+#define O_WRONLY 0x001
+#define O_RDWR   0x002
+#define O_CREAT  0x040
+#define O_EXCL   0x080
+#define O_TRUNC  0x200
 
 /* Unfortunately, errno constants are different in some older emscripten versions */
 /*  (linux errno numbers compared to WASI errno numbers) */
@@ -31,8 +35,6 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-#include <emscripten.h>
-#include "Chat.h"
 
 
 /*########################################################################################################################*
@@ -63,11 +65,9 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-/* TODO: check this is actually accurate */
-static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
+	return end - beg;
 }
 
 extern void interop_Log(const char* msg, int len);
@@ -89,6 +89,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 cc_uint64 Stopwatch_Measure(void) {
 	/* time is a milliseconds double */
+	/*  convert to microseconds */
 	return (cc_uint64)(emscripten_get_now() * 1000);
 }
 
@@ -96,17 +97,14 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-extern void interop_InitFilesystem(void);
-extern void interop_LoadIndexedDB(void);
-extern int interop_DirectoryCreate(const char* path, int perms);
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
-	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
-	/* TODO: Is the default mode in all cases */
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+	String_AppendConst(path, folder);
+}
 
-	/* returned result is negative for error */
-	return -interop_DirectoryCreate(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+extern void interop_InitFilesystem(void);
+cc_result Directory_Create(const cc_string* path) {
+	/* Web filesystem doesn't need directories */
+	return 0;
 }
 
 extern int interop_FileExists(const char* path);
@@ -120,10 +118,6 @@ static void* enum_obj;
 static Directory_EnumCallback enum_callback;
 EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-
-	/* ignore . and .. entry */
-	if (src[0] == '.' && src[1] == '\0') return;
-	if (src[0] == '.' && src[1] == '.' && src[2] == '\0') return;
 
 	String_InitArray(path, pathBuffer);
 	String_AppendUtf8(&path, src, String_Length(src));
@@ -141,12 +135,12 @@ cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallbac
 	return -interop_DirectoryIter(str);
 }
 
-extern int interop_FileCreate(const char* path, int mode, int perms);
+extern int interop_FileCreate(const char* path, int mode);
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	int res;
 	Platform_EncodeUtf8(str, path);
-	res = interop_FileCreate(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	res = interop_FileCreate(str, mode);
 
 	/* returned result is negative for error */
 	if (res >= 0) {
@@ -198,15 +192,15 @@ cc_result File_Close(cc_file file) {
 
 extern int interop_FileSeek(int fd, int offset, int whence);
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	/* returned result is negative for error */
-	int res = interop_FileSeek(file, offset, modes[seekType]);
+	int res = interop_FileSeek(file, offset, seekType);
 	/* FileSeek returns current position, discard that */
 	return res >= 0 ? 0 : -res;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	int res = interop_FileSeek(file, 0, SEEK_CUR);
+	/* FILE_SEEKFROM_CURRENT is same as SEEK_CUR */
+	int res = interop_FileSeek(file, 0, FILE_SEEKFROM_CURRENT);
 	/* returned result is negative for error */
 	if (res >= 0) {
 		*pos = res; return 0;
@@ -231,21 +225,22 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 /* No real threading support with emscripten backend */
-void Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Start(Thread_StartFunc func) { func(); return NULL; }
-void Thread_Detach(void* handle) { }
-void Thread_Join(void* handle) { }
+void  Thread_Sleep(cc_uint32 milliseconds) { }
+void* Thread_Create(Thread_StartFunc func) { return NULL; }
+void  Thread_Start2(void* handle, Thread_StartFunc func) { func(); }
+void  Thread_Detach(void* handle) { }
+void  Thread_Join(void* handle) { }
 
 void* Mutex_Create(void) { return NULL; }
-void Mutex_Free(void* handle) { }
-void Mutex_Lock(void* handle) { }
-void Mutex_Unlock(void* handle) { }
+void  Mutex_Free(void* handle) { }
+void  Mutex_Lock(void* handle) { }
+void  Mutex_Unlock(void* handle) { }
 
 void* Waitable_Create(void) { return NULL; }
-void Waitable_Free(void* handle) { }
-void Waitable_Signal(void* handle) { }
-void Waitable_Wait(void* handle) { }
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
+void  Waitable_Free(void* handle) { }
+void  Waitable_Signal(void* handle) { }
+void  Waitable_Wait(void* handle) { }
+void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
 
 
 /*########################################################################################################################*
@@ -356,14 +351,11 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Process_StartGame(const cc_string* args, int numArgs) {
-	return ERR_NOT_SUPPORTED; 
-}
 void Process_Exit(cc_result code) {
-	/* Window isn't implicitly closed when process is exited */
+	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
 	if (code) Window_Close();
-
-	exit(code);
+	/* game normally calls exit with code = 0 due to async IndexedDB loading */
+	if (code) exit(code);
 }
 
 extern int interop_OpenTab(const char* url);
@@ -377,26 +369,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 	if (res == 1) res = ERR_INVALID_OPEN_URL;
 	return res;
 }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-const struct UpdaterInfo Updater_Info = { "", 0 };
-
-cc_result Updater_GetBuildTime(cc_uint64* t)   { return ERR_NOT_SUPPORTED; }
-cc_bool Updater_Clean(void)                    { return true; }
-cc_result Updater_Start(const char** action)   { return ERR_NOT_SUPPORTED; }
-cc_result Updater_MarkExecutable(void)         { return 0; }
-cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
 
 
 /*########################################################################################################################*
@@ -441,13 +413,7 @@ extern void interop_InitModule(void);
 void Platform_Init(void) {
 	interop_InitModule();
 	interop_InitFilesystem();
-	interop_LoadIndexedDB();
 	interop_InitSockets();
-	
-	/* NOTE: You must pre-load IndexedDB before main() */
-	/* (because pre-loading only works asynchronously) */
-	/* If you don't, you'll get errors later trying to sync local to remote */
-	/* See doc/hosting-webclient.md for example preloading IndexedDB code */
 }
 void Platform_Free(void) { }
 
@@ -460,7 +426,7 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) { return E
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
+*------------------------------------------------------Main driver--------------------------------------------------------*
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
@@ -471,9 +437,39 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
-extern int interop_DirectorySetWorking(const char* path);
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	/* returned result is negative for error */
-	return -interop_DirectorySetWorking("/classicube");
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
+static int _argc;
+static char** _argv;
+
+extern void interop_FS_Init(void);
+extern void interop_DirectorySetWorking(const char* path);
+extern void interop_AsyncDownloadTexturePack(const char* path, const char* url);
+
+int main(int argc, char** argv) {
+	_argc = argc; _argv = argv;
+
+	/* Game loads resources asynchronously, then actually starts itself */
+	/* main */
+	/*  > texture pack download (async) */
+	/*     > load indexedDB (async) */
+	/*        > web_main (game actually starts) */
+	interop_FS_Init();
+	interop_DirectorySetWorking("/classicube");
+	interop_AsyncDownloadTexturePack("texpacks/default.zip", "/static/default.zip");
+}
+
+extern void interop_LoadIndexedDB(void);
+extern void interop_AsyncLoadIndexedDB(void);
+/* Asynchronous callback after texture pack is downloaded */
+EMSCRIPTEN_KEEPALIVE void main_phase1(void) {
+	interop_LoadIndexedDB(); /* legacy compatibility */
+	interop_AsyncLoadIndexedDB();
+}
+
+extern int web_main(int argc, char** argv);
+/* Asynchronous callback after IndexedDB is loaded */
+EMSCRIPTEN_KEEPALIVE void main_phase2(void) {
+	web_main(_argc, _argv);
 }
 #endif

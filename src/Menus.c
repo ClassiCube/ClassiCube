@@ -354,9 +354,7 @@ static void ListScreen_Init(void* screen) {
 
 static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void ListScreen_Free(void* screen) {
@@ -416,9 +414,7 @@ void ListScreen_Show(void) {
 *#########################################################################################################################*/
 static void MenuScreen_Render2(void* screen, double delta) {
 	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 
@@ -1566,40 +1562,40 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 	cc_string relPath = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
-#ifdef CC_BUILD_WEB
-	/* Web client texture pack dir starts with /, so need to get rid of that */
-	if (relPath.buffer[0] == '/') { relPath.buffer++; relPath.length--; }
-#endif
-
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
 	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string path = String_FromConst(TEXPACKS_DIR);
+	static const cc_string path = String_FromConst("texpacks");
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
 	StringsBuffer_Sort(&s->entries);
 }
 
-#ifdef CC_BUILD_WEB
-extern void interop_UploadTexPack(const char* path);
 static void TexturePackScreen_UploadCallback(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+#ifdef CC_BUILD_WEB
+	cc_string relPath = *path;
+	Utils_UNSAFE_GetFilename(&relPath);
 
-	interop_UploadTexPack(str);
-	TexturePackScreen_Show();
-	TexturePack_SetDefault(path);
+	ListScreen_Reload(&ListScreen);
+	TexturePack_SetDefault(&relPath);
+#else
+	String_Copy(&TexturePack_Path, path);
+#endif
 	TexturePack_ExtractCurrent(true);
 }
 
 static void TexturePackScreen_UploadFunc(void* s, void* w) {
-	static const char* const filters[] = { ".zip", NULL };
-	Window_OpenFileDialog(filters, TexturePackScreen_UploadCallback);
+	static const char* const filters[] = { 
+		".zip", NULL 
+	};
+	static struct OpenFileDialogArgs args = {
+		"Texture packs", filters,
+		TexturePackScreen_UploadCallback,
+		OFD_UPLOAD_PERSIST, "texpacks"
+	};
+	Window_OpenFileDialog(&args);
 }
-#else
-#define TexturePackScreen_UploadFunc NULL
-#endif
 
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
@@ -1777,7 +1773,13 @@ static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 	static const char* const filters[] = { 
 		".cw", ".dat", ".lvl", ".mine", ".fcm", NULL 
 	};
-	cc_result res = Window_OpenFileDialog(filters, LoadLevelScreen_UploadCallback);
+	static struct OpenFileDialogArgs args = {
+		"Classic map files", filters,
+		LoadLevelScreen_UploadCallback,
+		OFD_UPLOAD_DELETE, "tmp"
+	};
+
+	cc_result res = Window_OpenFileDialog(&args);
 	if (res) Logger_SimpleWarn(res, "showing open file dialog");
 }
 
@@ -2161,9 +2163,7 @@ static void MenuInputOverlay_Render(void* screen, double delta) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (s->screenMode) Menu_RenderBounds();
 
-	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void MenuInputOverlay_Free(void* screen) {
@@ -2472,9 +2472,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DFlat(w->x - EXTHELP_PAD, w->y - EXTHELP_PAD, 
 		w->width + EXTHELP_PAD * 2, w->height + EXTHELP_PAD * 2, tableColor);
 
-	Gfx_SetTexturing(true);
 	Elem_Render(&s->extHelp, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void MenuOptionsScreen_Free(void* screen) {
@@ -3416,9 +3414,7 @@ static void TexIdsOverlay_Free(void* screen) {
 static void TexIdsOverlay_Render(void* screen, double delta) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int offset = 0;
-
 	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
@@ -3428,7 +3424,6 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 
 	Gfx_BindTexture(s->idAtlas.tex.ID);
 	Gfx_DrawVb_IndexedTris_Range(s->textVertices, offset);
-	Gfx_SetTexturing(false);
 }
 
 static int TexIdsOverlay_KeyDown(void* screen, int key) {

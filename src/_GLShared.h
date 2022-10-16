@@ -287,9 +287,16 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	GLContext_Update();
-	/* In case GLContext_Update changes window bounds */
 	/* TODO: Eliminate this nasty hack.. */
 	Game_UpdateDimensions();
 	glViewport(0, 0, Game.Width, Game.Height);
+	
+	/* With cocoa backend, in some cases [NSOpenGLContext update] will actually */
+	/*  call glViewport with the size of the window framebuffer */
+	/*  https://github.com/glfw/glfw/issues/80 */
+	/* Normally this doesn't matter, but it does when game is compiled against recent */
+	/*  macOS SDK *and* the display is a high DPI display - where glViewport(width, height) */
+	/*  above would otherwise result in game rendering to only 1/4 of the screen */
+	/*  https://github.com/UnknownShadow200/ClassiCube/issues/888 */
+	GLContext_Update();
 }

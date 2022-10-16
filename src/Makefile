@@ -36,7 +36,7 @@ CC=gcc
 OEXT=.exe
 CFLAGS=-g -pipe -DUNICODE -fno-math-errno
 LDFLAGS=-g
-LIBS=-mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
+LIBS=-mwindows -lwinmm -limagehlp
 endif
 
 ifeq ($(PLAT),linux)
@@ -89,7 +89,7 @@ endif
 ifeq ($(PLAT),haiku)
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
-LIBS=-lm -lexecinfo -lGL -lnetwork -lSDL2
+LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(OS),Windows_NT)

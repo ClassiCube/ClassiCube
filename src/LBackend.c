@@ -243,7 +243,6 @@ static CC_NOINLINE void RedrawDirty(void) {
 		}
 		DrawWidget(w);
 	}
-	MarkAllDirty();
 }
 
 static CC_NOINLINE void DoRedraw(void) {

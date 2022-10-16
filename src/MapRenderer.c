@@ -187,7 +187,6 @@ void MapRenderer_RenderNormal(double delta) {
 	if (!mapChunks) return;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	
 	Gfx_EnableMipmaps();
@@ -203,7 +202,6 @@ void MapRenderer_RenderNormal(double delta) {
 
 	CheckWeather(delta);
 	Gfx_SetAlphaTest(false);
-	Gfx_SetTexturing(false);
 #if DEBUG_OCCLUSION
 	DebugPickedPos();
 #endif
@@ -264,9 +262,8 @@ void MapRenderer_RenderTranslucent(double delta) {
 	/* First fill depth buffer */
 	vertices = Game_Vertices;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);
-	Gfx_SetColWriteMask(false, false, false, false);
+	Gfx_DepthOnlyRendering(true);
 
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (tranPartsCount[batch] <= 0) continue;
@@ -279,8 +276,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 
 	/* Then actually draw the transluscent blocks */
 	Gfx_SetAlphaBlending(true);
-	Gfx_SetTexturing(true);
-	Gfx_SetColWriteMask(true, true, true, true);
+	Gfx_DepthOnlyRendering(false);
 	Gfx_SetDepthWrite(false); /* already calculated depth values in depth pass */
 
 	Gfx_EnableMipmaps();
@@ -300,7 +296,6 @@ void MapRenderer_RenderTranslucent(double delta) {
 		Gfx_SetAlphaTest(false);
 	}
 	Gfx_SetAlphaBlending(false);
-	Gfx_SetTexturing(false);
 }
 
 

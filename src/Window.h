@@ -63,8 +63,6 @@ CC_VAR extern struct _DisplayData {
 int Display_ScaleX(int x);
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
 int Display_ScaleY(int y);
-#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
-#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
 /* Data for the game/launcher window. */
 CC_VAR extern struct _WinData {
@@ -130,9 +128,20 @@ void Window_ProcessEvents(void);
 void Cursor_SetPosition(int x, int y);
 /* Shows a dialog box window. */
 CC_API void Window_ShowDialog(const char* title, const char* msg);
+
+#define OFD_UPLOAD_DELETE  0 /* (webclient) Deletes the uploaded file after invoking callback function */
+#define OFD_UPLOAD_PERSIST 1 /* (webclient) Saves the uploded file into IndexedDB */
 typedef void (*OpenFileDialogCallback)(const cc_string* path);
-/* Shows an 'load file' dialog window. */
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback);
+
+struct OpenFileDialogArgs {
+	const char* description; /* Describes the types of files supported (e.g. "Texture packs") */
+	const char* const* filters; /* File extensions to limit dialog to showing (e.g. ".zip", NULL) */
+	OpenFileDialogCallback Callback;
+	int uploadAction; /* Action webclient takes after invoking callback function */
+	const char* uploadFolder; /* For webclient, folder to upload the file to */
+};
+/* Shows an 'load file' dialog window */
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args);
 
 /* Allocates a framebuffer that can be drawn/transferred to the window. */
 /* NOTE: Do NOT free bmp->Scan0, use Window_FreeFramebuffer. */
@@ -144,11 +153,11 @@ void Window_DrawFramebuffer(Rect2D r);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
-struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; };
+struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque; };
 void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type);
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args);
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args);
 /* Sets the text used for keyboard input. */
 /* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
 /*  because it is backed by a HTML input, rather than true keyboard input events. */

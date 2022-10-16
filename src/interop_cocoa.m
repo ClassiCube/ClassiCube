@@ -3,6 +3,7 @@
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "String.h"
+#include "Options.h"
 #include <Cocoa/Cocoa.h>
 #include <ApplicationServices/ApplicationServices.h>
 
@@ -12,6 +13,7 @@ static NSWindow* winHandle;
 static NSView* viewHandle;
 static cc_bool canCheckOcclusion;
 static cc_bool legacy_fullscreen;
+static cc_bool scroll_debugging;
 
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
@@ -36,6 +38,7 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 }
 
 static void Window_CommonCreate(void) {
+	scroll_debugging = Options_GetBool("scroll-debug", false);
 	// for quit buttons in dock and menubar
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
 		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
@@ -141,11 +144,20 @@ void Window_Init(void) {
 #endif
 
 static void RefreshWindowBounds(void) {
-	NSRect win, view;
-	int viewY;
+	if (legacy_fullscreen) {
+		CGRect rect = CGDisplayBounds(CGMainDisplayID());
+		windowX = (int)rect.origin.x; // usually 0
+		windowY = (int)rect.origin.y; // usually 0
+		// TODO is it correct to use display bounds and not just 0?
+		
+		WindowInfo.Width  = (int)rect.size.width;
+		WindowInfo.Height = (int)rect.size.height;
+		return;
+	}
 
-	win  = [winHandle frame];
-	view = [viewHandle frame];
+	NSRect win  = [winHandle frame];
+	NSRect view = [viewHandle frame];
+	int viewY;
 
 	// For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen.
 	// To get window's real Y screen position, first need to find Y of top. (win.y + win.height)
@@ -290,8 +302,8 @@ static void DoCreateWindow(int width, int height) {
 	RefreshWindowBounds();
 	MakeContentView();
 	ApplyIcon();
-    
-    canCheckOcclusion = [winHandle respondsToSelector:@selector(occlusionState)];
+
+	canCheckOcclusion = [winHandle respondsToSelector:@selector(occlusionState)];
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
@@ -352,7 +364,7 @@ void Window_Close(void) {
 	[winHandle close];
 }
 
-static int MapNativeMouse(int button) {
+static int MapNativeMouse(NSInteger button) {
 	if (button == 0) return KEY_LMOUSE;
 	if (button == 1) return KEY_RMOUSE;
 	if (button == 2) return KEY_MMOUSE;
@@ -401,6 +413,17 @@ static int TryGetKey(NSEvent* ev) {
 
 	Platform_Log1("Unknown key %i", &code);
 	return 0;
+}
+
+static void DebugScrollEvent(NSEvent* ev) {
+	float dy = [ev deltaY];
+	int steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
+	
+	CGEventRef ref = [ev CGEvent];
+	if (!ref) return;
+	int raw = CGEventGetIntegerValueField(ref, kCGScrollWheelEventDeltaAxis1);
+	
+	Platform_Log3("SCROLL: %i.0 = (%i, %f3)", &steps, &raw, &dy);
 }
 
 void Window_ProcessEvents(void) {
@@ -459,6 +482,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: // NSScrollWheel
+			if (scroll_debugging) DebugScrollEvent(ev);
 			dy    = [ev deltaY];
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175
 			//  delta is in 'line height' units, but I don't know how to map that to actual units.
@@ -506,7 +530,8 @@ void ShowDialogCore(const char* title, const char* msg) {
 	CFRelease(msgCF);
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
 	NSOpenPanel* dlg = [NSOpenPanel openPanel];
 	NSArray* files;
 	NSString* str;
@@ -538,7 +563,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	String_InitArray(path, pathBuffer);
 	String_AppendUtf8(&path, src, len);
-	callback(&path);
+	args->Callback(&path);
  	return 0;
 }
 
@@ -599,7 +624,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
@@ -609,19 +634,33 @@ void Window_CloseKeyboard(void) { }
 *#########################################################################################################################*/
 #if defined CC_BUILD_GL && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
+#include <OpenGL/OpenGL.h>
+
+// SDKs < 10.7 do not have this defined
+#ifndef kCGLRPVideoMemoryMegabytes
+#define kCGLRPVideoMemoryMegabytes 131
+#endif
+
+static int SupportsModernFullscreen(void) {
+	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
+}
 
 static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
+	// TODO: Is there a penalty for fullscreen contexts in 10.7 and later?
+	// Need to test whether there is a performance penalty or not
+	if (SupportsModernFullscreen()) fullscreen = false;
+	
 	NSOpenGLPixelFormatAttribute attribs[] = {
 		NSOpenGLPFAColorSize,    DisplayInfo.Depth,
 		NSOpenGLPFADepthSize,    24,
 		NSOpenGLPFADoubleBuffer,
 		fullscreen ? NSOpenGLPFAFullScreen : 0,
+		// TODO do we have to mask to main display? or can we just use -1 for all displays?
+		NSOpenGLPFAScreenMask,   CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
 		0
 	};
-	// NSOpenGLPFAScreenMask,   CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()),
 	return [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 }
-
 
 void GLContext_Create(void) {
 	NSOpenGLPixelFormat* fmt;
@@ -673,10 +712,55 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
-void GLContext_GetApiInfo(cc_string* info) { }
+static const char* GetAccelerationMode(CGLContextObj ctx) {
+	GLint fGPU, vGPU;
+	
+	// NOTE: only macOS 10.4 or later
+	if (CGLGetParameter(ctx, kCGLCPGPUFragmentProcessing, &fGPU)) return NULL;
+	if (CGLGetParameter(ctx, kCGLCPGPUVertexProcessing,   &vGPU)) return NULL;
+	
+	if (fGPU && vGPU) return "Fully";
+	if (fGPU || vGPU) return "Partially";
+	return "Not";
+}
 
-static int SupportsModernFullscreen(void) {
-	return [winHandle respondsToSelector:@selector(toggleFullScreen:)];
+void GLContext_GetApiInfo(cc_string* info) {
+	CGLContextObj ctx = [ctxHandle CGLContextObj];
+	GLint rendererID;
+	CGLGetParameter(ctx, kCGLCPCurrentRendererID, &rendererID);
+	
+	GLint nRenders = 0;
+	CGLRendererInfoObj rend;
+	CGLQueryRendererInfo(-1, &rend, &nRenders);
+	
+	for (int i = 0; i < nRenders; i++)
+	{
+		GLint curID = -1;
+		CGLDescribeRenderer(rend, i, kCGLRPRendererID, &curID);
+		if (curID != rendererID) continue;
+		
+		GLint acc = 0;
+		CGLDescribeRenderer(rend, i, kCGLRPAccelerated, &acc);
+		const char* mode = GetAccelerationMode(ctx);
+		
+		GLint vram = 0;
+		if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemoryMegabytes, &vram)) {
+			// preferred path (macOS 10.7 or later)
+		} else if (!CGLDescribeRenderer(rend, i, kCGLRPVideoMemory, &vram)) {
+			vram /= (1024 * 1024); // TODO: use float instead?
+		} else {
+			vram = -1; // TODO show a better error?
+		}
+		
+		if (mode && acc) {
+			String_Format2(info, "VRAM: %i MB, %c HW accelerated\n", &vram, mode);
+		} else {
+			String_Format2(info, "VRAM: %i MB, %c\n",
+						   &vram, acc ? "HW accelerated" : "no HW acceleration");
+		}
+		break;
+	}
+	CGLDestroyRendererInfo(rend);
 }
 
 cc_result Window_EnterFullscreen(void) {
@@ -685,17 +769,35 @@ cc_result Window_EnterFullscreen(void) {
 		return 0;
 	}
 
+	Platform_LogConst("Falling back to legacy fullscreen..");
 	legacy_fullscreen = true;
 	[ctxHandle clearDrawable];
+	CGDisplayCapture(CGMainDisplayID());
+
 	// setFullScreen doesn't return an error code, which is unfortunate
-	//  because if setFullscreen fails, you're left with a blank window
+	//  because if setFullScreen fails, you're left with a blank window
 	//  that's still rendering thousands of frames per second
 	//[ctxHandle setFullScreen];
 	//return 0;
-	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
-	// TODO doesn't seem to work on 10.7 or later??
+	
+	// CGLSetFullScreenOnDisplay is the preferable API, because it  
+	//  works properly on macOS 10.7 and all later versions
+	// However, because this API was only introduced in 10.7, it 
+	//  is essentially useless for us - because the superior 
+	//  toggleFullScreen API is already used in macOS 10.7+
 	//cc_result res = CGLSetFullScreenOnDisplay([ctxHandle CGLContextObj], CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID()));
+	
+	// CGLSetFullsScreen has existed since macOS 10.1, however
+	//  it was deprecated in 10.6 - and by deprecated, Apple
+	//  REALLY means deprecated. If the SDK ClassiCube is compiled
+	//  against is 10.6 or later, then CGLSetFullScreen will always
+	//  fail to work (CGLSetFullScreenOnDisplay still works) though
+	// So make sure you compile ClassiCube with an older SDK version
+	cc_result res = CGLSetFullScreen([ctxHandle CGLContextObj]);
+
 	if (res) Window_ExitFullscreen();
+	RefreshWindowBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
 	return res;
 }
 
@@ -706,10 +808,12 @@ cc_result Window_ExitFullscreen(void) {
 	}
 
 	legacy_fullscreen = false;
+	CGDisplayRelease(CGMainDisplayID());
 	[ctxHandle clearDrawable];
 	[ctxHandle setView:viewHandle];
+
+	RefreshWindowBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
-
-
 #endif
