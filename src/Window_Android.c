@@ -375,7 +375,7 @@ static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str) {
 	ofd_callback(&path);
 
 	if (ofd_action == OFD_UPLOAD_DELETE) {
-	    // TODO better way of doing this?
+	    // TODO better way of doing this? msybe move to java side?
 	    raw = (*env)->GetStringUTFChars(env, str, NULL);
 	    unlink(raw);
 	    (*env)->ReleaseStringUTFChars(env, str, raw);
@@ -391,6 +391,7 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* open_args) {
     ofd_callback = open_args->Callback;
     ofd_action   = open_args->uploadAction;
 
+    // TODO use filters
     args[0].l = JavaMakeConst(env, open_args->uploadFolder);
     int OK = JavaICall_Int(env, JAVA_openFileDialog, args);
     (*env)->DeleteLocalRef(env, args[0].l);

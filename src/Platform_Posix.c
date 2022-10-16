@@ -143,7 +143,9 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_IOS
+#if defined CC_BUILD_ANDROID
+/* implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
 #else
 void Directory_GetCachePath(cc_string* path, const char* folder) {

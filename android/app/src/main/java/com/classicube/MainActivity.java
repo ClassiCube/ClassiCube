@@ -9,7 +9,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -34,8 +33,6 @@ import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.InputQueue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -43,12 +40,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.view.View;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.Window;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
@@ -596,9 +591,20 @@ public class MainActivity extends Activity
 		}
 	}
 	
-	public String getExternalAppDir() {
+	public String getGameDataDirectory() {
 		// getExternalFilesDir - API level 8
 		return getExternalFilesDir(null).getAbsolutePath();
+	}
+
+	public String getGameCacheDirectory() {
+		// getExternalCacheDir - API level 8
+		File root = getExternalCacheDir();
+		if (root != null) return root.getAbsolutePath();
+
+		// although exceedingly rare, getExternalCacheDir() can technically fail
+		//   "... May return null if shared storage is not currently available."
+		// getCacheDir - API level 1
+		return getCacheDir().getAbsolutePath();
 	}
 	
 	public String getUUID() {
@@ -803,7 +809,7 @@ public class MainActivity extends Activity
 	
 	public String shareScreenshot(String path) {
 		try {
-			File file = new File(getExternalAppDir() + "/screenshots/" + path);
+			File file = new File(getGameDataDirectory() + "/screenshots/" + path);
 			Intent intent = new Intent();
 			
 			intent.setAction(Intent.ACTION_SEND);
@@ -866,7 +872,7 @@ public class MainActivity extends Activity
 
 	String saveContentToTemp(Uri uri, String folder, String name) throws IOException {
 		//File file = new File(getExternalFilesDir(null), folder + "/" + name);
-		File file = new File(getExternalAppDir() + "/" + folder + "/" + name);
+		File file = new File(getGameDataDirectory() + "/" + folder + "/" + name);
 		file.getParentFile().mkdirs();
 
 		OutputStream output = null;
