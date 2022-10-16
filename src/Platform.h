@@ -22,6 +22,7 @@ typedef int cc_file;
 #define UPDATE_FILE "ClassiCube.update"
 
 /* Origin points for when seeking in a file. */
+/*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
 /* Number of milliseconds since 01/01/0001 to start of unix time. */
 #define UNIX_EPOCH 62135596800000ULL
@@ -171,6 +172,7 @@ typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj);
 CC_API cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback);
 /* Returns non-zero if the given file exists. */
 CC_API int File_Exists(const cc_string* path);
+void Directory_GetCachePath(cc_string* path, const char* folder);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */

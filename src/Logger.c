@@ -84,6 +84,14 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case ERR_NO_AUDIO_OUTPUT:  return "No audio output devices plugged in";
 	case ERR_INVALID_DATA_URL: return "Cannot download from invalid URL";
 	case ERR_INVALID_OPEN_URL: return "Cannot navigate to invalid URL";
+
+	case NBT_ERR_EXPECTED_I8:  return "Expected Int8 NBT tag";
+	case NBT_ERR_EXPECTED_I16: return "Expected Int16 NBT tag";
+	case NBT_ERR_EXPECTED_I32: return "Expected Int32 NBT tag";
+	case NBT_ERR_EXPECTED_F32: return "Expected Float32 NBT tag";
+	case NBT_ERR_EXPECTED_STR: return "Expected String NBT tag";
+	case NBT_ERR_EXPECTED_ARR: return "Expected ByteArray NBT tag";
+	case NBT_ERR_ARR_TOO_SMALL:return "ByteArray NBT tag too small";
 	}
 	return NULL;
 }

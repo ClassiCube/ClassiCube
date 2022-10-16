@@ -202,7 +202,6 @@ void MapRenderer_RenderNormal(double delta) {
 
 	CheckWeather(delta);
 	Gfx_SetAlphaTest(false);
-	Gfx_SetTexturing(false);
 #if DEBUG_OCCLUSION
 	DebugPickedPos();
 #endif
@@ -297,7 +296,6 @@ void MapRenderer_RenderTranslucent(double delta) {
 		Gfx_SetAlphaTest(false);
 	}
 	Gfx_SetAlphaBlending(false);
-	Gfx_SetTexturing(false);
 }
 
 

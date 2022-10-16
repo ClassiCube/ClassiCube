@@ -17,6 +17,7 @@
 #include "Options.h"
 #include "Utils.h"
 #include "LBackend.h"
+#include "Http.h"
 #define LAYOUTS static const struct LLayout
 
 /*########################################################################################################################*
@@ -1016,16 +1017,15 @@ static void CheckResourcesScreen_Show(struct LScreen* s_) {
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
-#define RESOURCES_BACK_COLOR BitmapColor_RGB( 12,  12,  12)
 #define RESOURCES_FORE_COLOR BitmapColor_RGB(120,  85, 151)
-
 static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
 	Gradient_Noise(ctx, RESOURCES_FORE_COLOR, 4, x, y, width, height);
 }
 
 static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 	int x, y, width, height;
-	Context2D_Clear(ctx, RESOURCES_BACK_COLOR, 0, 0, ctx->width, ctx->height);
+	BitmapCol color = BitmapColor_Scale(Launcher_Theme.BackgroundColor, 0.2f);
+	Context2D_Clear(ctx, color, 0, 0, ctx->width, ctx->height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 

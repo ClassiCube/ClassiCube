@@ -544,24 +544,24 @@ EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) {
 	uploadCallback = NULL;
 }
 
-extern void interop_OpenFileDialog(const char* filter);
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-	cc_string path; char pathBuffer[NATIVE_STR_LEN];
-	char filter[NATIVE_STR_LEN];
+extern void interop_OpenFileDialog(const char* filter, int action, const char* folder);
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
+	cc_string filter; char filterBuffer[1024];
 	int i;
 
 	/* Filter tokens are , separated - e.g. ".cw,.dat */
-	String_InitArray(path, pathBuffer);
+	String_InitArray_NT(filter, filterBuffer);
 	for (i = 0; filters[i]; i++)
 	{
-		if (i) String_Append(&path, ',');
-		String_AppendConst(&path, filters[i]);
+		if (i) String_Append(&filter, ',');
+		String_AppendConst(&filter, filters[i]);
 	}
-	Platform_EncodeUtf8(filter, &path);
+	filter.buffer[filter.length] = '\0';
 
-	uploadCallback = callback;
+	uploadCallback = args->Callback;
 	/* Calls Window_OnFileUploaded on success */
-	interop_OpenFileDialog(filter);
+	interop_OpenFileDialog(filter.buffer, args->uploadAction, args->uploadFolder);
 	return 0;
 }
 

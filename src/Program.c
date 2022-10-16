@@ -116,7 +116,7 @@ static int RunProgram(int argc, char** argv) {
 /* ClassiCube is sort of and sort of not the executable */
 /*  on iOS - UIKit is responsible for kickstarting the game. */
 /* (this is handled in interop_ios.m as the code is Objective C) */
-int main_real(int argc, char** argv) {
+int ios_main(int argc, char** argv) {
 	SetupProgram(argc, argv);
 	for (;;) { RunProgram(argc, argv); }
 	return 0;
@@ -136,8 +136,11 @@ void android_main(void) {
 /*  Normally, the final code produced for "main" is our "main" combined with crt's main */
 /*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
 /* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
-#ifdef CC_NOMAIN
+#if defined CC_NOMAIN
 int main_real(int argc, char** argv) {
+#elif defined CC_BUILD_WEB
+/* webclient does some asynchronous initialisation first, then kickstarts the game after that */
+int web_main(int argc, char** argv) {
 #else 
 int main(int argc, char** argv) {
 #endif

@@ -34,6 +34,8 @@ CC_VAR extern struct _CameraData {
 	float Mass;
 	/* Field of view of the camera */
 	int Fov, DefaultFov, ZoomFov;
+
+	float TiltPitch;
 } Camera;
 
 struct Camera {

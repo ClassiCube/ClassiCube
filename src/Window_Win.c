@@ -124,8 +124,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_WINDOWPOSCHANGED:
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
+		cc_bool sized  = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 		if (pos->hwnd != win_handle) break;
-		cc_bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 
 		GrabCursor();
 		RefreshWindowBounds();
@@ -551,7 +551,8 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	WCHAR str[MAX_PATH] = { 0 };
 	OPENFILENAMEW ofn   = { 0 };
@@ -560,7 +561,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 
 	/* Filter tokens are \0 separated - e.g. "Maps (*.cw;*.dat)\0*.cw;*.dat\0 */
 	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, "All supported files (");
+	String_Format1(&path, "%c (", args->description);
 	for (i = 0; filters[i]; i++) 
 	{
 		if (i) String_Append(&path, ';');
@@ -592,7 +593,7 @@ cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallba
 	for (i = 0; i < MAX_PATH && str[i]; i++) {
 		String_Append(&path, Convert_CodepointToCP437(str[i]));
 	}
-	callback(&path);
+	args->Callback(&path);
 	return 0;
 }
 
@@ -625,7 +626,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
-	static const cc_string user32 = String_FromConst("USER32.DLL");
 	RAWINPUTDEVICE rid;
 
 	rawMouseSupported = _RegisterRawInputDevices && _GetRawInputData;
@@ -680,9 +680,11 @@ static FP_SWAPINTERVAL wglSwapIntervalEXT;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
+	int modeIndex;
+
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+	pfd.dwFlags  = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
 	pfd.cColorBits = mode->R + mode->G + mode->B;
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
@@ -693,7 +695,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.cBlueBits  = mode->B;
 	pfd.cAlphaBits = mode->A;
 
-	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
+	modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
 
 	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
@@ -712,8 +714,6 @@ void GLContext_Create(void) {
 	GLContext_SelectGraphicsMode(&mode);
 
 	ctx_handle = wglCreateContext(win_DC);
-	if (!ctx_handle) ctx_handle = wglCreateContext(win_DC);
-
 	if (!ctx_handle) {
 		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}

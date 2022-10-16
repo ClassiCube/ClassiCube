@@ -110,7 +110,13 @@ static CGRect GetViewFrame(void) {
 
 static OpenFileDialogCallback open_dlg_callback;
 - (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
-    NSString* str = url.path;
+    NSString* str    = url.path;
+    const char* utf8 = str.UTF8String;
+    
+    char tmpBuffer[NATIVE_STR_LEN];
+    cc_string tmp = String_FromArray(tmpBuffer);
+    String_AppendUtf8(&tmp, utf8, String_Length(utf8));
+    open_dlg_callback(&tmp);
 }
 
 static cc_bool kb_active;
@@ -174,14 +180,14 @@ static UITextField* kb_widget;
 @implementation CCAppDelegate
 
 - (void)runMainLoop {
-    extern int main_real(int argc, char** argv);
-    main_real(1, NULL);
+    extern int ios_main(int argc, char** argv);
+    ios_main(1, NULL);
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     // schedule the actual main loop to run in next CFRunLoop iteration
-    //  (as calling main_real here doesn't work properly)
+    //  (as calling ios_main here doesn't work properly)
     [self performSelector:@selector(runMainLoop) withObject:nil afterDelay:0.0];
     return YES;
 }
@@ -478,13 +484,31 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
     [UIViewController attemptRotationToDeviceOrientation];
 }
 
-cc_result Window_OpenFileDialog(const char* const* filters, OpenFileDialogCallback callback) {
-    NSArray<NSString*>* types = @[ @"public.png" ]; // TODO fill in
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+    // see the custom UTITypes declared in Info.plist 
+    NSDictionary<NSString*, NSString*>* fileExt_map =
+    @{
+      @".cw"  : @"com.classicube.client.ios-cw",
+      @".dat" : @"com.classicube.client.ios-dat",
+      @".lvl" : @"com.classicube.client.ios-lvl",
+      @".fcm" : @"com.classicube.client.ios-fcm",
+      @".zip" : @"public.zip-archive"
+    };
+    NSMutableArray<NSString*>* types = [NSMutableArray array];
+    const char* const* filters = args->filters;
+
+    for (int i = 0; filters[i]; i++) {
+        NSString* fileExt = [NSString stringWithUTF8String:filters[i]];
+        NSString* utType  = [fileExt_map objectForKey:fileExt];
+        if (utType) [types addObject:utType];
+    }
     
     UIDocumentPickerViewController* dlg;
     dlg = [UIDocumentPickerViewController alloc];
     dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
+    //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
     
+    open_dlg_callback = args->Callback;
     dlg.delegate = cc_controller;
     [cc_controller presentViewController:dlg animated:YES completion: Nil];
     return 0; // TODO still unfinished
@@ -685,7 +709,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
     // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
-    NSArray* array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     if (array.count <= 0) return ERR_NOT_SUPPORTED;
     
     NSString* str    = [array objectAtIndex:0];
@@ -717,6 +741,22 @@ void GetDeviceUUID(cc_string* str) {
     // TODO avoid code duplication
     const char* src = string.UTF8String;
     String_AppendUtf8(str, src, String_Length(src));
+}
+
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    if (array.count > 0) {
+        // try to use iOS app cache folder if possible
+        // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
+        NSString* str    = [array objectAtIndex:0];
+        const char* utf8 = [str UTF8String];
+        
+        String_AppendUtf8(path, utf8, String_Length(utf8));
+        String_Format1(path, "/%c", folder);
+        Directory_Create(path);
+    } else {
+        String_AppendConst(path, folder);
+    }
 }
 
 
@@ -915,6 +955,7 @@ void interop_SysFontFree(void* handle) {
 
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
 CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
+	// TODO move to Drawer2D.h
     if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
     
     // Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb

@@ -137,6 +137,10 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+	String_AppendConst(path, folder);
+}
+
 cc_result Directory_Create(const cc_string* path) {
 	WCHAR str[NATIVE_STR_LEN];
 	cc_result res;
@@ -930,5 +934,42 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return i;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) { return 0; }
+/* Detects if the game is running in Windows directory */
+/* This happens when ClassiCube is launched directly from shell process */
+/*  (e.g. via clicking a search result in Windows 10 start menu) */
+static cc_bool IsProblematicWorkingDirectory(void) {
+	cc_string curDir, winDir;
+	char curPath[2048] = { 0 };
+	char winPath[2048] = { 0 };
+
+	GetCurrentDirectoryA(2048, curPath);
+	GetSystemDirectoryA(winPath, 2048);
+
+	curDir = String_FromReadonly(curPath);
+	winDir = String_FromReadonly(winPath);
+	
+	if (String_Equals(&curDir, &winDir)) {
+		Platform_LogConst("Working directory is System32! Changing to executable directory..");
+		return true;
+	}
+	return false;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
+	WCHAR path[NATIVE_STR_LEN + 1];
+	int i, len;
+	cc_result res;
+	if (!IsProblematicWorkingDirectory()) return 0;
+
+	res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+
+	/* Get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '/' || path[i] == '\\') break;
+	}
+
+	path[len] = '\0';
+	return SetCurrentDirectoryW(path) ? 0 : GetLastError();
+}
 #endif

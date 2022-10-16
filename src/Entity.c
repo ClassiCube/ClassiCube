@@ -478,7 +478,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
-		flags = e == &LocalPlayer_Instance ? HTTP_FLAG_NOCACHE : 0;
+		flags = e == &LocalPlayer_Instance.Base ? HTTP_FLAG_NOCACHE : 0;
 
 		if (!first) {
 			e->_skinReqID     = Http_AsyncGetSkin(&skin, flags);
@@ -557,7 +557,6 @@ void Entities_RenderModels(double delta, float t) {
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
 	}
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
 }
 	
@@ -582,7 +581,6 @@ void Entities_RenderNames(void) {
 		}
 	}
 
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
 	if (hadFog) Gfx_SetFog(true);
 }
@@ -608,7 +606,6 @@ void Entities_RenderHoveredNames(void) {
 		}
 	}
 
-	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthTest(true);
 	if (hadFog) Gfx_SetFog(true);
@@ -645,6 +642,12 @@ void Entities_Remove(EntityID id) {
 	Event_RaiseInt(&EntityEvents.Removed, id);
 	Entities.List[id]->VTABLE->Despawn(Entities.List[id]);
 	Entities.List[id] = NULL;
+
+	/* TODO: Move to EntityEvents.Removed callback instead */
+	if (TabList_EntityLinked_Get(id)) {
+		TabList_Remove(id);
+		TabList_EntityLinked_Reset(id);
+	}
 }
 
 EntityID Entities_GetClosest(struct Entity* src) {
@@ -690,7 +693,6 @@ void Entities_DrawShadows(void) {
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
-	Gfx_SetTexturing(false);
 }
 
 
@@ -722,10 +724,16 @@ void TabList_Remove(EntityID id) {
 	Event_RaiseInt(&TabListEvents.Removed, id);
 }
 
-void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, const cc_string* group, cc_uint8 rank) {
+void TabList_Set(EntityID id, const cc_string* player_, const cc_string* list, const cc_string* group, cc_uint8 rank) {
 	cc_string oldPlayer, oldList, oldGroup;
 	cc_uint8 oldRank;
 	struct Event_Int* events;
+
+	/* Player name shouldn't have colour codes */
+	/*  (intended for e.g. tab autocomplete) */
+	cc_string player; char playerBuffer[STRING_SIZE];
+	String_InitArray(player, playerBuffer);
+	String_AppendColorless(&player, player_);
 	
 	if (TabList.NameOffsets[id]) {
 		oldPlayer = TabList_UNSAFE_GetPlayer(id);
@@ -733,8 +741,8 @@ void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, co
 		oldGroup  = TabList_UNSAFE_GetGroup(id);
 		oldRank   = TabList.GroupRanks[id];
 
-		/* Don't redraw the tab list if nothing changed. */
-		if (String_Equals(player, &oldPlayer)  && String_Equals(list, &oldList)
+		/* Don't redraw the tab list if nothing changed */
+		if (String_Equals(&player, &oldPlayer) && String_Equals(list, &oldList)
 			&& String_Equals(group, &oldGroup) && rank == oldRank) return;
 
 		events = &TabListEvents.Changed;
@@ -743,13 +751,17 @@ void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, co
 	}
 	TabList_Delete(id);
 
-	StringsBuffer_Add(&TabList._buffer, player);
+	StringsBuffer_Add(&TabList._buffer, &player);
 	StringsBuffer_Add(&TabList._buffer, list);
 	StringsBuffer_Add(&TabList._buffer, group);
 
 	TabList.NameOffsets[id] = TabList._buffer.count;
 	TabList.GroupRanks[id]  = rank;
 	Event_RaiseInt(events, id);
+}
+
+static void Tablist_Init(void) {
+	TabList_Set(ENTITIES_SELF_ID, &Game_Username, &Game_Username, &String_Empty, 0);
 }
 
 static void TabList_Clear(void) {
@@ -759,7 +771,7 @@ static void TabList_Clear(void) {
 }
 
 struct IGameComponent TabList_Component = {
-	NULL,          /* Init  */
+	Tablist_Init,  /* Init  */
 	TabList_Clear, /* Free  */
 	TabList_Clear  /* Reset */
 };
@@ -1117,6 +1129,16 @@ void LocalPlayer_MoveToSpawn(void) {
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 	/* TODO: This needs to be before new map... */
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+}
+
+void LocalPlayer_CalcDefaultSpawn(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	float x = (World.Width  / 2) + 0.5f; 
+	float z = (World.Length / 2) + 0.5f;
+
+	p->Spawn      = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+	p->SpawnYaw   = 0.0f;
+	p->SpawnPitch = 0.0f;
 }
 
 

@@ -221,6 +221,9 @@ typedef int CURLcode;
 #define CURLOPT_HEADERFUNCTION (20000 + 79)
 #define CURLOPT_HTTPGET        (0     + 80)
 #define CURLOPT_SSL_VERIFYHOST (0     + 81)
+#define CURLOPT_HTTP_VERSION   (0     + 84)
+
+#define CURL_HTTP_VERSION_1_1   2L /* stick to HTTP 1.1 */
 
 #if defined _WIN32
 #define APIENTRY __cdecl
@@ -277,7 +280,7 @@ static cc_bool LoadCurlFuncs(void) {
 }
 
 static CURL* curl;
-static cc_bool curlSupported;
+static cc_bool curlSupported, curlVerbose;
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	const char* err;
@@ -300,7 +303,9 @@ static void HttpBackend_Init(void) {
 
 	curl = _curl_easy_init();
 	if (!curl) { Logger_SimpleWarn(res, "initing curl_easy"); return; }
+
 	curlSupported = true;
+	curlVerbose = Options_GetBool("curl-verbose", false);
 }
 
 static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) {
@@ -343,11 +348,14 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	_curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	_curl_easy_setopt(curl, CURLOPT_MAXREDIRS,      20L);
+	_curl_easy_setopt(curl, CURLOPT_HTTP_VERSION,   CURL_HTTP_VERSION_1_1);
 
 	_curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
 	_curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
 	_curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_ProcessData);
 	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+
+	if (curlVerbose) _curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 	if (httpsVerify) return;
 	_curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);

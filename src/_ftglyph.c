@@ -30,12 +30,12 @@
 #include "Core.h"
 #ifdef CC_BUILD_FREETYPE
 #include "freetype/ft2build.h"
-#include FT_INTERNAL_DEBUG_H_FT
+#include "freetype/ftdebug.h"
 
-#include FT_GLYPH_H_FT
-#include FT_OUTLINE_H_FT
-#include FT_BITMAP_H_FT
-#include FT_INTERNAL_OBJECTS_H_FT
+#include "freetype/ftglyph.h"
+#include "freetype/ftoutln.h"
+#include "freetype/ftbitmap.h"
+#include "freetype/ftobjs.h"
 
   /*************************************************************************/
   /*                                                                       */
@@ -301,16 +301,7 @@
 
     else
     {
-      /* try to find a renderer that supports the glyph image format */
-      FT_Renderer  render = FT_Lookup_Renderer( library, slot->format, 0 );
-
-
-      if ( render )
-        clazz = &render->glyph_class;
-    }
-
-    if ( !clazz )
-    {
+      /* NOTE: Support for other renderers removed */
       error = FT_THROW( Invalid_Glyph_Format );
       goto Exit;
     }

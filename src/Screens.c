@@ -186,7 +186,6 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	static const cc_string prefix = String_FromConst("Position: ");
 
 	struct HUDScreen* s      = (struct HUDScreen*)screen;
-	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
 
 	Font_Make(&s->font, 16, FONT_FLAGS_PADDING);
@@ -307,7 +306,6 @@ static void HUDScreen_Render(void* screen, double delta) {
 	}
 
 	if (!Gui_GetBlocksWorld()) Elem_Render(&s->hotbar, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void HUDScreen_Free(void* screen) {
@@ -703,7 +701,6 @@ static void TabListOverlay_Render(void* screen, double delta) {
 		}
 		Texture_Render(&tex);
 	}
-	Gfx_SetTexturing(false);
 }
 
 static void TabListOverlay_Free(void* screen) {
@@ -1327,20 +1324,17 @@ static void ChatScreen_Render(void* screen, double delta) {
 
 	if (Game_HideGui && s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
-		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
 
 	if (!TabListOverlay_Instance.active && !Gui_GetBlocksWorld()) {
 		ChatScreen_DrawCrosshairs();
-		Gfx_SetTexturing(false);
 	}
 	if (s->grabsInput && !Gui.ClassicChat) {
 		ChatScreen_DrawChatBackground(s);
 	}
 
 	ChatScreen_DrawChat(s, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void ChatScreen_Free(void* screen) {
@@ -1685,7 +1679,6 @@ static void LoadingScreen_Render(void* screen, double delta) {
 
 	offset = Widget_Render2(&s->title,   offset);
 	offset = Widget_Render2(&s->message, offset);
-	Gfx_SetTexturing(false);
 
 	filledWidth = (int)(s->progWidth * s->progress);
 	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, 
@@ -1762,9 +1755,6 @@ static void GeneratingScreen_Free(void* screen) {
 }
 
 static void GeneratingScreen_EndGeneration(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	float x, z;
-
 	Gen_Done   = false;
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
@@ -1772,11 +1762,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Blocks = NULL;
 	World.Seed = Gen_Seed;
 
-	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
-	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-
-	p->SpawnYaw   = 0.0f;
-	p->SpawnPitch = 0.0f;
+	LocalPlayer_CalcDefaultSpawn();
 	LocalPlayer_MoveToSpawn();
 }
 
@@ -1936,7 +1922,6 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DGradient(0, 0, WindowInfo.Width, WindowInfo.Height, top, bottom);
 
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit); }
@@ -2139,7 +2124,6 @@ static void TouchScreen_ContextRecreated(void* screen) {
 static void TouchScreen_Render(void* screen, double delta) {
 	if (Gui.InputGrab) return;
 	Screen_Render2Widgets(screen, delta);
-	Gfx_SetTexturing(false);
 }
 
 static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {

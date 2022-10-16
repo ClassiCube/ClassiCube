@@ -1,7 +1,7 @@
 #ifndef CC_DRAWER2D_H
 #define CC_DRAWER2D_H
-#include "Constants.h"
 #include "Bitmap.h"
+#include "Constants.h"
 /*  Performs a variety of drawing operations on bitmaps, and converts bitmaps into textures.
 	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */

@@ -43,7 +43,6 @@ static void HeldBlockRenderer_RenderModel(void) {
 		Gfx_RestoreAlphaState(Blocks.Draw[held_block]);
 	}
 	
-	Gfx_SetTexturing(false);
 	Gfx_SetDepthTest(true);
 	Gfx_SetFaceCulling(false);
 }
