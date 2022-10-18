@@ -164,6 +164,12 @@ Install openal_devel and libexecinfo_devel package if needed
 
 ```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
+#### SerenityOS
+
+Install SDL2 port if needed
+
+```cc *.c -o ClassiCube -lgl -lSDL2```
+
 ## Compiling - other
 
 #### Web

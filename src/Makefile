@@ -92,6 +92,10 @@ LDFLAGS=-g
 LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
+ifeq ($(PLAT),serenityos)
+LIBS=-lgl -lSDL2
+endif
+
 ifeq ($(OS),Windows_NT)
 DEL=del
 endif
@@ -120,7 +124,9 @@ dragonfly:
 	$(MAKE) $(ENAME) PLAT=dragonfly -j$(JOBS)
 haiku:
 	$(MAKE) $(ENAME) PLAT=haiku -j$(JOBS)
-	
+serenityos:
+	$(MAKE) $(ENAME) PLAT=serenityos -j$(JOBS)
+
 clean:
 	$(DEL) $(OBJECTS)
 

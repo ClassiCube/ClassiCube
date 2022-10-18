@@ -16,9 +16,10 @@
 #define NOIME
 #include <windows.h>
 #include <imagehlp.h>
-#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU
+#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 #include <signal.h>
-/* OpenBSD doesn't provide sys/ucontext.h */
+/* These operating systems don't provide sys/ucontext.h */
+/*  But register constants be found from includes in <signal.h> */
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* Need to define this to get REG_ constants */
 #define _GNU_SOURCE
@@ -342,6 +343,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
+}
+#elif defined CC_BUILD_SERENITY
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* TODO: Backtrace using LibSymbolication */
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
