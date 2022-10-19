@@ -364,7 +364,7 @@ void Window_Close(void) {
 	[winHandle close];
 }
 
-static int MapNativeMouse(NSInteger button) {
+static int MapNativeMouse(long button) {
 	if (button == 0) return KEY_LMOUSE;
 	if (button == 1) return KEY_RMOUSE;
 	if (button == 2) return KEY_MMOUSE;
@@ -636,7 +636,7 @@ void Window_CloseKeyboard(void) { }
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
-// SDKs < 10.7 do not have this defined
+// SDKs < macOS 10.7 do not have this defined
 #ifndef kCGLRPVideoMemoryMegabytes
 #define kCGLRPVideoMemoryMegabytes 131
 #endif
@@ -712,6 +712,8 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
+/* kCGLCPCurrentRendererID is only defined on macOS 10.4 and later */
+#ifdef kCGLCPCurrentRendererID
 static const char* GetAccelerationMode(CGLContextObj ctx) {
 	GLint fGPU, vGPU;
 	
@@ -762,6 +764,12 @@ void GLContext_GetApiInfo(cc_string* info) {
 	}
 	CGLDestroyRendererInfo(rend);
 }
+#else
+// macOS 10.3 and earlier case
+void GLContext_GetApiInfo(cc_string* info) {
+	// TODO: retrieve rendererID from a CGLPixelFormatObj, but this isn't all that important
+}
+#endif
 
 cc_result Window_EnterFullscreen(void) {
 	if (SupportsModernFullscreen()) {
