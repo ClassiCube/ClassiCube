@@ -3,7 +3,7 @@
 #include "Bitmap.h"
 #include "Constants.h"
 /* Implements asynchronous web tasks for the launcher.
-	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct JsonContext;

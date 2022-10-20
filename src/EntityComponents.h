@@ -3,7 +3,7 @@
 #include "Vectors.h"
 #include "Constants.h"
 /* Various components for entities.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct Entity;

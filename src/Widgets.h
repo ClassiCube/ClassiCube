@@ -6,7 +6,7 @@
 #include "Entity.h"
 #include "Inventory.h"
 /* Contains all 2D widget implementations.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 
