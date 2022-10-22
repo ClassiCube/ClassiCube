@@ -102,6 +102,14 @@ extern void interop_AdjustXY(int* x, int* y);
 static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
 	int i, x, y;
+	/* Because we return true to cancel default browser behaviour, sometimes we also */
+	/*   end up preventing the default 'focus gained' behaviour from occurring */
+	/* So manually activate focus as a workaround */
+	if (!WindowInfo.Focused) {
+		WindowInfo.Focused = true;
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
+	}
+
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
