@@ -608,41 +608,34 @@ static void Classic_EntityTeleport(cc_uint8* data) {
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
-	Vec3 pos;
-	float yaw, pitch;
 
-	pos.X = (cc_int8)data[1] / 32.0f;
-	pos.Y = (cc_int8)data[2] / 32.0f;
-	pos.Z = (cc_int8)data[3] / 32.0f;
-	yaw   = Math_Packed2Deg(data[4]);
-	pitch = Math_Packed2Deg(data[5]);
-
-	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, true);
+	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH | LU_FLAG_RELATIVEPOS;
+	update.pos.X = (cc_int8)data[1] / 32.0f;
+	update.pos.Y = (cc_int8)data[2] / 32.0f;
+	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	update.yaw   = Math_Packed2Deg(data[4]);
+	update.pitch = Math_Packed2Deg(data[5]);
 	UpdateLocation(id, &update, true);
 }
 
 static void Classic_RelPositionUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
-	Vec3 pos;
 
-	pos.X = (cc_int8)data[1] / 32.0f;
-	pos.Y = (cc_int8)data[2] / 32.0f;
-	pos.Z = (cc_int8)data[3] / 32.0f;
-
-	LocationUpdate_MakePos(&update, pos, true);
+	update.flags = LU_INCLUDES_POS | LU_FLAG_RELATIVEPOS;
+	update.pos.X = (cc_int8)data[1] / 32.0f;
+	update.pos.Y = (cc_int8)data[2] / 32.0f;
+	update.pos.Z = (cc_int8)data[3] / 32.0f;
 	UpdateLocation(id, &update, true);
 }
 
 static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
-	float yaw, pitch;
 
-	yaw   = Math_Packed2Deg(data[1]);
-	pitch = Math_Packed2Deg(data[2]);
-
-	LocationUpdate_MakeOri(&update, yaw, pitch);
+	update.flags = LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.yaw   = Math_Packed2Deg(data[1]);
+	update.pitch = Math_Packed2Deg(data[2]);
 	UpdateLocation(id, &update, true);
 }
 
@@ -706,14 +699,20 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 	}
 
 	y -= 51; /* Convert to feet position */
+	/* The original classic client behaves strangely in that */
+	/*   Y+0  is sent back to the server for next client->server position update */
+	/*   Y+22 is sent back to the server for all subsequent position updates */
+	/* so to simplify things, just always add 22 to Y*/
 	if (id == ENTITIES_SELF_ID) y += 22;
 
-	pos.X = x/32.0f; pos.Y = y/32.0f; pos.Z = z/32.0f;
-	yaw   = Math_Packed2Deg(*data++);
-	pitch = Math_Packed2Deg(*data++);
+	update.flags = LU_INCLUDES_POS | LU_INCLUDES_PITCH | LU_INCLUDES_YAW;
+	update.pos.X = x/32.0f; 
+	update.pos.Y = y/32.0f; 
+	update.pos.Z = z/32.0f;
+	update.yaw   = Math_Packed2Deg(*data++);
+	update.pitch = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
-	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, false);
 	UpdateLocation(id, &update, interpolate);
 }
 
@@ -1274,7 +1273,7 @@ static void CPE_SetMapEnvProperty(cc_uint8* data) {
 }
 
 static void CPE_SetEntityProperty(cc_uint8* data) {
-	struct LocationUpdate update = { 0 };
+	struct LocationUpdate update;
 	struct Entity* e;
 	float scale;
 
@@ -1287,14 +1286,14 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	switch (type) {
 	case 0:
-		update.Flags = LOCATIONUPDATE_ROTX;
-		update.RotX  = LocationUpdate_Clamp((float)value); break;
+		update.flags = LU_INCLUDES_ROTX;
+		update.rotX  = (float)value; break;
 	case 1:
-		update.Flags = LOCATIONUPDATE_YAW;
-		update.Yaw   = LocationUpdate_Clamp((float)value); break;
+		update.flags = LU_INCLUDES_YAW;
+		update.yaw   = (float)value; break;
 	case 2:
-		update.Flags = LOCATIONUPDATE_ROTZ;
-		update.RotZ  = LocationUpdate_Clamp((float)value); break;
+		update.flags = LU_INCLUDES_ROTZ;
+		update.rotZ  = (float)value; break;
 
 	case 3:
 	case 4:

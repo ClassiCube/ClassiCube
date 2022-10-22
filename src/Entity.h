@@ -31,27 +31,19 @@ extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
-#define LOCATIONUPDATE_POS   0x01
-#define LOCATIONUPDATE_PITCH 0x02
-#define LOCATIONUPDATE_YAW   0x04
-#define LOCATIONUPDATE_ROTX  0x08
-#define LOCATIONUPDATE_ROTZ  0x10
+#define LU_INCLUDES_POS   0x01
+#define LU_INCLUDES_PITCH 0x02
+#define LU_INCLUDES_YAW   0x04
+#define LU_INCLUDES_ROTX  0x08
+#define LU_INCLUDES_ROTZ  0x10
+
+#define LU_FLAG_RELATIVEPOS  0x20
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
-	Vec3 Pos;
-	float Pitch, Yaw, RotX, RotZ;
-	cc_uint8 Flags;
-	cc_bool RelativePos;
+	Vec3 pos;
+	float pitch, yaw, rotX, rotZ;
+	cc_uint8 flags;
 };
-
-/* Clamps the given angle so it lies between [0, 360). */
-float LocationUpdate_Clamp(float degrees);
-/* Makes a location update only containing yaw and pitch. */
-void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch);
-/* Makes a location update only containing position */
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel);
-/* Makes a location update containing position, yaw and pitch. */
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel);
 
 struct Entity;
 struct EntityVTABLE {

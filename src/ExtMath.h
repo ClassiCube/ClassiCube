@@ -47,6 +47,9 @@ int Math_Log2(cc_uint32 value);
 int Math_CeilDiv(int a, int b);
 int Math_Sign(float value);
 
+/* Clamps the given angle so it lies between [0, 360) */
+float Math_ClampAngle(float degrees);
+/* Linearly interpolates between a and b */
 float Math_Lerp(float a, float b, float t);
 /* Linearly interpolates between a given angle range, adjusting if necessary. */
 float Math_LerpAngle(float leftAngle, float rightAngle, float t);

@@ -52,6 +52,12 @@ float Math_Lerp(float a, float b, float t) {
 	return a + (b - a) * t;
 }
 
+float Math_ClampAngle(float degrees) {
+	while (degrees >= 360.0f) degrees -= 360.0f;
+	while (degrees < 0.0f)    degrees += 360.0f;
+	return degrees;
+}
+
 float Math_LerpAngle(float leftAngle, float rightAngle, float t) {
 	/* We have to cheat a bit for angles here */
 	/* Consider 350* --> 0*, we only want to travel 10* */

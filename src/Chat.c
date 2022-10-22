@@ -618,8 +618,8 @@ static struct ChatCommand CuboidCommand = {
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
-	struct LocationUpdate update;
 	struct Entity* e = &LocalPlayer_Instance.Base;
+	struct LocationUpdate update;
 	Vec3 v;
 
 	if (argsCount != 3) {
@@ -631,7 +631,8 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 		return;
 	}
 
-	LocationUpdate_MakePos(&update, v, false);
+	update.flags = LU_INCLUDES_POS;
+	update.pos   = v;
 	e->VTABLE->SetLocation(e, &update, false);
 }
 

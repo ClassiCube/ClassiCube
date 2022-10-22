@@ -26,39 +26,6 @@
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
-/*########################################################################################################################*
-*-----------------------------------------------------LocationUpdate------------------------------------------------------*
-*#########################################################################################################################*/
-float LocationUpdate_Clamp(float degrees) {
-	while (degrees >= 360.0f) degrees -= 360.0f;
-	while (degrees < 0.0f)    degrees += 360.0f;
-	return degrees;
-}
-
-static struct LocationUpdate loc_empty;
-void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch) {
-	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_PITCH | LOCATIONUPDATE_YAW;
-	update->Pitch = LocationUpdate_Clamp(pitch);
-	update->Yaw   = LocationUpdate_Clamp(yaw);
-}
-
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel) {
-	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_POS;
-	update->Pos   = pos;
-	update->RelativePos = rel;
-}
-
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel) {
-	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_POS | LOCATIONUPDATE_PITCH | LOCATIONUPDATE_YAW;
-	update->Pitch = LocationUpdate_Clamp(pitch);
-	update->Yaw   = LocationUpdate_Clamp(yaw);
-	update->Pos   = pos;
-	update->RelativePos = rel;
-}
-
 
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
@@ -1017,11 +984,17 @@ static void LocalPlayer_DoRespawn(void) {
 		}
 	}
 
+	/* Adjust the position to be slightly above the ground, so that */
+	/*  it's obvious to the player that they are being respawned */
 	spawn.Y += 2.0f/16.0f;
-	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnYaw, p->SpawnPitch, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	Vec3_Set(p->Base.Velocity, 0,0,0);
 
+	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.pos   = spawn;
+	update.yaw   = p->SpawnYaw;
+	update.pitch = p->SpawnPitch;
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+
+	Vec3_Set(p->Base.Velocity, 0,0,0);
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);
 	bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
@@ -1125,7 +1098,11 @@ void LocalPlayer_MoveToSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct LocationUpdate update;
 
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
+	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.pos   = p->Spawn;
+	update.yaw   = p->SpawnYaw;
+	update.pitch = p->SpawnPitch;
+
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 	/* TODO: This needs to be before new map... */
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);

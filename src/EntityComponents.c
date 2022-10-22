@@ -322,10 +322,10 @@ void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* e, float t)
 }
 
 static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* update) {
-	if (update->RelativePos) {
-		Vec3_AddBy(&state->Pos, &update->Pos);
+	if (update->flags & LU_FLAG_RELATIVEPOS) {
+		Vec3_AddBy(&state->Pos, &update->pos);
 	} else {
-		state->Pos = update->Pos;
+		state->Pos = update->pos;
 	}
 }
 
@@ -351,13 +351,13 @@ static void NetInterpComp_AddState(struct NetInterpComp* interp, struct InterpSt
 void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
 	struct InterpState last = interp->Cur;
 	struct InterpState* cur = &interp->Cur;
-	cc_uint8 flags = update->Flags;
+	cc_uint8 flags = update->flags;
 
-	if (flags & LOCATIONUPDATE_POS)   InterpComp_SetPos(cur, update);
-	if (flags & LOCATIONUPDATE_ROTX)  cur->RotX  = update->RotX;
-	if (flags & LOCATIONUPDATE_ROTZ)  cur->RotZ  = update->RotZ;
-	if (flags & LOCATIONUPDATE_PITCH) cur->Pitch = update->Pitch;
-	if (flags & LOCATIONUPDATE_YAW)   cur->Yaw   = update->Yaw;
+	if (flags & LU_INCLUDES_POS)   InterpComp_SetPos(cur, update);
+	if (flags & LU_INCLUDES_ROTX)  cur->RotX  = Math_ClampAngle(update->rotX);
+	if (flags & LU_INCLUDES_ROTZ)  cur->RotZ  = Math_ClampAngle(update->rotZ);
+	if (flags & LU_INCLUDES_PITCH) cur->Pitch = Math_ClampAngle(update->pitch);
+	if (flags & LU_INCLUDES_YAW)   cur->Yaw   = Math_ClampAngle(update->yaw);
 
 	if (!interpolate) {
 		interp->Prev = *cur; interp->PrevRotY = cur->Yaw;
@@ -395,6 +395,7 @@ void NetInterpComp_AdvanceState(struct NetInterpComp* interp) {
 *-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
 *#########################################################################################################################*/
 static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool interpolate) {
+	value = Math_ClampAngle(value);
 	*next = value;
 	if (!interpolate) *prev = value;
 }
@@ -403,10 +404,10 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 	struct Entity* entity = &LocalPlayer_Instance.Base;
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
-	cc_uint8 flags = update->Flags;
+	cc_uint8 flags = update->flags;
 	float yOffset;
 
-	if (flags & LOCATIONUPDATE_POS) {
+	if (flags & LU_INCLUDES_POS) {
 		InterpComp_SetPos(next, update);
 		/* If server sets Y position exactly on ground, push up a tiny bit */
 		yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
@@ -415,23 +416,23 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		if (!interpolate) { prev->Pos = next->Pos; entity->Position = next->Pos; }
 	}
 
-	if (flags & LOCATIONUPDATE_PITCH) {
-		LocalInterpComp_Angle(&prev->Pitch, &next->Pitch, update->Pitch, interpolate);
+	if (flags & LU_INCLUDES_PITCH) {
+		LocalInterpComp_Angle(&prev->Pitch, &next->Pitch, update->pitch, interpolate);
 	}
-	if (flags & LOCATIONUPDATE_YAW) {
-		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->Yaw,   interpolate);
+	if (flags & LU_INCLUDES_YAW) {
+		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->yaw,   interpolate);
 	}
-	if (flags & LOCATIONUPDATE_ROTX) {
-		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->RotX,  interpolate);
+	if (flags & LU_INCLUDES_ROTX) {
+		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->rotX,  interpolate);
 	}
-	if (flags & LOCATIONUPDATE_ROTZ) {
-		LocalInterpComp_Angle(&prev->RotZ,  &next->RotZ,  update->RotZ,  interpolate);
+	if (flags & LU_INCLUDES_ROTZ) {
+		LocalInterpComp_Angle(&prev->RotZ,  &next->RotZ,  update->rotZ,  interpolate);
 	}
 
-	if (flags & LOCATIONUPDATE_YAW) {
+	if (flags & LU_INCLUDES_YAW) {
 		if (!interpolate) {
-			interp->NextRotY = update->Yaw;
-			entity->RotY     = update->Yaw;
+			interp->NextRotY = next->Yaw;
+			entity->RotY     = next->Yaw;
 			interp->RotYCount = 0;
 		} else {
 			/* Body Y rotation lags slightly behind */
