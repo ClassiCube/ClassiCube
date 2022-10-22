@@ -134,7 +134,7 @@ static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 	RemoveEndPlus(skin);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate);
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags);
 static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const cc_string* skin, cc_bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e;
@@ -153,7 +153,7 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	Entity_SetName(e, name);
 
 	if (!readPosition) return;
-	Classic_ReadAbsoluteLocation(data, id, false);
+	Classic_ReadAbsoluteLocation(data, id, 0);
 	if (id != ENTITIES_SELF_ID) return;
 
 	p->Spawn      = p->Base.Position;
@@ -168,9 +168,9 @@ void Protocol_RemoveEntity(EntityID id) {
 	Entities_Remove(id);
 }
 
-static void UpdateLocation(EntityID id, struct LocationUpdate* update, cc_bool interpolate) {
+static void UpdateLocation(EntityID id, struct LocationUpdate* update) {
 	struct Entity* e = Entities.List[id];
-	if (e) { e->VTABLE->SetLocation(e, update, interpolate); }
+	if (e) { e->VTABLE->SetLocation(e, update); }
 }
 
 static void UpdateUserType(struct HacksComp* hacks, cc_uint8 value) {
@@ -602,41 +602,41 @@ static void Classic_AddEntity(cc_uint8* data) {
 
 static void Classic_EntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
-	Classic_ReadAbsoluteLocation(data, id, true);
+	Classic_ReadAbsoluteLocation(data, id, LU_FLAG_INTERPOLATE);
 }
 
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH | LU_FLAG_RELATIVEPOS;
+	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH | LU_FLAG_RELATIVEPOS | LU_FLAG_INTERPOLATE;
 	update.pos.X = (cc_int8)data[1] / 32.0f;
 	update.pos.Y = (cc_int8)data[2] / 32.0f;
 	update.pos.Z = (cc_int8)data[3] / 32.0f;
 	update.yaw   = Math_Packed2Deg(data[4]);
 	update.pitch = Math_Packed2Deg(data[5]);
-	UpdateLocation(id, &update, true);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_RelPositionUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_POS | LU_FLAG_RELATIVEPOS;
+	update.flags = LU_INCLUDES_POS | LU_FLAG_RELATIVEPOS | LU_FLAG_INTERPOLATE;
 	update.pos.X = (cc_int8)data[1] / 32.0f;
 	update.pos.Y = (cc_int8)data[2] / 32.0f;
 	update.pos.Z = (cc_int8)data[3] / 32.0f;
-	UpdateLocation(id, &update, true);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.flags = LU_INCLUDES_YAW | LU_INCLUDES_PITCH| LU_FLAG_INTERPOLATE;
 	update.yaw   = Math_Packed2Deg(data[1]);
 	update.pitch = Math_Packed2Deg(data[2]);
-	UpdateLocation(id, &update, true);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_RemoveEntity(cc_uint8* data) {
@@ -680,11 +680,9 @@ static void Classic_SetPermission(cc_uint8* data) {
 	HacksComp_RecheckFlags(hacks);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate) {
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags) {
 	struct LocationUpdate update;
 	int x, y, z;
-	Vec3 pos;
-	float yaw, pitch;
 
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
@@ -705,7 +703,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 	/* so to simplify things, just always add 22 to Y*/
 	if (id == ENTITIES_SELF_ID) y += 22;
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_PITCH | LU_INCLUDES_YAW;
+	update.flags = LU_INCLUDES_POS | LU_INCLUDES_PITCH | LU_INCLUDES_YAW | flags;
 	update.pos.X = x/32.0f; 
 	update.pos.Y = y/32.0f; 
 	update.pos.Z = z/32.0f;
@@ -713,7 +711,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 	update.pitch = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
-	UpdateLocation(id, &update, interpolate);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_Reset(void) {
@@ -1286,13 +1284,13 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	switch (type) {
 	case 0:
-		update.flags = LU_INCLUDES_ROTX;
+		update.flags = LU_INCLUDES_ROTX | LU_FLAG_INTERPOLATE;
 		update.rotX  = (float)value; break;
 	case 1:
-		update.flags = LU_INCLUDES_YAW;
+		update.flags = LU_INCLUDES_YAW  | LU_FLAG_INTERPOLATE;
 		update.yaw   = (float)value; break;
 	case 2:
-		update.flags = LU_INCLUDES_ROTZ;
+		update.flags = LU_INCLUDES_ROTZ | LU_FLAG_INTERPOLATE;
 		update.rotZ  = (float)value; break;
 
 	case 3:
@@ -1312,7 +1310,7 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 	default:
 		return;
 	}
-	e->VTABLE->SetLocation(e, &update, true);
+	e->VTABLE->SetLocation(e, &update);
 }
 
 static void CPE_TwoWayPing(cc_uint8* data) {

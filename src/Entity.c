@@ -30,7 +30,7 @@ const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock",
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol Entity_GetCol(struct Entity* e) {
+static PackedCol Entity_GetColor(struct Entity* e) {
 	Vec3 eyePos = Entity_GetEyePosition(e);
 	IVec3 pos; IVec3_Floor(&pos, &eyePos);
 	return Lighting.Color(pos.X, pos.Y, pos.Z);
@@ -816,9 +816,9 @@ static void LocalPlayer_InputUp(void* obj, int key) {
 	LocalPlayer_InputSet(key, false);
 }
 
-static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
+static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
-	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
+	LocalInterpComp_SetLocation(&p->Interp, update);
 }
 
 static void LocalPlayer_Tick(struct Entity* e, double delta) {
@@ -889,7 +889,7 @@ static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
 }
 
 static const struct EntityVTABLE localPlayer_VTABLE = {
-	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
+	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
 	LocalPlayer_RenderModel, LocalPlayer_RenderName
 };
 static void LocalPlayer_Init(void) {
@@ -992,7 +992,7 @@ static void LocalPlayer_DoRespawn(void) {
 	update.pos   = spawn;
 	update.yaw   = p->SpawnYaw;
 	update.pitch = p->SpawnPitch;
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update);
 
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
@@ -1103,7 +1103,7 @@ void LocalPlayer_MoveToSpawn(void) {
 	update.yaw   = p->SpawnYaw;
 	update.pitch = p->SpawnPitch;
 
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update);
 	/* TODO: This needs to be before new map... */
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
@@ -1124,9 +1124,9 @@ void LocalPlayer_CalcDefaultSpawn(void) {
 *#########################################################################################################################*/
 struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
-static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
+static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
+	NetInterpComp_SetLocation(&p->Interp, update);
 }
 
 static void NetPlayer_Tick(struct Entity* e, double delta) {
@@ -1160,7 +1160,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 }
 
 static const struct EntityVTABLE netPlayer_VTABLE = {
-	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
+	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetColor,
 	NetPlayer_RenderModel, NetPlayer_RenderName
 };
 void NetPlayer_Init(struct NetPlayer* p) {

@@ -654,7 +654,7 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 
 	update.flags = LU_INCLUDES_POS;
 	update.pos   = pos;
-	p->VTABLE->SetLocation(p, &update, false);
+	p->VTABLE->SetLocation(p, &update);
 	return true;
 }
 
@@ -713,7 +713,7 @@ static cc_bool CheckIsFree(BlockID block) {
 
 	update.flags = LU_INCLUDES_POS;
 	update.pos   = nextPos;
-	p->VTABLE->SetLocation(p, &update, false);
+	p->VTABLE->SetLocation(p, &update);
 	return true;
 }
 

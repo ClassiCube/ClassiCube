@@ -633,7 +633,7 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 
 	update.flags = LU_INCLUDES_POS;
 	update.pos   = v;
-	e->VTABLE->SetLocation(e, &update, false);
+	e->VTABLE->SetLocation(e, &update);
 }
 
 static struct ChatCommand TeleportCommand = {

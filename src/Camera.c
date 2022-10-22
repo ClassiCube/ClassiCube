@@ -95,7 +95,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	if (update.pitch >= 90.0f && update.pitch <= 270.0f) {
 		update.pitch = p->Interp.Next.Pitch < 180.0f ? 90.0f : 270.0f;
 	}
-	e->VTABLE->SetLocation(e, &update, false);
+	e->VTABLE->SetLocation(e, &update);
 }
 
 static void PerspectiveCamera_UpdateMouse(double delta) {

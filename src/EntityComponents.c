@@ -348,10 +348,11 @@ static void NetInterpComp_AddState(struct NetInterpComp* interp, struct InterpSt
 	interp->States[interp->StatesCount] = state; interp->StatesCount++;
 }
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update) {
 	struct InterpState last = interp->Cur;
 	struct InterpState* cur = &interp->Cur;
-	cc_uint8 flags = update->flags;
+	cc_uint8 flags      = update->flags;
+	cc_bool interpolate = flags & LU_FLAG_INTERPOLATE;
 
 	if (flags & LU_INCLUDES_POS)   InterpComp_SetPos(cur, update);
 	if (flags & LU_INCLUDES_ROTX)  cur->RotX  = Math_ClampAngle(update->rotX);
@@ -400,11 +401,12 @@ static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool
 	if (!interpolate) *prev = value;
 }
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update) {
 	struct Entity* entity = &LocalPlayer_Instance.Base;
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
-	cc_uint8 flags = update->flags;
+	cc_uint8 flags      = update->flags;
+	cc_bool interpolate = flags & LU_FLAG_INTERPOLATE;
 	float yOffset;
 
 	if (flags & LU_INCLUDES_POS) {

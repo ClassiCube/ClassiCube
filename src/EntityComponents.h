@@ -88,7 +88,7 @@ struct InterpComp { InterpComp_Layout };
 
 void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, float t);
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, cc_bool interpolate);
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update);
 void LocalInterpComp_AdvanceState(struct InterpComp* interp);
 
 /* Entity component that performs interpolation for network players */
@@ -100,7 +100,7 @@ struct NetInterpComp {
 	struct InterpState States[10];
 };
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate);
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update);
 void NetInterpComp_AdvanceState(struct NetInterpComp* interp);
 
 /* Entity component that draws square and circle shadows beneath entities */

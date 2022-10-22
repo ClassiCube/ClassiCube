@@ -31,13 +31,22 @@ extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
+/* Which fields are included/valid in a LocationUpdate */
 #define LU_INCLUDES_POS   0x01
 #define LU_INCLUDES_PITCH 0x02
 #define LU_INCLUDES_YAW   0x04
 #define LU_INCLUDES_ROTX  0x08
 #define LU_INCLUDES_ROTZ  0x10
 
-#define LU_FLAG_RELATIVEPOS  0x20
+/* If set, then new position is calculated by adding current position to update->pos */
+/* If not set, then new position is just update->pos */
+#define LU_FLAG_RELATIVEPOS 0x20
+/* TODO fill this in when implemented */
+#define LU_FLAG_X           0x40
+/* If set, then linearly interpolates between current and new state */
+/* If not set, then current state is immediately updated to new state */
+#define LU_FLAG_INTERPOLATE 0x80
+
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
 	Vec3 pos;
@@ -49,7 +58,7 @@ struct Entity;
 struct EntityVTABLE {
 	void (*Tick)(struct Entity* e, double delta);
 	void (*Despawn)(struct Entity* e);
-	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate);
+	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update);
 	PackedCol (*GetCol)(struct Entity* e);
 	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
 	void (*RenderName)(struct Entity* e);
