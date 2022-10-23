@@ -30,8 +30,6 @@
 #include "Input.h"
 #include "Utils.h"
 
-#define QUOTE(x) #x
-#define STRINGIFY(val) QUOTE(val)
 struct _ProtocolData Protocol;
 
 /* Classic state */
@@ -1461,15 +1459,8 @@ static void CPE_DefineModel(cc_uint8* data) {
 	numParts   = data[114];
 
 	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
-		cc_string msg; char msgBuffer[256];
-		String_InitArray(msg, msgBuffer);
-
-		String_Format1(
-			&msg,
-			"&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS),
-			&name
-		);
-		Logger_WarnFunc(&msg);
+		int maxParts = MAX_CUSTOM_MODEL_PARTS;
+		Chat_Add2("&cCustom Model '%s' exceeds parts limit of %i", &name, &maxParts);
 		return;
 	}
 

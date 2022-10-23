@@ -16,6 +16,7 @@
 #include "Menus.h"
 #include "Funcs.h"
 #include "Server.h"
+#include "TexturePack.h"
 
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
@@ -495,19 +496,28 @@ void Screen_PointerUp(void* s, int id, int x, int y) { }
 /*########################################################################################################################*
 *------------------------------------------------------Gui component------------------------------------------------------*
 *#########################################################################################################################*/
-static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
-
-static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
-	if (String_CaselessEqualsConst(name, "gui.png")) {
-		Game_UpdateTexture(&Gui.GuiTex, stream, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
-		Game_UpdateTexture(&Gui.GuiClassicTex, stream, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "icons.png")) {
-		Game_UpdateTexture(&Gui.IconsTex, stream, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "touch.png")) {
-		Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL);
-	}
+static void GuiPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&Gui.GuiTex, stream, name, NULL);
 }
+static struct TextureEntry gui_entry = { "gui.png", GuiPngProcess };
+
+static void GuiClassicPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&Gui.GuiClassicTex, stream, name, NULL);
+}
+static struct TextureEntry guiClassic_entry = { "gui_classic.png", GuiClassicPngProcess };
+
+static void IconsPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&Gui.IconsTex, stream, name, NULL);
+}
+static struct TextureEntry icons_entry = { "icons.png", IconsPngProcess };
+
+static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL);
+}
+static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
+
+
+static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
 static void OnKeyPress(void* obj, int cp) {
 	struct Screen* s;
@@ -545,8 +555,12 @@ static void OnContextLost(void* obj) {
 
 static void OnInit(void) {
 	Gui.Screens = Gui_Screens; /* for plugins */
+	TextureEntry_Register(&gui_entry);
+	TextureEntry_Register(&guiClassic_entry);
+	TextureEntry_Register(&icons_entry);
+	TextureEntry_Register(&touch_entry);
+
 	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);
-	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 	Event_Register_(&InputEvents.Press,          NULL, OnKeyPress);
