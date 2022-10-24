@@ -709,28 +709,27 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 	TableWidget_UpdateDescTexPos(w);
 }
 
-static cc_bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
-	int i, end = min(start + w->blocksPerRow, Array_Elems(Inventory.Map));
-
-	for (i = start; i < end; i++) {
-		if (Inventory.Map[i] != BLOCK_AIR) return false;
-	}
-	return true;
-}
-
 void TableWidget_RecreateBlocks(struct TableWidget* w) {
-	int i, max = Game_UseCPEBlocks ? BLOCK_MAX_DEFINED : BLOCK_MAX_ORIGINAL;
+	int max = Game_UseCPEBlocks ? BLOCK_MAX_DEFINED : BLOCK_MAX_ORIGINAL;
+	int i, begCount, rowEnd;
+	cc_bool emptyRow;
 	BlockID block;
 	w->blocksCount = 0;
 
-	for (i = 0; i < Array_Elems(Inventory.Map); ) {
-		if ((i % w->blocksPerRow) == 0 && TableWidget_RowEmpty(w, i)) {
-			i += w->blocksPerRow; continue;
+	for (i = 0; i < Array_Elems(Inventory.Map);) {
+		emptyRow = true;
+		begCount = w->blocksCount;
+		rowEnd   = min(i + w->blocksPerRow, Array_Elems(Inventory.Map));
+
+		for (; i < rowEnd; i++) {
+			block = Inventory.Map[i];
+			if (block > max) continue;
+			
+			w->blocks[w->blocksCount++] = block;
+			if (block != BLOCK_AIR) emptyRow = false;
 		}
 
-		block = Inventory.Map[i];
-		if (block <= max) { w->blocks[w->blocksCount++] = block; }
-		i++;
+		if (emptyRow) w->blocksCount = begCount;
 	}
 
 	w->rowsTotal = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
