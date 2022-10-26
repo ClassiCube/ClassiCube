@@ -498,6 +498,11 @@ static void OnInit(void) {
 	} else {
 		String_AppendString(&TexturePack_Path, &defaultPath);
 	}
+	
+	/* TODO temp hack to fix mobile, need to properly fix */
+	/*  issue is that Drawer2D_Component.Init is called from Launcher,*/
+	/*  which called TextureEntry_Register, whoops*/
+	entries_head = NULL;
 
 	TextureEntry_Register(&terrain_entry);
 	Utils_EnsureDirectory("texpacks");
