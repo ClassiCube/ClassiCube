@@ -602,7 +602,7 @@ static void Classic_AddEntity(cc_uint8* data) {
 static void Classic_EntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
 	Classic_ReadAbsoluteLocation(data, id, 
-		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_ORI_INTERPOLATE);
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_ABSOLUTE_SMOOTH | LU_ORI_INTERPOLATE);
 }
 
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
