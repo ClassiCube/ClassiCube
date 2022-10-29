@@ -737,12 +737,11 @@ static void Classic_Reset(void) {
 }
 
 static void Classic_Tick(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct Entity* e      = &LocalPlayer_Instance.Base;
+	struct Entity* e = &LocalPlayer_Instance.Base;
 	if (!classic_receivedFirstPos) return;
 	/* Report end position of each physics tick, rather than current position */
 	/*  (otherwise can miss landing on a block then jumping off of it again) */
-	Classic_WritePosition(p->Interp.Next.Pos, e->Yaw, e->Pitch);
+	Classic_WritePosition(e->next.pos, e->Yaw, e->Pitch);
 }
 
 

@@ -54,6 +54,9 @@ struct LocationUpdate {
 	cc_uint8 flags;
 };
 
+/* Represents a position and orientation state */
+struct EntityLocation { Vec3 pos; float pitch, yaw, rotX, rotY, rotZ; };
+
 struct Entity;
 struct EntityVTABLE {
 	void (*Tick)(struct Entity* e, double delta);
@@ -96,6 +99,10 @@ struct Entity {
 	char SkinRaw[STRING_SIZE];
 	char NameRaw[STRING_SIZE];
 	struct Texture NameTex;
+
+	/* Previous and next intended location of the entity */
+	/*  Current state is linearly interpolated between prev and next */
+	struct EntityLocation prev, next;
 };
 typedef cc_bool (*Entity_TouchesCondition)(BlockID block);
 
@@ -128,6 +135,7 @@ cc_bool Entity_TouchesAnyWater(struct Entity* e);
 void Entity_SetName(struct Entity* e, const cc_string* name);
 /* Sets the skin name of the given entity. */
 void Entity_SetSkin(struct Entity* e, const cc_string* skin);
+void Entity_LerpAngles(struct Entity* e, float t);
 
 /* Global data for all entities */
 /* (Actual entities may point to NetPlayers_List or elsewhere) */

@@ -77,31 +77,27 @@ void HacksComp_SetFlying(struct HacksComp* hacks, cc_bool flying);
 void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip);
 float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed);
 
-/* Represents a position and orientation state */
-struct InterpState { Vec3 Pos; float Pitch, Yaw, RotX, RotZ; };
-
-#define InterpComp_Layout \
-struct InterpState Prev, Next; float PrevRotY, NextRotY; int RotYCount; float RotYStates[15];
-
+#define InterpComp_Layout int RotYCount; float RotYStates[15];
 /* Base entity component that performs interpolation of position and orientation */
 struct InterpComp { InterpComp_Layout };
 
-void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, float t);
-
 void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update);
-void LocalInterpComp_AdvanceState(struct InterpComp* interp);
+void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e);
+
+/* Represents a network position and orientation state */
+struct NetInterpState { Vec3 Pos; float Pitch, Yaw, RotX, RotZ; };
 
 /* Entity component that performs interpolation for network players */
 struct NetInterpComp {
 	InterpComp_Layout
 	/* Last known position and orientation sent by the server */
-	struct InterpState Cur;
+	struct NetInterpState Cur;
 	int StatesCount;
-	struct InterpState States[10];
+	struct NetInterpState States[10];
 };
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update);
-void NetInterpComp_AdvanceState(struct NetInterpComp* interp);
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e);
+void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e);
 
 /* Entity component that draws square and circle shadows beneath entities */
 

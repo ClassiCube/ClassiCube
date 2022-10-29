@@ -691,7 +691,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	IVec3_ToVec3(&pos, &Game_SelectedPos.TranslatedPos);
 	if (IntersectsOthers(pos, block)) return false;
 	
-	nextPos = LocalPlayer_Instance.Interp.Next.Pos;
+	nextPos = LocalPlayer_Instance.Base.next.pos;
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 

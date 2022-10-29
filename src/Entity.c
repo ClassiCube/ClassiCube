@@ -501,6 +501,17 @@ void Entity_SetSkin(struct Entity* e, const cc_string* skin) {
 	String_CopyToRawArray(e->SkinRaw, &tmp);
 }
 
+void Entity_LerpAngles(struct Entity* e, float t) {
+	struct EntityLocation* prev = &e->prev;
+	struct EntityLocation* next = &e->next;
+
+	e->Pitch = Math_LerpAngle(prev->pitch, next->pitch, t);
+	e->Yaw   = Math_LerpAngle(prev->yaw,   next->yaw,   t);
+	e->RotX  = Math_LerpAngle(prev->rotX,  next->rotX,  t);
+	e->RotY  = Math_LerpAngle(prev->rotY,  next->rotY, t);
+	e->RotZ  = Math_LerpAngle(prev->rotZ,  next->rotZ,  t);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
@@ -763,9 +774,9 @@ float LocalPlayer_JumpHeight(void) {
 void LocalPlayer_SetInterpPosition(float t) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
-		Vec3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+		Vec3_Lerp(&p->Base.Position, &p->Base.prev.pos, &p->Base.next.pos, t);
 	}
-	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), &p->Base, t);
+	Entity_LerpAngles(&p->Base, t);
 }
 
 static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
@@ -833,9 +844,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
 
-	LocalInterpComp_AdvanceState(&p->Interp);
-	p->Base.Position = p->Interp.Prev.Pos;
-
+	LocalInterpComp_AdvanceState(&p->Interp, e);
 	LocalPlayer_HandleInput(&xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
 	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
@@ -852,8 +861,8 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
 	if (p->Hacks.Floating) e->Velocity.Y = 0.0f;
 
-	p->Interp.Next.Pos = e->Position; e->Position = p->Interp.Prev.Pos;
-	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	e->next.pos = e->Position; e->Position = e->prev.pos;
+	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
 	Entity_CheckSkin(&p->Base);
@@ -1126,33 +1135,30 @@ struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	NetInterpComp_SetLocation(&p->Interp, update);
+	NetInterpComp_SetLocation(&p->Interp, update, e);
 }
 
 static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	NetInterpComp_AdvanceState(&p->Interp);
-	p->Base.Position = p->Interp.Prev.Pos;
+	NetInterpComp_AdvanceState(&p->Interp, e);
 
 	Entity_CheckSkin(e);
-	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 }
 
 static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
-	struct NetPlayer* p = (struct NetPlayer*)e;
-	Vec3_Lerp(&e->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
-	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), e, t);
+	Vec3_Lerp(&e->Position, &e->prev.pos, &e->next.pos, t);
+	Entity_LerpAngles(e, t);
 
 	AnimatedComp_GetCurrent(e, t);
-	p->Base.ShouldRender = Model_ShouldRender(e);
-	if (p->Base.ShouldRender) Model_Render(e->Model, e);
+	e->ShouldRender = Model_ShouldRender(e);
+	if (e->ShouldRender) Model_Render(e->Model, e);
 }
 
 static void NetPlayer_RenderName(struct Entity* e) {
-	struct NetPlayer* p = (struct NetPlayer*)e;
 	float distance;
 	int threshold;
-	if (!p->Base.ShouldRender) return;
+	if (!e->ShouldRender) return;
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
