@@ -84,16 +84,17 @@ struct InterpComp { InterpComp_Layout };
 void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update);
 void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e);
 
-/* Represents a network position and orientation state */
-struct NetInterpState { Vec3 Pos; float Pitch, Yaw, RotX, RotZ; };
+/* Represents a network orientation state */
+struct NetInterpAngles { float Pitch, Yaw, RotX, RotZ; };
 
 /* Entity component that performs interpolation for network players */
 struct NetInterpComp {
 	InterpComp_Layout
 	/* Last known position and orientation sent by the server */
-	struct NetInterpState Cur;
-	int StatesCount;
-	struct NetInterpState States[10];
+	Vec3 CurPos; struct NetInterpAngles CurAngles;
+	/* Interpolated position and orientation state */
+	int PositionsCount, AnglesCount;
+	Vec3 Positions[10]; struct NetInterpAngles Angles[10];
 };
 
 void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e);

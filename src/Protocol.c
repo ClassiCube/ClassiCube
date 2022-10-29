@@ -151,7 +151,8 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	Entity_SetName(e, name);
 
 	if (!readPosition) return;
-	Classic_ReadAbsoluteLocation(data, id, 0);
+	Classic_ReadAbsoluteLocation(data, id,
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_ABSOLUTE_INSTANT);
 	if (id != ENTITIES_SELF_ID) return;
 
 	p->Spawn      = p->Base.Position;
@@ -600,14 +601,15 @@ static void Classic_AddEntity(cc_uint8* data) {
 
 static void Classic_EntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
-	Classic_ReadAbsoluteLocation(data, id, LU_FLAG_INTERPOLATE);
+	Classic_ReadAbsoluteLocation(data, id, 
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_ORI_INTERPOLATE);
 }
 
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH | LU_FLAG_RELATIVEPOS | LU_FLAG_INTERPOLATE;
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
 	update.pos.X = (cc_int8)data[1] / 32.0f;
 	update.pos.Y = (cc_int8)data[2] / 32.0f;
 	update.pos.Z = (cc_int8)data[3] / 32.0f;
@@ -620,7 +622,7 @@ static void Classic_RelPositionUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_POS | LU_FLAG_RELATIVEPOS | LU_FLAG_INTERPOLATE;
+	update.flags = LU_HAS_POS | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
 	update.pos.X = (cc_int8)data[1] / 32.0f;
 	update.pos.Y = (cc_int8)data[2] / 32.0f;
 	update.pos.Z = (cc_int8)data[3] / 32.0f;
@@ -631,7 +633,7 @@ static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_YAW | LU_INCLUDES_PITCH| LU_FLAG_INTERPOLATE;
+	update.flags = LU_HAS_YAW | LU_HAS_PITCH | LU_ORI_INTERPOLATE;
 	update.yaw   = Math_Packed2Deg(data[1]);
 	update.pitch = Math_Packed2Deg(data[2]);
 	UpdateLocation(id, &update);
@@ -701,7 +703,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 	/* so to simplify things, just always add 22 to Y*/
 	if (id == ENTITIES_SELF_ID) y += 22;
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_PITCH | LU_INCLUDES_YAW | flags;
+	update.flags = flags;
 	update.pos.X = x/32.0f; 
 	update.pos.Y = y/32.0f; 
 	update.pos.Z = z/32.0f;
@@ -1281,13 +1283,13 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	switch (type) {
 	case 0:
-		update.flags = LU_INCLUDES_ROTX | LU_FLAG_INTERPOLATE;
+		update.flags = LU_HAS_ROTX | LU_ORI_INTERPOLATE;
 		update.rotX  = (float)value; break;
 	case 1:
-		update.flags = LU_INCLUDES_YAW  | LU_FLAG_INTERPOLATE;
+		update.flags = LU_HAS_YAW  | LU_ORI_INTERPOLATE;
 		update.yaw   = (float)value; break;
 	case 2:
-		update.flags = LU_INCLUDES_ROTZ | LU_FLAG_INTERPOLATE;
+		update.flags = LU_HAS_ROTZ | LU_ORI_INTERPOLATE;
 		update.rotZ  = (float)value; break;
 
 	case 3:

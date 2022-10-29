@@ -32,20 +32,26 @@ extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
 /* Which fields are included/valid in a LocationUpdate */
-#define LU_INCLUDES_POS   0x01
-#define LU_INCLUDES_PITCH 0x02
-#define LU_INCLUDES_YAW   0x04
-#define LU_INCLUDES_ROTX  0x08
-#define LU_INCLUDES_ROTZ  0x10
+#define LU_HAS_POS   0x01
+#define LU_HAS_PITCH 0x02
+#define LU_HAS_YAW   0x04
+#define LU_HAS_ROTX  0x08
+#define LU_HAS_ROTZ  0x10
 
-/* If set, then new position is calculated by adding current position to update->pos */
-/* If not set, then new position is just update->pos */
-#define LU_FLAG_RELATIVEPOS 0x20
-/* TODO fill this in when implemented */
-#define LU_FLAG_X           0x40
-/* If set, then linearly interpolates between current and new state */
-/* If not set, then current state is immediately updated to new state */
-#define LU_FLAG_INTERPOLATE 0x80
+/* How to move the entity when position field is included */
+#define LU_POS_MODEMASK   0x60
+/* Entity is instantly teleported to update->pos */
+#define LU_POS_ABSOLUTE_INSTANT 0x00
+/* Entity is smoothly moved to update->pos */
+#define LU_POS_ABSOLUTE_SMOOTH  0x20
+/* Entity is smoothly moved to current position + update->pos */
+#define LU_POS_RELATIVE_SMOOTH  0x40
+/* Entity is offset/shifted by update->pos */
+#define LU_POS_RELATIVE_SHIFT   0x60
+
+/* If set, then linearly interpolates between current and new angles */
+/* If not set, then current angles are immediately updated to new angles */
+#define LU_ORI_INTERPOLATE 0x80
 
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {

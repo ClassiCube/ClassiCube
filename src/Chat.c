@@ -631,7 +631,7 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 		return;
 	}
 
-	update.flags = LU_INCLUDES_POS;
+	update.flags = LU_HAS_POS;
 	update.pos   = v;
 	e->VTABLE->SetLocation(e, &update);
 }
