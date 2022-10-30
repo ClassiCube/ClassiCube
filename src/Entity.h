@@ -38,15 +38,16 @@ enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 #define LU_HAS_ROTX  0x08
 #define LU_HAS_ROTZ  0x10
 
-/* How to move the entity when position field is included */
+/* 0-11-00000 How to move the entity when position field is included */
 #define LU_POS_MODEMASK   0x60
-/* Entity is instantly teleported to update->pos */
+
+/* 0-00-00000 Entity is instantly teleported to update->pos */
 #define LU_POS_ABSOLUTE_INSTANT 0x00
-/* Entity is smoothly moved to update->pos */
+/* 0-01-00000 Entity is smoothly moved to update->pos */
 #define LU_POS_ABSOLUTE_SMOOTH  0x20
-/* Entity is smoothly moved to current position + update->pos */
+/* 0-10-00000 Entity is smoothly moved to current position + update->pos */
 #define LU_POS_RELATIVE_SMOOTH  0x40
-/* Entity is offset/shifted by update->pos */
+/* 0-11-00000 Entity is offset/shifted by update->pos */
 #define LU_POS_RELATIVE_SHIFT   0x60
 
 /* If set, then linearly interpolates between current and new angles */

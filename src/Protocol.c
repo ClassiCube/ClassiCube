@@ -683,6 +683,7 @@ static void Classic_SetPermission(cc_uint8* data) {
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags) {
 	struct LocationUpdate update;
 	int x, y, z;
+	cc_uint8 mode;
 
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
@@ -696,12 +697,15 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 		data += 6;
 	}
 
-	y -= 51; /* Convert to feet position */
-	/* The original classic client behaves strangely in that */
-	/*   Y+0  is sent back to the server for next client->server position update */
-	/*   Y+22 is sent back to the server for all subsequent position updates */
-	/* so to simplify things, just always add 22 to Y*/
-	if (id == ENTITIES_SELF_ID) y += 22;
+	mode = flags & LU_POS_MODEMASK;
+	if (mode == LU_POS_ABSOLUTE_SMOOTH || mode == LU_POS_ABSOLUTE_INSTANT) { /* Only perform height shifts on absolute updates */
+		y -= 51; /* Convert to feet position */
+		/* The original classic client behaves strangely in that */
+		/*   Y+0  is sent back to the server for next client->server position update */
+		/*   Y+22 is sent back to the server for all subsequent position updates */
+		/* so to simplify things, just always add 22 to Y*/
+		if (id == ENTITIES_SELF_ID) y += 22;
+	}
 
 	update.flags = flags;
 	update.pos.X = x/32.0f; 
@@ -1546,15 +1550,21 @@ static void CPE_PluginMessage(cc_uint8* data) {
 
 static void CPE_EntityTeleportExt(cc_uint8* data) {
 	EntityID id = *data++;
-	cc_uint8 type = *data++;
-	cc_uint8 flags = LU_HAS_POS;
-	if (type > 3) return; /* Invalid type, do nothing. Or should default be assumed and still TP? */
-	if (type != 3) flags |= LU_HAS_PITCH | LU_HAS_YAW;
+	cc_uint8 packetFlags = *data++;
+	cc_uint8 flags = 0;
 
-	if (type == 0) flags |= LU_POS_ABSOLUTE_SMOOTH | LU_ORI_INTERPOLATE; /* Same as OPCODE_ENTITY_TELEPORT */
-	if (type == 1) flags |= LU_POS_ABSOLUTE_INSTANT;                     /* Same as OPCODE_ENTITY_TELEPORT, but with no interpolation (instant) */
-	if (type == 2) flags |= LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE; /* Same as OPCODE_RELPOS_AND_ORI_UPDATE (with bigger location range) */
-	if (type == 3) flags |= LU_POS_RELATIVE_SHIFT;                       /* Instant and seamless TP for local player, same as OPCODE_RELPOS_UPDATE for net player */
+	/* bit  0    includes position */
+	/* bits 1-2  position mode(absolute_instant / absolute_smooth / relative_smooth / relative_seamless) */
+	/* bit  3    unused */
+	/* bit  4    includes orientation */
+	/* bit  5    interpolate ori */
+	/* bit  6-7  unused */
+
+	if (packetFlags & 1) flags |= LU_HAS_POS;
+	flags |= (packetFlags & 6) << 3; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
+	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
+	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
+
 	Classic_ReadAbsoluteLocation(data, id, flags);
 }
 
