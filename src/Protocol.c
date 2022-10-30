@@ -1561,7 +1561,7 @@ static void CPE_EntityTeleportExt(cc_uint8* data) {
 	/* bit  6-7  unused */
 
 	if (packetFlags & 1) flags |= LU_HAS_POS;
-	flags |= (packetFlags & 6) << 3; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
+	flags |= (packetFlags & 6) << 4; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
 	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
 	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
 
