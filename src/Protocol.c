@@ -928,10 +928,11 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (version == 1) return;
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
-		Protocol.Sizes[OPCODE_ENTITY_TELEPORT] += 6;
-		Protocol.Sizes[OPCODE_ADD_ENTITY]      += 6;
-		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2] += 6;
-		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]  += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT]     += 6;
+		Protocol.Sizes[OPCODE_ADD_ENTITY]          += 6;
+		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2]     += 6;
+		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]      += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT] += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
 		cpe_twoWayPing = true;
@@ -1543,6 +1544,20 @@ static void CPE_PluginMessage(cc_uint8* data) {
 	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
 }
 
+static void CPE_EntityTeleportExt(cc_uint8* data) {
+	EntityID id = *data++;
+	cc_uint8 type = *data++;
+	cc_uint8 flags = LU_HAS_POS;
+	if (type > 3) return; /* Invalid type, do nothing. Or should default be assumed and still TP? */
+	if (type != 3) flags |= LU_HAS_PITCH | LU_HAS_YAW;
+
+	if (type == 0) flags |= LU_POS_ABSOLUTE_SMOOTH | LU_ORI_INTERPOLATE; /* Same as OPCODE_ENTITY_TELEPORT */
+	if (type == 1) flags |= LU_POS_ABSOLUTE_INSTANT;                     /* Same as OPCODE_ENTITY_TELEPORT, but with no interpolation (instant) */
+	if (type == 2) flags |= LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE; /* Same as OPCODE_RELPOS_AND_ORI_UPDATE (with bigger location range) */
+	if (type == 3) flags |= LU_POS_RELATIVE_SHIFT;                       /* Instant and seamless TP for local player, same as OPCODE_RELPOS_UPDATE for net player */
+	Classic_ReadAbsoluteLocation(data, id, flags);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1589,6 +1604,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
+	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_EntityTeleportExt, 11);
 }
 
 static void CPE_Tick(void) {
