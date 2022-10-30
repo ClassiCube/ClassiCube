@@ -760,7 +760,7 @@ static const char* cpe_clientExtensions[] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages", "EntityTeleportExt",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages", "ExtEntityTeleport",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1548,7 +1548,7 @@ static void CPE_PluginMessage(cc_uint8* data) {
 	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
 }
 
-static void CPE_EntityTeleportExt(cc_uint8* data) {
+static void CPE_ExtEntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
 	cc_uint8 packetFlags = *data++;
 	cc_uint8 flags = 0;
@@ -1614,7 +1614,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
-	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_EntityTeleportExt, 11);
+	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 }
 
 static void CPE_Tick(void) {
