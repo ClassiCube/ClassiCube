@@ -760,7 +760,7 @@ static const char* cpe_clientExtensions[] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages", "EntityTeleportExt",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
