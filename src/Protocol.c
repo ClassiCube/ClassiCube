@@ -151,7 +151,8 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	Entity_SetName(e, name);
 
 	if (!readPosition) return;
-	Classic_ReadAbsoluteLocation(data, id, 0);
+	Classic_ReadAbsoluteLocation(data, id,
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_ABSOLUTE_INSTANT);
 	if (id != ENTITIES_SELF_ID) return;
 
 	p->Spawn      = p->Base.Position;
@@ -600,14 +601,15 @@ static void Classic_AddEntity(cc_uint8* data) {
 
 static void Classic_EntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
-	Classic_ReadAbsoluteLocation(data, id, LU_FLAG_INTERPOLATE);
+	Classic_ReadAbsoluteLocation(data, id, 
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_ABSOLUTE_SMOOTH | LU_ORI_INTERPOLATE);
 }
 
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH | LU_FLAG_RELATIVEPOS | LU_FLAG_INTERPOLATE;
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
 	update.pos.X = (cc_int8)data[1] / 32.0f;
 	update.pos.Y = (cc_int8)data[2] / 32.0f;
 	update.pos.Z = (cc_int8)data[3] / 32.0f;
@@ -620,7 +622,7 @@ static void Classic_RelPositionUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_POS | LU_FLAG_RELATIVEPOS | LU_FLAG_INTERPOLATE;
+	update.flags = LU_HAS_POS | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
 	update.pos.X = (cc_int8)data[1] / 32.0f;
 	update.pos.Y = (cc_int8)data[2] / 32.0f;
 	update.pos.Z = (cc_int8)data[3] / 32.0f;
@@ -631,7 +633,7 @@ static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
 
-	update.flags = LU_INCLUDES_YAW | LU_INCLUDES_PITCH| LU_FLAG_INTERPOLATE;
+	update.flags = LU_HAS_YAW | LU_HAS_PITCH | LU_ORI_INTERPOLATE;
 	update.yaw   = Math_Packed2Deg(data[1]);
 	update.pitch = Math_Packed2Deg(data[2]);
 	UpdateLocation(id, &update);
@@ -681,6 +683,7 @@ static void Classic_SetPermission(cc_uint8* data) {
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags) {
 	struct LocationUpdate update;
 	int x, y, z;
+	cc_uint8 mode;
 
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
@@ -694,14 +697,17 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 		data += 6;
 	}
 
-	y -= 51; /* Convert to feet position */
-	/* The original classic client behaves strangely in that */
-	/*   Y+0  is sent back to the server for next client->server position update */
-	/*   Y+22 is sent back to the server for all subsequent position updates */
-	/* so to simplify things, just always add 22 to Y*/
-	if (id == ENTITIES_SELF_ID) y += 22;
+	mode = flags & LU_POS_MODEMASK;
+	if (mode == LU_POS_ABSOLUTE_SMOOTH || mode == LU_POS_ABSOLUTE_INSTANT) { /* Only perform height shifts on absolute updates */
+		y -= 51; /* Convert to feet position */
+		/* The original classic client behaves strangely in that */
+		/*   Y+0  is sent back to the server for next client->server position update */
+		/*   Y+22 is sent back to the server for all subsequent position updates */
+		/* so to simplify things, just always add 22 to Y*/
+		if (id == ENTITIES_SELF_ID) y += 22;
+	}
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_PITCH | LU_INCLUDES_YAW | flags;
+	update.flags = flags;
 	update.pos.X = x/32.0f; 
 	update.pos.Y = y/32.0f; 
 	update.pos.Z = z/32.0f;
@@ -754,7 +760,7 @@ static const char* cpe_clientExtensions[] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages", "ExtEntityTeleport",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -926,10 +932,11 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (version == 1) return;
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
-		Protocol.Sizes[OPCODE_ENTITY_TELEPORT] += 6;
-		Protocol.Sizes[OPCODE_ADD_ENTITY]      += 6;
-		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2] += 6;
-		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]  += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT]     += 6;
+		Protocol.Sizes[OPCODE_ADD_ENTITY]          += 6;
+		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2]     += 6;
+		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]      += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT] += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
 		cpe_twoWayPing = true;
@@ -1281,13 +1288,13 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	switch (type) {
 	case 0:
-		update.flags = LU_INCLUDES_ROTX | LU_FLAG_INTERPOLATE;
+		update.flags = LU_HAS_ROTX | LU_ORI_INTERPOLATE;
 		update.rotX  = (float)value; break;
 	case 1:
-		update.flags = LU_INCLUDES_YAW  | LU_FLAG_INTERPOLATE;
+		update.flags = LU_HAS_YAW  | LU_ORI_INTERPOLATE;
 		update.yaw   = (float)value; break;
 	case 2:
-		update.flags = LU_INCLUDES_ROTZ | LU_FLAG_INTERPOLATE;
+		update.flags = LU_HAS_ROTZ | LU_ORI_INTERPOLATE;
 		update.rotZ  = (float)value; break;
 
 	case 3:
@@ -1541,6 +1548,26 @@ static void CPE_PluginMessage(cc_uint8* data) {
 	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
 }
 
+static void CPE_ExtEntityTeleport(cc_uint8* data) {
+	EntityID id = *data++;
+	cc_uint8 packetFlags = *data++;
+	cc_uint8 flags = 0;
+
+	/* bit  0    includes position */
+	/* bits 1-2  position mode(absolute_instant / absolute_smooth / relative_smooth / relative_seamless) */
+	/* bit  3    unused */
+	/* bit  4    includes orientation */
+	/* bit  5    interpolate ori */
+	/* bit  6-7  unused */
+
+	if (packetFlags & 1) flags |= LU_HAS_POS;
+	flags |= (packetFlags & 6) << 4; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
+	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
+	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
+
+	Classic_ReadAbsoluteLocation(data, id, flags);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1587,6 +1614,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
+	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 }
 
 static void CPE_Tick(void) {

@@ -652,7 +652,7 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 		return false;
 	}
 
-	update.flags = LU_INCLUDES_POS;
+	update.flags = LU_HAS_POS | LU_POS_ABSOLUTE_INSTANT;
 	update.pos   = pos;
 	p->VTABLE->SetLocation(p, &update);
 	return true;
@@ -711,7 +711,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	/* Push player upwards when they are jumping and trying to place a block underneath them */
 	nextPos.Y = pos.Y + Blocks.MaxBB[block].Y + ENTITY_ADJUSTMENT;
 
-	update.flags = LU_INCLUDES_POS;
+	update.flags = LU_HAS_POS | LU_POS_ABSOLUTE_INSTANT;
 	update.pos   = nextPos;
 	p->VTABLE->SetLocation(p, &update);
 	return true;

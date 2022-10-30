@@ -508,7 +508,7 @@ void Entity_LerpAngles(struct Entity* e, float t) {
 	e->Pitch = Math_LerpAngle(prev->pitch, next->pitch, t);
 	e->Yaw   = Math_LerpAngle(prev->yaw,   next->yaw,   t);
 	e->RotX  = Math_LerpAngle(prev->rotX,  next->rotX,  t);
-	e->RotY  = Math_LerpAngle(prev->rotY,  next->rotY, t);
+	e->RotY  = Math_LerpAngle(prev->rotY,  next->rotY,  t);
 	e->RotZ  = Math_LerpAngle(prev->rotZ,  next->rotZ,  t);
 }
 
@@ -997,7 +997,7 @@ static void LocalPlayer_DoRespawn(void) {
 	/*  it's obvious to the player that they are being respawned */
 	spawn.Y += 2.0f/16.0f;
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
 	update.pos   = spawn;
 	update.yaw   = p->SpawnYaw;
 	update.pitch = p->SpawnPitch;
@@ -1107,7 +1107,7 @@ void LocalPlayer_MoveToSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct LocationUpdate update;
 
-	update.flags = LU_INCLUDES_POS | LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
 	update.pos   = p->Spawn;
 	update.yaw   = p->SpawnYaw;
 	update.pitch = p->SpawnPitch;

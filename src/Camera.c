@@ -84,7 +84,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 		return;
 	}
 	
-	update.flags = LU_INCLUDES_YAW | LU_INCLUDES_PITCH;
+	update.flags = LU_HAS_YAW | LU_HAS_PITCH;
 	update.yaw   = e->next.yaw   + rot.X;
 	update.pitch = e->next.pitch + rot.Y;
 	update.pitch = Math_ClampAngle(update.pitch);
