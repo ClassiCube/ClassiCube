@@ -1018,11 +1018,12 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
 	float *A = state->a, *B = state->b, *C = state->c;
 
-	float u[VORBIS_MAX_BLOCK_SIZE];
-	float w[VORBIS_MAX_BLOCK_SIZE];
+	float u[VORBIS_MAX_BLOCK_SIZE / 2];
+	float w[VORBIS_MAX_BLOCK_SIZE / 2];
 	float e_1, e_2, f_1, f_2;
 	float g_1, g_2, h_1, h_2;
 	float x_1, x_2, y_1, y_2;
+
 
 	/* spectral coefficients, step 1, step 2 */
 	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
@@ -1034,45 +1035,46 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 		h_2 = f_1 * A[n4-2-k2] - f_2 * A[n4-1-k2];
 		h_1 = f_1 * A[n4-1-k2] + f_2 * A[n4-2-k2];
 
-		w[n2+3+k4] = h_2 + g_2;
-		w[n2+1+k4] = h_1 + g_1;
+		w[n4+1+k2] = h_2 + g_2;
+		w[n4+0+k2] = h_1 + g_1;
 
-		w[k4+3] = (h_2 - g_2) * A[n2-4-k4] - (h_1 - g_1) * A[n2-3-k4];
-		w[k4+1] = (h_1 - g_1) * A[n2-4-k4] + (h_2 - g_2) * A[n2-3-k4];
+		w[k2+1] = (h_2 - g_2) * A[n2-4-k4] - (h_1 - g_1) * A[n2-3-k4];
+		w[k2+0] = (h_1 - g_1) * A[n2-4-k4] + (h_2 - g_2) * A[n2-3-k4];
 	}
 
 	/* step 3 */
 	log2_n = state->log2_n;
 	for (l = 0; l <= log2_n - 4; l++) {
-		int k0 = n >> (l+2), k1 = 1 << (l+3);
-		int r, r4, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
+		int k0 = n >> (l+3), k1 = 1 << (l+3);
+		int r, r2, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
 
-		for (r = 0, r4 = 0; r < rMax; r++, r4 += 4) {
+		for (r = 0, r2 = 0; r < rMax; r++, r2 += 2) {
 			for (s2 = 0; s2 < s2Max; s2 += 2) {
-				e_1 = w[n-1-k0*s2-r4];     e_2 = w[n-3-k0*s2-r4];
-				f_1 = w[n-1-k0*(s2+1)-r4]; f_2 = w[n-3-k0*(s2+1)-r4];
+				e_1 = w[n2-1-k0*s2-r2];     
+				e_2 = w[n2-2-k0*s2-r2];
+				f_1 = w[n2-1-k0*(s2+1)-r2]; 
+				f_2 = w[n2-2-k0*(s2+1)-r2];
 
-				u[n-1-k0*s2-r4] = e_1 + f_1;
-				u[n-3-k0*s2-r4] = e_2 + f_2;
-
-				u[n-1-k0*(s2+1)-r4] = (e_1 - f_1) * A[r*k1] - (e_2 - f_2) * A[r*k1+1];
-				u[n-3-k0*(s2+1)-r4] = (e_2 - f_2) * A[r*k1] + (e_1 - f_1) * A[r*k1+1];
+				u[n2-1-k0*s2-r2]     = e_1 + f_1;
+				u[n2-2-k0*s2-r2]     = e_2 + f_2;
+				u[n2-1-k0*(s2+1)-r2] = (e_1 - f_1) * A[r*k1] - (e_2 - f_2) * A[r*k1+1];
+				u[n2-2-k0*(s2+1)-r2] = (e_2 - f_2) * A[r*k1] + (e_1 - f_1) * A[r*k1+1];
 			}
 		}
 
 		/* TODO: eliminate this, do w/u in-place */
 		/* TODO: dynamically allocate mem for imdct */
 		if (l+1 <= log2_n - 4) {
-			Mem_Copy(w, u, sizeof(u));
+			Mem_Copy(w, u, n2 * sizeof(float));
 		}
 	}
 
 	/* step 4, step 5, step 6, step 7, step 8, output */
 	reversed = state->reversed;
 	for (k = 0, k2 = 0, k8 = 0; k < n8; k++, k2 += 2, k8 += 8) {
-		cc_uint32 j = reversed[k], j8 = j << 3;
-		e_1 = u[n-j8-1]; e_2 = u[n-j8-3];
-		f_1 = u[j8+3];   f_2 = u[j8+1];
+		cc_uint32 j = reversed[k], j4 = j << 2;
+		e_1 = u[n2-j4-1]; e_2 = u[n2-j4-2];
+		f_1 = u[j4+1];    f_2 = u[j4+0];
 
 		g_1 =  e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2);
 		h_1 =  e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2);
