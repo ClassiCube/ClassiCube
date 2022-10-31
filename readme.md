@@ -162,7 +162,7 @@ Install libexecinfo, curl and openal-soft package if needed
 
 Install openal_devel and libexecinfo_devel package if needed
 
-```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc *.c Window_Haiku.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 #### SerenityOS
 

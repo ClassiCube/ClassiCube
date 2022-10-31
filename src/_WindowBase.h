@@ -105,21 +105,11 @@ static void InitGraphicsMode(struct GraphicsMode* m) {
 	}
 }
 
-#ifdef CC_BUILD_GL
-/* OpenGL contexts are heavily tied to the window, so for simplicitly are also included here */
-/* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system. */
-
-void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
-	int i;
-	for (i = 0; i < count; i++) {
-		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
-	}
-}
-
+/* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system */
+#if defined CC_BUILD_GL && defined CC_BUILD_EGL
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_EGL
 #include <EGL/egl.h>
 static EGLDisplay ctx_display;
 static EGLContext ctx_context;
@@ -224,5 +214,4 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	eglSwapInterval(ctx_display, vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif
 #endif

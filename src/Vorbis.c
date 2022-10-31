@@ -1009,7 +1009,7 @@ void imdct_init(struct imdct_state* state, int n) {
 }
 
 void imdct_calc(float* in, float* out, struct imdct_state* state) {
-	int k, k2, k4, k8, n = state->n;
+	int k, k2, k4, n = state->n;
 	int n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
 	int l, log2_n;
 	cc_uint32* reversed;
@@ -1025,7 +1025,7 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	float x_1, x_2, y_1, y_2;
 
 
-	/* spectral coefficients, step 1, step 2 */
+	/* spectral coefficients, step 1, step 2 */ /* TODO avoid k */
 	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
 		e_1 = -in[k4+3];   e_2 = -in[k4+1];
 		g_1 = e_1 * A[n2-1-k2] + e_2 * A[n2-2-k2];
@@ -1071,7 +1071,7 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 
 	/* step 4, step 5, step 6, step 7, step 8, output */
 	reversed = state->reversed;
-	for (k = 0, k2 = 0, k8 = 0; k < n8; k++, k2 += 2, k8 += 8) {
+	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
 		cc_uint32 j = reversed[k], j4 = j << 2;
 		e_1 = u[n2-j4-1]; e_2 = u[n2-j4-2];
 		f_1 = u[j4+1];    f_2 = u[j4+0];

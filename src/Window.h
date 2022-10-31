@@ -179,6 +179,7 @@ void Window_UpdateRawMouse(void);
 /* Cursor will also be unhidden and moved back to window centre. */
 void Window_DisableRawMouse(void);
 
+/* OpenGL contexts are heavily tied to the window, so for simplicitly are also provided here */
 #ifdef CC_BUILD_GL
 #define GLCONTEXT_DEFAULT_DEPTH 24
 /* Creates an OpenGL context, then makes it the active context. */
