@@ -197,8 +197,6 @@ void GLContext_Free(void);
 /* NOTE: The implementation may still return an address for unsupported functions! */
 /* You MUST check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
 void* GLContext_GetAddress(const char* function);
-/* Loads all OpenGL function pointers using GLContext_GetAddress in the given list */
-void GLContext_GetAll(const struct DynamicLibSym* syms, int count);
 
 /* Swaps the front and back buffer, displaying the back buffer on screen. */
 cc_bool GLContext_SwapBuffers(void);
