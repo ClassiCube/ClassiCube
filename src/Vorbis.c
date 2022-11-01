@@ -52,6 +52,8 @@ static cc_result Ogg_NextPage(struct OggState* ctx) {
 	if ((res = Stream_Read(source, header, sizeof(header)))) return res;
 
 	sig = Stream_GetU32_BE(&header[0]);
+	if (sig == OGG_FourCC('I','D','3', 2))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.2 tags header */
+	if (sig == OGG_FourCC('I','D','3', 3))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.3 tags header */
 	if (sig != OGG_FourCC('O','g','g','S')) return OGG_ERR_INVALID_SIG;
 	if (header[4] != 0) return OGG_ERR_VERSION;
 

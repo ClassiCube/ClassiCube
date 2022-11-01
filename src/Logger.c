@@ -59,10 +59,11 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case ERR_INVALID_ARGUMENT: return "Invalid argument";
 	case ERR_OUT_OF_MEMORY:    return "Out of memory";
 
-	case OGG_ERR_INVALID_SIG:  return "Invalid OGG signature";
+	case OGG_ERR_INVALID_SIG:  return "Only OGG music files supported";
 	case OGG_ERR_VERSION:      return "Invalid OGG format version";
+	case AUDIO_ERR_MP3_SIG:    return "MP3 audio files are not supported";
 
-	case WAV_ERR_STREAM_HDR:  return "Invalid WAV header";
+	case WAV_ERR_STREAM_HDR:  return "Only WAV sound files supported";
 	case WAV_ERR_STREAM_TYPE: return "Invalid WAV type";
 	case WAV_ERR_DATA_TYPE:   return "Unsupported WAV audio format";
 

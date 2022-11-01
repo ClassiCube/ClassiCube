@@ -19,8 +19,10 @@ enum CC_ERRORS {
 	WAV_ERR_STREAM_HDR   = 0xCCDED007UL, /* Bytes #1-#4  aren't "RIFF" */
 	WAV_ERR_STREAM_TYPE  = 0xCCDED008UL, /* Bytes #9-#12 aren't "WAV " */
 	WAV_ERR_DATA_TYPE    = 0xCCDED009UL, /* Audio data type isn't 1 (PCM) */
-	/*WAV_ERR_NO_DATA    = 0xCCDED00AUL, no longer used */
+	/*WAV_ERR_NO_DATA    = 0xCCDED00AUL,  repurposed for AUDIO_ERR_MP3_SIG */
 	WAV_ERR_SAMPLE_BITS  = 0xCCDED00BUL, /* Bits per sample isn't 16 */
+
+	AUDIO_ERR_MP3_SIG    = 0xCCDED00AUL, /* Signature bytes are "ID3" (repurposed WAV_ERR_NO_DATA) */
 
 	/*VORBIS_ERR_HEADER         = 0xCCDED00CUL, no longer used */
 	VORBIS_ERR_WRONG_HEADER     = 0xCCDED00DUL, /* Packet header doesn't match expected type */
