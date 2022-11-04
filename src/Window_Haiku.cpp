@@ -10,10 +10,20 @@ extern "C" {
 #include "Utils.h"
 }
 
-#include <AppKit.h>
-#include <InterfaceKit.h>
-#include <OpenGLKit.h>
-#include <StorageKit.h>
+// AppKit
+#include <Application.h> 
+#include <Clipboard.h> 
+#include <Message.h> 
+// GLKit
+#include <GL/gl.h>
+#include <GLView.h>
+// InterfaceKit
+#include <Alert.h>
+#include <Bitmap.h>
+#include <Screen.h>
+// StorageKit
+#include <FilePanel.h>
+#include <Path.h>
 
 static BApplication* app_handle;
 static BWindow* win_handle;

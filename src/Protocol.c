@@ -30,8 +30,6 @@
 #include "Input.h"
 #include "Utils.h"
 
-#define QUOTE(x) #x
-#define STRINGIFY(val) QUOTE(val)
 struct _ProtocolData Protocol;
 
 /* Classic state */
@@ -134,7 +132,7 @@ static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 	RemoveEndPlus(skin);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate);
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags);
 static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const cc_string* skin, cc_bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e;
@@ -153,7 +151,8 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	Entity_SetName(e, name);
 
 	if (!readPosition) return;
-	Classic_ReadAbsoluteLocation(data, id, false);
+	Classic_ReadAbsoluteLocation(data, id,
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_ABSOLUTE_INSTANT);
 	if (id != ENTITIES_SELF_ID) return;
 
 	p->Spawn      = p->Base.Position;
@@ -168,9 +167,9 @@ void Protocol_RemoveEntity(EntityID id) {
 	Entities_Remove(id);
 }
 
-static void UpdateLocation(EntityID id, struct LocationUpdate* update, cc_bool interpolate) {
+static void UpdateLocation(EntityID id, struct LocationUpdate* update) {
 	struct Entity* e = Entities.List[id];
-	if (e) { e->VTABLE->SetLocation(e, update, interpolate); }
+	if (e) { e->VTABLE->SetLocation(e, update); }
 }
 
 static void UpdateUserType(struct HacksComp* hacks, cc_uint8 value) {
@@ -602,48 +601,42 @@ static void Classic_AddEntity(cc_uint8* data) {
 
 static void Classic_EntityTeleport(cc_uint8* data) {
 	EntityID id = *data++;
-	Classic_ReadAbsoluteLocation(data, id, true);
+	Classic_ReadAbsoluteLocation(data, id, 
+		LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_ABSOLUTE_SMOOTH | LU_ORI_INTERPOLATE);
 }
 
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
-	Vec3 pos;
-	float yaw, pitch;
 
-	pos.X = (cc_int8)data[1] / 32.0f;
-	pos.Y = (cc_int8)data[2] / 32.0f;
-	pos.Z = (cc_int8)data[3] / 32.0f;
-	yaw   = Math_Packed2Deg(data[4]);
-	pitch = Math_Packed2Deg(data[5]);
-
-	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, true);
-	UpdateLocation(id, &update, true);
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
+	update.pos.X = (cc_int8)data[1] / 32.0f;
+	update.pos.Y = (cc_int8)data[2] / 32.0f;
+	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	update.yaw   = Math_Packed2Deg(data[4]);
+	update.pitch = Math_Packed2Deg(data[5]);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_RelPositionUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
-	Vec3 pos;
 
-	pos.X = (cc_int8)data[1] / 32.0f;
-	pos.Y = (cc_int8)data[2] / 32.0f;
-	pos.Z = (cc_int8)data[3] / 32.0f;
-
-	LocationUpdate_MakePos(&update, pos, true);
-	UpdateLocation(id, &update, true);
+	update.flags = LU_HAS_POS | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
+	update.pos.X = (cc_int8)data[1] / 32.0f;
+	update.pos.Y = (cc_int8)data[2] / 32.0f;
+	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	UpdateLocation(id, &update);
 }
 
 static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = data[0];
-	float yaw, pitch;
 
-	yaw   = Math_Packed2Deg(data[1]);
-	pitch = Math_Packed2Deg(data[2]);
-
-	LocationUpdate_MakeOri(&update, yaw, pitch);
-	UpdateLocation(id, &update, true);
+	update.flags = LU_HAS_YAW | LU_HAS_PITCH | LU_ORI_INTERPOLATE;
+	update.yaw   = Math_Packed2Deg(data[1]);
+	update.pitch = Math_Packed2Deg(data[2]);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_RemoveEntity(cc_uint8* data) {
@@ -687,11 +680,10 @@ static void Classic_SetPermission(cc_uint8* data) {
 	HacksComp_RecheckFlags(hacks);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate) {
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags) {
 	struct LocationUpdate update;
 	int x, y, z;
-	Vec3 pos;
-	float yaw, pitch;
+	cc_uint8 mode;
 
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
@@ -705,16 +697,25 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 		data += 6;
 	}
 
-	y -= 51; /* Convert to feet position */
-	if (id == ENTITIES_SELF_ID) y += 22;
+	mode = flags & LU_POS_MODEMASK;
+	if (mode == LU_POS_ABSOLUTE_SMOOTH || mode == LU_POS_ABSOLUTE_INSTANT) { /* Only perform height shifts on absolute updates */
+		y -= 51; /* Convert to feet position */
+		/* The original classic client behaves strangely in that */
+		/*   Y+0  is sent back to the server for next client->server position update */
+		/*   Y+22 is sent back to the server for all subsequent position updates */
+		/* so to simplify things, just always add 22 to Y*/
+		if (id == ENTITIES_SELF_ID) y += 22;
+	}
 
-	pos.X = x/32.0f; pos.Y = y/32.0f; pos.Z = z/32.0f;
-	yaw   = Math_Packed2Deg(*data++);
-	pitch = Math_Packed2Deg(*data++);
+	update.flags = flags;
+	update.pos.X = x/32.0f; 
+	update.pos.Y = y/32.0f; 
+	update.pos.Z = z/32.0f;
+	update.yaw   = Math_Packed2Deg(*data++);
+	update.pitch = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
-	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, false);
-	UpdateLocation(id, &update, interpolate);
+	UpdateLocation(id, &update);
 }
 
 static void Classic_Reset(void) {
@@ -742,12 +743,11 @@ static void Classic_Reset(void) {
 }
 
 static void Classic_Tick(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct Entity* e      = &LocalPlayer_Instance.Base;
+	struct Entity* e = &LocalPlayer_Instance.Base;
 	if (!classic_receivedFirstPos) return;
 	/* Report end position of each physics tick, rather than current position */
 	/*  (otherwise can miss landing on a block then jumping off of it again) */
-	Classic_WritePosition(p->Interp.Next.Pos, e->Yaw, e->Pitch);
+	Classic_WritePosition(e->next.pos, e->Yaw, e->Pitch);
 }
 
 
@@ -760,7 +760,7 @@ static const char* cpe_clientExtensions[] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages", "ExtEntityTeleport",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -932,10 +932,11 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (version == 1) return;
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
-		Protocol.Sizes[OPCODE_ENTITY_TELEPORT] += 6;
-		Protocol.Sizes[OPCODE_ADD_ENTITY]      += 6;
-		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2] += 6;
-		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]  += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT]     += 6;
+		Protocol.Sizes[OPCODE_ADD_ENTITY]          += 6;
+		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2]     += 6;
+		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]      += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT] += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
 		cpe_twoWayPing = true;
@@ -1274,7 +1275,7 @@ static void CPE_SetMapEnvProperty(cc_uint8* data) {
 }
 
 static void CPE_SetEntityProperty(cc_uint8* data) {
-	struct LocationUpdate update = { 0 };
+	struct LocationUpdate update;
 	struct Entity* e;
 	float scale;
 
@@ -1287,14 +1288,14 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	switch (type) {
 	case 0:
-		update.Flags = LOCATIONUPDATE_ROTX;
-		update.RotX  = LocationUpdate_Clamp((float)value); break;
+		update.flags = LU_HAS_ROTX | LU_ORI_INTERPOLATE;
+		update.rotX  = (float)value; break;
 	case 1:
-		update.Flags = LOCATIONUPDATE_YAW;
-		update.Yaw   = LocationUpdate_Clamp((float)value); break;
+		update.flags = LU_HAS_YAW  | LU_ORI_INTERPOLATE;
+		update.yaw   = (float)value; break;
 	case 2:
-		update.Flags = LOCATIONUPDATE_ROTZ;
-		update.RotZ  = LocationUpdate_Clamp((float)value); break;
+		update.flags = LU_HAS_ROTZ | LU_ORI_INTERPOLATE;
+		update.rotZ  = (float)value; break;
 
 	case 3:
 	case 4:
@@ -1313,7 +1314,7 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 	default:
 		return;
 	}
-	e->VTABLE->SetLocation(e, &update, true);
+	e->VTABLE->SetLocation(e, &update);
 }
 
 static void CPE_TwoWayPing(cc_uint8* data) {
@@ -1464,15 +1465,8 @@ static void CPE_DefineModel(cc_uint8* data) {
 	numParts   = data[114];
 
 	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
-		cc_string msg; char msgBuffer[256];
-		String_InitArray(msg, msgBuffer);
-
-		String_Format1(
-			&msg,
-			"&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS),
-			&name
-		);
-		Logger_WarnFunc(&msg);
+		int maxParts = MAX_CUSTOM_MODEL_PARTS;
+		Chat_Add2("&cCustom Model '%s' exceeds parts limit of %i", &name, &maxParts);
 		return;
 	}
 
@@ -1554,6 +1548,26 @@ static void CPE_PluginMessage(cc_uint8* data) {
 	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
 }
 
+static void CPE_ExtEntityTeleport(cc_uint8* data) {
+	EntityID id = *data++;
+	cc_uint8 packetFlags = *data++;
+	cc_uint8 flags = 0;
+
+	/* bit  0    includes position */
+	/* bits 1-2  position mode(absolute_instant / absolute_smooth / relative_smooth / relative_seamless) */
+	/* bit  3    unused */
+	/* bit  4    includes orientation */
+	/* bit  5    interpolate ori */
+	/* bit  6-7  unused */
+
+	if (packetFlags & 1) flags |= LU_HAS_POS;
+	flags |= (packetFlags & 6) << 4; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
+	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
+	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
+
+	Classic_ReadAbsoluteLocation(data, id, flags);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1600,6 +1614,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
+	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 }
 
 static void CPE_Tick(void) {

@@ -664,27 +664,6 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-static void TableWidget_MakeBlockDesc(struct TableWidget* w, cc_string* desc, BlockID block) {
-	cc_string name;
-	int block_ = block;
-	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
-	if (block == BLOCK_AIR) return;
-
-	name = Block_UNSAFE_GetName(block);
-	String_AppendString(desc, &name);
-	if (Game_ClassicMode) return;
-
-	String_Format1(desc, " (ID %i&f", &block_);
-	if (!Blocks.CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
-	if (!Blocks.CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
-	String_Append(desc, ')');
-}
-
-static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
-	w->descTex.X = w->x + w->width / 2 - w->descTex.Width / 2;
-	w->descTex.Y = w->y - w->descTex.Height - 5;
-}
-
 static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 	BlockID block;
 	if (w->selectedIndex == w->lastCreatedIndex) return;
@@ -692,45 +671,30 @@ static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 	w->lastCreatedIndex = w->selectedIndex;
 
 	block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
-	TableWidget_MakeDescTex(w, block);
-}
-
-void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
-	cc_string desc; char descBuffer[STRING_SIZE * 2];
-	struct DrawTextArgs args;
-
-	Gfx_DeleteTexture(&w->descTex.ID);
-	String_InitArray(desc, descBuffer);
-	TableWidget_MakeBlockDesc(w, &desc, block);
-	if (!desc.length) return;
-	
-	DrawTextArgs_Make(&args, &desc, w->font, true);
-	Drawer2D_MakeTextTexture(&w->descTex, &args);
-	TableWidget_UpdateDescTexPos(w);
-}
-
-static cc_bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
-	int i, end = min(start + w->blocksPerRow, Array_Elems(Inventory.Map));
-
-	for (i = start; i < end; i++) {
-		if (Inventory.Map[i] != BLOCK_AIR) return false;
-	}
-	return true;
+	w->UpdateDesc(block);
 }
 
 void TableWidget_RecreateBlocks(struct TableWidget* w) {
-	int i, max = Game_UseCPEBlocks ? BLOCK_MAX_DEFINED : BLOCK_MAX_ORIGINAL;
+	int max = Game_UseCPEBlocks ? BLOCK_MAX_DEFINED : BLOCK_MAX_ORIGINAL;
+	int i, begCount, rowEnd;
+	cc_bool emptyRow;
 	BlockID block;
 	w->blocksCount = 0;
 
-	for (i = 0; i < Array_Elems(Inventory.Map); ) {
-		if ((i % w->blocksPerRow) == 0 && TableWidget_RowEmpty(w, i)) {
-			i += w->blocksPerRow; continue;
+	for (i = 0; i < Array_Elems(Inventory.Map);) {
+		emptyRow = true;
+		begCount = w->blocksCount;
+		rowEnd   = min(i + w->blocksPerRow, Array_Elems(Inventory.Map));
+
+		for (; i < rowEnd; i++) {
+			block = Inventory.Map[i];
+			if (block > max) continue;
+			
+			w->blocks[w->blocksCount++] = block;
+			if (block != BLOCK_AIR) emptyRow = false;
 		}
 
-		block = Inventory.Map[i];
-		if (block <= max) { w->blocks[w->blocksCount++] = block; }
-		i++;
+		if (emptyRow) w->blocksCount = begCount;
 	}
 
 	w->rowsTotal = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
@@ -792,14 +756,11 @@ static void TableWidget_Render(void* widget, double delta) {
 			x + cellSizeX / 2, y + cellSizeY / 2);
 	}
 	IsometricDrawer_EndBatch();
-
-	if (w->descTex.ID) { Texture_Render(&w->descTex); }
 }
 
 static void TableWidget_Free(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	Gfx_DeleteDynamicVb(&w->vb);
-	Gfx_DeleteTexture(&w->descTex.ID);
 	w->lastCreatedIndex = -1000;
 }
 
@@ -825,7 +786,6 @@ static void TableWidget_Reposition(void* widget) {
 		w->width  = w->cellSizeX * w->blocksPerRow;
 		w->height = w->cellSizeY * w->rowsVisible;
 		Widget_CalcPosition(w);
-		TableWidget_UpdateDescTexPos(w);
 
 		/* Does the table fit on screen? */
 		if (Game_ClassicMode || Table_Y(w) >= 0) break;

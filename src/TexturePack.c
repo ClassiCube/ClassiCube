@@ -440,22 +440,39 @@ void TexturePack_Extract(const cc_string* url) {
 	TexturePack_ExtractCurrent(false);
 }
 
+static struct TextureEntry* entries_head;
+static struct TextureEntry* entries_tail;
+
+void TextureEntry_Register(struct TextureEntry* entry) {
+	LinkedList_Append(entry, entries_head, entries_tail);
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------Textures component----------------------------------------------------*
 *#########################################################################################################################*/
-static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
+static void TerrainPngProcess(struct Stream* stream, const cc_string* name) {
 	struct Bitmap bmp;
-	cc_result res;
-
-	if (!String_CaselessEqualsConst(name, "terrain.png")) return;
-	res = Png_Decode(&bmp, stream);
+	cc_result res = Png_Decode(&bmp, stream);
 
 	if (res) {
 		Logger_SysWarn2(res, "decoding", name);
 		Mem_Free(bmp.scan0);
 	} else if (!Atlas_TryChange(&bmp)) {
 		Mem_Free(bmp.scan0);
+	}
+}
+static struct TextureEntry terrain_entry = { "terrain.png", TerrainPngProcess };
+
+
+static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
+	struct TextureEntry* e;
+
+	for (e = entries_head; e; e = e->next) {
+		if (!String_CaselessEqualsConst(name, e->filename)) continue;
+
+		e->Callback(stream, name);
+		return;
 	}
 }
 
@@ -481,7 +498,13 @@ static void OnInit(void) {
 	} else {
 		String_AppendString(&TexturePack_Path, &defaultPath);
 	}
+	
+	/* TODO temp hack to fix mobile, need to properly fix */
+	/*  issue is that Drawer2D_Component.Init is called from Launcher,*/
+	/*  which called TextureEntry_Register, whoops*/
+	entries_head = NULL;
 
+	TextureEntry_Register(&terrain_entry);
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
 	TextureCache_Init();
@@ -497,6 +520,7 @@ static void OnFree(void) {
 	OnContextLost(NULL);
 	Atlas2D_Free();
 	TexturePack_Url.length = 0;
+	entries_head = NULL;
 }
 
 struct IGameComponent Textures_Component = {

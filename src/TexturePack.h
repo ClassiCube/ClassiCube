@@ -99,4 +99,12 @@ void TexturePack_CheckPending(void);
 /* Else tries extracting cached texture pack for the given URL, */
 /* then asynchronously downloads the texture pack from the given URL. */
 CC_API void TexturePack_Extract(const cc_string* url);
+
+struct TextureEntry;
+struct TextureEntry {
+	const char* filename;
+	void (*Callback)(struct Stream* stream, const cc_string* name);
+	struct TextureEntry* next;
+};
+void TextureEntry_Register(struct TextureEntry* entry);
 #endif

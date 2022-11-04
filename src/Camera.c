@@ -75,11 +75,8 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 }
 
 static void PerspectiveCamera_UpdateMouseRotation(double delta) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct Entity* e      = &p->Base;
-
+	struct Entity* e = &LocalPlayer_Instance.Base;
 	struct LocationUpdate update;
-	float yaw, pitch;
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
 	if (Key_IsAltPressed() && Camera.Active->isThirdPerson) {
@@ -87,15 +84,16 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 		return;
 	}
 	
-	yaw   = p->Interp.Next.Yaw   + rot.X;
-	pitch = p->Interp.Next.Pitch + rot.Y;
-	LocationUpdate_MakeOri(&update, yaw, pitch);
+	update.flags = LU_HAS_YAW | LU_HAS_PITCH;
+	update.yaw   = e->next.yaw   + rot.X;
+	update.pitch = e->next.pitch + rot.Y;
+	update.pitch = Math_ClampAngle(update.pitch);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
-	if (update.Pitch >= 90.0f && update.Pitch <= 270.0f) {
-		update.Pitch = p->Interp.Next.Pitch < 180.0f ? 90.0f : 270.0f;
+	if (update.pitch >= 90.0f && update.pitch <= 270.0f) {
+		update.pitch = e->next.pitch < 180.0f ? 90.0f : 270.0f;
 	}
-	e->VTABLE->SetLocation(e, &update, false);
+	e->VTABLE->SetLocation(e, &update);
 }
 
 static void PerspectiveCamera_UpdateMouse(double delta) {

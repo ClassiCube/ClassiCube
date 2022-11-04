@@ -302,77 +302,105 @@ static void InterpComp_AddRotY(struct InterpComp* interp, float state) {
 	interp->RotYStates[interp->RotYCount] = state; interp->RotYCount++;
 }
 
-static void InterpComp_AdvanceRotY(struct InterpComp* interp) {
-	interp->PrevRotY = interp->NextRotY;
+static void InterpComp_AdvanceRotY(struct InterpComp* interp, struct Entity* e) {
 	if (!interp->RotYCount) return;
 
-	interp->NextRotY = interp->RotYStates[0];
+	e->next.rotY = interp->RotYStates[0];
 	InterpComp_RemoveOldestRotY(interp);
-}
-
-void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* e, float t) {
-	struct InterpState* prev = &interp->Prev;
-	struct InterpState* next = &interp->Next;
-
-	e->Pitch = Math_LerpAngle(prev->Pitch, next->Pitch, t);
-	e->Yaw   = Math_LerpAngle(prev->Yaw,   next->Yaw,   t);
-	e->RotX  = Math_LerpAngle(prev->RotX,  next->RotX,  t);
-	e->RotY  = Math_LerpAngle(interp->PrevRotY, interp->NextRotY, t);
-	e->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ,  t);
-}
-
-static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* update) {
-	if (update->RelativePos) {
-		Vec3_AddBy(&state->Pos, &update->Pos);
-	} else {
-		state->Pos = update->Pos;
-	}
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------NetworkInterpolationComponent----------------------------------------------*
 *#########################################################################################################################*/
-static void NetInterpComp_RemoveOldestState(struct NetInterpComp* interp) {
+#define NetInterpAngles_Copy(dst, src) \
+(dst).pitch = (src)->Pitch;\
+(dst).yaw   = (src)->Yaw;\
+(dst).rotX  = (src)->RotX;\
+(dst).rotZ  = (src)->RotZ;
+
+static void NetInterpComp_RemoveOldestPosition(struct NetInterpComp* interp) {
 	int i;
-	for (i = 0; i < Array_Elems(interp->States); i++) {
-		interp->States[i] = interp->States[i + 1];
+	interp->PositionsCount--;
+
+	for (i = 0; i < interp->PositionsCount; i++) {
+		interp->Positions[i] = interp->Positions[i + 1];
 	}
-	interp->StatesCount--;
 }
 
-static void NetInterpComp_AddState(struct NetInterpComp* interp, struct InterpState state) {
-	if (interp->StatesCount == Array_Elems(interp->States)) {
-		NetInterpComp_RemoveOldestState(interp);
+static void NetInterpComp_AddPosition(struct NetInterpComp* interp, Vec3 pos) {
+	if (interp->PositionsCount == Array_Elems(interp->Positions)) {
+		NetInterpComp_RemoveOldestPosition(interp);
 	}
-	interp->States[interp->StatesCount] = state; interp->StatesCount++;
+	interp->Positions[interp->PositionsCount++] = pos;
 }
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
-	struct InterpState last = interp->Cur;
-	struct InterpState* cur = &interp->Cur;
-	cc_uint8 flags = update->Flags;
+static void NetInterpComp_SetPosition(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e, int mode) {
+	Vec3 lastPos = interp->CurPos;
+	Vec3* curPos = &interp->CurPos;
+	Vec3 midPos;
 
-	if (flags & LOCATIONUPDATE_POS)   InterpComp_SetPos(cur, update);
-	if (flags & LOCATIONUPDATE_ROTX)  cur->RotX  = update->RotX;
-	if (flags & LOCATIONUPDATE_ROTZ)  cur->RotZ  = update->RotZ;
-	if (flags & LOCATIONUPDATE_PITCH) cur->Pitch = update->Pitch;
-	if (flags & LOCATIONUPDATE_YAW)   cur->Yaw   = update->Yaw;
+	if (mode == LU_POS_ABSOLUTE_INSTANT || mode == LU_POS_ABSOLUTE_SMOOTH) {
+		*curPos = update->pos;
+	} else {
+		Vec3_AddBy(curPos, &update->pos);
+	}
+
+	if (mode == LU_POS_ABSOLUTE_INSTANT) {
+		e->prev.pos = *curPos;
+		e->next.pos = *curPos;
+		interp->PositionsCount = 0;
+	} else {
+		/* Smoother interpolation by also adding midpoint */
+		Vec3_Lerp(&midPos, &lastPos, curPos, 0.5f);
+		NetInterpComp_AddPosition(interp,  midPos);
+		NetInterpComp_AddPosition(interp, *curPos);
+	}
+}
+
+static void NetInterpComp_RemoveOldestAngles(struct NetInterpComp* interp) {
+	int i;
+	interp->AnglesCount--;
+
+	for (i = 0; i < interp->AnglesCount; i++) {
+		interp->Angles[i] = interp->Angles[i + 1];
+	}
+}
+
+static void NetInterpComp_AddAngles(struct NetInterpComp* interp, struct NetInterpAngles angles) {
+	if (interp->AnglesCount == Array_Elems(interp->Angles)) {
+		NetInterpComp_RemoveOldestAngles(interp);
+	}
+	interp->Angles[interp->AnglesCount++] = angles;
+}
+
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e) {
+	struct NetInterpAngles last = interp->CurAngles;
+	struct NetInterpAngles* cur = &interp->CurAngles;
+	struct NetInterpAngles mid;
+	cc_uint8 flags      = update->flags;
+	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
+
+	if (flags & LU_HAS_POS) {
+		NetInterpComp_SetPosition(interp, update, e, flags & LU_POS_MODEMASK);
+	}
+	if (flags & LU_HAS_ROTX)  cur->RotX  = Math_ClampAngle(update->rotX);
+	if (flags & LU_HAS_ROTZ)  cur->RotZ  = Math_ClampAngle(update->rotZ);
+	if (flags & LU_HAS_PITCH) cur->Pitch = Math_ClampAngle(update->pitch);
+	if (flags & LU_HAS_YAW)   cur->Yaw   = Math_ClampAngle(update->yaw);
 
 	if (!interpolate) {
-		interp->Prev = *cur; interp->PrevRotY = cur->Yaw;
-		interp->Next = *cur; interp->NextRotY = cur->Yaw;
-		interp->RotYCount = 0; interp->StatesCount = 0;
+		NetInterpAngles_Copy(e->prev, cur); e->prev.rotY = cur->Yaw;
+		NetInterpAngles_Copy(e->next, cur); e->next.rotY = cur->Yaw;
+		interp->RotYCount = 0; interp->AnglesCount = 0;
 	} else {
-		/* Smoother interpolation by also adding midpoint. */
-		struct InterpState mid;
-		Vec3_Lerp(&mid.Pos, &last.Pos, &cur->Pos, 0.5f);
+		/* Smoother interpolation by also adding midpoint */
 		mid.RotX  = Math_LerpAngle(last.RotX,  cur->RotX,  0.5f);
 		mid.RotZ  = Math_LerpAngle(last.RotZ,  cur->RotZ,  0.5f);
 		mid.Pitch = Math_LerpAngle(last.Pitch, cur->Pitch, 0.5f);
 		mid.Yaw   = Math_LerpAngle(last.Yaw,   cur->Yaw,   0.5f);
-		NetInterpComp_AddState(interp, mid);
-		NetInterpComp_AddState(interp, *cur);
+		NetInterpComp_AddAngles(interp, mid);
+		NetInterpComp_AddAngles(interp, *cur);
 
 		/* Body rotation lags behind head a tiny bit */
 		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 0.33333333f));
@@ -381,73 +409,95 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 	}
 }
 
-void NetInterpComp_AdvanceState(struct NetInterpComp* interp) {
-	interp->Prev = interp->Next;
-	if (interp->StatesCount > 0) {
-		interp->Next = interp->States[0];
-		NetInterpComp_RemoveOldestState(interp);
+void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e) {
+	e->prev     = e->next;
+	e->Position = e->prev.pos;
+
+	if (interp->PositionsCount) {
+		e->next.pos = interp->Positions[0];
+		NetInterpComp_RemoveOldestPosition(interp);
 	}
-	InterpComp_AdvanceRotY((struct InterpComp*)interp);
+	if (interp->AnglesCount) {
+		NetInterpAngles_Copy(e->next, &interp->Angles[0]);
+		NetInterpComp_RemoveOldestAngles(interp);
+	}
+	InterpComp_AdvanceRotY((struct InterpComp*)interp, e);
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
 *#########################################################################################################################*/
+static void LocalInterpComp_SetPosition(struct LocationUpdate* update, int mode) {
+	struct Entity* e = &LocalPlayer_Instance.Base;
+	float yOffset;
+
+	if (mode == LU_POS_ABSOLUTE_INSTANT || mode == LU_POS_ABSOLUTE_SMOOTH) {
+		e->next.pos = update->pos;
+	} else if (mode == LU_POS_RELATIVE_SMOOTH) {
+		Vec3_AddBy(&e->next.pos, &update->pos);
+	} else if (mode == LU_POS_RELATIVE_SHIFT) {
+		Vec3_AddBy(&e->prev.pos, &update->pos);
+		Vec3_AddBy(&e->next.pos, &update->pos);
+	}
+
+	/* If server sets Y position exactly on ground, push up a tiny bit */
+	yOffset = e->next.pos.Y - Math_Floor(e->next.pos.Y);
+	if (yOffset < ENTITY_ADJUSTMENT) e->next.pos.Y += ENTITY_ADJUSTMENT;
+
+	if (mode == LU_POS_ABSOLUTE_INSTANT) { 
+		e->prev.pos = e->next.pos; e->Position = e->next.pos; 
+	}
+}
+
 static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool interpolate) {
+	value = Math_ClampAngle(value);
 	*next = value;
 	if (!interpolate) *prev = value;
 }
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
-	struct Entity* entity = &LocalPlayer_Instance.Base;
-	struct InterpState* prev = &interp->Prev;
-	struct InterpState* next = &interp->Next;
-	cc_uint8 flags = update->Flags;
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update) {
+	struct Entity* e = &LocalPlayer_Instance.Base;
+	struct EntityLocation* prev = &e->prev;
+	struct EntityLocation* next = &e->next;
+	cc_uint8 flags      = update->flags;
+	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
 	float yOffset;
 
-	if (flags & LOCATIONUPDATE_POS) {
-		InterpComp_SetPos(next, update);
-		/* If server sets Y position exactly on ground, push up a tiny bit */
-		yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
+	if (flags & LU_HAS_POS) {
+		LocalInterpComp_SetPosition(update, flags & LU_POS_MODEMASK);
+	}
+	if (flags & LU_HAS_PITCH) {
+		LocalInterpComp_Angle(&prev->pitch, &next->pitch, update->pitch, interpolate);
+	}
+	if (flags & LU_HAS_ROTX) {
+		LocalInterpComp_Angle(&prev->rotX,  &next->rotX,  update->rotX,  interpolate);
+	}
+	if (flags & LU_HAS_ROTZ) {
+		LocalInterpComp_Angle(&prev->rotZ,  &next->rotZ,  update->rotZ,  interpolate);
+	}
+	if (flags & LU_HAS_YAW) {
+		LocalInterpComp_Angle(&prev->yaw,   &next->yaw,   update->yaw,   interpolate);
 
-		if (yOffset < ENTITY_ADJUSTMENT) next->Pos.Y += ENTITY_ADJUSTMENT;
-		if (!interpolate) { prev->Pos = next->Pos; entity->Position = next->Pos; }
-	}
-
-	if (flags & LOCATIONUPDATE_PITCH) {
-		LocalInterpComp_Angle(&prev->Pitch, &next->Pitch, update->Pitch, interpolate);
-	}
-	if (flags & LOCATIONUPDATE_YAW) {
-		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->Yaw,   interpolate);
-	}
-	if (flags & LOCATIONUPDATE_ROTX) {
-		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->RotX,  interpolate);
-	}
-	if (flags & LOCATIONUPDATE_ROTZ) {
-		LocalInterpComp_Angle(&prev->RotZ,  &next->RotZ,  update->RotZ,  interpolate);
-	}
-
-	if (flags & LOCATIONUPDATE_YAW) {
 		if (!interpolate) {
-			interp->NextRotY = update->Yaw;
-			entity->RotY     = update->Yaw;
+			next->rotY        = next->yaw;
 			interp->RotYCount = 0;
 		} else {
 			/* Body Y rotation lags slightly behind */
-			InterpComp_AddRotY(interp, Math_LerpAngle(prev->Yaw, next->Yaw, 0.33333333f));
-			InterpComp_AddRotY(interp, Math_LerpAngle(prev->Yaw, next->Yaw, 0.66666667f));
-			InterpComp_AddRotY(interp, Math_LerpAngle(prev->Yaw, next->Yaw, 1.00000000f));
+			InterpComp_AddRotY(interp, Math_LerpAngle(prev->yaw, next->yaw, 0.33333333f));
+			InterpComp_AddRotY(interp, Math_LerpAngle(prev->yaw, next->yaw, 0.66666667f));
+			InterpComp_AddRotY(interp, Math_LerpAngle(prev->yaw, next->yaw, 1.00000000f));
 
-			interp->NextRotY = interp->RotYStates[0];
+			e->next.rotY = interp->RotYStates[0];
 		}
 	}
-	InterpComp_LerpAngles(interp, entity, 0.0f);
+	Entity_LerpAngles(e, 0.0f);
 }
 
-void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
-	interp->Prev = interp->Next;
-	InterpComp_AdvanceRotY(interp);
+void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e) {
+	e->prev     = e->next;
+	e->Position = e->prev.pos;
+	InterpComp_AdvanceRotY(interp, e);
 }
 
 
@@ -1273,7 +1323,7 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	if (sounds_type != SOUND_NONE) return;
 
 	/* then check block standing on (feet) */
-	pos = p->Interp.Next.Pos; pos.Y -= 0.01f;
+	pos = p->Base.next.pos; pos.Y -= 0.01f;
 	IVec3_Floor(&coords, &pos);
 	blockUnder = World_SafeGetBlock(coords.X, coords.Y, coords.Z);
 	maxY = coords.Y + Blocks.MaxBB[blockUnder].Y;
@@ -1312,7 +1362,7 @@ static cc_bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 
 void SoundComp_Tick(cc_bool wasOnGround) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vec3 soundPos      = p->Interp.Next.Pos;
+	Vec3 soundPos         = p->Base.next.pos;
 
 	SoundComp_GetSound(p);
 	if (!sounds_anyNonAir) soundPos = Vec3_BigPos();

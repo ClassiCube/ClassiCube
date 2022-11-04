@@ -26,44 +26,11 @@
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
-/*########################################################################################################################*
-*-----------------------------------------------------LocationUpdate------------------------------------------------------*
-*#########################################################################################################################*/
-float LocationUpdate_Clamp(float degrees) {
-	while (degrees >= 360.0f) degrees -= 360.0f;
-	while (degrees < 0.0f)    degrees += 360.0f;
-	return degrees;
-}
-
-static struct LocationUpdate loc_empty;
-void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch) {
-	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_PITCH | LOCATIONUPDATE_YAW;
-	update->Pitch = LocationUpdate_Clamp(pitch);
-	update->Yaw   = LocationUpdate_Clamp(yaw);
-}
-
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel) {
-	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_POS;
-	update->Pos   = pos;
-	update->RelativePos = rel;
-}
-
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel) {
-	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_POS | LOCATIONUPDATE_PITCH | LOCATIONUPDATE_YAW;
-	update->Pitch = LocationUpdate_Clamp(pitch);
-	update->Yaw   = LocationUpdate_Clamp(yaw);
-	update->Pos   = pos;
-	update->RelativePos = rel;
-}
-
 
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol Entity_GetCol(struct Entity* e) {
+static PackedCol Entity_GetColor(struct Entity* e) {
 	Vec3 eyePos = Entity_GetEyePosition(e);
 	IVec3 pos; IVec3_Floor(&pos, &eyePos);
 	return Lighting.Color(pos.X, pos.Y, pos.Z);
@@ -534,6 +501,17 @@ void Entity_SetSkin(struct Entity* e, const cc_string* skin) {
 	String_CopyToRawArray(e->SkinRaw, &tmp);
 }
 
+void Entity_LerpAngles(struct Entity* e, float t) {
+	struct EntityLocation* prev = &e->prev;
+	struct EntityLocation* next = &e->next;
+
+	e->Pitch = Math_LerpAngle(prev->pitch, next->pitch, t);
+	e->Yaw   = Math_LerpAngle(prev->yaw,   next->yaw,   t);
+	e->RotX  = Math_LerpAngle(prev->rotX,  next->rotX,  t);
+	e->RotY  = Math_LerpAngle(prev->rotY,  next->rotY,  t);
+	e->RotZ  = Math_LerpAngle(prev->rotZ,  next->rotZ,  t);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
@@ -796,9 +774,9 @@ float LocalPlayer_JumpHeight(void) {
 void LocalPlayer_SetInterpPosition(float t) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
-		Vec3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+		Vec3_Lerp(&p->Base.Position, &p->Base.prev.pos, &p->Base.next.pos, t);
 	}
-	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), &p->Base, t);
+	Entity_LerpAngles(&p->Base, t);
 }
 
 static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
@@ -849,9 +827,9 @@ static void LocalPlayer_InputUp(void* obj, int key) {
 	LocalPlayer_InputSet(key, false);
 }
 
-static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
+static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
-	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
+	LocalInterpComp_SetLocation(&p->Interp, update);
 }
 
 static void LocalPlayer_Tick(struct Entity* e, double delta) {
@@ -866,9 +844,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
 
-	LocalInterpComp_AdvanceState(&p->Interp);
-	p->Base.Position = p->Interp.Prev.Pos;
-
+	LocalInterpComp_AdvanceState(&p->Interp, e);
 	LocalPlayer_HandleInput(&xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
 	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
@@ -885,8 +861,8 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
 	if (p->Hacks.Floating) e->Velocity.Y = 0.0f;
 
-	p->Interp.Next.Pos = e->Position; e->Position = p->Interp.Prev.Pos;
-	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	e->next.pos = e->Position; e->Position = e->prev.pos;
+	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
 	Entity_CheckSkin(&p->Base);
@@ -922,7 +898,7 @@ static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
 }
 
 static const struct EntityVTABLE localPlayer_VTABLE = {
-	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
+	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
 	LocalPlayer_RenderModel, LocalPlayer_RenderName
 };
 static void LocalPlayer_Init(void) {
@@ -1017,11 +993,17 @@ static void LocalPlayer_DoRespawn(void) {
 		}
 	}
 
+	/* Adjust the position to be slightly above the ground, so that */
+	/*  it's obvious to the player that they are being respawned */
 	spawn.Y += 2.0f/16.0f;
-	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnYaw, p->SpawnPitch, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	Vec3_Set(p->Base.Velocity, 0,0,0);
 
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
+	update.pos   = spawn;
+	update.yaw   = p->SpawnYaw;
+	update.pitch = p->SpawnPitch;
+	p->Base.VTABLE->SetLocation(&p->Base, &update);
+
+	Vec3_Set(p->Base.Velocity, 0,0,0);
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);
 	bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
@@ -1125,8 +1107,12 @@ void LocalPlayer_MoveToSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct LocationUpdate update;
 
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
+	update.pos   = p->Spawn;
+	update.yaw   = p->SpawnYaw;
+	update.pitch = p->SpawnPitch;
+
+	p->Base.VTABLE->SetLocation(&p->Base, &update);
 	/* TODO: This needs to be before new map... */
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
@@ -1147,35 +1133,32 @@ void LocalPlayer_CalcDefaultSpawn(void) {
 *#########################################################################################################################*/
 struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
-static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
+static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
+	NetInterpComp_SetLocation(&p->Interp, update, e);
 }
 
 static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	NetInterpComp_AdvanceState(&p->Interp);
-	p->Base.Position = p->Interp.Prev.Pos;
+	NetInterpComp_AdvanceState(&p->Interp, e);
 
 	Entity_CheckSkin(e);
-	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 }
 
 static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
-	struct NetPlayer* p = (struct NetPlayer*)e;
-	Vec3_Lerp(&e->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
-	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), e, t);
+	Vec3_Lerp(&e->Position, &e->prev.pos, &e->next.pos, t);
+	Entity_LerpAngles(e, t);
 
 	AnimatedComp_GetCurrent(e, t);
-	p->Base.ShouldRender = Model_ShouldRender(e);
-	if (p->Base.ShouldRender) Model_Render(e->Model, e);
+	e->ShouldRender = Model_ShouldRender(e);
+	if (e->ShouldRender) Model_Render(e->Model, e);
 }
 
 static void NetPlayer_RenderName(struct Entity* e) {
-	struct NetPlayer* p = (struct NetPlayer*)e;
 	float distance;
 	int threshold;
-	if (!p->Base.ShouldRender) return;
+	if (!e->ShouldRender) return;
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
@@ -1183,7 +1166,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 }
 
 static const struct EntityVTABLE netPlayer_VTABLE = {
-	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
+	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetColor,
 	NetPlayer_RenderModel, NetPlayer_RenderName
 };
 void NetPlayer_Init(struct NetPlayer* p) {

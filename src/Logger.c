@@ -16,9 +16,10 @@
 #define NOIME
 #include <windows.h>
 #include <imagehlp.h>
-#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU
+#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 #include <signal.h>
-/* OpenBSD doesn't provide sys/ucontext.h */
+/* These operating systems don't provide sys/ucontext.h */
+/*  But register constants be found from includes in <signal.h> */
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* Need to define this to get REG_ constants */
 #define _GNU_SOURCE
@@ -58,10 +59,11 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case ERR_INVALID_ARGUMENT: return "Invalid argument";
 	case ERR_OUT_OF_MEMORY:    return "Out of memory";
 
-	case OGG_ERR_INVALID_SIG:  return "Invalid OGG signature";
+	case OGG_ERR_INVALID_SIG:  return "Only OGG music files supported";
 	case OGG_ERR_VERSION:      return "Invalid OGG format version";
+	case AUDIO_ERR_MP3_SIG:    return "MP3 audio files are not supported";
 
-	case WAV_ERR_STREAM_HDR:  return "Invalid WAV header";
+	case WAV_ERR_STREAM_HDR:  return "Only WAV sound files supported";
 	case WAV_ERR_STREAM_TYPE: return "Invalid WAV type";
 	case WAV_ERR_DATA_TYPE:   return "Unsupported WAV audio format";
 
@@ -342,6 +344,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
+}
+#elif defined CC_BUILD_SERENITY
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* TODO: Backtrace using LibSymbolication */
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>

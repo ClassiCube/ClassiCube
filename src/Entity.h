@@ -6,7 +6,7 @@
 #include "PackedCol.h"
 #include "String.h"
 /* Represents an in-game entity.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct Model;
 struct IGameComponent;
@@ -31,33 +31,44 @@ extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
-#define LOCATIONUPDATE_POS   0x01
-#define LOCATIONUPDATE_PITCH 0x02
-#define LOCATIONUPDATE_YAW   0x04
-#define LOCATIONUPDATE_ROTX  0x08
-#define LOCATIONUPDATE_ROTZ  0x10
+/* Which fields are included/valid in a LocationUpdate */
+#define LU_HAS_POS   0x01
+#define LU_HAS_PITCH 0x02
+#define LU_HAS_YAW   0x04
+#define LU_HAS_ROTX  0x08
+#define LU_HAS_ROTZ  0x10
+
+/* 0-11-00000 How to move the entity when position field is included */
+#define LU_POS_MODEMASK   0x60
+
+/* 0-00-00000 Entity is instantly teleported to update->pos */
+#define LU_POS_ABSOLUTE_INSTANT 0x00
+/* 0-01-00000 Entity is smoothly moved to update->pos */
+#define LU_POS_ABSOLUTE_SMOOTH  0x20
+/* 0-10-00000 Entity is smoothly moved to current position + update->pos */
+#define LU_POS_RELATIVE_SMOOTH  0x40
+/* 0-11-00000 Entity is offset/shifted by update->pos */
+#define LU_POS_RELATIVE_SHIFT   0x60
+
+/* If set, then linearly interpolates between current and new angles */
+/* If not set, then current angles are immediately updated to new angles */
+#define LU_ORI_INTERPOLATE 0x80
+
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
-	Vec3 Pos;
-	float Pitch, Yaw, RotX, RotZ;
-	cc_uint8 Flags;
-	cc_bool RelativePos;
+	Vec3 pos;
+	float pitch, yaw, rotX, rotZ;
+	cc_uint8 flags;
 };
 
-/* Clamps the given angle so it lies between [0, 360). */
-float LocationUpdate_Clamp(float degrees);
-/* Makes a location update only containing yaw and pitch. */
-void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch);
-/* Makes a location update only containing position */
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel);
-/* Makes a location update containing position, yaw and pitch. */
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel);
+/* Represents a position and orientation state */
+struct EntityLocation { Vec3 pos; float pitch, yaw, rotX, rotY, rotZ; };
 
 struct Entity;
 struct EntityVTABLE {
 	void (*Tick)(struct Entity* e, double delta);
 	void (*Despawn)(struct Entity* e);
-	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate);
+	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update);
 	PackedCol (*GetCol)(struct Entity* e);
 	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
 	void (*RenderName)(struct Entity* e);
@@ -95,6 +106,10 @@ struct Entity {
 	char SkinRaw[STRING_SIZE];
 	char NameRaw[STRING_SIZE];
 	struct Texture NameTex;
+
+	/* Previous and next intended location of the entity */
+	/*  Current state is linearly interpolated between prev and next */
+	struct EntityLocation prev, next;
 };
 typedef cc_bool (*Entity_TouchesCondition)(BlockID block);
 
@@ -127,6 +142,7 @@ cc_bool Entity_TouchesAnyWater(struct Entity* e);
 void Entity_SetName(struct Entity* e, const cc_string* name);
 /* Sets the skin name of the given entity. */
 void Entity_SetSkin(struct Entity* e, const cc_string* skin);
+void Entity_LerpAngles(struct Entity* e, float t);
 
 /* Global data for all entities */
 /* (Actual entities may point to NetPlayers_List or elsewhere) */

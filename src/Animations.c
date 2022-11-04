@@ -351,6 +351,30 @@ static void Animations_Tick(struct ScheduledTask* task) {
 /*########################################################################################################################*
 *--------------------------------------------------Animations component---------------------------------------------------*
 *#########################################################################################################################*/
+static void AnimationsPngProcess(struct Stream* stream, const cc_string* name) {
+	cc_result res = Png_Decode(&anims_bmp, stream);
+	if (!res) return;
+
+	Logger_SysWarn2(res, "decoding", name);
+	Mem_Free(anims_bmp.scan0);
+	anims_bmp.scan0 = NULL;
+}
+static struct TextureEntry animations_entry = { "animations.png", AnimationsPngProcess };
+static struct TextureEntry animations_txt   = { "animations.txt", Animations_ReadDescription };
+
+static void UseWaterProcess(struct Stream* stream, const cc_string* name) {
+	useWaterAnim    = true;
+	alwaysWaterAnim = true;
+}
+static struct TextureEntry water_entry = { "usewateranim", UseWaterProcess };
+
+static void UseLavaProcess(struct Stream* stream, const cc_string* name) {
+	useLavaAnim    = true;
+	alwaysLavaAnim = true;
+}
+static struct TextureEntry lava_entry = { "uselavaanim", UseLavaProcess };
+
+
 static void OnPackChanged(void* obj) {
 	Animations_Clear();
 	useLavaAnim     = Animations_IsDefaultZip();
@@ -358,31 +382,14 @@ static void OnPackChanged(void* obj) {
 	alwaysLavaAnim  = false;
 	alwaysWaterAnim = false;
 }
-
-static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
-	cc_result res;
-	if (String_CaselessEqualsConst(name, "animations.png")) {
-		res = Png_Decode(&anims_bmp, stream);
-		if (!res) return;
-
-		Logger_SysWarn2(res, "decoding", name);
-		Mem_Free(anims_bmp.scan0);
-		anims_bmp.scan0 = NULL;
-	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
-		Animations_ReadDescription(stream, name);
-	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
-		useLavaAnim    = true;
-		alwaysLavaAnim = true;
-	} else if (String_CaselessEqualsConst(name, "usewateranim")) {
-		useWaterAnim    = true;
-		alwaysWaterAnim = true;
-	}
-}
-
 static void OnInit(void) {
+	TextureEntry_Register(&animations_entry);
+	TextureEntry_Register(&animations_txt);
+	TextureEntry_Register(&water_entry);
+	TextureEntry_Register(&lava_entry);
+
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
-	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Animations_Component = {

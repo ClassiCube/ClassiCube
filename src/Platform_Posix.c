@@ -143,7 +143,9 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_IOS
+#if defined CC_BUILD_ANDROID
+/* implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
 #else
 void Directory_GetCachePath(cc_string* path, const char* folder) {
@@ -706,7 +708,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
-#elif defined CC_BUILD_LINUX
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_SERENITY
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
@@ -794,7 +796,7 @@ cc_bool Updater_Clean(void) { return true; }
 	#endif
 #elif defined CC_BUILD_LINUX
 	#if __x86_64__
-	const struct UpdaterInfo Updater_Info = {
+	const struct UpdaterInfo Updater_Info = {	
 		"&eModernGL is recommended for newer machines (2010 or later)", 2,
 		{
 			{ "ModernGL", "cc-nix64-gl2" },

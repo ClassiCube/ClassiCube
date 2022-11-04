@@ -745,6 +745,27 @@ static void UpdateMapEdges(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static void CloudsPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&clouds_tex, stream, name, NULL);
+}
+static struct TextureEntry clouds_entry = { "clouds.png", CloudsPngProcess };
+
+static void SkyboxPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&skybox_tex, stream, name, NULL);
+}
+static struct TextureEntry skybox_entry = { "skybox.png", SkyboxPngProcess };
+
+static void SnowPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&snow_tex, stream, name, NULL);
+}
+static struct TextureEntry snow_entry = { "snow.png", SnowPngProcess };
+
+static void RainPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&rain_tex, stream, name, NULL);
+}
+static struct TextureEntry rain_entry = { "rain.png", RainPngProcess };
+
+
 static void DeleteVbs(void) {
 	Gfx_DeleteVb(&sky_vb);
 	Gfx_DeleteVb(&clouds_vb);
@@ -803,18 +824,6 @@ int EnvRenderer_CalcFlags(const cc_string* mode) {
 }
 
 
-static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) {
-	if (String_CaselessEqualsConst(name, "clouds.png")) {
-		Game_UpdateTexture(&clouds_tex, src, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "skybox.png")) {
-		Game_UpdateTexture(&skybox_tex, src, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "snow.png")) {
-		Game_UpdateTexture(&snow_tex, src, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "rain.png")) {
-		Game_UpdateTexture(&rain_tex, src, name, NULL);
-	}
-}
-
 static void OnTexturePackChanged(void* obj) {
 	/* TODO: Find better way, really should delete them all here */
 	Gfx_DeleteTexture(&skybox_tex);
@@ -864,7 +873,11 @@ static void OnInit(void) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 
-	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
+	TextureEntry_Register(&clouds_entry);
+	TextureEntry_Register(&skybox_entry);
+	TextureEntry_Register(&snow_entry);
+	TextureEntry_Register(&rain_entry);
+
 	Event_Register_(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
 	Event_Register_(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
 

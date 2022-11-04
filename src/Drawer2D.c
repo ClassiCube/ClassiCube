@@ -13,6 +13,7 @@
 #include "Errors.h"
 #include "Window.h"
 #include "Options.h"
+#include "TexturePack.h"
 
 struct _Drawer2DData Drawer2D;
 #define Font_IsBitmap(font) (!(font)->handle)
@@ -633,6 +634,22 @@ void Drawer2D_DrawClippedText(struct Context2D* ctx, struct DrawTextArgs* args,
 /*########################################################################################################################*
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
+static void DefaultPngProcess(struct Stream* stream, const cc_string* name) {
+	struct Bitmap bmp;
+	cc_result res;
+
+	if ((res = Png_Decode(&bmp, stream))) {
+		Logger_SysWarn2(res, "decoding", name);
+		Mem_Free(bmp.scan0);
+	} else if (Font_SetBitmapAtlas(&bmp)) {
+		Event_RaiseVoid(&ChatEvents.FontChanged);
+	} else {
+		Mem_Free(bmp.scan0);
+	}
+}
+static struct TextureEntry default_entry = { "default.png", DefaultPngProcess };
+
+
 static void InitHexEncodedColor(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 	Drawer2D.Colors[i] = BitmapColor_RGB(
 		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
@@ -655,21 +672,6 @@ static void OnReset(void) {
 	}
 }
 
-static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) {
-	struct Bitmap bmp;
-	cc_result res;
-	if (!String_CaselessEqualsConst(name, "default.png")) return;
-
-	if ((res = Png_Decode(&bmp, src))) {
-		Logger_SysWarn2(res, "decoding", name);
-		Mem_Free(bmp.scan0);
-	} else if (Font_SetBitmapAtlas(&bmp)) {
-		Event_RaiseVoid(&ChatEvents.FontChanged);
-	} else {
-		Mem_Free(bmp.scan0);
-	}
-}
-
 static void OnInit(void) {
 	OnReset();
 	Drawer2D.BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
@@ -677,7 +679,7 @@ static void OnInit(void) {
 
 	Options_Get(OPT_FONT_NAME, &font_default, "");
 	if (Game_ClassicMode) font_default.length = 0;
-	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	TextureEntry_Register(&default_entry);
 }
 
 static void OnFree(void) { 

@@ -93,6 +93,16 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 	Chat_Add1("  &c%s", &path);
 }
 
+void Directory_GetCachePath(cc_string* path, const char* folder) {
+	cc_string dir; char dirBuffer[FILENAME_SIZE];
+	String_InitArray(dir, dirBuffer);
+	// TODO cache method ID
+	JavaCall_Void_String("getGameCacheDirectory", &dir);
+
+	String_Format2(path, "%s/%c", &dir, folder);
+	Directory_Create(path);
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
@@ -113,9 +123,9 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 
-	JavaCall_Void_String("getExternalAppDir", &dir);
+	JavaCall_Void_String("getGameDataDirectory", &dir);
 	dir.buffer[dir.length] = '\0';
-	Platform_Log1("EXTERNAL DIR: %s|", &dir);
+	Platform_Log1("DATA DIR: %s|", &dir);
 
 	int res = chdir(dir.buffer) == -1 ? errno : 0;
 	if (!res) return 0;

@@ -570,6 +570,12 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 /*########################################################################################################################*
 *---------------------------------------------------Particles component---------------------------------------------------*
 *#########################################################################################################################*/
+static void ParticlesPngProcess(struct Stream* stream, const cc_string* name) {
+	Game_UpdateTexture(&Particles_TexId, stream, name, NULL);
+}
+static struct TextureEntry particles_entry = { "particles.png", ParticlesPngProcess };
+
+
 static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&Particles_VB); 
 
@@ -583,19 +589,13 @@ static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, Blo
 	Particles_BreakBlockEffect(coords, old, now);
 }
 
-static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
-	if (String_CaselessEqualsConst(name, "particles.png")) {
-		Game_UpdateTexture(&Particles_TexId, stream, name, NULL);
-	}
-}
-
 static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	Random_SeedFromCurrentTime(&rnd);
-	OnContextRecreated(NULL);	
+	OnContextRecreated(NULL);
+	TextureEntry_Register(&particles_entry);
 
 	Event_Register_(&UserEvents.BlockChanged,    NULL, OnBreakBlockEffect_Handler);
-	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }

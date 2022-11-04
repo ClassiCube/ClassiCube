@@ -596,10 +596,8 @@ static int RotateVertical(cc_string* name, int offset) {
 }
 
 static int RotateFence(cc_string* name, int offset) {
-	float yaw;
 	/* Fence type blocks */
-	yaw = LocalPlayer_Instance.Base.Yaw;
-	yaw = LocationUpdate_Clamp(yaw);
+	float yaw = Math_ClampAngle(LocalPlayer_Instance.Base.Yaw);
 
 	if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
 		AutoRotate_Insert(name, offset, "-WE");
@@ -624,9 +622,7 @@ static int RotatePillar(cc_string* name, int offset) {
 }
 
 static int RotateDirection(cc_string* name, int offset) {
-	float yaw;
-	yaw = LocalPlayer_Instance.Base.Yaw;
-	yaw = LocationUpdate_Clamp(yaw);
+	float yaw = Math_ClampAngle(LocalPlayer_Instance.Base.Yaw);
 
 	if (yaw >= 45.0f && yaw < 135.0f) {
 		AutoRotate_Insert(name, offset, "-E");

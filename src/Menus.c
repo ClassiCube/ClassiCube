@@ -1595,7 +1595,9 @@ static void TexturePackScreen_UploadFunc(void* s, void* w) {
 		TexturePackScreen_UploadCallback,
 		OFD_UPLOAD_PERSIST, "texpacks"
 	};
-	Window_OpenFileDialog(&args);
+
+	cc_result res = Window_OpenFileDialog(&args);
+	if (res) Logger_SimpleWarn(res, "showing open file dialog");
 }
 
 void TexturePackScreen_Show(void) {

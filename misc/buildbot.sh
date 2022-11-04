@@ -215,6 +215,16 @@ build_ios() {
   cp cc-ios Payload/ClassiCube.app/ClassiCube
   # https://askubuntu.com/questions/681949/plutil-equivalent-in-ubuntu
   plistutil -i $ROOT_DIR/ios/Info.plist -o Payload/ClassiCube.app/Info.plist -f bin
+  # copy across the icon files
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_40.png "Payload/ClassiCube.app/AppIcon40x40~ipad.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_76.png "Payload/ClassiCube.app/AppIcon76x76~ipad.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_80.png "Payload/ClassiCube.app/AppIcon40x40@2x.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_80.png "Payload/ClassiCube.app/AppIcon40x40@2x~ipad.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_120.png "Payload/ClassiCube.app/AppIcon40x40@3x.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_120.png "Payload/ClassiCube.app/AppIcon60x60@2x.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_152.png "Payload/ClassiCube.app/AppIcon76x76@2x~ipad.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_167.png "Payload/ClassiCube.app/AppIcon83.5x83.5@2x~ipad.png"
+  cp $ROOT_DIR/ios/ClassiCube/Assets.xcassets/AppIcon.appiconset/CC_180.png "Payload/ClassiCube.app/AppIcon60x60@3x.png"
   zip -r cc.ipa Payload 
 }
 

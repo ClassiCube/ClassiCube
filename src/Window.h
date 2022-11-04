@@ -179,6 +179,7 @@ void Window_UpdateRawMouse(void);
 /* Cursor will also be unhidden and moved back to window centre. */
 void Window_DisableRawMouse(void);
 
+/* OpenGL contexts are heavily tied to the window, so for simplicitly are also provided here */
 #ifdef CC_BUILD_GL
 #define GLCONTEXT_DEFAULT_DEPTH 24
 /* Creates an OpenGL context, then makes it the active context. */
@@ -196,8 +197,6 @@ void GLContext_Free(void);
 /* NOTE: The implementation may still return an address for unsupported functions! */
 /* You MUST check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
 void* GLContext_GetAddress(const char* function);
-/* Loads all OpenGL function pointers using GLContext_GetAddress in the given list */
-void GLContext_GetAll(const struct DynamicLibSym* syms, int count);
 
 /* Swaps the front and back buffer, displaying the back buffer on screen. */
 cc_bool GLContext_SwapBuffers(void);
