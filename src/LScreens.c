@@ -658,9 +658,12 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.iptUsername, (struct LWidget*)&MainScreen.iptPassword,
 	(struct LWidget*)&MainScreen.btnLogin,    (struct LWidget*)&MainScreen.btnResume,
 	(struct LWidget*)&MainScreen.lblStatus,   (struct LWidget*)&MainScreen.btnDirect,
-	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.lblUpdate,
-	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions,
-	(struct LWidget*)&MainScreen.btnUpdates
+	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.btnRegister,
+	(struct LWidget*)&MainScreen.btnOptions,
+#ifndef CC_BUILD_FLATPAK
+	(struct LWidget*)&MainScreen.btnUpdates,
+	(struct LWidget*)&MainScreen.lblUpdate
+#endif
 };
 
 LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
@@ -958,6 +961,7 @@ void MainScreen_SetActive(void) {
 }
 
 
+#ifndef CC_BUILD_FLATPAK
 /*########################################################################################################################*
 *----------------------------------------------------CheckResourcesScreen-------------------------------------------------*
 *#########################################################################################################################*/
@@ -1140,6 +1144,7 @@ void FetchResourcesScreen_SetActive(void) {
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
+#endif
 
 /*########################################################################################################################*
 *--------------------------------------------------------ServersScreen----------------------------------------------------*
