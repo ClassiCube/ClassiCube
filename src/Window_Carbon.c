@@ -455,8 +455,8 @@ static CGSWindowID winId;
 #endif
 
 #ifdef CC_BUILD_ICON
-extern const int CCIcon_Data[];
-extern const int CCIcon_Width, CCIcon_Height;
+/* See misc/mac_icon_gen.cs for how to generate this file */
+#include "_CCIcon_mac.h"
 
 static void ApplyIcon(void) {
 	CGColorSpaceRef colSpace;

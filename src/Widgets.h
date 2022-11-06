@@ -97,7 +97,7 @@ struct TableWidget {
 	struct ScrollbarWidget scroll;
 	int lastX, lastY, paddingX;
 	int paddingTopY, paddingMaxY;
-	void (*UpdateDesc)(BlockID block);
+	void (*UpdateTitle)(BlockID block);
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
