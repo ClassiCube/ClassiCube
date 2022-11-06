@@ -2,11 +2,12 @@ using System.Drawing.Imaging;
 using System.Drawing;
 using System.IO;
 
-namespace test {
-	public static class Program {
-		
-		const string src = "CCIcon.ico";
-		const string dst = "CCIcon.c";
+namespace test 
+{
+	public static class Program 
+	{
+		const string src = "CCicon.ico";
+		const string dst = "_CCIcon_mac.h";
 		
 		static void DumpIcon(StreamWriter sw, int width, int height) {
 			using (Icon icon = new Icon(src, width, height)) {
@@ -25,11 +26,13 @@ namespace test {
 		
 		public static void Main(string[] args) {
 			using (StreamWriter sw = new StreamWriter(dst)) {
-				sw.WriteLine("const unsigned int CCIcon_Data[] = {");
+				sw.WriteLine("/* Generated using misc/mac_icon_gen.cs */");
+				sw.WriteLine("");
+				sw.WriteLine("static const unsigned int CCIcon_Data[] = {");
 				DumpIcon(sw, 64, 64);
 				sw.WriteLine("};");
-				sw.WriteLine("const int CCIcon_Width  = 64;");
-				sw.WriteLine("const int CCIcon_Height = 64;");
+				sw.WriteLine("static const int CCIcon_Width  = 64;");
+				sw.WriteLine("static const int CCIcon_Height = 64;");
 			}
 		}
 	}

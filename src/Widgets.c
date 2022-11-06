@@ -664,14 +664,14 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-static void TableWidget_RecreateDescTex(struct TableWidget* w) {
+static void TableWidget_RecreateTitle(struct TableWidget* w) {
 	BlockID block;
 	if (w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
 	w->lastCreatedIndex = w->selectedIndex;
 
 	block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
-	w->UpdateDesc(block);
+	w->UpdateTitle(block);
 }
 
 void TableWidget_RecreateBlocks(struct TableWidget* w) {
@@ -767,7 +767,7 @@ static void TableWidget_Free(void* widget) {
 void TableWidget_Recreate(struct TableWidget* w) {
 	Elem_Free(w);
 	Gfx_RecreateDynamicVb(&w->vb, VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 }
 
 static void TableWidget_Reposition(void* widget) {
@@ -810,7 +810,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	w->scroll.topRow += (index / w->blocksPerRow) - (start / w->blocksPerRow);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 	TableWidget_MoveCursorToSelected(w);
 }
 
@@ -852,7 +852,7 @@ static int TableWidget_MouseScroll(void* widget, float delta) {
 	if (index >= w->blocksCount) index = -1;
 
 	w->selectedIndex = index;
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 	return true;
 }
 
@@ -880,7 +880,7 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 			}
 		}
 	}
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 	return true;
 }
 
@@ -937,7 +937,7 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 	w->scroll.topRow -= (w->rowsVisible - 1);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 	TableWidget_MoveCursorToSelected(w);
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 }
 
 void TableWidget_OnInventoryChanged(struct TableWidget* w) {
@@ -949,7 +949,7 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 
 	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
 	ScrollbarWidget_ClampTopRow(&w->scroll);
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 }
 
 

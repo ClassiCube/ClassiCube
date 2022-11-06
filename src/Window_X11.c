@@ -267,8 +267,8 @@ void Window_Init(void) {
 }
 
 #ifdef CC_BUILD_ICON
-extern const long CCIcon_Data[];
-extern const int  CCIcon_Size;
+/* See misc/linux_icon_gen.cs for how to generate this file */
+#include "_CCIcon_X11.h"
 
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
