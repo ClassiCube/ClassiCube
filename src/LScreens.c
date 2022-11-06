@@ -871,7 +871,7 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	if (CheckUpdateTask.Base.success) {
 		latest  = MainScreen_GetVersion(&CheckUpdateTask.latestRelease);
 		current = MainScreen_GetVersion(&currentStr);
-		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aUpdate available" : "&eUp to date");
 	} else {
 		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
 	}
