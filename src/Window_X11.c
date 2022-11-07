@@ -251,7 +251,7 @@ void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
 
-	if (!display) Logger_Abort("Failed to open display");
+	if (!display) Logger_Abort("Failed to open the X11 display. No X server running?");
 	screen = DefaultScreen(display);
 	HookXErrors();
 
