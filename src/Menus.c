@@ -1277,13 +1277,13 @@ void ClassicGenScreen_Show(void) {
 static struct SaveLevelScreen {
 	Screen_Body
 	struct FontDesc titleFont, textFont;
-	struct ButtonWidget save, alt, cancel;
+	struct ButtonWidget save, file, cancel;
 	struct TextInputWidget input;
 	struct TextWidget desc;
 } SaveLevelScreen;
 
 static struct Widget* save_widgets[] = {
-	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.alt,
+	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.file,
 	(struct Widget*)&SaveLevelScreen.cancel,
 	(struct Widget*)&SaveLevelScreen.input,  (struct Widget*)&SaveLevelScreen.desc,
 };
@@ -1294,23 +1294,10 @@ static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 		s->save.optName ? "&cOverwrite existing?" : "Save", &s->titleFont);
 }
 
-static void SaveLevelScreen_UpdateAlt(struct SaveLevelScreen* s) {
-#ifdef CC_BUILD_WEB
-	ButtonWidget_SetConst(&s->alt, "Download", &s->titleFont);
-#else
-	ButtonWidget_SetConst(&s->alt,
-		s->alt.optName ? "&cOverwrite existing?" : "Save schematic", &s->titleFont);
-#endif
-}
-
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 	if (s->save.optName) {
 		s->save.optName = NULL;
 		SaveLevelScreen_UpdateSave(s);
-	}
-	if (s->alt.optName) {
-		s->alt.optName = NULL;
-		SaveLevelScreen_UpdateAlt(s);
 	}
 }
 
@@ -1321,13 +1308,10 @@ static void DownloadMap(const cc_string* path) {
 	char strFile[NATIVE_STR_LEN];
 	cc_string file;
 	cc_result res;
-	Platform_EncodeUtf8(strPath, path);
 
-	/* maps/aaa.schematic -> aaa.cw */
+	Platform_EncodeUtf8(strPath, path);
 	file = *path; Utils_UNSAFE_GetFilename(&file);
-	file.length = String_LastIndexOf(&file, '.');
-	String_AppendConst(&file, ".cw");
-	Platform_EncodeUtf8(strFile, &file);
+	latform_EncodeUtf8(strFile, file);
 	
 	res = interop_DownloadMap(strPath, strFile);
 	if (res) {
@@ -1338,58 +1322,50 @@ static void DownloadMap(const cc_string* path) {
 }
 #endif
 
-static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* path) {
-	static const cc_string cw = String_FromConst(".cw");
+static cc_result SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* path) {
+	static const cc_string schematic = String_FromConst(".schematic");
 	struct Stream stream, compStream;
 	struct GZipState state;
 	cc_result res;
 
 	res = Stream_CreateFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "creating", path); return; }
+	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
 	GZip_MakeStream(&compStream, &state, &stream);
 
 #ifdef CC_BUILD_WEB
 	res = Cw_Save(&compStream);
 #else
-	if (String_CaselessEnds(path, &cw)) {
-		res = Cw_Save(&compStream); /* TODO change to checking for schematic instead */
-	} else {
+	if (String_CaselessEnds(path, &schematic)) {
 		res = Schematic_Save(&compStream);
+	} else {
+		res = Cw_Save(&compStream);
 	}
 #endif
 
 	if (res) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "encoding", path); return;
+		Logger_SysWarn2(res, "encoding", path); return res;
 	}
 
 	if ((res = compStream.Close(&compStream))) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "closing", path); return;
+		Logger_SysWarn2(res, "closing", path); return res;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", path); return; }
+	if (res) { Logger_SysWarn2(res, "closing", path); return res; }
 
-#ifdef CC_BUILD_WEB
-	if (String_CaselessEnds(path, &cw)) {
-		Chat_Add1("&eSaved map to: %s", path);
-	} else {
-		DownloadMap(path);
-	}
-#else
-	Chat_Add1("&eSaved map to: %s", path);
-#endif
 	World.LastSave = Game.Time;
 	Gui_ShowPauseMenu();
+	return 0;
 }
 
-static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
+static void SaveLevelScreen_DoSave(void* screen, void* widget, const char* fmt) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct ButtonWidget* btn  = (struct ButtonWidget*)widget;
 	cc_string file = s->input.base.text;
+	cc_result res;
 
 	if (!file.length) {
 		TextWidget_SetConst(&s->desc, "&ePlease enter a filename", &s->textFont);
@@ -1402,23 +1378,38 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
 		SaveLevelScreen_UpdateSave(s);
-		SaveLevelScreen_UpdateAlt(s);
-	} else {
-		SaveLevelScreen_RemoveOverwrites(s);
-		SaveLevelScreen_SaveMap(s, &path);
+		return;
 	}
-}
-static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, "maps/%s.cw"); }
+		
+	SaveLevelScreen_RemoveOverwrites(s);
+	if ((res = SaveLevelScreen_SaveMap(s, &path))) return;
+
 #ifdef CC_BUILD_WEB
-/* Use absolute path so data is written to memory filesystem instead of default filesystem */
-static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "/%s.tmpmap"); }
+	if (btn == &s->save) {
+		Chat_Add1("&eSaved map to: %s", &path);
+	} else {
+		DownloadMap(&path);
+	}
 #else
-static void SaveLevelScreen_UploadCallback(const cc_string* path) {
-	SaveLevelScreen_SaveMap(NULL, path);
+	Chat_Add1("&eSaved map to: %s", &path);
+#endif
 }
 
-static void SaveLevelScreen_Alt(void* a, void* b)  { 
-	//SaveLevelScreen_Save(a, b, "maps/%s.schematic");
+static void SaveLevelScreen_Save(void* a, void* b) { 
+	SaveLevelScreen_DoSave(a, b, "maps/%s.cw"); 
+}
+
+#ifdef CC_BUILD_WEB
+static void SaveLevelScreen_File(void* a, void* b) {
+	SaveLevelScreen_DoSave(a, b, "/tmpmaps/%s.cw");
+}
+#else
+static void SaveLevelScreen_UploadCallback(const cc_string* path) {
+	cc_result res = SaveLevelScreen_SaveMap(NULL, path);
+	if (!res) Chat_Add1("&eSaved map to: %s", path);
+}
+
+static void SaveLevelScreen_File(void* a, void* b) {
 	static const char* const titles[] = {
 		"ClassiCube map", "MineCraft schematic", NULL
 	};
@@ -1433,17 +1424,6 @@ static void SaveLevelScreen_Alt(void* a, void* b)  {
 	if (res) Logger_SimpleWarn(res, "showing save file dialog");
 }
 #endif
-
-static void SaveLevelScreen_Render(void* screen, double delta) {
-	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
-	int x, y;
-	MenuScreen_Render2(screen, delta);
-
-#ifndef CC_BUILD_WEB
-	x = WindowInfo.Width / 2; y = WindowInfo.Height / 2;
-	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
-#endif
-}
 
 static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
@@ -1484,10 +1464,14 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 
 	Screen_UpdateVb(screen);
 	SaveLevelScreen_UpdateSave(s);
-	SaveLevelScreen_UpdateAlt(s);
 
-	TextInputWidget_SetFont(&s->input, &s->textFont);
-	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
+	TextInputWidget_SetFont(&s->input,                &s->textFont);
+	ButtonWidget_SetConst(&s->cancel, "Cancel",       &s->titleFont);
+#ifdef CC_BUILD_WEB
+	ButtonWidget_SetConst(&s->file,   "Download",     &s->titleFont);
+#else
+	ButtonWidget_SetConst(&s->file,   "Save file...", &s->titleFont);
+#endif
 }
 
 static void SaveLevelScreen_Update(void* screen, double delta) {
@@ -1497,20 +1481,12 @@ static void SaveLevelScreen_Update(void* screen, double delta) {
 
 static void SaveLevelScreen_Layout(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	Widget_SetLocation(&s->save,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
-#ifdef CC_BUILD_WEB
-	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
-#else
-	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
-#endif
+	Widget_SetLocation(&s->input, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Widget_SetLocation(&s->save,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  20);
+	Widget_SetLocation(&s->desc,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  65);
 
+	Widget_SetLocation(&s->file, ANCHOR_CENTRE, ANCHOR_MAX, 0, 70);
 	Menu_LayoutBack(&s->cancel);
-	Widget_SetLocation(&s->input,  ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -30);
-#ifdef CC_BUILD_WEB
-	Widget_SetLocation(&s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 115);
-#else
-	Widget_SetLocation(&s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
-#endif
 }
 
 static void SaveLevelScreen_Init(void* screen) {
@@ -1522,12 +1498,8 @@ static void SaveLevelScreen_Init(void* screen) {
 	s->maxVertices = SAVE_MAX_VERTICES;
 	MenuInput_Path(desc);
 	
-	ButtonWidget_Init(&s->save, 300, SaveLevelScreen_Main);
-#ifdef CC_BUILD_WEB
-	ButtonWidget_Init(&s->alt,  300, SaveLevelScreen_Alt);
-#else
-	ButtonWidget_Init(&s->alt,  200, SaveLevelScreen_Alt);
-#endif
+	ButtonWidget_Init(&s->save, 400, SaveLevelScreen_Save);
+	ButtonWidget_Init(&s->file, 400, SaveLevelScreen_File);
 
 	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
 	TextInputWidget_Create(&s->input, 500, &World.Name, &desc);
@@ -1537,7 +1509,7 @@ static void SaveLevelScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Update, Menu_CloseKeyboard,
-	SaveLevelScreen_Render,  Screen_BuildMesh,
+	MenuScreen_Render2,      Screen_BuildMesh,
 	SaveLevelScreen_KeyDown, Screen_InputUp,   SaveLevelScreen_KeyPress, SaveLevelScreen_TextChanged,
 	Menu_PointerDown,        Screen_PointerUp, Menu_PointerMove,         Screen_TMouseScroll,
 	SaveLevelScreen_Layout,  SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated

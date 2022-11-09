@@ -542,7 +542,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	interop_ShowDialog(title, msg); 
 }
 
-static OpenFileDialogCallback uploadCallback;
+static FileDialogCallback uploadCallback;
 EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) { 
 	cc_string file; char buffer[FILENAME_SIZE];
 	String_InitArray(file, buffer);
