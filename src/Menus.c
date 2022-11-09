@@ -1279,15 +1279,15 @@ static struct SaveLevelScreen {
 	struct FontDesc titleFont, textFont;
 	struct ButtonWidget save, alt, cancel;
 	struct TextInputWidget input;
-	struct TextWidget mcEdit, desc;
+	struct TextWidget desc;
 } SaveLevelScreen;
 
-static struct Widget* save_widgets[6] = {
+static struct Widget* save_widgets[] = {
 	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.alt,
-	(struct Widget*)&SaveLevelScreen.mcEdit, (struct Widget*)&SaveLevelScreen.cancel,
+	(struct Widget*)&SaveLevelScreen.cancel,
 	(struct Widget*)&SaveLevelScreen.input,  (struct Widget*)&SaveLevelScreen.desc,
 };
-#define SAVE_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define SAVE_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + TEXTWIDGET_MAX)
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
@@ -1352,7 +1352,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* 
 	res = Cw_Save(&compStream);
 #else
 	if (String_CaselessEnds(path, &cw)) {
-		res = Cw_Save(&compStream);
+		res = Cw_Save(&compStream); /* TODO change to checking for schematic instead */
 	} else {
 		res = Schematic_Save(&compStream);
 	}
@@ -1413,7 +1413,25 @@ static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, 
 /* Use absolute path so data is written to memory filesystem instead of default filesystem */
 static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "/%s.tmpmap"); }
 #else
-static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "maps/%s.schematic"); }
+static void SaveLevelScreen_UploadCallback(const cc_string* path) {
+	SaveLevelScreen_SaveMap(NULL, path);
+}
+
+static void SaveLevelScreen_Alt(void* a, void* b)  { 
+	//SaveLevelScreen_Save(a, b, "maps/%s.schematic");
+	static const char* const titles[] = {
+		"ClassiCube map", "MineCraft schematic", NULL
+	};
+	static const char* const filters[] = {
+		".cw", ".schematic", NULL
+	};
+	static struct SaveFileDialogArgs args = {
+		filters, titles, SaveLevelScreen_UploadCallback
+	};
+
+	cc_result res = Window_SaveFileDialog(&args);
+	if (res) Logger_SimpleWarn(res, "showing save file dialog");
+}
 #endif
 
 static void SaveLevelScreen_Render(void* screen, double delta) {
@@ -1468,9 +1486,6 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	SaveLevelScreen_UpdateSave(s);
 	SaveLevelScreen_UpdateAlt(s);
 
-#ifndef CC_BUILD_WEB
-	TextWidget_SetConst(&s->mcEdit,   "&eCan be imported into MCEdit", &s->textFont);
-#endif
 	TextInputWidget_SetFont(&s->input, &s->textFont);
 	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
 }
@@ -1487,7 +1502,6 @@ static void SaveLevelScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
 #else
 	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
-	Widget_SetLocation(&s->mcEdit, ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
 #endif
 
 	Menu_LayoutBack(&s->cancel);
@@ -1511,10 +1525,8 @@ static void SaveLevelScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->save, 300, SaveLevelScreen_Main);
 #ifdef CC_BUILD_WEB
 	ButtonWidget_Init(&s->alt,  300, SaveLevelScreen_Alt);
-	s->widgets[2] = NULL; /* null mcEdit widget */
 #else
 	ButtonWidget_Init(&s->alt,  200, SaveLevelScreen_Alt);
-	TextWidget_Init(&s->mcEdit);
 #endif
 
 	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
