@@ -84,6 +84,7 @@ LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),haiku)
+OBJECTS+=Window_Haiku.o
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
 LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
@@ -134,4 +135,7 @@ $(C_OBJECTS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 interop_cocoa.o: interop_cocoa.m
+	$(CC) $(CFLAGS) -c $< -o $@
+	
+Window_Haiku.o: Window_Haiku.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
