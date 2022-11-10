@@ -1587,3 +1587,97 @@ cc_result Schematic_Save(struct Stream* stream) {
 	}
 	return Stream_Write(stream, sc_end, sizeof(sc_end));
 }
+
+const int spawn_value = 8;
+static const struct JField {
+	cc_uint8 type;
+	const char* name;
+	void* value;
+} level_fields[] = {
+	{ JFIELD_I32,   "width",  &World.Width  },
+	{ JFIELD_I32,   "depth",  &World.Height },
+	{ JFIELD_I32,   "height", &World.Length },
+	{ JFIELD_I32,   "xSpawn",  &spawn_value  },
+	{ JFIELD_I32,   "ySpawn",  &spawn_value },
+	{ JFIELD_I32,   "zSpawn", &spawn_value },
+	/*{JFIELD_I32,   "skyColor",   &Env.SkyCol},
+	{ JFIELD_I32,   "fogColor",   &Env.FogCol},
+	{ JFIELD_I32,   "cloudColor", &Env.CloudsCol},*/
+	{ JFIELD_ARRAY, "blocks", &World.Blocks }
+	/* TODO spawn, classic only blocks */
+};
+
+static int WriteJavaString(cc_uint8* dst, const char* value) {
+	int length = String_Length(value);
+	dst[0] = 0;
+	dst[1] = length;
+	Mem_Copy(dst + 2, value, length);
+	return length;
+}
+
+static cc_result WriteClassDesc(struct Stream* stream, cc_uint8 typecode, const char* klass, 
+								int numFields, const struct JField* fields) {
+	cc_uint8 header[256] = { 0 };
+	static const cc_uint8 footer[] = {
+		TC_ENDBLOCKDATA, /* classAnnotations */
+		TC_NULL          /* superClassDesc */
+	};
+	int i, length;
+	cc_result res;
+
+	header[0] = typecode;
+	header[1] = TC_CLASSDESC;
+	length    = WriteJavaString(header + 2, klass);
+	header[4 + length +  8] = SC_SERIALIZABLE;
+	header[4 + length +  9] = 0;
+	header[4 + length + 10] = numFields;
+
+	if ((res = Stream_Write(stream, header, 15 + length))) return res;
+
+	for (i = 0; i < numFields; i++) 
+	{
+		header[0] = fields[i].type;
+		length    = WriteJavaString(header + 1, fields[i].name);
+
+		if (fields[i].type == JFIELD_ARRAY) {
+			header[3 + length + 0] = TC_STRING;
+			WriteJavaString(&header[3 + length + 1], "[B");
+			length += 5;
+		}
+		if ((res = Stream_Write(stream, header, 3 + length))) return res;
+	}
+
+	if ((res = Stream_Write(stream, footer, sizeof(footer)))) return res;
+	return 0;
+}
+
+cc_result Dat_Save(struct Stream* stream) {
+	static const cc_uint8 header[] = {
+		/* DAT signature + version */
+		0x27,0x1B,0xB7,0x88, 0x02,
+		/* JSF signature + version */
+		0xAC,0xED, 0x00,0x05
+	};
+	cc_uint8 tmp[4];
+	cc_result res;
+	int i;
+
+	if ((res = Stream_Write(stream, header, sizeof(header)))) return res;
+	if ((res = WriteClassDesc(stream, TC_OBJECT, "com.mojang.minecraft.level.Level", 
+					Array_Elems(level_fields), level_fields))) return res;
+
+	/* Write field values */
+	for (i = 0; i < Array_Elems(level_fields); i++) 
+	{
+		if (level_fields[i].type == JFIELD_I32) {
+			Stream_SetU32_BE(tmp, *((int*)level_fields[i].value));
+			if ((res = Stream_Write(stream, tmp, 4))) return res;
+		} else {
+			if ((res = WriteClassDesc(stream, TC_ARRAY, "[B", 0, NULL)))  return res;
+			Stream_SetU32_BE(tmp, World.Volume);
+			if ((res = Stream_Write(stream, tmp, 4))) return res;
+			if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
+		}
+	}
+	return 0;
+}

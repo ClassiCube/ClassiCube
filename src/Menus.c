@@ -1324,6 +1324,7 @@ static void DownloadMap(const cc_string* path) {
 
 static cc_result SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* path) {
 	static const cc_string schematic = String_FromConst(".schematic");
+	static const cc_string mine = String_FromConst(".mine");
 	struct Stream stream, compStream;
 	struct GZipState state;
 	cc_result res;
@@ -1337,6 +1338,8 @@ static cc_result SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_str
 #else
 	if (String_CaselessEnds(path, &schematic)) {
 		res = Schematic_Save(&compStream);
+	} else if (String_CaselessEnds(path, &mine)) {
+		res = Dat_Save(&compStream);
 	} else {
 		res = Cw_Save(&compStream);
 	}
@@ -1411,10 +1414,10 @@ static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 
 static void SaveLevelScreen_File(void* a, void* b) {
 	static const char* const titles[] = {
-		"ClassiCube map", "MineCraft schematic", NULL
+		"ClassiCube map", "MineCraft schematic", "MineCraft classic map", NULL
 	};
 	static const char* const filters[] = {
-		".cw", ".schematic", NULL
+		".cw", ".schematic", ".mine", NULL
 	};
 	static struct SaveFileDialogArgs args = {
 		filters, titles, SaveLevelScreen_UploadCallback
