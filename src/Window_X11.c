@@ -292,7 +292,7 @@ static void DoCreateWindow(int width, int height) {
 	RegisterAtoms();
 	win_visual = GLContext_SelectVisual();
 
-	Platform_LogConst("Opening render window... ");
+	Platform_Log1("Created window (visual id: %h)", &win_visual.visualid);
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 	attributes.event_mask = win_eventMask;
 
