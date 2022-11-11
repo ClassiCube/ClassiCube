@@ -9,6 +9,8 @@
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
 
+#error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &WindowInfo.Width, &WindowInfo.Height);
 }

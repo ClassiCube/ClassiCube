@@ -409,10 +409,16 @@ void TexturePack_CheckPending(void) {
 		Mem_Free(item.data);
 	} else if (item.result) {
 		Logger_Warn(item.result, "trying to download texture pack", Http_DescribeError);
+	} else if (item.statusCode == 200 || item.statusCode == 304) {
+		/* Empty responses is okay for these status codes, so don't log an error */
+	} else if (item.statusCode == 404) {
+		Chat_AddRaw("&c404 Not Found error when trying to download texture pack");
+		Chat_AddRaw("  &cThe texture pack URL may be incorrect or no longer exist");
+	} else if (item.statusCode == 401 || item.statusCode == 403) {
+		Chat_Add1("&c%i Not Authorised error when trying to download texture pack", &item.statusCode);
+		Chat_AddRaw("  &cThe texture pack URL may not be publicly shared");
 	} else {
-		int status = item.statusCode;
-		if (status == 200 || status == 304) return;
-		Chat_Add1("&c%i error when trying to download texture pack", &status);
+		Chat_Add1("&c%i error when trying to download texture pack", &item.statusCode);
 	}
 }
 
