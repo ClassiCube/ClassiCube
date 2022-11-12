@@ -573,6 +573,24 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	return 0;
 }
 
+extern int interop_DownloadFile(const char* path, const char* filename);
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_string file; char fileBuffer[FILENAME_SIZE];
+
+	if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+
+	String_InitArray(file, fileBuffer);
+	String_InitArray(path, pathBuffer);
+	String_Format2(&file, "%s%c", &args->defaultName, args->filters[0]);
+	String_Format1(&path, "Downloads/%s", &file);
+
+	args->Callback(&path);
+	pathBuffer[path.length] = '\0';
+	fileBuffer[file.length] = '\0';
+	return interop_DownloadFile(pathBuffer, fileBuffer);
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }

@@ -1588,23 +1588,19 @@ cc_result Schematic_Save(struct Stream* stream) {
 	return Stream_Write(stream, sc_end, sizeof(sc_end));
 }
 
-const int spawn_value = 8;
 static const struct JField {
-	cc_uint8 type;
+	cc_uint8 type, isFloat;
 	const char* name;
 	void* value;
 } level_fields[] = {
-	{ JFIELD_I32,   "width",  &World.Width  },
-	{ JFIELD_I32,   "depth",  &World.Height },
-	{ JFIELD_I32,   "height", &World.Length },
-	{ JFIELD_I32,   "xSpawn",  &spawn_value  },
-	{ JFIELD_I32,   "ySpawn",  &spawn_value },
-	{ JFIELD_I32,   "zSpawn", &spawn_value },
-	/*{JFIELD_I32,   "skyColor",   &Env.SkyCol},
-	{ JFIELD_I32,   "fogColor",   &Env.FogCol},
-	{ JFIELD_I32,   "cloudColor", &Env.CloudsCol},*/
-	{ JFIELD_ARRAY, "blocks", &World.Blocks }
-	/* TODO spawn, classic only blocks */
+	{ JFIELD_I32, false, "width",  &World.Width  },
+	{ JFIELD_I32, false, "depth",  &World.Height },
+	{ JFIELD_I32, false, "height", &World.Length },
+	{ JFIELD_I32, true,  "xSpawn", &LocalPlayer_Instance.Base.Position.X },
+	{ JFIELD_I32, true,  "ySpawn", &LocalPlayer_Instance.Base.Position.Y },
+	{ JFIELD_I32, true,  "zSpawn", &LocalPlayer_Instance.Base.Position.Z },
+	{ JFIELD_ARRAY,0, "blocks" }
+	/* TODO classic only blocks */
 };
 
 static int WriteJavaString(cc_uint8* dst, const char* value) {
@@ -1658,9 +1654,10 @@ cc_result Dat_Save(struct Stream* stream) {
 		/* JSF signature + version */
 		0xAC,0xED, 0x00,0x05
 	};
+	const struct JField* field;
 	cc_uint8 tmp[4];
 	cc_result res;
-	int i;
+	int i, value;
 
 	if ((res = Stream_Write(stream, header, sizeof(header)))) return res;
 	if ((res = WriteClassDesc(stream, TC_OBJECT, "com.mojang.minecraft.level.Level", 
@@ -1669,8 +1666,11 @@ cc_result Dat_Save(struct Stream* stream) {
 	/* Write field values */
 	for (i = 0; i < Array_Elems(level_fields); i++) 
 	{
-		if (level_fields[i].type == JFIELD_I32) {
-			Stream_SetU32_BE(tmp, *((int*)level_fields[i].value));
+		field = &level_fields[i];
+
+		if (field->type == JFIELD_I32) {
+			value = field->isFloat ? *((float*)field->value) : *((int*)field->value);
+			Stream_SetU32_BE(tmp, value);
 			if ((res = Stream_Write(stream, tmp, 4))) return res;
 		} else {
 			if ((res = WriteClassDesc(stream, TC_ARRAY, "[B", 0, NULL)))  return res;

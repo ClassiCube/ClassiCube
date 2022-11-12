@@ -31,6 +31,7 @@
 #include "Options.h"
 #include "Input.h"
 #include "Utils.h"
+#include "Errors.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {
@@ -1301,28 +1302,7 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 	}
 }
 
-#ifdef CC_BUILD_WEB
-extern int interop_DownloadMap(const char* path, const char* filename);
-static void DownloadMap(const cc_string* path) {
-	char strPath[NATIVE_STR_LEN];
-	char strFile[NATIVE_STR_LEN];
-	cc_string file;
-	cc_result res;
-
-	Platform_EncodeUtf8(strPath, path);
-	file = *path; Utils_UNSAFE_GetFilename(&file);
-	latform_EncodeUtf8(strFile, file);
-	
-	res = interop_DownloadMap(strPath, strFile);
-	if (res) {
-		Logger_SysWarn2(res, "Downloading map", &file);
-	} else {
-		Chat_Add1("&eDownloaded map: %s", &file);
-	}
-}
-#endif
-
-static cc_result SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* path) {
+static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
 	static const cc_string schematic = String_FromConst(".schematic");
 	static const cc_string mine = String_FromConst(".mine");
 	struct Stream stream, compStream;
@@ -1363,10 +1343,10 @@ static cc_result SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_str
 	return 0;
 }
 
-static void SaveLevelScreen_DoSave(void* screen, void* widget, const char* fmt) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
+static void SaveLevelScreen_Save(void* screen, void* widget) { 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct ButtonWidget* btn  = (struct ButtonWidget*)widget;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string file = s->input.base.text;
 	cc_result res;
 
@@ -1374,9 +1354,10 @@ static void SaveLevelScreen_DoSave(void* screen, void* widget, const char* fmt) 
 		TextWidget_SetConst(&s->desc, "&ePlease enter a filename", &s->textFont);
 		return;
 	}
+
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, fmt, &file);
-	String_Copy(&World.Name,   &file);
+	String_Format1(&path, "maps/%s.cw", &file);
+	String_Copy(&World.Name, &file);
 
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
@@ -1385,48 +1366,38 @@ static void SaveLevelScreen_DoSave(void* screen, void* widget, const char* fmt) 
 	}
 		
 	SaveLevelScreen_RemoveOverwrites(s);
-	if ((res = SaveLevelScreen_SaveMap(s, &path))) return;
-
-#ifdef CC_BUILD_WEB
-	if (btn == &s->save) {
-		Chat_Add1("&eSaved map to: %s", &path);
-	} else {
-		DownloadMap(&path);
-	}
-#else
+	if ((res = SaveLevelScreen_SaveMap(&path))) return;
 	Chat_Add1("&eSaved map to: %s", &path);
-#endif
 }
 
-static void SaveLevelScreen_Save(void* a, void* b) { 
-	SaveLevelScreen_DoSave(a, b, "maps/%s.cw"); 
-}
-
-#ifdef CC_BUILD_WEB
-static void SaveLevelScreen_File(void* a, void* b) {
-	SaveLevelScreen_DoSave(a, b, "/tmpmaps/%s.cw");
-}
-#else
 static void SaveLevelScreen_UploadCallback(const cc_string* path) {
-	cc_result res = SaveLevelScreen_SaveMap(NULL, path);
+	cc_result res = SaveLevelScreen_SaveMap(path);
 	if (!res) Chat_Add1("&eSaved map to: %s", path);
 }
 
-static void SaveLevelScreen_File(void* a, void* b) {
+static void SaveLevelScreen_File(void* screen, void* b) {
 	static const char* const titles[] = {
 		"ClassiCube map", "MineCraft schematic", "MineCraft classic map", NULL
 	};
 	static const char* const filters[] = {
 		".cw", ".schematic", ".mine", NULL
 	};
-	static struct SaveFileDialogArgs args = {
-		filters, titles, SaveLevelScreen_UploadCallback
-	};
+	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	struct SaveFileDialogArgs args;
+	cc_result res;
 
-	cc_result res = Window_SaveFileDialog(&args);
-	if (res) Logger_SimpleWarn(res, "showing save file dialog");
+	args.filters     = filters;
+	args.titles      = titles;
+	args.defaultName = s->input.base.text;
+	args.Callback    = SaveLevelScreen_UploadCallback;
+
+	res = Window_SaveFileDialog(&args);
+	if (res == SFD_ERR_NEED_DEFAULT_NAME) {
+		TextWidget_SetConst(&s->desc, "&ePlease enter a filename", &s->textFont);
+	} else if (res) {
+		Logger_SimpleWarn(res, "showing save file dialog");
+	}
 }
-#endif
 
 static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;

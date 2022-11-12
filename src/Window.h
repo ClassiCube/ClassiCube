@@ -136,6 +136,7 @@ typedef void (*FileDialogCallback)(const cc_string* path);
 struct SaveFileDialogArgs {
 	const char* const* filters; /* File extensions to limit dialog to showing (e.g. ".zip", NULL) */
 	const char* const* titles;  /* Descriptions to show for each file extension */
+	cc_string defaultName;      /* Default filename (without extension), required by some backends */
 	FileDialogCallback Callback;
 };
 struct OpenFileDialogArgs {
