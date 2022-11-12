@@ -1650,6 +1650,31 @@ static cc_result WriteClassDesc(struct Stream* stream, cc_uint8 typecode, const 
 	return 0;
 }
 
+#define DAT_BUFFER_SIZE (64 * 1024)
+static cc_result WriteLevelBlocks(struct Stream* stream) {
+	cc_uint8 buffer[DAT_BUFFER_SIZE];
+	int i, bIndex = 0;
+	cc_result res;
+	BlockID b;
+
+	for (i = 0; i < World.Volume; i++)
+	{
+		b = World_GetRawBlock(i);
+		/* TODO: Better fallback decision (e.g. air if custom block is 'gas' type) */
+		if (b > BLOCK_STONE_BRICK) b = BLOCK_STONE;
+
+		buffer[bIndex] = (cc_uint8)b;
+		bIndex++;
+		if (bIndex < DAT_BUFFER_SIZE) continue;
+
+		if ((res = Stream_Write(stream, buffer, DAT_BUFFER_SIZE))) return res;
+		bIndex = 0;
+	}
+
+	if (bIndex == 0) return 0;
+	return Stream_Write(stream, buffer, bIndex);
+}
+
 cc_result Dat_Save(struct Stream* stream) {
 	static const cc_uint8 header[] = {
 		0x27,0x1B,0xB7,0x88, 0x02, /* DAT signature + version */
@@ -1677,7 +1702,7 @@ cc_result Dat_Save(struct Stream* stream) {
 			if ((res = WriteClassDesc(stream, TC_ARRAY, "[B", 0, NULL)))  return res;
 			Stream_SetU32_BE(tmp, World.Volume);
 			if ((res = Stream_Write(stream, tmp, 4))) return res;
-			if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
+			if ((res = WriteLevelBlocks(stream)))     return res;
 		}
 	}
 	return 0;
