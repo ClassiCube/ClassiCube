@@ -967,7 +967,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	XFlush(m.dpy); /* flush so window disappears immediately */
 }
 
-static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callback) {
+static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callback, const char* defaultExt) {
 	cc_string path; char pathBuffer[1024];
 	char result[4096] = { 0 };
 	int len, i;
@@ -977,14 +977,21 @@ static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callbac
 
 	/* result from zenity is normally just one string */
 	while (fgets(result, sizeof(result), fp)) { }
-	len = String_Length(result);
-
-	if (len) {
-		String_InitArray(path, pathBuffer);
-		String_AppendUtf8(&path, result, len);
-		callback(&path);
-	}
 	pclose(fp);
+
+	len = String_Length(result);
+	if (!len) return 0;
+
+	String_InitArray(path, pathBuffer);
+	String_AppendUtf8(&path, result, len);
+
+	/* Add default file extension if necessary */
+	if (defaultExt) {
+		cc_string file = path;
+		Utils_UNSAFE_GetFilename(&file);
+		if (String_IndexOf(&file, '.') == -1) String_AppendConst(&path, defaultExt);
+	}
+	callback(&path);
 	return 0;
 }
 
@@ -1010,7 +1017,7 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	String_AppendConst(&path, "'");
 
 	path.buffer[path.length] = '\0';
-	return OpenSaveFileDialog(path.buffer, args->Callback);
+	return OpenSaveFileDialog(path.buffer, args->Callback, NULL);
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
@@ -1028,7 +1035,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	String_AppendConst(&path, " --save --confirm-overwrite");
 
 	path.buffer[path.length] = '\0';
-	return OpenSaveFileDialog(path.buffer, args->Callback);
+	return OpenSaveFileDialog(path.buffer, args->Callback, fileExts[0]);
 }
 
 static GC fb_gc;

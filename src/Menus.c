@@ -1377,7 +1377,7 @@ static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 
 static void SaveLevelScreen_File(void* screen, void* b) {
 	static const char* const titles[] = {
-		"ClassiCube map", "MineCraft schematic", "MineCraft classic map", NULL
+		"ClassiCube map", "Minecraft schematic", "Minecraft classic map", NULL
 	};
 	static const char* const filters[] = {
 		".cw", ".schematic", ".mine", NULL
@@ -1476,7 +1476,7 @@ static void SaveLevelScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->file, 400, SaveLevelScreen_File);
 
 	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
-	TextInputWidget_Create(&s->input, 500, &World.Name, &desc);
+	TextInputWidget_Create(&s->input, 400, &World.Name, &desc);
 	TextWidget_Init(&s->desc);
 	s->input.onscreenPlaceholder = "Map name";
 }
