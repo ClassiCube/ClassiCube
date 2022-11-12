@@ -1542,8 +1542,7 @@ cc_result Cw_Save(struct Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
-
-static cc_uint8 sc_begin[78] = {
+static cc_uint8 sc_begin[] = {
 NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_STR,  0,9,  'M','a','t','e','r','i','a','l','s', 0,7, 'C','l','a','s','s','i','c',
 	NBT_I16,  0,5,  'W','i','d','t','h',                 0,0,
@@ -1551,10 +1550,10 @@ NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_I16,  0,6,  'L','e','n','g','t','h',             0,0,
 	NBT_I8S,  0,6,  'B','l','o','c','k','s',             0,0,0,0,
 };
-static cc_uint8 sc_data[11] = {
+static cc_uint8 sc_data[] = {
 	NBT_I8S,  0,4,  'D','a','t','a',                     0,0,0,0,
 };
-static cc_uint8 sc_end[37] = {
+static cc_uint8 sc_end[] = {
 	NBT_LIST, 0,8,  'E','n','t','i','t','i','e','s',                 NBT_DICT, 0,0,0,0,
 	NBT_LIST, 0,12, 'T','i','l','e','E','n','t','i','t','i','e','s', NBT_DICT, 0,0,0,0,
 NBT_END,
@@ -1588,6 +1587,10 @@ cc_result Schematic_Save(struct Stream* stream) {
 	return Stream_Write(stream, sc_end, sizeof(sc_end));
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------Dat export---------------------------------------------------------*
+*#########################################################################################################################*/
 static const struct JField {
 	cc_uint8 type, isFloat;
 	const char* name;
@@ -1649,10 +1652,8 @@ static cc_result WriteClassDesc(struct Stream* stream, cc_uint8 typecode, const 
 
 cc_result Dat_Save(struct Stream* stream) {
 	static const cc_uint8 header[] = {
-		/* DAT signature + version */
-		0x27,0x1B,0xB7,0x88, 0x02,
-		/* JSF signature + version */
-		0xAC,0xED, 0x00,0x05
+		0x27,0x1B,0xB7,0x88, 0x02, /* DAT signature + version */
+		0xAC,0xED, 0x00,0x05       /* JSF signature + version */
 	};
 	const struct JField* field;
 	cc_uint8 tmp[4];

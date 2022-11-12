@@ -586,6 +586,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	String_Format1(&path, "Downloads/%s", &file);
 
 	args->Callback(&path);
+	/* TODO use utf8 instead */
 	pathBuffer[path.length] = '\0';
 	fileBuffer[file.length] = '\0';
 	return interop_DownloadFile(pathBuffer, fileBuffer);

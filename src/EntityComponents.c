@@ -462,7 +462,6 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 	struct EntityLocation* next = &e->next;
 	cc_uint8 flags      = update->flags;
 	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
-	float yOffset;
 
 	if (flags & LU_HAS_POS) {
 		LocalInterpComp_SetPosition(update, flags & LU_POS_MODEMASK);
