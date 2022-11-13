@@ -283,6 +283,10 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
 static SDL_Surface* win_surface;
 static SDL_Surface* blit_surface;
 

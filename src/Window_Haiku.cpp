@@ -95,6 +95,7 @@ public:
 static void CallOpenFileCallback(const char* path);
 void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 	CCEvent event = { 0 };
+	const char* filename;
 	entry_ref fileRef;
 	
 	switch (msg->what)
@@ -107,6 +108,16 @@ void CC_BApp::DispatchMessage(BMessage* msg, BHandler* handler) {
 		// TODO do we need to support more than 1 ref?
 		if (msg->FindRef("refs", 0, &fileRef) == B_OK) {
 			BPath path(&fileRef);
+			CallOpenFileCallback(path.Path());
+		}
+		break;
+	case B_SAVE_REQUESTED:
+		// TODO do we need to support more than 1 ref?
+		if (msg->FindRef("directory", 0, &fileRef) == B_OK && 
+			msg->FindString("name", &filename) == B_OK) {
+			BDirectory folder(&fileRef);
+			BPath path(&folder, filename);
+			// TODO add default file extension
 			CallOpenFileCallback(path.Path());
 		}
 		break;
@@ -503,8 +514,9 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 static BFilePanel* open_panel;
-static OpenFileDialogCallback open_callback;
-static const char* const* open_filters;
+static BFilePanel* save_panel;
+static FileDialogCallback file_callback;
+static const char* const* file_filters;
 
 class CC_BRefFilter : public BRefFilter
 {
@@ -517,9 +529,9 @@ public:
 		BPath path(ref);
 		cc_string str = String_FromReadonly(path.Path());
 		
-		for (int i = 0; open_filters[i]; i++)
+		for (int i = 0; file_filters[i]; i++)
 		{
-			cc_string ext = String_FromReadonly(open_filters[i]);
+			cc_string ext = String_FromReadonly(file_filters[i]);
 			if (String_CaselessEnds(&str, &ext)) return true;
 		}
 		return false;
@@ -529,11 +541,11 @@ public:
 static void CallOpenFileCallback(const char* rawPath) {
 	cc_string path; char pathBuffer[1024];
 	String_InitArray(path, pathBuffer);
-	if (!open_callback) return;
+	if (!file_callback) return;
 	
 	String_AppendUtf8(&path, rawPath, String_Length(rawPath));
-	open_callback(&path);
-	open_callback = NULL;
+	file_callback(&path);
+	file_callback = NULL;
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
@@ -544,9 +556,23 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 		//  so this is technically a memory leak.. but meh
 	}
 	
-	open_callback = args->Callback;
-	open_filters  = args->filters;
+	file_callback = args->Callback;
+	file_filters  = args->filters;
 	open_panel->Show();
+	return 0;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	if (!save_panel) {
+		save_panel = new BFilePanel(B_SAVE_PANEL);
+		save_panel->SetRefFilter(new CC_BRefFilter());
+		// NOTE: the CC_BRefFilter is NOT owned by the BFilePanel,
+		//  so this is technically a memory leak.. but meh
+	}
+	
+	file_callback = args->Callback;
+	file_filters  = args->filters;
+	save_panel->Show();
 	return 0;
 }
 

@@ -551,50 +551,82 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	const char* const* filters = args->filters;
+static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback callback, 
+									const char* const* fileExts, cc_bool load) {
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	WCHAR str[MAX_PATH] = { 0 };
 	OPENFILENAMEW ofn   = { 0 };
 	WCHAR filter[MAX_PATH];
+	BOOL ok;
 	int i;
 
-	/* Filter tokens are \0 separated - e.g. "Maps (*.cw;*.dat)\0*.cw;*.dat\0 */
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "%c (", args->description);
-	for (i = 0; filters[i]; i++) 
-	{
-		if (i) String_Append(&path, ';');
-		String_Format1(&path, "*%c", filters[i]);
-	}
-	String_Append(&path, ')');
-	String_Append(&path, '\0');
-
-	for (i = 0; filters[i]; i++)
-	{
-		if (i) String_Append(&path, ';');
-		String_Format1(&path, "*%c", filters[i]);
-	}
-	String_Append(&path, '\0');
-	Platform_EncodeUtf16(filter, &path);
-
+	Platform_EncodeUtf16(filter, filters);
 	ofn.lStructSize  = sizeof(ofn);
 	ofn.hwndOwner    = win_handle;
 	ofn.lpstrFile    = str;
 	ofn.nMaxFile     = MAX_PATH;
 	ofn.lpstrFilter  = filter;
 	ofn.nFilterIndex = 1;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+	ofn.Flags = OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | (load ? OFN_FILEMUSTEXIST : OFN_OVERWRITEPROMPT);
 
-	if (!GetOpenFileNameW(&ofn))
-		return CommDlgExtendedError();
+	ok = load ? GetOpenFileNameW(&ofn) : GetSaveFileNameW(&ofn);
+	if (!ok) return CommDlgExtendedError();
 	String_InitArray(path, pathBuffer);
 
 	for (i = 0; i < MAX_PATH && str[i]; i++) {
 		String_Append(&path, Convert_CodepointToCP437(str[i]));
 	}
-	args->Callback(&path);
+
+	/* Add default file extension if user didn't provide one */
+	if (!load && ofn.nFileExtension == 0 && ofn.nFilterIndex > 0) {
+		String_AppendConst(&path, fileExts[ofn.nFilterIndex - 1]);
+	}
+	callback(&path);
 	return 0;
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* fileExts = args->filters;
+	cc_string filters; char buffer[NATIVE_STR_LEN];
+	int i;
+
+	/* Filter tokens are \0 separated - e.g. "Maps (*.cw;*.dat)\0*.cw;*.dat\0 */
+	String_InitArray(filters, buffer);
+	String_Format1(&filters, "%c (", args->description);
+	for (i = 0; fileExts[i]; i++)
+	{
+		if (i) String_Append(&filters, ';');
+		String_Format1(&filters, "*%c", fileExts[i]);
+	}
+	String_Append(&filters, ')');
+	String_Append(&filters, '\0');
+
+	for (i = 0; fileExts[i]; i++)
+	{
+		if (i) String_Append(&filters, ';');
+		String_Format1(&filters, "*%c", fileExts[i]);
+	}
+	String_Append(&filters, '\0');
+
+	return OpenSaveFileDialog(&filters, args->Callback, fileExts, true);
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	const char* const* titles   = args->titles;
+	const char* const* fileExts = args->filters;
+	cc_string filters; char buffer[NATIVE_STR_LEN];
+	int i;
+
+	/* Filter tokens are \0 separated - e.g. "Map (*.cw)\0*.cw\0 */
+	String_InitArray(filters, buffer);
+	for (i = 0; fileExts[i]; i++)
+	{
+		String_Format2(&filters, "%c (*%c)", titles[i], fileExts[i]);
+		String_Append(&filters,  '\0');
+		String_Format1(&filters, "*%c", fileExts[i]);
+		String_Append(&filters,  '\0');
+	}
+	return OpenSaveFileDialog(&filters, args->Callback, fileExts, false);
 }
 
 static HDC draw_DC;

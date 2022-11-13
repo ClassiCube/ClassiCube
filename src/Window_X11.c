@@ -967,12 +967,38 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	XFlush(m.dpy); /* flush so window disappears immediately */
 }
 
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	const char* const* filters = args->filters;
+static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callback, const char* defaultExt) {
 	cc_string path; char pathBuffer[1024];
 	char result[4096] = { 0 };
 	int len, i;
-	FILE* fp;
+	/* TODO this doesn't detect when Zenity doesn't exist */
+	FILE* fp = popen(args, "r");
+	if (!fp) return 0;
+
+	/* result from zenity is normally just one string */
+	while (fgets(result, sizeof(result), fp)) { }
+	pclose(fp);
+
+	len = String_Length(result);
+	if (!len) return 0;
+
+	String_InitArray(path, pathBuffer);
+	String_AppendUtf8(&path, result, len);
+
+	/* Add default file extension if necessary */
+	if (defaultExt) {
+		cc_string file = path;
+		Utils_UNSAFE_GetFilename(&file);
+		if (String_IndexOf(&file, '.') == -1) String_AppendConst(&path, defaultExt);
+	}
+	callback(&path);
+	return 0;
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
+	cc_string path; char pathBuffer[1024];
+	int i;
 
 	String_InitArray_NT(path, pathBuffer);
 	String_Format1(&path, "zenity --file-selection --file-filter='%c (", args->description);
@@ -989,23 +1015,27 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 		String_Format1(&path, " *%c", filters[i]);
 	}
 	String_AppendConst(&path, "'");
+
 	path.buffer[path.length] = '\0';
+	return OpenSaveFileDialog(path.buffer, args->Callback, NULL);
+}
 
-	/* TODO this doesn't detect when Zenity doesn't exist */
-	fp = popen(path.buffer, "r");
-	if (!fp) return 0;
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	const char* const* titles   = args->titles;
+	const char* const* fileExts = args->filters;
+	cc_string path; char pathBuffer[1024];
+	int i;
 
-	/* result is normally just one string */
-	while (fgets(result, sizeof(result), fp)) { }
-	len = String_Length(result);
-
-	if (len) {
-		String_InitArray(path, pathBuffer);
-		String_AppendUtf8(&path, result, len);
-		args->Callback(&path);
+	String_InitArray_NT(path, pathBuffer);
+	String_AppendConst(&path, "zenity --file-selection");
+	for (i = 0; fileExts[i]; i++)
+	{
+		String_Format3(&path, " --file-filter='%c (*%c) | *%c'", titles[i], fileExts[i], fileExts[i]);
 	}
-	pclose(fp);
-	return 0;
+	String_AppendConst(&path, " --save --confirm-overwrite");
+
+	path.buffer[path.length] = '\0';
+	return OpenSaveFileDialog(path.buffer, args->Callback, fileExts[0]);
 }
 
 static GC fb_gc;

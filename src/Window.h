@@ -131,17 +131,25 @@ CC_API void Window_ShowDialog(const char* title, const char* msg);
 
 #define OFD_UPLOAD_DELETE  0 /* (webclient) Deletes the uploaded file after invoking callback function */
 #define OFD_UPLOAD_PERSIST 1 /* (webclient) Saves the uploded file into IndexedDB */
-typedef void (*OpenFileDialogCallback)(const cc_string* path);
+typedef void (*FileDialogCallback)(const cc_string* path);
 
+struct SaveFileDialogArgs {
+	const char* const* filters; /* File extensions to limit dialog to showing (e.g. ".zip", NULL) */
+	const char* const* titles;  /* Descriptions to show for each file extension */
+	cc_string defaultName;      /* Default filename (without extension), required by some backends */
+	FileDialogCallback Callback;
+};
 struct OpenFileDialogArgs {
 	const char* description; /* Describes the types of files supported (e.g. "Texture packs") */
 	const char* const* filters; /* File extensions to limit dialog to showing (e.g. ".zip", NULL) */
-	OpenFileDialogCallback Callback;
+	FileDialogCallback Callback;
 	int uploadAction; /* Action webclient takes after invoking callback function */
 	const char* uploadFolder; /* For webclient, folder to upload the file to */
 };
 /* Shows an 'load file' dialog window */
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args);
+/* Shows an 'save file' dialog window */
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args);
 
 /* Allocates a framebuffer that can be drawn/transferred to the window. */
 /* NOTE: Do NOT free bmp->Scan0, use Window_FreeFramebuffer. */
