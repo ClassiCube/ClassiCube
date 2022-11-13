@@ -818,6 +818,7 @@ static cc_string font_candidates[] = {
 	String_FromConst("Cantarell"),
 	String_FromConst("DejaVu Sans Book"), 
 	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
+	String_FromConst("Liberation Serif"), /* for SerenityOS */
 	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
 	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
 	String_FromConst("Geneva"), /* for ancient macOS versions */
