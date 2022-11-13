@@ -1650,6 +1650,12 @@ static cc_result WriteClassDesc(struct Stream* stream, cc_uint8 typecode, const 
 	return 0;
 }
 
+static const cc_uint8 cpe_fallback[] = {
+	BLOCK_SLAB, BLOCK_BROWN_SHROOM, BLOCK_SAND, BLOCK_AIR, BLOCK_STILL_LAVA, BLOCK_PINK,
+	BLOCK_GREEN, BLOCK_DIRT, BLOCK_BLUE, BLOCK_CYAN, BLOCK_GLASS, BLOCK_IRON, BLOCK_OBSIDIAN, BLOCK_WHITE,
+	BLOCK_WOOD, BLOCK_STONE
+};
+
 #define DAT_BUFFER_SIZE (64 * 1024)
 static cc_result WriteLevelBlocks(struct Stream* stream) {
 	cc_uint8 buffer[DAT_BUFFER_SIZE];
@@ -1662,6 +1668,8 @@ static cc_result WriteLevelBlocks(struct Stream* stream) {
 		b = World_GetRawBlock(i);
 		/* TODO: Better fallback decision (e.g. air if custom block is 'gas' type) */
 		if (b > BLOCK_STONE_BRICK) b = BLOCK_STONE;
+		/* TODO: Move to GameVersion.c and account for game version */
+		if (b > BLOCK_OBSIDIAN) b = cpe_fallback[b - BLOCK_COBBLE_SLAB];
 
 		buffer[bIndex] = (cc_uint8)b;
 		bIndex++;
