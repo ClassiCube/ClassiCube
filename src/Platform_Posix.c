@@ -459,6 +459,10 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
+#elif defined CC_BUILD_SERENITY
+	static const cc_string dirs[] = {
+		String_FromConst("/res/fonts")
+	};
 #else
 	static const cc_string dirs[] = {
 		String_FromConst("/usr/share/fonts"),

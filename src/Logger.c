@@ -767,6 +767,19 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
+#elif defined CC_BUILD_SERENITY
+static void PrintRegisters(cc_string* str, void* ctx) {
+	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+#if defined __i386__
+	#define REG_GET(reg, ign) &r.e##reg
+	Dump_X86()
+#elif defined __x86_64__
+	#define REG_GET(reg, ign) &r.r##reg
+	Dump_X64()
+#else
+	#error "Unknown CPU architecture"
+#endif
+}
 #endif
 
 static void DumpRegisters(void* ctx) {

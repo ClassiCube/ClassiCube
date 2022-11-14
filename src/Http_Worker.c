@@ -254,6 +254,9 @@ static const cc_string curlAlt = String_FromConst("/usr/pkg/lib/libcurl.so");
 #elif defined CC_BUILD_BSD
 static const cc_string curlLib = String_FromConst("libcurl.so");
 static const cc_string curlAlt = String_FromConst("libcurl.so");
+#elif defined CC_BUILD_SERENITY
+static const cc_string curlLib = String_FromConst("/usr/local/lib/libcurl.so");
+static const cc_string curlAlt = String_FromConst("/usr/local/lib/libcurl.so");
 #else
 static const cc_string curlLib = String_FromConst("libcurl.so.4");
 static const cc_string curlAlt = String_FromConst("libcurl.so.3");
