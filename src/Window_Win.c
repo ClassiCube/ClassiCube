@@ -551,8 +551,8 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
-static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback callback, 
-									const char* const* fileExts, cc_bool load) {
+static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback callback, cc_bool load,
+									const char* const* fileExts, const cc_string* defaultName) {
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
 	WCHAR str[MAX_PATH] = { 0 };
 	OPENFILENAMEW ofn   = { 0 };
@@ -560,6 +560,7 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 	BOOL ok;
 	int i;
 
+	Platform_EncodeUtf16(str, defaultName);
 	Platform_EncodeUtf16(filter, filters);
 	ofn.lStructSize  = sizeof(ofn);
 	ofn.hwndOwner    = win_handle;
@@ -608,7 +609,7 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	}
 	String_Append(&filters, '\0');
 
-	return OpenSaveFileDialog(&filters, args->Callback, fileExts, true);
+	return OpenSaveFileDialog(&filters, args->Callback, true, fileExts, &String_Empty);
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
@@ -626,7 +627,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 		String_Format1(&filters, "*%c", fileExts[i]);
 		String_Append(&filters,  '\0');
 	}
-	return OpenSaveFileDialog(&filters, args->Callback, fileExts, false);
+	return OpenSaveFileDialog(&filters, args->Callback, false, fileExts, &args->defaultName);
 }
 
 static HDC draw_DC;

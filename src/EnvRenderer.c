@@ -811,7 +811,7 @@ static void OnContextRecreated(void* obj) {
 void EnvRenderer_SetMode(int flags) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
-	OnContextRecreated(NULL); 
+	OnContextRecreated(NULL);
 }
 
 int EnvRenderer_CalcFlags(const cc_string* mode) {

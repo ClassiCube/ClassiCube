@@ -6,6 +6,7 @@
 #include "Bitmap.h"
 #include "Options.h"
 #include "Errors.h"
+#include "Utils.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
@@ -1033,6 +1034,11 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 		String_Format3(&path, " --file-filter='%c (*%c) | *%c'", titles[i], fileExts[i], fileExts[i]);
 	}
 	String_AppendConst(&path, " --save --confirm-overwrite");
+
+	/* TODO: Utf8 encode filename */
+	if (args->defaultName.length) {
+		String_Format1(&path, " --filename='%s'", &args->defaultName);
+	}
 
 	path.buffer[path.length] = '\0';
 	return OpenSaveFileDialog(path.buffer, args->Callback, fileExts[0]);

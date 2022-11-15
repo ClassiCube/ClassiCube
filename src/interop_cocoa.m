@@ -561,6 +561,8 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	NSString* str;
 	const char* src;
 	int len, i;
+	
+	// TODO: Use args->defaultName, but only macOS 10.6
 
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setAllowedFileTypes:types];

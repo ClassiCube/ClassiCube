@@ -1096,14 +1096,19 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 }
 
 #if defined CC_BUILD_LINUX
-/* Read /var/lib/dbus/machine-id for the key */
+/* Read /var/lib/dbus/machine-id or /etc/machine-id for the key */
 static cc_result GetMachineID(cc_uint32* key) {
-	const cc_string idFile = String_FromConst("/var/lib/dbus/machine-id");
+	const cc_string idFile  = String_FromConst("/var/lib/dbus/machine-id");
+	const cc_string altFile = String_FromConst("/etc/machine-id");
 	char tmp[MACHINEID_LEN];
 	struct Stream s;
 	cc_result res;
 
-	if ((res = Stream_OpenFile(&s, &idFile))) return res;
+	/* Some machines only have dbus id, others only have etc id */
+	res = Stream_OpenFile(&s, &idFile);
+	if (res) res = Stream_OpenFile(&s, &altFile);
+	if (res) return res;
+
 	res = Stream_Read(&s, tmp, MACHINEID_LEN);
 	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
 
