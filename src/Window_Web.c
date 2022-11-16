@@ -542,7 +542,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	interop_ShowDialog(title, msg); 
 }
 
-static OpenFileDialogCallback uploadCallback;
+static FileDialogCallback uploadCallback;
 EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) { 
 	cc_string file; char buffer[FILENAME_SIZE];
 	String_InitArray(file, buffer);
@@ -571,6 +571,25 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	/* Calls Window_OnFileUploaded on success */
 	interop_OpenFileDialog(filter.buffer, args->uploadAction, args->uploadFolder);
 	return 0;
+}
+
+extern int interop_DownloadFile(const char* path, const char* filename);
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_string file; char fileBuffer[FILENAME_SIZE];
+
+	if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+
+	String_InitArray(file, fileBuffer);
+	String_InitArray(path, pathBuffer);
+	String_Format2(&file, "%s%c", &args->defaultName, args->filters[0]);
+	String_Format1(&path, "Downloads/%s", &file);
+
+	args->Callback(&path);
+	/* TODO use utf8 instead */
+	pathBuffer[path.length] = '\0';
+	fileBuffer[file.length] = '\0';
+	return interop_DownloadFile(pathBuffer, fileBuffer);
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }

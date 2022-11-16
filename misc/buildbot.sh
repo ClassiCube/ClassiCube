@@ -125,7 +125,6 @@ RPI64_CC=~/rpi64/cross-pi-gcc-9.4.0-64/bin/aarch64-linux-gnu-gcc
 
 build_rpi32() {
   echo "Building rpi32.."
-  cp $ROOT_DIR/misc/CCIcon_X11 $ROOT_DIR/src/CCIcon_X11
   rm cc-rpi
   $RPI32_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
   if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 32 bit" >> "$ERRS_FILE"; fi
@@ -133,7 +132,6 @@ build_rpi32() {
 
 build_rpi64() {
   echo "Building rpi64.."
-  cp $ROOT_DIR/misc/CCIcon_X11 $ROOT_DIR/src/CCIcon_X11
   rm cc-rpi64
   $RPI64_CC *.c $ALL_FLAGS $RPI_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi64 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 64 bit" >> "$ERRS_FILE"; fi

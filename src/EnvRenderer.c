@@ -815,10 +815,12 @@ void EnvRenderer_SetMode(int flags) {
 }
 
 int EnvRenderer_CalcFlags(const cc_string* mode) {
-	if (String_CaselessEqualsConst(mode, "legacyfast")) return ENV_LEGACY | ENV_MINIMAL;
-	if (String_CaselessEqualsConst(mode, "legacy"))     return ENV_LEGACY;
-	if (String_CaselessEqualsConst(mode, "normal"))     return 0;
+	if (String_CaselessEqualsConst(mode, "normal")) return 0;
+	if (String_CaselessEqualsConst(mode, "legacy")) return ENV_LEGACY;
+	if (String_CaselessEqualsConst(mode, "fast"))   return ENV_MINIMAL;
+	/* backwards compatibility */
 	if (String_CaselessEqualsConst(mode, "normalfast")) return ENV_MINIMAL;
+	if (String_CaselessEqualsConst(mode, "legacyfast")) return ENV_LEGACY | ENV_MINIMAL;
 
 	return -1;
 }

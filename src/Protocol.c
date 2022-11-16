@@ -380,11 +380,10 @@ void Classic_SendChat(const cc_string* text, cc_bool partial) {
 	Server.SendData(data, 66);
 }
 
-void Classic_WritePosition(Vec3 pos, float yaw, float pitch) {
+static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, float pitch) {
 	BlockID payload;
 	int x, y, z;
 
-	cc_uint8* data = Server.WriteBuffer;
 	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
 		payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
@@ -406,11 +405,13 @@ void Classic_WritePosition(Vec3 pos, float yaw, float pitch) {
 		*data++ = Math_Deg2Packed(yaw);
 		*data++ = Math_Deg2Packed(pitch);
 	}
-	Server.WriteBuffer = data;
+	return data;
 }
 
-void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
-	cc_uint8* data = Server.WriteBuffer;
+void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
+	cc_uint8 tmp[32];
+	cc_uint8* data = tmp;
+
 	*data++ = OPCODE_SET_BLOCK_CLIENT;
 	{
 		Stream_SetU16_BE(data, x); data += 2;
@@ -419,7 +420,7 @@ void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 		*data++ = place;
 		WriteBlock(data, block);
 	}
-	Server.WriteBuffer = data;
+	Server.SendData(tmp, (cc_uint32)(data - tmp));
 }
 
 #define Classic_HandshakeSize() (Game_Version.Protocol > PROTOCOL_0019 ? 131 : 130)
@@ -742,12 +743,13 @@ static void Classic_Reset(void) {
 	Net_Set(OPCODE_SET_PERMISSION, Classic_SetPermission, 2);
 }
 
-static void Classic_Tick(void) {
+static cc_uint8* Classic_Tick(cc_uint8* data) {
 	struct Entity* e = &LocalPlayer_Instance.Base;
-	if (!classic_receivedFirstPos) return;
+	if (!classic_receivedFirstPos) return data;
+
 	/* Report end position of each physics tick, rather than current position */
 	/*  (otherwise can miss landing on a block then jumping off of it again) */
-	Classic_WritePosition(e->next.pos, e->Yaw, e->Pitch);
+	return Classic_WritePosition(data, e->next.pos, e->Yaw, e->Pitch);
 }
 
 
@@ -830,14 +832,13 @@ static void CPE_SendExtEntry(const cc_string* extName, int extVersion) {
 	Server.SendData(data, 69);
 }
 
-static void CPE_WriteTwoWayPing(cc_bool serverToClient, int id) {
-	cc_uint8* data = Server.WriteBuffer; 
+static cc_uint8* CPE_WriteTwoWayPing(cc_uint8* data, cc_bool serverToClient, int id) {
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
 		*data++ = serverToClient;
 		Stream_SetU16_BE(data, id); data += 2;
 	}
-	Server.WriteBuffer = data;
+	return data;
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
@@ -1320,11 +1321,14 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 static void CPE_TwoWayPing(cc_uint8* data) {
 	cc_uint8 serverToClient = data[0];
 	int id = Stream_GetU16_BE(data + 1);
+	cc_uint8 tmp[32];
 
-	if (serverToClient) {
-		CPE_WriteTwoWayPing(true, id); /* server to client reply */
-		Net_SendPacket();
-	} else { Ping_Update(id); }
+	/* handle client>server ping response from server */
+	if (!serverToClient) { Ping_Update(id); return; }
+
+	/* send server>client ping response to server */
+	data = CPE_WriteTwoWayPing(tmp, true, id);
+	Server.SendData(tmp, (cc_uint32)(data - tmp));
 }
 
 static void CPE_SetInventoryOrder(cc_uint8* data) {
@@ -1617,12 +1621,13 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 }
 
-static void CPE_Tick(void) {
+static cc_uint8* CPE_Tick(cc_uint8* data) {
 	cpe_pingTicks++;
 	if (cpe_pingTicks >= 20 && cpe_twoWayPing) {
-		CPE_WriteTwoWayPing(false, Ping_NextPingId());
+		data = CPE_WriteTwoWayPing(data, false, Ping_NextPingId());
 		cpe_pingTicks = 0;
 	}
+	return data;
 }
 
 
@@ -1764,9 +1769,16 @@ static void Protocol_Reset(void) {
 }
 
 void Protocol_Tick(void) {
-	Classic_Tick();
-	CPE_Tick();
+	cc_uint8 tmp[256];
+	cc_uint8* data = tmp;
+
+	data = Classic_Tick(data);
+	data = CPE_Tick(data);
 	WoM_Tick();
+
+	/* Have any packets been written? */
+	if (data == tmp) return;
+	Server.SendData(tmp, (cc_uint32)(data - tmp));
 }
 
 static void OnInit(void) {

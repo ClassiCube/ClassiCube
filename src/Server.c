@@ -177,16 +177,15 @@ static void SPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now
 	Physics_OnBlockChanged(x, y, z, old, now);
 }
 
-static void SPConnection_SendPosition(Vec3 pos, float yaw, float pitch) { }
 static void SPConnection_SendData(const cc_uint8* data, cc_uint32 len) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
-	if ((ticks % 3) == 0) { /* 60 -> 20 ticks a second */
-		Physics_Tick();
-		TexturePack_CheckPending();
-	}
-	ticks++;
+	/* 60 -> 20 ticks a second */
+	if ((ticks++ % 3) != 0)  return;
+	
+	Physics_Tick();
+	TexturePack_CheckPending();
 }
 
 static void SPConnection_Init(void) {
@@ -197,13 +196,11 @@ static void SPConnection_Init(void) {
 	Server.Tick         = SPConnection_Tick;
 	Server.SendBlock    = SPConnection_SendBlock;
 	Server.SendChat     = SPConnection_SendChat;
-	Server.SendPosition = SPConnection_SendPosition;
 	Server.SendData     = SPConnection_SendData;
 	
 	Server.SupportsFullCP437       = !Game_ClassicMode;
 	Server.SupportsPartialMessages = true;
 	Server.IsSinglePlayer          = true;
-	Server.WriteBuffer = NULL;
 }
 
 
@@ -212,7 +209,6 @@ static void SPConnection_Init(void) {
 *#########################################################################################################################*/
 static cc_socket net_socket;
 static cc_uint8  net_readBuffer[4096 * 5];
-static cc_uint8  net_writeBuffer[131];
 static cc_uint8* net_readCurrent;
 
 static cc_result net_writeFailure;
@@ -229,9 +225,7 @@ static void MPConnection_FinishConnect(void) {
 	Event_RaiseVoid(&NetEvents.Connected);
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 
-	net_readCurrent    = net_readBuffer;
-	Server.WriteBuffer = net_writeBuffer;
-
+	net_readCurrent = net_readBuffer;
 	Classic_SendLogin();
 	lastPacket = Game.Time;
 }
@@ -311,11 +305,10 @@ static void MPConnection_BeginConnect(void) {
 static void MPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now) {
 	if (now == BLOCK_AIR) {
 		now = Inventory_SelectedBlock;
-		Classic_WriteSetBlock(x, y, z, false, now);
+		Classic_SendSetBlock(x, y, z, false, now);
 	} else {
-		Classic_WriteSetBlock(x, y, z, true, now);
+		Classic_SendSetBlock(x, y, z, true, now);
 	}
-	Net_SendPacket();
 }
 
 static void MPConnection_SendChat(const cc_string* text) {
@@ -328,11 +321,6 @@ static void MPConnection_SendChat(const cc_string* text) {
 		left = String_UNSAFE_SubstringAt(&left, STRING_SIZE);
 	}
 	Classic_SendChat(&left, false);
-}
-
-static void MPConnection_SendPosition(Vec3 pos, float yaw, float pitch) {
-	Classic_WritePosition(pos, yaw, pitch);
-	Net_SendPacket();
 }
 
 static void MPConnection_Disconnect(void) {
@@ -442,13 +430,10 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
-	if ((ticks % 3) == 0) {
-		TexturePack_CheckPending();
-		Protocol_Tick();
-		/* Have any packets been written? */
-		if (Server.WriteBuffer != net_writeBuffer) Net_SendPacket();
-	}
-	ticks++;
+	if ((ticks++ % 3) != 0) return;
+
+	TexturePack_CheckPending();
+	Protocol_Tick();
 }
 
 static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
@@ -475,12 +460,6 @@ static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
 	}
 }
 
-void Net_SendPacket(void) {
-	cc_uint32 len = (cc_uint32)(Server.WriteBuffer - net_writeBuffer);
-	Server.WriteBuffer = net_writeBuffer;
-	Server.SendData(net_writeBuffer, len);
-}
-
 static void MPConnection_Init(void) {
 	Server_ResetState();
 	Server.IsSinglePlayer = false;
@@ -489,11 +468,8 @@ static void MPConnection_Init(void) {
 	Server.Tick         = MPConnection_Tick;
 	Server.SendBlock    = MPConnection_SendBlock;
 	Server.SendChat     = MPConnection_SendChat;
-	Server.SendPosition = MPConnection_SendPosition;
 	Server.SendData     = MPConnection_SendData;
-
-	net_readCurrent    = net_readBuffer;
-	Server.WriteBuffer = net_writeBuffer;
+	net_readCurrent     = net_readBuffer;
 }
 
 
