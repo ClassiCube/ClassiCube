@@ -542,14 +542,14 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	interop_ShowDialog(title, msg); 
 }
 
-static FileDialogCallback uploadCallback;
+static FileDialogCallback dialog_callback;
 EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) { 
-	cc_string file; char buffer[FILENAME_SIZE];
-	String_InitArray(file, buffer);
+	cc_string path; char buffer[FILENAME_SIZE];
+	String_InitArray(path, buffer);
 
-	String_AppendUtf8(&file, src, String_Length(src));
-	uploadCallback(&file);
-	uploadCallback = NULL;
+	String_AppendUtf8(&path, src, String_Length(src));
+	dialog_callback(&path);
+	dialog_callback = NULL;
 }
 
 extern void interop_OpenFileDialog(const char* filter, int action, const char* folder);
@@ -567,29 +567,25 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	}
 	filter.buffer[filter.length] = '\0';
 
-	uploadCallback = args->Callback;
+	dialog_callback = args->Callback;
 	/* Calls Window_OnFileUploaded on success */
 	interop_OpenFileDialog(filter.buffer, args->uploadAction, args->uploadFolder);
 	return 0;
 }
 
-extern int interop_DownloadFile(const char* path, const char* filename);
+extern int interop_DownloadFile(const char* filename, const char* const* filters, const char* const* titles);
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string file; char fileBuffer[FILENAME_SIZE];
-
 	if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+	dialog_callback = args->Callback;
 
-	String_InitArray(file, fileBuffer);
-	String_InitArray(path, pathBuffer);
-	String_Format2(&file, "%s%c", &args->defaultName, args->filters[0]);
-	String_Format1(&path, "Downloads/%s", &file);
-
-	args->Callback(&path);
 	/* TODO use utf8 instead */
-	pathBuffer[path.length] = '\0';
+	String_InitArray(file, fileBuffer);
+	String_Format2(&file, "%s%c", &args->defaultName, args->filters[0]);
 	fileBuffer[file.length] = '\0';
-	return interop_DownloadFile(pathBuffer, fileBuffer);
+
+	/* Calls Window_OnFileUploaded on success */
+	return interop_DownloadFile(fileBuffer, args->filters, args->titles);
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }

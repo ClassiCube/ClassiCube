@@ -91,22 +91,72 @@ mergeInto(LibraryManager.library, {
 
 
 //########################################################################################################################
-//-----------------------------------------------------------Menu---------------------------------------------------------
+//---------------------------------------------------------Dialogs--------------------------------------------------------
 //########################################################################################################################
-  interop_DownloadFile: function(path, filename) {
+  interop_DownloadFile: function(filename, filters, titles) {
     try {
-      var name = UTF8ToString(path);
-      var data = CCFS.readFile(name);
+      if (_interop_ShowSaveDialog(filename, filters, titles)) return 0;
+      
+      var name = UTF8ToString(filename);
+      var path = 'Downloads/' + name;
+      ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+      
+      var data = CCFS.readFile(path);
       var blob = new Blob([data], { type: 'application/octet-stream' });
       _interop_SaveBlob(blob, UTF8ToString(filename));
-      CCFS.unlink(name);
+      CCFS.unlink(path);
       return 0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
-  interop_DownloadMap__deps: ['interop_SaveBlob'],
+  interop_DownloadFile__deps: ['interop_SaveBlob', 'interop_ShowSaveDialog'],  
+  interop_ShowSaveDialog: function(filename, filters, titles) {
+    // not supported by all browsers
+    if (!window.showSaveFilePicker) return 0;
+    
+    var fileTypes = [];
+    for (var i = 0; HEAP32[(filters>>2)+i|0]; i++)
+    {
+      var filter = HEAP32[(filters>>2)+i|0];
+      var title  = HEAP32[(titles >>2)+i|0];
+      
+      var filetype = {
+        description: UTF8ToString(title),
+        accept: {'applicaion/octet-stream': [UTF8ToString(filter)]}
+      };
+      fileTypes.push(filetype);
+    }
+    
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises
+    // https://web.dev/file-system-access/
+    var path = null;
+    var opts = {
+      suggestedName: UTF8ToString(filename),
+      types: fileTypes
+    };
+    window.showSaveFilePicker(opts)
+      .then(function(fileHandle) {
+        path = 'Downloads/' + fileHandle.name;
+        return fileHandle.createWritable();
+      })
+      .then(function(writable) {
+        ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+      
+        var data = CCFS.readFile(path);
+        writable.write(data);
+        return writable.close();
+      })
+      .catch(function(error) {
+        ccall('Platform_LogError', 'void', ['string'], ['&cError downloading file']);
+        ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+      })
+      .finally(function(result) {
+        if (path) CCFS.unlink(path);
+      });
+      return 1;
+  },
   
   
 //########################################################################################################################

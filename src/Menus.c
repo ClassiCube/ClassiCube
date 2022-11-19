@@ -1313,9 +1313,6 @@ static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
 	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
 	GZip_MakeStream(&compStream, &state, &stream);
 
-#ifdef CC_BUILD_WEB
-	res = Cw_Save(&compStream);
-#else
 	if (String_CaselessEnds(path, &schematic)) {
 		res = Schematic_Save(&compStream);
 	} else if (String_CaselessEnds(path, &mine)) {
@@ -1323,7 +1320,6 @@ static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
 	} else {
 		res = Cw_Save(&compStream);
 	}
-#endif
 
 	if (res) {
 		stream.Close(&stream);
