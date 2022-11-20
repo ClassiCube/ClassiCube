@@ -26,7 +26,6 @@ import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.provider.OpenableColumns;
 import android.provider.Settings.Secure;
 import android.text.Editable;
@@ -159,19 +158,6 @@ public class MainActivity extends Activity
 		runGameAsync();
 	}
 	
-	void HACK_avoidFileUriExposedErrors() {
-		// StrictMode - API level 9
-		// disableDeathOnFileUriExposure - API level 24 ?????
-		try {
-			Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
-			m.invoke(null);
-		}  catch (NoClassDefFoundError ex) {
-			ex.printStackTrace();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// requestWindowFeature - API level 1
@@ -192,9 +178,6 @@ public class MainActivity extends Activity
 		// Need to find a solution that both renders over display cutouts and doesn't mess up onscreen input
 		// renderOverDisplayCutouts();
 		// TODO: semaphore for destroyed and surfaceDestroyed
-
-		// avoid FileUriExposed exception when taking screenshots on recent Android versions
-		HACK_avoidFileUriExposedErrors();
 
 		if (!gameRunning) startGameAsync();
 		// TODO rethink to avoid this
@@ -811,11 +794,21 @@ public class MainActivity extends Activity
 	
 	public String shareScreenshot(String path) {
 		try {
-			File file = new File(getGameDataDirectory() + "/screenshots/" + path);
+			Uri uri;
+			if (android.os.Build.VERSION.SDK_INT >= 23){ // android 6.0
+				uri = CCFileProvider.getUriForFile("screenshots/" + path);
+			} else {
+				// when trying to use content:// URIs on my android 4.0.3 test device
+				//   - 1 app crashed
+				//   - 1 app wouldn't show image previews
+				// so fallback to file:// on older devices as they seem to reliably work
+				File file = new File(getGameDataDirectory() + "/screenshots/" + path);
+				uri = Uri.fromFile(file);
+			}
 			Intent intent = new Intent();
 			
 			intent.setAction(Intent.ACTION_SEND);
-			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+			intent.putExtra(Intent.EXTRA_STREAM, uri);
 			intent.setType("image/png");
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			startActivity(Intent.createChooser(intent, "share via"));
