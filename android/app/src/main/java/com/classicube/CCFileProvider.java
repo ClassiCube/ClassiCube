@@ -12,11 +12,12 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 
 public class CCFileProvider extends ContentProvider
 {
-    final static String[] DEFAULT_COLUMNS = { OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE };
+    final static String[] DEFAULT_COLUMNS = { OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE, MediaStore.MediaColumns.DATA };
     File root;
 
     @Override
@@ -33,11 +34,11 @@ public class CCFileProvider extends ContentProvider
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         File file = getFileForUri(uri);
-        // can be null when caller is requesting all supported columns
+        // can be null when caller is requesting all columns
         if (projection == null) projection = DEFAULT_COLUMNS;
 
-        ArrayList<String> cols = new ArrayList<String>(2);
-        ArrayList<Object> vals = new ArrayList<Object>(2);
+        ArrayList<String> cols = new ArrayList<String>(3);
+        ArrayList<Object> vals = new ArrayList<Object>(3);
 
         for (String column : projection) {
             if (column.equals(OpenableColumns.DISPLAY_NAME)) {
@@ -46,6 +47,9 @@ public class CCFileProvider extends ContentProvider
             } else if (column.equals(OpenableColumns.SIZE)) {
                 cols.add(OpenableColumns.SIZE);
                 vals.add(file.length());
+            } else if (column.equals(MediaStore.MediaColumns.DATA)) {
+                cols.add(MediaStore.MediaColumns.DATA);
+                vals.add(file.getAbsolutePath());
             }
         }
 
@@ -92,7 +96,7 @@ public class CCFileProvider extends ContentProvider
         // See AndroidManifest.xml for authority
         return new Uri.Builder()
                 .scheme("content")
-                .authority("com.classicube.android.client.ccfiles")
+                .authority("com.classicube.android.client.provider")
                 .encodedPath(Uri.encode(path, "/"))
                 .build();
     }
@@ -100,7 +104,7 @@ public class CCFileProvider extends ContentProvider
     File getFileForUri(Uri uri) {
         String path = uri.getPath();
         File file   = new File(root, path);
-        
+
         file = file.getAbsoluteFile();
         // security validation check
         if (!file.getPath().startsWith(root.getPath())) {

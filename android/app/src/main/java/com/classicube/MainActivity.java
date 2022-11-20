@@ -794,7 +794,17 @@ public class MainActivity extends Activity
 	
 	public String shareScreenshot(String path) {
 		try {
-			Uri uri = CCFileProvider.getUriForFile("screenshots", path);
+			Uri uri;
+			if (android.os.Build.VERSION.SDK_INT >= 23){ // android 6.0
+				uri = CCFileProvider.getUriForFile("screenshots/" + path);
+			} else {
+				// when trying to use content:// URIs on my android 4.0.3 test device
+				//   - 1 app crashed
+				//   - 1 app wouldn't show image previews
+				// so fallback to file:// on older devices as they seem to reliably work
+				File file = new File(getGameDataDirectory() + "/screenshots/" + path);
+				uri = Uri.fromFile(file);
+			}
 			Intent intent = new Intent();
 			
 			intent.setAction(Intent.ACTION_SEND);

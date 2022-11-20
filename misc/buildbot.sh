@@ -179,9 +179,12 @@ build_android() {
   #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/Makefile
   #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/CMakeLists.txt
   
-  # compile interop java file into its multiple .class files
-  javac java/com/classicube/MainActivity.java -d ./obj -classpath $SDK_ROOT/android.jar
+  # compile java files into multiple .class files
+  cd $ROOT_DIR/android/app/src/main/java/com/classicube
+  javac *.java -d $ROOT_DIR/android/app/src/main/obj -classpath $SDK_ROOT/android.jar
   if [ $? -ne 0 ]; then echo "Failed to compile Android Java" >> "$ERRS_FILE"; fi
+  
+  cd $ROOT_DIR/android/app/src/main
   # compile the multiple .class files into one .dex file
   $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
   # create initial .apk with packaged version of resources
