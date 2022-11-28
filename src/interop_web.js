@@ -24,7 +24,7 @@ mergeInto(LibraryManager.library, {
   interop_InitModule: function() {
     // these are required for older versions of emscripten, but the compiler removes
     // this by default as no syscalls are used by the C platform code anymore
-    window.ERRNO_CODES={EPERM:1,ENOENT:2,EIO:5,ENXIO:6,EBADF:9,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EEXIST:17,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,EBADFD:77,ENOTEMPTY:39};
+    window.ERRNO_CODES={ENOENT:2,EBADF:9,EAGAIN:11,ENOMEM:12,EEXIST:17,EINVAL:22};
   },
   interop_InitModule__deps: ['interop_SaveBlob'],
   interop_TakeScreenshot: function(path) {

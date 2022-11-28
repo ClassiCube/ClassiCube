@@ -10,7 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
@@ -25,16 +24,18 @@
 
 /* Unfortunately, errno constants are different in some older emscripten versions */
 /*  (linux errno numbers compared to WASI errno numbers) */
-/* So just use the same numbers as interop_web.js (otherwise connecting always fail) */
-#define _EINPROGRESS  26
+/* So just use the same errono numbers as interop_web.js */
+#define _ENOENT        2
 #define _EAGAIN        6 /* same as EWOULDBLOCK */
+#define _EEXIST       17
 #define _EHOSTUNREACH 23
+#define _EINPROGRESS  26
 
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_FileShareViolation = 1000000000; /* Not used in web filesystem backend */
+const cc_result ReturnCode_FileNotFound     = _ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 
 
 /*########################################################################################################################*
