@@ -407,7 +407,7 @@ void TexturePack_CheckPending(void) {
 	if (item.success) {
 		ApplyDownloaded(&item);
 	} else if (item.result) {
-		Logger_Warn(item.result, "trying to download texture pack", Http_DescribeError);
+		Http_LogError("trying to download texture pack", &item);
 	} else if (item.statusCode == 200 || item.statusCode == 304) {
 		/* Empty responses is okay for these status codes, so don't log an error */
 	} else if (item.statusCode == 404) {

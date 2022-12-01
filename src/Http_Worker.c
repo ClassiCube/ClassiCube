@@ -285,7 +285,7 @@ static cc_bool LoadCurlFuncs(void) {
 static CURL* curl;
 static cc_bool curlSupported, curlVerbose;
 
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	const char* err;
 	
 	if (!_curl_easy_strerror) return false;
@@ -393,14 +393,25 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
+	/* must be at least CURL_ERROR_SIZE (256) in size */
+	req->error = Mem_TryAllocCleared(257, 1);
+	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, req->error);
+
 	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
 
+	/* Free error string if it isn't needed */
+	if (req->error && !req->error[0]) {
+		Mem_Free(req->error);
+		req->error = NULL;
+	}
+
 	_curl_slist_free_all((struct curl_slist*)req->meta);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
+	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, NULL);
 	return res;
 }
 #elif defined CC_BUILD_WININET
@@ -552,7 +563,7 @@ static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
 }
 
 static void* wininet_lib;
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	return Platform_DescribeErrorExt(res, dst, wininet_lib);
 }
 
@@ -685,7 +696,7 @@ struct HttpRequest* java_req;
 static jmethodID JAVA_httpInit, JAVA_httpSetHeader, JAVA_httpPerform, JAVA_httpSetData;
 static jmethodID JAVA_httpDescribeError;
 
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	char buffer[NATIVE_STR_LEN];
 	cc_string err;
 	JNIEnv* env;
@@ -804,7 +815,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #include <stddef.h>
 #include <CFNetwork/CFNetwork.h>
 
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
     return false;
 }
 

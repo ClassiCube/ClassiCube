@@ -6,6 +6,7 @@
 #include "Stream.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "Http.h"
 
 #if defined CC_BUILD_WEB
 /* Can't see native CPU state with javascript */

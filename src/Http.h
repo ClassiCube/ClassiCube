@@ -37,6 +37,7 @@ struct HttpRequest {
 	cc_uint32   size; /* Size of the contents. */
 	cc_uint32 _capacity; /* (private) Maximum size of data buffer */
 	void* meta;          /* Pointer to backend specific data */
+	const char* error;
 
 	char lastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char etag[STRING_SIZE];         /* ETag of cached item (if any) */
@@ -84,4 +85,6 @@ cc_bool Http_GetCurrent(int* reqID, int* progress);
 int Http_CheckProgress(int reqID);
 /* Clears the list of pending requests. */
 void Http_ClearPending(void);
+
+void Http_LogError(const char* action, const struct HttpRequest* item);
 #endif

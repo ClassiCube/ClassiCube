@@ -59,7 +59,7 @@ void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_s
 
 	if (res) {
 		/* Non HTTP error - this is not good */
-		Logger_Warn(res, action, Http_DescribeError);
+		Http_LogError(action, req);
 		String_Format2(dst, "&cError %i when %c", &res, action);
 	} else if (status != 200) {
 		String_Format2(dst, "&c%i error when %c", &status, action);
