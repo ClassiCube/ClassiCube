@@ -7,6 +7,7 @@
 struct LScreen;
 struct FontDesc;
 struct Context2D;
+struct HttpRequest;
 
 /* The screen/menu currently being shown */
 extern struct LScreen* Launcher_Active;

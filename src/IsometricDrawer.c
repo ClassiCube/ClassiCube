@@ -13,8 +13,8 @@ static struct VertexTextured* iso_vertices_base;
 static GfxResourceID iso_vb;
 
 static cc_bool iso_cacheInited;
-static PackedCol iso_col = PACKEDCOL_WHITE;
-static PackedCol iso_colXSide, iso_colZSide, iso_colYBottom;
+static PackedCol iso_color = PACKEDCOL_WHITE;
+static PackedCol iso_colorXSide, iso_colorZSide, iso_colorYBottom;
 
 #define iso_cosX  (0.86602540378443864f) /* cos(30  * MATH_DEG2RAD) */
 #define iso_sinX  (0.50000000000000000f) /* sin(30  * MATH_DEG2RAD) */
@@ -42,7 +42,8 @@ static void IsometricDrawer_InitCache(void) {
 	if (iso_cacheInited) return;
 
 	iso_cacheInited = true;
-	PackedCol_GetShaded(iso_col, &iso_colXSide, &iso_colZSide, &iso_colYBottom);
+	PackedCol_GetShaded(iso_color, 
+		&iso_colorXSide, &iso_colorZSide, &iso_colorYBottom);
 
 	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);
 	Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD);
@@ -78,7 +79,7 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, cc_bool firstPart) {
 	float x1, x2;
 
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
-	v.Col = iso_col;
+	v.Col = iso_color;
 	Block_Tint(v.Col, block);
 
 	x1 = firstPart ? 0.5f : -0.1f;
@@ -107,7 +108,7 @@ static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
 	float z1, z2;
 
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
-	v.Col = iso_col;
+	v.Col = iso_color;
 	Block_Tint(v.Col, block);
 
 	z1 = firstPart ? 0.5f : -0.1f;
@@ -175,11 +176,11 @@ void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 		Drawer.Tinted  = Blocks.Tinted[block];
 		Drawer.TintCol = Blocks.FogCol[block];
 
-		Drawer_XMax(1, bright ? iso_col : iso_colXSide, 
+		Drawer_XMax(1, bright ? iso_color : iso_colorXSide,
 			IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);
-		Drawer_ZMin(1, bright ? iso_col : iso_colZSide, 
+		Drawer_ZMin(1, bright ? iso_color : iso_colorZSide,
 			IsometricDrawer_GetTexLoc(block, FACE_ZMIN), &iso_vertices);
-		Drawer_YMax(1, iso_col, 
+		Drawer_YMax(1, iso_color,
 			IsometricDrawer_GetTexLoc(block, FACE_YMAX), &iso_vertices);
 	}
 }
