@@ -150,7 +150,7 @@ mergeInto(LibraryManager.library, {
       })
       .catch(function(error) {
         ccall('Platform_LogError', 'void', ['string'], ['&cError downloading file']);
-        ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+        ccall('Platform_LogError', 'void', ['string'], ['   &c' + error]);
       })
       .finally(function(result) {
         if (path) CCFS.unlink(path);

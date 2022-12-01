@@ -632,14 +632,10 @@ void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static int Table_X(struct TableWidget* w) { return w->x - w->paddingX;    }
-static int Table_Y(struct TableWidget* w) { return w->y - w->paddingTopY; }
-static int Table_Width(struct TableWidget* w) {
-	return w->blocksPerRow * w->cellSizeX + w->paddingX * 2;
-}
-static int Table_Height(struct TableWidget* w) {
-	return w->rowsVisible  * w->cellSizeY + w->paddingTopY + w->paddingMaxY;
-}
+static int Table_X(struct TableWidget* w)      { return w->x - w->paddingL; }
+static int Table_Y(struct TableWidget* w)      { return w->y - w->paddingT; }
+static int Table_Width(struct TableWidget* w)  { return w->width + w->paddingL + w->paddingR; }
+static int Table_Height(struct TableWidget* w) { return w->height + w->paddingT + w->paddingB; }
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
@@ -743,8 +739,8 @@ static void TableWidget_Render(void* widget, double delta) {
 		/* We want to always draw the selected block on top of others */
 		/* TODO: Need two size arguments, in case X/Y dpi differs */
 		if (i == w->selectedIndex) continue;
-		IsometricDrawer_DrawBatch(w->blocks[i], cellSizeX * 0.7f / 2.0f,
-			x + cellSizeX / 2, y + cellSizeY / 2);
+		IsometricDrawer_DrawBatch(w->blocks[i],
+			w->normBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
 
 	i = w->selectedIndex;
@@ -752,8 +748,7 @@ static void TableWidget_Render(void* widget, double delta) {
 		TableWidget_GetCoords(w, i, &x, &y);
 
 		IsometricDrawer_DrawBatch(w->blocks[i],
-			(cellSizeX + w->selBlockExpand) * 0.7f / 2.0f,
-			x + cellSizeX / 2, y + cellSizeY / 2);
+			w->selBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
 	IsometricDrawer_EndBatch();
 }
@@ -772,15 +767,18 @@ void TableWidget_Recreate(struct TableWidget* w) {
 
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	float scale = w->scale;
-	int cellSize;
+	float scale = Math_SqrtF(w->scale);
+	int cellSize, blockSize;
 
-	cellSize     = (int)(50 * Math_SqrtF(scale));
-	w->cellSizeX = Display_ScaleX(cellSize);
-	w->cellSizeY = Display_ScaleY(cellSize);
+	cellSize     = Game_ClassicMode ? 48 : 50;
+	w->cellSizeX = Display_ScaleX(cellSize * scale);
+	w->cellSizeY = Display_ScaleY(cellSize * scale);
 
-	w->selBlockExpand = 25.0f * Math_SqrtF(scale);
-	w->rowsVisible    = min(8, w->rowsTotal); /* 8 rows max */
+	blockSize    = Game_ClassicMode ? 40 : 50;
+	blockSize    = Display_ScaleX(blockSize * scale);
+	w->normBlockSize = (blockSize             ) * 0.7f / 2.0f;
+	w->selBlockSize  = (blockSize + 25 * scale) * 0.7f / 2.0f;
+	w->rowsVisible   = min(8, w->rowsTotal); /* 8 rows max */
 
 	do {
 		w->width  = w->cellSizeX * w->blocksPerRow;
@@ -918,9 +916,10 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->lastX = -20; w->lastY = -20;
 	w->scale = 1;
 
-	w->paddingX    = Display_ScaleX(15);
-	w->paddingTopY = Display_ScaleY(15 + 20);
-	w->paddingMaxY = Display_ScaleX(15);
+	w->paddingL = Display_ScaleX(Game_ClassicMode ? 20 : 15);
+	w->paddingR = Display_ScaleX(Game_ClassicMode ? 28 : 15);
+	w->paddingT = Display_ScaleY(Game_ClassicMode ? 46 : 35);
+	w->paddingB = Display_ScaleY(Game_ClassicMode ? 14 : 15);
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
