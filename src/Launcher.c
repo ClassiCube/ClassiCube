@@ -53,7 +53,10 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	LBackend_Redraw();
 }
 
-void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc_string* dst) {
+void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_string* dst) {
+	cc_result res = req->result;
+	int status    = req->statusCode;
+
 	if (res) {
 		/* Non HTTP error - this is not good */
 		Logger_Warn(res, action, Http_DescribeError);
@@ -120,9 +123,13 @@ CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name);
 }
 
+static void ConnectToServerError(struct HttpRequest* req) {
+	cc_string logMsg = String_Init(NULL, 0, 0);
+	Launcher_DisplayHttpError(req, "fetching server info", &logMsg);
+}
+
 cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 	struct ServerInfo* info;
-	cc_string logMsg;
 	int i;
 	if (!hash->length) return false;
 
@@ -139,7 +146,7 @@ cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 	FetchServerTask_Run(hash);
 
 	while (!FetchServerTask.Base.completed) { 
-		LWebTask_Tick(&FetchServerTask.Base);
+		LWebTask_Tick(&FetchServerTask.Base, ConnectToServerError);
 		Thread_Sleep(10); 
 	}
 
@@ -148,9 +155,6 @@ cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 		return true;
 	} else if (FetchServerTask.Base.success) {
 		Window_ShowDialog("Failed to connect", "No server has that hash");
-	} else {
-		logMsg = String_Init(NULL, 0, 0);
-		LWebTask_DisplayError(&FetchServerTask.Base, "fetching server info", &logMsg);
 	}
 	return false;
 }

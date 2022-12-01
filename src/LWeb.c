@@ -212,29 +212,23 @@ static void LWebTask_Reset(struct LWebTask* task) {
 	task->completed = false;
 	task->working   = true;
 	task->success   = false;
-	task->res       = 0;
-	task->status    = 0;
 }
 
-void LWebTask_Tick(struct LWebTask* task) {
+void LWebTask_Tick(struct LWebTask* task, LWebTask_ErrorCallback errorCallback) {
 	struct HttpRequest req;
 	if (task->completed) return;
 	if (!Http_GetResult(task->reqID, &req)) return;
-
-	task->res    = req.result;
-	task->status = req.statusCode;
 
 	task->working   = false;
 	task->completed = true;
 	task->success   = req.success;
 
-	if (!req.success) return;
-	task->Handle((cc_uint8*)req.data, req.size);
-	Mem_Free(req.data);
-}
-
-void LWebTask_DisplayError(struct LWebTask* task, const char* action, cc_string* dst) {
-	Launcher_DisplayHttpError(task->res, task->status, action, dst);
+	if (req.success) {
+		task->Handle((cc_uint8*)req.data, req.size);
+		Mem_Free(req.data);
+	} else if (errorCallback) {
+		errorCallback(&req);
+	}
 }
 
 void LWebTasks_Init(void) {

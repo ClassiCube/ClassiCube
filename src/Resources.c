@@ -778,8 +778,8 @@ void Resources_CheckExistence(void) {
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
-int  Fetcher_StatusCode, Fetcher_Downloaded;
-cc_result Fetcher_Result;
+int Fetcher_Downloaded;
+FetcherErrorCallback Fetcher_ErrorCallback;
 
 const char* Fetcher_RequestName(int reqID) {
 	int i;
@@ -845,9 +845,10 @@ CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* req) {
 		return true;
 	}
 
-	Fetcher_Failed     = true;
-	Fetcher_Result     = req->result;
-	Fetcher_StatusCode = req->statusCode;
+	/* Only show error for first failed download */
+	if (!Fetcher_Failed) Fetcher_ErrorCallback(req);
+	Fetcher_Failed = true;
+	
 	Fetcher_Finish();
 	return false;
 }

@@ -706,12 +706,12 @@ CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool fu
 		info->ip.length   && info->port.length;
 }
 
-CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* action) {
+CC_NOINLINE static void MainScreen_Error(struct HttpRequest* req, const char* action) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = &MainScreen;
 	String_InitArray(str, strBuffer);
 
-	LWebTask_DisplayError(task, action, &str);
+	Launcher_DisplayHttpError(req, action, &str);
 	LLabel_SetText(&s->lblStatus, &str);
 	s->signingIn = false;
 }
@@ -858,7 +858,7 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	cc_uint32 latest, current;
 
 	if (!CheckUpdateTask.Base.working)   return;
-	LWebTask_Tick(&CheckUpdateTask.Base);
+	LWebTask_Tick(&CheckUpdateTask.Base, NULL);
 	if (!CheckUpdateTask.Base.completed) return;
 
 	if (CheckUpdateTask.Base.success) {
@@ -881,15 +881,16 @@ static void MainScreen_LoginPhase2(struct MainScreen* s, const cc_string* user) 
 	LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");
 }
 
+static void MainScreen_SignInError(struct HttpRequest* req) {
+	MainScreen_Error(req, "signing in");
+}
+
 static void MainScreen_TickGetToken(struct MainScreen* s) {
 	if (!GetTokenTask.Base.working)   return;
-	LWebTask_Tick(&GetTokenTask.Base);
-	if (!GetTokenTask.Base.completed) return;
+	LWebTask_Tick(&GetTokenTask.Base, MainScreen_SignInError);
 
-	if (!GetTokenTask.Base.success) {
-		MainScreen_Error(&GetTokenTask.Base, "signing in");
-		return;
-	}
+	if (!GetTokenTask.Base.completed) return;
+	if (!GetTokenTask.Base.success)   return;
 
 	if (!GetTokenTask.error && String_CaselessEquals(&GetTokenTask.username, &s->iptUsername.text)) {
 		/* Already logged in, go straight to fetching servers */
@@ -902,7 +903,7 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
 	if (!SignInTask.Base.working)   return;
-	LWebTask_Tick(&SignInTask.Base);
+	LWebTask_Tick(&SignInTask.Base, MainScreen_SignInError);
 	if (!SignInTask.Base.completed) return;
 
 	if (SignInTask.needMFA) { MFAScreen_SetActive(); return; }
@@ -911,20 +912,19 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 		LLabel_SetConst(&s->lblStatus, SignInTask.error);
 	} else if (SignInTask.Base.success) {
 		MainScreen_LoginPhase2(s, &SignInTask.username);
-	} else {
-		MainScreen_Error(&SignInTask.Base, "signing in");
 	}
+}
+
+static void MainScreen_ServersError(struct HttpRequest* req) {
+	MainScreen_Error(req, "retrieving servers list");
 }
 
 static void MainScreen_TickFetchServers(struct MainScreen* s) {
 	if (!FetchServersTask.Base.working)   return;
-	LWebTask_Tick(&FetchServersTask.Base);
-	if (!FetchServersTask.Base.completed) return;
+	LWebTask_Tick(&FetchServersTask.Base, MainScreen_ServersError);
 
-	if (!FetchServersTask.Base.success) {
-		MainScreen_Error(&FetchServersTask.Base, "retrieving servers list");
-		return;
-	}
+	if (!FetchServersTask.Base.completed) return;
+	if (!FetchServersTask.Base.success)   return;
 
 	s->signingIn = false;
 	if (Launcher_AutoHash.length) {
@@ -1078,7 +1078,19 @@ static void FetchResourcesScreen_Init(struct LScreen* s_) {
 
 	s->btnCancel.OnClick = CheckResourcesScreen_Next;
 }
-static void FetchResourcesScreen_Show(struct LScreen* s_) { Fetcher_Run(); }
+
+static void FetchResourcesScreen_Error(struct HttpRequest* req) {
+	cc_string str; char buffer[STRING_SIZE];
+	String_InitArray(str, buffer);
+
+	Launcher_DisplayHttpError(req, "downloading resources", &str);
+	LLabel_SetText(&FetchResourcesScreen.lblStatus, &str);
+}
+
+static void FetchResourcesScreen_Show(struct LScreen* s_) {
+	Fetcher_ErrorCallback = FetchResourcesScreen_Error;
+	Fetcher_Run(); 
+}
 
 static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, int reqID) {
 	cc_string str; char strBuffer[STRING_SIZE];
@@ -1107,14 +1119,6 @@ static void FetchResourcesScreen_UpdateProgress(struct FetchResourcesScreen* s) 
 	LSlider_SetProgress(&s->sdrProgress, progress);
 }
 
-static void FetchResourcesScreen_Error(struct FetchResourcesScreen* s) {
-	cc_string str; char buffer[STRING_SIZE];
-	String_InitArray(str, buffer);
-
-	Launcher_DisplayHttpError(Fetcher_Result, Fetcher_StatusCode, "downloading resources", &str);
-	LLabel_SetText(&s->lblStatus, &str);
-}
-
 static void FetchResourcesScreen_Tick(struct LScreen* s_) {
 	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
 	if (!Fetcher_Working) return;
@@ -1123,7 +1127,7 @@ static void FetchResourcesScreen_Tick(struct LScreen* s_) {
 	Fetcher_Update();
 
 	if (!Fetcher_Completed) return;
-	if (Fetcher_Failed) { FetchResourcesScreen_Error(s); return; }
+	if (Fetcher_Failed)     return;
 
 	Launcher_TryLoadTexturePack();
 	CheckResourcesScreen_Next(NULL);
@@ -1274,11 +1278,11 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 	LScreen_Tick(s_);
 
 	count = FetchFlagsTask.count;
-	LWebTask_Tick(&FetchFlagsTask.Base);
+	LWebTask_Tick(&FetchFlagsTask.Base, NULL);
 	if (count != FetchFlagsTask.count) LBackend_TableFlagAdded(&s->table);
 
 	if (!FetchServersTask.Base.working) return;
-	LWebTask_Tick(&FetchServersTask.Base);
+	LWebTask_Tick(&FetchServersTask.Base, NULL);
 	if (!FetchServersTask.Base.completed) return;
 
 	if (FetchServersTask.Base.success) {
@@ -1644,7 +1648,7 @@ static void UpdatesScreen_Get(cc_bool release, int buildIndex) {
 
 static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 	if (!CheckUpdateTask.Base.working) return;
-	LWebTask_Tick(&CheckUpdateTask.Base);
+	LWebTask_Tick(&CheckUpdateTask.Base, NULL);
 
 	if (!CheckUpdateTask.Base.completed) return;
 	UpdatesScreen_FormatBoth(s);
@@ -1665,23 +1669,25 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
-static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
+static void FetchUpdatesError(struct HttpRequest* req) {
 	cc_string str; char strBuffer[STRING_SIZE];
+	String_InitArray(str, strBuffer);
+
+	Launcher_DisplayHttpError(req, "fetching update", &str);
+	LLabel_SetText(&UpdatesScreen.lblStatus, &str);
+}
+
+static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 	if (!FetchUpdateTask.Base.working) return;
 
-	LWebTask_Tick(&FetchUpdateTask.Base);
+	LWebTask_Tick(&FetchUpdateTask.Base, FetchUpdatesError);
 	UpdatesScreen_UpdateProgress(s, &FetchUpdateTask.Base);
 	if (!FetchUpdateTask.Base.completed) return;
 
-	if (!FetchUpdateTask.Base.success) {
-		String_InitArray(str, strBuffer);
-		LWebTask_DisplayError(&FetchUpdateTask.Base, "fetching update", &str);
-		LLabel_SetText(&s->lblStatus, &str);
-	} else {
-		/* FetchUpdateTask handles saving the updated file for us */
-		Launcher_ShouldExit   = true;
-		Launcher_ShouldUpdate = true;
-	}
+	if (!FetchUpdateTask.Base.success) return;
+	/* FetchUpdateTask handles saving the updated file for us */
+	Launcher_ShouldExit   = true;
+	Launcher_ShouldUpdate = true;
 }
 
 static void UpdatesScreen_Rel_0(void* w) { UpdatesScreen_Get(true,  0); }

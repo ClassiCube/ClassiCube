@@ -6,6 +6,7 @@
 	Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
+struct HttpRequest;
 struct JsonContext;
 typedef void (*JsonOnValue)(struct JsonContext* ctx, const cc_string* v);
 typedef void (*JsonOnNew)(struct JsonContext* ctx);
@@ -53,15 +54,14 @@ struct LWebTask {
 	cc_bool completed; /* Whether the task has finished executing. */
 	cc_bool working;   /* Whether the task is currently in progress, or is scheduled to be. */
 	cc_bool success;   /* Whether the task completed successfully. */
-	cc_result res;     /* Error returned (e.g. for DNS failure) */
-	int status;        /* HTTP return code for the request */
 	
 	int reqID; /* Unique request identifier for this web task. */
 	/* Called when task successfully downloaded/uploaded data. */
 	void (*Handle)(cc_uint8* data, cc_uint32 len);
 };
-void LWebTask_Tick(struct LWebTask* task);
-void LWebTask_DisplayError(struct LWebTask* task, const char* action, cc_string* dst);
+typedef void (*LWebTask_ErrorCallback)(struct HttpRequest* req);
+
+void LWebTask_Tick(struct LWebTask* task, LWebTask_ErrorCallback errorCallback);
 void LWebTasks_Init(void);
 
 
