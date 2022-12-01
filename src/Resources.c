@@ -837,54 +837,55 @@ static void Fetcher_Finish(void) {
 	}
 }
 
-CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* req) {
-	if (!Http_GetResult(reqID, req)) return false;
+CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* item) {
+	if (!Http_GetResult(reqID, item)) return false;
 
-	if (req->success) {
+	if (item->success) {
 		Fetcher_Downloaded++;
 		return true;
 	}
 
 	/* Only show error for first failed download */
-	if (!Fetcher_Failed) Fetcher_ErrorCallback(req);
+	if (!Fetcher_Failed) Fetcher_ErrorCallback(item);
 	Fetcher_Failed = true;
+	HttpRequest_Free(item);
 	
 	Fetcher_Finish();
 	return false;
 }
 
 static void Fetcher_CheckFile(struct ZipfileSource* file) {
-	struct HttpRequest req;
+	struct HttpRequest item;
 	cc_result res;
-	if (!Fetcher_Get(file->reqID, &req)) return;
+	if (!Fetcher_Get(file->reqID, &item)) return;
 	
 	file->downloaded = true;
-	res = file->Process(&req);
+	res = file->Process(&item);
 
 	if (res) {
 		cc_string name = String_FromReadonly(file->name);
 		Logger_SysWarn2(res, "making", &name);
 	}
-	Mem_Free(req.data);
+	HttpRequest_Free(&item);
 
 	if (file->last) DefaultZip_Create();
 }
 
 static void Fetcher_CheckMusic(struct MusicResource* music) {
-	struct HttpRequest req;
-	if (!Fetcher_Get(music->reqID, &req)) return;
+	struct HttpRequest item;
+	if (!Fetcher_Get(music->reqID, &item)) return;
 
 	music->downloaded = true;
-	MusicResource_Save(music->name, &req);
-	Mem_Free(req.data);
+	MusicResource_Save(music->name, &item);
+	HttpRequest_Free(&item);
 }
 
 static void Fetcher_CheckSound(const struct SoundResource* sound) {
-	struct HttpRequest req;
-	if (!Fetcher_Get(sound->reqID, &req)) return;
+	struct HttpRequest item;
+	if (!Fetcher_Get(sound->reqID, &item)) return;
 
-	SoundPatcher_Save(sound->name, &req);
-	Mem_Free(req.data);
+	SoundPatcher_Save(sound->name, &item);
+	HttpRequest_Free(&item);
 }
 
 /* TODO: Implement this.. */

@@ -12,8 +12,7 @@ static cc_bool httpsOnly, httpOnly, httpsVerify;
 static char skinServer_buffer[128];
 static cc_string skinServer = String_FromArray(skinServer_buffer);
 
-/* Frees data from a HTTP request. */
-static void HttpRequest_Free(struct HttpRequest* request) {
+void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
 	request->data = NULL;
 	request->size = 0;
@@ -82,7 +81,7 @@ static void RequestList_TryFree(struct RequestList* list, int id) {
 	int i = RequestList_Find(list, id);
 	if (i < 0) return;
 
-	Mem_Free(list->entries[i].data);
+	HttpRequest_Free(&list->entries[i]);
 	RequestList_RemoveAt(list, i);
 }
 
@@ -197,7 +196,7 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 			item = &processedReqs.entries[i];
 			if (item->timeDownloaded + (10 * 1000) >= now) continue;
 
-			Mem_Free(item->data);
+			HttpRequest_Free(item);
 			RequestList_RemoveAt(&processedReqs, i);
 		}
 	}

@@ -3584,7 +3584,9 @@ static void TexPackOverlay_Update(void* screen, double delta) {
 	s->dirty         = true;
 	s->gotContent    = true;
 	s->contentLength = item.contentLength;
+
 	TexPackOverlay_UpdateLine3(s);
+	HttpRequest_Free(&item);
 }
 
 static void TexPackOverlay_ContextLost(void* screen) {

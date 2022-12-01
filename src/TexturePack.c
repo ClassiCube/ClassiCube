@@ -406,7 +406,6 @@ void TexturePack_CheckPending(void) {
 
 	if (item.success) {
 		ApplyDownloaded(&item);
-		Mem_Free(item.data);
 	} else if (item.result) {
 		Logger_Warn(item.result, "trying to download texture pack", Http_DescribeError);
 	} else if (item.statusCode == 200 || item.statusCode == 304) {
@@ -420,6 +419,7 @@ void TexturePack_CheckPending(void) {
 	} else {
 		Chat_Add1("&c%i error when trying to download texture pack", &item.statusCode);
 	}
+	HttpRequest_Free(&item);
 }
 
 /* Asynchronously downloads the given texture pack */

@@ -272,10 +272,9 @@ static void WoM_Reset(void) {
 static void WoM_Tick(void) {
 	struct HttpRequest item;
 	if (!Http_GetResult(wom_identifier, &item)) return;
-	if (!item.success) return;
 
-	WoM_ParseConfig(&item);
-	Mem_Free(item.data);
+	if (item.success) WoM_ParseConfig(&item);
+	HttpRequest_Free(&item);
 }
 
 

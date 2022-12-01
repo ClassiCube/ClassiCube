@@ -45,6 +45,9 @@ struct HttpRequest {
 	struct StringsBuffer* cookies;  /* Cookie list sent in requests. May be modified by the response. */
 };
 
+/* Frees all dynamically allocated data from a HTTP request */
+void HttpRequest_Free(struct HttpRequest* request);
+
 /* Aschronously performs a http GET request to download a skin. */
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
 int Http_AsyncGetSkin(const cc_string* skinName, cc_uint8 flags);
