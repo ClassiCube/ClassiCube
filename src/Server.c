@@ -24,6 +24,7 @@
 #include "Platform.h"
 #include "Input.h"
 #include "Errors.h"
+#include "Options.h"
 
 static char nameBuffer[STRING_SIZE];
 static char motdBuffer[STRING_SIZE];
@@ -121,7 +122,12 @@ static void SPConnection_BeginConnect(void) {
 	/* For when user drops a map file onto ClassiCube.exe */
 	path = Game_Username;
 	if (SP_HasDir(path) && File_Exists(&path)) {
-		Map_LoadFrom(&path); return;
+		Map_LoadFrom(&path);
+		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
+		/* TODO Entity_SetNameSkin function? */
+		Entity_SetName(&LocalPlayer_Instance.Base, &Game_Username);
+		Entity_SetSkin(&LocalPlayer_Instance.Base, &Game_Username);
+		return;
 	}
 
 	Random_SeedFromCurrentTime(&rnd);

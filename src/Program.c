@@ -81,7 +81,7 @@ static int RunProgram(int argc, char** argv) {
 
 	if (argsCount == 0) {
 #ifdef CC_BUILD_WEB
-		String_AppendConst(&Game_Username, "WebTest!");
+		String_AppendConst(&Game_Username, DEFAULT_USERNAME);
 		RunGame();
 #else
 		Launcher_Run();

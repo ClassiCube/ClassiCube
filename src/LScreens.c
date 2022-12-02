@@ -753,7 +753,7 @@ static void MainScreen_Resume(void* w) {
 }
 
 static void MainScreen_Singleplayer(void* w) {
-	static const cc_string defUser = String_FromConst("Singleplayer");
+	static const cc_string defUser = String_FromConst(DEFAULT_USERNAME);
 	const cc_string* user = &MainScreen.iptUsername.text;
 
 	if (!user->length) user = &defUser;

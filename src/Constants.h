@@ -80,4 +80,6 @@ enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 #define RESOURCE_SERVER "http://static.classicube.net"
 /* Webpage where users can register for a new account */
 #define REGISTERNEW_URL "https://www.classicube.net/acc/register/"
+
+#define DEFAULT_USERNAME "Singleplayer"
 #endif

@@ -396,6 +396,8 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	/* must be at least CURL_ERROR_SIZE (256) in size */
 	req->error = Mem_TryAllocCleared(257, 1);
 	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, req->error);
+	/* TODO stackalloc instead and then copy to dynamic array later? */
+	/*  probably not worth the extra complexity though */
 
 	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
