@@ -64,6 +64,7 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #define OPT_CLASSIC_HACKS "nostalgia-hacks"
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
 #define OPT_CLASSIC_CHAT "nostalgia-classicchat"
+#define OPT_CLASSIC_INVENTORY "nostalgia-classicinventory"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 #define OPT_CAMERA_MASS "cameramass"
 #define OPT_CAMERA_SMOOTH "camera-smooth"

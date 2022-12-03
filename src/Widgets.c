@@ -721,7 +721,7 @@ static void TableWidget_Render(void* widget, double delta) {
 
 	cellSizeX = w->cellSizeX;
 	cellSizeY = w->cellSizeY;
-	if (w->selectedIndex != -1 && Game_ClassicMode && w->blocks[w->selectedIndex] != BLOCK_AIR) {
+	if (w->selectedIndex != -1 && Gui.ClassicInventory && w->blocks[w->selectedIndex] != BLOCK_AIR) {
 		TableWidget_GetCoords(w, w->selectedIndex, &x, &y);
 
 		/* TODO: Need two size arguments, in case X/Y dpi differs */
@@ -767,14 +767,15 @@ void TableWidget_Recreate(struct TableWidget* w) {
 
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
+	cc_bool classic = Gui.ClassicInventory;
 	float scale = Math_SqrtF(w->scale);
 	int cellSize, blockSize;
 
-	cellSize     = Game_ClassicMode ? 48 : 50;
+	cellSize     = classic ? 48 : 50;
 	w->cellSizeX = Display_ScaleX(cellSize * scale);
 	w->cellSizeY = Display_ScaleY(cellSize * scale);
 
-	blockSize    = Game_ClassicMode ? 40 : 50;
+	blockSize    = classic ? 40 : 50;
 	blockSize    = Display_ScaleX(blockSize * scale);
 	w->normBlockSize = (blockSize             ) * 0.7f / 2.0f;
 	w->selBlockSize  = (blockSize + 25 * scale) * 0.7f / 2.0f;
@@ -786,7 +787,7 @@ static void TableWidget_Reposition(void* widget) {
 		Widget_CalcPosition(w);
 
 		/* Does the table fit on screen? */
-		if (Game_ClassicMode || Table_Y(w) >= 0) break;
+		if (classic || Table_Y(w) >= 0) break;
 		w->rowsVisible--;
 	} while (w->rowsVisible > 1);
 
@@ -905,7 +906,8 @@ static const struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_KeyDown,     Widget_InputUp,        TableWidget_MouseScroll,
 	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove
 };
-void TableWidget_Create(struct TableWidget* w) {	
+void TableWidget_Create(struct TableWidget* w) {
+	cc_bool classic;
 	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
 	w->lastCreatedIndex = -1000;
@@ -916,10 +918,11 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->lastX = -20; w->lastY = -20;
 	w->scale = 1;
 
-	w->paddingL = Display_ScaleX(Game_ClassicMode ? 20 : 15);
-	w->paddingR = Display_ScaleX(Game_ClassicMode ? 28 : 15);
-	w->paddingT = Display_ScaleY(Game_ClassicMode ? 46 : 35);
-	w->paddingB = Display_ScaleY(Game_ClassicMode ? 14 : 15);
+	classic     = Gui.ClassicInventory;
+	w->paddingL = Display_ScaleX(classic ? 20 : 15);
+	w->paddingR = Display_ScaleX(classic ? 28 : 15);
+	w->paddingT = Display_ScaleY(classic ? 46 : 35);
+	w->paddingB = Display_ScaleY(classic ? 14 : 15);
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {

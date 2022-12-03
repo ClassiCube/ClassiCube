@@ -4,6 +4,7 @@
 /* Implements checking, fetching, and patching the default game assets.
 	Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
+struct HttpRequest;
 typedef void (*FetcherErrorCallback)(struct HttpRequest* req);
 
 /* Number of resources that need to be downloaded */

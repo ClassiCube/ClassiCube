@@ -2193,7 +2193,7 @@ void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, M
 *#########################################################################################################################*/
 struct MenuOptionsScreen;
 typedef void (*InitMenuOptions)(struct MenuOptionsScreen* s);
-#define MENUOPTS_MAX_OPTS 10
+#define MENUOPTS_MAX_OPTS 11
 static void MenuOptionsScreen_Layout(void* screen);
 
 static struct MenuOptionsScreen {
@@ -2212,6 +2212,7 @@ static struct MenuOptionsScreen {
 
 static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1] = {
 	NULL,NULL,NULL,NULL,NULL,  NULL,NULL,NULL,NULL,NULL,
+	NULL, 
 	(struct Widget*)&MenuOptionsScreen_Instance.done
 };
 
@@ -3136,6 +3137,9 @@ static void NostalgiaScreen_SetTexs(const cc_string* v) { Game_AllowServerTextur
 static void NostalgiaScreen_GetClassicChat(cc_string* v) { Menu_GetBool(v, Gui.ClassicChat); }
 static void NostalgiaScreen_SetClassicChat(const cc_string* v) { Gui.ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
 
+static void NostalgiaScreen_GetClassicInv(cc_string* v) { Menu_GetBool(v, Gui.ClassicInventory); }
+static void NostalgiaScreen_SetClassicInv(const cc_string* v) { Gui.ClassicInventory = Menu_SetBool(v, OPT_CLASSIC_INVENTORY); }
+
 static void NostalgiaScreen_SwitchBack(void* a, void* b) {
 	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
@@ -3146,7 +3150,7 @@ static void NostalgiaScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 }
 
 static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[9] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
 		{ -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool,
@@ -3166,15 +3170,17 @@ static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
         { 1,    0, "Use classic chat",    MenuOptionsScreen_Bool,
             NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
+		{ 1,   50, "Use classic inventory", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetClassicInv,  NostalgiaScreen_SetClassicInv },
 	};
-	s->numCore         = 9 + 1;
-	s->maxVertices    += 9 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
+	s->numCore         = 10 + 1;
+	s->maxVertices    += 10 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
 	TextWidget_Init(&nostalgia_desc);
 	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	s->widgets[9] = (struct Widget*)&nostalgia_desc;
+	s->widgets[10] = (struct Widget*)&nostalgia_desc;
 }
 
 void NostalgiaScreen_Show(void) {
