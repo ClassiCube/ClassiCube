@@ -55,7 +55,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, title);
+	String_EncodeUtf8(str, title);
 	SDL_SetWindowTitle(win_handle, str);
 }
 
@@ -70,7 +70,7 @@ void Clipboard_GetText(cc_string* value) {
 
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, value);
+	String_EncodeUtf8(str, value);
 	SDL_SetClipboardText(str);
 }
 

@@ -1298,7 +1298,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
+		int len = String_EncodeUtf8(buffer, &part);
 		width += interop_TextWidth(buffer, len);
 	}
 	return Math_Ceil(width);
@@ -1320,7 +1320,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
+		int len = String_EncodeUtf8(buffer, &part);
 
 		color = Drawer2D_GetColor(colorCode);
 		if (shadow) color = GetShadowColor(color);

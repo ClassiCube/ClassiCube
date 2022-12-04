@@ -117,7 +117,7 @@ static void DeleteExportTempFile(void) {
     if (!save_path.length) return;
     
     char path[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(path, &save_path);
+    String_EncodeUtf8(path, &save_path);
     unlink(path);
     save_path.length = 0;
 }
@@ -272,7 +272,7 @@ static UIColor* ToUIColor(BitmapCol color, float A) {
 
 static NSString* ToNSString(const cc_string* text) {
     char raw[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(raw, text);
+    String_EncodeUtf8(raw, text);
     return [NSString stringWithUTF8String:raw];
 }
 

@@ -375,7 +375,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req->meta);
 
 	Http_SetCurlOpts(req);
-	Platform_EncodeUtf8(urlStr, url);
+	String_EncodeUtf8(urlStr, url);
 	_curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
 	if (req->requestType == REQUEST_TYPE_HEAD) {
@@ -829,7 +829,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
     char tmp[NATIVE_STR_LEN];
     CFStringRef keyCF, valCF;
     CFHTTPMessageRef msg = (CFHTTPMessageRef)req->meta;
-    Platform_EncodeUtf8(tmp, value);
+    String_EncodeUtf8(tmp, value);
     
     keyCF = CFStringCreateWithCString(NULL, key, kCFStringEncodingUTF8);
     valCF = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
@@ -875,7 +875,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     CFURLRef urlRef;
     cc_result result = 0;
     
-    Platform_EncodeUtf8(tmp, url);
+    String_EncodeUtf8(tmp, url);
     urlCF  = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
     urlRef = CFURLCreateWithString(NULL, urlCF, NULL);
     // TODO e.g. "http://www.example.com/skin/1 2.png" causes this to return null

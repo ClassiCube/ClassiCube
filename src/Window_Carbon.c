@@ -146,7 +146,7 @@ void Clipboard_SetText(const cc_string* value) {
 	if (err) Logger_Abort2(err, "Clearing Pasteboard");
 	PasteboardSynchronize(pbRef);
 
-	len    = Platform_EncodeUtf8(str, value);
+	len    = String_EncodeUtf8(str, value);
 	cfData = CFDataCreate(NULL, str, len);
 	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
 
@@ -516,7 +516,7 @@ void Window_SetTitle(const cc_string* title) {
 	int len;
 	
 	/* TODO: This leaks memory, old title isn't released */
-	len     = Platform_EncodeUtf8(str, title);
+	len     = String_EncodeUtf8(str, title);
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }

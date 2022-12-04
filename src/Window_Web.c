@@ -410,7 +410,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(); }
 extern void interop_SetPageTitle(const char* title);
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, title);
+	String_EncodeUtf8(str, title);
 	interop_SetPageTitle(str);
 }
 
@@ -446,7 +446,7 @@ void Clipboard_GetText(cc_string* value) {
 extern void interop_TrySetClipboardText(const char* text);
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, value);
+	String_EncodeUtf8(str, value);
 	interop_TrySetClipboardText(str);
 }
 
@@ -609,7 +609,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	keyboardOpen = true;
 	if (!Input_TouchMode) return;
 
-	Platform_EncodeUtf8(str, args->text);
+	String_EncodeUtf8(str, args->text);
 	Platform_LogConst("OPEN SESAME");
 	interop_OpenKeyboard(str, args->type, args->placeholder);
 	args->opaque = true;
@@ -619,7 +619,7 @@ void Window_SetKeyboardText(const cc_string* text) {
 	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
 
-	Platform_EncodeUtf8(str, text);
+	String_EncodeUtf8(str, text);
 	interop_SetKeyboardText(str);
 }
 

@@ -2810,7 +2810,7 @@ static void ChatOptionsScreen_GetClickable(cc_string* v) { Menu_GetBool(v, Gui.C
 static void ChatOptionsScreen_SetClickable(const cc_string* v) { Gui.ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[4] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1,  0, "Chat scale",         MenuOptionsScreen_Input,
 			ChatOptionsScreen_GetChatScale, ChatOptionsScreen_SetChatScale },
 		{ -1, 50, "Chat lines",         MenuOptionsScreen_Input,
@@ -2863,7 +2863,7 @@ static void GuiOptionsScreen_SetUseFont(const cc_string* v) {
 }
 
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[7] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Black text shadows", MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
 		{ -1,  -50, "Show FPS",           MenuOptionsScreen_Bool,
@@ -2976,7 +2976,7 @@ static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 }
 
 static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks },
 		{ -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
@@ -3063,7 +3063,7 @@ static void MiscOptionsScreen_SetSensitivity(const cc_string* v) {
 }
 
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[7] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
 		{ -1,  -50, "Music volume",   MenuOptionsScreen_Input,

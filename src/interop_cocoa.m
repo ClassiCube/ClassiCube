@@ -117,7 +117,7 @@ void Clipboard_SetText(const cc_string* value) {
 	char raw[NATIVE_STR_LEN];
 	NSString* str;
 
-	Platform_EncodeUtf8(raw, value);
+	String_EncodeUtf8(raw, value);
 	str        = [NSString stringWithUTF8String:raw];
 	pasteboard = [NSPasteboard generalPasteboard];
 
@@ -311,7 +311,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];
 	NSString* str;
-	Platform_EncodeUtf8(raw, title);
+	String_EncodeUtf8(raw, title);
 
 	str = [NSString stringWithUTF8String:raw];
 	[winHandle setTitle:str];

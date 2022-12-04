@@ -155,7 +155,7 @@ void Directory_GetCachePath(cc_string* path, const char* folder) {
 
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
@@ -164,7 +164,7 @@ cc_result Directory_Create(const cc_string* path) {
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -176,7 +176,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	Platform_EncodeUtf8(str, dirPath);
+	String_EncodeUtf8(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -201,7 +201,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
-			Platform_EncodeUtf8(full_path, &path);
+			String_EncodeUtf8(full_path, &path);
 			is_dir = stat(full_path, &sb) == 0 && S_ISDIR(sb.st_mode);
 		}
 #else
@@ -225,7 +225,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
@@ -521,7 +521,7 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, address);
+	String_EncodeUtf8(str, address);
 
 	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
 	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) return AF_INET6;
@@ -651,7 +651,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	argv[0]   = path;
 
 	for (i = 0, j = 1; i < numArgs; i++, j++) {
-		Platform_EncodeUtf8(raw[i], &args[i]);
+		String_EncodeUtf8(raw[i], &args[i]);
 		argv[j] = raw[i];
 	}
 
@@ -672,7 +672,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 	CFURLRef urlCF;
 	int len;
 	
-	len   = Platform_EncodeUtf8(str, args);
+	len   = String_EncodeUtf8(str, args);
 	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
@@ -682,7 +682,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
-	Platform_EncodeUtf8(str, args);
+	String_EncodeUtf8(str, args);
 
 	cmd[0] = "open"; cmd[1] = str; cmd[2] = NULL;
 	Process_RawStart("open", cmd);
@@ -692,7 +692,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
-	Platform_EncodeUtf8(str, args);
+	String_EncodeUtf8(str, args);
 
 	/* TODO: Can xdg-open be used on original Solaris, or is it just an OpenIndiana thing */
 	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
@@ -903,7 +903,7 @@ const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING | 
 							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
@@ -945,7 +945,7 @@ const cc_string DynamicLib_Ext = String_FromConst(".so");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return dlopen(str, RTLD_NOW);
 }
 
@@ -964,20 +964,6 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-int Platform_EncodeUtf8(void* data, const cc_string* src) {
-	cc_uint8* dst = (cc_uint8*)data;
-	cc_uint8* cur;
-	int i, len = 0;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) {
-		cur = dst + len;
-		len += Convert_CP437ToUtf8(src->buffer[i], cur);
-	}
-	dst[len] = '\0';
-	return len;
-}
-
 static void Platform_InitPosix(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */

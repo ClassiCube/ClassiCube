@@ -526,7 +526,7 @@ void Game_TakeScreenshot(void) {
 
 #ifdef CC_BUILD_WEB
 	extern void interop_TakeScreenshot(const char* path);
-	Platform_EncodeUtf8(str, &filename);
+	String_EncodeUtf8(str, &filename);
 	interop_TakeScreenshot(str);
 #else
 	if (!Utils_EnsureDirectory("screenshots")) return;

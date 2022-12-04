@@ -111,7 +111,7 @@ cc_result Directory_Create(const cc_string* path) {
 extern int interop_FileExists(const char* path);
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return interop_FileExists(str);
 }
 
@@ -128,7 +128,7 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 extern int interop_DirectoryIter(const char* path);
 cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 
 	enum_obj      = obj;
 	enum_callback = callback;
@@ -140,7 +140,7 @@ extern int interop_FileCreate(const char* path, int mode);
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	int res;
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	res = interop_FileCreate(str, mode);
 
 	/* returned result is negative for error */
@@ -285,7 +285,7 @@ extern int interop_SocketConnect(int sock, const char* addr, int port);
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	char addr[NATIVE_STR_LEN];
 	int res;
-	Platform_EncodeUtf8(addr, address);
+	String_EncodeUtf8(addr, address);
 
 	*s  = interop_SocketCreate();
 	/* returned result is negative for error */
@@ -363,7 +363,7 @@ extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	cc_result res;
-	Platform_EncodeUtf8(str, args);
+	String_EncodeUtf8(str, args);
 
 	res = interop_OpenTab(str);
 	/* interop error code -> ClassiCube error code */
@@ -375,20 +375,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-int Platform_EncodeUtf8(void* data, const cc_string* src) {
-	cc_uint8* dst = (cc_uint8*)data;
-	cc_uint8* cur;
-	int i, len = 0;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) {
-		cur = dst + len;
-		len += Convert_CP437ToUtf8(src->buffer[i], cur);
-	}
-	dst[len] = '\0';
-	return len;
-}
-
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char* str;
 	int len;

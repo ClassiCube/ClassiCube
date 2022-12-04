@@ -347,7 +347,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, title);
+	String_EncodeUtf8(str, title);
 	XStoreName(win_display, win_handle, str);
 }
 
@@ -668,7 +668,7 @@ void Window_ProcessEvents(void) {
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 				char str[800];
-				int len = Platform_EncodeUtf8(str, &clipboard_copy_text);
+				int len = String_EncodeUtf8(str, &clipboard_copy_text);
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
 					PropModeReplace, (unsigned char*)str, len);

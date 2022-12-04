@@ -94,6 +94,10 @@ ifeq ($(PLAT),serenityos)
 LIBS=-lgl -lSDL2
 endif
 
+ifeq ($(PLAT),psp)
+CC=psp-gcc
+endif
+
 ifeq ($(OS),Windows_NT)
 DEL=del
 endif
@@ -124,6 +128,8 @@ haiku:
 	$(MAKE) $(ENAME) PLAT=haiku
 serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
+psp:
+	$(MAKE) $(ENAME) PLAT=psp
 
 clean:
 	$(DEL) $(OBJECTS)

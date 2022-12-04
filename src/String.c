@@ -617,6 +617,20 @@ void String_DecodeCP1252(cc_string* value, const void* data, int numBytes) {
 	}
 }
 
+int String_EncodeUtf8(void* data, const cc_string* src) {
+	cc_uint8* dst = (cc_uint8*)data;
+	cc_uint8* cur;
+	int i, len = 0;
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+
+	for (i = 0; i < src->length; i++) {
+		cur = dst + len;
+		len += Convert_CP437ToUtf8(src->buffer[i], cur);
+	}
+	dst[len] = '\0';
+	return len;
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Numerical conversions--------------------------------------------------*
