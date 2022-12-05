@@ -56,7 +56,7 @@ cc_bool Game_ViewBobbing, Game_HideGui, Game_DefaultZipMissing;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
 
-static char usernameBuffer[FILENAME_SIZE];
+static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
 cc_string Game_Username = String_FromArray(usernameBuffer);
 cc_string Game_Mppass   = String_FromArray(mppassBuffer);

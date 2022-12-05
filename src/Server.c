@@ -111,7 +111,9 @@ static void Ping_Reset(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
+static char autoloadBuffer[FILENAME_SIZE];
+cc_string SP_AutoloadMap = String_FromArray(autoloadBuffer);
+
 static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
 	cc_string path;
@@ -120,14 +122,8 @@ static void SPConnection_BeginConnect(void) {
 	Game_UseCPEBlocks = Game_UseCPE;
 
 	/* For when user drops a map file onto ClassiCube.exe */
-	path = Game_Username;
-	if (SP_HasDir(path) && File_Exists(&path)) {
-		Map_LoadFrom(&path);
-		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
-		/* TODO Entity_SetNameSkin function? */
-		Entity_SetName(&LocalPlayer_Instance.Base, &Game_Username);
-		Entity_SetSkin(&LocalPlayer_Instance.Base, &Game_Username);
-		return;
+	if (SP_AutoloadMap.length) {
+		Map_LoadFrom(&SP_AutoloadMap); return;
 	}
 
 	Random_SeedFromCurrentTime(&rnd);

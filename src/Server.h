@@ -68,4 +68,7 @@ CC_VAR extern struct _ServerConnectionData {
 /* If user hasn't previously accepted url, displays a dialog asking to confirm downloading it */
 /* Otherwise just calls TexturePack_Extract */
 void Server_RetrieveTexturePack(const cc_string* url);
+
+/* Path of map to automatically load in singleplayer */
+extern cc_string SP_AutoloadMap;
 #endif

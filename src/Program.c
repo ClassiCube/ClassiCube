@@ -67,6 +67,8 @@ static void SetupProgram(int argc, char** argv) {
 	String_InitArray(Server.Address, ipBuffer);
 }
 
+#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
+
 static int RunProgram(int argc, char** argv) {
 	cc_string args[GAME_MAX_CMDARGS];
 	cc_uint16 port;
@@ -90,6 +92,11 @@ static int RunProgram(int argc, char** argv) {
 		args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
 		String_Copy(&Launcher_AutoHash, &args[0]);
 		Launcher_Run();
+	/* File path to auto load a map in singleplayer */
+	} else if (argsCount == 1 && SP_HasDir(args[0]) && File_Exists(&args[0])) {
+		Options_Get(LOPT_USERNAME, &Game_Username, DEFAULT_USERNAME);
+		String_Copy(&SP_AutoloadMap, &args[0]); /* TODO: don't copy args? */
+		RunGame();
 #endif
 	} else if (argsCount == 1) {
 		String_Copy(&Game_Username, &args[0]);
