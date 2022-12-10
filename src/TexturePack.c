@@ -192,32 +192,68 @@ CC_INLINE static void HashUrl(cc_string* key, const cc_string* url) {
 	String_AppendUInt32(key, Utils_CRC32((const cc_uint8*)url->buffer, url->length));
 }
 
-CC_NOINLINE static void MakeCachePath(cc_string* path, const cc_string* url) {
+static cc_bool createdCache, cacheInvalid;
+static cc_bool UseDedicatedCache(cc_string* path, const cc_string* key) {
+	cc_result res;
+	Directory_GetCachePath(path);
+	if (!path->length || cacheInvalid) return false;
+
+	String_AppendConst(path, "/texturecache");
+	res = Directory_Create(path);
+
+	/* Check if something is deleting the cache directory behind our back */
+	/*  (Several users have reported this happening on some Android devices) */
+	if (createdCache && res == 0) {
+		Chat_AddRaw("&cSomething has deleted system managed cache folder");
+		Chat_AddRaw("  &cFalling back to caching to game folder instead..");
+		cacheInvalid = true;
+	}
+	if (res == 0) createdCache = true;
+
+	String_Format1(path, "/%s", key);
+	return !cacheInvalid;
+}
+
+CC_NOINLINE static void MakeCachePath(cc_string* mainPath, cc_string* altPath, const cc_string* url) {
 	cc_string key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
-
 	HashUrl(&key, url);
-	Directory_GetCachePath(path, "texturecache");
-	String_Format1(path, "/%s", &key);
+	
+	if (UseDedicatedCache(mainPath, &key)) {
+		/* If using dedicated cache directory, also fallback to default cache directory */
+		String_Format1(altPath,  "texturecache/%s",  &key);
+	} else {
+		mainPath->length = 0;
+		String_Format1(mainPath, "texturecache/%s",  &key);
+	}
 }
 
 /* Returns non-zero if given URL has been cached */
 static int IsCached(const cc_string* url) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-	String_InitArray(path, pathBuffer);
+	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
+	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
+	String_InitArray(mainPath, mainBuffer);
+	String_InitArray(altPath,   altBuffer);
 
-	MakeCachePath(&path, url);
-	return File_Exists(&path);
+	MakeCachePath(&mainPath, &altPath, url);
+	return File_Exists(&mainPath) || (altPath.length && File_Exists(&altPath));
 }
 
 /* Attempts to open the cached data stream for the given url */
 static cc_bool OpenCachedData(const cc_string* url, struct Stream* stream) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_string mainPath; char mainBuffer[FILENAME_SIZE];
+	cc_string altPath;  char  altBuffer[FILENAME_SIZE];
 	cc_result res;
+	String_InitArray(mainPath, mainBuffer);
+	String_InitArray(altPath,   altBuffer);
+	
 
-	String_InitArray(path, pathBuffer);
-	MakeCachePath(&path, url);
-	res = Stream_OpenFile(stream, &path);
+	MakeCachePath(&mainPath, &altPath, url);
+	res = Stream_OpenFile(stream, &mainPath);
+
+	/* try fallback cache if can't find in main cache */
+	if (res == ReturnCode_FileNotFound && altPath.length)
+		res = Stream_OpenFile(stream, &altPath);
 
 	if (res == ReturnCode_FileNotFound) return false;
 	if (res) { Logger_SysWarn2(res, "opening cache for", url); return false; }
@@ -262,17 +298,20 @@ CC_NOINLINE static void SetCachedTag(const cc_string* url, struct StringsBuffer*
 
 /* Updates cached data, ETag, and Last-Modified for the given URL */
 static void UpdateCache(struct HttpRequest* req) {
-	cc_string path, url; char pathBuffer[FILENAME_SIZE];
+	cc_string url, altPath, value;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_result res;
 	url = String_FromRawArray(req->url);
 
-	path = String_FromRawArray(req->etag);
-	SetCachedTag(&url, &etagCache, &path, ETAGS_TXT);
-	path = String_FromRawArray(req->lastModified);
-	SetCachedTag(&url, &lastModCache, &path, LASTMOD_TXT);
+	value = String_FromRawArray(req->etag);
+	SetCachedTag(&url, &etagCache,    &value, ETAGS_TXT);
+	value = String_FromRawArray(req->lastModified);
+	SetCachedTag(&url, &lastModCache, &value, LASTMOD_TXT);
 
 	String_InitArray(path, pathBuffer);
-	MakeCachePath(&path, &url);
+	altPath = String_Empty;
+	MakeCachePath(&path, &altPath, &url);
+
 	res = Stream_WriteAllTo(&path, req->data, req->size);
 	if (res) { Logger_SysWarn2(res, "caching", &url); }
 }

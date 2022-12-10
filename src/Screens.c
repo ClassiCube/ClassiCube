@@ -1851,7 +1851,7 @@ static struct DisconnectScreen {
 
 	struct FontDesc titleFont, messageFont;
 	struct TextWidget title, message;
-	char _titleBuffer[STRING_SIZE];
+	char _titleBuffer[STRING_SIZE * 2];
 	char _messageBuffer[STRING_SIZE];
 	cc_string titleStr, messageStr;
 } DisconnectScreen;

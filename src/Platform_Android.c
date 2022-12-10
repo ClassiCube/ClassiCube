@@ -93,14 +93,9 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 	Chat_Add1("  &c%s", &path);
 }
 
-void Directory_GetCachePath(cc_string* path, const char* folder) {
-	cc_string dir; char dirBuffer[FILENAME_SIZE];
-	String_InitArray(dir, dirBuffer);
+void Directory_GetCachePath(cc_string* path) {
 	// TODO cache method ID
-	JavaCall_Void_String("getGameCacheDirectory", &dir);
-
-	String_Format2(path, "%s/%c", &dir, folder);
-	Directory_Create(path);
+	JavaCall_Void_String("getGameCacheDirectory", path);
 }
 
 

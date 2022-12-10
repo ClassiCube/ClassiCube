@@ -172,7 +172,7 @@ typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj);
 CC_API cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback);
 /* Returns non-zero if the given file exists. */
 CC_API int File_Exists(const cc_string* path);
-void Directory_GetCachePath(cc_string* path, const char* folder);
+void Directory_GetCachePath(cc_string* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */

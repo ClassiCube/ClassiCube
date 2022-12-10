@@ -148,9 +148,7 @@ cc_uint64 Stopwatch_Measure(void) {
 #elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
 #else
-void Directory_GetCachePath(cc_string* path, const char* folder) {
-	String_AppendConst(path, folder);
-}
+void Directory_GetCachePath(cc_string* path) { }
 #endif
 
 cc_result Directory_Create(const cc_string* path) {
