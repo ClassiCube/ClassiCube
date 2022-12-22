@@ -453,15 +453,6 @@ static void LoadWinsockFuncs(void) {
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
-cc_result Socket_Available(cc_socket s, int* available) {
-	return _ioctlsocket(s, FIONREAD, available);
-}
-
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	int resultSize = sizeof(cc_result);
-	return _getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)result, &resultSize);
-}
-
 static int ParseHost(void* dst, WCHAR* host, int port) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
 	struct hostent* res;
@@ -542,7 +533,7 @@ void Socket_Close(cc_socket s) {
 	_closesocket(s);
 }
 
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -559,6 +550,25 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	if (selectCount == -1) { *success = false; return _WSAGetLastError(); }
 
 	*success = set.fd_count != 0; return 0;
+}
+
+cc_result Socket_CheckAvailable(cc_socket s, int* available) {
+	return _ioctlsocket(s, FIONREAD, available);
+}
+
+cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
+	return Socket_Poll(s, SOCKET_POLL_READ, readable);
+}
+
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
+	int resultSize;
+	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+	if (res || *writable) return res;
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	resultSize = sizeof(cc_result);
+	_getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&res, &resultSize);
+	return res;
 }
 
 

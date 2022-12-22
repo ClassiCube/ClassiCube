@@ -116,7 +116,6 @@ cc_string SP_AutoloadMap = String_FromArray(autoloadBuffer);
 
 static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
-	cc_string path;
 	RNGState rnd;
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
@@ -214,7 +213,7 @@ static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8* net_readCurrent;
 
 static cc_result net_writeFailure;
-static double lastPacket;
+static double net_lastPacket;
 static cc_uint8 lastOpcode;
 
 static cc_bool net_connecting;
@@ -228,8 +227,8 @@ static void MPConnection_FinishConnect(void) {
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 
 	net_readCurrent = net_readBuffer;
+	net_lastPacket  = Game.Time;
 	Classic_SendLogin();
-	lastPacket = Game.Time;
 }
 
 static void MPConnection_Fail(const cc_string* reason) {
@@ -255,17 +254,13 @@ static void MPConnection_FailConnect(cc_result result) {
 }
 
 static void MPConnection_TickConnect(void) {
-	cc_result res = 0;
-	cc_bool poll_write;
-	double now;
+	cc_bool writable;
+	double now    = Game.Time;
+	cc_result res = Socket_CheckWritable(net_socket, &writable);
 
-	Socket_GetError(net_socket, &res);
-	if (res) { MPConnection_FailConnect(res); return; }
-
-	Socket_Poll(net_socket, SOCKET_POLL_WRITE, &poll_write);
-	now = Game.Time;
-
-	if (poll_write) {
+	if (res) {
+		MPConnection_FailConnect(res);
+	} else if (writable) {
 		MPConnection_FinishConnect();
 	} else if (now > net_connectTimeout) {
 		MPConnection_FailConnect(0);
@@ -332,15 +327,16 @@ static void MPConnection_Disconnect(void) {
 }
 
 static void MPConnection_CheckDisconnection(void) {
-	cc_result availRes, selectRes;
-	int pending = 0;
-	cc_bool poll_read;
+	cc_result readableRes;
+	cc_bool readable;
 
-	availRes  = Socket_Available(net_socket, &pending);
-	/* poll read returns true when socket is closed */
-	selectRes = Socket_Poll(net_socket, SOCKET_POLL_READ, &poll_read);
+	/* poll read returns true when either: */
+	/*   a) data is available to read */
+	/*   b) socket is closed */
+	/* since a) is already handled in MPConnection_Tick, this only handles b) */
+	readableRes = Socket_CheckReadable(net_socket, &readable);
 
-	if (net_writeFailure || availRes || selectRes || (pending == 0 && poll_read)) {
+	if (net_writeFailure || readableRes || readable) {
 		MPConnection_Disconnect();
 	}
 }
@@ -367,12 +363,12 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
-	/* Over 30 seconds since last packet, connection likely dropped */
-	if (lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
+	/* Over 30 seconds since last packet, connection probably dropped */
+	if (net_lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
 	if (Server.Disconnected) return;
 
 	pending = 0;
-	res     = Socket_Available(net_socket, &pending);
+	res     = Socket_CheckAvailable(net_socket, &pending);
 	readEnd = net_readCurrent; /* todo change to int remaining instead */
 
 	if (!res && pending) {
@@ -383,7 +379,9 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			if (res == ReturnCode_SocketInProgess)  return;
 			if (res == ReturnCode_SocketWouldBlock) return;
 		}
+
 		readEnd += pending;
+		net_lastPacket = Game.Time;
 	}
 
 	if (res) {
@@ -412,7 +410,6 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
 
 		lastOpcode = opcode;
-		lastPacket = Game.Time;
 		handler(net_readCurrent + 1); /* skip opcode */
 		net_readCurrent += Protocol.Sizes[opcode];
 	}

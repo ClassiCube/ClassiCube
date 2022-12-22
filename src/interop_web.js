@@ -537,7 +537,7 @@ mergeInto(LibraryManager.library, {
   },
   interop_SocketCreate: function() {
     var sock = {
-      error: null, // Used by interop_SocketGetError
+      error: null, // Used by interop_SocketWritable
       recv_queue: [],
       socket: null,
     };
@@ -593,7 +593,7 @@ mergeInto(LibraryManager.library, {
     ws.onerror = function(error) {
       // The WebSocket spec only allows a 'simple event' to be thrown on error,
       // so we only really know as much as ECONNREFUSED.
-      sock.error = -SOCKETS.ECONNREFUSED; // Used by interop_SocketGetError
+      sock.error = SOCKETS.ECONNREFUSED; // Used by interop_SocketWritable
     };
     // always "fail" in non-blocking mode
     return SOCKETS.EINPROGRESS;
@@ -673,23 +673,25 @@ mergeInto(LibraryManager.library, {
 
     return sock.recv_queue.length;
   },
-  interop_SocketGetError: function(sockFD) {
+  interop_SocketReadable: function(sockFD, readable) {
+    HEAPU8[readable|0] = 0;
     var sock = SOCKETS.sockets[sockFD];
     if (!sock) return SOCKETS.EBADF;
 
-    return sock.error || 0;
+    var ws = sock.socket;
+    if (!ws) return SOCKETS.ENOTCONN;
+    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) HEAPU8[readable|0] = 1
+    return 0;
   },
-  interop_SocketPoll: function(sockFD) {
+  interop_SocketWritable: function(sockFD, writable) {
+    HEAPU8[writable|0] = 0;
     var sock = SOCKETS.sockets[sockFD];
     if (!sock) return SOCKETS.EBADF;
 
-    var ws   = sock.socket;
-    if (!ws) return 0;
-    var mask = 0;
-
-    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
-    if (ws.readyState === ws.OPEN) mask |= 2;
-    return mask;
+    var ws = sock.socket;
+    if (!ws) return SOCKETS.ENOTCONN;
+    if (ws.readyState === ws.OPEN) HEAPU8[writable|0] = 1;
+    return sock.error || 0;
   },
 
 

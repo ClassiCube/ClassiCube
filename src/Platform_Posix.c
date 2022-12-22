@@ -483,15 +483,6 @@ union SocketAddress {
 	struct sockaddr_in6 v6;
 };
 
-cc_result Socket_Available(cc_socket s, int* available) {
-	return ioctl(s, FIONREAD, available);
-}
-
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	socklen_t resultSize = sizeof(cc_result);
-	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
-}
-
 static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
@@ -577,7 +568,7 @@ void Socket_Close(cc_socket s) {
 
 #if defined CC_BUILD_DARWIN
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -596,7 +587,7 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 }
 #else
 #include <poll.h>
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
@@ -610,6 +601,24 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	return 0;
 }
 #endif
+
+cc_result Socket_CheckAvailable(cc_socket s, int* available) {
+	return ioctl(s, FIONREAD, available);
+}
+
+cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
+	return Socket_Poll(s, SOCKET_POLL_READ, readable);
+}
+
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
+	socklen_t resultSize;
+	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+	if (res || *writable) return res;
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	return res;
+}
 
 
 /*########################################################################################################################*
