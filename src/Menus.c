@@ -2554,7 +2554,7 @@ static void ClassicOptionsScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 }
 
 static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[9] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Music",           MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic },
 		{ -1, -100, "Invert mouse",    MenuOptionsScreen_Bool,
@@ -2635,7 +2635,7 @@ static void EnvSettingsScreen_GetEdgeHeight(cc_string* v) { String_AppendInt(v, 
 static void EnvSettingsScreen_SetEdgeHeight(const cc_string* v) { Env_SetEdgeHeight(Menu_Int(v)); }
 
 static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Clouds color",  MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsColor,  EnvSettingsScreen_SetCloudsColor },
 		{ -1, -100, "Sky color",     MenuOptionsScreen_Input,
@@ -2723,7 +2723,7 @@ static void GraphicsOptionsScreen_SetCameraMass(const cc_string* c) {
 }
 
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[8] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Camera Mass",       MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass },
 		{ -1, -50,  "FPS mode",          MenuOptionsScreen_Enum,

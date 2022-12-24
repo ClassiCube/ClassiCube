@@ -1318,8 +1318,8 @@ void GLContext_GetApiInfo(cc_string* info) {
 	unsigned int vram, acc;
 	if (!queryRendererMESA) return;
 
-	queryRendererMESA(0x8186, &acc);
-	queryRendererMESA(0x8187, &vram);
+	queryRendererMESA(0x8186, &acc);  /* GLX_RENDERER_ACCELERATED_MESA */
+	queryRendererMESA(0x8187, &vram); /* GLX_RENDERER_VIDEO_MEMORY_MESA */
 	String_Format2(info, "VRAM: %i MB, %c", &vram,
 		acc ? "HW accelerated" : "no HW acceleration");
 }
