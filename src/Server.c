@@ -326,19 +326,13 @@ static void MPConnection_Disconnect(void) {
 	Game_Disconnect(&title, &reason);
 }
 
-static void MPConnection_CheckDisconnection(void) {
-	cc_result readableRes;
-	cc_bool readable;
+static void DisconnectReadFailed(cc_result res) {
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
+	String_InitArray(msg, msgBuffer);
+	String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
 
-	/* poll read returns true when either: */
-	/*   a) data is available to read */
-	/*   b) socket is closed */
-	/* since a) is already handled in MPConnection_Tick, this only handles b) */
-	readableRes = Socket_CheckReadable(net_socket, &readable);
-
-	if (net_writeFailure || readableRes || readable) {
-		MPConnection_Disconnect();
-	}
+	Logger_Log(&msg);
+	MPConnection_Disconnect();
 }
 
 static void DisconnectInvalidOpcode(cc_uint8 opcode) {
@@ -351,81 +345,67 @@ static void DisconnectInvalidOpcode(cc_uint8 opcode) {
 }
 
 static void MPConnection_Tick(struct ScheduledTask* task) {
-	static const cc_string title_lost  = String_FromConst("&eLost connection to the server");
-	static const cc_string reason_err  = String_FromConst("I/O error when reading packets");
-	cc_string msg; char msgBuffer[STRING_SIZE * 2];
-	cc_uint32 pending;
 	cc_uint8* readEnd;
 	Net_Handler handler;
+	cc_uint32 read;
 	int i, remaining;
 	cc_result res;
 
 	if (Server.Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
-	/* Over 30 seconds since last packet, connection probably dropped */
-	if (net_lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
-	if (Server.Disconnected) return;
-
-	pending = 0;
-	res     = Socket_CheckAvailable(net_socket, &pending);
-	readEnd = net_readCurrent; /* todo change to int remaining instead */
-
-	if (!res && pending) {
-		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	
-		res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &pending);
-		/* Ignore errors for 'no data available for non-blocking read' */
-		if (res) {
-			if (res == ReturnCode_SocketInProgess)  return;
-			if (res == ReturnCode_SocketWouldBlock) return;
-		}
-
-		readEnd += pending;
-		net_lastPacket = Game.Time;
-	}
-
+	/* NOTE: using a read call that is a multiple of 4096 (appears to?) improve read performance */	
+	res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &read);
+	
 	if (res) {
-		String_InitArray(msg, msgBuffer);
-		String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
+		/* 'no data available for non-blocking read' is an expected error */
+		if (res == ReturnCode_SocketInProgess)  res = 0;
+		if (res == ReturnCode_SocketWouldBlock) res = 0;
 
-		Logger_Log(&msg);
-		Game_Disconnect(&title_lost, &reason_err);
-		return;
-	}
+		if (res) { DisconnectReadFailed(res); return; }
+	} else if (read == 0) {
+		/* recv only returns 0 read when socket is closed.. probably? */
+		/* Over 30 seconds since last packet, connection probably dropped */
+		/* TODO: Should this be checked unconditonally instead of just when read = 0 ? */
+		if (net_lastPacket + 30 < Game.Time) { MPConnection_Disconnect(); return; }
+	} else {
+		readEnd         = net_readCurrent + read;
+		net_lastPacket  = Game.Time;
+		net_readCurrent = net_readBuffer;
 
-	net_readCurrent = net_readBuffer;
-	while (net_readCurrent < readEnd) {
-		cc_uint8 opcode = net_readCurrent[0];
+		while (net_readCurrent < readEnd) {
+			cc_uint8 opcode = net_readCurrent[0];
 
-		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
-		if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
-			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
-			net_readCurrent++;
-			LocalPlayer_ResetJumpVelocity();
-			continue;
+			/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
+			if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
+				Platform_LogConst("Skipping invalid HackControl byte from D3 server");
+				net_readCurrent++;
+				LocalPlayer_ResetJumpVelocity();
+				continue;
+			}
+
+			if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
+			handler = Protocol.Handlers[opcode];
+			if (!handler) { DisconnectInvalidOpcode(opcode); return; }
+
+			lastOpcode = opcode;
+			handler(net_readCurrent + 1); /* skip opcode */
+			net_readCurrent += Protocol.Sizes[opcode];
 		}
 
-		if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
-		handler = Protocol.Handlers[opcode];
-		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
-
-		lastOpcode = opcode;
-		handler(net_readCurrent + 1); /* skip opcode */
-		net_readCurrent += Protocol.Sizes[opcode];
+		/* Protocol packets might be split up across TCP packets */
+		/* If so, copy last few unprocessed bytes back to beginning of buffer */
+		/* These bytes are then later combined with subsequently read TCP packet data */
+		remaining = (int)(readEnd - net_readCurrent);
+		for (i = 0; i < remaining; i++) {
+			net_readBuffer[i] = net_readCurrent[i];
+		}
+		net_readCurrent = net_readBuffer + remaining;
 	}
-
-	/* Protocol packets might be split up across TCP packets */
-	/* If so, copy last few unprocessed bytes back to beginning of buffer */
-	/* These bytes are then later combined with subsequently read TCP packet data */
-	remaining = (int)(readEnd - net_readCurrent);
-	for (i = 0; i < remaining; i++) {
-		net_readBuffer[i] = net_readCurrent[i];
-	}
-	net_readCurrent = net_readBuffer + remaining;
 
 	if (net_writeFailure) {
 		Platform_Log1("Error from send: %i", &net_writeFailure);
-		MPConnection_Disconnect();
+		MPConnection_Disconnect(); return;
 	}
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */

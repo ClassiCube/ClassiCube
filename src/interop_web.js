@@ -667,22 +667,6 @@ mergeInto(LibraryManager.library, {
     HEAPU8.set(msg, dst);
     return msg.byteLength;
   },
-  interop_SocketGetPending: function(sockFD) {
-    var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
-
-    return sock.recv_queue.length;
-  },
-  interop_SocketReadable: function(sockFD, readable) {
-    HEAPU8[readable|0] = 0;
-    var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
-
-    var ws = sock.socket;
-    if (!ws) return SOCKETS.ENOTCONN;
-    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) HEAPU8[readable|0] = 1
-    return 0;
-  },
   interop_SocketWritable: function(sockFD, writable) {
     HEAPU8[writable|0] = 0;
     var sock = SOCKETS.sockets[sockFD];

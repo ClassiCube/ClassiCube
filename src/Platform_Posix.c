@@ -602,10 +602,6 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 }
 #endif
 
-cc_result Socket_CheckAvailable(cc_socket s, int* available) {
-	return ioctl(s, FIONREAD, available);
-}
-
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }

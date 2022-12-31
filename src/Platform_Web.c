@@ -253,7 +253,6 @@ void Platform_LoadSysFonts(void) { }
 *#########################################################################################################################*/
 extern void interop_InitSockets(void);
 int Socket_ValidAddress(const cc_string* address) { return true; }
-extern int interop_SocketGetPending(int sock);
 
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const char* addr, int port);
@@ -272,20 +271,22 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 }
 
 extern int interop_SocketRecv(int sock, void* data, int len);
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	/* recv only reads one WebSocket frame at most, hence call it multiple times */
-	int res; *modified = 0;
+cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
+	int res; 
+	*read = 0;
 
-	while (count && interop_SocketGetPending(s) > 0) {
+	/* interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times */
+	while (count) {
 		/* returned result is negative for error */
 		res = interop_SocketRecv(s, data, count);
 
 		if (res >= 0) {
-			*modified += res;
-			data      += res; count -= res;
+			*read += res;
+			data  += res; count -= res;
 		} else {
-			/* EAGAIN when no data available */
-			if (res == -_EAGAIN) break;
+			/* EAGAIN when no more data available */
+			if (res == -_EAGAIN) return *read == 0 ? _EAGAIN : 0;
+
 			return -res;
 		}
 	}
@@ -307,23 +308,6 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 extern int interop_SocketClose(int sock);
 void Socket_Close(cc_socket s) {
 	interop_SocketClose(s);
-}
-
-cc_result Socket_CheckAvailable(cc_socket s, int* available) {
-	int res = interop_SocketGetPending(s);
-	/* returned result is negative for error */
-
-	if (res >= 0) {
-		*available = res; return 0;
-	} else {
-		*available = 0; return -res;
-	}
-}
-
-extern int interop_SocketReadable(int sock, cc_bool* readable);
-cc_result Socket_CheckReadable(cc_socket s, int mode, cc_bool* readable) {
-	/* returned result is negative for error */
-	return -interop_SocketReadable(s, readable);
 }
 
 extern int interop_SocketWritable(int sock, cc_bool* writable);
