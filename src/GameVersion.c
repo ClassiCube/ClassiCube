@@ -64,7 +64,7 @@ void GameVersion_Load(void) {
 	int version = Options_GetInt("protocol-version", PROTOCOL_0017, PROTOCOL_0030, PROTOCOL_0030);
 	const struct GameVersion* ver = NULL;
 
-	if (!Game_ClassicMode) {
+	if (Game_UseCPE) {
 		ver = &version_cpe;
 	} else if (version == PROTOCOL_0030) {
 		ver = &version_0030;

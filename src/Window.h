@@ -161,7 +161,7 @@ void Window_DrawFramebuffer(Rect2D r);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
-struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque; };
+struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque, multiline; };
 void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type);
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */

@@ -35,7 +35,9 @@ void GuiOptionsScreen_Show(void);
 void GraphicsOptionsScreen_Show(void);
 void HacksSettingsScreen_Show(void);
 void EnvSettingsScreen_Show(void);
-void NostalgiaScreen_Show(void);
+void NostalgiaAppearanceScreen_Show(void);
+void NostalgiaFunctionalityScreen_Show(void);
+void NostalgiaMenuScreen_Show(void);
 
 void UrlWarningOverlay_Show(const cc_string* url);
 void TexIdsOverlay_Show(void);
