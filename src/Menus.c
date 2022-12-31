@@ -3251,12 +3251,12 @@ static void NostalgiaScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 
 static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
-		{ -1,   0, "Use server textures", MenuOptionsScreen_Bool,
+		{ -1,   0, "Use server textures",  MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
 	
-		{ 1,  -50, "Allow custom blocks", MenuOptionsScreen_Bool,
+		{ 1,  -50, "Allow custom blocks",  MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom },
-		{ 1, -  0, "Use CPE",             MenuOptionsScreen_Bool,
+		{ 1, -  0, "Non-classic features", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE }
 	};
 	s->numCore         = Array_Elems(buttons) + 1;

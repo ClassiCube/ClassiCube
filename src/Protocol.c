@@ -369,6 +369,19 @@ static cc_result MapState_Read(struct MapState* m) {
 /*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
+#define Classic_HandshakeSize() (Game_Version.Protocol > PROTOCOL_0019 ? 131 : 130)
+void Classic_SendLogin(void) {
+	cc_uint8 data[131];
+	data[0] = OPCODE_HANDSHAKE;
+	{
+		data[1]   = Game_Version.Protocol;
+		WriteString(&data[2],  &Game_Username);
+		WriteString(&data[66], &Game_Mppass);
+		data[130] = Game_UseCPE ? 0x42 : 0x00;
+	}
+	Server.SendData(data, Classic_HandshakeSize());
+}
+
 void Classic_SendChat(const cc_string* text, cc_bool partial) {
 	cc_uint8 data[66];
 	data[0] = OPCODE_MESSAGE;
@@ -420,19 +433,6 @@ void Classic_SendSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 		WriteBlock(data, block);
 	}
 	Server.SendData(tmp, (cc_uint32)(data - tmp));
-}
-
-#define Classic_HandshakeSize() (Game_Version.Protocol > PROTOCOL_0019 ? 131 : 130)
-void Classic_SendLogin(void) {
-	cc_uint8 data[131];
-	data[0] = OPCODE_HANDSHAKE;
-	{
-		data[1]   = Game_Version.Protocol;
-		WriteString(&data[2],  &Game_Username);
-		WriteString(&data[66], &Game_Mppass);
-		data[130] = Game_UseCPE ? 0x42 : 0x00;
-	}
-	Server.SendData(data, Classic_HandshakeSize());
 }
 
 static void Classic_Handshake(cc_uint8* data) {
