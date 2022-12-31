@@ -153,7 +153,7 @@ static void Menu_SwitchGui(void* a, void* b)       { GuiOptionsScreen_Show(); }
 static void Menu_SwitchGfx(void* a, void* b)       { GraphicsOptionsScreen_Show(); }
 static void Menu_SwitchHacks(void* a, void* b)     { HacksSettingsScreen_Show(); }
 static void Menu_SwitchEnv(void* a, void* b)       { EnvSettingsScreen_Show(); }
-static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaScreen_Show(); }
+static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaMenuScreen_Show(); }
 
 static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show(); }
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
@@ -3105,7 +3105,80 @@ void MiscOptionsScreen_Show(void) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------NostalgiaScreen-----------------------------------------------------*
+*--------------------------------------------------NostalgiaMenuScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct NostalgiaMenuScreen {
+	Screen_Body
+	struct ButtonWidget btnA, btnF, done;
+	struct TextWidget title;
+} NostalgiaMenuScreen;
+
+static struct Widget* nostalgiaMenu_widgets[] = {
+	(struct Widget*)&NostalgiaMenuScreen.btnA, (struct Widget*)&NostalgiaMenuScreen.btnF,
+	(struct Widget*)&NostalgiaMenuScreen.done, (struct Widget*)&NostalgiaMenuScreen.title
+};
+#define NOSTALGIA_MENU_MAX_VERTICES (3 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
+
+static void NostalgiaMenuScreen_Appearance(void* a, void* b)    { NostalgiaAppearanceScreen_Show(); }
+static void NostalgiaMenuScreen_Functionality(void* a, void* b) { NostalgiaFunctionalityScreen_Show(); }
+
+static void NostalgiaMenuScreen_SwitchBack(void* a, void* b) {
+	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
+}
+
+static void NostalgiaMenuScreen_ContextRecreated(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+	struct FontDesc titleFont;
+	Screen_UpdateVb(screen);
+	Gui_MakeTitleFont(&titleFont);
+
+	TextWidget_SetConst(&s->title, "Nostalgia options", &titleFont);
+	ButtonWidget_SetConst(&s->btnA, "Appearance",       &titleFont);
+	ButtonWidget_SetConst(&s->btnF, "Functionality",    &titleFont);
+	ButtonWidget_SetConst(&s->done,    "Done",          &titleFont);
+
+	Font_Free(&titleFont);
+}
+
+static void NostalgiaMenuScreen_Layout(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
+	Widget_SetLocation(&s->btnA,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -25);
+	Widget_SetLocation(&s->btnF,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,   25);
+	Menu_LayoutBack(&s->done);
+}
+
+static void NostalgiaMenuScreen_Init(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+
+	s->widgets     = nostalgiaMenu_widgets;
+	s->numWidgets  = Array_Elems(nostalgiaMenu_widgets);
+	s->maxVertices = NOSTALGIA_MENU_MAX_VERTICES;
+
+	TextWidget_Init(&s->title);
+	ButtonWidget_Init(&s->btnA, 400, NostalgiaMenuScreen_Appearance);
+	ButtonWidget_Init(&s->btnF, 400, NostalgiaMenuScreen_Functionality);
+	ButtonWidget_Init(&s->done, 400, NostalgiaMenuScreen_SwitchBack);
+}
+
+static const struct ScreenVTABLE NostalgiaMenuScreen_VTABLE = {
+	NostalgiaMenuScreen_Init,  Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render2,        Screen_BuildMesh,
+	Screen_InputDown,          Screen_InputUp,    Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
+	NostalgiaMenuScreen_Layout, Screen_ContextLost, NostalgiaMenuScreen_ContextRecreated
+};
+void NostalgiaMenuScreen_Show(void) {
+	struct NostalgiaMenuScreen* s = &NostalgiaMenuScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &NostalgiaMenuScreen_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------NostalgiaAppearanceScreen------------------------------------------------*
 *#########################################################################################################################*/
 static void NostalgiaScreen_GetHand(cc_string* v) { Menu_GetBool(v, Models.ClassicArms); }
 static void NostalgiaScreen_SetHand(const cc_string* v) { Models.ClassicArms = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
@@ -3116,6 +3189,12 @@ static void NostalgiaScreen_SetAnim(const cc_string* v) {
 	Options_SetBool(OPT_SIMPLE_ARMS_ANIM, Game_SimpleArmsAnim);
 }
 
+static void NostalgiaScreen_GetClassicChat(cc_string* v) { Menu_GetBool(v, Gui.ClassicChat); }
+static void NostalgiaScreen_SetClassicChat(const cc_string* v) { Gui.ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
+
+static void NostalgiaScreen_GetClassicInv(cc_string* v) { Menu_GetBool(v, Gui.ClassicInventory); }
+static void NostalgiaScreen_SetClassicInv(const cc_string* v) { Gui.ClassicInventory = Menu_SetBool(v, OPT_CLASSIC_INVENTORY); }
+
 static void NostalgiaScreen_GetGui(cc_string* v) { Menu_GetBool(v, Gui.ClassicTexture); }
 static void NostalgiaScreen_SetGui(const cc_string* v) { Gui.ClassicTexture = Menu_SetBool(v, OPT_CLASSIC_GUI); }
 
@@ -3125,66 +3204,73 @@ static void NostalgiaScreen_SetList(const cc_string* v) { Gui.ClassicTabList = M
 static void NostalgiaScreen_GetOpts(cc_string* v) { Menu_GetBool(v, Gui.ClassicMenu); }
 static void NostalgiaScreen_SetOpts(const cc_string* v) { Gui.ClassicMenu = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
 
+static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
+	static const struct MenuOptionDesc buttons[] = {
+		{ -1, -100, "Classic hand model",   MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
+		{ -1,  -50, "Classic walk anim",    MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim },
+        { -1,    0, "Classic chat",    MenuOptionsScreen_Bool,
+            NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
+		{ -1,  50, "Classic inventory", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetClassicInv,  NostalgiaScreen_SetClassicInv },
+		{  1,  -50, "Classic GUI textures", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetGui,    NostalgiaScreen_SetGui },
+		{  1,    0, "Classic player list",  MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetList,   NostalgiaScreen_SetList },
+		{  1,   50, "Classic options",      MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts },
+	};
+	s->numCore         = Array_Elems(buttons);
+	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+
+	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
+}
+
+void NostalgiaAppearanceScreen_Show(void) {
+	MenuOptionsScreen_Show(NULL, NULL, 0, NostalgiaAppearanceScreen_InitWidgets);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------NostalgiaFunctionalityScreen-----------------------------------------------*
+*#########################################################################################################################*/
+static void NostalgiaScreen_GetTexs(cc_string* v) { Menu_GetBool(v, Game_AllowServerTextures); }
+static void NostalgiaScreen_SetTexs(const cc_string* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
+
 static void NostalgiaScreen_GetCustom(cc_string* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
 static void NostalgiaScreen_SetCustom(const cc_string* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
 
 static void NostalgiaScreen_GetCPE(cc_string* v) { Menu_GetBool(v, Game_UseCPE); }
 static void NostalgiaScreen_SetCPE(const cc_string* v) { Game_UseCPE = Menu_SetBool(v, OPT_CPE); }
 
-static void NostalgiaScreen_GetTexs(cc_string* v) { Menu_GetBool(v, Game_AllowServerTextures); }
-static void NostalgiaScreen_SetTexs(const cc_string* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
-
-static void NostalgiaScreen_GetClassicChat(cc_string* v) { Menu_GetBool(v, Gui.ClassicChat); }
-static void NostalgiaScreen_SetClassicChat(const cc_string* v) { Gui.ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
-
-static void NostalgiaScreen_GetClassicInv(cc_string* v) { Menu_GetBool(v, Gui.ClassicInventory); }
-static void NostalgiaScreen_SetClassicInv(const cc_string* v) { Gui.ClassicInventory = Menu_SetBool(v, OPT_CLASSIC_INVENTORY); }
-
-static void NostalgiaScreen_SwitchBack(void* a, void* b) {
-	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
-}
-
 static struct TextWidget nostalgia_desc;
 static void NostalgiaScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 	TextWidget_SetConst(&nostalgia_desc, "&eButtons on the right require restarting game", &s->textFont);
 }
 
-static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
+static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
-		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
-		{ -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim },
-		{ -1,  -50, "Classic gui textures", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetGui,    NostalgiaScreen_SetGui },
-		{ -1,    0, "Classic player list",  MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetList,   NostalgiaScreen_SetList },
-		{ -1,   50, "Classic options",      MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts },
-	
-		{ 1, -150, "Allow custom blocks", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom },
-		{ 1, -100, "Use CPE",             MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE },
-		{ 1,  -50, "Use server textures", MenuOptionsScreen_Bool,
+		{ -1,   0, "Use server textures", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
-        { 1,    0, "Use classic chat",    MenuOptionsScreen_Bool,
-            NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
-		{ 1,   50, "Use classic inventory", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetClassicInv,  NostalgiaScreen_SetClassicInv },
+	
+		{ 1,  -50, "Allow custom blocks", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom },
+		{ 1, -  0, "Use CPE",             MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE }
 	};
-	s->numCore         = 10 + 1;
-	s->maxVertices    += 10 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
+	s->numCore         = Array_Elems(buttons) + 1;
+	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
+	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
 	TextWidget_Init(&nostalgia_desc);
 	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	s->widgets[10] = (struct Widget*)&nostalgia_desc;
+	s->widgets[3] = (struct Widget*)&nostalgia_desc;
 }
 
-void NostalgiaScreen_Show(void) {
-	MenuOptionsScreen_Show(NULL, NULL, 0, NostalgiaScreen_InitWidgets);
+void NostalgiaFunctionalityScreen_Show(void) {
+	MenuOptionsScreen_Show(NULL, NULL, 0, NostalgiaFunctionalityScreen_InitWidgets);
 }
 
 
