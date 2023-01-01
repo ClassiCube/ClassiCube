@@ -254,30 +254,6 @@ void Platform_LoadSysFonts(void) { }
 extern void interop_InitSockets(void);
 int Socket_ValidAddress(const cc_string* address) { return true; }
 
-extern int interop_SocketGetPending(int sock);
-cc_result Socket_Available(cc_socket s, int* available) {
-	int res = interop_SocketGetPending(s);
-	/* returned result is negative for error */
-
-	if (res >= 0) {
-		*available = res; return 0;
-	} else {
-		*available = 0; return -res;
-	}
-}
-
-extern int interop_SocketGetError(int sock);
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	int res = interop_SocketGetError(s);
-	/* returned result is negative for error */
-
-	if (res >= 0) {
-		*result = res; return 0;
-	} else {
-		*result = 0; return -res;
-	}
-}
-
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const char* addr, int port);
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
@@ -295,20 +271,22 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 }
 
 extern int interop_SocketRecv(int sock, void* data, int len);
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	/* recv only reads one WebSocket frame at most, hence call it multiple times */
-	int res; *modified = 0;
+cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
+	int res; 
+	*read = 0;
 
-	while (count && interop_SocketGetPending(s) > 0) {
+	/* interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times */
+	while (count) {
 		/* returned result is negative for error */
 		res = interop_SocketRecv(s, data, count);
 
 		if (res >= 0) {
-			*modified += res;
-			data      += res; count -= res;
+			*read += res;
+			data  += res; count -= res;
 		} else {
-			/* EAGAIN when no data available */
-			if (res == -_EAGAIN) break;
+			/* EAGAIN when no more data available */
+			if (res == -_EAGAIN) return *read == 0 ? _EAGAIN : 0;
+
 			return -res;
 		}
 	}
@@ -332,18 +310,10 @@ void Socket_Close(cc_socket s) {
 	interop_SocketClose(s);
 }
 
-extern int interop_SocketPoll(int sock);
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+extern int interop_SocketWritable(int sock, cc_bool* writable);
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	/* returned result is negative for error */
-	int res = interop_SocketPoll(s), flags;
-
-	if (res >= 0) {
-		flags    = mode == SOCKET_POLL_READ ? 0x01 : 0x02;
-		*success = (res & flags) != 0;
-		return 0;
-	} else {
-		*success = false; return -res;
-	}
+	return -interop_SocketWritable(s, writable);
 }
 
 
