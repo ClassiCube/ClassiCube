@@ -40,39 +40,44 @@ static const cc_uint8 v4_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
 };
 
 static const struct GameVersion version_cpe  = { 
-	"0.30",    PROTOCOL_0030, BLOCK_MAX_CPE, 10,
-	sizeof(v7_inventory), NULL,         v7_hotbar
+	"0.30", VERSION_CPE, 
+	PROTOCOL_0030, BLOCK_MAX_CPE, 
+	10, sizeof(v7_inventory), NULL,         v7_hotbar
 };
 static const struct GameVersion version_0030 = {
-	"0.30",    PROTOCOL_0030, BLOCK_OBSIDIAN, 9,
-	sizeof(v7_inventory), v7_inventory, v7_hotbar
+	"0.30", VERSION_0030,
+	PROTOCOL_0030, BLOCK_OBSIDIAN, 
+	 9, sizeof(v7_inventory), v7_inventory, v7_hotbar
 };
 static const struct GameVersion version_0023 = {
-	"0.0.23a", PROTOCOL_0020, BLOCK_GOLD, 8,
-	sizeof(v6_inventory), v6_inventory, v6_hotbar
+	"0.0.23a", VERSION_0023,
+	PROTOCOL_0020, BLOCK_GOLD, 
+	 8, sizeof(v6_inventory), v6_inventory, v6_hotbar
 };
 static const struct GameVersion version_0019 = {
-	"0.0.19a", PROTOCOL_0019, BLOCK_GLASS, 6,
-	sizeof(v5_inventory), v5_inventory, v5_hotbar
+	"0.0.19a", VERSION_0019,
+	PROTOCOL_0019, BLOCK_GLASS, 
+	 6, sizeof(v5_inventory), v5_inventory, v5_hotbar
 };
 static const struct GameVersion version_0017 = {
-	"0.0.17a", PROTOCOL_0017, BLOCK_LEAVES, 6,
-	sizeof(v4_inventory), v4_inventory, v4_hotbar
+	"0.0.17a", VERSION_0017,
+	PROTOCOL_0017, BLOCK_LEAVES, 
+	 6, sizeof(v4_inventory), v4_inventory, v4_hotbar
 };
 
 void GameVersion_Load(void) {
-	int version = Options_GetInt("protocol-version", PROTOCOL_0017, PROTOCOL_0030, PROTOCOL_0030);
+	int version = Options_GetInt(OPT_GAME_VERSION, VERSION_0017, VERSION_0030, VERSION_0030);
 	const struct GameVersion* ver = NULL;
 
 	if (Game_UseCPE) {
 		ver = &version_cpe;
-	} else if (version == PROTOCOL_0030) {
+	} else if (version == VERSION_0030) {
 		ver = &version_0030;
-	} else if (version == PROTOCOL_0020) {
+	} else if (version == VERSION_0023) {
 		ver = &version_0023;
-	} else if (version == PROTOCOL_0019) {
+	} else if (version == VERSION_0019) {
 		ver = &version_0019;
-	} else if (version == PROTOCOL_0017) {
+	} else if (version == VERSION_0017) {
 		ver = &version_0017;
 	}
 

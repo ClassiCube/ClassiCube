@@ -76,6 +76,7 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #define OPT_SKIN_SERVER "http-skinserver"
 #define OPT_RAW_INPUT "win-raw-input"
 #define OPT_DPI_SCALING "win-dpi-scaling"
+#define OPT_GAME_VERSION "game-version"
 
 #define LOPT_SESSION  "launcher-session"
 #define LOPT_USERNAME "launcher-cc-username"

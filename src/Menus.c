@@ -2199,8 +2199,8 @@ static void MenuOptionsScreen_Layout(void* screen);
 static struct MenuOptionsScreen {
 	Screen_Body
 	struct MenuInputDesc* descs;
-	const char** descriptions;
-	int activeI, selectedI, descriptionsCount;
+	const char* descriptions[MENUOPTS_MAX_OPTS + 1];
+	int activeI, selectedI;
 	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
 	int numButtons, numCore;
 	struct FontDesc titleFont, textFont;
@@ -2278,9 +2278,10 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	cc_string descRaw, descLines[5];
 
 	MenuOptionsScreen_FreeExtHelp(s);
-	if (!s->descriptions || s->activeI >= 0) return;
+	if (s->activeI >= 0) return;
 	desc = s->descriptions[idx];
 	if (!desc) return;
+	if (!s->widgets[idx] || s->widgets[idx]->disabled) return;
 
 	descRaw          = String_FromReadonly(desc);
 	s->extHelp.lines = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
@@ -2307,7 +2308,6 @@ static int MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i = Menu_DoPointerMove(s, id, x, y);
 	if (i == -1 || i == s->selectedI) return true;
-	if (!s->descriptions || i >= s->descriptionsCount) return true;
 
 	s->selectedI = i;
 	if (s->activeI == -1) MenuOptionsScreen_SelectExtHelp(s, i);
@@ -2403,9 +2403,13 @@ static void MenuOptionsScreen_Init(void* screen) {
 
 	s->widgets     = menuOpts_widgets;
 	s->numWidgets  = MENUOPTS_MAX_OPTS + 1; /* always have back button */
-	/* The various menu options screens might have different number of widgets */
-	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { s->widgets[i] = NULL; }
 	s->maxVertices = BUTTONWIDGET_MAX;
+
+	/* The various menu options screens might have different number of widgets */
+	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { 
+		s->widgets[i]      = NULL;
+		s->descriptions[i] = NULL;
+	}
 
 	s->activeI     = -1;
 	s->selectedI   = -1;
@@ -2477,16 +2481,13 @@ static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	Menu_PointerDown,         Screen_PointerUp,  MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
 	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
 };
-void MenuOptionsScreen_Show(struct MenuInputDesc* descs, const char** descriptions, int descsCount, InitMenuOptions init) {
+void MenuOptionsScreen_Show(struct MenuInputDesc* descs, InitMenuOptions init) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &MenuOptionsScreen_VTABLE;
 
-	s->descs             = descs;
-	s->descriptions      = descriptions;
-	s->descriptionsCount = descsCount;
-
+	s->descs           = descs;
 	s->DoInit          = init;
 	s->DoRecreateExtra = NULL;
 	s->OnHacksChanged  = NULL;
@@ -2594,7 +2595,7 @@ void ClassicOptionsScreen_Show(void) {
 	MenuInput_Enum(descs[2], viewDistNames,  VIEW_COUNT);
 	MenuInput_Enum(descs[7], FpsLimit_Names, FPS_LIMIT_COUNT);
 
-	MenuOptionsScreen_Show(descs, NULL, 0, ClassicOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, ClassicOptionsScreen_InitWidgets);
 }
 
 
@@ -2678,7 +2679,7 @@ void EnvSettingsScreen_Show(void) {
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);
 
-	MenuOptionsScreen_Show(descs, NULL, 0, EnvSettingsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, EnvSettingsScreen_InitWidgets);
 }
 
 
@@ -2746,38 +2747,36 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	s->numCore      = 8;
 	s->maxVertices += 8 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
-}
 
-void GraphicsOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[8];
-	static const char* extDescs[Array_Elems(descs)];
-
-	extDescs[0] = "&eChange the smoothness of the smooth camera.";
-	extDescs[1] = \
+	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
+	s->descriptions[1] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
-	extDescs[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	extDescs[5] = \
+	s->descriptions[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
+	s->descriptions[5] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	extDescs[6] = \
+	s->descriptions[6] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
 		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
-	
+}
+
+void GraphicsOptionsScreen_Show(void) {
+	static struct MenuInputDesc descs[8];
 	MenuInput_Float(descs[0], 1, 100, 20);
 	MenuInput_Enum(descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(descs[2],  8, 4096, 512);
 	MenuInput_Enum(descs[5], NameMode_Names,   NAME_MODE_COUNT);
 	MenuInput_Enum(descs[6], ShadowMode_Names, SHADOW_MODE_COUNT);
 
-	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), GraphicsOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, GraphicsOptionsScreen_InitWidgets);
 }
 
 
@@ -2831,7 +2830,7 @@ void ChatOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[5];
 	MenuInput_Float(descs[0], 0.25f, 4.00f, 1);
 	MenuInput_Int(descs[1],       0,    30, Gui.DefaultLines);
-	MenuOptionsScreen_Show(descs, NULL, 0, ChatOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, ChatOptionsScreen_InitWidgets);
 }
 
 
@@ -2890,7 +2889,7 @@ void GuiOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[8];
 	MenuInput_Float(descs[2], 0.25f, 4.00f, 1);
 	MenuInput_Float(descs[3], 0.25f, 4.00f, 1);
-	MenuOptionsScreen_Show(descs, NULL, 0, GuiOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, GuiOptionsScreen_InitWidgets);
 }
 
 
@@ -3005,25 +3004,22 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 	HacksSettingsScreen_CheckHacksAllowed(s);
+
+	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
+	s->descriptions[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
+	s->descriptions[7] = \
+		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
+		"&ethe block to be placed, and you to be moved out of the way.\n" \
+		"&fThis is mainly useful for quick pillaring/towering.";
+	s->descriptions[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
 }
 
 void HacksSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
-	static const char* extDescs[Array_Elems(descs)];
-
-	extDescs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
-	extDescs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
-	extDescs[7] = \
-		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
-		"&ethe block to be placed, and you to be moved out of the way.\n" \
-		"&fThis is mainly useful for quick pillaring/towering.";
-	extDescs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
-
 	MenuInput_Float(descs[1], 0.1f,   50, 10);
 	MenuInput_Float(descs[3], 0.1f, 2048, 1.233f);
 	MenuInput_Int(descs[9],      1,  179, 70);
-
-	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), HacksSettingsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, HacksSettingsScreen_InitWidgets);
 }
 
 
@@ -3100,7 +3096,7 @@ void MiscOptionsScreen_Show(void) {
 	MenuInput_Int(descs[6],   1, 200, 30);
 #endif
 
-	MenuOptionsScreen_Show(descs, NULL, 0, MiscSettingsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, MiscSettingsScreen_InitWidgets);
 }
 
 
@@ -3228,13 +3224,17 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 }
 
 void NostalgiaAppearanceScreen_Show(void) {
-	MenuOptionsScreen_Show(NULL, NULL, 0, NostalgiaAppearanceScreen_InitWidgets);
+	MenuOptionsScreen_Show(NULL, NostalgiaAppearanceScreen_InitWidgets);
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------NostalgiaFunctionalityScreen-----------------------------------------------*
 *#########################################################################################################################*/
+static void NostalgiaScreen_UpdateVersionDisabled(void) {
+	MenuOptionsScreen_Instance.buttons[3].disabled = Game_UseCPE;
+}
+
 static void NostalgiaScreen_GetTexs(cc_string* v) { Menu_GetBool(v, Game_AllowServerTextures); }
 static void NostalgiaScreen_SetTexs(const cc_string* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
@@ -3242,22 +3242,40 @@ static void NostalgiaScreen_GetCustom(cc_string* v) { Menu_GetBool(v, Game_Allow
 static void NostalgiaScreen_SetCustom(const cc_string* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
 
 static void NostalgiaScreen_GetCPE(cc_string* v) { Menu_GetBool(v, Game_UseCPE); }
-static void NostalgiaScreen_SetCPE(const cc_string* v) { Game_UseCPE = Menu_SetBool(v, OPT_CPE); }
+static void NostalgiaScreen_SetCPE(const cc_string* v) {
+	Game_UseCPE = Menu_SetBool(v, OPT_CPE); 
+	NostalgiaScreen_UpdateVersionDisabled();
+}
+
+static void NostalgiaScreen_Version(void* screen, void* widget) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	int ver = Game_Version.Version - 1;
+	if (ver < VERSION_0017) ver = VERSION_0030;
+
+	Options_SetInt(OPT_GAME_VERSION, ver);
+	GameVersion_Load();
+	MenuOptionsScreen_Update(s, Screen_Index(s, widget));
+}
+
+static void NostalgiaScreen_GetVersion(cc_string* v) { String_AppendConst(v, Game_Version.Name); }
+static void NostalgiaScreen_SetVersion(const cc_string* v) { }
 
 static struct TextWidget nostalgia_desc;
 static void NostalgiaScreen_RecreateExtra(struct MenuOptionsScreen* s) {
-	TextWidget_SetConst(&nostalgia_desc, "&eButtons on the right require restarting game", &s->textFont);
+	TextWidget_SetConst(&nostalgia_desc, "&eRequires restarting game to take full effect", &s->textFont);
 }
 
 static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
-		{ -1,   0, "Use server textures",  MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
-	
-		{ 1,  -50, "Allow custom blocks",  MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom },
-		{ 1, -  0, "Non-classic features", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE }
+		{ -1, -50, "Use server textures",  MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetTexs,    NostalgiaScreen_SetTexs },
+		{ -1,   0, "Allow custom blocks",  MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetCustom,  NostalgiaScreen_SetCustom },
+
+		{  1, -50, "Non-classic features", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetCPE,     NostalgiaScreen_SetCPE },
+		{  1,   0, "Game version",         NostalgiaScreen_Version,
+			NostalgiaScreen_GetVersion, NostalgiaScreen_SetVersion }
 	};
 	s->numCore         = Array_Elems(buttons) + 1;
 	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
@@ -3266,11 +3284,17 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
 	TextWidget_Init(&nostalgia_desc);
 	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	s->widgets[3] = (struct Widget*)&nostalgia_desc;
+	s->widgets[4] = (struct Widget*)&nostalgia_desc;
+
+	NostalgiaScreen_UpdateVersionDisabled();
+	s->descriptions[3] = \
+		"&eNote that support for versions earlier than 0.30 is incomplete.\n" \
+		"\n" \
+		"&cNote that some servers only support 0.30 game version";
 }
 
 void NostalgiaFunctionalityScreen_Show(void) {
-	MenuOptionsScreen_Show(NULL, NULL, 0, NostalgiaFunctionalityScreen_InitWidgets);
+	MenuOptionsScreen_Show(NULL, NostalgiaFunctionalityScreen_InitWidgets);
 }
 
 

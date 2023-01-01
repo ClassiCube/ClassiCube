@@ -48,9 +48,13 @@ extern cc_bool Game_ScreenshotRequested;
 extern cc_bool Game_HideGui;
 extern cc_bool Game_DefaultZipMissing;
 
+enum GAME_VERSION_ {
+	VERSION_0017 = 27, VERSION_0019 = 28, VERSION_0023 = 29, VERSION_0030 = 30, VERSION_CPE = 31
+};
 struct GameVersion { 
 	const char* Name; 
-	cc_uint8 Protocol, MaxBlock, BlocksPerRow, InventorySize;
+	cc_uint8 Version, Protocol, MaxBlock;
+	cc_uint8 BlocksPerRow, InventorySize;
 	const cc_uint8* Inventory; 
 	const cc_uint8* Hotbar;
 };
