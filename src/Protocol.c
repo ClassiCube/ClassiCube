@@ -727,6 +727,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 	UpdateLocation(id, &update);
 }
 
+#define Classic_HandshakeSize() (Game_Version.Protocol > PROTOCOL_0019 ? 131 : 130)
 static void Classic_Reset(void) {
 	Stream_ReadonlyMemory(&map_part, NULL, 0);
 	map_begunLoading = false;
