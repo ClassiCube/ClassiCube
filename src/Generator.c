@@ -5,6 +5,7 @@
 #include "Platform.h"
 #include "World.h"
 #include "Utils.h"
+#include "Game.h"
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
@@ -488,6 +489,10 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 }
 
 static void NotchyGen_PlantFlowers(void) {
+	if (Game_Version.Version < VERSION_0023) {
+		return;
+	}
+	
 	int numPatches;
 	BlockRaw block;
 	int patchX,  patchZ;
