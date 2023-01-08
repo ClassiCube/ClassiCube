@@ -527,6 +527,10 @@ static void NotchyGen_PlantFlowers(void) {
 }
 
 static void NotchyGen_PlantMushrooms(void) {
+	if (Game_Version.Version < VERSION_0023) {
+		return;
+	}
+
 	int numPatches, groundHeight;
 	BlockRaw block;
 	int patchX, patchY, patchZ;
