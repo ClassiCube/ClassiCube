@@ -84,7 +84,7 @@ CC_NOINLINE static int MusicResource_Download(const char* hash) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
 
 	String_InitArray(url, urlBuffer);
-	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
+	String_Format3(&url, "https://resources.download.minecraft.net/%r%r/%c", 
 					&hash[0], &hash[1], hash);
 	return Http_AsyncGetData(&url, 0);
 }
