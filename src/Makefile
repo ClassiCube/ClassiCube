@@ -96,6 +96,7 @@ endif
 
 ifeq ($(PLAT),psp)
 CC=psp-gcc
+LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -129,7 +130,7 @@ haiku:
 serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 psp:
-	$(MAKE) $(ENAME) PLAT=psp
+	$(MAKE) ClassiCube.elf PLAT=psp
 
 clean:
 	$(DEL) $(OBJECTS)
@@ -145,3 +146,9 @@ interop_cocoa.o: interop_cocoa.m
 	
 Window_Haiku.o: Window_Haiku.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
+	
+# PSP requires fixups
+ClassiCube.elf : $(ENAME)
+	cp $(ENAME) ClassiCube.elf
+	psp-fixup-imports ClassiCube.elf
+

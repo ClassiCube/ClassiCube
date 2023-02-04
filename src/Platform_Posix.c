@@ -53,6 +53,13 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
+#elif defined CC_BUILD_PSP
+/* pspsdk doesn't seem to support IPv6 */
+#undef AF_INET6
+#include <pspkernel.h>
+
+PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
+PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 #endif
 
 
@@ -477,10 +484,12 @@ void Platform_LoadSysFonts(void) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 union SocketAddress {
-	struct sockaddr_storage total;
 	struct sockaddr raw;
 	struct sockaddr_in  v4;
+	#ifdef AF_INET6
 	struct sockaddr_in6 v6;
+	struct sockaddr_storage total;
+	#endif
 };
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
@@ -513,7 +522,9 @@ static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	String_EncodeUtf8(str, address);
 
 	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	#ifdef AF_INET6
 	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) return AF_INET6;
+	#endif
 	return ParseHost(addr, str);
 }
 
@@ -533,13 +544,22 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
+	
+	#if defined CC_BUILD_PSP
+	int on = 1;
+	setsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
+	#else
 	ioctl(*s, FIONBIO, &blocking_raw);
+	#endif
 
+	#ifdef AF_INET6
 	if (family == AF_INET6) {
 		addr.v6.sin6_family = AF_INET6;
 		addr.v6.sin6_port   = htons(port);
 		addrSize = sizeof(addr.v6);
-	} else if (family == AF_INET) {
+	}
+	#endif
+	if (family == AF_INET) {
 		addr.v4.sin_family  = AF_INET;
 		addr.v4.sin_port    = htons(port);
 		addrSize = sizeof(addr.v4);
@@ -566,7 +586,7 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN
+#if defined CC_BUILD_DARWIN || defined CC_BUILD_PSP
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
@@ -900,7 +920,18 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#if defined CC_BUILD_PSP
+/* TODO can this actually be supported somehow */
+const cc_string DynamicLib_Ext = String_FromConst(".so");
+
+void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
+void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
+
+cc_bool DynamicLib_DescribeError(cc_string* dst) {
+	String_AppendConst(dst, "Dynamic linking unsupported");
+	return true;
+}
+#elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 

@@ -26,6 +26,8 @@
 #define _GNU_SOURCE
 #include <sys/ucontext.h>
 #include <signal.h>
+#elif defined CC_BUILD_PSP
+/* TODO can this be supported somehow? */
 #elif defined CC_BUILD_POSIX
 #include <signal.h>
 #include <sys/ucontext.h>
@@ -232,6 +234,8 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
+#elif defined CC_BUILD_PSP
+/* No backtrace support implemented for PSP */
 #elif defined CC_BUILD_POSIX
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
@@ -350,6 +354,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
 	/* TODO: Backtrace using LibSymbolication */
+}
+#elif defined CC_BUILD_PSP
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* Backtrace not implemented for PSP */
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
@@ -781,6 +790,10 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
+#elif defined CC_BUILD_PSP
+static void PrintRegisters(cc_string* str, void* ctx) {
+	/* Register dumping not implemented */
+}
 #endif
 
 static void DumpRegisters(void* ctx) {
@@ -957,11 +970,11 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 
 void Logger_Hook(void) {
 	static const struct DynamicLibSym funcs[] = {
-#ifdef _IMAGEHLP64
+	#ifdef _IMAGEHLP64
 		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
-#else
+	#else
 		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
-#endif
+	#endif
 	};
 	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
 	void* lib;
@@ -978,7 +991,7 @@ void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char*
 void Logger_Abort2(cc_result result, const char* raw_msg) {
 #endif
 	CONTEXT ctx;
-#if _M_IX86 && __GNUC__
+	#if _M_IX86 && __GNUC__
 	/* Stack frame layout on x86: */
 	/*  [ebp] is previous frame's EBP */
 	/*  [ebp+4] is previous frame's EIP (return address) */
@@ -995,14 +1008,22 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 		: "eax", "memory"
 	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
-#else
+	#else
 	/* This method is guaranteed to exist on 64 bit windows.  */
 	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
 	/*  so an alternative is provided for MinGW above so that */
 	/*  the game can be cross-compiled for Windows 98 / 2000  */
 	RtlCaptureContext(&ctx);
-#endif
+	#endif
 	AbortCommon(result, raw_msg, &ctx);
+}
+#elif defined CC_BUILD_PSP
+void Logger_Hook(void) {
+	/* TODO can signals be supported somehow? */
+}
+
+void Logger_Abort2(cc_result result, const char* raw_msg) {
+	AbortCommon(result, raw_msg, NULL);
 }
 #elif defined CC_BUILD_POSIX
 static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
@@ -1025,10 +1046,10 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
-#if defined CC_BUILD_ANDROID
+	#if defined CC_BUILD_ANDROID
 	/* deliberate Dalvik VM abort, try to log a nicer error for this */
 	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
-#endif
+	#endif
 	AbortCommon(0, msg.buffer, ctx);
 }
 
