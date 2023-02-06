@@ -1037,7 +1037,7 @@ static void LTable_HeadersClick(struct LTable* w, int idx) {
 
 	for (i = 0, x = w->x; i < w->numColumns; i++) {
 		/* clicked on gridline, begin dragging */
-		if (mouseX >= (x - dragPad) && mouseX < (x + dragPad) && w->columns[i].interactable) {
+		if (mouseX >= (x - dragPad) && mouseX < (x + dragPad) && w->columns[i].draggable) {
 			w->draggingColumn = i - 1;
 			w->dragXStart = (mouseX - w->x) - w->columns[i - 1].width;
 			return;
@@ -1048,7 +1048,7 @@ static void LTable_HeadersClick(struct LTable* w, int idx) {
 	}
 
 	for (i = 0, x = w->x; i < w->numColumns; i++) {
-		if (mouseX >= x && mouseX < (x + w->columns[i].width) && w->columns[i].interactable) {
+		if (mouseX >= x && mouseX < (x + w->columns[i].width) && w->columns[i].sortable) {
 			w->sortingCol = i;
 			w->columns[i].invertSort = !w->columns[i].invertSort;
 			LTable_Sort(w);

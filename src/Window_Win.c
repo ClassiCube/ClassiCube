@@ -35,6 +35,10 @@
 #define WM_XBUTTONDOWN 0x020B
 #define WM_XBUTTONUP   0x020C
 #endif
+#ifndef WM_INPUT
+/* Missing when compiling with some older winapi SDKs */
+#define WM_INPUT       0x00FF
+#endif
 
 static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
