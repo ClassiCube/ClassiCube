@@ -1542,8 +1542,7 @@ cc_result Cw_Save(struct Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
-
-static cc_uint8 sc_begin[78] = {
+static cc_uint8 sc_begin[] = {
 NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_STR,  0,9,  'M','a','t','e','r','i','a','l','s', 0,7, 'C','l','a','s','s','i','c',
 	NBT_I16,  0,5,  'W','i','d','t','h',                 0,0,
@@ -1551,10 +1550,10 @@ NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_I16,  0,6,  'L','e','n','g','t','h',             0,0,
 	NBT_I8S,  0,6,  'B','l','o','c','k','s',             0,0,0,0,
 };
-static cc_uint8 sc_data[11] = {
+static cc_uint8 sc_data[] = {
 	NBT_I8S,  0,4,  'D','a','t','a',                     0,0,0,0,
 };
-static cc_uint8 sc_end[37] = {
+static cc_uint8 sc_end[] = {
 	NBT_LIST, 0,8,  'E','n','t','i','t','i','e','s',                 NBT_DICT, 0,0,0,0,
 	NBT_LIST, 0,12, 'T','i','l','e','E','n','t','i','t','i','e','s', NBT_DICT, 0,0,0,0,
 NBT_END,
@@ -1586,4 +1585,133 @@ cc_result Schematic_Save(struct Stream* stream) {
 		if ((res = Stream_Write(stream, chunk, count))) return res;
 	}
 	return Stream_Write(stream, sc_end, sizeof(sc_end));
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Dat export---------------------------------------------------------*
+*#########################################################################################################################*/
+static const struct JField {
+	cc_uint8 type, isFloat;
+	const char* name;
+	void* value;
+} level_fields[] = {
+	{ JFIELD_I32, false, "width",  &World.Width  },
+	{ JFIELD_I32, false, "depth",  &World.Height },
+	{ JFIELD_I32, false, "height", &World.Length },
+	{ JFIELD_I32, true,  "xSpawn", &LocalPlayer_Instance.Base.Position.X },
+	{ JFIELD_I32, true,  "ySpawn", &LocalPlayer_Instance.Base.Position.Y },
+	{ JFIELD_I32, true,  "zSpawn", &LocalPlayer_Instance.Base.Position.Z },
+	{ JFIELD_ARRAY,0, "blocks" }
+	/* TODO classic only blocks */
+};
+
+static int WriteJavaString(cc_uint8* dst, const char* value) {
+	int length = String_Length(value);
+	dst[0] = 0;
+	dst[1] = length;
+	Mem_Copy(dst + 2, value, length);
+	return length;
+}
+
+static cc_result WriteClassDesc(struct Stream* stream, cc_uint8 typecode, const char* klass, 
+								int numFields, const struct JField* fields) {
+	cc_uint8 header[256] = { 0 };
+	static const cc_uint8 footer[] = {
+		TC_ENDBLOCKDATA, /* classAnnotations */
+		TC_NULL          /* superClassDesc */
+	};
+	int i, length;
+	cc_result res;
+
+	header[0] = typecode;
+	header[1] = TC_CLASSDESC;
+	length    = WriteJavaString(header + 2, klass);
+	header[4 + length +  8] = SC_SERIALIZABLE;
+	header[4 + length +  9] = 0;
+	header[4 + length + 10] = numFields;
+
+	if ((res = Stream_Write(stream, header, 15 + length))) return res;
+
+	for (i = 0; i < numFields; i++) 
+	{
+		header[0] = fields[i].type;
+		length    = WriteJavaString(header + 1, fields[i].name);
+
+		if (fields[i].type == JFIELD_ARRAY) {
+			header[3 + length + 0] = TC_STRING;
+			WriteJavaString(&header[3 + length + 1], "[B");
+			length += 5;
+		}
+		if ((res = Stream_Write(stream, header, 3 + length))) return res;
+	}
+
+	if ((res = Stream_Write(stream, footer, sizeof(footer)))) return res;
+	return 0;
+}
+
+static const cc_uint8 cpe_fallback[] = {
+	BLOCK_SLAB, BLOCK_BROWN_SHROOM, BLOCK_SAND, BLOCK_AIR, BLOCK_STILL_LAVA, BLOCK_PINK,
+	BLOCK_GREEN, BLOCK_DIRT, BLOCK_BLUE, BLOCK_CYAN, BLOCK_GLASS, BLOCK_IRON, BLOCK_OBSIDIAN, BLOCK_WHITE,
+	BLOCK_WOOD, BLOCK_STONE
+};
+
+#define DAT_BUFFER_SIZE (64 * 1024)
+static cc_result WriteLevelBlocks(struct Stream* stream) {
+	cc_uint8 buffer[DAT_BUFFER_SIZE];
+	int i, bIndex = 0;
+	cc_result res;
+	BlockID b;
+
+	for (i = 0; i < World.Volume; i++)
+	{
+		b = World_GetRawBlock(i);
+		/* TODO: Better fallback decision (e.g. air if custom block is 'gas' type) */
+		if (b > BLOCK_STONE_BRICK) b = BLOCK_STONE;
+		/* TODO: Move to GameVersion.c and account for game version */
+		if (b > BLOCK_OBSIDIAN) b = cpe_fallback[b - BLOCK_COBBLE_SLAB];
+
+		buffer[bIndex] = (cc_uint8)b;
+		bIndex++;
+		if (bIndex < DAT_BUFFER_SIZE) continue;
+
+		if ((res = Stream_Write(stream, buffer, DAT_BUFFER_SIZE))) return res;
+		bIndex = 0;
+	}
+
+	if (bIndex == 0) return 0;
+	return Stream_Write(stream, buffer, bIndex);
+}
+
+cc_result Dat_Save(struct Stream* stream) {
+	static const cc_uint8 header[] = {
+		0x27,0x1B,0xB7,0x88, 0x02, /* DAT signature + version */
+		0xAC,0xED, 0x00,0x05       /* JSF signature + version */
+	};
+	const struct JField* field;
+	cc_uint8 tmp[4];
+	cc_result res;
+	int i, value;
+
+	if ((res = Stream_Write(stream, header, sizeof(header)))) return res;
+	if ((res = WriteClassDesc(stream, TC_OBJECT, "com.mojang.minecraft.level.Level", 
+					Array_Elems(level_fields), level_fields))) return res;
+
+	/* Write field values */
+	for (i = 0; i < Array_Elems(level_fields); i++) 
+	{
+		field = &level_fields[i];
+
+		if (field->type == JFIELD_I32) {
+			value = field->isFloat ? *((float*)field->value) : *((int*)field->value);
+			Stream_SetU32_BE(tmp, value);
+			if ((res = Stream_Write(stream, tmp, 4))) return res;
+		} else {
+			if ((res = WriteClassDesc(stream, TC_ARRAY, "[B", 0, NULL)))  return res;
+			Stream_SetU32_BE(tmp, World.Volume);
+			if ((res = Stream_Write(stream, tmp, 4))) return res;
+			if ((res = WriteLevelBlocks(stream)))     return res;
+		}
+	}
+	return 0;
 }

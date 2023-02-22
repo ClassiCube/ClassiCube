@@ -434,11 +434,11 @@ static struct ChatCommand RenderTypeCommand = {
 	"RenderType", RenderTypeCommand_Execute,
 	COMMAND_FLAG_UNSPLIT_ARGS,
 	{
-		"&a/client rendertype [normal/legacy/legacyfast]",
-		"&bnormal: &eDefault renderer, with all environmental effects enabled.",
-		"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
-		"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
-		"&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+		"&a/client rendertype [normal/legacy/fast]",
+		"&bnormal: &eDefault render mode, with all environmental effects enabled",
+		"&blegacy: &eSame as normal mode, &cbut is usually slightly slower",
+		"   &eIf you have issues with clouds and map edges disappearing randomly, use this mode",
+		"&bfast: &eSacrifices clouds, fog and overhead sky for faster performance",
 	}
 };
 

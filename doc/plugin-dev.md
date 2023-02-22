@@ -16,7 +16,7 @@ I assume your directory is structured like this:
 src/...
 TestPlugin.c
 ```
-Or in other words, in a directory somewhere, you have a file named ```TestPlugin.c```, and then a sub-directory named ```src``` which contains the game's source code.
+Or in other words, in a directory somewhere, you have a file named `TestPlugin.c`, and then a sub-directory named `src` which contains the game's source code.
 
 ### Basic plugin
 ```C
@@ -51,8 +51,8 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
 #include "src/String.h"
 
 static void TestPlugin_Init(void) {
-        cc_string msg = String_FromConst("Hello world!");
-        Chat_Add(&msg);
+    cc_string msg = String_FromConst("Hello world!");
+    Chat_Add(&msg);
 }
 
 EXPORT int Plugin_ApiVersion = 1;
@@ -112,50 +112,64 @@ Plugin compilation instructions differs depending on the compiler and operating 
 ## Compiling - Linux
 
 ### Using gcc or clang
+
 #### Compiling
 
-```cc TestPlugin.c -o TestPlugin.so -shared -fPIC```
+`cc TestPlugin.c -o TestPlugin.so -shared -fPIC`
 
-Then put ```TestPlugin.so``` into your game's ```plugins``` folder. Done.
+Then put `TestPlugin.so` into your game's `plugins` folder. Done.
 
 ### Cross compiling for Windows 32 bit using mingw-w64
+
 #### Setup
 
-1) Compile the game, see ```Cross compiling for windows``` in main readme
-2) Rename compiled executable to ClassiCube.exe
-3) Install the ```mingw-w64-tools``` package
-
-TODO: this also works for mingw. clean this up.
+1) Create `ClassiCube.exe` by either:
+    1) Compiling the game, see `Cross compiling for windows (32 bit)` in [main readme](/readme.md#cross-compiling-for-windows-32-bit)
+    2) Downloading 32 bit ClassiCube from https://www.classicube.net/download/#dl-win
+2) Install the `mingw-w64-tools` package (if it isn't already)
+3) Generate the list of exported symbols from `ClassiCube.exe` by running:
+    * `gendef ClassiCube.exe`
+4) Create a linkable library from the exported symbols list by running: 
+    * `i686-w64-mingw32-dlltool -d ClassiCube.def -l libClassiCube.a -D ClassiCube.exe`
 
 TODO: also document alternate method of compiling the game using --out-implib
 
 #### Compiling
 
-First, generate list of exported symbols: 
+`i686-w64-mingw32-gcc TestPlugin.c -o TestPlugin.dll -s -shared -L . -lClassiCube`
 
-```gendef src/ClassiCube.exe```
-
-Next create a linkable library: 
-
-```i686-w64-mingw32-dlltool -d ClassiCube.def -l libClassiCube.a -D ClassiCube.exe```
-
-Finally compile the plugin:
-
-```i686-w64-mingw32-gcc TestPlugin.c -o TestPlugin.dll -s -shared -L . -lClassiCube```
-
-Then put ```TestPlugin.dll``` into your game's ```plugins``` folder. Done.
+Then put `TestPlugin.dll` into your game's `plugins` folder. Done.
 
 ### Cross compiling for Windows 64 bit using mingw-w64
-Repeat the steps of *Cross compiling for Windows 32 bit*, but replace ```i686-w64-mingw32``` with ```x86_64-w64-mingw32``` 
+
+#### Setup
+
+1) Create `ClassiCube.exe` by either:
+    1) Compiling the game, see `Cross compiling for windows (64 bit)` in [main readme](/readme.md#cross-compiling-for-windows-64-bit)
+    2) Downloading 64 bit ClassiCube from https://www.classicube.net/download/#dl-win
+2) Install the `mingw-w64-tools` package (if it isn't already)
+3) Generate the list of exported symbols from `ClassiCube.exe` by running:
+    * `gendef ClassiCube.exe`
+4) Create a linkable library from the exported symbols list by running: 
+    * `x86_64-w64-mingw32-dlltool -d ClassiCube.def -l libClassiCube.a -D ClassiCube.exe`
+
+TODO: also document alternate method of compiling the game using --out-implib
+
+#### Compiling
+
+`x86_64-w64-mingw32-gcc TestPlugin.c -o TestPlugin.dll -s -shared -L . -lClassiCube`
+
+Then put `TestPlugin.dll` into your game's `plugins` folder. Done.
 
 ## Compiling - macOS
 
 ### Using gcc or clang
+
 #### Compiling
 
-```cc TestPlugin.c -o TestPlugin.dylib -undefined dynamic_lookup```
+`cc TestPlugin.c -o TestPlugin.dylib -undefined dynamic_lookup`
 
-Then put ```TestPlugin.dylib``` into your game's ```plugins``` folder. Done.
+Then put `TestPlugin.dylib` into your game's `plugins` folder. Done.
 
 ## Compiling - Windows
 
@@ -164,7 +178,7 @@ TODO more detailed when I have some more time...
 
 #### Setup
 
-1) Compile the game, see ```Cross compiling for windows``` in main readme
+1) Compile the game, see `Cross compiling for windows` in main readme
 2) Find the `ClassiCube.lib` that was generated when compiling the game. Usually it is in either `src\x64\Debug` or `src\x86\Debug`.
 3) Add a new `Empty Project` to the ClassiCube solution, then add the plugin .c files to it
 
@@ -174,17 +188,17 @@ Note: If the plugin provides a .vcxproj file, you can skip step 2 and just open 
 
 The simplest way of linking to the `.lib` file is simply adding the following code to one of the plugin's `.c` files
 
-```C
+`C
 #ifdef _MSC_VER
   #ifdef _WIN64
-    #pragma comment(lib, "[GAME SOURCE]/x64/Debug/ClassiCube.lib")
+    #pragma comment(lib, "[GAME SRC FOLDER]/x64/Debug/ClassiCube.lib")
   #else
-    #pragma comment(lib, "[GAME SOURCE]/x86/Debug/ClassiCube.lib")
+    #pragma comment(lib, "[GAME SRC FOLDER]/x86/Debug/ClassiCube.lib")
   #endif
 #endif
-```
+`
 
-replacing `[GAME SOURCE]` with the full path of `src` folder (e.g. `C:/Dev/ClassiCube/src`)
+replacing `[GAME SRC FOLDER]` with the full path of `src` folder (e.g. `C:/Dev/ClassiCube/src`)
 
 #### Configuration - alternative #2
 
@@ -203,33 +217,33 @@ TODO: may need to configure include directories
 #### Compiling
 
 Build the project. There should be a line in the build output that tells you where you can find the .dll file like this:
-```
+`
 Project1.vcxproj -> C:\classicube-dev\testplugin\src\x64\Debug\TestPlugin.dll
-``` 
+` 
 
-Then put ```TestPlugin.dll``` into your game's ```plugins``` folder. Done.
+Then put `TestPlugin.dll` into your game's `plugins` folder. Done.
 
 ### Using mingw-w64
 
 #### Setup
 
-Generate the list of exported symbols of `ClassiCube.exe`
-
-```gendef src/ClassiCube.exe```
-
-Next create a linkable library from the exported symbols list: 
-
-```dlltool -d ClassiCube.def -l libClassiCube.a -D ClassiCube.exe```
+1) Create `ClassiCube.exe` by either:
+    1) Compiling the game, see `Compiling for windows (MinGW-w64)` in [main readme](/readme.md#using-mingw-w64)
+    2) Downloading ClassiCube from https://www.classicube.net/download/#dl-win
+2) Generate the list of exported symbols in `ClassiCube.exe` by running:
+    * `gendef ClassiCube.exe`
+3) Create a linkable library from the exported symbols list by running: 
+    * `dlltool -d ClassiCube.def -l libClassiCube.a -D ClassiCube.exe`
 
 #### Compiling
 
-```gcc TestPlugin.c -o TestPlugin.dll -s -shared -L . -lClassiCube```
+`gcc TestPlugin.c -o TestPlugin.dll -s -shared -L . -lClassiCube`
 
-Then put ```TestPlugin.dll``` into your game's ```plugins``` folder. Done.
+Then put `TestPlugin.dll` into your game's `plugins` folder. Done.
 
 ## Compiling - other notes
 
 ##### Ultra small dlls - mingw
-If you **ONLY** use code from the game (no external libraries and no C standard library functions), add ```-nostartfiles -Wl,--entry=0``` to the compile flags
+If you **ONLY** use code from the game (no external libraries and no C standard library functions), add `-nostartfiles -Wl,--entry=0` to the compile flags
 
 This step isn't necessary, the dll works fine without it. But it does reduce the size of the dll from 11 to 4 kb.

@@ -34,7 +34,7 @@ static cc_bool  L_rndInited;
 static void LavaAnimation_Tick(void) {
 	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 	BitmapCol* ptr = pixels;
-	float soupHeat, potHeat, col;
+	float soupHeat, potHeat, color;
 	int size, mask, shift;
 	int x, y, i = 0;
 	struct Bitmap bmp;
@@ -85,13 +85,13 @@ static void LavaAnimation_Tick(void) {
 			if (Random_Float(&L_rnd) <= 0.005f) L_flameHeat[i] = 1.5f * 0.01f;
 
 			/* Output the pixel */
-			col = 2.0f * L_soupHeat[i];
-			Math_Clamp(col, 0.0f, 1.0f);
+			color = 2.0f * L_soupHeat[i];
+			Math_Clamp(color, 0.0f, 1.0f);
 
 			*ptr = BitmapCol_Make(
-				col * 100.0f + 155.0f,
-				col * col * 255.0f,
-				col * col * col * col * 128.0f,
+				color * 100.0f + 155.0f,
+				color * color * 255.0f,
+				color * color * color * color * 128.0f,
 				255);
 
 			ptr++; i++;
@@ -115,7 +115,7 @@ static cc_bool  W_rndInited;
 static void WaterAnimation_Tick(void) {
 	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 	BitmapCol* ptr = pixels;
-	float soupHeat, col;
+	float soupHeat, color;
 	int size, mask, shift;
 	int x, y, i = 0;
 	struct Bitmap bmp;
@@ -146,15 +146,15 @@ static void WaterAnimation_Tick(void) {
 			if (Random_Float(&W_rnd) <= 0.05f) W_flameHeat[i] = 0.5f * 0.05f;
 
 			/* Output the pixel */
-			col = W_soupHeat[i];
-			Math_Clamp(col, 0.0f, 1.0f);
-			col = col * col;
+			color = W_soupHeat[i];
+			Math_Clamp(color, 0.0f, 1.0f);
+			color = color * color;
 
 			*ptr = BitmapCol_Make(
-				32.0f  + col * 32.0f,
-				50.0f  + col * 64.0f,
+				32.0f  + color * 32.0f,
+				50.0f  + color * 64.0f,
 				255,
-				146.0f + col * 50.0f);
+				146.0f + color * 50.0f);
 
 			ptr++; i++;
 		}

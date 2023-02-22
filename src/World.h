@@ -77,14 +77,17 @@ void World_OutOfMemory(void);
 /* Sets World.Blocks2 and updates internal state for more than 256 blocks. */
 void World_SetMapUpper(BlockRaw* blocks);
 
+#define World_GetRawBlock(idx) ((World.Blocks[idx] | (World.Blocks2[idx] << 8)) & World.IDMask)
+
 /* Gets the block at the given coordinates. */
 /* NOTE: Does NOT check that the coordinates are inside the map. */
 static CC_INLINE BlockID World_GetBlock(int x, int y, int z) {
 	int i = World_Pack(x, y, z);
-	return (BlockID)((World.Blocks[i] | (World.Blocks2[i] << 8)) & World.IDMask);
+	return (BlockID)World_GetRawBlock(i);
 }
 #else
 #define World_GetBlock(x, y, z) World.Blocks[World_Pack(x, y, z)]
+#define World_GetRawBlock(idx)  World.Blocks[idx]
 #endif
 
 /* If Y is above the map, returns BLOCK_AIR. */

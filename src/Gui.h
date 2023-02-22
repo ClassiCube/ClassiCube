@@ -40,6 +40,8 @@ CC_VAR extern struct _GuiData {
 	cc_bool TabAutocomplete;
 	/* Whether FPS counter (and other info) is shown in top left. */
 	cc_bool ShowFPS;
+	/* Whether classic-style inventory is used */
+	cc_bool ClassicInventory;
 	float RawHotbarScale, RawChatScale, RawInventoryScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;

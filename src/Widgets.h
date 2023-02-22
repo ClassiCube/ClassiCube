@@ -88,7 +88,7 @@ struct TableWidget {
 	int rowsTotal, rowsVisible;
 	int lastCreatedIndex;
 	int selectedIndex, cellSizeX, cellSizeY;
-	float selBlockExpand;
+	float normBlockSize, selBlockSize;
 	GfxResourceID vb;
 	cc_bool pendingClose;
 	float scale;
@@ -96,8 +96,8 @@ struct TableWidget {
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
 	int lastX, lastY, paddingX;
-	int paddingTopY, paddingMaxY;
-	void (*UpdateDesc)(BlockID block);
+	int paddingL, paddingR, paddingT, paddingB;
+	void (*UpdateTitle)(BlockID block);
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);

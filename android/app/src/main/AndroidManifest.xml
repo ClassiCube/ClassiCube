@@ -11,6 +11,12 @@
   <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="26"/>
   
   <application android:icon="@mipmap/ccicon" android:label="ClassiCube">
+    <provider
+        android:name="com.classicube.CCFileProvider"
+        android:authorities="com.classicube.android.client.provider"
+        android:exported="false"
+        android:grantUriPermissions="true" >
+    </provider>
 
     <activity android:name="com.classicube.MainActivity" android:label="ClassiCube"
               android:configChanges="orientation|screenSize|keyboard|keyboardHidden">

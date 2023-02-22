@@ -458,15 +458,18 @@ static void Entity_CheckSkin(struct Entity* e) {
 	}
 
 	if (!Http_GetResult(e->_skinReqID, &item)) return;
-	if (!item.success) { Entity_SetSkinAll(e, true); return; }
 
-	Stream_ReadonlyMemory(&mem, item.data, item.size);
-	if ((res = ApplySkin(e, &bmp, &mem, &skin))) {
-		LogInvalidSkin(res, &skin, item.data, item.size);
+	if (!item.success) { 
+		Entity_SetSkinAll(e, true);
+	} else {
+		Stream_ReadonlyMemory(&mem, item.data, item.size);
+
+		if ((res = ApplySkin(e, &bmp, &mem, &skin))) {
+			LogInvalidSkin(res, &skin, item.data, item.size);
+		}
+		Mem_Free(bmp.scan0);
 	}
-
-	Mem_Free(bmp.scan0);
-	Mem_Free(item.data);
+	HttpRequest_Free(&item);
 }
 
 /* Returns true if no other entities are sharing this skin texture */

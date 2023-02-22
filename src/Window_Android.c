@@ -14,7 +14,8 @@ static ANativeWindow* win_handle;
 static cc_bool winCreated;
 static jmethodID JAVA_openKeyboard, JAVA_setKeyboardText, JAVA_closeKeyboard;
 static jmethodID JAVA_getWindowState, JAVA_enterFullscreen, JAVA_exitFullscreen;
-static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation, JAVA_openFileDialog;
+static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation;
+static jmethodID JAVA_openFileDialog, JAVA_saveFileDialog;
 static jmethodID JAVA_processedSurfaceDestroyed, JAVA_processEvents;
 static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_setupForGame;
 
@@ -245,6 +246,7 @@ static void CacheMethodRefs(JNIEnv* env) {
 	JAVA_showAlert = JavaGetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
 	JAVA_setRequestedOrientation = JavaGetIMethod(env, "setRequestedOrientation", "(I)V");
 	JAVA_openFileDialog = JavaGetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
+	JAVA_saveFileDialog = JavaGetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
 }
 
 // TODO move to bottom of file?
@@ -365,7 +367,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
-static OpenFileDialogCallback ofd_callback;
+static FileDialogCallback ofd_callback;
 static int ofd_action;
 static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str) {
     const char* raw;
@@ -395,6 +397,32 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* open_args) {
     args[0].l = JavaMakeConst(env, open_args->uploadFolder);
     int OK = JavaICall_Int(env, JAVA_openFileDialog, args);
     (*env)->DeleteLocalRef(env, args[0].l);
+    // TODO: Better error handling
+    return OK ? 0 : ERR_INVALID_ARGUMENT;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* save_args) {
+    JNIEnv* env;
+    jvalue args[2];
+    JavaGetCurrentEnv(env);
+    if (!save_args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+
+    // save the item to a temp file, which is then (usually) later deleted by intent callback
+    cc_string tmpDir = String_FromConst("Exported");
+    Directory_Create(&tmpDir);
+
+    cc_string path; char pathBuffer[FILENAME_SIZE];
+    String_InitArray(path, pathBuffer);
+    String_Format3(&path, "%s/%s%c", &tmpDir, &save_args->defaultName, save_args->filters[0]);
+    save_args->Callback(&path);
+    // TODO kinda ugly, maybe a better way?
+    cc_string file = String_UNSAFE_SubstringAt(&path, String_IndexOf(&path, '/') + 1);
+
+    args[0].l = JavaMakeString(env, &path);
+    args[1].l = JavaMakeString(env, &file);
+    int OK = JavaICall_Int(env, JAVA_saveFileDialog, args);
+    (*env)->DeleteLocalRef(env, args[0].l);
+    (*env)->DeleteLocalRef(env, args[1].l);
     // TODO: Better error handling
     return OK ? 0 : ERR_INVALID_ARGUMENT;
 }

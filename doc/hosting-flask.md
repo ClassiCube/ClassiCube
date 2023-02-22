@@ -133,7 +133,7 @@ if __name__ == "__main__":
 ```
 
 #### static/classisphere.js
-Download `cs.classicube.net/c_client/latest/ClassiCube.js` for this
+Download `cs.classicube.net/client/latest/ClassiCube.js` for this
 
 #### static/default.zip
 Download `classicube.net/static/default.zip` for this

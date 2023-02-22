@@ -818,6 +818,7 @@ static cc_string font_candidates[] = {
 	String_FromConst("Cantarell"),
 	String_FromConst("DejaVu Sans Book"), 
 	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
+	String_FromConst("Liberation Serif"), /* for SerenityOS */
 	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
 	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
 	String_FromConst("Geneva"), /* for ancient macOS versions */
@@ -1297,7 +1298,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
+		int len = String_EncodeUtf8(buffer, &part);
 		width += interop_TextWidth(buffer, len);
 	}
 	return Math_Ceil(width);
@@ -1319,7 +1320,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
 		char buffer[NATIVE_STR_LEN];
-		int len = Platform_EncodeUtf8(buffer, &part);
+		int len = String_EncodeUtf8(buffer, &part);
 
 		color = Drawer2D_GetColor(colorCode);
 		if (shadow) color = GetShadowColor(color);

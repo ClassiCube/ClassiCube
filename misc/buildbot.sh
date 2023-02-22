@@ -60,21 +60,19 @@ NIX64_FLAGS="-no-pie -fno-pie -m64 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON
 
 build_nix32() {
   echo "Building linux32.."
-  cp $ROOT_DIR/misc/CCicon_nix32 $ROOT_DIR/src/CCicon_nix32.o
   rm cc-nix32
-  gcc *.c $ALL_FLAGS $NIX32_FLAGS CCicon_nix32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix32 -lX11 -lXi -lpthread -lGL -lm -ldl
+  gcc *.c $ALL_FLAGS $NIX32_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix32 -lX11 -lXi -lpthread -lGL -lm -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Linux 32 bit" >> "$ERRS_FILE"; fi
-  gcc *.c $ALL_FLAGS $NIX32_FLAGS CCicon_nix32.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+  gcc *.c $ALL_FLAGS $NIX32_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Linux 32 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
 build_nix64() {
   echo "Building linux64.."
-  cp $ROOT_DIR/misc/CCicon_nix64 $ROOT_DIR/src/CCicon_nix64.o
   rm cc-nix64
-  gcc *.c $ALL_FLAGS $NIX64_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix64 -lX11 -lXi -lpthread -lGL -lm -ldl
+  gcc *.c $ALL_FLAGS $NIX64_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-nix64 -lX11 -lXi -lpthread -lGL -lm -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Linux 64 bit" >> "$ERRS_FILE"; fi
-  gcc *.c $ALL_FLAGS $NIX64_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-nix64-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+  gcc *.c $ALL_FLAGS $NIX64_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-nix64-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Linux 64 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
@@ -85,21 +83,19 @@ MACOS_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 
 build_mac32() {
   echo "Building mac32.."
-  cp $ROOT_DIR/misc/CCicon_mac32 $ROOT_DIR/src/CCicon_mac32.o
   rm cc-osx32
-  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
+  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
   if [ $? -ne 0 ]; then echo "Failed to compile macOS 32 bit" >> "$ERRS_FILE"; fi
-  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-osx32-gl2 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
+  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-osx32-gl2 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
   if [ $? -ne 0 ]; then echo "Failed to compile macOS 32 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
 build_mac64() {
   echo "Building mac64.."
-  cp $ROOT_DIR/misc/CCicon_mac64 $ROOT_DIR/src/CCicon_mac64.o
   rm cc-osx64
-  $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+  $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
   if [ $? -ne 0 ]; then echo "Failed to compile macOS 64 bit" >> "$ERRS_FILE"; fi
-  $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-osx64-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+  $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_GLMODERN -o cc-osx64-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
   if [ $? -ne 0 ]; then echo "Failed to compile macOS 64 bit (OpenGL Modern)" >> "$ERRS_FILE"; fi
 }
 
@@ -129,17 +125,15 @@ RPI64_CC=~/rpi64/cross-pi-gcc-9.4.0-64/bin/aarch64-linux-gnu-gcc
 
 build_rpi32() {
   echo "Building rpi32.."
-  cp $ROOT_DIR/misc/CCicon_rpi32 $ROOT_DIR/src/CCicon_rpi32.o
   rm cc-rpi
-  $RPI32_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib CCicon_rpi32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  $RPI32_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
   if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 32 bit" >> "$ERRS_FILE"; fi
 }
 
 build_rpi64() {
   echo "Building rpi64.."
-  cp $ROOT_DIR/misc/CCicon_rpi64 $ROOT_DIR/src/CCicon_rpi64.o
   rm cc-rpi64
-  $RPI64_CC *.c $ALL_FLAGS $RPI_FLAGS CCicon_rpi64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi64 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl
+  $RPI64_CC *.c $ALL_FLAGS $RPI_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi64 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl
   if [ $? -ne 0 ]; then echo "Failed to compile Raspberry Pi 64 bit" >> "$ERRS_FILE"; fi
 }
 
@@ -185,9 +179,12 @@ build_android() {
   #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/Makefile
   #  https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/CMakeLists.txt
   
-  # compile interop java file into its multiple .class files
-  javac java/com/classicube/MainActivity.java -d ./obj -classpath $SDK_ROOT/android.jar
+  # compile java files into multiple .class files
+  cd $ROOT_DIR/android/app/src/main/java/com/classicube
+  javac *.java -d $ROOT_DIR/android/app/src/main/obj -classpath $SDK_ROOT/android.jar
   if [ $? -ne 0 ]; then echo "Failed to compile Android Java" >> "$ERRS_FILE"; fi
+  
+  cd $ROOT_DIR/android/app/src/main
   # compile the multiple .class files into one .dex file
   $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
   # create initial .apk with packaged version of resources

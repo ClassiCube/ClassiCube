@@ -137,9 +137,7 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path, const char* folder) {
-	String_AppendConst(path, folder);
-}
+void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_string* path) {
 	WCHAR str[NATIVE_STR_LEN];
@@ -455,30 +453,21 @@ static void LoadWinsockFuncs(void) {
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
-cc_result Socket_Available(cc_socket s, int* available) {
-	return _ioctlsocket(s, FIONREAD, available);
-}
-
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	int resultSize = sizeof(cc_result);
-	return _getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)result, &resultSize);
-}
-
 static int ParseHost(void* dst, WCHAR* host, int port) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
 	struct hostent* res;
 
 	Platform_Utf16ToAnsi(host);
 	res = _gethostbyname((char*)host);
-	if (!res || res->h_addrtype != AF_INET) return 0;
+	if (!res || res->h_addrtype != AF_INET) return false;
 
 	/* Must have at least one IPv4 address */
-	if (!res->h_addr_list[0]) return 0;
+	if (!res->h_addr_list[0]) return false;
 
 	addr4->sin_family = AF_INET;
 	addr4->sin_port   = _htons(port);
 	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
-	return AF_INET;
+	return true;
 }
 
 static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, int port) {
@@ -488,15 +477,15 @@ static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, i
 	Platform_EncodeUtf16(str, address);
 
 	*size = sizeof(*addr4);
-	if (!_WSAStringToAddressW(str, AF_INET, NULL, addr4, size)) {
+	if (!_WSAStringToAddressW(str, AF_INET,  NULL, addr4, size)) {
 		addr4->sin_port  = _htons(port);
-		return AF_INET;
+		return true;
 	}
 
 	*size = sizeof(*addr6);
-	if (!_WSAStringToAddressW(str, AF_INET6, NULL, (SOCKADDR*)addr6, size)) {
+	if (!_WSAStringToAddressW(str, AF_INET6, NULL, addr6, size)) {
 		addr6->sin6_port = _htons(port);
-		return AF_INET6;
+		return true;
 	}
 
 	*size = sizeof(*addr4);
@@ -510,16 +499,16 @@ int Socket_ValidAddress(const cc_string* address) {
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
-	int family, blockingMode = -1; /* non-blocking mode */
+	int blockingMode = -1; /* non-blocking mode */
 	SOCKADDR_STORAGE addr;
 	cc_result res;
 	INT addrSize;
 
 	*s = -1;
-	if (!(family = Socket_ParseAddress(&addr, &addrSize, address, port)))
+	if (!Socket_ParseAddress(&addr, &addrSize, address, port))
 		return ERR_INVALID_ARGUMENT;
 
-	*s = _socket(family, SOCK_STREAM, IPPROTO_TCP);
+	*s = _socket(addr.ss_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
 	_ioctlsocket(*s, FIONBIO, &blockingMode);
 
@@ -544,7 +533,7 @@ void Socket_Close(cc_socket s) {
 	_closesocket(s);
 }
 
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -561,6 +550,21 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	if (selectCount == -1) { *success = false; return _WSAGetLastError(); }
 
 	*success = set.fd_count != 0; return 0;
+}
+
+cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
+	return Socket_Poll(s, SOCKET_POLL_READ, readable);
+}
+
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
+	int resultSize;
+	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+	if (res || *writable) return res;
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	resultSize = sizeof(cc_result);
+	_getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&res, &resultSize);
+	return res;
 }
 
 

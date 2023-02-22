@@ -24,6 +24,7 @@
 #include "Platform.h"
 #include "Input.h"
 #include "Errors.h"
+#include "Options.h"
 
 static char nameBuffer[STRING_SIZE];
 static char motdBuffer[STRING_SIZE];
@@ -110,18 +111,18 @@ static void Ping_Reset(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
+static char autoloadBuffer[FILENAME_SIZE];
+cc_string SP_AutoloadMap = String_FromArray(autoloadBuffer);
+
 static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
-	cc_string path;
 	RNGState rnd;
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
 
 	/* For when user drops a map file onto ClassiCube.exe */
-	path = Game_Username;
-	if (SP_HasDir(path) && File_Exists(&path)) {
-		Map_LoadFrom(&path); return;
+	if (SP_AutoloadMap.length) {
+		Map_LoadFrom(&SP_AutoloadMap); return;
 	}
 
 	Random_SeedFromCurrentTime(&rnd);
@@ -177,16 +178,15 @@ static void SPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now
 	Physics_OnBlockChanged(x, y, z, old, now);
 }
 
-static void SPConnection_SendPosition(Vec3 pos, float yaw, float pitch) { }
 static void SPConnection_SendData(const cc_uint8* data, cc_uint32 len) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
-	if ((ticks % 3) == 0) { /* 60 -> 20 ticks a second */
-		Physics_Tick();
-		TexturePack_CheckPending();
-	}
-	ticks++;
+	/* 60 -> 20 ticks a second */
+	if ((ticks++ % 3) != 0)  return;
+	
+	Physics_Tick();
+	TexturePack_CheckPending();
 }
 
 static void SPConnection_Init(void) {
@@ -197,13 +197,11 @@ static void SPConnection_Init(void) {
 	Server.Tick         = SPConnection_Tick;
 	Server.SendBlock    = SPConnection_SendBlock;
 	Server.SendChat     = SPConnection_SendChat;
-	Server.SendPosition = SPConnection_SendPosition;
 	Server.SendData     = SPConnection_SendData;
 	
 	Server.SupportsFullCP437       = !Game_ClassicMode;
 	Server.SupportsPartialMessages = true;
 	Server.IsSinglePlayer          = true;
-	Server.WriteBuffer = NULL;
 }
 
 
@@ -212,11 +210,10 @@ static void SPConnection_Init(void) {
 *#########################################################################################################################*/
 static cc_socket net_socket;
 static cc_uint8  net_readBuffer[4096 * 5];
-static cc_uint8  net_writeBuffer[131];
 static cc_uint8* net_readCurrent;
 
 static cc_result net_writeFailure;
-static double lastPacket;
+static double net_lastPacket;
 static cc_uint8 lastOpcode;
 
 static cc_bool net_connecting;
@@ -229,11 +226,9 @@ static void MPConnection_FinishConnect(void) {
 	Event_RaiseVoid(&NetEvents.Connected);
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 
-	net_readCurrent    = net_readBuffer;
-	Server.WriteBuffer = net_writeBuffer;
-
+	net_readCurrent = net_readBuffer;
+	net_lastPacket  = Game.Time;
 	Classic_SendLogin();
-	lastPacket = Game.Time;
 }
 
 static void MPConnection_Fail(const cc_string* reason) {
@@ -259,17 +254,13 @@ static void MPConnection_FailConnect(cc_result result) {
 }
 
 static void MPConnection_TickConnect(void) {
-	cc_result res = 0;
-	cc_bool poll_write;
-	double now;
+	cc_bool writable;
+	double now    = Game.Time;
+	cc_result res = Socket_CheckWritable(net_socket, &writable);
 
-	Socket_GetError(net_socket, &res);
-	if (res) { MPConnection_FailConnect(res); return; }
-
-	Socket_Poll(net_socket, SOCKET_POLL_WRITE, &poll_write);
-	now = Game.Time;
-
-	if (poll_write) {
+	if (res) {
+		MPConnection_FailConnect(res);
+	} else if (writable) {
 		MPConnection_FinishConnect();
 	} else if (now > net_connectTimeout) {
 		MPConnection_FailConnect(0);
@@ -311,11 +302,10 @@ static void MPConnection_BeginConnect(void) {
 static void MPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now) {
 	if (now == BLOCK_AIR) {
 		now = Inventory_SelectedBlock;
-		Classic_WriteSetBlock(x, y, z, false, now);
+		Classic_SendSetBlock(x, y, z, false, now);
 	} else {
-		Classic_WriteSetBlock(x, y, z, true, now);
+		Classic_SendSetBlock(x, y, z, true, now);
 	}
-	Net_SendPacket();
 }
 
 static void MPConnection_SendChat(const cc_string* text) {
@@ -330,29 +320,19 @@ static void MPConnection_SendChat(const cc_string* text) {
 	Classic_SendChat(&left, false);
 }
 
-static void MPConnection_SendPosition(Vec3 pos, float yaw, float pitch) {
-	Classic_WritePosition(pos, yaw, pitch);
-	Net_SendPacket();
-}
-
 static void MPConnection_Disconnect(void) {
 	static const cc_string title  = String_FromConst("Disconnected!");
 	static const cc_string reason = String_FromConst("You've lost connection to the server");
 	Game_Disconnect(&title, &reason);
 }
 
-static void MPConnection_CheckDisconnection(void) {
-	cc_result availRes, selectRes;
-	int pending = 0;
-	cc_bool poll_read;
+static void DisconnectReadFailed(cc_result res) {
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
+	String_InitArray(msg, msgBuffer);
+	String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
 
-	availRes  = Socket_Available(net_socket, &pending);
-	/* poll read returns true when socket is closed */
-	selectRes = Socket_Poll(net_socket, SOCKET_POLL_READ, &poll_read);
-
-	if (net_writeFailure || availRes || selectRes || (pending == 0 && poll_read)) {
-		MPConnection_Disconnect();
-	}
+	Logger_Log(&msg);
+	MPConnection_Disconnect();
 }
 
 static void DisconnectInvalidOpcode(cc_uint8 opcode) {
@@ -365,90 +345,74 @@ static void DisconnectInvalidOpcode(cc_uint8 opcode) {
 }
 
 static void MPConnection_Tick(struct ScheduledTask* task) {
-	static const cc_string title_lost  = String_FromConst("&eLost connection to the server");
-	static const cc_string reason_err  = String_FromConst("I/O error when reading packets");
-	cc_string msg; char msgBuffer[STRING_SIZE * 2];
-	cc_uint32 pending;
 	cc_uint8* readEnd;
 	Net_Handler handler;
+	cc_uint32 read;
 	int i, remaining;
 	cc_result res;
 
 	if (Server.Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
-	/* Over 30 seconds since last packet, connection likely dropped */
-	if (lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
-	if (Server.Disconnected) return;
-
-	pending = 0;
-	res     = Socket_Available(net_socket, &pending);
-	readEnd = net_readCurrent; /* todo change to int remaining instead */
-
-	if (!res && pending) {
-		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	
-		res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &pending);
-		/* Ignore errors for 'no data available for non-blocking read' */
-		if (res) {
-			if (res == ReturnCode_SocketInProgess)  return;
-			if (res == ReturnCode_SocketWouldBlock) return;
-		}
-		readEnd += pending;
-	}
-
+	/* NOTE: using a read call that is a multiple of 4096 (appears to?) improve read performance */	
+	res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &read);
+	
 	if (res) {
-		String_InitArray(msg, msgBuffer);
-		String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
+		/* 'no data available for non-blocking read' is an expected error */
+		if (res == ReturnCode_SocketInProgess)  res = 0;
+		if (res == ReturnCode_SocketWouldBlock) res = 0;
 
-		Logger_Log(&msg);
-		Game_Disconnect(&title_lost, &reason_err);
-		return;
-	}
+		if (res) { DisconnectReadFailed(res); return; }
+	} else if (read == 0) {
+		/* recv only returns 0 read when socket is closed.. probably? */
+		/* Over 30 seconds since last packet, connection probably dropped */
+		/* TODO: Should this be checked unconditonally instead of just when read = 0 ? */
+		if (net_lastPacket + 30 < Game.Time) { MPConnection_Disconnect(); return; }
+	} else {
+		readEnd         = net_readCurrent + read;
+		net_lastPacket  = Game.Time;
+		net_readCurrent = net_readBuffer;
 
-	net_readCurrent = net_readBuffer;
-	while (net_readCurrent < readEnd) {
-		cc_uint8 opcode = net_readCurrent[0];
+		while (net_readCurrent < readEnd) {
+			cc_uint8 opcode = net_readCurrent[0];
 
-		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
-		if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
-			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
-			net_readCurrent++;
-			LocalPlayer_ResetJumpVelocity();
-			continue;
+			/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
+			if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
+				Platform_LogConst("Skipping invalid HackControl byte from D3 server");
+				net_readCurrent++;
+				LocalPlayer_ResetJumpVelocity();
+				continue;
+			}
+
+			if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
+			handler = Protocol.Handlers[opcode];
+			if (!handler) { DisconnectInvalidOpcode(opcode); return; }
+
+			lastOpcode = opcode;
+			handler(net_readCurrent + 1); /* skip opcode */
+			net_readCurrent += Protocol.Sizes[opcode];
 		}
 
-		if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
-		handler = Protocol.Handlers[opcode];
-		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
-
-		lastOpcode = opcode;
-		lastPacket = Game.Time;
-		handler(net_readCurrent + 1); /* skip opcode */
-		net_readCurrent += Protocol.Sizes[opcode];
+		/* Protocol packets might be split up across TCP packets */
+		/* If so, copy last few unprocessed bytes back to beginning of buffer */
+		/* These bytes are then later combined with subsequently read TCP packet data */
+		remaining = (int)(readEnd - net_readCurrent);
+		for (i = 0; i < remaining; i++) {
+			net_readBuffer[i] = net_readCurrent[i];
+		}
+		net_readCurrent = net_readBuffer + remaining;
 	}
-
-	/* Protocol packets might be split up across TCP packets */
-	/* If so, copy last few unprocessed bytes back to beginning of buffer */
-	/* These bytes are then later combined with subsequently read TCP packet data */
-	remaining = (int)(readEnd - net_readCurrent);
-	for (i = 0; i < remaining; i++) {
-		net_readBuffer[i] = net_readCurrent[i];
-	}
-	net_readCurrent = net_readBuffer + remaining;
 
 	if (net_writeFailure) {
 		Platform_Log1("Error from send: %i", &net_writeFailure);
-		MPConnection_Disconnect();
+		MPConnection_Disconnect(); return;
 	}
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
-	if ((ticks % 3) == 0) {
-		TexturePack_CheckPending();
-		Protocol_Tick();
-		/* Have any packets been written? */
-		if (Server.WriteBuffer != net_writeBuffer) Net_SendPacket();
-	}
-	ticks++;
+	if ((ticks++ % 3) != 0) return;
+
+	TexturePack_CheckPending();
+	Protocol_Tick();
 }
 
 static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
@@ -475,12 +439,6 @@ static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
 	}
 }
 
-void Net_SendPacket(void) {
-	cc_uint32 len = (cc_uint32)(Server.WriteBuffer - net_writeBuffer);
-	Server.WriteBuffer = net_writeBuffer;
-	Server.SendData(net_writeBuffer, len);
-}
-
 static void MPConnection_Init(void) {
 	Server_ResetState();
 	Server.IsSinglePlayer = false;
@@ -489,11 +447,8 @@ static void MPConnection_Init(void) {
 	Server.Tick         = MPConnection_Tick;
 	Server.SendBlock    = MPConnection_SendBlock;
 	Server.SendChat     = MPConnection_SendChat;
-	Server.SendPosition = MPConnection_SendPosition;
 	Server.SendData     = MPConnection_SendData;
-
-	net_readCurrent    = net_readBuffer;
-	Server.WriteBuffer = net_writeBuffer;
+	net_readCurrent     = net_readBuffer;
 }
 
 

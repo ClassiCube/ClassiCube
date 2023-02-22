@@ -146,7 +146,7 @@ void Clipboard_SetText(const cc_string* value) {
 	if (err) Logger_Abort2(err, "Clearing Pasteboard");
 	PasteboardSynchronize(pbRef);
 
-	len    = Platform_EncodeUtf8(str, value);
+	len    = String_EncodeUtf8(str, value);
 	cfData = CFDataCreate(NULL, str, len);
 	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
 
@@ -455,8 +455,8 @@ static CGSWindowID winId;
 #endif
 
 #ifdef CC_BUILD_ICON
-extern const int CCIcon_Data[];
-extern const int CCIcon_Width, CCIcon_Height;
+/* See misc/mac_icon_gen.cs for how to generate this file */
+#include "_CCIcon_mac.h"
 
 static void ApplyIcon(void) {
 	CGColorSpaceRef colSpace;
@@ -516,7 +516,7 @@ void Window_SetTitle(const cc_string* title) {
 	int len;
 	
 	/* TODO: This leaks memory, old title isn't released */
-	len     = Platform_EncodeUtf8(str, title);
+	len     = String_EncodeUtf8(str, title);
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }
@@ -592,6 +592,10 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 

@@ -2,11 +2,12 @@ using System.Drawing.Imaging;
 using System.Drawing;
 using System.IO;
 
-namespace test {
-	public static class Program {
-		
+namespace test 
+{
+	public static class Program 
+	{
 		const string src = "CCicon.ico";
-		const string dst = "CCicon.c";
+		const string dst = "_CCIcon_X11.h";
 		
 		static void DumpIcon(StreamWriter sw, int width, int height) {
 			sw.WriteLine(width + "," + height + ",");
@@ -27,12 +28,14 @@ namespace test {
 		
 		public static void Main(string[] args) {
 			using (StreamWriter sw = new StreamWriter(dst)) {
-				sw.WriteLine("const unsigned long CCIcon_Data[] = {");
+				sw.WriteLine("/* Generated using misc/linux_icon_gen.cs */");
+				sw.WriteLine("");
+				sw.WriteLine("static const unsigned long CCIcon_Data[] = {");
 				DumpIcon(sw, 64, 64);
 				DumpIcon(sw, 32, 32);
 				DumpIcon(sw, 16, 16);
 				sw.WriteLine("};");
-				sw.WriteLine("const int CCIcon_Size = sizeof(CCIcon_Data) / sizeof(unsigned long);");
+				sw.WriteLine("static const int CCIcon_Size = sizeof(CCIcon_Data) / sizeof(unsigned long);");
 			}
 		}
 	}

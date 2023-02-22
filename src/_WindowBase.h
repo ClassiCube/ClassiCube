@@ -74,7 +74,8 @@ void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_st
 	args->text   = text;
 	args->type   = type;
 	args->placeholder = "";
-	args->opaque = false;
+	args->opaque      = false;
+	args->multiline   = false;
 }
 
 

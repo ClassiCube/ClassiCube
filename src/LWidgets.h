@@ -161,9 +161,10 @@ struct LTableColumn {
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
 	cc_bool hasGridline;
-	/* Whether user can interact with this column. */
-	/* Non-interactable columns can't be sorted/resized. */
-	cc_bool interactable;
+	/* Whether user can resize this column. */
+	cc_bool draggable;
+	/* Whether user can sort this column. */
+	cc_bool sortable;
 	/* Whether to invert the order of row sorting. */
 	cc_bool invertSort;
 };

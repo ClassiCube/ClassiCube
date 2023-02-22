@@ -9,7 +9,7 @@
 /* Data for a selection box. */
 struct SelectionBox {
 	Vec3 p0, p1;
-	PackedCol col;
+	PackedCol color;
 	float minDist, maxDist;
 };
 
@@ -30,7 +30,7 @@ static void BuildFaces(struct SelectionBox* box, struct VertexColoured* v) {
 		SelectionBox_Z(Z0) SelectionBox_Z(Z1) /* ZMin, ZMax */
 		SelectionBox_X(X0) SelectionBox_X(X1) /* XMin, XMax */
 	};
-	PackedCol col;
+	PackedCol color;
 	int i, flags;
 
 	float offset = box->minDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
@@ -38,13 +38,13 @@ static void BuildFaces(struct SelectionBox* box, struct VertexColoured* v) {
 	Vec3_Add1(&coords[0], &box->p0, -offset);
 	Vec3_Add1(&coords[1], &box->p1,  offset);
 
-	col = box->col;
+	color = box->color;
 	for (i = 0; i < Array_Elems(faceIndices); i++, v++) {
 		flags  = faceIndices[i];
 		v->X   = coords[(flags     ) & 1].X;
 		v->Y   = coords[(flags >> 1) & 1].Y;
 		v->Z   = coords[(flags >> 2)    ].Z;
-		v->Col = col;
+		v->Col = color;
 	}
 }
 
@@ -54,7 +54,7 @@ static void BuildEdges(struct SelectionBox* box, struct VertexColoured* v) {
 		X0|Y1|Z0, X1|Y1|Z0,  X1|Y1|Z0, X1|Y1|Z1,  X1|Y1|Z1, X0|Y1|Z1,  X0|Y1|Z1, X0|Y1|Z0, /* YMax */
 		X0|Y0|Z0, X0|Y1|Z0,  X1|Y0|Z0, X1|Y1|Z0,  X1|Y0|Z1, X1|Y1|Z1,  X0|Y0|Z1, X0|Y1|Z1, /* X/Z  */
 	};
-	PackedCol col;
+	PackedCol color;
 	int i, flags;
 
 	float offset = box->minDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
@@ -62,16 +62,16 @@ static void BuildEdges(struct SelectionBox* box, struct VertexColoured* v) {
 	Vec3_Add1(&coords[0], &box->p0, -offset);
 	Vec3_Add1(&coords[1], &box->p1,  offset);
 
-	col = box->col;
+	color = box->color;
 	/* invert R/G/B for surrounding line */
-	col = (col & PACKEDCOL_A_MASK) | (~col & PACKEDCOL_RGB_MASK);
+	color = (color & PACKEDCOL_A_MASK) | (~color & PACKEDCOL_RGB_MASK);
 
 	for (i = 0; i < Array_Elems(edgeIndices); i++, v++) {
 		flags  = edgeIndices[i];
 		v->X   = coords[(flags     ) & 1].X;
 		v->Y   = coords[(flags >> 1) & 1].Y;
 		v->Z   = coords[(flags >> 2)    ].Z;
-		v->Col = col;
+		v->Col = color;
 	}
 }
 
@@ -110,11 +110,11 @@ static cc_uint8 selections_ids[SELECTIONS_MAX];
 static GfxResourceID selections_VB, selections_LineVB;
 static cc_bool selections_used;
 
-void Selections_Add(cc_uint8 id, const IVec3* p1, const IVec3* p2, PackedCol col) {
+void Selections_Add(cc_uint8 id, const IVec3* p1, const IVec3* p2, PackedCol color) {
 	struct SelectionBox sel;
 	IVec3_ToVec3(&sel.p0, p1);
 	IVec3_ToVec3(&sel.p1, p2);
-	sel.col = col;
+	sel.color = color;
 
 	Selections_Remove(id);
 	selections_list[selections_count] = sel;

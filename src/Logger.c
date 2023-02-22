@@ -6,6 +6,7 @@
 #include "Stream.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "Http.h"
 
 #if defined CC_BUILD_WEB
 /* Can't see native CPU state with javascript */
@@ -25,6 +26,8 @@
 #define _GNU_SOURCE
 #include <sys/ucontext.h>
 #include <signal.h>
+#elif defined CC_BUILD_PSP
+/* TODO can this be supported somehow? */
 #elif defined CC_BUILD_POSIX
 #include <signal.h>
 #include <sys/ucontext.h>
@@ -231,6 +234,8 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
+#elif defined CC_BUILD_PSP
+/* No backtrace support implemented for PSP */
 #elif defined CC_BUILD_POSIX
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
@@ -349,6 +354,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
 	/* TODO: Backtrace using LibSymbolication */
+}
+#elif defined CC_BUILD_PSP
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* Backtrace not implemented for PSP */
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
@@ -590,22 +600,24 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_LR()      &r.gp_regs[35]
 	#define REG_GET_CTR()     &r.gp_regs[34]
 	Dump_PPC()
-#elif defined __riscv
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_PC()      &r.__gregs[REG_PC]
-	Dump_RISCV()
 #elif defined __mips__
 	#define REG_GNUM(num)     &r.gregs[num]
 	#define REG_GET_PC()      &r.pc
 	#define REG_GET_LO()      &r.mdlo
 	#define REG_GET_HI()      &r.mdhi
 	Dump_MIPS()
+#elif defined __riscv
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_PC()      &r.__gregs[REG_PC]
+	Dump_RISCV()
 #else
 	#error "Unknown CPU architecture"
 #endif
 }
 #elif defined CC_BUILD_SOLARIS
 /* See /usr/include/sys/regset.h */
+/* -> usr/src/uts/[ARCH]/sys/mcontext.h */
+/* -> usr/src/uts/[ARCH]/sys/regset.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 
@@ -615,12 +627,16 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined __x86_64__
 	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
 	Dump_X64()
+#elif defined __sparc__
+	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
+	Dump_SPARC()
 #else
 	#error "Unknown CPU architecture"
 #endif
 }
 #elif defined CC_BUILD_NETBSD
-/* See /usr/include/i386/mcontext.h */
+/* See /usr/include/[ARCH]/mcontext.h */
+/* -> src/sys/arch/[ARCH]/include/mcontext.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
@@ -629,12 +645,44 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined __x86_64__
 	#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
 	Dump_X64()
+#elif defined __aarch64__
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_FP()      &r.__gregs[_REG_FP]
+	#define REG_GET_LR()      &r.__gregs[_REG_LR]
+	#define REG_GET_SP()      &r.__gregs[_REG_SP]
+	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	Dump_ARM64()
+#elif defined __arm__
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_FP()      &r.__gregs[_REG_FP]
+	#define REG_GET_IP()      &r.__gregs[12]
+	#define REG_GET_SP()      &r.__gregs[_REG_SP]
+	#define REG_GET_LR()      &r.__gregs[_REG_LR]
+	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	Dump_ARM32()
+#elif defined __powerpc__
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	#define REG_GET_LR()      &r.__gregs[_REG_LR]
+	#define REG_GET_CTR()     &r.__gregs[_REG_CTR]
+	Dump_PPC()
+#elif defined __mips__
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_PC()      &r.__gregs[_REG_EPC]
+	#define REG_GET_LO()      &r.__gregs[_REG_MDLO]
+	#define REG_GET_HI()      &r.__gregs[_REG_MDHI]
+	Dump_MIPS()
+#elif defined __riscv
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	Dump_RISCV()
 #else
 	#error "Unknown CPU architecture"
 #endif
 }
 #elif defined CC_BUILD_FREEBSD
 /* See /usr/include/machine/ucontext.h */
+/* -> src/sys/[ARCH]/include/ucontext.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
@@ -643,20 +691,75 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined __x86_64__
 	#define REG_GET(reg, ign) &r.mc_r##reg
 	Dump_X64()
+#elif defined __aarch64__
+	#define REG_GNUM(num)     &r.mc_gpregs.gp_x[num]
+	#define REG_GET_FP()      &r.mc_gpregs.gp_x[29]
+	#define REG_GET_LR()      &r.mc_gpregs.gp_lr
+	#define REG_GET_SP()      &r.mc_gpregs.gp_sp
+	#define REG_GET_PC()      &r.mc_gpregs.gp_elr
+	Dump_ARM64()
+#elif defined __arm__
+	#define REG_GNUM(num)     &r.__gregs[num]
+	#define REG_GET_FP()      &r.__gregs[_REG_FP]
+	#define REG_GET_IP()      &r.__gregs[12]
+	#define REG_GET_SP()      &r.__gregs[_REG_SP]
+	#define REG_GET_LR()      &r.__gregs[_REG_LR]
+	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	Dump_ARM32()
+#elif defined __powerpc__
+	#define REG_GNUM(num)     &r.mc_frame[##num]
+	#define REG_GET_PC()      &r.mc_srr0
+	#define REG_GET_LR()      &r.mc_lr
+	#define REG_GET_CTR()     &r.mc_ctr
+	Dump_PPC()
+#elif defined __mips__
+	#define REG_GNUM(num)     &r.mc_regs[num]
+	#define REG_GET_PC()      &r.mc_pc
+	#define REG_GET_LO()      &r.mullo
+	#define REG_GET_HI()      &r.mulhi
+	Dump_MIPS()
 #else
 	#error "Unknown CPU architecture"
 #endif
 }
 #elif defined CC_BUILD_OPENBSD
 /* See /usr/include/machine/signal.h */
+/* -> src/sys/arch/[ARCH]/include/signal.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
-	struct sigcontext r = *((ucontext_t*)ctx);
+	ucontext_t* r = (ucontext_t*)ctx;
 #if defined __i386__
-	#define REG_GET(reg, ign) &r.sc_e##reg
+	#define REG_GET(reg, ign) &r->sc_e##reg
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(reg, ign) &r.sc_r##reg
+	#define REG_GET(reg, ign) &r->sc_r##reg
 	Dump_X64()
+#elif defined __aarch64__
+	#define REG_GNUM(num)     &r->sc_x[num]
+	#define REG_GET_FP()      &r->sc_x[29]
+	#define REG_GET_LR()      &r->sc_lr
+	#define REG_GET_SP()      &r->sc_sp
+	#define REG_GET_PC()      &r->sc_elr
+	Dump_ARM64()
+#elif defined __arm__
+	#define REG_GNUM(num)     &r->sc_r##num
+	#define REG_GET_FP()      &r->sc_r11
+	#define REG_GET_IP()      &r->sc_r12
+	#define REG_GET_SP()      &r->sc_usr_sp
+	#define REG_GET_LR()      &r->sc_usr_lr
+	#define REG_GET_PC()      &r->sc_pc
+	Dump_ARM32()
+#elif defined __powerpc__
+	#define REG_GNUM(num)     &r->sc_frame.fixreg[num]
+	#define REG_GET_PC()      &r->sc_frame.srr0
+	#define REG_GET_LR()      &r->sc_frame.lr
+	#define REG_GET_CTR()     &r->sc_frame.ctr
+	Dump_PPC()
+#elif defined __mips__
+	#define REG_GNUM(num)     &r->sc_regs[num]
+	#define REG_GET_PC()      &r->sc_pc
+	#define REG_GET_LO()      &r->mullo
+	#define REG_GET_HI()      &r->mulhi
+	Dump_MIPS()
 #else
 	#error "Unknown CPU architecture"
 #endif
@@ -674,7 +777,25 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
+#elif defined CC_BUILD_SERENITY
+static void PrintRegisters(cc_string* str, void* ctx) {
+	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+#if defined __i386__
+	#define REG_GET(reg, ign) &r.e##reg
+	Dump_X86()
+#elif defined __x86_64__
+	#define REG_GET(reg, ign) &r.r##reg
+	Dump_X64()
+#else
+	#error "Unknown CPU architecture"
 #endif
+}
+#elif defined CC_BUILD_PSP
+static void PrintRegisters(cc_string* str, void* ctx) {
+	/* Register dumping not implemented */
+}
+#endif
+
 static void DumpRegisters(void* ctx) {
 	cc_string str; char strBuffer[768];
 	String_InitArray(str, strBuffer);
@@ -849,11 +970,11 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 
 void Logger_Hook(void) {
 	static const struct DynamicLibSym funcs[] = {
-#ifdef _IMAGEHLP64
+	#ifdef _IMAGEHLP64
 		{ "EnumerateLoadedModules64", (void**)&_EnumerateLoadedModules},
-#else
+	#else
 		{ "EnumerateLoadedModules",   (void**)&_EnumerateLoadedModules },
-#endif
+	#endif
 	};
 	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
 	void* lib;
@@ -870,7 +991,7 @@ void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char*
 void Logger_Abort2(cc_result result, const char* raw_msg) {
 #endif
 	CONTEXT ctx;
-#if _M_IX86 && __GNUC__
+	#if _M_IX86 && __GNUC__
 	/* Stack frame layout on x86: */
 	/*  [ebp] is previous frame's EBP */
 	/*  [ebp+4] is previous frame's EIP (return address) */
@@ -887,14 +1008,22 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 		: "eax", "memory"
 	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
-#else
+	#else
 	/* This method is guaranteed to exist on 64 bit windows.  */
 	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
 	/*  so an alternative is provided for MinGW above so that */
 	/*  the game can be cross-compiled for Windows 98 / 2000  */
 	RtlCaptureContext(&ctx);
-#endif
+	#endif
 	AbortCommon(result, raw_msg, &ctx);
+}
+#elif defined CC_BUILD_PSP
+void Logger_Hook(void) {
+	/* TODO can signals be supported somehow? */
+}
+
+void Logger_Abort2(cc_result result, const char* raw_msg) {
+	AbortCommon(result, raw_msg, NULL);
 }
 #elif defined CC_BUILD_POSIX
 static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
@@ -917,10 +1046,10 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
-#if defined CC_BUILD_ANDROID
+	#if defined CC_BUILD_ANDROID
 	/* deliberate Dalvik VM abort, try to log a nicer error for this */
 	if (type == SIGSEGV && addr == 0xDEADD00D) Platform_TryLogJavaError();
-#endif
+	#endif
 	AbortCommon(0, msg.buffer, ctx);
 }
 

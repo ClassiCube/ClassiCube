@@ -32,6 +32,7 @@
 #include "Options.h"
 #include "Input.h"
 #include "Utils.h"
+#include "Errors.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {
@@ -153,7 +154,7 @@ static void Menu_SwitchGui(void* a, void* b)       { GuiOptionsScreen_Show(); }
 static void Menu_SwitchGfx(void* a, void* b)       { GraphicsOptionsScreen_Show(); }
 static void Menu_SwitchHacks(void* a, void* b)     { HacksSettingsScreen_Show(); }
 static void Menu_SwitchEnv(void* a, void* b)       { EnvSettingsScreen_Show(); }
-static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaScreen_Show(); }
+static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaMenuScreen_Show(); }
 
 static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show(); }
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
@@ -1278,30 +1279,21 @@ void ClassicGenScreen_Show(void) {
 static struct SaveLevelScreen {
 	Screen_Body
 	struct FontDesc titleFont, textFont;
-	struct ButtonWidget save, alt, cancel;
+	struct ButtonWidget save, file, cancel;
 	struct TextInputWidget input;
-	struct TextWidget mcEdit, desc;
+	struct TextWidget desc;
 } SaveLevelScreen;
 
-static struct Widget* save_widgets[6] = {
-	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.alt,
-	(struct Widget*)&SaveLevelScreen.mcEdit, (struct Widget*)&SaveLevelScreen.cancel,
+static struct Widget* save_widgets[] = {
+	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.file,
+	(struct Widget*)&SaveLevelScreen.cancel,
 	(struct Widget*)&SaveLevelScreen.input,  (struct Widget*)&SaveLevelScreen.desc,
 };
-#define SAVE_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define SAVE_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + TEXTWIDGET_MAX)
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
 		s->save.optName ? "&cOverwrite existing?" : "Save", &s->titleFont);
-}
-
-static void SaveLevelScreen_UpdateAlt(struct SaveLevelScreen* s) {
-#ifdef CC_BUILD_WEB
-	ButtonWidget_SetConst(&s->alt, "Download", &s->titleFont);
-#else
-	ButtonWidget_SetConst(&s->alt,
-		s->alt.optName ? "&cOverwrite existing?" : "Save schematic", &s->titleFont);
-#endif
 }
 
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
@@ -1309,123 +1301,99 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 		s->save.optName = NULL;
 		SaveLevelScreen_UpdateSave(s);
 	}
-	if (s->alt.optName) {
-		s->alt.optName = NULL;
-		SaveLevelScreen_UpdateAlt(s);
-	}
 }
 
-#ifdef CC_BUILD_WEB
-extern int interop_DownloadMap(const char* path, const char* filename);
-static void DownloadMap(const cc_string* path) {
-	char strPath[NATIVE_STR_LEN];
-	char strFile[NATIVE_STR_LEN];
-	cc_string file;
-	cc_result res;
-	Platform_EncodeUtf8(strPath, path);
-
-	/* maps/aaa.schematic -> aaa.cw */
-	file = *path; Utils_UNSAFE_GetFilename(&file);
-	file.length = String_LastIndexOf(&file, '.');
-	String_AppendConst(&file, ".cw");
-	Platform_EncodeUtf8(strFile, &file);
-	
-	res = interop_DownloadMap(strPath, strFile);
-	if (res) {
-		Logger_SysWarn2(res, "Downloading map", &file);
-	} else {
-		Chat_Add1("&eDownloaded map: %s", &file);
-	}
-}
-#endif
-
-static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* path) {
-	static const cc_string cw = String_FromConst(".cw");
+static cc_result SaveLevelScreen_SaveMap(const cc_string* path) {
+	static const cc_string schematic = String_FromConst(".schematic");
+	static const cc_string mine = String_FromConst(".mine");
 	struct Stream stream, compStream;
 	struct GZipState state;
 	cc_result res;
 
 	res = Stream_CreateFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "creating", path); return; }
+	if (res) { Logger_SysWarn2(res, "creating", path); return res; }
 	GZip_MakeStream(&compStream, &state, &stream);
 
-#ifdef CC_BUILD_WEB
-	res = Cw_Save(&compStream);
-#else
-	if (String_CaselessEnds(path, &cw)) {
-		res = Cw_Save(&compStream);
-	} else {
+	if (String_CaselessEnds(path, &schematic)) {
 		res = Schematic_Save(&compStream);
+	} else if (String_CaselessEnds(path, &mine)) {
+		res = Dat_Save(&compStream);
+	} else {
+		res = Cw_Save(&compStream);
 	}
-#endif
 
 	if (res) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "encoding", path); return;
+		Logger_SysWarn2(res, "encoding", path); return res;
 	}
 
 	if ((res = compStream.Close(&compStream))) {
 		stream.Close(&stream);
-		Logger_SysWarn2(res, "closing", path); return;
+		Logger_SysWarn2(res, "closing", path); return res;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_SysWarn2(res, "closing", path); return; }
+	if (res) { Logger_SysWarn2(res, "closing", path); return res; }
 
-#ifdef CC_BUILD_WEB
-	if (String_CaselessEnds(path, &cw)) {
-		Chat_Add1("&eSaved map to: %s", path);
-	} else {
-		DownloadMap(path);
-	}
-#else
-	Chat_Add1("&eSaved map to: %s", path);
-#endif
 	World.LastSave = Game.Time;
 	Gui_ShowPauseMenu();
+	return 0;
 }
 
-static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-
+static void SaveLevelScreen_Save(void* screen, void* widget) { 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct ButtonWidget* btn  = (struct ButtonWidget*)widget;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string file = s->input.base.text;
+	cc_result res;
 
 	if (!file.length) {
 		TextWidget_SetConst(&s->desc, "&ePlease enter a filename", &s->textFont);
 		return;
 	}
+
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, fmt, &file);
-	String_Copy(&World.Name,   &file);
+	String_Format1(&path, "maps/%s.cw", &file);
+	String_Copy(&World.Name, &file);
 
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
 		SaveLevelScreen_UpdateSave(s);
-		SaveLevelScreen_UpdateAlt(s);
-	} else {
-		SaveLevelScreen_RemoveOverwrites(s);
-		SaveLevelScreen_SaveMap(s, &path);
+		return;
 	}
+		
+	SaveLevelScreen_RemoveOverwrites(s);
+	if ((res = SaveLevelScreen_SaveMap(&path))) return;
+	Chat_Add1("&eSaved map to: %s", &path);
 }
-static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, "maps/%s.cw"); }
-#ifdef CC_BUILD_WEB
-/* Use absolute path so data is written to memory filesystem instead of default filesystem */
-static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "/%s.tmpmap"); }
-#else
-static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "maps/%s.schematic"); }
-#endif
 
-static void SaveLevelScreen_Render(void* screen, double delta) {
-	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
-	int x, y;
-	MenuScreen_Render2(screen, delta);
+static void SaveLevelScreen_UploadCallback(const cc_string* path) {
+	cc_result res = SaveLevelScreen_SaveMap(path);
+	if (!res) Chat_Add1("&eSaved map to: %s", path);
+}
 
-#ifndef CC_BUILD_WEB
-	x = WindowInfo.Width / 2; y = WindowInfo.Height / 2;
-	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
-#endif
+static void SaveLevelScreen_File(void* screen, void* b) {
+	static const char* const titles[] = {
+		"ClassiCube map", "Minecraft schematic", "Minecraft classic map", NULL
+	};
+	static const char* const filters[] = {
+		".cw", ".schematic", ".mine", NULL
+	};
+	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	struct SaveFileDialogArgs args;
+	cc_result res;
+
+	args.filters     = filters;
+	args.titles      = titles;
+	args.defaultName = s->input.base.text;
+	args.Callback    = SaveLevelScreen_UploadCallback;
+
+	res = Window_SaveFileDialog(&args);
+	if (res == SFD_ERR_NEED_DEFAULT_NAME) {
+		TextWidget_SetConst(&s->desc, "&ePlease enter a filename", &s->textFont);
+	} else if (res) {
+		Logger_SimpleWarn(res, "showing save file dialog");
+	}
 }
 
 static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
@@ -1467,13 +1435,14 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 
 	Screen_UpdateVb(screen);
 	SaveLevelScreen_UpdateSave(s);
-	SaveLevelScreen_UpdateAlt(s);
 
-#ifndef CC_BUILD_WEB
-	TextWidget_SetConst(&s->mcEdit,   "&eCan be imported into MCEdit", &s->textFont);
+	TextInputWidget_SetFont(&s->input,                &s->textFont);
+	ButtonWidget_SetConst(&s->cancel, "Cancel",       &s->titleFont);
+#ifdef CC_BUILD_WEB
+	ButtonWidget_SetConst(&s->file,   "Download",     &s->titleFont);
+#else
+	ButtonWidget_SetConst(&s->file,   "Save file...", &s->titleFont);
 #endif
-	TextInputWidget_SetFont(&s->input, &s->textFont);
-	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
 }
 
 static void SaveLevelScreen_Update(void* screen, double delta) {
@@ -1483,21 +1452,12 @@ static void SaveLevelScreen_Update(void* screen, double delta) {
 
 static void SaveLevelScreen_Layout(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	Widget_SetLocation(&s->save,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
-#ifdef CC_BUILD_WEB
-	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
-#else
-	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
-	Widget_SetLocation(&s->mcEdit, ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
-#endif
+	Widget_SetLocation(&s->input, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Widget_SetLocation(&s->save,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  20);
+	Widget_SetLocation(&s->desc,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  65);
 
+	Widget_SetLocation(&s->file, ANCHOR_CENTRE, ANCHOR_MAX, 0, 70);
 	Menu_LayoutBack(&s->cancel);
-	Widget_SetLocation(&s->input,  ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -30);
-#ifdef CC_BUILD_WEB
-	Widget_SetLocation(&s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 115);
-#else
-	Widget_SetLocation(&s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
-#endif
 }
 
 static void SaveLevelScreen_Init(void* screen) {
@@ -1509,24 +1469,18 @@ static void SaveLevelScreen_Init(void* screen) {
 	s->maxVertices = SAVE_MAX_VERTICES;
 	MenuInput_Path(desc);
 	
-	ButtonWidget_Init(&s->save, 300, SaveLevelScreen_Main);
-#ifdef CC_BUILD_WEB
-	ButtonWidget_Init(&s->alt,  300, SaveLevelScreen_Alt);
-	s->widgets[2] = NULL; /* null mcEdit widget */
-#else
-	ButtonWidget_Init(&s->alt,  200, SaveLevelScreen_Alt);
-	TextWidget_Init(&s->mcEdit);
-#endif
+	ButtonWidget_Init(&s->save, 400, SaveLevelScreen_Save);
+	ButtonWidget_Init(&s->file, 400, SaveLevelScreen_File);
 
 	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
-	TextInputWidget_Create(&s->input, 500, &World.Name, &desc);
+	TextInputWidget_Create(&s->input, 400, &World.Name, &desc);
 	TextWidget_Init(&s->desc);
 	s->input.onscreenPlaceholder = "Map name";
 }
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Update, Menu_CloseKeyboard,
-	SaveLevelScreen_Render,  Screen_BuildMesh,
+	MenuScreen_Render2,      Screen_BuildMesh,
 	SaveLevelScreen_KeyDown, Screen_InputUp,   SaveLevelScreen_KeyPress, SaveLevelScreen_TextChanged,
 	Menu_PointerDown,        Screen_PointerUp, Menu_PointerMove,         Screen_TMouseScroll,
 	SaveLevelScreen_Layout,  SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
@@ -2240,14 +2194,14 @@ void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, M
 *#########################################################################################################################*/
 struct MenuOptionsScreen;
 typedef void (*InitMenuOptions)(struct MenuOptionsScreen* s);
-#define MENUOPTS_MAX_OPTS 10
+#define MENUOPTS_MAX_OPTS 11
 static void MenuOptionsScreen_Layout(void* screen);
 
 static struct MenuOptionsScreen {
 	Screen_Body
 	struct MenuInputDesc* descs;
-	const char** descriptions;
-	int activeI, selectedI, descriptionsCount;
+	const char* descriptions[MENUOPTS_MAX_OPTS + 1];
+	int activeI, selectedI;
 	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
 	int numButtons, numCore;
 	struct FontDesc titleFont, textFont;
@@ -2259,6 +2213,7 @@ static struct MenuOptionsScreen {
 
 static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1] = {
 	NULL,NULL,NULL,NULL,NULL,  NULL,NULL,NULL,NULL,NULL,
+	NULL, 
 	(struct Widget*)&MenuOptionsScreen_Instance.done
 };
 
@@ -2324,9 +2279,10 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	cc_string descRaw, descLines[5];
 
 	MenuOptionsScreen_FreeExtHelp(s);
-	if (!s->descriptions || s->activeI >= 0) return;
+	if (s->activeI >= 0) return;
 	desc = s->descriptions[idx];
 	if (!desc) return;
+	if (!s->widgets[idx] || s->widgets[idx]->disabled) return;
 
 	descRaw          = String_FromReadonly(desc);
 	s->extHelp.lines = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
@@ -2353,7 +2309,6 @@ static int MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i = Menu_DoPointerMove(s, id, x, y);
 	if (i == -1 || i == s->selectedI) return true;
-	if (!s->descriptions || i >= s->descriptionsCount) return true;
 
 	s->selectedI = i;
 	if (s->activeI == -1) MenuOptionsScreen_SelectExtHelp(s, i);
@@ -2449,9 +2404,13 @@ static void MenuOptionsScreen_Init(void* screen) {
 
 	s->widgets     = menuOpts_widgets;
 	s->numWidgets  = MENUOPTS_MAX_OPTS + 1; /* always have back button */
-	/* The various menu options screens might have different number of widgets */
-	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { s->widgets[i] = NULL; }
 	s->maxVertices = BUTTONWIDGET_MAX;
+
+	/* The various menu options screens might have different number of widgets */
+	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { 
+		s->widgets[i]      = NULL;
+		s->descriptions[i] = NULL;
+	}
 
 	s->activeI     = -1;
 	s->selectedI   = -1;
@@ -2523,16 +2482,13 @@ static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	Menu_PointerDown,         Screen_PointerUp,  MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
 	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
 };
-void MenuOptionsScreen_Show(struct MenuInputDesc* descs, const char** descriptions, int descsCount, InitMenuOptions init) {
+void MenuOptionsScreen_Show(struct MenuInputDesc* descs, InitMenuOptions init) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &MenuOptionsScreen_VTABLE;
 
-	s->descs             = descs;
-	s->descriptions      = descriptions;
-	s->descriptionsCount = descsCount;
-
+	s->descs           = descs;
 	s->DoInit          = init;
 	s->DoRecreateExtra = NULL;
 	s->OnHacksChanged  = NULL;
@@ -2600,7 +2556,7 @@ static void ClassicOptionsScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 }
 
 static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[9] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Music",           MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic },
 		{ -1, -100, "Invert mouse",    MenuOptionsScreen_Bool,
@@ -2640,7 +2596,7 @@ void ClassicOptionsScreen_Show(void) {
 	MenuInput_Enum(descs[2], viewDistNames,  VIEW_COUNT);
 	MenuInput_Enum(descs[7], FpsLimit_Names, FPS_LIMIT_COUNT);
 
-	MenuOptionsScreen_Show(descs, NULL, 0, ClassicOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, ClassicOptionsScreen_InitWidgets);
 }
 
 
@@ -2681,7 +2637,7 @@ static void EnvSettingsScreen_GetEdgeHeight(cc_string* v) { String_AppendInt(v, 
 static void EnvSettingsScreen_SetEdgeHeight(const cc_string* v) { Env_SetEdgeHeight(Menu_Int(v)); }
 
 static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Clouds color",  MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsColor,  EnvSettingsScreen_SetCloudsColor },
 		{ -1, -100, "Sky color",     MenuOptionsScreen_Input,
@@ -2724,7 +2680,7 @@ void EnvSettingsScreen_Show(void) {
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);
 
-	MenuOptionsScreen_Show(descs, NULL, 0, EnvSettingsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, EnvSettingsScreen_InitWidgets);
 }
 
 
@@ -2775,9 +2731,8 @@ static void GraphicsOptionsScreen_SetCameraMass(const cc_string* c) {
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 
-#define GraphicsOptionsButtonCount 9
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[GraphicsOptionsButtonCount] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Camera Mass",       MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass },
 		{ -1, -100,  "FPS mode",          MenuOptionsScreen_Enum,
@@ -2799,42 +2754,40 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
 	};
 
-	s->numCore      = GraphicsOptionsButtonCount;
-	s->maxVertices += GraphicsOptionsButtonCount * BUTTONWIDGET_MAX;
+	s->numCore      = 9;
+	s->maxVertices += 9 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
-}
 
-void GraphicsOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[GraphicsOptionsButtonCount];
-	static const char* extDescs[Array_Elems(descs)];
-
-	extDescs[0] = "&eChange the smoothness of the smooth camera.";
-	extDescs[1] = \
+	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
+	s->descriptions[1] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
-	extDescs[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	extDescs[4] = "&cNote: &eModern lighting will reduce performance and increase memory usage.";
-	extDescs[6] = \
+	s->descriptions[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
+	s->descriptions[4] = "&cNote: &eModern lighting will reduce performance and increase memory usage.";
+	s->descriptions[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	extDescs[7] = \
+	s->descriptions[7] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
 		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
-	
+}
+
+void GraphicsOptionsScreen_Show(void) {
+	static struct MenuInputDesc descs[9];
 	MenuInput_Float(descs[0], 1, 100, 20);
 	MenuInput_Enum(descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(descs[2],  8, 4096, 512);
 	MenuInput_Enum(descs[6], NameMode_Names,   NAME_MODE_COUNT);
 	MenuInput_Enum(descs[7], ShadowMode_Names, SHADOW_MODE_COUNT);
 
-	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), GraphicsOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, GraphicsOptionsScreen_InitWidgets);
 }
 
 
@@ -2867,7 +2820,7 @@ static void ChatOptionsScreen_GetClickable(cc_string* v) { Menu_GetBool(v, Gui.C
 static void ChatOptionsScreen_SetClickable(const cc_string* v) { Gui.ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[4] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1,  0, "Chat scale",         MenuOptionsScreen_Input,
 			ChatOptionsScreen_GetChatScale, ChatOptionsScreen_SetChatScale },
 		{ -1, 50, "Chat lines",         MenuOptionsScreen_Input,
@@ -2888,7 +2841,7 @@ void ChatOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[5];
 	MenuInput_Float(descs[0], 0.25f, 4.00f, 1);
 	MenuInput_Int(descs[1],       0,    30, Gui.DefaultLines);
-	MenuOptionsScreen_Show(descs, NULL, 0, ChatOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, ChatOptionsScreen_InitWidgets);
 }
 
 
@@ -2920,7 +2873,7 @@ static void GuiOptionsScreen_SetUseFont(const cc_string* v) {
 }
 
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[7] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Black text shadows", MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
 		{ -1,  -50, "Show FPS",           MenuOptionsScreen_Bool,
@@ -2947,7 +2900,7 @@ void GuiOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[8];
 	MenuInput_Float(descs[2], 0.25f, 4.00f, 1);
 	MenuInput_Float(descs[3], 0.25f, 4.00f, 1);
-	MenuOptionsScreen_Show(descs, NULL, 0, GuiOptionsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, GuiOptionsScreen_InitWidgets);
 }
 
 
@@ -3033,7 +2986,7 @@ static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 }
 
 static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks },
 		{ -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
@@ -3062,25 +3015,22 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 	HacksSettingsScreen_CheckHacksAllowed(s);
+
+	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
+	s->descriptions[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
+	s->descriptions[7] = \
+		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
+		"&ethe block to be placed, and you to be moved out of the way.\n" \
+		"&fThis is mainly useful for quick pillaring/towering.";
+	s->descriptions[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
 }
 
 void HacksSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
-	static const char* extDescs[Array_Elems(descs)];
-
-	extDescs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
-	extDescs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
-	extDescs[7] = \
-		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
-		"&ethe block to be placed, and you to be moved out of the way.\n" \
-		"&fThis is mainly useful for quick pillaring/towering.";
-	extDescs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
-
 	MenuInput_Float(descs[1], 0.1f,   50, 10);
 	MenuInput_Float(descs[3], 0.1f, 2048, 1.233f);
 	MenuInput_Int(descs[9],      1,  179, 70);
-
-	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), HacksSettingsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, HacksSettingsScreen_InitWidgets);
 }
 
 
@@ -3120,7 +3070,7 @@ static void MiscOptionsScreen_SetSensitivity(const cc_string* v) {
 }
 
 static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[7] = {
+	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
 		{ -1,  -50, "Music volume",   MenuOptionsScreen_Input,
@@ -3157,12 +3107,85 @@ void MiscOptionsScreen_Show(void) {
 	MenuInput_Int(descs[6],   1, 200, 30);
 #endif
 
-	MenuOptionsScreen_Show(descs, NULL, 0, MiscSettingsScreen_InitWidgets);
+	MenuOptionsScreen_Show(descs, MiscSettingsScreen_InitWidgets);
 }
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------NostalgiaScreen-----------------------------------------------------*
+*--------------------------------------------------NostalgiaMenuScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct NostalgiaMenuScreen {
+	Screen_Body
+	struct ButtonWidget btnA, btnF, done;
+	struct TextWidget title;
+} NostalgiaMenuScreen;
+
+static struct Widget* nostalgiaMenu_widgets[] = {
+	(struct Widget*)&NostalgiaMenuScreen.btnA, (struct Widget*)&NostalgiaMenuScreen.btnF,
+	(struct Widget*)&NostalgiaMenuScreen.done, (struct Widget*)&NostalgiaMenuScreen.title
+};
+#define NOSTALGIA_MENU_MAX_VERTICES (3 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
+
+static void NostalgiaMenuScreen_Appearance(void* a, void* b)    { NostalgiaAppearanceScreen_Show(); }
+static void NostalgiaMenuScreen_Functionality(void* a, void* b) { NostalgiaFunctionalityScreen_Show(); }
+
+static void NostalgiaMenuScreen_SwitchBack(void* a, void* b) {
+	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
+}
+
+static void NostalgiaMenuScreen_ContextRecreated(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+	struct FontDesc titleFont;
+	Screen_UpdateVb(screen);
+	Gui_MakeTitleFont(&titleFont);
+
+	TextWidget_SetConst(&s->title, "Nostalgia options", &titleFont);
+	ButtonWidget_SetConst(&s->btnA, "Appearance",       &titleFont);
+	ButtonWidget_SetConst(&s->btnF, "Functionality",    &titleFont);
+	ButtonWidget_SetConst(&s->done,    "Done",          &titleFont);
+
+	Font_Free(&titleFont);
+}
+
+static void NostalgiaMenuScreen_Layout(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
+	Widget_SetLocation(&s->btnA,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -25);
+	Widget_SetLocation(&s->btnF,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,   25);
+	Menu_LayoutBack(&s->done);
+}
+
+static void NostalgiaMenuScreen_Init(void* screen) {
+	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
+
+	s->widgets     = nostalgiaMenu_widgets;
+	s->numWidgets  = Array_Elems(nostalgiaMenu_widgets);
+	s->maxVertices = NOSTALGIA_MENU_MAX_VERTICES;
+
+	TextWidget_Init(&s->title);
+	ButtonWidget_Init(&s->btnA, 400, NostalgiaMenuScreen_Appearance);
+	ButtonWidget_Init(&s->btnF, 400, NostalgiaMenuScreen_Functionality);
+	ButtonWidget_Init(&s->done, 400, NostalgiaMenuScreen_SwitchBack);
+}
+
+static const struct ScreenVTABLE NostalgiaMenuScreen_VTABLE = {
+	NostalgiaMenuScreen_Init,  Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render2,        Screen_BuildMesh,
+	Screen_InputDown,          Screen_InputUp,    Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
+	NostalgiaMenuScreen_Layout, Screen_ContextLost, NostalgiaMenuScreen_ContextRecreated
+};
+void NostalgiaMenuScreen_Show(void) {
+	struct NostalgiaMenuScreen* s = &NostalgiaMenuScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &NostalgiaMenuScreen_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------NostalgiaAppearanceScreen------------------------------------------------*
 *#########################################################################################################################*/
 static void NostalgiaScreen_GetHand(cc_string* v) { Menu_GetBool(v, Models.ClassicArms); }
 static void NostalgiaScreen_SetHand(const cc_string* v) { Models.ClassicArms = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
@@ -3173,6 +3196,12 @@ static void NostalgiaScreen_SetAnim(const cc_string* v) {
 	Options_SetBool(OPT_SIMPLE_ARMS_ANIM, Game_SimpleArmsAnim);
 }
 
+static void NostalgiaScreen_GetClassicChat(cc_string* v) { Menu_GetBool(v, Gui.ClassicChat); }
+static void NostalgiaScreen_SetClassicChat(const cc_string* v) { Gui.ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
+
+static void NostalgiaScreen_GetClassicInv(cc_string* v) { Menu_GetBool(v, Gui.ClassicInventory); }
+static void NostalgiaScreen_SetClassicInv(const cc_string* v) { Gui.ClassicInventory = Menu_SetBool(v, OPT_CLASSIC_INVENTORY); }
+
 static void NostalgiaScreen_GetGui(cc_string* v) { Menu_GetBool(v, Gui.ClassicTexture); }
 static void NostalgiaScreen_SetGui(const cc_string* v) { Gui.ClassicTexture = Menu_SetBool(v, OPT_CLASSIC_GUI); }
 
@@ -3182,61 +3211,101 @@ static void NostalgiaScreen_SetList(const cc_string* v) { Gui.ClassicTabList = M
 static void NostalgiaScreen_GetOpts(cc_string* v) { Menu_GetBool(v, Gui.ClassicMenu); }
 static void NostalgiaScreen_SetOpts(const cc_string* v) { Gui.ClassicMenu = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
 
-static void NostalgiaScreen_GetCustom(cc_string* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
-static void NostalgiaScreen_SetCustom(const cc_string* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
+static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
+	static const struct MenuOptionDesc buttons[] = {
+		{ -1, -100, "Classic hand model",   MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
+		{ -1,  -50, "Classic walk anim",    MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim },
+        { -1,    0, "Classic chat",    MenuOptionsScreen_Bool,
+            NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
+		{ -1,  50, "Classic inventory", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetClassicInv,  NostalgiaScreen_SetClassicInv },
+		{  1,  -50, "Classic GUI textures", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetGui,    NostalgiaScreen_SetGui },
+		{  1,    0, "Classic player list",  MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetList,   NostalgiaScreen_SetList },
+		{  1,   50, "Classic options",      MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts },
+	};
+	s->numCore         = Array_Elems(buttons);
+	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 
-static void NostalgiaScreen_GetCPE(cc_string* v) { Menu_GetBool(v, Game_UseCPE); }
-static void NostalgiaScreen_SetCPE(const cc_string* v) { Game_UseCPE = Menu_SetBool(v, OPT_CPE); }
+	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
+}
+
+void NostalgiaAppearanceScreen_Show(void) {
+	MenuOptionsScreen_Show(NULL, NostalgiaAppearanceScreen_InitWidgets);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------NostalgiaFunctionalityScreen-----------------------------------------------*
+*#########################################################################################################################*/
+static void NostalgiaScreen_UpdateVersionDisabled(void) {
+	MenuOptionsScreen_Instance.buttons[3].disabled = Game_UseCPE;
+}
 
 static void NostalgiaScreen_GetTexs(cc_string* v) { Menu_GetBool(v, Game_AllowServerTextures); }
 static void NostalgiaScreen_SetTexs(const cc_string* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
-static void NostalgiaScreen_GetClassicChat(cc_string* v) { Menu_GetBool(v, Gui.ClassicChat); }
-static void NostalgiaScreen_SetClassicChat(const cc_string* v) { Gui.ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
+static void NostalgiaScreen_GetCustom(cc_string* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
+static void NostalgiaScreen_SetCustom(const cc_string* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
 
-static void NostalgiaScreen_SwitchBack(void* a, void* b) {
-	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
+static void NostalgiaScreen_GetCPE(cc_string* v) { Menu_GetBool(v, Game_UseCPE); }
+static void NostalgiaScreen_SetCPE(const cc_string* v) {
+	Game_UseCPE = Menu_SetBool(v, OPT_CPE); 
+	NostalgiaScreen_UpdateVersionDisabled();
 }
+
+static void NostalgiaScreen_Version(void* screen, void* widget) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	int ver = Game_Version.Version - 1;
+	if (ver < VERSION_0017) ver = VERSION_0030;
+
+	Options_SetInt(OPT_GAME_VERSION, ver);
+	GameVersion_Load();
+	MenuOptionsScreen_Update(s, Screen_Index(s, widget));
+}
+
+static void NostalgiaScreen_GetVersion(cc_string* v) { String_AppendConst(v, Game_Version.Name); }
+static void NostalgiaScreen_SetVersion(const cc_string* v) { }
 
 static struct TextWidget nostalgia_desc;
 static void NostalgiaScreen_RecreateExtra(struct MenuOptionsScreen* s) {
-	TextWidget_SetConst(&nostalgia_desc, "&eButtons on the right require restarting game", &s->textFont);
+	TextWidget_SetConst(&nostalgia_desc, "&eRequires restarting game to take full effect", &s->textFont);
 }
 
-static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[9] = {
-		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
-		{ -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim },
-		{ -1,  -50, "Classic gui textures", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetGui,    NostalgiaScreen_SetGui },
-		{ -1,    0, "Classic player list",  MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetList,   NostalgiaScreen_SetList },
-		{ -1,   50, "Classic options",      MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts },
-	
-		{ 1, -150, "Allow custom blocks", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom },
-		{ 1, -100, "Use CPE",             MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE },
-		{ 1,  -50, "Use server textures", MenuOptionsScreen_Bool,
-			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
-        { 1,    0, "Use classic chat",    MenuOptionsScreen_Bool,
-            NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
+static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s) {
+	static const struct MenuOptionDesc buttons[] = {
+		{ -1, -50, "Use server textures",  MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetTexs,    NostalgiaScreen_SetTexs },
+		{ -1,   0, "Allow custom blocks",  MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetCustom,  NostalgiaScreen_SetCustom },
+
+		{  1, -50, "Non-classic features", MenuOptionsScreen_Bool,
+			NostalgiaScreen_GetCPE,     NostalgiaScreen_SetCPE },
+		{  1,   0, "Game version",         NostalgiaScreen_Version,
+			NostalgiaScreen_GetVersion, NostalgiaScreen_SetVersion }
 	};
-	s->numCore         = 9 + 1;
-	s->maxVertices    += 9 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
+	s->numCore         = Array_Elems(buttons) + 1;
+	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
+	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
 	TextWidget_Init(&nostalgia_desc);
 	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	s->widgets[9] = (struct Widget*)&nostalgia_desc;
+	s->widgets[4] = (struct Widget*)&nostalgia_desc;
+
+	NostalgiaScreen_UpdateVersionDisabled();
+	s->descriptions[3] = \
+		"&eNote that support for versions earlier than 0.30 is incomplete.\n" \
+		"\n" \
+		"&cNote that some servers only support 0.30 game version";
 }
 
-void NostalgiaScreen_Show(void) {
-	MenuOptionsScreen_Show(NULL, NULL, 0, NostalgiaScreen_InitWidgets);
+void NostalgiaFunctionalityScreen_Show(void) {
+	MenuOptionsScreen_Show(NULL, NostalgiaFunctionalityScreen_InitWidgets);
 }
 
 
@@ -3642,7 +3711,9 @@ static void TexPackOverlay_Update(void* screen, double delta) {
 	s->dirty         = true;
 	s->gotContent    = true;
 	s->contentLength = item.contentLength;
+
 	TexPackOverlay_UpdateLine3(s);
+	HttpRequest_Free(&item);
 }
 
 static void TexPackOverlay_ContextLost(void* screen) {

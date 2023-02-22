@@ -78,23 +78,11 @@ FT_BEGIN_HEADER
                              FT_Render_Mode    mode,
                              const FT_Vector*  origin );
 
-  typedef FT_Error
-  (*FT_Renderer_TransformFunc)( FT_Renderer       renderer,
-                                FT_GlyphSlot      slot,
-                                const FT_Matrix*  matrix,
-                                const FT_Vector*  delta );
-
 
   typedef void
   (*FT_Renderer_GetCBoxFunc)( FT_Renderer   renderer,
                               FT_GlyphSlot  slot,
                               FT_BBox*      cbox );
-
-
-  typedef FT_Error
-  (*FT_Renderer_SetModeFunc)( FT_Renderer  renderer,
-                              FT_ULong     mode_tag,
-                              FT_Pointer   mode_ptr );
 
 
   /*************************************************************************/
@@ -108,17 +96,8 @@ FT_BEGIN_HEADER
   /* <Fields>                                                              */
   /*    root            :: The root @FT_Module_Class fields.               */
   /*                                                                       */
-  /*    glyph_format    :: The glyph image format this renderer handles.   */
-  /*                                                                       */
   /*    render_glyph    :: A method used to render the image that is in a  */
   /*                       given glyph slot into a bitmap.                 */
-  /*                                                                       */
-  /*    transform_glyph :: A method used to transform the image that is in */
-  /*                       a given glyph slot.                             */
-  /*                                                                       */
-  /*    get_glyph_cbox  :: A method used to access the glyph's cbox.       */
-  /*                                                                       */
-  /*    set_mode        :: A method used to pass additional parameters.    */
   /*                                                                       */
   /*    raster_class    :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.    */
   /*                       This is a pointer to its raster's class.        */
@@ -127,12 +106,7 @@ FT_BEGIN_HEADER
   {
     FT_Module_Class            root;
 
-    FT_Glyph_Format            glyph_format;
-
     FT_Renderer_RenderFunc     render_glyph;
-    FT_Renderer_TransformFunc  transform_glyph;
-    FT_Renderer_GetCBoxFunc    get_glyph_cbox;
-    FT_Renderer_SetModeFunc    set_mode;
 
     FT_Raster_Funcs*           raster_class;
 

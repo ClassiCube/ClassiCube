@@ -1,5 +1,6 @@
 package com.classicube;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +8,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -24,7 +26,6 @@ import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.provider.OpenableColumns;
 import android.provider.Settings.Secure;
 import android.text.Editable;
@@ -157,19 +158,6 @@ public class MainActivity extends Activity
 		runGameAsync();
 	}
 	
-	void HACK_avoidFileUriExposedErrors() {
-		// StrictMode - API level 9
-		// disableDeathOnFileUriExposure - API level 24 ?????
-		try {
-			Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
-			m.invoke(null);
-		}  catch (NoClassDefFoundError ex) {
-			ex.printStackTrace();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// requestWindowFeature - API level 1
@@ -190,9 +178,6 @@ public class MainActivity extends Activity
 		// Need to find a solution that both renders over display cutouts and doesn't mess up onscreen input
 		// renderOverDisplayCutouts();
 		// TODO: semaphore for destroyed and surfaceDestroyed
-
-		// avoid FileUriExposed exception when taking screenshots on recent Android versions
-		HACK_avoidFileUriExposedErrors();
 
 		if (!gameRunning) startGameAsync();
 		// TODO rethink to avoid this
@@ -809,11 +794,21 @@ public class MainActivity extends Activity
 	
 	public String shareScreenshot(String path) {
 		try {
-			File file = new File(getGameDataDirectory() + "/screenshots/" + path);
+			Uri uri;
+			if (android.os.Build.VERSION.SDK_INT >= 23){ // android 6.0
+				uri = CCFileProvider.getUriForFile("screenshots/" + path);
+			} else {
+				// when trying to use content:// URIs on my android 4.0.3 test device
+				//   - 1 app crashed
+				//   - 1 app wouldn't show image previews
+				// so fallback to file:// on older devices as they seem to reliably work
+				File file = new File(getGameDataDirectory() + "/screenshots/" + path);
+				uri = Uri.fromFile(file);
+			}
 			Intent intent = new Intent();
 			
 			intent.setAction(Intent.ACTION_SEND);
-			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+			intent.putExtra(Intent.EXTRA_STREAM, uri);
 			intent.setType("image/png");
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			startActivity(Intent.createChooser(intent, "share via"));
@@ -824,7 +819,10 @@ public class MainActivity extends Activity
 	}
 
 
-	static String uploadFolder;
+	static String uploadFolder, savePath;
+	final static int OPEN_REQUEST = 0x4F50454E;
+	final static int SAVE_REQUEST = 0x53415645;
+
 	// https://stackoverflow.com/questions/36557879/how-to-use-native-android-file-open-dialog
 	// https://developer.android.com/guide/topics/providers/document-provider
 	// https://developer.android.com/training/data-storage/shared/documents-files#java
@@ -837,7 +835,27 @@ public class MainActivity extends Activity
 					.setType("*/*")
 					.setAction(Intent.ACTION_GET_CONTENT);
 
-			startActivityForResult(Intent.createChooser(intent, "Select a file"), 0x55530200);
+			startActivityForResult(Intent.createChooser(intent, "Select a file"), OPEN_REQUEST);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return 0;// TODO log error to in-game
+		}
+		return 1;
+	}
+
+	// https://stackoverflow.com/questions/8586691/how-to-open-file-save-dialog-in-android
+	public int saveFileDialog(String path, String name) {
+		savePath = path;
+
+		try {
+			Intent intent = new Intent()
+					.setType("/")
+					.addCategory(Intent.CATEGORY_OPENABLE)
+					.setAction(Intent.ACTION_CREATE_DOCUMENT)
+					.setType("application/octet-stream")
+					.putExtra(Intent.EXTRA_TITLE, name);
+
+			startActivityForResult(Intent.createChooser(intent, "Choose destination"), SAVE_REQUEST);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			return 0;// TODO log error to in-game
@@ -848,8 +866,42 @@ public class MainActivity extends Activity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode != 0x55530200 || resultCode != RESULT_OK) return;
+		if (resultCode != RESULT_OK) return;
 
+		if (requestCode == OPEN_REQUEST) {
+			handleOpenResult(data);
+		} else if (requestCode == SAVE_REQUEST) {
+			handleSaveResult(data);
+		}
+	}
+
+	void handleSaveResult(Intent data) {
+		try {
+			Uri selected = data.getData();
+			saveTempToContent(selected, savePath);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			// TODO log error to in-game
+		}
+	}
+
+	void saveTempToContent(Uri uri, String path) throws IOException {
+		File file = new File(getGameDataDirectory() + "/" + path);
+		OutputStream output = null;
+		InputStream input   = null;
+
+		try {
+			input  = new FileInputStream(file);
+			output = getContentResolver().openOutputStream(uri);
+			copyStreamData(input, output);
+			file.delete();
+		} finally {
+			if (output != null) output.close();
+			if (input != null)  input.close();
+		}
+	}
+
+	void handleOpenResult(Intent data) {
 		try {
 			Uri selected = data.getData();
 			String name  = getContentFilename(selected);
@@ -881,16 +933,19 @@ public class MainActivity extends Activity
 		try {
 			output = new FileOutputStream(file);
 			input  = getContentResolver().openInputStream(uri);
-
-			byte[] temp = new byte[8192];
-			int length;
-			while ((length = input.read(temp)) > 0)
-				output.write(temp, 0, length);
+			copyStreamData(input, output);
 		} finally {
 			if (output != null) output.close();
 			if (input != null)  input.close();
 		}
 		return file.getAbsolutePath();
+	}
+
+	static void copyStreamData(InputStream input, OutputStream output) throws IOException {
+		byte[] temp = new byte[8192];
+		int length;
+		while ((length = input.read(temp)) > 0)
+			output.write(temp, 0, length);
 	}
 
 

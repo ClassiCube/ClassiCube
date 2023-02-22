@@ -883,19 +883,7 @@
       /* now, transform the glyph image if needed */
       if ( internal->transform_flags )
       {
-        /* get renderer */
-        /* NOTE: Support for multiple renderers was removed */
-        FT_Renderer renderer = library->cur_renderer;
-        if ( renderer->glyph_format != slot->format )
-          renderer = NULL;
-
-
-        if ( renderer )
-          error = renderer->clazz->transform_glyph(
-                                     renderer, slot,
-                                     &internal->transform_matrix,
-                                     &internal->transform_delta );
-        else if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
+        if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
         {
           /* apply `standard' transformation if no renderer is available */
           if ( internal->transform_flags & 1 )
@@ -2854,7 +2842,6 @@
 
 
     render->clazz         = clazz;
-    render->glyph_format  = clazz->glyph_format;
 
     render->raster_render = clazz->raster_class->raster_render;
     render->render        = clazz->render_glyph;

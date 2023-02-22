@@ -108,7 +108,20 @@ static CGRect GetViewFrame(void) {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
-static OpenFileDialogCallback open_dlg_callback;
+// ==== UIDocumentPickerDelegate ====
+static FileDialogCallback open_dlg_callback;
+static char save_buffer[FILENAME_SIZE];
+static cc_string save_path = String_FromArray(save_buffer);
+
+static void DeleteExportTempFile(void) {
+    if (!save_path.length) return;
+    
+    char path[NATIVE_STR_LEN];
+    String_EncodeUtf8(path, &save_path);
+    unlink(path);
+    save_path.length = 0;
+}
+
 - (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
     NSString* str    = url.path;
     const char* utf8 = str.UTF8String;
@@ -116,7 +129,15 @@ static OpenFileDialogCallback open_dlg_callback;
     char tmpBuffer[NATIVE_STR_LEN];
     cc_string tmp = String_FromArray(tmpBuffer);
     String_AppendUtf8(&tmp, utf8, String_Length(utf8));
+    
+    DeleteExportTempFile();
+    if (!open_dlg_callback) return;
     open_dlg_callback(&tmp);
+    open_dlg_callback = NULL;
+}
+
+- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+    DeleteExportTempFile();
 }
 
 static cc_bool kb_active;
@@ -251,7 +272,7 @@ static UIColor* ToUIColor(BitmapCol color, float A) {
 
 static NSString* ToNSString(const cc_string* text) {
     char raw[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(raw, text);
+    String_EncodeUtf8(raw, text);
     return [NSString stringWithUTF8String:raw];
 }
 
@@ -514,6 +535,29 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     return 0; // TODO still unfinished
 }
 
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+    if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+    
+    // save the item to a temp file, which is then (usually) later deleted by picker callbacks
+    cc_string tmpDir = String_FromConst("Exported");
+    Directory_Create(&tmpDir);
+    
+    save_path.length = 0;
+    String_Format3(&save_path, "%s/%s%c", &tmpDir, &args->defaultName, args->filters[0]);
+    args->Callback(&save_path);
+    
+    NSString* str = ToNSString(&save_path);
+    NSURL* url    = [NSURL fileURLWithPath:str isDirectory:NO];
+    
+    UIDocumentPickerViewController* dlg;
+    dlg = [UIDocumentPickerViewController alloc];
+    dlg = [dlg initWithURL:url inMode:UIDocumentPickerModeExportToService];
+    
+    dlg.delegate = cc_controller;
+    [cc_controller presentViewController:dlg animated:YES completion: Nil];
+    return 0;
+}
+
 
 /*#########################################################################################################################*
  *--------------------------------------------------------2D window--------------------------------------------------------*
@@ -676,11 +720,8 @@ static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
 
 cc_result Process_StartOpen(const cc_string* args) {
-    NSURL* url;
-    NSString* str;
-    
-    str = ToNSString(args);
-    url = [[NSURL alloc] initWithString:str];
+    NSString* str = ToNSString(args);
+    NSURL* url    = [[NSURL alloc] initWithString:str];
     [UIApplication.sharedApplication openURL:url];
     return 0;
 }
@@ -743,20 +784,16 @@ void GetDeviceUUID(cc_string* str) {
     String_AppendUtf8(str, src, String_Length(src));
 }
 
-void Directory_GetCachePath(cc_string* path, const char* folder) {
+void Directory_GetCachePath(cc_string* path) {
     NSArray* array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    if (array.count > 0) {
-        // try to use iOS app cache folder if possible
-        // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
-        NSString* str    = [array objectAtIndex:0];
-        const char* utf8 = [str UTF8String];
+    if (array.count <= 0) return;
+	
+    // try to use iOS app cache folder if possible
+    // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
+    NSString* str    = [array objectAtIndex:0];
+    const char* utf8 = [str UTF8String];
         
-        String_AppendUtf8(path, utf8, String_Length(utf8));
-        String_Format1(path, "/%c", folder);
-        Directory_Create(path);
-    } else {
-        String_AppendConst(path, folder);
-    }
+    String_AppendUtf8(path, utf8, String_Length(utf8));
 }
 
 
