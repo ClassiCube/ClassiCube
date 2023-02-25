@@ -886,7 +886,10 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 
 	if ((res = Stream_Read(stream, tmp, 12)))  return res;
 	fourCC = Stream_GetU32_BE(tmp + 0);
+	if (fourCC == WAV_FourCC('I','D','3', 2))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.2 tags header */
+	if (fourCC == WAV_FourCC('I','D','3', 3))  return AUDIO_ERR_MP3_SIG; /* ID3 v2.3 tags header */
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
+
 	/* tmp[4] (4) file size */
 	fourCC = Stream_GetU32_BE(tmp + 8);
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;

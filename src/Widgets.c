@@ -632,14 +632,10 @@ void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static int Table_X(struct TableWidget* w) { return w->x - w->paddingX;    }
-static int Table_Y(struct TableWidget* w) { return w->y - w->paddingTopY; }
-static int Table_Width(struct TableWidget* w) {
-	return w->blocksPerRow * w->cellSizeX + w->paddingX * 2;
-}
-static int Table_Height(struct TableWidget* w) {
-	return w->rowsVisible  * w->cellSizeY + w->paddingTopY + w->paddingMaxY;
-}
+static int Table_X(struct TableWidget* w)      { return w->x - w->paddingL; }
+static int Table_Y(struct TableWidget* w)      { return w->y - w->paddingT; }
+static int Table_Width(struct TableWidget* w)  { return w->width + w->paddingL + w->paddingR; }
+static int Table_Height(struct TableWidget* w) { return w->height + w->paddingT + w->paddingB; }
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
@@ -664,73 +660,37 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-static void TableWidget_MakeBlockDesc(struct TableWidget* w, cc_string* desc, BlockID block) {
-	cc_string name;
-	int block_ = block;
-	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
-	if (block == BLOCK_AIR) return;
-
-	name = Block_UNSAFE_GetName(block);
-	String_AppendString(desc, &name);
-	if (Game_ClassicMode) return;
-
-	String_Format1(desc, " (ID %i&f", &block_);
-	if (!Blocks.CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
-	if (!Blocks.CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
-	String_Append(desc, ')');
-}
-
-static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
-	w->descTex.X = w->x + w->width / 2 - w->descTex.Width / 2;
-	w->descTex.Y = w->y - w->descTex.Height - 5;
-}
-
-static void TableWidget_RecreateDescTex(struct TableWidget* w) {
+static void TableWidget_RecreateTitle(struct TableWidget* w) {
 	BlockID block;
 	if (w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
 	w->lastCreatedIndex = w->selectedIndex;
 
 	block = w->selectedIndex == -1 ? BLOCK_AIR : w->blocks[w->selectedIndex];
-	TableWidget_MakeDescTex(w, block);
-}
-
-void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
-	cc_string desc; char descBuffer[STRING_SIZE * 2];
-	struct DrawTextArgs args;
-
-	Gfx_DeleteTexture(&w->descTex.ID);
-	String_InitArray(desc, descBuffer);
-	TableWidget_MakeBlockDesc(w, &desc, block);
-	if (!desc.length) return;
-	
-	DrawTextArgs_Make(&args, &desc, w->font, true);
-	Drawer2D_MakeTextTexture(&w->descTex, &args);
-	TableWidget_UpdateDescTexPos(w);
-}
-
-static cc_bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
-	int i, end = min(start + w->blocksPerRow, Array_Elems(Inventory.Map));
-
-	for (i = start; i < end; i++) {
-		if (Inventory.Map[i] != BLOCK_AIR) return false;
-	}
-	return true;
+	w->UpdateTitle(block);
 }
 
 void TableWidget_RecreateBlocks(struct TableWidget* w) {
-	int i, max = Game_UseCPEBlocks ? BLOCK_MAX_DEFINED : BLOCK_MAX_ORIGINAL;
+	int max = Game_UseCPEBlocks ? BLOCK_MAX_DEFINED : BLOCK_MAX_ORIGINAL;
+	int i, begCount, rowEnd;
+	cc_bool emptyRow;
 	BlockID block;
 	w->blocksCount = 0;
 
-	for (i = 0; i < Array_Elems(Inventory.Map); ) {
-		if ((i % w->blocksPerRow) == 0 && TableWidget_RowEmpty(w, i)) {
-			i += w->blocksPerRow; continue;
+	for (i = 0; i < Array_Elems(Inventory.Map);) {
+		emptyRow = true;
+		begCount = w->blocksCount;
+		rowEnd   = min(i + w->blocksPerRow, Array_Elems(Inventory.Map));
+
+		for (; i < rowEnd; i++) {
+			block = Inventory.Map[i];
+			if (block > max) continue;
+			
+			w->blocks[w->blocksCount++] = block;
+			if (block != BLOCK_AIR) emptyRow = false;
 		}
 
-		block = Inventory.Map[i];
-		if (block <= max) { w->blocks[w->blocksCount++] = block; }
-		i++;
+		if (emptyRow) w->blocksCount = begCount;
 	}
 
 	w->rowsTotal = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
@@ -761,7 +721,7 @@ static void TableWidget_Render(void* widget, double delta) {
 
 	cellSizeX = w->cellSizeX;
 	cellSizeY = w->cellSizeY;
-	if (w->selectedIndex != -1 && Game_ClassicMode && w->blocks[w->selectedIndex] != BLOCK_AIR) {
+	if (w->selectedIndex != -1 && Gui.ClassicInventory && w->blocks[w->selectedIndex] != BLOCK_AIR) {
 		TableWidget_GetCoords(w, w->selectedIndex, &x, &y);
 
 		/* TODO: Need two size arguments, in case X/Y dpi differs */
@@ -779,8 +739,8 @@ static void TableWidget_Render(void* widget, double delta) {
 		/* We want to always draw the selected block on top of others */
 		/* TODO: Need two size arguments, in case X/Y dpi differs */
 		if (i == w->selectedIndex) continue;
-		IsometricDrawer_DrawBatch(w->blocks[i], cellSizeX * 0.7f / 2.0f,
-			x + cellSizeX / 2, y + cellSizeY / 2);
+		IsometricDrawer_DrawBatch(w->blocks[i],
+			w->normBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
 
 	i = w->selectedIndex;
@@ -788,47 +748,46 @@ static void TableWidget_Render(void* widget, double delta) {
 		TableWidget_GetCoords(w, i, &x, &y);
 
 		IsometricDrawer_DrawBatch(w->blocks[i],
-			(cellSizeX + w->selBlockExpand) * 0.7f / 2.0f,
-			x + cellSizeX / 2, y + cellSizeY / 2);
+			w->selBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
 	IsometricDrawer_EndBatch();
-
-	if (w->descTex.ID) { Texture_Render(&w->descTex); }
 }
 
 static void TableWidget_Free(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	Gfx_DeleteDynamicVb(&w->vb);
-	Gfx_DeleteTexture(&w->descTex.ID);
 	w->lastCreatedIndex = -1000;
 }
 
 void TableWidget_Recreate(struct TableWidget* w) {
 	Elem_Free(w);
 	Gfx_RecreateDynamicVb(&w->vb, VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 }
 
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	float scale = w->scale;
-	int cellSize;
+	cc_bool classic = Gui.ClassicInventory;
+	float scale = Math_SqrtF(w->scale);
+	int cellSize, blockSize;
 
-	cellSize     = (int)(50 * Math_SqrtF(scale));
-	w->cellSizeX = Display_ScaleX(cellSize);
-	w->cellSizeY = Display_ScaleY(cellSize);
+	cellSize     = classic ? 48 : 50;
+	w->cellSizeX = Display_ScaleX(cellSize * scale);
+	w->cellSizeY = Display_ScaleY(cellSize * scale);
 
-	w->selBlockExpand = 25.0f * Math_SqrtF(scale);
-	w->rowsVisible    = min(8, w->rowsTotal); /* 8 rows max */
+	blockSize    = classic ? 40 : 50;
+	blockSize    = Display_ScaleX(blockSize * scale);
+	w->normBlockSize = (blockSize             ) * 0.7f / 2.0f;
+	w->selBlockSize  = (blockSize + 25 * scale) * 0.7f / 2.0f;
+	w->rowsVisible   = min(8, w->rowsTotal); /* 8 rows max */
 
 	do {
 		w->width  = w->cellSizeX * w->blocksPerRow;
 		w->height = w->cellSizeY * w->rowsVisible;
 		Widget_CalcPosition(w);
-		TableWidget_UpdateDescTexPos(w);
 
 		/* Does the table fit on screen? */
-		if (Game_ClassicMode || Table_Y(w) >= 0) break;
+		if (classic || Table_Y(w) >= 0) break;
 		w->rowsVisible--;
 	} while (w->rowsVisible > 1);
 
@@ -850,7 +809,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	w->scroll.topRow += (index / w->blocksPerRow) - (start / w->blocksPerRow);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 	TableWidget_MoveCursorToSelected(w);
 }
 
@@ -892,7 +851,7 @@ static int TableWidget_MouseScroll(void* widget, float delta) {
 	if (index >= w->blocksCount) index = -1;
 
 	w->selectedIndex = index;
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 	return true;
 }
 
@@ -920,7 +879,7 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 			}
 		}
 	}
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 	return true;
 }
 
@@ -947,7 +906,8 @@ static const struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_KeyDown,     Widget_InputUp,        TableWidget_MouseScroll,
 	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove
 };
-void TableWidget_Create(struct TableWidget* w) {	
+void TableWidget_Create(struct TableWidget* w) {
+	cc_bool classic;
 	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
 	w->lastCreatedIndex = -1000;
@@ -958,9 +918,11 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->lastX = -20; w->lastY = -20;
 	w->scale = 1;
 
-	w->paddingX    = Display_ScaleX(15);
-	w->paddingTopY = Display_ScaleY(15 + 20);
-	w->paddingMaxY = Display_ScaleX(15);
+	classic     = Gui.ClassicInventory;
+	w->paddingL = Display_ScaleX(classic ? 20 : 15);
+	w->paddingR = Display_ScaleX(classic ? 28 : 15);
+	w->paddingT = Display_ScaleY(classic ? 46 : 35);
+	w->paddingB = Display_ScaleY(classic ? 14 : 15);
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
@@ -977,7 +939,7 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 	w->scroll.topRow -= (w->rowsVisible - 1);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 	TableWidget_MoveCursorToSelected(w);
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 }
 
 void TableWidget_OnInventoryChanged(struct TableWidget* w) {
@@ -989,7 +951,7 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 
 	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
 	ScrollbarWidget_ClampTopRow(&w->scroll);
-	TableWidget_RecreateDescTex(w);
+	TableWidget_RecreateTitle(w);
 }
 
 

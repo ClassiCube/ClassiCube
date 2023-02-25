@@ -6,6 +6,7 @@
 #include "Bitmap.h"
 #include "Options.h"
 #include "Errors.h"
+#include "Utils.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
@@ -251,7 +252,7 @@ void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
 
-	if (!display) Logger_Abort("Failed to open display");
+	if (!display) Logger_Abort("Failed to open the X11 display. No X server running?");
 	screen = DefaultScreen(display);
 	HookXErrors();
 
@@ -267,8 +268,8 @@ void Window_Init(void) {
 }
 
 #ifdef CC_BUILD_ICON
-extern const long CCIcon_Data[];
-extern const int  CCIcon_Size;
+/* See misc/linux_icon_gen.cs for how to generate this file */
+#include "_CCIcon_X11.h"
 
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
@@ -292,7 +293,7 @@ static void DoCreateWindow(int width, int height) {
 	RegisterAtoms();
 	win_visual = GLContext_SelectVisual();
 
-	Platform_LogConst("Opening render window... ");
+	Platform_Log1("Created window (visual id: %h)", &win_visual.visualid);
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 	attributes.event_mask = win_eventMask;
 
@@ -346,7 +347,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, title);
+	String_EncodeUtf8(str, title);
 	XStoreName(win_display, win_handle, str);
 }
 
@@ -667,7 +668,7 @@ void Window_ProcessEvents(void) {
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 				char str[800];
-				int len = Platform_EncodeUtf8(str, &clipboard_copy_text);
+				int len = String_EncodeUtf8(str, &clipboard_copy_text);
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
 					PropModeReplace, (unsigned char*)str, len);
@@ -967,12 +968,38 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	XFlush(m.dpy); /* flush so window disappears immediately */
 }
 
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	const char* const* filters = args->filters;
+static cc_result OpenSaveFileDialog(const char* args, FileDialogCallback callback, const char* defaultExt) {
 	cc_string path; char pathBuffer[1024];
 	char result[4096] = { 0 };
 	int len, i;
-	FILE* fp;
+	/* TODO this doesn't detect when Zenity doesn't exist */
+	FILE* fp = popen(args, "r");
+	if (!fp) return 0;
+
+	/* result from zenity is normally just one string */
+	while (fgets(result, sizeof(result), fp)) { }
+	pclose(fp);
+
+	len = String_Length(result);
+	if (!len) return 0;
+
+	String_InitArray(path, pathBuffer);
+	String_AppendUtf8(&path, result, len);
+
+	/* Add default file extension if necessary */
+	if (defaultExt) {
+		cc_string file = path;
+		Utils_UNSAFE_GetFilename(&file);
+		if (String_IndexOf(&file, '.') == -1) String_AppendConst(&path, defaultExt);
+	}
+	callback(&path);
+	return 0;
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	const char* const* filters = args->filters;
+	cc_string path; char pathBuffer[1024];
+	int i;
 
 	String_InitArray_NT(path, pathBuffer);
 	String_Format1(&path, "zenity --file-selection --file-filter='%c (", args->description);
@@ -989,23 +1016,32 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 		String_Format1(&path, " *%c", filters[i]);
 	}
 	String_AppendConst(&path, "'");
+
 	path.buffer[path.length] = '\0';
+	return OpenSaveFileDialog(path.buffer, args->Callback, NULL);
+}
 
-	/* TODO this doesn't detect when Zenity doesn't exist */
-	fp = popen(path.buffer, "r");
-	if (!fp) return 0;
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	const char* const* titles   = args->titles;
+	const char* const* fileExts = args->filters;
+	cc_string path; char pathBuffer[1024];
+	int i;
 
-	/* result is normally just one string */
-	while (fgets(result, sizeof(result), fp)) { }
-	len = String_Length(result);
-
-	if (len) {
-		String_InitArray(path, pathBuffer);
-		String_AppendUtf8(&path, result, len);
-		args->Callback(&path);
+	String_InitArray_NT(path, pathBuffer);
+	String_AppendConst(&path, "zenity --file-selection");
+	for (i = 0; fileExts[i]; i++)
+	{
+		String_Format3(&path, " --file-filter='%c (*%c) | *%c'", titles[i], fileExts[i], fileExts[i]);
 	}
-	pclose(fp);
-	return 0;
+	String_AppendConst(&path, " --save --confirm-overwrite");
+
+	/* TODO: Utf8 encode filename */
+	if (args->defaultName.length) {
+		String_Format1(&path, " --filename='%s'", &args->defaultName);
+	}
+
+	path.buffer[path.length] = '\0';
+	return OpenSaveFileDialog(path.buffer, args->Callback, fileExts[0]);
 }
 
 static GC fb_gc;
@@ -1282,8 +1318,8 @@ void GLContext_GetApiInfo(cc_string* info) {
 	unsigned int vram, acc;
 	if (!queryRendererMESA) return;
 
-	queryRendererMESA(0x8186, &acc);
-	queryRendererMESA(0x8187, &vram);
+	queryRendererMESA(0x8186, &acc);  /* GLX_RENDERER_ACCELERATED_MESA */
+	queryRendererMESA(0x8187, &vram); /* GLX_RENDERER_VIDEO_MEMORY_MESA */
 	String_Format2(info, "VRAM: %i MB, %c", &vram,
 		acc ? "HW accelerated" : "no HW acceleration");
 }

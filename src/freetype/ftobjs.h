@@ -659,8 +659,6 @@ FT_BEGIN_HEADER
   {
     FT_ModuleRec            root;
     FT_Renderer_Class*      clazz;
-    FT_Glyph_Format         glyph_format;
-    FT_Glyph_Class          glyph_class;
 
     FT_Raster_Render_Func   raster_render;
     FT_Renderer_RenderFunc  render;
@@ -925,11 +923,7 @@ FT_BEGIN_HEADER
           init_,                             \
           done_,                             \
           get_interface_,                    \
-          glyph_format_,                     \
           render_glyph_,                     \
-          transform_glyph_,                  \
-          get_glyph_cbox_,                   \
-          set_mode_,                         \
           raster_class_ )                    \
   FT_CALLBACK_TABLE_DEF                      \
   const FT_Renderer_Class  class_ =          \
@@ -943,12 +937,7 @@ FT_BEGIN_HEADER
                            init_,            \
                            done_,            \
                            get_interface_ )  \
-    glyph_format_,                           \
-                                             \
     render_glyph_,                           \
-    transform_glyph_,                        \
-    get_glyph_cbox_,                         \
-    set_mode_,                               \
                                              \
     raster_class_                            \
   };

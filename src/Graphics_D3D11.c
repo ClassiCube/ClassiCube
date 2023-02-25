@@ -73,8 +73,7 @@ static void CreateDeviceAndSwapChain(void) {
 
 	DXGI_SWAP_CHAIN_DESC desc = { 0 };
 	desc.BufferCount = 1;
-	// todo see if BGRA slightly faster
-	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	// RefreshRate intentionally left at 0 so display's refresh rate is used
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	desc.OutputWindow = WindowInfo.Handle;
@@ -1044,7 +1043,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	desc.Height    = WindowInfo.Height;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
-	desc.Format    = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Format    = DXGI_FORMAT_B8G8R8A8_UNORM;
 	desc.SampleDesc.Count = 1;
 	desc.Usage     = D3D11_USAGE_STAGING;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;

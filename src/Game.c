@@ -56,7 +56,7 @@ cc_bool Game_ViewBobbing, Game_HideGui, Game_DefaultZipMissing;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
 
-static char usernameBuffer[FILENAME_SIZE];
+static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
 cc_string Game_Username = String_FromArray(usernameBuffer);
 cc_string Game_Mppass   = String_FromArray(mppassBuffer);
@@ -303,7 +303,7 @@ static void LoadOptions(void) {
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
-	Game_UseCPE            = Options_GetBool(OPT_CPE, true);
+	Game_UseCPE            = !Game_ClassicMode && Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
@@ -526,7 +526,7 @@ void Game_TakeScreenshot(void) {
 
 #ifdef CC_BUILD_WEB
 	extern void interop_TakeScreenshot(const char* path);
-	Platform_EncodeUtf8(str, &filename);
+	String_EncodeUtf8(str, &filename);
 	interop_TakeScreenshot(str);
 #else
 	if (!Utils_EnsureDirectory("screenshots")) return;

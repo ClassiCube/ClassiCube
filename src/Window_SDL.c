@@ -9,6 +9,8 @@
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
 
+#error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &WindowInfo.Width, &WindowInfo.Height);
 }
@@ -53,7 +55,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, title);
+	String_EncodeUtf8(str, title);
 	SDL_SetWindowTitle(win_handle, str);
 }
 
@@ -68,7 +70,7 @@ void Clipboard_GetText(cc_string* value) {
 
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, value);
+	String_EncodeUtf8(str, value);
 	SDL_SetClipboardText(str);
 }
 
@@ -278,6 +280,10 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 

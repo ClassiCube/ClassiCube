@@ -3,7 +3,7 @@
 #include "Vectors.h"
 #include "Constants.h"
 /* Various components for entities.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct Entity;
@@ -77,31 +77,28 @@ void HacksComp_SetFlying(struct HacksComp* hacks, cc_bool flying);
 void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip);
 float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed);
 
-/* Represents a position and orientation state */
-struct InterpState { Vec3 Pos; float Pitch, Yaw, RotX, RotZ; };
-
-#define InterpComp_Layout \
-struct InterpState Prev, Next; float PrevRotY, NextRotY; int RotYCount; float RotYStates[15];
-
+#define InterpComp_Layout int RotYCount; float RotYStates[15];
 /* Base entity component that performs interpolation of position and orientation */
 struct InterpComp { InterpComp_Layout };
 
-void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, float t);
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update);
+void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e);
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, cc_bool interpolate);
-void LocalInterpComp_AdvanceState(struct InterpComp* interp);
+/* Represents a network orientation state */
+struct NetInterpAngles { float Pitch, Yaw, RotX, RotZ; };
 
 /* Entity component that performs interpolation for network players */
 struct NetInterpComp {
 	InterpComp_Layout
 	/* Last known position and orientation sent by the server */
-	struct InterpState Cur;
-	int StatesCount;
-	struct InterpState States[10];
+	Vec3 CurPos; struct NetInterpAngles CurAngles;
+	/* Interpolated position and orientation state */
+	int PositionsCount, AnglesCount;
+	Vec3 Positions[10]; struct NetInterpAngles Angles[10];
 };
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate);
-void NetInterpComp_AdvanceState(struct NetInterpComp* interp);
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e);
+void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e);
 
 /* Entity component that draws square and circle shadows beneath entities */
 

@@ -48,7 +48,9 @@ void Http_TryCancel(int reqID) {
 /*########################################################################################################################*
 *----------------------------------------------------Emscripten backend---------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) { 
+	return false; 
+}
 
 #define HTTP_MAX_CONCURRENCY 6
 static void Http_StartNextDownload(void) {
@@ -66,7 +68,7 @@ static void Http_StartNextDownload(void) {
 	Http_GetUrl(req, &url);
 	Platform_Log1("Fetching %s", &url);
 
-	Platform_EncodeUtf8(urlStr, &url);
+	String_EncodeUtf8(urlStr, &url);
 	res = interop_DownloadAsync(urlStr, req->requestType, req->id);
 	
 	if (res) {

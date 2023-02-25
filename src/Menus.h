@@ -3,7 +3,7 @@
 #include "Core.h"
 
 /* Contains all 2D menu screen implementations.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
 int Menu_PointerDown(void* screen, int id, int x, int y);
@@ -35,7 +35,9 @@ void GuiOptionsScreen_Show(void);
 void GraphicsOptionsScreen_Show(void);
 void HacksSettingsScreen_Show(void);
 void EnvSettingsScreen_Show(void);
-void NostalgiaScreen_Show(void);
+void NostalgiaAppearanceScreen_Show(void);
+void NostalgiaFunctionalityScreen_Show(void);
+void NostalgiaMenuScreen_Show(void);
 
 void UrlWarningOverlay_Show(const cc_string* url);
 void TexIdsOverlay_Show(void);

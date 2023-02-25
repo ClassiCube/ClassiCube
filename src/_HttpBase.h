@@ -12,11 +12,13 @@ static cc_bool httpsOnly, httpOnly, httpsVerify;
 static char skinServer_buffer[128];
 static cc_string skinServer = String_FromArray(skinServer_buffer);
 
-/* Frees data from a HTTP request. */
-static void HttpRequest_Free(struct HttpRequest* request) {
+void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
-	request->data = NULL;
-	request->size = 0;
+	Mem_Free(request->error);
+
+	request->data  = NULL;
+	request->size  = 0;
+	request->error = NULL;
 }
 
 /*########################################################################################################################*
@@ -82,7 +84,7 @@ static void RequestList_TryFree(struct RequestList* list, int id) {
 	int i = RequestList_Find(list, id);
 	if (i < 0) return;
 
-	Mem_Free(list->entries[i].data);
+	HttpRequest_Free(&list->entries[i]);
 	RequestList_RemoveAt(list, i);
 }
 
@@ -175,7 +177,13 @@ static void Http_GetUrl(struct HttpRequest* req, cc_string* dst) {
 /* Updates state after a completed http request */
 static void Http_FinishRequest(struct HttpRequest* req) {
 	req->success = !req->result && req->statusCode == 200 && req->data && req->size;
-	if (!req->success) HttpRequest_Free(req);
+
+	if (!req->success) {
+		const char* error = req->error; req->error = NULL;
+		HttpRequest_Free(req);
+		req->error = error;
+		/* TODO don't HttpRequest_Free here? */
+	}
 
 	Mutex_Lock(processedMutex);
 	{
@@ -197,7 +205,7 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 			item = &processedReqs.entries[i];
 			if (item->timeDownloaded + (10 * 1000) >= now) continue;
 
-			Mem_Free(item->data);
+			HttpRequest_Free(item);
 			RequestList_RemoveAt(&processedReqs, i);
 		}
 	}
@@ -260,6 +268,20 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 		len = Convert_CP437ToUtf8(src->buffer[i], data);
 		Http_UrlEncode(dst, data, len);
 	}
+}
+
+/* Outputs more detailed information about errors with http requests */
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst);
+
+void Http_LogError(const char* action, const struct HttpRequest* item) {
+	cc_string msg; char msgBuffer[512];
+	String_InitArray(msg, msgBuffer);
+	
+	Logger_FormatWarn(&msg, item->result, action, HttpBackend_DescribeError);
+	if (item->error && item->error[0]) {
+		String_Format1(&msg, "\n  Error details: %c", item->error);
+	}
+	Logger_WarnFunc(&msg);
 }
 
 

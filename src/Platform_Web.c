@@ -10,7 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
@@ -25,16 +24,18 @@
 
 /* Unfortunately, errno constants are different in some older emscripten versions */
 /*  (linux errno numbers compared to WASI errno numbers) */
-/* So just use the same numbers as interop_web.js (otherwise connecting always fail) */
-#define _EINPROGRESS  26
+/* So just use the same errono numbers as interop_web.js */
+#define _ENOENT        2
 #define _EAGAIN        6 /* same as EWOULDBLOCK */
+#define _EEXIST       17
 #define _EHOSTUNREACH 23
+#define _EINPROGRESS  26
 
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_FileShareViolation = 1000000000; /* Not used in web filesystem backend */
+const cc_result ReturnCode_FileNotFound     = _ENOENT;
 const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
-const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const cc_result ReturnCode_DirectoryExists  = _EEXIST;
 
 
 /*########################################################################################################################*
@@ -97,9 +98,7 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path, const char* folder) {
-	String_AppendConst(path, folder);
-}
+void Directory_GetCachePath(cc_string* path) { }
 
 extern void interop_InitFilesystem(void);
 cc_result Directory_Create(const cc_string* path) {
@@ -110,7 +109,7 @@ cc_result Directory_Create(const cc_string* path) {
 extern int interop_FileExists(const char* path);
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return interop_FileExists(str);
 }
 
@@ -127,7 +126,7 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 extern int interop_DirectoryIter(const char* path);
 cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 
 	enum_obj      = obj;
 	enum_callback = callback;
@@ -139,7 +138,7 @@ extern int interop_FileCreate(const char* path, int mode);
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	int res;
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	res = interop_FileCreate(str, mode);
 
 	/* returned result is negative for error */
@@ -255,36 +254,12 @@ void Platform_LoadSysFonts(void) { }
 extern void interop_InitSockets(void);
 int Socket_ValidAddress(const cc_string* address) { return true; }
 
-extern int interop_SocketGetPending(int sock);
-cc_result Socket_Available(cc_socket s, int* available) {
-	int res = interop_SocketGetPending(s);
-	/* returned result is negative for error */
-
-	if (res >= 0) {
-		*available = res; return 0;
-	} else {
-		*available = 0; return -res;
-	}
-}
-
-extern int interop_SocketGetError(int sock);
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	int res = interop_SocketGetError(s);
-	/* returned result is negative for error */
-
-	if (res >= 0) {
-		*result = res; return 0;
-	} else {
-		*result = 0; return -res;
-	}
-}
-
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const char* addr, int port);
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	char addr[NATIVE_STR_LEN];
 	int res;
-	Platform_EncodeUtf8(addr, address);
+	String_EncodeUtf8(addr, address);
 
 	*s  = interop_SocketCreate();
 	/* returned result is negative for error */
@@ -296,20 +271,22 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 }
 
 extern int interop_SocketRecv(int sock, void* data, int len);
-cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	/* recv only reads one WebSocket frame at most, hence call it multiple times */
-	int res; *modified = 0;
+cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
+	int res; 
+	*read = 0;
 
-	while (count && interop_SocketGetPending(s) > 0) {
+	/* interop_SocketRecv only reads one WebSocket frame at most, hence call it multiple times */
+	while (count) {
 		/* returned result is negative for error */
 		res = interop_SocketRecv(s, data, count);
 
 		if (res >= 0) {
-			*modified += res;
-			data      += res; count -= res;
+			*read += res;
+			data  += res; count -= res;
 		} else {
-			/* EAGAIN when no data available */
-			if (res == -_EAGAIN) break;
+			/* EAGAIN when no more data available */
+			if (res == -_EAGAIN) return *read == 0 ? _EAGAIN : 0;
+
 			return -res;
 		}
 	}
@@ -333,18 +310,10 @@ void Socket_Close(cc_socket s) {
 	interop_SocketClose(s);
 }
 
-extern int interop_SocketPoll(int sock);
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+extern int interop_SocketWritable(int sock, cc_bool* writable);
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	/* returned result is negative for error */
-	int res = interop_SocketPoll(s), flags;
-
-	if (res >= 0) {
-		flags    = mode == SOCKET_POLL_READ ? 0x01 : 0x02;
-		*success = (res & flags) != 0;
-		return 0;
-	} else {
-		*success = false; return -res;
-	}
+	return -interop_SocketWritable(s, writable);
 }
 
 
@@ -362,7 +331,7 @@ extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	cc_result res;
-	Platform_EncodeUtf8(str, args);
+	String_EncodeUtf8(str, args);
 
 	res = interop_OpenTab(str);
 	/* interop error code -> ClassiCube error code */
@@ -374,20 +343,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-int Platform_EncodeUtf8(void* data, const cc_string* src) {
-	cc_uint8* dst = (cc_uint8*)data;
-	cc_uint8* cur;
-	int i, len = 0;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) {
-		cur = dst + len;
-		len += Convert_CP437ToUtf8(src->buffer[i], cur);
-	}
-	dst[len] = '\0';
-	return len;
-}
-
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char* str;
 	int len;

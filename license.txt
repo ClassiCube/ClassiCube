@@ -1,4 +1,4 @@
-﻿Copyright (c) 2014 - 2021, UnknownShadow200
+﻿Copyright (c) 2014 - 2022, UnknownShadow200
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, 

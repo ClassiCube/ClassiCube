@@ -30,6 +30,7 @@ add_library(classicube SHARED
         ../../src/Utils.c
         ../../src/Camera.c
         ../../src/Game.c
+        ../../src/GameVersion.c
         ../../src/Window_Android.c
         ../../src/_ftbase.c
         ../../src/Graphics_GL2.c

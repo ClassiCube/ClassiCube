@@ -193,6 +193,9 @@ void String_AppendUtf8(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from CP-1252 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
 void String_DecodeCP1252(cc_string* str, const void* data, int numBytes);
+/* Encodes a string in UTF8 format, also null terminating the string. */
+/* Returns the number of bytes written, excluding trailing NULL terminator. */
+int String_EncodeUtf8(void* data, const cc_string* src);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API cc_bool Convert_ParseUInt8(const cc_string*  str, cc_uint8* value);

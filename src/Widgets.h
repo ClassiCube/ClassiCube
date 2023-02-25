@@ -6,7 +6,7 @@
 #include "Entity.h"
 #include "Inventory.h"
 /* Contains all 2D widget implementations.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 
@@ -87,18 +87,17 @@ struct TableWidget {
 	int blocksCount, blocksPerRow;
 	int rowsTotal, rowsVisible;
 	int lastCreatedIndex;
-	struct FontDesc* font;
 	int selectedIndex, cellSizeX, cellSizeY;
-	float selBlockExpand;
+	float normBlockSize, selBlockSize;
 	GfxResourceID vb;
 	cc_bool pendingClose;
 	float scale;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
-	struct Texture descTex;
 	int lastX, lastY, paddingX;
-	int paddingTopY, paddingMaxY;
+	int paddingL, paddingR, paddingT, paddingB;
+	void (*UpdateTitle)(BlockID block);
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
@@ -107,7 +106,6 @@ CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
 CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-CC_NOINLINE void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
 CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
 
 

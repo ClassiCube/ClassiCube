@@ -2,7 +2,7 @@
 #define CC_MAPFORMATS_H
 #include "Core.h"
 /* Imports/exports a world and associated metadata from/to a particular map file format.
-   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 
 struct Stream;
@@ -29,9 +29,12 @@ cc_result Cw_Load(struct Stream* stream);
 cc_result Dat_Load(struct Stream* stream);
 
 /* Exports a world to a .cw ClassicWorld map file. */
-/* Compatible with ClassiCube/ClassicalSharp. */
+/* Compatible with ClassiCube/ClassicalSharp */
 cc_result Cw_Save(struct Stream* stream);
-/* Exports a world to a .schematic Schematic map file. */
-/* Used by MCEdit and other tools. */
+/* Exports a world to a .schematic Schematic map file */
+/* Used by MCEdit and other tools */
 cc_result Schematic_Save(struct Stream* stream);
+/* Exports a world to a .dat Classic map file */
+/* Used by MineCraft Classic */
+cc_result Dat_Save(struct Stream* stream);
 #endif

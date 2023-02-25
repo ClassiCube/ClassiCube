@@ -3,8 +3,6 @@ C_OBJECTS:=$(patsubst %.c, %.o, $(C_SOURCES))
 OBJECTS:=$(C_OBJECTS)
 ENAME=ClassiCube
 DEL=rm
-JOBS=1
-CC=cc
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g -rdynamic
 
@@ -44,7 +42,6 @@ LIBS=-lX11 -lXi -lpthread -lGL -lm -ldl
 endif
 
 ifeq ($(PLAT),sunos)
-CC=gcc
 CFLAGS=-g -pipe -fno-math-errno
 LIBS=-lm -lsocket -lX11 -lXi -lGL
 endif
@@ -87,9 +84,19 @@ LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),haiku)
+OBJECTS+=Window_Haiku.o
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
 LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+endif
+
+ifeq ($(PLAT),serenityos)
+LIBS=-lgl -lSDL2
+endif
+
+ifeq ($(PLAT),psp)
+CC=psp-gcc
+LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -99,28 +106,32 @@ endif
 default: $(PLAT)
 
 web:
-	$(MAKE) $(ENAME) PLAT=web -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=web
 linux:
-	$(MAKE) $(ENAME) PLAT=linux -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=linux
 mingw:
-	$(MAKE) $(ENAME) PLAT=mingw -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=mingw
 sunos:
-	$(MAKE) $(ENAME) PLAT=sunos -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=sunos
 mac_x32:
-	$(MAKE) $(ENAME) PLAT=mac_x32 -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=mac_x32
 mac_x64:
-	$(MAKE) $(ENAME) PLAT=mac_x64 -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=mac_x64
 freebsd:
-	$(MAKE) $(ENAME) PLAT=freebsd -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=freebsd
 openbsd:
-	$(MAKE) $(ENAME) PLAT=openbsd -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=openbsd
 netbsd:
-	$(MAKE) $(ENAME) PLAT=netbsd -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=netbsd
 dragonfly:
-	$(MAKE) $(ENAME) PLAT=dragonfly -j$(JOBS)
+	$(MAKE) $(ENAME) PLAT=dragonfly
 haiku:
-	$(MAKE) $(ENAME) PLAT=haiku -j$(JOBS)
-	
+	$(MAKE) $(ENAME) PLAT=haiku
+serenityos:
+	$(MAKE) $(ENAME) PLAT=serenityos
+psp:
+	$(MAKE) ClassiCube.elf PLAT=psp
+
 clean:
 	$(DEL) $(OBJECTS)
 
@@ -132,3 +143,12 @@ $(C_OBJECTS): %.o : %.c
 	
 interop_cocoa.o: interop_cocoa.m
 	$(CC) $(CFLAGS) -c $< -o $@
+	
+Window_Haiku.o: Window_Haiku.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+	
+# PSP requires fixups
+ClassiCube.elf : $(ENAME)
+	cp $(ENAME) ClassiCube.elf
+	psp-fixup-imports ClassiCube.elf
+

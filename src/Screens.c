@@ -1368,6 +1368,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	Gui_UpdateInputGrab();
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
+	args.multiline   = true;
 	Window_OpenKeyboard(&args);
 	s->input.base.disabled = args.opaque;
 
@@ -1396,8 +1397,39 @@ static struct InventoryScreen {
 	Screen_Body
 	struct FontDesc font;
 	struct TableWidget table;
+	struct TextWidget title;
 	cc_bool releasedInv, deferredSelect;
 } InventoryScreen_Instance;
+
+
+static void InventoryScreen_GetTitleText(cc_string* desc, BlockID block) {
+	cc_string name;
+	int block_ = block;
+	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
+	if (block == BLOCK_AIR) return;
+
+	name = Block_UNSAFE_GetName(block);
+	String_AppendString(desc, &name);
+	if (Game_ClassicMode) return;
+
+	String_Format1(desc, " (ID %i&f", &block_);
+	if (!Blocks.CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
+	if (!Blocks.CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
+	String_Append(desc, ')');
+}
+
+static void InventoryScreen_UpdateTitle(struct InventoryScreen* s, BlockID block) {
+	cc_string desc; char descBuffer[STRING_SIZE * 2];
+
+	String_InitArray(desc, descBuffer);
+	InventoryScreen_GetTitleText(&desc, block);
+	TextWidget_Set(&s->title, &desc, &s->font);
+}
+
+static void InventoryScreen_OnUpdateTitle(BlockID block) {
+	InventoryScreen_UpdateTitle(&InventoryScreen_Instance, block);
+}
+
 
 static void InventoryScreen_OnBlockChanged(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
@@ -1408,6 +1440,7 @@ static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Font_Free(&s->font);
 	Elem_Free(&s->table);
+	Elem_Free(&s->title);
 }
 
 static void InventoryScreen_ContextRecreated(void* screen) {
@@ -1426,16 +1459,17 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	s->deferredSelect = false;
 	/* User is holding invalid block */
 	if (table->selectedIndex == -1) {
-		TableWidget_MakeDescTex(table, Inventory_SelectedBlock);
+		InventoryScreen_UpdateTitle(s, Inventory_SelectedBlock);
 	}
 }
 
 static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	
+	TextWidget_Init(&s->title);
 	TableWidget_Create(&s->table);
-	s->table.font         = &s->font;
 	s->table.blocksPerRow = Inventory.BlocksPerRow;
+	s->table.UpdateTitle   = InventoryScreen_OnUpdateTitle;
 	TableWidget_RecreateBlocks(&s->table);
 
 	/* Can't immediately move to selected here, because cursor grabbed  */
@@ -1451,12 +1485,18 @@ static void InventoryScreen_Render(void* screen, double delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	if (s->deferredSelect) InventoryScreen_MoveToSelected(s);
 	Elem_Render(&s->table, delta);
+	Elem_Render(&s->title, delta);
 }
 
 static void InventoryScreen_Layout(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	s->table.scale = Gui_GetInventoryScale();
-	Widget_Layout(&s->table);
+	Widget_SetLocation(&s->table, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
+
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	/* use Table(Y) directly instead of s->title->height ??? */
+	s->title.yOffset = s->table.y - s->title.height - 3;
+	Widget_Layout(&s->title); /* Needed for yOffset */
 }
 
 static void InventoryScreen_Free(void* screen) {
@@ -1812,7 +1852,7 @@ static struct DisconnectScreen {
 
 	struct FontDesc titleFont, messageFont;
 	struct TextWidget title, message;
-	char _titleBuffer[STRING_SIZE];
+	char _titleBuffer[STRING_SIZE * 2];
 	char _messageBuffer[STRING_SIZE];
 	cc_string titleStr, messageStr;
 } DisconnectScreen;

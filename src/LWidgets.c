@@ -487,11 +487,11 @@ static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerIn
 }
 
 static struct LTableColumn tableColumns[] = {
-	{ "",          15, FlagColumn_Draw,     NULL,                false, false },
-	{ "Name",     328, NameColumn_Draw,     NameColumn_Sort,     true,  true  },
-	{ "Players",   73, PlayersColumn_Draw,  PlayersColumn_Sort,  true,  true  },
-	{ "Uptime",    73, UptimeColumn_Draw,   UptimeColumn_Sort,   true,  true  },
-	{ "Software", 143, SoftwareColumn_Draw, SoftwareColumn_Sort, false, true  }
+	{ "",          15, FlagColumn_Draw,     NULL,                false, false, false },
+	{ "Name",     328, NameColumn_Draw,     NameColumn_Sort,     true,  false, true  },
+	{ "Players",   73, PlayersColumn_Draw,  PlayersColumn_Sort,  true,  true,  true  },
+	{ "Uptime",    73, UptimeColumn_Draw,   UptimeColumn_Sort,   true,  true,  true  },
+	{ "Software", 143, SoftwareColumn_Draw, SoftwareColumn_Sort, false, true,  true  }
 };
 
 

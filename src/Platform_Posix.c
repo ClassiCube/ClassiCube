@@ -53,6 +53,13 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
+#elif defined CC_BUILD_PSP
+/* pspsdk doesn't seem to support IPv6 */
+#undef AF_INET6
+#include <pspkernel.h>
+
+PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
+PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 #endif
 
 
@@ -143,17 +150,17 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_IOS
+#if defined CC_BUILD_ANDROID
+/* implemented in Platform_Android.c */
+#elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
 #else
-void Directory_GetCachePath(cc_string* path, const char* folder) {
-	String_AppendConst(path, folder);
-}
+void Directory_GetCachePath(cc_string* path) { }
 #endif
 
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
@@ -162,7 +169,7 @@ cc_result Directory_Create(const cc_string* path) {
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -174,7 +181,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	Platform_EncodeUtf8(str, dirPath);
+	String_EncodeUtf8(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -199,7 +206,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
-			Platform_EncodeUtf8(full_path, &path);
+			String_EncodeUtf8(full_path, &path);
 			is_dir = stat(full_path, &sb) == 0 && S_ISDIR(sb.st_mode);
 		}
 #else
@@ -223,7 +230,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
@@ -457,6 +464,10 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
+#elif defined CC_BUILD_SERENITY
+	static const cc_string dirs[] = {
+		String_FromConst("/res/fonts")
+	};
 #else
 	static const cc_string dirs[] = {
 		String_FromConst("/usr/share/fonts"),
@@ -473,20 +484,13 @@ void Platform_LoadSysFonts(void) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 union SocketAddress {
-	struct sockaddr_storage total;
 	struct sockaddr raw;
 	struct sockaddr_in  v4;
+	#ifdef AF_INET6
 	struct sockaddr_in6 v6;
+	struct sockaddr_storage total;
+	#endif
 };
-
-cc_result Socket_Available(cc_socket s, int* available) {
-	return ioctl(s, FIONREAD, available);
-}
-
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	socklen_t resultSize = sizeof(cc_result);
-	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
-}
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
@@ -515,10 +519,12 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, address);
+	String_EncodeUtf8(str, address);
 
 	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	#ifdef AF_INET6
 	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) return AF_INET6;
+	#endif
 	return ParseHost(addr, str);
 }
 
@@ -538,13 +544,22 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
+	
+	#if defined CC_BUILD_PSP
+	int on = 1;
+	setsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
+	#else
 	ioctl(*s, FIONBIO, &blocking_raw);
+	#endif
 
+	#ifdef AF_INET6
 	if (family == AF_INET6) {
 		addr.v6.sin6_family = AF_INET6;
 		addr.v6.sin6_port   = htons(port);
 		addrSize = sizeof(addr.v6);
-	} else if (family == AF_INET) {
+	}
+	#endif
+	if (family == AF_INET) {
 		addr.v4.sin_family  = AF_INET;
 		addr.v4.sin_port    = htons(port);
 		addrSize = sizeof(addr.v4);
@@ -571,9 +586,9 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN
+#if defined CC_BUILD_DARWIN || defined CC_BUILD_PSP
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -592,7 +607,7 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 }
 #else
 #include <poll.h>
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
@@ -606,6 +621,20 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	return 0;
 }
 #endif
+
+cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
+	return Socket_Poll(s, SOCKET_POLL_READ, readable);
+}
+
+cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
+	socklen_t resultSize;
+	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+	if (res || *writable) return res;
+
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	return res;
+}
 
 
 /*########################################################################################################################*
@@ -645,7 +674,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	argv[0]   = path;
 
 	for (i = 0, j = 1; i < numArgs; i++, j++) {
-		Platform_EncodeUtf8(raw[i], &args[i]);
+		String_EncodeUtf8(raw[i], &args[i]);
 		argv[j] = raw[i];
 	}
 
@@ -666,7 +695,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 	CFURLRef urlCF;
 	int len;
 	
-	len   = Platform_EncodeUtf8(str, args);
+	len   = String_EncodeUtf8(str, args);
 	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
@@ -676,7 +705,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
-	Platform_EncodeUtf8(str, args);
+	String_EncodeUtf8(str, args);
 
 	cmd[0] = "open"; cmd[1] = str; cmd[2] = NULL;
 	Process_RawStart("open", cmd);
@@ -686,7 +715,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
-	Platform_EncodeUtf8(str, args);
+	String_EncodeUtf8(str, args);
 
 	/* TODO: Can xdg-open be used on original Solaris, or is it just an OpenIndiana thing */
 	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
@@ -706,7 +735,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
-#elif defined CC_BUILD_LINUX
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_SERENITY
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
@@ -891,13 +920,24 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#if defined CC_BUILD_PSP
+/* TODO can this actually be supported somehow */
+const cc_string DynamicLib_Ext = String_FromConst(".so");
+
+void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
+void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
+
+cc_bool DynamicLib_DescribeError(cc_string* dst) {
+	String_AppendConst(dst, "Dynamic linking unsupported");
+	return true;
+}
+#elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING | 
 							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
@@ -939,7 +979,7 @@ const cc_string DynamicLib_Ext = String_FromConst(".so");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, path);
 	return dlopen(str, RTLD_NOW);
 }
 
@@ -958,20 +998,6 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-int Platform_EncodeUtf8(void* data, const cc_string* src) {
-	cc_uint8* dst = (cc_uint8*)data;
-	cc_uint8* cur;
-	int i, len = 0;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) {
-		cur = dst + len;
-		len += Convert_CP437ToUtf8(src->buffer[i], cur);
-	}
-	dst[len] = '\0';
-	return len;
-}
-
 static void Platform_InitPosix(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
@@ -1090,14 +1116,19 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 }
 
 #if defined CC_BUILD_LINUX
-/* Read /var/lib/dbus/machine-id for the key */
+/* Read /var/lib/dbus/machine-id or /etc/machine-id for the key */
 static cc_result GetMachineID(cc_uint32* key) {
-	const cc_string idFile = String_FromConst("/var/lib/dbus/machine-id");
+	const cc_string idFile  = String_FromConst("/var/lib/dbus/machine-id");
+	const cc_string altFile = String_FromConst("/etc/machine-id");
 	char tmp[MACHINEID_LEN];
 	struct Stream s;
 	cc_result res;
 
-	if ((res = Stream_OpenFile(&s, &idFile))) return res;
+	/* Some machines only have dbus id, others only have etc id */
+	res = Stream_OpenFile(&s, &idFile);
+	if (res) res = Stream_OpenFile(&s, &altFile);
+	if (res) return res;
+
 	res = Stream_Read(&s, tmp, MACHINEID_LEN);
 	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
 

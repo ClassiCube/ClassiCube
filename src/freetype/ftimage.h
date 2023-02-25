@@ -172,8 +172,6 @@ FT_BEGIN_HEADER
     FT_PIXEL_MODE_GRAY,
     FT_PIXEL_MODE_GRAY2,
     FT_PIXEL_MODE_GRAY4,
-    FT_PIXEL_MODE_LCD,
-    FT_PIXEL_MODE_LCD_V,
     FT_PIXEL_MODE_BGRA,
 
     FT_PIXEL_MODE_MAX      /* do not remove */
@@ -673,21 +671,13 @@ FT_BEGIN_HEADER
   /*      generally want to access the `outline' field of the              */
   /*      @FT_GlyphSlotRec structure to read it.                           */
   /*                                                                       */
-  /*    FT_GLYPH_FORMAT_PLOTTER ::                                         */
-  /*      The glyph image is a vectorial path with no inside and outside   */
-  /*      contours.  Some Type~1 fonts, like those in the Hershey family,  */
-  /*      contain glyphs in this format.  These are described as           */
-  /*      @FT_Outline, but FreeType isn't currently capable of rendering   */
-  /*      them correctly.                                                  */
-  /*                                                                       */
   typedef enum  FT_Glyph_Format_
   {
     FT_IMAGE_TAG( FT_GLYPH_FORMAT_NONE, 0, 0, 0, 0 ),
 
     FT_IMAGE_TAG( FT_GLYPH_FORMAT_COMPOSITE, 'c', 'o', 'm', 'p' ),
     FT_IMAGE_TAG( FT_GLYPH_FORMAT_BITMAP,    'b', 'i', 't', 's' ),
-    FT_IMAGE_TAG( FT_GLYPH_FORMAT_OUTLINE,   'o', 'u', 't', 'l' ),
-    FT_IMAGE_TAG( FT_GLYPH_FORMAT_PLOTTER,   'p', 'l', 'o', 't' )
+    FT_IMAGE_TAG( FT_GLYPH_FORMAT_OUTLINE,   'o', 'u', 't', 'l' )
 
   } FT_Glyph_Format;
 

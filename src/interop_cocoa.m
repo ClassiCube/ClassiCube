@@ -117,7 +117,7 @@ void Clipboard_SetText(const cc_string* value) {
 	char raw[NATIVE_STR_LEN];
 	NSString* str;
 
-	Platform_EncodeUtf8(raw, value);
+	String_EncodeUtf8(raw, value);
 	str        = [NSString stringWithUTF8String:raw];
 	pasteboard = [NSPasteboard generalPasteboard];
 
@@ -246,8 +246,8 @@ static void MakeContentView(void) {
 }
 
 #ifdef CC_BUILD_ICON
-extern const int CCIcon_Data[];
-extern const int CCIcon_Width, CCIcon_Height;
+// See misc/mac_icon_gen.cs for how to generate this file
+#include "_CCIcon_mac.h"
 
 static void ApplyIcon(void) {
 	CGColorSpaceRef colSpace;
@@ -311,7 +311,7 @@ void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];
 	NSString* str;
-	Platform_EncodeUtf8(raw, title);
+	String_EncodeUtf8(raw, title);
 
 	str = [NSString stringWithUTF8String:raw];
 	[winHandle setTitle:str];
@@ -364,7 +364,7 @@ void Window_Close(void) {
 	[winHandle close];
 }
 
-static int MapNativeMouse(NSInteger button) {
+static int MapNativeMouse(long button) {
 	if (button == 0) return KEY_LMOUSE;
 	if (button == 1) return KEY_RMOUSE;
 	if (button == 2) return KEY_MMOUSE;
@@ -530,41 +530,70 @@ void ShowDialogCore(const char* title, const char* msg) {
 	CFRelease(msgCF);
 }
 
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	const char* const* filters = args->filters;
-	NSOpenPanel* dlg = [NSOpenPanel openPanel];
-	NSArray* files;
+static NSMutableArray* GetOpenSaveFilters(const char* const* filters) {
+    NSMutableArray* types = [NSMutableArray array];
+    for (int i = 0; filters[i]; i++)
+    {
+        NSString* filter = [NSString stringWithUTF8String:filters[i]];
+        filter = [filter substringFromIndex:1];
+        [types addObject:filter];
+    }
+    return types;
+}
+
+static void OpenSaveDoCallback(NSURL* url, FileDialogCallback callback) {
+    NSString* str;
+    const char* src;
+    int len;
+    
+    str = [url path];
+    src = [str UTF8String];
+    len = String_Length(src);
+    
+    cc_string path; char pathBuffer[NATIVE_STR_LEN];
+    String_InitArray(path, pathBuffer);
+    String_AppendUtf8(&path, src, len);
+    callback(&path);
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	NSSavePanel* dlg = [NSSavePanel savePanel];
 	NSString* str;
 	const char* src;
 	int len, i;
-
-	NSMutableArray* types = [NSMutableArray array];
-	for (i = 0; filters[i]; i++)
-	{
-		NSString* filter = [NSString stringWithUTF8String:filters[i]];
-		filter = [filter substringFromIndex:1];
-		[types addObject:filter];
-	}
 	
-	[dlg setCanChooseFiles: YES];
-	if ([dlg runModalForTypes:types] != NSOKButton) return 0;
-	// unfortunately below code doesn't work when linked against SDK < 10.6
-	//   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
-	// [dlg setAllowedFileTypes:types];
-	// if ([dlg runModal] != NSOKButton) return 0;
+	// TODO: Use args->defaultName, but only macOS 10.6
 
-	files = [dlg URLs];
-	if ([files count] < 1) return 0;
+    NSMutableArray* types = GetOpenSaveFilters(args->filters);
+    [dlg setAllowedFileTypes:types];
+	if ([dlg runModal] != NSOKButton) return 0;
 
-	str = [[files objectAtIndex:0] path];
-	src = [str UTF8String];
-	len = String_Length(src);
-
-	cc_string path; char pathBuffer[NATIVE_STR_LEN];
-	String_InitArray(path, pathBuffer);
-	String_AppendUtf8(&path, src, len);
-	args->Callback(&path);
+	NSURL* file = [dlg URL];
+    if (file) OpenSaveDoCallback(file, args->Callback);
  	return 0;
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+    const char* const* filters = args->filters;
+    NSOpenPanel* dlg = [NSOpenPanel openPanel];
+    NSString* str;
+    const char* src;
+    int len, i;
+    
+    NSMutableArray* types = GetOpenSaveFilters(args->filters);
+    [dlg setCanChooseFiles: YES];
+    if ([dlg runModalForTypes:types] != NSOKButton) return 0;
+    // unfortunately below code doesn't work when linked against SDK < 10.6
+    //   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
+    // [dlg setAllowedFileTypes:types];
+    // if ([dlg runModal] != NSOKButton) return 0;
+    
+    NSArray* files = [dlg URLs];
+    if ([files count] < 1) return 0;
+    
+    NSURL* file = [files objectAtIndex:0];
+    OpenSaveDoCallback(file, args->Callback);
+    return 0;
 }
 
 static struct Bitmap fb_bmp;
@@ -636,7 +665,7 @@ void Window_CloseKeyboard(void) { }
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
-// SDKs < 10.7 do not have this defined
+// SDKs < macOS 10.7 do not have this defined
 #ifndef kCGLRPVideoMemoryMegabytes
 #define kCGLRPVideoMemoryMegabytes 131
 #endif
@@ -712,6 +741,8 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
+/* kCGLCPCurrentRendererID is only defined on macOS 10.4 and later */
+#ifdef kCGLCPCurrentRendererID
 static const char* GetAccelerationMode(CGLContextObj ctx) {
 	GLint fGPU, vGPU;
 	
@@ -762,6 +793,12 @@ void GLContext_GetApiInfo(cc_string* info) {
 	}
 	CGLDestroyRendererInfo(rend);
 }
+#else
+// macOS 10.3 and earlier case
+void GLContext_GetApiInfo(cc_string* info) {
+	// TODO: retrieve rendererID from a CGLPixelFormatObj, but this isn't all that important
+}
+#endif
 
 cc_result Window_EnterFullscreen(void) {
 	if (SupportsModernFullscreen()) {

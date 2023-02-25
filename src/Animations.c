@@ -34,7 +34,7 @@ static cc_bool  L_rndInited;
 static void LavaAnimation_Tick(void) {
 	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 	BitmapCol* ptr = pixels;
-	float soupHeat, potHeat, col;
+	float soupHeat, potHeat, color;
 	int size, mask, shift;
 	int x, y, i = 0;
 	struct Bitmap bmp;
@@ -85,13 +85,13 @@ static void LavaAnimation_Tick(void) {
 			if (Random_Float(&L_rnd) <= 0.005f) L_flameHeat[i] = 1.5f * 0.01f;
 
 			/* Output the pixel */
-			col = 2.0f * L_soupHeat[i];
-			Math_Clamp(col, 0.0f, 1.0f);
+			color = 2.0f * L_soupHeat[i];
+			Math_Clamp(color, 0.0f, 1.0f);
 
 			*ptr = BitmapCol_Make(
-				col * 100.0f + 155.0f,
-				col * col * 255.0f,
-				col * col * col * col * 128.0f,
+				color * 100.0f + 155.0f,
+				color * color * 255.0f,
+				color * color * color * color * 128.0f,
 				255);
 
 			ptr++; i++;
@@ -115,7 +115,7 @@ static cc_bool  W_rndInited;
 static void WaterAnimation_Tick(void) {
 	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 	BitmapCol* ptr = pixels;
-	float soupHeat, col;
+	float soupHeat, color;
 	int size, mask, shift;
 	int x, y, i = 0;
 	struct Bitmap bmp;
@@ -146,15 +146,15 @@ static void WaterAnimation_Tick(void) {
 			if (Random_Float(&W_rnd) <= 0.05f) W_flameHeat[i] = 0.5f * 0.05f;
 
 			/* Output the pixel */
-			col = W_soupHeat[i];
-			Math_Clamp(col, 0.0f, 1.0f);
-			col = col * col;
+			color = W_soupHeat[i];
+			Math_Clamp(color, 0.0f, 1.0f);
+			color = color * color;
 
 			*ptr = BitmapCol_Make(
-				32.0f  + col * 32.0f,
-				50.0f  + col * 64.0f,
+				32.0f  + color * 32.0f,
+				50.0f  + color * 64.0f,
 				255,
-				146.0f + col * 50.0f);
+				146.0f + color * 50.0f);
 
 			ptr++; i++;
 		}
@@ -351,6 +351,30 @@ static void Animations_Tick(struct ScheduledTask* task) {
 /*########################################################################################################################*
 *--------------------------------------------------Animations component---------------------------------------------------*
 *#########################################################################################################################*/
+static void AnimationsPngProcess(struct Stream* stream, const cc_string* name) {
+	cc_result res = Png_Decode(&anims_bmp, stream);
+	if (!res) return;
+
+	Logger_SysWarn2(res, "decoding", name);
+	Mem_Free(anims_bmp.scan0);
+	anims_bmp.scan0 = NULL;
+}
+static struct TextureEntry animations_entry = { "animations.png", AnimationsPngProcess };
+static struct TextureEntry animations_txt   = { "animations.txt", Animations_ReadDescription };
+
+static void UseWaterProcess(struct Stream* stream, const cc_string* name) {
+	useWaterAnim    = true;
+	alwaysWaterAnim = true;
+}
+static struct TextureEntry water_entry = { "usewateranim", UseWaterProcess };
+
+static void UseLavaProcess(struct Stream* stream, const cc_string* name) {
+	useLavaAnim    = true;
+	alwaysLavaAnim = true;
+}
+static struct TextureEntry lava_entry = { "uselavaanim", UseLavaProcess };
+
+
 static void OnPackChanged(void* obj) {
 	Animations_Clear();
 	useLavaAnim     = Animations_IsDefaultZip();
@@ -358,31 +382,14 @@ static void OnPackChanged(void* obj) {
 	alwaysLavaAnim  = false;
 	alwaysWaterAnim = false;
 }
-
-static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
-	cc_result res;
-	if (String_CaselessEqualsConst(name, "animations.png")) {
-		res = Png_Decode(&anims_bmp, stream);
-		if (!res) return;
-
-		Logger_SysWarn2(res, "decoding", name);
-		Mem_Free(anims_bmp.scan0);
-		anims_bmp.scan0 = NULL;
-	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
-		Animations_ReadDescription(stream, name);
-	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
-		useLavaAnim    = true;
-		alwaysLavaAnim = true;
-	} else if (String_CaselessEqualsConst(name, "usewateranim")) {
-		useWaterAnim    = true;
-		alwaysWaterAnim = true;
-	}
-}
-
 static void OnInit(void) {
+	TextureEntry_Register(&animations_entry);
+	TextureEntry_Register(&animations_txt);
+	TextureEntry_Register(&water_entry);
+	TextureEntry_Register(&lava_entry);
+
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
-	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Animations_Component = {

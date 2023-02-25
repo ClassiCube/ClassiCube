@@ -652,8 +652,9 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 		return false;
 	}
 
-	LocationUpdate_MakePos(&update, pos, false);
-	p->VTABLE->SetLocation(p, &update, false);
+	update.flags = LU_HAS_POS | LU_POS_ABSOLUTE_INSTANT;
+	update.pos   = pos;
+	p->VTABLE->SetLocation(p, &update);
 	return true;
 }
 
@@ -690,7 +691,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	IVec3_ToVec3(&pos, &Game_SelectedPos.TranslatedPos);
 	if (IntersectsOthers(pos, block)) return false;
 	
-	nextPos = LocalPlayer_Instance.Interp.Next.Pos;
+	nextPos = LocalPlayer_Instance.Base.next.pos;
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
@@ -709,8 +710,10 @@ static cc_bool CheckIsFree(BlockID block) {
 
 	/* Push player upwards when they are jumping and trying to place a block underneath them */
 	nextPos.Y = pos.Y + Blocks.MaxBB[block].Y + ENTITY_ADJUSTMENT;
-	LocationUpdate_MakePos(&update, nextPos, false);
-	p->VTABLE->SetLocation(p, &update, false);
+
+	update.flags = LU_HAS_POS | LU_POS_ABSOLUTE_INSTANT;
+	update.pos   = nextPos;
+	p->VTABLE->SetLocation(p, &update);
 	return true;
 }
 

@@ -64,6 +64,7 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #define OPT_CLASSIC_HACKS "nostalgia-hacks"
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
 #define OPT_CLASSIC_CHAT "nostalgia-classicchat"
+#define OPT_CLASSIC_INVENTORY "nostalgia-classicinventory"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 #define OPT_CAMERA_MASS "cameramass"
 #define OPT_CAMERA_SMOOTH "camera-smooth"
@@ -75,6 +76,7 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #define OPT_SKIN_SERVER "http-skinserver"
 #define OPT_RAW_INPUT "win-raw-input"
 #define OPT_DPI_SCALING "win-dpi-scaling"
+#define OPT_GAME_VERSION "game-version"
 
 #define LOPT_SESSION  "launcher-session"
 #define LOPT_USERNAME "launcher-cc-username"

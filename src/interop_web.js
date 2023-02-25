@@ -24,7 +24,7 @@ mergeInto(LibraryManager.library, {
   interop_InitModule: function() {
     // these are required for older versions of emscripten, but the compiler removes
     // this by default as no syscalls are used by the C platform code anymore
-    window.ERRNO_CODES={EPERM:1,ENOENT:2,EIO:5,ENXIO:6,EBADF:9,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EEXIST:17,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,EBADFD:77,ENOTEMPTY:39};
+    window.ERRNO_CODES={ENOENT:2,EBADF:9,EAGAIN:11,ENOMEM:12,EEXIST:17,EINVAL:22};
   },
   interop_InitModule__deps: ['interop_SaveBlob'],
   interop_TakeScreenshot: function(path) {
@@ -91,22 +91,72 @@ mergeInto(LibraryManager.library, {
 
 
 //########################################################################################################################
-//-----------------------------------------------------------Menu---------------------------------------------------------
+//---------------------------------------------------------Dialogs--------------------------------------------------------
 //########################################################################################################################
-  interop_DownloadMap: function(path, filename) {
+  interop_DownloadFile: function(filename, filters, titles) {
     try {
-      var name = UTF8ToString(path);
-      var data = CCFS.readFile(name);
+      if (_interop_ShowSaveDialog(filename, filters, titles)) return 0;
+      
+      var name = UTF8ToString(filename);
+      var path = 'Downloads/' + name;
+      ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+      
+      var data = CCFS.readFile(path);
       var blob = new Blob([data], { type: 'application/octet-stream' });
       _interop_SaveBlob(blob, UTF8ToString(filename));
-      CCFS.unlink(name);
+      CCFS.unlink(path);
       return 0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
-  interop_DownloadMap__deps: ['interop_SaveBlob'],
+  interop_DownloadFile__deps: ['interop_SaveBlob', 'interop_ShowSaveDialog'],  
+  interop_ShowSaveDialog: function(filename, filters, titles) {
+    // not supported by all browsers
+    if (!window.showSaveFilePicker) return 0;
+    
+    var fileTypes = [];
+    for (var i = 0; HEAP32[(filters>>2)+i|0]; i++)
+    {
+      var filter = HEAP32[(filters>>2)+i|0];
+      var title  = HEAP32[(titles >>2)+i|0];
+      
+      var filetype = {
+        description: UTF8ToString(title),
+        accept: {'applicaion/octet-stream': [UTF8ToString(filter)]}
+      };
+      fileTypes.push(filetype);
+    }
+    
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises
+    // https://web.dev/file-system-access/
+    var path = null;
+    var opts = {
+      suggestedName: UTF8ToString(filename),
+      types: fileTypes
+    };
+    window.showSaveFilePicker(opts)
+      .then(function(fileHandle) {
+        path = 'Downloads/' + fileHandle.name;
+        return fileHandle.createWritable();
+      })
+      .then(function(writable) {
+        ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+      
+        var data = CCFS.readFile(path);
+        writable.write(data);
+        return writable.close();
+      })
+      .catch(function(error) {
+        ccall('Platform_LogError', 'void', ['string'], ['&cError downloading file']);
+        ccall('Platform_LogError', 'void', ['string'], ['   &c' + error]);
+      })
+      .finally(function(result) {
+        if (path) CCFS.unlink(path);
+      });
+      return 1;
+  },
   
   
 //########################################################################################################################
@@ -487,7 +537,7 @@ mergeInto(LibraryManager.library, {
   },
   interop_SocketCreate: function() {
     var sock = {
-      error: null, // Used by interop_SocketGetError
+      error: null, // Used by interop_SocketWritable
       recv_queue: [],
       socket: null,
     };
@@ -543,7 +593,7 @@ mergeInto(LibraryManager.library, {
     ws.onerror = function(error) {
       // The WebSocket spec only allows a 'simple event' to be thrown on error,
       // so we only really know as much as ECONNREFUSED.
-      sock.error = -SOCKETS.ECONNREFUSED; // Used by interop_SocketGetError
+      sock.error = SOCKETS.ECONNREFUSED; // Used by interop_SocketWritable
     };
     // always "fail" in non-blocking mode
     return SOCKETS.EINPROGRESS;
@@ -617,29 +667,15 @@ mergeInto(LibraryManager.library, {
     HEAPU8.set(msg, dst);
     return msg.byteLength;
   },
-  interop_SocketGetPending: function(sockFD) {
+  interop_SocketWritable: function(sockFD, writable) {
+    HEAPU8[writable|0] = 0;
     var sock = SOCKETS.sockets[sockFD];
     if (!sock) return SOCKETS.EBADF;
 
-    return sock.recv_queue.length;
-  },
-  interop_SocketGetError: function(sockFD) {
-    var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
-
+    var ws = sock.socket;
+    if (!ws) return SOCKETS.ENOTCONN;
+    if (ws.readyState === ws.OPEN) HEAPU8[writable|0] = 1;
     return sock.error || 0;
-  },
-  interop_SocketPoll: function(sockFD) {
-    var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
-
-    var ws   = sock.socket;
-    if (!ws) return 0;
-    var mask = 0;
-
-    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
-    if (ws.readyState === ws.OPEN) mask |= 2;
-    return mask;
   },
 
 

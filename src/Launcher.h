@@ -2,11 +2,12 @@
 #define CC_LAUNCHER_H
 #include "Bitmap.h"
 /* Implements the launcher part of the game.
-	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
 struct FontDesc;
 struct Context2D;
+struct HttpRequest;
 
 /* The screen/menu currently being shown */
 extern struct LScreen* Launcher_Active;
@@ -75,6 +76,6 @@ void Launcher_Run(void);
 /* Starts the game from the given arguments. */
 cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server);
 /* Prints information about a http error to dst. (for status widget) */
-/* If res is non-zero, also displays a dialog box on-screen. */
-void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc_string* dst);
+/* If req->result is non-zero, also displays a dialog box on-screen. */
+void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_string* dst);
 #endif

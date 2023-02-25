@@ -1,9 +1,14 @@
 package com.classicube;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -20,6 +25,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -27,7 +33,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
+import android.provider.OpenableColumns;
 import android.provider.Settings.Secure;
 import android.text.Editable;
 import android.text.InputType;
@@ -152,12 +158,10 @@ public class MainActivity extends Activity
 	}
 
 	final static int CMD_KEY_DOWN = 0;
-
-	final static int CMD_POINTER_DOWN = 3;
-	final static int CMD_POINTER_UP   = 4;
 	final static int CMD_KEY_UP   = 1;
 	final static int CMD_KEY_CHAR = 2;
-	final static int CMD_KEY_TEXT = 19;
+	final static int CMD_POINTER_DOWN = 3;
+	final static int CMD_POINTER_UP   = 4;
 	final static int CMD_POINTER_MOVE = 5;
 
 	final static int CMD_WIN_CREATED   = 6;
@@ -175,12 +179,14 @@ public class MainActivity extends Activity
 	final static int CMD_LOST_FOCUS  = 16;
 	final static int CMD_CONFIG_CHANGED = 17;
 	final static int CMD_LOW_MEMORY  = 18;
-	final static int CMD_UI_CREATED  = 20;
-	final static int CMD_UI_CLICKED  = 21;
-	final static int CMD_UI_CHANGED  = 22;
-	final static int CMD_UI_STRING   = 23;
-
-
+	final static int CMD_KEY_TEXT    = 19;
+	final static int CMD_OFD_RESULT  = 20;
+	
+	final static int CMD_UI_CREATED  = 21;
+	final static int CMD_UI_CLICKED  = 22;
+	final static int CMD_UI_CHANGED  = 23;
+	final static int CMD_UI_STRING   = 24;
+	
 	// ====================================================================
 	// ------------------------------ EVENTS ------------------------------
 	// ====================================================================
@@ -200,19 +206,6 @@ public class MainActivity extends Activity
 
 		gameRunning = true;
 		runGameAsync();
-	}
-
-	void HACK_avoidFileUriExposedErrors() {
-		// StrictMode - API level 9
-		// disableDeathOnFileUriExposure - API level 24 ?????
-		try {
-			Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
-			m.invoke(null);
-		}  catch (NoClassDefFoundError ex) {
-			ex.printStackTrace();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
 	}
 
 	@Override
@@ -235,9 +228,6 @@ public class MainActivity extends Activity
 		// Need to find a solution that both renders over display cutouts and doesn't mess up onscreen input
 		// renderOverDisplayCutouts();
 		// TODO: semaphore for destroyed and surfaceDestroyed
-
-		// avoid FileUriExposed exception when taking screenshots on recent Android versions
-		HACK_avoidFileUriExposedErrors();
 
 		if (!gameRunning) startGameAsync();
 		// TODO rethink to avoid this
@@ -399,6 +389,8 @@ public class MainActivity extends Activity
 			case CMD_LOST_FOCUS:  processOnLostFocus();	 break;
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
 			case CMD_LOW_MEMORY:  processOnLowMemory();	 break;
+			case CMD_OFD_RESULT:  processOFDResult(c.str); break;
+
 			case CMD_UI_CREATED:  processOnUICreated();	 break;
 			case CMD_UI_CLICKED:  processOnUIClicked(c.arg1); break;
 			case CMD_UI_CHANGED:  processOnUIChanged(c.arg1, c.arg2); break;
@@ -435,6 +427,8 @@ public class MainActivity extends Activity
 	native void processOnLostFocus();
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
+	native void processOFDResult(String path);
+	
 	native void processOnUICreated();
 	native void processOnUIClicked(int id);
 	native void processOnUIChanged(int id, int val);
@@ -1106,11 +1100,22 @@ public class MainActivity extends Activity
 		}
 	}
 
-	public String getExternalAppDir() {
+	public String getGameDataDirectory() {
 		// getExternalFilesDir - API level 8
 		return getExternalFilesDir(null).getAbsolutePath();
 	}
 
+	public String getGameCacheDirectory() {
+		// getExternalCacheDir - API level 8
+		File root = getExternalCacheDir();
+		if (root != null) return root.getAbsolutePath();
+
+		// although exceedingly rare, getExternalCacheDir() can technically fail
+		//   "... May return null if shared storage is not currently available."
+		// getCacheDir - API level 1
+		return getCacheDir().getAbsolutePath();
+	}
+	
 	public String getUUID() {
 		// getContentResolver - API level 1
 		// getString, ANDROID_ID - API level 3
@@ -1295,11 +1300,21 @@ public class MainActivity extends Activity
 
 	public String shareScreenshot(String path) {
 		try {
-			File file = new File(getExternalAppDir() + "/screenshots/" + path);
+			Uri uri;
+			if (android.os.Build.VERSION.SDK_INT >= 23){ // android 6.0
+				uri = CCFileProvider.getUriForFile("screenshots/" + path);
+			} else {
+				// when trying to use content:// URIs on my android 4.0.3 test device
+				//   - 1 app crashed
+				//   - 1 app wouldn't show image previews
+				// so fallback to file:// on older devices as they seem to reliably work
+				File file = new File(getGameDataDirectory() + "/screenshots/" + path);
+				uri = Uri.fromFile(file);
+			}
 			Intent intent = new Intent();
 
 			intent.setAction(Intent.ACTION_SEND);
-			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+			intent.putExtra(Intent.EXTRA_STREAM, uri);
 			intent.setType("image/png");
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			startActivity(Intent.createChooser(intent, "share via"));
@@ -1307,6 +1322,136 @@ public class MainActivity extends Activity
 			return ex.toString();
 		}
 		return "";
+	}
+
+
+	static String uploadFolder, savePath;
+	final static int OPEN_REQUEST = 0x4F50454E;
+	final static int SAVE_REQUEST = 0x53415645;
+
+	// https://stackoverflow.com/questions/36557879/how-to-use-native-android-file-open-dialog
+	// https://developer.android.com/guide/topics/providers/document-provider
+	// https://developer.android.com/training/data-storage/shared/documents-files#java
+	// https://stackoverflow.com/questions/5657411/android-getting-a-file-uri-from-a-content-uri
+	public int openFileDialog(String folder) {
+		uploadFolder = folder;
+
+		try {
+			Intent intent = new Intent()
+					.setType("*/*")
+					.setAction(Intent.ACTION_GET_CONTENT);
+
+			startActivityForResult(Intent.createChooser(intent, "Select a file"), OPEN_REQUEST);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return 0;// TODO log error to in-game
+		}
+		return 1;
+	}
+
+	// https://stackoverflow.com/questions/8586691/how-to-open-file-save-dialog-in-android
+	public int saveFileDialog(String path, String name) {
+		savePath = path;
+
+		try {
+			Intent intent = new Intent()
+					.setType("/")
+					.addCategory(Intent.CATEGORY_OPENABLE)
+					.setAction(Intent.ACTION_CREATE_DOCUMENT)
+					.setType("application/octet-stream")
+					.putExtra(Intent.EXTRA_TITLE, name);
+
+			startActivityForResult(Intent.createChooser(intent, "Choose destination"), SAVE_REQUEST);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return 0;// TODO log error to in-game
+		}
+		return 1;
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode != RESULT_OK) return;
+
+		if (requestCode == OPEN_REQUEST) {
+			handleOpenResult(data);
+		} else if (requestCode == SAVE_REQUEST) {
+			handleSaveResult(data);
+		}
+	}
+
+	void handleSaveResult(Intent data) {
+		try {
+			Uri selected = data.getData();
+			saveTempToContent(selected, savePath);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			// TODO log error to in-game
+		}
+	}
+
+	void saveTempToContent(Uri uri, String path) throws IOException {
+		File file = new File(getGameDataDirectory() + "/" + path);
+		OutputStream output = null;
+		InputStream input   = null;
+
+		try {
+			input  = new FileInputStream(file);
+			output = getContentResolver().openOutputStream(uri);
+			copyStreamData(input, output);
+			file.delete();
+		} finally {
+			if (output != null) output.close();
+			if (input != null)  input.close();
+		}
+	}
+
+	void handleOpenResult(Intent data) {
+		try {
+			Uri selected = data.getData();
+			String name  = getContentFilename(selected);
+			String path  = saveContentToTemp(selected, uploadFolder, name);
+			pushCmd(CMD_OFD_RESULT, uploadFolder + "/" + name);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			// TODO log error to in-game
+		}
+	}
+
+	String getContentFilename(Uri uri) {
+		Cursor cursor = getContentResolver().query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null);
+		if (cursor != null && cursor.moveToFirst()) {
+			int cIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+			if (cIndex != -1) return cursor.getString(cIndex);
+		}
+		return null;
+	}
+
+	String saveContentToTemp(Uri uri, String folder, String name) throws IOException {
+		//File file = new File(getExternalFilesDir(null), folder + "/" + name);
+		File file = new File(getGameDataDirectory() + "/" + folder + "/" + name);
+		file.getParentFile().mkdirs();
+
+		OutputStream output = null;
+		InputStream input   = null;
+
+		try {
+			output = new FileOutputStream(file);
+			input  = getContentResolver().openInputStream(uri);
+			copyStreamData(input, output);
+		} finally {
+			if (output != null) output.close();
+			if (input != null)  input.close();
+		}
+		return file.getAbsolutePath();
+	}
+
+	static void copyStreamData(InputStream input, OutputStream output) throws IOException {
+		byte[] temp = new byte[8192];
+		int length;
+		while ((length = input.read(temp)) > 0)
+			output.write(temp, 0, length);
 	}
 
 

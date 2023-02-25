@@ -254,6 +254,9 @@ static const cc_string curlAlt = String_FromConst("/usr/pkg/lib/libcurl.so");
 #elif defined CC_BUILD_BSD
 static const cc_string curlLib = String_FromConst("libcurl.so");
 static const cc_string curlAlt = String_FromConst("libcurl.so");
+#elif defined CC_BUILD_SERENITY
+static const cc_string curlLib = String_FromConst("/usr/local/lib/libcurl.so");
+static const cc_string curlAlt = String_FromConst("/usr/local/lib/libcurl.so");
 #else
 static const cc_string curlLib = String_FromConst("libcurl.so.4");
 static const cc_string curlAlt = String_FromConst("libcurl.so.3");
@@ -282,7 +285,7 @@ static cc_bool LoadCurlFuncs(void) {
 static CURL* curl;
 static cc_bool curlSupported, curlVerbose;
 
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	const char* err;
 	
 	if (!_curl_easy_strerror) return false;
@@ -372,7 +375,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req->meta);
 
 	Http_SetCurlOpts(req);
-	Platform_EncodeUtf8(urlStr, url);
+	String_EncodeUtf8(urlStr, url);
 	_curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
 	if (req->requestType == REQUEST_TYPE_HEAD) {
@@ -390,14 +393,27 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
+	/* must be at least CURL_ERROR_SIZE (256) in size */
+	req->error = Mem_TryAllocCleared(257, 1);
+	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, req->error);
+	/* TODO stackalloc instead and then copy to dynamic array later? */
+	/*  probably not worth the extra complexity though */
+
 	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
 
+	/* Free error string if it isn't needed */
+	if (req->error && !req->error[0]) {
+		Mem_Free(req->error);
+		req->error = NULL;
+	}
+
 	_curl_slist_free_all((struct curl_slist*)req->meta);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
+	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, NULL);
 	return res;
 }
 #elif defined CC_BUILD_WININET
@@ -549,7 +565,7 @@ static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
 }
 
 static void* wininet_lib;
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	return Platform_DescribeErrorExt(res, dst, wininet_lib);
 }
 
@@ -682,7 +698,7 @@ struct HttpRequest* java_req;
 static jmethodID JAVA_httpInit, JAVA_httpSetHeader, JAVA_httpPerform, JAVA_httpSetData;
 static jmethodID JAVA_httpDescribeError;
 
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
 	char buffer[NATIVE_STR_LEN];
 	cc_string err;
 	JNIEnv* env;
@@ -801,7 +817,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #include <stddef.h>
 #include <CFNetwork/CFNetwork.h>
 
-cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
     return false;
 }
 
@@ -813,7 +829,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
     char tmp[NATIVE_STR_LEN];
     CFStringRef keyCF, valCF;
     CFHTTPMessageRef msg = (CFHTTPMessageRef)req->meta;
-    Platform_EncodeUtf8(tmp, value);
+    String_EncodeUtf8(tmp, value);
     
     keyCF = CFStringCreateWithCString(NULL, key, kCFStringEncodingUTF8);
     valCF = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
@@ -859,7 +875,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     CFURLRef urlRef;
     cc_result result = 0;
     
-    Platform_EncodeUtf8(tmp, url);
+    String_EncodeUtf8(tmp, url);
     urlCF  = CFStringCreateWithCString(NULL, tmp, kCFStringEncodingUTF8);
     urlRef = CFURLCreateWithString(NULL, urlCF, NULL);
     // TODO e.g. "http://www.example.com/skin/1 2.png" causes this to return null

@@ -59,14 +59,14 @@ I am assuming you used the installer from https://sourceforge.net/projects/mingw
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to directory with game's source code
-4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32`
+4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using MinGW
 I am assuming you used the installer from http://www.mingw.org/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 3. Navigate to directory with game's source code
-4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32`
+4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using TCC
 I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
@@ -162,7 +162,13 @@ Install libexecinfo, curl and openal-soft package if needed
 
 Install openal_devel and libexecinfo_devel package if needed
 
-```cc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc *.c Window_Haiku.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+
+#### SerenityOS
+
+Install SDL2 port if needed
+
+```cc *.c -o ClassiCube -lgl -lSDL2```
 
 ## Compiling - other
 

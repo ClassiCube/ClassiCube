@@ -434,11 +434,11 @@ static struct ChatCommand RenderTypeCommand = {
 	"RenderType", RenderTypeCommand_Execute,
 	COMMAND_FLAG_UNSPLIT_ARGS,
 	{
-		"&a/client rendertype [normal/legacy/legacyfast]",
-		"&bnormal: &eDefault renderer, with all environmental effects enabled.",
-		"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
-		"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
-		"&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+		"&a/client rendertype [normal/legacy/fast]",
+		"&bnormal: &eDefault render mode, with all environmental effects enabled",
+		"&blegacy: &eSame as normal mode, &cbut is usually slightly slower",
+		"   &eIf you have issues with clouds and map edges disappearing randomly, use this mode",
+		"&bfast: &eSacrifices clouds, fog and overhead sky for faster performance",
 	}
 };
 
@@ -618,8 +618,8 @@ static struct ChatCommand CuboidCommand = {
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
-	struct LocationUpdate update;
 	struct Entity* e = &LocalPlayer_Instance.Base;
+	struct LocationUpdate update;
 	Vec3 v;
 
 	if (argsCount != 3) {
@@ -631,8 +631,9 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 		return;
 	}
 
-	LocationUpdate_MakePos(&update, v, false);
-	e->VTABLE->SetLocation(e, &update, false);
+	update.flags = LU_HAS_POS;
+	update.pos   = v;
+	e->VTABLE->SetLocation(e, &update);
 }
 
 static struct ChatCommand TeleportCommand = {

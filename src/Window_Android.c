@@ -15,6 +15,7 @@ static cc_bool winCreated;
 static jmethodID JAVA_openKeyboard, JAVA_setKeyboardText, JAVA_closeKeyboard;
 static jmethodID JAVA_getWindowState, JAVA_enterFullscreen, JAVA_exitFullscreen;
 static jmethodID JAVA_showAlert, JAVA_setRequestedOrientation;
+static jmethodID JAVA_openFileDialog, JAVA_saveFileDialog;
 static jmethodID JAVA_processedSurfaceDestroyed, JAVA_processEvents;
 static jmethodID JAVA_getDpiX, JAVA_getDpiY, JAVA_create2DView, JAVA_create3DView;
 
@@ -205,6 +206,8 @@ static void JNICALL java_UICreated(JNIEnv* env, jobject o) {
 	Event_RaiseVoid(&WindowEvents.Created);
 }
 
+static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str);
+
 static const JNINativeMethod methods[] = {
 	{ "processKeyDown",   "(I)V", java_processKeyDown },
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
@@ -230,6 +233,7 @@ static const JNINativeMethod methods[] = {
 	{ "processOnLostFocus", "()V", java_onLostFocus },
 	{ "processOnLowMemory", "()V", java_onLowMemory },
 	{ "processOnUICreated", "()V", java_UICreated },
+	{ "processOFDResult",   "(Ljava/lang/String;)V", java_processOFDResult },
 };
 static void CacheMethodRefs(JNIEnv* env) {
 	JAVA_openKeyboard    = JavaGetIMethod(env, "openKeyboard",    "(Ljava/lang/String;I)V");
@@ -250,8 +254,11 @@ static void CacheMethodRefs(JNIEnv* env) {
 
 	JAVA_showAlert = JavaGetIMethod(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
 	JAVA_setRequestedOrientation = JavaGetIMethod(env, "setRequestedOrientation", "(I)V");
+	JAVA_openFileDialog = JavaGetIMethod(env, "openFileDialog", "(Ljava/lang/String;)I");
+	JAVA_saveFileDialog = JavaGetIMethod(env, "saveFileDialog", "(Ljava/lang/String;Ljava/lang/String;)I");
 }
 
+// TODO move to bottom of file?
 void Window_Init(void) {
 	JNIEnv* env;
 	/* TODO: ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0); */
@@ -370,8 +377,64 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
+static FileDialogCallback ofd_callback;
+static int ofd_action;
+static void JNICALL java_processOFDResult(JNIEnv* env, jobject o, jstring str) {
+    const char* raw;
+
+    char buffer[NATIVE_STR_LEN];
+	cc_string path = JavaGetString(env, str, buffer);
+	ofd_callback(&path);
+
+	if (ofd_action == OFD_UPLOAD_DELETE) {
+	    // TODO better way of doing this? msybe move to java side?
+	    raw = (*env)->GetStringUTFChars(env, str, NULL);
+	    unlink(raw);
+	    (*env)->ReleaseStringUTFChars(env, str, raw);
+	}
+    ofd_callback = NULL;
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* open_args) {
+    JNIEnv* env;
+    jvalue args[1];
+    JavaGetCurrentEnv(env);
+
+    ofd_callback = open_args->Callback;
+    ofd_action   = open_args->uploadAction;
+
+    // TODO use filters
+    args[0].l = JavaMakeConst(env, open_args->uploadFolder);
+    int OK = JavaICall_Int(env, JAVA_openFileDialog, args);
+    (*env)->DeleteLocalRef(env, args[0].l);
+    // TODO: Better error handling
+    return OK ? 0 : ERR_INVALID_ARGUMENT;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* save_args) {
+    JNIEnv* env;
+    jvalue args[2];
+    JavaGetCurrentEnv(env);
+    if (!save_args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+
+    // save the item to a temp file, which is then (usually) later deleted by intent callback
+    cc_string tmpDir = String_FromConst("Exported");
+    Directory_Create(&tmpDir);
+
+    cc_string path; char pathBuffer[FILENAME_SIZE];
+    String_InitArray(path, pathBuffer);
+    String_Format3(&path, "%s/%s%c", &tmpDir, &save_args->defaultName, save_args->filters[0]);
+    save_args->Callback(&path);
+    // TODO kinda ugly, maybe a better way?
+    cc_string file = String_UNSAFE_SubstringAt(&path, String_IndexOf(&path, '/') + 1);
+
+    args[0].l = JavaMakeString(env, &path);
+    args[1].l = JavaMakeString(env, &file);
+    int OK = JavaICall_Int(env, JAVA_saveFileDialog, args);
+    (*env)->DeleteLocalRef(env, args[0].l);
+    (*env)->DeleteLocalRef(env, args[1].l);
+    // TODO: Better error handling
+    return OK ? 0 : ERR_INVALID_ARGUMENT;
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
