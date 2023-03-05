@@ -5,10 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -28,7 +26,6 @@ import android.graphics.Color;
 import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
@@ -42,9 +39,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
-import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -70,6 +65,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -181,12 +177,12 @@ public class MainActivity extends Activity
 	final static int CMD_LOW_MEMORY  = 18;
 	final static int CMD_KEY_TEXT    = 19;
 	final static int CMD_OFD_RESULT  = 20;
-	
+
 	final static int CMD_UI_CREATED  = 21;
 	final static int CMD_UI_CLICKED  = 22;
 	final static int CMD_UI_CHANGED  = 23;
 	final static int CMD_UI_STRING   = 24;
-	
+
 	// ====================================================================
 	// ------------------------------ EVENTS ------------------------------
 	// ====================================================================
@@ -428,7 +424,7 @@ public class MainActivity extends Activity
 	//native void processOnConfigChanged();
 	native void processOnLowMemory();
 	native void processOFDResult(String path);
-	
+
 	native void processOnUICreated();
 	native void processOnUIClicked(int id);
 	native void processOnUIChanged(int id, int val);
@@ -539,7 +535,7 @@ public class MainActivity extends Activity
 	}
 
 	ViewGroup.LayoutParams makeLayoutParams(int xMode, int xOffset, int yMode, int yOffset,
-				  							int width, int height) {
+											int width, int height) {
 		return new CC2DLayoutParams(xMode, xOffset, yMode, yOffset, width, height);
 	}
 
@@ -622,10 +618,10 @@ public class MainActivity extends Activity
 				  int width, int height) {
 		final Button btn = new Button(this);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															width, height);
+				width, height);
 
-        buttonUpdateBackground(btn, width, height);
-        btn.setTextColor(Color.WHITE);
+		buttonUpdateBackground(btn, width, height);
+		btn.setTextColor(Color.WHITE);
 		btn.setPadding(btn.getPaddingLeft(), 0, btn.getPaddingRight(), 0);
 		btn.setTransformationMethod(null); // get rid of all caps
 
@@ -684,7 +680,7 @@ public class MainActivity extends Activity
 	int labelAdd(int xMode, int xOffset, int yMode, int yOffset) {
 		final TextView lbl = new TextView(this);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															_WRAP_CONTENT, _WRAP_CONTENT);
+				_WRAP_CONTENT, _WRAP_CONTENT);
 		lbl.setTextColor(Color.WHITE);
 
 		return showWidgetAsync(lbl, lp, null);
@@ -705,7 +701,7 @@ public class MainActivity extends Activity
 				 int width, int height, int flags, String placeholder) {
 		final EditText ipt = new EditText(this);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															width, height);
+				width, height);
 		ipt.setBackgroundColor(Color.WHITE);
 		ipt.setPadding(ipt.getPaddingLeft(), 0, ipt.getPaddingRight(), 0);
 		ipt.setHint(placeholder);
@@ -733,20 +729,20 @@ public class MainActivity extends Activity
 	}
 
 	int lineAdd(int xMode, int xOffset, int yMode, int yOffset,
-				 int width, int height, int color) {
+				int width, int height, int color) {
 		final View view = new View(this);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															width, height);
+				width, height);
 		view.setBackgroundColor(color);
 
 		return showWidgetAsync(view, lp, null);
 	}
 
 	int checkboxAdd(int xMode, int xOffset, int yMode, int yOffset,
-				  String title, final boolean checked) {
+					String title, final boolean checked) {
 		final CheckBox cb = new CheckBox(this);
 		final CC2DLayoutParams lp = new CC2DLayoutParams(xMode, xOffset, yMode, yOffset,
-														_WRAP_CONTENT, _WRAP_CONTENT);
+				_WRAP_CONTENT, _WRAP_CONTENT);
 		cb.setText(title);
 		cb.setTextColor(Color.WHITE);
 
@@ -776,10 +772,10 @@ public class MainActivity extends Activity
 	}
 
 	int sliderAdd(int xMode, int xOffset, int yMode, int yOffset,
-				 int width, int height, int color) {
+				  int width, int height, int color) {
 		final ProgressBar prg = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															width, height);
+				width, height);
 		// https://stackoverflow.com/questions/39771796/change-horizontal-progress-bar-color
 		prg.getProgressDrawable().setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
 
@@ -799,7 +795,7 @@ public class MainActivity extends Activity
 				 int color) {
 		final ListView list = new ListView(this);
 		final ViewGroup.LayoutParams lp = makeLayoutParams(xMode, xOffset, yMode, yOffset,
-															_MATCH_PARENT, _WRAP_CONTENT); //_MATCH_PARENT
+				_MATCH_PARENT, _WRAP_CONTENT); //_MATCH_PARENT
 		//list.setBackgroundColor(color);
 		/*list.setScrollIndicators(
 				View.SCROLL_INDICATOR_TOP |
@@ -818,23 +814,50 @@ public class MainActivity extends Activity
 		});
 	}
 
-	native static int tableGetCount(int id);
-	native static String tableGetTitle(int id, int pos);
-	native static String tableGetDetails(int id, int pos);
-	native static int tableGetColor(int id, int pos, boolean selected);
+	native static int tableGetColor(int pos, boolean selected, boolean featured);
+
+	class TableEntry { public String title, details; public boolean featured; }
+	static ArrayList<TableEntry> table_entries = new ArrayList<TableEntry>();
+	void tableStartUpdate() {
+		table_entries.clear();
+	}
+
+	void tableAddEntry(String name, String details, boolean featured) {
+		TableEntry e = new TableEntry();
+		e.title    = name;
+		e.details  = details;
+		e.featured = featured;
+		table_entries.add(e);
+	}
+
+	void tableFinishUpdate(final int id) {
+		final Object[] entries = table_entries.toArray();
+		runOnUiThread(new Runnable() {
+			public void run() {
+				View view = findViewById(id);
+				if (view == null) return;
+
+				ListAdapter adapter = ((ListView)view).getAdapter();
+				((CCTableAdapter)adapter).entries = entries;
+				((CCTableAdapter)adapter).notifyDataSetChanged();
+			}
+		});
+	}
+
 
 	class CCTableAdapter extends BaseAdapter
 	{
+		public Object[] entries = new Object[0];
 		Context ctx;
 		int listID;
 
 		public CCTableAdapter(Context context, int id) {
-			ctx    = context;
+			ctx	= context;
 			listID = id;
 		}
 
 		@Override
-		public int getCount() { return tableGetCount(listID); }
+		public int getCount() { return entries.length; }
 
 		@Override
 		public String getItem(int position) { return ""; }
@@ -854,20 +877,22 @@ public class MainActivity extends Activity
 
 			LinearLayout root = (LinearLayout)convertView;
 			LinearLayout text = (LinearLayout)root.getChildAt(1);
-			TextView title    = (TextView)text.getChildAt(0);
+			TextView title	= (TextView)text.getChildAt(0);
 			TextView details  = (TextView)text.getChildAt(1);
 
-			title.setText(tableGetTitle(listID, position));
-			details.setText(tableGetDetails(listID, position));
+			TableEntry entry  = (TableEntry)entries[position];
+			title.setText(entry.title);
+			details.setText(entry.details);
 
-			convertView.setBackgroundColor(tableGetColor(listID, position, false));
+			int color = tableGetColor(position, false, entry.featured);
+			convertView.setBackgroundColor(color);
 			return convertView;
 		}
 
 		View createRow(int position) {
 			ImageView image = new ImageView(ctx);
 			LinearLayout.LayoutParams imageLP = new LinearLayout.LayoutParams(
-						Pixels(FLAG_WIDTH), Pixels(FLAG_HEIGHT));
+					Pixels(FLAG_WIDTH), Pixels(FLAG_HEIGHT));
 			imageLP.gravity = Gravity.CENTER;
 
 			Bitmap bmp = Bitmap.createBitmap(FLAG_WIDTH, FLAG_HEIGHT, Bitmap.Config.ARGB_8888);
@@ -1115,7 +1140,7 @@ public class MainActivity extends Activity
 		// getCacheDir - API level 1
 		return getCacheDir().getAbsolutePath();
 	}
-	
+
 	public String getUUID() {
 		// getContentResolver - API level 1
 		// getString, ANDROID_ID - API level 3
@@ -1234,7 +1259,7 @@ public class MainActivity extends Activity
 			Window window = getWindow();
 			window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 			window.getAttributes().layoutInDisplayCutoutMode =
-				WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+					WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
 		} catch (NoSuchFieldError ex) {
 			ex.printStackTrace();
 		} catch (NoSuchMethodError ex) {
@@ -1289,14 +1314,14 @@ public class MainActivity extends Activity
 		runOnUiThread(new Runnable() {
 			public void run() { setUIVisibility(FULLSCREEN_FLAGS); }
 		});
-    }
+	}
 
-    public void exitFullscreen() {
+	public void exitFullscreen() {
 		fullscreen = false;
 		runOnUiThread(new Runnable() {
 			public void run() { setUIVisibility(View.SYSTEM_UI_FLAG_VISIBLE); }
 		});
-    }
+	}
 
 	public String shareScreenshot(String path) {
 		try {

@@ -887,9 +887,10 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 
 static BitmapCol LBackend_TableRowColor(struct LTable* w, int row) {
 	struct ServerInfo* entry = row < w->rowsCount ? LTable_Get(row) : NULL;
+	cc_bool featured         = entry && entry->featured;
 	cc_bool selected         = entry && String_Equals(&entry->hash, w->selectedHash);
 
-	return LTable_RowColor(entry, row, selected);
+	return LTable_RowColor(entry, selected, featured);
 }
 
 /* Draws background behind each row in the table */

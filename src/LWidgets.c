@@ -721,14 +721,14 @@ void LTable_ShowSelected(struct LTable* w) {
 	LTable_ClampTopRow(w);
 }
 
-BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
+BitmapCol LTable_RowColor(int row, cc_bool selected, cc_bool featured) {
 	BitmapCol featSelColor  = BitmapColor_RGB( 50,  53,  0);
 	BitmapCol featuredColor = BitmapColor_RGB(101, 107,  0);
 	BitmapCol selectedColor = BitmapColor_RGB( 40,  40, 40);
 
-	if (entry && entry->featured) {
+	if (featured) {
 		return selected ? featSelColor : featuredColor;
-	} else if (entry && selected) {
+	} else if (selected) {
 		return selectedColor;
 	}
 
