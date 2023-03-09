@@ -57,6 +57,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsoluteLayout;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -70,8 +71,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import com.classicube.android.client.R;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places
@@ -805,10 +804,27 @@ public class MainActivity extends Activity
 				View.SCROLL_INDICATOR_START |
 				View.SCROLL_INDICATOR_END);
 		list.setScrollbarFadingEnabled(false);*/
+		final CCTableAdapter adapter = new CCTableAdapter(MainActivity.this);
+		// https://stackoverflow.com/questions/2454337/why-is-my-onitemselectedlistener-not-called-in-a-listview
+
+		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			View prev;
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				if (prev != null) {
+					int prevPos = list.getPositionForView(prev);
+					if (prevPos >= 0)
+						prev.setBackgroundColor(adapter.getRowColor(prevPos, false));
+				}
+
+				prev = view;
+				view.setBackgroundColor(adapter.getRowColor(position, true));
+			}
+		});
 
 		return showWidgetAsync(list, lp, new UICallback() {
 			public void execute() {
-				CCTableAdapter adapter = new CCTableAdapter(MainActivity.this, list.getId());
 				list.setAdapter(adapter);
 			}
 		});
@@ -849,11 +865,9 @@ public class MainActivity extends Activity
 	{
 		public Object[] entries = new Object[0];
 		Context ctx;
-		int listID;
 
-		public CCTableAdapter(Context context, int id) {
+		public CCTableAdapter(Context context) {
 			ctx	= context;
-			listID = id;
 		}
 
 		@Override
@@ -884,9 +898,13 @@ public class MainActivity extends Activity
 			title.setText(entry.title);
 			details.setText(entry.details);
 
-			int color = tableGetColor(position, false, entry.featured);
-			convertView.setBackgroundColor(color);
+			convertView.setBackgroundColor(getRowColor(position, false));
 			return convertView;
+		}
+
+		public int getRowColor(int position, boolean selected) {
+			TableEntry entry = (TableEntry)entries[position];
+			return tableGetColor(position, selected, entry.featured);
 		}
 
 		View createRow(int position) {
@@ -1176,11 +1194,11 @@ public class MainActivity extends Activity
 		keyboardType = flags;
 		keyboardText = text;
 		//runOnUiThread(new Runnable() {
-			//public void run() {
-				// Restart view so it uses the right INPUT_TYPE
-				if (curView != null) input.restartInput(curView);
-				if (curView != null) input.showSoftInput(curView, 0);
-			//}
+		//public void run() {
+		// Restart view so it uses the right INPUT_TYPE
+		if (curView != null) input.restartInput(curView);
+		if (curView != null) input.showSoftInput(curView, 0);
+		//}
 		//});
 	}
 
@@ -1192,9 +1210,9 @@ public class MainActivity extends Activity
 		input.hideSoftInputFromWindow(view.getWindowToken(), 0);
 		keyboardText = "";
 		//runOnUiThread(new Runnable() {
-			//public void run() {
-				if (curView != null) input.hideSoftInputFromWindow(curView.getWindowToken(), 0);
-			//}
+		//public void run() {
+		if (curView != null) input.hideSoftInputFromWindow(curView.getWindowToken(), 0);
+		//}
 		//});
 	}
 
