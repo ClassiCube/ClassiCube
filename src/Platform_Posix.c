@@ -140,8 +140,12 @@ cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
 #else
 cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
+	#ifdef CC_BUILD_IRIX
+	clock_gettime(CLOCK_REALTIME, &t);
+	#else
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
+	#endif
 	return (cc_uint64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
 #endif
@@ -202,7 +206,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;

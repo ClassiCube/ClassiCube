@@ -250,6 +250,13 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_GL
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
+#elif defined __sgi
+#define CC_BUILD_IRIX
+#define CC_BUILD_POSIX
+#define CC_BUILD_GL
+#define CC_BUILD_X11
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __EMSCRIPTEN__
 #define CC_BUILD_WEB
 #define CC_BUILD_GL

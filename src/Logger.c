@@ -236,6 +236,12 @@ static void DumpFrame(cc_string* trace, void* addr) {
 }
 #elif defined CC_BUILD_PSP
 /* No backtrace support implemented for PSP */
+#elif defined CC_BUILD_IRIX
+/* IRIX doesn't expose a nice interface for dladdr */
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_uintptr addr_ = (cc_uintptr)addr;
+	String_Format1(str, "%x", &addr_);
+}
 #elif defined CC_BUILD_POSIX
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
@@ -359,6 +365,11 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
 	/* Backtrace not implemented for PSP */
+}
+#elif defined CC_BUILD_IRIX
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	String_AppendConst(trace, "-- backtrace unimplemented --");
+	/* TODO implement backtrace using exc_unwind https://nixdoc.net/man-pages/IRIX/man3/exception.3.html */
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
@@ -789,6 +800,13 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #else
 	#error "Unknown CPU architecture"
 #endif
+}
+#elif defined CC_BUILD_IRIX
+/* See /usr/include/sys/signal.h */
+/* https://nixdoc.net/man-pages/IRIX/man5/UCONTEXT.5.html */
+static void PrintRegisters(cc_string* str, void* ctx) {
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
+	#error "Unknown CPU architecture"
 }
 #elif defined CC_BUILD_PSP
 static void PrintRegisters(cc_string* str, void* ctx) {
