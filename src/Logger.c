@@ -240,7 +240,7 @@ static void DumpFrame(cc_string* trace, void* addr) {
 /* IRIX doesn't expose a nice interface for dladdr */
 static void DumpFrame(cc_string* trace, void* addr) {
 	cc_uintptr addr_ = (cc_uintptr)addr;
-	String_Format1(str, "%x", &addr_);
+	String_Format1(trace, "%x", &addr_);
 }
 #elif defined CC_BUILD_POSIX
 /* need to define __USE_GNU for dladdr */
