@@ -851,12 +851,21 @@ static void SysFonts_Update(void) {
 }
 
 static void SysFonts_Load(void) {
+	/* Need to keep track of whether font cache has been checked at least once */
+	/* (Otherwise if unable to find any cached fonts and then unable to load any fonts, 
+	/*  font_list.count will always be 0 and the 'Initialising font cache' dialog will 
+	    confusingly get shown over and over until all font_candidates entries are checked) */
+	static cc_bool checkedCache;
+	if (checkedCache) return;
+	checkedCache = true;
+
 	EntryList_UNSAFE_Load(&font_list, FONT_CACHE_FILE);
 	if (font_list.count) return;
 	
 	Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
 	SysFonts_Update();
 }
+
 
 /* Some language-specific fonts don't support English letters */
 /* and show entirely as '[]' - better off ignoring such fonts */
@@ -943,6 +952,33 @@ void SysFonts_Register(const cc_string* path) {
 	}
 }
 
+
+static cc_string Font_LookupOf(const cc_string* fontName, const char type) {
+	cc_string name; char nameBuffer[STRING_SIZE + 2];
+	String_InitArray(name, nameBuffer);
+
+	String_Format2(&name, "%s %r", fontName, &type);
+	return EntryList_UNSAFE_Get(&font_list, &name, '=');
+}
+
+static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
+	cc_string path;
+	if (!font_list.count) SysFonts_Load();
+	path = String_Empty;
+
+	if (flags & FONT_FLAGS_BOLD) path = Font_LookupOf(fontName, 'B');
+	return path.length ? path : Font_LookupOf(fontName, 'R');
+}
+
+static cc_string Font_Lookup(const cc_string* fontName, int flags) {
+	cc_string path = Font_DoLookup(fontName, flags);
+	if (path.length) return path;
+
+	SysFonts_Update();
+	return Font_DoLookup(fontName, flags);
+}
+
+
 const cc_string* SysFonts_UNSAFE_GetDefault(void) {
 	cc_string* font, path;
 	int i;
@@ -974,31 +1010,6 @@ void SysFonts_GetNames(struct StringsBuffer* buffer) {
 		StringsBuffer_Add(buffer, &name);
 	}
 	StringsBuffer_Sort(buffer);
-}
-
-static cc_string Font_LookupOf(const cc_string* fontName, const char type) {
-	cc_string name; char nameBuffer[STRING_SIZE + 2];
-	String_InitArray(name, nameBuffer);
-
-	String_Format2(&name, "%s %r", fontName, &type);
-	return EntryList_UNSAFE_Get(&font_list, &name, '=');
-}
-
-static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
-	cc_string path;
-	if (!font_list.count) SysFonts_Load();
-	path = String_Empty;
-
-	if (flags & FONT_FLAGS_BOLD) path = Font_LookupOf(fontName, 'B');
-	return path.length ? path : Font_LookupOf(fontName, 'R');
-}
-
-static cc_string Font_Lookup(const cc_string* fontName, int flags) {
-	cc_string path = Font_DoLookup(fontName, flags);
-	if (path.length) return path;
-
-	SysFonts_Update();
-	return Font_DoLookup(fontName, flags);
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
