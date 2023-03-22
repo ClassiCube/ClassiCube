@@ -805,6 +805,16 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Copy(path, info.name, *len);
 	return 0;
 }
+#elif defined CC_BUILD_IRIX
+static cc_result Process_RawGetExePath(char* path, int* len) {
+	static cc_string file = String_FromConst("ClassiCube");
+
+	/* TODO properly get exe path */
+	/* Maybe use PIOCOPENM from https://nixdoc.net/man-pages/IRIX/man4/proc.4.html */
+	Mem_Copy(path, file.buffer, file.length);
+	*len = file.length;
+	return 0;
+}
 #endif
 
 
@@ -1012,6 +1022,15 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
+#ifdef CC_BUILD_IRIX
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+	const char* err = strerror(res);
+	if (!err || res >= 1000) return false;
+
+	String_AppendUtf8(dst, err, String_Length(err));
+	return true;
+}
+#else
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
@@ -1028,6 +1047,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	String_AppendUtf8(dst, chars, len);
 	return true;
 }
+#endif
 
 #if defined CC_BUILD_DARWIN
 static void Platform_InitStopwatch(void) {
