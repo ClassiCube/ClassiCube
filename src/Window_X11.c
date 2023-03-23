@@ -10,7 +10,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
+#ifdef CC_BUILD_XINPUT2
 #include <X11/extensions/XInput2.h>
+#endif
 #include <stdio.h>
 
 #ifdef X_HAVE_UTF8_STRING
@@ -1129,6 +1131,7 @@ void Window_CloseKeyboard(void) { }
 static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;
 
+#ifdef CC_BUILD_XINPUT2
 static void CheckMovementDelta(double dx, double dy) {
 	/* Despite the assumption that XI_RawMotion is relative,     */
 	/*  unfortunately there's a few buggy corner cases out there */
@@ -1210,6 +1213,10 @@ static void InitRawMouse(void) {
 	XISelectEvents(win_display, win_rootWin, &evmask, 1);
 	rawMouseSupported = true;
 }
+#else
+static void HandleGenericEvent(XEvent* e) { }
+static void InitRawMouse(void) { }
+#endif
 
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();

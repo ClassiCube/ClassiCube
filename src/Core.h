@@ -185,6 +185,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
+#define CC_BUILD_XINPUT2
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #if defined CC_BUILD_RPI
@@ -218,6 +219,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
+#define CC_BUILD_XINPUT2
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __FreeBSD__ || defined __DragonFly__
@@ -226,6 +228,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_BSD
 #define CC_BUILD_GL
 #define CC_BUILD_X11
+#define CC_BUILD_XINPUT2
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __OpenBSD__
@@ -234,6 +237,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_BSD
 #define CC_BUILD_GL
 #define CC_BUILD_X11
+#define CC_BUILD_XINPUT2
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __NetBSD__
@@ -242,6 +246,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_BSD
 #define CC_BUILD_GL
 #define CC_BUILD_X11
+#define CC_BUILD_XINPUT2
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __HAIKU__
@@ -250,6 +255,14 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_GL
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
+#elif defined __sgi
+#define CC_BUILD_IRIX
+#define CC_BUILD_POSIX
+#define CC_BUILD_GL
+#define CC_BUILD_X11
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
+#define CC_BIG_ENDIAN
 #elif defined __EMSCRIPTEN__
 #define CC_BUILD_WEB
 #define CC_BUILD_GL
