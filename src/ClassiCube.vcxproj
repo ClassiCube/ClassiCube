@@ -529,6 +529,9 @@
     <ClCompile Include="_truetype.c" />
     <ClCompile Include="_type1.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\misc\CCicon.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
