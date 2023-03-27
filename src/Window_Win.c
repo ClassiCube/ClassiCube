@@ -369,13 +369,12 @@ void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
-	WCHAR str[NATIVE_STR_LEN];
-	Platform_EncodeUtf16(str, title);
-	if (SetWindowTextW(win_handle, str)) return;
+	cc_winstring str;
+	Platform_EncodeString(&str, title);
+	if (SetWindowTextW(win_handle, str.uni)) return;
 
 	/* Windows 9x does not support W API functions */
-	Platform_Utf16ToAnsi(str);
-	SetWindowTextA(win_handle, (const char*)str);
+	SetWindowTextA(win_handle, str.ansi);
 }
 
 void Clipboard_GetText(cc_string* value) {
@@ -558,19 +557,19 @@ static void ShowDialogCore(const char* title, const char* msg) {
 static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback callback, cc_bool load,
 									const char* const* fileExts, const cc_string* defaultName) {
 	cc_string path; char pathBuffer[NATIVE_STR_LEN];
-	WCHAR str[MAX_PATH] = { 0 };
-	OPENFILENAMEW ofn   = { 0 };
-	WCHAR filter[MAX_PATH];
+	cc_winstring str  = { 0 };
+	OPENFILENAMEW ofn = { 0 };
+	cc_winstring filter;
 	BOOL ok;
 	int i;
 
-	Platform_EncodeUtf16(str, defaultName);
-	Platform_EncodeUtf16(filter, filters);
+	Platform_EncodeString(&str, defaultName);
+	Platform_EncodeString(&filter, filters);
 	ofn.lStructSize  = sizeof(ofn);
 	ofn.hwndOwner    = win_handle;
-	ofn.lpstrFile    = str;
+	ofn.lpstrFile    = str.uni;
 	ofn.nMaxFile     = MAX_PATH;
-	ofn.lpstrFilter  = filter;
+	ofn.lpstrFilter  = filter.uni;
 	ofn.nFilterIndex = 1;
 	ofn.Flags = OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | (load ? OFN_FILEMUSTEXIST : OFN_OVERWRITEPROMPT);
 
@@ -578,8 +577,8 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 	if (!ok) return CommDlgExtendedError();
 	String_InitArray(path, pathBuffer);
 
-	for (i = 0; i < MAX_PATH && str[i]; i++) {
-		String_Append(&path, Convert_CodepointToCP437(str[i]));
+	for (i = 0; i < MAX_PATH && str.uni[i]; i++) {
+		String_Append(&path, Convert_CodepointToCP437(str.uni[i]));
 	}
 
 	/* Add default file extension if user didn't provide one */
