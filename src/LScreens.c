@@ -996,11 +996,6 @@ LAYOUTS cres_btnNo[]  = { { ANCHOR_CENTRE,  70 }, { ANCHOR_CENTRE, 45 } };
 static void CheckResourcesScreen_Yes(void*  w) { FetchResourcesScreen_SetActive(); }
 static void CheckResourcesScreen_Next(void* w) {
 	Http_ClearPending();
-	if (Options_LoadResult != ReturnCode_FileNotFound) {
-		MainScreen_SetActive();
-	} else {
-		ChooseModeScreen_SetActive(true);
-	}
 }
 
 static void CheckResourcesScreen_Init(struct LScreen* s_) {

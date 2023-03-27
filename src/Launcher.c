@@ -251,7 +251,11 @@ void Launcher_Run(void) {
 	Http_Component.Init();
 	CheckUpdateTask_Run();
 	Resources_CheckExistence();
-	MainScreen_SetActive();
+	if (Options_LoadResult != ReturnCode_FileNotFound) {
+		MainScreen_SetActive();
+	} else {
+		ChooseModeScreen_SetActive(true);
+	}
 
 	for (;;) {
 		Window_ProcessEvents();
