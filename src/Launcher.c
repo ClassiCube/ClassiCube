@@ -250,13 +250,8 @@ void Launcher_Run(void) {
 
 	Http_Component.Init();
 	CheckUpdateTask_Run();
-	Resources_CheckExistence();
 
-	if (Resources_Count) {
-		CheckResourcesScreen_SetActive();
-	} else {
-		MainScreen_SetActive();
-	}
+	MainScreen_SetActive();
 
 	for (;;) {
 		Window_ProcessEvents();
