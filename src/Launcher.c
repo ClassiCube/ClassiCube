@@ -250,7 +250,7 @@ void Launcher_Run(void) {
 
 	Http_Component.Init();
 	CheckUpdateTask_Run();
-
+	Resources_CheckExistence();
 	MainScreen_SetActive();
 
 	for (;;) {
