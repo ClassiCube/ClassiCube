@@ -138,6 +138,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->selectedWidget = NULL;
 }
 
+static void SwitchToResources(void* w)     { CheckResourcesScreen_SetActive(); }
 static void SwitchToChooseMode(void* w)    { ChooseModeScreen_SetActive(false); }
 static void SwitchToColours(void* w)       { ColoursScreen_SetActive(); }
 static void SwitchToDirectConnect(void* w) { DirectConnectScreen_SetActive(); }
@@ -1345,14 +1346,15 @@ void ServersScreen_SetActive(void) {
 *#########################################################################################################################*/
 static struct SettingsScreen {
 	LScreen_Layout
-	struct LButton btnMode, btnColours, btnBack;
-	struct LLabel  lblMode, lblColours;
+	struct LButton btnResources, btnMode, btnColours, btnBack;
+	struct LLabel  lblResources, lblMode, lblColours;
 	struct LCheckbox cbExtra, cbEmpty, cbScale;
 	struct LLine sep;
 } SettingsScreen;
 
 static struct LWidget* settings_widgets[] = {
 	(struct LWidget*)&SettingsScreen.sep,
+	(struct LWidget*)&SettingsScreen.btnResources, (struct LWidget*)&SettingsScreen.lblResources,
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.btnColours, (struct LWidget*)&SettingsScreen.lblColours,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
@@ -1360,11 +1362,14 @@ static struct LWidget* settings_widgets[] = {
 };
 static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.sep,
+	(struct LWidget*)&SettingsScreen.btnResources, (struct LWidget*)&SettingsScreen.lblResources,
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
 	(struct LWidget*)&SettingsScreen.btnBack,    (struct LWidget*)&SettingsScreen.cbScale
 };
 
+LAYOUTS set_btnResources[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -120 } };
+LAYOUTS set_lblResources[] = { { ANCHOR_CENTRE_MIN,     -70 }, { ANCHOR_CENTRE,  -120 } };
 LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };
 LAYOUTS set_lblMode[]    = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -70 } };
 LAYOUTS set_btnColours[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -20 } };
@@ -1406,6 +1411,9 @@ static void SettingsScreen_DPIScaling(struct LCheckbox* w) {
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	LLine_Init(  &s->sep, 380, set_sep);
+	
+	LButton_Init(&s->btnResources, 110, 35, "Resources", set_btnResources);
+	LLabel_Init( &s->lblResources, "&eDownload textures/sounds from Minecraft", set_lblResources);
 
 	LButton_Init(&s->btnMode, 110, 35, "Mode", set_btnMode);
 	LLabel_Init( &s->lblMode, "&eChange the enabled features", set_lblMode);
@@ -1429,6 +1437,7 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	LCheckbox_Init(&s->cbScale, "Use display scaling", set_cbScale);
 	s->cbScale.ValueChanged = SettingsScreen_DPIScaling;
 
+	s->btnResources.OnClick = SwitchToResources;
 	s->btnMode.OnClick    = SwitchToChooseMode;
 	s->btnColours.OnClick = SwitchToThemes;
 	s->btnBack.OnClick    = SwitchToMain;
