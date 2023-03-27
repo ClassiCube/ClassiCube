@@ -1009,7 +1009,7 @@ static void CheckResourcesScreen_Init(struct LScreen* s_) {
 	s->numWidgets = Array_Elems(checkResources_widgets);
 	s->lblStatus.small = true;
 
-	LLabel_Init( &s->lblLine1,  "Some required resources weren't found", cres_lblLine1);
+	LLabel_Init( &s->lblLine1,  "This will overwrite existing resources.", cres_lblLine1);
 	LLabel_Init( &s->lblLine2,  "Okay to download?", cres_lblLine2);
 	LLabel_Init( &s->lblStatus, "",                  cres_lblStatus);
 
