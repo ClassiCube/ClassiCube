@@ -1,5 +1,5 @@
 #include "Resources.h"
-#if !defined(CC_BUILD_WEB) && !defined(CC_BUILD_FLATPAK)
+#ifndef CC_BUILD_WEB
 #include "Funcs.h"
 #include "String.h"
 #include "Constants.h"
