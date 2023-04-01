@@ -23,17 +23,20 @@ static unsigned int __attribute__((aligned(16))) list[262144];
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 gfx_indices[GFX_MAX_INDICES];
+static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 static int formatFields[] = {
 	GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D,
 	GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D
 };
+static ScePspFMatrix4 identity;
 
 static void guInit(void) {
 	void* framebuffer0 = (void*)0;
 	void* framebuffer1 = (void*)FB_SIZE;
 	void* depthbuffer  = (void*)(FB_SIZE + FB_SIZE);
+	gumLoadIdentity(&identity);
 	
+	sceGuInit();
 	sceGuStart(GU_DIRECT, list);
 	sceGuDrawBuffer(GU_PSM_8888, framebuffer0, BUFFER_WIDTH);
 	sceGuDispBuffer(SCREEN_WIDTH, SCREEN_HEIGHT, framebuffer1, BUFFER_WIDTH);
@@ -46,9 +49,18 @@ static void guInit(void) {
 	sceGuShadeModel(GU_SMOOTH);
 	sceGuDisable(GU_TEXTURE_2D);
 	
-	// TODO needed?
-	sceGuClearColor(0);
+	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	sceGuDepthFunc(GU_GEQUAL);
 	sceGuClearDepth(0);
+	sceGuDepthRange(65535,0);
+	
+	
+	sceGuSetMatrix(GU_MODEL, &identity);
+	sceGuColor(0xffffffff);
+	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	sceGuDisable(GU_SCISSOR_TEST);
+	
+	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();
 	sceGuSync(0,0);
@@ -62,11 +74,13 @@ void Gfx_Create(void) {
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
 	MakeIndices(gfx_indices, GFX_MAX_INDICES);
+	guInit();
+	InitDefaultResources();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
-void Gfx_Free(void) { }
+void Gfx_Free(void) { FreeDefaultResources(); }
 void Gfx_RestoreState(void) { }
 void Gfx_FreeState(void) { }
 #define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
@@ -75,7 +89,13 @@ void Gfx_FreeState(void) { }
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	return 0;
+	int size = bmp->width * bmp->height * 4;
+	cc_uint8* data = memalign(16, 16 + size);
+	
+	((cc_uint32*)data)[0] = bmp->width;
+	((cc_uint32*)data)[1] = bmp->height;
+	Mem_Copy(data + 16, bmp->scan0, size);
+	return data;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -85,12 +105,20 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
+	GfxResourceID data = *texId;
+	if (data) Mem_Free(data);
+	*texId = NULL;
 }
 
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	cc_uint8* data = (cc_uint8*)texId;
+	int width = ((cc_uint32*)data)[0];
+	int height = ((cc_uint32*)data)[1];
+	sceGuTexMode(GU_PSM_8888,0,0,0);
+	sceGuTexImage(0, width, height, width, data + 16);
 }
 
 
@@ -121,11 +149,15 @@ void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
+	//*matrix = Matrix_Identity;
+	//gumOrtho(matrix, 0.0f, width, height, 0.0f, ORTHO_NEAR, ORTHO_FAR);
 	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
 }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
 	float zNear = 0.1f;
-	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
+	*matrix = Matrix_Identity;
+	gumPerspective(matrix, 70.0f, aspect, 0.1f, zFar);
+	//Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
 
@@ -176,39 +208,55 @@ static int gfx_stride, gfx_format = -1, gfx_fields;
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return 0; }
 void Gfx_BindIb(GfxResourceID ib)    { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
+static int vb_size;
 
 
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return Mem_Alloc(count, strideSizes[fmt], "gfx VB");
+	void* data = memalign(16, count * strideSizes[fmt]);
+	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
+	return data;
+	//return Mem_Alloc(count, strideSizes[fmt], "gfx VB");
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID data = *vb;
-	if (!data) return;
-	Mem_Free(data);
+	if (data) Mem_Free(data);
 	*vb = 0;
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	vb_size = count * strideSizes[fmt];
 	return vb;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
+void Gfx_UnlockVb(GfxResourceID vb) { 
+	gfx_vertices = vb; 
+	sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
+}
 
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_Alloc(maxVertices, strideSizes[fmt], "gfx VB");
+	void* data = memalign(16, maxVertices * strideSizes[fmt]);
+	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
+	return data;
+	//return Mem_Alloc(maxVertices, strideSizes[fmt], "gfx VB");
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	vb_size = count * strideSizes[fmt];
 	return vb; 
 }
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { gfx_vertices = vb; }
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
+	gfx_vertices = vb; 
+	sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
+}
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
+	sceKernelDcacheWritebackInvalidateRange(vertices, vCount * gfx_stride);
 }
 
 
@@ -221,13 +269,13 @@ static int gfx_fogMode  = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	GU_Toggle(GU_FOG);
+	//GU_Toggle(GU_FOG);
 }
 
 void Gfx_SetFogCol(PackedCol color) {
 	if (color == gfx_fogColor) return;
 	gfx_fogColor = color;
-	sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
+	//sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -236,7 +284,7 @@ void Gfx_SetFogDensity(float value) {
 void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
 	gfx_fogEnd = value;
-	sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
+	//sceGuFog(0.0f, gfx_fogEnd, gfx_fogColor);
 }
 
 void Gfx_SetFogMode(FogFunc func) {
@@ -257,18 +305,15 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static int matrix_modes[] = { GU_PROJECTION, GU_VIEW };
-static int lastMatrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; sceGumMatrixMode(matrix_modes[type]); }
-	sceGumLoadMatrix((const float*)matrix);
-	sceGumUpdateMatrix();
+	ScePspFMatrix4 m;
+	gumLoadMatrix(&m, matrix);
+	sceGuSetMatrix(matrix_modes[type], &m);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type != lastMatrix) { lastMatrix = type; sceGumMatrixMode(matrix_modes[type]); }
-	sceGumLoadIdentity();
-	sceGumUpdateMatrix();
+	sceGuSetMatrix(matrix_modes[type], &identity);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -304,14 +349,14 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields, verticesCount, gfx_indices, gfx_vertices + startVertex * gfx_stride);
+	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, verticesCount, gfx_indices, gfx_vertices + startVertex * gfx_stride);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields, verticesCount, gfx_indices, gfx_vertices);
+	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, verticesCount, gfx_indices, gfx_vertices);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields, verticesCount, gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
+	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, verticesCount, gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
 }
 #endif
