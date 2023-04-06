@@ -244,6 +244,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #define CC_BUILD_PSP
+#undef CC_BUILD_FREETYPE
 #undef EXTENDED_BLOCKS
 #endif
 #endif

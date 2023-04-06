@@ -228,7 +228,8 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 }
 
 static int ExecThread(unsigned int argc, void *argv) {
-	((Thread_StartFunc)argv)(); 
+	Thread_StartFunc* func = (Thread_StartFunc*)argv;
+	(*func)();
 	return 0;
 }
 
@@ -247,7 +248,7 @@ void Thread_Start2(void* handle, Thread_StartFunc func) {
 }
 
 void Thread_Detach(void* handle) {
-	sceKernelDeleteThread((int)handle);
+	sceKernelDeleteThread((int)handle); // TODO don't call this??
 }
 
 void Thread_Join(void* handle) {
