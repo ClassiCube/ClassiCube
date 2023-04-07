@@ -9,7 +9,6 @@
 #include "Utils.h"
 #include "Errors.h"
 #include <errno.h>
-#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -19,14 +18,13 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <stdio.h>
 #include <pspkernel.h>
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
+#include <psprtc.h>
 
-#define NS_PER_SEC 1000000000ULL
-const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
+const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -64,13 +62,16 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-/* TODO: check this is actually accurate */
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg) / 1000;
+	return end - beg;
 }
 
 void Platform_Log(const char* msg, int len) {
+	int fd = sceKernelStdout();
+	sceIoWrite(fd, msg, len);
+	sceIoWrite(fd, "\n",  1);
+	
 	//pspDebugSioPutData(msg, len);
 	//pspDebugSioPutData("\n",  1);
 }
@@ -83,25 +84,23 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
-	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	pspTime curTime;
+	sceRtcGetCurrentClockLocalTime(&curTime);
 
-	t->year   = loc_time.tm_year + 1900;
-	t->month  = loc_time.tm_mon  + 1;
-	t->day    = loc_time.tm_mday;
-	t->hour   = loc_time.tm_hour;
-	t->minute = loc_time.tm_min;
-	t->second = loc_time.tm_sec;
+	t->year   = curTime.year;
+	t->month  = curTime.month;
+	t->day    = curTime.day;
+	t->hour   = curTime.hour;
+	t->minute = curTime.minutes;
+	t->second = curTime.seconds;
 }
 
+#define US_PER_SEC 1000000ULL
 cc_uint64 Stopwatch_Measure(void) {
-	struct timespec t;
-	// sceKernelGetSystemTimeWide
-	/* TODO: CLOCK_MONOTONIC_RAW ?? */
-	clock_gettime(CLOCK_MONOTONIC, &t);
-	return (cc_uint64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+	// TODO: sceKernelGetSystemTimeWide
+	struct SceKernelTimeval cur;
+	sceKernelLibcGettimeofday(&cur, NULL);
+	return (cc_uint64)cur.tv_sec * US_PER_SEC + cur.tv_usec;
 }
 
 

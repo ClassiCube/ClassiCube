@@ -60,6 +60,8 @@ static void guInit(void) {
 	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDisable(GU_SCISSOR_TEST);
 	
+	
+    //sceGuEnable(GU_CLIP_PLANES);
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();
@@ -137,13 +139,18 @@ void Gfx_ClearCol(PackedCol color) {
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	//glColorMask(r, g, b, a);
-	/* TODO implemenet */
+	unsigned int mask = 0xffffffff;
+	if (r) mask &= 0xffffff00;
+	if (g) mask &= 0xffff00ff;
+	if (b) mask &= 0xff00ffff;
+	if (a) mask &= 0x00ffffff;
+	
+	//sceGuPixelMask(mask); TODO implement
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) { sceGuDepthMask(enabled); }
 void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
-
+//void Gfx_SetDepthTest(cc_bool enabled)  { sceGuDisable(GU_DEPTH_TEST); }
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
@@ -305,11 +312,11 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static int matrix_modes[] = { GU_PROJECTION, GU_VIEW };
+static ScePspFMatrix4 tmp_matrix;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	ScePspFMatrix4 m;
-	gumLoadMatrix(&m, matrix);
-	sceGuSetMatrix(matrix_modes[type], &m);
+	gumLoadMatrix(&tmp_matrix, matrix);
+	sceGuSetMatrix(matrix_modes[type], &tmp_matrix);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -349,14 +356,17 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, verticesCount, gfx_indices, gfx_vertices + startVertex * gfx_stride);
+	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
+			gfx_indices, gfx_vertices + startVertex * gfx_stride);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, verticesCount, gfx_indices, gfx_vertices);
+	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount),
+			gfx_indices, gfx_vertices);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, verticesCount, gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
+	sceGuDrawArray(GU_TRIANGLES, gfx_fields | GU_INDEX_16BIT, ICOUNT(verticesCount), 
+			gfx_indices, gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED);
 }
 #endif
