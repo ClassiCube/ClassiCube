@@ -49,10 +49,11 @@ static void guInit(void) {
 	sceGuShadeModel(GU_SMOOTH);
 	sceGuDisable(GU_TEXTURE_2D);
 	
+	sceGuAlphaFunc(GU_GREATER, 0x7f, 0xff);
 	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
-	sceGuDepthFunc(GU_GEQUAL);
-	sceGuClearDepth(0);
-	sceGuDepthRange(65535,0);
+	sceGuDepthFunc(GU_LEQUAL); // sceGuDepthFunc(GU_GEQUAL);
+	sceGuClearDepth(65535); // sceGuClearDepth(0);
+	sceGuDepthRange(0, 65535); // sceGuDepthRange(65535, 0);
 	
 	
 	sceGuSetMatrix(GU_MODEL, &identity);
@@ -61,7 +62,7 @@ static void guInit(void) {
 	sceGuDisable(GU_SCISSOR_TEST);
 	
 	
-    //sceGuEnable(GU_CLIP_PLANES);
+    //sceGuDisable(GU_CLIP_PLANES);
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();
@@ -90,20 +91,41 @@ void Gfx_FreeState(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+typedef struct CCTexture_ {
+	cc_uint32 width, height;
+	cc_uint32 pad1, pad2; // data must be aligned to 16 bytes
+	cc_uint32 pixels[];
+} CCTexture;
+
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
-	cc_uint8* data = memalign(16, 16 + size);
+	CCTexture* tex = (CCTexture*)memalign(16, 16 + size);
 	
-	((cc_uint32*)data)[0] = bmp->width;
-	((cc_uint32*)data)[1] = bmp->height;
-	Mem_Copy(data + 16, bmp->scan0, size);
-	return data;
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	Mem_Copy(tex->pixels, bmp->scan0, size);
+	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;
+	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
+	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	// TODO: Do line by line and only invalidate the actually changed parts of lines?
+	sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }
 
+/*void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;
+	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
+
+	for (int yy = 0; yy < part->height; yy++) {
+		Mem_Copy(dst + (y + yy) * tex->width, part->scan0 + yy * rowWidth, part->width * 4);
+	}
+}*/
+
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -116,11 +138,9 @@ void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	cc_uint8* data = (cc_uint8*)texId;
-	int width = ((cc_uint32*)data)[0];
-	int height = ((cc_uint32*)data)[1];
+	CCTexture* tex = (CCTexture*)texId;
 	sceGuTexMode(GU_PSM_8888,0,0,0);
-	sceGuTexImage(0, width, height, width, data + 16);
+	sceGuTexImage(0, tex->width, tex->height, tex->width, tex->pixels);
 }
 
 
@@ -128,7 +148,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
+void Gfx_SetFaceCulling(cc_bool enabled)   { /*GU_Toggle(GU_CULL_FACE); */ } // TODO: Fix? GU_CCW instead??
 void Gfx_SetAlphaBlending(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -145,26 +165,23 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (b) mask &= 0xff00ffff;
 	if (a) mask &= 0x00ffffff;
 	
-	//sceGuPixelMask(mask); TODO implement
+	sceGuPixelMask(mask);
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { sceGuDepthMask(enabled); }
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	sceGuDepthMask(enabled ? 0 : 0xffffffff); 
+}
 void Gfx_SetDepthTest(cc_bool enabled)  { GU_Toggle(GU_DEPTH_TEST); }
-//void Gfx_SetDepthTest(cc_bool enabled)  { sceGuDisable(GU_DEPTH_TEST); }
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	//*matrix = Matrix_Identity;
-	//gumOrtho(matrix, 0.0f, width, height, 0.0f, ORTHO_NEAR, ORTHO_FAR);
 	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
 }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
 	float zNear = 0.1f;
-	*matrix = Matrix_Identity;
-	gumPerspective(matrix, 70.0f, aspect, 0.1f, zFar);
-	//Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
+	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
 
@@ -298,9 +315,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	/* TODO: Implemen fake exp/exp2 fog */
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { 
-	GU_Toggle(GU_ALPHA_TEST);
-}
+void Gfx_SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
