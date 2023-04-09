@@ -24,10 +24,17 @@ typedef enum MatrixType_ {
 #define SIZEOF_VERTEX_COLOURED 16
 #define SIZEOF_VERTEX_TEXTURED 24
 
+#if defined CC_BUILD_PSP
+/* 3 floats for position (XYZ), 4 bytes for colour. */
+struct VertexColoured { PackedCol Col; float X, Y, Z; };
+/* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
+struct VertexTextured { float U, V; PackedCol Col; float X, Y, Z; };
+#else
 /* 3 floats for position (XYZ), 4 bytes for colour. */
 struct VertexColoured { float X, Y, Z; PackedCol Col; };
 /* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
 struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; };
+#endif
 
 void Gfx_Create(void);
 void Gfx_Free(void);

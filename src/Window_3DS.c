@@ -36,6 +36,7 @@ void Window_Init(void) {
 	
 	WindowInfo.Width  = height; // deliberately swapped
 	WindowInfo.Height = width;  // deliberately swapped
+	WindowInfo.Focused = true;
 }
 
 static void DoCreateWindow(int _3d) {

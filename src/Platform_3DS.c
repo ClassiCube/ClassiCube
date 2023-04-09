@@ -104,6 +104,7 @@ cc_uint64 Stopwatch_Measure(void) {
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
+	// See CPU_TICKS_PER_USEC in libctru/include/3ds/os.h
 	return (end - beg) * US_PER_SEC / SYSCLOCK_ARM11;
 }
 
@@ -122,12 +123,6 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	cc_uint64 beg = Stopwatch_Measure();
-	Thread_Sleep(10);
-	cc_uint64 end = Stopwatch_Measure();
-	int delta = Stopwatch_ElapsedMicroseconds(beg, end);
-	Platform_Log1("DELTA: %i", &delta);
-	
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	String_EncodeUtf8(str, path);
@@ -239,9 +234,8 @@ static void Exec3DSThread(void* param) {
 }
 
 void* Thread_Create(Thread_StartFunc func) {
-	return NULL;
-	// TODO: Not quite correct, but eh
-	//return threadCreate(Exec3DSThread, (void*)func, 512 * 1024, 0x3f, -2, false);
+	//TODO: Not quite correct, but eh
+	return threadCreate(Exec3DSThread, (void*)func, 512 * 1024, 0x3f, -2, false);
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
@@ -249,14 +243,14 @@ void Thread_Start2(void* handle, Thread_StartFunc func) {
 }
 
 void Thread_Detach(void* handle) {
-	//Thread thread = (Thread)handle;
-	//threadDetach(thread);
+	Thread thread = (Thread)handle;
+	threadDetach(thread);
 }
 
 void Thread_Join(void* handle) {
-	//Thread thread = (Thread)handle;
-	//threadJoin(thread, U64_MAX);
-	//threadFree(thread);
+	Thread thread = (Thread)handle;
+	threadJoin(thread, U64_MAX);
+	threadFree(thread);
 }
 
 void* Mutex_Create(void) {
@@ -280,10 +274,11 @@ void Mutex_Unlock(void* handle) {
 void* Waitable_Create(void) {
 	LightEvent* event = (LightEvent*)Mem_Alloc(1, sizeof(LightEvent), "waitable");
 	LightEvent_Init(event, RESET_ONESHOT);
-	return RESET_ONESHOT;
+	return event;
 }
 
 void Waitable_Free(void* handle) {
+	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
