@@ -1,13 +1,4 @@
 #include "Core.h"
-
-// https://gbatemp.net/threads/homebrew-development.360646/page-245
-// 3DS defaults to stack size of *32 KB*.. way too small
-unsigned int __stacksize__ = 512 * 1024;
-
-#define CC_BUILD_GL
-#include "Graphics_GL1.c"
-
-#undef CC_BUILD_3DS
 #if defined CC_BUILD_3DS
 #include "_GraphicsBase.h"
 #include "Errors.h"
@@ -23,6 +14,10 @@ unsigned int __stacksize__ = 512 * 1024;
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
+	
+// https://gbatemp.net/threads/homebrew-development.360646/page-245
+// 3DS defaults to stack size of *32 KB*.. way too small
+unsigned int __stacksize__ = 512 * 1024;
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
