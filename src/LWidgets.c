@@ -700,11 +700,11 @@ static void LTable_QuickSort(int left, int right) {
 }
 
 void LTable_Sort(struct LTable* w) {
-	if (!FetchServersTask.numServers) return;
-
 	sortingCol = w->sortingCol;
 	FetchServersTask_ResetOrder();
-	LTable_QuickSort(0, FetchServersTask.numServers - 1);
+
+	if (FetchServersTask.numServers)
+		LTable_QuickSort(0, FetchServersTask.numServers - 1);
 
 	LTable_ApplyFilter(w);
 	LTable_ShowSelected(w);
