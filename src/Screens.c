@@ -75,16 +75,18 @@ static struct HUDScreen {
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
+#define HUD_MAX_VERTICES (TEXTWIDGET_MAX * 2)
 
-static void HUDScreen_UpdateLine1(struct HUDScreen* s) {
+static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
-	int indices, ping;
-	int fps = (int)(s->frames / s->accumulator);
+	int indices, ping, fps;
 
 	String_InitArray(status, statusBuffer);
-	String_Format1(&status, "%i fps, ", &fps);
 	/* Don't remake texture when FPS isn't being shown */
 	if (!Gui.ShowFPS && s->line1.tex.ID) return;
+
+	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
+	String_Format1(&status, "%i fps, ", &fps);
 
 	if (Game_ClassicMode) {
 		String_Format1(&status, "%i chunk updates", &Game.ChunkUpdates);
@@ -100,6 +102,7 @@ static void HUDScreen_UpdateLine1(struct HUDScreen* s) {
 		if (ping) String_Format1(&status, ", ping %i ms", &ping);
 	}
 	TextWidget_Set(&s->line1, &status, &s->font);
+	s->dirty = true;
 }
 
 static void HUDScreen_DrawPosition(struct HUDScreen* s) {
@@ -140,11 +143,18 @@ static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	return speed != s->lastSpeed || Camera.Fov != s->lastFov || s->hacksChanged;
 }
 
-static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
+static void HUDScreen_RemakeLine2(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	float speed = HacksComp_CalcSpeedFactor(hacks, hacks->CanSpeed);
+	float speed;
+	s->dirty = true;
 
+	if (Game_ClassicMode) {
+		TextWidget_SetConst(&s->line2, Game_Version.Name, &s->font);
+		return;
+	}
+
+	speed = HacksComp_CalcSpeedFactor(hacks, hacks->CanSpeed);
 	s->lastSpeed = speed; s->lastFov = Camera.Fov;
 	s->hacksChanged = false;
 
@@ -160,21 +170,12 @@ static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	TextWidget_Set(&s->line2, &status, &s->font);
 }
 
-static void HUDScreen_Update(void* screen, double delta) {
-	struct HUDScreen* s = (struct HUDScreen*)screen;
-	s->frames++;
-	s->accumulator += delta;
-	if (s->accumulator < 1.0) return;
-
-	HUDScreen_UpdateLine1(s);
-	s->accumulator = 0.0;
-	s->frames      = 0;
-	Game.ChunkUpdates = 0;
-}
 
 static void HUDScreen_ContextLost(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Font_Free(&s->font);
+	Screen_ContextLost(screen);
+
 	TextAtlas_Free(&s->posAtlas);
 	Elem_Free(&s->hotbar);
 	Elem_Free(&s->line1);
@@ -185,24 +186,17 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	static const cc_string chars  = String_FromConst("0123456789-, ()");
 	static const cc_string prefix = String_FromConst("Position: ");
 
-	struct HUDScreen* s      = (struct HUDScreen*)screen;
-	struct TextWidget* line2 = &s->line2;
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	Screen_UpdateVb(s);
 
 	Font_Make(&s->font, 16, FONT_FLAGS_PADDING);
 	Font_SetPadding(&s->font, 2);
 	HotbarWidget_SetFont(&s->hotbar, &s->font);
 
-	HUDScreen_Update(s, 1.0);
+	HUDScreen_RemakeLine1(s);
 	TextAtlas_Make(&s->posAtlas, &chars, &s->font, &prefix);
-
-	if (Game_ClassicMode) {
-		TextWidget_SetConst(line2, Game_Version.Name, &s->font);
-	} else {
-		HUDScreen_UpdateHackState(s);
-	}
+	HUDScreen_RemakeLine2(s);
 }
-
-static void HUDScreen_BuildMesh(void* screen) { }
 
 static int HUDScreen_LayoutHotbar(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
@@ -284,25 +278,64 @@ static void HUDScreen_HacksChanged(void* obj) {
 
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
+	s->maxVertices      = HUD_MAX_VERTICES;
+
 	HotbarWidget_Create(&s->hotbar);
 	TextWidget_Init(&s->line1);
 	TextWidget_Init(&s->line2);
 	Event_Register_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
 }
 
+static void HUDScreen_UpdateFPS(struct HUDScreen* s, double delta) {
+	s->frames++;
+	s->accumulator += delta;
+	if (s->accumulator < 1.0) return;
+
+	HUDScreen_RemakeLine1(s);
+	s->accumulator    = 0.0;
+	s->frames         = 0;
+	Game.ChunkUpdates = 0;
+}
+
+static void HUDScreen_Update(void* screen, double delta) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	HUDScreen_UpdateFPS(s, delta);
+	if (Game_ClassicMode) return;
+
+	if (IsOnlyChatActive() && Gui.ShowFPS) {
+		if (HUDScreen_HasHacksChanged(s)) HUDScreen_RemakeLine2(s);
+	}
+}
+
+static void HUDScreen_BuildMesh(void* screen) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
+
+	data = Screen_LockVb(s);
+	ptr  = &data;
+
+	Widget_BuildMesh(&s->line1, ptr);
+	Widget_BuildMesh(&s->line2, ptr);
+	Gfx_UnlockDynamicVb(s->vb);
+}
+
 static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (Game_HideGui) return;
 
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
+
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
-	if (Gui.ShowFPS) Elem_Render(&s->line1, delta);
+	if (Gui.ShowFPS) Widget_Render2(&s->line1, 0);
 
 	if (Game_ClassicMode) {
-		Elem_Render(&s->line2, delta);
+		Widget_Render2(&s->line2, 4);
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
-		if (HUDScreen_HasHacksChanged(s)) HUDScreen_UpdateHackState(s);
+		Widget_Render2(&s->line2, 4);
 		HUDScreen_DrawPosition(s);
-		Elem_Render(&s->line2, delta);
+		/* TODO swap these two lines back */
 	}
 
 	if (!Gui_GetBlocksWorld()) Elem_Render(&s->hotbar, delta);
@@ -1922,13 +1955,14 @@ static void DisconnectScreen_OnQuit(void* s, void* w) { Window_Close(); }
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	s->maxVertices             = DISCONNECT_MAX_VERTICES;
+
 	TextWidget_Init(&s->title);
 	TextWidget_Init(&s->message);
 
 	ButtonWidget_Init(&s->reconnect, 300, DisconnectScreen_OnReconnect);
 	ButtonWidget_Init(&s->quit,      300, DisconnectScreen_OnQuit);
 	s->reconnect.disabled = !s->canReconnect;
-	s->maxVertices  = DISCONNECT_MAX_VERTICES;
 
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
 	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
