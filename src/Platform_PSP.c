@@ -234,7 +234,7 @@ static int ExecThread(unsigned int argc, void *argv) {
 
 void* Thread_Create(Thread_StartFunc func) {
 	#define CC_THREAD_PRIORITY 17 // TODO: 18?
-	#define CC_THREAD_STACKSIZE 0x8000
+	#define CC_THREAD_STACKSIZE 128 * 1024
 	#define CC_THREAD_ATTRS 0 // TODO PSP_THREAD_ATTR_VFPU?
 	
 	return (void*)sceKernelCreateThread("CC thread", ExecThread, CC_THREAD_PRIORITY, 

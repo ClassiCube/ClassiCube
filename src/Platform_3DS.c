@@ -235,7 +235,7 @@ static void Exec3DSThread(void* param) {
 
 void* Thread_Create(Thread_StartFunc func) {
 	//TODO: Not quite correct, but eh
-	return threadCreate(Exec3DSThread, (void*)func, 512 * 1024, 0x3f, -2, false);
+	return threadCreate(Exec3DSThread, (void*)func, 128 * 1024, 0x3f, -2, false);
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {

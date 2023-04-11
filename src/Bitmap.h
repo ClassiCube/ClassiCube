@@ -47,9 +47,6 @@ BitmapCol BitmapColor_Scale(BitmapCol a, float t);
 
 /* A 2D array of BitmapCol pixels */
 struct Bitmap { BitmapCol* scan0; int width, height; };
-#define PNG_MAX_DIMS 0x8000
-#define PNG_SIG_SIZE 8
-
 /* Returns number of bytes a bitmap consumes. */
 #define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
 /* Gets the yth row of the given bitmap. */
@@ -75,6 +72,14 @@ void Bitmap_TryAllocate(struct Bitmap* bmp, int width, int height);
 /* The pixels from the region are scaled upwards or downwards depending on destination width and height. */
 CC_API void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src, 
 						int srcX, int srcY, int srcWidth, int srcHeight);
+
+#define PNG_SIG_SIZE 8
+#if defined CC_BUILD_PSP || defined CC_BUILD_3DS
+/* No point supporting > 1K x 1K bitmaps when system has less than 64 MB of RAM anyways */
+#define PNG_MAX_DIMS 1024
+#else
+#define PNG_MAX_DIMS 0x8000
+#endif
 
 /* Whether data starts with PNG format signature/identifier. */
 cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len);

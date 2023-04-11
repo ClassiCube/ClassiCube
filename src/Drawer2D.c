@@ -1388,4 +1388,35 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
     interop_SysTextDraw(args, bmp, x, y, shadow);
 }
+#elif defined CC_BUILD_PSP || defined CC_BUILD_3DS
+void SysFonts_Register(const cc_string* path) { }
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) { }
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
+
+	desc->handle = (void*)1;
+	return 0;
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	SysFont_Make(desc, NULL, size, flags);
+}
+
+void Font_Free(struct FontDesc* desc) {
+    desc->size   = 0;
+    desc->handle = NULL;
+}
+
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+	return 10;
+}
+
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+}
 #endif
