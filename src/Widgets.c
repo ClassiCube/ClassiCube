@@ -49,7 +49,8 @@ static void TextWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
-static struct VertexTextured* TextWidget_BuildMesh(void* widget, struct VertexTextured* vertices, struct VertexTextured* beg) {
+static struct VertexTextured* TextWidget_BuildMesh(void* widget, 
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	w->offset = Widget_CalcVertexOffset(vertices, beg);
 	Gfx_Make2DQuad(&w->tex, w->color, vertices);
@@ -160,7 +161,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	Texture_RenderShaded(&w->tex, color);
 }
 
-static struct VertexTextured* ButtonWidget_BuildMesh(void* widget, struct VertexTextured* vertices, struct VertexTextured* beg) {
+static struct VertexTextured* ButtonWidget_BuildMesh(void* widget, 
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct Texture back;
 	PackedCol color;
 	float scale;
@@ -1474,7 +1476,8 @@ static void TextInputWidget_Render(void* widget, double delta) {
 	InputWidget_RenderCaret(w, delta);
 }
 
-static struct VertexTextured* TextInputWidget_BuildMesh(void* widget, struct VertexTextured* vertices, struct VertexTextured* beg) {
+static struct VertexTextured* TextInputWidget_BuildMesh(void* widget, 
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	w->offset = Widget_CalcVertexOffset(vertices, beg);
 
@@ -2267,10 +2270,39 @@ static void TextGroupWidget_Free(void* widget) {
 	}
 }
 
+static struct VertexTextured* TextGroupWidget_BuildMesh(void* widget, 
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+	struct Texture* textures  = w->textures;
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
+	int i;
+
+	for (i = 0; i < w->lines; i++) {
+		if (!textures[i].ID) continue;
+
+		Gfx_Make2DQuad(&textures[i], PACKEDCOL_WHITE, vertices + 4 * i);
+	}
+	return vertices + 4 * w->lines;
+}
+
+static void TextGroupWidget_Render2(void* widget) {
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+	struct Texture* textures  = w->textures;
+	int i;
+
+	for (i = 0; i < w->lines; i++) {
+		if (!textures[i].ID) continue;
+
+		Gfx_BindTexture(textures[i].ID);
+		Gfx_DrawVb_IndexedTris_Range(4, w->offset + i * 4);
+	}
+}
+
 static const struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	TextGroupWidget_Render, TextGroupWidget_Free, TextGroupWidget_Reposition,
 	Widget_InputDown,       Widget_InputUp,       Widget_MouseScroll,
-	Widget_Pointer,         Widget_PointerUp,     Widget_PointerMove
+	Widget_Pointer,         Widget_PointerUp,     Widget_PointerMove,
+	TextGroupWidget_BuildMesh, TextGroupWidget_Render2
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
 	Widget_Reset(w);
@@ -2553,25 +2585,27 @@ static void ThumbstickWidget_Rotate(void* widget, struct VertexTextured** vertic
 	}
 }
 
-static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured** vertices) {
+static struct VertexTextured* ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured* vertices) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	float tmp;
-	tex->Y = w->y + w->height / 2;
-	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	tex->Y   = w->y + w->height / 2;
+	vertices = Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
-	tex->Y = w->y;
-	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
-	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	tex->Y   = w->y;
+	tmp      = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	vertices = Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
-	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	vertices = Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 	ThumbstickWidget_Rotate(widget, vertices, w->width);
 
-	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
-	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	tmp      = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	vertices = Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 	ThumbstickWidget_Rotate(widget, vertices, w->width / 2);
+	return vertices;
 }
 
-static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices, struct VertexTextured* beg) {
+static struct VertexTextured* ThumbstickWidget_BuildMesh(void* widget, 
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct Texture tex;
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	w->offset = Widget_CalcVertexOffset(vertices, beg);
@@ -2581,9 +2615,10 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
 
 	tex.uv.V1 = 0.0f; tex.uv.V2 = 0.5f;
-	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+	vertices = ThumbstickWidget_BuildGroup(widget, &tex, vertices);
 	tex.uv.V1 = 0.5f; tex.uv.V2 = 1.0f;
-	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+	vertices = ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+	return vertices;
 }
 
 static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
@@ -2609,13 +2644,12 @@ static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 static int ThumbstickWidget_Render2(void* widget) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	int i, base, flags = ThumbstickWidget_CalcDirs(w);
+	if (!Gui.TouchTex) return;
 
-	if (Gui.TouchTex) {
-		Gfx_BindTexture(Gui.TouchTex);
-		for (i = 0; i < 4; i++) {
-			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
-			Gfx_DrawVb_IndexedTris_Range(4, w->offset + base + (i * 4));
-		}
+	Gfx_BindTexture(Gui.TouchTex);
+	for (i = 0; i < 4; i++) {
+		base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
+		Gfx_DrawVb_IndexedTris_Range(4, w->offset + base + (i * 4));
 	}
 }
 

@@ -796,6 +796,15 @@ static struct ChatScreen {
 	struct Texture chatTextures[GUI_MAX_CHATLINES];
 } ChatScreen_Instance;
 #define CH_EXTENT 16
+#define CHAT_MAX_VERTICES (4 * (3 + CHAT_MAX_STATUS + CHAT_MAX_BOTTOMRIGHT + CHAT_MAX_CLIENTSTATUS + GUI_MAX_CHATLINES))
+
+static struct Widget* chat_widgets[] = {
+	(struct Widget*)&ChatScreen_Instance.status,       (struct Widget*)&ChatScreen_Instance.bottomRight,
+	(struct Widget*)&ChatScreen_Instance.chat,         (struct Widget*)&ChatScreen_Instance.clientStatus,
+	(struct Widget*)&ChatScreen_Instance.announcement, (struct Widget*)&ChatScreen_Instance.bigAnnouncement,
+	(struct Widget*)&ChatScreen_Instance.smallAnnouncement,
+};
+
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
@@ -921,24 +930,6 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 	}
 }
 
-static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
-	int progress = Http_CheckProgress(TexturePack_ReqID);
-	cc_string msg; char msgBuffer[STRING_SIZE];
-	if (progress == s->lastDownloadStatus) return;
-
-	s->lastDownloadStatus = progress;
-	String_InitArray(msg, msgBuffer);
-
-	if (progress == HTTP_PROGRESS_MAKING_REQUEST) {
-		String_AppendConst(&msg, "&eRetrieving texture pack..");
-	} else if (progress == HTTP_PROGRESS_FETCHING_DATA) {
-		String_AppendConst(&msg, "&eDownloading texture pack");
-	} else if (progress >= 0 && progress <= 100) {
-		String_Format1(&msg, "&eDownloading texture pack (&7%i&e%%)", &progress);
-	}
-	Chat_AddOf(&msg, MSG_TYPE_EXTRASTATUS_1);
-}
-
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	double caretAcc;
@@ -960,6 +951,7 @@ static void ChatScreen_ColCodeChanged(void* screen, int code) {
 static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (Gfx.LostContext) return;
+	s->dirty = true;
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->chatIndex++;
@@ -986,6 +978,41 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 		/* Status[1] is for reduced performance mode message */
 		TextGroupWidget_Redraw(&s->status, type - MSG_TYPE_EXTRASTATUS_1);
 	} 
+}
+
+static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
+	int progress = Http_CheckProgress(TexturePack_ReqID);
+	cc_string msg; char msgBuffer[STRING_SIZE];
+	if (progress == s->lastDownloadStatus) return;
+
+	s->lastDownloadStatus = progress;
+	String_InitArray(msg, msgBuffer);
+
+	if (progress == HTTP_PROGRESS_MAKING_REQUEST) {
+		String_AppendConst(&msg, "&eRetrieving texture pack..");
+	} else if (progress == HTTP_PROGRESS_FETCHING_DATA) {
+		String_AppendConst(&msg, "&eDownloading texture pack");
+	} else if (progress >= 0 && progress <= 100) {
+		String_Format1(&msg, "&eDownloading texture pack (&7%i&e%%)", &progress);
+	}
+	Chat_AddOf(&msg, MSG_TYPE_EXTRASTATUS_1);
+}
+
+static void ChatScreen_Update(struct ChatScreen* s, double delta) {
+	double now = Game.Time;
+	ChatScreen_UpdateTexpackStatus(s);
+
+	/* Destroy announcement texture before even rendering it at all, */
+	/* otherwise changing texture pack shows announcement for one frame */
+	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
+		Elem_Free(&s->announcement); s->dirty = true;
+	}
+	if (s->bigAnnouncement.tex.ID && now > Chat_BigAnnouncementReceived + 5) {
+		Elem_Free(&s->bigAnnouncement); s->dirty = true;
+	}
+	if (s->smallAnnouncement.tex.ID && now > Chat_SmallAnnouncementReceived + 5) {
+		Elem_Free(&s->smallAnnouncement); s->dirty = true;
+	}
 }
 
 static void ChatScreen_DrawCrosshairs(void) {
@@ -1023,14 +1050,16 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	double now;
 	int i, logIdx;
 
-	ChatScreen_UpdateTexpackStatus(s);
-	if (!Game_PureClassic) { Elem_Render(&s->status, delta); }
-	Elem_Render(&s->bottomRight, delta);
-	Elem_Render(&s->clientStatus, delta);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
+
+	if (!Game_PureClassic) { Widget_Render2(&s->status); }
+	Widget_Render2(&s->bottomRight);
+	Widget_Render2(&s->clientStatus);
 
 	now = Game.Time;
 	if (s->grabsInput) {
-		Elem_Render(&s->chat, delta);
+		Widget_Render2(&s->chat);
 	} else {
 		/* Only render recent chat */
 		for (i = 0; i < s->chat.lines; i++) {
@@ -1039,27 +1068,16 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_GetLogTime(logIdx) + 10 >= now) Texture_Render(&tex);
+			if (Chat_GetLogTime(logIdx) + 10 < now)     continue;
+			
+			Gfx_BindTexture(tex.ID);
+			Gfx_DrawVb_IndexedTris_Range(4, s->chat.offset + i * 4);
 		}
 	}
 
-	/* Destroy announcement texture before even rendering it at all, */
-	/* otherwise changing texture pack shows announcement for one frame */
-	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
-		Elem_Free(&s->announcement);
-	}
-
-	if (s->bigAnnouncement.tex.ID && now > Chat_BigAnnouncementReceived + 5) {
-		Elem_Free(&s->bigAnnouncement);
-	}
-
-	if (s->smallAnnouncement.tex.ID && now > Chat_SmallAnnouncementReceived + 5) {
-		Elem_Free(&s->smallAnnouncement);
-	}
-
-	Elem_Render(&s->announcement, delta);
-	Elem_Render(&s->bigAnnouncement, delta);
-	Elem_Render(&s->smallAnnouncement, delta);
+	Widget_Render2(&s->announcement);
+	Widget_Render2(&s->bigAnnouncement);
+	Widget_Render2(&s->smallAnnouncement);
 
 	if (s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
@@ -1079,6 +1097,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	ChatScreen_FreeChatFonts(s);
+	Screen_ContextLost(s);
 
 	Elem_Free(&s->chat);
 	Elem_Free(&s->input.base);
@@ -1102,6 +1121,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	struct FontDesc font;
 	ChatScreen_ChatUpdateFont(s);
 	ChatScreen_Redraw(s);
+	Screen_UpdateVb(s);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1112,8 +1132,6 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	Font_Free(&font);
 #endif
 }
-
-static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
@@ -1345,6 +1363,10 @@ static void ChatScreen_Init(void* screen) {
 	Event_Register_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
 	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
 
+	s->maxVertices = CHAT_MAX_VERTICES;
+	s->widgets     = chat_widgets;
+	s->numWidgets  = Array_Elems(chat_widgets);
+
 #ifdef CC_BUILD_TOUCH
 	ButtonWidget_Init(&s->send,   100, NULL);
 	ButtonWidget_Init(&s->cancel, 100, NULL);
@@ -1377,8 +1399,8 @@ static void ChatScreen_Free(void* screen) {
 }
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
-	ChatScreen_Init,        Screen_NullUpdate, ChatScreen_Free,    
-	ChatScreen_Render,      ChatScreen_BuildMesh,
+	ChatScreen_Init,        ChatScreen_Update, ChatScreen_Free,    
+	ChatScreen_Render,      Screen_BuildMesh,
 	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, ChatScreen_TextChanged,
 	ChatScreen_PointerDown, Screen_PointerUp,  Screen_FPointer,     ChatScreen_MouseScroll,
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
@@ -1636,7 +1658,7 @@ static struct LoadingScreen {
 #define LOADING_MAX_VERTICES (2 * TEXTWIDGET_MAX)
 #define LOADING_TILE_SIZE 64
 
-static struct Widget* loading_widgets[2] = {
+static struct Widget* loading_widgets[] = {
 	(struct Widget*)&LoadingScreen.title, (struct Widget*)&LoadingScreen.message
 };
 
@@ -1888,7 +1910,7 @@ static struct DisconnectScreen {
 	cc_string titleStr, messageStr;
 } DisconnectScreen;
 
-static struct Widget* disconnect_widgets[4] = {
+static struct Widget* disconnect_widgets[] = {
 	(struct Widget*)&DisconnectScreen.title, 
 	(struct Widget*)&DisconnectScreen.message,
 	(struct Widget*)&DisconnectScreen.reconnect,

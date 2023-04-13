@@ -185,7 +185,7 @@ static struct ListScreen {
 	struct StringsBuffer entries;
 } ListScreen;
 
-static struct Widget* list_widgets[10] = {
+static struct Widget* list_widgets[] = {
 	(struct Widget*)&ListScreen.btns[0], (struct Widget*)&ListScreen.btns[1],
 	(struct Widget*)&ListScreen.btns[2], (struct Widget*)&ListScreen.btns[3],
 	(struct Widget*)&ListScreen.btns[4], (struct Widget*)&ListScreen.left,
@@ -606,7 +606,7 @@ static struct OptionsGroupScreen {
 	struct ButtonWidget done;	
 } OptionsGroupScreen;
 
-static struct Widget* optGroups_widgets[10] = {
+static struct Widget* optGroups_widgets[] = {
 	(struct Widget*)&OptionsGroupScreen.btns[0], (struct Widget*)&OptionsGroupScreen.btns[1],
 	(struct Widget*)&OptionsGroupScreen.btns[2], (struct Widget*)&OptionsGroupScreen.btns[3],
 	(struct Widget*)&OptionsGroupScreen.btns[4], (struct Widget*)&OptionsGroupScreen.btns[5],
@@ -735,7 +735,7 @@ static struct EditHotkeyScreen {
 	struct ButtonWidget btns[5], cancel;
 } EditHotkeyScreen;
 
-static struct Widget* edithotkey_widgets[7] = {
+static struct Widget* edithotkey_widgets[] = {
 	(struct Widget*)&EditHotkeyScreen.btns[0], (struct Widget*)&EditHotkeyScreen.btns[1],
 	(struct Widget*)&EditHotkeyScreen.btns[2], (struct Widget*)&EditHotkeyScreen.btns[3],
 	(struct Widget*)&EditHotkeyScreen.btns[4], (struct Widget*)&EditHotkeyScreen.input,
@@ -1000,7 +1000,7 @@ static struct GenLevelScreen {
 	struct TextWidget labels[4], title;
 } GenLevelScreen;
 
-static struct Widget* gen_widgets[12] = {
+static struct Widget* gen_widgets[] = {
 	(struct Widget*)&GenLevelScreen.inputs[0], (struct Widget*)&GenLevelScreen.inputs[1],
 	(struct Widget*)&GenLevelScreen.inputs[2], (struct Widget*)&GenLevelScreen.inputs[3],
 	(struct Widget*)&GenLevelScreen.labels[0], (struct Widget*)&GenLevelScreen.labels[1],
@@ -2029,7 +2029,7 @@ static struct MenuInputOverlay {
 	cc_string value; char valueBuffer[STRING_SIZE];
 } MenuInputOverlay;
 
-static struct Widget* menuInput_widgets[3] = {
+static struct Widget* menuInput_widgets[] = {
 	(struct Widget*)&MenuInputOverlay.ok,   (struct Widget*)&MenuInputOverlay.Default, 
 	(struct Widget*)&MenuInputOverlay.input
 };
@@ -3333,7 +3333,7 @@ static struct TexIdsOverlay {
 	struct TextAtlas idAtlas;
 	struct TextWidget title;
 } TexIdsOverlay;
-static struct Widget* texids_widgets[1] = { (struct Widget*)&TexIdsOverlay.title };
+static struct Widget* texids_widgets[] = { (struct Widget*)&TexIdsOverlay.title };
 
 #define TEXIDS_MAX_PER_PAGE (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW)
 #define TEXIDS_TEXT_VERTICES (10 * 4 + 90 * 8 + 412 * 12) /* '0'-'9' + '10'-'99' + '100'-'511' */
@@ -3536,7 +3536,7 @@ static struct UrlWarningOverlay {
 	char _urlBuffer[STRING_SIZE * 4];
 } UrlWarningOverlay;
 
-static struct Widget* urlwarning_widgets[6] = {
+static struct Widget* urlwarning_widgets[] = {
 	(struct Widget*)&UrlWarningOverlay.lbls[0], (struct Widget*)&UrlWarningOverlay.lbls[1],
 	(struct Widget*)&UrlWarningOverlay.lbls[2], (struct Widget*)&UrlWarningOverlay.lbls[3],
 	(struct Widget*)&UrlWarningOverlay.btns[0], (struct Widget*)&UrlWarningOverlay.btns[1]
@@ -3626,7 +3626,7 @@ static struct TexPackOverlay {
 	char _urlBuffer[STRING_SIZE + 1];
 } TexPackOverlay;
 
-static struct Widget* texpack_widgets[8] = {
+static struct Widget* texpack_widgets[] = {
 	(struct Widget*)&TexPackOverlay.lbls[0], (struct Widget*)&TexPackOverlay.lbls[1],
 	(struct Widget*)&TexPackOverlay.lbls[2], (struct Widget*)&TexPackOverlay.lbls[3],
 	(struct Widget*)&TexPackOverlay.btns[0], (struct Widget*)&TexPackOverlay.btns[1],
@@ -3808,7 +3808,7 @@ static struct TouchOnscreenScreen {
 	struct FontDesc font;
 } TouchOnscreenScreen;
 
-static struct Widget* touchOnscreen_widgets[3 + ONSCREEN_PAGE_BTNS] = {
+static struct Widget* touchOnscreen_widgets[] = {
 	(struct Widget*)&TouchOnscreenScreen.back,    (struct Widget*)&TouchOnscreenScreen.left,
 	(struct Widget*)&TouchOnscreenScreen.right,   (struct Widget*)&TouchOnscreenScreen.btns[0], 
 	(struct Widget*)&TouchOnscreenScreen.btns[1], (struct Widget*)&TouchOnscreenScreen.btns[2], 
@@ -3943,7 +3943,7 @@ static struct TouchCtrlsScreen {
 	struct FontDesc font;
 } TouchCtrlsScreen;
 
-static struct Widget* touchCtrls_widgets[1 + TOUCHCTRLS_BTNS] = {
+static struct Widget* touchCtrls_widgets[] = {
 	(struct Widget*)&TouchCtrlsScreen.back,    (struct Widget*)&TouchCtrlsScreen.btns[0], 
 	(struct Widget*)&TouchCtrlsScreen.btns[1], (struct Widget*)&TouchCtrlsScreen.btns[2], 
 	(struct Widget*)&TouchCtrlsScreen.btns[3], (struct Widget*)&TouchCtrlsScreen.btns[4]
@@ -4115,7 +4115,7 @@ static struct TouchMoreScreen {
 	struct ButtonWidget btns[TOUCHMORE_BTNS];
 } TouchMoreScreen;
 
-static struct Widget* touchMore_widgets[1 + TOUCHMORE_BTNS] = {
+static struct Widget* touchMore_widgets[] = {
 	(struct Widget*)&TouchMoreScreen.back,    (struct Widget*)&TouchMoreScreen.btns[0], 
 	(struct Widget*)&TouchMoreScreen.btns[1], (struct Widget*)&TouchMoreScreen.btns[2], 
 	(struct Widget*)&TouchMoreScreen.btns[3], (struct Widget*)&TouchMoreScreen.btns[4],
