@@ -20,6 +20,8 @@
 #include "Input.h"
 
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
+#define Widget_CalcVertexOffset(cur, beg) (int)(cur - beg)
+
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }
 static void Widget_InputUp(void* elem, int key)   { }
@@ -33,7 +35,7 @@ static int  Widget_MouseScroll(void* elem, float delta) { return false; }
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->col);
+	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->color);
 }
 
 static void TextWidget_Free(void* widget) {
@@ -47,18 +49,19 @@ static void TextWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
-static void TextWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+static struct VertexTextured* TextWidget_BuildMesh(void* widget, struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	Gfx_Make2DQuad(&w->tex, w->col, vertices);
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
+	Gfx_Make2DQuad(&w->tex, w->color, vertices);
+	return vertices + 4;
 }
 
-static int TextWidget_Render2(void* widget, int offset) {
+static void TextWidget_Render2(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->tex.ID) {
-		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
-	}
-	return offset + 4;
+	if (!w->tex.ID) return;
+
+	Gfx_BindTexture(w->tex.ID);
+	Gfx_DrawVb_IndexedTris_Range(4, w->offset);
 }
 
 static const struct WidgetVTABLE TextWidget_VTABLE = {
@@ -70,7 +73,7 @@ static const struct WidgetVTABLE TextWidget_VTABLE = {
 void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
-	w->col    = PACKEDCOL_WHITE;
+	w->color  = PACKEDCOL_WHITE;
 }
 
 void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font) {
@@ -97,6 +100,9 @@ void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
+#define BTN_NORMAL_COLOR   PackedCol_Make(224, 224, 224, 255)
+#define BTN_ACTIVE_COLOR   PackedCol_Make(255, 255, 160, 255)
+#define BTN_DISABLED_COLOR PackedCol_Make(160, 160, 160, 255)
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 
 static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
@@ -119,14 +125,10 @@ static void ButtonWidget_Reposition(void* widget) {
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
-	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
-	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
-	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
+	struct Texture back;
 	PackedCol color;
-
-	struct ButtonWidget* w = (struct ButtonWidget*)widget;
-	struct Texture back;	
 	float scale;
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
 		
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->disabled) back = btnDisabledTex;
@@ -146,27 +148,24 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Draw2DTexture(&back, w->col);
+		Gfx_Draw2DTexture(&back, w->color);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Draw2DTexture(&back, w->col);
+		Gfx_Draw2DTexture(&back, w->color);
 	}
 
 	if (!w->tex.ID) return;
-	color = w->disabled ? disabledColor : (w->active ? activeColor : normColor);
+	color = w->disabled ? BTN_DISABLED_COLOR : (w->active ? BTN_ACTIVE_COLOR : BTN_NORMAL_COLOR);
 	Texture_RenderShaded(&w->tex, color);
 }
 
-static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
-	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
-	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
-	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
+static struct VertexTextured* ButtonWidget_BuildMesh(void* widget, struct VertexTextured* vertices, struct VertexTextured* beg) {
+	struct Texture back;
 	PackedCol color;
-
-	struct ButtonWidget* w = (struct ButtonWidget*)widget;
-	struct Texture back;	
 	float scale;
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
 		
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->disabled) back = btnDisabledTex;
@@ -176,36 +175,35 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
 		/* Button can be drawn normally */
-		Gfx_Make2DQuad(&back, w->col, vertices);
-		*vertices += 4; /* always use up 8 vertices for body */
+		Gfx_Make2DQuad(&back, w->color, vertices);
 	} else {
 		/* Split button down the middle */
 		scale = (w->width / 400.0f) / (2 * DisplayInfo.ScaleX);
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices + 0);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices + 4);
 	}
 
-	color = w->disabled ? disabledColor : (w->active ? activeColor : normColor);
-	Gfx_Make2DQuad(&w->tex, color, vertices);
+	color = w->disabled ? BTN_DISABLED_COLOR : (w->active ? BTN_ACTIVE_COLOR : BTN_NORMAL_COLOR);
+	Gfx_Make2DQuad(&w->tex, color, vertices + 8);
+	return vertices + 12;
 }
 
-static int ButtonWidget_Render2(void* widget, int offset) {
+static void ButtonWidget_Render2(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
 	Gfx_BindTexture(Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex);
 	/* TODO: Does this 400 need to take DPI into account */
-	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset);
+	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, w->offset);
 
 	if (w->tex.ID) {
 		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset + 8);
+		Gfx_DrawVb_IndexedTris_Range(4, w->offset + 8);
 	}
-	return offset + 12;
 }
 
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
@@ -222,7 +220,7 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
-	w->col       = PACKEDCOL_WHITE;
+	w->color     = PACKEDCOL_WHITE;
 	w->optName   = NULL;
 	w->minWidth  = Display_ScaleX(minWidth);
 	w->minHeight = Display_ScaleY(40);
@@ -1476,23 +1474,24 @@ static void TextInputWidget_Render(void* widget, double delta) {
 	InputWidget_RenderCaret(w, delta);
 }
 
-static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+static struct VertexTextured* TextInputWidget_BuildMesh(void* widget, struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices);
-	Gfx_Make2DQuad(&w->caretTex, w->caretCol,     vertices);
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
+
+	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices + 0);
+	Gfx_Make2DQuad(&w->caretTex, w->caretCol,     vertices + 4);
+	return vertices + 8;
 }
 
-static int TextInputWidget_Render2(void* widget, int offset) {
+static void TextInputWidget_Render2(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
-	Gfx_DrawVb_IndexedTris_Range(4, offset);
-	offset += 4;
+	Gfx_DrawVb_IndexedTris_Range(4, w->offset);
 
 	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
 		Gfx_BindTexture(w->caretTex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		Gfx_DrawVb_IndexedTris_Range(4, w->offset + 4);
 	}
-	return offset + 4;
 }
 
 static void TextInputWidget_RemakeTexture(void* widget) {
@@ -2572,9 +2571,10 @@ static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struc
 	ThumbstickWidget_Rotate(widget, vertices, w->width / 2);
 }
 
-static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
-	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices, struct VertexTextured* beg) {
 	struct Texture tex;
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
 
 	tex.X     = w->x;
 	tex.Width = w->width; tex.Height = w->height / 2;
@@ -2606,7 +2606,7 @@ static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 	return dirs;
 }
 
-static int ThumbstickWidget_Render2(void* widget, int offset) {
+static int ThumbstickWidget_Render2(void* widget) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	int i, base, flags = ThumbstickWidget_CalcDirs(w);
 
@@ -2614,10 +2614,9 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 		Gfx_BindTexture(Gui.TouchTex);
 		for (i = 0; i < 4; i++) {
 			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
-			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4));
+			Gfx_DrawVb_IndexedTris_Range(4, w->offset + base + (i * 4));
 		}
 	}
-	return offset + THUMBSTICKWIDGET_MAX;
 }
 
 static void ThumbstickWidget_Reposition(void* widget) {

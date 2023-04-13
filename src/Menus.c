@@ -1070,7 +1070,7 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int def) {
 	TextInputWidget_Create(&s->inputs[i], 200, &tmp, &desc);
 	s->inputs[i].base.showCaret = false;
 	TextWidget_Init(&s->labels[i]);
-	s->labels[i].col = PackedCol_Make(224, 224, 224, 255);
+	s->labels[i].color = PackedCol_Make(224, 224, 224, 255);
 	/* TODO placeholder */
 	s->inputs[i].onscreenType = KEYBOARD_TYPE_INTEGER;
 }
@@ -3306,7 +3306,7 @@ static void Overlay_InitLabels(struct TextWidget* labels) {
 	TextWidget_Init(&labels[0]);
 	for (i = 1; i < 4; i++) {
 		TextWidget_Init(&labels[i]);
-		labels[i].col = PackedCol_Make(224, 224, 224, 255);
+		labels[i].color = PackedCol_Make(224, 224, 224, 255);
 	}
 }
 
@@ -3380,7 +3380,8 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTextured** ptr) {
+static struct VertexTextured* TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, 
+														struct VertexTextured* ptr) {
 	struct Texture tex;
 	int baseLoc, xOffset;
 	int i, row, size;
@@ -3401,15 +3402,17 @@ static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTex
 			tex.uv.V1 = Atlas1D_RowId(i + baseLoc) * Atlas1D.InvTileSize;
 			tex.uv.V2 = tex.uv.V1      + UV2_Scale * Atlas1D.InvTileSize;
 			
-			Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
+			ptr = Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
 		}
 
 		baseLoc += TEXIDS_MAX_PER_PAGE;
 		xOffset += size * ATLAS2D_TILES_PER_ROW;
 	}
+	return ptr;
 }
 
-static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextured** ptr) {
+static struct VertexTextured* TexIdsOverlay_BuildText(struct TexIdsOverlay* s, 
+													struct VertexTextured* ptr) {
 	struct TextAtlas* idAtlas;
 	struct VertexTextured* beg;
 	int xOffset, size, row;
@@ -3418,7 +3421,7 @@ static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextur
 	size    = s->tileSize;
 	xOffset = s->xOffset;
 	idAtlas = &s->idAtlas;
-	beg     = *ptr;
+	beg     = ptr;
 	
 	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
 		idAtlas->tex.Y = s->yOffset + (size - idAtlas->tex.Height);
@@ -3426,26 +3429,27 @@ static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextur
 		for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 			for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
 				idAtlas->curX = xOffset + size * x + 3; /* offset text by 3 pixels */
-				TextAtlas_AddInt(idAtlas, id++, ptr);
+				ptr = TextAtlas_AddInt(idAtlas, id++, ptr);
 			}
 			idAtlas->tex.Y += size;
 		}
 		xOffset += size * ATLAS2D_TILES_PER_ROW;
 	}	
-	s->textVertices = (int)(*ptr - beg);
+	s->textVertices = (int)(ptr - beg);
+	return ptr;
 }
 
 static void TexIdsOverlay_BuildMesh(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	struct VertexTextured* data;
-	struct VertexTextured** ptr;
+	struct VertexTextured* ptr;
 
 	data = Screen_LockVb(s);
-	ptr  = &data;
+	ptr  = data;
 
-	Widget_BuildMesh(&s->title, ptr);
-	TexIdsOverlay_BuildTerrain(s, ptr);
-	TexIdsOverlay_BuildText(s, ptr);
+	ptr = Widget_BuildMesh(&s->title, ptr, data);
+	ptr = TexIdsOverlay_BuildTerrain(s, ptr);
+	ptr = TexIdsOverlay_BuildText(s, ptr);
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
@@ -3485,13 +3489,14 @@ static void TexIdsOverlay_Free(void* screen) {
 
 static void TexIdsOverlay_Render(void* screen, double delta) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	int offset = 0;
+	int offset;
 	Menu_RenderBounds();
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
-	offset = Widget_Render2(&s->title, offset);
+	Widget_Render2(&s->title);
+	offset = s->title.offset + 4;
 	offset = TexIdsOverlay_RenderTerrain(s, offset);
 
 	Gfx_BindTexture(s->idAtlas.tex.ID);

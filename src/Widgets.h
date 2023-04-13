@@ -14,7 +14,7 @@ struct FontDesc;
 struct TextWidget {
 	Widget_Body
 	struct Texture tex;
-	PackedCol col;
+	PackedCol color;
 };
 #define TEXTWIDGET_MAX 4
 
@@ -32,7 +32,7 @@ typedef void (*Button_Set)(const cc_string* raw);
 struct ButtonWidget {
 	Widget_Body
 	struct Texture tex;
-	PackedCol col;
+	PackedCol color;
 	int minWidth, minHeight;
 	const char* optName;
 	Button_Get GetValue;

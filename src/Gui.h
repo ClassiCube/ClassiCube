@@ -151,9 +151,9 @@ struct WidgetVTABLE {
 	/* Returns non-zero if a pointer movement is handled. */
 	int (*HandlesPointerMove)(void* elem, int id, int x, int y);
 	/* Builds the mesh of vertices for this widget. */
-	void (*BuildMesh)(void* elem, struct VertexTextured** vertices);
+	struct VertexTextured* (*BuildMesh)(void* elem, struct VertexTextured* vertices, struct VertexTextured* beg);
 	/* Draws this widget on-screen. */
-	int  (*Render2)(void* elem, int offset);
+	void (*Render2)(void* elem);
 };
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
@@ -161,7 +161,8 @@ struct WidgetVTABLE {
 	cc_bool disabled;              /* Whether widget is prevented from being interacted with */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
-	Widget_LeftClick MenuClick;
+	Widget_LeftClick MenuClick; \
+	int offset; /* Offset into vertex buffer when rendering */
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Body };
@@ -240,8 +241,10 @@ struct TextAtlas {
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct FontDesc* font, const cc_string* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
-void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices);
-void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices);
+struct VertexTextured* TextAtlas_Add(struct TextAtlas* atlas, 
+									int charI, struct VertexTextured* vertices);
+struct VertexTextured* TextAtlas_AddInt(struct TextAtlas* atlas, 
+									int value, struct VertexTextured* vertices);
 
 #define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
 #define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
@@ -254,7 +257,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_OnPointerUp(elem,        id, x, y) (elem)->VTABLE->OnPointerUp(elem,        id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
-#define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
-#define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)
-#define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget)
+#define Widget_BuildMesh(widget, vertices, beg) (widget)->VTABLE->BuildMesh(widget, vertices, beg)
+#define Widget_Render2(widget) (widget)->VTABLE->Render2(widget)
+#define Widget_Layout(widget)  (widget)->VTABLE->Reposition(widget)
 #endif

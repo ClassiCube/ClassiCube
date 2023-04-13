@@ -326,7 +326,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 
 void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->tex.ID); }
 
-void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices) {
+struct VertexTextured* TextAtlas_Add(struct TextAtlas* atlas, 
+									int charI, struct VertexTextured* vertices) {
 	struct Texture part = atlas->tex;
 	int width = atlas->widths[charI];
 
@@ -335,21 +336,24 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** v
 	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
 
 	atlas->curX += width;	
-	Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);
+	return Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);
 }
 
-void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices) {
+struct VertexTextured* TextAtlas_AddInt(struct TextAtlas* atlas, 
+										int value, struct VertexTextured* vertices) {
 	char digits[STRING_INT_CHARS];
 	int i, count;
 
 	if (value < 0) {
-		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
+		vertices = TextAtlas_Add(atlas, 10, vertices); 
+		value = -value; /* - sign */
 	}
 	count = String_MakeUInt32((cc_uint32)value, digits);
 
 	for (i = count - 1; i >= 0; i--) {
-		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
+		vertices = TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}
+	return vertices;
 }
 
 
@@ -394,14 +398,14 @@ int Widget_Contains(void* widget, int x, int y) {
 void Screen_Render2Widgets(void* screen, double delta) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
-	int i, offset = 0;
+	int i;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
 	for (i = 0; i < s->numWidgets; i++) {
 		if (!widgets[i]) continue;
-		offset = Widget_Render2(widgets[i], offset);
+		Widget_Render2(widgets[i]);
 	}
 }
 
@@ -453,15 +457,15 @@ void Screen_BuildMesh(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	struct VertexTextured* data;
-	struct VertexTextured** ptr;
+	struct VertexTextured* cur;
 	int i;
 
 	data = Screen_LockVb(s);
-	ptr  = &data;
+	cur  = data;
 
 	for (i = 0; i < s->numWidgets; i++) {
 		if (!widgets[i]) continue;
-		Widget_BuildMesh(widgets[i], ptr);
+		cur = Widget_BuildMesh(widgets[i], cur, data);
 	}
 	Gfx_UnlockDynamicVb(s->vb);
 }

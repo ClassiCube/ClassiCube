@@ -117,19 +117,19 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	/* Make "Position: " prefix */
 	tex = atlas->tex; 
 	tex.X = 2; tex.Width = atlas->offset;
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
+	ptr = Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
 
 	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->curX = atlas->offset + 2;
 
 	/* Make (X, Y, Z) suffix */
-	TextAtlas_Add(atlas, 13, &ptr);
-	TextAtlas_AddInt(atlas, pos.X, &ptr);
-	TextAtlas_Add(atlas, 11, &ptr);
-	TextAtlas_AddInt(atlas, pos.Y, &ptr);
-	TextAtlas_Add(atlas, 11, &ptr);
-	TextAtlas_AddInt(atlas, pos.Z, &ptr);
-	TextAtlas_Add(atlas, 14, &ptr);
+	ptr = TextAtlas_Add(atlas, 13, ptr);
+	ptr = TextAtlas_AddInt(atlas, pos.X, ptr);
+	ptr = TextAtlas_Add(atlas, 11, ptr);
+	ptr = TextAtlas_AddInt(atlas, pos.Y, ptr);
+	ptr = TextAtlas_Add(atlas, 11, ptr);
+	ptr = TextAtlas_AddInt(atlas, pos.Z, ptr);
+	ptr = TextAtlas_Add(atlas, 14, ptr);
 
 	Gfx_BindTexture(atlas->tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
@@ -310,13 +310,13 @@ static void HUDScreen_Update(void* screen, double delta) {
 static void HUDScreen_BuildMesh(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	struct VertexTextured* data;
-	struct VertexTextured** ptr;
+	struct VertexTextured* cur;
 
 	data = Screen_LockVb(s);
-	ptr  = &data;
+	cur  = data;
 
-	Widget_BuildMesh(&s->line1, ptr);
-	Widget_BuildMesh(&s->line2, ptr);
+	cur = Widget_BuildMesh(&s->line1, cur, data);
+	cur = Widget_BuildMesh(&s->line2, cur, data);
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
@@ -328,12 +328,12 @@ static void HUDScreen_Render(void* screen, double delta) {
 	Gfx_BindDynamicVb(s->vb);
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
-	if (Gui.ShowFPS) Widget_Render2(&s->line1, 0);
+	if (Gui.ShowFPS) Widget_Render2(&s->line1);
 
 	if (Game_ClassicMode) {
-		Widget_Render2(&s->line2, 4);
+		Widget_Render2(&s->line2);
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
-		Widget_Render2(&s->line2, 4);
+		Widget_Render2(&s->line2);
 		HUDScreen_DrawPosition(s);
 		/* TODO swap these two lines back */
 	}
@@ -1689,13 +1689,13 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 static void LoadingScreen_BuildMesh(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	struct VertexTextured* data;
-	struct VertexTextured** ptr;
+	struct VertexTextured* ptr;
 	struct Texture tex;
 	TextureLoc loc;
 	int atlasIndex, i;
 
 	data = Screen_LockVb(s);
-	ptr  = &data;
+	ptr  = data;
 
 	loc       = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	Tex_SetRect(tex, 0,0, WindowInfo.Width,LOADING_TILE_SIZE);
@@ -1704,11 +1704,11 @@ static void LoadingScreen_BuildMesh(void* screen) {
 	
 	for (i = 0; i < s->rows; i++) {
 		tex.Y = i * LOADING_TILE_SIZE;
-		Gfx_Make2DQuad(&tex, PackedCol_Make(64, 64, 64, 255), ptr);
+		ptr = Gfx_Make2DQuad(&tex, PackedCol_Make(64, 64, 64, 255), ptr);
 	}
 
-	Widget_BuildMesh(&s->title,   ptr);
-	Widget_BuildMesh(&s->message, ptr);
+	ptr = Widget_BuildMesh(&s->title,   ptr, data);
+	ptr = Widget_BuildMesh(&s->message, ptr, data);
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
@@ -1735,23 +1735,21 @@ static void LoadingScreen_Init(void* screen) {
 
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	int offset, filledWidth;
+	int filledWidth;
 	TextureLoc loc;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
 	/* Draw background dirt */
-	offset = 0;
 	if (s->rows) {
 		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 		Gfx_BindTexture(Atlas1D.TexIds[Atlas1D_Index(loc)]);
 		Gfx_DrawVb_IndexedTris(s->rows * 4);
-		offset = s->rows * 4;
 	}
 
-	offset = Widget_Render2(&s->title,   offset);
-	offset = Widget_Render2(&s->message, offset);
+	Widget_Render2(&s->title);
+	Widget_Render2(&s->message);
 
 	filledWidth = (int)(s->progWidth * s->progress);
 	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, 

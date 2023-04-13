@@ -177,16 +177,16 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	struct VertexTextured texVerts[4];
-	struct VertexTextured* ptr = texVerts;
-	Gfx_Make2DQuad(tex, color, &ptr);
+	Gfx_Make2DQuad(tex, color, texVerts);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
 }
 
-void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
+struct VertexTextured* Gfx_Make2DQuad(const struct Texture* tex, 
+									PackedCol color, struct VertexTextured* vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
 	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
-	struct VertexTextured* v = *vertices;
+	struct VertexTextured* v = vertices;
 
 #ifdef CC_BUILD_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
@@ -199,7 +199,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	v->X = x2; v->Y = y1; v->Z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V1; v++;
 	v->X = x2; v->Y = y2; v->Z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
 	v->X = x1; v->Y = y2; v->Z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
-	*vertices = v;
+	return v;
 }
 
 static cc_bool gfx_hadFog;
