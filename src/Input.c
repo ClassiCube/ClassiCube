@@ -944,7 +944,7 @@ static void HandleHotkeyDown(int key) {
 	if (!(hkey->flags & HOTKEY_FLAG_STAYS_OPEN)) {
 		Chat_Send(&text, false);
 	} else if (!Gui.InputGrab) {
-		ChatScreen_OpenInput(&text);
+		ChatInputScreen_Open(&text);
 	}
 }
 

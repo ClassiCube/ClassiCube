@@ -3552,7 +3552,7 @@ static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	if (Gui.ClickableChat) ChatScreen_AppendInput(&s->url);
+	if (Gui.ClickableChat) ChatInputScreen_Append(&s->url);
 	Gui_Remove((struct Screen*)s);
 }
 

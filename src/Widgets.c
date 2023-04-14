@@ -125,42 +125,6 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->tex.Y = w->y + (w->height / 2 - w->tex.Height / 2);
 }
 
-static void ButtonWidget_Render(void* widget, double delta) {
-	struct Texture back;
-	PackedCol color;
-	float scale;
-	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
-		
-	back = w->active ? btnSelectedTex : btnShadowTex;
-	if (w->disabled) back = btnDisabledTex;
-
-	back.ID = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
-	back.X = w->x; back.Width  = w->width;
-	back.Y = w->y; back.Height = w->height;
-
-	/* TODO: Does this 400 need to take DPI into account */
-	if (w->width >= 400) {
-		/* Button can be drawn normally */
-		Texture_Render(&back);
-	} else {
-		/* Split button down the middle */
-		scale = (w->width / 400.0f) / (2 * DisplayInfo.ScaleX);
-		Gfx_BindTexture(back.ID); /* avoid bind twice */
-
-		back.Width = (w->width / 2);
-		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Draw2DTexture(&back, w->color);
-
-		back.X += (w->width / 2);
-		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Draw2DTexture(&back, w->color);
-	}
-
-	if (!w->tex.ID) return;
-	color = w->disabled ? BTN_DISABLED_COLOR : (w->active ? BTN_ACTIVE_COLOR : BTN_NORMAL_COLOR);
-	Texture_RenderShaded(&w->tex, color);
-}
-
 static struct VertexTextured* ButtonWidget_BuildMesh(void* widget, 
 								struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct Texture back;
@@ -202,14 +166,13 @@ static void ButtonWidget_Render2(void* widget) {
 	/* TODO: Does this 400 need to take DPI into account */
 	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, w->offset);
 
-	if (w->tex.ID) {
-		Gfx_BindTexture(w->tex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, w->offset + 8);
-	}
+	if (!w->tex.ID) return;
+	Gfx_BindTexture(w->tex.ID);
+	Gfx_DrawVb_IndexedTris_Range(4, w->offset + 8);
 }
 
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
-	ButtonWidget_Render, ButtonWidget_Free, ButtonWidget_Reposition,
+	NULL,                ButtonWidget_Free, ButtonWidget_Reposition,
 	Widget_InputDown,    Widget_InputUp,    Widget_MouseScroll,
 	Widget_Pointer,      Widget_PointerUp,  Widget_PointerMove,
 	ButtonWidget_BuildMesh, ButtonWidget_Render2
@@ -997,7 +960,7 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 	}
 }
 
-static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
+static char InputWidget_GetLastColor(struct InputWidget* w, int x, int y) {
 	cc_string line; char lineBuffer[STRING_SIZE];
 	char col;
 	String_InitArray(line, lineBuffer);
@@ -1055,7 +1018,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	w->caretTex.X = w->x + w->padding + lineWidth;
 	w->caretTex.Y = (w->inputTex.Y + w->caretOffset) + w->caretY * w->lineHeight;
-	colCode = InputWidget_GetLastCol(w, w->caretX, w->caretY);
+	colCode = InputWidget_GetLastColor(w, w->caretX, w->caretY);
 
 	if (colCode) {
 		col = Drawer2D_GetColor(colCode);
@@ -1065,15 +1028,6 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	} else {
 		w->caretCol = PackedCol_Scale(PACKEDCOL_WHITE, 0.8f);
 	}
-}
-
-static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
-	float second;
-	if (!w->showCaret) return;
-	w->caretAccumulator += delta;
-
-	second = Math_Mod1((float)w->caretAccumulator);
-	if (second < 0.5f) Texture_RenderShaded(&w->caretTex, w->caretCol);
 }
 
 static void InputWidget_OnPressedEnter(void* widget) {
@@ -1470,12 +1424,6 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 /*########################################################################################################################*
 *-----------------------------------------------------TextInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void TextInputWidget_Render(void* widget, double delta) {
-	struct InputWidget* w = (struct InputWidget*)widget;
-	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
-}
-
 static struct VertexTextured* TextInputWidget_BuildMesh(void* widget, 
 								struct VertexTextured* vertices, struct VertexTextured* beg) {
 	struct InputWidget* w = (struct InputWidget*)widget;
@@ -1581,7 +1529,7 @@ static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
 
 static int TextInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE TextInputWidget_VTABLE = {
-	TextInputWidget_Render,      InputWidget_Free, InputWidget_Reposition,
+	NULL,                        InputWidget_Free, InputWidget_Reposition,
 	InputWidget_KeyDown,         Widget_InputUp,   Widget_MouseScroll,
 	TextInputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove,
 	TextInputWidget_BuildMesh,   TextInputWidget_Render2
@@ -1621,6 +1569,28 @@ void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font) {
 *#########################################################################################################################*/
 static const cc_string chatInputPrefix = String_FromConst("> ");
 
+static struct VertexTextured* ChatInputWidget_BuildMesh(void* widget,
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
+	struct InputWidget* w = (struct InputWidget*)widget;
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
+
+	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices + 0);
+	Gfx_Make2DQuad(&w->caretTex, w->caretCol,     vertices + 4);
+	return vertices + 8;
+}
+
+static void ChatInputWidget_Render2(void* widget) {
+	struct InputWidget* w = (struct InputWidget*)widget;
+	Gfx_BindTexture(w->inputTex.ID);
+	Gfx_DrawVb_IndexedTris_Range(4, w->offset);
+
+	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
+		Gfx_BindTexture(w->caretTex.ID);
+		Gfx_DrawVb_IndexedTris_Range(4, w->offset + 4);
+	}
+}
+
+
 static void ChatInputWidget_MakeTexture(struct InputWidget* w, int width, int height) {
 	cc_string line; char lineBuffer[STRING_SIZE + 2];
 	struct DrawTextArgs args;
@@ -1639,7 +1609,7 @@ static void ChatInputWidget_MakeTexture(struct InputWidget* w, int width, int he
 		line.length = 0;
 
 		/* Color code continues in next line */
-		lastCol = InputWidget_GetLastCol(w, 0, i);
+		lastCol = InputWidget_GetLastColor(w, 0, i);
 		if (!Drawer2D_IsWhiteColor(lastCol)) {
 			String_Append(&line, '&'); String_Append(&line, lastCol);
 		}
@@ -1684,7 +1654,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->inputTex.Y = w->y;
 }
 
-static void ChatInputWidget_Render(void* widget, double delta) {
+void ChatInputWidget_RenderBackground(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	PackedCol backColor   = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
@@ -1703,9 +1673,6 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backColor);
 		y += w->lineHeight;
 	}
-
-	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
 }
 
 static void ChatInputWidget_OnPressedEnter(void* widget) {
@@ -1856,9 +1823,10 @@ static int ChatInputWidget_GetMaxLines(void) {
 }
 
 static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
-	ChatInputWidget_Render,  InputWidget_Free, InputWidget_Reposition,
-	ChatInputWidget_KeyDown, Widget_InputUp,   Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove
+	NULL,                      InputWidget_Free, InputWidget_Reposition,
+	ChatInputWidget_KeyDown,   Widget_InputUp,   Widget_MouseScroll,
+	InputWidget_PointerDown,   Widget_PointerUp, Widget_PointerMove,
+	ChatInputWidget_BuildMesh, ChatInputWidget_Render2
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w) {
 	InputWidget_Reset(&w->base);
@@ -2531,14 +2499,28 @@ static int SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
 	return TOUCH_TYPE_GUI;
 }
 
+static struct VertexTextured* SpecialInputWidget_BuildMesh(void* widget,
+								struct VertexTextured* vertices, struct VertexTextured* beg) {
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
+	w->offset = Widget_CalcVertexOffset(vertices, beg);
+
+	Gfx_Make2DQuad(&w->tex, PACKEDCOL_WHITE, vertices);
+	return vertices + 8;
+}
+
+static void SpecialInputWidget_Render2(void* widget) {
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
+	Gfx_BindTexture(w->tex.ID);
+	Gfx_DrawVb_IndexedTris_Range(4, w->offset);
+}
+
 void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w) {
 	SpecialInputWidget_UpdateColString(w);
 	w->tabs[0].contents = w->colString;
 	if (w->selectedIndex != 0) return;
 
-	/* defer updating colours tab until visible */
-	if (!w->active) { w->pendingRedraw = true; return; }
-	SpecialInputWidget_Redraw(w);
+	/* Currently displaying colours tab */
+	if (w->active) w->pendingRedraw = true;
 }
 
 void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active) {
@@ -2548,9 +2530,10 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active) 
 }
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
-	SpecialInputWidget_Render,      SpecialInputWidget_Free, SpecialInputWidget_Reposition,
+	NULL,                           SpecialInputWidget_Free, SpecialInputWidget_Reposition,
 	Widget_InputDown,               Widget_InputUp,          Widget_MouseScroll,
-	SpecialInputWidget_PointerDown, Widget_PointerUp,        Widget_PointerMove
+	SpecialInputWidget_PointerDown, Widget_PointerUp,        Widget_PointerMove,
+	SpecialInputWidget_BuildMesh,   SpecialInputWidget_Render2
 };
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target) {
 	Widget_Reset(w);

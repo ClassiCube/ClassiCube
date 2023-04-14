@@ -41,23 +41,9 @@ int Screen_TPointer(void* s, int id, int x, int y) { return true; }
 void Screen_NullFunc(void* screen) { }
 void Screen_NullUpdate(void* screen, double delta) { }
 
-/* TODO: Remove these */
-struct HUDScreen;
-struct ChatScreen;
-static struct HUDScreen*  Gui_HUD;
-static struct ChatScreen* Gui_Chat;
-
 static cc_bool InventoryScreen_IsHotbarActive(void);
-CC_NOINLINE static cc_bool IsOnlyChatActive(void) {
-	struct Screen* s;
-	int i;
-
-	for (i = 0; i < Gui.ScreensCount; i++) {
-		s = Gui_Screens[i];
-		if (s->grabsInput && s != (struct Screen*)Gui_Chat) return false;
-	}
-	return true;
-}
+static cc_bool ChatInputScreen_IsActive(void);
+CC_NOINLINE static cc_bool IsOnlyChatActive(void);
 
 
 /*########################################################################################################################*
@@ -74,7 +60,7 @@ static struct HUDScreen {
 	float lastSpeed;
 	int lastFov;
 	struct HotbarWidget hotbar;
-} HUDScreen_Instance;
+} HUDScreen;
 #define HUD_MAX_VERTICES (TEXTWIDGET_MAX * 2)
 
 static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
@@ -199,7 +185,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 }
 
 static int HUDScreen_LayoutHotbar(void) {
-	struct HUDScreen* s = &HUDScreen_Instance;
+	struct HUDScreen* s = &HUDScreen;
 	s->hotbar.scale     = Gui_GetHotbarScale();
 	Widget_Layout(&s->hotbar);
 	return s->hotbar.height;
@@ -353,9 +339,8 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Layout,      HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
-	struct HUDScreen* s = &HUDScreen_Instance;
+	struct HUDScreen* s = &HUDScreen;
 	s->VTABLE = &HUDScreen_VTABLE;
-	Gui_HUD   = s;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_HUD);
 }
 
@@ -656,7 +641,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 	cc_string player;
 	int i;
 
-	if (!((struct Screen*)Gui_Chat)->grabsInput) return false;
+	if (!ChatInputScreen_IsActive()) return false;
 	String_InitArray(text, textBuffer);
 
 	for (i = 0; i < s->namesCount; i++) {
@@ -666,7 +651,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 
 		player = TabList_UNSAFE_GetPlayer(s->ids[i]);
 		String_Format1(&text, "%s ", &player);
-		ChatScreen_AppendInput(&text);
+		ChatInputScreen_Append(&text);
 		return TOUCH_TYPE_GUI;
 	}
 	return false;
@@ -763,7 +748,7 @@ static const struct ScreenVTABLE TabListOverlay_VTABLE = {
 	TabListOverlay_PointerDown, Screen_PointerUp,      Screen_FPointer,  Screen_FMouseScroll,
 	TabListOverlay_Layout, TabListOverlay_ContextLost, TabListOverlay_ContextRecreated
 };
-void TabListOverlay_Show(void) {
+static void TabListOverlay_Show(void) {
 	struct TabListOverlay* s  = &TabListOverlay_Instance;
 	s->VTABLE    = &TabListOverlay_VTABLE;
 	s->staysOpen = false;
@@ -777,15 +762,11 @@ void TabListOverlay_Show(void) {
 *#########################################################################################################################*/
 static struct ChatScreen {
 	Screen_Body
-	float chatAcc;
-	cc_bool suppressNextPress;
 	int chatIndex, paddingX, paddingY;
-	int lastDownloadStatus;
+	int lastDownloadStatus, uiOffset;
 	struct FontDesc chatFont, announcementFont, bigAnnouncementFont, smallAnnouncementFont;
 	struct TextWidget announcement, bigAnnouncement, smallAnnouncement;
-	struct ChatInputWidget input;
 	struct TextGroupWidget status, bottomRight, chat, clientStatus;
-	struct SpecialInputWidget altText;
 #ifdef CC_BUILD_TOUCH
 	struct ButtonWidget send, cancel, more;
 #endif
@@ -806,25 +787,13 @@ static struct Widget* chat_widgets[] = {
 };
 
 
-static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
-	int pad, y;
-	/* Determining chat Y requires us to know hotbar's position */
-	HUDScreen_LayoutHotbar();
-		
-	y = min(s->input.base.y, Gui_HUD->hotbar.y);
-	y -= s->input.base.yOffset; /* add some padding */
-	s->altText.yOffset = WindowInfo.Height - y;
-	Widget_Layout(&s->altText);
+static void ChatScreen_UpdateChatYOffsets(void) {
+	struct ChatScreen* s = &ChatScreen_Instance;
 
-	pad = s->altText.active ? 5 : 10;
-	s->clientStatus.yOffset = WindowInfo.Height - s->altText.y + pad;
+	s->clientStatus.yOffset = s->uiOffset + 10; /* Max height of hotbar and chat input */
 	Widget_Layout(&s->clientStatus);
 	s->chat.yOffset = s->clientStatus.yOffset + s->clientStatus.height;
 	Widget_Layout(&s->chat);
-}
-
-static void ChatScreen_OnInputTextChanged(void* elem) {
-	ChatScreen_UpdateChatYOffsets(&ChatScreen_Instance);
 }
 
 static cc_string ChatScreen_GetChat(int i) {
@@ -847,6 +816,7 @@ static void ChatScreen_FreeChatFonts(struct ChatScreen* s) {
 	Font_Free(&s->smallAnnouncementFont);
 }
 
+static void ChatInputScreen_OnFontChanged(void);
 static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	int size = (int)(8  * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
@@ -863,11 +833,12 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	Font_Make(&s->bigAnnouncementFont, size * 1.33, FONT_FLAGS_NONE);
 	Font_Make(&s->smallAnnouncementFont, size * 0.67, FONT_FLAGS_NONE);
 
-	ChatInputWidget_SetFont(&s->input,        &s->chatFont);
 	TextGroupWidget_SetFont(&s->status,       &s->chatFont);
 	TextGroupWidget_SetFont(&s->bottomRight,  &s->chatFont);
 	TextGroupWidget_SetFont(&s->chat,         &s->chatFont);
 	TextGroupWidget_SetFont(&s->clientStatus, &s->chatFont);
+
+	ChatInputScreen_OnFontChanged();
 	return true;
 }
 
@@ -879,9 +850,6 @@ static void ChatScreen_Redraw(struct ChatScreen* s) {
 	TextGroupWidget_RedrawAll(&s->status);
 	TextGroupWidget_RedrawAll(&s->bottomRight);
 	TextGroupWidget_RedrawAll(&s->clientStatus);
-
-	if (s->grabsInput) InputWidget_UpdateText(&s->input.base);
-	SpecialInputWidget_Redraw(&s->altText);
 }
 
 static int ChatScreen_ClampChatIndex(int index) {
@@ -891,7 +859,8 @@ static int ChatScreen_ClampChatIndex(int index) {
 	return index;
 }
 
-static void ChatScreen_ScrollChatBy(struct ChatScreen* s, int delta) {
+static void ChatScreen_ScrollChatBy(int delta) {
+	struct ChatScreen* s = &ChatScreen_Instance;
 	int newIndex = ChatScreen_ClampChatIndex(s->chatIndex + delta);
 	delta = newIndex - s->chatIndex;
 
@@ -908,44 +877,25 @@ static void ChatScreen_ScrollChatBy(struct ChatScreen* s, int delta) {
 	}
 }
 
-static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
-	struct InputWidget* input;
-	int defaultIndex;
-
-	s->grabsInput = false;
-	Gui_UpdateInputGrab();
-	Window_CloseKeyboard();
-	if (close) InputWidget_Clear(&s->input.base);
-
-	input = &s->input.base;
-	input->OnPressedEnter(input);
-	SpecialInputWidget_SetActive(&s->altText, false);
-	ChatScreen_UpdateChatYOffsets(s);
-
+static void ChatScreen_ResetScroll(void) {
+	struct ChatScreen* s = &ChatScreen_Instance;
 	/* Reset chat when user has scrolled up in chat history */
-	defaultIndex = Chat_Log.count - Gui.Chatlines;
-	if (s->chatIndex != defaultIndex) {
-		s->chatIndex = defaultIndex;
-		TextGroupWidget_RedrawAll(&s->chat);
-	}
+	int defaultIndex = Chat_Log.count - Gui.Chatlines;
+	if (s->chatIndex == defaultIndex) return;
+
+	s->chatIndex = defaultIndex;
+	TextGroupWidget_RedrawAll(&s->chat);
+	s->dirty     = true;
 }
 
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	double caretAcc;
 	if (Gfx.LostContext) return;
 
-	SpecialInputWidget_UpdateCols(&s->altText);
 	TextGroupWidget_RedrawAllWithCol(&s->chat,         code);
 	TextGroupWidget_RedrawAllWithCol(&s->status,       code);
 	TextGroupWidget_RedrawAllWithCol(&s->bottomRight,  code);
 	TextGroupWidget_RedrawAllWithCol(&s->clientStatus, code);
-
-	/* Some servers have plugins that redefine colours constantly */
-	/* Preserve caret accumulator so caret blinking stays consistent */
-	caretAcc = s->input.base.caretAccumulator;
-	InputWidget_UpdateText(&s->input.base);
-	s->input.base.caretAccumulator = caretAcc;
 }
 
 static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type) {
@@ -972,7 +922,7 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 		TextWidget_Set(&s->smallAnnouncement, msg, &s->smallAnnouncementFont);
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_2) {
 		TextGroupWidget_Redraw(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1);
-		ChatScreen_UpdateChatYOffsets(s);
+		ChatScreen_UpdateChatYOffsets();
 	} else if (type >= MSG_TYPE_EXTRASTATUS_1 && type <= MSG_TYPE_EXTRASTATUS_2) {
 		/* Status[0] is for texture pack downloading message */
 		/* Status[1] is for reduced performance mode message */
@@ -1045,92 +995,25 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 	}
 }
 
-static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
-	struct Texture tex;
-	double now;
-	int i, logIdx;
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_BindDynamicVb(s->vb);
-
-	if (!Game_PureClassic) { Widget_Render2(&s->status); }
-	Widget_Render2(&s->bottomRight);
-	Widget_Render2(&s->clientStatus);
-
-	now = Game.Time;
-	if (s->grabsInput) {
-		Widget_Render2(&s->chat);
-	} else {
-		/* Only render recent chat */
-		for (i = 0; i < s->chat.lines; i++) {
-			tex    = s->chat.textures[i];
-			logIdx = s->chatIndex + i;
-			if (!tex.ID) continue;
-
-			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_GetLogTime(logIdx) + 10 < now)     continue;
-			
-			Gfx_BindTexture(tex.ID);
-			Gfx_DrawVb_IndexedTris_Range(4, s->chat.offset + i * 4);
-		}
-	}
-
-	Widget_Render2(&s->announcement);
-	Widget_Render2(&s->bigAnnouncement);
-	Widget_Render2(&s->smallAnnouncement);
-
-	if (s->grabsInput) {
-		Elem_Render(&s->input.base, delta);
-		if (s->altText.active) {
-			Elem_Render(&s->altText, delta);
-		}
-
-#ifdef CC_BUILD_TOUCH
-		if (!Input_TouchMode) return;
-		Elem_Render(&s->more,   delta);
-		Elem_Render(&s->send,   delta);
-		Elem_Render(&s->cancel, delta);
-#endif
-	}
-}
-
 static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	ChatScreen_FreeChatFonts(s);
 	Screen_ContextLost(s);
 
 	Elem_Free(&s->chat);
-	Elem_Free(&s->input.base);
-	Elem_Free(&s->altText);
 	Elem_Free(&s->status);
 	Elem_Free(&s->bottomRight);
 	Elem_Free(&s->clientStatus);
 	Elem_Free(&s->announcement);
 	Elem_Free(&s->bigAnnouncement);
 	Elem_Free(&s->smallAnnouncement);
-
-#ifdef CC_BUILD_TOUCH
-	Elem_Free(&s->more);
-	Elem_Free(&s->send);
-	Elem_Free(&s->cancel);
-#endif
 }
 
 static void ChatScreen_ContextRecreated(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	struct FontDesc font;
 	ChatScreen_ChatUpdateFont(s);
 	ChatScreen_Redraw(s);
 	Screen_UpdateVb(s);
-
-#ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return;
-	Gui_MakeTitleFont(&font);
-	ButtonWidget_SetConst(&s->more,   "More",   &font);
-	ButtonWidget_SetConst(&s->send,   "Send",   &font);
-	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
-	Font_Free(&font);
-#endif
 }
 
 static void ChatScreen_Layout(void* screen) {
@@ -1140,13 +1023,11 @@ static void ChatScreen_Layout(void* screen) {
 	s->paddingX = Display_ScaleX(5);
 	s->paddingY = Display_ScaleY(5);
 
-	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
-	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
 	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
 	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, 0);
 	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
-	ChatScreen_UpdateChatYOffsets(s);
+	ChatScreen_UpdateChatYOffsets();
 
 	/* Can't use Widget_SetLocation because it DPI scales input */
 	s->bottomRight.yOffset = HUDScreen_LayoutHotbar() + Display_ScaleY(15);
@@ -1163,81 +1044,20 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->smallAnnouncement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
 	s->smallAnnouncement.yOffset = WindowInfo.Height / 20;
 	Widget_Layout(&s->smallAnnouncement);
-
-#ifdef CC_BUILD_TOUCH
-	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
-		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10,  60);
-		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10,  10);
-		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MAX, 10, 110);
-	} else {
-		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10,  10);
-		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10,  60);
-		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MIN, 10, 110);
-	}
-#endif
-}
-
-static int ChatScreen_KeyPress(void* screen, char keyChar) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (!s->grabsInput) return false;
-
-	if (s->suppressNextPress) {
-		s->suppressNextPress = false;
-		return false;
-	}
-
-	InputWidget_Append(&s->input.base, keyChar);
-	return true;
-}
-
-static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (!s->grabsInput) return false;
-
-	InputWidget_SetText(&s->input.base, str);
-#endif
-	return true;
 }
 
 static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int playerListKey   = KeyBinds[KEYBIND_TABLIST];
-	cc_bool handlesList = playerListKey != KEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
-	if (key == playerListKey && handlesList) {
+	if (key == KeyBinds[KEYBIND_TABLIST]) {
 		if (!TabListOverlay_Instance.active && !Server.IsSinglePlayer) {
-			TabListOverlay_Show();
+			TabListOverlay_Show(); /* TODO return true*/
 		}
-		return true;
-	}
-
-	s->suppressNextPress = false;
-	/* Handle chat text input */
-	if (s->grabsInput) {
-#ifdef CC_BUILD_WEB
-		/* See reason for this in HandleInputUp */
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER) {
-			ChatScreen_EnterChatInput(s, false);
-#else
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER || key == KEY_ESCAPE) {
-			ChatScreen_EnterChatInput(s, key == KEY_ESCAPE);
-#endif
-		} else if (key == KEY_PAGEUP) {
-			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
-		} else if (key == KEY_PAGEDOWN) {
-			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
-		} else {
-			Elem_HandlesKeyDown(&s->input.base, key);
-		}
-		return key < KEY_F1 || key > KEY_F24;
-	}
-
-	if (key == KeyBinds[KEYBIND_CHAT]) {
-		ChatScreen_OpenInput(&String_Empty);
+	} else if (key == KeyBinds[KEYBIND_CHAT]) {
+		ChatInputScreen_Open(&String_Empty);
 	} else if (key == KEY_SLASH) {
-		ChatScreen_OpenInput(&slash);
+		ChatInputScreen_Open(&slash);
 	} else if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		InventoryScreen_Show();
 	} else {
@@ -1246,99 +1066,26 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	return true;
 }
 
-static void ChatScreen_ToggleAltInput(struct ChatScreen* s) {
-	SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
-	ChatScreen_UpdateChatYOffsets(s);
-}
-
-static void ChatScreen_KeyUp(void* screen, int key) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (!s->grabsInput || (struct Screen*)s != Gui.InputGrab) return;
-
-#ifdef CC_BUILD_WEB
-	/* See reason for this in HandleInputUp */
-	if (key == KEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
-#endif
-
-	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
-		if (!WindowInfo.Focused) return;
-		ChatScreen_ToggleAltInput(s);
-	}
-}
-
-static int ChatScreen_MouseScroll(void* screen, float delta) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int steps;
-	if (!s->grabsInput) return false;
-
-	steps = Utils_AccumulateWheelDelta(&s->chatAcc, delta);
-	ChatScreen_ScrollChatBy(s, -steps);
-	return true;
-}
-
 static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	cc_string text; char textBuffer[STRING_SIZE * 4];
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int height, chatY, i;
+	int i;
 	if (Game_HideGui) return false;
 
-	if (!s->grabsInput) {
-		if (!Input_TouchMode) return false;
-		String_InitArray(text, textBuffer);
-
-		/* Should be able to click on links with touch */
-		i = TextGroupWidget_GetSelected(&s->chat, &text, x, y);
-		if (!Utils_IsUrlPrefix(&text)) return false;
-
-		if (Chat_GetLogTime(s->chatIndex + i) + 10 < Game.Time) return false;
-		UrlWarningOverlay_Show(&text); return TOUCH_TYPE_GUI;
-	}
-
-#ifdef CC_BUILD_TOUCH
-	if (Input_TouchMode) {
-		if (Widget_Contains(&s->send, x, y)) {
-			ChatScreen_EnterChatInput(s, false); return TOUCH_TYPE_GUI;
-		}
-		if (Widget_Contains(&s->cancel, x, y)) {
-			ChatScreen_EnterChatInput(s, true); return TOUCH_TYPE_GUI;
-		}
-		if (Widget_Contains(&s->more, x, y)) {
-			ChatScreen_ToggleAltInput(s); return TOUCH_TYPE_GUI;
-		}
-	}
-#endif
-
-	if (!Widget_Contains(&s->chat, x, y)) {
-		if (s->altText.active && Widget_Contains(&s->altText, x, y)) {
-			Elem_HandlesPointerDown(&s->altText, id, x, y);
-			ChatScreen_UpdateChatYOffsets(s);
-			return TOUCH_TYPE_GUI;
-		}
-		Elem_HandlesPointerDown(&s->input.base, id, x, y);
-		return TOUCH_TYPE_GUI;
-	}
-
-	height = TextGroupWidget_UsedHeight(&s->chat);
-	chatY  = s->chat.y + s->chat.height - height;
-	if (!Gui_Contains(s->chat.x, chatY, s->chat.width, height, x, y)) return false;
-
+	if (!Input_TouchMode) return false;
 	String_InitArray(text, textBuffer);
-	TextGroupWidget_GetSelected(&s->chat, &text, x, y);
-	if (!text.length) return false;
 
-	if (Utils_IsUrlPrefix(&text)) {
-		UrlWarningOverlay_Show(&text);
-	} else if (Gui.ClickableChat) {
-		ChatScreen_AppendInput(&text);
-	}
+	/* Should be able to click on links with touch */
+	i = TextGroupWidget_GetSelected(&s->chat, &text, x, y);
+	if (!Utils_IsUrlPrefix(&text)) return false;
+
+	if (Chat_GetLogTime(s->chatIndex + i) + 10 < Game.Time) return false;
+	UrlWarningOverlay_Show(&text); 
 	return TOUCH_TYPE_GUI;
 }
 
 static void ChatScreen_Init(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	ChatInputWidget_Create(&s->input);
-	s->input.base.OnTextChanged = ChatScreen_OnInputTextChanged;
-	SpecialInputWidget_Create(&s->altText, &s->chatFont, &s->input.base);
 
 	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS,
 							s->statusTextures, ChatScreen_GetStatus);
@@ -1374,18 +1121,49 @@ static void ChatScreen_Init(void* screen) {
 #endif
 }
 
+static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
+	struct Texture tex;
+	double now;
+	int i, logIdx;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
+
+	if (!Game_PureClassic) { Widget_Render2(&s->status); }
+	Widget_Render2(&s->bottomRight);
+	Widget_Render2(&s->clientStatus);
+
+	now = Game.Time;
+	if (ChatInputScreen_IsActive()) {
+		Widget_Render2(&s->chat);
+	} else {
+		/* Only render recent chat */
+		for (i = 0; i < s->chat.lines; i++) {
+			tex    = s->chat.textures[i];
+			logIdx = s->chatIndex + i;
+			if (!tex.ID) continue;
+
+			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
+			if (Chat_GetLogTime(logIdx) + 10 < now)     continue;
+			
+			Gfx_BindTexture(tex.ID);
+			Gfx_DrawVb_IndexedTris_Range(4, s->chat.offset + i * 4);
+		}
+	}
+
+	Widget_Render2(&s->announcement);
+	Widget_Render2(&s->bigAnnouncement);
+	Widget_Render2(&s->smallAnnouncement);
+}
+
 static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-
-	if (Game_HideGui && s->grabsInput) {
-		Elem_Render(&s->input.base, delta);
-	}
 	if (Game_HideGui) return;
 
 	if (!TabListOverlay_Instance.active && !Gui_GetBlocksWorld()) {
 		ChatScreen_DrawCrosshairs();
 	}
-	if (s->grabsInput && !Gui.ClassicChat) {
+	if (ChatInputScreen_IsActive() && !Gui.ClassicChat) {
 		ChatScreen_DrawChatBackground(s);
 	}
 
@@ -1401,8 +1179,8 @@ static void ChatScreen_Free(void* screen) {
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Init,        ChatScreen_Update, ChatScreen_Free,    
 	ChatScreen_Render,      Screen_BuildMesh,
-	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, ChatScreen_TextChanged,
-	ChatScreen_PointerDown, Screen_PointerUp,  Screen_FPointer,     ChatScreen_MouseScroll,
+	ChatScreen_KeyDown,     Screen_FInput,     Screen_FKeyPress, Screen_FText,
+	ChatScreen_PointerDown, Screen_PointerUp,  Screen_FPointer,  Screen_FMouseScroll,
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
 };
 void ChatScreen_Show(void) {
@@ -1410,30 +1188,7 @@ void ChatScreen_Show(void) {
 	s->lastDownloadStatus = HTTP_PROGRESS_NOT_WORKING_ON;
 
 	s->VTABLE = &ChatScreen_VTABLE;
-	Gui_Chat  = s;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_CHAT);
-}
-
-void ChatScreen_OpenInput(const cc_string* text) {
-	struct ChatScreen* s = &ChatScreen_Instance;
-	struct OpenKeyboardArgs args;
-	s->suppressNextPress = true;
-	s->grabsInput        = true;
-
-	Gui_UpdateInputGrab();
-	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
-	args.placeholder = "Enter chat";
-	args.multiline   = true;
-	Window_OpenKeyboard(&args);
-	s->input.base.disabled = args.opaque;
-
-	String_Copy(&s->input.base.text, text);
-	InputWidget_UpdateText(&s->input.base);
-}
-
-void ChatScreen_AppendInput(const cc_string* text) {
-	struct ChatScreen* s = &ChatScreen_Instance;
-	InputWidget_AppendText(&s->input.base, text);
 }
 
 void ChatScreen_SetChatlines(int lines) {
@@ -1441,7 +1196,361 @@ void ChatScreen_SetChatlines(int lines) {
 	Elem_Free(&s->chat);
 	s->chatIndex += s->chat.lines - lines;
 	s->chat.lines = lines;
+
 	TextGroupWidget_RedrawAll(&s->chat);
+	s->dirty = true;
+}
+
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------ChatInputScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct ChatInputScreen {
+	Screen_Body
+	float chatAcc;
+	cc_bool suppressNextPress, active;
+	struct ChatInputWidget input;
+	struct SpecialInputWidget altText;
+#ifdef CC_BUILD_TOUCH
+	struct ButtonWidget send, cancel, more;
+#endif
+} ChatInputScreen;
+
+static struct Widget* chatinput_widgets[] = {
+	(struct Widget*)&ChatInputScreen.input, (struct Widget*)&ChatInputScreen.altText,
+#ifdef CC_BUILD_TOUCH
+	(struct Widget*)&ChatInputScreen.send,  (struct Widget*)&ChatInputScreen.cancel,
+	(struct Widget*)&ChatInputScreen.more
+#endif
+};
+#define CHATINPUT_MAX_VERTICES MENUINPUTWIDGET_MAX + 4 /* TODO replace.. */
+
+static cc_bool ChatInputScreen_IsActive(void) { return ChatInputScreen.active; }
+static cc_bool IsOnlyChatActive(void) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->grabsInput && s != (struct Screen*)&ChatInputScreen) return false;
+	}
+	return true;
+}
+
+static void ChatInputScreen_UpdateYOffsets(void) {
+	struct ChatInputScreen* s = &ChatInputScreen;
+	int y;
+	/* Determining input Y requires us to know hotbar's position */
+	HUDScreen_LayoutHotbar();
+		
+	y = min(s->input.base.y, HUDScreen.hotbar.y);
+	y -= s->input.base.yOffset; /* add some padding */
+	s->altText.yOffset = WindowInfo.Height - y;
+	Widget_Layout(&s->altText);
+
+	ChatScreen_Instance.uiOffset = WindowInfo.Height - s->altText.y;
+	ChatScreen_UpdateChatYOffsets();
+}
+
+static void ChatInputScreen_OnInputTextChanged(void* elem) {
+	ChatInputScreen_UpdateYOffsets();
+}
+
+static void ChatInputScreen_OnFontChanged(void) {
+	struct ChatInputScreen* s = &ChatInputScreen;
+	if (!s->altText.font) return; /* Chat input never created */
+
+	ChatInputWidget_SetFont(&s->input, &ChatScreen_Instance.chatFont);
+	InputWidget_UpdateText(&s->input.base);
+	SpecialInputWidget_Redraw(&s->altText);
+
+	ChatInputScreen_UpdateYOffsets();
+}
+
+static void ChatInputScreen_EnterInput(struct ChatInputScreen* s, cc_bool close) {
+	struct InputWidget* input;
+
+	Gui_UpdateInputGrab();
+	Window_CloseKeyboard();
+	if (close) InputWidget_Clear(&s->input.base);
+
+	input = &s->input.base;
+	input->OnPressedEnter(input);
+	SpecialInputWidget_SetActive(&s->altText, false);
+	ChatInputScreen_UpdateYOffsets();
+
+	ChatScreen_ResetScroll();
+	Gui_Remove((struct Screen*)s);
+}
+
+static void ChatInputScreen_ColorCodeChanged(void* screen, int code) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	double caretAcc;
+	if (Gfx.LostContext) return;
+	SpecialInputWidget_UpdateCols(&s->altText);
+
+	/* Some servers have plugins that redefine colours constantly */
+	/* Preserve caret accumulator so caret blinking stays consistent */
+	caretAcc = s->input.base.caretAccumulator;
+	InputWidget_UpdateText(&s->input.base);
+	s->input.base.caretAccumulator = caretAcc;
+}
+
+static void ChatInputScreen_ContextLost(void* screen) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	Screen_ContextLost(s);
+	Elem_Free(&s->input.base);
+	Elem_Free(&s->altText);
+
+#ifdef CC_BUILD_TOUCH
+	Elem_Free(&s->more);
+	Elem_Free(&s->send);
+	Elem_Free(&s->cancel);
+#endif
+}
+
+static void ChatInputScreen_ContextRecreated(void* screen) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	struct FontDesc font;
+	ChatInputScreen_OnFontChanged();
+	Screen_UpdateVb(s);
+
+#ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
+	Gui_MakeTitleFont(&font);
+	ButtonWidget_SetConst(&s->more,   "More",   &font);
+	ButtonWidget_SetConst(&s->send,   "Send",   &font);
+	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
+	Font_Free(&font);
+#endif
+}
+
+static void ChatInputScreen_Layout(void* screen) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	Widget_SetLocation(&s->input.base, ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->altText,    ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	ChatInputScreen_UpdateYOffsets();
+
+#ifdef CC_BUILD_TOUCH
+	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
+		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10,  60);
+		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10,  10);
+		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MAX, 10, 110);
+	} else {
+		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10,  10);
+		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10,  60);
+		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MIN, 10, 110);
+	}
+#endif
+}
+
+static int ChatInputScreen_KeyPress(void* screen, char keyChar) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	if (s->suppressNextPress) {
+		s->suppressNextPress = false;
+		return false;
+	}
+
+	InputWidget_Append(&s->input.base, keyChar);
+	return true;
+}
+
+static int ChatInputScreen_TextChanged(void* screen, const cc_string* str) {
+#ifdef CC_BUILD_TOUCH
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	InputWidget_SetText(&s->input.base, str);
+#endif
+	return true;
+}
+
+static int ChatInputScreen_KeyDown(void* screen, int key) {
+	static const cc_string slash = String_FromConst("/");
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	int playerListKey   = KeyBinds[KEYBIND_TABLIST];
+	cc_bool handlesList = playerListKey != KEY_TAB || !Gui.TabAutocomplete;
+
+	if (key == playerListKey && handlesList) {
+		if (!TabListOverlay_Instance.active && !Server.IsSinglePlayer) {
+			TabListOverlay_Show();
+		}
+		return true;
+	}
+
+	s->suppressNextPress = false;
+	/* Handle chat text input */
+#ifdef CC_BUILD_WEB
+	/* See reason for this in HandleInputUp */
+	if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER) {
+		ChatInputScreen_EnterChatInput(s, false);
+#else
+	if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER || key == KEY_ESCAPE) {
+		ChatInputScreen_EnterInput(s, key == KEY_ESCAPE);
+#endif
+	} else if (key == KEY_PAGEUP) {
+		ChatScreen_ScrollChatBy(-Gui.Chatlines);
+	} else if (key == KEY_PAGEDOWN) {
+		ChatScreen_ScrollChatBy(+Gui.Chatlines);
+	} else {
+		Elem_HandlesKeyDown(&s->input.base, key);
+	}
+	return key < KEY_F1 || key > KEY_F24;
+}
+
+static void ChatInputScreen_KeyUp(void* screen, int key) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	if ((struct Screen*)s != Gui.InputGrab) return;
+
+#ifdef CC_BUILD_WEB
+	/* See reason for this in HandleInputUp */
+	if (key == KEY_ESCAPE) ChatInputScreen_EnterChatInput(s, true);
+#endif
+
+	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
+		if (!WindowInfo.Focused) return;
+
+		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
+		ChatInputScreen_UpdateYOffsets();
+	}
+}
+
+static int ChatInputScreen_MouseScroll(void* screen, float delta) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	int steps = Utils_AccumulateWheelDelta(&s->chatAcc, delta);
+	ChatScreen_ScrollChatBy(-steps);
+	return true;
+}
+
+static int ChatInputScreen_PointerDown(void* screen, int id, int x, int y) {
+	cc_string text; char textBuffer[STRING_SIZE * 4];
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	struct TextGroupWidget* chat = &ChatScreen_Instance.chat;
+	int height, chatY;
+	if (Game_HideGui) return false;
+
+#ifdef CC_BUILD_TOUCH
+	if (Input_TouchMode) {
+		if (Widget_Contains(&s->send, x, y)) {
+			ChatInputScreen_EnterChatInput(s, false); return TOUCH_TYPE_GUI;
+		}
+		if (Widget_Contains(&s->cancel, x, y)) {
+			ChatInputScreen_EnterChatInput(s, true); return TOUCH_TYPE_GUI;
+		}
+		if (Widget_Contains(&s->more, x, y)) {
+			ChatInputScreen_ToggleAltInput(s); return TOUCH_TYPE_GUI;
+		}
+	}
+#endif
+
+	if (!Widget_Contains(chat, x, y)) {
+		if (s->altText.active && Widget_Contains(&s->altText, x, y)) {
+			Elem_HandlesPointerDown(&s->altText, id, x, y);
+			ChatInputScreen_UpdateYOffsets();
+			return TOUCH_TYPE_GUI;
+		}
+		Elem_HandlesPointerDown(&s->input.base, id, x, y);
+		return TOUCH_TYPE_GUI;
+	}
+
+	height = TextGroupWidget_UsedHeight(chat);
+	chatY  = chat->y + chat->height - height;
+	if (!Gui_Contains(chat->x, chatY, chat->width, height, x, y)) return false;
+
+	String_InitArray(text, textBuffer);
+	TextGroupWidget_GetSelected(chat, &text, x, y);
+	if (!text.length) return false;
+
+	if (Utils_IsUrlPrefix(&text)) {
+		UrlWarningOverlay_Show(&text);
+	} else if (Gui.ClickableChat) {
+		ChatInputScreen_Append(&text);
+	}
+	return TOUCH_TYPE_GUI;
+}
+
+static void ChatInputScreen_Init(void* screen) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	ChatInputWidget_Create(&s->input);
+	s->input.base.OnTextChanged = ChatInputScreen_OnInputTextChanged;
+	SpecialInputWidget_Create(&s->altText, &ChatScreen_Instance.chatFont, &s->input.base);
+
+	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatInputScreen_ColorCodeChanged);
+	s->active = true;
+
+	s->maxVertices = CHATINPUT_MAX_VERTICES;
+	s->widgets     = chatinput_widgets;
+	s->numWidgets  = Array_Elems(chatinput_widgets);
+
+#ifdef CC_BUILD_TOUCH
+	ButtonWidget_Init(&s->send,   100, NULL);
+	ButtonWidget_Init(&s->cancel, 100, NULL);
+	ButtonWidget_Init(&s->more,   100, NULL);
+#endif
+}
+
+static void ChatInputScreen_Update(void* screen, double delta) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	s->input.base.caretAccumulator += delta;
+	
+	if (s->altText.active && s->altText.pendingRedraw) {
+		SpecialInputWidget_Redraw(&s->altText);
+		s->dirty = true;
+	}
+}
+
+static void ChatInputScreen_Render(void* screen, double delta) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	ChatInputWidget_RenderBackground(&s->input);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
+
+	Widget_Render2(&s->input.base);
+	if (Game_HideGui) return;
+	if (s->altText.active) Widget_Render2(&s->altText);
+
+#ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
+	Widget_Render2(&s->more);
+	Widget_Render2(&s->send);
+	Widget_Render2(&s->cancel);
+#endif
+}
+
+static void ChatInputScreen_Free(void* screen) {
+	struct ChatInputScreen* s = (struct ChatInputScreen*)screen;
+	Event_Unregister_(&ChatEvents.ColCodeChanged, s, ChatInputScreen_ColorCodeChanged);
+	s->active = false;
+}
+
+static const struct ScreenVTABLE ChatInputScreen_VTABLE = {
+	ChatInputScreen_Init,        ChatInputScreen_Update, ChatInputScreen_Free,    
+	ChatInputScreen_Render,      Screen_BuildMesh,
+	ChatInputScreen_KeyDown,     ChatInputScreen_KeyUp,  ChatInputScreen_KeyPress, ChatInputScreen_TextChanged,
+	ChatInputScreen_PointerDown, Screen_PointerUp,  Screen_FPointer,     ChatInputScreen_MouseScroll,
+	ChatInputScreen_Layout, ChatInputScreen_ContextLost, ChatInputScreen_ContextRecreated
+};
+void ChatInputScreen_Open(const cc_string* text) {
+	struct ChatInputScreen* s = &ChatInputScreen;
+	struct OpenKeyboardArgs args;
+	s->VTABLE = &ChatInputScreen_VTABLE;
+
+	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
+	args.placeholder = "Enter chat";
+	args.multiline   = true;
+	Window_OpenKeyboard(&args);
+	
+	s->suppressNextPress = true;
+	s->grabsInput        = true;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_CHATINPUT);
+
+	s->input.base.disabled = args.opaque;
+	String_Copy(&s->input.base.text, text);
+	InputWidget_UpdateText(&s->input.base);
+}
+
+void ChatInputScreen_Append(const cc_string* text) {
+	struct ChatInputScreen* s = &ChatInputScreen;
+	InputWidget_AppendText(&s->input.base, text);
 }
 
 
@@ -1571,7 +1680,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
-		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key);
+		return Elem_HandlesKeyDown(&HUDScreen.hotbar, key);
 	}
 	return true;
 }
@@ -1593,7 +1702,7 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	cc_bool handled, hotbar;
 
 	if (table->scroll.draggingId == id) return TOUCH_TYPE_GUI;
-	if (HUDscreen_PointerDown(Gui_HUD, id, x, y)) return TOUCH_TYPE_GUI;
+	if (HUDscreen_PointerDown(&HUDScreen, id, x, y)) return TOUCH_TYPE_GUI;
 	handled = Elem_HandlesPointerDown(table, id, x, y);
 
 	if (!handled || table->pendingClose) {

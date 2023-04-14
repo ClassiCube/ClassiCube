@@ -221,6 +221,7 @@ struct ChatInputWidget {
 	char _origBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];	
 };
 
+CC_NOINLINE void ChatInputWidget_RenderBackground(void* widget);
 CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w);
 CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontDesc* font);
 

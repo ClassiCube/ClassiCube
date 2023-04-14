@@ -35,9 +35,9 @@ void TouchScreen_Show(void);
 #endif
 
 /* Opens chat input for the HUD with the given initial text. */
-void ChatScreen_OpenInput(const cc_string* text);
+void ChatInputScreen_Open(const cc_string* text);
 /* Appends text to the chat input in the HUD. */
-void ChatScreen_AppendInput(const cc_string* text);
+void ChatInputScreen_Append(const cc_string* text);
 /* Sets number of visible lines in the main chat widget. */
 void ChatScreen_SetChatlines(int lines);
 #endif
