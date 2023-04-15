@@ -137,26 +137,86 @@ void Gfx_Free(void) { FreeShaders(); }
 void Gfx_RestoreState(void) { }
 void Gfx_FreeState(void) { }
 
+
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
+	// Simplified "Interleave bits by Binary Magic Numbers" from
+	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveTableObvious
+	// TODO: Simplify to array lookup?
+    	x = (x | (x << 2)) & 0x33;
+    	x = (x | (x << 1)) & 0x55;
+
+    	y = (y | (y << 2)) & 0x33;
+    	y = (y | (y << 1)) & 0x55;
+
+    return x | (y << 1);
+}
+
+// Pixels are arranged in a recursive Z-order curve / Morton offset
+// They are arranged into 8x8 tiles, where each 8x8 tile is composed of
+//  four 4x4 subtiles, which are in turn composed of four 2x2 subtiles
+static void ToMortonTexture(C3D_Tex* tex, int originX, int originY, 
+						struct Bitmap* bmp, int rowWidth) {
+	unsigned pixel, morton;
+	unsigned dstX, dstY, tileX, tileY;
+	
+	int width = bmp->width, height = bmp->height;
+	cc_uint32* dst = tex->data;
+	cc_uint32* src = bmp->scan0;
+
+	for (int y = 0; y < height; y++)
+	{
+		dstY  = tex->height - 1 - (y + originY);
+		tileY = dstY & ~0x07;
+
+		for (int x = 0; x < width; x++)
+		{
+			dstX   = x + originX;
+			tileX  = dstX & ~0x07;
+			morton = CalcZOrder(dstX & 0x07, dstY & 0x07);
+			pixel  = src[x + (y * rowWidth)];
+
+			dst[morton + (tileX * 8) + (tileY * tex->width)] = pixel;
+		}
+	}
+}
+
+
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	return 0;
+	C3D_Tex* tex = Mem_Alloc(1, sizeof(C3D_Tex), "GPU texture desc");
+	C3D_TexInit(tex, bmp->width, bmp->height, GPU_RGBA8);
+	
+	ToMortonTexture(tex, 0, 0, bmp, bmp->width);
+    	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
+    	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	C3D_Tex* tex = (C3D_Tex*)texId;
+	ToMortonTexture(tex, x, y, part, rowWidth);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
+	C3D_Tex* tex = *texId;
+	if (!tex) return;
+	
+	C3D_TexDelete(tex);
+	Mem_Free(tex);
+	*texId = NULL;
 }
 
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	C3D_Tex* tex = (C3D_Tex*)texId;
+	C3D_TexBind(0, tex);
 }
 
 
