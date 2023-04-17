@@ -24,7 +24,7 @@ unsigned int __stacksize__ = 256 * 1024;
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
-/* Current format and size of vertices */
+// Current format and size of vertices
 static int gfx_stride, gfx_format = -1;
 	
 	
@@ -32,15 +32,14 @@ static int gfx_stride, gfx_format = -1;
 *------------------------------------------------------Vertex shaders-----------------------------------------------------*
 *#########################################################################################################################*/
 #define UNI_MVP_MATRIX (1 << 0)
-
-/* cached uniforms (cached for multiple programs */
-static struct Matrix _view, _proj, _mvp;
+// cached uniforms (cached for multiple programs)
+static C3D_Mtx _mvp;
 
 static struct CCShader {
 	DVLB_s* dvlb;
 	shaderProgram_s program;
-	int uniforms;     /* which associated uniforms need to be resent to GPU */
-	int locations[1]; /* location of uniforms (not constant) */
+	int uniforms;     // which associated uniforms need to be resent to GPU
+	int locations[1]; // location of uniforms (not constant)
 };
 static struct CCShader* gfx_activeShader;
 static struct CCShader shaders[2];
@@ -58,27 +57,28 @@ static void Shader_Free(struct CCShader* shader) {
 	DVLB_Free(shader->dvlb);
 }
 
-/* Marks a uniform as changed on all programs */
+// Marks a uniform as changed on all programs
 static void DirtyUniform(int uniform) {
-	int i;
-	for (int i = 0; i < Array_Elems(shaders); i++) {
+	for (int i = 0; i < Array_Elems(shaders); i++) 
+	{
 		shaders[i].uniforms |= uniform;
 	}
 }
 
-/* Sends changed uniforms to the GPU for current program */
+// Sends changed uniforms to the GPU for current program
 static void ReloadUniforms(void) {
 	struct CCShader* s = gfx_activeShader;
-	if (!s) return; /* NULL if context is lost */
+	if (!s) return; // NULL if context is lost
 
 	if (s->uniforms & UNI_MVP_MATRIX) {
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, s->locations[0], &_mvp);
 		s->uniforms &= ~UNI_MVP_MATRIX;
 	}
 }
+static void ReloadUniforms(void);
 
-/* Switches program to one that can render current vertex format and state */
-/* Compiles program and reloads uniforms if needed */
+// Switches program to one that can render current vertex format and state
+// Loads program and reloads uniforms if needed
 static void SwitchProgram(void) {
 	struct CCShader* shader;
 	int index = 0;
@@ -115,6 +115,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
+	Gfx_SetFaceCulling(false);
 	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
@@ -125,10 +126,18 @@ void Gfx_Create(void) {
 	
 	// Configure the first fragment shading substage to just pass through the vertex color
 	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
+	//C3D_TexEnv* env = C3D_GetTexEnv(0);
+	//C3D_TexEnvInit(env);
+	//C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, 0, 0);
+	//C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+	
+	 // Configure the first fragment shading substage to blend the texture color with
+  	// the vertex color (calculated by the vertex shader using a lighting algorithm)
+  	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
 	C3D_TexEnv* env = C3D_GetTexEnv(0);
 	C3D_TexEnvInit(env);
-	C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, 0, 0);
-	C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+  	C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
+ 	C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
@@ -137,11 +146,10 @@ void Gfx_Free(void) { FreeShaders(); }
 void Gfx_RestoreState(void) { }
 void Gfx_FreeState(void) { }
 
-
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
+/*static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
 	// Simplified "Interleave bits by Binary Magic Numbers" from
 	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveTableObvious
 	// TODO: Simplify to array lookup?
@@ -152,15 +160,25 @@ static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
     	y = (y | (y << 1)) & 0x55;
 
     return x | (y << 1);
+}*/
+static inline cc_uint32 CalcZOrder(cc_uint32 a) {
+	// Simplified "Interleave bits by Binary Magic Numbers" from
+	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveTableObvious
+	// TODO: Simplify to array lookup?
+    	a = (a | (a << 2)) & 0x33;
+    	a = (a | (a << 1)) & 0x55;
+    	return a;
+    	// equivalent to return (a & 1) | ((a & 2) << 1) | (a & 4) << 2;
+    	//  but compiles to less instructions
 }
 
 // Pixels are arranged in a recursive Z-order curve / Morton offset
 // They are arranged into 8x8 tiles, where each 8x8 tile is composed of
 //  four 4x4 subtiles, which are in turn composed of four 2x2 subtiles
 static void ToMortonTexture(C3D_Tex* tex, int originX, int originY, 
-						struct Bitmap* bmp, int rowWidth) {
-	unsigned pixel, morton;
-	unsigned dstX, dstY, tileX, tileY;
+				struct Bitmap* bmp, int rowWidth) {
+	unsigned int pixel, mortonX, mortonY;
+	unsigned int dstX, dstY, tileX, tileY;
 	
 	int width = bmp->width, height = bmp->height;
 	cc_uint32* dst = tex->data;
@@ -168,17 +186,18 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 	for (int y = 0; y < height; y++)
 	{
-		dstY  = tex->height - 1 - (y + originY);
-		tileY = dstY & ~0x07;
+		dstY    = tex->height - 1 - (y + originY);
+		tileY   = dstY & ~0x07;
+		mortonY = CalcZOrder(dstY & 0x07) << 1;
 
 		for (int x = 0; x < width; x++)
 		{
-			dstX   = x + originX;
-			tileX  = dstX & ~0x07;
-			morton = CalcZOrder(dstX & 0x07, dstY & 0x07);
-			pixel  = src[x + (y * rowWidth)];
+			dstX    = x + originX;
+			tileX   = dstX & ~0x07;
+			mortonX = CalcZOrder(dstX & 0x07);
+			pixel   = src[x + (y * rowWidth)];
 
-			dst[morton + (tileX * 8) + (tileY * tex->width)] = pixel;
+			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
 		}
 	}
 }
@@ -190,6 +209,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	
 	ToMortonTexture(tex, 0, 0, bmp, bmp->width);
     	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
+    	C3D_TexSetWrap(tex, GPU_REPEAT, GPU_REPEAT);
     	return tex;
 }
 
@@ -223,35 +243,62 @@ void Gfx_BindTexture(GfxResourceID texId) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFaceCulling(cc_bool enabled)   { }
-void Gfx_SetAlphaBlending(cc_bool enabled) { }
+void Gfx_SetFaceCulling(cc_bool enabled) { 
+	C3D_CullFace(enabled ? GPU_CULL_FRONT_CCW : GPU_CULL_NONE);
+}
+
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
+void Gfx_SetAlphaBlending(cc_bool enabled) { 
+	if (enabled) {
+		C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA);
+	} else {
+		C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+	}
+}
+
+void Gfx_SetAlphaTest(cc_bool enabled) { 
+	C3D_AlphaTest(enabled, GPU_GREATER, 0x7F);
+}
+
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+}
+
 static PackedCol clear_color;
-void Gfx_ClearCol(PackedCol color) { 
-	//clear_color = color;
+void Gfx_ClearCol(PackedCol color) {
 	// TODO find better way?
 	clear_color = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
 }
 
+static cc_bool depthTest, depthWrite;
+static int colorWriteMask = GPU_WRITE_COLOR;
+
+static void UpdateDepthWriteMask(void) {
+	//C3D_EarlyDepthTest(true, GPU_EARLYDEPTH_GREATER, 0);
+	//C3D_EarlyDepthTest(false, GPU_EARLYDEPTH_GREATER, 0);
+	int writeMask = colorWriteMask;
+	if (depthWrite) writeMask |= GPU_WRITE_DEPTH;
+	C3D_DepthTest(depthTest, GPU_GEQUAL, writeMask);
+}
+
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	depthWrite = enabled;
+	UpdateDepthWriteMask();
+}
+void Gfx_SetDepthTest(cc_bool enabled) { 
+	depthTest = enabled;
+	UpdateDepthWriteMask();
+}
+
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-}
-
-void Gfx_SetDepthWrite(cc_bool enabled) { }
-void Gfx_SetDepthTest(cc_bool enabled)  { }
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Matrices--------------------------------------------------------*
-*#########################################################################################################################*/
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	//Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
-	Mtx_Ortho(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR, false);
-}
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
-	float zNear = 0.1f;
-	//Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
-	Mtx_Persp(matrix, fov, aspect, 0.1f, zFar, false);
+	int mask = 0;
+	if (r) mask |= GPU_WRITE_RED;
+	if (g) mask |= GPU_WRITE_GREEN;
+	if (b) mask |= GPU_WRITE_BLUE;
+	if (a) mask |= GPU_WRITE_ALPHA;
+	colorWriteMask = mask;
 }
 
 
@@ -388,25 +435,61 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { 
-	C3D_AlphaTest(enabled, GPU_GREATER, 0x7F);
-}
-
-void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-}
-
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+static C3D_Mtx _view, _proj;
 
-	Matrix_Mul(&_mvp, &_view, &_proj);
+void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
+	Mtx_OrthoTilt(matrix, 0.0f, width, height, 0.0f, ORTHO_NEAR, ORTHO_FAR, true);
+}
+
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+	Mtx_PerspTilt(matrix, fov, aspect, 0.1f, zFar, true);
+}
+
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	if (type == MATRIX_VIEW) {
+		float* m  = (float*)matrix;
+		// Transpose
+		for(int i = 0; i < 4; i++)
+		{
+			_view.r[i].x = m[0  + i];
+			_view.r[i].y = m[4  + i];
+			_view.r[i].z = m[8  + i];
+			_view.r[i].w = m[12 + i];
+		}
+	}
+	if (type == MATRIX_PROJECTION) _proj = *((C3D_Mtx*)matrix);
+
+	Mtx_Multiply(&_mvp, &_proj, &_view);
 	DirtyUniform(UNI_MVP_MATRIX);
 	ReloadUniforms();
 }
+
+
+/*void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	if (type == MATRIX_VIEW) _view = *matrix;
+	
+	// Provided projection matrix assumes landscape display, but 3DS framebuffer
+	//  is a rotated portrait display, so need to swap pixel X/Y values to correct that
+	// 
+	// This can be done by rotating the projection matrix 90 degrees around Z axis
+	// https://open.gl/transformations
+	if (type == MATRIX_PROJECTION) {
+		struct Matrix rot = Matrix_Identity;
+		rot.row1.X =  0; rot.row1.Y = 1;
+		rot.row2.X = -1; rot.row2.Y = 0;
+		//Matrix_RotateZ(&rot, 90 * MATH_DEG2RAD);
+		//Matrix_Mul(&_proj, &_proj, &rot); // TODO avoid Matrix_Mul ??
+		Matrix_Mul(&_proj, matrix, &rot); // TODO avoid Matrix_Mul ?
+	}
+
+	UpdateMVP();
+	DirtyUniform(UNI_MVP_MATRIX);
+	ReloadUniforms();
+}*/
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
 	Gfx_LoadMatrix(type, &Matrix_Identity);

@@ -8,11 +8,16 @@ struct Stream;
 
 /* Represents a packed 32 bit RGBA colour, suitable for native graphics API texture pixels. */
 typedef cc_uint32 BitmapCol;
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP // TODO not 3DS?
 #define BITMAPCOLOR_R_SHIFT  0
 #define BITMAPCOLOR_G_SHIFT  8
 #define BITMAPCOLOR_B_SHIFT 16
 #define BITMAPCOLOR_A_SHIFT 24
+#elif defined CC_BUILD_3DS
+#define BITMAPCOLOR_R_SHIFT 24
+#define BITMAPCOLOR_G_SHIFT 16
+#define BITMAPCOLOR_B_SHIFT  8
+#define BITMAPCOLOR_A_SHIFT  0
 #else
 #define BITMAPCOLOR_B_SHIFT  0
 #define BITMAPCOLOR_G_SHIFT  8
