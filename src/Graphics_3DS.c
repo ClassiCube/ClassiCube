@@ -110,17 +110,22 @@ static void FreeShaders(void) {
 	}
 }
 
+static void SetDefaultState(void) {
+	Gfx_SetFaceCulling(false);
+	Gfx_SetAlphaTest(false);
+	Gfx_SetDepthWrite(true);
+}
+
 void Gfx_Create(void) {
-	Platform_LogConst("BEGIN..");
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
-	Gfx_SetFaceCulling(false);
 	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
+	SetDefaultState();
 	InitDefaultResources();
 	AllocShaders();
 	
@@ -351,8 +356,8 @@ static cc_uint16* gfx_indices;
 
 static void* AllocBuffer(int count, int elemSize) {
 	void* ptr = linearAlloc(count * elemSize);
-	cc_uintptr addr = ptr;
-	Platform_Log3("BUFFER CREATE: %i X %i = %x", &count, &elemSize, &addr);
+	//cc_uintptr addr = ptr;
+	//Platform_Log3("BUFFER CREATE: %i X %i = %x", &count, &elemSize, &addr);
 	
 	if (!ptr) Logger_Abort("Failed to allocate memory for buffer");
 	return ptr;

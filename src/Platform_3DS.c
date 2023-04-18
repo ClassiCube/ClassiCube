@@ -25,8 +25,10 @@
 #include <sys/stat.h>
 #include <poll.h>
 #include <stdio.h>
+#include <malloc.h>
 #include <netdb.h>
 #include <3ds.h>
+#include <citro3d.h>
 
 #define US_PER_SEC 1000000LL
 #define NS_PER_MS 1000000LL
@@ -103,7 +105,10 @@ cc_uint64 Stopwatch_Measure(void) {
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
-	if (end < beg) return 0;
+	if (end < beg) return 0;	
+	// TODO: This doesn't seem to accurately measure time in Citra.
+	// hopefully it works better on a real 3DS?
+	
 	// See CPU_TICKS_PER_USEC in libctru/include/3ds/os.h
 	return (end - beg) * US_PER_SEC / SYSCLOCK_ARM11;
 }
@@ -235,7 +240,7 @@ static void Exec3DSThread(void* param) {
 
 void* Thread_Create(Thread_StartFunc func) {
 	//TODO: Not quite correct, but eh
-	return threadCreate(Exec3DSThread, (void*)func, 128 * 1024, 0x3f, -2, false);
+	return threadCreate(Exec3DSThread, (void*)func, 256 * 1024, 0x3f, -2, false);
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
@@ -315,7 +320,7 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int family = 0, res;
+	int success = 0, res;
 
 	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -326,21 +331,21 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 
 	for (cur = result; cur; cur = cur->ai_next) {
 		if (cur->ai_family != AF_INET) continue;
-		family = AF_INET;
+		success = true;
 
 		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
 		break;
 	}
 
 	freeaddrinfo(result);
-	return family;
+	return success;
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr) > 0) return true;
 	return ParseHost(addr, str);
 }
 
@@ -350,23 +355,21 @@ int Socket_ValidAddress(const cc_string* address) {
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
-	int family, addrSize = 0, blocking_raw = -1; /* non-blocking mode */
+	int addrSize, blocking_raw = -1; /* non-blocking mode */
 	union SocketAddress addr;
 	cc_result res;
 
 	*s = -1;
-	if (!(family = ParseAddress(&addr, address)))
+	if (!ParseAddress(&addr, address))
 		return ERR_INVALID_ARGUMENT;
 
-	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
+	*s = socket(AF_INET, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
 	ioctl(*s, FIONBIO, &blocking_raw);
 
-	if (family == AF_INET) {
-		addr.v4.sin_family  = AF_INET;
-		addr.v4.sin_port    = htons(port);
-		addrSize = sizeof(addr.v4);
-	}
+	addr.v4.sin_family  = AF_INET;
+	addr.v4.sin_port    = htons(port);
+	addrSize = sizeof(addr.v4);
 
 	res = connect(*s, &addr.raw, addrSize);
 	return res == -1 ? errno : 0;
@@ -408,7 +411,7 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize;
+	socklen_t resultSize = sizeof(socklen_t);
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
@@ -467,8 +470,23 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Init(void) { }
-void Platform_Free(void) { }
+#define SOC_CTX_ALIGN 0x1000
+#define SOC_CTX_SIZE  0x1000 * 128
+
+void Platform_Init(void) { 
+	// See https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/soc.h
+	//  * @param context_addr Address of a page-aligned (0x1000) buffer to be used.
+	//  * @param context_size Size of the buffer, a multiple of 0x1000.
+	//  * @note The specified context buffer can no longer be accessed by the process which called this function, since the userland permissions for this block are set to no-access.
+	void* buffer = memalign(SOC_CTX_ALIGN, SOC_CTX_SIZE);
+	if (!buffer) return;
+	socInit(buffer, SOC_CTX_SIZE);
+}
+
+void Platform_Free(void) {
+	socExit();
+	// TODO free soc buffer? probably no point
+}
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
@@ -504,7 +522,8 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
-	// Unlike other plaforms, 3DS doesn't use argv[0] for program name
+	// Unlike other plaforms, 3DS doesn't use argv[0] for program name and so argc will be 0
+	// TODO: maybe it still does in some cases?
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) {
