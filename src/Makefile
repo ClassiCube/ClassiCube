@@ -138,7 +138,9 @@ irix:
 	$(MAKE) $(ENAME) PLAT=irix
 psp:
 	$(MAKE) ClassiCube.elf PLAT=psp
-
+3ds:
+	$(MAKE) -f Makefile_3DS PLAT=3ds
+	
 clean:
 	$(DEL) $(OBJECTS)
 

@@ -32,6 +32,7 @@
 
 #define US_PER_SEC 1000000LL
 #define NS_PER_MS 1000000LL
+#define ROOT_DIR "sdmc://ClassiCube"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -119,18 +120,23 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
 
+static void GetNativePath(char* str, const cc_string* path) {
+	static const char root_path[18] = "sdmc://ClassiCube/";
+	Mem_Copy(str, root_path, sizeof(root_path));
+	str += sizeof(root_path);
+	String_EncodeUtf8(str, path);
+}
+
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
-	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	GetNativePath(str, path);
+	return mkdir(str, 0666) == -1 ? errno : 0; // FS has no permissions anyways
 }
 
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	String_EncodeUtf8(str, path);
+	GetNativePath(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -142,7 +148,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	String_EncodeUtf8(str, dirPath);
+	GetNativePath(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -154,11 +160,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	while ((entry = readdir(dirPtr))) {
 		path.length = 0;
 		String_Format1(&path, "%s/", dirPath);
-
-		/* ignore . and .. entry */
 		src = entry->d_name;
-		if (src[0] == '.' && src[1] == '\0') continue;
-		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
@@ -181,8 +183,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	GetNativePath(str, path);
+	*file = open(str, mode, 0666); // FS has no permissions anyways
 	return *file == -1 ? errno : 0;
 }
 
@@ -474,6 +476,8 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 #define SOC_CTX_SIZE  0x1000 * 128
 
 void Platform_Init(void) { 
+	Directory_Create(&String_Empty); // create root directory
+	
 	// See https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/soc.h
 	//  * @param context_addr Address of a page-aligned (0x1000) buffer to be used.
 	//  * @param context_size Size of the buffer, a multiple of 0x1000.

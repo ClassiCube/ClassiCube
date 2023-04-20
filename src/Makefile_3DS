@@ -1,0 +1,83 @@
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+include $(DEVKITARM)/3ds_rules
+
+
+APP_ICON	:= $(CURDIR)"/../misc/CC_48x48.png"
+APP_TITLE 	:= ClassiCube
+APP_DESCRIPTION := Simple block building sandbox
+APP_AUTHOR 	:= UnknownShadow200
+
+TARGET		:= ClassiCube
+OUTPUT		:=	$(CURDIR)/$(TARGET)
+CFILES		:=	$(wildcard *.c)
+SFILES		:=	$(wildcard *.s)
+PICAFILES	:=	$(wildcard *.v.pica)
+export LD	:=	$(CC)
+
+export OFILES_SOURCES 	:= $(CFILES:.c=.o) $(SFILES:.s=.o)
+
+export OFILES_BIN	:= $(PICAFILES:.v.pica=.shbin.o)
+
+export DEPSDIR		:= $(CURDIR)/build
+
+export OFILES 		:= $(OFILES_BIN) $(OFILES_SOURCES)
+
+export HFILES		:=	$(PICAFILES:.v.pica=_shbin.h)
+
+export INCLUDE		:=	$(foreach dir,$(CTRULIB),-I$(dir)/include)
+export LIBPATHS	:=	$(foreach dir,$(CTRULIB),-L$(dir)/lib)
+
+export _3DSXDEPS	:=	$(if $(NO_SMDH),,$(OUTPUT).smdh)
+
+ifeq ($(strip $(NO_SMDH)),)
+	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
+endif
+
+#---------------------------------------------------------------------------------
+# options for code generation
+#---------------------------------------------------------------------------------
+ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
+
+CFLAGS	:=	-g -Wall -O2 -mword-relocations -ffunction-sections \
+			$(ARCH) $(INCLUDE) -D__3DS__
+
+ASFLAGS	:=	-g $(ARCH)
+LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+
+LIBS	:= -lcitro3d -lctru -lm
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+default: $(DEPSDIR) $(OUTPUT).3dsx
+
+clean:
+	@rm $(OFILES) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
+
+$(OUTPUT).3dsx	: $(OUTPUT).elf $(_3DSXDEPS)
+
+$(OFILES_SOURCES) : $(HFILES)
+
+$(OUTPUT).elf	: $(OFILES)
+
+$(DEPSDIR):
+	@mkdir -p $@
+
+#---------------------------------------------------------------------------------
+# rules for assembling GPU shaders
+#---------------------------------------------------------------------------------
+define shader-as
+	$(eval CURBIN := $*.shbin)
+	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(CURBIN) | tr . _)`.h
+	echo "extern const u8" `(echo $(CU-RBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(CURBIN) | tr . _)`.h
+	echo "extern const u32" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(CURBIN) | tr . _)`.h
+	picasso -o $(CURBIN) $1
+	bin2s $(CURBIN) | $(AS) -o $*.shbin.o
+endef
+
+%.shbin.o %_shbin.h : %.v.pica
+	@echo $(notdir $<)
+	@$(call shader-as,$<)
