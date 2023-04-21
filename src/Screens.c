@@ -2085,7 +2085,7 @@ static void TouchScreen_PlaceClick(void* s,    void* w) { InputHandler_PlaceBloc
 static void TouchScreen_PickClick(void* s,     void* w) { InputHandler_PickBlock(); }
 
 static void TouchScreen_TabClick(void* s, void* w) {
-	if (TabListOverlay_Instance.active) {
+	if (tablist_active) {
 		Gui_Remove((struct Screen*)&TabListOverlay_Instance);
 	} else {
 		TabListOverlay_Show();
