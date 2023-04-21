@@ -30,13 +30,15 @@
 #include <signal.h>
 #include <sys/ucontext.h>
 #endif
-
 #ifdef CC_BUILD_DARWIN
 /* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
 #include <AvailabilityMacros.h>
 #endif
+
 /* Only show up to 40 frames in backtrace */
-#define MAX_BACKTRACE_FRAMES 40
+#define MAX_BACKTRACE_FRAMES 40x
+
+static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
 
 /*########################################################################################################################*
@@ -1039,8 +1041,6 @@ void Logger_Hook(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Deliberate crash logging------------------------------------------------*
 *#########################################################################################################################*/
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
-
 #if defined CC_BUILD_WIN
 #if __GNUC__
 /* Don't want compiler doing anything fancy with registers */

@@ -11,14 +11,10 @@
 extern cc_bool Input_RawMode; // Otherwise KEY_ conflicts with 3DS keys
 #include "_WindowBase.h"
 
-struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
 //  * Width/height refer to the physical dimensions of the screen; that is, the top screen
 //  * is 240 pixels wide and 400 pixels tall; while the bottom screen is 240x320.
-
 void Window_Init(void) {
 	//gfxInit(GSP_BGR8_OES,GSP_BGR8_OES,false); 
 	//gfxInit(GSP_BGR8_OES,GSP_RGBA8_OES,false);
@@ -65,6 +61,31 @@ void Window_Close(void) {
 }
 
 void Window_ProcessEvents(void) {
+	hidScanInput();
+	/* TODO implement */
+	
+	if (hidKeysDown() & KEY_TOUCH)
+		Input_SetPressed(119); // LMOUSE
+	
+	if (hidKeysUp() & KEY_TOUCH)
+		Input_SetReleased(119); // LMOUSE
+	
+	if (hidKeysHeld() & KEY_TOUCH) {
+		int x, y;
+		Cursor_GetRawPos(&x, &y);
+		Pointer_SetPosition(0, x, y);
+	}
+}
+
+static void Cursor_GetRawPos(int* x, int* y) {
+	touchPosition touch;
+	hidTouchRead(&touch);
+
+	*x = touch.px;
+	*y = touch.py;
+}
+
+static void Cursor_DoSetVisible(cc_bool visible) {
 	/* TODO implement */
 }
 
@@ -122,7 +143,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
-void Window_EnableRawMouse(void)  { }
-void Window_UpdateRawMouse(void)  { }
-void Window_DisableRawMouse(void) { }
+void Window_EnableRawMouse(void)  { DefaultEnableRawMouse();  }
+void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse();  }
+void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #endif
