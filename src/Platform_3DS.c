@@ -32,13 +32,16 @@
 
 #define US_PER_SEC 1000000LL
 #define NS_PER_MS 1000000LL
-#define ROOT_DIR "sdmc://ClassiCube"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+
+// https://gbatemp.net/threads/homebrew-development.360646/page-245
+// 3DS defaults to stack size of *32 KB*.. way too small
+unsigned int __stacksize__ = 256 * 1024;
 
 
 /*########################################################################################################################*
@@ -121,7 +124,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Directory_GetCachePath(cc_string* path) { }
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[18] = "sdmc://ClassiCube/";
+	static const char root_path[22] = "sdmc://3ds/ClassiCube/";
 	Mem_Copy(str, root_path, sizeof(root_path));
 	str += sizeof(root_path);
 	String_EncodeUtf8(str, path);
@@ -476,7 +479,9 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 #define SOC_CTX_SIZE  0x1000 * 128
 
 void Platform_Init(void) { 
-	Directory_Create(&String_Empty); // create root directory
+	// create root directories (no permissions anyways)
+	mkdir("sdmc://3ds",            0666);
+	mkdir("sdmc://3ds/ClassiCube", 0666);
 	
 	// See https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/soc.h
 	//  * @param context_addr Address of a page-aligned (0x1000) buffer to be used.
@@ -526,8 +531,8 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
-	// Unlike other plaforms, 3DS doesn't use argv[0] for program name and so argc will be 0
-	// TODO: maybe it still does in some cases?
+	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
+	// (e.g. when running from Citra)
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) {

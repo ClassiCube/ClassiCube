@@ -5,8 +5,11 @@
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
-#include "Window.h"
 #include <3ds.h>
+
+#define CC_INPUT_H
+extern cc_bool Input_RawMode; // Otherwise KEY_ conflicts with 3DS keys
+#include "_WindowBase.h"
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -26,7 +29,7 @@ void Window_Init(void) {
 	consoleInit(GFX_BOTTOM, NULL);
 	
 	u16 width, height;
-	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
+	gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
 	
 	DisplayInfo.Width  = height; // deliberately swapped
 	DisplayInfo.Height = width;  // deliberately swapped
@@ -34,8 +37,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width  = height; // deliberately swapped
-	WindowInfo.Height = width;  // deliberately swapped
+	WindowInfo.Width   = height; // deliberately swapped
+	WindowInfo.Height  = width;  // deliberately swapped
 	WindowInfo.Focused = true;
 }
 
@@ -69,7 +72,7 @@ void Cursor_SetPosition(int x, int y) {
 	/* TODO implement */
 }
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	/* TODO implement */
 }
 
@@ -90,10 +93,6 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r) {
 	u16 width, height;
 	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
-	//Platform_Log4("SRC: %i,%i (%i,%i)", &r.X, &r.Y, &r.Width, &r.Height);
-	
-	int width_ = width, height_ = height;
-	//Platform_Log2("DST: %i, %i", &width_, &height_);
 
 	// SRC y = 0 to 240
 	// SRC x = 0 to 400

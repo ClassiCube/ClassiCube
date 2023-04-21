@@ -10,30 +10,26 @@ APP_TITLE 	:= ClassiCube
 APP_DESCRIPTION := Simple block building sandbox
 APP_AUTHOR 	:= UnknownShadow200
 
-TARGET		:= ClassiCube
-OUTPUT		:=	$(CURDIR)/$(TARGET)
 CFILES		:=	$(wildcard *.c)
 SFILES		:=	$(wildcard *.s)
 PICAFILES	:=	$(wildcard *.v.pica)
 export LD	:=	$(CC)
 
-export OFILES_SOURCES 	:= $(CFILES:.c=.o) $(SFILES:.s=.o)
+OFILES_SOURCES := $(CFILES:.c=.o) $(SFILES:.s=.o)
 
-export OFILES_BIN	:= $(PICAFILES:.v.pica=.shbin.o)
+OFILES_SHADERS	:= $(PICAFILES:.v.pica=.shbin.o)
 
-export DEPSDIR		:= $(CURDIR)/build
+DEPSDIR	:= $(CURDIR)/build
 
-export OFILES 		:= $(OFILES_BIN) $(OFILES_SOURCES)
+OFILES 	:= $(OFILES_SHADERS) $(OFILES_SOURCES)
 
-export HFILES		:=	$(PICAFILES:.v.pica=_shbin.h)
+INCLUDE	:=	$(foreach dir,$(CTRULIB),-I$(dir)/include)
+LIBPATHS	:=	$(foreach dir,$(CTRULIB),-L$(dir)/lib)
 
-export INCLUDE		:=	$(foreach dir,$(CTRULIB),-I$(dir)/include)
-export LIBPATHS	:=	$(foreach dir,$(CTRULIB),-L$(dir)/lib)
-
-export _3DSXDEPS	:=	$(if $(NO_SMDH),,$(OUTPUT).smdh)
+_3DSXDEPS	:=	$(if $(NO_SMDH),,$(CURDIR)/ClassiCube.smdh)
 
 ifeq ($(strip $(NO_SMDH)),)
-	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
+	export _3DSXFLAGS += --smdh=$(CURDIR)/ClassiCube.smdh
 endif
 
 #---------------------------------------------------------------------------------
@@ -52,16 +48,16 @@ LIBS	:= -lcitro3d -lctru -lm
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-default: $(DEPSDIR) $(OUTPUT).3dsx
+default: $(DEPSDIR) ClassiCube.3dsx
 
 clean:
-	@rm $(OFILES) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
+	@rm $(OFILES) ClassiCube.3dsx ClassiCube.smdh ClassiCube.elf
 
-$(OUTPUT).3dsx	: $(OUTPUT).elf $(_3DSXDEPS)
+ClassiCube.elf	: $(OFILES)
 
-$(OFILES_SOURCES) : $(HFILES)
+ClassiCube.3dsx : ClassiCube.elf $(_3DSXDEPS)
 
-$(OUTPUT).elf	: $(OFILES)
+Graphics_3DS.o : $(OFILES_SHADERS)
 
 $(DEPSDIR):
 	@mkdir -p $@
@@ -69,15 +65,8 @@ $(DEPSDIR):
 #---------------------------------------------------------------------------------
 # rules for assembling GPU shaders
 #---------------------------------------------------------------------------------
-define shader-as
-	$(eval CURBIN := $*.shbin)
-	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const u8" `(echo $(CU-RBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const u32" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(CURBIN) | tr . _)`.h
-	picasso -o $(CURBIN) $1
-	bin2s $(CURBIN) | $(AS) -o $*.shbin.o
-endef
-
-%.shbin.o %_shbin.h : %.v.pica
-	@echo $(notdir $<)
-	@$(call shader-as,$<)
+%.shbin.o : %.v.pica
+	$(eval CUR_SH := $<)
+	$(eval CURBIN := $(subst .v.pica,.shbin,$<))
+	picasso -o $(CURBIN) $(CUR_SH)
+	bin2s $(CURBIN) | $(AS) -o $(CURBIN).o

@@ -1,8 +1,9 @@
-; Vertex shader for rendering textured vertices for PICA200 GPU on the Nintendo 3DS
+; Vertex shader for rendering textured vertices with an offset for PICA200 GPU on the Nintendo 3DS
 ; ==================================================================================
 
 ; Uniforms
 .fvec MVP[4];
+.fvec tex_offset;
 
 ; Constants
 .constf ONE_DIV_255(0.003921568627, 0.003921568627, 0.003921568627, 0.003921568627)
@@ -29,8 +30,8 @@
 
 	; out_col = in_col * ONE_DIV_255
 	mul out_col, ONE_DIV_255, in_col
-	; out_tex = in_tex
-	mov out_tex, in_tex
+	; out_tex = in_tex + tex_offset
+	add out_tex, tex_offset, in_tex
 	
 	end
 .end
