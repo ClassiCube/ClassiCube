@@ -20,7 +20,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <poll.h>
@@ -360,9 +359,9 @@ int Socket_ValidAddress(const cc_string* address) {
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
-	int addrSize, blocking_raw = -1; /* non-blocking mode */
 	union SocketAddress addr;
 	cc_result res;
+	int flags;
 
 	*s = -1;
 	if (!ParseAddress(&addr, address))
@@ -370,13 +369,15 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 
 	*s = socket(AF_INET, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
-	ioctl(*s, FIONBIO, &blocking_raw);
+	
+	// non blocking mode
+	flags = fcntl(*s, F_GETFL, 0);
+	if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
 
-	addr.v4.sin_family  = AF_INET;
-	addr.v4.sin_port    = htons(port);
-	addrSize = sizeof(addr.v4);
+	addr.v4.sin_family = AF_INET;
+	addr.v4.sin_port   = htons(port);
 
-	res = connect(*s, &addr.raw, addrSize);
+	res = connect(*s, &addr.raw, sizeof(addr.v4));
 	return res == -1 ? errno : 0;
 }
 

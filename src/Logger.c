@@ -36,7 +36,7 @@
 #endif
 
 /* Only show up to 40 frames in backtrace */
-#define MAX_BACKTRACE_FRAMES 40x
+#define MAX_BACKTRACE_FRAMES 40
 
 static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
