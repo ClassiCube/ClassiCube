@@ -46,6 +46,7 @@ struct HUDScreen;
 struct ChatScreen;
 static struct HUDScreen*  Gui_HUD;
 static struct ChatScreen* Gui_Chat;
+static cc_bool tablist_active;
 
 static cc_bool InventoryScreen_IsHotbarActive(void);
 CC_NOINLINE static cc_bool IsOnlyChatActive(void) {
@@ -75,7 +76,7 @@ static struct HUDScreen {
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
-#define HUD_MAX_VERTICES (TEXTWIDGET_MAX * 2)
+#define HUD_MAX_VERTICES (TEXTWIDGET_MAX * 2 + 4)
 
 static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
@@ -307,6 +308,21 @@ static void HUDScreen_Update(void* screen, double delta) {
 	}
 }
 
+#define CH_EXTENT 16
+static void HUDScreen_BuildCrosshairsMesh(struct VertexTextured** ptr) {
+	static struct Texture tex = { 0, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
+	int extent;
+
+	extent = (int)(CH_EXTENT * Gui_Scale(WindowInfo.Height / 480.0f));
+	tex.ID = Gui.IconsTex;
+	tex.X  = (WindowInfo.Width  / 2) - extent;
+	tex.Y  = (WindowInfo.Height / 2) - extent;
+
+	tex.Width  = extent * 2;
+	tex.Height = extent * 2;
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
+}
+
 static void HUDScreen_BuildMesh(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	struct VertexTextured* data;
@@ -315,6 +331,7 @@ static void HUDScreen_BuildMesh(void* screen) {
 	data = Screen_LockVb(s);
 	ptr  = &data;
 
+	HUDScreen_BuildCrosshairsMesh(ptr);
 	Widget_BuildMesh(&s->line1, ptr);
 	Widget_BuildMesh(&s->line2, ptr);
 	Gfx_UnlockDynamicVb(s->vb);
@@ -328,17 +345,24 @@ static void HUDScreen_Render(void* screen, double delta) {
 	Gfx_BindDynamicVb(s->vb);
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
-	if (Gui.ShowFPS) Widget_Render2(&s->line1, 0);
+	if (Gui.ShowFPS) Widget_Render2(&s->line1, 4);
 
 	if (Game_ClassicMode) {
-		Widget_Render2(&s->line2, 4);
+		Widget_Render2(&s->line2, 8);
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
-		Widget_Render2(&s->line2, 4);
+		Widget_Render2(&s->line2, 8);
 		HUDScreen_DrawPosition(s);
 		/* TODO swap these two lines back */
 	}
 
 	if (!Gui_GetBlocksWorld()) Elem_Render(&s->hotbar, delta);
+
+	if (!Gui.IconsTex) return;
+	if (!tablist_active && !Gui_GetBlocksWorld()) {
+		Gfx_BindTexture(Gui.IconsTex);
+		Gfx_BindDynamicVb(s->vb);
+		Gfx_DrawVb_IndexedTris(4);
+	}
 }
 
 static void HUDScreen_Free(void* screen) {
@@ -372,7 +396,7 @@ typedef int (*TabListEntryCompare)(int x, int y);
 static struct TabListOverlay {
 	Screen_Body
 	int x, y, width, height;
-	cc_bool active, classic, staysOpen;
+	cc_bool classic, staysOpen;
 	int namesCount, elementOffset;
 	struct TextWidget title;
 	struct FontDesc font;
@@ -738,7 +762,7 @@ static void TabListOverlay_Render(void* screen, double delta) {
 
 static void TabListOverlay_Free(void* screen) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	s->active = false;
+	tablist_active = false;
 	Event_Unregister_(&TabListEvents.Added,   s, TabListOverlay_Add);
 	Event_Unregister_(&TabListEvents.Changed, s, TabListOverlay_Update);
 	Event_Unregister_(&TabListEvents.Removed, s, TabListOverlay_Remove);
@@ -746,7 +770,7 @@ static void TabListOverlay_Free(void* screen) {
 
 static void TabListOverlay_Init(void* screen) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	s->active        = true;
+	tablist_active   = true;
 	s->classic       = Gui.ClassicTabList || !Server.SupportsExtPlayerList;
 	s->elementOffset = s->classic ? 0 : 10;
 	TextWidget_Init(&s->title);
@@ -769,7 +793,6 @@ void TabListOverlay_Show(void) {
 	s->staysOpen = false;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TABLIST);
 }
-
 
 
 /*########################################################################################################################*
@@ -795,7 +818,6 @@ static struct ChatScreen {
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[GUI_MAX_CHATLINES];
 } ChatScreen_Instance;
-#define CH_EXTENT 16
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
@@ -988,21 +1010,6 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 	} 
 }
 
-static void ChatScreen_DrawCrosshairs(void) {
-	static struct Texture tex = { 0, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
-	int extent;
-	if (!Gui.IconsTex) return;
-
-	extent = (int)(CH_EXTENT * Gui_Scale(WindowInfo.Height / 480.0f));
-	tex.ID = Gui.IconsTex;
-	tex.X  = (WindowInfo.Width  / 2) - extent;
-	tex.Y  = (WindowInfo.Height / 2) - extent;
-
-	tex.Width  = extent * 2;
-	tex.Height = extent * 2;
-	Texture_Render(&tex);
-}
-
 static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 	int usedHeight = TextGroupWidget_UsedHeight(&s->chat);
 	int x = s->chat.x;
@@ -1189,7 +1196,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	cc_bool handlesList = playerListKey != KEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
-		if (!TabListOverlay_Instance.active && !Server.IsSinglePlayer) {
+		if (!tablist_active && !Server.IsSinglePlayer) {
 			TabListOverlay_Show();
 		}
 		return true;
@@ -1360,9 +1367,6 @@ static void ChatScreen_Render(void* screen, double delta) {
 	}
 	if (Game_HideGui) return;
 
-	if (!TabListOverlay_Instance.active && !Gui_GetBlocksWorld()) {
-		ChatScreen_DrawCrosshairs();
-	}
 	if (s->grabsInput && !Gui.ClassicChat) {
 		ChatScreen_DrawChatBackground(s);
 	}
