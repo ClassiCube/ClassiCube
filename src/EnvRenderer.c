@@ -435,7 +435,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	int weather, vCount;
 	IVec3 pos;
 	cc_bool moved, particles;
-	float speed, vOffset;
+	float speed, vOffsetBase, vOffset;
 
 	PackedCol col;
 	int dist, dx, dz, x, z;
@@ -457,9 +457,9 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.Y += 64;
 	pos.Y = max(World.Height, pos.Y);
 
-	speed     = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
-	vOffset   = (float)Game.Time * speed;
-	particles = weather == WEATHER_RAINY;
+	speed       = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
+	vOffsetBase = (float)Game.Time * speed;
+	particles   = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 
 	v   = vertices;
@@ -486,8 +486,13 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			uOffset2 = 0;
 			if (weather == WEATHER_SNOWY) {
 				Random_Seed(&snowDirRng, (x + 1217 * z) & 0x7fffffff);
-				uOffset1 = ((float)Game.Time * (Random_Float(&snowDirRng) * (1 - -1) + -1)) * Env.WeatherSpeed * 0.5f;
-				uOffset2 = ((float)Game.Time * (Random_Float(&snowDirRng) * (1 - -1) + -1)) * Env.WeatherSpeed * 0.5f;
+				/* Multiply horizontal speed by a random float from -1 to 1 */
+				uOffset1 = ((float)Game.Time * (Random_Float(&snowDirRng) * 2 + -1)) * Env.WeatherSpeed * 0.5f;
+				uOffset2 = ((float)Game.Time * (Random_Float(&snowDirRng) * 2 + -1)) * Env.WeatherSpeed * 0.5f;
+				/* Multiply vertical speed by a random float from 1.0 to 0.25 */
+				vOffset = vOffsetBase * (float)(Random_Float(&snowDirRng) * (1.0f - 0.25f) + 0.25f);
+			} else {
+				vOffset = vOffsetBase;
 			}
 			
 			worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
@@ -496,10 +501,11 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
 			x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
 
-			v->X = x1; v->Y = y1; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v1; v++;
-			v->X = x1; v->Y = y2; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v2; v++;
-			v->X = x2; v->Y = y2; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v2; v++;
-			v->X = x2; v->Y = y1; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v1; v++;
+			/* Add 0.25 to v on one plane so that the texture doesn't align to create a noticable mirror effect down the middle */
+			v->X = x1; v->Y = y1; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v1+0.25f; v++;
+			v->X = x1; v->Y = y2; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v2+0.25f; v++;
+			v->X = x2; v->Y = y2; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v2+0.25f; v++;
+			v->X = x2; v->Y = y1; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v1+0.25f; v++;
 
 			v->X = x2; v->Y = y1; v->Z = z1; v->Col = col; v->U = 1.0f + uOffset2; v->V = v1; v++;
 			v->X = x2; v->Y = y2; v->Z = z1; v->Col = col; v->U = 1.0f + uOffset2; v->V = v2; v++;
