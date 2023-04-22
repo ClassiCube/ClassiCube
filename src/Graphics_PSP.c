@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 
+#include <malloc.h>
 #include <pspkernel.h>
 #include <pspdisplay.h>
 #include <pspdebug.h>
@@ -71,7 +72,7 @@ static void guInit(void) {
 	sceGuDisplay(GU_TRUE);
 }
 
-static void GLBackend_Init(void);
+static GfxResourceID white_square;
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
@@ -79,11 +80,20 @@ void Gfx_Create(void) {
 	MakeIndices(gfx_indices, GFX_MAX_INDICES);
 	guInit();
 	InitDefaultResources();
+	
+	// 1x1 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
+}
+
+void Gfx_Free(void) { 
+	FreeDefaultResources(); 
+	Gfx_DeleteTexture(&white_square);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
-
-void Gfx_Free(void) { FreeDefaultResources(); }
 void Gfx_RestoreState(void) { }
 void Gfx_FreeState(void) { }
 #define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
@@ -139,6 +149,8 @@ void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
+	if (!tex) tex  = white_square; 
+	
 	sceGuTexMode(GU_PSM_8888,0,0,0);
 	sceGuTexImage(0, tex->width, tex->height, tex->width, tex->pixels);
 }

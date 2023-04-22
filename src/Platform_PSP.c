@@ -15,10 +15,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdio.h>
 #include <pspkernel.h>
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
@@ -32,6 +30,8 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
+
+PSP_DISABLE_AUTOSTART_PTHREAD() // reduces .elf size by 140 kb
 
 
 /*########################################################################################################################*
