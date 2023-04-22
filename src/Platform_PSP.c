@@ -11,12 +11,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <fcntl.h>
 #include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <pspkernel.h>
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
@@ -72,8 +67,11 @@ void Platform_Log(const char* msg, int len) {
 	sceIoWrite(fd, msg, len);
 	sceIoWrite(fd, "\n",  1);
 	
-	//pspDebugSioPutData(msg, len);
-	//pspDebugSioPutData("\n",  1);
+	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
+	//cc_string str = String_Init(msg, len, len);
+	//cc_file file = 0;
+	//File_Open(&file, &str);
+	//File_Close(file);	
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
@@ -109,112 +107,122 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
 
+extern int __path_absolute(const char *in, char *out, int len);
+static void GetNativePath(char* str, const cc_string* path) {
+	char tmp[NATIVE_STR_LEN + 1];
+	String_EncodeUtf8(tmp, path);
+	__path_absolute(tmp, str, NATIVE_STR_LEN);
+}
+
+#define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
+
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
-	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	GetNativePath(str, path);
+	
+	int result = sceIoMkdir(str, 0777);
+	return GetSCEResult(result);
 }
 
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	struct stat sb;
-	String_EncodeUtf8(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	SceIoStat sb;
+	GetNativePath(str, path);
+	return sceIoGetstat(str, &sb) == 0 && (sb.st_attr & FIO_SO_IFREG) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
-	struct dirent* entry;
-	char* src;
-	int len, res, is_dir;
+	int res;
 
-	String_EncodeUtf8(str, dirPath);
-	dirPtr = opendir(str);
-	if (!dirPtr) return errno;
+	GetNativePath(str, dirPath);
+	SceUID uid = sceIoDopen(str);
+	if (uid < 0) return GetSCEResult(uid); // error
 
-	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
-	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
-	errno = 0;
 	String_InitArray(path, pathBuffer);
+	SceIoDirent entry;
 
-	while ((entry = readdir(dirPtr))) {
+	while ((res = sceIoDread(uid, &entry)) > 0) {
 		path.length = 0;
 		String_Format1(&path, "%s/", dirPath);
 
-		/* ignore . and .. entry */
-		src = entry->d_name;
-		if (src[0] == '.' && src[1] == '\0') continue;
+		// ignore . and .. entry (PSP does return them)
+		char* src = entry.d_name;
+		if (src[0] == '.' && src[1] == '\0')                  continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-
-		len = String_Length(src);
+		
+		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-		is_dir = entry->d_type == DT_DIR;
-		/* TODO: fallback to stat when this fails */
-
-		if (is_dir) {
+		if (entry.d_stat.st_attr & FIO_SO_IFDIR) {
 			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
+			if (res) break;
 		} else {
 			callback(&path, obj);
 		}
-		errno = 0;
 	}
 
-	res = errno; /* return code from readdir */
-	closedir(dirPtr);
-	return res;
+	sceIoDclose(uid);
+	return GetSCEResult(res);
 }
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
+	GetNativePath(str, path);
+	
+	int result = sceIoOpen(str, mode, 0777);
+	*file      = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path, PSP_O_RDONLY);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path, PSP_O_RDWR | PSP_O_CREAT | PSP_O_TRUNC);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path, PSP_O_RDWR | PSP_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	int result = sceIoRead(file, data, count);
+	*bytesRead = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	int result  = sceIoWrite(file, data, count);
+	*bytesWrote = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Close(cc_file file) {
-	return close(file) == -1 ? errno : 0;
+	int result = sceIoDclose(file);
+	return GetSCEResult(result);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	static cc_uint8 modes[3] = { PSP_SEEK_SET, PSP_SEEK_CUR, PSP_SEEK_END };
+	
+	int result = sceIoLseek32(file, offset, modes[seekType]);
+	return GetSCEResult(result);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	int result = sceIoLseek32(file, 0, PSP_SEEK_CUR);
+	*pos       = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	int curPos = sceIoLseek32(file, 0, PSP_SEEK_CUR);
+	if (curPos < 0) { *len = -1; return GetSCEResult(curPos); }
+	
+	*len = sceIoLseek32(file, 0, PSP_SEEK_END);
+	sceIoLseek32(file, curPos, PSP_SEEK_SET); // restore position
+	return 0;
 }
 
 
