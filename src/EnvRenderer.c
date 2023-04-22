@@ -441,7 +441,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	int dist, dx, dz, x, z;
 	float alpha, y, height;
 	float uOffset1, uOffset2;
-	float worldV, v1, v2;
+	float worldV, v1, v2, vPlane1Offset;
 	float x1,y1,z1, x2,y2,z2;
 
 	weather = Env.Weather;
@@ -457,9 +457,10 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.Y += 64;
 	pos.Y = max(World.Height, pos.Y);
 
-	speed       = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
-	vOffsetBase = (float)Game.Time * speed;
-	particles   = weather == WEATHER_RAINY;
+	speed         = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
+	vOffsetBase   = (float)Game.Time * speed;
+	vPlane1Offset = weather == WEATHER_RAINY ? 0 : 0.25f; /* Offset v on 1 plane while snowing to avoid the unnatural mirrored texture effect */
+	particles     = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 
 	v   = vertices;
@@ -501,11 +502,10 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
 			x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
 
-			/* Add 0.25 to v on one plane so that the texture doesn't align to create a noticable mirror effect down the middle */
-			v->X = x1; v->Y = y1; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v1+0.25f; v++;
-			v->X = x1; v->Y = y2; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v2+0.25f; v++;
-			v->X = x2; v->Y = y2; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v2+0.25f; v++;
-			v->X = x2; v->Y = y1; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v1+0.25f; v++;
+			v->X = x1; v->Y = y1; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v1+vPlane1Offset; v++;
+			v->X = x1; v->Y = y2; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v2+vPlane1Offset; v++;
+			v->X = x2; v->Y = y2; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v2+vPlane1Offset; v++;
+			v->X = x2; v->Y = y1; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v1+vPlane1Offset; v++;
 
 			v->X = x2; v->Y = y1; v->Z = z1; v->Col = col; v->U = 1.0f + uOffset2; v->V = v1; v++;
 			v->X = x2; v->Y = y2; v->Z = z1; v->Col = col; v->U = 1.0f + uOffset2; v->V = v2; v++;
