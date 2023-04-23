@@ -466,11 +466,6 @@ static struct LightQueue lightQueue;
 /*########################################################################################################################*
 *----------------------------------------------------Modern lighting------------------------------------------------------*
 *#########################################################################################################################*/
-/* How many unique "levels" of light there are when modern lighting is used. */
-#define MODERN_LIGHTING_LEVELS 16
-#define MODERN_LIGHTING_MAX_LEVEL MODERN_LIGHTING_LEVELS - 1
-/* How many bits to shift sunlight level to the left when storing it in a byte along with blocklight level*/
-#define MODERN_LIGHTING_SUN_SHIFT 4
 
 /* A 16x16 palette of sun and block light colors. */
 /* It is indexed by a byte where the leftmost 4 bits represent sunlight level and the rightmost 4 bits represent blocklight level */
@@ -506,11 +501,10 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 			/* between shadow color and darkest shadow color */
 			if (sunLevel == MODERN_LIGHTING_LEVELS - 1) {
 				sunColor = Env.SunCol;
-			} else if (sunLevel == MODERN_LIGHTING_LEVELS - 2) {
-				sunColor = PackedCol_Lerp(Env.SunCol, Env.ShadowCol, 0.5F);
 			} else {
 				//sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3));
-				blockLerp = sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3);
+
+				blockLerp = max(sunLevel, MODERN_LIGHTING_LEVELS - SUN_LEVELS) / (float)(MODERN_LIGHTING_LEVELS - 2);
 				//blockLerp *= blockLerp;
 				blockLerp *= (MATH_PI / 2);
 				blockLerp = Math_Cos(blockLerp);
@@ -735,7 +729,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 
 		BlockID thisBlock = World_GetBlock(curNode.X, curNode.Y, curNode.Z);
 		curLight--; // 1 light level less in each neighbour
-		if (curLight == 0) continue;
+		if (curLight == MODERN_LIGHTING_LEVELS - SUN_LEVELS) continue;
 
 
 		curNode.X--;

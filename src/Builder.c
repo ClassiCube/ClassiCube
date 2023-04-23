@@ -1254,7 +1254,6 @@ static void AdvBuilder_SetActive(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Modern mesh builder-----------------------------------------------------*
 *#########################################################################################################################*/
-#define MODERN_AO 0.5F
 /* Fast color averaging wizardy from https://stackoverflow.com/questions/8440631/how-would-you-average-two-32-bit-colors-packed-into-an-integer */
 #define AVERAGE(a, b)   ( ((((a) ^ (b)) & 0xfefefefe) >> 1) + ((a) & (b)) )
 
