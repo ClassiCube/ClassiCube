@@ -718,7 +718,8 @@ void Gfx_DisableTextureOffset(void) {
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
-	/* The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	float zNear = ORTHO_NEAR, zFar = ORTHO_FAR;
 	*matrix = Matrix_Identity;
 
@@ -731,25 +732,16 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	matrix->row4.Z = zNear / (zNear - zFar);
 }
 
-static float CalcZNear(float fov) {
-	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
-	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
-	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
-	if (depthBits < 24 || fov <= 70 * MATH_DEG2RAD) return 0.05f;
-	if (fov <= 100 * MATH_DEG2RAD) return 0.025f;
-	if (fov <= 150 * MATH_DEG2RAD) return 0.0125f;
-	return 0.00390625f;
-}
-
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
 	/* Deliberately swap zNear/zFar in projection matrix calculation to produce */
 	/*  a projection matrix that results in a reversed depth buffer */
 	/* https://developer.nvidia.com/content/depth-precision-visualized */
 	float zNear_ = zFar;
-	float zFar_  = CalcZNear(fov);
+	float zFar_  = Reversed_CalcZNear(fov, depthBits);
 
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 

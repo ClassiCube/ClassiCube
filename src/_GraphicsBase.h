@@ -236,6 +236,17 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 }
 
 
+static float Reversed_CalcZNear(float fov, int depthbufferBits) {
+	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
+	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
+	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
+	if (depthbufferBits < 24 || fov <= 70 * MATH_DEG2RAD) return 0.05f;
+	if (fov <= 100 * MATH_DEG2RAD) return 0.025f;
+	if (fov <= 150 * MATH_DEG2RAD) return 0.0125f;
+	return 0.00390625f;
+}
+
+
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
