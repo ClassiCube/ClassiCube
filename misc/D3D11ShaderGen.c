@@ -84,12 +84,12 @@ static const char PS_SOURCE[] =
 "   if (color.a < 0.5) { discard; return color; }                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_LINEAR                                               \n" \
-"   float depth = input.position.z * input.position.w;              \n" \
+"   float depth = input.position.w;                                 \n" \
 "   float fog   = saturate((fogEnd - depth) / fogEnd);              \n" \
 "   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
 "#endif                                                             \n" \
 "#ifdef PS_FOG_DENSITY                                              \n" \
-"   float depth = input.position.z * input.position.w;              \n" \
+"   float depth = input.position.w;                                 \n" \
 "   float fog   = saturate(exp(fogDensity * depth));                \n" \
 "   color.rgb   = lerp(fogColor, color.rgb, fog);                   \n" \
 "#endif                                                             \n" \

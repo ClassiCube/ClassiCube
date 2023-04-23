@@ -716,11 +716,10 @@ void Gfx_DisableTextureOffset(void) {
 	IDirect3DDevice9_SetTransform(device, D3DTS_TEXTURE0, (const D3DMATRIX*)&Matrix_Identity);
 }
 
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	/* NOTE: This calculation is shared with Direct3D 11 backend */
-	float zNear = ORTHO_NEAR, zFar = ORTHO_FAR;
 	*matrix = Matrix_Identity;
 
 	matrix->row1.X =  2.0f / width;
@@ -733,7 +732,7 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	/* Deliberately swap zNear/zFar in projection matrix calculation to produce */
 	/*  a projection matrix that results in a reversed depth buffer */
 	/* https://developer.nvidia.com/content/depth-precision-visualized */

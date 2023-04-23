@@ -27,7 +27,7 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	float fovy = Camera.Fov * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	Gfx_CalcPerspectiveMatrix(fovy, aspectRatio, (float)Game_ViewDistance, proj);
+	Gfx_CalcPerspectiveMatrix(proj, fovy, aspectRatio, (float)Game_ViewDistance);
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
@@ -137,7 +137,8 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 static Vec2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->Yaw * MATH_DEG2RAD; v.Y = p->Pitch * MATH_DEG2RAD;
+	v.X = p->Yaw   * MATH_DEG2RAD; 
+	v.Y = p->Pitch * MATH_DEG2RAD;
 	return v;
 }
 
@@ -173,7 +174,8 @@ static float dist_third = DEF_ZOOM, dist_forward = DEF_ZOOM;
 static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->Yaw * MATH_DEG2RAD; v.Y = p->Pitch * MATH_DEG2RAD;
+	v.X = p->Yaw   * MATH_DEG2RAD; 
+	v.Y = p->Pitch * MATH_DEG2RAD;
 	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
 
 	v.X += cam_rotOffset.X * MATH_DEG2RAD; 

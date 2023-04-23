@@ -18,8 +18,6 @@ const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced perf
 static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
-#define ORTHO_NEAR -10000.0f
-#define ORTHO_FAR   10000.0f
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
@@ -205,7 +203,8 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
-	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
+	Gfx_CalcOrthoMatrix(&ortho, 
+						(float)width, (float)height, -10000.0f, 10000.0f);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 

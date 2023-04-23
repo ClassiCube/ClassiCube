@@ -202,9 +202,9 @@ CC_API void Gfx_EnableTextureOffset(float x, float y);
 CC_API void Gfx_DisableTextureOffset(void);
 
 /* Calculates an orthographic projection matrix suitable with this backend. (usually for 2D) */
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar);
 /* Calculates a perspective projection matrix suitable with this backend. (usually for 3D) */
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix);
+void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar);
 /* NOTE: Projection matrix calculation is here because it can depend the graphics backend */
 /*  (e.g. OpenGL uses a Z clip space range of [-1, 1], whereas Direct3D9 uses [0, 1]) */
 

@@ -441,11 +441,11 @@ void Gfx_SetFogMode(FogFunc func) {
 *#########################################################################################################################*/
 static C3D_Mtx _view, _proj;
 
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Mtx_OrthoTilt(matrix, 0.0f, width, height, 0.0f, ORTHO_NEAR, ORTHO_FAR, true);
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
+	Mtx_OrthoTilt(matrix, 0.0f, width, height, 0.0f, zNear, zFar, true);
 }
 
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	Mtx_PerspTilt(matrix, fov, aspect, 0.1f, zFar, true);
 }
 
