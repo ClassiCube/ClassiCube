@@ -94,6 +94,11 @@ ifeq ($(PLAT),serenityos)
 LIBS=-lgl -lSDL2
 endif
 
+ifeq ($(PLAT),irix)
+CC=gcc
+LIBS=-lGL -lX11 -lXi -lm -lpthread -ldl
+endif
+
 ifeq ($(PLAT),psp)
 CC=psp-gcc
 LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay
@@ -129,9 +134,13 @@ haiku:
 	$(MAKE) $(ENAME) PLAT=haiku
 serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
+irix:
+	$(MAKE) $(ENAME) PLAT=irix
 psp:
 	$(MAKE) ClassiCube.elf PLAT=psp
-
+3ds:
+	$(MAKE) -f Makefile_3DS PLAT=3ds
+	
 clean:
 	$(DEL) $(OBJECTS)
 

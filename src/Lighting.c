@@ -287,7 +287,7 @@ static cc_bool ClassicLighting_NeedsNeighour(BlockID block, int i, int minY, int
 	cc_bool affected;
 
 #ifndef EXTENDED_BLOCKS
-	Lighting_NeedsNeighourBody(World.Blocks[i]);
+	ClassicLighting_NeedsNeighourBody(World.Blocks[i]);
 #else
 	if (World.IDMask <= 0xFF) {
 		ClassicLighting_NeedsNeighourBody(World.Blocks[i]);

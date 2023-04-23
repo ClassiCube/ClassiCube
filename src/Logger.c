@@ -26,8 +26,6 @@
 #define _GNU_SOURCE
 #include <sys/ucontext.h>
 #include <signal.h>
-#elif defined CC_BUILD_PSP
-/* TODO can this be supported somehow? */
 #elif defined CC_BUILD_POSIX
 #include <signal.h>
 #include <sys/ucontext.h>
@@ -36,8 +34,11 @@
 /* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
 #include <AvailabilityMacros.h>
 #endif
+
 /* Only show up to 40 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 40
+
+static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
 
 /*########################################################################################################################*
@@ -192,9 +193,7 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 	}
 }
 
-#if defined CC_BUILD_WEB
-/* No stack frames for web */
-#elif defined CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
 static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	char strBuffer[512]; cc_string str;
@@ -234,8 +233,12 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
-#elif defined CC_BUILD_PSP
-/* No backtrace support implemented for PSP */
+#elif defined CC_BUILD_IRIX
+/* IRIX doesn't expose a nice interface for dladdr */
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_uintptr addr_ = (cc_uintptr)addr;
+	String_Format1(trace, "%x", &addr_);
+}
 #elif defined CC_BUILD_POSIX
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
@@ -257,15 +260,15 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
+#else
+/* No backtrace support implemented */
 #endif
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WEB
-void Logger_Backtrace(cc_string* trace, void* ctx) { }
-#elif defined CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
 	HANDLE process, thread;
@@ -355,10 +358,10 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
 	/* TODO: Backtrace using LibSymbolication */
 }
-#elif defined CC_BUILD_PSP
+#elif defined CC_BUILD_IRIX
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
-	/* Backtrace not implemented for PSP */
+	/* TODO implement backtrace using exc_unwind https://nixdoc.net/man-pages/IRIX/man3/exception.3.html */
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
@@ -371,6 +374,8 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	}
 	String_AppendConst(trace, _NL);
 }
+#else
+void Logger_Backtrace(cc_string* trace, void* ctx) { }
 #endif
 
 
@@ -460,9 +465,7 @@ String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25
 String_Format4(str, "r28=%x sp =%x fp =%x ra =%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
 String_Format3(str, "pc =%x lo =%x hi =%x" _NL,        REG_GET_PC(), REG_GET_LO(), REG_GET_HI());
 
-#if defined CC_BUILD_WEB
-static void PrintRegisters(cc_string* str, void* ctx) { }
-#elif defined CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 /* See CONTEXT in WinNT.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
 	CONTEXT* r = (CONTEXT*)ctx;
@@ -790,7 +793,19 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
-#elif defined CC_BUILD_PSP
+#elif defined CC_BUILD_IRIX
+/* See /usr/include/sys/ucontext.h */
+/* https://nixdoc.net/man-pages/IRIX/man5/UCONTEXT.5.html */
+static void PrintRegisters(cc_string* str, void* ctx) {
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
+
+	#define REG_GNUM(num) &r->__gregs[CTX_EPC]
+	#define REG_GET_PC()  &r->__gregs[CTX_MDLO]
+	#define REG_GET_LO()  &r->__gregs[CTX_MDLO]
+	#define REG_GET_HI()  &r->__gregs[CTX_MDHI]
+	Dump_MIPS()
+}
+#else
 static void PrintRegisters(cc_string* str, void* ctx) {
 	/* Register dumping not implemented */
 }
@@ -930,16 +945,9 @@ static void DumpMisc(void* ctx) { }
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Error handling-----------------------------------------------------*
+*--------------------------------------------------Unhandled error logging------------------------------------------------*
 *#########################################################################################################################*/
-static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
-
-#if defined CC_BUILD_WEB
-void Logger_Hook(void) { }
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-	AbortCommon(result, raw_msg, NULL);
-}
-#elif defined CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_string msg; char msgBuffer[128 + 1];
 	cc_uint32 code;
@@ -983,48 +991,6 @@ void Logger_Hook(void) {
 	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
 	
 }
-
-#if __GNUC__
-/* Don't want compiler doing anything fancy with registers */
-void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char* raw_msg) {
-#else
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-#endif
-	CONTEXT ctx;
-	#if _M_IX86 && __GNUC__
-	/* Stack frame layout on x86: */
-	/*  [ebp] is previous frame's EBP */
-	/*  [ebp+4] is previous frame's EIP (return address) */
-	/*  address of [ebp+8] is previous frame's ESP */
-	__asm__(
-		"mov 0(%%ebp), %%eax \n\t" /* mov eax, [ebp]     */
-		"mov %%eax, %0       \n\t" /* mov [ctx.Ebp], eax */
-		"mov 4(%%ebp), %%eax \n\t" /* mov eax, [ebp+4]   */
-		"mov %%eax, %1       \n\t" /* mov [ctx.Eip], eax */
-		"lea 8(%%ebp), %%eax \n\t" /* lea eax, [ebp+8]   */
-		"mov %%eax, %2"            /* mov [ctx.Esp], eax */
-		: "=m" (ctx.Ebp), "=m" (ctx.Eip), "=m" (ctx.Esp)
-		:
-		: "eax", "memory"
-	);
-	ctx.ContextFlags = CONTEXT_CONTROL;
-	#else
-	/* This method is guaranteed to exist on 64 bit windows.  */
-	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
-	/*  so an alternative is provided for MinGW above so that */
-	/*  the game can be cross-compiled for Windows 98 / 2000  */
-	RtlCaptureContext(&ctx);
-	#endif
-	AbortCommon(result, raw_msg, &ctx);
-}
-#elif defined CC_BUILD_PSP
-void Logger_Hook(void) {
-	/* TODO can signals be supported somehow? */
-}
-
-void Logger_Abort2(cc_result result, const char* raw_msg) {
-	AbortCommon(result, raw_msg, NULL);
-}
 #elif defined CC_BUILD_POSIX
 static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	cc_string msg; char msgBuffer[128 + 1];
@@ -1065,7 +1031,51 @@ void Logger_Hook(void) {
 	sigaction(SIGABRT, &sa, &old);
 	sigaction(SIGFPE,  &sa, &old);
 }
+#else
+void Logger_Hook(void) {
+	/* TODO can signals be supported somehow for PSP/3DS? */
+}
+#endif
 
+
+/*########################################################################################################################*
+*-------------------------------------------------Deliberate crash logging------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+#if __GNUC__
+/* Don't want compiler doing anything fancy with registers */
+void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char* raw_msg) {
+#else
+void Logger_Abort2(cc_result result, const char* raw_msg) {
+#endif
+	CONTEXT ctx;
+	#if _M_IX86 && __GNUC__
+	/* Stack frame layout on x86: */
+	/*  [ebp] is previous frame's EBP */
+	/*  [ebp+4] is previous frame's EIP (return address) */
+	/*  address of [ebp+8] is previous frame's ESP */
+	__asm__(
+		"mov 0(%%ebp), %%eax \n\t" /* mov eax, [ebp]     */
+		"mov %%eax, %0       \n\t" /* mov [ctx.Ebp], eax */
+		"mov 4(%%ebp), %%eax \n\t" /* mov eax, [ebp+4]   */
+		"mov %%eax, %1       \n\t" /* mov [ctx.Eip], eax */
+		"lea 8(%%ebp), %%eax \n\t" /* lea eax, [ebp+8]   */
+		"mov %%eax, %2"            /* mov [ctx.Esp], eax */
+		: "=m" (ctx.Ebp), "=m" (ctx.Eip), "=m" (ctx.Esp)
+		:
+		: "eax", "memory"
+	);
+	ctx.ContextFlags = CONTEXT_CONTROL;
+	#else
+	/* This method is guaranteed to exist on 64 bit windows.  */
+	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
+	/*  so an alternative is provided for MinGW above so that */
+	/*  the game can be cross-compiled for Windows 98 / 2000  */
+	RtlCaptureContext(&ctx);
+	#endif
+	AbortCommon(result, raw_msg, &ctx);
+}
+#else
 void Logger_Abort2(cc_result result, const char* raw_msg) {
 	AbortCommon(result, raw_msg, NULL);
 }

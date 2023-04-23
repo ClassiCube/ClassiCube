@@ -557,12 +557,11 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	int resultSize;
-	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+	int resultSize = sizeof(cc_result);
+	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	resultSize = sizeof(cc_result);
 	_getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&res, &resultSize);
 	return res;
 }

@@ -658,9 +658,11 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.iptUsername, (struct LWidget*)&MainScreen.iptPassword,
 	(struct LWidget*)&MainScreen.btnLogin,    (struct LWidget*)&MainScreen.btnResume,
 	(struct LWidget*)&MainScreen.lblStatus,   (struct LWidget*)&MainScreen.btnDirect,
-	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.lblUpdate,
-	(struct LWidget*)&MainScreen.btnRegister, (struct LWidget*)&MainScreen.btnOptions,
+	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.btnRegister,
+	(struct LWidget*)&MainScreen.btnOptions,  (struct LWidget*)&MainScreen.lblUpdate,
+#ifndef CC_BUILD_FLATPAK
 	(struct LWidget*)&MainScreen.btnUpdates
+#endif
 };
 
 LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
@@ -673,10 +675,15 @@ LAYOUTS main_btnResume[]  = { { ANCHOR_CENTRE, 90 }, { ANCHOR_CENTRE, -25 } };
 LAYOUTS main_btnDirect[]  = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,  60 } };
 LAYOUTS main_btnSPlayer[] = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 110 } };
 
-LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
 LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,    6 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_btnOptions[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
+
+#ifndef CC_BUILD_FLATPAK
+LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
+#else
+LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 6 } };
+#endif
 
 
 struct ResumeInfo {
@@ -864,7 +871,11 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	if (CheckUpdateTask.Base.success) {
 		latest  = MainScreen_GetVersion(&CheckUpdateTask.latestRelease);
 		current = MainScreen_GetVersion(&currentStr);
+#ifdef CC_BUILD_FLATPAK
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aUpdate available" : "&eUp to date");
+#else
 		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
+#endif
 	} else {
 		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
 	}
@@ -958,6 +969,7 @@ void MainScreen_SetActive(void) {
 }
 
 
+#ifndef CC_BUILD_FLATPAK
 /*########################################################################################################################*
 *----------------------------------------------------CheckResourcesScreen-------------------------------------------------*
 *#########################################################################################################################*/
@@ -1144,6 +1156,7 @@ void FetchResourcesScreen_SetActive(void) {
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
+#endif
 
 /*########################################################################################################################*
 *--------------------------------------------------------ServersScreen----------------------------------------------------*

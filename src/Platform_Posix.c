@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <netdb.h>
 
-#define Socket__Error() errno
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -53,13 +52,6 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
-#elif defined CC_BUILD_PSP
-/* pspsdk doesn't seem to support IPv6 */
-#undef AF_INET6
-#include <pspkernel.h>
-
-PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
-PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 #endif
 
 
@@ -140,8 +132,12 @@ cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
 #else
 cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
+	#ifdef CC_BUILD_IRIX
+	clock_gettime(CLOCK_REALTIME, &t);
+	#else
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
+	#endif
 	return (cc_uint64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
 #endif
@@ -202,7 +198,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
@@ -544,13 +540,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
-	
-	#if defined CC_BUILD_PSP
-	int on = 1;
-	setsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
-	#else
 	ioctl(*s, FIONBIO, &blocking_raw);
-	#endif
 
 	#ifdef AF_INET6
 	if (family == AF_INET6) {
@@ -586,7 +576,7 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN || defined CC_BUILD_PSP
+#if defined CC_BUILD_DARWIN
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
@@ -627,7 +617,7 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize;
+	socklen_t resultSize = sizeof(socklen_t);
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
@@ -801,6 +791,16 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Copy(path, info.name, *len);
 	return 0;
 }
+#elif defined CC_BUILD_IRIX
+static cc_result Process_RawGetExePath(char* path, int* len) {
+	static cc_string file = String_FromConst("ClassiCube");
+
+	/* TODO properly get exe path */
+	/* Maybe use PIOCOPENM from https://nixdoc.net/man-pages/IRIX/man4/proc.4.html */
+	Mem_Copy(path, file.buffer, file.length);
+	*len = file.length;
+	return 0;
+}
 #endif
 
 
@@ -920,18 +920,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_PSP
-/* TODO can this actually be supported somehow */
-const cc_string DynamicLib_Ext = String_FromConst(".so");
-
-void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	String_AppendConst(dst, "Dynamic linking unsupported");
-	return true;
-}
-#elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
@@ -1008,6 +997,15 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
+#ifdef CC_BUILD_IRIX
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+	const char* err = strerror(res);
+	if (!err || res >= 1000) return false;
+
+	String_AppendUtf8(dst, err, String_Length(err));
+	return true;
+}
+#else
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
@@ -1024,6 +1022,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	String_AppendUtf8(dst, chars, len);
 	return true;
 }
+#endif
 
 #if defined CC_BUILD_DARWIN
 static void Platform_InitStopwatch(void) {

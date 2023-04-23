@@ -1575,6 +1575,7 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     cc_string desc = String_FromArray(descBuffer);
     String_Format2(&desc, "%i/%i players, up for ", &server->players, &server->maxPlayers);
     LTable_FormatUptime(&desc, server->uptime);
+    if (server->software.length) String_Format1(&desc, " | %s", &server->software);
     
     if (flag && !flag->meta && flag->bmp.scan0) {
         UIImage* img = ToUIImage(&flag->bmp);

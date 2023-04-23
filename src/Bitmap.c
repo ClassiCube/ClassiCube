@@ -429,8 +429,9 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
-				/* RGB is 16 bits big endian, ignore least significant 8 bits */
-				trnsCol = BitmapCol_Make(tmp[0], tmp[0], tmp[0], 0);
+				/* RGB is always two bytes */
+				/* TODO is this right for 16 bits per channel images? */
+				trnsCol = BitmapCol_Make(tmp[1], tmp[1], tmp[1], 0);
 			} else if (col == PNG_COLOR_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
@@ -446,8 +447,9 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
-				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
-				trnsCol = BitmapCol_Make(tmp[0], tmp[2], tmp[4], 0);
+				/* R,G,B are always two bytes */
+				/* TODO is this right for 16 bits per channel images? */
+				trnsCol = BitmapCol_Make(tmp[1], tmp[3], tmp[5], 0);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}

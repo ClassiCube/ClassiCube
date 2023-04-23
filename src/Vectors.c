@@ -167,7 +167,7 @@ void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct M
 }
 
 void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar) {
-	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373965(v=vs.85).aspx */
+	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
 	*result = Matrix_Identity;
 
 	result->row1.X =  2.0f / (right - left);
@@ -181,20 +181,20 @@ void Matrix_Orthographic(struct Matrix* result, float left, float right, float t
 
 static double Tan_Simple(double x) { return Math_Sin(x) / Math_Cos(x); }
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar) {
-	float c = zNear * (float)Tan_Simple(0.5f * fovy);
+	float c = (float)Tan_Simple(0.5f * fovy);
 
-	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
+	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
 	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
 	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
 	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*result = Matrix_Identity;
-	result->row4.W = 0.0f;
 
-	result->row1.X =  zNear / (c * aspect);
-	result->row2.Y =  zNear / c;
-	result->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	result->row1.X =  1.0f / (c * aspect);
+	result->row2.Y =  1.0f / c;
 	result->row3.Z = -(zFar + zNear) / (zFar - zNear);
+	result->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
 	result->row3.W = -1.0f;
+	result->row4.W =  0.0f;
 }
 
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {

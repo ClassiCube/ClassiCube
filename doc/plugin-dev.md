@@ -178,7 +178,7 @@ TODO more detailed when I have some more time...
 
 #### Setup
 
-1) Compile the game, see `Cross compiling for windows` in main readme
+1) Compile the game, see `Compiling - Windows > using Visual Studio` in main readme
 2) Find the `ClassiCube.lib` that was generated when compiling the game. Usually it is in either `src\x64\Debug` or `src\x86\Debug`.
 3) Add a new `Empty Project` to the ClassiCube solution, then add the plugin .c files to it
 
@@ -188,7 +188,7 @@ Note: If the plugin provides a .vcxproj file, you can skip step 2 and just open 
 
 The simplest way of linking to the `.lib` file is simply adding the following code to one of the plugin's `.c` files
 
-`C
+```C
 #ifdef _MSC_VER
   #ifdef _WIN64
     #pragma comment(lib, "[GAME SRC FOLDER]/x64/Debug/ClassiCube.lib")

@@ -6,6 +6,8 @@
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
+#include <pspdisplay.h>
+#include <pspge.h>
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -18,8 +20,9 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width  = SCREEN_WIDTH;
-	WindowInfo.Height = SCREEN_HEIGHT;
+	WindowInfo.Width   = SCREEN_WIDTH;
+	WindowInfo.Height  = SCREEN_HEIGHT;
+	//WindowInfo.Focused = true;
 }
 
 static void DoCreateWindow(int _3d) {
@@ -72,17 +75,47 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	/* TODO implement */
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+	fb_bmp     = *bmp;
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
-	/* TODO implement */
+	void* fb = sceGeEdramGetAddr();
+	
+	sceDisplayWaitVblankStart();
+	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
+
+	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
+	cc_uint32* dst = (cc_uint32*)fb           + r.X;
+
+	for (int y = r.Y; y < r.Y + r.Height; y++) {
+		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * fb_bmp.width, r.Width * 4);
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	/* TODO implement */
+	Mem_Free(bmp->scan0);
 }
+
+/*void Window_AllocFramebuffer(struct Bitmap* bmp) {
+	void* fb = sceGeEdramGetAddr();
+	bmp->scan0  = fb;
+	bmp->width  = BUFFER_WIDTH;
+	bmp->height = SCREEN_HEIGHT;
+}
+
+void Window_DrawFramebuffer(Rect2D r) {
+	//sceDisplayWaitVblankStart();
+	//sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	//sceDisplaySetFrameBuf(sceGeEdramGetAddr(), BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
+}
+
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
+
+}*/
 
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
