@@ -717,9 +717,18 @@ void Gfx_DisableTextureOffset(void) {
 }
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
-	matrix->row3.Z = 1.0f       / (ORTHO_NEAR - ORTHO_FAR);
-	matrix->row4.Z = ORTHO_NEAR / (ORTHO_NEAR - ORTHO_FAR);
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
+	/* The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	float zNear = ORTHO_NEAR, zFar = ORTHO_FAR;
+	*matrix = Matrix_Identity;
+
+	matrix->row1.X =  2.0f / width;
+	matrix->row2.Y = -2.0f / height;
+	matrix->row3.Z =  1.0f / (zNear - zFar);
+
+	matrix->row4.X = -1.0f;
+	matrix->row4.Y =  1.0f;
+	matrix->row4.Z = zNear / (zNear - zFar);
 }
 
 static float CalcZNear(float fov) {
@@ -732,11 +741,24 @@ static float CalcZNear(float fov) {
 	return 0.00390625f;
 }
 
+static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
-	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, CalcZNear(fov), zFar);
-	/* Adjust the projection matrix to produce reversed Z values */
-	matrix->row3.Z = -matrix->row3.Z - 1.0f;
-	matrix->row4.Z = -matrix->row4.Z;
+	/* Deliberately swap zNear/zFar in projection matrix calculation to produce */
+	/*  a projection matrix that results in a reversed depth buffer */
+	/* https://developer.nvidia.com/content/depth-precision-visualized */
+	float zNear_ = zFar;
+	float zFar_  = CalcZNear(fov);
+
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
+	float c = (float)Cotangent(0.5f * fov);
+	*matrix = Matrix_Identity;
+
+	matrix->row1.X =  c / aspect;
+	matrix->row2.Y =  c;
+	matrix->row3.Z = zFar_ / (zNear_ - zFar_);
+	matrix->row3.W = -1.0f;
+	matrix->row4.Z = (zNear_ * zFar_) / (zNear_ - zFar_);
+	matrix->row4.W =  0.0f;
 }
 
 
