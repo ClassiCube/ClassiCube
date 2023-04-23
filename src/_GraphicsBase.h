@@ -203,8 +203,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
-	Gfx_CalcOrthoMatrix(&ortho, 
-						(float)width, (float)height, -10000.0f, 10000.0f);
+	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -10000.0f, 10000.0f);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 
