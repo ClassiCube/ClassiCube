@@ -698,7 +698,7 @@ static void UpdateMapSides(void) {
 	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&sides_vb,
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
-	sides_fullBright = Blocks.FullBright[block];
+	sides_fullBright = Blocks.Brightness[block];
 	color = sides_fullBright ? PACKEDCOL_WHITE : Env.ShadowCol;
 	Block_Tint(color, block)
 
@@ -744,7 +744,7 @@ static void UpdateMapEdges(void) {
 	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
-	edges_fullBright = Blocks.FullBright[block];
+	edges_fullBright = Blocks.Brightness[block];
 	color = edges_fullBright ? PACKEDCOL_WHITE : Env.SunCol;
 	Block_Tint(color, block)
 

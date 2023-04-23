@@ -178,7 +178,7 @@ static void PrepareChunk(int x1, int y1, int z1) {
 				if (Blocks.Draw[b] == DRAW_SPRITE) { AddSpriteVertices(b); continue; }
 
 				Builder_X = x; Builder_Y = y; Builder_Z = z;
-				Builder_FullBright = Blocks.FullBright[b];
+				Builder_FullBright = Blocks.Brightness[b];
 				tileIdx = b * BLOCK_COUNT;
 				/* All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times. */
 
@@ -499,7 +499,7 @@ static void Builder_DrawSprite(int x, int y, int z) {
 		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 	}
 	
-	bright = Blocks.FullBright[Builder_Block];
+	bright = Blocks.Brightness[Builder_Block];
 	part   = &Builder_Parts[Atlas1D_Index(loc)];
 	v.Col  = bright ? PACKEDCOL_WHITE : Lighting.Color_Fast(x, y, z);
 	Block_Tint(v.Col, Builder_Block);
@@ -655,7 +655,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 	if (!count_XMin && !count_XMax && !count_ZMin &&
 		!count_ZMax && !count_YMin && !count_YMax) return;
 
-	fullBright = Blocks.FullBright[Builder_Block];
+	fullBright = Blocks.Brightness[Builder_Block];
 	baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	lightFlags = Blocks.LightOffset[Builder_Block];
 
@@ -809,9 +809,9 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 	flags |= Lighting.IsLit_Fast(x, (y + 1) - offset, z) ? LIT_P1 : 0;
 
 	/* If a block is fullbright, it should also look as if that spot is lit */
-	if (Blocks.FullBright[Builder_Chunk[cIndex - 324]]) flags |= LIT_M1;
-	if (Blocks.FullBright[block])                       flags |= LIT_CC;
-	if (Blocks.FullBright[Builder_Chunk[cIndex + 324]]) flags |= LIT_P1;
+	if (Blocks.Brightness[Builder_Chunk[cIndex - 324]]) flags |= LIT_M1;
+	if (Blocks.Brightness[block])                       flags |= LIT_CC;
+	if (Blocks.Brightness[Builder_Chunk[cIndex + 324]]) flags |= LIT_P1;
 	
 	return flags;
 }
@@ -1208,7 +1208,7 @@ static void Adv_RenderBlock(int index, int x, int y, int z) {
 	if (!count_XMin && !count_XMax && !count_ZMin &&
 		!count_ZMax && !count_YMin && !count_YMax) return;
 
-	Builder_FullBright = Blocks.FullBright[Builder_Block];
+	Builder_FullBright = Blocks.Brightness[Builder_Block];
 	adv_baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	adv_tinted     = Blocks.Tinted[Builder_Block];
 
@@ -1559,7 +1559,7 @@ static void Modern_RenderBlock(int index, int x, int y, int z) {
 	if (!count_XMin && !count_XMax && !count_ZMin &&
 		!count_ZMax && !count_YMin && !count_YMax) return;
 
-	Builder_FullBright = Blocks.FullBright[Builder_Block];
+	Builder_FullBright = Blocks.Brightness[Builder_Block];
 	adv_baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	adv_tinted = Blocks.Tinted[Builder_Block];
 

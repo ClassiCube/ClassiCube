@@ -2062,7 +2062,7 @@ static void BlockModel_Draw(struct Entity* p) {
 	bModel_index = 0;
 	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
-	if (Blocks.FullBright[bModel_block]) {
+	if (Blocks.Brightness[bModel_block]) {
 		for (i = 0; i < FACE_COUNT; i++) {
 			Models.Cols[i] = PACKEDCOL_WHITE;
 		}

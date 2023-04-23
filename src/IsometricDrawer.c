@@ -139,7 +139,7 @@ void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, GfxResourceID v
 }
 
 void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
-	cc_bool bright = Blocks.FullBright[block];
+	cc_bool bright = Blocks.Brightness[block];
 	Vec3 min, max;
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 

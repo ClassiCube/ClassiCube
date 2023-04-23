@@ -1701,7 +1701,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSi
 	Blocks.DigSounds[block]  = sound;
 	if (sound == SOUND_GLASS) Blocks.StepSounds[block] = SOUND_STONE;
 
-	Blocks.FullBright[block] = *data++ != 0;
+	Blocks.Brightness[block] = *data++ != 0;
 	*ptr = data;
 	return block;
 }

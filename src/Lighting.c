@@ -618,8 +618,8 @@ static cc_uint8 GetBlocklight(int x, int y, int z, cc_bool sun) {
 }
 
 static cc_bool CanLightPass(BlockID thisBlock, Face face) {
-	/* If it's not opaque and it doesn't block light, or it's fullbright, we can always pass through */
-	if ((Blocks.Draw[thisBlock] > DRAW_OPAQUE && !Blocks.BlocksLight[thisBlock]) || Blocks.FullBright[thisBlock]) { return true; }
+	/* If it's not opaque and it doesn't block light, or it is brighter than 0, we can always pass through */
+	if ((Blocks.Draw[thisBlock] > DRAW_OPAQUE && !Blocks.BlocksLight[thisBlock]) || Blocks.Brightness[thisBlock]) { return true; }
 	/* Light can always pass through leaves and water */
 	if (Blocks.Draw[thisBlock] == DRAW_TRANSPARENT_THICK || Blocks.Draw[thisBlock] == DRAW_TRANSLUCENT) { return true; }
 
@@ -627,7 +627,7 @@ static cc_bool CanLightPass(BlockID thisBlock, Face face) {
 	/* We can assume a block is full sized if none of the LightOffset flags are 0 */
 	if (Blocks.BlocksLight[thisBlock] && Blocks.LightOffset[thisBlock] == 0xFF) { return false; }
 
-	/* Is stone's face hidden by thisBlock? */
+	/* Is stone's face hidden by thisBlock? TODO: Don't hardcode using stone */
 	return !Block_IsFaceHidden(BLOCK_STONE, thisBlock, face);
 }
 
@@ -824,8 +824,8 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 			for (x = chunkStartX; x < chunkEndX; x++) {
 
 				BlockID curBlock = World_GetBlock(x, y, z);
-				if (Blocks.FullBright[curBlock]) {
-					CalcBlockLight(MODERN_LIGHTING_MAX_LEVEL, x, y, z);
+				if (Blocks.Brightness[curBlock]) {
+					CalcBlockLight(Blocks.Brightness[curBlock], x, y, z);
 				}
 
 				//this cell is exposed to sunlight
