@@ -132,6 +132,7 @@ static void GetNativePath(char* str, const cc_string* path) {
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+	
 	return mkdir(str, 0666) == -1 ? errno : 0; // FS has no permissions anyways
 }
 
@@ -139,6 +140,7 @@ int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	GetNativePath(str, path);
+	
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -186,6 +188,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+
+	Platform_Log1("Opening file: %c", str);
 	*file = open(str, mode, 0666); // FS has no permissions anyways
 	return *file == -1 ? errno : 0;
 }

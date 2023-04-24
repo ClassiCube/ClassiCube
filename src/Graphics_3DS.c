@@ -111,6 +111,7 @@ static void SetDefaultState(void) {
 	Gfx_SetDepthWrite(true);
 }
 
+static GfxResourceID white_square;
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
@@ -138,11 +139,23 @@ void Gfx_Create(void) {
 	C3D_TexEnvInit(env);
   	C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
  	C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+ 	
+	// 8x8 dummy white texture
+	//  (textures must be at least 8x8, see C3D_TexInitWithParams source)
+	struct Bitmap bmp;
+	BitmapCol pixels[8*8];
+	Mem_Set(pixels, 0xFF, sizeof(pixels));
+	Bitmap_Init(bmp, 8, 8, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
+}
+
+void Gfx_Free(void) { 
+	FreeShaders();
+	FreeDefaultResources(); 
+	Gfx_DeleteTexture(&white_square);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
-
-void Gfx_Free(void) { FreeShaders(); }
 void Gfx_RestoreState(void) { }
 void Gfx_FreeState(void) { }
 
@@ -205,7 +218,8 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	C3D_Tex* tex = Mem_Alloc(1, sizeof(C3D_Tex), "GPU texture desc");
-	C3D_TexInit(tex, bmp->width, bmp->height, GPU_RGBA8);
+	bool success = C3D_TexInit(tex, bmp->width, bmp->height, GPU_RGBA8);
+	//if (!success) Logger_Abort("Failed to create 3DS texture");
 	
 	ToMortonTexture(tex, 0, 0, bmp, bmp->width);
     	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
@@ -235,7 +249,9 @@ void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	C3D_Tex* tex = (C3D_Tex*)texId;
+	C3D_Tex* tex  = (C3D_Tex*)texId;
+	if (!tex) tex = white_square;
+	
 	C3D_TexBind(0, tex);
 }
 
