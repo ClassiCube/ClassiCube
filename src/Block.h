@@ -113,6 +113,7 @@ if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 /*  and comparing whether the block directly behind them is in shadow or not */
 #define LIGHT_FLAG_SHADES_FROM_BELOW 6
 cc_uint8 Block_ReadBrightness(cc_uint8 fullBright);
+cc_uint8 Block_WriteFullBright(cc_uint8 brightness);
 
 /* Returns whether the given block has been changed from default */
 cc_bool Block_IsCustomDefined(BlockID block);

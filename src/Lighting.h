@@ -19,7 +19,7 @@ extern cc_bool Lighting_Modern;
 #define MODERN_LIGHTING_MAX_LEVEL MODERN_LIGHTING_LEVELS - 1
 /* How many bits to shift sunlight level to the left when storing it in a byte along with blocklight level. */
 #define MODERN_LIGHTING_SUN_SHIFT 4
-#define SUN_LEVELS 2
+#define SUN_LEVELS 16
 
 CC_VAR extern struct _Lighting {
 	/* Releases/Frees the per-level lighting state */

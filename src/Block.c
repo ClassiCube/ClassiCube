@@ -26,7 +26,7 @@ const char* const Sound_Names[SOUND_COUNT] = {
 /* Brightness */
 #define BRIT_NONE 0
 #define BRIT_FULL MODERN_LIGHTING_MAX_LEVEL
-#define BRIT_MAGM 1
+#define BRIT_MAGM 7
 
 struct SimpleBlockDef {
 	const char* name;
@@ -524,9 +524,42 @@ int Block_Parse(const cc_string* name) {
 	return Block_FindID(name);
 }
 
+/* 0b_1000_0000 */
+#define USE_MODERN_BRIGHTNESS_FLAG 1 << 7
+/* 0b_0100_0000 */
+#define USE_SUN_COLOR 1 << 6
+/* 0b_0000_1111 */
+#define BRIGHTNESS_MASK MODERN_LIGHTING_MAX_LEVEL
+
 cc_uint8 Block_ReadBrightness(cc_uint8 fullBright) {
-	//TODO, then use in Formats.c and Protocol.c
-	return 0;
+	cc_bool useSun;
+	/* If the fullBright byte does not use the flag, we should interpret it as either completely dark or casting max block light */
+	if ((fullBright & USE_MODERN_BRIGHTNESS_FLAG) == 0) { return fullBright > 0 ? MODERN_LIGHTING_MAX_LEVEL : 0; }
+
+	useSun = fullBright & USE_SUN_COLOR;
+
+	/* Preserve only the least significant four bits. This gives us our raw brightness level for sun or block light. */
+	fullBright &= BRIGHTNESS_MASK;
+
+	/* Sun light is stored in the upper four bits */
+	if (useSun) { fullBright <<= MODERN_LIGHTING_SUN_SHIFT; }
+	return fullBright;
+}
+cc_uint8 Block_WriteFullBright(cc_uint8 brightness) {
+	cc_uint8 blockBrightness, sunBrightness, fullBright;
+	blockBrightness = brightness & BRIGHTNESS_MASK;
+	sunBrightness   = brightness >> MODERN_LIGHTING_SUN_SHIFT;
+	fullBright      = USE_MODERN_BRIGHTNESS_FLAG;
+
+	/* Modern brightness stored in a fullbright value is mutually exclusive between using block and using sun light */
+	if (blockBrightness > 0) {
+		fullBright |= blockBrightness;
+	} else if (sunBrightness > 0) {
+		fullBright |= USE_SUN_COLOR; /* Insert flag that tells us this fullbright value should be interpreted as sun brightness */
+		fullBright |= sunBrightness;
+	} else {
+		return 0;
+	}
 }
 
 /*########################################################################################################################*

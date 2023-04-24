@@ -493,12 +493,11 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 	cc_uint8 R, G, B;
 
 	defaultBlockLight = PackedCol_Make(255, 235, 198, 255); /* A very mildly orange tinted light color */
-	darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
+	//darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
+	darkestShadow = Env.ShadowCol;
 
 	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
 		for (blockLevel = 0; blockLevel < MODERN_LIGHTING_LEVELS; blockLevel++) {
-			/* We want the brightest light level to be the sun env color, with all other 15 levels being interpolation */
-			/* between shadow color and darkest shadow color */
 			if (sunLevel == MODERN_LIGHTING_LEVELS - 1) {
 				sunColor = Env.SunCol;
 			} else {
@@ -508,7 +507,7 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 				//blockLerp *= blockLerp;
 				blockLerp *= (MATH_PI / 2);
 				blockLerp = Math_Cos(blockLerp);
-				sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, 1 - blockLerp);
+				sunColor = PackedCol_Lerp(darkestShadow, Env.SunCol, 1 - blockLerp);
 			}
 
 			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
@@ -805,6 +804,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
 	int chunkEndX, chunkEndY, chunkEndZ; //world coords
+	cc_bool brightness;
 	chunkStartX = cx * CHUNK_SIZE;
 	chunkStartY = cy * CHUNK_SIZE;
 	chunkStartZ = cz * CHUNK_SIZE;
@@ -824,13 +824,20 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 			for (x = chunkStartX; x < chunkEndX; x++) {
 
 				BlockID curBlock = World_GetBlock(x, y, z);
-				if (Blocks.Brightness[curBlock]) {
-					CalcBlockLight(Blocks.Brightness[curBlock], x, y, z);
+				if (Blocks.Brightness[curBlock] > 0) {
+					brightness = Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL; /* get block brightness */
+					if (brightness > 0) { CalcBlockLight(brightness, x, y, z); }
+					else {
+						/* If no block brightness, it must use sun brightness */
+						CalcSkyLight(Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT, x, y, z);
+					}
 				}
 
 				//this cell is exposed to sunlight
 				if (y > Heightmap_GetLightHeight(x, z)) {
-					CalcSkyLight(MODERN_LIGHTING_MAX_LEVEL, x, y, z);
+					//CalcSkyLight(MODERN_LIGHTING_MAX_LEVEL, x, y, z);
+					/* Simply light this cell fully with sun, don't bother spreading */
+					SetBlocklight(MODERN_LIGHTING_MAX_LEVEL, x, y, z, true);
 				}
 			}
 		}
