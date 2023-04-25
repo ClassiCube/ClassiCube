@@ -1312,7 +1312,7 @@ static void Modern_DrawXMin(int count, int x, int y, int z) {
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	PackedCol tint, white = PACKEDCOL_WHITE;
-	int offset = (Blocks.LightOffset[Builder_Block] >> FACE_XMIN) & 1;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_XMIN) & 1;
 	PackedCol orig = Lighting.Color_XSide_Fast(x-offset, y, z);
 	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x-offset, y, z, -1, -1);
 	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x-offset, y, z, 1, -1);
@@ -1345,7 +1345,7 @@ static void Modern_DrawXMax(int count, int x, int y, int z) {
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	PackedCol tint, white = PACKEDCOL_WHITE;
-	int offset = (Blocks.LightOffset[Builder_Block] >> FACE_XMAX) & 1;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_XMAX) & 1;
 	PackedCol orig = Lighting.Color_XSide_Fast(x+offset, y, z);
 	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x+offset, y, z, -1, -1);
 	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x+offset, y, z, 1, -1);
@@ -1391,7 +1391,7 @@ static void Modern_DrawZMin(int count, int x, int y, int z) {
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	PackedCol tint, white = PACKEDCOL_WHITE;
-	int offset = (Blocks.LightOffset[Builder_Block] >> FACE_ZMIN) & 1;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_ZMIN) & 1;
 	PackedCol orig = Lighting.Color_ZSide_Fast(x, y, z-offset);
 	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z-offset, -1, -1);
 	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z-offset, 1, -1);
@@ -1424,7 +1424,7 @@ static void Modern_DrawZMax(int count, int x, int y, int z) {
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	PackedCol tint, white = PACKEDCOL_WHITE;
-	int offset = (Blocks.LightOffset[Builder_Block] >> FACE_ZMAX) & 1;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_ZMAX) & 1;
 	PackedCol orig = Lighting.Color_ZSide_Fast(x, y, z+offset);
 	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z+offset, -1, -1);
 	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z+offset, 1, -1);
@@ -1470,7 +1470,7 @@ static void Modern_DrawYMin(int count, int x, int y, int z) {
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	PackedCol tint, white = PACKEDCOL_WHITE;
-	int offset = (Blocks.LightOffset[Builder_Block] >> FACE_YMIN) & 1;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_YMIN) & 1;
 	PackedCol orig = Lighting.Color_YMin_Fast(x, y-offset, z);
 	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorYMin(orig, x, y-offset, z, -1, -1);
 	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorYMin(orig, x, y-offset, z,  1, -1);
@@ -1516,7 +1516,7 @@ static void Modern_DrawYMax(int count, int x, int y, int z) {
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	PackedCol tint, white = PACKEDCOL_WHITE;
-	int offset = (Blocks.LightOffset[Builder_Block] >> FACE_YMAX) & 1;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_YMAX) & 1;
 	PackedCol orig = Lighting.Color(x, y+offset, z);
 	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorYMax(orig, x, y+offset, z, -1, -1);
 	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorYMax(orig, x, y+offset, z,  1, -1);
