@@ -330,6 +330,9 @@
     <ClInclude Include="_GLShared.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="SystemFonts.h">
+      <Filter>Header Files\2D</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -589,6 +592,9 @@
     </ClCompile>
     <ClCompile Include="GameVersion.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemFonts.c">
+      <Filter>Source Files\2D</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

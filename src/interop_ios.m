@@ -896,17 +896,6 @@ int interop_SysTextWidth(struct DrawTextArgs* args) {
     return Math_Ceil(width);
 }
 
-#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
-CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
-    if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
-    
-    // Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb
-    // Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb
-    // And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb
-    // Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb
-    return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
-}
-
 void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x, int y, cc_bool shadow) {
     CTFontRef font  = (CTFontRef)args->font->handle;
     cc_string left  = args->text, part;
@@ -988,18 +977,6 @@ void interop_SysMakeDefault(struct FontDesc* desc, int size, int flags) {
 
 void interop_SysFontFree(void* handle) {
     CFBridgingRelease(handle);
-}
-
-#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
-CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
-	// TODO move to Drawer2D.h
-    if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
-    
-    // Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb
-    // Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb
-    // And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb
-    // Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb
-    return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
 }
 
 static NSMutableAttributedString* GetAttributedString(struct DrawTextArgs* args, cc_bool shadow) {

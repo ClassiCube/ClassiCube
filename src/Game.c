@@ -36,6 +36,7 @@
 #include "Protocol.h"
 #include "Picking.h"
 #include "Animations.h"
+#include "SystemFonts.h"
 
 struct _GameData Game;
 cc_uint64 Game_FrameStart;
@@ -388,6 +389,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);
 	Game_AddComponent(&Drawer2D_Component);
+	Game_AddComponent(&SystemFonts_Component);
 
 	Game_AddComponent(&Chat_Component);
 	Game_AddComponent(&Particles_Component);

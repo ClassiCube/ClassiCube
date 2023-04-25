@@ -20,6 +20,7 @@
 #include "Options.h"
 #include "LBackend.h"
 #include "PackedCol.h"
+#include "SystemFonts.h"
 
 struct LScreen* Launcher_Active;
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -234,6 +235,7 @@ void Launcher_Run(void) {
 #endif
 
 	Drawer2D_Component.Init();
+	SystemFonts_Component.Init();
 	Drawer2D.BitmappedText    = false;
 	Drawer2D.BlackTextShadows = true;
 

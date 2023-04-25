@@ -32,6 +32,7 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "SystemFonts.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {
@@ -1573,7 +1574,7 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 	cc_string fontName   = ListScreen_UNSAFE_GetCur(s, widget);
 
 	Options_Set(OPT_FONT_NAME, &fontName);
-	Font_SetDefault(&fontName);
+	SysFont_SetDefault(&fontName);
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {

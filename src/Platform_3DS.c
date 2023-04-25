@@ -4,7 +4,6 @@
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
-#include "Drawer2D.h"
 #include "Funcs.h"
 #include "Window.h"
 #include "Utils.h"
@@ -306,13 +305,6 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	s64 timeout_ns = milliseconds * (1000 * 1000); // milliseconds to nanoseconds
 	int res = LightEvent_WaitTimeout((LightEvent*)handle, timeout_ns);
 	if (res) Logger_Abort2(res, "Waiting timed event");
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_LoadSysFonts(void) { 
 }
 
 

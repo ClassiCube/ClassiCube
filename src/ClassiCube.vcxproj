@@ -420,6 +420,7 @@
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Stream.h" />
+    <ClInclude Include="SystemFonts.h" />
     <ClInclude Include="TexturePack.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="PackedCol.h" />
@@ -501,6 +502,7 @@
     <ClCompile Include="Server.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
+    <ClCompile Include="SystemFonts.c" />
     <ClCompile Include="TexturePack.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
