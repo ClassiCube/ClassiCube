@@ -503,7 +503,8 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 			} else {
 				//sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3));
 
-				blockLerp = max(sunLevel, MODERN_LIGHTING_LEVELS - SUN_LEVELS) / (float)(MODERN_LIGHTING_LEVELS - 2);
+				//used -2 before to go from sun to darkest shadow, thus making sun cloned twice at the start of the ramp
+				blockLerp = max(sunLevel, MODERN_LIGHTING_LEVELS - SUN_LEVELS) / (float)(MODERN_LIGHTING_LEVELS - 1); 
 				//blockLerp *= blockLerp;
 				blockLerp *= (MATH_PI / 2);
 				blockLerp = Math_Cos(blockLerp);

@@ -531,6 +531,8 @@ int Block_Parse(const cc_string* name) {
 /* 0b_0000_1111 */
 #define BRIGHTNESS_MASK MODERN_LIGHTING_MAX_LEVEL
 
+/* Reads network format    0b_US--_LLLL where U = uses modern brightness, S = uses sun brightness, and L = brightness */
+/* Into CC's native format 0b_SSSS_BBBB where S = sunlight brightness and B = block brightness */
 cc_uint8 Block_ReadBrightness(cc_uint8 fullBright) {
 	cc_bool useSun;
 	/* If the fullBright byte does not use the flag, we should interpret it as either completely dark or casting max block light */
@@ -545,6 +547,8 @@ cc_uint8 Block_ReadBrightness(cc_uint8 fullBright) {
 	if (useSun) { fullBright <<= MODERN_LIGHTING_SUN_SHIFT; }
 	return fullBright;
 }
+/* Writes CC's native  0b_SSSS_BBBB format where S is sunlight brightness and B is block brightness */
+/* into Network format 0b_US--_LLLL format where U is uses modern brightness, S is uses sun brightness, and L is brightness */
 cc_uint8 Block_WriteFullBright(cc_uint8 brightness) {
 	cc_uint8 blockBrightness, sunBrightness, fullBright;
 	blockBrightness = brightness & BRIGHTNESS_MASK;
