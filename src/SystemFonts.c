@@ -756,8 +756,11 @@ cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int siz
 	desc->size   = size;
 	desc->flags  = flags;
 	desc->height = Drawer2D_AdjHeight(size);
-
 	desc->handle = fontGetSystemFont();
+	
+	CFNT_s* font = (CFNT_s*)desc->handle;
+	int fmt = font->finf.tglp->sheetFmt;
+	Platform_Log1("Font GPU format: %i", &fmt);
 	return 0;
 }
 
@@ -789,45 +792,62 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 	return max(1, width);
 }
 
-static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphIndex) {
+
+// see Graphics_3DS.c for more details
+static inline cc_uint32 CalcMortonOffset(cc_uint32 x, cc_uint32 y) {
+	// TODO: Simplify to array lookup?
+    	x = (x | (x << 2)) & 0x33;
+    	x = (x | (x << 1)) & 0x55;
+
+    	y = (y | (y << 2)) & 0x33;
+    	y = (y | (y << 1)) & 0x55;
+
+    return x | (y << 1);
+}
+
+static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphIndex, int CP, BitmapCol color) {
 	TGLP_s* tglp = font->finf.tglp;
+	int fmt = font->finf.tglp->sheetFmt;
+	if (fmt != GPU_A4) return;
 	
-	//int glyphsPerSheet = tglp->nRows * tglp->nLines;
-	//int sheetIdx = glyphIndex / glyphsPerSheet;
-	//int sheetPos = glyphIndex % glyphsPerSheet;
-	//u8* sheet    = tglp->sheetData + (sheetIdx * tglp->sheetSize);
+	int glyphsPerSheet = tglp->nRows * tglp->nLines;
+	int sheetIdx = glyphIndex / glyphsPerSheet;
+	int sheetPos = glyphIndex % glyphsPerSheet;
+	u8* sheet    = tglp->sheetData + (sheetIdx * tglp->sheetSize);
+	u8 a;
 
-	//int rowY = sheetPos / tglp->nRows;
-	//int rowX = sheetPos % tglp->nRows;
+	int rowY = sheetPos / tglp->nRows;
+	int rowX = sheetPos % tglp->nRows;
 	
-	//int FMT = tglp->sheetFmt;
-	//Platform_Log1("FMT: %i", &FMT);
+	charWidthInfo_s* wInfo = fontGetCharWidthInfo(font, glyphIndex);	
+	//int L = wInfo->left, W = wInfo->glyphWidth;
+	//Platform_Log3("Draw %r (L=%i, W=%i", &CP, &L, &W);
 	
-	charWidthInfo_s* wInfo = fontGetCharWidthInfo(font, glyphIndex);
-	
-	/*for (int Y = 0; Y < tglp->cellHeight; Y++)
-	{
-		for (int X = wInfo->left; X < wInfo->left + wInfo->glyphWidth; X++)
-		{
-			int XX = x + X, YY = y + Y;
-			if (XX < 0 || YY < 0 || XX >= bmp->width || YY >= bmp->height) continue;
-			
-			int srcX = X + rowX * tglp->cellWidth;
-			int srcY = Y + rowY * tglp->cellHeight; // TODO wrong. morton offset too?
-			
-			u8 VALUE = ((sheet + srcY * (tglp->sheetWidth >> 1))[srcX >> 1] & 0x0F) << 4;
-			Bitmap_GetPixel(bmp, XX, YY) = BitmapColor_RGB(VALUE, VALUE, VALUE);
-		}
-	}*/
-
+	// TODO not very efficient.. but it works I guess
+	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
 	for (int Y = 0; Y < tglp->cellHeight; Y++)
 	{
 		for (int X = wInfo->left; X < wInfo->left + wInfo->glyphWidth; X++)
+		//for (int X = 0; X < tglp->cellWidth; X++)
 		{
-			int XX = x + X, YY = y + Y;
-			if (XX < 0 || YY < 0 || XX >= bmp->width || YY >= bmp->height) continue;
+			int dstX = x + X, dstY = y + Y;
+			if (dstX < 0 || dstY < 0 || dstX >= bmp->width || dstY >= bmp->height) continue;
 			
-			Bitmap_GetPixel(bmp, XX, YY) = BITMAPCOLOR_WHITE;
+			int srcX = X + rowX * tglp->cellWidth;
+			int srcY = Y + rowY * tglp->cellHeight;
+			
+			int tile_offset   = (srcY & ~0x07) * tglp->sheetWidth + (srcX & ~0x07) * 8;
+			int tile_location = CalcMortonOffset(srcX & 0x07, srcY & 0x07);
+			
+			// each byte stores two pixels in it
+			a = sheet[(tile_offset + tile_location) >> 1];
+			a = (tile_location & 1) ? (a >> 4) : (a & 0x0F);
+			a = a * 0x11; // 0-15 > 0-255
+			
+			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapColor_RGB(
+				((BitmapCol_R(color) * a) >> 8),
+				((BitmapCol_G(color) * a) >> 8),
+				((BitmapCol_B(color) * a) >> 8));
 		}
 	}
 }
@@ -836,16 +856,20 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 	cc_string left = args->text, part;
 	char colorCode = 'f';
 	CFNT_s* font   = (CFNT_s*)args->font->handle;
+	BitmapCol color;
 
 	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
 	{
+		color = Drawer2D_GetColor(colorCode);
+		if (shadow) color = GetShadowColor(color);
+	
 		for (int i = 0; i < part.length; i++) 
 		{
 			cc_unichar cp  = Convert_CP437ToUnicode(part.buffer[i]);
 			int glyphIndex = fontGlyphIndexFromCodePoint(font, cp);
 			if (glyphIndex < 0) continue;
 			
-			DrawGlyph(font, bmp, x, y, glyphIndex);
+			DrawGlyph(font, bmp, x, y, glyphIndex, cp, color);
 			charWidthInfo_s* wInfo = fontGetCharWidthInfo(font, glyphIndex);
 			x += wInfo->charWidth;
 		}
