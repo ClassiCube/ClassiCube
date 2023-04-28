@@ -814,7 +814,7 @@ static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphI
 	int sheetIdx = glyphIndex / glyphsPerSheet;
 	int sheetPos = glyphIndex % glyphsPerSheet;
 	u8* sheet    = tglp->sheetData + (sheetIdx * tglp->sheetSize);
-	u8 a;
+	u8 a, I, invI;
 
 	int rowY = sheetPos / tglp->nRows;
 	int rowX = sheetPos % tglp->nRows;
@@ -827,14 +827,13 @@ static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphI
 	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
 	for (int Y = 0; Y < tglp->cellHeight; Y++)
 	{
-		for (int X = wInfo->left; X < wInfo->left + wInfo->glyphWidth; X++)
-		//for (int X = 0; X < tglp->cellWidth; X++)
+		for (int X = 0; X < wInfo->glyphWidth; X++)
 		{
-			int dstX = x + X, dstY = y + Y;
+			int dstX = x + X + wInfo->left, dstY = y + Y;
 			if (dstX < 0 || dstY < 0 || dstX >= bmp->width || dstY >= bmp->height) continue;
 			
-			int srcX = X + rowX * tglp->cellWidth;
-			int srcY = Y + rowY * tglp->cellHeight;
+			int srcX = X + rowX * (tglp->cellWidth  + 1);
+			int srcY = Y + rowY * (tglp->cellHeight + 1);
 			
 			int tile_offset   = (srcY & ~0x07) * tglp->sheetWidth + (srcX & ~0x07) * 8;
 			int tile_location = CalcMortonOffset(srcX & 0x07, srcY & 0x07);
@@ -844,10 +843,20 @@ static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphI
 			a = (tile_location & 1) ? (a >> 4) : (a & 0x0F);
 			a = a * 0x11; // 0-15 > 0-255
 			
-			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapColor_RGB(
+			I = a; invI = UInt8_MaxValue - a;
+
+			BitmapCol src = Bitmap_GetPixel(bmp, dstX, dstY);
+			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapCol_Make(
+				((BitmapCol_R(color) * I) >> 8) + ((BitmapCol_R(src) * invI) >> 8),
+				((BitmapCol_G(color) * I) >> 8) + ((BitmapCol_G(src) * invI) >> 8),
+				((BitmapCol_B(color) * I) >> 8) + ((BitmapCol_B(src) * invI) >> 8),
+				                           I  + ((BitmapCol_A(src) * invI) >> 8)
+			);
+				
+			/*Bitmap_GetPixel(bmp, dstX, dstY) = BitmapColor_RGB(
 				((BitmapCol_R(color) * a) >> 8),
 				((BitmapCol_G(color) * a) >> 8),
-				((BitmapCol_B(color) * a) >> 8));
+				((BitmapCol_B(color) * a) >> 8));*/
 		}
 	}
 }
