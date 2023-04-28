@@ -113,6 +113,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	u16 width, height;
+	gfxSetDoubleBuffering(GFX_TOP, false);
 	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
 
 	// SRC y = 0 to 240
@@ -129,17 +130,57 @@ void Window_DrawFramebuffer(Rect2D r) {
 		fb[addr+1] = BitmapCol_G(color);
 		fb[addr+2] = BitmapCol_R(color);
 	}
-	/* TODO implement */
+	// TODO implement
+	// TODO gspWaitForVBlank();
 	Platform_LogConst("DRAW FB!!!");
 	gfxFlushBuffers();
-	gfxSwapBuffers();
+	//gfxSwapBuffers();
+	// TODO: tearing??
+	gfxSetDoubleBuffering(GFX_TOP, false);
+	gfxScreenSwapBuffers(GFX_TOP, true);
+	gfxSetDoubleBuffering(GFX_TOP, true);
+	gfxScreenSwapBuffers(GFX_BOTTOM, true);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO implement */
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
+static void OnscreenTextChanged(const char* text) {
+	char tmpBuffer[NATIVE_STR_LEN];
+	cc_string tmp = String_FromArray(tmpBuffer);
+	String_AppendUtf8(&tmp, text, String_Length(text));
+    
+	Event_RaiseString(&InputEvents.TextChanged, &tmp);
+}
+
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+	const char* btnText = args->type & KEYBOARD_FLAG_SEND ? "Send" : "Enter";
+	char input[NATIVE_STR_LEN]  = { 0 };
+	char output[NATIVE_STR_LEN] = { 0 };
+	SwkbdState swkbd;
+	String_EncodeUtf8(input, args->text);
+	
+	int mode = args->type & 0xFF;
+	int type = (mode == KEYBOARD_TYPE_NUMBER || mode == KEYBOARD_TYPE_INTEGER) ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
+	
+	swkbdInit(&swkbd, type, 3, -1);
+	swkbdSetInitialText(&swkbd, input);
+	swkbdSetHintText(&swkbd, args->placeholder);
+	//swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
+	//swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, btnText, true);
+	swkbdSetButton(&swkbd, SWKBD_BUTTON_CONFIRM, btnText, true);
+	
+	if (type == KEYBOARD_TYPE_PASSWORD)
+		swkbdSetPasswordMode(&swkbd, SWKBD_PASSWORD_HIDE_DELAY);
+	if (args->multiline)
+		swkbdSetFeatures(&swkbd, SWKBD_MULTILINE);
+		
+	// TODO filter callbacks and Window_Setkeyboardtext ??
+	int btn = swkbdInputText(&swkbd, output, sizeof(output));
+	if (btn != SWKBD_BUTTON_CONFIRM) return;
+	OnscreenTextChanged(output);
+}
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 

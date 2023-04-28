@@ -162,7 +162,14 @@ void Window_DrawFramebuffer(Rect2D r);
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
 struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque, multiline; };
-void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type);
+static void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
+	args->text   = text;
+	args->type   = type;
+	args->placeholder = "";
+	args->opaque      = false;
+	args->multiline   = false;
+}
+
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args);

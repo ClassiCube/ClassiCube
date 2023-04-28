@@ -70,14 +70,6 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	if (rawMode) Window_EnableRawMouse();
 }
 
-void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
-	args->text   = text;
-	args->type   = type;
-	args->placeholder = "";
-	args->opaque      = false;
-	args->multiline   = false;
-}
-
 
 struct GraphicsMode { int R, G, B, A; };
 /* Creates a GraphicsMode compatible with the default display device */
