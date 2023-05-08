@@ -26,7 +26,8 @@ void Camera_KeyLookUpdate(cc_bool up, cc_bool down, cc_bool right, cc_bool left)
 	static TimeMS last_now = 0;
 	TimeMS now = DateTime_CurrentUTC_MS();
 
-	float delta = 1.2f * (now - last_now);
+	// divide by 25 to have reasonable sensitivity for default mouse sens
+	float delta = (Camera.Sensitivity / 25.0f) * (float)(now - last_now);
 	if (up)    cam_deltaY -= delta;
 	if (down)  cam_deltaY += delta;
 	if (right) cam_deltaX += delta;
