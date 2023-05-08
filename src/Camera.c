@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Options.h"
 #include "Picking.h"
+#include "Platform.h"
 
 struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
@@ -22,10 +23,16 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 }
 
 void Camera_KeyLookUpdate(cc_bool up, cc_bool down, cc_bool right, cc_bool left) {
-	if (up)    cam_deltaY -= 10.0;
-	if (down)  cam_deltaY += 10.0;
-	if (right) cam_deltaX += 10.0;
-	if (left)  cam_deltaX -= 10.0;
+	static TimeMS last_now = 0;
+	TimeMS now = DateTime_CurrentUTC_MS();
+
+	float delta = 1.2f * (now - last_now);
+	if (up)    cam_deltaY -= delta;
+	if (down)  cam_deltaY += delta;
+	if (right) cam_deltaX += delta;
+	if (left)  cam_deltaX -= delta;
+
+	last_now = now;
 }
 
 /*########################################################################################################################*
