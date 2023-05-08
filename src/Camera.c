@@ -21,6 +21,13 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
 
+void Camera_KeyLookUpdate(cc_bool up, cc_bool down, cc_bool right, cc_bool left) {
+	if (up)    cam_deltaY -= 10.0;
+	if (down)  cam_deltaY += 10.0;
+	if (right) cam_deltaX += 10.0;
+	if (left)  cam_deltaX -= 10.0;
+}
+
 /*########################################################################################################################*
 *--------------------------------------------------Perspective camera-----------------------------------------------------*
 *#########################################################################################################################*/

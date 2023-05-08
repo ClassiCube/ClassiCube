@@ -80,4 +80,5 @@ CC_API void Camera_Register(struct Camera* camera);
 void Camera_CheckFocus(void);
 void Camera_UpdateProjection(void);
 void Camera_SetFov(int fov);
+void Camera_KeyLookUpdate(cc_bool up, cc_bool down, cc_bool right, cc_bool left);
 #endif
