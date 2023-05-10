@@ -771,6 +771,8 @@ void InputHandler_PickBlock(void) {
 }
 
 void InputHandler_Tick(void) {
+	if (Gui.InputGrab) return;
+
 	cc_bool left, middle, right;
 	cc_bool look_up, look_down, look_right, look_left;
 	TimeMS now = DateTime_CurrentUTC_MS();
@@ -785,7 +787,6 @@ void InputHandler_Tick(void) {
 
 	if (delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
-	if (Gui.InputGrab) return;
 
 	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
 	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
