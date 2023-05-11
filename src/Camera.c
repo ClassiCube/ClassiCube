@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "Options.h"
 #include "Picking.h"
+#include "Platform.h"
 
 struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
@@ -19,6 +20,20 @@ static float cam_deltaX, cam_deltaY;
 
 static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
+}
+
+void Camera_KeyLookUpdate(cc_bool up, cc_bool down, cc_bool right, cc_bool left) {
+	static TimeMS last_now = 0;
+	TimeMS now = DateTime_CurrentUTC_MS();
+
+	// divide by 25 to have reasonable sensitivity for default mouse sens
+	float delta = (Camera.Sensitivity / 25.0f) * (float)(now - last_now);
+	if (up)    cam_deltaY -= delta;
+	if (down)  cam_deltaY += delta;
+	if (right) cam_deltaX += delta;
+	if (left)  cam_deltaX -= delta;
+
+	last_now = now;
 }
 
 /*########################################################################################################################*

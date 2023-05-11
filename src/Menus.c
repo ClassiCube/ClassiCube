@@ -2005,11 +2005,11 @@ void OtherKeyBindingsScreen_Show(void) {
 *------------------------------------------------MouseKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
 void MouseKeyBindingsScreen_Show(void) {
-	static const cc_uint8 binds[3]    = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK };
-	static const char* const descs[3] = { "Delete block", "Pick block", "Place block" };
+	static const cc_uint8 binds[7]    = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK, KEYBIND_LOOK_UP, KEYBIND_LOOK_DOWN, KEYBIND_LOOK_LEFT, KEYBIND_LOOK_RIGHT };
+	static const char* const descs[7] = { "Delete block", "Pick block", "Place block", "Look Up", "Look Down", "Look Left", "Look Right" };
 
 	KeyBindsScreen_Reset(Menu_SwitchKeysOther, NULL, 260);
-	KeyBindsScreen_SetLayout(-40, 10, -1);
+	KeyBindsScreen_SetLayout(-140, 10, 3);
 	KeyBindsScreen.msgText = "&ePress escape to reset the binding";
 	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Mouse key bindings");
 }
