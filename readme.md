@@ -1,15 +1,21 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, macOS, Linux, Android, iOS, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, and in a web browser.<br>
+ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, 3DS (unfinished), PSP (unfinished), and in a web browser.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
 
-
 You can download the game [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+
+### We need your help
+
+ClassiCube strives to support providing an experience identical to the original Minecraft Classic by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
+
+If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (UnknownShadow200#2728 on Discord)
 
 ## Information
 
 #### What ClassiCube is
 * A complete re-implementation of Minecraft Classic 0.30, with **optional** additions
+* Partially supports some features of Minecraft Classic versions before 0.30
 * Lightweight, minimal memory usage compared to original Minecraft Classic
 * Much better performance than original Minecraft Classic
 * Works with effectively all graphics cards that support OpenGL or Direct3D 9
@@ -17,7 +23,7 @@ You can download the game [from here](https://www.classicube.net/download/) and 
 #### What ClassiCube isn't
 * It does not work with Minecraft Java or Bedrock edition servers
 * It does not have a survival mode (nor will such a mode be added)
-* It does not reimplement Minecraft Classic versions before 0.30
+* It does not support logging in with Mojang/Minecraft accounts
 
 #### System requirements
 * Windows: 95 or later
@@ -28,14 +34,14 @@ You can download the game [from here](https://www.classicube.net/download/) and 
 **Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
 
 #### Instructions
-Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net. 
+Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net and classicube.net.<br>
 Just click 'OK' to the dialog menu that appears when you start the launcher.
 
 **Singleplayer**
 Run ClassiCube.exe, then click Singleplayer at the main menu.
 
 **Multiplayer**
-Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.net servers,~~ and classicube.net servers through the launcher.
+Run ClassiCube.exe. You can connect to LAN/locally hosted servers, and classicube.net servers if you have a [ClassiCube account](https://www.classicube.net/).
 
 ###### *Stuck with OpenGL 1.1 due to old graphics hardware?*
 If you're on Windows, you should first try using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/). Typically though, this occurs because you have not installed GPU drivers.
@@ -52,7 +58,7 @@ If you get a ```The Windows SDK version 5.1 was not found``` compilation error, 
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
 2. Navigate to directory with game's source code
-3. Enter `cl.exe *.c /link user32.lib gdi32.lib crypt32.lib ws2_32.lib wininet.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
+3. Enter `cl.exe *.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
 
 ##### Using MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
@@ -62,7 +68,7 @@ I am assuming you used the installer from https://sourceforge.net/projects/mingw
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using MinGW
-I am assuming you used the installer from http://www.mingw.org/
+I am assuming you used the installer from https://osdn.net/projects/mingw/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 3. Navigate to directory with game's source code
@@ -164,6 +170,10 @@ Install openal_devel and libexecinfo_devel package if needed
 
 ```cc *.c Window_Haiku.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
+#### IRIX
+
+```gcc -lGL -lX11 -lXi -lm -lpthread -ldl```
+
 #### SerenityOS
 
 Install SDL2 port if needed
@@ -177,6 +187,14 @@ Install SDL2 port if needed
 ```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
+
+#### PSP
+
+cd into `src` directory, then run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
+
+#### 3DS
+
+cd into `src` directory, then run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
 
 ##### Other
 
