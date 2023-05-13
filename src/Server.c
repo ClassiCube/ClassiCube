@@ -283,7 +283,7 @@ static void MPConnection_BeginConnect(void) {
 	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 	
-	res = Socket_Connect(&net_socket, &Server.Address, Server.Port);
+	res = Socket_Connect(&net_socket, &Server.Address, Server.Port, true);
 	if (res == ERR_INVALID_ARGUMENT) {
 		static const cc_string reason = String_FromConst("Invalid IP address");
 		MPConnection_Fail(&reason);

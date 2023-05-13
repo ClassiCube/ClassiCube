@@ -256,7 +256,7 @@ int Socket_ValidAddress(const cc_string* address) { return true; }
 
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const char* addr, int port);
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	char addr[NATIVE_STR_LEN];
 	int res;
 	String_EncodeUtf8(addr, address);

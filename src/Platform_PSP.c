@@ -347,7 +347,7 @@ int Socket_ValidAddress(const cc_string* address) {
 	return ParseAddress(&addr, address);
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
 	int res;
 
@@ -357,8 +357,10 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	*s = sceNetInetSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
 	
-	int on = 1;
-	sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
+	if (nonblocking) {
+		int on = 1;
+		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
+	}
 	
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);

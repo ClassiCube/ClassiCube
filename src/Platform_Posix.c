@@ -529,8 +529,8 @@ int Socket_ValidAddress(const cc_string* address) {
 	return ParseAddress(&addr, address);
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
-	int family, addrSize = 0, blocking_raw = -1; /* non-blocking mode */
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
+	int family, addrSize = 0;
 	union SocketAddress addr;
 	cc_result res;
 
@@ -540,7 +540,11 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
-	ioctl(*s, FIONBIO, &blocking_raw);
+
+	if (nonblocking) {
+		int blocking_raw = -1; /* non-blocking mode */
+		ioctl(*s, FIONBIO, &blocking_raw);
+	}
 
 	#ifdef AF_INET6
 	if (family == AF_INET6) {

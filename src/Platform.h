@@ -241,8 +241,8 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
 /* Returns non-zero if the given address is valid for a socket to connect to */
 int Socket_ValidAddress(const cc_string* address);
 
-/* Allocates a new non-blocking socket and then begins connecting to the given address:port. */
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port);
+/* Allocates a new socket and then begins connecting to the given address:port. */
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking);
 /* Attempts to read data from the given socket. */
 /* NOTE: A closed socket may set modified to 0, but still return 'success' (i.e. 0) */
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);

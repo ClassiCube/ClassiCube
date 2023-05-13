@@ -498,8 +498,7 @@ int Socket_ValidAddress(const cc_string* address) {
 	return Socket_ParseAddress(&addr, &addrSize, address, 0);
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
-	int blockingMode = -1; /* non-blocking mode */
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	SOCKADDR_STORAGE addr;
 	cc_result res;
 	INT addrSize;
@@ -510,7 +509,11 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 
 	*s = _socket(addr.ss_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
-	_ioctlsocket(*s, FIONBIO, &blockingMode);
+
+	if (nonblocking) {
+		int blockingMode = -1; /* non-blocking mode */
+		_ioctlsocket(*s, FIONBIO, &blockingMode);
+	}
 
 	res = _connect(*s, (SOCKADDR*)&addr, addrSize);
 	return res == -1 ? _WSAGetLastError() : 0;

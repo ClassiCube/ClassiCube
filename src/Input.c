@@ -774,16 +774,8 @@ void InputHandler_Tick(void) {
 	if (Gui.InputGrab) return;
 
 	cc_bool left, middle, right;
-	cc_bool look_up, look_down, look_right, look_left;
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
-
-	look_up    = KeyBind_IsPressed(KEYBIND_LOOK_UP);
-	look_down  = KeyBind_IsPressed(KEYBIND_LOOK_DOWN);
-	look_right = KeyBind_IsPressed(KEYBIND_LOOK_RIGHT);
-	look_left  = KeyBind_IsPressed(KEYBIND_LOOK_LEFT);
-
-	Camera_KeyLookUpdate(look_up, look_down, look_right, look_left);
 
 	if (delta < 250) return; /* 4 times per second */
 	input_lastClick = now;

@@ -17,23 +17,23 @@ static struct RayTracer cameraClipPos;
 static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
 static float cam_deltaX, cam_deltaY;
+static double last_time;
 
 static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
 
-void Camera_KeyLookUpdate(cc_bool up, cc_bool down, cc_bool right, cc_bool left) {
-	static TimeMS last_now = 0;
-	TimeMS now = DateTime_CurrentUTC_MS();
-
+void Camera_KeyLookUpdate(void) {
+	if (Gui.InputGrab) return;
 	// divide by 25 to have reasonable sensitivity for default mouse sens
-	float delta = (Camera.Sensitivity / 25.0f) * (float)(now - last_now);
-	if (up)    cam_deltaY -= delta;
-	if (down)  cam_deltaY += delta;
-	if (right) cam_deltaX += delta;
-	if (left)  cam_deltaX -= delta;
+	float delta = (Camera.Sensitivity / 25.0f) * (1000 * (Game.Time - last_time));
 
-	last_now = now;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += delta;
+
+	last_time = Game.Time;
 }
 
 /*########################################################################################################################*

@@ -354,10 +354,9 @@ int Socket_ValidAddress(const cc_string* address) {
 	return ParseAddress(&addr, address);
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
 	cc_result res;
-	int flags;
 
 	*s = -1;
 	if (!ParseAddress(&addr, address))
@@ -366,9 +365,10 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	*s = socket(AF_INET, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
 	
-	// non blocking mode
-	flags = fcntl(*s, F_GETFL, 0);
-	if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
+	if (nonblocking) {
+		int flags = fcntl(*s, F_GETFL, 0);
+		if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
+	}
 
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
