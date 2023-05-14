@@ -34,11 +34,13 @@ extern const cc_result ReturnCode_SocketWouldBlock;
 extern const cc_result ReturnCode_DirectoryExists;
 
 #ifdef CC_BUILD_WIN
-/* Encodes a string in UTF16 format, also null terminating the string. */
-/* Returns the number of bytes written, excluding trailing NULL terminator. */
-int Platform_EncodeUtf16(void* data, const cc_string* src);
-/* Converts a null terminated WCHAR* to char* in-place */
-void Platform_Utf16ToAnsi(void* data);
+typedef struct cc_winstring_ {
+	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
+	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
+} cc_winstring;
+/* Encodes a string in UTF16 and ASCII format, also null terminating the string. */
+void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
+
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 #else
 /* Encodes a string in UTF8 format, also null terminating the string. */
