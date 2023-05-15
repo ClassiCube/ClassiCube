@@ -110,6 +110,7 @@ static void D3D9_FillPresentArgs(D3DPRESENT_PARAMETERS* args) {
 	args->PresentationInterval   = gfx_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
 	args->Windowed   = true;
+	//args->MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
 }
 
 static const int D3D9_DepthBufferBits(void) {

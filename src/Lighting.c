@@ -120,7 +120,7 @@ static void ClassicLighting_UpdateLighting(int x, int y, int z, BlockID oldBlock
 			classic_heightmap[index] = y - newOffset;
 		} else {
 			/* Part of the column is now visible to light, we don't know how exactly how high it should be though. */
-			/* However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y */
+			/* However, we know that if the block Y was above or equal to old light height, then the new light height must be <= block Y */
 			ClassicLighting_CalcHeightAt(x, y, z, index);
 		}
 	} else if (y == lightH && oldOffset == 0) {

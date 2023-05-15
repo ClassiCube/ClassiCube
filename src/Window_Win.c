@@ -560,12 +560,20 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 	cc_winstring str  = { 0 };
 	OPENFILENAMEW ofn = { 0 };
 	cc_winstring filter;
+	cc_result res;
 	BOOL ok;
 	int i;
 
 	Platform_EncodeString(&str, defaultName);
 	Platform_EncodeString(&filter, filters);
-	ofn.lStructSize  = sizeof(ofn);
+	/* NOTE: OPENFILENAME_SIZE_VERSION_400 is used instead of sizeof(OFN), because the size of */
+	/*  OPENFILENAME increased after Windows 9x/NT4 with the addition of pvReserved and later fields */
+	/* (and Windows 9x/NT4 return an error if a lStructSize > OPENFILENAME_SIZE_VERSION_400 is used) */
+	ofn.lStructSize  = OPENFILENAME_SIZE_VERSION_400;
+	/* also note that this only works when you *don't* have OFN_HOOK in Flags - if you do, then */
+	/*  on modern Windows versions the dialogs are altered to show an old Win 9x style appearance */
+	/* (see https://github.com/geany/geany/issues/578 for example of this problem) */
+
 	ofn.hwndOwner    = win_handle;
 	ofn.lpstrFile    = str.uni;
 	ofn.nMaxFile     = MAX_PATH;
@@ -573,12 +581,27 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 	ofn.nFilterIndex = 1;
 	ofn.Flags = OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | (load ? OFN_FILEMUSTEXIST : OFN_OVERWRITEPROMPT);
 
-	ok = load ? GetOpenFileNameW(&ofn) : GetSaveFileNameW(&ofn);
-	if (!ok) return CommDlgExtendedError();
 	String_InitArray(path, pathBuffer);
+	ok = load ? GetOpenFileNameW(&ofn) : GetSaveFileNameW(&ofn);
+	
+	if (ok) {
+		/* Successfully got a unicode filesystem path */
+		for (i = 0; i < MAX_PATH && str.uni[i]; i++) {
+			String_Append(&path, Convert_CodepointToCP437(str.uni[i]));
+		}
+	} else if ((res = CommDlgExtendedError()) == 2) {
+		/* CDERR_INITIALIZATION - probably running on Windows 9x */
+		ofn.lpstrFile   = str.ansi;
+		ofn.lpstrFilter = filter.ansi;
 
-	for (i = 0; i < MAX_PATH && str.uni[i]; i++) {
-		String_Append(&path, Convert_CodepointToCP437(str.uni[i]));
+		ok = load ? GetOpenFileNameA(&ofn) : GetSaveFileNameA(&ofn);
+		if (!ok) return CommDlgExtendedError();
+
+		for (i = 0; i < MAX_PATH && str.ansi[i]; i++) {
+			String_Append(&path, str.ansi[i]);
+		}
+	} else {
+		return res;
 	}
 
 	/* Add default file extension if user didn't provide one */

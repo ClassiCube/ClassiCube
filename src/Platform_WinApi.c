@@ -145,6 +145,7 @@ cc_result Directory_Create(const cc_string* path) {
 
 	Platform_EncodeString(&str, path);
 	if (CreateDirectoryW(str.uni, NULL)) return 0;
+	/* Windows 9x does not support W API functions */
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
 	return CreateDirectoryA(str.ansi, NULL) ? 0 : GetLastError();
@@ -156,6 +157,7 @@ int File_Exists(const cc_string* path) {
 
 	Platform_EncodeString(&str, path);
 	attribs = GetFileAttributesW(str.uni);
+
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
