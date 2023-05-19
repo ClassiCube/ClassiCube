@@ -745,14 +745,11 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.nVersion = 1;
 	pfd.dwFlags  = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
+
 	pfd.cColorBits = mode->R + mode->G + mode->B;
 	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
-
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cRedBits   = mode->R; // TODO unnecessary??
-	pfd.cGreenBits = mode->G;
-	pfd.cBlueBits  = mode->B;
-	pfd.cAlphaBits = mode->A;
+	pfd.cAlphaBits = mode->A; /* TODO not needed? test on Intel */
 
 	modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
@@ -761,6 +758,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 
+	/* TODO DescribePixelFormat might be unnecessary? */
 	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
 	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
 		Logger_Abort2(GetLastError(), "SetPixelFormat failed");

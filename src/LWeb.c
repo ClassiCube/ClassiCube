@@ -89,6 +89,7 @@ static void Json_ConsumeString(struct JsonContext* ctx, cc_string* str) {
 		if (!ctx->left) break;
 		c = *ctx->cur; JsonContext_Consume(ctx, 1);
 		if (c == '/' || c == '\\' || c == '"') { String_Append(str, c); continue; }
+		if (c == 'n') { String_Append(str, '\n'); continue; }
 
 		/* form of \uYYYY */
 		if (c != 'u' || ctx->left < 4) break;
