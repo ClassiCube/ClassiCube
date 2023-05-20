@@ -416,6 +416,190 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, NULL);
 	return res;
 }
+#elif CC_BUILD_HTTPRAW
+#include "Errors.h"
+
+static void HttpBackend_Init(void) {
+	httpOnly = true; // TODO: insecure
+}
+
+enum HTTP_RESPONSE_STATE {
+	HTTP_RESPONSE_STATE_HEADER,
+	HTTP_RESPONSE_STATE_BODY_INIT,
+	HTTP_RESPONSE_STATE_BODY_DATA
+};
+
+/* https://httpwg.org/specs/rfc7230.html */
+static cc_result HttpResponse_Parse(cc_socket socket, struct HttpRequest* req) {
+	int state = HTTP_RESPONSE_STATE_HEADER;
+	char headerBuffer[256];
+	char buffer[4096];
+	cc_string header;
+	cc_uint32 total;
+	cc_result res;
+	int offset;
+	String_InitArray(header, headerBuffer);
+
+	/* TODO refactor */
+	for (;;) {
+		res    = Socket_Read(socket, buffer, 4096, &total);
+		offset = 0;
+		if (res)        return res;
+		if (total == 0) return ERR_END_OF_STREAM;
+
+		switch (state) {
+
+		case HTTP_RESPONSE_STATE_HEADER:
+		{
+			for (; offset < total;) {
+				char c = buffer[offset++];
+				if (c == '\r') continue;
+				if (c != '\n') { String_Append(&header, c); continue; }
+
+				Http_ParseHeader(req, &header);
+				/* Zero length header = end of message header */
+				if (header.length == 0) {
+					state = HTTP_RESPONSE_STATE_BODY_INIT;
+					goto handle_body_init;
+				}
+				header.length = 0;
+			}
+		}
+		break;
+
+		case HTTP_RESPONSE_STATE_BODY_INIT:
+		handle_body_init:
+		{
+			/* Chunked encoding not supported yet */
+			if (!req->contentLength) return res;
+			/* HEAD responses never have a message body */
+			if (req->requestType == REQUEST_TYPE_HEAD) return res;
+			/* 1XX (Information) responses don't have message body */
+			if (req->statusCode >= 100 && req->statusCode <= 199) return res;
+			/* 204 (No Content) and 304 (Not Modified) also don't */
+			if (req->statusCode == 204 || req->statusCode == 304) return res;
+
+			Http_BufferInit(req);
+			state = HTTP_RESPONSE_STATE_BODY_DATA;
+		}
+
+		case HTTP_RESPONSE_STATE_BODY_DATA:
+		{
+			cc_uint32 left  = total - offset;
+			cc_uint32 avail = req->contentLength - req->size;
+			cc_uint32 read  = min(left, avail);
+
+			Http_BufferEnsure(req, read);
+			Mem_Copy(req->data + req->size, buffer + offset, read);
+			Http_BufferExpanded(req, read);
+			if (req->size >= req->contentLength) return res;
+		}
+		break;
+		}
+	}
+}
+
+/* caches connections to web servers */
+struct HttpUrlParts {
+	cc_string address;  /* Address of server (e.g. "classicube.net") */
+	cc_uint16 port;     /* Port server is listening on (e.g 80) */
+	cc_bool https;      /* Whether HTTPS or just HTTP protocol */
+	cc_string resource; /* Path being accessed (and query string) */
+	char _addressBuffer[STRING_SIZE  + 1];
+	char _resourceBuffer[STRING_SIZE * 4 + 1];
+};
+
+/* Converts characters to UTF8, then calls Http_UrlEncode on them. */
+static void Http_UrlEncodeUrl(cc_string* dst, const cc_string* src) {
+	cc_uint8 data[4];
+	int i, len;
+	char c;
+
+	for (i = 0; i < src->length; i++) {
+		c   = src->buffer[i];
+		len = Convert_CP437ToUtf8(c, data);
+
+		/* URL path/query must not be URL encoded (it normally would be) */
+		if (c == '/' || c == '?' || c == '=') {
+			String_Append(dst, c);
+		} else {
+			Http_UrlEncode(dst, data, len);
+		}
+	}
+}
+
+/* Splits up the components of a URL */
+static void Http_ParseUrl(const cc_string* url, struct HttpUrlParts* parts) {
+	cc_string scheme, path, addr, host, port, resource;
+	/* URL is of form [scheme]://[server host]:[server port]/[resource] */
+	int idx = String_IndexOfConst(url, "://");
+
+	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(url,   0, idx);
+	path   = idx == -1 ? *url         : String_UNSAFE_SubstringAt(url, idx + 3);
+	parts->https = String_CaselessEqualsConst(&scheme, "https");
+
+	String_UNSAFE_Separate(&path, '/', &addr, &resource);
+	String_UNSAFE_Separate(&addr, ':', &host, &port);
+
+	String_InitArray_NT(parts->address, parts->_addressBuffer);
+	String_Copy(&parts->address, &host);
+	parts->_addressBuffer[parts->address.length] = '\0';
+
+	if (!Convert_ParseUInt16(&port, &parts->port)) {
+		parts->port = parts->https ? 443 : 80;
+	}
+
+	String_InitArray_NT(parts->resource, parts->_resourceBuffer);
+	String_Append(&parts->resource, '/');
+	/* Address may have unicode characters - need to percent encode them */
+	Http_UrlEncodeUrl(&parts->resource, &resource);
+	parts->_resourceBuffer[parts->resource.length] = '\0';
+}
+
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) {
+	String_Format2((cc_string*)req->meta, "%c:%s\r\n", key, value);
+}
+
+static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
+	static const char* verbs[3] = { "GET", "HEAD", "POST" };
+	struct HttpUrlParts parts;
+	char inputBuffer[16384];
+	cc_string inputMsg;
+	cc_socket socket = 0;
+	cc_result res;
+
+	Http_ParseUrl(url, &parts);
+	res = Socket_Connect(&socket, &parts.address, parts.port, false);
+	if (res) { Socket_Close(socket); return res; }
+
+	String_InitArray(inputMsg, inputBuffer);
+	req->meta = &inputMsg;
+
+	/* Write request message headers */
+	String_Format2(&inputMsg, "%c %s HTTP/1.1\r\n",
+					verbs[req->requestType], &parts.resource);
+	Http_AddHeader(req, "Host", &parts.address);
+	Http_SetRequestHeaders(req);
+	String_AppendConst(&inputMsg, "\r\n");
+	
+	/* Write request message body */
+	if (req->data) {
+		String_AppendAll(&inputMsg, req->data, req->size);
+		HttpRequest_Free(req);
+	}
+
+	cc_uint32 wrote;
+	res = Socket_Write(socket, inputBuffer, inputMsg.length, &wrote);
+	if (res) { Socket_Close(socket); return res; }
+
+	res = HttpResponse_Parse(socket, req);
+	Socket_Close(socket);
+	return res;
+}
+
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
 #elif defined CC_BUILD_WININET
 /*########################################################################################################################*
 *-----------------------------------------------------WinINet backend-----------------------------------------------------*
