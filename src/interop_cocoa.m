@@ -1,11 +1,4 @@
-#include "_WindowBase.h"
-#include "ExtMath.h"
-#include "Funcs.h"
-#include "Bitmap.h"
-#include "String.h"
-#include "Options.h"
-#include <Cocoa/Cocoa.h>
-#include <ApplicationServices/ApplicationServices.h>
+#include "interop_cocoa.h"
 
 static int windowX, windowY;
 static NSApplication* appHandle;

@@ -208,3 +208,6 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+# Don't Use!
+dontuse
