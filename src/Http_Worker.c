@@ -416,8 +416,9 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, NULL);
 	return res;
 }
-#elif CC_BUILD_HTTPRAW
+#elif defined CC_BUILD_HTTPCLIENT
 #include "Errors.h"
+#include "PackedCol.h"
 
 static void HttpBackend_Init(void) {
 	httpOnly = true; // TODO: insecure
@@ -426,62 +427,119 @@ static void HttpBackend_Init(void) {
 enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_HEADER,
 	HTTP_RESPONSE_STATE_BODY_INIT,
-	HTTP_RESPONSE_STATE_BODY_DATA
+	HTTP_RESPONSE_STATE_BODY_DATA,
+	HTTP_RESPONSE_STATE_CHUNK_HEADER,
+	HTTP_RESPONSE_STATE_CHUNK_DATA,
+	HTTP_RESPONSE_STATE_CHUNK_END_R,
+	HTTP_RESPONSE_STATE_CHUNK_END_N,
+	HTTP_RESPONSE_STATE_CHUNK_TRAILERS,
+	HTTP_RESPONSE_STATE_DONE
 };
 
-/* https://httpwg.org/specs/rfc7230.html */
-static cc_result HttpResponse_Parse(cc_socket socket, struct HttpRequest* req) {
-	int state = HTTP_RESPONSE_STATE_HEADER;
-	char headerBuffer[256];
-	char buffer[4096];
+struct HttpClientState {
+	enum HTTP_RESPONSE_STATE state;
+	struct HttpRequest* req;
+	int redirectTimes, chunked;
+	int chunkRead, chunkLength;
 	cc_string header;
-	cc_uint32 total;
-	cc_result res;
-	int offset;
-	String_InitArray(header, headerBuffer);
+	char _headerBuffer[256];
+};
 
-	/* TODO refactor */
-	for (;;) {
-		res    = Socket_Read(socket, buffer, 4096, &total);
-		offset = 0;
-		if (res)        return res;
-		if (total == 0) return ERR_END_OF_STREAM;
+static void HttpClientState_Reset(struct HttpClientState* state) {
+	state->state       = HTTP_RESPONSE_STATE_HEADER;
+	state->chunked     = 0;
+	state->chunkRead   = 0;
+	state->chunkLength = 0;
+	String_InitArray(state->header, state->_headerBuffer);
+}
 
-		switch (state) {
+static void HttpClientState_Init(struct HttpClientState* state) {
+	state->redirectTimes = 0;
+	HttpClientState_Reset(state);
+}
+
+static void HttpClient_ParseHeader(struct HttpClientState* state, const cc_string* line) {
+	cc_string name, value;
+	/* name: value */
+	if (!String_UNSAFE_Separate(line, ':', &name, &value)) return;
+
+	if (String_CaselessEqualsConst(&name, "Transfer-Encoding")) {
+		state->chunked = String_CaselessEqualsConst(&value, "chunked");
+	}
+}
+
+/* RFC 7230, section 3.3.3 - Message Body Length */
+static cc_bool HttpClient_HasBody(struct HttpRequest* req) {
+	/* HEAD responses never have a message body */
+	if (req->requestType == REQUEST_TYPE_HEAD) return false;
+	/* 1XX (Information) responses don't have message body */
+	if (req->statusCode >= 100 && req->statusCode <= 199) return false;
+	/* 204 (No Content) and 304 (Not Modified) also don't */
+	if (req->statusCode == 204 || req->statusCode == 304) return false;
+
+	return true;
+}
+
+/* RFC 7230, section 4.1 - Chunked Transfer Coding */
+static int HttpClient_GetChunkLength(const cc_string* line) {
+	int length = 0, i, part;
+
+	for (i = 0; i < line->length; i++) {
+		char c = line->buffer[i];
+		/* RFC 7230, section 4.1.1 - Chunk Extensions */
+		if (c == ';') break;
+
+		part = PackedCol_DeHex(c);
+		if (part == -1) return -1;
+		length = (length << 4) | part;
+	}
+	return length;
+}
+
+/* https://httpwg.org/specs/rfc7230.html */
+static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer, int total) {
+	struct HttpRequest* req = state->req;
+	int offset = 0;
+
+	while (offset < total) {
+		switch (state->state) {
 
 		case HTTP_RESPONSE_STATE_HEADER:
 		{
 			for (; offset < total;) {
 				char c = buffer[offset++];
 				if (c == '\r') continue;
-				if (c != '\n') { String_Append(&header, c); continue; }
+				if (c != '\n') { String_Append(&state->header, c); continue; }
 
-				Http_ParseHeader(req, &header);
-				/* Zero length header = end of message header */
-				if (header.length == 0) {
-					state = HTTP_RESPONSE_STATE_BODY_INIT;
-					goto handle_body_init;
+				/* Zero length header = end of message headers */
+				if (state->header.length == 0) {
+					state->state = HTTP_RESPONSE_STATE_BODY_INIT;
+					break;
 				}
-				header.length = 0;
+
+				Http_ParseHeader(state->req, &state->header);
+				HttpClient_ParseHeader(state, &state->header);
+				state->header.length = 0;
 			}
 		}
 		break;
 
 		case HTTP_RESPONSE_STATE_BODY_INIT:
-		handle_body_init:
 		{
-			/* Chunked encoding not supported yet */
-			if (!req->contentLength) return res;
-			/* HEAD responses never have a message body */
-			if (req->requestType == REQUEST_TYPE_HEAD) return res;
-			/* 1XX (Information) responses don't have message body */
-			if (req->statusCode >= 100 && req->statusCode <= 199) return res;
-			/* 204 (No Content) and 304 (Not Modified) also don't */
-			if (req->statusCode == 204 || req->statusCode == 304) return res;
-
-			Http_BufferInit(req);
-			state = HTTP_RESPONSE_STATE_BODY_DATA;
+			if (!HttpClient_HasBody(req)) {
+				state->state = HTTP_RESPONSE_STATE_DONE;
+			} else if (state->chunked) {
+				Http_BufferInit(req);
+				state->state = HTTP_RESPONSE_STATE_CHUNK_HEADER;
+			} else if (req->contentLength) {
+				Http_BufferInit(req);
+				state->state = HTTP_RESPONSE_STATE_BODY_DATA;
+			} else {
+				/* Chunked encoding not supported yet */
+				return ERR_NOT_SUPPORTED;
+			}
 		}
+		break;
 
 		case HTTP_RESPONSE_STATE_BODY_DATA:
 		{
@@ -492,10 +550,110 @@ static cc_result HttpResponse_Parse(cc_socket socket, struct HttpRequest* req) {
 			Http_BufferEnsure(req, read);
 			Mem_Copy(req->data + req->size, buffer + offset, read);
 			Http_BufferExpanded(req, read);
-			if (req->size >= req->contentLength) return res;
+
+			if (req->size >= req->contentLength) {
+				state->state = HTTP_RESPONSE_STATE_DONE;
+			}
 		}
 		break;
+
+		/* RFC 7230, section 4.1 - Chunked Transfer Coding */
+		case HTTP_RESPONSE_STATE_CHUNK_HEADER:
+		{
+			for (; offset < total;) {
+				char c = buffer[offset++];
+				if (c == '\r') continue;
+				if (c != '\n') { String_Append(&state->header, c); continue; }
+
+				state->chunkLength = HttpClient_GetChunkLength(&state->header);
+				if (state->chunkLength < 0) return ERR_INVALID_ARGUMENT;
+				state->header.length = 0;
+
+				if (state->chunkLength == 0) {
+					state->state = HTTP_RESPONSE_STATE_CHUNK_TRAILERS;
+				} else {
+					state->state = HTTP_RESPONSE_STATE_CHUNK_DATA;
+				}
+				break;
+			}
 		}
+		break;
+
+		case HTTP_RESPONSE_STATE_CHUNK_DATA:
+		{
+			cc_uint32 left  = total - offset;
+			cc_uint32 avail = state->chunkLength - state->chunkRead;
+			cc_uint32 read  = min(left, avail);
+
+			Http_BufferEnsure(req, read);
+			Mem_Copy(req->data + req->size, buffer + offset, read);
+			Http_BufferExpanded(req, read);
+			state->chunkRead += read;
+			offset += read;
+
+			if (state->chunkRead >= state->chunkLength) {
+				state->state       = HTTP_RESPONSE_STATE_CHUNK_END_R;
+				state->chunkRead   = 0;
+				state->chunkLength = 0;
+			}
+		}
+		break;
+
+		/* Chunks are terminated by \r\n */
+		case HTTP_RESPONSE_STATE_CHUNK_END_R:
+			if (buffer[offset++] != '\r') return ERR_INVALID_ARGUMENT;
+
+			state->state = HTTP_RESPONSE_STATE_CHUNK_END_N;
+			break;
+
+		case HTTP_RESPONSE_STATE_CHUNK_END_N:
+			if (buffer[offset++] != '\n') return ERR_INVALID_ARGUMENT;
+
+			state->state = HTTP_RESPONSE_STATE_CHUNK_HEADER;
+			break;
+
+		/* RFC 7230, section 4.1.2 - Chunked Trailer Part */
+		case HTTP_RESPONSE_STATE_CHUNK_TRAILERS:
+		{
+			for (; offset < total;) {
+				char c = buffer[offset++];
+				if (c == '\r') continue;
+				if (c != '\n') { String_Append(&state->header, c); continue; }
+
+				/* Zero length header = end of message trailers */
+				if (state->header.length == 0) {
+					state->state = HTTP_RESPONSE_STATE_DONE;
+					break;
+				}
+				state->header.length = 0;
+			}
+		} 
+		break;
+
+		default:
+			return 0;
+		}
+	}
+	return 0;
+}
+
+static cc_result HttpClient_ParseResponse(cc_socket socket, struct HttpRequest* req) {
+	char buffer[8192];
+	cc_uint32 total;
+	cc_result res;
+	struct HttpClientState state;
+	
+	HttpClientState_Init(&state);
+	state.req = req;
+
+	for (;;) {
+		res = Socket_Read(socket, buffer, 8192, &total);
+		if (res)        return res;
+		if (total == 0) return ERR_END_OF_STREAM;
+
+		res = HttpClient_Process(&state, buffer, total);
+		if (res) return res;
+		if (state.state == HTTP_RESPONSE_STATE_DONE) return 0;
 	}
 }
 
@@ -561,6 +719,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
+	static const cc_string userAgent = String_FromConst(GAME_APP_NAME);
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpUrlParts parts;
 	char inputBuffer[16384];
@@ -574,11 +733,13 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 
 	String_InitArray(inputMsg, inputBuffer);
 	req->meta = &inputMsg;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 
 	/* Write request message headers */
 	String_Format2(&inputMsg, "%c %s HTTP/1.1\r\n",
 					verbs[req->requestType], &parts.resource);
-	Http_AddHeader(req, "Host", &parts.address);
+	Http_AddHeader(req, "Host",       &parts.address); 
+	Http_AddHeader(req, "User-Agent", &userAgent);
 	Http_SetRequestHeaders(req);
 	String_AppendConst(&inputMsg, "\r\n");
 	
@@ -592,7 +753,8 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	res = Socket_Write(socket, inputBuffer, inputMsg.length, &wrote);
 	if (res) { Socket_Close(socket); return res; }
 
-	res = HttpResponse_Parse(socket, req);
+	res = HttpClient_ParseResponse(socket, req);
+	http_curProgress = 100;
 	Socket_Close(socket);
 	return res;
 }
