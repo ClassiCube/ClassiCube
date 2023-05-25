@@ -482,6 +482,21 @@ static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 }
 
 
+struct HttpConnection {
+	cc_socket socket;
+};
+
+static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
+	conn->socket = 0;
+	return Socket_Connect(&conn->socket, &url->address, url->port, false);
+}
+
+static void HttpConnection_Close(struct HttpConnection* conn) {
+	Socket_Close(conn->socket);
+	conn->socket = 0;
+}
+
+
 enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_HEADER,
 	HTTP_RESPONSE_STATE_BODY_INIT,
@@ -496,6 +511,7 @@ enum HTTP_RESPONSE_STATE {
 
 struct HttpClientState {
 	enum HTTP_RESPONSE_STATE state;
+	struct HttpConnection conn;
 	struct HttpRequest* req;
 	int chunked;
 	int chunkRead, chunkLength;
@@ -531,6 +547,8 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 
 	Http_AddHeader(req, "Host",       &state->url.address); /* TODO port for non-standard*/
 	Http_AddHeader(req, "User-Agent", &userAgent);
+	if (req->data) String_Format1(buffer, "Content-Length: %i\r\n", &req->size);
+
 	Http_SetRequestHeaders(req);
 	String_AppendConst(buffer, "\r\n");
 	
@@ -541,7 +559,7 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 	} /* TODO post redirect handling */
 }
 
-static cc_result HttpClient_SendRequest(cc_socket socket, struct HttpClientState* state) {
+static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	char inputBuffer[16384];
 	cc_string inputMsg;
 	cc_uint32 wrote;
@@ -552,7 +570,7 @@ static cc_result HttpClient_SendRequest(cc_socket socket, struct HttpClientState
 	HttpClient_Serialise(state);
 
 	/* TODO check wrote is >= inputMsg.length */
-	return Socket_Write(socket, inputBuffer, inputMsg.length, &wrote);
+	return Socket_Write(state->conn.socket, inputBuffer, inputMsg.length, &wrote);
 }
 
 
@@ -650,6 +668,7 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 			Http_BufferEnsure(req, read);
 			Mem_Copy(req->data + req->size, buffer + offset, read);
 			Http_BufferExpanded(req, read);
+			offset += read;
 
 			if (req->size >= req->contentLength) {
 				state->state = HTTP_RESPONSE_STATE_DONE;
@@ -737,13 +756,13 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 	return 0;
 }
 
-static cc_result HttpClient_ParseResponse(cc_socket socket, struct HttpClientState* state) {
+static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	char buffer[8192];
 	cc_uint32 total;
 	cc_result res;
 
 	for (;;) {
-		res = Socket_Read(socket, buffer, 8192, &total);
+		res = Socket_Read(state->conn.socket, buffer, 8192, &total);
 		if (res)        return res;
 		if (total == 0) return ERR_END_OF_STREAM;
 
@@ -764,6 +783,7 @@ static cc_result HttpClient_HandleRedirect(struct HttpClientState* state) {
 		HttpUrl_Parse(&url, &state->url);
 		HttpRequest_Free(state->req);
 
+		Platform_Log1("  Redirecting to: %s", &url);
 		state->req->contentLength = 0; /* TODO */
 		return 0;
 	} else {
@@ -777,24 +797,23 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 	struct HttpClientState state;
-	cc_socket socket = 0;
-	cc_result res;
 	int redirects = 0;
+	cc_result res;
 
 	HttpClientState_Init(&state);
 	HttpUrl_Parse(urlStr, &state.url);
 	state.req = req;
 
 	for (;;) {
-		res = Socket_Connect(&socket, &state.url.address, state.url.port, false);
-		if (res) { Socket_Close(socket); return res; }
+		res = HttpConnection_Open(&state.conn, &state.url);
+		if (res) { HttpConnection_Close(&state.conn); return res; }
 
-		res = HttpClient_SendRequest(socket, &state);
-		if (res) { Socket_Close(socket); return res; }
+		res = HttpClient_SendRequest(&state);
+		if (res) { HttpConnection_Close(&state.conn); return res; }
 
-		res = HttpClient_ParseResponse(socket, &state);
+		res = HttpClient_ParseResponse(&state);
 		http_curProgress = 100;
-		Socket_Close(socket);
+		HttpConnection_Close(&state.conn);
 
 		if (res || !HttpClient_IsRedirect(req)) break;
 		/* TODO BETTER ERROR CODE */
