@@ -124,5 +124,11 @@ enum CC_ERRORS {
 	NBT_ERR_EXPECTED_STR = 0xCCDED064UL, /* Expected String NBT tag */
 	NBT_ERR_EXPECTED_ARR = 0xCCDED065UL, /* Expected Byte Array NBT tag */
 	NBT_ERR_ARR_TOO_SMALL= 0xCCDED066UL, /* Byte Array NBT tag length is < expected length */
+
+	HTTP_ERR_NO_SSL      = 0xCCDED067UL, /* HTTP backend doesn't support SSL */
+	HTTP_ERR_REDIRECTS   = 0xCCDED068UL, /* Too many attempted HTTP redirects */
+	HTTP_ERR_RELATIVE    = 0xCCDED069UL, /* Unsupported relative URL format */
+	HTTP_ERR_INVALID_BODY= 0xCCDED06AUL, /* HTTP message doesn't have Content-Length or use Chunked transfer encoding */
+	HTTP_ERR_CHUNK_SIZE  = 0xCCDED06BUL, /* HTTP message chunk has negative size/length */
 };
 #endif

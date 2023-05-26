@@ -421,18 +421,17 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #include "PackedCol.h"
 
 static void HttpBackend_Init(void) {
-	httpOnly = true; // TODO: insecure
+	//httpOnly = true; // TODO: insecure
 }
 
 
 /* Components of a URL */
 struct HttpUrl {
-	cc_string address;  /* Address of server (e.g. "classicube.net") */
-	cc_uint16 port;     /* Port server is listening on (e.g 80) */
 	cc_bool https;      /* Whether HTTPS or just HTTP protocol */
+	cc_string address;  /* Address of server (e.g. "classicube.net:8080") */
 	cc_string resource; /* Path being accessed (and query string) */
-	char _addressBuffer[STRING_SIZE  + 1];
-	char _resourceBuffer[STRING_SIZE * 4 + 1];
+	char _addressBuffer[STRING_SIZE + 8];
+	char _resourceBuffer[STRING_SIZE * 4];
 };
 
 static void HttpUrl_EncodeUrl(cc_string* dst, const cc_string* src) {
@@ -455,30 +454,24 @@ static void HttpUrl_EncodeUrl(cc_string* dst, const cc_string* src) {
 
 /* Splits up the components of a URL */
 static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
-	cc_string scheme, path, addr, host, port, resource;
+	cc_string scheme, path, addr, resource;
 	/* URL is of form [scheme]://[server host]:[server port]/[resource] */
+	/* For simplicity, parsed as [scheme]://[server address]/[resource] */
 	int idx = String_IndexOfConst(src, "://");
 
 	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(src,   0, idx);
 	path   = idx == -1 ? *src         : String_UNSAFE_SubstringAt(src, idx + 3);
+
 	url->https = String_CaselessEqualsConst(&scheme, "https");
-
 	String_UNSAFE_Separate(&path, '/', &addr, &resource);
-	String_UNSAFE_Separate(&addr, ':', &host, &port);
 
-	String_InitArray_NT(url->address, url->_addressBuffer);
-	String_Copy(&url->address, &host);
-	url->_addressBuffer[url->address.length] = '\0';
+	String_InitArray(url->address, url->_addressBuffer);
+	String_Copy(&url->address, &addr);
 
-	if (!Convert_ParseUInt16(&port, &url->port)) {
-		url->port = url->https ? 443 : 80;
-	}
-
-	String_InitArray_NT(url->resource, url->_resourceBuffer);
+	String_InitArray(url->resource, url->_resourceBuffer);
 	String_Append(&url->resource, '/');
 	/* Address may have unicode characters - need to percent encode them */
 	HttpUrl_EncodeUrl(&url->resource, &resource);
-	url->_resourceBuffer[url->resource.length] = '\0';
 }
 
 
@@ -487,8 +480,18 @@ struct HttpConnection {
 };
 
 static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
+	cc_string host, port;
+	cc_uint16 portNum;
+
+	/* address can be either "host" or "host:port" */
+	String_UNSAFE_Separate(&url->address, ':', &host, &port);
+	if (!Convert_ParseUInt16(&port, &portNum)) {
+		portNum = url->https ? 443 : 80;
+	}
+
 	conn->socket = 0;
-	return Socket_Connect(&conn->socket, &url->address, url->port, false);
+	if (url->https) return HTTP_ERR_NO_SSL;
+	return Socket_Connect(&conn->socket, &host, portNum, false);
 }
 
 static void HttpConnection_Close(struct HttpConnection* conn) {
@@ -545,7 +548,7 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 	String_Format2(buffer, "%c %s HTTP/1.1\r\n",
 					verbs[req->requestType], &state->url.resource);
 
-	Http_AddHeader(req, "Host",       &state->url.address); /* TODO port for non-standard*/
+	Http_AddHeader(req, "Host",       &state->url.address);
 	Http_AddHeader(req, "User-Agent", &userAgent);
 	if (req->data) String_Format1(buffer, "Content-Length: %i\r\n", &req->size);
 
@@ -569,7 +572,7 @@ static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	HttpClient_Serialise(state);
 
-	/* TODO check wrote is >= inputMsg.length */
+	/* TODO check that wrote is >= inputMsg.length */
 	return Socket_Write(state->conn.socket, inputBuffer, inputMsg.length, &wrote);
 }
 
@@ -653,8 +656,7 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 				Http_BufferInit(req);
 				state->state = HTTP_RESPONSE_STATE_BODY_DATA;
 			} else {
-				/* Chunked encoding not supported yet */
-				return ERR_NOT_SUPPORTED;
+				return HTTP_ERR_INVALID_BODY;
 			}
 		}
 		break;
@@ -685,7 +687,7 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 				if (c != '\n') { String_Append(&state->header, c); continue; }
 
 				state->chunkLength = HttpClient_GetChunkLength(&state->header);
-				if (state->chunkLength < 0) return ERR_INVALID_ARGUMENT;
+				if (state->chunkLength < 0) return HTTP_ERR_CHUNK_SIZE;
 				state->header.length = 0;
 
 				if (state->chunkLength == 0) {
@@ -787,7 +789,7 @@ static cc_result HttpClient_HandleRedirect(struct HttpClientState* state) {
 		state->req->contentLength = 0; /* TODO */
 		return 0;
 	} else {
-		return ERR_INVALID_ARGUMENT;
+		return HTTP_ERR_RELATIVE;
 	}
 }
 
@@ -816,8 +818,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 		HttpConnection_Close(&state.conn);
 
 		if (res || !HttpClient_IsRedirect(req)) break;
-		/* TODO BETTER ERROR CODE */
-		if (redirects >= 20) return ERR_DOWNLOAD_INVALID;
+		if (redirects >= 20) return HTTP_ERR_REDIRECTS;
 
 		/* TODO FOLLOW LOCATION PROPERLY */
 		redirects++;
