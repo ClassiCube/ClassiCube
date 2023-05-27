@@ -495,6 +495,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 }
 
 static void HttpConnection_Close(struct HttpConnection* conn) {
+	if (!conn->socket) return; /* Closing socket 0 will crash on GC/Wii */
 	Socket_Close(conn->socket);
 	conn->socket = 0;
 }

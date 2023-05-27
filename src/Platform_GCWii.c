@@ -9,16 +9,12 @@
 #include "Errors.h"
 #include "PackedCol.h"
 #include <errno.h>
-#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/time.h>
-#include <stdio.h>
 #include <network.h>
 #include <ogc/lwp.h>
 #include <ogc/mutex.h>
@@ -101,78 +97,39 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
+static bool fat_available; 
+// trying to call mkdir etc with no FAT device loaded seems to be broken (dolphin crashes due to trying to execute invalid instruction)
+//   https://github.com/Patater/newlib/blob/8a9e3aaad59732842b08ad5fc19e0acf550a418a/libgloss/libsysbase/mkdir.c and
+//   https://github.com/Patater/newlib/blob/8a9e3aaad59732842b08ad5fc19e0acf550a418a/newlib/libc/include/sys/iosupport.h
+// would suggest it should just return ENOSYS due to using the 'null' device, but whatever
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[16] = "sd:/ClassiCube/";
+	static const char root_path[15] = "sd:/ClassiCube/";
 	Mem_Copy(str, root_path, sizeof(root_path));
 	str += sizeof(root_path);
 	String_EncodeUtf8(str, path);
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	return 1;
-}
-int File_Exists(const cc_string* path) {
-	return 0;
-}
-
-cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	return 1;
-}
-
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return 1;
-}
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return 1;
-}
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return 1;
-}
-
-cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return 1;
-}
-
-cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	return 1;
-}
-
-cc_result File_Close(cc_file file) {
-	return 1;
-}
-
-cc_result File_Seek(cc_file file, int offset, int seekType) {
-	return 1;
-}
-
-cc_result File_Position(cc_file file, cc_uint32* pos) {
-	return 1;
-}
-
-cc_result File_Length(cc_file file, cc_uint32* len) {
-	return 1;
-}
-
-/*
-cc_result Directory_Create(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	// read/write/search permissions for owner and group, and with read/search permissions for others.
-	// TODO: Is the default mode in all cases
+	if (!fat_available) return ENOSYS;
 	
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	char str[NATIVE_STR_LEN];
+	GetNativePath(str, path);
+	return mkdir(str, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
+	if (!fat_available) return false;
+	
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	String_EncodeUtf8(str, path);
+	GetNativePath(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+	if (!fat_available) return ENOSYS;
+
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
 	DIR* dirPtr;
@@ -180,7 +137,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	String_EncodeUtf8(str, dirPath);
+	GetNativePath(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -228,9 +185,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
+	if (!fat_available) return ENOSYS;
+	
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	GetNativePath(str, path);
+	*file = open(str, mode, 0);
 	return *file == -1 ? errno : 0;
 }
 
@@ -272,7 +231,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	struct stat st;
 	if (fstat(file, &st) == -1) { *len = -1; return errno; }
 	*len = st.st_size; return 0;
-}*/
+}
 
 
 /*########################################################################################################################*
@@ -297,7 +256,7 @@ void Thread_Start2(void* handle, Thread_StartFunc func) {
 
 void Thread_Detach(void* handle) {
 	// TODO: Leaks return value of thread ???
-	lwp_t* ptr = (lwp_t*)handle;;
+	lwp_t* ptr = (lwp_t*)handle;
 	Mem_Free(ptr);
 }
 
@@ -577,7 +536,9 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
-	//fatInitDefault();
+	fat_available = fatInitDefault();
+	if (fat_available) mkdir("sd:/ClassiCube", 0); // create root 'ClassiCube' directory
+	
 	net_init();
 }
 void Platform_Free(void) { }
