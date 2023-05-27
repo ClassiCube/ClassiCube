@@ -117,9 +117,6 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
-#define EXTENDED_BLOCKS
-#define EXTENDED_TEXTURES
-
 
 #define CC_BUILD_FREETYPE
 /*#define CC_BUILD_GL11*/
@@ -244,17 +241,28 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_HTTPCLIENT
 #define CC_BUILD_OPENAL
 #define CC_BUILD_PSP
+#define CC_BUILD_LOWMEM
 #undef CC_BUILD_FREETYPE
-#undef EXTENDED_BLOCKS
 #elif defined __3DS__
 #define CC_BUILD_HTTPCLIENT
 #define CC_BUILD_OPENAL
 #define CC_BUILD_3DS
+#define CC_BUILD_LOWMEM
 #undef CC_BUILD_FREETYPE
-#undef EXTENDED_BLOCKS
+#elif defined GEKKO
+#define CC_BUILD_HTTPCLIENT
+#define CC_BUILD_OPENAL
+#define CC_BUILD_GCWII
+#define CC_BUILD_LOWMEM
+#undef CC_BUILD_FREETYPE
 #endif
 #endif
 
+
+#ifndef CC_BUILD_LOWMEM
+#define EXTENDED_BLOCKS
+#endif
+#define EXTENDED_TEXTURES
 
 #ifdef EXTENDED_BLOCKS
 typedef cc_uint16 BlockID;
