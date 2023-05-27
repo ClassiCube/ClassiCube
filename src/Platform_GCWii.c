@@ -615,15 +615,14 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
+	// GC/WII *sometimes* doesn't use argv[0] for program name and so argc will be 0
+	if (!argc) return 0;
 
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
+	int count = min(argc, GAME_MAX_CMDARGS);
+	for (int i = 0; i < count; i++) {
 		args[i] = String_FromReadonly(argv[i]);
 	}
 	
-	count = 0;
 	return count;
 }
 
