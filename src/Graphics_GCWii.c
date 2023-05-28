@@ -41,6 +41,8 @@ static void InitGX(void) {
 	GX_SetDispCopyGamma(GX_GM_1_0);
 	GX_InvVtxCache();
 	
+	GX_SetNumChans(1);
+	
 	xfbs[0] = Window_XFB;
 	xfbs[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(mode));
 }
@@ -61,6 +63,7 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 
 void Gfx_RestoreState(void) { 
 	InitDefaultResources();
+
 	// 4x4 dummy white texture (textures must be at least 1 4x4 tile)
 	struct Bitmap bmp;
 	BitmapCol pixels[4 * 4];
@@ -81,6 +84,7 @@ typedef struct CCTexture_ {
 	GXTexObj obj;
 	cc_uint32 pixels[];
 } CCTexture;
+
 // ClassiCube RGBA8 bitmaps
 // - store pixels in simple linear order
 //    i.e. pixels are ordered as (x=0,y=0), (x=1,y=0), (x=2,y=0) ... (x=0,y=1) ...
@@ -89,7 +93,8 @@ typedef struct CCTexture_ {
 // GX RGBA8 textures
 // - store pixels in 4x4 tiles
 // - store all of the AR values of the tile's pixels, then store all of the GB values
-static void ReorderPixels(cc_uint32* pixels, struct Bitmap* bmp) {
+static void ReorderPixels(cc_uint32* pixels, struct Bitmap* bmp, 
+			int originX, int originY, int rowWidth) {
 	int size = bmp->width * bmp->height * 4;
 	
 	// http://hitmen.c02.at/files/yagcd/yagcd/chap15.html
@@ -97,14 +102,15 @@ static void ReorderPixels(cc_uint32* pixels, struct Bitmap* bmp) {
 	// "RGBA8 (4x4 tiles in two cache lines - first is AR and second is GB"
 	uint8_t *src = (uint8_t*)bmp->scan0;
 	uint8_t *dst = (uint8_t*)pixels;
-	int bmpWidth = bmp->width, bmpHeight = bmp->height;
+	int srcWidth = bmp->width, srcHeight = bmp->height;
 	
-	for (int blockY = 0; blockY < bmpHeight; blockY += 4)
-		for (int blockX = 0; blockX < bmpWidth; blockX += 4) 
+	for (int tileY = originY; tileY < originY + srcHeight; tileY += 4)
+		for (int tileX = originX; tileX < originX + srcWidth; tileX += 4) 
 	{
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 4; x++) {
-				uint32_t idx = (((blockY + y) * bmpWidth) + blockX + x) << 2;
+				uint32_t idx = (((tileY + y) * rowWidth) + tileX + x) << 2;
+
 				*dst++ = src[idx + 0]; // A
 				*dst++ = src[idx + 1]; // R
 			}
@@ -112,7 +118,8 @@ static void ReorderPixels(cc_uint32* pixels, struct Bitmap* bmp) {
 		
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 4; x++) {
-				uint32_t idx = (((blockY + y) * bmpWidth) + blockX + x) << 2;
+				uint32_t idx = (((tileY + y) * rowWidth) + tileX + x) << 2;
+
 				*dst++ = src[idx + 2]; // G
 				*dst++ = src[idx + 3]; // B
 			}
@@ -133,15 +140,20 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 			GX_TF_RGBA8, GX_REPEAT, GX_REPEAT, GX_FALSE);
 	GX_InitTexObjFilterMode(&tex->obj, GX_NEAR, GX_NEAR);
 			
-	ReorderPixels(tex->pixels, bmp);
+	ReorderPixels(tex->pixels, bmp, 0, 0, bmp->width);
 	DCFlushRange(tex->pixels, size);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;
+	// TODO: wrong behaviour if x/y/part isn't multiple of 4 pixels
+	//ReorderPixels(tex->pixels, part, x, y, rowWidth);
+	GX_InvalidateTexAll();
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -156,6 +168,7 @@ void Gfx_DisableMipmaps(void) { }
 void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex = white_square;
+
 	GX_LoadTexObj(&tex->obj, GX_TEXMAP0);
 }
 
@@ -189,6 +202,7 @@ void Gfx_ClearCol(PackedCol color) {
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 }
+
 static cc_bool depth_write = true, depth_test = true;
 static void UpdateDepthState(void) {
 	// match Desktop behaviour, where disabling depth testing also disables depth writing
@@ -256,6 +270,7 @@ static cc_uint16* gfx_indices;
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { 
 	void* data = memalign(16, indicesCount * 2);
 	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
+
 	Mem_Copy(data, indices, indicesCount * 2);
 	return data;
 }
@@ -269,6 +284,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	if (data) Mem_Free(data);
 	*ib = 0;
 }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Vertex Buffers-----------------------------------------------------*
@@ -361,7 +377,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	//GX_SetColorUpdate(!depthOnly);
+	GX_SetColorUpdate(!depthOnly);
+	GX_SetAlphaUpdate(!depthOnly);
 }
 
 
@@ -404,8 +421,9 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	guOrtho(matrix, 0, height, 0, width, zNear, zFar);
 }
+
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	guPerspective(matrix, fov,aspect, 0.1f, zFar);
+	guPerspective(matrix, fov * MATH_RAD2DEG, aspect, 0.1f, zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -432,9 +450,11 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
+// TODO
 }
 
 void Gfx_DisableTextureOffset(void) { 
+//TODO
 }
 
 
@@ -449,16 +469,17 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
+
 	GX_ClearVtxDesc();
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		GX_SetVtxDesc(GX_VA_POS,  GX_DIRECT);
 		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 		GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS,  GX_POS_XYZ,  GX_F32,   0);
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST,   GX_F32,   0);
-		
-		GX_SetNumChans(1);
+
 		GX_SetNumTexGens(1);
 		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
 		GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
@@ -466,11 +487,10 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	} else {
 		GX_SetVtxDesc(GX_VA_POS,  GX_DIRECT);
 		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS,  GX_POS_XYZ,  GX_F32,   0);
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
-		
-		
-		GX_SetNumChans(1);
+
 		GX_SetNumTexGens(0);
 		GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 		GX_SetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
@@ -480,9 +500,10 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
-// TODO GX_QUADS instead maybe.. ?
+
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, ICOUNT(verticesCount));
+	// TODO: Ditch indexed rendering and use GX_QUADS instead ??
 	for (int i = 0; i < ICOUNT(verticesCount); i++) 
 	{
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + gfx_indices[i];
@@ -492,6 +513,7 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	}
 	GX_End();
 }
+
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, ICOUNT(verticesCount));
 	for (int i = 0; i < ICOUNT(verticesCount); i++) 
