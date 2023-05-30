@@ -422,6 +422,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #include "SSL.h"
 
 static void HttpBackend_Init(void) {
+	SSLBackend_Init(httpsVerify);
 	//httpOnly = true; // TODO: insecure
 }
 
@@ -855,7 +856,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 }
 
 static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
-	return false;
+	return SSLBackend_DescribeError(res, dst);
 }
 #elif defined CC_BUILD_WININET
 /*########################################################################################################################*

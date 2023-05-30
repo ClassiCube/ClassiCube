@@ -506,7 +506,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	if (*s == -1) return _WSAGetLastError();
 
 	if (nonblocking) {
-		int blockingMode = -1; /* non-blocking mode */
+		u_long blockingMode = -1; /* non-blocking mode */
 		_ioctlsocket(*s, FIONBIO, &blockingMode);
 	}
 
