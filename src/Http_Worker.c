@@ -419,6 +419,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #elif defined CC_BUILD_HTTPCLIENT
 #include "Errors.h"
 #include "PackedCol.h"
+#include "SSL.h"
 
 static void HttpBackend_Init(void) {
 	//httpOnly = true; // TODO: insecure
@@ -477,11 +478,13 @@ static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 
 struct HttpConnection {
 	cc_socket socket;
+	void* sslCtx;
 };
 
 static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
 	cc_string host, port;
 	cc_uint16 portNum;
+	cc_result res;
 
 	/* address can be either "host" or "host:port" */
 	String_UNSAFE_Separate(&url->address, ':', &host, &port);
@@ -490,14 +493,35 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	}
 
 	conn->socket = 0;
-	if (url->https) return HTTP_ERR_NO_SSL;
-	return Socket_Connect(&conn->socket, &host, portNum, false);
+	conn->sslCtx = NULL;
+	if ((res = Socket_Connect(&conn->socket, &host, portNum, false))) return res;
+
+	if (!url->https) return 0;
+	return SSL_Init(conn->socket, &host, &conn->sslCtx);
+}
+
+static cc_result HttpConnection_Read(struct HttpConnection* conn,  cc_uint8* data, cc_uint32 count, cc_uint32* read) {
+	if (conn->sslCtx)
+		return SSL_Read(conn->sslCtx, data, count, read);
+	return Socket_Read(conn->socket,  data, count, read);
+}
+
+static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
+	if (conn->sslCtx) 
+		return SSL_Write(conn->sslCtx, data, count, wrote);
+	return Socket_Write(conn->socket,  data, count, wrote);
 }
 
 static void HttpConnection_Close(struct HttpConnection* conn) {
-	if (!conn->socket) return; /* Closing socket 0 will crash on GC/Wii */
-	Socket_Close(conn->socket);
-	conn->socket = 0;
+	if (conn->sslCtx) {
+		SSL_Free(conn->sslCtx);
+		conn->sslCtx = NULL;
+	}
+
+	if (conn->socket) { /* Closing socket 0 will crash on GC/Wii */
+		Socket_Close(conn->socket);
+		conn->socket = 0;
+	}
 }
 
 
@@ -574,7 +598,7 @@ static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	HttpClient_Serialise(state);
 
 	/* TODO check that wrote is >= inputMsg.length */
-	return Socket_Write(state->conn.socket, inputBuffer, inputMsg.length, &wrote);
+	return HttpConnection_Write(&state->conn, inputBuffer, inputMsg.length, &wrote);
 }
 
 
@@ -765,7 +789,7 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	cc_result res;
 
 	for (;;) {
-		res = Socket_Read(state->conn.socket, buffer, 8192, &total);
+		res = HttpConnection_Read(&state->conn, buffer, 8192, &total);
 		if (res)        return res;
 		if (total == 0) return ERR_END_OF_STREAM;
 

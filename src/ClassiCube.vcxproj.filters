@@ -333,6 +333,9 @@
     <ClInclude Include="SystemFonts.h">
       <Filter>Header Files\2D</Filter>
     </ClInclude>
+    <ClInclude Include="SSL.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -595,6 +598,9 @@
     </ClCompile>
     <ClCompile Include="SystemFonts.c">
       <Filter>Source Files\2D</Filter>
+    </ClCompile>
+    <ClCompile Include="SSL.c">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

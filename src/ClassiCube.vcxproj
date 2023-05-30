@@ -419,6 +419,7 @@
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="SSL.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="SystemFonts.h" />
     <ClInclude Include="TexturePack.h" />
@@ -500,6 +501,7 @@
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="Server.c" />
+    <ClCompile Include="SSL.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="SystemFonts.c" />
