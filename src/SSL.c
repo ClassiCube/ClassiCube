@@ -45,7 +45,17 @@ void SSLBackend_Init(cc_bool verifyCerts) {
 }
 
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
-	return Platform_DescribeErrorExt(res, dst, secur32_lib);
+	switch (res) {
+	case SEC_E_UNTRUSTED_ROOT:
+		String_AppendConst(dst, "The website's SSL certificate was issued by an authority that is not trusted");
+		return true;
+	case SEC_E_CERT_EXPIRED:
+		String_AppendConst(dst, "The website's SSL certificate has expired");
+		return true;
+	case TRUST_E_CERT_SIGNATURE:
+		String_AppendConst(dst, "The signature of the website's SSL certificate cannot be verified");
+		return true;
+	}
 }
 
 
@@ -65,8 +75,9 @@ struct SSLContext {
 static SECURITY_STATUS SSL_CreateHandle(struct SSLContext* ctx) {
 	SCHANNEL_CRED cred = { 0 };
 	cred.dwVersion = SCHANNEL_CRED_VERSION;
-	cred.dwFlags   = SCH_CRED_AUTO_CRED_VALIDATION | SCH_CRED_NO_DEFAULT_CREDS;
+	cred.dwFlags   = SCH_CRED_NO_DEFAULT_CREDS | (_verifyCerts ? SCH_CRED_AUTO_CRED_VALIDATION : SCH_CRED_MANUAL_CRED_VALIDATION);
 
+	/* TODO: SCHANNEL_NAME_A and use SChannel dll? */
 	return sspiFPs->AcquireCredentialsHandleA(NULL, UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
 						&cred, NULL, NULL, &ctx->handle, NULL);
 }
@@ -171,16 +182,13 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 		sec   = sspiFPs->InitializeSecurityContextA(&ctx->handle, &ctx->context, NULL, flags, 0, 0,
 							&in_desc, 0, NULL, &out_desc, &flags, NULL);
 
-		if (in_buffers[1].BufferType == SECBUFFER_EXTRA)
-		{
+		if (in_buffers[1].BufferType == SECBUFFER_EXTRA) {
 			/* SChannel didn't process the entirety of the input buffer */
 			/*  So move the leftover data back to the front of the input buffer */
 			leftover_len = in_buffers[1].cbBuffer;
 			memmove(ctx->incoming, ctx->incoming + (ctx->bufferLen - leftover_len), leftover_len);
 			ctx->bufferLen = leftover_len;
-		}
-		else
-		{
+		} else if (sec != SEC_E_INCOMPLETE_MESSAGE) {
 			/* SChannel processed entirely of input buffer */
 			ctx->bufferLen = 0;
 		}
@@ -189,8 +197,7 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 		if (sec == SEC_E_OK) break;
 
 		/* Need to send data to the server */
-		if (sec == SEC_I_CONTINUE_NEEDED)
-		{
+		if (sec == SEC_I_CONTINUE_NEEDED) {
 			res = SSL_SendRaw(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
 			sspiFPs->FreeContextBuffer(out_buffers[0].pvBuffer); /* TODO always free? */
 
@@ -226,9 +233,9 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	ctx->socket = socket;
 	Platform_EncodeString(&host, host_);
 
-	if ((res = SSL_CreateHandle(ctx)))	   return res;
+	if ((res = SSL_CreateHandle(ctx)))	     return res;
 	if ((res = SSL_Connect(ctx, host.ansi))) return res;
-	if ((res = SSL_Negotiate(ctx)))		  return res;
+	if ((res = SSL_Negotiate(ctx)))		     return res;
 	return 0;
 }
 
@@ -236,8 +243,7 @@ static cc_result SSL_ReadDecrypted(struct SSLContext* ctx, cc_uint8* data, cc_ui
 	int len = min(count, ctx->decryptedSize);
 	Mem_Copy(data, ctx->decryptedData, len);
 
-	if (len == ctx->decryptedSize)
-	{
+	if (len == ctx->decryptedSize) {
 		/* incoming buffer stores decrypted data and then any leftover ciphertext */
 		/*  So move the leftover ciphertext back to the start of the input buffer */
 		/* TODO: Share function with handshake function */
@@ -247,9 +253,7 @@ static cc_result SSL_ReadDecrypted(struct SSLContext* ctx, cc_uint8* data, cc_ui
 
 		ctx->decryptedData = NULL;
 		ctx->decryptedSize = 0;
-	}
-	else
-	{
+	} else {
 		ctx->decryptedData += len;
 		ctx->decryptedSize -= len;
 	}
@@ -271,8 +275,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 	for (;;)
 	{
 		/* if any ciphertext data, then try to decrypt it */
-		if (ctx->bufferLen)
-		{
+		if (ctx->bufferLen) {
 			/* https://learn.microsoft.com/en-us/windows/win32/secauthn/stream-contexts */
 			buffers[0].BufferType = SECBUFFER_DATA;
 			buffers[0].pvBuffer   = ctx->incoming;
@@ -286,8 +289,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 			desc.pBuffers  = buffers;
 
 			sec = sspiFPs->DecryptMessage(&ctx->context, &desc, 0, NULL);
-			if (sec == SEC_E_OK)
-			{				
+			if (sec == SEC_E_OK) {				
 				/* After successful decryption the SecBuffers will be: */
 				/*   buffers[0] = headers */
 				/*   buffers[1] = content */
@@ -317,6 +319,7 @@ static cc_result SSL_WriteChunk(struct SSLContext* s, const cc_uint8* data, cc_u
 	SECURITY_STATUS res;
 	int total;
 
+	/* https://learn.microsoft.com/en-us/windows/win32/secauthn/encryptmessage--schannel */
 	buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
 	buffers[0].pvBuffer   = buffer;
 	buffers[0].cbBuffer   = s->sizes.cbHeader;
