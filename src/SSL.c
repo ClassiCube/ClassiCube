@@ -20,28 +20,39 @@
 /* https://hpbn.co/transport-layer-security-tls/ */
 #define TLS_MAX_PACKET_SIZE (16384 + 512) /* 16kb record size + header/mac/padding */
 /* TODO: Check against sizes.cbMaximumMessage */
-static void* secur32_lib;
+
+static void* schannel_lib;
 static INIT_SECURITY_INTERFACE_A _InitSecurityInterfaceA;
-static PSecurityFunctionTableA sspiFPs;
 static cc_bool _verifyCerts;
 
+static ACQUIRE_CREDENTIALS_HANDLE_FN_A  FP_AcquireCredentialsHandleA;
+static FREE_CREDENTIALS_HANDLE_FN       FP_FreeCredentialsHandle;
+static INITIALIZE_SECURITY_CONTEXT_FN_A FP_InitializeSecurityContextA;
+static ACCEPT_SECURITY_CONTEXT_FN       FP_AcceptSecurityContext;
+static COMPLETE_AUTH_TOKEN_FN           FP_CompleteAuthToken;
+static DELETE_SECURITY_CONTEXT_FN       FP_DeleteSecurityContext;
+static QUERY_CONTEXT_ATTRIBUTES_FN_A    FP_QueryContextAttributesA;
+static FREE_CONTEXT_BUFFER_FN           FP_FreeContextBuffer;
+static ENCRYPT_MESSAGE_FN               FP_EncryptMessage;
+static DECRYPT_MESSAGE_FN               FP_DecryptMessage;
+
 void SSLBackend_Init(cc_bool verifyCerts) {
-	/* NOTE: Windows 95 secur32.dll doesn't export EncryptMessage/DecryptMessage */
-	/*  so instead retrieve function pointers via SecurityFunctionTable table */
+	/* secur32.dll is available on Win9x and later */
+	/* Security.dll is available on NT 4 and later */
+
+	/* Officially, InitSecurityInterfaceA and then AcquireCredentialsA from */
+	/*  secur32.dll (or security.dll) should be called - however */
+	/*  AcquireCredentialsA fails with SEC_E_SECPKG_NOT_FOUND on Win 9x */
+	/* But if you instead directly call those functions from schannel.dll, 
+	/*  then it DOES work. (and on later Windows versions, those functions */
+	/*  exported from schannel.dll are just DLL forwards to secur32.dll */
 	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(InitSecurityInterfaceA)
 	};
-	static const cc_string secur32  = String_FromConst("secur32.dll");
-	static const cc_string security = String_FromConst("security.dll");
+	static const cc_string schannel = String_FromConst("schannel.dll");
 	_verifyCerts = verifyCerts;
-
 	/* TODO: Load later?? prob too hard */
-	DynamicLib_LoadAll(&secur32, funcs, Array_Elems(funcs), &secur32_lib);
-	if (secur32_lib) return;
-
-	/* Windows NT 4.0 only has Security.dll, 9x and later have Secur32.dll */
-	/*  (on ??? and later, Security.dll just contains forwards to Secur32.dll */
-	DynamicLib_LoadAll(&security, funcs, Array_Elems(funcs), &secur32_lib);
+	DynamicLib_LoadAll(&schannel, funcs, Array_Elems(funcs), &schannel_lib);
 }
 
 cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
@@ -56,6 +67,7 @@ cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
 		String_AppendConst(dst, "The signature of the website's SSL certificate cannot be verified");
 		return true;
 	}
+	return false;
 }
 
 
@@ -77,8 +89,8 @@ static SECURITY_STATUS SSL_CreateHandle(struct SSLContext* ctx) {
 	cred.dwVersion = SCHANNEL_CRED_VERSION;
 	cred.dwFlags   = SCH_CRED_NO_DEFAULT_CREDS | (_verifyCerts ? SCH_CRED_AUTO_CRED_VALIDATION : SCH_CRED_MANUAL_CRED_VALIDATION);
 
-	/* TODO: SCHANNEL_NAME_A and use SChannel dll? */
-	return sspiFPs->AcquireCredentialsHandleA(NULL, UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
+	/* TODO: SCHANNEL_NAME_A ? */
+	return FP_AcquireCredentialsHandleA(NULL, UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
 						&cred, NULL, NULL, &ctx->handle, NULL);
 }
 
@@ -130,7 +142,7 @@ static SECURITY_STATUS SSL_Connect(struct SSLContext* ctx, const char* hostname)
 	out_desc.cBuffers  = Array_Elems(out_buffers);
 	out_desc.pBuffers  = out_buffers;
 
-	res = sspiFPs->InitializeSecurityContextA(&ctx->handle, NULL, hostname, flags, 0, 0,
+	res = FP_InitializeSecurityContextA(&ctx->handle, NULL, hostname, flags, 0, 0,
 						NULL, 0, &ctx->context, &out_desc, &flags, NULL);
 	if (res != SEC_I_CONTINUE_NEEDED) return res;
 	res = 0;
@@ -138,7 +150,7 @@ static SECURITY_STATUS SSL_Connect(struct SSLContext* ctx, const char* hostname)
 	/* Send initial handshake to the server (if there is one) */
 	if (out_buffers[0].pvBuffer) {
 		res = SSL_SendRaw(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
-		sspiFPs->FreeContextBuffer(out_buffers[0].pvBuffer);
+		FP_FreeContextBuffer(out_buffers[0].pvBuffer);
 	}
 	return res;
 }
@@ -179,7 +191,7 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 		out_desc.pBuffers  = out_buffers;
 
 		flags = ctx->flags;
-		sec   = sspiFPs->InitializeSecurityContextA(&ctx->handle, &ctx->context, NULL, flags, 0, 0,
+		sec   = FP_InitializeSecurityContextA(&ctx->handle, &ctx->context, NULL, flags, 0, 0,
 							&in_desc, 0, NULL, &out_desc, &flags, NULL);
 
 		if (in_buffers[1].BufferType == SECBUFFER_EXTRA) {
@@ -199,7 +211,7 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 		/* Need to send data to the server */
 		if (sec == SEC_I_CONTINUE_NEEDED) {
 			res = SSL_SendRaw(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
-			sspiFPs->FreeContextBuffer(out_buffers[0].pvBuffer); /* TODO always free? */
+			FP_FreeContextBuffer(out_buffers[0].pvBuffer); /* TODO always free? */
 
 			if (res) return res;
 			continue;
@@ -210,18 +222,41 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 		if ((res = SSL_RecvRaw(ctx))) return res;
 	}
 
-	sspiFPs->QueryContextAttributesA(&ctx->context, SECPKG_ATTR_STREAM_SIZES, &ctx->sizes);
+	FP_QueryContextAttributesA(&ctx->context, SECPKG_ATTR_STREAM_SIZES, &ctx->sizes);
 	return 0;
 }
 
+
+static void SSL_LoadSecurityFunctions(PSecurityFunctionTableA sspiFPs) {
+	FP_AcquireCredentialsHandleA  = sspiFPs->AcquireCredentialsHandleA;
+	FP_FreeCredentialsHandle      = sspiFPs->FreeCredentialsHandle;
+	FP_InitializeSecurityContextA = sspiFPs->InitializeSecurityContextA;
+	FP_AcceptSecurityContext      = sspiFPs->AcceptSecurityContext;
+	FP_CompleteAuthToken          = sspiFPs->CompleteAuthToken;
+	FP_DeleteSecurityContext      = sspiFPs->DeleteSecurityContext;
+	FP_QueryContextAttributesA    = sspiFPs->QueryContextAttributesA;
+	FP_FreeContextBuffer          = sspiFPs->FreeContextBuffer;
+
+	FP_EncryptMessage = sspiFPs->EncryptMessage;
+	FP_DecryptMessage = sspiFPs->DecryptMessage;
+	/* Old Windows versions don't have EncryptMessage/DecryptMessage, */
+	/*  but have the older SealMessage/UnsealMessage functions instead */
+	if (!FP_EncryptMessage) FP_EncryptMessage = (ENCRYPT_MESSAGE_FN)sspiFPs->Reserved3;
+	if (!FP_DecryptMessage) FP_DecryptMessage = (DECRYPT_MESSAGE_FN)sspiFPs->Reserved4;
+}
+
 cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
+	PSecurityFunctionTableA sspiFPs;
 	struct SSLContext* ctx;
 	SECURITY_STATUS res;
 	cc_winstring host;
-
 	if (!_InitSecurityInterfaceA) return HTTP_ERR_NO_SSL;
-	if (!sspiFPs) sspiFPs = _InitSecurityInterfaceA();
-	if (!sspiFPs) return ERR_NOT_SUPPORTED;
+
+	if (!FP_InitializeSecurityContextA) {
+		sspiFPs = _InitSecurityInterfaceA();
+		if (!sspiFPs) return ERR_NOT_SUPPORTED;
+		SSL_LoadSecurityFunctions(sspiFPs);
+	}
 
 	ctx = Mem_TryAllocCleared(1, sizeof(struct SSLContext));
 	if (!ctx) return ERR_OUT_OF_MEMORY;
@@ -238,6 +273,7 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	if ((res = SSL_Negotiate(ctx)))		     return res;
 	return 0;
 }
+
 
 static cc_result SSL_ReadDecrypted(struct SSLContext* ctx, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
 	int len = min(count, ctx->decryptedSize);
@@ -288,7 +324,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 			desc.cBuffers  = Array_Elems(buffers);
 			desc.pBuffers  = buffers;
 
-			sec = sspiFPs->DecryptMessage(&ctx->context, &desc, 0, NULL);
+			sec = FP_DecryptMessage(&ctx->context, &desc, 0, NULL);
 			if (sec == SEC_E_OK) {				
 				/* After successful decryption the SecBuffers will be: */
 				/*   buffers[0] = headers */
@@ -337,7 +373,7 @@ static cc_result SSL_WriteChunk(struct SSLContext* s, const cc_uint8* data, cc_u
 	desc.ulVersion = SECBUFFER_VERSION;
 	desc.cBuffers  = Array_Elems(buffers);
 	desc.pBuffers  = buffers;
-	if ((res = sspiFPs->EncryptMessage(&s->context, 0, &desc, 0))) return res;
+	if ((res = FP_EncryptMessage(&s->context, 0, &desc, 0))) return res;
 
 	/* NOTE: Okay to write in one go, since all three buffers will be contiguous */
 	/*  (as TLS record header size will always be the same size) */
@@ -366,8 +402,8 @@ cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32*
 cc_result SSL_Free(void* ctx_) {
 	/* TODO send TLS close */
 	struct SSLContext* ctx = (struct SSLContext*)ctx_;
-	sspiFPs->DeleteSecurityContext(&ctx->context);
-	sspiFPs->FreeCredentialsHandle(&ctx->handle);
+	FP_DeleteSecurityContext(&ctx->context);
+	FP_FreeCredentialsHandle(&ctx->handle);
 	Mem_Free(ctx);
 	return 0; 
 }
