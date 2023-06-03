@@ -127,7 +127,11 @@ static void SPConnection_BeginConnect(void) {
 
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
+#if defined CC_BUILD_LOWMEM
+	World_SetDimensions(64, 64, 64);
+#else
 	World_SetDimensions(128, 64, 128);
+#endif
 
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);

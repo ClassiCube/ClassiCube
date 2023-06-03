@@ -146,13 +146,12 @@ int File_Exists(const cc_string* path) {
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
 	int len, res, is_dir;
 
 	GetNativePath(str, dirPath);
-	dirPtr = opendir(str);
+	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
@@ -320,13 +319,13 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int success = 0, res;
+	int success = 0;
 
 	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	res = getaddrinfo(host, NULL, &hints, &result);
+	int res = getaddrinfo(host, NULL, &hints, &result);
 	if (res) return 0;
 
 	for (cur = result; cur; cur = cur->ai_next) {
@@ -356,7 +355,6 @@ int Socket_ValidAddress(const cc_string* address) {
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
-	cc_result res;
 
 	*s = -1;
 	if (!ParseAddress(&addr, address))
@@ -373,7 +371,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
 
-	res = connect(*s, &addr.raw, sizeof(addr.v4));
+	int res = connect(*s, &addr.raw, sizeof(addr.v4));
 	return res == -1 ? errno : 0;
 }
 
@@ -396,15 +394,14 @@ void Socket_Close(cc_socket s) {
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
-	int flags;
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
 	
 	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
+	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
+	*success  = (pfd.revents & flags) != 0;
 	return 0;
 }
 
@@ -527,13 +524,14 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
 	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
 	// (e.g. when running from Citra)
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
+	int count = min(argc, GAME_MAX_CMDARGS);
+	Platform_Log1("ARGS: %i", &count);
+	
+	for (int i = 0; i < count; i++) {
 		args[i] = String_FromReadonly(argv[i]);
+		Platform_Log2("  ARG %i = %c", &i, argv[i]);
 	}
 	return count;
 }

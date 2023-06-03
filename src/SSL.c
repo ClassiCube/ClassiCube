@@ -43,7 +43,7 @@ void SSLBackend_Init(cc_bool verifyCerts) {
 	/* Officially, InitSecurityInterfaceA and then AcquireCredentialsA from */
 	/*  secur32.dll (or security.dll) should be called - however */
 	/*  AcquireCredentialsA fails with SEC_E_SECPKG_NOT_FOUND on Win 9x */
-	/* But if you instead directly call those functions from schannel.dll, 
+	/* But if you instead directly call those functions from schannel.dll, */
 	/*  then it DOES work. (and on later Windows versions, those functions */
 	/*  exported from schannel.dll are just DLL forwards to secur32.dll */
 	static const struct DynamicLibSym funcs[] = {
@@ -406,6 +406,69 @@ cc_result SSL_Free(void* ctx_) {
 	FP_FreeCredentialsHandle(&ctx->handle);
 	Mem_Free(ctx);
 	return 0; 
+}
+#elif defined CC_BUILD_3DS
+#include <3ds.h>
+#include "String.h"
+// https://github.com/devkitPro/3ds-examples/blob/master/network/sslc/source/ssl.c
+// https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/sslc.h
+static u32 certChainHandle;
+static cc_bool _verifyCerts;
+static void SSL_CreateRootChain(void) {
+	int ret = sslcCreateRootCertChain(&certChainHandle);
+	if (ret) { Platform_Log1("sslcCreateRootCertChain failed: %i", &ret); return; }
+}
+
+void SSLBackend_Init(cc_bool verifyCerts) {
+	int ret = sslcInit(0);
+	if (ret) { Platform_Log1("sslcInit failed: %i", &ret); return; }
+	
+	_verifyCerts = verifyCerts;
+	SSL_CreateRootChain();
+}
+cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) { return false; }
+
+cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
+	if (!certChainHandle) return HTTP_ERR_NO_SSL;
+	int ret;
+	
+	sslcContext* ctx;
+	char host[NATIVE_STR_LEN];
+	String_EncodeUtf8(host, host_);
+	
+	ctx = Mem_TryAllocCleared(1, sizeof(sslcContext));
+	if (!ctx) return ERR_OUT_OF_MEMORY;
+	*out_ctx = (void*)ctx;
+	
+	int opts = _verifyCerts ? SSLCOPT_Default : SSLCOPT_DisableVerify;
+	if ((ret = sslcCreateContext(ctx, socket, opts, host))) return ret;
+	sslcContextSetRootCertChain(ctx, certChainHandle);
+	
+	// detect lack of proper SSL support in Citra
+	if (!ctx->sslchandle) return HTTP_ERR_NO_SSL;
+	if ((ret = sslcStartConnection(ctx, NULL, NULL))) return ret;
+	return 0;
+}
+
+cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
+	sslcContext* ctx = (sslcContext*)ctx_;
+	int ret = sslcRead(ctx, data, count, false);
+	
+	if (ret < 0) return ret;
+	*read = ret; return 0;
+}
+
+cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) { 
+	sslcContext* ctx = (sslcContext*)ctx_;
+	int ret = sslcWrite(ctx, data, count);
+	
+	if (ret < 0) return ret;
+	*wrote = ret; return 0;
+}
+
+cc_result SSL_Free(void* ctx_) { 
+	sslcContext* ctx = (sslcContext*)ctx_;
+	return sslcDestroyContext(ctx);
 }
 #else
 void SSLBackend_Init(cc_bool verifyCerts) { }
