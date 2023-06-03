@@ -24,8 +24,8 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_SocketInProgess  = -EINPROGRESS; // net_XYZ error results are negative
+const cc_result ReturnCode_SocketWouldBlock = -EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
 
@@ -57,7 +57,6 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-#include <stdio.h>
 // dolphin recognises this function name (if loaded as .elf), and will patch it
 //  to also log the message to dolphin's console at OSREPORT-HLE log level
 void CC_NOINLINE __write_console(int fd, const char* msg, int len) {
@@ -145,13 +144,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
 	struct dirent* entry;
-	char* src;
-	int len, res, is_dir;
+	int res;
 
 	GetNativePath(str, dirPath);
-	dirPtr = opendir(str);
+	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
 	// POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed."
@@ -164,24 +161,14 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		String_Format1(&path, "%s/", dirPath);
 
 		// ignore . and .. entry
-		src = entry->d_name;
+		char* src = entry->d_name;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
-		len = String_Length(src);
+		int len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
-
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX
-		{
-			char full_path[NATIVE_STR_LEN];
-			struct stat sb;
-			String_EncodeUtf8(full_path, &path);
-			is_dir = stat(full_path, &sb) == 0 && S_ISDIR(sb.st_mode);
-		}
-#else
-		is_dir = entry->d_type == DT_DIR;
+		int is_dir = entry->d_type == DT_DIR;
 		// TODO: fallback to stat when this fails
-#endif
 
 		if (is_dir) {
 			res = Directory_Enum(&path, obj, callback);
@@ -430,7 +417,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
 
 	*s = net_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
+	if (*s < 0) return *s;
 
 	if (nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
@@ -467,11 +454,11 @@ void Socket_Close(cc_socket s) {
 // libogc only implements net_poll for wii currently
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollsd pfd;
-	int flags;
-
 	pfd.socket = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (net_poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
+	
+	int res = net_poll(&pfd, 1, 0);
+	if (res < 0) { *success = false; return res; }
 	
 	// to match select, closed socket still counts as readable
 	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
@@ -514,14 +501,15 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 }
 static void InitSockets(void) {
 #ifdef HW_RVL
-	net_init();
+	int ret = net_init();
+	Platform_Log1("Network setup result: %i", &ret);
 #else
 	// https://github.com/devkitPro/wii-examples/blob/master/devices/network/sockettest/source/sockettest.c
 	char localip[16] = {0};
 	char gateway[16] = {0};
 	char netmask[16] = {0};
 	
-	int ret = if_config(localip, netmask, gateway, TRUE, 20);
+	int ret = if_config(localip, gateway, netmask, TRUE, 20);
 	if (ret >= 0) {
 		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
 	} else {
