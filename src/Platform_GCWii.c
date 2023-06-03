@@ -57,9 +57,22 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+#include <stdio.h>
+// dolphin recognises this function name (if loaded as .elf), and will patch it
+//  to also log the message to dolphin's console at OSREPORT-HLE log level
+void CC_NOINLINE __write_console(int fd, const char* msg, int len) {
+	write(STDOUT_FILENO, msg, len); // this can be intercepted by libogc debug console
+}
+
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	char buffer[256];
+	cc_string str = String_Init(buffer, 0, 254); // 2 characters (\n and \0)
+	
+	String_AppendAll(&str, msg, len);
+	buffer[str.length + 0] = '\n';
+	buffer[str.length + 1] = '\0'; // needed to make Dolphin logger happy
+	__write_console(0, buffer, str.length + 1); // +1 for '\n'
+	// TODO: Just use printf("%s", somehow ???
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
@@ -382,6 +395,7 @@ union SocketAddress {
 };
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
+#ifdef HW_RVL
 	struct hostent* res = net_gethostbyname(host);
 	
 	if (!res || res->h_addrtype != AF_INET) return false;
@@ -390,6 +404,10 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 
 	addr->v4.sin_addr = *(struct in_addr*)res->h_addr_list[0];
 	return true;
+#else
+	// DNS resolution not implemented in gamecube libbba
+	return false;
+#endif
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
@@ -407,7 +425,6 @@ int Socket_ValidAddress(const cc_string* address) {
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
-	cc_result res;
 
 	*s = -1;
 	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
@@ -423,20 +440,22 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
 
-	res = net_connect(*s, &addr.raw, sizeof(addr.v4));
-	return res == -1 ? errno : 0;
+	int res = net_connect(*s, &addr.raw, sizeof(addr.v4));
+	return res < 0 ? res : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int recvCount = net_recv(s, data, count, 0);
-	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return errno;
+	int res = net_recv(s, data, count, 0);
+	if (res < 0) { *modified = 0; return res; }
+	
+	*modified = res; return 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = net_send(s, data, count, 0);
-	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return errno;
+	int res = net_send(s, data, count, 0);
+	if (res < 0) { *modified = 0; return res; }
+	
+	*modified = res; return 0;
 }
 
 void Socket_Close(cc_socket s) {
@@ -444,6 +463,8 @@ void Socket_Close(cc_socket s) {
 	net_close(s);
 }
 
+#ifdef HW_RVL
+// libogc only implements net_poll for wii currently
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollsd pfd;
 	int flags;
@@ -452,11 +473,28 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	if (net_poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
 	
-	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
+	// to match select, closed socket still counts as readable
+	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
+	*success  = (pfd.revents & flags) != 0;
 	return 0;
 }
+#else
+// libogc only implements net_select for gamecube currently
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+	fd_set set;
+	struct timeval time = { 0 };
+	int res; // number of 'ready' sockets
+	FD_ZERO(&set);
+	FD_SET(s, &set);
+	if (mode == SOCKET_POLL_READ) {
+		res = net_select(s + 1, &set, NULL, NULL, &time);
+	} else {
+		res = net_select(s + 1, NULL, &set, NULL, &time);
+	}
+	if (res < 0) { *success = false; return res; }
+	*success = FD_ISSET(s, &set) != 0; return 0;
+}
+#endif
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 	return Socket_Poll(s, SOCKET_POLL_READ, readable);
@@ -473,6 +511,23 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
 	net_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, resultSize);
 	return res;
+}
+static void InitSockets(void) {
+#ifdef HW_RVL
+	net_init();
+#else
+	// https://github.com/devkitPro/wii-examples/blob/master/devices/network/sockettest/source/sockettest.c
+	char localip[16] = {0};
+	char gateway[16] = {0};
+	char netmask[16] = {0};
+	
+	int ret = if_config(localip, netmask, gateway, TRUE, 20);
+	if (ret >= 0) {
+		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
+	} else {
+		Platform_Log1("Network setup failed: %i", &ret);
+	}
+#endif
 }
 
 
@@ -539,7 +594,7 @@ void Platform_Init(void) {
 	fat_available = fatInitDefault();
 	if (fat_available) mkdir("sd:/ClassiCube", 0); // create root 'ClassiCube' directory
 	
-	net_init();
+	InitSockets();
 }
 void Platform_Free(void) { }
 

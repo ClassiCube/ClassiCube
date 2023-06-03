@@ -4,36 +4,43 @@ endif
 
 include $(DEVKITARM)/3ds_rules
 
-
+#---------------------------------------------------------------------------------
+# configurable options
+#---------------------------------------------------------------------------------
 APP_ICON	:= $(CURDIR)"/../misc/CC_48x48.png"
 APP_TITLE 	:= ClassiCube
 APP_DESCRIPTION := Simple block building sandbox
 APP_AUTHOR 	:= UnknownShadow200
+TARGET := ClassiCube-3ds
 
+#---------------------------------------------------------------------------------
+# compilation options
+#---------------------------------------------------------------------------------
 CFILES		:=	$(wildcard *.c)
 SFILES		:=	$(wildcard *.s)
 PICAFILES	:=	$(wildcard *.v.pica)
+
+LIBS	:= -lcitro3d -lctru -lm
+
+
 export LD	:=	$(CC)
-
-OFILES_SOURCES := $(CFILES:.c=.o) $(SFILES:.s=.o)
-
-OFILES_SHADERS	:= $(PICAFILES:.v.pica=.shbin.o)
-
 DEPSDIR	:= $(CURDIR)/build
 
+OFILES_SOURCES := $(CFILES:.c=.o) $(SFILES:.s=.o)
+OFILES_SHADERS := $(PICAFILES:.v.pica=.shbin.o)
 OFILES 	:= $(OFILES_SHADERS) $(OFILES_SOURCES)
 
 INCLUDE	:=	$(foreach dir,$(CTRULIB),-I$(dir)/include)
 LIBPATHS	:=	$(foreach dir,$(CTRULIB),-L$(dir)/lib)
 
-_3DSXDEPS	:=	$(if $(NO_SMDH),,$(CURDIR)/ClassiCube.smdh)
+_3DSXDEPS	:=	$(if $(NO_SMDH),,$(CURDIR)/$(TARGET).smdh)
 
 ifeq ($(strip $(NO_SMDH)),)
-	export _3DSXFLAGS += --smdh=$(CURDIR)/ClassiCube.smdh
+	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
 endif
 
 #---------------------------------------------------------------------------------
-# options for code generation
+# code generation options
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
@@ -43,19 +50,17 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations -ffunction-sections \
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro3d -lctru -lm
-
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-default: $(DEPSDIR) ClassiCube.3dsx
+default: $(DEPSDIR) $(TARGET).3dsx
 
 clean:
-	@rm $(OFILES) ClassiCube.3dsx ClassiCube.smdh ClassiCube.elf
+	@rm $(OFILES) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf
 
-ClassiCube.elf	: $(OFILES)
+$(TARGET).elf	: $(OFILES)
 
-ClassiCube.3dsx : ClassiCube.elf $(_3DSXDEPS)
+$(TARGET).3dsx : $(TARGET).elf $(_3DSXDEPS)
 
 Graphics_3DS.o : $(OFILES_SHADERS)
 

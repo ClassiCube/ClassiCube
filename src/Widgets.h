@@ -261,7 +261,7 @@ CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
 /* Typically only called in response to the ChatEvents.ColCodeChanged event. */
 CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, char col);
 /* Gets the text for the i'th line. */
-static cc_string TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(i); }
+static CC_INLINE cc_string TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(i); }
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
