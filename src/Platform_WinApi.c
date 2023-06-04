@@ -224,18 +224,22 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	cc_winstring str;
+static cc_result DoFileRaw(cc_file* file, const cc_winstring* str, DWORD access, DWORD createMode) {
 	cc_result res;
-	Platform_EncodeString(&str, path);
 
-	*file = CreateFileW(str.uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileW(str->uni,  access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
 	/* Windows 9x does not support W API functions */
-	*file = CreateFileA(str.ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFileA(str->ansi, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+}
+
+static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
+	cc_winstring str;
+	Platform_EncodeString(&str, path);
+	return DoFileRaw(file, &str, access, createMode);
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
@@ -568,13 +572,26 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
-	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
-	return *len ? 0 : GetLastError();
+static cc_result Process_RawGetExePath(cc_winstring* path, int* len) {
+	cc_result res;
+
+	/* If GetModuleFileNameA fails.. that's a serious problem */
+	*len = GetModuleFileNameA(NULL, path->ansi, NATIVE_STR_LEN);
+	path->ansi[*len] = '\0';
+	if (!(*len)) return GetLastError();
+	
+	*len = GetModuleFileNameW(NULL, path->uni, NATIVE_STR_LEN);
+	path->uni[*len]  = '\0';
+	if (*len) return 0;
+
+	/* GetModuleFileNameW can fail on Win 9x */
+	res = GetLastError();
+	if (res == ERROR_CALL_NOT_IMPLEMENTED) res = 0;
+	return res;
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	WCHAR path[NATIVE_STR_LEN + 1];
+	cc_winstring path;
 	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
 	STARTUPINFOW si        = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
@@ -582,8 +599,7 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	cc_result res;
 	int len, i;
 
-	Process_RawGetExePath(path, &len);
-	path[len] = '\0';
+	if ((res = Process_RawGetExePath(&path, &len))) return res;
 	si.cb = sizeof(STARTUPINFOW);
 	
 	String_InitArray(argv, argvBuffer);
@@ -599,19 +615,15 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	}
 	Platform_EncodeString(&raw, &argv);
 
-	if (CreateProcessW(path, raw.uni, NULL, NULL, 
-			false, 0, NULL, NULL, &si, &pi)) goto success;
-	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+	if (path.uni[0]) {
+		if (!CreateProcessW(path.uni, raw.uni, NULL, NULL,
+				false, 0, NULL, NULL, &si, &pi)) return GetLastError();
+	} else {
+		/* Windows 9x does not support W API functions */
+		if (!CreateProcessA(path.ansi, raw.ansi, NULL, NULL,
+				false, 0, NULL, NULL, &si, &pi)) return GetLastError();
+	}
 
-	/* Windows 9x does not support W API functions */
-	len = GetModuleFileNameA(NULL, (LPSTR)path, NATIVE_STR_LEN);
-	((char*)path)[len] = '\0';
-
-	if (CreateProcessA((LPCSTR)path, raw.ansi, NULL, NULL,
-			false, 0, NULL, NULL, &si, &pi)) goto success;
-	return GetLastError();
-
-success:
 	/* Don't leak memory for process return code */
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
@@ -655,36 +667,34 @@ cc_bool Updater_Clean(void) {
 }
 
 cc_result Updater_Start(const char** action) {
-	WCHAR path[NATIVE_STR_LEN + 1];
+	cc_winstring path;
 	cc_result res;
-	int len = 0;
+	int len;
 
 	*action = "Getting executable path";
-	if ((res = Process_RawGetExePath(path, &len))) return res;
-	path[len] = '\0';
+	if ((res = Process_RawGetExePath(&path, &len))) return res;
 
-	*action = "Moving executable to CC_prev.exe";
-	if (!MoveFileExW(path, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+	*action = "Moving executable to CC_prev.exe"; 
+	if (!path.uni[0]) return ERR_NOT_SUPPORTED; /* MoveFileA returns ERROR_ACCESS_DENIED on Win 9x anyways */
+	if (!MoveFileExW(path.uni, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+
 	*action = "Replacing executable";
-	if (!MoveFileExW(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+	if (!MoveFileExW(UPDATE_SRC, path.uni, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 
 	*action = "Restarting game";
 	return Process_StartGame2(NULL, 0);
 }
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	WCHAR path[NATIVE_STR_LEN + 1];
+	cc_winstring path;
 	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
-	int len = 0;
+	cc_result res;
+	int len;
 
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-
-	file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-	if (file == INVALID_HANDLE_VALUE) return GetLastError();
+	if ((res = Process_RawGetExePath(&path, &len))) return res;
+	if ((res = DoFileRaw(&file, &path, GENERIC_READ, OPEN_EXISTING))) return res;
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
 		raw        = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
@@ -955,20 +965,23 @@ static cc_bool IsProblematicWorkingDirectory(void) {
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char** argv) {
-	WCHAR path[NATIVE_STR_LEN + 1];
+	cc_winstring path;
 	int i, len;
 	cc_result res;
 	if (!IsProblematicWorkingDirectory()) return 0;
 
-	res = Process_RawGetExePath(path, &len);
+	res = Process_RawGetExePath(&path, &len);
 	if (res) return res;
+	if (!path.uni[0]) return ERR_NOT_SUPPORTED; 
+	/* Not implemented on ANSI only systems due to laziness */
 
 	/* Get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/' || path[i] == '\\') break;
+	for (i = len - 1; i >= 0; i--, len--) 
+	{
+		if (path.uni[i] == '/' || path.uni[i] == '\\') break;
 	}
 
-	path[len] = '\0';
-	return SetCurrentDirectoryW(path) ? 0 : GetLastError();
+	path.uni[len] = '\0';
+	return SetCurrentDirectoryW(path.uni) ? 0 : GetLastError();
 }
 #endif
