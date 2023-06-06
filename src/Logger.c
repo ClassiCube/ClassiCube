@@ -35,8 +35,8 @@
 #include <AvailabilityMacros.h>
 #endif
 
-/* Only show up to 40 frames in backtrace */
-#define MAX_BACKTRACE_FRAMES 40
+/* Only show up to 50 frames in backtrace */
+#define MAX_BACKTRACE_FRAMES 50
 
 static void AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
