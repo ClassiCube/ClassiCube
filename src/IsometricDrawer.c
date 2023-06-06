@@ -10,7 +10,8 @@
 static float iso_scale;
 static struct VertexTextured* iso_vertices;
 static struct VertexTextured* iso_vertices_base;
-static GfxResourceID iso_vb;
+static int* iso_state;
+static int* iso_state_base;
 
 static cc_bool iso_cacheInited;
 static PackedCol iso_color = PACKEDCOL_WHITE;
@@ -23,7 +24,6 @@ static PackedCol iso_colorXSide, iso_colorZSide, iso_colorYBottom;
 
 static struct Matrix iso_transform;
 static Vec3 iso_pos;
-static int iso_lastTexIndex, iso_texIndex;
 
 static void IsometricDrawer_RotateX(float cosA, float sinA) {
 	float y   = cosA  * iso_pos.Y + sinA * iso_pos.Z;
@@ -50,35 +50,22 @@ static void IsometricDrawer_InitCache(void) {
 	Matrix_Mul(&iso_transform, &rotY, &rotX);
 }
 
-static void IsometricDrawer_Flush(void) {
-	int count;
-	if (iso_lastTexIndex != -1) {
-		Gfx_BindTexture(Atlas1D.TexIds[iso_lastTexIndex]);
-		count = (int)(iso_vertices - iso_vertices_base);
-		Gfx_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices_base, count);
-	}
-
-	iso_lastTexIndex = iso_texIndex;
-	iso_vertices     = iso_vertices_base;
-}
-
 static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 	TextureLoc loc = Block_Tex(block, face);
-	iso_texIndex   = Atlas1D_Index(loc);
-
-	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
+	*iso_state++   = Atlas1D_Index(loc);
 	return loc;
 }
 
 static void IsometricDrawer_SpriteZQuad(BlockID block, cc_bool firstPart) {
+	int texIndex;
 	TextureLoc loc = Block_Tex(block, FACE_ZMAX);
-	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
+	TextureRec rec = Atlas1D_TexRec(loc, 1, &texIndex);
 
 	struct VertexTextured v;
 	float minX, maxX, minY, maxY;
 	float x1, x2;
 
-	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
+	*iso_state++ = texIndex;
 	v.Col = iso_color;
 	Block_Tint(v.Col, block);
 
@@ -100,14 +87,15 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, cc_bool firstPart) {
 }
 
 static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
+	int texIndex;
 	TextureLoc loc = Block_Tex(block, FACE_XMAX);
-	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
+	TextureRec rec = Atlas1D_TexRec(loc, 1, &texIndex);
 	
 	struct VertexTextured v;
 	float minY, maxY, minZ, maxZ;
 	float z1, z2;
 
-	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
+	*iso_state++ = texIndex;
 	v.Col = iso_color;
 	Block_Tint(v.Col, block);
 
@@ -128,17 +116,17 @@ static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
 	v.Y = minY;                           v.V = rec.V2; *iso_vertices++ = v;
 }
 
-void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, GfxResourceID vb) {
+void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state) {
 	IsometricDrawer_InitCache();
-	iso_lastTexIndex = -1;
-	iso_vertices = vertices;
+	iso_vertices      = vertices;
 	iso_vertices_base = vertices;
-	iso_vb = vb;
+	iso_state         = state;
+	iso_state_base    = state;
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &iso_transform);
 }
 
-void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
+void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
 	cc_bool bright = Blocks.FullBright[block];
 	Vec3 min, max;
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -185,12 +173,38 @@ void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 	}
 }
 
-void IsometricDrawer_EndBatch(void) {
-	if (iso_vertices != iso_vertices_base) { 
-		iso_lastTexIndex = iso_texIndex; 
-		IsometricDrawer_Flush(); 
+static void IsometricDrawer_Render(GfxResourceID vb) {
+	int curIdx, batchBeg, batchLen;
+	int count, i;
+	
+	count = (int)(iso_vertices - iso_vertices_base);
+	Gfx_SetDynamicVbData(vb, iso_vertices_base, count);
+
+	curIdx   = iso_state_base[0];
+	batchLen = 0;
+	batchBeg = 0;
+
+	for (i = 0; i < count / 4; i++, batchLen += 4) 
+	{
+		if (iso_state_base[i] == curIdx) continue;
+
+		/* Flush previous batch */
+		Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
+		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
+
+		/* Reset for next batch */
+		curIdx   = iso_state_base[i];
+		batchBeg = i * 4;
+		batchLen = 0;
 	}
 
-	iso_lastTexIndex = -1;
+	Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
+	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
+}
+
+void IsometricDrawer_EndBatch(GfxResourceID vb) {
+	if (iso_state != iso_state_base) {
+		IsometricDrawer_Render(vb);
+	}
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 }

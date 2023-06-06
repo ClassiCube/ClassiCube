@@ -403,13 +403,15 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	Gfx_Draw2DTexture(&w->selTex, PACKEDCOL_WHITE);
 }
 
+#define HOTBAR_MAX_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	/* TODO: Should hotbar use its own VB? */
-	struct VertexTextured vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
+	struct VertexTextured vertices[HOTBAR_MAX_VERTICES];
+	int state[HOTBAR_MAX_VERTICES / 4];
 	float scale;
 	int i, x, y;
 
-	IsometricDrawer_BeginBatch(vertices, Models.Vb);
+	IsometricDrawer_BeginBatch(vertices, state);
 	scale = w->elemSize / 2.0f;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
@@ -419,9 +421,9 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 #ifdef CC_BUILD_TOUCH
 		if (i == HOTBAR_MAX_INDEX && Input_TouchMode) continue;
 #endif
-		IsometricDrawer_DrawBatch(Inventory_Get(i), scale, x, y);
+		IsometricDrawer_AddBatch(Inventory_Get(i), scale, x, y);
 	}
-	IsometricDrawer_EndBatch();
+	IsometricDrawer_EndBatch(Models.Vb);
 }
 
 static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int index, int dir) {
@@ -700,6 +702,7 @@ void TableWidget_RecreateBlocks(struct TableWidget* w) {
 static void TableWidget_Render(void* widget, double delta) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	struct VertexTextured vertices[TABLE_MAX_VERTICES];
+	int state[TABLE_MAX_VERTICES / 4];
 	int cellSizeX, cellSizeY, size;
 	float off;
 	int i, x, y;
@@ -732,14 +735,14 @@ static void TableWidget_Render(void* widget, double delta) {
 	}
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
-	IsometricDrawer_BeginBatch(vertices, w->vb);
+	IsometricDrawer_BeginBatch(vertices, state);
 	for (i = 0; i < w->blocksCount; i++) {
 		if (!TableWidget_GetCoords(w, i, &x, &y)) continue;
 
 		/* We want to always draw the selected block on top of others */
 		/* TODO: Need two size arguments, in case X/Y dpi differs */
 		if (i == w->selectedIndex) continue;
-		IsometricDrawer_DrawBatch(w->blocks[i],
+		IsometricDrawer_AddBatch(w->blocks[i],
 			w->normBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
 
@@ -747,10 +750,10 @@ static void TableWidget_Render(void* widget, double delta) {
 	if (i != -1) {
 		TableWidget_GetCoords(w, i, &x, &y);
 
-		IsometricDrawer_DrawBatch(w->blocks[i],
+		IsometricDrawer_AddBatch(w->blocks[i],
 			w->selBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
-	IsometricDrawer_EndBatch();
+	IsometricDrawer_EndBatch(w->vb);
 }
 
 static void TableWidget_Free(void* widget) {
