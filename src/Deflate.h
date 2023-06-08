@@ -100,7 +100,7 @@ struct DeflateState {
 	cc_uint16 Head[DEFLATE_HASH_SIZE];
 	cc_uint16 Prev[DEFLATE_BUFFER_SIZE];
 	/* NOTE: The largest possible value that can get */
-	/*  stored in Head/Prev is DEFLATE_BUFFER_SIZE - 1 */
+	/*  stored in Head/Prev is <= DEFLATE_BUFFER_SIZE */
 	cc_bool WroteHeader;
 };
 /* Compresses input data using DEFLATE, then writes compressed output to another stream. Write only stream. */

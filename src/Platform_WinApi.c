@@ -22,6 +22,7 @@
 /* === BEGIN shellapi.h === */
 #define SHELLAPI DECLSPEC_IMPORT
 SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR operation, LPCWSTR file, LPCWSTR parameters, LPCWSTR directory, INT showCmd);
+SHELLAPI HINSTANCE WINAPI ShellExecuteA(HWND hwnd, LPCSTR operation,  LPCSTR file,  LPCSTR  parameters, LPCSTR  directory, INT showCmd);
 /* === END shellapi.h === */
 /* === BEGIN wincrypt.h === */
 typedef struct _CRYPTOAPI_BLOB {
@@ -637,6 +638,9 @@ cc_result Process_StartOpen(const cc_string* args) {
 	Platform_EncodeString(&str, args);
 
 	res = (cc_uintptr)ShellExecuteW(NULL, NULL, str.uni, NULL, NULL, SW_SHOWNORMAL);
+	/* Windows 9x always returns "error 0" for ShellExecuteW */
+	if (res == 0) res = (cc_uintptr)ShellExecuteA(NULL, NULL, str.ansi, NULL, NULL, SW_SHOWNORMAL);
+
 	/* MSDN: "If the function succeeds, it returns a value greater than 32. If the function fails, */
 	/*  it returns an error value that indicates the cause of the failure" */
 	return res > 32 ? 0 : (cc_result)res;
