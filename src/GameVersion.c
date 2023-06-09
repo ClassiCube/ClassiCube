@@ -67,10 +67,10 @@ static const struct GameVersion version_0017 = {
 
 void GameVersion_Load(void) {
 	int version = Options_GetInt(OPT_GAME_VERSION, VERSION_0017, VERSION_0030, VERSION_0030);
-	const struct GameVersion* ver = NULL;
+	const struct GameVersion* ver = &version_cpe;
 
 	if (Game_UseCPE) {
-		ver = &version_cpe;
+		/* defaults to CPE already */
 	} else if (version == VERSION_0030) {
 		ver = &version_0030;
 	} else if (version == VERSION_0023) {

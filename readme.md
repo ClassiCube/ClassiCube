@@ -3,13 +3,13 @@ ClassiCube is a custom Minecraft Classic compatible client written in C that wor
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
 
-You can download the game [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
 ### We need your help
 
 ClassiCube strives to support providing an experience identical to the original Minecraft Classic by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
 
-If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (UnknownShadow200#2728 on Discord)
+If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (`unknownshadow200` on Discord)
 
 ## Information
 
@@ -64,27 +64,27 @@ If you get a ```The Windows SDK version 5.1 was not found``` compilation error, 
 
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
-2. Navigate to directory with game's source code
+2. Navigate to the directory with ClassiCube's source code
 3. Enter `cl.exe *.c /link user32.lib gdi32.lib winmm.lib dbghelp.lib shell32.lib comdlg32.lib /out:ClassiCube.exe`
 
 ##### Using MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
-3. Navigate to directory with game's source code
+2. Navigate to the directory with ClassiCube's source code
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using MinGW
 I am assuming you used the installer from https://osdn.net/projects/mingw/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-3. Navigate to directory with game's source code
+2. Navigate to the directory with ClassiCube's source code
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using TCC
 I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 1. Extract the .zip file
-2. In `ExtMath.C`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
+2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
 3. In TCC's `include/math.h`, remove the inline definition for `fabs` at around line 217
 4. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext`
 5. Add missing include files from `winapi-full-for-0.9.27.zip` as required
@@ -211,7 +211,7 @@ You'll have to write the necessary code. You should read portability.md in doc f
 
 Functions and variables in .h files are mostly documented.
 
-Further information (e.g. style) for the game's source code can be found in the doc and misc folders.
+Further information (e.g. style) for ClassiCube's source code can be found in the doc and misc folders.
 
 #### Known compilation errors
 

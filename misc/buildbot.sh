@@ -34,23 +34,29 @@ WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
 build_win32() {
   echo "Building win32.."
   cp $ROOT_DIR/misc/CCicon_32.res $ROOT_DIR/src/CCicon_32.res
-  rm cc-w32-d3d.exe cc-w32-ogl.exe
 
   $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lwinmm -limagehlp
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit" >> "$ERRS_FILE"; fi
   $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit (OpenGL)" >> "$ERRS_FILE"; fi
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d11.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit (Direct3D11)" >> "$ERRS_FILE"; fi
+
+  # mingw defaults to i686, but some really old CPUs only support i586
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -march=i586 -o cc-w9x-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 9x (OpenGL)" >> "$ERRS_FILE"; fi
 }
 
 build_win64() {
   echo "Building win64.."
   cp $ROOT_DIR/misc/CCicon_64.res $ROOT_DIR/src/CCicon_64.res
-  rm cc-w64-d3d.exe cc-w64-ogl.exe
   
   $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-d3d.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -lwinmm -limagehlp
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 64 bit" >> "$ERRS_FILE"; fi
   $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-ogl.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 64 bit (OpenGL)" >> "$ERRS_FILE"; fi
+  $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-d3d11.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp
+  if [ $? -ne 0 ]; then echo "Failed to compile Windows 64 bit (Direct3D11)" >> "$ERRS_FILE"; fi
 }
 
 # ----------------------------- compile linux
@@ -106,7 +112,7 @@ WEB_CC="/home/buildbot/emsdk/emscripten/1.38.31/emcc"
 build_web() {
   echo "Building web.."
   rm cc.js
-  $WEB_CC *.c -O1 -o cc.js --js-library interop_web.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web -w
+  $WEB_CC *.c -O1 -o cc.js --js-library interop_web.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web
   if [ $? -ne 0 ]; then echo "Failed to compile Webclient" >> "$ERRS_FILE"; fi
   # fix mouse wheel scrolling page not being properly prevented
   # "[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."
@@ -114,8 +120,6 @@ build_web() {
 }
 
 # ----------------------------- compile raspberry pi
-#   I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
-#   Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
 #   I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
 #   Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
 RPI32_CC=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc-4.8.3
@@ -198,17 +202,23 @@ build_android() {
   # jarsigner -verbose
   # create aligned .apk file
   $TOOLS_ROOT/zipalign -f 4 obj/cc-signed.apk $ROOT_DIR/src/cc.apk
+  # restore to normal directory now that finished
+  cd $ROOT_DIR/src/
 }
 
 # ----------------------------- compile ios
 IOS_CC="ios-cc"
 IOS_LIBS="-framework OpenGLES -framework CoreGraphics -framework IOKit -framework CoreFoundation -framework Foundation -framework UIKit -framework QuartzCore -framework CFNetwork -lobjc"
-IOS_FLAGS="-s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
+IOS_FLAGS="-s -O1 -fvisibility=hidden -rdynamic -funwind-tables -arch armv7 -arch arm64"
   
 build_ios() {
   echo "Building ios.."
+#  IPHONEOS_DEPLOYMENT_TARGET=7.0 $IOS_CC *.c interop_ios.m $IOS_FLAGS $IOS_LIBS -o cc-ios
   $IOS_CC *.c interop_ios.m $IOS_FLAGS $IOS_LIBS -o cc-ios
-  mkdir -p Payload/ClassiCube.app
+  if [ $? -ne 0 ]; then echo "Failed to compile iOS" >> "$ERRS_FILE"; fi
+
+  mkdir Payload
+  mkdir Payload/ClassiCube.app
   cp cc-ios Payload/ClassiCube.app/ClassiCube
   # https://askubuntu.com/questions/681949/plutil-equivalent-in-ubuntu
   plistutil -i $ROOT_DIR/ios/Info.plist -o Payload/ClassiCube.app/Info.plist -f bin
