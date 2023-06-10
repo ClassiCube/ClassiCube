@@ -416,7 +416,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	*s = -1;
 	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
 
-	*s = net_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	*s = net_socket(AF_INET, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
 
 	if (nonblocking) {
@@ -506,10 +506,10 @@ static void InitSockets(void) {
 #else
 	// https://github.com/devkitPro/wii-examples/blob/master/devices/network/sockettest/source/sockettest.c
 	char localip[16] = {0};
-	char gateway[16] = {0};
 	char netmask[16] = {0};
+	char gateway[16] = {0};
 	
-	int ret = if_config(localip, gateway, netmask, TRUE, 20);
+	int ret = if_config(localip, netmask, gateway, TRUE, 20);
 	if (ret >= 0) {
 		Platform_Log3("Network ip: %c, gw: %c, mask %c", localip, gateway, netmask);
 	} else {
