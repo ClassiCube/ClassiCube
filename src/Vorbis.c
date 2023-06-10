@@ -204,9 +204,7 @@ static float float32_unpack(struct VorbisState* ctx) {
 	cc_uint32 exponent = (x & 0x7fe00000) >> 21;
 	if (x & 0x80000000UL) mantissa = -mantissa;
 
-	#define LOG_2 0.693147180559945
-	/* TODO: Can we make this more accurate? maybe ldexp ?? */
-	return (float)(mantissa * Math_Exp(LOG_2 * ((int)exponent - 788))); /* pow(2, x) */
+	return (float)Math_ldexp(mantissa, (int)exponent - 788);
 }
 
 

@@ -71,7 +71,7 @@ If you get a ```The Windows SDK version 5.1 was not found``` compilation error, 
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
-2. Navigate to the directory with ClassiCube's source code
+3. Navigate to the directory with ClassiCube's source code
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using MinGW

@@ -21,6 +21,7 @@ double Math_Cos(double x) { return cos(x); }
 float Math_SinF(float x) { return (float)Math_Sin(x); }
 float Math_CosF(float x) { return (float)Math_Cos(x); }
 double Math_Atan2(double x, double y) { return atan2(y, x); }
+double Math_ldexp(double m, int exp)  { return ldexp(m, exp); }
 
 int Math_Floor(float value) {
 	int valueI = (int)value;

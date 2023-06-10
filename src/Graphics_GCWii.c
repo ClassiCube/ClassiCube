@@ -340,13 +340,14 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
+	gfx_vertices = vb;
 	DCFlushRange(vb, vb_size);
 }
 
 // Current size of vertices
 static int gfx_stride; // TODO move down to Drawing area ??
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	gfx_vertices = vb;
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
 	DCFlushRange(vertices, vCount * gfx_stride);
 }
