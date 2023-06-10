@@ -58,7 +58,12 @@ void Gfx_Create(void) {
 	//Thread_Sleep(20 * 1000);
 }
 
-void Gfx_Free(void) { Gfx_FreeState(); }
+void Gfx_Free(void) { 
+	Gfx_FreeState();
+	GX_AbortFrame();
+	//GX_Flush(); // TODO needed?
+	VIDEO_Flush();
+}
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
 void Gfx_RestoreState(void) { 
@@ -460,13 +465,29 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 void Gfx_LoadIdentityMatrix(MatrixType type) {
 	Gfx_LoadMatrix(type, &Matrix_Identity);
 }
-
-void Gfx_EnableTextureOffset(float x, float y) {
-// TODO
+static float texOffsetX, texOffsetY;
+static void UpdateTexCoordGen(void) {
+	if (texOffsetX || texOffsetY) {
+		Mtx mat   = { 0 };
+		// https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/glTranslate.xml
+		mat[0][0] = 1; mat[0][3] = texOffsetX;
+		mat[1][1] = 1; mat[1][3] = texOffsetY;
+		
+		GX_LoadTexMtxImm(mat, GX_TEXMTX0, GX_MTX2x4);
+		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_TEXMTX0);
+	} else {
+		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+	}
 }
 
-void Gfx_DisableTextureOffset(void) { 
-//TODO
+void Gfx_EnableTextureOffset(float x, float y) {
+	texOffsetX = x; texOffsetY = y;
+	UpdateTexCoordGen();
+}
+
+void Gfx_DisableTextureOffset(void) {
+	texOffsetX = 0; texOffsetY = 0;
+	UpdateTexCoordGen();
 }
 
 
@@ -493,7 +514,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST,   GX_F32,   0);
 
 		GX_SetNumTexGens(1);
-		GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+		// TODO avoid calling here. only call in Gfx_Init and Enable/Disable Texture Offset ???
+		UpdateTexCoordGen();
 		GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
 		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
 	} else {

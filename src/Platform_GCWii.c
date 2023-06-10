@@ -59,18 +59,20 @@ void Mem_Free(void* mem) {
 *#########################################################################################################################*/
 // dolphin recognises this function name (if loaded as .elf), and will patch it
 //  to also log the message to dolphin's console at OSREPORT-HLE log level
-void CC_NOINLINE __write_console(int fd, const char* msg, int len) {
-	write(STDOUT_FILENO, msg, len); // this can be intercepted by libogc debug console
+void CC_NOINLINE __write_console(int fd, const char* msg, const u32* size) {
+	write(STDOUT_FILENO, msg, *size); // this can be intercepted by libogc debug console
 }
-
 void Platform_Log(const char* msg, int len) {
 	char buffer[256];
 	cc_string str = String_Init(buffer, 0, 254); // 2 characters (\n and \0)
+	u32 size;
 	
 	String_AppendAll(&str, msg, len);
 	buffer[str.length + 0] = '\n';
 	buffer[str.length + 1] = '\0'; // needed to make Dolphin logger happy
-	__write_console(0, buffer, str.length + 1); // +1 for '\n'
+	
+	size = str.length + 1; // +1 for '\n'
+	__write_console(0, buffer, &size); 
 	// TODO: Just use printf("%s", somehow ???
 }
 
