@@ -6,15 +6,14 @@
 #include "Block.h"
 #include "TexturePack.h"
 #include "Block.h"
+#include "Game.h"
 
-static float iso_scale;
 static struct VertexTextured* iso_vertices;
 static struct VertexTextured* iso_vertices_base;
 static int* iso_state;
 static int* iso_state_base;
 
 static cc_bool iso_cacheInited;
-static PackedCol iso_color = PACKEDCOL_WHITE;
 static PackedCol iso_colorXSide, iso_colorZSide, iso_colorYBottom;
 
 #define iso_cosX  (0.86602540378443864f) /* cos(30  * MATH_DEG2RAD) */
@@ -23,26 +22,14 @@ static PackedCol iso_colorXSide, iso_colorZSide, iso_colorYBottom;
 #define iso_sinY (-0.70710678118654752f) /* sin(-45 * MATH_DEG2RAD) */
 
 static struct Matrix iso_transform;
-static Vec3 iso_pos;
-
-static void IsometricDrawer_RotateX(float cosA, float sinA) {
-	float y   = cosA  * iso_pos.Y + sinA * iso_pos.Z;
-	iso_pos.Z = -sinA * iso_pos.Y + cosA * iso_pos.Z;
-	iso_pos.Y = y;
-}
-
-static void IsometricDrawer_RotateY(float cosA, float sinA) {
-	float x   = cosA * iso_pos.X - sinA * iso_pos.Z;
-	iso_pos.Z = sinA * iso_pos.X + cosA * iso_pos.Z;
-	iso_pos.X = x;
-}
+static float iso_posX, iso_posY;
 
 static void IsometricDrawer_InitCache(void) {
 	struct Matrix rotY, rotX;
 	if (iso_cacheInited) return;
 
 	iso_cacheInited = true;
-	PackedCol_GetShaded(iso_color, 
+	PackedCol_GetShaded(PACKEDCOL_WHITE,
 		&iso_colorXSide, &iso_colorZSide, &iso_colorYBottom);
 
 	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);
@@ -56,64 +43,77 @@ static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 	return loc;
 }
 
-static void IsometricDrawer_SpriteZQuad(BlockID block, cc_bool firstPart) {
+static void IsometricDrawer_Flat(BlockID block, float size) {
 	int texIndex;
 	TextureLoc loc = Block_Tex(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &texIndex);
 
 	struct VertexTextured v;
 	float minX, maxX, minY, maxY;
-	float x1, x2;
 
 	*iso_state++ = texIndex;
-	v.Col = iso_color;
+	v.Col = PACKEDCOL_WHITE;
 	Block_Tint(v.Col, block);
 
-	x1 = firstPart ? 0.5f : -0.1f;
-	x2 = firstPart ? 1.1f :  0.5f;
-	rec.U1 = (firstPart ? 0.0f : 0.5f);
-	rec.U2 = (firstPart ? 0.5f : 1.0f) * UV2_Scale;
+	/* Rescale by 0.70 in Classic mode to match vanilla size */
+	/* Rescale by 0.88 in Enhanced mode to be slightly nicer */
+	/*  Default selected size:  54px -> 48px */
+	/*  Default inventory size: 36px -> 32px */
+	/*  Default hotbar size:    28px -> 24px */
+	float scale = Game_ClassicMode ? 0.70f : 0.88f;
+	size = Math_Ceil(size * scale);
+	minX = iso_posX - size; maxX = iso_posX + size;
+	minY = iso_posY - size; maxY = iso_posY + size;
 
-	minX = iso_scale * (1.0f - x1   * 2.0f) + iso_pos.X;
-	maxX = iso_scale * (1.0f - x2   * 2.0f) + iso_pos.X;
-	minY = iso_scale * (1.0f - 0.0f * 2.0f) + iso_pos.Y;
-	maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
-
-	v.Z = iso_pos.Z;
-	v.X = minX; v.Y = minY; v.U = rec.U2; v.V = rec.V2; *iso_vertices++ = v;
-	            v.Y = maxY;               v.V = rec.V1; *iso_vertices++ = v;
-	v.X = maxX;             v.U = rec.U1;               *iso_vertices++ = v;
-	            v.Y = minY;               v.V = rec.V2; *iso_vertices++ = v;
+	v.Z = 0.0f;
+	v.X = minX; v.Y = minY; v.U = rec.U1; v.V = rec.V1; *iso_vertices++ = v;
+	            v.Y = maxY;               v.V = rec.V2; *iso_vertices++ = v;
+	v.X = maxX;             v.U = rec.U2;               *iso_vertices++ = v;
+	            v.Y = minY;               v.V = rec.V1; *iso_vertices++ = v;
 }
 
-static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
-	int texIndex;
-	TextureLoc loc = Block_Tex(block, FACE_XMAX);
-	TextureRec rec = Atlas1D_TexRec(loc, 1, &texIndex);
-	
-	struct VertexTextured v;
-	float minY, maxY, minZ, maxZ;
-	float z1, z2;
+static void IsometricDrawer_Angled(BlockID block, float size) {
+	cc_bool bright;
+	Vec3 min, max;
+	struct VertexTextured* beg = iso_vertices;
+	float x, y, scale;
 
-	*iso_state++ = texIndex;
-	v.Col = iso_color;
-	Block_Tint(v.Col, block);
+	/* isometric coords size: cosY * -scale - sinY * scale */
+	/* we need to divide by (2 * cosY), as the calling function expects size to be in pixels. */
+	scale = size / (2.0f * iso_cosY);
 
-	z1 = firstPart ? 0.5f : -0.1f;
-	z2 = firstPart ? 1.1f :  0.5f;
-	rec.U1 = (firstPart ? 0.0f : 0.5f);
-	rec.U2 = (firstPart ? 0.5f : 1.0f) * UV2_Scale;
+	Drawer.MinBB = Blocks.MinBB[block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
+	Drawer.MaxBB = Blocks.MaxBB[block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
+	min = Blocks.MinBB[block]; max = Blocks.MaxBB[block];
 
-	minY = iso_scale * (1.0f - 0.0f * 2.0f) + iso_pos.Y;
-	maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
-	minZ = iso_scale * (1.0f - z1   * 2.0f) + iso_pos.Z;
-	maxZ = iso_scale * (1.0f - z2   * 2.0f) + iso_pos.Z;
+	Drawer.X1 = scale * (1.0f - min.X * 2.0f);
+	Drawer.X2 = scale * (1.0f - max.X * 2.0f);
+	Drawer.Y1 = scale * (1.0f - min.Y * 2.0f);
+	Drawer.Y2 = scale * (1.0f - max.Y * 2.0f);
+	Drawer.Z1 = scale * (1.0f - min.Z * 2.0f);
+	Drawer.Z2 = scale * (1.0f - max.Z * 2.0f);
 
-	v.X = iso_pos.X;
-	v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; *iso_vertices++ = v;
-	v.Y = maxY;                           v.V = rec.V1; *iso_vertices++ = v;
-	            v.Z = maxZ; v.U = rec.U1;               *iso_vertices++ = v;
-	v.Y = minY;                           v.V = rec.V2; *iso_vertices++ = v;
+	bright = Blocks.FullBright[block];
+	Drawer.Tinted  = Blocks.Tinted[block];
+	Drawer.TintCol = Blocks.FogCol[block];
+
+	Drawer_XMax(1, bright ? PACKEDCOL_WHITE : iso_colorXSide,
+		IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);
+	Drawer_ZMin(1, bright ? PACKEDCOL_WHITE : iso_colorZSide,
+		IsometricDrawer_GetTexLoc(block, FACE_ZMIN), &iso_vertices);
+	Drawer_YMax(1, PACKEDCOL_WHITE,
+		IsometricDrawer_GetTexLoc(block, FACE_YMAX), &iso_vertices);
+
+	for (struct VertexTextured* v = beg; v < iso_vertices; v++)
+	{
+		/* Cut down Vec3_Transform (row4 is always 0, and don't need Z) */
+		struct Matrix* mat = &iso_transform;
+		x = v->X * mat->row1.X + v->Y * mat->row2.X + v->Z * mat->row3.X;
+		y = v->X * mat->row1.Y + v->Y * mat->row2.Y + v->Z * mat->row3.Y;
+
+		v->X = x + iso_posX;
+		v->Y = y + iso_posY;
+	}
 }
 
 void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state) {
@@ -122,54 +122,21 @@ void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state) {
 	iso_vertices_base = vertices;
 	iso_state         = state;
 	iso_state_base    = state;
-
-	Gfx_LoadMatrix(MATRIX_VIEW, &iso_transform);
 }
 
 void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
-	cc_bool bright = Blocks.FullBright[block];
-	Vec3 min, max;
+	struct VertexTextured* beg = iso_vertices;
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 
-	/* isometric coords size: cosY * -scale - sinY * scale */
-	/* we need to divide by (2 * cosY), as the calling function expects size to be in pixels. */
-	iso_scale = size / (2.0f * iso_cosY);
-
-	/* screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x)) */
-	iso_pos.X = x; iso_pos.Y = y; iso_pos.Z = 0.0f;
-	IsometricDrawer_RotateX(iso_cosX, -iso_sinX);
-	IsometricDrawer_RotateY(iso_cosY, -iso_sinY);
-
-	/* See comment in GfxCommon_Draw2DTexture() */
-	iso_pos.X -= 0.5f; iso_pos.Y -= 0.5f;
+	/* See comment in GfxCommon_Draw2DTexture() for why 0.5 is subtracted */
+	/* TODO only for Direct3D 9?? pass in registers? */
+	iso_posX = x - 0.5f; 
+	iso_posY = y - 0.5f;
 
 	if (Blocks.Draw[block] == DRAW_SPRITE) {
-		IsometricDrawer_SpriteXQuad(block, true);
-		IsometricDrawer_SpriteZQuad(block, true);
-
-		IsometricDrawer_SpriteZQuad(block, false);
-		IsometricDrawer_SpriteXQuad(block, false);
+		IsometricDrawer_Flat(block, size);
 	} else {
-		Drawer.MinBB = Blocks.MinBB[block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
-		Drawer.MaxBB = Blocks.MaxBB[block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
-		min = Blocks.MinBB[block]; max = Blocks.MaxBB[block];
-
-		Drawer.X1 = iso_scale * (1.0f - min.X * 2.0f) + iso_pos.X; 
-		Drawer.X2 = iso_scale * (1.0f - max.X * 2.0f) + iso_pos.X;
-		Drawer.Y1 = iso_scale * (1.0f - min.Y * 2.0f) + iso_pos.Y; 
-		Drawer.Y2 = iso_scale * (1.0f - max.Y * 2.0f) + iso_pos.Y;
-		Drawer.Z1 = iso_scale * (1.0f - min.Z * 2.0f) + iso_pos.Z; 
-		Drawer.Z2 = iso_scale * (1.0f - max.Z * 2.0f) + iso_pos.Z;
-
-		Drawer.Tinted  = Blocks.Tinted[block];
-		Drawer.TintCol = Blocks.FogCol[block];
-
-		Drawer_XMax(1, bright ? iso_color : iso_colorXSide,
-			IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);
-		Drawer_ZMin(1, bright ? iso_color : iso_colorZSide,
-			IsometricDrawer_GetTexLoc(block, FACE_ZMIN), &iso_vertices);
-		Drawer_YMax(1, iso_color,
-			IsometricDrawer_GetTexLoc(block, FACE_YMAX), &iso_vertices);
+		IsometricDrawer_Angled(block, size);
 	}
 }
 

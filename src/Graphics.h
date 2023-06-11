@@ -68,7 +68,7 @@ extern const cc_string Gfx_LowPerfMessage;
 /* Texture should allow updating via Gfx_UpdateTexture */
 #define TEXTURE_FLAG_DYNAMIC 0x02
 
-#define LOWPERF_EXIT_MESSAGE  "&eExited reduced performance mode"
+#define LOWPERF_EXIT_MESSAGE "&eExited reduced performance mode"
 
 void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
 void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);

@@ -189,7 +189,7 @@ static void SysFonts_Update(void) {
 
 static void SysFonts_Load(void) {
 	/* Need to keep track of whether font cache has been checked at least once */
-	/* (Otherwise if unable to find any cached fonts and then unable to load any fonts, 
+	/* (Otherwise if unable to find any cached fonts and then unable to load any fonts, */
 	/*  font_list.count will always be 0 and the 'Initialising font cache' dialog will 
 	    confusingly get shown over and over until all font_candidates entries are checked) */
 	static cc_bool checkedCache;

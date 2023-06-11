@@ -7,7 +7,7 @@
 struct VertexTextured;
 
 /* Maximum number of vertices used to draw a block in isometric way. */
-#define ISOMETRICDRAWER_MAXVERTICES 16
+#define ISOMETRICDRAWER_MAXVERTICES 12
 
 /* Sets up state to begin drawing blocks isometrically. */
 void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state);
