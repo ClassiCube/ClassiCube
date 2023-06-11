@@ -1518,9 +1518,13 @@ static void InventoryScreen_Init(void* screen) {
 	Event_Register_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
-static void InventoryScreen_Render(void* screen, double delta) {
+static void InventoryScreen_Update(void* screen, double delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	if (s->deferredSelect) InventoryScreen_MoveToSelected(s);
+}
+
+static void InventoryScreen_Render(void* screen, double delta) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Elem_Render(&s->table, delta);
 	Elem_Render(&s->title, delta);
 }
@@ -1604,7 +1608,7 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 }
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {
-	InventoryScreen_Init,        Screen_NullUpdate,         InventoryScreen_Free, 
+	InventoryScreen_Init,        InventoryScreen_Update,    InventoryScreen_Free,
 	InventoryScreen_Render,      InventoryScreen_BuildMesh,
 	InventoryScreen_KeyDown,     InventoryScreen_KeyUp,     Screen_TKeyPress,            Screen_TText,
 	InventoryScreen_PointerDown, InventoryScreen_PointerUp, InventoryScreen_PointerMove, InventoryScreen_MouseScroll,

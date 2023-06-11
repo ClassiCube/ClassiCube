@@ -647,6 +647,84 @@ static struct ChatCommand TeleportCommand = {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------BlockEditCommand----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_bool BlockEditCommand_GetTexture(const cc_string* value, int* tex) {
+	int maxTexs = ATLAS1D_MAX_ATLASES;
+
+	if (!Convert_ParseInt(value, tex)) {
+		Chat_AddRaw("&eBlockEdit: &eTexture must be an integer");
+		return false;
+	}
+
+	if (*tex < 0 || *tex >= maxTexs) {
+		Chat_Add1("&eBlockEdit: &eTexture must be between 0 and %i", &maxTexs);
+		return false;
+	}
+	return true;
+}
+
+static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
+	cc_string parts[3];
+	cc_string* prop;
+	cc_string* value;
+	int argsCount, block, tex;
+
+	if (String_CaselessEqualsConst(args, "properties")) {
+		Chat_AddRaw("&eEditable block properties:");
+		Chat_AddRaw("&a  name &e- Sets the name of the block");
+		Chat_AddRaw("&a  all &e- Sets textures on all six sides of the block");
+		Chat_AddRaw("&a  sides &e- Sets textures on four sides of the block");
+		return;
+	}
+
+	argsCount = String_UNSAFE_Split(args, ' ', parts, 3);
+	if (argsCount < 3) {
+		Chat_AddRaw("&eBlockEdit: &eThree arguments required &e(See &a/client help blockedit&e)");
+		return;
+	}
+
+	block = Block_Parse(&parts[0]);
+	if (block == -1) {
+		Chat_Add1("&eBlockEdit: &c\"%s\" is not a valid block name or ID", &parts[0]);
+		return;
+	}
+
+	prop  = &parts[1];
+	value = &parts[2];
+	if (String_CaselessEqualsConst(prop, "name")) {
+		Block_SetName(block, value);
+	} else if (String_CaselessEqualsConst(prop, "all")) {
+		if (!BlockEditCommand_GetTexture(value, &tex)) return;
+
+		Block_SetSide(tex, block);
+		Block_Tex(block, FACE_YMAX) = tex;
+		Block_Tex(block, FACE_YMIN) = tex;
+	} else if (String_CaselessEqualsConst(prop, "sides")) {
+		if (!BlockEditCommand_GetTexture(value, &tex)) return;
+
+		Block_SetSide(tex, block);
+	} else {
+		Chat_Add1("&eBlockEdit: &eUnknown property %s &e(See &a/client help blockedit&e)", prop);
+		return;
+	}
+
+	Block_DefineCustom(block, false);
+}
+
+static struct ChatCommand BlockEditCommand = {
+	"BlockEdit", BlockEditCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client blockedit [block] [property] [value]",
+		"&eEdits the given property of the given block",
+		"&a/client blockedit properties",
+		"&eLists the editable block properties",
+	}
+};
+
+
+/*########################################################################################################################*
 *-------------------------------------------------------Generic chat------------------------------------------------------*
 *#########################################################################################################################*/
 static void LogInputUsage(const cc_string* text) {
@@ -681,6 +759,7 @@ static void OnInit(void) {
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
+	Commands_Register(&BlockEditCommand);
 
 #if defined CC_BUILD_MOBILE || defined CC_BUILD_WEB
 	/* Better to not log chat by default on mobile/web, */

@@ -15,26 +15,19 @@ static int* iso_state_base;
 
 static cc_bool iso_cacheInited;
 static PackedCol iso_colorXSide, iso_colorZSide, iso_colorYBottom;
+static float iso_posX, iso_posY;
 
 #define iso_cosX  (0.86602540378443864f) /* cos(30  * MATH_DEG2RAD) */
 #define iso_sinX  (0.50000000000000000f) /* sin(30  * MATH_DEG2RAD) */
 #define iso_cosY  (0.70710678118654752f) /* cos(-45 * MATH_DEG2RAD) */
 #define iso_sinY (-0.70710678118654752f) /* sin(-45 * MATH_DEG2RAD) */
 
-static struct Matrix iso_transform;
-static float iso_posX, iso_posY;
-
 static void IsometricDrawer_InitCache(void) {
-	struct Matrix rotY, rotX;
 	if (iso_cacheInited) return;
 
 	iso_cacheInited = true;
 	PackedCol_GetShaded(PACKEDCOL_WHITE,
 		&iso_colorXSide, &iso_colorZSide, &iso_colorYBottom);
-
-	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);
-	Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD);
-	Matrix_Mul(&iso_transform, &rotY, &rotX);
 }
 
 static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
@@ -76,6 +69,7 @@ static void IsometricDrawer_Angled(BlockID block, float size) {
 	cc_bool bright;
 	Vec3 min, max;
 	struct VertexTextured* beg = iso_vertices;
+	struct VertexTextured* v;
 	float x, y, scale;
 
 	/* isometric coords size: cosY * -scale - sinY * scale */
@@ -104,12 +98,18 @@ static void IsometricDrawer_Angled(BlockID block, float size) {
 	Drawer_YMax(1, PACKEDCOL_WHITE,
 		IsometricDrawer_GetTexLoc(block, FACE_YMAX), &iso_vertices);
 
-	for (struct VertexTextured* v = beg; v < iso_vertices; v++)
+	for (v = beg; v < iso_vertices; v++)
 	{
-		/* Cut down Vec3_Transform (row4 is always 0, and don't need Z) */
-		struct Matrix* mat = &iso_transform;
-		x = v->X * mat->row1.X + v->Y * mat->row2.X + v->Z * mat->row3.X;
-		y = v->X * mat->row1.Y + v->Y * mat->row2.Y + v->Z * mat->row3.Y;
+		/* Cut down form of: */
+		/*   Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD); */
+		/*   Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD); */
+		/*   Matrix_Mul(&iso_transform, &rotY, &rotX); */
+		/*   ...                                       */
+		/*   Vec3 vec = { v.X, v.Y, v.Z }; */
+		/*   Vec3_Transform(&vec, &vec, &iso_transform); */
+		/* With all unnecessary operations either simplified or removed */
+		x = v->X * iso_cosY                              + v->Z * -iso_sinY;
+		y = v->X * iso_sinX * iso_sinY + v->Y * iso_cosX + v->Z * iso_sinX * iso_cosY;
 
 		v->X = x + iso_posX;
 		v->Y = y + iso_posY;
@@ -173,5 +173,4 @@ void IsometricDrawer_EndBatch(GfxResourceID vb) {
 	if (iso_state != iso_state_base) {
 		IsometricDrawer_Render(vb);
 	}
-	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 }
