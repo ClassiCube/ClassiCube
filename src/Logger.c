@@ -994,8 +994,20 @@ void Logger_Hook(void) {
 	
 }
 #elif defined CC_BUILD_POSIX
+static const char* SignalDescribe(int type) {
+	switch (type) {
+	case SIGSEGV: return "SIGSEGV";
+	case SIGBUS:  return "SIGBUS";
+	case SIGILL:  return "SIGILL";
+	case SIGABRT: return "SIGABRT";
+	case SIGFPE:  return "SIGFPE";
+	}
+	return NULL;
+}
+
 static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	cc_string msg; char msgBuffer[128 + 1];
+	const char* desc;
 	int type, code;
 	cc_uintptr addr;
 
@@ -1009,9 +1021,14 @@ static void SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	type = info->si_signo;
 	code = info->si_code;
 	addr = (cc_uintptr)info->si_addr;
+	desc = SignalDescribe(type);
 
 	String_InitArray_NT(msg, msgBuffer);
-	String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
+	if (desc) {
+		String_Format3(&msg, "Unhandled signal %c (code %i) at %x", desc,  &code, &addr);
+	} else {
+		String_Format3(&msg, "Unhandled signal %i (code %i) at %x", &type, &code, &addr);
+	}
 	msg.buffer[msg.length] = '\0';
 
 	#if defined CC_BUILD_ANDROID

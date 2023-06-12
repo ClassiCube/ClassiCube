@@ -19,7 +19,7 @@ static cc_bool scroll_debugging;
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
 *#########################################################################################################################*/
 extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
-// TODO: Try NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
+// TODO: Try replacing with NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
 
 // NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c
 static void Window_CommonInit(void) {
@@ -128,8 +128,29 @@ void Clipboard_SetText(const cc_string* value) {
 	[pasteboard setString:str forType:NSStringPboardType];
 }
 
+
+static void LogUnhandled(NSString* str) {
+	if (!str) return;
+	const char* src = [str UTF8String];
+	if (!src) return;
+	
+	cc_string msg = String_FromReadonly(src);
+	Platform_Log(msg.buffer, msg.length);
+	Logger_Log(&msg);
+}
+
+// TODO: Should really be handled elsewhere, in Logger or ErrorHandler
+static void LogUnhandledNSErrors(NSException* ex) {
+	// last chance to log exception details before process dies
+	LogUnhandled(@"About to die from unhandled NSException..");
+	LogUnhandled([ex name]);
+	LogUnhandled([ex reason]);
+}
+
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
+	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
 	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
