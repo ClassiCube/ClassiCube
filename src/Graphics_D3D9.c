@@ -533,23 +533,23 @@ static void D3D9_RestoreRenderStates(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, int size) {
+static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	void* dst = NULL;
-	cc_result res = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
+	cc_result res = IDirect3DIndexBuffer9_Lock(buffer, 0, count * 2, &dst, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockIb");
 
-	Mem_Copy(dst, data, size);
+	fillFunc((cc_uint16*)dst, count, obj);
 	res = IDirect3DIndexBuffer9_Unlock(buffer);
 	if (res) Logger_Abort2(res, "D3D9_UnlockIb");
 }
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	int size = indicesCount * 2;
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	int size = count * 2;
 	IDirect3DIndexBuffer9* ibuffer;
 	cc_result res = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
 	if (res) Logger_Abort2(res, "D3D9_CreateIb");
 
-	D3D9_SetIbData(ibuffer, indices, size);
+	D3D9_SetIbData(ibuffer, count, fillFunc, obj);
 	return ibuffer;
 }
 

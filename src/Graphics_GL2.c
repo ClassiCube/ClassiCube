@@ -102,9 +102,12 @@ static GLuint GL_GenAndBind(GLenum target) {
 	return id;
 }
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	cc_uint16 indices[GFX_MAX_INDICES];
 	GLuint id      = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	cc_uint32 size = indicesCount * 2;
+	cc_uint32 size = count * sizeof(cc_uint16);
+
+	fillFunc(indices, count, obj);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
 }

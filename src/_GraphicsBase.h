@@ -32,10 +32,10 @@ CC_NOINLINE static void Gfx_FreeState(void);
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc */
-static void MakeIndices(cc_uint16* indices, int iCount) {
+static void MakeIndices(cc_uint16* indices, int count, void* obj) {
 	int element = 0, i;
 
-	for (i = 0; i < iCount; i += 6) {
+	for (i = 0; i < count; i += 6) {
 		indices[0] = (cc_uint16)(element + 0);
 		indices[1] = (cc_uint16)(element + 1);
 		indices[2] = (cc_uint16)(element + 2);
@@ -49,9 +49,7 @@ static void MakeIndices(cc_uint16* indices, int iCount) {
 }
 
 static void InitDefaultResources(void) {
-	cc_uint16 indices[GFX_MAX_INDICES];
-	MakeIndices(indices, GFX_MAX_INDICES);
-	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
+	Gfx_defaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
 
 	Gfx_RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	Gfx_RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);

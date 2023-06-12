@@ -276,25 +276,14 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Index Buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16* gfx_indices;
+static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { 
-	void* data = memalign(16, indicesCount * 2);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-
-	Mem_Copy(data, indices, indicesCount * 2);
-	return data;
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	fillFunc(gfx_indices, count * sizeof(cc_uint16), obj);
 }
 
-void Gfx_BindIb(GfxResourceID ib) { 
-	gfx_indices = ib;
-}
-
-void Gfx_DeleteIb(GfxResourceID* ib) { 
-	GfxResourceID data = *ib;
-	if (data) Mem_Free(data);
-	*ib = 0;
-}
+void Gfx_BindIb(GfxResourceID ib) { }
+void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
 /*########################################################################################################################*

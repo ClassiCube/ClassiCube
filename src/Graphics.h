@@ -134,8 +134,10 @@ CC_API void Gfx_SetDepthWrite(cc_bool enabled);
 /*  NOTE: Implicitly calls Gfx_SetColWriteMask */
 CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
 
+/* Callback function to initialise/fill out the contents of an index buffer */
+typedef void (*Gfx_FillIBFunc)(cc_uint16* indices, int count, void* obj);
 /* Creates a new index buffer and fills out its contents. */
-CC_API GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
+CC_API GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj);
 /* Sets the currently active index buffer. */
 CC_API void Gfx_BindIb(GfxResourceID ib);
 /* Deletes the given index buffer, then sets it to 0. */
