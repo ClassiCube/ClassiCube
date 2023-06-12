@@ -18,6 +18,9 @@ static cc_bool scroll_debugging;
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
 *#########################################################################################################################*/
+extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
+// TODO: Try NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
+
 // NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c
 static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();

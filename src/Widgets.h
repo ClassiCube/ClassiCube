@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include "Entity.h"
 #include "Inventory.h"
+#include "IsometricDrawer.h"
 /* Contains all 2D widget implementations.
    Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 */
@@ -99,6 +100,7 @@ struct TableWidget {
 	int paddingL, paddingR, paddingT, paddingB;
 	void (*UpdateTitle)(BlockID block);
 };
+#define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
 /* Sets the selected block in the table to the given block. */

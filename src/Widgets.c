@@ -4,8 +4,6 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Window.h"
-#include "Inventory.h"
-#include "IsometricDrawer.h"
 #include "Utils.h"
 #include "Model.h"
 #include "Screens.h"
@@ -636,10 +634,8 @@ void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
 *#########################################################################################################################*/
 static int Table_X(struct TableWidget* w)      { return w->x - w->paddingL; }
 static int Table_Y(struct TableWidget* w)      { return w->y - w->paddingT; }
-static int Table_Width(struct TableWidget* w)  { return w->width + w->paddingL + w->paddingR; }
+static int Table_Width(struct TableWidget* w)  { return w->width  + w->paddingL + w->paddingR; }
 static int Table_Height(struct TableWidget* w) { return w->height + w->paddingT + w->paddingB; }
-
-#define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
 static cc_bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int* cellY) {
 	int x, y;
@@ -756,15 +752,10 @@ static void TableWidget_Render(void* widget, double delta) {
 	IsometricDrawer_EndBatch(w->vb);
 }
 
-static void TableWidget_Free(void* widget) {
-	struct TableWidget* w = (struct TableWidget*)widget;
-	Gfx_DeleteDynamicVb(&w->vb);
-	w->lastCreatedIndex = -1000;
-}
+static void TableWidget_Free(void* widget) { }
 
 void TableWidget_Recreate(struct TableWidget* w) {
-	Elem_Free(w);
-	Gfx_RecreateDynamicVb(&w->vb, VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
+	w->lastCreatedIndex = -1000;
 	TableWidget_RecreateTitle(w);
 }
 

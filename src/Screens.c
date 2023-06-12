@@ -1461,6 +1461,7 @@ static void InventoryScreen_UpdateTitle(struct InventoryScreen* s, BlockID block
 	String_InitArray(desc, descBuffer);
 	InventoryScreen_GetTitleText(&desc, block);
 	TextWidget_Set(&s->title, &desc, &s->font);
+	s->dirty = true;
 }
 
 static void InventoryScreen_OnUpdateTitle(BlockID block) {
@@ -1475,6 +1476,9 @@ static void InventoryScreen_OnBlockChanged(void* screen) {
 
 static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	Gfx_DeleteDynamicVb(&s->vb);
+	s->table.vb = 0;
+
 	Font_Free(&s->font);
 	Elem_Free(&s->table);
 	Elem_Free(&s->title);
@@ -1482,11 +1486,15 @@ static void InventoryScreen_ContextLost(void* screen) {
 
 static void InventoryScreen_ContextRecreated(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	Gfx_RecreateDynamicVb(&s->vb, VERTEX_FORMAT_TEXTURED, TEXTWIDGET_MAX + TABLE_MAX_VERTICES);
+	s->table.vb = s->vb;
+
 	Gui_MakeBodyFont(&s->font);
 	TableWidget_Recreate(&s->table);
 }
 
-static void InventoryScreen_BuildMesh(void* screen) { }
+static void InventoryScreen_BuildMesh(void* screen) {
+}
 
 static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	struct TableWidget* table = &s->table;
