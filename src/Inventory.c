@@ -94,7 +94,7 @@ void Inventory_PickBlock(BlockID block) {
 static BlockID DefaultMapping(int slot) {
 	if (Game_ClassicMode) {
 		if (slot < Game_Version.InventorySize) return Game_Version.Inventory[slot];
-	}else if (slot < BLOCK_MAX_CPE) {
+	} else if (slot < Game_Version.MaxCoreBlock) {
 		return (BlockID)(slot + 1);
 	}
 	return BLOCK_AIR;

@@ -53,7 +53,7 @@ enum GAME_VERSION_ {
 };
 struct GameVersion { 
 	const char* Name; 
-	cc_uint8 Version, Protocol, MaxBlock;
+	cc_uint8 Version, Protocol, MaxCoreBlock;
 	cc_uint8 BlocksPerRow, InventorySize;
 	const cc_uint8* Inventory; 
 	const cc_uint8* Hotbar;

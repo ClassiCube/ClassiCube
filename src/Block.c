@@ -458,7 +458,7 @@ void Block_UndefineCustom(BlockID block) {
 }
 
 void Block_ResetProps(BlockID block) {
-	const struct SimpleBlockDef* def = block <= Game_Version.MaxBlock ? &core_blockDefs[block] : &invalid_blockDef;
+	const struct SimpleBlockDef* def = block <= Game_Version.MaxCoreBlock ? &core_blockDefs[block] : &invalid_blockDef;
 	const cc_string name = String_FromReadonly(def->name);
 
 	Blocks.BlocksLight[block] = def->blocksLight;
