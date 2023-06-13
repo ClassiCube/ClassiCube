@@ -950,17 +950,32 @@ static void DumpMisc(void* ctx) { }
 *--------------------------------------------------Unhandled error logging------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
+static const char* ExceptionDescribe(cc_uint32 code) {
+	switch (code) {
+	case EXCEPTION_ACCESS_VIOLATION:    return "ACCESS_VIOLATION";
+	case EXCEPTION_ILLEGAL_INSTRUCTION: return "ILLEGAL_INSTRUCTION";
+	case EXCEPTION_INT_DIVIDE_BY_ZERO:  return "DIVIDE_BY_ZERO";
+	}
+	return NULL;
+}
+
 static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_string msg; char msgBuffer[128 + 1];
+	const char* desc;
 	cc_uint32 code;
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
 	code = (cc_uint32)info->ExceptionRecord->ExceptionCode;
 	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
+	desc = ExceptionDescribe(code);
 
 	String_InitArray_NT(msg, msgBuffer);
-	String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
+	if (desc) {
+		String_Format2(&msg, "Unhandled %c error at %x", desc, &addr);
+	} else {
+		String_Format2(&msg, "Unhandled exception 0x%h at %x", &code, &addr);
+	}
 
 	numArgs = info->ExceptionRecord->NumberParameters;
 	if (numArgs) {

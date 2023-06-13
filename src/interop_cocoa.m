@@ -156,6 +156,9 @@ void Window_Init(void) {
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];
 	Window_CommonInit();
+
+	// NSApplication sometimes replaces the uncaught exception handler, so set it again
+	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
 }
 
 
@@ -540,10 +543,16 @@ void ShowDialogCore(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	NSAlert* alert;
 	
-	alert   = [NSAlert alloc];
-	alert   = [alert init];
 	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
 	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
+	
+	// backwards compatible @try @catch
+	NS_DURING {
+		alert = [NSAlert alloc];
+		alert = [alert init];
+	} NS_HANDLER {
+		LogUnhandledNSErrors(localException);
+	} NS_ENDHANDLER
 	
 	[alert setMessageText: titleCF];
 	[alert setInformativeText: msgCF];
