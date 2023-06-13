@@ -213,10 +213,12 @@ static void GL_DelBuffer(GfxResourceID id) {
 static GfxResourceID (*_genBuffer)(void)    = GL_GenBuffer;
 static void (*_delBuffer)(GfxResourceID id) = GL_DelBuffer;
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	cc_uint16 indices[GFX_MAX_INDICES];
 	GfxResourceID id = _genBuffer();
-	cc_uint32 size   = indicesCount * 2;
+	cc_uint32 size   = count * sizeof(cc_uint16);
 
+	fillFunc(indices, count, obj);
 	_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
@@ -231,7 +233,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	*ib = 0;
 }
 #else
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return 0; }
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) { return 0; }
 void Gfx_BindIb(GfxResourceID ib) { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 #endif
@@ -504,7 +506,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *-------------------------------------------------------Compatibility-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GL11
-static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
+static void GLBackend_Init(void) { MakeIndices(gl_indices, GFX_MAX_INDICES, NULL); }
 #else
 
 #if defined CC_BUILD_WIN

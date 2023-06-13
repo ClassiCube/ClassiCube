@@ -24,7 +24,6 @@ static unsigned int __attribute__((aligned(16))) list[262144];
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 static int formatFields[] = {
 	GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_3D,
 	GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D
@@ -77,7 +76,6 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
-	MakeIndices(gfx_indices, GFX_MAX_INDICES);
 	guInit();
 	InitDefaultResources();
 	
@@ -267,10 +265,15 @@ static int gfx_stride, gfx_format = -1, gfx_fields;
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return 0; }
+static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
+static int vb_size;
+
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	fillFunc(gfx_indices, count, obj);
+}
+
 void Gfx_BindIb(GfxResourceID ib)    { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
-static int vb_size;
 
 
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {

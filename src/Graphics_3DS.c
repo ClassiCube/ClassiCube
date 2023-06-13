@@ -381,10 +381,10 @@ static void FreeBuffer(GfxResourceID* buffer) {
 	*buffer = 0;
 }
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { 
-	void* ptr = AllocBuffer(indicesCount, 2);
-	Mem_Copy(ptr, indices, indicesCount * 2);
-	return ptr;
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	void* ib = AllocBuffer(count, sizeof(cc_uint16));
+	fillFunc(ib, count, obj);
+	return ib;
 }
 
 void Gfx_BindIb(GfxResourceID ib)    { gfx_indices = ib; }

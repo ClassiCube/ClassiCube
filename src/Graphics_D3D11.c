@@ -302,12 +302,14 @@ void Gfx_SetTexturing(cc_bool enabled) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	ID3D11Buffer* buffer = NULL;
+	cc_uint16 indices[GFX_MAX_INDICES];
+	fillFunc(indices, count, obj);
 	
 	D3D11_BUFFER_DESC desc = { 0 };
 	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(cc_uint16) * indicesCount;
+	desc.ByteWidth = count * sizeof(cc_uint16);
 	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
 	D3D11_SUBRESOURCE_DATA data;
