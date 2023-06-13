@@ -269,7 +269,7 @@ static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	fillFunc(gfx_indices, count * sizeof(cc_uint16), obj);
+	fillFunc(gfx_indices, count, obj);
 }
 
 void Gfx_BindIb(GfxResourceID ib)    { }

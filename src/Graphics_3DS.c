@@ -382,8 +382,8 @@ static void FreeBuffer(GfxResourceID* buffer) {
 }
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	void* ib = AllocBuffer(count, 2);
-	fillFunc(ib, count * sizeof(cc_uint16), obj);
+	void* ib = AllocBuffer(count, sizeof(cc_uint16));
+	fillFunc(ib, count, obj);
 	return ib;
 }
 
