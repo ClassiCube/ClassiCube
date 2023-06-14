@@ -40,36 +40,37 @@ static const cc_uint8 v4_hotbar[INVENTORY_BLOCKS_PER_HOTBAR] = {
 };
 
 static const struct GameVersion version_cpe  = { 
-	"0.30", VERSION_CPE, 
+	"0.30",     true, VERSION_CPE, 
 	PROTOCOL_0030, BLOCK_MAX_CPE, 
 	10, sizeof(v7_inventory), NULL,         v7_hotbar
 };
 static const struct GameVersion version_0030 = {
-	"0.30", VERSION_0030,
+	"0.30",    false, VERSION_0030,
 	PROTOCOL_0030, BLOCK_OBSIDIAN, 
 	 9, sizeof(v7_inventory), v7_inventory, v7_hotbar
 };
 static const struct GameVersion version_0023 = {
-	"0.0.23a", VERSION_0023,
+	"0.0.23a", false, VERSION_0023,
 	PROTOCOL_0020, BLOCK_GOLD, 
 	 8, sizeof(v6_inventory), v6_inventory, v6_hotbar
 };
 static const struct GameVersion version_0019 = {
-	"0.0.19a", VERSION_0019,
+	"0.0.19a", false, VERSION_0019,
 	PROTOCOL_0019, BLOCK_GLASS, 
 	 6, sizeof(v5_inventory), v5_inventory, v5_hotbar
 };
 static const struct GameVersion version_0017 = {
-	"0.0.17a", VERSION_0017,
+	"0.0.17a", false, VERSION_0017,
 	PROTOCOL_0017, BLOCK_LEAVES, 
 	 6, sizeof(v4_inventory), v4_inventory, v4_hotbar
 };
 
 void GameVersion_Load(void) {
-	int version = Options_GetInt(OPT_GAME_VERSION, VERSION_0017, VERSION_0030, VERSION_0030);
+	cc_bool hasCPE = !Game_ClassicMode && Options_GetBool(OPT_CPE, true);
+	int version    = Options_GetInt(OPT_GAME_VERSION, VERSION_0017, VERSION_0030, VERSION_0030);
 	const struct GameVersion* ver = &version_cpe;
 
-	if (Game_UseCPE) {
+	if (hasCPE) {
 		/* defaults to CPE already */
 	} else if (version == VERSION_0030) {
 		ver = &version_0030;

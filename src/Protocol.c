@@ -386,7 +386,7 @@ void Classic_SendLogin(void) {
 		/*  and will get stuck waiting for data if client connects using version 5 and only sends 130 bytes */
 		/* To workaround this, include a 'ping packet' after 'version 5 handshake packet' - version 5 server software */
 		/*  will do nothing with the ping packet, and the aforementioned server software will be happy with 131 bytes */
-		data[130] = Game_UseCPE ? 0x42 : (Game_Version.Protocol <= PROTOCOL_0019 ? OPCODE_PING : 0x00);
+		data[130] = Game_Version.HasCPE ? 0x42 : (Game_Version.Protocol <= PROTOCOL_0019 ? OPCODE_PING : 0x00);
 	}
 	Server.SendData(data, 131);
 }
@@ -1588,7 +1588,7 @@ static void CPE_Reset(void) {
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
 	cpe_pluginMessages = false; cpe_extTextures = false; cpe_fastMap = false;
 	cpe_extBlocks = false; Game_UseCPEBlocks = false; cpe_blockPerms = false;
-	if (!Game_UseCPE) return;
+	if (!Game_Version.HasCPE) return;
 
 	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);
 	Net_Set(OPCODE_EXT_ENTRY, CPE_ExtEntry, 69);
@@ -1760,7 +1760,7 @@ static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 }
 
 static void BlockDefs_Reset(void) {
-	if (!Game_UseCPE || !Game_AllowCustomBlocks) return;
+	if (!Game_Version.HasCPE || !Game_AllowCustomBlocks) return;
 	Net_Set(OPCODE_DEFINE_BLOCK,     BlockDefs_DefineBlock,    80);
 	Net_Set(OPCODE_UNDEFINE_BLOCK,   BlockDefs_UndefineBlock,  2);
 	Net_Set(OPCODE_DEFINE_BLOCK_EXT, BlockDefs_DefineBlockExt, 85);

@@ -13,6 +13,18 @@
 #include "Logger.h"
 #include "LWeb.h"
 #include "Http.h"
+
+/* Represents a set of assets/resources */
+/* E.g. music set, sounds set, textures set */
+struct AssetSet {
+	/* Checks whether all assets in this asset set exist on disc */
+	void (*CheckExistence)(void);
+	/* Begins asynchronously downloading the missing assets in this asset set */
+	void (*DownloadAssets)(void);
+	/* Checks if any assets have been downloaded, and processes them if so */
+	void (*CheckStatus)(void);
+};
+
 int Resources_Count, Resources_Size;
 
 union ResourceValue {
@@ -31,17 +43,19 @@ struct ResourceZipEntry {
 #define RESOURCE_TYPE_PNG   2
 #define RESOURCE_TYPE_CONST 3
 
+static CC_NOINLINE cc_bool Fetcher_Get(int reqID, struct HttpRequest* item);
+
 
 /*########################################################################################################################*
-*--------------------------------------------------------Music resources--------------------------------------------------*
+*---------------------------------------------------------Music assets----------------------------------------------------*
 *#########################################################################################################################*/
-static struct MusicResource {
+static struct MusicAsset {
 	const char* name;
 	const char* hash;
 	short size;
 	cc_bool downloaded;
 	int reqID;
-} musicResources[] = {
+} musicAssets[] = {
 	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
 	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
 	{ "calm3.ogg", "14ae57a6bce3d4254daa8be2b098c2d99743cc3f", 2181 },
@@ -51,25 +65,51 @@ static struct MusicResource {
 	{ "hal4.ogg",  "5e7d63e75c6e042f452bc5e151276911ef92fed8", 2499 }
 };
 
-static void MusicResources_CheckExistence(void) {
+static void MusicAssets_CheckExistence(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	String_InitArray(path, pathBuffer);
 
-	for (i = 0; i < Array_Elems(musicResources); i++) {
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
 		path.length = 0;
-		String_Format1(&path, "audio/%c", musicResources[i].name);
+		String_Format1(&path, "audio/%c", musicAssets[i].name);
 
-		musicResources[i].downloaded = File_Exists(&path);
-		if (musicResources[i].downloaded) continue;
+		musicAssets[i].downloaded = File_Exists(&path);
+		if (musicAssets[i].downloaded) continue;
 
-		Resources_Size += musicResources[i].size;
+		Resources_Size += musicAssets[i].size;
 		Resources_Count++;
 	}
 }
 
 
-static void MusicResource_Save(const char* name, struct HttpRequest* req) {
+/*########################################################################################################################*
+*-----------------------------------------------------Music asset fetching -----------------------------------------------*
+*#########################################################################################################################*/
+CC_NOINLINE static int MusicAsset_Download(const char* hash) {
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
+
+	String_InitArray(url, urlBuffer);
+	String_Format3(&url, "https://resources.download.minecraft.net/%r%r/%c", 
+					&hash[0], &hash[1], hash);
+	return Http_AsyncGetData(&url, 0);
+}
+
+static void MusicAssets_DownloadResources(void) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (musicAssets[i].downloaded) continue;
+		musicAssets[i].reqID = MusicAsset_Download(musicAssets[i].hash);
+	}
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Music asset processing ----------------------------------------------*
+*#########################################################################################################################*/
+static void MusicAsset_Save(const char* name, struct HttpRequest* req) {
 	cc_string path; char pathBuffer[STRING_SIZE];
 	cc_result res;
 
@@ -80,24 +120,39 @@ static void MusicResource_Save(const char* name, struct HttpRequest* req) {
 	if (res) Logger_SysWarn(res, "saving music file");
 }
 
-CC_NOINLINE static int MusicResource_Download(const char* hash) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
+static void MusicAsset_Check(struct MusicAsset* music) {
+	struct HttpRequest item;
+	if (!Fetcher_Get(music->reqID, &item)) return;
 
-	String_InitArray(url, urlBuffer);
-	String_Format3(&url, "https://resources.download.minecraft.net/%r%r/%c", 
-					&hash[0], &hash[1], hash);
-	return Http_AsyncGetData(&url, 0);
+	music->downloaded = true;
+	MusicAsset_Save(music->name, &item);
+	HttpRequest_Free(&item);
 }
+
+static void MusicAssets_CheckStatus(void) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (musicAssets[i].downloaded) continue;
+		MusicAsset_Check(&musicAssets[i]);
+	}
+}
+
+static const struct AssetSet musicAssetSet = {
+	MusicAssets_CheckExistence,
+	MusicAssets_DownloadResources,
+	MusicAssets_CheckStatus
+};
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Sound resources--------------------------------------------------*
+*---------------------------------------------------------Sound assets----------------------------------------------------*
 *#########################################################################################################################*/
-static struct SoundResource {
+static struct SoundAsset {
 	const char* name;
 	const char* hash;
 	int reqID;
-} soundResources[] = {
+} soundAssets[] = {
 	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
 	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
 	{ "dig_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
@@ -132,26 +187,44 @@ static struct SoundResource {
 };
 static cc_bool allSoundsExist;
 
-static void SoundResources_CheckExistence(void) {
+static void SoundAssets_CheckExistence(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	String_InitArray(path, pathBuffer);
 
-	for (i = 0; i < Array_Elems(soundResources); i++) {
+	for (i = 0; i < Array_Elems(soundAssets); i++) 
+	{
 		path.length = 0;
-		String_Format1(&path, "audio/%c.wav", soundResources[i].name);
+		String_Format1(&path, "audio/%c.wav", soundAssets[i].name);
 
 		if (File_Exists(&path)) continue;
 		allSoundsExist = false;
 
-		Resources_Count += Array_Elems(soundResources);
+		Resources_Count += Array_Elems(soundAssets);
 		Resources_Size  += 417;
 		return;
 	}
 	allSoundsExist = true;
 }
 
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset fetching -----------------------------------------------*
+*#########################################################################################################################*/
+#define SoundAsset_Download(hash) MusicAsset_Download(hash)
 
+static void SoundAssets_DownloadAssets(void) {
+	int i;
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		if (allSoundsExist) continue;
+		soundAssets[i].reqID = SoundAsset_Download(soundAssets[i].hash);
+	}
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Sound asset processing ----------------------------------------------*
+*#########################################################################################################################*/
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_HDR_SIZE 44
 
@@ -238,7 +311,28 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	Vorbis_Free(&ctx);
 }
 
-#define SoundResource_Download(hash) MusicResource_Download(hash)
+
+static void SoundAsset_Check(const struct SoundAsset* sound) {
+	struct HttpRequest item;
+	if (!Fetcher_Get(sound->reqID, &item)) return;
+
+	SoundPatcher_Save(sound->name, &item);
+	HttpRequest_Free(&item);
+}
+
+static void SoundAssets_CheckStatus(void) {
+	int i;
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		SoundAsset_Check(&soundAssets[i]);
+	}
+}
+
+static const struct AssetSet soundAssetSet = {
+	SoundAssets_CheckExistence,
+	SoundAssets_DownloadAssets,
+	SoundAssets_CheckStatus
+};
 
 
 /*########################################################################################################################*
@@ -764,15 +858,6 @@ static void DefaultZip_CheckExistence(void) {
 	}
 }
 
-void Resources_CheckExistence(void) {
-	Resources_Count = 0;
-	Resources_Size  = 0;
-
-	DefaultZip_CheckExistence();
-	MusicResources_CheckExistence();
-	SoundResources_CheckExistence();
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
@@ -781,17 +866,35 @@ cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int Fetcher_Downloaded;
 FetcherErrorCallback Fetcher_ErrorCallback;
 
+/* TODO: array of asset sets */
+static const struct AssetSet* const asset_sets[] = {
+	&musicAssetSet,
+	&soundAssetSet
+};
+
+void Resources_CheckExistence(void) {
+	int i;
+	Resources_Count = 0;
+	Resources_Size  = 0;
+
+	DefaultZip_CheckExistence();
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		asset_sets[i]->CheckExistence();
+	}
+}
+
 const char* Fetcher_RequestName(int reqID) {
 	int i;
 
 	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
 		if (reqID == defaultZipSources[i].reqID)  return defaultZipSources[i].name;
 	}
-	for (i = 0; i < Array_Elems(musicResources); i++) {
-		if (reqID == musicResources[i].reqID) return musicResources[i].name;
+	for (i = 0; i < Array_Elems(musicAssets); i++) {
+		if (reqID == musicAssets[i].reqID) return musicAssets[i].name;
 	}
-	for (i = 0; i < Array_Elems(soundResources); i++) {
-		if (reqID == soundResources[i].reqID) return soundResources[i].name;
+	for (i = 0; i < Array_Elems(soundAssets); i++) {
+		if (reqID == soundAssets[i].reqID) return soundAssets[i].name;
 	}
 	return NULL;
 }
@@ -812,13 +915,9 @@ void Fetcher_Run(void) {
 		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
 	}
 
-	for (i = 0; i < Array_Elems(musicResources); i++) {
-		if (musicResources[i].downloaded) continue;
-		musicResources[i].reqID = MusicResource_Download(musicResources[i].hash);
-	}
-	for (i = 0; i < Array_Elems(soundResources); i++) {
-		if (allSoundsExist) continue;
-		soundResources[i].reqID = SoundResource_Download(soundResources[i].hash);
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		asset_sets[i]->DownloadAssets();
 	}
 }
 
@@ -871,23 +970,6 @@ static void Fetcher_CheckFile(struct ZipfileSource* file) {
 	if (file->last) DefaultZip_Create();
 }
 
-static void Fetcher_CheckMusic(struct MusicResource* music) {
-	struct HttpRequest item;
-	if (!Fetcher_Get(music->reqID, &item)) return;
-
-	music->downloaded = true;
-	MusicResource_Save(music->name, &item);
-	HttpRequest_Free(&item);
-}
-
-static void Fetcher_CheckSound(const struct SoundResource* sound) {
-	struct HttpRequest item;
-	if (!Fetcher_Get(sound->reqID, &item)) return;
-
-	SoundPatcher_Save(sound->name, &item);
-	HttpRequest_Free(&item);
-}
-
 /* TODO: Implement this.. */
 /* TODO: How expensive is it to constantly do 'Get' over and over */
 void Fetcher_Update(void) {
@@ -898,13 +980,9 @@ void Fetcher_Update(void) {
 		Fetcher_CheckFile(&defaultZipSources[i]);
 	}
 
-	for (i = 0; i < Array_Elems(musicResources); i++) {
-		if (musicResources[i].downloaded) continue;
-		Fetcher_CheckMusic(&musicResources[i]);
-	}
-
-	for (i = 0; i < Array_Elems(soundResources); i++) {
-		Fetcher_CheckSound(&soundResources[i]);
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		asset_sets[i]->CheckStatus();
 	}
 
 	if (Fetcher_Downloaded != Resources_Count) return; 

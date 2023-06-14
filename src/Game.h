@@ -38,7 +38,6 @@ extern cc_bool Game_ClassicMode;
 extern cc_bool Game_ClassicHacks;
 #define Game_PureClassic (Game_ClassicMode && !Game_ClassicHacks)
 extern cc_bool Game_AllowCustomBlocks;
-extern cc_bool Game_UseCPE;
 extern cc_bool Game_AllowServerTextures;
 
 extern cc_bool Game_ViewBobbing;
@@ -51,8 +50,9 @@ extern cc_bool Game_DefaultZipMissing;
 enum GAME_VERSION_ {
 	VERSION_0017 = 27, VERSION_0019 = 28, VERSION_0023 = 29, VERSION_0030 = 30, VERSION_CPE = 31
 };
-struct GameVersion { 
-	const char* Name; 
+struct GameVersion {
+	const char* Name;
+	cc_bool HasCPE;
 	cc_uint8 Version, Protocol, MaxCoreBlock;
 	cc_uint8 BlocksPerRow, InventorySize;
 	const cc_uint8* Inventory; 
