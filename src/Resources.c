@@ -19,8 +19,12 @@
 struct AssetSet {
 	/* Checks whether all assets in this asset set exist on disc */
 	void (*CheckExistence)(void);
+	/* Counts the number of size of missing assets that need to be downloaded */
+	void (*CountMissing)(void);
 	/* Begins asynchronously downloading the missing assets in this asset set */
 	void (*DownloadAssets)(void);
+	/* Returns the name for the associated request, or NULL otherwise */
+	const char* (*GetRequestName)(int reqID);
 	/* Checks if any assets have been downloaded, and processes them if so */
 	void (*CheckStatus)(void);
 };
@@ -76,6 +80,13 @@ static void MusicAssets_CheckExistence(void) {
 		String_Format1(&path, "audio/%c", musicAssets[i].name);
 
 		musicAssets[i].downloaded = File_Exists(&path);
+	}
+}
+
+static void MusicAssets_CountMissing(void) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
 		if (musicAssets[i].downloaded) continue;
 
 		Resources_Size += musicAssets[i].size;
@@ -96,13 +107,22 @@ CC_NOINLINE static int MusicAsset_Download(const char* hash) {
 	return Http_AsyncGetData(&url, 0);
 }
 
-static void MusicAssets_DownloadResources(void) {
+static void MusicAssets_DownloadAssets(void) {
 	int i;
 	for (i = 0; i < Array_Elems(musicAssets); i++) 
 	{
 		if (musicAssets[i].downloaded) continue;
 		musicAssets[i].reqID = MusicAsset_Download(musicAssets[i].hash);
 	}
+}
+
+static const char* MusicAssets_GetRequestName(int reqID) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (reqID == musicAssets[i].reqID) return musicAssets[i].name;
+	}
+	return NULL;
 }
 
 
@@ -138,9 +158,11 @@ static void MusicAssets_CheckStatus(void) {
 	}
 }
 
-static const struct AssetSet musicAssetSet = {
+static const struct AssetSet mccMusicAssetSet = {
 	MusicAssets_CheckExistence,
-	MusicAssets_DownloadResources,
+	MusicAssets_CountMissing,
+	MusicAssets_DownloadAssets,
+	MusicAssets_GetRequestName,
 	MusicAssets_CheckStatus
 };
 
@@ -199,12 +221,16 @@ static void SoundAssets_CheckExistence(void) {
 
 		if (File_Exists(&path)) continue;
 		allSoundsExist = false;
-
-		Resources_Count += Array_Elems(soundAssets);
-		Resources_Size  += 417;
 		return;
 	}
 	allSoundsExist = true;
+}
+
+static void SoundAssets_CountMissing(void) {
+	if (allSoundsExist) return;
+
+	Resources_Count += Array_Elems(soundAssets);
+	Resources_Size  += 417;
 }
 
 /*########################################################################################################################*
@@ -219,6 +245,15 @@ static void SoundAssets_DownloadAssets(void) {
 		if (allSoundsExist) continue;
 		soundAssets[i].reqID = SoundAsset_Download(soundAssets[i].hash);
 	}
+}
+
+static const char* SoundAssets_GetRequestName(int reqID) {
+	int i;
+	for (i = 0; i < Array_Elems(soundAssets); i++) 
+	{
+		if (reqID == soundAssets[i].reqID) return soundAssets[i].name;
+	}
+	return NULL;
 }
 
 
@@ -328,10 +363,105 @@ static void SoundAssets_CheckStatus(void) {
 	}
 }
 
-static const struct AssetSet soundAssetSet = {
+static const struct AssetSet mccSoundAssetSet = {
 	SoundAssets_CheckExistence,
+	SoundAssets_CountMissing,
 	SoundAssets_DownloadAssets,
+	SoundAssets_GetRequestName,
 	SoundAssets_CheckStatus
+};
+
+
+/*########################################################################################################################*
+*------------------------------------------------------CC texture assets--------------------------------------------------*
+*#########################################################################################################################*/
+static const cc_string ccTexPack = String_FromConst("texpacks/classicube.zip");
+static cc_bool ccTexturesExist, ccTexturesDownloaded;
+static int ccTexturesReqID;
+
+static void CCTextures_CheckExistence(void) {
+	ccTexturesExist = File_Exists(&ccTexPack);
+}
+
+static void CCTextures_CountMissing(void) {
+	if (ccTexturesExist) return;
+
+	Resources_Count++;
+	Resources_Size += 83;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------CC texture assets fetching --------------------------------------------*
+*#########################################################################################################################*/
+static void CCTextures_DownloadAssets(void) {
+	static cc_string url = String_FromConst(RESOURCE_SERVER "/default.zip");
+	if (ccTexturesExist) return;
+
+	ccTexturesReqID = Http_AsyncGetData(&url, 0);
+}
+
+static const char* CCTextures_GetRequestName(int reqID) {
+	return reqID == ccTexturesReqID ? "ClassiCube textures" : NULL;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------CC texture assets processing -------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_MOBILE
+/* Android needs the touch.png */
+/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
+static cc_bool CCTextures_SelectEntry(const cc_string* path) {
+	return String_CaselessEqualsConst(path, "touch.png");
+}
+static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
+	struct ResourceZipEntry* e = ZipEntries_Find(path);
+	return ZipEntry_ExtractData(e, data, source);
+}
+
+static void CCTextures_ExtractZip(struct HttpRequest* req) {
+	struct Stream src;
+	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
+	Stream_ReadonlyMemory(&src,   req->data, req->size);
+
+	return Zip_Extract(&src, 
+			CCTextures_SelectEntry, CCTextures_ProcessEntry);
+}
+#else
+static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
+	return Stream_WriteAllTo(&ccTexPack, req->data, req->size);
+}
+#endif
+
+static void CCTextures_Check(const struct SoundAsset* sound) {
+	struct HttpRequest item;
+	if (!Fetcher_Get(sound->reqID, &item)) return;
+
+	SoundPatcher_Save(sound->name, &item);
+	HttpRequest_Free(&item);
+}
+
+static void CCTextures_CheckStatus(void) {
+	struct HttpRequest item;
+	cc_result res;
+
+	if (ccTexturesDownloaded) return;
+	if (!Fetcher_Get(ccTexturesReqID, &item)) return;
+
+	ccTexturesDownloaded = true;
+	res = CCTextures_ExtractZip(&item);
+	if (res) Logger_SysWarn(res, "saving ClassiCube textures");
+
+	HttpRequest_Free(&item);
+}
+
+static const struct AssetSet ccTexsAssetSet = {
+	CCTextures_CheckExistence,
+	CCTextures_CountMissing,
+	CCTextures_DownloadAssets,
+	CCTextures_GetRequestName,
+	CCTextures_CheckStatus
 };
 
 
@@ -538,7 +668,6 @@ static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result TerrainPatcher_Process(struct HttpRequest* req);
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
-static cc_result NewTextures_ExtractZip(struct HttpRequest* req);
 
 /* URLs which data is downloaded from in order to generate the entries in default.zip */
 static struct ZipfileSource {
@@ -552,8 +681,7 @@ static struct ZipfileSource {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     ModernPatcher_ExtractFiles, 4621 },
 	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TerrainPatcher_Process, 7 },
-	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 },
-	{ "new textures",      RESOURCE_SERVER "/default.zip",        NewTextures_ExtractZip, 83, false,true }
+	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21, false,true }
 };
 
 
@@ -740,34 +868,6 @@ static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	return 0;
 }
 
-static const cc_string ccTexPack = String_FromConst("texpacks/classicube.zip");
-#ifdef CC_BUILD_MOBILE
-/* Android needs the touch.png */
-/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
-static cc_bool NewTextures_SelectEntry(const cc_string* path) {
-	return String_CaselessEqualsConst(path, "touch.png");
-}
-static cc_result NewTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
-	struct ResourceZipEntry* e = ZipEntries_Find(path);
-	return ZipEntry_ExtractData(e, data, source);
-}
-
-static cc_result NewTextures_ExtractZip(struct HttpRequest* req) {
-	struct Stream src;
-	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
-	Stream_ReadonlyMemory(&src,   req->data, req->size);
-
-	return Zip_Extract(&src, 
-			NewTextures_SelectEntry, NewTextures_ProcessEntry);
-}
-#else
-static cc_result NewTextures_ExtractZip(struct HttpRequest* req) {
-	/* it's alright to fail to create alternate texture pack */
-	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
-	return 0;
-}
-#endif
-
 
 /*########################################################################################################################*
 *------------------------------------------------------default.zip writer-------------------------------------------------*
@@ -851,6 +951,8 @@ static void DefaultZip_CheckExistence(void) {
 	int i;
 	DefaultZip_CountEntries();
 	if (allZipEntriesExist) return;
+	/* Need touch.png from ClassiCube textures */
+	ccTexturesExist = false;
 
 	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
 		Resources_Count++;
@@ -868,8 +970,9 @@ FetcherErrorCallback Fetcher_ErrorCallback;
 
 /* TODO: array of asset sets */
 static const struct AssetSet* const asset_sets[] = {
-	&musicAssetSet,
-	&soundAssetSet
+	&ccTexsAssetSet,
+	&mccMusicAssetSet,
+	&mccSoundAssetSet
 };
 
 void Resources_CheckExistence(void) {
@@ -882,19 +985,24 @@ void Resources_CheckExistence(void) {
 	{
 		asset_sets[i]->CheckExistence();
 	}
+
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		asset_sets[i]->CountMissing();
+	}
 }
 
 const char* Fetcher_RequestName(int reqID) {
+	const char* name;
 	int i;
 
 	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
 		if (reqID == defaultZipSources[i].reqID)  return defaultZipSources[i].name;
 	}
-	for (i = 0; i < Array_Elems(musicAssets); i++) {
-		if (reqID == musicAssets[i].reqID) return musicAssets[i].name;
-	}
-	for (i = 0; i < Array_Elems(soundAssets); i++) {
-		if (reqID == soundAssets[i].reqID) return soundAssets[i].name;
+
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		if ((name = asset_sets[i]->GetRequestName(reqID))) return name;
 	}
 	return NULL;
 }
