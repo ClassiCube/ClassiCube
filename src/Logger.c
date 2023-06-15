@@ -365,6 +365,8 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, "-- backtrace unimplemented --");
 	/* TODO implement backtrace using exc_unwind https://nixdoc.net/man-pages/IRIX/man3/exception.3.html */
 }
+#elif defined CC_BACKTRACE_BUILTIN
+/* Implemented later at end of the file */
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
 void Logger_Backtrace(cc_string* trace, void* ctx) {
@@ -1218,3 +1220,81 @@ void Logger_FailToStart(const char* raw_msg) {
 	Logger_Log(&msg);
 	Process_Exit(1);
 }
+
+#if defined CC_BACKTRACE_BUILTIN
+static CC_NOINLINE void* GetReturnAddress(int level) {
+	/* "... a value of 0 yields the return address of the current function, a value of 1 yields the return address of the caller of the current function" */
+	switch(level) {
+	case 0:  return __builtin_return_address(1);
+	case 1:  return __builtin_return_address(2);
+	case 2:  return __builtin_return_address(3);
+	case 3:  return __builtin_return_address(4);
+	case 4:  return __builtin_return_address(5);
+	case 5:  return __builtin_return_address(6);
+	case 6:  return __builtin_return_address(7);
+	case 7:  return __builtin_return_address(8);
+	case 8:  return __builtin_return_address(9);
+	case 9:  return __builtin_return_address(10);
+	case 10: return __builtin_return_address(11);
+	case 11: return __builtin_return_address(12);
+	case 12: return __builtin_return_address(13);
+	case 13: return __builtin_return_address(14);
+	case 14: return __builtin_return_address(15);
+	case 15: return __builtin_return_address(16);
+	case 16: return __builtin_return_address(17);
+	case 17: return __builtin_return_address(18);
+	case 18: return __builtin_return_address(19);
+	case 19: return __builtin_return_address(20);
+	case 20: return __builtin_return_address(21);
+	default: return NULL;
+	}
+}
+
+static CC_NOINLINE void* GetFrameAddress(int level) {
+	/* "... a value of 0 yields the frame address of the current function, a value of 1 yields the frame address of the caller of the current function, and so forth." */
+	switch(level) {
+	case 0:  return __builtin_frame_address(1);
+	case 1:  return __builtin_frame_address(2);
+	case 2:  return __builtin_frame_address(3);
+	case 3:  return __builtin_frame_address(4);
+	case 4:  return __builtin_frame_address(5);
+	case 5:  return __builtin_frame_address(6);
+	case 6:  return __builtin_frame_address(7);
+	case 7:  return __builtin_frame_address(8);
+	case 8:  return __builtin_frame_address(9);
+	case 9:  return __builtin_frame_address(10);
+	case 10: return __builtin_frame_address(11);
+	case 11: return __builtin_frame_address(12);
+	case 12: return __builtin_frame_address(13);
+	case 13: return __builtin_frame_address(14);
+	case 14: return __builtin_frame_address(15);
+	case 15: return __builtin_frame_address(16);
+	case 16: return __builtin_frame_address(17);
+	case 17: return __builtin_frame_address(18);
+	case 18: return __builtin_frame_address(19);
+	case 19: return __builtin_frame_address(20);
+	case 20: return __builtin_frame_address(21);
+	default: return NULL;
+	}
+}
+
+void Logger_Backtrace(cc_string* trace, void* ctx) {
+	void* addrs[MAX_BACKTRACE_FRAMES];
+	int i, frames;
+	
+	/* See https://gcc.gnu.org/onlinedocs/gcc/Return-Address.html */
+	/*   Note "Calling this function with a nonzero argument can have unpredictable effects, including crashing the calling program" */
+	/*   So this probably only works on x86/x86_64 */
+	for (i = 0; GetFrameAddress(i + 1) && i < MAX_BACKTRACE_FRAMES; i++)
+	{
+		addrs[i] = GetReturnAddress(i);
+		if (!addrs[i]) break;
+	}	
+
+	frames = i;
+	for (i = 0; i < frames; i++) {
+		DumpFrame(trace, addrs[i]);
+	}
+	String_AppendConst(trace, _NL);
+}
+#endif
