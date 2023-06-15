@@ -626,16 +626,16 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 /* -> usr/src/uts/[ARCH]/sys/mcontext.h */
 /* -> usr/src/uts/[ARCH]/sys/regset.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 
 #if defined __i386__
-	#define REG_GET(ign, reg) &r.gregs[E##reg]
+	#define REG_GET(ign, reg) &r->gregs[E##reg]
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
+	#define REG_GET(ign, reg) &r->gregs[REG_R##reg]
 	Dump_X64()
 #elif defined __sparc__
-	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
+	#define REG_GET(ign, reg) &r->gregs[REG_##reg]
 	Dump_SPARC()
 #else
 	#error "Unknown CPU architecture"
@@ -645,43 +645,43 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 /* See /usr/include/[ARCH]/mcontext.h */
 /* -> src/sys/arch/[ARCH]/include/mcontext.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
-	#define REG_GET(ign, reg) &r.__gregs[_REG_E##reg]
+	#define REG_GET(ign, reg) &r->__gregs[_REG_E##reg]
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
+	#define REG_GET(ign, reg) &r->__gregs[_REG_R##reg]
 	Dump_X64()
 #elif defined __aarch64__
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_FP()      &r.__gregs[_REG_FP]
-	#define REG_GET_LR()      &r.__gregs[_REG_LR]
-	#define REG_GET_SP()      &r.__gregs[_REG_SP]
-	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_FP()      &r->__gregs[_REG_FP]
+	#define REG_GET_LR()      &r->__gregs[_REG_LR]
+	#define REG_GET_SP()      &r->__gregs[_REG_SP]
+	#define REG_GET_PC()      &r->__gregs[_REG_PC]
 	Dump_ARM64()
 #elif defined __arm__
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_FP()      &r.__gregs[_REG_FP]
-	#define REG_GET_IP()      &r.__gregs[12]
-	#define REG_GET_SP()      &r.__gregs[_REG_SP]
-	#define REG_GET_LR()      &r.__gregs[_REG_LR]
-	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_FP()      &r->__gregs[_REG_FP]
+	#define REG_GET_IP()      &r->__gregs[12]
+	#define REG_GET_SP()      &r->__gregs[_REG_SP]
+	#define REG_GET_LR()      &r->__gregs[_REG_LR]
+	#define REG_GET_PC()      &r->__gregs[_REG_PC]
 	Dump_ARM32()
 #elif defined __powerpc__
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_PC()      &r.__gregs[_REG_PC]
-	#define REG_GET_LR()      &r.__gregs[_REG_LR]
-	#define REG_GET_CTR()     &r.__gregs[_REG_CTR]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_PC()      &r->__gregs[_REG_PC]
+	#define REG_GET_LR()      &r->__gregs[_REG_LR]
+	#define REG_GET_CTR()     &r->__gregs[_REG_CTR]
 	Dump_PPC()
 #elif defined __mips__
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_PC()      &r.__gregs[_REG_EPC]
-	#define REG_GET_LO()      &r.__gregs[_REG_MDLO]
-	#define REG_GET_HI()      &r.__gregs[_REG_MDHI]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_PC()      &r->__gregs[_REG_EPC]
+	#define REG_GET_LO()      &r->__gregs[_REG_MDLO]
+	#define REG_GET_HI()      &r->__gregs[_REG_MDHI]
 	Dump_MIPS()
 #elif defined __riscv
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_PC()      &r->__gregs[_REG_PC]
 	Dump_RISCV()
 #else
 	#error "Unknown CPU architecture"
@@ -691,39 +691,39 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 /* See /usr/include/machine/ucontext.h */
 /* -> src/sys/[ARCH]/include/ucontext.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
-	#define REG_GET(reg, ign) &r.mc_e##reg
+	#define REG_GET(reg, ign) &r->mc_e##reg
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(reg, ign) &r.mc_r##reg
+	#define REG_GET(reg, ign) &r->mc_r##reg
 	Dump_X64()
 #elif defined __aarch64__
-	#define REG_GNUM(num)     &r.mc_gpregs.gp_x[num]
-	#define REG_GET_FP()      &r.mc_gpregs.gp_x[29]
-	#define REG_GET_LR()      &r.mc_gpregs.gp_lr
-	#define REG_GET_SP()      &r.mc_gpregs.gp_sp
-	#define REG_GET_PC()      &r.mc_gpregs.gp_elr
+	#define REG_GNUM(num)     &r->mc_gpregs.gp_x[num]
+	#define REG_GET_FP()      &r->mc_gpregs.gp_x[29]
+	#define REG_GET_LR()      &r->mc_gpregs.gp_lr
+	#define REG_GET_SP()      &r->mc_gpregs.gp_sp
+	#define REG_GET_PC()      &r->mc_gpregs.gp_elr
 	Dump_ARM64()
 #elif defined __arm__
-	#define REG_GNUM(num)     &r.__gregs[num]
-	#define REG_GET_FP()      &r.__gregs[_REG_FP]
-	#define REG_GET_IP()      &r.__gregs[12]
-	#define REG_GET_SP()      &r.__gregs[_REG_SP]
-	#define REG_GET_LR()      &r.__gregs[_REG_LR]
-	#define REG_GET_PC()      &r.__gregs[_REG_PC]
+	#define REG_GNUM(num)     &r->__gregs[num]
+	#define REG_GET_FP()      &r->__gregs[_REG_FP]
+	#define REG_GET_IP()      &r->__gregs[12]
+	#define REG_GET_SP()      &r->__gregs[_REG_SP]
+	#define REG_GET_LR()      &r->__gregs[_REG_LR]
+	#define REG_GET_PC()      &r->__gregs[_REG_PC]
 	Dump_ARM32()
 #elif defined __powerpc__
-	#define REG_GNUM(num)     &r.mc_frame[##num]
-	#define REG_GET_PC()      &r.mc_srr0
-	#define REG_GET_LR()      &r.mc_lr
-	#define REG_GET_CTR()     &r.mc_ctr
+	#define REG_GNUM(num)     &r->mc_frame[##num]
+	#define REG_GET_PC()      &r->mc_srr0
+	#define REG_GET_LR()      &r->mc_lr
+	#define REG_GET_CTR()     &r->mc_ctr
 	Dump_PPC()
 #elif defined __mips__
-	#define REG_GNUM(num)     &r.mc_regs[num]
-	#define REG_GET_PC()      &r.mc_pc
-	#define REG_GET_LO()      &r.mullo
-	#define REG_GET_HI()      &r.mulhi
+	#define REG_GNUM(num)     &r->mc_regs[num]
+	#define REG_GET_PC()      &r->mc_pc
+	#define REG_GET_LO()      &r->mullo
+	#define REG_GET_HI()      &r->mulhi
 	Dump_MIPS()
 #else
 	#error "Unknown CPU architecture"
@@ -772,26 +772,46 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #endif
 }
 #elif defined CC_BUILD_HAIKU
+/* See /headers/posix/arch/[ARCH]/signal.h */
 static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
-	#define REG_GET(reg, ign) &r.me##reg
+	#define REG_GET(reg, ign) &r->e##reg
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(reg, ign) &r.r##reg
+	#define REG_GET(reg, ign) &r->r##reg
 	Dump_X64()
+#elif defined __aarch64__
+	#define REG_GNUM(num)     &r->x[num]
+	#define REG_GET_FP()      &r->x[29]
+	#define REG_GET_LR()      &r->lr
+	#define REG_GET_SP()      &r->sp
+	#define REG_GET_PC()      &r->elr
+	Dump_ARM64()
+#elif defined __arm__
+	#define REG_GNUM(num)     &r->r##num
+	#define REG_GET_FP()      &r->r11
+	#define REG_GET_IP()      &r->r12
+	#define REG_GET_SP()      &r->r13
+	#define REG_GET_LR()      &r->r14
+	#define REG_GET_PC()      &r->r15
+	Dump_ARM32()
+#elif defined __riscv
+	#define REG_GNUM(num)     &r->x[num - 1]
+	#define REG_GET_PC()      &r->pc
+	Dump_RISCV()
 #else
 	#error "Unknown CPU architecture"
 #endif
 }
 #elif defined CC_BUILD_SERENITY
 static void PrintRegisters(cc_string* str, void* ctx) {
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+	mcontext_t* r = &((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
-	#define REG_GET(reg, ign) &r.e##reg
+	#define REG_GET(reg, ign) &r->e##reg
 	Dump_X86()
 #elif defined __x86_64__
-	#define REG_GET(reg, ign) &r.r##reg
+	#define REG_GET(reg, ign) &r->r##reg
 	Dump_X64()
 #else
 	#error "Unknown CPU architecture"
