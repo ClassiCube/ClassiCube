@@ -30,6 +30,7 @@ static D3DFORMAT viewFormat, depthFormat;
 static int cachedWidth, cachedHeight;
 static int depthBits;
 static float totalMem;
+static cc_bool fallbackRendering;
 
 static void D3D9_RestoreRenderStates(void);
 static void D3D9_FreeResource(GfxResourceID* resource) {
@@ -68,10 +69,15 @@ static void LoadD3D9Library(void) {
 
 static void CreateD3D9Instance(void) {
 	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
+
 	/* Normal Direct3D9 supports POOL_MANAGED textures */
 	/*  (Direct3D9Ex does not support them however) */
 	Gfx.ManagedTextures = true;
 	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
+
+	fallbackRendering = Options_GetBool("fallback-rendering", false);
+	if (!fallbackRendering) return;
+	Platform_LogConst("WARNING: Using fallback rendering mode, which will reduce performance");
 }
 
 static void FindCompatibleViewFormat(void) {
@@ -510,6 +516,29 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
 	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 	if (depthOnly) IDirect3DDevice9_SetTexture(device, 0, NULL);
+
+	/* For when Direct3D9 device doesn't support D3DRS_COLORWRITEENABLE */
+	/*  Technically, the correct way to check for whether it works or not */
+	/*  is by checking whether the PrimitiveMiscCaps field in D3DCAPS9 */
+	/*  has the D3DPMISCCAPS_COLORWRITEENABLE flag set */
+	/* But since I'm unsure if there might be some GPU drivers out there */
+	/*  that do support D3DRS_COLORWRITEENABLE but forget to set the flag, */
+	/*  I've decided to require the user to manually enable this fallback */
+	if (!fallbackRendering) return;
+
+	/* https://gamedev.net/forums/topic/375017-c-enabling-disabling-writing-to-buffers/3473819/ */
+	if (depthOnly) {
+		/* finalX = srcX*0 + dstX*1 */
+		/*  So in other words, final pixel = existing pixel */
+		/*  Pretty costly performance wise though */
+		IDirect3DDevice9_SetRenderState(device, D3DRS_SRCBLEND,  D3DBLEND_ZERO);
+		IDirect3DDevice9_SetRenderState(device, D3DRS_DESTBLEND, D3DBLEND_ONE);
+		Gfx_SetAlphaBlending(true);
+	} else {
+		/* finalX = srcX*srcA + dstX*(1-srcA) */
+		IDirect3DDevice9_SetRenderState(device, D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
+		IDirect3DDevice9_SetRenderState(device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+	}
 }
 
 static void D3D9_RestoreRenderStates(void) {
