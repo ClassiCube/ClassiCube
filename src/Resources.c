@@ -43,11 +43,10 @@ struct ResourceZipEntry {
 	union ResourceValue value;
 	cc_uint32 offset, crc32;
 };
-#define RESOURCE_TYPE_DATA  1
-#define RESOURCE_TYPE_PNG   2
-#define RESOURCE_TYPE_CONST 3
 
 static CC_NOINLINE cc_bool Fetcher_Get(int reqID, struct HttpRequest* item);
+CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* name);
+static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source);
 
 
 /*########################################################################################################################*
@@ -420,7 +419,7 @@ static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* d
 	return ZipEntry_ExtractData(e, data, source);
 }
 
-static void CCTextures_ExtractZip(struct HttpRequest* req) {
+static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
 	struct Stream src;
 	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
 	Stream_ReadonlyMemory(&src,   req->data, req->size);
@@ -604,6 +603,10 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 /*########################################################################################################################*
 *----------------------------------------------------default.zip resources------------------------------------------------*
 *#########################################################################################################################*/
+#define RESOURCE_TYPE_DATA  1
+#define RESOURCE_TYPE_PNG   2
+#define RESOURCE_TYPE_CONST 3
+
 #define ANIMS_TXT \
 "# This file defines the animations used in a texture pack for ClassiCube.\r\n" \
 "# Each line is in the format : <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>\r\n" \
@@ -916,7 +919,7 @@ static void DefaultZip_Create(void) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Resources checker--------------------------------------------------*
+*-----------------------------------------------Minecraft Classic texture assets------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool allZipEntriesExist;
 static int zipEntriesFound;
@@ -929,7 +932,7 @@ static cc_bool DefaultZip_SelectEntry(const cc_string* path) {
 	return false;
 }
 
-static void DefaultZip_CountEntries(void) {
+static void MCCTextures_CheckExistence(void) {
 	static const cc_string path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
 	cc_result res;
@@ -947,9 +950,8 @@ static void DefaultZip_CountEntries(void) {
 	allZipEntriesExist = zipEntriesFound >= Array_Elems(defaultZipEntries);
 }
 
-static void DefaultZip_CheckExistence(void) {
+static void MCCTextures_CountMissing(void) {
 	int i;
-	DefaultZip_CountEntries();
 	if (allZipEntriesExist) return;
 	/* Need touch.png from ClassiCube textures */
 	ccTexturesExist = false;
@@ -962,6 +964,69 @@ static void DefaultZip_CheckExistence(void) {
 
 
 /*########################################################################################################################*
+*------------------------------------------Minecraft Classic texture assets fetching -------------------------------------*
+*#########################################################################################################################*/
+static void MCCTextures_DownloadAssets(void) {
+	cc_string url;
+	int i;
+	if (allZipEntriesExist) return;
+
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) 
+	{
+		url = String_FromReadonly(defaultZipSources[i].url);
+		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
+	}
+}
+
+static const char* MCCTextures_GetRequestName(int reqID) {
+	int i;
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) 
+	{
+		if (reqID == defaultZipSources[i].reqID) return defaultZipSources[i].name;
+	}
+	return NULL;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------Minecraft Classic texture assets processing -----------------------------------*
+*#########################################################################################################################*/
+static void MCCTextures_CheckSource(struct ZipfileSource* source) {
+	struct HttpRequest item;
+	cc_result res;
+	if (!Fetcher_Get(source->reqID, &item)) return;
+	
+	source->downloaded = true;
+	res = source->Process(&item);
+
+	if (res) {
+		cc_string name = String_FromReadonly(source->name);
+		Logger_SysWarn2(res, "making", &name);
+	}
+	HttpRequest_Free(&item);
+
+	if (source->last) DefaultZip_Create();
+}
+
+static void MCCTextures_CheckStatus(void) {
+	int i;
+	for (i = 0; i < Array_Elems(defaultZipSources); i++) 
+	{
+		if (defaultZipSources[i].downloaded) continue;
+		MCCTextures_CheckSource(&defaultZipSources[i]);
+	}
+}
+
+static const struct AssetSet mccTexsAssetSet = {
+	MCCTextures_CheckExistence,
+	MCCTextures_CountMissing,
+	MCCTextures_DownloadAssets,
+	MCCTextures_GetRequestName,
+	MCCTextures_CheckStatus
+};
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
@@ -970,6 +1035,7 @@ FetcherErrorCallback Fetcher_ErrorCallback;
 
 /* TODO: array of asset sets */
 static const struct AssetSet* const asset_sets[] = {
+	&mccTexsAssetSet,
 	&ccTexsAssetSet,
 	&mccMusicAssetSet,
 	&mccSoundAssetSet
@@ -980,7 +1046,6 @@ void Resources_CheckExistence(void) {
 	Resources_Count = 0;
 	Resources_Size  = 0;
 
-	DefaultZip_CheckExistence();
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
 		asset_sets[i]->CheckExistence();
@@ -996,10 +1061,6 @@ const char* Fetcher_RequestName(int reqID) {
 	const char* name;
 	int i;
 
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
-		if (reqID == defaultZipSources[i].reqID)  return defaultZipSources[i].name;
-	}
-
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
 		if ((name = asset_sets[i]->GetRequestName(reqID))) return name;
@@ -1008,20 +1069,12 @@ const char* Fetcher_RequestName(int reqID) {
 }
 
 void Fetcher_Run(void) {
-	cc_string url;
 	int i;
 
 	Fetcher_Failed     = false;
 	Fetcher_Downloaded = 0;
 	Fetcher_Working    = true;
 	Fetcher_Completed  = false;
-
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
-		if (allZipEntriesExist) continue;
-
-		url = String_FromReadonly(defaultZipSources[i].url);
-		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
-	}
 
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
@@ -1061,33 +1114,10 @@ CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* item) {
 	return false;
 }
 
-static void Fetcher_CheckFile(struct ZipfileSource* file) {
-	struct HttpRequest item;
-	cc_result res;
-	if (!Fetcher_Get(file->reqID, &item)) return;
-	
-	file->downloaded = true;
-	res = file->Process(&item);
-
-	if (res) {
-		cc_string name = String_FromReadonly(file->name);
-		Logger_SysWarn2(res, "making", &name);
-	}
-	HttpRequest_Free(&item);
-
-	if (file->last) DefaultZip_Create();
-}
-
 /* TODO: Implement this.. */
 /* TODO: How expensive is it to constantly do 'Get' over and over */
 void Fetcher_Update(void) {
 	int i;
-
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
-		if (defaultZipSources[i].downloaded) continue;
-		Fetcher_CheckFile(&defaultZipSources[i]);
-	}
-
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
 		asset_sets[i]->CheckStatus();
