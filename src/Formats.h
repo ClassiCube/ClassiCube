@@ -27,6 +27,9 @@ cc_result Cw_Load(struct Stream* stream);
 /* Imports a world from a .dat classic map file. */
 /* Used by Minecraft Classic/WoM client. */
 cc_result Dat_Load(struct Stream* stream);
+/* Imports a world from a .mclevel NBT map file. */
+/* Used by Minecraft Indev client. */
+cc_result MCLevel_Load(struct Stream* stream);
 
 /* Exports a world to a .cw ClassicWorld map file. */
 /* Compatible with ClassiCube/ClassicalSharp */

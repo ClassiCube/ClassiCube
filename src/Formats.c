@@ -42,15 +42,17 @@ static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 }
 
 IMapImporter Map_FindImporter(const cc_string* path) {
-	static const cc_string cw   = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	static const cc_string fcm  = String_FromConst(".fcm"), dat = String_FromConst(".dat");
-	static const cc_string mine = String_FromConst(".mine");
+	static const cc_string cw    = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	static const cc_string fcm   = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	static const cc_string mine  = String_FromConst(".mine");
+	static const cc_string mclvl = String_FromConst(".mclevel");
 
 	if (String_CaselessEnds(path,   &cw))  return Cw_Load;
-	if (String_CaselessEnds(path,  &lvl)) return Lvl_Load;
-	if (String_CaselessEnds(path,  &fcm)) return Fcm_Load;
-	if (String_CaselessEnds(path,  &dat)) return Dat_Load;
-	if (String_CaselessEnds(path, &mine)) return Dat_Load;
+	if (String_CaselessEnds(path,  &lvl))  return Lvl_Load;
+	if (String_CaselessEnds(path,  &fcm))  return Fcm_Load;
+	if (String_CaselessEnds(path,  &dat))  return Dat_Load;
+	if (String_CaselessEnds(path, &mine))  return Dat_Load;
+	if (String_CaselessEnds(path, &mclvl)) return MCLevel_Load;
 
 	return NULL;
 }
@@ -307,7 +309,9 @@ enum NbtTagType {
 
 #define NBT_SMALL_SIZE  STRING_SIZE
 #define NBT_STRING_SIZE STRING_SIZE
+
 #define NbtTag_IsSmall(tag) ((tag)->dataSize <= NBT_SMALL_SIZE)
+#define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->name, tagName))
 struct NbtTag;
 
 struct NbtTag {
@@ -329,6 +333,7 @@ struct NbtTag {
 	} value;
 	char _nameBuffer[NBT_STRING_SIZE];
 	cc_result result;
+	int listIndex;
 };
 
 static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
@@ -400,7 +405,8 @@ static cc_result Nbt_ReadString(struct Stream* stream, cc_string* str) {
 }
 
 typedef void (*Nbt_Callback)(struct NbtTag* tag);
-static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
+static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream* stream, 
+							struct NbtTag* parent, Nbt_Callback callback, int listIndex) {
 	struct NbtTag tag;
 	cc_uint8 childType;
 	cc_uint8 tmp[5];	
@@ -408,9 +414,10 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 	cc_uint32 i, count;
 	
 	if (typeId == NBT_END) return 0;
-	tag.type   = typeId; 
-	tag.parent = parent;
-	tag.dataSize = 0;
+	tag.type      = typeId; 
+	tag.parent    = parent;
+	tag.dataSize  = 0;
+	tag.listIndex = listIndex;
 	String_InitArray(tag.name, tag._nameBuffer);
 
 	if (readTagName) {
@@ -459,7 +466,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 		count = Stream_GetU32_BE(&tmp[1]);
 
 		for (i = 0; i < count; i++) {
-			res = Nbt_ReadTag(childType, false, stream, &tag, callback);
+			res = Nbt_ReadTag(childType, false, stream, &tag, callback, i);
 			if (res) break;
 		}
 		break;
@@ -469,7 +476,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 			if ((res = stream->ReadU8(stream, &childType))) break;
 			if (childType == NBT_END) break;
 
-			res = Nbt_ReadTag(childType, true, stream, &tag, callback);
+			res = Nbt_ReadTag(childType, true, stream, &tag, callback, 0);
 			if (res) break;
 		}
 		break;
@@ -484,8 +491,39 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.value.big);
 	return tag.result;
 }
-#define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->name, tagName))
 
+
+static BlockRaw* Nbt_TakeArray(struct NbtTag* tag, const char* type) {
+	BlockRaw* ptr;
+	if (NbtTag_IsSmall(tag)) {
+		/* Small data is stored inline in tha tag, so need to copy it out */
+		ptr = (BlockRaw*)Mem_Alloc(tag->dataSize, 1, type);
+		Mem_Copy(ptr, tag->value.small, tag->dataSize);
+	} else {
+		ptr = tag->value.big;
+		tag->value.big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on the array */
+	}
+	return ptr;
+}
+
+static cc_result Nbt_Read(struct Stream* stream, Nbt_Callback callback) {
+	struct Stream compStream;
+	struct InflateState state;
+	cc_result res;
+	cc_uint8 tag;
+
+	Inflate_MakeStream2(&compStream, &state, stream);
+	if ((res = Map_SkipGZipHeader(stream))) return res;
+	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
+
+	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
+	return Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, callback, 0);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------NBTWriter--------------------------------------------------------*
+*#########################################################################################################################*/
 static cc_uint8* Nbt_WriteConst(cc_uint8* data, const char* text) {
 	int i, len = String_Length(text);
 	*data++ = 0;
@@ -604,17 +642,6 @@ COMPOUND "ClassicWorld" {
 		}
 	}
 }*/
-static BlockRaw* Cw_GetBlocks(struct NbtTag* tag) {
-	BlockRaw* ptr;
-	if (NbtTag_IsSmall(tag)) {
-		ptr = (BlockRaw*)Mem_Alloc(tag->dataSize, 1, ".cw map blocks");
-		Mem_Copy(ptr, tag->value.small, tag->dataSize);
-	} else {
-		ptr = tag->value.big;
-		tag->value.big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World.Blocks */
-	}
-	return ptr;
-}
 
 static void Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "X")) { World.Width  = NbtTag_U16(tag); return; }
@@ -632,10 +659,12 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 	if (IsTag(tag, "BlockArray")) {
 		World.Volume = tag->dataSize;
-		World.Blocks = Cw_GetBlocks(tag);
+		World.Blocks = Nbt_TakeArray(tag, ".cw map blocks");
 	}
 #ifdef EXTENDED_BLOCKS
-	if (IsTag(tag, "BlockArray2")) World_SetMapUpper(Cw_GetBlocks(tag));
+	if (IsTag(tag, "BlockArray2")) {
+		World_SetMapUpper(Nbt_TakeArray(tag, ".cw map blocks2"));
+	}
 #endif
 }
 
@@ -835,17 +864,7 @@ static void Cw_Callback(struct NbtTag* tag) {
 }
 
 cc_result Cw_Load(struct Stream* stream) {
-	struct Stream compStream;
-	struct InflateState state;
-	cc_result res;
-	cc_uint8 tag;
-
-	Inflate_MakeStream2(&compStream, &state, stream);
-	if ((res = Map_SkipGZipHeader(stream))) return res;
-	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
-
-	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
-	return Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
+	return Nbt_Read(stream, Cw_Callback);
 }
 
 
@@ -1340,6 +1359,108 @@ cc_result Dat_Load(struct Stream* stream) {
 		/* Bogus .dat file */
 	default:   return DAT_ERR_VERSION;
 	}
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------MCLevel format------------------------------------------------------*
+*#########################################################################################################################*/
+/* MCLevel is a NBT tag based map format used by Minecraft Indev. Tags not listed below are discarded.
+COMPOUND "MinecraftLevel" {
+	COMPOUND "Map" {
+		I16 "Width", "Height", "Length"
+		I16 "Spawn" [3]
+		U8* "Blocks"
+	}
+	COMPOUND "Environment" {
+		I32 "SkyColor"
+		I32 "FogColor"
+		I32 "CloudColor"
+		I16 "CloudHeight"
+	}
+}*/
+static int mcl_edgeHeight, mcl_sidesHeight;
+
+static void MCLevel_ParseMap(struct NbtTag* tag) {
+	if (IsTag(tag, "width"))  { World.Width  = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "height")) { World.Height = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "length")) { World.Length = NbtTag_U16(tag); return; }
+
+	if (IsTag(tag, "blocks")) {
+		World.Volume = tag->dataSize;
+		World.Blocks = Nbt_TakeArray(tag, ".mclevel map blocks");
+	}
+}
+
+static PackedCol MCLevel_ParseColor(struct NbtTag* tag) {
+	int RGB = NbtTag_I32(tag);
+	return PackedCol_Make(RGB >> 16, RGB >> 8, RGB, 255);
+}
+
+static void MCLevel_ParseEnvironment(struct NbtTag* tag) {
+	if (IsTag(tag, "SkyColor")) {
+		Env.SkyCol    = MCLevel_ParseColor(tag);
+	} else if (IsTag(tag, "FogColor")) {
+		Env.FogCol    = MCLevel_ParseColor(tag);
+	} else if (IsTag(tag, "CloudColor")) {
+		Env.CloudsCol = MCLevel_ParseColor(tag);
+	} else if (IsTag(tag, "CloudHeight")) {
+		Env.CloudsHeight = NbtTag_U16(tag);
+	} else if (IsTag(tag, "SurroundingGroundType")) {
+		Env.SidesBlock  = NbtTag_U8(tag);
+		/* TODO need to explore this fully */
+		if (Env.SidesBlock == BLOCK_GRASS) Env.SidesBlock = BLOCK_DIRT;
+	} else if (IsTag(tag, "SurroundingWaterType")) {
+		Env.EdgeBlock   = NbtTag_U8(tag);
+	} else if (IsTag(tag, "SurroundingGroundHeight")) {
+		mcl_sidesHeight = NbtTag_U16(tag);
+	} else if (IsTag(tag, "SurroundingWaterHeight")) {
+		mcl_edgeHeight  = NbtTag_U16(tag);
+	}
+}
+
+
+static void MCLevel_Callback_2(struct NbtTag* tag) {
+	struct NbtTag* group = tag->parent;
+	if (IsTag(group, "Map")) {
+		MCLevel_ParseMap(tag);
+	} else if (IsTag(group, "Environment")) {
+		MCLevel_ParseEnvironment(tag);
+	}
+}
+
+static void MCLevel_Callback_3(struct NbtTag* tag) {
+	struct NbtTag* group = tag->parent->parent;
+	struct NbtTag* field = tag->parent;
+
+	if (IsTag(group, "Map") && IsTag(field, "spawn")) {
+		cc_int16 value = NbtTag_I16(tag);
+
+		if (tag->listIndex == 0) LocalPlayer_Instance.Spawn.X = value;
+		if (tag->listIndex == 1) LocalPlayer_Instance.Spawn.Y = value - 1.0f;
+		if (tag->listIndex == 2) LocalPlayer_Instance.Spawn.Z = value;
+	}
+}
+
+static void MCLevel_Callback(struct NbtTag* tag) {
+	struct NbtTag* tmp = tag->parent;
+	int depth = 0;
+	while (tmp) { depth++; tmp = tmp->parent; }
+
+	switch (depth) {
+	case 2: MCLevel_Callback_2(tag); return;
+	case 3: MCLevel_Callback_3(tag); return;
+	}
+	/* MinecraftLevel -> Map/Environment -> [value]
+			0					1				 2 */
+}
+
+cc_result MCLevel_Load(struct Stream* stream) {
+	cc_result res = Nbt_Read(stream, MCLevel_Callback);
+
+	Env.EdgeHeight  = mcl_edgeHeight;
+	Env.SidesOffset = mcl_sidesHeight - mcl_edgeHeight;
+	return res;
 }
 
 
