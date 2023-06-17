@@ -13,6 +13,7 @@
 #include "Logger.h"
 #include "LWeb.h"
 #include "Http.h"
+#include "Game.h"
 
 /* Represents a set of assets/resources */
 /* E.g. music set, sounds set, textures set */
@@ -629,14 +630,14 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 /* The entries that are required to exist within default.zip */
 static struct ResourceZipEntry defaultZipEntries[] = {
 	/* classic jar files */
-	{ "char.png",     RESOURCE_TYPE_DATA }, { "clouds.png",      RESOURCE_TYPE_DATA }, 
-	{ "default.png",  RESOURCE_TYPE_DATA }, { "particles.png",   RESOURCE_TYPE_DATA },
-	{ "rain.png",     RESOURCE_TYPE_DATA }, { "gui_classic.png", RESOURCE_TYPE_DATA }, 
-	{ "icons.png",    RESOURCE_TYPE_DATA }, { "terrain.png",     RESOURCE_TYPE_PNG  },
+	{ "terrain.png",  RESOURCE_TYPE_PNG  }, { "particles.png",   RESOURCE_TYPE_DATA },
+	{ "clouds.png",   RESOURCE_TYPE_DATA }, { "rain.png",        RESOURCE_TYPE_DATA },
+	{ "char.png",     RESOURCE_TYPE_DATA }, { "default.png",     RESOURCE_TYPE_DATA }, 
+	{ "icons.png",    RESOURCE_TYPE_DATA }, { "gui_classic.png", RESOURCE_TYPE_DATA },
 	{ "creeper.png",  RESOURCE_TYPE_DATA }, { "pig.png",         RESOURCE_TYPE_DATA }, 
 	{ "sheep.png",    RESOURCE_TYPE_DATA }, { "sheep_fur.png",   RESOURCE_TYPE_DATA },
 	{ "skeleton.png", RESOURCE_TYPE_DATA }, { "spider.png",      RESOURCE_TYPE_DATA }, 
-	{ "zombie.png",   RESOURCE_TYPE_DATA }, /* "arrows.png", "sign.png" */
+	{ "zombie.png",   RESOURCE_TYPE_DATA },
 	/* other files */
 	{ "snow.png", RESOURCE_TYPE_DATA }, { "chicken.png",    RESOURCE_TYPE_DATA },
 	{ "gui.png",  RESOURCE_TYPE_DATA }, { "animations.png", RESOURCE_TYPE_PNG  }, 
@@ -650,7 +651,8 @@ CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* nam
 	struct ResourceZipEntry* e;
 	int i;
 
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) 
+	{
 		e = &defaultZipEntries[i];
 		if (String_CaselessEqualsConst(name, e->filename)) return e;
 	}
@@ -671,6 +673,7 @@ static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result TerrainPatcher_Process(struct HttpRequest* req);
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req);
+static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req);
 
 /* URLs which data is downloaded from in order to generate the entries in default.zip */
 static struct ZipfileSource {
@@ -678,14 +681,16 @@ static struct ZipfileSource {
 	const char* url;
 	cc_result (*Process)(struct HttpRequest* req);
 	short size;
-	cc_bool downloaded, last;
+	cc_bool downloaded;
 	int reqID;
 } defaultZipSources[] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar", ClassicPatcher_ExtractFiles, 291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     ModernPatcher_ExtractFiles, 4621 },
 	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png", TerrainPatcher_Process, 7 },
-	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21, false,true }
+	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            NewTextures_ExtractGui, 21 },
+	{ "classic gold", "https://classic.minecraft.net/assets/textures/gold.png", Classic0023Patcher_OldGold, 1 }, /* NOTE: this must be the last entry */
 };
+static int numDefaultZipSources, numDefaultZipProcessed;
 
 
 /*########################################################################################################################*
@@ -723,6 +728,15 @@ static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req) {
 			ClassicPatcher_SelectEntry, ClassicPatcher_ProcessEntry);
 }
 
+static void PatchTerrainTile(struct Bitmap* src, int srcX, int srcY, int tileX, int tileY) {
+	static const cc_string terrainPng = String_FromConst("terrain.png");
+	struct ResourceZipEntry* entry    = ZipEntries_Find(&terrainPng);
+	struct Bitmap* dst = &entry->value.bmp;
+
+	Bitmap_UNSAFE_CopyBlock(srcX, srcY, tileX * 16, tileY * 16, src, dst, 16);
+}
+
+
 /* the x,y of tiles in terrain.png which get patched */
 static const struct TilePatch { const char* name; cc_uint8 x1,y1, x2,y2; } modern_tiles[12] = {
 	{ "assets/minecraft/textures/blocks/sandstone_bottom.png", 9,3 },
@@ -748,19 +762,14 @@ CC_NOINLINE static const struct TilePatch* ModernPatcher_GetTile(const cc_string
 }
 
 static cc_result ModernPatcher_PatchTile(struct Stream* data, const struct TilePatch* tile) {
-	static const cc_string terrainPng = String_FromConst("terrain.png");
 	struct Bitmap bmp;
 	cc_result res;
-	struct ResourceZipEntry* e = ZipEntries_Find(&terrainPng);
-	struct Bitmap* terrainBmp  = &e->value.bmp;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
-	Bitmap_UNSAFE_CopyBlock(0, 0, tile->x1 * 16, tile->y1 * 16, &bmp, terrainBmp, 16);
+	PatchTerrainTile(&bmp, 0, 0, tile->x1, tile->y1);
 
 	/* only quartz needs copying to two tiles */
-	if (tile->y2) {
-		Bitmap_UNSAFE_CopyBlock(0, 0, tile->x2 * 16, tile->y2 * 16, &bmp, terrainBmp, 16);
-	}
+	if (tile->y2) PatchTerrainTile(&bmp, 0, 0, tile->x2, tile->y2);
 
 	Mem_Free(bmp.scan0);
 	return 0;
@@ -828,15 +837,8 @@ static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req) {
 			ModernPatcher_SelectEntry, ModernPatcher_ProcessEntry);
 }
 
-static void TerrainPatcher_PatchTile(struct Bitmap* dst, struct Bitmap* src, 
-									int srcX, int srcY, int dstX, int dstY) {
-	Bitmap_UNSAFE_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, dst, 16);
-}
 
 static cc_result TerrainPatcher_Process(struct HttpRequest* req) {
-	static const cc_string terrainPng = String_FromConst("terrain.png");
-	struct ResourceZipEntry* entry;
-	struct Bitmap* dst;
 	struct Bitmap bmp;
 	struct Stream src;
 	cc_result res;
@@ -844,21 +846,17 @@ static cc_result TerrainPatcher_Process(struct HttpRequest* req) {
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	if ((res = Png_Decode(&bmp, &src))) return res;
 
-	entry = ZipEntries_Find(&terrainPng);
-	dst   = &entry->value.bmp;
+	PatchTerrainTile(&bmp,  0,0, 3,3);
+	PatchTerrainTile(&bmp, 16,0, 6,3);
+	PatchTerrainTile(&bmp, 32,0, 6,2);
 
-	TerrainPatcher_PatchTile(dst, &bmp,  0,0, 3,3);
-	TerrainPatcher_PatchTile(dst, &bmp, 16,0, 6,3);
-	TerrainPatcher_PatchTile(dst, &bmp, 32,0, 6,2);
-
-	TerrainPatcher_PatchTile(dst, &bmp,  0,16,  5,3);
-	TerrainPatcher_PatchTile(dst, &bmp, 16,16,  6,5);
-	TerrainPatcher_PatchTile(dst, &bmp, 32,16, 11,0);
+	PatchTerrainTile(&bmp,  0,16,  5,3);
+	PatchTerrainTile(&bmp, 16,16,  6,5);
+	PatchTerrainTile(&bmp, 32,16, 11,0);
 
 	Mem_Free(bmp.scan0);
 	return 0;
 }
-
 
 static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	static const cc_string guiPng = String_FromConst("gui.png");
@@ -868,6 +866,22 @@ static cc_result NewTextures_ExtractGui(struct HttpRequest* req) {
 	entry->size       = req->size;
 
 	req->data = NULL; /* don't free memory yet */
+	return 0;
+}
+
+static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
+	struct Bitmap bmp;
+	struct Stream src;
+	cc_result res;
+
+	Stream_ReadonlyMemory(&src, req->data, req->size);
+	if ((res = Png_Decode(&bmp, &src))) return res;
+
+	PatchTerrainTile(&bmp, 0,0, 8,1);
+	PatchTerrainTile(&bmp, 0,0, 8,2);
+	PatchTerrainTile(&bmp, 0,0, 8,3);
+
+	Mem_Free(bmp.scan0);
 	return 0;
 }
 
@@ -901,20 +915,20 @@ static cc_result DefaultZip_WriteEntries(struct Stream* s) {
 }
 
 static void DefaultZip_Create(void) {
-	static const cc_string path = String_FromConst("texpacks/default.zip");
+	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
 	struct Stream s;
 	cc_result res;
 
 	res = Stream_CreateFile(&s, &path);
 	if (res) {
-		Logger_SysWarn(res, "creating default.zip"); return;
+		Logger_SysWarn2(res, "creating", &path); return;
 	}
 		
 	res = DefaultZip_WriteEntries(&s);
-	if (res) Logger_SysWarn(res, "making default.zip");
+	if (res) Logger_SysWarn2(res, "making", &path);
 
 	res = s.Close(&s);
-	if (res) Logger_SysWarn(res, "closing default.zip");
+	if (res) Logger_SysWarn2(res, "closing", &path);
 }
 
 
@@ -933,7 +947,7 @@ static cc_bool DefaultZip_SelectEntry(const cc_string* path) {
 }
 
 static void MCCTextures_CheckExistence(void) {
-	static const cc_string path = String_FromConst("texpacks/default.zip");
+	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
 	struct Stream stream;
 	cc_result res;
 
@@ -956,7 +970,11 @@ static void MCCTextures_CountMissing(void) {
 	/* Need touch.png from ClassiCube textures */
 	ccTexturesExist = false;
 
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) {
+	numDefaultZipSources = Array_Elems(defaultZipSources);
+	/* old gold texture only needed in 0.0.23 and earlier */
+	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
+
+	for (i = 0; i < numDefaultZipSources; i++) {
 		Resources_Count++;
 		Resources_Size += defaultZipSources[i].size;
 	}
@@ -970,8 +988,9 @@ static void MCCTextures_DownloadAssets(void) {
 	cc_string url;
 	int i;
 	if (allZipEntriesExist) return;
+	numDefaultZipProcessed = 0;
 
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) 
+	for (i = 0; i < numDefaultZipSources; i++)
 	{
 		url = String_FromReadonly(defaultZipSources[i].url);
 		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
@@ -980,7 +999,7 @@ static void MCCTextures_DownloadAssets(void) {
 
 static const char* MCCTextures_GetRequestName(int reqID) {
 	int i;
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) 
+	for (i = 0; i < numDefaultZipSources; i++) 
 	{
 		if (reqID == defaultZipSources[i].reqID) return defaultZipSources[i].name;
 	}
@@ -1005,12 +1024,13 @@ static void MCCTextures_CheckSource(struct ZipfileSource* source) {
 	}
 	HttpRequest_Free(&item);
 
-	if (source->last) DefaultZip_Create();
+	if (++numDefaultZipProcessed < numDefaultZipSources) return;
+	DefaultZip_Create();
 }
 
 static void MCCTextures_CheckStatus(void) {
 	int i;
-	for (i = 0; i < Array_Elems(defaultZipSources); i++) 
+	for (i = 0; i < numDefaultZipSources; i++) 
 	{
 		if (defaultZipSources[i].downloaded) continue;
 		MCCTextures_CheckSource(&defaultZipSources[i]);
@@ -1033,7 +1053,6 @@ cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int Fetcher_Downloaded;
 FetcherErrorCallback Fetcher_ErrorCallback;
 
-/* TODO: array of asset sets */
 static const struct AssetSet* const asset_sets[] = {
 	&mccTexsAssetSet,
 	&ccTexsAssetSet,
@@ -1045,6 +1064,7 @@ void Resources_CheckExistence(void) {
 	int i;
 	Resources_Count = 0;
 	Resources_Size  = 0;
+	GameVersion_Load();
 
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{

@@ -57,6 +57,7 @@ struct GameVersion {
 	cc_uint8 BlocksPerRow, InventorySize;
 	const cc_uint8* Inventory; 
 	const cc_uint8* Hotbar;
+	const char* DefaultTexpack;
 };
 extern struct GameVersion Game_Version;
 extern void GameVersion_Load(void);

@@ -325,7 +325,6 @@ static char texpackPathBuffer[FILENAME_SIZE];
 
 cc_string TexturePack_Url  = String_FromArray(textureUrlBuffer);
 cc_string TexturePack_Path = String_FromArray(texpackPathBuffer);
-static const cc_string defaultPath = String_FromConst("texpacks/default.zip");
 
 void TexturePack_SetDefault(const cc_string* texPack) {
 	TexturePack_Path.length = 0;
@@ -372,15 +371,14 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	return res;
 }
 
-static cc_result ExtractFromFile(const cc_string* path) {
+static cc_result ExtractFromFile(const cc_string* path, cc_bool isDefault) {
 	struct Stream stream;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
 	if (res) {
 		/* Game shows a dialog if default.zip is missing */
-		Game_DefaultZipMissing |= res == ReturnCode_FileNotFound
-					&& String_CaselessEquals(path, &defaultPath);
+		Game_DefaultZipMissing |= isDefault && res == ReturnCode_FileNotFound;
 		Logger_SysWarn2(res, "opening", path); 
 		return res; 
 	}
@@ -392,13 +390,14 @@ static cc_result ExtractFromFile(const cc_string* path) {
 }
 
 static cc_result ExtractDefault(void) {
-	cc_string path = Game_ClassicMode ? defaultPath : TexturePack_Path;
-	cc_result res  = ExtractFromFile(&defaultPath);
+	cc_string defaultPath = String_FromReadonly(Game_Version.DefaultTexpack);
+	cc_string path        = Game_ClassicMode ? defaultPath : TexturePack_Path;
+	cc_bool isDefault     = String_CaselessEquals(&path, &defaultPath);
+	cc_result res         = ExtractFromFile(&defaultPath, true);
+	/* TODO fallback */
 
 	/* override default.zip with user's default texture pack */
-	if (!String_CaselessEquals(&path, &defaultPath)) {
-		res = ExtractFromFile(&path);
-	}
+	if (!isDefault) res = ExtractFromFile(&path, false);
 	return res;
 }
 
@@ -541,7 +540,7 @@ static void OnInit(void) {
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &file)) {
 		String_Format1(&TexturePack_Path,      "texpacks/%s", &file);
 	} else {
-		String_AppendString(&TexturePack_Path, &defaultPath);
+		String_AppendConst(&TexturePack_Path, Game_Version.DefaultTexpack);
 	}
 	
 	/* TODO temp hack to fix mobile, need to properly fix */
