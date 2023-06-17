@@ -17,6 +17,8 @@
 #include "TexturePack.h"
 #include "Utils.h"
 static cc_bool calcDefaultSpawn;
+static struct MapImporter* imp_head;
+static struct MapImporter* imp_tail;
 
 
 /*########################################################################################################################*
@@ -41,25 +43,25 @@ static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 	return 0;
 }
 
-IMapImporter Map_FindImporter(const cc_string* path) {
-	static const cc_string cw    = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	static const cc_string fcm   = String_FromConst(".fcm"), dat = String_FromConst(".dat");
-	static const cc_string mine  = String_FromConst(".mine");
-	static const cc_string mclvl = String_FromConst(".mclevel");
+void MapImporter_Register(struct MapImporter* imp) {
+	LinkedList_Append(imp, imp_head, imp_tail);
+}
 
-	if (String_CaselessEnds(path,   &cw))  return Cw_Load;
-	if (String_CaselessEnds(path,  &lvl))  return Lvl_Load;
-	if (String_CaselessEnds(path,  &fcm))  return Fcm_Load;
-	if (String_CaselessEnds(path,  &dat))  return Dat_Load;
-	if (String_CaselessEnds(path, &mine))  return Dat_Load;
-	if (String_CaselessEnds(path, &mclvl)) return MCLevel_Load;
+struct MapImporter* MapImporter_Find(const cc_string* path) {
+	struct MapImporter* imp;
+	cc_string ext;
 
+	for (imp = imp_head; imp; imp = imp->next)
+	{
+		ext = String_FromReadonly(imp->fileExt);
+		if (String_CaselessEnds(path, &ext)) return imp;
+	}
 	return NULL;
 }
 
 cc_result Map_LoadFrom(const cc_string* path) {
 	cc_string relPath, fileName, fileExt;
-	IMapImporter importer;
+	struct MapImporter* imp;
 	struct Stream stream;
 	cc_result res;
 	Game_Reset();
@@ -68,10 +70,10 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
-	importer = Map_FindImporter(path);
-	if (!importer) {
+	imp = MapImporter_Find(path);
+	if (!imp) {
 		res = ERR_NOT_SUPPORTED;
-	} else if ((res = importer(&stream))) {
+	} else if ((res = imp->import(&stream))) {
 		World_Reset();
 	}
 
@@ -171,7 +173,9 @@ static cc_result Lvl_ReadCustomBlocks(struct Stream* stream) {
 	return 0;
 }
 
-cc_result Lvl_Load(struct Stream* stream) {
+/* Imports a world from a .lvl MCSharp server map file */
+/* Used by MCSharp/MCLawl/MCForge/MCDzienny/MCGalaxy */
+static cc_result Lvl_Load(struct Stream* stream) {
 	cc_uint8 header[18];
 	cc_uint8* blocks;
 	cc_uint8 section;
@@ -258,7 +262,9 @@ static cc_result Fcm_ReadString(struct Stream* stream) {
 	return stream->Skip(stream, len);
 }
 
-cc_result Fcm_Load(struct Stream* stream) {
+/* Imports a world from a .fcm fCraft server map file (v3 only) */
+/* Used by fCraft/800Craft/LegendCraft/ProCraft */
+static cc_result Fcm_Load(struct Stream* stream) {
 	cc_uint8 header[79];	
 	cc_result res;
 	int i, count;
@@ -863,7 +869,9 @@ static void Cw_Callback(struct NbtTag* tag) {
 	        0             1         2        3          4   */
 }
 
-cc_result Cw_Load(struct Stream* stream) {
+/* Imports a world from a .cw ClassicWorld map file */
+/* Used by ClassiCube/ClassicalSharp */
+static cc_result Cw_Load(struct Stream* stream) {
 	return Nbt_Read(stream, Cw_Callback);
 }
 
@@ -1326,7 +1334,9 @@ static cc_result Dat_LoadFormat2(struct Stream* stream) {
 	return 0;
 }
 
-cc_result Dat_Load(struct Stream* stream) {
+/* Imports a world from a .dat classic map file */
+/* Used by Minecraft Classic/WoM client */
+static cc_result Dat_Load(struct Stream* stream) {
 	cc_uint8 header[4 + 1];
 	cc_uint32 signature;
 	cc_result res;
@@ -1417,6 +1427,7 @@ static void MCLevel_ParseEnvironment(struct NbtTag* tag) {
 	} else if (IsTag(tag, "SurroundingWaterHeight")) {
 		mcl_edgeHeight  = NbtTag_U16(tag);
 	}
+	/* TODO: SkyBrightness */
 }
 
 
@@ -1455,7 +1466,9 @@ static void MCLevel_Callback(struct NbtTag* tag) {
 			0					1				 2 */
 }
 
-cc_result MCLevel_Load(struct Stream* stream) {
+/* Imports a world from a .mclevel NBT map file */
+/* Used by Minecraft Indev client */
+static cc_result MCLevel_Load(struct Stream* stream) {
 	cc_result res = Nbt_Read(stream, MCLevel_Callback);
 
 	Env.EdgeHeight  = mcl_edgeHeight;
@@ -1836,3 +1849,32 @@ cc_result Dat_Save(struct Stream* stream) {
 	}
 	return 0;
 }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Formats component-------------------------------------------------*
+*#########################################################################################################################*/
+static struct MapImporter cw_imp    = { ".cw",      Cw_Load };
+static struct MapImporter dat_imp   = { ".dat",     Dat_Load };
+static struct MapImporter lvl_imp   = { ".lvl",     Lvl_Load };
+static struct MapImporter mine_imp  = { ".mine",    Dat_Load };
+static struct MapImporter fcm_imp   = { ".fcm",     Fcm_Load };
+static struct MapImporter mclvl_imp = { ".mclevel", MCLevel_Load };
+
+static void OnInit(void) {
+	MapImporter_Register(&cw_imp);
+	MapImporter_Register(&dat_imp);
+	MapImporter_Register(&lvl_imp);
+	MapImporter_Register(&mine_imp);
+	MapImporter_Register(&fcm_imp);
+	MapImporter_Register(&mclvl_imp);
+}
+
+static void OnFree(void) {
+	imp_head = NULL;
+}
+
+struct IGameComponent Formats_Component = {
+	OnInit, /* Init  */
+	OnFree  /* Free  */
+};

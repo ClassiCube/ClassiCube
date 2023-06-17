@@ -37,6 +37,7 @@
 #include "Picking.h"
 #include "Animations.h"
 #include "SystemFonts.h"
+#include "Formats.h"
 
 struct _GameData Game;
 cc_uint64 Game_FrameStart;
@@ -414,6 +415,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&PickedPosRenderer_Component);
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
+	Game_AddComponent(&Formats_Component);
 
 	LoadPlugins();
 	for (comp = comps_head; comp; comp = comp->next) {

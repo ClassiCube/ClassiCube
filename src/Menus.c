@@ -1711,9 +1711,9 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void LoadLevelScreen_FilterFiles(const cc_string* path, void* obj) {
-	IMapImporter importer = Map_FindImporter(path);
+	struct MapImporter* imp = MapImporter_Find(path);
 	cc_string relPath = *path;
-	if (!importer) return;
+	if (!imp) return;
 
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
 	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
@@ -1729,7 +1729,7 @@ static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom
 static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 	static const char* const filters[] = { 
 		".cw", ".dat", ".lvl", ".mine", ".fcm", ".mclevel", NULL 
-	};
+	}; /* TODO not hardcode list */
 	static struct OpenFileDialogArgs args = {
 		"Classic map files", filters,
 		LoadLevelScreen_UploadCallback,
