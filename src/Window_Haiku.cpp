@@ -317,7 +317,7 @@ void Window_Create3D(int width, int height) {
 
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(raw, title);
+	String_EncodeUtf8(raw, title);
 	
 	win_handle->Lock(); // TODO even need to lock/unlock?
 	win_handle->SetTitle(raw);
@@ -339,7 +339,7 @@ void Clipboard_GetText(cc_string* value) {
 
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
-	int str_len = Platform_EncodeUtf8(str, value);
+	int str_len = String_EncodeUtf8(str, value);
 	
 	if (!be_clipboard->Lock()) return;
 	be_clipboard->Clear();
