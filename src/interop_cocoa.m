@@ -150,6 +150,7 @@ static void LogUnhandledNSErrors(NSException* ex) {
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+	showDialogs = Options_GetBool("show-dialogs", true);
 
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
 	pool = [[NSAutoreleasePool alloc] init];
@@ -546,13 +547,8 @@ void ShowDialogCore(const char* title, const char* msg) {
 	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
 	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
 	
-	// backwards compatible @try @catch
-	NS_DURING {
-		alert = [NSAlert alloc];
-		alert = [alert init];
-	} NS_HANDLER {
-		LogUnhandledNSErrors(localException);
-	} NS_ENDHANDLER
+	alert = [NSAlert alloc];
+	alert = [alert init];
 	
 	[alert setMessageText: titleCF];
 	[alert setInformativeText: msgCF];

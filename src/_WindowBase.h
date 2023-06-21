@@ -15,6 +15,7 @@ int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
 static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
+static cc_bool showDialogs   = true;
 /* Gets the position of the cursor in screen or window coordinates */
 static void Cursor_GetRawPos(int* x, int* y);
 /* Sets whether the cursor is visible when over this window */
@@ -64,6 +65,7 @@ static void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* Ensure cursor is usable while showing message box */
 	cc_bool rawMode = Input_RawMode;
+	if (!showDialogs) return;
 
 	if (rawMode) Window_DisableRawMouse();
 	ShowDialogCore(title, msg);
