@@ -423,9 +423,48 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
+static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
+static int gameNumArgs;
+static cc_bool gameHasArgs;
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	return ERR_NOT_SUPPORTED;
+	for (int i = 0; i < numArgs; i++) 
+	{
+		String_CopyToRawArray(gameArgs[i], &args[i]);
+	}
+	Platform_LogConst("START GAME");
+	gameHasArgs = true;
+	gameNumArgs = numArgs;
+	return 0;
 }
+static int GetGameArgs(cc_string* args) {
+	int count = gameNumArgs;
+	for (int i = 0; i < count; i++) 
+	{
+		args[i] = String_FromRawArray(gameArgs[i]);
+	}
+	// clear arguments so after game is closed, launcher is started
+    	gameNumArgs = 0;
+    	return count;
+}
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	if (gameHasArgs) return GetGameArgs(args);
+	
+	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
+	// (e.g. when running from Citra)
+	int count = min(argc, GAME_MAX_CMDARGS);
+	Platform_Log1("ARGS: %i", &count);
+	
+	for (int i = 0; i < count; i++) {
+		args[i] = String_FromReadonly(argv[i]);
+		Platform_Log2("  ARG %i = %c", &i, argv[i]);
+	}
+	return count;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
+
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartOpen(const cc_string* args) {
@@ -517,26 +556,5 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 }
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
-*#########################################################################################################################*/
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
-	// (e.g. when running from Citra)
-	int count = min(argc, GAME_MAX_CMDARGS);
-	Platform_Log1("ARGS: %i", &count);
-	
-	for (int i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-		Platform_Log2("  ARG %i = %c", &i, argv[i]);
-	}
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
 }
 #endif

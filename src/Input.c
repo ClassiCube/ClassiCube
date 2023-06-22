@@ -487,9 +487,9 @@ int Hotkeys_FindPartial(int key) {
 	struct HotkeyData hk;
 	int i, modifiers = 0;
 
-	if (Input_IsCtrlPressed())  modifiers |= HOTIPT_MOD_CTRL;
-	if (Input_IsShiftPressed()) modifiers |= HOTIPT_MOD_SHIFT;
-	if (Input_IsAltPressed())   modifiers |= HOTIPT_MOD_ALT;
+	if (Input_IsCtrlPressed())  modifiers |= HOTKEY_MOD_CTRL;
+	if (Input_IsShiftPressed()) modifiers |= HOTKEY_MOD_SHIFT;
+	if (Input_IsAltPressed())   modifiers |= HOTKEY_MOD_ALT;
 
 	for (i = 0; i < HotkeysText.count; i++) {
 		hk = HotkeysList[i];

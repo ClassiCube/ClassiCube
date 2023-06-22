@@ -6,9 +6,6 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include <3ds.h>
-
-#define CC_INPUT_H
-extern cc_bool Input_RawMode; // Otherwise KEY_ conflicts with 3DS keys
 #include "_WindowBase.h"
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
@@ -64,11 +61,37 @@ void Window_ProcessEvents(void) {
 	hidScanInput();
 	/* TODO implement */
 	
-	if (hidKeysDown() & KEY_TOUCH)
-		Input_SetPressed(119); // LMOUSE
+	//u32 m1 = hidKeysDown(), m2 = hidKeysHeld();
+	//Platform_Log2("MODS: %h | %h", &m1, &m2);
 	
-	if (hidKeysUp() & KEY_TOUCH)
-		Input_SetReleased(119); // LMOUSE
+	// hidKeysDown hidKeysUp
+	//u32 mods = hidKeysDownRepeat();
+	u32 mods = hidKeysDown() | hidKeysHeld();
+	//Platform_Log1("MODS: %h", &mods);
+	Input_SetNonRepeatable(IPT_LMOUSE, mods & KEY_TOUCH);
+	
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & KEY_L);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & KEY_R);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & KEY_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & KEY_X);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & KEY_Y);
+	
+	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_START);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_SELECT);
+	// fake tab with down for Launcher
+	Input_SetNonRepeatable(IPT_TAB, mods & KEY_DDOWN);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & KEY_DLEFT);
+	Input_SetNonRepeatable(IPT_LEFT,                mods & KEY_DLEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(IPT_RIGHT,               mods & KEY_DRIGHT);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DUP);
+	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DUP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DDOWN);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DDOWN);
 	
 	if (hidKeysHeld() & KEY_TOUCH) {
 		int x, y;

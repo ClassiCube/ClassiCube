@@ -157,14 +157,14 @@ struct HotkeyData {
 	int textIndex;     /* contents to copy directly into the input bar */
 	cc_uint8 trigger;  /* Member of Key enumeration */
 	cc_uint8 mods;     /* HotkeyModifiers bitflags */
-	cc_uint8 flags;    /* HOTIPT_FLAG flags */
+	cc_uint8 flags;    /* HOTKEY_FLAG flags */
 };
 
 #define HOTKEYS_MAX_COUNT 256
 extern struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 extern struct StringsBuffer HotkeysText;
 enum HotkeyModifiers {
-	HOTIPT_MOD_CTRL = 1, HOTIPT_MOD_SHIFT = 2, HOTIPT_MOD_ALT = 4
+	HOTKEY_MOD_CTRL = 1, HOTKEY_MOD_SHIFT = 2, HOTKEY_MOD_ALT = 4
 };
 
 /* Adds or updates a new hotkey. */

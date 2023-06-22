@@ -138,6 +138,12 @@ void android_main(void) {
 	SetupProgram(0, NULL);
 	for (;;) { RunProgram(0, NULL); }
 }
+#elif defined CC_BUILD_3DS
+int main(int argc, char** argv) {
+	SetupProgram(argc, argc);
+	for (;;) { RunProgram(argc, argv); }
+	return 0;
+}
 #else
 /* NOTE: main_real is used for when compiling with MingW without linking to startup files. */
 /*  Normally, the final code produced for "main" is our "main" combined with crt's main */

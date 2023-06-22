@@ -879,9 +879,9 @@ static int EditHotkeyScreen_KeyDown(void* screen, int key) {
 		if (s->selectedI == 0) {
 			s->curHotkey.trigger = key;
 		} else if (s->selectedI == 1) {
-			if      (key == IPT_LCTRL  || key == IPT_RCTRL)  s->curHotkey.mods |= HOTIPT_MOD_CTRL;
-			else if (key == IPT_LSHIFT || key == IPT_RSHIFT) s->curHotkey.mods |= HOTIPT_MOD_SHIFT;
-			else if (key == IPT_LALT   || key == IPT_RALT)   s->curHotkey.mods |= HOTIPT_MOD_ALT;
+			if      (key == IPT_LCTRL  || key == IPT_RCTRL)  s->curHotkey.mods |= HOTKEY_MOD_CTRL;
+			else if (key == IPT_LSHIFT || key == IPT_RSHIFT) s->curHotkey.mods |= HOTKEY_MOD_SHIFT;
+			else if (key == IPT_LALT   || key == IPT_RALT)   s->curHotkey.mods |= HOTKEY_MOD_ALT;
 			else s->curHotkey.mods = 0;
 		}
 
@@ -1629,9 +1629,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
-	if (String_ContainsConst(&value, "Ctrl"))  mods |= HOTIPT_MOD_CTRL;
-	if (String_ContainsConst(&value, "Shift")) mods |= HOTIPT_MOD_SHIFT;
-	if (String_ContainsConst(&value, "Alt"))   mods |= HOTIPT_MOD_ALT;
+	if (String_ContainsConst(&value, "Ctrl"))  mods |= HOTKEY_MOD_CTRL;
+	if (String_ContainsConst(&value, "Shift")) mods |= HOTKEY_MOD_SHIFT;
+	if (String_ContainsConst(&value, "Alt"))   mods |= HOTKEY_MOD_ALT;
 
 	trigger = Utils_ParseEnum(&key, IPT_NONE, Input_DisplayNames, INPUT_COUNT);
 	for (i = 0; i < HotkeysText.count; i++) {
@@ -1643,9 +1643,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, cc_string* str) {
-	if (flags & HOTIPT_MOD_CTRL)  String_AppendConst(str, " Ctrl");
-	if (flags & HOTIPT_MOD_SHIFT) String_AppendConst(str, " Shift");
-	if (flags & HOTIPT_MOD_ALT)   String_AppendConst(str, " Alt");
+	if (flags & HOTKEY_MOD_CTRL)  String_AppendConst(str, " Ctrl");
+	if (flags & HOTKEY_MOD_SHIFT) String_AppendConst(str, " Shift");
+	if (flags & HOTKEY_MOD_ALT)   String_AppendConst(str, " Alt");
 }
 
 static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
