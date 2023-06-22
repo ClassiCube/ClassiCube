@@ -174,11 +174,11 @@ static void OnResize(void* obj) {
 }
 
 static cc_bool IsShutdown(int key) {
-	if (key == KEY_F4 && Key_IsAltPressed()) return true;
+	if (key == IPT_F4 && Input_IsAltPressed()) return true;
 
 	/* On macOS, Cmd+Q should also end the process */
 #ifdef CC_BUILD_DARWIN
-	return key == 'Q' && Key_IsWinPressed();
+	return key == 'Q' && Input_IsWinPressed();
 #else
 	return false;
 #endif

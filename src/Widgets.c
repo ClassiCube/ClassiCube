@@ -881,13 +881,13 @@ static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
-	if (key == KEY_LEFT || key == KEY_KP4) {
+	if (key == IPT_LEFT || key == IPT_KP4) {
 		TableWidget_ScrollRelative(w, -1);
-	} else if (key == KEY_RIGHT || key == KEY_KP6) {
+	} else if (key == IPT_RIGHT || key == IPT_KP6) {
 		TableWidget_ScrollRelative(w, 1);
-	} else if (key == KEY_UP || key == KEY_KP8) {
+	} else if (key == IPT_UP || key == IPT_KP8) {
 		TableWidget_ScrollRelative(w, -w->blocksPerRow);
-	} else if (key == KEY_DOWN || key == KEY_KP2) {
+	} else if (key == IPT_DOWN || key == IPT_KP2) {
 		TableWidget_ScrollRelative(w, w->blocksPerRow);
 	} else {
 		return false;
@@ -1146,7 +1146,7 @@ static void InputWidget_DeleteChar(struct InputWidget* w) {
 static void InputWidget_BackspaceKey(struct InputWidget* w) {
 	int i, len;
 
-	if (Key_IsActionPressed()) {
+	if (Input_IsActionPressed()) {
 		if (w->caretPos == -1) { w->caretPos = w->text.length - 1; }
 		len = WordWrap_GetBackLength(&w->text, w->caretPos);
 		if (!len) return;
@@ -1180,7 +1180,7 @@ static void InputWidget_DeleteKey(struct InputWidget* w) {
 }
 
 static void InputWidget_LeftKey(struct InputWidget* w) {
-	if (Key_IsActionPressed()) {
+	if (Input_IsActionPressed()) {
 		if (w->caretPos == -1) { w->caretPos = w->text.length - 1; }
 		w->caretPos -= WordWrap_GetBackLength(&w->text, w->caretPos);
 		InputWidget_UpdateCaret(w);
@@ -1196,7 +1196,7 @@ static void InputWidget_LeftKey(struct InputWidget* w) {
 }
 
 static void InputWidget_RightKey(struct InputWidget* w) {
-	if (Key_IsActionPressed()) {
+	if (Input_IsActionPressed()) {
 		w->caretPos += WordWrap_GetForwardLength(&w->text, w->caretPos);
 		if (w->caretPos >= w->text.length) { w->caretPos = -1; }
 		InputWidget_UpdateCaret(w);
@@ -1281,17 +1281,17 @@ static void InputWidget_Reposition(void* widget) {
 
 static int InputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (key == KEY_LEFT) {
+	if (key == IPT_LEFT) {
 		InputWidget_LeftKey(w);
-	} else if (key == KEY_RIGHT) {
+	} else if (key == IPT_RIGHT) {
 		InputWidget_RightKey(w);
-	} else if (key == KEY_BACKSPACE) {
+	} else if (key == IPT_BACKSPACE) {
 		InputWidget_BackspaceKey(w);
-	} else if (key == KEY_DELETE) {
+	} else if (key == IPT_DELETE) {
 		InputWidget_DeleteKey(w);
-	} else if (key == KEY_HOME) {
+	} else if (key == IPT_HOME) {
 		InputWidget_HomeKey(w);
-	} else if (key == KEY_END) {
+	} else if (key == IPT_END) {
 		InputWidget_EndKey(w);
 	} else if (!InputWidget_OtherKey(w, key)) {
 		return false;
@@ -1719,7 +1719,7 @@ static void ChatInputWidget_UpKey(struct InputWidget* w) {
 	cc_string prevInput;
 	int pos;
 
-	if (Key_IsActionPressed()) {
+	if (Input_IsActionPressed()) {
 		pos = w->caretPos == -1 ? w->text.length : w->caretPos;
 		if (pos < INPUTWIDGET_LEN) return;
 
@@ -1748,7 +1748,7 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 	struct ChatInputWidget* W = (struct ChatInputWidget*)w;
 	cc_string prevInput;
 
-	if (Key_IsActionPressed()) {
+	if (Input_IsActionPressed()) {
 		if (w->caretPos == -1) return;
 
 		w->caretPos += INPUTWIDGET_LEN;
@@ -1837,9 +1837,9 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 static int ChatInputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
-	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
-	if (key == KEY_DOWN) { ChatInputWidget_DownKey(w); return true; }
+	if (key == IPT_TAB)  { ChatInputWidget_TabKey(w);  return true; }
+	if (key == IPT_UP)   { ChatInputWidget_UpKey(w);   return true; }
+	if (key == IPT_DOWN) { ChatInputWidget_DownKey(w); return true; }
 	return InputWidget_KeyDown(w, key);
 }
 

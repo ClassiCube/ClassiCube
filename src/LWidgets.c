@@ -249,19 +249,19 @@ static void LInput_Delete(struct LInput* w) {
 
 static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	struct LInput* w = (struct LInput*)widget;
-	if (key == KEY_BACKSPACE) {
+	if (key == IPT_BACKSPACE) {
 		LInput_Backspace(w);
-	} else if (key == KEY_DELETE) {
+	} else if (key == IPT_DELETE) {
 		LInput_Delete(w);
 	} else if (key == INPUT_CLIPBOARD_COPY) {
 		if (w->text.length) Clipboard_SetText(&w->text);
 	} else if (key == INPUT_CLIPBOARD_PASTE) {
 		LInput_CopyFromClipboard(w);
-	} else if (key == KEY_ESCAPE) {
+	} else if (key == IPT_ESCAPE) {
 		if (w->text.length) LInput_SetString(w, &String_Empty);
-	} else if (key == KEY_LEFT) {
+	} else if (key == IPT_LEFT) {
 		LInput_AdvanceCaretPos(w, false);
-	} else if (key == KEY_RIGHT) {
+	} else if (key == IPT_RIGHT) {
 		LInput_AdvanceCaretPos(w, true);
 	}
 }
@@ -561,20 +561,20 @@ void LTable_RowClick(struct LTable* w, int row) {
 }
 
 cc_bool LTable_HandlesKey(int key) {
-	return key == KEY_UP || key == KEY_DOWN || key == KEY_PAGEUP || key == KEY_PAGEDOWN;
+	return key == IPT_UP || key == IPT_DOWN || key == IPT_PAGEUP || key == IPT_PAGEDOWN;
 }
 
 static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 
-	if (key == KEY_UP) {
+	if (key == IPT_UP) {
 		index--;
-	} else if (key == KEY_DOWN) {
+	} else if (key == IPT_DOWN) {
 		index++;
-	} else if (key == KEY_PAGEUP) {
+	} else if (key == IPT_PAGEUP) {
 		index -= w->visibleRows;
-	} else if (key == KEY_PAGEDOWN) {
+	} else if (key == IPT_PAGEDOWN) {
 		index += w->visibleRows;
 	} else { return; }
 

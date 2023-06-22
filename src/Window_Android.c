@@ -29,57 +29,57 @@ static void RefreshWindowBounds(void) {
 static int MapNativeKey(int code) {
 	if (code >= AKEYCODE_0  && code <= AKEYCODE_9)   return (code - AKEYCODE_0)  + '0';
 	if (code >= AKEYCODE_A  && code <= AKEYCODE_Z)   return (code - AKEYCODE_A)  + 'A';
-	if (code >= AKEYCODE_F1 && code <= AKEYCODE_F12) return (code - AKEYCODE_F1) + KEY_F1;
-	if (code >= AKEYCODE_NUMPAD_0 && code <= AKEYCODE_NUMPAD_9) return (code - AKEYCODE_NUMPAD_0) + KEY_KP0;
+	if (code >= AKEYCODE_F1 && code <= AKEYCODE_F12) return (code - AKEYCODE_F1) + IPT_F1;
+	if (code >= AKEYCODE_NUMPAD_0 && code <= AKEYCODE_NUMPAD_9) return (code - AKEYCODE_NUMPAD_0) + IPT_KP0;
 
 	switch (code) {
 		/* TODO: AKEYCODE_STAR */
 		/* TODO: AKEYCODE_POUND */
-	case AKEYCODE_BACK:   return KEY_ESCAPE;
-	case AKEYCODE_COMMA:  return KEY_COMMA;
-	case AKEYCODE_PERIOD: return KEY_PERIOD;
-	case AKEYCODE_ALT_LEFT:    return KEY_LALT;
-	case AKEYCODE_ALT_RIGHT:   return KEY_RALT;
-	case AKEYCODE_SHIFT_LEFT:  return KEY_LSHIFT;
-	case AKEYCODE_SHIFT_RIGHT: return KEY_RSHIFT;
-	case AKEYCODE_TAB:    return KEY_TAB;
-	case AKEYCODE_SPACE:  return KEY_SPACE;
-	case AKEYCODE_ENTER:  return KEY_ENTER;
-	case AKEYCODE_DEL:    return KEY_BACKSPACE;
-	case AKEYCODE_GRAVE:  return KEY_TILDE;
-	case AKEYCODE_MINUS:  return KEY_MINUS;
-	case AKEYCODE_EQUALS: return KEY_EQUALS;
-	case AKEYCODE_LEFT_BRACKET:  return KEY_LBRACKET;
-	case AKEYCODE_RIGHT_BRACKET: return KEY_RBRACKET;
-	case AKEYCODE_BACKSLASH:  return KEY_BACKSLASH;
-	case AKEYCODE_SEMICOLON:  return KEY_SEMICOLON;
-	case AKEYCODE_APOSTROPHE: return KEY_QUOTE;
-	case AKEYCODE_SLASH:      return KEY_SLASH;
+	case AKEYCODE_BACK:   return IPT_ESCAPE;
+	case AKEYCODE_COMMA:  return IPT_COMMA;
+	case AKEYCODE_PERIOD: return IPT_PERIOD;
+	case AKEYCODE_ALT_LEFT:    return IPT_LALT;
+	case AKEYCODE_ALT_RIGHT:   return IPT_RALT;
+	case AKEYCODE_SHIFT_LEFT:  return IPT_LSHIFT;
+	case AKEYCODE_SHIFT_RIGHT: return IPT_RSHIFT;
+	case AKEYCODE_TAB:    return IPT_TAB;
+	case AKEYCODE_SPACE:  return IPT_SPACE;
+	case AKEYCODE_ENTER:  return IPT_ENTER;
+	case AKEYCODE_DEL:    return IPT_BACKSPACE;
+	case AKEYCODE_GRAVE:  return IPT_TILDE;
+	case AKEYCODE_MINUS:  return IPT_MINUS;
+	case AKEYCODE_EQUALS: return IPT_EQUALS;
+	case AKEYCODE_LEFT_BRACKET:  return IPT_LBRACKET;
+	case AKEYCODE_RIGHT_BRACKET: return IPT_RBRACKET;
+	case AKEYCODE_BACKSLASH:  return IPT_BACKSLASH;
+	case AKEYCODE_SEMICOLON:  return IPT_SEMICOLON;
+	case AKEYCODE_APOSTROPHE: return IPT_QUOTE;
+	case AKEYCODE_SLASH:      return IPT_SLASH;
 		/* TODO: AKEYCODE_AT */
 		/* TODO: AKEYCODE_PLUS */
 		/* TODO: AKEYCODE_MENU */
-	case AKEYCODE_PAGE_UP:     return KEY_PAGEUP;
-	case AKEYCODE_PAGE_DOWN:   return KEY_PAGEDOWN;
-	case AKEYCODE_ESCAPE:      return KEY_ESCAPE;
-	case AKEYCODE_FORWARD_DEL: return KEY_DELETE;
-	case AKEYCODE_CTRL_LEFT:   return KEY_LCTRL;
-	case AKEYCODE_CTRL_RIGHT:  return KEY_RCTRL;
-	case AKEYCODE_CAPS_LOCK:   return KEY_CAPSLOCK;
-	case AKEYCODE_SCROLL_LOCK: return KEY_SCROLLLOCK;
-	case AKEYCODE_META_LEFT:   return KEY_LWIN;
-	case AKEYCODE_META_RIGHT:  return KEY_RWIN;
-	case AKEYCODE_SYSRQ:    return KEY_PRINTSCREEN;
-	case AKEYCODE_BREAK:    return KEY_PAUSE;
-	case AKEYCODE_INSERT:   return KEY_INSERT;
-	case AKEYCODE_NUM_LOCK: return KEY_NUMLOCK;
-	case AKEYCODE_NUMPAD_DIVIDE:   return KEY_KP_DIVIDE;
-	case AKEYCODE_NUMPAD_MULTIPLY: return KEY_KP_MULTIPLY;
-	case AKEYCODE_NUMPAD_SUBTRACT: return KEY_KP_MINUS;
-	case AKEYCODE_NUMPAD_ADD:      return KEY_KP_PLUS;
-	case AKEYCODE_NUMPAD_DOT:      return KEY_KP_DECIMAL;
-	case AKEYCODE_NUMPAD_ENTER:    return KEY_KP_ENTER;
+	case AKEYCODE_PAGE_UP:     return IPT_PAGEUP;
+	case AKEYCODE_PAGE_DOWN:   return IPT_PAGEDOWN;
+	case AKEYCODE_ESCAPE:      return IPT_ESCAPE;
+	case AKEYCODE_FORWARD_DEL: return IPT_DELETE;
+	case AKEYCODE_CTRL_LEFT:   return IPT_LCTRL;
+	case AKEYCODE_CTRL_RIGHT:  return IPT_RCTRL;
+	case AKEYCODE_CAPS_LOCK:   return IPT_CAPSLOCK;
+	case AKEYCODE_SCROLL_LOCK: return IPT_SCROLLLOCK;
+	case AKEYCODE_META_LEFT:   return IPT_LWIN;
+	case AKEYCODE_META_RIGHT:  return IPT_RWIN;
+	case AKEYCODE_SYSRQ:    return IPT_PRINTSCREEN;
+	case AKEYCODE_BREAK:    return IPT_PAUSE;
+	case AKEYCODE_INSERT:   return IPT_INSERT;
+	case AKEYCODE_NUM_LOCK: return IPT_NUMLOCK;
+	case AKEYCODE_NUMPAD_DIVIDE:   return IPT_KP_DIVIDE;
+	case AKEYCODE_NUMPAD_MULTIPLY: return IPT_KP_MULTIPLY;
+	case AKEYCODE_NUMPAD_SUBTRACT: return IPT_KP_MINUS;
+	case AKEYCODE_NUMPAD_ADD:      return IPT_KP_PLUS;
+	case AKEYCODE_NUMPAD_DOT:      return IPT_KP_DECIMAL;
+	case AKEYCODE_NUMPAD_ENTER:    return IPT_KP_ENTER;
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
 static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {

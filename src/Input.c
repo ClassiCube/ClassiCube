@@ -239,11 +239,11 @@ void Input_SetPressed(int key) {
 	Input_Pressed[key] = true;
 	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
 
-	if (key == 'C' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
-	if (key == 'V' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
+	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
 
 	/* don't allow multiple left mouse down events */
-	if (key != KEY_LMOUSE || wasPressed) return;
+	if (key != IPT_LMOUSE || wasPressed) return;
 	Pointer_SetPressed(0, true);
 }
 
@@ -252,7 +252,7 @@ void Input_SetReleased(int key) {
 	Input_Pressed[key] = false;
 
 	Event_RaiseInt(&InputEvents.Up, key);
-	if (key == KEY_LMOUSE) Pointer_SetPressed(0, false);
+	if (key == IPT_LMOUSE) Pointer_SetPressed(0, false);
 }
 
 void Input_Set(int key, int pressed) {
@@ -318,14 +318,14 @@ void Pointer_SetPosition(int idx, int x, int y) {
 cc_uint8 KeyBinds[KEYBIND_COUNT];
 const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
-	KEY_SPACE, 'R', KEY_ENTER, 'T',
-	'B', 'F', KEY_ENTER, KEY_TAB, 
-	KEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
-	KEY_LALT, KEY_F3, KEY_F12, KEY_F11, 
-	KEY_F5, KEY_F1, KEY_F7, 'C', 
-	KEY_LCTRL, KEY_LMOUSE, KEY_MMOUSE, KEY_RMOUSE, 
-	KEY_F6, KEY_LALT, KEY_F8, 
-	'G', KEY_F10, 0,
+	IPT_SPACE, 'R', IPT_ENTER, 'T',
+	'B', 'F', IPT_ENTER, IPT_TAB, 
+	IPT_LSHIFT, 'X', 'Z', 'Q', 'E', 
+	IPT_LALT, IPT_F3, IPT_F12, IPT_F11, 
+	IPT_F5, IPT_F1, IPT_F7, 'C', 
+	IPT_LCTRL, IPT_LMOUSE, IPT_MMOUSE, IPT_RMOUSE, 
+	IPT_F6, IPT_LALT, IPT_F8, 
+	'G', IPT_F10, 0,
 	0, 0, 0, 0
 };
 static const char* const keybindNames[KEYBIND_COUNT] = {
@@ -355,7 +355,7 @@ static void KeyBind_Load(void) {
 		name.buffer[name.length] = '\0';
 
 		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Input_StorageNames, INPUT_COUNT);
-		if (mapping != KEY_ESCAPE) KeyBinds[i] = mapping;
+		if (mapping != IPT_ESCAPE) KeyBinds[i] = mapping;
 	}
 }
 
@@ -384,20 +384,20 @@ static void KeyBind_Init(void) {
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
 const cc_uint8 Hotkeys_LWJGL[256] = {
-	0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_TAB,
-	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S',
-	'D', 'F', 'G', 'H', 'J', 'K', 'L', KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V',
-	'B', 'N', 'M', KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RSHIFT, 0, KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5,
-	KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7, KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1,
-	KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11, KEY_F12, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, 0, 0, 0, 0, 0, 0,
+	0, IPT_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', IPT_MINUS, IPT_EQUALS, IPT_BACKSPACE, IPT_TAB,
+	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', IPT_LBRACKET, IPT_RBRACKET, IPT_ENTER, IPT_LCTRL, 'A', 'S',
+	'D', 'F', 'G', 'H', 'J', 'K', 'L', IPT_SEMICOLON, IPT_QUOTE, IPT_TILDE, IPT_LSHIFT, IPT_BACKSLASH, 'Z', 'X', 'C', 'V',
+	'B', 'N', 'M', IPT_COMMA, IPT_PERIOD, IPT_SLASH, IPT_RSHIFT, 0, IPT_LALT, IPT_SPACE, IPT_CAPSLOCK, IPT_F1, IPT_F2, IPT_F3, IPT_F4, IPT_F5,
+	IPT_F6, IPT_F7, IPT_F8, IPT_F9, IPT_F10, IPT_NUMLOCK, IPT_SCROLLLOCK, IPT_KP7, IPT_KP8, IPT_KP9, IPT_KP_MINUS, IPT_KP4, IPT_KP5, IPT_KP6, IPT_KP_PLUS, IPT_KP1,
+	IPT_KP2, IPT_KP3, IPT_KP0, IPT_KP_DECIMAL, 0, 0, 0, IPT_F11, IPT_F12, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, IPT_F13, IPT_F14, IPT_F15, IPT_F16, IPT_F17, IPT_F18, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_KP_PLUS, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_KP_ENTER, KEY_RCTRL, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, IPT_KP_PLUS, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, IPT_KP_ENTER, IPT_RCTRL, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, KEY_KP_DIVIDE, 0, 0, KEY_RALT, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, KEY_PAUSE, 0, KEY_HOME, KEY_UP, KEY_PAGEUP, 0, KEY_LEFT, 0, KEY_RIGHT, 0, KEY_END,
-	KEY_DOWN, KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0, 0, 0, 0, KEY_LWIN, KEY_RWIN, 0, 0, 0,
+	0, 0, 0, 0, 0, IPT_KP_DIVIDE, 0, 0, IPT_RALT, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, IPT_PAUSE, 0, IPT_HOME, IPT_UP, IPT_PAGEUP, 0, IPT_LEFT, 0, IPT_RIGHT, 0, IPT_END,
+	IPT_DOWN, IPT_PAGEDOWN, IPT_INSERT, IPT_DELETE, 0, 0, 0, 0, 0, 0, 0, IPT_LWIN, IPT_RWIN, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
@@ -487,9 +487,9 @@ int Hotkeys_FindPartial(int key) {
 	struct HotkeyData hk;
 	int i, modifiers = 0;
 
-	if (Key_IsCtrlPressed())  modifiers |= HOTKEY_MOD_CTRL;
-	if (Key_IsShiftPressed()) modifiers |= HOTKEY_MOD_SHIFT;
-	if (Key_IsAltPressed())   modifiers |= HOTKEY_MOD_ALT;
+	if (Input_IsCtrlPressed())  modifiers |= HOTIPT_MOD_CTRL;
+	if (Input_IsShiftPressed()) modifiers |= HOTIPT_MOD_SHIFT;
+	if (Input_IsAltPressed())   modifiers |= HOTIPT_MOD_ALT;
 
 	for (i = 0; i < HotkeysText.count; i++) {
 		hk = HotkeysList[i];
@@ -512,8 +512,8 @@ static void StoredHotkey_Parse(cc_string* key, cc_string* value) {
 	if (!String_UNSAFE_Separate(key,   '&', &strKey,  &strMods)) return;
 	if (!String_UNSAFE_Separate(value, '&', &strMore, &strText)) return;
 	
-	trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_StorageNames, INPUT_COUNT);
-	if (trigger == KEY_NONE) return; 
+	trigger = Utils_ParseEnum(&strKey, IPT_NONE, Input_StorageNames, INPUT_COUNT);
+	if (trigger == IPT_NONE) return; 
 	if (!Convert_ParseUInt8(&strMods, &modifiers)) return;
 	if (!Convert_ParseBool(&strMore,  &more))      return;
 	
@@ -813,11 +813,11 @@ void InputHandler_Tick(void) {
 *-----------------------------------------------------Input helpers-------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool InputHandler_IsShutdown(int key) {
-	if (key == KEY_F4 && Key_IsAltPressed()) return true;
+	if (key == IPT_F4 && Input_IsAltPressed()) return true;
 
 	/* On macOS, Cmd+Q should also end the process */
 #ifdef CC_BUILD_DARWIN
-	return key == 'Q' && Key_IsWinPressed();
+	return key == 'Q' && Input_IsWinPressed();
 #else
 	return false;
 #endif
@@ -845,7 +845,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 	struct HacksComp* h;
 	cc_bool hotbar;
 
-	hotbar = Key_IsAltPressed() || Key_IsCtrlPressed() || Key_IsShiftPressed();
+	hotbar = Input_IsAltPressed() || Input_IsCtrlPressed() || Input_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta))   return true;
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
@@ -925,7 +925,7 @@ static cc_bool HandleCoreKey(int key) {
 		Game_ToggleFullscreen();
 	} else if (key == KeyBinds[KEYBIND_FOG]) {
 		Game_CycleViewDistance();
-	} else if (key == KEY_F5 && Game_ClassicMode) {
+	} else if (key == IPT_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
 	} else {
@@ -1044,7 +1044,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	int i;
 
 #ifndef CC_BUILD_WEB
-	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
+	if (key == IPT_ESCAPE && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Remove(s);
 		return;
@@ -1064,7 +1064,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
-	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui.InputGrab) {
+	if ((key == IPT_ESCAPE || key == IPT_PAUSE) && !Gui.InputGrab) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -1093,7 +1093,7 @@ static void OnInputUp(void* obj, int key) {
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
 	/* done in key up, the cursor disappears as expected. */
-	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
+	if (key == IPT_ESCAPE && (s = Gui_GetClosable())) {
 		if (suppressEscape) { suppressEscape = false; return; }
 		Gui_Remove(s); return;
 	}

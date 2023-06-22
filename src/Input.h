@@ -10,40 +10,40 @@ struct StringsBuffer;
 extern struct IGameComponent Input_Component;
 
 enum InputButtons {
-	KEY_NONE, /* Unrecognised key */
+	IPT_NONE, /* Unrecognised key */
 
-	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
-	KEY_F11, KEY_F12, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, KEY_F19, KEY_F20,
-	KEY_F21, KEY_F22, KEY_F23, KEY_F24,
+	IPT_F1, IPT_F2, IPT_F3, IPT_F4, IPT_F5, IPT_F6, IPT_F7, IPT_F8, IPT_F9, IPT_F10,
+	IPT_F11, IPT_F12, IPT_F13, IPT_F14, IPT_F15, IPT_F16, IPT_F17, IPT_F18, IPT_F19, IPT_F20,
+	IPT_F21, IPT_F22, IPT_F23, IPT_F24,
 
-	KEY_TILDE, KEY_MINUS, KEY_EQUALS, KEY_LBRACKET, KEY_RBRACKET, KEY_SLASH,
-	KEY_SEMICOLON, KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH,
+	IPT_TILDE, IPT_MINUS, IPT_EQUALS, IPT_LBRACKET, IPT_RBRACKET, IPT_SLASH,
+	IPT_SEMICOLON, IPT_QUOTE, IPT_COMMA, IPT_PERIOD, IPT_BACKSLASH,
 
-	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL,
-	KEY_LALT, KEY_RALT, KEY_LWIN, KEY_RWIN,
+	IPT_LSHIFT, IPT_RSHIFT, IPT_LCTRL, IPT_RCTRL,
+	IPT_LALT, IPT_RALT, IPT_LWIN, IPT_RWIN,
 
-	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
+	IPT_UP, IPT_DOWN, IPT_LEFT, IPT_RIGHT,
 
-	KEY_0, KEY_1, KEY_2, KEY_3, KEY_4,
-	KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, /* same as '0'-'9' */
+	IPT_0, IPT_1, IPT_2, IPT_3, IPT_4,
+	IPT_5, IPT_6, IPT_7, IPT_8, IPT_9, /* same as '0'-'9' */
 
-	KEY_INSERT, KEY_DELETE, KEY_HOME, KEY_END, KEY_PAGEUP, KEY_PAGEDOWN,
-	KEY_MENU,
+	IPT_INSERT, IPT_DELETE, IPT_HOME, IPT_END, IPT_PAGEUP, IPT_PAGEDOWN,
+	IPT_MENU,
 
-	KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J,
-	KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T,
-	KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z, /* same as 'A'-'Z' */
+	IPT_A, IPT_B, IPT_C, IPT_D, IPT_E, IPT_F, IPT_G, IPT_H, IPT_I, IPT_J,
+	IPT_K, IPT_L, IPT_M, IPT_N, IPT_O, IPT_P, IPT_Q, IPT_R, IPT_S, IPT_T,
+	IPT_U, IPT_V, IPT_W, IPT_X, IPT_Y, IPT_Z, /* same as 'A'-'Z' */
 
-	KEY_ENTER, KEY_ESCAPE, KEY_SPACE, KEY_BACKSPACE, KEY_TAB, KEY_CAPSLOCK,
-	KEY_SCROLLLOCK, KEY_PRINTSCREEN, KEY_PAUSE, KEY_NUMLOCK,
+	IPT_ENTER, IPT_ESCAPE, IPT_SPACE, IPT_BACKSPACE, IPT_TAB, IPT_CAPSLOCK,
+	IPT_SCROLLLOCK, IPT_PRINTSCREEN, IPT_PAUSE, IPT_NUMLOCK,
 
-	KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4,
-	KEY_KP5, KEY_KP6, KEY_KP7, KEY_KP8, KEY_KP9,
-	KEY_KP_DIVIDE, KEY_KP_MULTIPLY, KEY_KP_MINUS,
-	KEY_KP_PLUS, KEY_KP_DECIMAL, KEY_KP_ENTER,
+	IPT_KP0, IPT_KP1, IPT_KP2, IPT_KP3, IPT_KP4,
+	IPT_KP5, IPT_KP6, IPT_KP7, IPT_KP8, IPT_KP9,
+	IPT_KP_DIVIDE, IPT_KP_MULTIPLY, IPT_KP_MINUS,
+	IPT_KP_PLUS, IPT_KP_DECIMAL, IPT_KP_ENTER,
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
-	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
+	IPT_XBUTTON1, IPT_XBUTTON2, IPT_LMOUSE, IPT_RMOUSE, IPT_MMOUSE,
 	INPUT_COUNT,
 
 	INPUT_CLIPBOARD_COPY  = 1001,
@@ -55,19 +55,19 @@ extern const char* const Input_StorageNames[INPUT_COUNT];
 /* Simple display names for each input button */
 extern const char* const Input_DisplayNames[INPUT_COUNT];
 
-#define Key_IsWinPressed()   (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
-#define Key_IsAltPressed()   (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
-#define Key_IsCtrlPressed()  (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
-#define Key_IsShiftPressed() (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
+#define Input_IsWinPressed()   (Input_Pressed[IPT_LWIN]   || Input_Pressed[IPT_RWIN])
+#define Input_IsAltPressed()   (Input_Pressed[IPT_LALT]   || Input_Pressed[IPT_RALT])
+#define Input_IsCtrlPressed()  (Input_Pressed[IPT_LCTRL]  || Input_Pressed[IPT_RCTRL])
+#define Input_IsShiftPressed() (Input_Pressed[IPT_LSHIFT] || Input_Pressed[IPT_RSHIFT])
 
 #if defined CC_BUILD_HAIKU
 /* Haiku uses ALT instead of CTRL for clipboard and stuff */
-#define Key_IsActionPressed() Key_IsAltPressed()
+#define Input_IsActionPressed() Input_IsAltPressed()
 #elif defined CC_BUILD_DARWIN
 /* macOS uses CMD instead of CTRL for clipboard and stuff */
-#define Key_IsActionPressed() Key_IsWinPressed()
+#define Input_IsActionPressed() Input_IsWinPressed()
 #else
-#define Key_IsActionPressed() Key_IsCtrlPressed()
+#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
 
 /* Pressed state of each input button. Use Input_Set to change. */
@@ -157,14 +157,14 @@ struct HotkeyData {
 	int textIndex;     /* contents to copy directly into the input bar */
 	cc_uint8 trigger;  /* Member of Key enumeration */
 	cc_uint8 mods;     /* HotkeyModifiers bitflags */
-	cc_uint8 flags;    /* HOTKEY_FLAG flags */
+	cc_uint8 flags;    /* HOTIPT_FLAG flags */
 };
 
 #define HOTKEYS_MAX_COUNT 256
 extern struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 extern struct StringsBuffer HotkeysText;
 enum HotkeyModifiers {
-	HOTKEY_MOD_CTRL = 1, HOTKEY_MOD_SHIFT = 2, HOTKEY_MOD_ALT = 4
+	HOTIPT_MOD_CTRL = 1, HOTIPT_MOD_SHIFT = 2, HOTIPT_MOD_ALT = 4
 };
 
 /* Adds or updates a new hotkey. */

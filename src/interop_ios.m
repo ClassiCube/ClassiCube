@@ -431,8 +431,8 @@ void ShowDialogCore(const char* title, const char* msg) {
 
 // === UITextFieldDelegate ===
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    Input_SetPressed(KEY_ENTER);
-    Input_SetReleased(KEY_ENTER);
+    Input_SetPressed(IPT_ENTER);
+    Input_SetReleased(IPT_ENTER);
     return YES;
 }
 @end

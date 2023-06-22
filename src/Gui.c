@@ -489,7 +489,7 @@ void Screen_ContextLost(void* screen) {
 	}
 }
 
-int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F24; }
+int  Screen_InputDown(void* screen, int key) { return key < IPT_F1 || key > IPT_F24; }
 void Screen_InputUp(void*   screen, int key) { }
 void Screen_PointerUp(void* s, int id, int x, int y) { }
 

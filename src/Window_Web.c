@@ -57,11 +57,11 @@ static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* dat
 	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
 	/* https://stackoverflow.com/questions/60895686/how-to-get-mouse-buttons-4-5-browser-back-browser-forward-working-in-firef */
 	switch (ev->button) {
-		case 0: Input_Set(KEY_LMOUSE, down); break;
-		case 1: Input_Set(KEY_MMOUSE, down); break;
-		case 2: Input_Set(KEY_RMOUSE, down); break;
-		case 3: Input_Set(KEY_XBUTTON1, down); break;
-		case 4: Input_Set(KEY_XBUTTON2, down); break;
+		case 0: Input_Set(IPT_LMOUSE, down); break;
+		case 1: Input_Set(IPT_MMOUSE, down); break;
+		case 2: Input_Set(IPT_RMOUSE, down); break;
+		case 3: Input_Set(IPT_XBUTTON1, down); break;
+		case 4: Input_Set(IPT_XBUTTON2, down); break;
 	}
 
 	DeferredEnableRawMouse();
@@ -85,9 +85,9 @@ static void RescaleXY(int* x, int* y) {
 static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	int x, y, buttons = ev->buttons;
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Input_SetNonRepeatable(KEY_LMOUSE, buttons & 0x01);
-	Input_SetNonRepeatable(KEY_RMOUSE, buttons & 0x02);
-	Input_SetNonRepeatable(KEY_MMOUSE, buttons & 0x04);
+	Input_SetNonRepeatable(IPT_LMOUSE, buttons & 0x01);
+	Input_SetNonRepeatable(IPT_RMOUSE, buttons & 0x02);
+	Input_SetNonRepeatable(IPT_MMOUSE, buttons & 0x04);
 
 	x = ev->targetX; y = ev->targetY;
 	RescaleXY(&x, &y);
@@ -199,66 +199,66 @@ static EM_BOOL OnVisibilityChanged(int eventType, const EmscriptenVisibilityChan
 static int MapNativeKey(int k, int l) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
-	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return KEY_F1  + (k - DOM_VK_F1); }
-	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9) { return KEY_KP0 + (k - DOM_VK_NUMPAD0); }
+	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return IPT_F1  + (k - DOM_VK_F1); }
+	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9) { return IPT_KP0 + (k - DOM_VK_NUMPAD0); }
 
 	switch (k) {
-	case DOM_VK_BACK_SPACE: return KEY_BACKSPACE;
-	case DOM_VK_TAB:        return KEY_TAB;
-	case DOM_VK_RETURN:     return l == DOM_KEY_LOCATION_NUMPAD ? KEY_KP_ENTER : KEY_ENTER;
-	case DOM_VK_SHIFT:      return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RSHIFT : KEY_LSHIFT;
-	case DOM_VK_CONTROL:    return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RCTRL  : KEY_LCTRL;
-	case DOM_VK_ALT:        return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RALT   : KEY_LALT;
-	case DOM_VK_PAUSE:      return KEY_PAUSE;
-	case DOM_VK_CAPS_LOCK:  return KEY_CAPSLOCK;
-	case DOM_VK_ESCAPE:     return KEY_ESCAPE;
-	case DOM_VK_SPACE:      return KEY_SPACE;
+	case DOM_VK_BACK_SPACE: return IPT_BACKSPACE;
+	case DOM_VK_TAB:        return IPT_TAB;
+	case DOM_VK_RETURN:     return l == DOM_KEY_LOCATION_NUMPAD ? IPT_KP_ENTER : IPT_ENTER;
+	case DOM_VK_SHIFT:      return l == DOM_KEY_LOCATION_RIGHT  ? IPT_RSHIFT : IPT_LSHIFT;
+	case DOM_VK_CONTROL:    return l == DOM_KEY_LOCATION_RIGHT  ? IPT_RCTRL  : IPT_LCTRL;
+	case DOM_VK_ALT:        return l == DOM_KEY_LOCATION_RIGHT  ? IPT_RALT   : IPT_LALT;
+	case DOM_VK_PAUSE:      return IPT_PAUSE;
+	case DOM_VK_CAPS_LOCK:  return IPT_CAPSLOCK;
+	case DOM_VK_ESCAPE:     return IPT_ESCAPE;
+	case DOM_VK_SPACE:      return IPT_SPACE;
 
-	case DOM_VK_PAGE_UP:     return KEY_PAGEUP;
-	case DOM_VK_PAGE_DOWN:   return KEY_PAGEDOWN;
-	case DOM_VK_END:         return KEY_END;
-	case DOM_VK_HOME:        return KEY_HOME;
-	case DOM_VK_LEFT:        return KEY_LEFT;
-	case DOM_VK_UP:          return KEY_UP;
-	case DOM_VK_RIGHT:       return KEY_RIGHT;
-	case DOM_VK_DOWN:        return KEY_DOWN;
-	case DOM_VK_PRINTSCREEN: return KEY_PRINTSCREEN;
-	case DOM_VK_INSERT:      return KEY_INSERT;
-	case DOM_VK_DELETE:      return KEY_DELETE;
+	case DOM_VK_PAGE_UP:     return IPT_PAGEUP;
+	case DOM_VK_PAGE_DOWN:   return IPT_PAGEDOWN;
+	case DOM_VK_END:         return IPT_END;
+	case DOM_VK_HOME:        return IPT_HOME;
+	case DOM_VK_LEFT:        return IPT_LEFT;
+	case DOM_VK_UP:          return IPT_UP;
+	case DOM_VK_RIGHT:       return IPT_RIGHT;
+	case DOM_VK_DOWN:        return IPT_DOWN;
+	case DOM_VK_PRINTSCREEN: return IPT_PRINTSCREEN;
+	case DOM_VK_INSERT:      return IPT_INSERT;
+	case DOM_VK_DELETE:      return IPT_DELETE;
 
-	case DOM_VK_SEMICOLON:   return KEY_SEMICOLON;
-	case DOM_VK_EQUALS:      return KEY_EQUALS;
-	case DOM_VK_WIN:         return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RWIN : KEY_LWIN;
-	case DOM_VK_MULTIPLY:    return KEY_KP_MULTIPLY;
-	case DOM_VK_ADD:         return KEY_KP_PLUS;
-	case DOM_VK_SUBTRACT:    return KEY_KP_MINUS;
-	case DOM_VK_DECIMAL:     return KEY_KP_DECIMAL;
-	case DOM_VK_DIVIDE:      return KEY_KP_DIVIDE;
-	case DOM_VK_NUM_LOCK:    return KEY_NUMLOCK;
-	case DOM_VK_SCROLL_LOCK: return KEY_SCROLLLOCK;
+	case DOM_VK_SEMICOLON:   return IPT_SEMICOLON;
+	case DOM_VK_EQUALS:      return IPT_EQUALS;
+	case DOM_VK_WIN:         return l == DOM_KEY_LOCATION_RIGHT ? IPT_RWIN : IPT_LWIN;
+	case DOM_VK_MULTIPLY:    return IPT_KP_MULTIPLY;
+	case DOM_VK_ADD:         return IPT_KP_PLUS;
+	case DOM_VK_SUBTRACT:    return IPT_KP_MINUS;
+	case DOM_VK_DECIMAL:     return IPT_KP_DECIMAL;
+	case DOM_VK_DIVIDE:      return IPT_KP_DIVIDE;
+	case DOM_VK_NUM_LOCK:    return IPT_NUMLOCK;
+	case DOM_VK_SCROLL_LOCK: return IPT_SCROLLLOCK;
 		
-	case DOM_VK_HYPHEN_MINUS:  return KEY_MINUS;
-	case DOM_VK_COMMA:         return KEY_COMMA;
-	case DOM_VK_PERIOD:        return KEY_PERIOD;
-	case DOM_VK_SLASH:         return KEY_SLASH;
-	case DOM_VK_BACK_QUOTE:    return KEY_TILDE;
-	case DOM_VK_OPEN_BRACKET:  return KEY_LBRACKET;
-	case DOM_VK_BACK_SLASH:    return KEY_BACKSLASH;
-	case DOM_VK_CLOSE_BRACKET: return KEY_RBRACKET;
-	case DOM_VK_QUOTE:         return KEY_QUOTE;
+	case DOM_VK_HYPHEN_MINUS:  return IPT_MINUS;
+	case DOM_VK_COMMA:         return IPT_COMMA;
+	case DOM_VK_PERIOD:        return IPT_PERIOD;
+	case DOM_VK_SLASH:         return IPT_SLASH;
+	case DOM_VK_BACK_QUOTE:    return IPT_TILDE;
+	case DOM_VK_OPEN_BRACKET:  return IPT_LBRACKET;
+	case DOM_VK_BACK_SLASH:    return IPT_BACKSLASH;
+	case DOM_VK_CLOSE_BRACKET: return IPT_RBRACKET;
+	case DOM_VK_QUOTE:         return IPT_QUOTE;
 
 	/* chrome */
-	case 186: return KEY_SEMICOLON;
-	case 187: return KEY_EQUALS;
-	case 189: return KEY_MINUS;
+	case 186: return IPT_SEMICOLON;
+	case 187: return IPT_EQUALS;
+	case 189: return IPT_MINUS;
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
 static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	int key = MapNativeKey(ev->keyCode, ev->location);
 	/* iOS safari still sends backspace key events, don't intercept those */
-	if (key == KEY_BACKSPACE && Input_TouchMode && keyboardOpen) return false;
+	if (key == IPT_BACKSPACE && Input_TouchMode && keyboardOpen) return false;
 	
 	if (key) Input_SetPressed(key);
 	DeferredEnableRawMouse();
@@ -267,26 +267,26 @@ static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
 	/*  NOTE: macOS uses Win (Command) key instead of Ctrl, have to account for that too */
-	if (Key_IsAltPressed())  return true;
-	if (Key_IsWinPressed())  return key != 'C' && key != 'V';
-	if (Key_IsCtrlPressed()) return key != 'C' && key != 'V';
+	if (Input_IsAltPressed())  return true;
+	if (Input_IsWinPressed())  return key != 'C' && key != 'V';
+	if (Input_IsCtrlPressed()) return key != 'C' && key != 'V';
 
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
-	if (key == KEY_SPACE) return !keyboardOpen;
+	if (key == IPT_SPACE) return !keyboardOpen;
 
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
-	return (key >= KEY_F1  && key <= KEY_F24)  || (key >= KEY_UP    && key <= KEY_RIGHT) ||
-		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
+	return (key >= IPT_F1  && key <= IPT_F24)  || (key >= IPT_UP    && key <= IPT_RIGHT) ||
+		(key >= IPT_INSERT && key <= IPT_MENU) || (key >= IPT_ENTER && key <= IPT_NUMLOCK);
 }
 
 static EM_BOOL OnKeyUp(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	int key = MapNativeKey(ev->keyCode, ev->location);
 	if (key) Input_SetReleased(key);
 	DeferredEnableRawMouse();
-	return key != KEY_NONE;
+	return key != IPT_NONE;
 }
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {

@@ -94,7 +94,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	struct LocationUpdate update;
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
-	if (Key_IsAltPressed() && Camera.Active->isThirdPerson) {
+	if (Input_IsAltPressed() && Camera.Active->isThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
 	}

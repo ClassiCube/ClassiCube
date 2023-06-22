@@ -50,22 +50,22 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
 	if (key >= XK_a && key <= XK_z) { return 'A' + (key - XK_a); }
 
-	if (key >= XK_F1 && key <= XK_F24)    { return KEY_F1  + (key - XK_F1); }
-	if (key >= XK_KP_0 && key <= XK_KP_9) { return KEY_KP0 + (key - XK_KP_0); }
+	if (key >= XK_F1 && key <= XK_F24)    { return IPT_F1  + (key - XK_F1); }
+	if (key >= XK_KP_0 && key <= XK_KP_9) { return IPT_KP0 + (key - XK_KP_0); }
 
 	/* Same Num Lock behaviour as Windows and text editors */
 	if (key >= XK_KP_Home && key <= XK_KP_Delete && !(state & Mod2Mask)) {
-		if (key == XK_KP_Home) return KEY_HOME;
-		if (key == XK_KP_Up)   return KEY_UP;
-		if (key == XK_KP_Page_Up) return KEY_PAGEUP;
+		if (key == XK_KP_Home) return IPT_HOME;
+		if (key == XK_KP_Up)   return IPT_UP;
+		if (key == XK_KP_Page_Up) return IPT_PAGEUP;
 
-		if (key == XK_KP_Left)   return KEY_LEFT;
-		if (key == XK_KP_Insert) return KEY_INSERT;
-		if (key == XK_KP_Right)  return KEY_RIGHT;
+		if (key == XK_KP_Left)   return IPT_LEFT;
+		if (key == XK_KP_Insert) return IPT_INSERT;
+		if (key == XK_KP_Right)  return IPT_RIGHT;
 
-		if (key == XK_KP_End)  return KEY_END;
-		if (key == XK_KP_Down) return KEY_DOWN;
-		if (key == XK_KP_Page_Down) return KEY_PAGEDOWN;
+		if (key == XK_KP_End)  return IPT_END;
+		if (key == XK_KP_Down) return IPT_DOWN;
+		if (key == XK_KP_Page_Down) return IPT_PAGEDOWN;
 	}
 
 	/* A chromebook user reported issues with pressing some keys: */
@@ -77,101 +77,101 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	key &= 0xFFFF;
 
 	switch (key) {
-		case XK_Escape: return KEY_ESCAPE;
-		case XK_Return: return KEY_ENTER;
-		case XK_space: return KEY_SPACE;
-		case XK_BackSpace: return KEY_BACKSPACE;
+		case XK_Escape: return IPT_ESCAPE;
+		case XK_Return: return IPT_ENTER;
+		case XK_space: return IPT_SPACE;
+		case XK_BackSpace: return IPT_BACKSPACE;
 
-		case XK_Shift_L: return KEY_LSHIFT;
-		case XK_Shift_R: return KEY_RSHIFT;
-		case XK_Alt_L: return KEY_LALT;
-		case XK_Alt_R: return KEY_RALT;
-		case XK_Control_L: return KEY_LCTRL;
-		case XK_Control_R: return KEY_RCTRL;
-		case XK_Super_L: return KEY_LWIN;
-		case XK_Super_R: return KEY_RWIN;
-		case XK_Meta_L: return KEY_LWIN;
-		case XK_Meta_R: return KEY_RWIN;
+		case XK_Shift_L: return IPT_LSHIFT;
+		case XK_Shift_R: return IPT_RSHIFT;
+		case XK_Alt_L: return IPT_LALT;
+		case XK_Alt_R: return IPT_RALT;
+		case XK_Control_L: return IPT_LCTRL;
+		case XK_Control_R: return IPT_RCTRL;
+		case XK_Super_L: return IPT_LWIN;
+		case XK_Super_R: return IPT_RWIN;
+		case XK_Meta_L: return IPT_LWIN;
+		case XK_Meta_R: return IPT_RWIN;
 
-		case XK_Menu:  return KEY_MENU;
-		case XK_Tab:   return KEY_TAB;
-		case XK_minus: return KEY_MINUS;
-		case XK_plus:  return KEY_EQUALS;
-		case XK_equal: return KEY_EQUALS;
+		case XK_Menu:  return IPT_MENU;
+		case XK_Tab:   return IPT_TAB;
+		case XK_minus: return IPT_MINUS;
+		case XK_plus:  return IPT_EQUALS;
+		case XK_equal: return IPT_EQUALS;
 
-		case XK_Caps_Lock: return KEY_CAPSLOCK;
-		case XK_Num_Lock:  return KEY_NUMLOCK;
+		case XK_Caps_Lock: return IPT_CAPSLOCK;
+		case XK_Num_Lock:  return IPT_NUMLOCK;
 
-		case XK_Pause: return KEY_PAUSE;
-		case XK_Break: return KEY_PAUSE;
-		case XK_Scroll_Lock: return KEY_SCROLLLOCK;
-		case XK_Insert:  return KEY_INSERT;
-		case XK_Print:   return KEY_PRINTSCREEN;
-		case XK_Sys_Req: return KEY_PRINTSCREEN;
+		case XK_Pause: return IPT_PAUSE;
+		case XK_Break: return IPT_PAUSE;
+		case XK_Scroll_Lock: return IPT_SCROLLLOCK;
+		case XK_Insert:  return IPT_INSERT;
+		case XK_Print:   return IPT_PRINTSCREEN;
+		case XK_Sys_Req: return IPT_PRINTSCREEN;
 
-		case XK_backslash: return KEY_BACKSLASH;
-		case XK_bar:       return KEY_BACKSLASH;
-		case XK_braceleft:    return KEY_LBRACKET;
-		case XK_bracketleft:  return KEY_LBRACKET;
-		case XK_braceright:   return KEY_RBRACKET;
-		case XK_bracketright: return KEY_RBRACKET;
-		case XK_colon:      return KEY_SEMICOLON;
-		case XK_semicolon:  return KEY_SEMICOLON;
-		case XK_quoteright: return KEY_QUOTE;
-		case XK_quotedbl:   return KEY_QUOTE;
-		case XK_quoteleft:  return KEY_TILDE;
-		case XK_asciitilde: return KEY_TILDE;
+		case XK_backslash: return IPT_BACKSLASH;
+		case XK_bar:       return IPT_BACKSLASH;
+		case XK_braceleft:    return IPT_LBRACKET;
+		case XK_bracketleft:  return IPT_LBRACKET;
+		case XK_braceright:   return IPT_RBRACKET;
+		case XK_bracketright: return IPT_RBRACKET;
+		case XK_colon:      return IPT_SEMICOLON;
+		case XK_semicolon:  return IPT_SEMICOLON;
+		case XK_quoteright: return IPT_QUOTE;
+		case XK_quotedbl:   return IPT_QUOTE;
+		case XK_quoteleft:  return IPT_TILDE;
+		case XK_asciitilde: return IPT_TILDE;
 
-		case XK_comma: return KEY_COMMA;
-		case XK_less:  return KEY_COMMA;
-		case XK_period:  return KEY_PERIOD;
-		case XK_greater: return KEY_PERIOD;
-		case XK_slash:    return KEY_SLASH;
-		case XK_question: return KEY_SLASH;
+		case XK_comma: return IPT_COMMA;
+		case XK_less:  return IPT_COMMA;
+		case XK_period:  return IPT_PERIOD;
+		case XK_greater: return IPT_PERIOD;
+		case XK_slash:    return IPT_SLASH;
+		case XK_question: return IPT_SLASH;
 
-		case XK_Left:  return KEY_LEFT;
-		case XK_Down:  return KEY_DOWN;
-		case XK_Right: return KEY_RIGHT;
-		case XK_Up:    return KEY_UP;
+		case XK_Left:  return IPT_LEFT;
+		case XK_Down:  return IPT_DOWN;
+		case XK_Right: return IPT_RIGHT;
+		case XK_Up:    return IPT_UP;
 
-		case XK_Delete: return KEY_DELETE;
-		case XK_Home:   return KEY_HOME;
-		case XK_End:    return KEY_END;
-		case XK_Page_Up:   return KEY_PAGEUP;
-		case XK_Page_Down: return KEY_PAGEDOWN;
+		case XK_Delete: return IPT_DELETE;
+		case XK_Home:   return IPT_HOME;
+		case XK_End:    return IPT_END;
+		case XK_Page_Up:   return IPT_PAGEUP;
+		case XK_Page_Down: return IPT_PAGEDOWN;
 
-		case XK_KP_Add: return KEY_KP_PLUS;
-		case XK_KP_Subtract: return KEY_KP_MINUS;
-		case XK_KP_Multiply: return KEY_KP_MULTIPLY;
-		case XK_KP_Divide:  return KEY_KP_DIVIDE;
-		case XK_KP_Decimal: return KEY_KP_DECIMAL;
-		case XK_KP_Insert: return KEY_KP0;
-		case XK_KP_End:  return KEY_KP1;
-		case XK_KP_Down: return KEY_KP2;
-		case XK_KP_Page_Down: return KEY_KP3;
-		case XK_KP_Left:  return KEY_KP4;
-		case XK_KP_Begin: return KEY_KP5;
-		case XK_KP_Right: return KEY_KP6;
-		case XK_KP_Home: return KEY_KP7;
-		case XK_KP_Up:   return KEY_KP8;
-		case XK_KP_Page_Up: return KEY_KP9;
-		case XK_KP_Delete:  return KEY_KP_DECIMAL;
-		case XK_KP_Enter:   return KEY_KP_ENTER;
+		case XK_KP_Add: return IPT_KP_PLUS;
+		case XK_KP_Subtract: return IPT_KP_MINUS;
+		case XK_KP_Multiply: return IPT_KP_MULTIPLY;
+		case XK_KP_Divide:  return IPT_KP_DIVIDE;
+		case XK_KP_Decimal: return IPT_KP_DECIMAL;
+		case XK_KP_Insert: return IPT_KP0;
+		case XK_KP_End:  return IPT_KP1;
+		case XK_KP_Down: return IPT_KP2;
+		case XK_KP_Page_Down: return IPT_KP3;
+		case XK_KP_Left:  return IPT_KP4;
+		case XK_KP_Begin: return IPT_KP5;
+		case XK_KP_Right: return IPT_KP6;
+		case XK_KP_Home: return IPT_KP7;
+		case XK_KP_Up:   return IPT_KP8;
+		case XK_KP_Page_Up: return IPT_KP9;
+		case XK_KP_Delete:  return IPT_KP_DECIMAL;
+		case XK_KP_Enter:   return IPT_KP_ENTER;
 	}
-	return KEY_NONE;
+	return IPT_NONE;
 }
 
 /* NOTE: This may not be entirely accurate, because user can configure keycode mappings */
 static const cc_uint8 keycodeMap[136] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6',
-	'7', '8', '9', '0', KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_TAB, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
-	'O',  'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S', 'D', 'F', 'G', 'H',  'J', 'K', 'L', KEY_SEMICOLON,
-	KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', KEY_PERIOD, KEY_COMMA, KEY_SLASH, KEY_RSHIFT, KEY_KP_MULTIPLY,
-	KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7,
-	KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11,
-	KEY_F12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	KEY_RALT, KEY_RCTRL, KEY_HOME, KEY_UP, KEY_PAGEUP, KEY_LEFT, KEY_RIGHT, KEY_END, KEY_DOWN, KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0,
-	0, 0, 0, KEY_PAUSE, 0, 0, 0, 0, 0, KEY_LWIN, 0, KEY_RWIN
+	0, 0, 0, 0, 0, 0, 0, 0, 0, IPT_ESCAPE, '1', '2', '3', '4', '5', '6',
+	'7', '8', '9', '0', IPT_MINUS, IPT_EQUALS, IPT_BACKSPACE, IPT_TAB, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+	'O',  'P', IPT_LBRACKET, IPT_RBRACKET, IPT_ENTER, IPT_LCTRL, 'A', 'S', 'D', 'F', 'G', 'H',  'J', 'K', 'L', IPT_SEMICOLON,
+	IPT_QUOTE, IPT_TILDE, IPT_LSHIFT, IPT_BACKSLASH, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', IPT_PERIOD, IPT_COMMA, IPT_SLASH, IPT_RSHIFT, IPT_KP_MULTIPLY,
+	IPT_LALT, IPT_SPACE, IPT_CAPSLOCK, IPT_F1, IPT_F2, IPT_F3, IPT_F4, IPT_F5, IPT_F6, IPT_F7, IPT_F8, IPT_F9, IPT_F10, IPT_NUMLOCK, IPT_SCROLLLOCK, IPT_KP7,
+	IPT_KP8, IPT_KP9, IPT_KP_MINUS, IPT_KP4, IPT_KP5, IPT_KP6, IPT_KP_PLUS, IPT_KP1, IPT_KP2, IPT_KP3, IPT_KP0, IPT_KP_DECIMAL, 0, 0, 0, IPT_F11,
+	IPT_F12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	IPT_RALT, IPT_RCTRL, IPT_HOME, IPT_UP, IPT_PAGEUP, IPT_LEFT, IPT_RIGHT, IPT_END, IPT_DOWN, IPT_PAGEDOWN, IPT_INSERT, IPT_DELETE, 0, 0, 0, 0,
+	0, 0, 0, IPT_PAUSE, 0, 0, 0, 0, 0, IPT_LWIN, 0, IPT_RWIN
 };
 
 static int MapNativeKeycode(unsigned int keycode) {
@@ -459,11 +459,11 @@ void Window_Close(void) {
 }
 
 static int MapNativeMouse(int button) {
-	if (button == 1) return KEY_LMOUSE;
-	if (button == 2) return KEY_MMOUSE;
-	if (button == 3) return KEY_RMOUSE;
-	if (button == 8) return KEY_XBUTTON1;
-	if (button == 9) return KEY_XBUTTON2;
+	if (button == 1) return IPT_LMOUSE;
+	if (button == 2) return IPT_MMOUSE;
+	if (button == 3) return IPT_RMOUSE;
+	if (button == 8) return IPT_XBUTTON1;
+	if (button == 9) return IPT_XBUTTON2;
 	return 0;
 }
 

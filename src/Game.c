@@ -137,7 +137,7 @@ void Game_CycleViewDistance(void) {
 	const short* dists = Gui.ClassicMenu ? classicDists : normDists;
 	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
 
-	if (Key_IsShiftPressed()) {
+	if (Input_IsShiftPressed()) {
 		CycleViewDistanceBackwards(dists, count);
 	} else {
 		CycleViewDistanceForwards(dists, count);
@@ -665,9 +665,9 @@ cc_bool Game_ShouldClose(void) {
 	}
 
 	/* Try to intercept Ctrl+W or Cmd+W for multiplayer */
-	if (Key_IsCtrlPressed() || Key_IsWinPressed()) return false;
+	if (Input_IsCtrlPressed() || Input_IsWinPressed()) return false;
 	/* Also try to intercept mouse back button (Mouse4) */
-	return !Input_Pressed[KEY_XBUTTON1];
+	return !Input_Pressed[IPT_XBUTTON1];
 }
 #else
 static void Game_RunLoop(void) {

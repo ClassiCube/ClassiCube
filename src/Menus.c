@@ -309,9 +309,9 @@ static void ListScreen_Select(struct ListScreen* s, const cc_string* str) {
 
 static int ListScreen_KeyDown(void* screen, int key) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	if (key == KEY_LEFT || key == KEY_PAGEUP) {
+	if (key == IPT_LEFT || key == IPT_PAGEUP) {
 		ListScreen_PageClick(s, false);
-	} else if (key == KEY_RIGHT || key == KEY_PAGEDOWN) {
+	} else if (key == IPT_RIGHT || key == IPT_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
 	}
 	return true;
@@ -742,7 +742,7 @@ static struct Widget* edithotkey_widgets[7] = {
 	(struct Widget*)&EditHotkeyScreen.btns[4], (struct Widget*)&EditHotkeyScreen.input,
 	(struct Widget*)&EditHotkeyScreen.cancel
 };
-#define EDITHOTKEY_MAX_VERTICES (MENUINPUTWIDGET_MAX + 6 * BUTTONWIDGET_MAX)
+#define EDITHOTIPT_MAX_VERTICES (MENUINPUTWIDGET_MAX + 6 * BUTTONWIDGET_MAX)
 
 static void HotkeyListScreen_MakeFlags(int flags, cc_string* str);
 static void EditHotkeyScreen_MakeFlags(int flags, cc_string* str) {
@@ -879,9 +879,9 @@ static int EditHotkeyScreen_KeyDown(void* screen, int key) {
 		if (s->selectedI == 0) {
 			s->curHotkey.trigger = key;
 		} else if (s->selectedI == 1) {
-			if      (key == KEY_LCTRL  || key == KEY_RCTRL)  s->curHotkey.mods |= HOTKEY_MOD_CTRL;
-			else if (key == KEY_LSHIFT || key == KEY_RSHIFT) s->curHotkey.mods |= HOTKEY_MOD_SHIFT;
-			else if (key == KEY_LALT   || key == KEY_RALT)   s->curHotkey.mods |= HOTKEY_MOD_ALT;
+			if      (key == IPT_LCTRL  || key == IPT_RCTRL)  s->curHotkey.mods |= HOTIPT_MOD_CTRL;
+			else if (key == IPT_LSHIFT || key == IPT_RSHIFT) s->curHotkey.mods |= HOTIPT_MOD_SHIFT;
+			else if (key == IPT_LALT   || key == IPT_RALT)   s->curHotkey.mods |= HOTIPT_MOD_ALT;
 			else s->curHotkey.mods = 0;
 		}
 
@@ -904,7 +904,7 @@ static void EditHotkeyScreen_ContextLost(void* screen) {
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	cc_bool existed = s->origHotkey.trigger != KEY_NONE;
+	cc_bool existed = s->origHotkey.trigger != IPT_NONE;
 
 	Gui_MakeTitleFont(&s->titleFont);
 	Gui_MakeBodyFont(&s->textFont);
@@ -953,7 +953,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 	s->widgets     = edithotkey_widgets;
 	s->numWidgets  = Array_Elems(edithotkey_widgets);
 	s->selectedI   = -1;
-	s->maxVertices = EDITHOTKEY_MAX_VERTICES;
+	s->maxVertices = EDITHOTIPT_MAX_VERTICES;
 	MenuInput_String(desc);
 
 	ButtonWidget_Init(&s->btns[0], 300, EditHotkeyScreen_BaseKey);
@@ -1629,11 +1629,11 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
-	if (String_ContainsConst(&value, "Ctrl"))  mods |= HOTKEY_MOD_CTRL;
-	if (String_ContainsConst(&value, "Shift")) mods |= HOTKEY_MOD_SHIFT;
-	if (String_ContainsConst(&value, "Alt"))   mods |= HOTKEY_MOD_ALT;
+	if (String_ContainsConst(&value, "Ctrl"))  mods |= HOTIPT_MOD_CTRL;
+	if (String_ContainsConst(&value, "Shift")) mods |= HOTIPT_MOD_SHIFT;
+	if (String_ContainsConst(&value, "Alt"))   mods |= HOTIPT_MOD_ALT;
 
-	trigger = Utils_ParseEnum(&key, KEY_NONE, Input_DisplayNames, INPUT_COUNT);
+	trigger = Utils_ParseEnum(&key, IPT_NONE, Input_DisplayNames, INPUT_COUNT);
 	for (i = 0; i < HotkeysText.count; i++) {
 		h = HotkeysList[i];
 		if (h.trigger == trigger && h.mods == mods) { original = h; break; }
@@ -1643,9 +1643,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, cc_string* str) {
-	if (flags & HOTKEY_MOD_CTRL)  String_AppendConst(str, " Ctrl");
-	if (flags & HOTKEY_MOD_SHIFT) String_AppendConst(str, " Shift");
-	if (flags & HOTKEY_MOD_ALT)   String_AppendConst(str, " Alt");
+	if (flags & HOTIPT_MOD_CTRL)  String_AppendConst(str, " Ctrl");
+	if (flags & HOTIPT_MOD_SHIFT) String_AppendConst(str, " Shift");
+	if (flags & HOTIPT_MOD_ALT)   String_AppendConst(str, " Alt");
 }
 
 static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
@@ -1810,7 +1810,7 @@ static int KeyBindsScreen_KeyDown(void* screen, int key) {
 
 	if (s->curI == -1) return Screen_InputDown(s, key);
 	bind = s->binds[s->curI];
-	if (key == KEY_ESCAPE) key = KeyBind_Defaults[bind];
+	if (key == IPT_ESCAPE) key = KeyBind_Defaults[bind];
 	KeyBind_Set(bind, key);
 
 	idx         = s->curI;
@@ -2064,7 +2064,7 @@ static int MenuInputOverlay_KeyDown(void* screen, int key) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
 
-	if (key == KEY_ENTER || key == KEY_KP_ENTER) {
+	if (key == IPT_ENTER || key == IPT_KP_ENTER) {
 		MenuInputOverlay_EnterInput(s); return true;
 	}
 	return Screen_InputDown(screen, key);

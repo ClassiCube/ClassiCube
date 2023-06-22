@@ -61,7 +61,7 @@ void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w) {
 
 static void LScreen_HandleTab(struct LScreen* s) {
 	struct LWidget* w;
-	int dir   = Key_IsShiftPressed() ? -1 : 1;
+	int dir   = Input_IsShiftPressed() ? -1 : 1;
 	int index = 0, i, j;
 
 	if (s->selectedWidget) {
@@ -82,9 +82,9 @@ static void LScreen_HandleTab(struct LScreen* s) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == KEY_TAB) {
+	if (key == IPT_TAB) {
 		LScreen_HandleTab(s);
-	} else if (key == KEY_ENTER || key == KEY_KP_ENTER) {
+	} else if (key == IPT_ENTER || key == IPT_KP_ENTER) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -369,13 +369,13 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 }
 
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == KEY_LEFT) {
+	if (key == IPT_LEFT) {
 		ColoursScreen_AdjustSelected(s, -1);
-	} else if (key == KEY_RIGHT) {
+	} else if (key == IPT_RIGHT) {
 		ColoursScreen_AdjustSelected(s, +1);
-	} else if (key == KEY_UP) {
+	} else if (key == IPT_UP) {
 		ColoursScreen_AdjustSelected(s, +10);
-	} else if (key == KEY_DOWN) {
+	} else if (key == IPT_DOWN) {
 		ColoursScreen_AdjustSelected(s, -10);
 	} else {
 		LScreen_KeyDown(s, key, was);
