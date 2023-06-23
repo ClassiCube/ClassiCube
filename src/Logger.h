@@ -43,6 +43,7 @@ void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path);
 /* This is used to attempt to log some information about a crash due to invalid memory read, etc. */
 void Logger_Hook(void);
 /* Generates a backtrace based on the platform-specific CPU context. */
+/* NOTE: The provided CPU context may be modified (e.g on Windows) */
 void Logger_Backtrace(cc_string* trace, void* ctx);
 /* Logs a message to client.log on disc. */
 /* NOTE: The message is written raw, it is NOT converted to unicode (unlike Stream_WriteLine) */

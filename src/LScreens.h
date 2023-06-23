@@ -27,7 +27,6 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \
 	int numWidgets;           /* Number of widgets actually used. */ \
 	struct LWidget** widgets; /* Array of pointers to all widgets in the screen. */ \
-	cc_bool hidesTitlebar;    /* Whether titlebar in window is hidden. */ \
 	const char* title;        /* Titlebar text */
 
 struct LScreen { LScreen_Layout };

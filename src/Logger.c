@@ -275,7 +275,6 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
 	HANDLE process, thread;
 	int count, type;
-	CONTEXT copy;
 
 	frame.AddrPC.Mode    = AddrModeFlat;
 	frame.AddrFrame.Mode = AddrModeFlat;
@@ -297,10 +296,10 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 #endif
 	process = GetCurrentProcess();
 	thread  = GetCurrentThread();
-	copy    = *ctx;
 
-	for (count = 0; count < max; count++) {
-		if (!StackWalk(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
+	for (count = 0; count < max; count++) 
+	{
+		if (!StackWalk(type, process, thread, &frame, ctx, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 		addrs[count] = frame.AddrPC.Offset;
 	}
@@ -313,7 +312,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	HANDLE process;
 
 	process = GetCurrentProcess();
-	SymInitialize(process, NULL, TRUE);
+	SymInitialize(process, NULL, TRUE); /* TODO only in MSVC.. */
 	frames  = GetFrames((CONTEXT*)ctx, addrs, MAX_BACKTRACE_FRAMES);
 
 	for (i = 0; i < frames; i++) {
@@ -849,7 +848,7 @@ static void DumpRegisters(void* ctx) {
 *------------------------------------------------Module/Memory map handling-----------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
+static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, void* userCtx) {
 	cc_string str; char strBuffer[256];
 	cc_uintptr beg, end;
 
@@ -862,7 +861,7 @@ static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, vo
 }
 
 static BOOL (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
-static void DumpMisc(void* ctx) {
+static void DumpMisc(void) {
 	static const cc_string modules = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
 
@@ -921,7 +920,7 @@ static int SkipRange(const cc_string* str) {
 }
 #endif
 
-static void DumpMisc(void* ctx) {
+static void DumpMisc(void) {
 	static const cc_string memMap = String_FromConst("-- memory map --\n");
 	cc_string str; char strBuffer[320];
 	int n, fd;
@@ -942,7 +941,7 @@ static void DumpMisc(void* ctx) {
 #elif defined CC_BUILD_DARWIN
 #include <mach-o/dyld.h>
 
-static void DumpMisc(void* ctx) {
+static void DumpMisc(void) {
 	static const cc_string modules = String_FromConst("-- modules --\n");
 	static const cc_string newLine = String_FromConst(_NL);
 	cc_uint32 i, count;
@@ -964,7 +963,7 @@ static void DumpMisc(void* ctx) {
 	}
 }
 #else
-static void DumpMisc(void* ctx) { }
+static void DumpMisc(void) { }
 #endif
 
 
@@ -1222,7 +1221,7 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	Logger_Log(&backtrace);
 	Logger_Backtrace(&msg, ctx);
 
-	DumpMisc(ctx);
+	DumpMisc();
 	CloseLogFile();
 
 	msg.buffer[msg.length] = '\0';
