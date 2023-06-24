@@ -33,6 +33,10 @@ extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
 extern const cc_result ReturnCode_DirectoryExists;
 
+/* Whether the launcher and game must both be run in the same process */
+/*  (e.g. can't start a separate process on Mobile or Consoles) */
+extern cc_bool Platform_SingleProcess;
+
 #ifdef CC_BUILD_WIN
 typedef struct cc_winstring_ {
 	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */

@@ -581,6 +581,8 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
+	Platform_SingleProcess = true;
+	
 	fat_available = fatInitDefault();
 	if (fat_available) mkdir("sd:/ClassiCube", 0); // create root 'ClassiCube' directory
 	

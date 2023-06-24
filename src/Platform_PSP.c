@@ -486,7 +486,10 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Init(void) { /*pspDebugSioInit();*/ }
+void Platform_Init(void) {
+	Platform_SingleProcess = true;
+	/*pspDebugSioInit();*/ 
+}
 void Platform_Free(void) { }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {

@@ -512,6 +512,8 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 #define SOC_CTX_SIZE  0x1000 * 128
 
 void Platform_Init(void) { 
+	Platform_SingleProcess = true;
+	
 	// create root directories (no permissions anyways)
 	mkdir("sdmc://3ds",            0666);
 	mkdir("sdmc://3ds/ClassiCube", 0666);

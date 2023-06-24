@@ -1057,6 +1057,10 @@ static void Platform_InitSpecific(void) { }
 #endif
 
 void Platform_Init(void) {
+#ifdef CC_BUILD_MOBILE
+	Platform_SingleProcess = true;
+#endif
+
 	Platform_InitPosix();
 	Platform_InitStopwatch();
 	Platform_InitSpecific();

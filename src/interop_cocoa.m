@@ -150,7 +150,6 @@ static void LogUnhandledNSErrors(NSException* ex) {
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
-	showDialogs = Options_GetBool("show-dialogs", true);
 
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
 	pool = [[NSAutoreleasePool alloc] init];

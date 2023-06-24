@@ -6,7 +6,6 @@
 #include "Stream.h"
 #include "Errors.h"
 #include "Utils.h"
-#include "Http.h"
 
 #if defined CC_BUILD_WEB
 /* Can't see native CPU state with javascript */
@@ -213,8 +212,8 @@ static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
 	PrintFrame(&str, addr, s.symbol.Address, s.symbol.Name, m.ModuleName);
 	String_AppendString(trace, &str);
 
-	/* This function only works for .pdb debug info */
-	/* This function is also missing on Windows98 + KernelEX */
+	/* This function only works for .pdb debug info anyways */
+	/* This function is also missing on Windows 9X */
 #if _MSC_VER
 	IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 	line.SizeOfStruct = sizeof(IMAGEHLP_LINE);

@@ -109,11 +109,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
-#ifdef CC_BUILD_MOBILE
-	Launcher_ShouldExit = true;
-#else
-	Launcher_ShouldExit = Options_GetBool(LOPT_AUTO_CLOSE, false);
-#endif
+	Launcher_ShouldExit = Platform_SingleProcess || Options_GetBool(LOPT_AUTO_CLOSE, false);
 	return true;
 }
 
@@ -366,7 +362,7 @@ void Launcher_SaveTheme(void) {
 	SaveColor("launcher-btn-fore-active-col",        Launcher_Theme.ButtonForeActiveColor);
 	SaveColor("launcher-btn-fore-inactive-col",      Launcher_Theme.ButtonForeColor);
 	SaveColor("launcher-btn-highlight-inactive-col", Launcher_Theme.ButtonHighlightColor);
-	Options_SetBool("nostalgia-classicbg",                 Launcher_Theme.ClassicBackground);
+	Options_SetBool("nostalgia-classicbg",           Launcher_Theme.ClassicBackground);
 }
 
 
