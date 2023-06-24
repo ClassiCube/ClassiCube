@@ -421,12 +421,9 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 #include "PackedCol.h"
 #include "SSL.h"
 
-static void HttpBackend_Init(void) {
-	SSLBackend_Init(httpsVerify);
-	//httpOnly = true; // TODO: insecure
-}
-
-
+/*########################################################################################################################*
+*---------------------------------------------------------HttpUrl---------------------------------------------------------*
+*#########################################################################################################################*/
 /* Components of a URL */
 struct HttpUrl {
 	cc_bool https;      /* Whether HTTPS or just HTTP protocol */
@@ -476,7 +473,28 @@ static void HttpUrl_Parse(const cc_string* src, struct HttpUrl* url) {
 	HttpUrl_EncodeUrl(&url->resource, &resource);
 }
 
+static cc_result HttpUrl_ResolveRedirect(struct HttpUrl* parts, const cc_string* url) {
+	/* absolute URL */
+	if (String_IndexOfConst(url, "http://") == 0 || String_IndexOfConst(url, "https://") == 0) {		
+		HttpUrl_Parse(url, parts);
+		return 0;
+	} 
 
+	/* Root relative URL */
+	if (url->buffer[0] == '/' && (url->length == 1 || url->buffer[1] != '/')) {
+		parts->resource.length = 0;
+		HttpUrl_EncodeUrl(&parts->resource, url);
+		return 0;
+	}
+
+	/* TODO scheme relative or relative URL or invalid */
+	return HTTP_ERR_RELATIVE;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------HttpConnection-----------------------------------------------------*
+*#########################################################################################################################*/
 struct HttpConnection {
 	cc_socket socket;
 	void* sslCtx;
@@ -501,7 +519,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	return SSL_Init(conn->socket, &host, &conn->sslCtx);
 }
 
-static cc_result HttpConnection_Read(struct HttpConnection* conn,  cc_uint8* data, cc_uint32 count, cc_uint32* read) {
+static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
 	if (conn->sslCtx)
 		return SSL_Read(conn->sslCtx, data, count, read);
 	return Socket_Read(conn->socket,  data, count, read);
@@ -526,6 +544,9 @@ static void HttpConnection_Close(struct HttpConnection* conn) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------HttpClient-------------------------------------------------------*
+*#########################################################################################################################*/
 enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_HEADER,
 	HTTP_RESPONSE_STATE_BODY_INIT,
@@ -805,18 +826,22 @@ static cc_bool HttpClient_IsRedirect(struct HttpRequest* req) {
 }
 
 static cc_result HttpClient_HandleRedirect(struct HttpClientState* state) {
-	cc_string url = state->location;
-	/* TODO wrong */
-	if (String_IndexOfConst(&url, "http://") == 0 || String_IndexOfConst(&url, "https://")) {
-		HttpUrl_Parse(&url, &state->url);
-		HttpRequest_Free(state->req);
+	cc_result res = HttpUrl_ResolveRedirect(&state->url, &state->location);
+	if (res) return res;
 
-		Platform_Log1("  Redirecting to: %s", &url);
-		state->req->contentLength = 0; /* TODO */
-		return 0;
-	} else {
-		return HTTP_ERR_RELATIVE;
-	}
+	HttpRequest_Free(state->req);
+	Platform_Log1("  Redirecting to: %s", &state->location);
+	state->req->contentLength = 0; /* TODO */
+	return 0;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------Http backend implementation-----------------------------------------------*
+*#########################################################################################################################*/
+static void HttpBackend_Init(void) {
+	SSLBackend_Init(httpsVerify);
+	//httpOnly = true; // TODO: insecure
 }
 
 static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) {

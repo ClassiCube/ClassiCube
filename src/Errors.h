@@ -97,6 +97,8 @@ enum CC_ERRORS {
 	JAVA_ERR_JOBJECT_FLAGS     = 0xCCDED04BUL, /* Object class isn't deserialisable */
 	JAVA_ERR_JVALUE_TYPE       = 0xCCDED04CUL, /* Value data type is invalid */
 
+	SOCK_ERR_UNKNOWN_HOST = 0xCCDED04FUL, /* Host (e.g. "example.com") was unknown to the DNS server(s) */
+
 	NBT_ERR_UNKNOWN   = 0xCCDED050UL, /* NBT tag has an unknown type */
 	CW_ERR_ROOT_TAG   = 0xCCDED051UL, /* NBT root tag isn't a Compound tag */
 	CW_ERR_STRING_LEN = 0xCCDED052UL, /* NBT string is too long */

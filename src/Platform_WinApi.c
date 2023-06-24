@@ -457,9 +457,18 @@ static void LoadWinsockFuncs(void) {
 static int ParseHost(void* dst, char* host, int port) {
 	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
 	struct hostent* res;
+	cc_result wsa_res;
 
 	res = _gethostbyname(host);
-	if (!res || res->h_addrtype != AF_INET) return false;
+	if (!res) {
+		wsa_res = _WSAGetLastError();
+
+		if (wsa_res == WSAHOST_NOT_FOUND) return SOCK_ERR_UNKNOWN_HOST;
+		return ERR_INVALID_ARGUMENT;
+	}
+		
+	/* per MSDN, should only be getting AF_INET returned from this */
+	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
 
 	/* Must have at least one IPv4 address */
 	if (!res->h_addr_list[0]) return false;
@@ -467,7 +476,7 @@ static int ParseHost(void* dst, char* host, int port) {
 	addr4->sin_family = AF_INET;
 	addr4->sin_port   = _htons(port);
 	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
-	return true;
+	return 0;
 }
 
 static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, int port) {
@@ -479,13 +488,13 @@ static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, i
 	*size = sizeof(*addr4);
 	if (!_WSAStringToAddressW(addr.uni, AF_INET,  NULL, addr4, size)) {
 		addr4->sin_port  = _htons(port);
-		return true;
+		return 0;
 	}
 
 	*size = sizeof(*addr6);
 	if (!_WSAStringToAddressW(addr.uni, AF_INET6, NULL, addr6, size)) {
 		addr6->sin6_port = _htons(port);
-		return true;
+		return 0;
 	}
 
 	*size = sizeof(*addr4);
@@ -495,7 +504,7 @@ static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, i
 int Socket_ValidAddress(const cc_string* address) {
 	SOCKADDR_STORAGE addr;
 	INT addrSize;
-	return Socket_ParseAddress(&addr, &addrSize, address, 0);
+	return Socket_ParseAddress(&addr, &addrSize, address, 0) == 0;
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
@@ -503,9 +512,9 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	cc_result res;
 	INT addrSize;
 
-	*s = -1;
-	if (!Socket_ParseAddress(&addr, &addrSize, address, port))
-		return ERR_INVALID_ARGUMENT;
+	*s  = -1;
+	res = Socket_ParseAddress(&addr, &addrSize, address, port);
+	if (res) return res;
 
 	*s = _socket(addr.ss_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
