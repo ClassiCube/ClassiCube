@@ -51,7 +51,7 @@ void SSLBackend_Init(cc_bool verifyCerts) {
 	};
 	static const cc_string schannel = String_FromConst("schannel.dll");
 	_verifyCerts = verifyCerts;
-	/* TODO: Load later?? prob too hard */
+	/* TODO: Load later?? it's unsafe to do on a background thread though */
 	DynamicLib_LoadAll(&schannel, funcs, Array_Elems(funcs), &schannel_lib);
 }
 
@@ -65,6 +65,11 @@ cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
 		return true;
 	case TRUST_E_CERT_SIGNATURE:
 		String_AppendConst(dst, "The signature of the website's SSL certificate cannot be verified");
+		return true;
+	case SEC_E_UNSUPPORTED_FUNCTION:
+		/* https://learn.microsoft.com/en-us/windows/win32/secauthn/schannel-error-codes-for-tls-and-ssl-alerts */
+		/* TLS1_ALERT_PROTOCOL_VERSION maps to this error code */
+		String_AppendConst(dst, "The website uses an incompatible SSL/TLS version");
 		return true;
 	}
 	return false;
@@ -88,6 +93,7 @@ static SECURITY_STATUS SSL_CreateHandle(struct SSLContext* ctx) {
 	SCHANNEL_CRED cred = { 0 };
 	cred.dwVersion = SCHANNEL_CRED_VERSION;
 	cred.dwFlags   = SCH_CRED_NO_DEFAULT_CREDS | (_verifyCerts ? SCH_CRED_AUTO_CRED_VALIDATION : SCH_CRED_MANUAL_CRED_VALIDATION);
+	cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT;
 
 	/* TODO: SCHANNEL_NAME_A ? */
 	return FP_AcquireCredentialsHandleA(NULL, UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
