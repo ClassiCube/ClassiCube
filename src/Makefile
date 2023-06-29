@@ -108,7 +108,7 @@ endif
 
 ifeq ($(PLAT),psp)
 CC=psp-gcc
-LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay
+LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay -lpspctrl
 endif
 
 ifeq ($(OS),Windows_NT)
