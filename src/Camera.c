@@ -24,9 +24,10 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 }
 
 void Camera_KeyLookUpdate(void) {
+	float delta;
 	if (Gui.InputGrab) return;
-	// divide by 25 to have reasonable sensitivity for default mouse sens
-	float delta = (Camera.Sensitivity / 25.0f) * (1000 * (Game.Time - last_time));
+	/* divide by 25 to have reasonable sensitivity for default mouse sens */
+	delta = (Camera.Sensitivity / 25.0f) * (1000 * (Game.Time - last_time));
 
 	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= delta;
 	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += delta;

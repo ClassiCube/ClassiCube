@@ -73,7 +73,9 @@ static float gfx_targetTime, gfx_actualTime;
 /* Examines difference between expected and actual frame times, */
 /*  then sleeps if actual frame time is too fast */
 static void LimitFPS(void) {
-	cc_uint64 frameEnd = Stopwatch_Measure();
+	cc_uint64 frameEnd, sleepEnd;
+	
+	frameEnd = Stopwatch_Measure();
 	gfx_actualTime += Stopwatch_ElapsedMicroseconds(Game_FrameStart, frameEnd) / 1000.0f;
 	gfx_targetTime += gfx_minFrameMs;
 
@@ -85,7 +87,7 @@ static void LimitFPS(void) {
 		/* also accumulate Thread_Sleep duration, as actual sleep */
 		/*  duration can significantly deviate from requested time */ 
 		/*  (e.g. requested 4ms, but actually slept for 8ms) */
-		cc_uint64 sleepEnd = Stopwatch_Measure();
+		sleepEnd = Stopwatch_Measure();
 		gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameEnd, sleepEnd) / 1000.0f;
 	}
 

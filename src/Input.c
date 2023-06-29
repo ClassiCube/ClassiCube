@@ -771,12 +771,15 @@ void InputHandler_PickBlock(void) {
 }
 
 void InputHandler_Tick(void) {
+	cc_bool left, middle, right;
+	TimeMS now;
+	int delta;
+	
 	if (Gui.InputGrab) return;
 
-	cc_bool left, middle, right;
-	TimeMS now = DateTime_CurrentUTC_MS();
-	int delta  = (int)(now - input_lastClick);
-
+	
+	now   = DateTime_CurrentUTC_MS();
+	delta = (int)(now - input_lastClick);
 	if (delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
 

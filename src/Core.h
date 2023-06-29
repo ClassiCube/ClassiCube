@@ -219,6 +219,12 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_GL
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
+#elif defined __BEOS__
+#define CC_BUILD_HAIKU
+#define CC_BUILD_POSIX
+#define CC_BUILD_GL
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __sgi
 #define CC_BUILD_IRIX
 #define CC_BUILD_POSIX

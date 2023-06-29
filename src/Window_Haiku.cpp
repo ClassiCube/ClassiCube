@@ -166,11 +166,11 @@ static void UpdateMouseButtons(int buttons) {
 	
 	// TODO move logic to UpdateMouseButton instead?
 	if (changed & B_PRIMARY_MOUSE_BUTTON)   
-		UpdateMouseButton(KEY_LMOUSE, buttons & B_PRIMARY_MOUSE_BUTTON);
+		UpdateMouseButton(IPT_LMOUSE, buttons & B_PRIMARY_MOUSE_BUTTON);
 	if (changed & B_SECONDARY_MOUSE_BUTTON)
-		UpdateMouseButton(KEY_RMOUSE, buttons & B_SECONDARY_MOUSE_BUTTON);
+		UpdateMouseButton(IPT_RMOUSE, buttons & B_SECONDARY_MOUSE_BUTTON);
 	if (changed & B_TERTIARY_MOUSE_BUTTON) 
-		UpdateMouseButton(KEY_MMOUSE, buttons & B_TERTIARY_MOUSE_BUTTON);
+		UpdateMouseButton(IPT_MMOUSE, buttons & B_TERTIARY_MOUSE_BUTTON);
 	last_buttons = buttons;
 }
 
@@ -178,7 +178,7 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 	CCEvent event = { 0 };
 	BPoint where;
 	float delta;
-	int value, width, height;
+	int32 value, width, height;
 	bool active;
 	
 	switch (msg->what)
@@ -407,20 +407,20 @@ void Window_Close(void) {
 }
 
 static const cc_uint8 key_map[] = {
-	/* 0x00 */ 0,KEY_ESCAPE,KEY_F1,KEY_F2, KEY_F3,KEY_F4,KEY_F5,KEY_F6, 
-	/* 0x08 */ KEY_F7,KEY_F8,KEY_F9,KEY_F10, KEY_F11,KEY_F12,KEY_PRINTSCREEN,KEY_SCROLLLOCK,
-	/* 0x10 */ KEY_PAUSE,KEY_TILDE,'1','2', '3','4','5','6',
-	/* 0x18 */ '7','8','9','0', KEY_MINUS,KEY_EQUALS,KEY_BACKSPACE,KEY_INSERT,
-	/* 0x20 */ KEY_HOME,KEY_PAGEUP,KEY_NUMLOCK,KEY_KP_DIVIDE, KEY_KP_MULTIPLY,KEY_KP_MINUS,KEY_TAB,'Q',
+	/* 0x00 */ 0,IPT_ESCAPE,IPT_F1,IPT_F2, IPT_F3,IPT_F4,IPT_F5,IPT_F6, 
+	/* 0x08 */ IPT_F7,IPT_F8,IPT_F9,IPT_F10, IPT_F11,IPT_F12,IPT_PRINTSCREEN,IPT_SCROLLLOCK,
+	/* 0x10 */ IPT_PAUSE,IPT_TILDE,'1','2', '3','4','5','6',
+	/* 0x18 */ '7','8','9','0', IPT_MINUS,IPT_EQUALS,IPT_BACKSPACE,IPT_INSERT,
+	/* 0x20 */ IPT_HOME,IPT_PAGEUP,IPT_NUMLOCK,IPT_KP_DIVIDE, IPT_KP_MULTIPLY,IPT_KP_MINUS,IPT_TAB,'Q',
 	/* 0x28 */ 'W','E','R','T', 'Y','U','I','O',
-	/* 0x30 */ 'P',KEY_LBRACKET,KEY_RBRACKET,KEY_BACKSLASH, KEY_DELETE,KEY_END,KEY_PAGEDOWN,KEY_KP7,
-	/* 0x38 */ KEY_KP8,KEY_KP9,KEY_KP_PLUS,KEY_CAPSLOCK, 'A','S','D','F',
-	/* 0x40 */ 'G','H','J','K', 'L',KEY_SEMICOLON,KEY_QUOTE,KEY_ENTER,	
-	/* 0x48 */ KEY_KP4,KEY_KP5,KEY_KP6,KEY_LSHIFT, 'Z','X','C','V',	
-	/* 0x50 */ 'B','N','M',KEY_COMMA, KEY_PERIOD,KEY_SLASH,KEY_RSHIFT,KEY_UP,	
-	/* 0x58 */ KEY_KP1,KEY_KP2,KEY_KP3,KEY_KP_ENTER, KEY_LCTRL,KEY_LALT,KEY_SPACE,KEY_RALT,	
-	/* 0x60 */ KEY_RCTRL,KEY_LEFT,KEY_DOWN,KEY_RIGHT, KEY_KP0,KEY_KP_DECIMAL,KEY_LWIN,0,	
-	/* 0x68 */ KEY_RWIN,0,0,0, 0,0,0,0,
+	/* 0x30 */ 'P',IPT_LBRACKET,IPT_RBRACKET,IPT_BACKSLASH, IPT_DELETE,IPT_END,IPT_PAGEDOWN,IPT_KP7,
+	/* 0x38 */ IPT_KP8,IPT_KP9,IPT_KP_PLUS,IPT_CAPSLOCK, 'A','S','D','F',
+	/* 0x40 */ 'G','H','J','K', 'L',IPT_SEMICOLON,IPT_QUOTE,IPT_ENTER,	
+	/* 0x48 */ IPT_KP4,IPT_KP5,IPT_KP6,IPT_LSHIFT, 'Z','X','C','V',	
+	/* 0x50 */ 'B','N','M',IPT_COMMA, IPT_PERIOD,IPT_SLASH,IPT_RSHIFT,IPT_UP,	
+	/* 0x58 */ IPT_KP1,IPT_KP2,IPT_KP3,IPT_KP_ENTER, IPT_LCTRL,IPT_LALT,IPT_SPACE,IPT_RALT,	
+	/* 0x60 */ IPT_RCTRL,IPT_LEFT,IPT_DOWN,IPT_RIGHT, IPT_KP0,IPT_KP_DECIMAL,IPT_LWIN,0,	
+	/* 0x68 */ IPT_RWIN,0,0,0, 0,0,0,0,
 };
 
 static int MapNativeKey(int raw) {
@@ -524,12 +524,14 @@ public:
 	CC_BRefFilter() : BRefFilter() { }
 	
 	bool Filter(const entry_ref* ref, BNode* node, stat_beos* st, const char* filetype) override {
+		cc_string str;
+		int i;
 		if (node->IsDirectory()) return true;
 		
 		BPath path(ref);
-		cc_string str = String_FromReadonly(path.Path());
+		str = String_FromReadonly(path.Path());
 		
-		for (int i = 0; file_filters[i]; i++)
+		for (i = 0; file_filters[i]; i++)
 		{
 			cc_string ext = String_FromReadonly(file_filters[i]);
 			if (String_CaselessEnds(&str, &ext)) return true;

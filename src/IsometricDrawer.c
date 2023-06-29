@@ -43,6 +43,7 @@ static void IsometricDrawer_Flat(BlockID block, float size) {
 
 	struct VertexTextured v;
 	float minX, maxX, minY, maxY;
+	float scale;
 
 	*iso_state++ = texIndex;
 	v.Col = PACKEDCOL_WHITE;
@@ -53,10 +54,10 @@ static void IsometricDrawer_Flat(BlockID block, float size) {
 	/*  Default selected size:  54px -> 48px */
 	/*  Default inventory size: 36px -> 32px */
 	/*  Default hotbar size:    28px -> 24px */
-	float scale = Game_ClassicMode ? 0.70f : 0.88f;
-	size = Math_Ceil(size * scale);
-	minX = iso_posX - size; maxX = iso_posX + size;
-	minY = iso_posY - size; maxY = iso_posY + size;
+	scale = Game_ClassicMode ? 0.70f : 0.88f;
+	size  = Math_Ceil(size * scale);
+	minX  = iso_posX - size; maxX = iso_posX + size;
+	minY  = iso_posY - size; maxY = iso_posY + size;
 
 	v.Z = 0.0f;
 	v.X = minX; v.Y = minY; v.U = rec.U1; v.V = rec.V1; *iso_vertices++ = v;

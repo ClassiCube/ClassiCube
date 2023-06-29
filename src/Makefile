@@ -90,6 +90,13 @@ LDFLAGS=-g
 LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
+ifeq ($(PLAT),beos)
+OBJECTS+=Window_Haiku.o
+CFLAGS=-g -pipe
+LDFLAGS=-g
+LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+endif
+
 ifeq ($(PLAT),serenityos)
 LIBS=-lgl -lSDL2
 endif
@@ -132,6 +139,8 @@ dragonfly:
 	$(MAKE) $(ENAME) PLAT=dragonfly
 haiku:
 	$(MAKE) $(ENAME) PLAT=haiku
+beos:
+	$(MAKE) $(ENAME) PLAT=beos
 serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 irix:
