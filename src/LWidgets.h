@@ -23,7 +23,8 @@ struct LWidgetVTABLE {
 	/* Called repeatedly to update this widget when selected. */
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
-	void (*KeyDown)(void* widget, int key, cc_bool wasDown);
+	/* Returns whether the key press was intercepted */
+	cc_bool (*KeyDown)(void* widget, int key, cc_bool wasDown);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
@@ -70,7 +71,7 @@ struct LButton {
 };
 CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LLayout* layouts);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
-CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered);
+CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active);
 
 struct LCheckbox;
 struct LCheckbox {

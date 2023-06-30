@@ -401,17 +401,18 @@ void LBackend_ButtonUpdate(struct LButton* w) {
 void LBackend_ButtonDraw(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
+	cc_bool active = w->hovered || w->selected;
 
-	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, w->hovered);
+	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, active);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
 
-	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
+	if (!active) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
 	Context2D_DrawText(&framebuffer, &args, 
 					  w->x + xOffset / 2, w->y + yOffset / 2);
 
-	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
+	if (!active) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
 }
 
 

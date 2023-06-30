@@ -59,9 +59,8 @@ void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w) {
 	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w, idx);
 }
 
-static void LScreen_HandleTab(struct LScreen* s) {
+static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 	struct LWidget* w;
-	int dir   = Input_IsShiftPressed() ? -1 : 1;
 	int index = 0, i, j;
 
 	if (s->selectedWidget) {
@@ -82,9 +81,7 @@ static void LScreen_HandleTab(struct LScreen* s) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == IPT_TAB) {
-		LScreen_HandleTab(s);
-	} else if (key == IPT_ENTER || key == IPT_KP_ENTER) {
+	if (key == IPT_ENTER || key == IPT_KP_ENTER) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -95,9 +92,20 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		} else if (s->onEnterWidget) {
 			s->onEnterWidget->OnClick(s->onEnterWidget);
 		}
-	} else if (s->selectedWidget) {
-		if (!s->selectedWidget->VTABLE->KeyDown) return;
-		s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was);
+		return;
+	}
+	
+	/* Active widget takes input priority over default behaviour */
+	if (s->selectedWidget && s->selectedWidget->VTABLE->KeyDown) {
+		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was)) return;
+	}
+
+	if (key == IPT_TAB) {
+		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
+	} else if (key == IPT_UP) {
+		LScreen_CycleSelected(s, -1);
+	} else if (key == IPT_DOWN) {
+		LScreen_CycleSelected(s,  1);
 	}
 }
 
@@ -1358,13 +1366,13 @@ static struct LWidget* settings_widgets[] = {
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.btnColours, (struct LWidget*)&SettingsScreen.lblColours,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
-	(struct LWidget*)&SettingsScreen.btnBack,    (struct LWidget*)&SettingsScreen.cbScale
+	(struct LWidget*)&SettingsScreen.cbScale,    (struct LWidget*)&SettingsScreen.btnBack
 };
 static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.sep,
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
-	(struct LWidget*)&SettingsScreen.btnBack,    (struct LWidget*)&SettingsScreen.cbScale
+	(struct LWidget*)&SettingsScreen.cbScale,    (struct LWidget*)&SettingsScreen.btnBack
 };
 
 LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };

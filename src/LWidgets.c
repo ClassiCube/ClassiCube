@@ -30,9 +30,9 @@ void LWidget_CalcOffsets(void) {
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
-	BitmapCol color = hovered ? Launcher_Theme.ButtonForeActiveColor 
-							  : Launcher_Theme.ButtonForeColor;
+static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active) {
+	BitmapCol color = active ? Launcher_Theme.ButtonForeActiveColor 
+							 : Launcher_Theme.ButtonForeColor;
 
 	if (Launcher_Theme.ClassicBackground) {
 		Gradient_Noise(ctx, color, 8,
@@ -67,12 +67,12 @@ static void LButton_DrawBorder(struct Context2D* ctx, int x, int y, int width, i
 					oneX,             height - twoY);
 }
 
-static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
+static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active) {
 	BitmapCol activeColor = BitmapColor_RGB(189, 198, 255);
 	BitmapCol color       = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		if (hovered) color = activeColor;
+		if (active) color = activeColor;
 
 		Context2D_Clear(ctx, color,
 						x + twoX,      y + oneY,
@@ -80,17 +80,17 @@ static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width
 		Context2D_Clear(ctx, color,
 						x + oneX,      y + twoY,
 						oneX,          height - fourY);
-	} else if (!hovered) {
+	} else if (!active) {
 		Context2D_Clear(ctx, color,
 						x + twoX,      y + oneY,
 						width - fourX, oneY);
 	}
 }
 
-void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered) {
-	LButton_DrawBase(     ctx, x, y, width, height, hovered);
+void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active) {
+	LButton_DrawBase(     ctx, x, y, width, height, active);
 	LButton_DrawBorder(   ctx, x, y, width, height);
-	LButton_DrawHighlight(ctx, x, y, width, height, hovered);
+	LButton_DrawHighlight(ctx, x, y, width, height, active);
 }
 
 static void LButton_Draw(void* widget) {
@@ -99,19 +99,19 @@ static void LButton_Draw(void* widget) {
 }
 
 static void LButton_Hover(void* w, int idx, cc_bool wasOver) {
-	/* only need to redraw when changing from unhovered to hovered */
+	/* only need to redraw when changing from unhovered to active */
 	if (!wasOver) LBackend_MarkDirty(w);
 }
 
-static void LButton_Unhover(void* w) {
-	LBackend_MarkDirty(w);
-}
+static void LButton_Unhover(void* w) { LBackend_MarkDirty(w); }
+static void LButton_OnSelect(void* w,   int idx, cc_bool wasSelected) { LBackend_MarkDirty(w); }
+static void LButton_OnUnselect(void* w, int idx) { LBackend_MarkDirty(w); }
 
 static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
-	NULL, NULL,                     /* Key    */
-	LButton_Hover, LButton_Unhover, /* Hover  */
-	NULL, NULL                      /* Select */
+	NULL, NULL,                          /* Key    */
+	LButton_Hover,    LButton_Unhover,   /* Hover  */
+	LButton_OnSelect, LButton_OnUnselect /* Select */
 };
 void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LLayout* layouts) {
 	w->VTABLE  = &lbutton_VTABLE;
@@ -247,7 +247,7 @@ static void LInput_Delete(struct LInput* w) {
 	LBackend_InputUpdate(w);
 }
 
-static void LInput_KeyDown(void* widget, int key, cc_bool was) {
+static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was) {
 	struct LInput* w = (struct LInput*)widget;
 	if (key == IPT_BACKSPACE) {
 		LInput_Backspace(w);
@@ -263,7 +263,11 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 		LInput_AdvanceCaretPos(w, false);
 	} else if (key == IPT_RIGHT) {
 		LInput_AdvanceCaretPos(w, true);
+	} else {
+		return false;
 	}
+
+	return true;
 }
 
 static cc_bool LInput_CanAppend(struct LInput* w, char c) {
@@ -564,7 +568,7 @@ cc_bool LTable_HandlesKey(int key) {
 	return key == IPT_UP || key == IPT_DOWN || key == IPT_PAGEUP || key == IPT_PAGEDOWN;
 }
 
-static void LTable_KeyDown(void* widget, int key, cc_bool was) {
+static cc_bool LTable_KeyDown(void* widget, int key, cc_bool was) {
 	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 
@@ -576,10 +580,11 @@ static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 		index -= w->visibleRows;
 	} else if (key == IPT_PAGEDOWN) {
 		index += w->visibleRows;
-	} else { return; }
+	} else { return false; }
 
 	w->_lastRow = -1;
 	LTable_SetSelectedTo(w, index);
+	return true;
 }
 
 static void LTable_MouseDown(void* widget, int idx, cc_bool wasOver) {
