@@ -48,7 +48,7 @@ struct LWidgetVTABLE {
 	int x, y, width, height;       /* Top left corner and dimensions of this widget */ \
 	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
 	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
-	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
+	cc_bool autoSelectable;        /* Whether this widget can get auto selected (e.g. pressing tab) */ \
 	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
 	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
 	cc_uint8 type;                 /* Type of this widget */ \

@@ -401,13 +401,12 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	Gfx_Draw2DTexture(&w->selTex, PACKEDCOL_WHITE);
 }
 
-#define HOTBAR_MAX_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	/* TODO: Should hotbar use its own VB? */
 	struct VertexTextured vertices[HOTBAR_MAX_VERTICES];
 	int state[HOTBAR_MAX_VERTICES / 4];
+	int i, x, y, count;
 	float scale;
-	int i, x, y;
 
 	IsometricDrawer_BeginBatch(vertices, state);
 	scale = w->elemSize / 2.0f;
@@ -421,7 +420,12 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 #endif
 		IsometricDrawer_AddBatch(Inventory_Get(i), scale, x, y);
 	}
-	IsometricDrawer_EndBatch(Models.Vb);
+
+	count = IsometricDrawer_EndBatch();
+	if (count == 0) return;
+
+	Gfx_SetDynamicVbData(Models.Vb, vertices, count);
+	IsometricDrawer_Render(count, 0, state);
 }
 
 static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int index, int dir) {
@@ -695,43 +699,16 @@ void TableWidget_RecreateBlocks(struct TableWidget* w) {
 	Widget_Layout(w);
 }
 
-static void TableWidget_Render(void* widget, double delta) {
+static void TableWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	struct VertexTextured vertices[TABLE_MAX_VERTICES];
-	int state[TABLE_MAX_VERTICES / 4];
-	int cellSizeX, cellSizeY, size;
-	float off;
+	struct VertexTextured* data = *vertices;
+	int cellSizeX, cellSizeY;
 	int i, x, y;
-
-	/* These were sourced by taking a screenshot of vanilla */
-	/* Then using paint to extract the color components */
-	/* Then using wolfram alpha to solve the glblendfunc equation */
-	PackedCol topBackColor    = PackedCol_Make( 34,  34,  34, 168);
-	PackedCol bottomBackColor = PackedCol_Make( 57,  57, 104, 202);
-	PackedCol topSelColor     = PackedCol_Make(255, 255, 255, 142);
-	PackedCol bottomSelColor  = PackedCol_Make(255, 255, 255, 192);
-
-	Gfx_Draw2DGradient(Table_X(w), Table_Y(w),
-		Table_Width(w), Table_Height(w), topBackColor, bottomBackColor);
-
-	if (w->rowsVisible < w->rowsTotal) {
-		Elem_Render(&w->scroll, delta);
-	}
 
 	cellSizeX = w->cellSizeX;
 	cellSizeY = w->cellSizeY;
-	if (w->selectedIndex != -1 && Gui.ClassicInventory && w->blocks[w->selectedIndex] != BLOCK_AIR) {
-		TableWidget_GetCoords(w, w->selectedIndex, &x, &y);
 
-		/* TODO: Need two size arguments, in case X/Y dpi differs */
-		off  = cellSizeX * 0.1f;
-		size = (int)(cellSizeX + off * 2);
-		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
-			size, size, topSelColor, bottomSelColor);
-	}
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-
-	IsometricDrawer_BeginBatch(vertices, state);
+	IsometricDrawer_BeginBatch(data, w->state);
 	for (i = 0; i < w->blocksCount; i++) {
 		if (!TableWidget_GetCoords(w, i, &x, &y)) continue;
 
@@ -749,7 +726,51 @@ static void TableWidget_Render(void* widget, double delta) {
 		IsometricDrawer_AddBatch(w->blocks[i],
 			w->selBlockSize, x + cellSizeX / 2, y + cellSizeY / 2);
 	}
-	IsometricDrawer_EndBatch(w->vb);
+
+	w->verticesCount = IsometricDrawer_EndBatch();
+	*vertices        = data + TABLE_MAX_VERTICES;
+}
+
+static int TableWidget_Render2(void* widget, int offset) {
+	struct TableWidget* w = (struct TableWidget*)widget;
+	int cellSizeX, cellSizeY, size;
+	float off;
+	int x, y;
+
+	/* These were sourced by taking a screenshot of vanilla */
+	/* Then using paint to extract the color components */
+	/* Then using wolfram alpha to solve the glblendfunc equation */
+	PackedCol topBackColor    = PackedCol_Make( 34,  34,  34, 168);
+	PackedCol bottomBackColor = PackedCol_Make( 57,  57, 104, 202);
+	PackedCol topSelColor     = PackedCol_Make(255, 255, 255, 142);
+	PackedCol bottomSelColor  = PackedCol_Make(255, 255, 255, 192);
+
+	Gfx_Draw2DGradient(Table_X(w), Table_Y(w),
+		Table_Width(w), Table_Height(w), topBackColor, bottomBackColor);
+
+	if (w->rowsVisible < w->rowsTotal) {
+		Elem_Render(&w->scroll, 0);
+	}
+
+	cellSizeX = w->cellSizeX;
+	cellSizeY = w->cellSizeY;
+	if (w->selectedIndex != -1 && Gui.ClassicInventory && w->blocks[w->selectedIndex] != BLOCK_AIR) {
+		TableWidget_GetCoords(w, w->selectedIndex, &x, &y);
+
+		/* TODO: Need two size arguments, in case X/Y dpi differs */
+		off  = cellSizeX * 0.1f;
+		size = (int)(cellSizeX + off * 2);
+		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
+			size, size, topSelColor, bottomSelColor);
+	}
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(w->vb);
+
+	if (w->verticesCount) {
+		IsometricDrawer_Render(w->verticesCount, offset, w->state);
+	}
+	return offset + TABLE_MAX_VERTICES;
 }
 
 static void TableWidget_Free(void* widget) { }
@@ -896,9 +917,10 @@ static int TableWidget_KeyDown(void* widget, int key) {
 }
 
 static const struct WidgetVTABLE TableWidget_VTABLE = {
-	TableWidget_Render,      TableWidget_Free,      TableWidget_Reposition,
+	NULL,                    TableWidget_Free,      TableWidget_Reposition,
 	TableWidget_KeyDown,     Widget_InputUp,        TableWidget_MouseScroll,
-	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove
+	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove,
+	TableWidget_BuildMesh,   TableWidget_Render2
 };
 void TableWidget_Create(struct TableWidget* w) {
 	cc_bool classic;

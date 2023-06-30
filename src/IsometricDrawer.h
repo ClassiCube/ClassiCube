@@ -13,6 +13,8 @@ struct VertexTextured;
 void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state);
 /* Buffers the vertices needed to draw the given block at the given position */
 void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y);
-/* Flushes buffered vertices to the GPU */
-void IsometricDrawer_EndBatch(GfxResourceID vb);
+/* Returns the number of buffered vertices */
+int  IsometricDrawer_EndBatch(void);
+/* Draws the buffered vertices */
+void IsometricDrawer_Render(int count, int offset, int* state);
 #endif

@@ -23,10 +23,11 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	void (*MouseWheel)(struct LScreen* s,  float delta); \
 	void (*ResetArea)(struct Context2D* ctx, int x, int y, int width, int height); \
 	struct LWidget* onEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
+	struct LWidget* onEscapeWidget; /* Widget to auto-click when Escape is pressed. Can be NULL. */ \
 	struct LWidget* hoveredWidget;  /* Widget the mouse is currently hovering over. */ \
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \
-	int numWidgets;           /* Number of widgets actually used. */ \
-	struct LWidget** widgets; /* Array of pointers to all widgets in the screen. */ \
+	int numWidgets;           /* Number of widgets actually used */ \
+	struct LWidget** widgets; /* Array of pointers to all the widgets in the screen */ \
 	const char* title;        /* Titlebar text */
 
 struct LScreen { LScreen_Layout };

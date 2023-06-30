@@ -117,7 +117,7 @@ void LButton_Init(struct LButton* w, int width, int height, const char* text, co
 	w->VTABLE  = &lbutton_VTABLE;
 	w->type    = LWIDGET_BUTTON;
 	w->layouts = layouts;
-	w->tabSelectable = true;
+	w->autoSelectable = true;
 	LBackend_ButtonInit(w, width, height);
 	LButton_SetConst(w, text);
 }
@@ -146,7 +146,7 @@ void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout*
 	w->VTABLE  = &lcheckbox_VTABLE;
 	w->type    = LWIDGET_CHECKBOX;
 	w->layouts = layouts;
-	w->tabSelectable = true;
+	w->autoSelectable = true;
 
 	w->text = String_FromReadonly(text);
 	LBackend_CheckboxInit(w);
@@ -263,9 +263,7 @@ static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was) {
 		LInput_AdvanceCaretPos(w, false);
 	} else if (key == IPT_RIGHT) {
 		LInput_AdvanceCaretPos(w, true);
-	} else {
-		return false;
-	}
+	} else { return false; }
 
 	return true;
 }
@@ -319,7 +317,7 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 void LInput_Init(struct LInput* w, int width, const char* hintText, const struct LLayout* layouts) {
 	w->VTABLE  = &linput_VTABLE;
 	w->type    = LWIDGET_INPUT;
-	w->tabSelectable = true;
+	w->autoSelectable = true;
 	w->opaque  = true;
 	w->layouts = layouts;
 	String_InitArray(w->text, w->_textBuffer);

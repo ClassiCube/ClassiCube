@@ -78,10 +78,13 @@ struct HotbarWidget {
 	double touchTime[HOTBAR_MAX_INDEX];
 #endif
 };
+#define HOTBAR_MAX_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
+
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
 
+#define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 /* A table of blocks. */
 struct TableWidget {
 	Widget_Body
@@ -99,8 +102,10 @@ struct TableWidget {
 	int lastX, lastY, paddingX;
 	int paddingL, paddingR, paddingT, paddingB;
 	void (*UpdateTitle)(BlockID block);
+
+	int state[TABLE_MAX_VERTICES / 4];
+	int verticesCount;
 };
-#define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
 /* Sets the selected block in the table to the given block. */

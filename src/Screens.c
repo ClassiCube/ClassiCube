@@ -1474,6 +1474,11 @@ static void InventoryScreen_OnBlockChanged(void* screen) {
 	TableWidget_OnInventoryChanged(&s->table);
 }
 
+static void InventoryScreen_NeedRedrawing(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	s->dirty = true;
+}
+
 static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Gfx_DeleteDynamicVb(&s->vb);
@@ -1494,6 +1499,16 @@ static void InventoryScreen_ContextRecreated(void* screen) {
 }
 
 static void InventoryScreen_BuildMesh(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
+
+	data = Screen_LockVb(s);
+	ptr  = &data;
+
+	Widget_BuildMesh(&s->title, ptr);
+	Widget_BuildMesh(&s->table, ptr);
+	Gfx_UnlockDynamicVb(s->vb);
 }
 
 static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
@@ -1518,12 +1533,21 @@ static void InventoryScreen_Init(void* screen) {
 	TableWidget_RecreateBlocks(&s->table);
 
 	/* Can't immediately move to selected here, because cursor grabbed  */
-	/* status might be toggled after InventoryScreen_Init() is called. */
-	/* That causes the cursor to be moved back to the middle of the window. */
+	/*  status might be toggled *after* InventoryScreen_Init() is called */
+	/* That causes the cursor to be moved back to the middle of the window */
 	s->deferredSelect = true;
 
+	Event_Register_(&TextureEvents.AtlasChanged,     s, InventoryScreen_NeedRedrawing);
 	Event_Register_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
 	Event_Register_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+}
+
+static void InventoryScreen_Free(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+
+	Event_Unregister_(&TextureEvents.AtlasChanged,     s, InventoryScreen_NeedRedrawing);
+	Event_Unregister_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_Unregister_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
 static void InventoryScreen_Update(void* screen, double delta) {
@@ -1533,8 +1557,8 @@ static void InventoryScreen_Update(void* screen, double delta) {
 
 static void InventoryScreen_Render(void* screen, double delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Elem_Render(&s->table, delta);
-	Elem_Render(&s->title, delta);
+	Widget_Render2(&s->table, TEXTWIDGET_MAX);
+	Widget_Render2(&s->title,              0);
 }
 
 static void InventoryScreen_Layout(void* screen) {
@@ -1546,12 +1570,6 @@ static void InventoryScreen_Layout(void* screen) {
 	/* use Table(Y) directly instead of s->title->height ??? */
 	s->title.yOffset = s->table.y - s->title.height - 3;
 	Widget_Layout(&s->title); /* Needed for yOffset */
-}
-
-static void InventoryScreen_Free(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Event_Unregister_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_Unregister_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
 static int InventoryScreen_KeyDown(void* screen, int key) {

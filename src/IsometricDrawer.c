@@ -11,7 +11,6 @@
 static struct VertexTextured* iso_vertices;
 static struct VertexTextured* iso_vertices_base;
 static int* iso_state;
-static int* iso_state_base;
 
 static cc_bool iso_cacheInited;
 static PackedCol iso_colorXSide, iso_colorZSide, iso_colorYBottom;
@@ -121,8 +120,7 @@ void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state) {
 	IsometricDrawer_InitCache();
 	iso_vertices      = vertices;
 	iso_vertices_base = vertices;
-	iso_state         = state;
-	iso_state_base    = state;
+	iso_state         = state; /* TODO just store TextureLoc ??? */
 }
 
 void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
@@ -143,37 +141,31 @@ void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
 	}
 }
 
-static void IsometricDrawer_Render(GfxResourceID vb) {
-	int curIdx, batchBeg, batchLen;
-	int count, i;
-	
-	count = (int)(iso_vertices - iso_vertices_base);
-	Gfx_SetDynamicVbData(vb, iso_vertices_base, count);
+int IsometricDrawer_EndBatch(void) {
+	return (int)(iso_vertices - iso_vertices_base);
+}
 
-	curIdx   = iso_state_base[0];
+void IsometricDrawer_Render(int count, int offset, int* state) {
+	int i, curIdx, batchBeg, batchLen;
+
+	curIdx   = state[0];
 	batchLen = 0;
-	batchBeg = 0;
+	batchBeg = offset;
 
 	for (i = 0; i < count / 4; i++, batchLen += 4) 
 	{
-		if (iso_state_base[i] == curIdx) continue;
+		if (state[i] == curIdx) continue;
 
 		/* Flush previous batch */
 		Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
 		Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
 
 		/* Reset for next batch */
-		curIdx   = iso_state_base[i];
-		batchBeg = i * 4;
+		curIdx   = state[i];
+		batchBeg += batchLen;
 		batchLen = 0;
 	}
 
 	Gfx_BindTexture(Atlas1D.TexIds[curIdx]);
 	Gfx_DrawVb_IndexedTris_Range(batchLen, batchBeg);
-}
-
-void IsometricDrawer_EndBatch(GfxResourceID vb) {
-	if (iso_state != iso_state_base) {
-		IsometricDrawer_Render(vb);
-	}
 }
