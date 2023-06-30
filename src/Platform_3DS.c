@@ -426,26 +426,31 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
 static cc_bool gameHasArgs;
+
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	for (int i = 0; i < numArgs; i++) 
 	{
 		String_CopyToRawArray(gameArgs[i], &args[i]);
 	}
+	
 	Platform_LogConst("START GAME");
 	gameHasArgs = true;
 	gameNumArgs = numArgs;
 	return 0;
 }
+
 static int GetGameArgs(cc_string* args) {
 	int count = gameNumArgs;
 	for (int i = 0; i < count; i++) 
 	{
 		args[i] = String_FromRawArray(gameArgs[i]);
 	}
+	
 	// clear arguments so after game is closed, launcher is started
-    	gameNumArgs = 0;
-    	return count;
+	gameNumArgs = 0;
+	return count;
 }
+
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (gameHasArgs) return GetGameArgs(args);
 	

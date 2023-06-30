@@ -76,8 +76,8 @@ void Window_ProcessEvents(void) {
 	
 	Input_SetNonRepeatable(IPT_ENTER,  mods & PSP_CTRL_START);
 	Input_SetNonRepeatable(IPT_ESCAPE, mods & PSP_CTRL_SELECT);
-	// fake tab with down for Launcher
-	Input_SetNonRepeatable(IPT_TAB, mods & PSP_CTRL_DOWN);
+	// fake tab with PSP_CTRL_SQUARE for Launcher too
+	Input_SetNonRepeatable(IPT_TAB,    mods & PSP_CTRL_SQUARE);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PSP_CTRL_LEFT);
 	Input_SetNonRepeatable(IPT_LEFT,                mods & PSP_CTRL_LEFT);
