@@ -1010,6 +1010,26 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 	} 
 }
 
+
+static void ChatScreen_Update(void* screen, double delta) {
+	struct ChatScreen* s = (struct ChatScreen*)screen;
+	double now = Game.Time;
+
+	/* Destroy announcement texture before even rendering it at all, */
+	/* otherwise changing texture pack shows announcement for one frame */
+	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
+		Elem_Free(&s->announcement);
+	}
+
+	if (s->bigAnnouncement.tex.ID && now > Chat_BigAnnouncementReceived + 5) {
+		Elem_Free(&s->bigAnnouncement);
+	}
+
+	if (s->smallAnnouncement.tex.ID && now > Chat_SmallAnnouncementReceived + 5) {
+		Elem_Free(&s->smallAnnouncement);
+	}
+}
+
 static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 	int usedHeight = TextGroupWidget_UsedHeight(&s->chat);
 	int x = s->chat.x;
@@ -1048,20 +1068,6 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
 			if (Chat_GetLogTime(logIdx) + 10 >= now) Texture_Render(&tex);
 		}
-	}
-
-	/* Destroy announcement texture before even rendering it at all, */
-	/* otherwise changing texture pack shows announcement for one frame */
-	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
-		Elem_Free(&s->announcement);
-	}
-
-	if (s->bigAnnouncement.tex.ID && now > Chat_BigAnnouncementReceived + 5) {
-		Elem_Free(&s->bigAnnouncement);
-	}
-
-	if (s->smallAnnouncement.tex.ID && now > Chat_SmallAnnouncementReceived + 5) {
-		Elem_Free(&s->smallAnnouncement);
 	}
 
 	Elem_Render(&s->announcement, delta);
@@ -1381,7 +1387,7 @@ static void ChatScreen_Free(void* screen) {
 }
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
-	ChatScreen_Init,        Screen_NullUpdate, ChatScreen_Free,    
+	ChatScreen_Init,        ChatScreen_Update, ChatScreen_Free,
 	ChatScreen_Render,      ChatScreen_BuildMesh,
 	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, ChatScreen_TextChanged,
 	ChatScreen_PointerDown, Screen_PointerUp,  Screen_FPointer,     ChatScreen_MouseScroll,
@@ -1491,7 +1497,7 @@ static void InventoryScreen_ContextLost(void* screen) {
 
 static void InventoryScreen_ContextRecreated(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Gfx_RecreateDynamicVb(&s->vb, VERTEX_FORMAT_TEXTURED, TEXTWIDGET_MAX + TABLE_MAX_VERTICES);
+	Screen_UpdateVb(s);
 	s->table.vb = s->vb;
 
 	Gui_MakeBodyFont(&s->font);
@@ -1525,6 +1531,7 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 
 static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	s->maxVertices = TEXTWIDGET_MAX + TABLE_MAX_VERTICES;
 	
 	TextWidget_Init(&s->title);
 	TableWidget_Create(&s->table);

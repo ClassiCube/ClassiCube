@@ -327,7 +327,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	IPT_F6, IPT_LALT, IPT_F8, 
 	'G', IPT_F10, 0,
 	0, 0, 0, 0,
-	'1', '2', '3', '4', '5', '6', '7', '8', '9'
+	'1','2','3', '4','5','6', '7','8','9'
 };
 static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
