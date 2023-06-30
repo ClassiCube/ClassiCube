@@ -14,12 +14,13 @@ void OptionsGroupScreen_Show(void);
 void ClassicOptionsScreen_Show(void);
 void ClassicPauseScreen_Show(void);
 
-void ClassicKeyBindingsScreen_Show(void);
-void ClassicHacksKeyBindingsScreen_Show(void);
-void NormalKeyBindingsScreen_Show(void);
-void HacksKeyBindingsScreen_Show(void);
-void OtherKeyBindingsScreen_Show(void);
-void MouseKeyBindingsScreen_Show(void);
+void ClassicBindingsScreen_Show(void);
+void ClassicHacksBindingsScreen_Show(void);
+void NormalBindingsScreen_Show(void);
+void HacksBindingsScreen_Show(void);
+void OtherBindingsScreen_Show(void);
+void MouseBindingsScreen_Show(void);
+void HotbarBindingsScreen_Show(void);
 
 void GenLevelScreen_Show(void);
 void ClassicGenScreen_Show(void);

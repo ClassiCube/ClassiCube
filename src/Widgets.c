@@ -486,12 +486,20 @@ static void HotbarWidget_Render(void* widget, double delta) {
 #endif
 }
 
+static int HotbarWidget_MapKey(int key) {
+	int i;
+	for (i = 0; i < 9; i++)
+	{
+		if (key == KeyBinds[KEYBIND_HOTBAR_1 + i]) return i;
+	}
+	return -1;
+}
+
 static int HotbarWidget_KeyDown(void* widget, int key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	int index;
-	if (key < '1' || key > '9') return false;
+	int index = HotbarWidget_MapKey(key);
+	if (index == -1) return false;
 
-	index = key - '1';
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */
 		Inventory_SetHotbarIndex(index);

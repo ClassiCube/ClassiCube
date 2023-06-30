@@ -326,7 +326,8 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	IPT_LCTRL, IPT_LMOUSE, IPT_MMOUSE, IPT_RMOUSE, 
 	IPT_F6, IPT_LALT, IPT_F8, 
 	'G', IPT_F10, 0,
-	0, 0, 0, 0
+	0, 0, 0, 0,
+	'1', '2', '3', '4', '5', '6', '7', '8', '9'
 };
 static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
@@ -338,7 +339,10 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"HalfSpeed", "DeleteBlock", "PickBlock", "PlaceBlock", 
 	"AutoRotate", "HotbarSwitching", "SmoothCamera", 
 	"DropBlock", "IDOverlay", "BreakableLiquids",
-	"LookUp", "LookDown", "LookRight", "LookLeft"
+	"LookUp", "LookDown", "LookRight", "LookLeft",
+	"Hotbar1", "Hotbar2", "Hotbar3",
+	"Hotbar4", "Hotbar5", "Horbar6",
+	"Hotbar7", "Hotbar8", "Hotbar9"
 };
 
 cc_bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
