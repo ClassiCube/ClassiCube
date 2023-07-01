@@ -53,7 +53,7 @@ LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL -framework 
 endif
 
 ifeq ($(PLAT),mac_x64)
-OBJECTS+=interop_cocoa.o
+OBJECTS+=src/interop_cocoa.o
 CFLAGS=-g -m64 -pipe -fno-math-errno
 LIBS=
 LDFLAGS=-rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
@@ -84,14 +84,14 @@ LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),haiku)
-OBJECTS+=Window_Haiku.o
+OBJECTS+=src/interop_BeOS.o
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
 LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),beos)
-OBJECTS+=Window_Haiku.o
+OBJECTS+=src/interop_BeOS.o
 CFLAGS=-g -pipe
 LDFLAGS=-g
 LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
@@ -166,7 +166,7 @@ $(C_OBJECTS): %.o : %.c
 src/interop_cocoa.o: src/interop_cocoa.m
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-src/Window_Haiku.o: src/Window_Haiku.cpp
+src/interop_BeOS.o: src/interop_BeOS.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 # PSP requires fixups

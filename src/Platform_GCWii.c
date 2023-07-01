@@ -524,8 +524,48 @@ static void InitSockets(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
+static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
+static int gameNumArgs;
+static cc_bool gameHasArgs;
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	return ERR_NOT_SUPPORTED;
+	for (int i = 0; i < numArgs; i++) 
+	{
+		String_CopyToRawArray(gameArgs[i], &args[i]);
+	}
+	
+	Platform_LogConst("START GAME");
+	gameHasArgs = true;
+	gameNumArgs = numArgs;
+	return 0;
+}
+static int GetGameArgs(cc_string* args) {
+	int count = gameNumArgs;
+	for (int i = 0; i < count; i++) 
+	{
+		args[i] = String_FromRawArray(gameArgs[i]);
+	}
+	
+	// clear arguments so after game is closed, launcher is started
+	gameNumArgs = 0;
+	return count;
+}
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	if (gameHasArgs) return GetGameArgs(args);
+	
+	// GC/WII *sometimes* doesn't use argv[0] for program name and so argc will be 0
+	if (!argc) return 0;
+
+	int count = min(argc, GAME_MAX_CMDARGS);
+	for (int i = 0; i < count; i++) 
+	{
+		args[i] = String_FromReadonly(argv[i]);
+	}
+	
+	return count;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
 }
 
 void Process_Exit(cc_result code) { exit(code); }
@@ -616,25 +656,5 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 }
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
-*#########################################################################################################################*/
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	// GC/WII *sometimes* doesn't use argv[0] for program name and so argc will be 0
-	if (!argc) return 0;
-
-	int count = min(argc, GAME_MAX_CMDARGS);
-	for (int i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
 }
 #endif

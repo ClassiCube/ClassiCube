@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_HAIKU && !defined CC_BUILD_SDL
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS 
 extern "C" {
 #include "_WindowBase.h"
 #include "Graphics.h"
@@ -10,6 +10,9 @@ extern "C" {
 #include "Utils.h"
 }
 
+// Other
+#include <errno.h>
+#include <Url.h>
 // AppKit
 #include <Application.h> 
 #include <Clipboard.h> 
@@ -25,6 +28,35 @@ extern "C" {
 #include <FilePanel.h>
 #include <Path.h>
 
+/*########################################################################################################################*
+*--------------------------------------------------------Platform---------------------------------------------------------*
+*#########################################################################################################################*/
+cc_uint64 Stopwatch_Measure(void) {
+	return system_time();
+}
+
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
+	if (end < beg) return 0;
+	return end - beg;
+}
+
+cc_result Process_StartOpen(const cc_string* args) {
+	static const cc_string https_protocol = String_FromConst("https://");
+	char str[NATIVE_STR_LEN];
+	String_EncodeUtf8(str, args);
+
+	cc_bool https    = String_CaselessStarts(args, &https_protocol);
+	const char* mime = https ? "application/x-vnd.Be.URL.https" : "application/x-vnd.Be.URL.http";
+	
+	const char* argv[] = { str, NULL };
+	return be_roster->Launch(mime, 1, argv);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Window----------------------------------------------------------*
+*#########################################################################################################################*/
+#if !defined CC_BUILD_SDL
 static BApplication* app_handle;
 static BWindow* win_handle;
 static BView* view_handle;
@@ -635,7 +667,11 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
+#if defined CC_BUILD_BEOS
+	return NULL;
+#else
 	return view_3D->GetGLProcAddress(function);
+#endif
 }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -647,5 +683,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif
+#endif // CC_BUILD_GL && !CC_BUILD_EGL
+#endif // !CC_BUILD_SDL
 #endif

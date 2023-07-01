@@ -83,13 +83,6 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-/* TODO: check this is actually accurate */
-static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
-cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
-	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
-}
-
 #if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS
@@ -122,14 +115,44 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 	t->second = loc_time.tm_sec;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Stopwatch--------------------------------------------------------*
+*#########################################################################################################################*/
 #define NS_PER_SEC 1000000000ULL
+
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
+/* Implemented in interop_BeOS.cpp */
+#elif defined CC_BUILD_DARWIN
+static cc_uint64 sw_freqMul, sw_freqDiv;
+static void Stopwatch_Init(void) {
+	mach_timebase_info_data_t tb = { 0 };
+	mach_timebase_info(&tb);
+
+	sw_freqMul = tb.numer;
+	/* tb.denom may be large, so multiplying by 1000 overflows 32 bits */
+	/* (one powerpc system had tb.denom of 33329426) */
+	sw_freqDiv = (cc_uint64)tb.denom * 1000;
+}
+
+cc_uint64 Stopwatch_Measure(void) { return mach_absolute_time(); }
+
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
+	if (end < beg) return 0;
+	return ((end - beg) * sw_freqMul) / sw_freqDiv;
+}
+#elif defined CC_BUILD_SOLARIS
+/* https://docs.oracle.com/cd/E86824_01/html/E54766/gethrtime-3c.html */
+/* The gethrtime() function returns the current high-resolution real time. Time is expressed as nanoseconds since some arbitrary time in the past */
+cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
+
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
+	if (end < beg) return 0;
+	return (end - beg) / 1000;
+}
+#else
 /* clock_gettime is optional, see http://pubs.opengroup.org/onlinepubs/009696899/functions/clock_getres.html */
 /* "... These functions are part of the Timers option and need not be available on all implementations..." */
-#if defined CC_BUILD_DARWIN
-cc_uint64 Stopwatch_Measure(void) { return mach_absolute_time(); }
-#elif defined CC_BUILD_SOLARIS
-cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
-#else
 cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
 	#ifdef CC_BUILD_IRIX
@@ -139,6 +162,11 @@ cc_uint64 Stopwatch_Measure(void) {
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	#endif
 	return (cc_uint64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+}
+
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
+	if (end < beg) return 0;
+	return (end - beg) / 1000;
 }
 #endif
 
@@ -580,8 +608,9 @@ void Socket_Close(cc_socket s) {
 	close(s);
 }
 
-#if defined CC_BUILD_DARWIN
+#if defined CC_BUILD_DARWIN || defined CC_BUILD_BEOS
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
+/* BeOS lacks support for poll */
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
@@ -695,16 +724,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	CFRelease(urlCF);
 	return 0;
 }
-#elif defined CC_BUILD_HAIKU
-cc_result Process_StartOpen(const cc_string* args) {
-	char str[NATIVE_STR_LEN];
-	char* cmd[3];
-	String_EncodeUtf8(str, args);
-
-	cmd[0] = "open"; cmd[1] = str; cmd[2] = NULL;
-	Process_RawStart("open", cmd);
-	return 0;
-}
+#elif defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
+/* Implemented in interop_BeOS.cpp */
 #else
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
@@ -995,9 +1016,6 @@ static void Platform_InitPosix(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
-	/* Assume stopwatch is in nanoseconds */
-	/* Some platforms (e.g. macOS) override this */
-	sw_freqDiv = 1000;
 }
 void Platform_Free(void) { }
 
@@ -1029,44 +1047,39 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 #endif
 
 #if defined CC_BUILD_DARWIN
-static void Platform_InitStopwatch(void) {
-	mach_timebase_info_data_t tb = { 0 };
-	mach_timebase_info(&tb);
-
-	sw_freqMul = tb.numer;
-	/* tb.denom may be large, so multiplying by 1000 overflows 32 bits */
-	/* (one powerpc system had tb.denom of 33329426) */
-	sw_freqDiv = (cc_uint64)tb.denom * 1000;
-}
 
 #if defined CC_BUILD_MACOS
 static void Platform_InitSpecific(void) {
 	ProcessSerialNumber psn = { 0, kCurrentProcess };
-#ifdef __ppc__
+	#ifdef __ppc__
 	/* TransformProcessType doesn't work with kCurrentProcess on older macOS */
 	GetCurrentProcess(&psn);
-#endif
+	#endif
 
 	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes or create windows */
 	/* NOTE: TransformProcessType is macOS 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
 #else
-/* Always foreground process on iOS */
-static void Platform_InitSpecific(void) { }
+static void Platform_InitSpecific(void) {
+	Platform_SingleProcess = true;
+	/* Always foreground process on iOS */
+}
 #endif
 
 void Platform_Init(void) {
-#ifdef CC_BUILD_MOBILE
-	Platform_SingleProcess = true;
-#endif
-
+	Stopwatch_Init();
 	Platform_InitPosix();
-	Platform_InitStopwatch();
 	Platform_InitSpecific();
 }
 #else
-void Platform_Init(void) { Platform_InitPosix(); }
+void Platform_Init(void) {
+	#ifdef CC_BUILD_MOBILE
+	Platform_SingleProcess = true;
+	#endif
+	
+	Platform_InitPosix(); 
+}
 #endif
 
 
