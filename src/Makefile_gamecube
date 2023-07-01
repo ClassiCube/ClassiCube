@@ -1,0 +1,51 @@
+ifeq ($(strip $(DEVKITPPC)),)
+$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
+endif
+
+include $(DEVKITPPC)/gamecube_rules
+
+
+#---------------------------------------------------------------------------------
+# configurable options
+#---------------------------------------------------------------------------------
+TARGET	:= ClassiCube-gc
+SOURCES	:= src
+
+
+#---------------------------------------------------------------------------------
+# compilation input
+#---------------------------------------------------------------------------------
+CFILES		:= $(wildcard src/*.c)
+sFILES		:= $(wildcard src/*.s)
+SFILES		:= $(wildcard src/*.S)
+
+OFILES		:= $(CFILES:.c=.o) $(sFILES:.s=.o) $(SFILES:.S=.o)
+
+INCLUDE		:= -I$(LIBOGC_INC)
+LIBPATHS	:= -L$(LIBOGC_LIB)
+
+
+#---------------------------------------------------------------------------------
+# options for code generation
+#---------------------------------------------------------------------------------
+DEPSDIR	:=	$(CURDIR)/build
+CFLAGS	=	-g -O2 -Wall $(MACHDEP) $(INCLUDE)
+LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+LIBS	:=	-lbba -lfat -logc -lm
+LD		:=	$(CC)
+
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+default: $(DEPSDIR) $(TARGET).dol
+
+$(DEPSDIR):
+	mkdir -p $@
+
+clean:
+	@rm $(OFILES) $(TARGET).elf $(TARGET).dol
+	
+$(TARGET).elf: $(OFILES)
+
+$(TARGET).dol: $(TARGET).elf

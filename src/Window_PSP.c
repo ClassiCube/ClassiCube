@@ -60,7 +60,7 @@ void Window_ProcessEvents(void) {
 	
 	int dx = pad.Lx - 127;
 	int dy = pad.Ly - 127;
-	if (Input_RawMode && (Math_AbsF(dx) > 1 || Math_AbsF(dy) > 1)) {
+	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
 		//Platform_Log2("RAW: %i, %i", &dx, &dy);
 		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
 	}

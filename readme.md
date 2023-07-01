@@ -197,27 +197,27 @@ The generated javascript file has some issues. [See here for how to fix](doc/com
 
 #### PSP
 
-cd into `src` directory, then run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
+Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
 
 The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### 3DS
 
-cd into `src` directory, then run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
+Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
 
 The 3DS port needs assistance from someone experienced with 3DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
-#### GameCube
-
-Use a slighly modified standard GameCube makefile. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-The GC port needs assistance from someone experienced with GC homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
 #### Wii
 
-Use a slighly modified standard Wii makefile. You'll need [libogc](https://github.com/devkitPro/libogc)
+Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
 The Wii port needs assistance from someone experienced with Wii homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+#### GameCube
+
+Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+The GC port needs assistance from someone experienced with GC homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 ##### Other
 

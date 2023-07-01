@@ -4,43 +4,38 @@ endif
 
 include $(DEVKITARM)/3ds_rules
 
+
 #---------------------------------------------------------------------------------
 # configurable options
 #---------------------------------------------------------------------------------
-APP_ICON	:= $(CURDIR)"/../misc/CC_48x48.png"
+APP_ICON	:= $(CURDIR)/misc/CC_48x48.png
 APP_TITLE 	:= ClassiCube
 APP_DESCRIPTION := Simple block building sandbox
 APP_AUTHOR 	:= UnknownShadow200
-TARGET := ClassiCube-3ds
+TARGET 		:= ClassiCube-3ds
+
 
 #---------------------------------------------------------------------------------
-# compilation options
+# compilation input
 #---------------------------------------------------------------------------------
-CFILES		:=	$(wildcard *.c)
-SFILES		:=	$(wildcard *.s)
-PICAFILES	:=	$(wildcard *.v.pica)
-
-LIBS	:= -lcitro3d -lctru -lm
-
-
-export LD	:=	$(CC)
-DEPSDIR	:= $(CURDIR)/build
+DEPSDIR		:= $(CURDIR)/build
+CFILES		:= $(wildcard src/*.c)
+SFILES		:= $(wildcard src/*.s)
+PICAFILES	:= $(wildcard src/*.v.pica)
+SMDH_FILE	:= src/ClassiCube.smdh
 
 OFILES_SOURCES := $(CFILES:.c=.o) $(SFILES:.s=.o)
 OFILES_SHADERS := $(PICAFILES:.v.pica=.shbin.o)
-OFILES 	:= $(OFILES_SHADERS) $(OFILES_SOURCES)
+OFILES 		:= $(OFILES_SHADERS) $(OFILES_SOURCES)
 
-INCLUDE	:=	$(foreach dir,$(CTRULIB),-I$(dir)/include)
-LIBPATHS	:=	$(foreach dir,$(CTRULIB),-L$(dir)/lib)
+INCLUDE 	:= $(foreach dir,$(CTRULIB),-I$(dir)/include)
+LIBPATHS	:= $(foreach dir,$(CTRULIB),-L$(dir)/lib)
 
-_3DSXDEPS	:=	$(if $(NO_SMDH),,$(CURDIR)/$(TARGET).smdh)
+_3DSXFLAGS 	+= --smdh=$(SMDH_FILE)
 
-ifeq ($(strip $(NO_SMDH)),)
-	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
-endif
 
 #---------------------------------------------------------------------------------
-# code generation options
+# options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
@@ -49,23 +44,27 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations -ffunction-sections \
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+LIBS	:= 	-lcitro3d -lctru -lm
+LD		:=	$(CC)
+
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
 default: $(DEPSDIR) $(TARGET).3dsx
 
+$(DEPSDIR):
+	@mkdir -p $@
+
 clean:
-	@rm $(OFILES) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf
+	@rm $(OFILES) $(TARGET).elf $(TARGET).3dsx $(SMDH_FILE)
 
 $(TARGET).elf	: $(OFILES)
 
-$(TARGET).3dsx : $(TARGET).elf $(_3DSXDEPS)
+$(TARGET).3dsx	: $(TARGET).elf $(SMDH_FILE)
 
-Graphics_3DS.o : $(OFILES_SHADERS)
+Graphics_3DS.o	: $(OFILES_SHADERS)
 
-$(DEPSDIR):
-	@mkdir -p $@
 
 #---------------------------------------------------------------------------------
 # rules for assembling GPU shaders

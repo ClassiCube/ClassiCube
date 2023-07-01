@@ -1,4 +1,4 @@
-C_SOURCES:=$(wildcard *.c)
+C_SOURCES:=$(wildcard src/*.c)
 C_OBJECTS:=$(patsubst %.c, %.o, $(C_SOURCES))
 OBJECTS:=$(C_OBJECTS)
 ENAME=ClassiCube
@@ -148,9 +148,9 @@ irix:
 psp:
 	$(MAKE) ClassiCube.elf PLAT=psp
 3ds:
-	$(MAKE) -f Makefile_3DS PLAT=3ds
+	$(MAKE) -f src/Makefile_3DS PLAT=3ds
 wii:
-	$(MAKE) -f Makefile_wii PLAT=wii
+	$(MAKE) -f src/Makefile_wii PLAT=wii
 gamecube:
 	$(MAKE) -f Makefile_gamecube PLAT=gamecube
 	
@@ -163,14 +163,13 @@ $(ENAME): $(OBJECTS)
 $(C_OBJECTS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-interop_cocoa.o: interop_cocoa.m
+src/interop_cocoa.o: src/interop_cocoa.m
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-Window_Haiku.o: Window_Haiku.cpp
+src/Window_Haiku.o: src/Window_Haiku.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 # PSP requires fixups
 ClassiCube.elf : $(ENAME)
 	cp $(ENAME) ClassiCube.elf
 	psp-fixup-imports ClassiCube.elf
-
