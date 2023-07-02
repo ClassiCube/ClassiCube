@@ -24,6 +24,7 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Event.h"
+#include "Options.h"
 
 struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
@@ -406,7 +407,9 @@ void LBackend_ButtonDraw(struct LButton* w) {
 	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, active);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
-	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
+	cc_bool useShadow = true;
+	if (Options_GetBool(LOPT_NO_TEXT_SHADOW, false)) { useShadow = false; }
+	DrawTextArgs_Make(&args, &w->text, &titleFont, useShadow);
 
 	if (!active) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
 	Context2D_DrawText(&framebuffer, &args, 

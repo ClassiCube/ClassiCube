@@ -1364,7 +1364,7 @@ static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnMode, btnColours, btnBack;
 	struct LLabel  lblMode, lblColours;
-	struct LCheckbox cbExtra, cbEmpty, cbScale;
+	struct LCheckbox cbExtra, cbEmpty, cbScale, cbFlatBack, cbFlatBtn, cbNoTextShadow;
 	struct LLine sep;
 } SettingsScreen;
 
@@ -1373,7 +1373,9 @@ static struct LWidget* settings_widgets[] = {
 	(struct LWidget*)&SettingsScreen.btnMode,    (struct LWidget*)&SettingsScreen.lblMode,
 	(struct LWidget*)&SettingsScreen.btnColours, (struct LWidget*)&SettingsScreen.lblColours,
 	(struct LWidget*)&SettingsScreen.cbExtra,    (struct LWidget*)&SettingsScreen.cbEmpty,
-	(struct LWidget*)&SettingsScreen.cbScale,    (struct LWidget*)&SettingsScreen.btnBack
+	(struct LWidget*)&SettingsScreen.cbScale,    (struct LWidget*)&SettingsScreen.cbFlatBack,
+	(struct LWidget*)&SettingsScreen.cbFlatBtn,  (struct LWidget*)&SettingsScreen.cbNoTextShadow,
+	(struct LWidget*)&SettingsScreen.btnBack
 };
 static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.sep,
@@ -1382,16 +1384,19 @@ static struct LWidget* settings_classic[] = {
 	(struct LWidget*)&SettingsScreen.cbScale,    (struct LWidget*)&SettingsScreen.btnBack
 };
 
-LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };
-LAYOUTS set_lblMode[]    = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -70 } };
-LAYOUTS set_btnColours[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -20 } };
-LAYOUTS set_lblColours[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS set_btnMode[]    = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS set_lblMode[]    = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS set_btnColours[] = { { ANCHOR_CENTRE,     -135 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS set_lblColours[] = { { ANCHOR_CENTRE_MIN,  -70 }, { ANCHOR_CENTRE,  -70 } };
 
-LAYOUTS set_sep[]     = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE,  15 } };
-LAYOUTS set_cbExtra[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  44 } };
-LAYOUTS set_cbEmpty[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE,  84 } };
-LAYOUTS set_cbScale[] = { { ANCHOR_CENTRE_MIN, -190 }, { ANCHOR_CENTRE, 124 } };
-LAYOUTS set_btnBack[] = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE, 170 } };
+LAYOUTS set_sep[]            = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE, -30 } };
+LAYOUTS set_cbExtra[]        = { { ANCHOR_CENTRE_MIN, -246 }, { ANCHOR_CENTRE,  -4 } };
+LAYOUTS set_cbEmpty[]        = { { ANCHOR_CENTRE_MIN, -246 }, { ANCHOR_CENTRE,  30 } };
+LAYOUTS set_cbScale[]        = { { ANCHOR_CENTRE_MIN, -246 }, { ANCHOR_CENTRE,  65 } };
+LAYOUTS set_cbFlatBack[]     = { { ANCHOR_CENTRE_MIN,   55 }, { ANCHOR_CENTRE,  -4 } };
+LAYOUTS set_cbFlatBtn[]      = { { ANCHOR_CENTRE_MIN,   55 }, { ANCHOR_CENTRE,  30 } };
+LAYOUTS set_cbNoTextShadow[] = { { ANCHOR_CENTRE_MIN,   55 }, { ANCHOR_CENTRE,  65 } };
+LAYOUTS set_btnBack[]        = { { ANCHOR_CENTRE,        0 }, { ANCHOR_CENTRE, 170 } };
 
 
 #if defined CC_BUILD_MOBILE
@@ -1420,6 +1425,21 @@ static void SettingsScreen_DPIScaling(struct LCheckbox* w) {
 #endif
 }
 
+static void SettingsScreen_FlatBack(struct LCheckbox* w) {
+	Options_SetBool(LOPT_FLAT_BACK, w->value);
+	LBackend_Redraw();
+}
+
+static void SettingsScreen_FlatButton(struct LCheckbox* w) {
+	Options_SetBool(LOPT_FLAT_BTN, w->value);
+	LBackend_Redraw();
+}
+
+static void SettingsScreen_NoTextShadow(struct LCheckbox* w) {
+	Options_SetBool(LOPT_NO_TEXT_SHADOW, w->value);
+	LBackend_Redraw();
+}
+
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	LLine_Init(  &s->sep, 380, set_sep);
@@ -1445,6 +1465,15 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 
 	LCheckbox_Init(&s->cbScale, "Use display scaling", set_cbScale);
 	s->cbScale.ValueChanged = SettingsScreen_DPIScaling;
+	
+	LCheckbox_Init(&s->cbFlatBack, "Flat background look", set_cbFlatBack);
+	s->cbFlatBack.ValueChanged = SettingsScreen_FlatBack;
+	
+	LCheckbox_Init(&s->cbFlatBtn, "Flat button look", set_cbFlatBtn);
+	s->cbFlatBtn.ValueChanged = SettingsScreen_FlatButton;
+	
+	LCheckbox_Init(&s->cbNoTextShadow, "No text shadow", set_cbNoTextShadow);
+	s->cbNoTextShadow.ValueChanged = SettingsScreen_NoTextShadow;
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
 	s->btnColours.OnClick = SwitchToThemes;
@@ -1467,8 +1496,11 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 #else
 	LCheckbox_Set(&s->cbExtra, Options_GetBool(LOPT_AUTO_CLOSE, false));
 #endif
-	LCheckbox_Set(&s->cbEmpty, Launcher_ShowEmptyServers);
-	LCheckbox_Set(&s->cbScale, DisplayInfo.DPIScaling);
+	LCheckbox_Set(&s->cbEmpty,        Launcher_ShowEmptyServers);
+	LCheckbox_Set(&s->cbScale,        DisplayInfo.DPIScaling);
+	LCheckbox_Set(&s->cbFlatBack,     Options_GetBool(LOPT_FLAT_BACK, false));
+	LCheckbox_Set(&s->cbFlatBtn,      Options_GetBool(LOPT_FLAT_BTN, false));
+	LCheckbox_Set(&s->cbNoTextShadow, Options_GetBool(LOPT_NO_TEXT_SHADOW, false));
 }
 
 void SettingsScreen_SetActive(void) {
@@ -1489,18 +1521,29 @@ void SettingsScreen_SetActive(void) {
 static struct ThemesScreen {
 	LScreen_Layout
 	struct LButton btnModern, btnClassic, btnNordic;
+	struct LButton btnBubblegum, btnCornflower, btnBeige;
+	struct LButton btnMarine, btnLime, btnBlood;
 	struct LButton btnCustom, btnBack;
 } ThemesScreen;
 
 static struct LWidget* themes_widgets[] = {
-	(struct LWidget*)&ThemesScreen.btnModern,  (struct LWidget*)&ThemesScreen.btnClassic,
-	(struct LWidget*)&ThemesScreen.btnNordic, (struct LWidget*)&ThemesScreen.btnCustom,
+	(struct LWidget*)&ThemesScreen.btnModern,     (struct LWidget*)&ThemesScreen.btnClassic,
+	(struct LWidget*)&ThemesScreen.btnNordic,     (struct LWidget*)&ThemesScreen.btnBubblegum,
+	(struct LWidget*)&ThemesScreen.btnCornflower, (struct LWidget*)&ThemesScreen.btnBeige,
+	(struct LWidget*)&ThemesScreen.btnMarine,     (struct LWidget*)&ThemesScreen.btnLime,
+	(struct LWidget*)&ThemesScreen.btnBlood,      (struct LWidget*)&ThemesScreen.btnCustom,
 	(struct LWidget*)&ThemesScreen.btnBack
 };
 
-LAYOUTS the_btnModern[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -120 } };
-LAYOUTS the_btnClassic[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -70 } };
-LAYOUTS the_btnNordic[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS the_btnModern[]     = { { ANCHOR_CENTRE, -210 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS the_btnClassic[]    = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS the_btnNordic[]     = { { ANCHOR_CENTRE,  210 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS the_btnBubblegum[]  = { { ANCHOR_CENTRE, -210 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS the_btnCornflower[] = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS the_btnBeige[]      = { { ANCHOR_CENTRE,  210 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS the_btnMarine[]     = { { ANCHOR_CENTRE, -210 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS the_btnLime[]       = { { ANCHOR_CENTRE,    0 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS the_btnBlood[]      = { { ANCHOR_CENTRE,  210 }, { ANCHOR_CENTRE,  -20 } };
 LAYOUTS the_btnCustom[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  120 } };
 LAYOUTS the_btnBack[]    = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
 
@@ -1520,21 +1563,51 @@ static void ThemesScreen_Classic(void* w) {
 static void ThemesScreen_Nordic(void* w) {
 	ThemesScreen_Set(&Launcher_NordicTheme);
 }
+static void ThemesScreen_Bubblegum(void* w) {
+	ThemesScreen_Set(&Launcher_BubblegumTheme);
+}
+static void ThemesScreen_Cornflower(void* w) {
+	ThemesScreen_Set(&Launcher_CornflowerTheme);
+}
+static void ThemesScreen_Beige(void* w) {
+	ThemesScreen_Set(&Launcher_BeigeTheme);
+}
+static void ThemesScreen_Marine(void* w) {
+	ThemesScreen_Set(&Launcher_MarineTheme);
+}
+static void ThemesScreen_Lime(void* w) {
+	ThemesScreen_Set(&Launcher_LimeTheme);
+}
+static void ThemesScreen_Blood(void* w) {
+	ThemesScreen_Set(&Launcher_BloodTheme);
+}
 
 static void ThemesScreen_Init(struct LScreen* s_) {
 	struct ThemesScreen* s = (struct ThemesScreen*)s_;
 	s->widgets    = themes_widgets;
 	s->numWidgets = Array_Elems(themes_widgets);
 
-	LButton_Init(&s->btnModern,  200, 35, "Modern",  the_btnModern);
-	LButton_Init(&s->btnClassic, 200, 35, "Classic", the_btnClassic);
-	LButton_Init(&s->btnNordic,  200, 35, "Nordic",  the_btnNordic);
-	LButton_Init(&s->btnCustom,  200, 35, "Custom",  the_btnCustom);
-	LButton_Init(&s->btnBack,     80, 35, "Back",    the_btnBack);
+	LButton_Init(&s->btnModern,     200, 35, "Modern",     the_btnModern);
+	LButton_Init(&s->btnClassic,    200, 35, "Classic",    the_btnClassic);
+	LButton_Init(&s->btnNordic,     200, 35, "Nordic",     the_btnNordic);
+	LButton_Init(&s->btnBubblegum,  200, 35, "Bubblegum",  the_btnBubblegum);
+	LButton_Init(&s->btnCornflower, 200, 35, "Cornflower", the_btnCornflower);
+	LButton_Init(&s->btnBeige,      200, 35, "Beige",      the_btnBeige);
+	LButton_Init(&s->btnMarine,     200, 35, "Marine",     the_btnMarine);
+	LButton_Init(&s->btnLime,       200, 35, "Lime",       the_btnLime);
+	LButton_Init(&s->btnBlood,      200, 35, "Blood",      the_btnBlood);
+	LButton_Init(&s->btnCustom,     200, 35, "Custom",  the_btnCustom);
+	LButton_Init(&s->btnBack,        80, 35, "Back",    the_btnBack);
 
-	s->btnModern.OnClick  = ThemesScreen_Modern;
-	s->btnClassic.OnClick = ThemesScreen_Classic;
-	s->btnNordic.OnClick  = ThemesScreen_Nordic;
+	s->btnModern.OnClick     = ThemesScreen_Modern;
+	s->btnClassic.OnClick    = ThemesScreen_Classic;
+	s->btnNordic.OnClick     = ThemesScreen_Nordic;
+	s->btnBubblegum.OnClick  = ThemesScreen_Bubblegum;
+	s->btnCornflower.OnClick = ThemesScreen_Cornflower;
+	s->btnBeige.OnClick      = ThemesScreen_Beige;
+	s->btnMarine.OnClick     = ThemesScreen_Marine;
+	s->btnLime.OnClick       = ThemesScreen_Lime;
+	s->btnBlood.OnClick      = ThemesScreen_Blood;
 	s->btnCustom.OnClick  = SwitchToColours;
 	s->btnBack.OnClick    = SwitchToSettings;
 }

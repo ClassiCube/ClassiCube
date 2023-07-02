@@ -13,6 +13,7 @@
 #include "Input.h"
 #include "Utils.h"
 #include "LBackend.h"
+#include "Options.h"
 
 static int flagXOffset, flagYOffset;
 static int oneX, twoX, fourX;
@@ -39,7 +40,9 @@ static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int
 						x + oneX,       y + oneY,
 						width - twoX,   height - twoY);
 	} else {
-		Gradient_Vertical(ctx, BitmapColor_Offset(color, 8,8,8), BitmapColor_Offset(color, -8,-8,-8),
+		int offset = 8;
+		if (Options_GetBool(LOPT_FLAT_BTN, false)) { offset = 0; }
+		Gradient_Vertical(ctx, BitmapColor_Offset(color, offset,offset,offset), BitmapColor_Offset(color, -offset,-offset,-offset),
 						  x + oneX,     y + oneY,
 						  width - twoX, height - twoY);
 	}

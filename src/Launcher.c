@@ -321,6 +321,54 @@ const struct LauncherTheme Launcher_NordicTheme = {
 	BitmapColor_RGB( 59,  66,  82), /* button foreground */
 	BitmapColor_RGB( 76,  86, 106), /* button highlight */
 };
+const struct LauncherTheme Launcher_BubblegumTheme = {
+	false,
+	BitmapColor_RGB(213, 107, 172), /* background */
+	BitmapColor_RGB(157,  61, 110), /* button border */
+	BitmapColor_RGB(249, 148, 206), /* active button */
+	BitmapColor_RGB(201,  94, 165), /* button foreground */
+	BitmapColor_RGB(222, 111, 186), /* button highlight */
+};
+const struct LauncherTheme Launcher_CornflowerTheme = {
+	false,
+	BitmapColor_RGB( 93, 127, 202), /* background */
+	BitmapColor_RGB( 57, 101, 150), /* button border */
+	BitmapColor_RGB(139, 178, 236), /* active button */
+	BitmapColor_RGB( 91, 124, 205), /* button foreground */
+	BitmapColor_RGB(112, 141, 226), /* button highlight */
+};
+const struct LauncherTheme Launcher_BeigeTheme = {
+	false,
+	BitmapColor_RGB(153, 127,  72), /* background */
+	BitmapColor_RGB( 97,  81,  10), /* button border */
+	BitmapColor_RGB(189, 168, 107), /* active button */
+	BitmapColor_RGB(141, 114,  65), /* button foreground */
+	BitmapColor_RGB(162, 131,  86), /* button highlight */
+};
+const struct LauncherTheme Launcher_MarineTheme = {
+	false,
+	BitmapColor_RGB( 62, 165, 130), /* background */
+	BitmapColor_RGB(  6, 119,  68), /* button border */
+	BitmapColor_RGB( 71, 169, 144), /* active button */
+	BitmapColor_RGB( 50, 152, 123), /* button foreground */
+	BitmapColor_RGB( 68, 185, 134), /* button highlight */
+};
+const struct LauncherTheme Launcher_LimeTheme = {
+	false,
+	BitmapColor_RGB( 73, 187,  92), /* background */
+	BitmapColor_RGB( 17, 141,  30), /* button border */
+	BitmapColor_RGB(109, 228, 126), /* active button */
+	BitmapColor_RGB( 61, 174,  85), /* button foreground */
+	BitmapColor_RGB( 82, 191, 106), /* button highlight */
+};
+const struct LauncherTheme Launcher_BloodTheme = {
+	false,
+	BitmapColor_RGB(153,   0,   0), /* background */
+	BitmapColor_RGB( 97,   0,   0), /* button border */
+	BitmapColor_RGB(162,   0,   0), /* active button */
+	BitmapColor_RGB(141,   0,   0), /* button foreground */
+	BitmapColor_RGB(189,   0,   0), /* button highlight */
+};
 
 CC_NOINLINE static void ParseColor(const char* key, BitmapCol* color) {
 	cc_uint8 rgb[3];
@@ -498,7 +546,9 @@ void Launcher_DrawBackground(struct Context2D* ctx, int x, int y, int width, int
 	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
 		ClearTile(x, y, width, height, ctx, &stoneBmp);
 	} else {
-		Gradient_Noise(ctx, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
+		int noise = 6;
+		if (Options_GetBool(LOPT_FLAT_BACK, false)) { noise = 0; }
+		Gradient_Noise(ctx, Launcher_Theme.BackgroundColor, noise, x, y, width, height);
 	}
 }
 

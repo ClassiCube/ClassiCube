@@ -82,8 +82,11 @@ Copyright 2014-2022 ClassiCube | Licensed under BSD-3
 #define LOPT_USERNAME "launcher-cc-username"
 #define LOPT_PASSWORD "launcher-cc-password"
 
-#define LOPT_AUTO_CLOSE "autocloselauncher"
-#define LOPT_SHOW_EMPTY "launcher-show-empty"
+#define LOPT_AUTO_CLOSE     "autocloselauncher"
+#define LOPT_SHOW_EMPTY     "launcher-show-empty"
+#define LOPT_FLAT_BACK      "launcher-flat-bg"
+#define LOPT_FLAT_BTN       "launcher-flat-btn"
+#define LOPT_NO_TEXT_SHADOW "launcher-no-text-shadow"
 
 #define ROPT_SERVER "launcher-server"
 #define ROPT_USER   "launcher-username"

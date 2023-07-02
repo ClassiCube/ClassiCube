@@ -45,6 +45,18 @@ extern const struct LauncherTheme Launcher_ModernTheme;
 extern const struct LauncherTheme Launcher_ClassicTheme;
 /* Custom Nordic style theme */
 extern const struct LauncherTheme Launcher_NordicTheme;
+/* Custom Bubblegum theme */
+extern const struct LauncherTheme Launcher_BubblegumTheme;
+/* Custom Cornflower theme */
+extern const struct LauncherTheme Launcher_CornflowerTheme;
+/* Custom Beige theme */
+extern const struct LauncherTheme Launcher_BeigeTheme;
+/* Custom Marine theme */
+extern const struct LauncherTheme Launcher_MarineTheme;
+/* Custom Lime theme */
+extern const struct LauncherTheme Launcher_LimeTheme;
+/* Custom Blood theme */
+extern const struct LauncherTheme Launcher_BloodTheme;
 
 /* Loads theme from options. */
 void Launcher_LoadTheme(void);
