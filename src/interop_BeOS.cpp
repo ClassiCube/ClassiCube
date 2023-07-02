@@ -12,7 +12,6 @@ extern "C" {
 
 // Other
 #include <errno.h>
-#include <Url.h>
 // AppKit
 #include <Application.h> 
 #include <Clipboard.h> 
@@ -48,7 +47,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 	cc_bool https    = String_CaselessStarts(args, &https_protocol);
 	const char* mime = https ? "application/x-vnd.Be.URL.https" : "application/x-vnd.Be.URL.http";
 	
-	const char* argv[] = { str, NULL };
+	char* argv[] = { str, NULL };
 	return be_roster->Launch(mime, 1, argv);
 }
 
@@ -555,12 +554,16 @@ class CC_BRefFilter : public BRefFilter
 public:
 	CC_BRefFilter() : BRefFilter() { }
 	
+#if defined CC_BUILD_BEOS
+	bool Filter(const entry_ref* ref, BNode* node, struct stat* st, const char* filetype) {
+#else
 	bool Filter(const entry_ref* ref, BNode* node, stat_beos* st, const char* filetype) override {
+#endif
+		BPath path(ref);
 		cc_string str;
 		int i;
-		if (node->IsDirectory()) return true;
 		
-		BPath path(ref);
+		if (node->IsDirectory()) return true;
 		str = String_FromReadonly(path.Path());
 		
 		for (i = 0; file_filters[i]; i++)

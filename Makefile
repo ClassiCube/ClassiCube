@@ -94,7 +94,7 @@ ifeq ($(PLAT),beos)
 OBJECTS+=src/interop_BeOS.o
 CFLAGS=-g -pipe
 LDFLAGS=-g
-LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+LIBS=-lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),serenityos)

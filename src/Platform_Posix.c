@@ -48,7 +48,7 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 #include <sys/systeminfo.h>
 #elif defined CC_BUILD_BSD
 #include <sys/sysctl.h>
-#elif defined CC_BUILD_HAIKU
+#elif defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
@@ -226,7 +226,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
 		{
 			char full_path[NATIVE_STR_LEN];
 			struct stat sb;
@@ -482,6 +482,10 @@ void Platform_LoadSysFonts(void) {
 #elif defined CC_BUILD_HAIKU
 	static const cc_string dirs[] = {
 		String_FromConst("/system/data/fonts")
+	};
+#elif defined CC_BUILD_BEOS
+	static const cc_string dirs[] = {
+		String_FromConst("/boot/beos/etc/fonts")
 	};
 #elif defined CC_BUILD_DARWIN
 	static const cc_string dirs[] = {
