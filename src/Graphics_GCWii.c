@@ -54,8 +54,6 @@ void Gfx_Create(void) {
 	
 	InitGX();
 	Gfx_RestoreState();
-	// INITDFAULTRESOURCES causes stack overflow due to gfx_indices
-	//Thread_Sleep(20 * 1000);
 }
 
 void Gfx_Free(void) { 
@@ -276,10 +274,12 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Index Buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
+//static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	fillFunc(gfx_indices, count, obj);
+	//fillFunc(gfx_indices, count, obj);
+	// not used since render using GX_QUADS anyways
+	return 1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
@@ -526,23 +526,22 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
-	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, ICOUNT(verticesCount));
+	GX_Begin(GX_QUADS, GX_VTXFMT0, verticesCount);
 	// TODO: Ditch indexed rendering and use GX_QUADS instead ??
-	for (int i = 0; i < ICOUNT(verticesCount); i++) 
+	for (int i = 0; i < verticesCount; i++) 
 	{
-		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + gfx_indices[i];
+		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->X, v->Y, v->Z);
 		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
 	}
 	GX_End();
 }
-
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
-	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, ICOUNT(verticesCount));
-	for (int i = 0; i < ICOUNT(verticesCount); i++) 
+	GX_Begin(GX_QUADS, GX_VTXFMT0, verticesCount);
+	for (int i = 0; i < verticesCount; i++) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + gfx_indices[i];
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->X, v->Y, v->Z);
 		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
