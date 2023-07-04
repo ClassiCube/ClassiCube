@@ -117,14 +117,17 @@ void Window_ProcessEvents(double delta) {
       Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
       Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & WPAD_BUTTON_1);
       Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_2);
-      
+
       Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_HOME);
       Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_MINUS);
 
-   	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY],  mods & WPAD_BUTTON_LEFT);
+      Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
+
+
       if (mods & WPAD_BUTTON_RIGHT) {
          Mouse_ScrollWheel(0.1);
       }
+
       Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
       Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
 
