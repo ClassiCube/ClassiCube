@@ -41,7 +41,8 @@ LD		:=	$(CC)
 default: $(DEPSDIR) $(TARGET).dol
 
 $(DEPSDIR):
-	mkdir -p $@
+	mkdir -p $(DEPSDIR)
+	mkdir -p $(DEPSDIR)/src
 
 clean:
 	@rm $(OFILES) $(TARGET).elf $(TARGET).dol

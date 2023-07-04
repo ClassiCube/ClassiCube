@@ -554,13 +554,17 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	
 	// GC/WII *sometimes* doesn't use argv[0] for program name and so argc will be 0
 	if (!argc) return 0;
+	
+	// at least The Homebrew Channel loader uses argv[0] for executable filename
+	//  see strcpy(result->args, filename); in loader_load in loader.c
+	//  https://github.com/fail0verflow/hbc/blob/master/channel/channelapp/source/loader.c#L912
+	argc--; argv++;
 
 	int count = min(argc, GAME_MAX_CMDARGS);
 	for (int i = 0; i < count; i++) 
 	{
 		args[i] = String_FromReadonly(argv[i]);
 	}
-	
 	return count;
 }
 

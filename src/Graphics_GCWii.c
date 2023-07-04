@@ -392,62 +392,52 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-/*void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	// Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
+	// Transposed, source guOrtho https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	//   The simplified calculation below uses: L = 0, R = width, T = 0, B = height
-	// NOTE: Shared with OpenGL. might be wrong to do that though?
 	*matrix = Matrix_Identity;
-
+	
 	matrix->row1.X =  2.0f / width;
 	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row3.Z = -1.0f / (zFar - zNear);
 
 	matrix->row4.X = -1.0f;
 	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.Z = -zFar / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
 	float c = (float)Cotangent(0.5f * fov);
-
-	// Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum
-	// For a FOV based perspective matrix, left/right/top/bottom are calculated as:
-	//   left = -c * aspect, right = c * aspect, bottom = -c, top = c
-	// Calculations are simplified because of left/right and top/bottom symmetry
+	
+	// Transposed, source guPersepctive https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	*matrix = Matrix_Identity;
-
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row1.X = c / aspect;
+	matrix->row2.Y = c;
+	matrix->row3.Z = -(zNear)        / (zFar - zNear);
 	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.Z = -(zFar * zNear) / (zFar - zNear);
 	matrix->row4.W =  0.0f;
-}*/
-void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	guOrtho(matrix, 0, height, 0, width, zNear, zFar);
-}
-
-void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	guPerspective(matrix, fov * MATH_RAD2DEG, aspect, 0.1f, zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	const float* m = (const float*)matrix;
+	float tmp[16];
+	
+	// Transpose matrix
+	for (int i = 0; i < 4; i++)
+	{
+		tmp[i * 4 + 0] = m[0  + i];
+		tmp[i * 4 + 1] = m[4  + i];
+		tmp[i * 4 + 2] = m[8  + i];
+		tmp[i * 4 + 3] = m[12 + i];
+	}
+		
 	if (type == MATRIX_PROJECTION) {
-		GX_LoadProjectionMtx(matrix,
-			(((float*)matrix)[3*4+3]) == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
+		GX_LoadProjectionMtx(tmp,
+			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
-		float* m  = (float*)matrix;
-		float tmp[16];
-		// Transpose (TODO only first 3 rows matter.. ?)
-		for(int i = 0; i < 4; i++)
-		{
-			tmp[i * 4 + 0] = m[0  + i];
-			tmp[i * 4 + 1] = m[4  + i];
-			tmp[i * 4 + 2] = m[8  + i];
-			tmp[i * 4 + 3] = m[12 + i];
-		}
 		GX_LoadPosMtxImm(tmp, GX_PNMTX0);
 	}
 }
@@ -537,6 +527,7 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	}
 	GX_End();
 }
+
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	GX_Begin(GX_QUADS, GX_VTXFMT0, verticesCount);
 	for (int i = 0; i < verticesCount; i++) 
