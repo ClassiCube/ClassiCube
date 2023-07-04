@@ -4,8 +4,6 @@
 #include "Graphics.h"
 #include "String.h"
 #include "Funcs.h"
-#include <stdio.h>
-#include "Chat.h"
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
@@ -223,7 +221,6 @@ void Window_ProcessEvents(double delta) {
 #endif
 
 static void Cursor_GetRawPos(int* x, int* y) {
-	*x = 100; *y = 100;
 
    u32 type;
 
@@ -236,6 +233,8 @@ static void Cursor_GetRawPos(int* x, int* y) {
 
       *x = wd->ir.x;
       *y = wd->ir.y;
+   } else {
+      *x = 0; *y = 0;
    }
 }
 void Cursor_SetPosition(int x, int y) {
