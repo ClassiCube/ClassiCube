@@ -127,9 +127,9 @@ void Window_ProcessEvents(double delta) {
       }
       Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
       Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
-      
-      const float ANGLE_DELTA = 100;
-      bool nunchuckUp = analog.ang > -ANGLE_DELTA && analog.ang < ANGLE_DELTA && analog.mag > 0.5 ;
+
+      const float ANGLE_DELTA = 50;
+      bool nunchuckUp = (analog.ang > -ANGLE_DELTA) && (analog.ang < ANGLE_DELTA) && (analog.mag > 0.5);
       bool nunchuckDown = analog.ang > 180-ANGLE_DELTA && analog.ang < 180+ANGLE_DELTA && analog.mag > 0.5;
       bool nunchuckLeft = analog.ang > -90-ANGLE_DELTA && analog.ang < -90+ANGLE_DELTA && analog.mag > 0.5;
       bool nunchuckRight = analog.ang > 90-ANGLE_DELTA && analog.ang < 90+ANGLE_DELTA && analog.mag > 0.5;
