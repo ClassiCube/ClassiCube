@@ -45,7 +45,6 @@ extern cc_bool Game_BreakableLiquids;
 /* Whether a screenshot should be taken at the end of this frame */
 extern cc_bool Game_ScreenshotRequested;
 extern cc_bool Game_HideGui;
-extern cc_bool Game_DefaultZipMissing;
 
 enum GAME_VERSION_ {
 	VERSION_0017 = 27, VERSION_0019 = 28, VERSION_0023 = 29, VERSION_0030 = 30, VERSION_CPE = 31

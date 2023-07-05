@@ -1,5 +1,5 @@
 #include "Resources.h"
-#if !defined(CC_BUILD_WEB) && !defined(CC_BUILD_FLATPAK)
+#if !defined CC_BUILD_WEB
 #include "Funcs.h"
 #include "String.h"
 #include "Constants.h"
@@ -1064,7 +1064,6 @@ void Resources_CheckExistence(void) {
 	int i;
 	Resources_Count = 0;
 	Resources_Size  = 0;
-	GameVersion_Load();
 
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{

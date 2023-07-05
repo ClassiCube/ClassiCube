@@ -21,6 +21,7 @@
 #include "LBackend.h"
 #include "PackedCol.h"
 #include "SystemFonts.h"
+#include "TexturePack.h"
 
 struct LScreen* Launcher_Active;
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -249,6 +250,8 @@ void Launcher_Run(void) {
 	Session_Load();
 	Launcher_LoadTheme();
 	Launcher_Init();
+
+	GameVersion_Load();
 	Launcher_TryLoadTexturePack();
 
 	Http_Component.Init();
@@ -443,13 +446,13 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 	return 0;
 }
 
-static void ExtractTexturePack(const cc_string* path) {
+static cc_result ExtractTexturePack(const cc_string* path) {
 	struct Stream stream;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn(res, "opening texture pack"); return; }
+	if (res == ReturnCode_FileNotFound) return res;
+	if (res) { Logger_SysWarn(res, "opening texture pack"); return res; }
 
 	res = Zip_Extract(&stream, 
 			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
@@ -457,21 +460,24 @@ static void ExtractTexturePack(const cc_string* path) {
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
+	return res;
 }
 
 void Launcher_TryLoadTexturePack(void) {
-	static const cc_string defZip = String_FromConst("texpacks/default.zip");
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string texPack;
 
+	/* TODO: Not duplicate TexturePack functionality */
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack)) {
 		String_InitArray(path, pathBuffer);
 		String_Format1(&path, "texpacks/%s", &texPack);
-		ExtractTexturePack(&path);
+		(void)ExtractTexturePack(&path);
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!hasBitmappedFont || dirtBmp.scan0 == NULL) ExtractTexturePack(&defZip);
+	if (!hasBitmappedFont || dirtBmp.scan0 == NULL)
+		TexturePack_ExtractDefault(ExtractTexturePack);
+
 	LBackend_UpdateLogoFont();
 }
 
