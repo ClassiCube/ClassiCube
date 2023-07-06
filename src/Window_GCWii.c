@@ -125,7 +125,7 @@ void Window_ProcessEvents(double delta) {
 
 
       if (mods & WPAD_BUTTON_RIGHT) {
-         Mouse_ScrollWheel(0.1);
+         Mouse_ScrollWheel(1.0*delta);
       }
 
       Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
