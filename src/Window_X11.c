@@ -370,7 +370,7 @@ void Clipboard_GetText(cc_string* value) {
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 100; i++) {
-		Window_ProcessEvents();
+		Window_ProcessEvents(0.0);
 		if (clipboard_paste_received) {
 			String_AppendString(value, &clipboard_paste_text);
 			return;
@@ -427,7 +427,7 @@ static void ToggleFullscreen(long op) {
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 	XSync(win_display, false);
 	XRaiseWindow(win_display, win_handle);
-	Window_ProcessEvents();
+	Window_ProcessEvents(0.0);
 }
 
 cc_result Window_EnterFullscreen(void) {
@@ -443,7 +443,7 @@ void Window_Show(void) { XMapWindow(win_display, win_handle); }
 
 void Window_SetSize(int width, int height) {
 	XResizeWindow(win_display, win_handle, width, height);
-	Window_ProcessEvents();
+	Window_ProcessEvents(0.0);
 }
 
 void Window_Close(void) {
@@ -513,7 +513,7 @@ static void HandleWMPing(XEvent* e) {
 }
 static void HandleGenericEvent(XEvent* e);
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	XEvent e;
 	Window focus;
 	int focusRevert;

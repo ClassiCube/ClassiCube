@@ -460,7 +460,7 @@ static int MapNativeKey(int raw) {
 	return key;
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	CCEvent event;
 	int key;
 	

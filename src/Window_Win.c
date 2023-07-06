@@ -463,7 +463,7 @@ static void ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 		SetWindowLongA(win_handle, GWL_STYLE, style);
 		SetWindowPos(win_handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 		ShowWindow(win_handle, finalShow); 
-		Window_ProcessEvents();
+		Window_ProcessEvents(0.0);
 	}
 	suppress_resize = false;
 
@@ -509,7 +509,7 @@ void Window_Close(void) {
 	PostMessageA(win_handle, WM_CLOSE, 0, 0);
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	HWND foreground;
 	MSG msg;
 

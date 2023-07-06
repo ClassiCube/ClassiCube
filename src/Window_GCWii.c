@@ -81,7 +81,7 @@ void Window_Close(void) {
 }
 
 #if defined HW_RVL
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	/* TODO implement */
 	WPAD_ScanPads();
 	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);		
@@ -108,7 +108,7 @@ void Window_ProcessEvents(void) {
 	
 }
 #elif defined HW_DOL
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	/* TODO implement */
 	PADStatus pads[4];
 	PAD_Read(pads);

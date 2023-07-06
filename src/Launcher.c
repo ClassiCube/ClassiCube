@@ -263,7 +263,7 @@ void Launcher_Run(void) {
 #endif
 
 	for (;;) {
-		Window_ProcessEvents();
+		Window_ProcessEvents(10 / 1000.0);
 		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Active->Tick(Launcher_Active);

@@ -551,7 +551,7 @@ void Window_Close(void) {
 	WindowInfo.Exists = false;
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	EventRef theEvent;
 	EventTargetRef target = GetEventDispatcherTarget();
 	OSStatus res;

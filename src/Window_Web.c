@@ -513,7 +513,7 @@ void Window_Close(void) {
 }
 
 extern void interop_RequestCanvasResize(void);
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	if (!needResize) return;
 	needResize = false;
 	if (!WindowInfo.Exists) return;

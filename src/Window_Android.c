@@ -278,7 +278,7 @@ static void RemakeWindowSurface(void) {
 	/* Loop until window gets created by main UI thread */
 	/* (i.e. until processSurfaceCreated is received) */
 	while (!winCreated) {
-		Window_ProcessEvents();
+		Window_ProcessEvents(0.0);
 		Thread_Sleep(10);
 	}
 
@@ -338,7 +338,7 @@ void Window_Close(void) {
 	/* ANativeActivity_finish(app->activity); */
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	/* TODO: Cache the java env */
@@ -358,7 +358,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	Platform_LogConst(title);
 	Platform_LogConst(msg);
 	/* in case surface destroyed message has arrived */
-	Window_ProcessEvents();
+	Window_ProcessEvents(0.0);
 
 	args[0].l = JavaMakeConst(env, title);
 	args[1].l = JavaMakeConst(env, msg);

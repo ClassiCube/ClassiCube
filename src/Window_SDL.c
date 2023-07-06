@@ -227,7 +227,7 @@ static void OnWindowEvent(const SDL_Event* e) {
 		}
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {

@@ -637,10 +637,10 @@ void Game_Free(void* obj) {
 
 #define Game_DoFrameBody() \
 	render = Stopwatch_Measure();\
-	Window_ProcessEvents();\
-	if (!WindowInfo.Exists) return;\
-	\
 	delta  = Stopwatch_ElapsedMicroseconds(Game_FrameStart, render) / (1000.0 * 1000.0);\
+	\
+	Window_ProcessEvents(delta);\
+	if (!WindowInfo.Exists) return;\
 	\
 	if (delta > 1.0) delta = 1.0; /* avoid large delta with suspended process */ \
 	if (delta > 0.0) { Game_FrameStart = render; Game_RenderFrame(delta); }

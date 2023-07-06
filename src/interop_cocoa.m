@@ -453,7 +453,7 @@ static void DebugScrollEvent(NSEvent* ev) {
 	Platform_Log3("SCROLL: %i.0 = (%i, %f3)", &steps, &raw, &dy);
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
 	CGFloat dx, dy;

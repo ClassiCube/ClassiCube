@@ -386,7 +386,7 @@ void Window_Close(void) {
     Event_RaiseVoid(&WindowEvents.Closing);
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
     SInt32 res;
     // manually tick event queue
     do {
@@ -408,7 +408,7 @@ void ShowDialogCore(const char* title, const char* msg) {
     // TODO clicking outside message box crashes launcher
     // loop until alert is closed TODO avoid sleeping
     while (!completed) {
-        Window_ProcessEvents();
+        Window_ProcessEvents(0.0);
         Thread_Sleep(16);
     }
 }
