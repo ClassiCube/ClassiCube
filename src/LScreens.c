@@ -677,7 +677,7 @@ LAYOUTS main_btnSPlayer[] = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 110 } };
 
 LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,    6 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_btnOptions[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_MAX,  6 } };
-LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
+LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    0 }, { ANCHOR_MAX,  0 } };
 
 #ifndef CC_BUILD_FLATPAK
 LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
