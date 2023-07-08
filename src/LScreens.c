@@ -815,7 +815,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LLabel_Init( &s->lblUpdate,   "&eChecking..",      main_lblUpdate);
 	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
 	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
-	LButton_Init(&s->btnUpdates,  100, 35, "Updates",  main_btnUpdates);
+	LButton_Init(&s->btnUpdates,  -50, 50, "Updates",  main_btnUpdates);
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
@@ -872,9 +872,9 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 		latest  = MainScreen_GetVersion(&CheckUpdateTask.latestRelease);
 		current = MainScreen_GetVersion(&currentStr);
 #ifdef CC_BUILD_FLATPAK
-		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aUpdate available" : "&eUp to date");
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&bALPHA BUILD" : "&bALPHA BUILD");
 #else
-		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&bALPHA BUILD" : "&bALPHA BUILD");
 #endif
 	} else {
 		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
