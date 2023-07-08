@@ -815,7 +815,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LLabel_Init( &s->lblUpdate,   "&eChecking..",      main_lblUpdate);
 	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
 	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
-	LButton_Init(&s->btnUpdates,  -50, 50, "Updates",  main_btnUpdates);
+	LButton_Init(&s->btnUpdates,  -50, -50, "Updates",  main_btnUpdates);
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
