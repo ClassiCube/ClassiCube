@@ -18,7 +18,6 @@
 #include "TexturePack.h"
 #include "Options.h"
 #include "Drawer2D.h"
-#include "NOVACRAFT.h"
  
 static char status[5][STRING_SIZE];
 static char bottom[3][STRING_SIZE];
@@ -394,7 +393,7 @@ static struct ChatCommand HelpCommand = {
 	}
 };
 static void VersionCommand_Execute(const cc_string* args, int argsCount) {
-	Chat_AddRaw(NOVACRAFT_VERSION);
+	Chat_AddRaw("ALPHA BUILD 0.0.3");
 }
 
 
@@ -689,6 +688,7 @@ void Chat_Send(const cc_string* text, cc_bool logUsage) {
 static void OnInit(void) {
 	Commands_Register(&GpuInfoCommand);
 	Commands_Register(&HelpCommand);
+	Commands_Register(&VersionCommand);
 	Commands_Register(&RenderTypeCommand);
 	Commands_Register(&ResolutionCommand);
 	Commands_Register(&ModelCommand);
