@@ -18,6 +18,7 @@
 #include "TexturePack.h"
 #include "Options.h"
 #include "Drawer2D.h"
+#include "NOVACRAFT.h"
  
 static char status[5][STRING_SIZE];
 static char bottom[3][STRING_SIZE];
@@ -390,6 +391,19 @@ static struct ChatCommand HelpCommand = {
 	{
 		"&a/client help [command name]",
 		"&eDisplays the help for the given command.",
+	}
+};
+static void VersionCommand_Execute(const cc_string* args, int argsCount) {
+	Chat_AddRaw(NOVACRAFT_VERSION);
+}
+
+
+static struct ChatCommand VersionCommand = {
+	"Version", VersionCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client Version",
+		"&eOutputs version of NovaCraft.",
 	}
 };
 
