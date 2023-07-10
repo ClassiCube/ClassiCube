@@ -3248,7 +3248,7 @@ void NostalgiaAppearanceScreen_Show(void) {
 *----------------------------------------------NostalgiaFunctionalityScreen-----------------------------------------------*
 *#########################################################################################################################*/
 static void NostalgiaScreen_UpdateVersionDisabled(void) {
-	MenuOptionsScreen_Instance.buttons[3].disabled = Game_UseCPE;
+	MenuOptionsScreen_Instance.buttons[3].disabled = Game_Version.HasCPE;
 }
 
 static void NostalgiaScreen_GetTexs(cc_string* v) { Menu_GetBool(v, Game_AllowServerTextures); }
@@ -3257,9 +3257,10 @@ static void NostalgiaScreen_SetTexs(const cc_string* v) { Game_AllowServerTextur
 static void NostalgiaScreen_GetCustom(cc_string* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
 static void NostalgiaScreen_SetCustom(const cc_string* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
 
-static void NostalgiaScreen_GetCPE(cc_string* v) { Menu_GetBool(v, Game_UseCPE); }
+static void NostalgiaScreen_GetCPE(cc_string* v) { Menu_GetBool(v, Game_Version.HasCPE); }
 static void NostalgiaScreen_SetCPE(const cc_string* v) {
-	Game_UseCPE = Menu_SetBool(v, OPT_CPE); 
+	Menu_SetBool(v, OPT_CPE); 
+	GameVersion_Load();
 	NostalgiaScreen_UpdateVersionDisabled();
 }
 

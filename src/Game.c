@@ -51,10 +51,10 @@ int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
 
 cc_bool Game_ClassicMode, Game_ClassicHacks;
-cc_bool Game_AllowCustomBlocks, Game_UseCPE;
+cc_bool Game_AllowCustomBlocks;
 cc_bool Game_AllowServerTextures;
 
-cc_bool Game_ViewBobbing, Game_HideGui, Game_DefaultZipMissing;
+cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
 
@@ -305,7 +305,6 @@ static void LoadOptions(void) {
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
-	Game_UseCPE            = !Game_ClassicMode && Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
@@ -422,11 +421,10 @@ static void Game_Load(void) {
 		if (comp->Init) comp->Init();
 	}
 
-	Game_DefaultZipMissing = false;
 	TexturePack_ExtractCurrent(true);
-	if (Game_DefaultZipMissing) {
+	if (TexturePack_DefaultMissing) {
 		Window_ShowDialog("Missing file",
-			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
+			"Both default.zip and classicube.zip are missing,\n try downloading resources first.\n\nClassiCube will still run, but without any textures.");
 	}
 
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);

@@ -325,13 +325,33 @@ static char texpackPathBuffer[FILENAME_SIZE];
 
 cc_string TexturePack_Url  = String_FromArray(textureUrlBuffer);
 cc_string TexturePack_Path = String_FromArray(texpackPathBuffer);
-static const cc_string defaultPath = String_FromConst("texpacks/default.zip");
+cc_bool TexturePack_DefaultMissing;
 
 void TexturePack_SetDefault(const cc_string* texPack) {
 	TexturePack_Path.length = 0;
 	String_Format1(&TexturePack_Path, "texpacks/%s", texPack);
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
+
+cc_result TexturePack_ExtractDefault(DefaultZipCallback callback) {
+	cc_result res = ReturnCode_FileNotFound;
+	const char* defaults[3];
+	cc_string path;
+	int i;
+
+	defaults[0] = Game_Version.DefaultTexpack;
+	defaults[1] = "texpacks/default.zip";
+	defaults[2] = "texpacks/classicube.zip";
+
+	for (i = 0; i < Array_Elems(defaults); i++) 
+	{
+		path = String_FromReadonly(defaults[i]);
+		res  = callback(&path);
+		if (!res) return 0;
+	}
+	return res;
+}
+
 
 static cc_bool SelectZipEntry(const cc_string* path) { return true; }
 static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, struct ZipEntry* source) {
@@ -377,13 +397,7 @@ static cc_result ExtractFromFile(const cc_string* path) {
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
-	if (res) {
-		/* Game shows a dialog if default.zip is missing */
-		Game_DefaultZipMissing |= res == ReturnCode_FileNotFound
-					&& String_CaselessEquals(path, &defaultPath);
-		Logger_SysWarn2(res, "opening", path); 
-		return res; 
-	}
+	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
 	res = ExtractFrom(&stream, path);
 	/* No point logging error for closing readonly file */
@@ -391,15 +405,21 @@ static cc_result ExtractFromFile(const cc_string* path) {
 	return res;
 }
 
-static cc_result ExtractDefault(void) {
-	cc_string path = Game_ClassicMode ? defaultPath : TexturePack_Path;
-	cc_result res  = ExtractFromFile(&defaultPath);
+static cc_result ExtractUserTextures(void) {
+	cc_string path;
+	cc_result res;
 
-	/* override default.zip with user's default texture pack */
-	if (!String_CaselessEquals(&path, &defaultPath)) {
-		res = ExtractFromFile(&path);
-	}
-	return res;
+	/* TODO: Log error for multiple default texture pack extract failure */
+	res = TexturePack_ExtractDefault(ExtractFromFile);
+	/* Game shows a warning dialog if default textures are missing */
+	TexturePack_DefaultMissing = res == ReturnCode_FileNotFound;
+
+	path = TexturePack_Path;
+	if (String_CaselessEqualsConst(&path, "texpacks/default.zip")) path.length = 0;
+	if (Game_ClassicMode || path.length == 0) return res;
+
+	/* override default textures with user's selected texture pack */
+	return ExtractFromFile(&path);
 }
 
 static cc_bool usingDefault;
@@ -410,7 +430,7 @@ cc_result TexturePack_ExtractCurrent(cc_bool forceReload) {
 
 	/* don't pointlessly load default texture pack */
 	if (!usingDefault || forceReload) {
-		res = ExtractDefault();
+		res = ExtractUserTextures();
 		usingDefault = true;
 	}
 
@@ -539,9 +559,7 @@ static void OnInit(void) {
 
 	TexturePack_Path.length = 0;
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &file)) {
-		String_Format1(&TexturePack_Path,      "texpacks/%s", &file);
-	} else {
-		String_AppendString(&TexturePack_Path, &defaultPath);
+		String_Format1(&TexturePack_Path, "texpacks/%s", &file);
 	}
 	
 	/* TODO temp hack to fix mobile, need to properly fix */
