@@ -962,14 +962,13 @@ static void MCCTextures_CheckExistence(void) {
 	(void)stream.Close(&stream);
 	/* >= in case somehow have say "gui.png", "GUI.png" */
 	allZipEntriesExist = zipEntriesFound >= Array_Elems(defaultZipEntries);
+
+	/* Need touch.png from ClassiCube textures */
+	if (!allZipEntriesExist) ccTexturesExist = false;
 }
 
 static void MCCTextures_CountMissing(void) {
 	int i;
-	if (allZipEntriesExist) return;
-	/* Need touch.png from ClassiCube textures */
-	ccTexturesExist = false;
-
 	numDefaultZipSources = Array_Elems(defaultZipSources);
 	/* old gold texture only needed in 0.0.23 and earlier */
 	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
@@ -1054,8 +1053,8 @@ int Fetcher_Downloaded;
 FetcherErrorCallback Fetcher_ErrorCallback;
 
 static const struct AssetSet* const asset_sets[] = {
-	&mccTexsAssetSet,
 	&ccTexsAssetSet,
+	&mccTexsAssetSet,
 	&mccMusicAssetSet,
 	&mccSoundAssetSet
 };
