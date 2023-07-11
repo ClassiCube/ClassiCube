@@ -235,24 +235,20 @@ mergeInto(LibraryManager.library, {
     var path = UTF8ToString(raw);
     CCFS.chdir(path);
   },
-  interop_DirectoryIter: function(raw) {
-    var path = UTF8ToString(raw);
-    try {
-      var entries = CCFS.readdir(path);
-      for (var i = 0; i < entries.length; i++) 
-      {
-        var path = entries[i];
-        // absolute path to root relative path
-        if (path.indexOf(CCFS.currentPath) === 0) {
-          path = path.substring(CCFS.currentPath.length + 1);
-        }
-        ccall('Directory_IterCallback', 'void', ['string'], [path]);
+  interop_DirectoryIterate: function(raw) {
+    var root = UTF8ToString(raw);
+    var entries = CCFS.getDirEntries(root);
+    
+    for (var i = 0; i < entries.length; i++) 
+    {
+      var path = entries[i];
+      // absolute path to root relative path
+      if (path.indexOf(CCFS.currentPath) === 0) {
+        path = path.substring(CCFS.currentPath.length + 1);
       }
-      return 0;
-    } catch (e) {
-      if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      ccall('Directory_IterCallback', 'void', ['string'], [path]);
     }
+    return 0;
   },
   interop_FileExists: function (raw) {
     var path = UTF8ToString(raw);
@@ -267,7 +263,7 @@ mergeInto(LibraryManager.library, {
       return stream.fd|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
   interop_FileRead: function(fd, dst, count) {
@@ -276,7 +272,7 @@ mergeInto(LibraryManager.library, {
       return CCFS.read(stream, HEAP8, dst, count)|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
   interop_FileWrite: function(fd, src, count) {
@@ -285,7 +281,7 @@ mergeInto(LibraryManager.library, {
       return CCFS.write(stream, HEAP8, src, count)|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
   interop_FileSeek: function(fd, offset, whence) {
@@ -294,17 +290,12 @@ mergeInto(LibraryManager.library, {
       return CCFS.llseek(stream, offset, whence)|0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
   interop_FileLength: function(fd) {
-    try {
-      var stream = CCFS.getStream(fd);
-      return stream.node.usedBytes|0;
-    } catch (e) {
-      if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
-    }
+    var stream = CCFS.getStream(fd);
+    return stream.node.usedBytes|0;
   },
   interop_FileClose: function(fd) {
     try {
@@ -315,7 +306,7 @@ mergeInto(LibraryManager.library, {
       return 0;
     } catch (e) {
       if (!(e instanceof CCFS.ErrnoError)) abort(e);
-      return -e.errno;
+      return e.errno;
     }
   },
   interop_FileClose__deps: ['interop_SaveNode'],
@@ -346,7 +337,7 @@ mergeInto(LibraryManager.library, {
       ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
     }; 
     
-    var stat, node, entry;
+    var node, entry;
     try {
       var lookup = CCFS.lookupPath(path);
       node = lookup.node;
@@ -429,7 +420,7 @@ mergeInto(LibraryManager.library, {
       db.onclose = function(ev) { 
         console.log('IndexedDB connection closed unexpectedly!');
         window.IDBFS_db = null; 
-      }
+      };
       callback(null, db);
     };
     req.onerror = function(e) {
@@ -547,7 +538,8 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
   interop_InitSockets: function() {
     window.SOCKETS = {
-      EBADF:-8,EISCONN:-30,ENOTCONN:-53,EAGAIN:-6,EHOSTUNREACH:-23,EINPROGRESS:-26,EALREADY:-7,ECONNRESET:-15,EINVAL:-28,ECONNREFUSED:-14,
+      E_INVALID_VALUE:-1,E_IS_CONN:-8,E_NOT_CONN:-9,E_WOULD_BLOCK:-10,
+      E_INVALID_HOST:-11,E_CONN_INPROGRESS:-12,E_CONN_REFUSED:-13,
       sockets: [],
     };
   },
@@ -564,14 +556,10 @@ mergeInto(LibraryManager.library, {
   interop_SocketConnect: function(sockFD, raw, port) {
     var addr = UTF8ToString(raw);
     var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
 
     // already connecting or connected
     var ws = sock.socket;
-    if (ws) {
-      if (ws.readyState === ws.CONNECTING) return SOCKETS.EALREADY;
-      return SOCKETS.EISCONN;
-    }
+    if (ws) return SOCKETS.E_IS_CONN;
 
     // create the actual websocket object and connect
     try {
@@ -582,7 +570,7 @@ mergeInto(LibraryManager.library, {
       ws = new WebSocket(url, 'ClassiCube');
       ws.binaryType = 'arraybuffer';
     } catch (e) {
-      return SOCKETS.EHOSTUNREACH;
+      return SOCKETS.E_INVALID_HOST;
     }
     sock.socket = ws;
 
@@ -609,31 +597,30 @@ mergeInto(LibraryManager.library, {
     ws.onerror = function(error) {
       // The WebSocket spec only allows a 'simple event' to be thrown on error,
       // so we only really know as much as ECONNREFUSED.
-      sock.error = SOCKETS.ECONNREFUSED; // Used by interop_SocketWritable
+      sock.error = SOCKETS.E_CONN_REFUSED; // Used by interop_SocketWritable
     };
     // always "fail" in non-blocking mode
-    return SOCKETS.EINPROGRESS;
+    return SOCKETS.E_CONN_INPROGRESS;
   },
   interop_SocketClose: function(sockFD) {
     var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
+    if (!sock) return;
 
     try {
       sock.socket.close();
     } catch (e) {
     }
     delete sock.socket;
-    return 0;
+    return;
   },
   interop_SocketSend: function(sockFD, src, length) {
     var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
+    var ws   = sock.socket;
 
-    var ws = sock.socket;
     if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
-      return SOCKETS.ENOTCONN;
+      return SOCKETS.E_NOT_CONN;
     } else if (ws.readyState === ws.CONNECTING) {
-      return SOCKETS.EAGAIN;
+      return SOCKETS.E_CONN_INPROGRESS;
     }
 
     // var data = HEAP8.slice(src, src + length); unsupported in IE11
@@ -646,22 +633,21 @@ mergeInto(LibraryManager.library, {
       ws.send(data);
       return length;
     } catch (e) {
-      return SOCKETS.EINVAL;
+      return SOCKETS.E_INVALID_VALUE;
     }
   },
   interop_SocketRecv: function(sockFD, dst, length) {
-    var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
-
+    var sock   = SOCKETS.sockets[sockFD];
     var packet = sock.recv_queue.shift();
+
     if (!packet) {
       var ws = sock.socket;
 
       if (!ws || ws.readyState == ws.CLOSING || ws.readyState == ws.CLOSED) {
-        return SOCKETS.ENOTCONN;
+        return SOCKETS.E_NOT_CONN;
       } else {
         // socket is in a valid state but truly has nothing available
-        return SOCKETS.EAGAIN;
+        return SOCKETS.E_WOULD_BLOCK;
       }
     }
 
@@ -686,10 +672,9 @@ mergeInto(LibraryManager.library, {
   interop_SocketWritable: function(sockFD, writable) {
     HEAPU8[writable|0] = 0;
     var sock = SOCKETS.sockets[sockFD];
-    if (!sock) return SOCKETS.EBADF;
 
     var ws = sock.socket;
-    if (!ws) return SOCKETS.ENOTCONN;
+    if (!ws) return SOCKETS.E_NOT_CONN;
     if (ws.readyState === ws.OPEN) HEAPU8[writable|0] = 1;
     return sock.error || 0;
   },
@@ -1210,7 +1195,13 @@ mergeInto(LibraryManager.library, {
   
   
   window.CCFS={
-      streams:[],entries:{},currentPath:"/",ErrnoError:null,
+      streams:[],
+      entries:{},
+      currentPath:"/",
+      ErrnoError:null,
+      E_INVALID_VALUE:-1,E_ENTRY_NOT_FOUND:-2,E_ENTRY_EXISTS:-3,
+      E_FD_CLOSED:-4,E_TOO_MANY_FDS:-5,E_READONLY_FILE:-6,E_WRITEONLY_FILE:-7,
+      
       resolvePath:function(path) {
         if (path.charAt(0) !== '/') {
           path = CCFS.currentPath + '/' + path;
@@ -1221,7 +1212,7 @@ mergeInto(LibraryManager.library, {
         path = CCFS.resolvePath(path);
         var node = CCFS.entries[path];
         
-        if (!node) throw new CCFS.ErrnoError(2);
+        if (!node) throw new CCFS.ErrnoError(CCFS.E_ENTRY_NOT_FOUND);
         return { path: path, node: node };
       },
       createNode:function(path) {
@@ -1239,7 +1230,7 @@ mergeInto(LibraryManager.library, {
         {
           if (!CCFS.streams[fd]) return fd;
         }
-        throw new CCFS.ErrnoError(24);
+        throw new CCFS.ErrnoError(CCFS.E_TOO_MANY_FDS);
       },
       getStream:function(fd) {
         return CCFS.streams[fd];
@@ -1250,7 +1241,7 @@ mergeInto(LibraryManager.library, {
         CCFS.streams[fd] = stream;
         return stream;
       },
-      readdir:function(path) {
+      getDirEntries:function(path) {
         path = CCFS.resolvePath(path) + '/';
 
         // all entries starting with given directory
@@ -1282,7 +1273,7 @@ mergeInto(LibraryManager.library, {
           if (node) {
             // if O_CREAT and O_EXCL are set, error out if the node already exists
             if ((flags & 128)) {
-              throw new CCFS.ErrnoError(17);
+              throw new CCFS.ErrnoError(CCFS.E_ENTRY_EXISTS);
             }
           } else {
             // node doesn't exist, try to create it
@@ -1291,7 +1282,7 @@ mergeInto(LibraryManager.library, {
           }
         }
         if (!node) {
-          throw new CCFS.ErrnoError(2);
+          throw new CCFS.ErrnoError(CCFS.E_ENTRY_NOT_FOUND);
         }
         
         // do truncation if necessary
@@ -1314,7 +1305,7 @@ mergeInto(LibraryManager.library, {
       },
       close:function(stream) {
         if (CCFS.isClosed(stream)) {
-          throw new CCFS.ErrnoError(9);
+          throw new CCFS.ErrnoError(CCFS.E_FD_CLOSED);
         }
         
         CCFS.streams[stream.fd] = null;
@@ -1325,7 +1316,7 @@ mergeInto(LibraryManager.library, {
       },
       llseek:function(stream, offset, whence) {
         if (CCFS.isClosed(stream)) {
-          throw new CCFS.ErrnoError(9);
+          throw new CCFS.ErrnoError(CCFS.E_FD_CLOSED);
         }
         
         var position = offset;
@@ -1338,20 +1329,20 @@ mergeInto(LibraryManager.library, {
         }
 
         if (position < 0) {
-          throw new CCFS.ErrnoError(22);
+          throw new CCFS.ErrnoError(CCFS.E_INVALID_VALUE);
         }
         stream.position = position;
         return stream.position;
       },
       read:function(stream, buffer, offset, length) {
         if (length < 0) {
-          throw new CCFS.ErrnoError(22);
+          throw new CCFS.ErrnoError(CCFS.E_INVALID_VALUE);
         }
         if (CCFS.isClosed(stream)) {
-          throw new CCFS.ErrnoError(9);
+          throw new CCFS.ErrnoError(CCFS.E_FD_CLOSED);
         }
-        if ((stream.flags & 2097155) === 1) {
-          throw new CCFS.ErrnoError(9);
+        if ((stream.flags & 2097155) === 1) { // O_WRONLY
+          throw new CCFS.ErrnoError(CCFS.E_WRITEONLY_FILE);
         }
         
         var position  = stream.position;
@@ -1361,13 +1352,13 @@ mergeInto(LibraryManager.library, {
       },
       write:function(stream, buffer, offset, length, canOwn) {
         if (length < 0) {
-          throw new CCFS.ErrnoError(22);
+          throw new CCFS.ErrnoError(CCFS.E_INVALID_VALUE);
         }
         if (CCFS.isClosed(stream)) {
-          throw new CCFS.ErrnoError(9);
+          throw new CCFS.ErrnoError(CCFS.E_FD_CLOSED);
         }
-        if ((stream.flags & 2097155) === 0) {
-          throw new CCFS.ErrnoError(9);
+        if ((stream.flags & 2097155) === 0) { // O_RDONLY
+          throw new CCFS.ErrnoError(CCFS.E_READONLY_FILE);
         }
         if (stream.flags & 1024) {
           // seek to the end before writing in append mode

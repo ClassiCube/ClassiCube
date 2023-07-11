@@ -22,20 +22,28 @@
 #define O_EXCL   0x080
 #define O_TRUNC  0x200
 
-/* Unfortunately, errno constants are different in some older emscripten versions */
-/*  (linux errno numbers compared to WASI errno numbers) */
-/* So just use the same errono numbers as interop_web.js */
-#define _ENOENT        2
-#define _EAGAIN        6 /* same as EWOULDBLOCK */
-#define _EEXIST       17
-#define _EHOSTUNREACH 23
-#define _EINPROGRESS  26
+/* General error codes */
+#define E_INVALID_VALUE    1
+/* File I/O specific errors */
+#define E_ENTRY_NOT_FOUND  2
+#define E_ENTRY_EXISTS     3
+#define E_FD_CLOSED        4
+#define E_TOO_MANY_FDS     5
+#define E_READONLY_FILE    6
+#define E_WRITEONLY_FILE   7
+/* Socket specific errors */
+#define E_IS_CONN          8
+#define E_NOT_CONN         9
+#define E_WOULD_BLOCK     10
+#define E_INVALID_HOST    11
+#define E_CONN_INPROGRESS 12
+#define E_CONN_REFUSED    13
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* Not used in web filesystem backend */
-const cc_result ReturnCode_FileNotFound     = _ENOENT;
-const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
-const cc_result ReturnCode_DirectoryExists  = _EEXIST;
+const cc_result ReturnCode_FileNotFound     = E_ENTRY_NOT_FOUND;
+const cc_result ReturnCode_SocketInProgess  = E_CONN_INPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = E_WOULD_BLOCK;
+const cc_result ReturnCode_DirectoryExists  = E_ENTRY_EXISTS;
 
 
 /*########################################################################################################################*
@@ -123,7 +131,7 @@ EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 	enum_callback(&path, enum_obj);
 }
 
-extern int interop_DirectoryIter(const char* path);
+extern int interop_DirectoryIterate(const char* path);
 cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, path);
@@ -131,7 +139,7 @@ cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallbac
 	enum_obj      = obj;
 	enum_callback = callback;
 	/* returned result is negative for error */
-	return -interop_DirectoryIter(str);
+	return -interop_DirectoryIterate(str);
 }
 
 extern int interop_FileCreate(const char* path, int mode);
@@ -266,7 +274,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	res = -interop_SocketConnect(*s, addr, port);
 
 	/* error returned when invalid address provided */
-	if (res == _EHOSTUNREACH) return ERR_INVALID_ARGUMENT;
+	if (res == E_INVALID_HOST) return ERR_INVALID_ARGUMENT;
 	return res;
 }
 
@@ -284,8 +292,8 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* r
 			*read += res;
 			data  += res; count -= res;
 		} else {
-			/* EAGAIN when no more data available */
-			if (res == -_EAGAIN) return *read == 0 ? _EAGAIN : 0;
+			/* E_WOULD_BLOCK when no more data available */
+			if (res == -E_WOULD_BLOCK) return *read == 0 ? E_WOULD_BLOCK : 0;
 
 			return -res;
 		}
@@ -301,11 +309,11 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	if (res >= 0) {
 		*modified = res; return 0;
 	} else {
-		*modified = 0; return -res;
+		*modified = 0;   return -res;
 	}
 }
 
-extern int interop_SocketClose(int sock);
+extern void interop_SocketClose(int sock);
 void Socket_Close(cc_socket s) {
 	interop_SocketClose(s);
 }
@@ -343,20 +351,37 @@ cc_result Process_StartOpen(const cc_string* args) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static const char* const error_descs[] = {
+	NULL,
+	"Invalid argument", /* E_INVALID_VALUE */
+
+	"No such file or directory",		/* E_ENTRY_NOT_FOUND */
+	"File or directory already exists", /* E_ENTRY_EXISTS */
+	"File descriptor already closed",   /* E_FD_CLOSED */
+	"Too many open File descriptors",   /* E_TOO_MANY_FDS */
+	"Write to readonly file",           /* E_READONLY_FILE */
+	"Read on writeonly file",           /* E_WRITEONLY_FILE */
+	
+	"Socket already connecting", /* E_IS_CONN */
+	"Socket not connected",      /* E_NOT_CONN */
+	"Operation would block",     /* E_WOULD_BLOCK */
+	"Invalid host provided",     /* E_INVALID_HOST */
+	"Connection in progress",    /* E_CONN_INPROGRESS */
+	"Connection refused",        /* E_CONN_REFUSED */
+};
+
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char* str;
 	int len;
 
-	/* For unrecognised error codes, strerror might return messages */
-	/*  such as 'No error information', which is not very useful */
-	if (res >= 1000) return false;
+	if (res > 0 && res < Array_Elems(error_descs)) {
+		str = error_descs[res]; 
+		len = String_CalcLen(str, NATIVE_STR_LEN);
 
-	str = strerror(res);
-	if (!str) return false;
-
-	len = String_CalcLen(str, NATIVE_STR_LEN);
-	String_AppendUtf8(dst, str, len);
-	return true;
+		String_AppendUtf8(dst, str, len);
+		return true;
+	}
+	return false;
 }
 
 EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {

@@ -585,7 +585,8 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	fileBuffer[file.length] = '\0';
 
 	/* Calls Window_OnFileUploaded on success */
-	return interop_DownloadFile(fileBuffer, args->filters, args->titles);
+	/* returned result is negative for error */
+	return -interop_DownloadFile(fileBuffer, args->filters, args->titles);
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
