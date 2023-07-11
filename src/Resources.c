@@ -969,6 +969,8 @@ static void MCCTextures_CheckExistence(void) {
 
 static void MCCTextures_CountMissing(void) {
 	int i;
+	if (allZipEntriesExist) return;
+
 	numDefaultZipSources = Array_Elems(defaultZipSources);
 	/* old gold texture only needed in 0.0.23 and earlier */
 	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
