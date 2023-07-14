@@ -89,11 +89,15 @@ struct SSLContext {
 	char incoming[TLS_MAX_PACKET_SIZE];
 };
 
+/* Undefined in older MinGW versions */
+#define _SP_PROT_TLS1_1_CLIENT 0x00000200
+#define _SP_PROT_TLS1_2_CLIENT 0x00000800
+
 static SECURITY_STATUS SSL_CreateHandle(struct SSLContext* ctx) {
 	SCHANNEL_CRED cred = { 0 };
 	cred.dwVersion = SCHANNEL_CRED_VERSION;
 	cred.dwFlags   = SCH_CRED_NO_DEFAULT_CREDS | (_verifyCerts ? SCH_CRED_AUTO_CRED_VALIDATION : SCH_CRED_MANUAL_CRED_VALIDATION);
-	cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT;
+	cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT | _SP_PROT_TLS1_1_CLIENT | _SP_PROT_TLS1_2_CLIENT;
 
 	/* TODO: SCHANNEL_NAME_A ? */
 	return FP_AcquireCredentialsHandleA(NULL, UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,

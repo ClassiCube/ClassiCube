@@ -123,6 +123,8 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - for Android
 
+NOTE: If you are distributing a modified version, please change the package ID from `com.classicube.android.client` to something else - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
+
 ##### Using Android Studio GUI
 
 Open `android` folder in Android Studio (TODO explain more detailed)
@@ -134,6 +136,8 @@ Run `gradlew` in android folder (TODO explain more detailed)
 ## Compiling - for iOS
 
 iOS version will have issues as it's incomplete and only tested in iOS Simulator
+
+NOTE: If you are distributing a modified version, please change the bundle ID from `com.classicube.ios.client` to something else - otherwise iOS users won't be able to have both ClassiCube and your modified version installed at the same time on their iOS device
 
 ##### Using Xcode GUI
 
