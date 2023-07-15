@@ -53,6 +53,85 @@ cc_result Process_StartOpen(const cc_string* args) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------BeOS threading------------------------------------------------------*
+*#########################################################################################################################*/
+// NOTE: BeOS only, as haiku uses the more efficient pthreads implementation in Platform_Posix.c
+#if defined CC_BUILD_BEOS
+#include <OS.h>
+void Thread_Sleep(cc_uint32 milliseconds) { snooze(milliseconds * 1000); }
+
+static int32 ExecThread(void* param) {
+	((Thread_StartFunc)param)();
+	return 0;
+}
+
+void* Thread_Create(Thread_StartFunc func) {
+	// TODO use ExecThread instead
+	thread_id thread = spawn_thread(ExecThread, "CC thread", B_NORMAL_PRIORITY, func);
+	return (void*)thread;
+}
+
+void Thread_Start2(void* handle, Thread_StartFunc func) {
+	thread_id thread = (thread_id)handle;
+	resume_thread(thread);
+}
+
+void Thread_Detach(void* handle) { }
+
+void Thread_Join(void* handle) {
+	thread_id thread = (thread_id)handle;
+	wait_for_thread(thread, NULL);
+}
+
+void* Mutex_Create(void) {
+	sem_id id = create_sem(1, "CC MUTEX");
+	return (void*)id;
+}
+
+void Mutex_Free(void* handle) {
+	sem_id id = (sem_id)handle;
+	delete_sem(id);
+}
+
+void Mutex_Lock(void* handle) {
+	sem_id id = (sem_id)handle;
+	acquire_sem(id);
+}
+
+void Mutex_Unlock(void* handle) {
+	sem_id id = (sem_id)handle;
+	release_sem(id);
+}
+
+void* Waitable_Create(void) {
+	sem_id id = create_sem(0, "CC WAITABLE");
+	return (void*)id;
+}
+
+void Waitable_Free(void* handle) {
+	sem_id id = (sem_id)handle;
+	delete_sem(id);
+}
+
+void Waitable_Signal(void* handle) {
+	sem_id id = (sem_id)handle;
+	release_sem(id);
+}
+
+void Waitable_Wait(void* handle) {
+	sem_id id = (sem_id)handle;
+	acquire_sem(id);
+}
+
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+	int microseconds = milliseconds * 1000;
+	sem_id id = (sem_id)handle;
+	acquire_sem_etc(id, 1, B_RELATIVE_TIMEOUT, microseconds);
+}
+#endif
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Window----------------------------------------------------------*
 *#########################################################################################################################*/
 #if !defined CC_BUILD_SDL

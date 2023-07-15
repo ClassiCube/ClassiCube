@@ -179,7 +179,11 @@ Install libexecinfo, curl and openal-soft package if needed
 
 Install openal_devel and libexecinfo_devel package if needed
 
-```cc *.c Window_Haiku.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+
+#### BeOS
+
+```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lGL -lbe -lgame -ltracker```
 
 #### IRIX
 
