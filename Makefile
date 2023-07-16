@@ -87,7 +87,7 @@ ifeq ($(PLAT),haiku)
 OBJECTS+=src/interop_BeOS.o
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
-LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+LIBS=-lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),beos)
@@ -108,7 +108,9 @@ endif
 
 ifeq ($(PLAT),psp)
 CC=psp-gcc
+CFLAGS=-g -pipe -fno-math-errno -I ${PSPDEV}/psp/sdk/include
 LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay -lpspctrl
+LDFLAGS=-g -L ${PSPDEV}/psp/sdk/lib
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -146,7 +148,7 @@ serenityos:
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
 psp:
-	$(MAKE) ClassiCube.elf PLAT=psp
+	$(MAKE) ClassiCube-psp.elf PLAT=psp
 3ds:
 	$(MAKE) -f src/Makefile_3DS PLAT=3ds
 wii:
@@ -170,6 +172,6 @@ src/interop_BeOS.o: src/interop_BeOS.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 # PSP requires fixups
-ClassiCube.elf : $(ENAME)
-	cp $(ENAME) ClassiCube.elf
-	psp-fixup-imports ClassiCube.elf
+ClassiCube-psp.elf : $(ENAME)
+	cp $(ENAME) ClassiCube-psp.elf
+	psp-fixup-imports ClassiCube-psp.elf

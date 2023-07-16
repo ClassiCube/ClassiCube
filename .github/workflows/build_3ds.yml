@@ -1,0 +1,26 @@
+name: Build latest (3DS)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-3ds
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile
+        run: |
+          make 3ds
+
+  notify-failure:
+    runs-on: ubuntu-20.04
+    needs: [build]
+    if: ${{ always() && (needs.build.result == 'failure') }}
+    steps:
+      - name: Notify failure
+        run: |
+          curl ${{ secrets.WEBHOOK_URL }} -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"username\": \"CC BuildBot\", \"avatar_url\": \"https://static.classicube.net/img/cc-cube-small.png\", \"content\": \"Failed to compile 3DS build\" }"

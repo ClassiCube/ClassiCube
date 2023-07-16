@@ -52,7 +52,7 @@ void Window_Close(void) {
 	/* TODO implement */
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	SceCtrlData pad;
 	/* TODO implement */
 	sceCtrlReadBufferPositive(&pad, 1);

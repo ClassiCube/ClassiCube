@@ -14,14 +14,7 @@
 
 static void* xfb;
 static GXRModeObj* rmode;
-
 void* Window_XFB;
-
-
-int evctr = 0;
-void countevs(int chan, const WPADData *data) {
-	evctr++;
-}
 
 void Window_Init(void) {
 	// Initialise the video system
@@ -181,9 +174,29 @@ void Window_ProcessEvents(double delta) {
    }
 
    Pointer_SetPosition(0, x, y);
-
-	
 }
+
+static int evctr = 0;
+static void countevs(int chan, const WPADData *data) {
+	evctr++;
+}
+
+static void Cursor_GetRawPos(int* x, int* y) {
+   u32 type;
+   WPAD_ReadPending(WPAD_CHAN_ALL, countevs);
+
+   int res = WPAD_Probe(0, &type);
+
+   if(res == WPAD_ERR_NONE) {
+      WPADData *wd = WPAD_Data(0);
+
+      *x = wd->ir.x;
+      *y = wd->ir.y;
+   } else {
+      *x = 0; *y = 0;
+   }
+}
+
 #elif defined HW_DOL
 void Window_ProcessEvents(double delta) {
 	/* TODO implement */
@@ -221,25 +234,13 @@ void Window_ProcessEvents(double delta) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PAD_BUTTON_DOWN);
 	Input_SetNonRepeatable(IPT_DOWN,                  mods & PAD_BUTTON_DOWN);
 }
-#endif
 
 static void Cursor_GetRawPos(int* x, int* y) {
-
-   u32 type;
-
-   WPAD_ReadPending(WPAD_CHAN_ALL, countevs);
-
-   int res = WPAD_Probe(0, &type);
-
-   if(res == WPAD_ERR_NONE) {
-      WPADData *wd = WPAD_Data(0);
-
-      *x = wd->ir.x;
-      *y = wd->ir.y;
-   } else {
-      *x = 0; *y = 0;
-   }
+	/* TODO implement */
+	*x = 0; *y = 0;
 }
+#endif
+
 void Cursor_SetPosition(int x, int y) {
 	/* TODO implement */
 }

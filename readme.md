@@ -151,7 +151,7 @@ Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
 
 #### FreeBSD
 
-Install libexecinfo, curl and openal-soft package if needed
+Install libxi, libexecinfo, curl and openal-soft package if needed
 
 ```cc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
@@ -177,9 +177,9 @@ Install libexecinfo, curl and openal-soft package if needed
 
 #### Haiku
 
-Install openal_devel and libexecinfo_devel package if needed
+Install openal_devel package if needed
 
-```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 #### BeOS
 

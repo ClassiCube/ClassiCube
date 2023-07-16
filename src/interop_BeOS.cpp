@@ -66,7 +66,6 @@ static int32 ExecThread(void* param) {
 }
 
 void* Thread_Create(Thread_StartFunc func) {
-	// TODO use ExecThread instead
 	thread_id thread = spawn_thread(ExecThread, "CC thread", B_NORMAL_PRIORITY, func);
 	return (void*)thread;
 }

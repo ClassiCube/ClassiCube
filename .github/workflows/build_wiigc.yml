@@ -1,0 +1,28 @@
+name: Build latest (Wii/GameCube)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-wiigc
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile
+        run: |
+          make wii
+          make clean
+          make gamecube
+
+  notify-failure:
+    runs-on: ubuntu-20.04
+    needs: [build]
+    if: ${{ always() && (needs.build.result == 'failure') }}
+    steps:
+      - name: Notify failure
+        run: |
+          curl ${{ secrets.WEBHOOK_URL }} -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"username\": \"CC BuildBot\", \"avatar_url\": \"https://static.classicube.net/img/cc-cube-small.png\", \"content\": \"Failed to compile Wii/GameCube build\" }"

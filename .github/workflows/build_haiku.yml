@@ -1,0 +1,27 @@
+name: Build latest (Haiku)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-haiku
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: haiku/cross-compiler:x86_64-r1beta4
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile
+        run: |
+          cd src        
+          x86_64-unknown-haiku-gcc *.c interop_BeOS.cpp -o ClassiCube-haiku -O1 -s -fno-stack-protector -fno-math-errno -Qn -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+
+  notify-failure:
+    runs-on: ubuntu-20.04
+    needs: [build]
+    if: ${{ always() && (needs.build.result == 'failure') }}
+    steps:
+      - name: Notify failure
+        run: |
+          curl ${{ secrets.WEBHOOK_URL }} -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"username\": \"CC BuildBot\", \"avatar_url\": \"https://static.classicube.net/img/cc-cube-small.png\", \"content\": \"Failed to compile Haiku build\" }"
