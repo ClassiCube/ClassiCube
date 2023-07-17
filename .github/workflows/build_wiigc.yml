@@ -19,7 +19,7 @@ jobs:
           make gamecube
 
   notify-failure:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [build]
     if: ${{ always() && (needs.build.result == 'failure') }}
     steps:
