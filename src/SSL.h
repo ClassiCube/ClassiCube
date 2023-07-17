@@ -3,7 +3,7 @@
 #include "Platform.h"
 /* 
 Wraps a socket connection in a TLS/SSL connection
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 void SSLBackend_Init(cc_bool verifyCerts);

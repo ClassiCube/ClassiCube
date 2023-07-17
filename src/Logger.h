@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Logs warnings/errors and also abstracts platform specific logging for fatal errors
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 typedef cc_bool (*Logger_DescribeError)(cc_result res, cc_string* dst);

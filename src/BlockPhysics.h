@@ -2,7 +2,7 @@
 #define CC_BLOCKPHYSICS_H
 #include "Core.h"
 /* Implements simple block physics.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 typedef void (*PhysicsHandler)(int index, BlockID block);
 

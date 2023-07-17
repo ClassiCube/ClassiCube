@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Renders environment of the map (clouds, sky, fog, map sides/edges, skybox, rain/snow)
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent EnvRenderer_Component;

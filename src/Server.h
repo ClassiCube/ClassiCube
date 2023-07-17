@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Represents a connection to either a multiplayer or an internal singleplayer server
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;

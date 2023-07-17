@@ -2,7 +2,7 @@
 #define CC_PICKEDPOSRENDERER_H
 #include "Core.h"
 /* Renders an outline around the block the player is looking at.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct RayTracer;
 struct IGameComponent;

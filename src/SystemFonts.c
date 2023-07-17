@@ -159,7 +159,7 @@ static cc_string font_candidates[] = {
 	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
 	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
 	String_FromConst("Geneva"), /* for ancient macOS versions */
-	String_FromConst("Droid Sans") /* for old Android versions */
+	String_FromConst("Droid Sans"), /* for old Android versions */
 	String_FromConst("Google Sans") /* Droid Sans is now known as Google Sans on some Android devices (e.g. a Pixel 6) */
 };
 

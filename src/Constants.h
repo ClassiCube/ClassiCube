@@ -2,7 +2,7 @@
 #define CC_CONSTANTS_H
 /* 
 Defines useful constants
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define GAME_MAX_CMDARGS 5

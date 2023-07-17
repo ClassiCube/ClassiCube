@@ -2,7 +2,7 @@
 #define CC_MAPFORMATS_H
 #include "Core.h"
 /* Imports/exports a world and associated metadata from/to a particular map file format.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Stream; 

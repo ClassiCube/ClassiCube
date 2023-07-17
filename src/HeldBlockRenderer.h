@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Renders the held block/arm at bottom right of game
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent HeldBlockRenderer_Component;

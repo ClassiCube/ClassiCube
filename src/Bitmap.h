@@ -2,7 +2,7 @@
 #define CC_BITMAP_H
 #include "Core.h"
 /* Represents a 2D array of pixels.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
 

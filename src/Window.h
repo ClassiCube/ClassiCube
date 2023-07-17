@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Abstracts interaction with a windowing system (creating window, moving cursor, etc)
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /*

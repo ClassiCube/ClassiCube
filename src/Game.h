@@ -2,7 +2,7 @@
 #define CC_GAME_H
 #include "Core.h"
 /* Represents the game and related structures.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;
