@@ -2963,37 +2963,6 @@
     FT_Module  module = NULL;
     FT_UInt    nn;
 
-
-#define FREETYPE_VER_FIXED  ( ( (FT_Long)FREETYPE_MAJOR << 16 ) | \
-                                FREETYPE_MINOR                  )
-
-    if ( !library )
-      return FT_THROW( Invalid_Library_Handle );
-
-    if ( !clazz )
-      return FT_THROW( Invalid_Argument );
-
-    /* check FreeType version */
-    if ( clazz->module_requires > FREETYPE_VER_FIXED )
-      return FT_THROW( Invalid_Version );
-
-    /* look for a module with the same name in the library's table */
-    for ( nn = 0; nn < library->num_modules; nn++ )
-    {
-      module = library->modules[nn];
-      if ( ft_strcmp( module->clazz->module_name, clazz->module_name ) == 0 )
-      {
-        /* this installed module has the same name, compare their versions */
-        if ( clazz->module_version <= module->clazz->module_version )
-          return FT_THROW( Lower_Module_Version );
-
-        /* remove the module from our list, then exit the loop to replace */
-        /* it by our new version..                                        */
-        FT_Remove_Module( library, module );
-        break;
-      }
-    }
-
     memory = library->memory;
     error  = FT_Err_Ok;
 

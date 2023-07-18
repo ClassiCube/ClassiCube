@@ -20,6 +20,7 @@ void HttpRequest_Free(struct HttpRequest* request) {
 	request->size  = 0;
 	request->error = NULL;
 }
+#define HttpRequest_Copy(dst, src) Mem_Copy(dst, src, sizeof(struct HttpRequest))
 
 /*########################################################################################################################*
 *----------------------------------------------------Http requests list---------------------------------------------------*
@@ -45,8 +46,9 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 
 	if (flags & HTTP_FLAG_PRIORITY) {
 		/* Shift all requests right one place */
-		for (i = list->count; i > 0; i--) {
-			list->entries[i] = list->entries[i - 1];
+		for (i = list->count; i > 0; i--) 
+		{
+			HttpRequest_Copy(&list->entries[i], &list->entries[i - 1]);
 		}
 		/* Insert new request at front/start */
 		i = 0;
@@ -55,7 +57,7 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 		i = list->count;
 	}
 
-	list->entries[i] = *item;
+	HttpRequest_Copy(&list->entries[i], item);
 	list->count++;
 }
 
@@ -63,8 +65,9 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 static void RequestList_RemoveAt(struct RequestList* list, int i) {
 	if (i < 0 || i >= list->count) Logger_Abort("Tried to remove element at list end");
 
-	for (; i < list->count - 1; i++) {
-		list->entries[i] = list->entries[i + 1];
+	for (; i < list->count - 1; i++) 
+	{
+		HttpRequest_Copy(&list->entries[i], &list->entries[i + 1]);
 	}
 	list->count--;
 }

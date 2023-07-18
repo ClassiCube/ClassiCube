@@ -434,14 +434,6 @@ static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
 }
 #endif
 
-static void CCTextures_Check(const struct SoundAsset* sound) {
-	struct HttpRequest item;
-	if (!Fetcher_Get(sound->reqID, &item)) return;
-
-	SoundPatcher_Save(sound->name, &item);
-	HttpRequest_Free(&item);
-}
-
 static void CCTextures_CheckStatus(void) {
 	struct HttpRequest item;
 	cc_result res;

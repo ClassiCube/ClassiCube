@@ -44,7 +44,7 @@ static void Http_BeginRequest(struct HttpRequest* req, cc_string* url) {
 
 	Mutex_Lock(curRequestMutex);
 	{
-		http_curRequest  = *req;
+		HttpRequest_Copy(&http_curRequest, req);
 		http_curProgress = HTTP_PROGRESS_MAKING_REQUEST;
 	}
 	Mutex_Unlock(curRequestMutex);
@@ -142,7 +142,7 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	Mutex_Lock(processedMutex);
 	{
 		i = RequestList_Find(&processedReqs, reqID);
-		if (i >= 0) *item = processedReqs.entries[i];
+		if (i >= 0) HttpRequest_Copy(item, &processedReqs.entries[i]);
 		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
 	}
 	Mutex_Unlock(processedMutex);
@@ -1467,7 +1467,7 @@ static void WorkerLoop(void) {
 		Mutex_Lock(pendingMutex);
 		{
 			if (pendingReqs.count) {
-				request    = pendingReqs.entries[0];
+				HttpRequest_Copy(&request, &pendingReqs.entries[0]);
 				hasRequest = true;
 				RequestList_RemoveAt(&pendingReqs, 0);
 			}

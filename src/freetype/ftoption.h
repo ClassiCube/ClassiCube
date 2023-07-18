@@ -75,39 +75,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-  /*#***********************************************************************/
-  /*                                                                       */
-  /* If you enable this configuration option, FreeType recognizes an       */
-  /* environment variable called `FREETYPE_PROPERTIES', which can be used  */
-  /* to control the various font drivers and modules.  The controllable    */
-  /* properties are listed in the section @properties.                     */
-  /*                                                                       */
-  /* You have to undefine this configuration option on platforms that lack */
-  /* the concept of environment variables (and thus don't have the         */
-  /* `getenv' function), for example Windows CE.                           */
-  /*                                                                       */
-  /* `FREETYPE_PROPERTIES' has the following syntax form (broken here into */
-  /* multiple lines for better readability).                               */
-  /*                                                                       */
-  /* {                                                                     */
-  /*   <optional whitespace>                                               */
-  /*   <module-name1> ':'                                                  */
-  /*   <property-name1> '=' <property-value1>                              */
-  /*   <whitespace>                                                        */
-  /*   <module-name2> ':'                                                  */
-  /*   <property-name2> '=' <property-value2>                              */
-  /*   ...                                                                 */
-  /* }                                                                     */
-  /*                                                                       */
-  /* Example:                                                              */
-  /*                                                                       */
-  /*   FREETYPE_PROPERTIES=truetype:interpreter-version=35 \               */
-  /*                       cff:no-stem-darkening=1 \                       */
-  /*                       autofitter:warping=1                            */
-  /*                                                                       */
-#undef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
-
-
   /*************************************************************************/
   /*                                                                       */
   /* Many compilers provide a non-ANSI 64-bit data type that can be used   */
@@ -397,20 +364,6 @@ FT_BEGIN_HEADER
   /* (By default, the module uses `PSNames' to extract glyph names.)       */
   /*                                                                       */
 #define TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Define TT_CONFIG_OPTION_SFNT_NAMES if your applications need to       */
-  /* access the internal name table in a SFNT-based format like TrueType   */
-  /* or OpenType.  The name table contains various strings used to         */
-  /* describe the font, like family name, copyright, version, etc.  It     */
-  /* does not contain any glyph name though.                               */
-  /*                                                                       */
-  /* Accessing SFNT names is done through the functions declared in        */
-  /* `ftsnames.h'.                                                         */
-  /*                                                                       */
-#define TT_CONFIG_OPTION_SFNT_NAMES
 
 
   /*************************************************************************/
