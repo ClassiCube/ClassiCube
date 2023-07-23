@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), and in a web browser.<br>
+ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, BeOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), and in a web browser.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -81,14 +81,14 @@ I am assuming you used the installer from https://osdn.net/projects/mingw/
 2. Navigate to the directory with ClassiCube's source code
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
-##### Using TCC
+##### Using TCC (Tiny C Compiler)
 I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 1. Extract the .zip file
-2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
-3. In TCC's `include/math.h`, remove the inline definition for `fabs` at around line 217
-4. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext`
-5. Add missing include files from `winapi-full-for-0.9.27.zip` as required
-6. ???
+2. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext` at line 554 (In between `RtlAddFunctionTable` and `RtlDeleteFunctionTable`)
+3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+4. Navigate to the directory with ClassiCube's source code
+5. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
+6. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`
 
 ## Compiling - Linux
 
@@ -207,11 +207,15 @@ The generated javascript file has some issues. [See here for how to fix](doc/com
 
 Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
 
+**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
+
 The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### 3DS
 
 Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
 
 The 3DS port needs assistance from someone experienced with 3DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
@@ -219,11 +223,15 @@ The 3DS port needs assistance from someone experienced with 3DS homebrew develop
 
 Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
+
 The Wii port needs assistance from someone experienced with Wii homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### GameCube
 
 Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
 
 The GC port needs assistance from someone experienced with GC homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
