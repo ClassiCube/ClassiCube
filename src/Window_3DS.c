@@ -88,10 +88,11 @@ void Window_ProcessEvents(double delta) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
 	Input_SetNonRepeatable(IPT_RIGHT,               mods & KEY_DRIGHT);
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DUP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DUP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DDOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DDOWN);
+	// NOTE: KEY_DUP and KEY_DDOWN are deliberately swapped here
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DDOWN);
+	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DDOWN);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DUP);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DUP);
 	
 	if (hidKeysHeld() & KEY_TOUCH) {
 		int x, y;
@@ -155,7 +156,6 @@ void Window_DrawFramebuffer(Rect2D r) {
 	}
 	// TODO implement
 	// TODO gspWaitForVBlank();
-	Platform_LogConst("DRAW FB!!!");
 	gfxFlushBuffers();
 	//gfxSwapBuffers();
 	// TODO: tearing??

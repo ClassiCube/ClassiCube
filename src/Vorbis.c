@@ -194,6 +194,7 @@ static int iLog(int x) {
 	return bits;
 }
 
+/* https://en.wikipedia.org/wiki/Single-precision_floating-point_format */
 /* Float consists of: */
 /* - 1 bit for sign */
 /* - 8 bits for biased exponent */

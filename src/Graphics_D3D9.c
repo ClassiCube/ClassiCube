@@ -81,7 +81,7 @@ static void CreateD3D9Instance(void) {
 }
 
 static void FindCompatibleViewFormat(void) {
-	static const D3DFORMAT formats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
+	static const D3DFORMAT formats[] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
 	cc_result res;
 	int i;
 
@@ -94,7 +94,7 @@ static void FindCompatibleViewFormat(void) {
 }
 
 static void FindCompatibleDepthFormat(void) {
-	static const D3DFORMAT formats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
+	static const D3DFORMAT formats[] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
 	cc_result res;
 	int i;
 

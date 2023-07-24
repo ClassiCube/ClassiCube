@@ -187,9 +187,12 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 
-	Platform_Log1("Opening file: %c", str);
 	*file = open(str, mode, 0666); // FS has no permissions anyways
-	return *file == -1 ? errno : 0;
+	//return *file == -1 ? errno : 0;
+	
+	int ERR = *file == -1 ? errno : 0;
+	Platform_Log2("Open %s = %i", path, &ERR);
+	return ERR;
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
@@ -518,13 +521,21 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 #define SOC_CTX_ALIGN 0x1000
 #define SOC_CTX_SIZE  0x1000 * 128
+static void CreateRootDirectory(const char* path) {
+	// create root directories (no permissions anyways)
+	int res = mkdir(path, 0666);
+	if (res >= 0) return;
+	
+	int err = errno;
+	Platform_Log2("mkdir %c FAILED: %i", path, &err);
+}
 
 void Platform_Init(void) { 
 	Platform_SingleProcess = true;
 	
 	// create root directories (no permissions anyways)
-	mkdir("sdmc://3ds",            0666);
-	mkdir("sdmc://3ds/ClassiCube", 0666);
+	CreateRootDirectory("sdmc://3ds");
+	CreateRootDirectory("sdmc://3ds/ClassiCube");
 	
 	// See https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/soc.h
 	//  * @param context_addr Address of a page-aligned (0x1000) buffer to be used.
