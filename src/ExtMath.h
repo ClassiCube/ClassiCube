@@ -32,9 +32,7 @@ CC_API double Math_Sin(double x);
 CC_API double Math_Cos(double x);
 float Math_SinF(float x);
 float Math_CosF(float x);
-double Math_Atan2(double x, double y);
-/* Returns m * 2^exp */
-double Math_ldexp(double m, int exp);
+double Math_Atan2(double x, double y);\
 
 /* Computes loge(x). Can also be used to approximate logy(x). */
 /* e.g. for log3(x), use: Math_Log(x)/log(3) */
