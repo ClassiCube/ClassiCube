@@ -49,17 +49,17 @@ void Window_Init(void) {
 	WindowInfo.Width   = rmode->fbWidth;
 	WindowInfo.Height  = rmode->xfbHeight;
 	WindowInfo.Focused = true;
+	WindowInfo.Exists  = true;
 	
 	#if defined HW_RVL
 	WPAD_Init();
-   WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
+	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
 	#elif defined HW_DOL
 	PAD_Init();
 	#endif
 }
 
 static void DoCreateWindow(int _3d) {
-	WindowInfo.Exists = true;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(0); }
 void Window_Create3D(int width, int height) { DoCreateWindow(1); }

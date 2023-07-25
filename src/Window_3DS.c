@@ -33,10 +33,10 @@ void Window_Init(void) {
 	WindowInfo.Width   = height; // deliberately swapped
 	WindowInfo.Height  = width;  // deliberately swapped
 	WindowInfo.Focused = true;
+	WindowInfo.Exists  = true;
 }
 
 static void DoCreateWindow(int _3d) {
-	WindowInfo.Exists = true;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(0); }
 void Window_Create3D(int width, int height) { DoCreateWindow(1); }
@@ -60,6 +60,12 @@ void Window_Close(void) {
 void Window_ProcessEvents(double delta) {
 	hidScanInput();
 	/* TODO implement */
+	
+	if (!aptMainLoop()) {
+		Event_RaiseVoid(&WindowEvents.Closing);
+		WindowInfo.Exists = false;
+		return;
+	}
 	
 	//u32 m1 = hidKeysDown(), m2 = hidKeysHeld();
 	//Platform_Log2("MODS: %h | %h", &m1, &m2);

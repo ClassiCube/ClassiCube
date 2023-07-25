@@ -25,13 +25,13 @@ void Window_Init(void) {
 	WindowInfo.Width   = SCREEN_WIDTH;
 	WindowInfo.Height  = SCREEN_HEIGHT;
 	WindowInfo.Focused = true;
+	WindowInfo.Exists  = true;
 	
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 }
 
 static void DoCreateWindow(int _3d) {
-	WindowInfo.Exists = true;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(0); }
 void Window_Create3D(int width, int height) { DoCreateWindow(1); }

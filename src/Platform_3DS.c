@@ -122,7 +122,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Directory_GetCachePath(cc_string* path) { }
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[22] = "sdmc://3ds/ClassiCube/";
+	static const char root_path[21] = "sdmc:/3ds/ClassiCube/";
 	Mem_Copy(str, root_path, sizeof(root_path));
 	str += sizeof(root_path);
 	String_EncodeUtf8(str, path);
@@ -188,11 +188,7 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	GetNativePath(str, path);
 
 	*file = open(str, mode, 0666); // FS has no permissions anyways
-	//return *file == -1 ? errno : 0;
-	
-	int ERR = *file == -1 ? errno : 0;
-	Platform_Log2("Open %s = %i", path, &ERR);
-	return ERR;
+	return *file == -1 ? errno : 0;
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
@@ -322,32 +318,33 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int success = 0;
+	int found = false;
 
 	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
 	int res = getaddrinfo(host, NULL, &hints, &result);
-	if (res) return 0;
+	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
+	if (res) return res;
 
 	for (cur = result; cur; cur = cur->ai_next) {
 		if (cur->ai_family != AF_INET) continue;
-		success = true;
+		found = true;
 
 		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
 		break;
 	}
 
 	freeaddrinfo(result);
-	return success;
+	return found ? 0 : ERR_INVALID_ARGUMENT;
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr) > 0) return true;
+	if (inet_pton(AF_INET, str, &addr->v4.sin_addr) > 0) return 0;
 	return ParseHost(addr, str);
 }
 
@@ -358,10 +355,10 @@ int Socket_ValidAddress(const cc_string* address) {
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
+	int res;
 
 	*s = -1;
-	if (!ParseAddress(&addr, address))
-		return ERR_INVALID_ARGUMENT;
+	if ((res = ParseAddress(&addr, address))) return res;
 
 	*s = socket(AF_INET, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
@@ -374,7 +371,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
 
-	int res = connect(*s, &addr.raw, sizeof(addr.v4));
+	res = connect(*s, &addr.raw, sizeof(addr.v4));
 	return res == -1 ? errno : 0;
 }
 
@@ -521,6 +518,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 #define SOC_CTX_ALIGN 0x1000
 #define SOC_CTX_SIZE  0x1000 * 128
+
 static void CreateRootDirectory(const char* path) {
 	// create root directories (no permissions anyways)
 	int res = mkdir(path, 0666);
@@ -534,8 +532,8 @@ void Platform_Init(void) {
 	Platform_SingleProcess = true;
 	
 	// create root directories (no permissions anyways)
-	CreateRootDirectory("sdmc://3ds");
-	CreateRootDirectory("sdmc://3ds/ClassiCube");
+	CreateRootDirectory("sdmc:/3ds");
+	CreateRootDirectory("sdmc:/3ds/ClassiCube");
 	
 	// See https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/soc.h
 	//  * @param context_addr Address of a page-aligned (0x1000) buffer to be used.
