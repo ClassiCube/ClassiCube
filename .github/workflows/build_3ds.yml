@@ -6,21 +6,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-3DS:
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitarm:latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compile
+      - name: Compile 3DS build
+        id: compile
         run: |
           make 3ds
 
-  notify-failure:
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: ${{ always() && (needs.build.result == 'failure') }}
-    steps:
-      - name: Notify failure
-        run: |
-          curl ${{ secrets.WEBHOOK_URL }} -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"username\": \"CC BuildBot\", \"avatar_url\": \"https://static.classicube.net/img/cc-cube-small.png\", \"content\": \"Failed to compile 3DS build\" }"
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile 3DS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-3ds.elf'
+          DEST_NAME: 'ClassiCube-3ds.elf'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-3ds.3dsx'
+          DEST_NAME: 'ClassiCube-3ds.3dsx'

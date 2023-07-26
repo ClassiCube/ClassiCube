@@ -154,7 +154,7 @@ psp:
 wii:
 	$(MAKE) -f src/Makefile_wii PLAT=wii
 gamecube:
-	$(MAKE) -f Makefile_gamecube PLAT=gamecube
+	$(MAKE) -f src/Makefile_gamecube PLAT=gamecube
 	
 clean:
 	$(DEL) $(OBJECTS)
