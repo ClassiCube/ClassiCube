@@ -734,6 +734,9 @@ cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int siz
 	desc->height = Drawer2D_AdjHeight(size);
 
 	desc->handle = (void*)1;
+	
+	// TODO: Actually implement native font APIs
+	Font_MakeBitmapped(desc, size, flags);
 	return 0;
 }
 

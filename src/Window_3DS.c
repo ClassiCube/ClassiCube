@@ -105,6 +105,12 @@ void Window_ProcessEvents(double delta) {
 		Cursor_GetRawPos(&x, &y);
 		Pointer_SetPosition(0, x, y);
 	}
+	
+	if (Input_RawMode) {	
+		circlePosition pos = { 0, 0 };
+		hidCircleRead(&pos);
+		Event_RaiseRawMove(&PointerEvents.RawMoved, -pos.dx / 32.0f, pos.dy / 32.0f);
+	}
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
