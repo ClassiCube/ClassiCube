@@ -7,6 +7,8 @@
 #include "Errors.h"
 #include <3ds.h>
 #include "_WindowBase.h"
+#include "ExtMath.h"
+static int touchActive;
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -16,7 +18,7 @@ void Window_Init(void) {
 	//gfxInit(GSP_BGR8_OES,GSP_BGR8_OES,false); 
 	//gfxInit(GSP_BGR8_OES,GSP_RGBA8_OES,false);
 	//gfxInit(GSP_RGBA8_OES, GSP_BGR8_OES, false); 
-	gfxInit(GSP_BGR8_OES,GSP_BGR8_OES,false);
+	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
 	
 	//gfxInit(GSP_RGBA8_OES,GSP_RGBA8_OES,false);
 	consoleInit(GFX_BOTTOM, NULL);
@@ -57,6 +59,9 @@ void Window_Close(void) {
 	/* TODO implement */
 }
 
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
 void Window_ProcessEvents(double delta) {
 	hidScanInput();
 	/* TODO implement */
@@ -100,52 +105,54 @@ void Window_ProcessEvents(double delta) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DUP);
 	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DUP);
 	
-	if (hidKeysHeld() & KEY_TOUCH) {
-		int x, y;
-		Cursor_GetRawPos(&x, &y);
+	touchPosition touch;
+	hidTouchRead(&touch);
+	touchActive = mods & KEY_TOUCH;
+	
+	if (touchActive) {
+		// rescale X from [0, bottom_FB_width) to [0, top_FB_width)
+		int x = touch.px * WindowInfo.Width / GSP_SCREEN_HEIGHT_BOTTOM;
+	 	int y = touch.py;
 		Pointer_SetPosition(0, x, y);
+	}
+	// Set starting position for camera movement
+	if (hidKeysDown() & KEY_TOUCH) {
+		cursorPrevX = touch.px;
+		cursorPrevY = touch.py;
 	}
 	
 	if (Input_RawMode) {	
-		circlePosition pos = { 0, 0 };
+		circlePosition pos;
 		hidCircleRead(&pos);
 		
 		// May not be exactly 0 on actual hardware
-		if (Math_AbsI(pos.dx) < 4) pos.dx = 0;
-		if (Math_AbsI(pos.dy) < 4) pos.dy = 0;
+		if (Math_AbsI(pos.dx) <= 4) pos.dx = 0;
+		if (Math_AbsI(pos.dy) <= 4) pos.dy = 0;
 		
 		Event_RaiseRawMove(&PointerEvents.RawMoved, -pos.dx / 32.0f, pos.dy / 32.0f);
 	}
 }
 
-static void Cursor_GetRawPos(int* x, int* y) {
+static void Cursor_DoSetVisible(cc_bool visible) { } // Makes no sense for 3DS
+void Cursor_SetPosition(int x, int y) { }            // Makes no sense for 3DS
+
+void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
+void Window_DisableRawMouse(void) { Input_RawMode = false; }
+
+void Window_UpdateRawMouse(void)  {
+	if (!touchActive) return;
+	
 	touchPosition touch;
 	hidTouchRead(&touch);
-
-	*x = touch.px;
-	*y = touch.py;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				x - cursorPrevX, y - cursorPrevY);	
+	cursorPrevX = x;
+	cursorPrevY = y;
 }
 
-static void Cursor_DoSetVisible(cc_bool visible) {
-	/* TODO implement */
-}
-
-void Cursor_SetPosition(int x, int y) {
-	/* TODO implement */
-}
-
-static void ShowDialogCore(const char* title, const char* msg) {
-	/* TODO implement */
-}
-
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
+/*########################################################################################################################*
+*------------------------------------------------------Framebuffer--------------------------------------------------------*
+*#########################################################################################################################*/
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
@@ -186,6 +193,9 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO implement */
 }
 
+/*########################################################################################################################*
+*------------------------------------------------------Soft keyboard------------------------------------------------------*
+*#########################################################################################################################*/
 static void OnscreenTextChanged(const char* text) {
 	char tmpBuffer[NATIVE_STR_LEN];
 	cc_string tmp = String_FromArray(tmpBuffer);
@@ -224,7 +234,18 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
-void Window_EnableRawMouse(void)  { DefaultEnableRawMouse();  }
-void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse();  }
-void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+/*########################################################################################################################*
+*-------------------------------------------------------Misc/Other--------------------------------------------------------*
+*#########################################################################################################################*/
+static void ShowDialogCore(const char* title, const char* msg) {
+	/* TODO implement */
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
 #endif
