@@ -109,6 +109,11 @@ void Window_ProcessEvents(double delta) {
 	if (Input_RawMode) {	
 		circlePosition pos = { 0, 0 };
 		hidCircleRead(&pos);
+		
+		// May not be exactly 0 on actual hardware
+		if (Math_AbsI(pos.dx) < 4) pos.dx = 0;
+		if (Math_AbsI(pos.dy) < 4) pos.dy = 0;
+		
 		Event_RaiseRawMove(&PointerEvents.RawMoved, -pos.dx / 32.0f, pos.dy / 32.0f);
 	}
 }

@@ -10,6 +10,7 @@
 #include <gccore.h>
 #if defined HW_RVL
 #include <wiiuse/wpad.h>
+#include <wiikeyboard/keyboard.h>
 #endif
 
 static void* xfb;
@@ -54,9 +55,9 @@ void Window_Init(void) {
 	#if defined HW_RVL
 	WPAD_Init();
 	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
-	#elif defined HW_DOL
-	PAD_Init();
+	KEYBOARD_Init(NULL);
 	#endif
+	PAD_Init();
 }
 
 static void DoCreateWindow(int _3d) {
@@ -78,6 +79,43 @@ void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) {
 	/* TODO implement */
+}
+
+static void HandlePADInput(void) {
+	PADStatus pads[4];
+	PAD_Read(pads);
+	if (pads[0].err) return;
+	
+	int mods = pads[0].button;	
+	int dx   = pads[0].stickX;
+	int dy   = pads[0].stickY;
+	
+	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
+	}		
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & PAD_TRIGGER_L);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & PAD_TRIGGER_R);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & PAD_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & PAD_BUTTON_X);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & PAD_BUTTON_Y);
+	// PAD_BUTTON_B
+	
+	Input_SetNonRepeatable(IPT_ENTER,  mods & PAD_BUTTON_START);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & PAD_TRIGGER_Z);
+	// fake tab with PAD_BUTTON_B for Launcher too
+	Input_SetNonRepeatable(IPT_TAB,    mods & PAD_BUTTON_B);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(IPT_LEFT,                mods & PAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & PAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(IPT_RIGHT,               mods & PAD_BUTTON_RIGHT);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & PAD_BUTTON_UP);
+	Input_SetNonRepeatable(IPT_UP,                    mods & PAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & PAD_BUTTON_DOWN);
 }
 
 #if defined HW_RVL
@@ -174,6 +212,15 @@ void Window_ProcessEvents(double delta) {
    }
 
    Pointer_SetPosition(0, x, y);
+   HandlePADInput();
+   
+   keyboard_event ke;
+   res = KEYBOARD_GetEvent(&ke);
+   if (res && ke.type == KEYBOARD_PRESSED)
+   {
+      //Platform_Log2("KEYCODE: %i (%i)", &ke.keycode, &ke.type);
+     if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
+   }
 }
 
 static int evctr = 0;
@@ -200,39 +247,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 #elif defined HW_DOL
 void Window_ProcessEvents(double delta) {
 	/* TODO implement */
-	PADStatus pads[4];
-	PAD_Read(pads);
-	int mods = pads[0].button;
-	
-	int dx = pads[0].stickX;
-	int dy = pads[0].stickY;
-	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
-	}
-			
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & PAD_TRIGGER_L);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & PAD_TRIGGER_R);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & PAD_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & PAD_BUTTON_X);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & PAD_BUTTON_Y);
-	// PAD_BUTTON_B
-	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & PAD_BUTTON_START);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & PAD_TRIGGER_Z);
-	// fake tab with PAD_BUTTON_B for Launcher too
-	Input_SetNonRepeatable(IPT_TAB,    mods & PAD_BUTTON_B);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & PAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & PAD_BUTTON_RIGHT);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PAD_BUTTON_DOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & PAD_BUTTON_DOWN);
+	HandlePADInput();
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
