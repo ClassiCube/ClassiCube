@@ -111,16 +111,19 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
+static char root_buffer[NATIVE_STR_LEN];
+static cc_string root_path = String_FromArray(root_buffer);
+
 static bool fat_available; 
 // trying to call mkdir etc with no FAT device loaded seems to be broken (dolphin crashes due to trying to execute invalid instruction)
 //   https://github.com/Patater/newlib/blob/8a9e3aaad59732842b08ad5fc19e0acf550a418a/libgloss/libsysbase/mkdir.c and
 //   https://github.com/Patater/newlib/blob/8a9e3aaad59732842b08ad5fc19e0acf550a418a/newlib/libc/include/sys/iosupport.h
-// would suggest it should just return ENOSYS due to using the 'null' device, but whatever
+// FindDevice() returns -1 when no matching device, however the code still unconditionally does "if (devoptab_list[dev]->mkdir_r) {"
+// - so will either attempt to access or execute invalid memory
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[15] = "sd:/ClassiCube/";
-	Mem_Copy(str, root_path, sizeof(root_path));
-	str += sizeof(root_path);
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
@@ -623,11 +626,48 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static void AppendDevice(cc_string* path, char* cwd) {
+	// try to find device FAT mounted on, otherwise default to SD card
+	if (!cwd) {
+		String_AppendConst(path, "sd"); return;
+	}
+	
+	Platform_Log1("CWD: %c", cwd);
+	cc_string cwd_ = String_FromReadonly(cwd);
+	int deviceEnd  = String_IndexOf(&cwd_, ':');
+		
+	if (deviceEnd >= 0) {
+		cc_string dev = String_UNSAFE_Substring(&cwd_, 0, deviceEnd);
+		// e.g. "card0:/" becomes "card0"
+		String_Append(path, &dev);
+	} else {
+		String_AppendConst(path, "sd");
+	}
+}
+static void FindRootDirectory(void) {
+	char cwdBuffer[NATIVE_STR_LEN] = { 0 };
+	char* cwd = getcwd(cwdBuffer, NATIVE_STR_LEN);
+	
+	root_path.length = 0;
+	AppendDevice(&root_path, cwd);
+	String_AppendConst(&root_path, ":/ClassiCube/");
+}
+static void CreateRootDirectory(void) {
+	if (!fat_available) return;
+	root_buffer[root_path.length] = '\0';
+	
+	// irectory_Create(&String_Empty); just returns error 20
+	int res = mkdir(root_buffer, 0);
+	int err = res == -1 ? errno : 0;
+	Platform_Log1("Created root directory: %i", &err);
+}
+
 void Platform_Init(void) {
 	Platform_SingleProcess = true;
 	
 	fat_available = fatInitDefault();
-	if (fat_available) mkdir("sd:/ClassiCube", 0); // create root 'ClassiCube' directory
+	FindRootDirectory();
+	CreateRootDirectory();
 	
 	InitSockets();
 }
