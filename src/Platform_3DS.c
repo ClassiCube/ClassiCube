@@ -120,11 +120,11 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
+static const cc_string root_path = String_FromConst("sdmc:/3ds/ClassiCube/");
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[21] = "sdmc:/3ds/ClassiCube/";
-	Mem_Copy(str, root_path, sizeof(root_path));
-	str += sizeof(root_path);
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 

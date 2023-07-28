@@ -9,6 +9,7 @@
 #include "_WindowBase.h"
 #include "ExtMath.h"
 static int touchActive;
+static cc_bool launcherMode;
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -38,10 +39,8 @@ void Window_Init(void) {
 	WindowInfo.Exists  = true;
 }
 
-static void DoCreateWindow(int _3d) {
-}
-void Window_Create2D(int width, int height) { DoCreateWindow(0); }
-void Window_Create3D(int width, int height) { DoCreateWindow(1); }
+void Window_Create2D(int width, int height) { launcherMode = true;  }
+void Window_Create3D(int width, int height) { launcherMode = false; }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -62,6 +61,41 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void HandleButtons_Game(u32 mods) {
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & KEY_L);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & KEY_R);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & KEY_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & KEY_X);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & KEY_Y);
+	
+	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_START);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_SELECT);
+	
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & KEY_DLEFT);
+	Input_SetNonRepeatable(IPT_LEFT,                mods & KEY_DLEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(IPT_RIGHT,               mods & KEY_DRIGHT);
+	
+	// NOTE: KEY_DUP and KEY_DDOWN are deliberately swapped here
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DDOWN);
+	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DDOWN);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DUP);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DUP);
+}
+static void HandleButtons_Launcher(u32 mods) {
+	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_A);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_B);
+	// fake tab with down for Launcher
+	//Input_SetNonRepeatable(IPT_TAB, mods & KEY_DDOWN);
+	
+	Input_SetNonRepeatable(IPT_LEFT,   mods & KEY_DLEFT);
+	Input_SetNonRepeatable(IPT_RIGHT,  mods & KEY_DRIGHT);	
+	// NOTE: KEY_DUP and KEY_DDOWN are deliberately swapped here
+	Input_SetNonRepeatable(IPT_UP,     mods & KEY_DDOWN);
+	Input_SetNonRepeatable(IPT_DOWN,   mods & KEY_DUP);
+}
+
 void Window_ProcessEvents(double delta) {
 	hidScanInput();
 	/* TODO implement */
@@ -74,36 +108,16 @@ void Window_ProcessEvents(double delta) {
 	
 	//u32 m1 = hidKeysDown(), m2 = hidKeysHeld();
 	//Platform_Log2("MODS: %h | %h", &m1, &m2);
-	
 	// hidKeysDown hidKeysUp
 	//u32 mods = hidKeysDownRepeat();
+	
 	u32 mods = hidKeysDown() | hidKeysHeld();
-	//Platform_Log1("MODS: %h", &mods);
+	if (launcherMode) {
+		HandleButtons_Launcher(mods);
+	} else {
+		HandleButtons_Game(mods);
+	}
 	Input_SetNonRepeatable(IPT_LMOUSE, mods & KEY_TOUCH);
-	
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & KEY_L);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & KEY_R);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & KEY_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & KEY_X);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & KEY_Y);
-	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_START);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_SELECT);
-	// fake tab with down for Launcher
-	Input_SetNonRepeatable(IPT_TAB, mods & KEY_DDOWN);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & KEY_DLEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & KEY_DLEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & KEY_DRIGHT);
-	
-	// NOTE: KEY_DUP and KEY_DDOWN are deliberately swapped here
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DDOWN);
-	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DDOWN);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DUP);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DUP);
 	
 	touchPosition touch;
 	hidTouchRead(&touch);
@@ -144,12 +158,13 @@ void Window_UpdateRawMouse(void)  {
 	
 	touchPosition touch;
 	hidTouchRead(&touch);
-	
+
 	Event_RaiseRawMove(&PointerEvents.RawMoved, 
 				touch.px - cursorPrevX, touch.py - cursorPrevY);	
 	cursorPrevX = touch.px;
 	cursorPrevY = touch.py;
 }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
@@ -194,6 +209,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO implement */
 }
 
+
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
@@ -235,6 +251,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
+
 /*########################################################################################################################*
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -247,6 +264,7 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+
 	return ERR_NOT_SUPPORTED;
 }
 #endif
