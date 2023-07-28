@@ -144,10 +144,11 @@ void Window_UpdateRawMouse(void)  {
 	
 	touchPosition touch;
 	hidTouchRead(&touch);
+	
 	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				x - cursorPrevX, y - cursorPrevY);	
-	cursorPrevX = x;
-	cursorPrevY = y;
+				touch.px - cursorPrevX, touch.py - cursorPrevY);	
+	cursorPrevX = touch.px;
+	cursorPrevY = touch.py;
 }
 
 /*########################################################################################################################*

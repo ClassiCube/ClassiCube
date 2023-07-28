@@ -1028,7 +1028,7 @@ void Logger_Hook(void) {
 	SetUnhandledExceptionFilter(UnhandledFilter);
 	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
 
-	/* Windows 9x requires GetCurrentProcessId - see old DBGHELP docs */
+	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
 	/* https://documentation.help/DbgHelp/documentation.pdf */
 	osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
 	osInfo.dwPlatformId        = 0;
