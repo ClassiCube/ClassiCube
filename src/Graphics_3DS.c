@@ -124,21 +124,6 @@ void Gfx_Create(void) {
 	SetDefaultState();
 	InitDefaultResources();
 	AllocShaders();
-	
-	// Configure the first fragment shading substage to just pass through the vertex color
-	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
-	//C3D_TexEnv* env = C3D_GetTexEnv(0);
-	//C3D_TexEnvInit(env);
-	//C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, 0, 0);
-	//C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
-	
-	 // Configure the first fragment shading substage to blend the texture color with
-  	// the vertex color (calculated by the vertex shader using a lighting algorithm)
-  	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
-	C3D_TexEnv* env = C3D_GetTexEnv(0);
-	C3D_TexEnvInit(env);
-  	C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
- 	C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
  	
 	// 8x8 dummy white texture
 	//  (textures must be at least 8x8, see C3D_TexInitWithParams source)
@@ -291,7 +276,7 @@ void Gfx_ClearCol(PackedCol color) {
 static cc_bool depthTest, depthWrite;
 static int colorWriteMask = GPU_WRITE_COLOR;
 
-static void UpdateDepthWriteMask(void) {
+static void UpdateWriteState(void) {
 	//C3D_EarlyDepthTest(true, GPU_EARLYDEPTH_GREATER, 0);
 	//C3D_EarlyDepthTest(false, GPU_EARLYDEPTH_GREATER, 0);
 	int writeMask = colorWriteMask;
@@ -301,11 +286,11 @@ static void UpdateDepthWriteMask(void) {
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	depthWrite = enabled;
-	UpdateDepthWriteMask();
+	UpdateWriteState();
 }
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	depthTest = enabled;
-	UpdateDepthWriteMask();
+	UpdateWriteState();
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -314,7 +299,9 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (g) mask |= GPU_WRITE_GREEN;
 	if (b) mask |= GPU_WRITE_BLUE;
 	if (a) mask |= GPU_WRITE_ALPHA;
+	
 	colorWriteMask = mask;
+	UpdateWriteState();
 }
 
 
@@ -523,13 +510,7 @@ void Gfx_DisableTextureOffset(void) {
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
-
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	SwitchProgram();
-	
+static void UpdateAttribFormat(VertexFormat fmt) {
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
 	AttrInfo_Init(attrInfo);
 	
@@ -540,7 +521,36 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	}
 }
 
+static void UpdateTexEnv(VertexFormat fmt) {
+	C3D_TexEnv* env = C3D_GetTexEnv(0);
+	C3D_TexEnvInit(env);
+	
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		// Configure the first fragment shading substage to blend the texture color with
+  		// the vertex color (calculated by the vertex shader using a lighting algorithm)
+  		// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight	
+  		C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
+ 		C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+ 	} else {
+ 		// Configure the first fragment shading substage to just pass through the vertex color
+		// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
+		C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, 0, 0);
+		C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+ 	}
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+	
+	SwitchProgram();
+	UpdateAttribFormat(fmt);
+	UpdateTexEnv(fmt);
+}
+
 void Gfx_DrawVb_Lines(int verticesCount) {
+	/* TODO */
 }
 
 static void SetVertexBuffer(int startVertex) {
