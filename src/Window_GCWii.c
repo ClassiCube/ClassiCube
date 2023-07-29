@@ -16,6 +16,7 @@
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
+
 static void OnPowerOff(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 	WindowInfo.Exists = false;

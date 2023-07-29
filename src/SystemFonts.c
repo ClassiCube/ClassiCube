@@ -721,7 +721,7 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
     interop_SysTextDraw(args, bmp, x, y, shadow);
 }
-#elif defined CC_BUILD_PSP || defined CC_BUILD_GCWII
+#elif defined CC_BUILD_PSP
 void SysFonts_Register(const cc_string* path) { }
 
 const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
@@ -752,6 +752,135 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 }
 
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+}
+#elif defined CC_BUILD_GCWII
+#include <ogc/system.h>
+void SysFonts_Register(const cc_string* path) { }
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) { }
+static union {
+	sys_fontheader hdr;
+	u8 data[SYS_FONTSIZE_ANSI];
+} __attribute__((aligned(32))) ipl_font;
+static cc_bool font_checked, font_okay;
+static void LoadIPLFont(void) {
+	font_checked = true;
+	// SJIS font layout not supported
+	if (SYS_GetFontEncoding() == 1) return;
+	
+	int res   = SYS_InitFont(&ipl_font.hdr);
+	font_okay = res == 1;
+}
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
+
+	desc->handle = (void*)1;
+	if (!font_checked) LoadIPLFont();
+	
+	if (!font_okay) Font_MakeBitmapped(desc, size, flags);
+	return 0;
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	SysFont_Make(desc, NULL, size, flags);
+}
+
+void SysFont_Free(struct FontDesc* desc) {
+}
+
+int SysFont_TextWidth(struct DrawTextArgs* args) {
+	// TODO: Optimise 
+	// u8* width_table = &ipl_font.data[ipl_font.header.width_table];
+	cc_string left = args->text, part;
+	char colorCode = 'f';	
+	int width = 0;
+	
+	void* image;
+	s32 cellX, cellY, glyphWidth;
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
+	{
+		for (int i = 0; i < part.length; i++) 
+		{
+			SYS_GetFontTexture((u8)part.buffer[i], &image, 
+						&cellX, &cellY, &glyphWidth);
+			width += glyphWidth;
+		}
+	}
+	return max(1, width);
+}
+// https://devkitpro.org/viewtopic.php?f=7&t=191
+//  Re: SYS_GetFontTexture & SYS_GetFontTexel
+static int DrawGlyph(struct Bitmap* bmp, int x, int y, u8 c, BitmapCol color) {
+	void* image;
+	s32 cellX, cellY, glyphWidth;
+	SYS_GetFontTexture(c, &image, &cellX, &cellY, &glyphWidth);
+	// after having been decompressed back in SYS_InitFont, 
+	//  font pixels are represented using I4 texture format
+		
+	int cellWidth  = ipl_font.hdr.cell_width;
+	int cellHeight = ipl_font.hdr.cell_height;
+	int sheetWidth = ipl_font.hdr.sheet_width;
+	u8 a, I, invI;
+	// TODO not very efficient.. but it works I guess
+	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
+	for (int Y = 0; Y < cellHeight; Y++) // glyphX, cellX
+	{
+		int dstY   = y + Y;
+		int glyphY = Y + cellY;
+		if (dstY < 0 || dstY >= bmp->height) continue;		
+			
+		for (int X = 0; X < cellWidth; X++)
+		{
+			int dstX   = x + X;
+			int glyphX = X + cellX;
+			if (dstX < 0 || dstX >= bmp->width) continue;
+			
+			// The I4 texture is divided into 8x8 blocks
+			//   https://wiki.tockdom.com/wiki/Image_Formats#I4
+			int tileX = glyphX & ~0x07;
+                	int tileY = glyphY & ~0x07;               	
+                	int tile_offset   = (tileY * sheetWidth) + (tileX << 3);
+                	int tile_location = ((glyphY & 7) << 3) | (glyphX & 7);
+                	
+                	// each byte stores two pixels in it
+                	a = ((u8*)image)[(tile_offset | tile_location) >> 1];
+			a = (glyphX & 1) ? (a & 0x0F) : (a >> 4);
+			a = a * 0x11; // 0-15 > 0-255
+			
+			I = a; invI = UInt8_MaxValue - a;
+			
+			BitmapCol src = Bitmap_GetPixel(bmp, dstX, dstY);
+			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapCol_Make(
+				((BitmapCol_R(color) * I) >> 8) + ((BitmapCol_R(src) * invI) >> 8),
+				((BitmapCol_G(color) * I) >> 8) + ((BitmapCol_G(src) * invI) >> 8),
+				((BitmapCol_B(color) * I) >> 8) + ((BitmapCol_B(src) * invI) >> 8),
+				                             I  + ((BitmapCol_A(src) * invI) >> 8));
+		}
+	}
+	return glyphWidth;
+}
+
+void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	cc_string left = args->text, part;
+	char colorCode = 'f';
+	BitmapCol color;
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
+	{
+		color = Drawer2D_GetColor(colorCode);
+		if (shadow) color = GetShadowColor(color);
+	
+		for (int i = 0; i < part.length; i++) 
+		{
+			x += DrawGlyph(bmp, x, y, (u8)part.buffer[i], color);
+		}
+	}
 }
 #elif defined CC_BUILD_3DS
 #include <3ds.h>
