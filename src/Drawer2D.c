@@ -55,7 +55,6 @@ void Font_Make(struct FontDesc* desc, int size, int flags) {
 }
 
 void Font_Free(struct FontDesc* desc) {
-	struct SysFont* font;
 	desc->size = 0;
 	if (Font_IsBitmap(desc)) return;
 

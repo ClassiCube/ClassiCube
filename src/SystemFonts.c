@@ -826,34 +826,35 @@ static int DrawGlyph(struct Bitmap* bmp, int x, int y, u8 c, BitmapCol color) {
 	int cellWidth  = ipl_font.hdr.cell_width;
 	int cellHeight = ipl_font.hdr.cell_height;
 	int sheetWidth = ipl_font.hdr.sheet_width;
-	u8 a, I, invI;
+	u8 I, invI;
 	// TODO not very efficient.. but it works I guess
 	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
-	for (int Y = 0; Y < cellHeight; Y++) // glyphX, cellX
+	for (int glyphY = 0; glyphY < cellHeight; glyphY++) // glyphX, cellX
 	{
-		int dstY   = y + Y;
-		int glyphY = Y + cellY;
+		int dstY = glyphY + y;
+		int srcY = glyphY + cellY;
 		if (dstY < 0 || dstY >= bmp->height) continue;		
 			
-		for (int X = 0; X < cellWidth; X++)
+		for (int glyphX = 0; glyphX < glyphWidth; glyphX++)
 		{
-			int dstX   = x + X;
-			int glyphX = X + cellX;
+			int dstX = glyphX + x;
+			int srcX = glyphX + cellX;
 			if (dstX < 0 || dstX >= bmp->width) continue;
 			
 			// The I4 texture is divided into 8x8 blocks
 			//   https://wiki.tockdom.com/wiki/Image_Formats#I4
-			int tileX = glyphX & ~0x07;
-                	int tileY = glyphY & ~0x07;               	
+			int tileX = srcX & ~0x07;
+                	int tileY = srcY & ~0x07;               	
                 	int tile_offset   = (tileY * sheetWidth) + (tileX << 3);
-                	int tile_location = ((glyphY & 7) << 3) | (glyphX & 7);
+                	int tile_location = ((srcY & 7) << 3) | (srcX & 7);
                 	
                 	// each byte stores two pixels in it
-                	a = ((u8*)image)[(tile_offset | tile_location) >> 1];
-			a = (glyphX & 1) ? (a & 0x0F) : (a >> 4);
-			a = a * 0x11; // 0-15 > 0-255
+                	I = ((u8*)image)[(tile_offset | tile_location) >> 1];
+			I = (glyphX & 1) ? (I & 0x0F) : (I >> 4);
+			I = I * 0x11; // 0-15 > 0-255
 			
-			I = a; invI = UInt8_MaxValue - a;
+			if (!I) continue;
+			invI = UInt8_MaxValue - I;
 			
 			BitmapCol src = Bitmap_GetPixel(bmp, dstX, dstY);
 			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapCol_Make(
@@ -953,43 +954,48 @@ static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphI
 	int sheetIdx = glyphIndex / glyphsPerSheet;
 	int sheetPos = glyphIndex % glyphsPerSheet;
 	u8* sheet    = tglp->sheetData + (sheetIdx * tglp->sheetSize);
-	u8 a, I, invI;
+	u8 I, invI;
 
-	int rowY = sheetPos / tglp->nRows;
 	int rowX = sheetPos % tglp->nRows;
+	int rowY = sheetPos / tglp->nRows;
 	
+	int cellX = rowX * (tglp->cellWidth  + 1) + 1;
+	int cellY = rowY * (tglp->cellHeight + 1) + 1;
 	charWidthInfo_s* wInfo = fontGetCharWidthInfo(font, glyphIndex);	
 	//int L = wInfo->left, W = wInfo->glyphWidth;
 	//Platform_Log3("Draw %r (L=%i, W=%i", &CP, &L, &W);
 	
 	// TODO not very efficient.. but it works I guess
 	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
-	for (int Y = 0; Y < tglp->cellHeight; Y++)
+	for (int glyphY = 0; glyphY < tglp->cellHeight; glyphY++)
 	{
-		for (int X = 0; X < wInfo->glyphWidth; X++)
+		int dstY = glyphY + y;
+		int srcY = glyphY + cellY;
+		if (dstY < 0 || dstY >= bmp->height) continue;
+		
+		for (int glyphX = 0; glyphX < wInfo->glyphWidth; glyphX++)
 		{
-			int dstX = x + X + wInfo->left, dstY = y + Y;
-			if (dstX < 0 || dstY < 0 || dstX >= bmp->width || dstY >= bmp->height) continue;
-			
-			int srcX = X + rowX * (tglp->cellWidth  + 1);
-			int srcY = Y + rowY * (tglp->cellHeight + 1);
+			int dstX = glyphX + x + wInfo->left;
+			int srcX = glyphX + cellX;
+			if (dstX < 0 || dstX >= bmp->width) continue;
 			
 			int tile_offset   = (srcY & ~0x07) * tglp->sheetWidth + (srcX & ~0x07) * 8;
 			int tile_location = CalcMortonOffset(srcX & 0x07, srcY & 0x07);
 			
 			// each byte stores two pixels in it
-			a = sheet[(tile_offset + tile_location) >> 1];
-			a = (tile_location & 1) ? (a >> 4) : (a & 0x0F);
-			a = a * 0x11; // 0-15 > 0-255
+			I = sheet[(tile_offset + tile_location) >> 1];
+			I = (tile_location & 1) ? (I >> 4) : (I & 0x0F);
+			I = I * 0x11; // 0-15 > 0-255
 			
-			I = a; invI = UInt8_MaxValue - a;
+			if (!I) continue;
+			invI = UInt8_MaxValue - I;
 
 			BitmapCol src = Bitmap_GetPixel(bmp, dstX, dstY);
 			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapCol_Make(
 				((BitmapCol_R(color) * I) >> 8) + ((BitmapCol_R(src) * invI) >> 8),
 				((BitmapCol_G(color) * I) >> 8) + ((BitmapCol_G(src) * invI) >> 8),
 				((BitmapCol_B(color) * I) >> 8) + ((BitmapCol_B(src) * invI) >> 8),
-				                           I  + ((BitmapCol_A(src) * invI) >> 8)
+				                             I  + ((BitmapCol_A(src) * invI) >> 8)
 			);
 				
 			/*Bitmap_GetPixel(bmp, dstX, dstY) = BitmapColor_RGB(
