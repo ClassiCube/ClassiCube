@@ -16,8 +16,17 @@
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
+static void OnPowerOff(void) {
+	Event_RaiseVoid(&WindowEvents.Closing);
+	WindowInfo.Exists = false;
+}
 
-void Window_Init(void) {
+void Window_Init(void) {	
+	// TODO: SYS_SetResetCallback(reload); too? not sure how reset differs on GC/WII
+	#if defined HW_RVL
+	SYS_SetPowerCallback(OnPowerOff);
+	#endif
+	
 	// Initialise the video system
 	VIDEO_Init();
 
@@ -80,6 +89,7 @@ void Window_SetSize(int width, int height) { }
 void Window_Close(void) {
 	/* TODO implement */
 }
+
 
 static void HandlePADInput(void) {
 	PADStatus pads[4];
@@ -356,5 +366,4 @@ void Window_DisableRawMouse(void) {
 	RegrabMouse();
 	Input_RawMode = false;
 }
-
 #endif

@@ -637,9 +637,8 @@ static void AppendDevice(cc_string* path, char* cwd) {
 	int deviceEnd  = String_IndexOf(&cwd_, ':');
 		
 	if (deviceEnd >= 0) {
-		cc_string dev = String_UNSAFE_Substring(&cwd_, 0, deviceEnd);
 		// e.g. "card0:/" becomes "card0"
-		String_Append(path, &dev);
+		String_AppendAll(path, cwd, deviceEnd);
 	} else {
 		String_AppendConst(path, "sd");
 	}
