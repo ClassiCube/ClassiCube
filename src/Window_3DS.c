@@ -257,6 +257,8 @@ void Window_CloseKeyboard(void) { /* TODO implement */ }
 *#########################################################################################################################*/
 static void ShowDialogCore(const char* title, const char* msg) {
 	/* TODO implement */
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

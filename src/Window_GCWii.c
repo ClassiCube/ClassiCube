@@ -277,6 +277,8 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 
 static void ShowDialogCore(const char* title, const char* msg) {
 	/* TODO implement */
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {

@@ -21,6 +21,9 @@
 #include <ogc/cond.h>
 #include <ogc/lwp_watchdog.h>
 #include <fat.h>
+#ifdef HW_RVL
+#include <ogc/wiilaunch.h>
+#endif
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -576,10 +579,19 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 
 void Process_Exit(cc_result code) { exit(code); }
 
+#ifdef HW_RVL
 cc_result Process_StartOpen(const cc_string* args) {
-	// TODO launch browser
+	char url[NATIVE_STR_LEN];
+	String_EncodeUtf8(url, args);
+	
+	// TODO: Not sure if this works or not
+	return WII_OpenURL(url);
+}
+#else
+cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -643,6 +655,7 @@ static void AppendDevice(cc_string* path, char* cwd) {
 		String_AppendConst(path, "sd");
 	}
 }
+
 static void FindRootDirectory(void) {
 	char cwdBuffer[NATIVE_STR_LEN] = { 0 };
 	char* cwd = getcwd(cwdBuffer, NATIVE_STR_LEN);
@@ -651,6 +664,7 @@ static void FindRootDirectory(void) {
 	AppendDevice(&root_path, cwd);
 	String_AppendConst(&root_path, ":/ClassiCube/");
 }
+
 static void CreateRootDirectory(void) {
 	if (!fat_available) return;
 	root_buffer[root_path.length] = '\0';

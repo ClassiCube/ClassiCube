@@ -476,7 +476,13 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
+	char url[NATIVE_STR_LEN];
+	int len = String_EncodeUtf8(url, args);
+	
+	// TODO: Not sure if this works or not
+	APT_PrepareToStartSystemApplet(APPID_WEB);
+	return APT_StartSystemApplet(APPID_WEB, url, len + 1, CUR_PROCESS_HANDLE); 
+	// len + 1 for null terminator
 }
 
 
