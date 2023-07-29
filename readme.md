@@ -268,7 +268,11 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows
 * [Clang](https://clang.llvm.org/) - Compiles client for macOS
 * [Emscripten](https://emscripten.org/) - Compiles client for web
-* [RenderDoc](https://renderdoc.org/) - graphics debugging
+* [RenderDoc](https://renderdoc.org/) - Graphics debugging
+* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
+* [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
+* [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
+* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
 
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>

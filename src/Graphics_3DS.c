@@ -245,7 +245,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFaceCulling(cc_bool enabled) { 
-	C3D_CullFace(enabled ? GPU_CULL_FRONT_CCW : GPU_CULL_NONE);
+	C3D_CullFace(enabled ? GPU_CULL_BACK_CCW : GPU_CULL_NONE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -445,26 +445,45 @@ void Gfx_SetFogMode(FogFunc func) {
 static C3D_Mtx _view, _proj;
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	Mtx_OrthoTilt(matrix, 0.0f, width, height, 0.0f, zNear, zFar, true);
+	// See Mtx_OrthoTilt in Citro3D for the original basis
+	// (it's mostly just a standard orthograph matrix rotated by 90 degrees) 
+	Mem_Set(matrix, 0, sizeof(struct Matrix));
+	
+	matrix->row2.X = -2.0f / height;
+	matrix->row4.X =  1.0f;
+	matrix->row1.Y = -2.0f / width;
+	matrix->row4.Y =  1.0f;
+	
+	matrix->row3.Z = 1.0f / (zNear - zFar);		
+	matrix->row4.Z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
+	matrix->row4.W = 1.0f;
 }
 
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	Mtx_PerspTilt(matrix, fov, aspect, 0.1f, zFar, true);
+	// See Mtx_PerspTilt in Citro3D for the original basis
+	// (it's mostly just a standard perspective matrix rotated by 90 degrees) 
+	float zNear = 0.1f;
+	fov = tanf(fov / 2.0f);	 
+	Mem_Set(matrix, 0, sizeof(struct Matrix));
+	matrix->row2.X =  1.0f / fov;
+	matrix->row1.Y = -1.0f / (fov * aspect);
+	matrix->row4.Z = zFar * zNear  / (zNear - zFar);
+	matrix->row3.W = -1.0f;
+	matrix->row3.Z =  1.0f * zNear / (zNear - zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW) {
-		float* m  = (float*)matrix;
-		// Transpose
-		for(int i = 0; i < 4; i++)
-		{
-			_view.r[i].x = m[0  + i];
-			_view.r[i].y = m[4  + i];
-			_view.r[i].z = m[8  + i];
-			_view.r[i].w = m[12 + i];
-		}
+	C3D_Mtx* dst = type == MATRIX_VIEW ? &_view : &_proj;
+	float* src   = (float*)matrix;
+	
+	// Transpose
+	for (int i = 0; i < 4; i++)
+	{
+		dst->r[i].x = src[0  + i];
+		dst->r[i].y = src[4  + i];
+		dst->r[i].z = src[8  + i];
+		dst->r[i].w = src[12 + i];
 	}
-	if (type == MATRIX_PROJECTION) _proj = *((C3D_Mtx*)matrix);
 
 	Mtx_Multiply(&_mvp, &_proj, &_view);
 	DirtyUniform(UNI_MVP_MATRIX);
@@ -510,6 +529,7 @@ void Gfx_DisableTextureOffset(void) {
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
+
 static void UpdateAttribFormat(VertexFormat fmt) {
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
 	AttrInfo_Init(attrInfo);
