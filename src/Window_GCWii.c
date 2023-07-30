@@ -78,6 +78,7 @@ void Window_Close(void) {
 	/* TODO implement */
 }
 
+
 /*########################################################################################################################*
 *---------------------------------------------GameCube controller processing----------------------------------------------*
 *#########################################################################################################################*/
@@ -94,13 +95,18 @@ static void ProcessPAD_Launcher(PADStatus* pad) {
 	Input_SetNonRepeatable(IPT_UP,    mods & PAD_BUTTON_UP);
 	Input_SetNonRepeatable(IPT_DOWN,  mods & PAD_BUTTON_DOWN);
 }
+
 static void ProcessPAD_Game(PADStatus* pad) {
 	int mods = pad->button;
 	int dx   = pad->substickX;
 	int dy   = pad->substickY;
+
+	if (Input_RawMode) {
+		// May not be exactly 0 on actual hardware
+		if (Math_AbsI(dx) <= 4) dx = 0;
+		if (Math_AbsI(dy) <= 4) dy = 0;
 	
-	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
 	}		
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & PAD_TRIGGER_L);
@@ -137,6 +143,7 @@ static void ProcessPADInput(void) {
 	}
 }
 
+
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -144,6 +151,7 @@ static void ProcessPADInput(void) {
 static int dragCursorX;
 static int dragCursorY;
 static cc_bool dragOn;
+
 static void ProcessWPAD_Launcher(int mods) {
 	Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_A);
 	Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_B);
@@ -153,6 +161,122 @@ static void ProcessWPAD_Launcher(int mods) {
 	Input_SetNonRepeatable(IPT_UP,     mods & WPAD_BUTTON_UP);
 	Input_SetNonRepeatable(IPT_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
+
+static void ProcessWPAD_Game(int mods) {
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_BUTTON_1);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_BUTTON_2);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_PLUS);
+	// TODO: WPAD_BUTTON_B
+      
+	Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_HOME);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],    mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(IPT_LEFT,                  mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT],   mods & WPAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(IPT_RIGHT,                 mods & WPAD_BUTTON_RIGHT);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(IPT_UP,                    mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & WPAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & WPAD_BUTTON_DOWN);
+}
+
+static void ProcessNunchuck_Game(int mods, double delta) {
+	WPADData* wd = WPAD_Data(0);
+	joystick_t analog = wd->exp.nunchuk.js;
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_NUNCHUK_BUTTON_C);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_NUNCHUK_BUTTON_Z);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & WPAD_BUTTON_1);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_2);
+
+	Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_HOME);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
+
+	if (mods & WPAD_BUTTON_RIGHT) {
+		Mouse_ScrollWheel(1.0*delta);
+	}
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
+
+	const float ANGLE_DELTA = 50;
+	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);
+	bool nunchuckDown  = (analog.ang > 180-ANGLE_DELTA) && (analog.ang < 180+ANGLE_DELTA) && (analog.mag > 0.5);
+	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
+	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  nunchuckLeft);
+	Input_SetNonRepeatable(IPT_LEFT,                nunchuckLeft);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], nunchuckRight);
+	Input_SetNonRepeatable(IPT_RIGHT,               nunchuckRight);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], nunchuckUp);
+	Input_SetNonRepeatable(IPT_UP,                    nunchuckUp);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    nunchuckDown);
+	Input_SetNonRepeatable(IPT_DOWN,                  nunchuckDown);
+}
+static void ProcessClassic_Joystick(struct joystick_t* js) {
+	// TODO: need to account for min/max??
+	int dx = js->pos.x - js->center.x;
+	int dy = js->pos.y - js->center.y;
+	
+	if (Math_AbsI(dx) <= 4) dx = 0;
+	if (Math_AbsI(dy) <= 4) dy = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
+}
+
+static void ProcessClassic_Game(void) {
+	WPADData* wd = WPAD_Data(0);
+	classic_ctrl_t ctrls = wd->exp.classic;
+	int mods = ctrls.btns | ctrls.btns_held;
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & CLASSIC_CTRL_BUTTON_X);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & CLASSIC_CTRL_BUTTON_Y);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & CLASSIC_CTRL_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & CLASSIC_CTRL_BUTTON_PLUS);
+	// TODO: CLASSIC_CTRL_BUTTON_B
+      
+	Input_SetNonRepeatable(IPT_ENTER,  mods & CLASSIC_CTRL_BUTTON_HOME);
+	Input_SetNonRepeatable(IPT_ESCAPE, mods & CLASSIC_CTRL_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],    mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Input_SetNonRepeatable(IPT_LEFT,                  mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT],   mods & CLASSIC_CTRL_BUTTON_RIGHT);
+	Input_SetNonRepeatable(IPT_RIGHT,                 mods & CLASSIC_CTRL_BUTTON_RIGHT);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & CLASSIC_CTRL_BUTTON_UP);
+	Input_SetNonRepeatable(IPT_UP,                    mods & CLASSIC_CTRL_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & CLASSIC_CTRL_BUTTON_DOWN);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & CLASSIC_CTRL_BUTTON_DOWN);
+	
+	if (Input_RawMode) {
+		ProcessClassic_Joystick(&ctrls.ljs);
+		ProcessClassic_Joystick(&ctrls.rjs);
+	}
+}
+
+static void GetIRPos(int res, int* x, int* y) {
+	if (res == WPAD_ERR_NONE) {
+		WPADData* wd = WPAD_Data(0);
+
+		*x = wd->ir.x;
+		*y = wd->ir.y;
+	} else {
+		*x = 0; 
+		*y = 0;
+	}
+}
+
 static void ProcessKeyboardInput(void) {
 	keyboard_event ke;
 	int res = KEYBOARD_GetEvent(&ke);
@@ -166,108 +290,45 @@ static void ProcessKeyboardInput(void) {
 
 void Window_ProcessEvents(double delta) {
 	/* TODO implement */
-   int x, y;
-   Cursor_GetRawPos(&x, &y);
-
 	WPAD_ScanPads();
-	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);		
+	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
+	u32 type;
+	int res  = WPAD_Probe(0, &type);
 
-   u32 res;
-   WPAD_Probe(0, &res);
+	if (launcherMode) {
+		ProcessWPAD_Launcher(mods);
+	} else if (type == WPAD_EXP_NUNCHUK) {
+		ProcessNunchuck_Game(mods, delta);
+	} else if (type == WPAD_EXP_CLASSIC) {
+		ProcessClassic_Game();
+	} else {
+		ProcessWPAD_Game(mods);
+	}
 
-   if (launcherMode) {
-   	ProcessWPAD_Launcher(mods);
-   } else if (res == WPAD_EXP_NUNCHUK) {
-      WPADData *wd = WPAD_Data(0);
-      joystick_t analog = wd->exp.nunchuk.js;
-
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_NUNCHUK_BUTTON_C);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_NUNCHUK_BUTTON_Z);
-      
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & WPAD_BUTTON_1);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_2);
-
-      Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_HOME);
-      Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_MINUS);
-
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
-
-
-      if (mods & WPAD_BUTTON_RIGHT) {
-         Mouse_ScrollWheel(1.0*delta);
-      }
-
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
-
-      const float ANGLE_DELTA = 50;
-      bool nunchuckUp = (analog.ang > -ANGLE_DELTA) && (analog.ang < ANGLE_DELTA) && (analog.mag > 0.5);
-      bool nunchuckDown = (analog.ang > 180-ANGLE_DELTA) && (analog.ang < 180+ANGLE_DELTA) && (analog.mag > 0.5);
-      bool nunchuckLeft = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
-      bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA) && (analog.ang < 90+ANGLE_DELTA) && (analog.mag > 0.5);
-
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  nunchuckLeft);
-      Input_SetNonRepeatable(IPT_LEFT,                nunchuckLeft);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], nunchuckRight);
-      Input_SetNonRepeatable(IPT_RIGHT,               nunchuckRight);
-
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], nunchuckUp);
-      Input_SetNonRepeatable(IPT_UP,                    nunchuckUp);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    nunchuckDown);
-      Input_SetNonRepeatable(IPT_DOWN,                  nunchuckDown);
-   } else {
-      // you can't open up chat without the nunchuck like this
-      
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_BUTTON_1);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_BUTTON_2);
-      
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_PLUS);
-      
-      Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_HOME);
-      Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_MINUS);
-
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & WPAD_BUTTON_LEFT);
-      Input_SetNonRepeatable(IPT_LEFT,                mods & WPAD_BUTTON_LEFT);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & WPAD_BUTTON_RIGHT);
-      Input_SetNonRepeatable(IPT_RIGHT,               mods & WPAD_BUTTON_RIGHT);
-      
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & WPAD_BUTTON_UP);
-      Input_SetNonRepeatable(IPT_UP,                    mods & WPAD_BUTTON_UP);
-      Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & WPAD_BUTTON_DOWN);
-      Input_SetNonRepeatable(IPT_DOWN,                  mods & WPAD_BUTTON_DOWN);
-   }
-
-   if (mods & WPAD_BUTTON_B) {
-      if (dragOn == false) {
-         dragCursorX = x;
-         dragCursorY = y;
-      }
-
-      dragOn = true;
-   } else {
-      dragOn = false;
-   }
-
-   Pointer_SetPosition(0, x, y);
-   ProcessPADInput();
-   ProcessKeyboardInput();
+	int x, y;
+	GetIRPos(res, &x, &y);
+	
+	if (mods & WPAD_BUTTON_B) {
+		if (dragOn == false) {
+			dragCursorX = x;
+			dragCursorY = y;
+		}
+		dragOn = true;
+	} else {
+		dragOn = false;
+	}
+	Pointer_SetPosition(0, x, y);
+	
+	ProcessPADInput();
+	ProcessKeyboardInput();
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
-   u32 type;
-   WPAD_ScanPads();
-   int res = WPAD_Probe(0, &type);
-
-   if (res == WPAD_ERR_NONE) {
-      WPADData *wd = WPAD_Data(0);
-
-      *x = wd->ir.x;
-      *y = wd->ir.y;
-   } else {
-      *x = 0; *y = 0;
-   }
+	u32 type;
+	WPAD_ScanPads();
+	
+	int res = WPAD_Probe(0, &type);
+	GetIRPos(res, x, y);
 }
 #else
 void Window_ProcessEvents(double delta) {
@@ -313,6 +374,7 @@ void Window_DisableRawMouse(void) {
 	RegrabMouse();
 	Input_RawMode = false;
 }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
@@ -367,6 +429,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
+
 /*########################################################################################################################*
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -381,6 +444,7 @@ int Window_IsObscured(void)            { return 0; }
 
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
+
 
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
