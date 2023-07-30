@@ -10,6 +10,7 @@
 #include "ExtMath.h"
 static int touchActive;
 static cc_bool launcherMode;
+static Result irrst_result;
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -37,6 +38,8 @@ void Window_Init(void) {
 	WindowInfo.Height  = width;  // deliberately swapped
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
+	
+	irrst_result = irrstInit();
 }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
@@ -77,12 +80,12 @@ static void HandleButtons_Game(u32 mods) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
 	Input_SetNonRepeatable(IPT_RIGHT,               mods & KEY_DRIGHT);
 	
-	// NOTE: KEY_DUP and KEY_DDOWN are deliberately swapped here
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DDOWN);
-	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DDOWN);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DUP);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DUP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DUP);
+	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DUP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DDOWN);
+	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DDOWN);
 }
+
 static void HandleButtons_Launcher(u32 mods) {
 	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_A);
 	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_B);
@@ -90,10 +93,16 @@ static void HandleButtons_Launcher(u32 mods) {
 	//Input_SetNonRepeatable(IPT_TAB, mods & KEY_DDOWN);
 	
 	Input_SetNonRepeatable(IPT_LEFT,   mods & KEY_DLEFT);
-	Input_SetNonRepeatable(IPT_RIGHT,  mods & KEY_DRIGHT);	
-	// NOTE: KEY_DUP and KEY_DDOWN are deliberately swapped here
-	Input_SetNonRepeatable(IPT_UP,     mods & KEY_DDOWN);
-	Input_SetNonRepeatable(IPT_DOWN,   mods & KEY_DUP);
+	Input_SetNonRepeatable(IPT_RIGHT,  mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(IPT_UP,     mods & KEY_DUP);
+	Input_SetNonRepeatable(IPT_DOWN,   mods & KEY_DDOWN);
+}
+static void ProcessJoystickInput(circlePosition* pos) {	
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(pos->dx) <= 4) pos->dx = 0;
+	if (Math_AbsI(pos->dy) <= 4) pos->dy = 0;
+		
+	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx / 8.0f, -pos->dy / 8.0f);
 }
 
 void Window_ProcessEvents(double delta) {
@@ -138,12 +147,14 @@ void Window_ProcessEvents(double delta) {
 	if (Input_RawMode) {	
 		circlePosition pos;
 		hidCircleRead(&pos);
-		
-		// May not be exactly 0 on actual hardware
-		if (Math_AbsI(pos.dx) <= 4) pos.dx = 0;
-		if (Math_AbsI(pos.dy) <= 4) pos.dy = 0;
-		
-		Event_RaiseRawMove(&PointerEvents.RawMoved, -pos.dx / 32.0f, pos.dy / 32.0f);
+		ProcessJoystickInput(&pos);
+	}
+	
+	if (Input_RawMode && irrst_result == 0) {
+		circlePosition pos;
+		irrstScanInput();
+		irrstCstickRead(&pos);
+		ProcessJoystickInput(&pos);
 	}
 }
 
