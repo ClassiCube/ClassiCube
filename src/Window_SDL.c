@@ -104,62 +104,62 @@ void Window_Close(void) {
 static int MapNativeKey(SDL_Keycode k) {
 	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'     + (k - SDLK_0); }
 	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'     + (k - SDLK_a); }
-	if (k >= SDLK_F1  && k <= SDLK_F12) { return IPT_F1  + (k - SDLK_F1); }
-	if (k >= SDLK_F13 && k <= SDLK_F24) { return IPT_F13 + (k - SDLK_F13); }
+	if (k >= SDLK_F1  && k <= SDLK_F12) { return CCKEY_F1  + (k - SDLK_F1); }
+	if (k >= SDLK_F13 && k <= SDLK_F24) { return CCKEY_F13 + (k - SDLK_F13); }
 	/* SDLK_KP_0 isn't before SDLK_KP_1 */
-	if (k >= SDLK_KP_1 && k <= SDLK_KP_9) { return IPT_KP1 + (k - SDLK_KP_1); }
+	if (k >= SDLK_KP_1 && k <= SDLK_KP_9) { return CCKEY_KP1 + (k - SDLK_KP_1); }
 
 	switch (k) {
-		case SDLK_RETURN: return IPT_ENTER;
-		case SDLK_ESCAPE: return IPT_ESCAPE;
-		case SDLK_BACKSPACE: return IPT_BACKSPACE;
-		case SDLK_TAB:    return IPT_TAB;
-		case SDLK_SPACE:  return IPT_SPACE;
-		case SDLK_QUOTE:  return IPT_QUOTE;
-		case SDLK_EQUALS: return IPT_EQUALS;
-		case SDLK_COMMA:  return IPT_COMMA;
-		case SDLK_MINUS:  return IPT_MINUS;
-		case SDLK_PERIOD: return IPT_PERIOD;
-		case SDLK_SLASH:  return IPT_SLASH;
-		case SDLK_SEMICOLON:    return IPT_SEMICOLON;
-		case SDLK_LEFTBRACKET:  return IPT_LBRACKET;
-		case SDLK_BACKSLASH:    return IPT_BACKSLASH;
-		case SDLK_RIGHTBRACKET: return IPT_RBRACKET;
-		case SDLK_BACKQUOTE:    return IPT_TILDE;
-		case SDLK_CAPSLOCK:     return IPT_CAPSLOCK;
-		case SDLK_PRINTSCREEN: return IPT_PRINTSCREEN;
-		case SDLK_SCROLLLOCK:  return IPT_SCROLLLOCK;
-		case SDLK_PAUSE:       return IPT_PAUSE;
-		case SDLK_INSERT:   return IPT_INSERT;
-		case SDLK_HOME:     return IPT_HOME;
-		case SDLK_PAGEUP:   return IPT_PAGEUP;
-		case SDLK_DELETE:   return IPT_DELETE;
-		case SDLK_END:      return IPT_END;
-		case SDLK_PAGEDOWN: return IPT_PAGEDOWN;
-		case SDLK_RIGHT: return IPT_RIGHT;
-		case SDLK_LEFT:  return IPT_LEFT;
-		case SDLK_DOWN:  return IPT_DOWN;
-		case SDLK_UP:    return IPT_UP;
+		case SDLK_RETURN: return CCKEY_ENTER;
+		case SDLK_ESCAPE: return CCKEY_ESCAPE;
+		case SDLK_BACKSPACE: return CCKEY_BACKSPACE;
+		case SDLK_TAB:    return CCKEY_TAB;
+		case SDLK_SPACE:  return CCKEY_SPACE;
+		case SDLK_QUOTE:  return CCKEY_QUOTE;
+		case SDLK_EQUALS: return CCKEY_EQUALS;
+		case SDLK_COMMA:  return CCKEY_COMMA;
+		case SDLK_MINUS:  return CCKEY_MINUS;
+		case SDLK_PERIOD: return CCKEY_PERIOD;
+		case SDLK_SLASH:  return CCKEY_SLASH;
+		case SDLK_SEMICOLON:    return CCKEY_SEMICOLON;
+		case SDLK_LEFTBRACKET:  return CCKEY_LBRACKET;
+		case SDLK_BACKSLASH:    return CCKEY_BACKSLASH;
+		case SDLK_RIGHTBRACKET: return CCKEY_RBRACKET;
+		case SDLK_BACKQUOTE:    return CCKEY_TILDE;
+		case SDLK_CAPSLOCK:     return CCKEY_CAPSLOCK;
+		case SDLK_PRINTSCREEN: return CCKEY_PRINTSCREEN;
+		case SDLK_SCROLLLOCK:  return CCKEY_SCROLLLOCK;
+		case SDLK_PAUSE:       return CCKEY_PAUSE;
+		case SDLK_INSERT:   return CCKEY_INSERT;
+		case SDLK_HOME:     return CCKEY_HOME;
+		case SDLK_PAGEUP:   return CCKEY_PAGEUP;
+		case SDLK_DELETE:   return CCKEY_DELETE;
+		case SDLK_END:      return CCKEY_END;
+		case SDLK_PAGEDOWN: return CCKEY_PAGEDOWN;
+		case SDLK_RIGHT: return CCKEY_RIGHT;
+		case SDLK_LEFT:  return CCKEY_LEFT;
+		case SDLK_DOWN:  return CCKEY_DOWN;
+		case SDLK_UP:    return CCKEY_UP;
 
-		case SDLK_NUMLOCKCLEAR: return IPT_NUMLOCK;
-		case SDLK_KP_DIVIDE: return IPT_KP_DIVIDE;
-		case SDLK_KP_MULTIPLY: return IPT_KP_MULTIPLY;
-		case SDLK_KP_MINUS: return IPT_KP_MINUS;
-		case SDLK_KP_PLUS: return IPT_KP_PLUS;
-		case SDLK_KP_ENTER: return IPT_KP_ENTER;
-		case SDLK_KP_0: return IPT_KP0;
-		case SDLK_KP_PERIOD: return IPT_KP_DECIMAL;
+		case SDLK_NUMLOCKCLEAR: return CCKEY_NUMLOCK;
+		case SDLK_KP_DIVIDE: return CCKEY_KP_DIVIDE;
+		case SDLK_KP_MULTIPLY: return CCKEY_KP_MULTIPLY;
+		case SDLK_KP_MINUS: return CCKEY_KP_MINUS;
+		case SDLK_KP_PLUS: return CCKEY_KP_PLUS;
+		case SDLK_KP_ENTER: return CCKEY_KP_ENTER;
+		case SDLK_KP_0: return CCKEY_KP0;
+		case SDLK_KP_PERIOD: return CCKEY_KP_DECIMAL;
 
-		case SDLK_LCTRL: return IPT_LCTRL;
-		case SDLK_LSHIFT: return IPT_LSHIFT;
-		case SDLK_LALT: return IPT_LALT;
-		case SDLK_LGUI: return IPT_LWIN;
-		case SDLK_RCTRL: return IPT_RCTRL;
-		case SDLK_RSHIFT: return IPT_RSHIFT;
-		case SDLK_RALT: return IPT_RALT;
-		case SDLK_RGUI: return IPT_RWIN;
+		case SDLK_LCTRL: return CCKEY_LCTRL;
+		case SDLK_LSHIFT: return CCKEY_LSHIFT;
+		case SDLK_LALT: return CCKEY_LALT;
+		case SDLK_LGUI: return CCKEY_LWIN;
+		case SDLK_RCTRL: return CCKEY_RCTRL;
+		case SDLK_RSHIFT: return CCKEY_RSHIFT;
+		case SDLK_RALT: return CCKEY_RALT;
+		case SDLK_RGUI: return CCKEY_RWIN;
 	}
-	return IPT_NONE;
+	return INPUT_NONE;
 }
 
 static void OnKeyEvent(const SDL_Event* e) {
@@ -172,11 +172,11 @@ static void OnMouseEvent(const SDL_Event* e) {
 	cc_bool pressed = e->button.state == SDL_PRESSED;
 	int btn;
 	switch (e->button.button) {
-		case SDL_BUTTON_LEFT:   btn = IPT_LMOUSE; break;
-		case SDL_BUTTON_MIDDLE: btn = IPT_MMOUSE; break;
-		case SDL_BUTTON_RIGHT:  btn = IPT_RMOUSE; break;
-		case SDL_BUTTON_X1:     btn = IPT_XBUTTON1; break;
-		case SDL_BUTTON_X2:     btn = IPT_XBUTTON2; break;
+		case SDL_BUTTON_LEFT:   btn = CCMOUSE_L; break;
+		case SDL_BUTTON_MIDDLE: btn = CCMOUSE_M; break;
+		case SDL_BUTTON_RIGHT:  btn = CCMOUSE_R; break;
+		case SDL_BUTTON_X1:     btn = CCMOUSE_X1; break;
+		case SDL_BUTTON_X2:     btn = CCMOUSE_X2; break;
 		default: return;
 	}
 	Input_Set(btn, pressed);

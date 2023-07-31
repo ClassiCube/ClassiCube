@@ -81,7 +81,7 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == IPT_ENTER || key == IPT_KP_ENTER) {
+	if (key == CCKEY_ENTER || key == CCKEY_KP_ENTER) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -100,13 +100,13 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was)) return;
 	}
 
-	if (key == IPT_TAB) {
+	if (key == CCKEY_TAB) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
-	} else if (key == IPT_UP) {
+	} else if (key == CCKEY_UP) {
 		LScreen_CycleSelected(s, -1);
-	} else if (key == IPT_DOWN) {
+	} else if (key == CCKEY_DOWN) {
 		LScreen_CycleSelected(s,  1);
-	} else if (key == IPT_ESCAPE && s->onEscapeWidget) {
+	} else if (key == CCKEY_ESCAPE && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
 	}
 }
@@ -379,13 +379,13 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 }
 
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == IPT_LEFT) {
+	if (key == CCKEY_LEFT) {
 		ColoursScreen_AdjustSelected(s, -1);
-	} else if (key == IPT_RIGHT) {
+	} else if (key == CCKEY_RIGHT) {
 		ColoursScreen_AdjustSelected(s, +1);
-	} else if (key == IPT_UP) {
+	} else if (key == CCKEY_UP) {
 		ColoursScreen_AdjustSelected(s, +10);
-	} else if (key == IPT_DOWN) {
+	} else if (key == CCKEY_DOWN) {
 		ColoursScreen_AdjustSelected(s, -10);
 	} else {
 		LScreen_KeyDown(s, key, was);

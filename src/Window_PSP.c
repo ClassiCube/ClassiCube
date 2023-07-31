@@ -74,20 +74,20 @@ void Window_ProcessEvents(double delta) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & PSP_CTRL_CROSS);
 	// PSP_CTRL_SQUARE
 	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & PSP_CTRL_START);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & PSP_CTRL_SELECT);
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PSP_CTRL_START);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PSP_CTRL_SELECT);
 	// fake tab with PSP_CTRL_SQUARE for Launcher too
-	Input_SetNonRepeatable(IPT_TAB,    mods & PSP_CTRL_SQUARE);
+	Input_SetNonRepeatable(CCKEY_TAB,    mods & PSP_CTRL_SQUARE);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PSP_CTRL_LEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & PSP_CTRL_LEFT);
+	Input_SetNonRepeatable(CCKEY_LEFT,              mods & PSP_CTRL_LEFT);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & PSP_CTRL_RIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & PSP_CTRL_RIGHT);
+	Input_SetNonRepeatable(CCKEY_RIGHT,             mods & PSP_CTRL_RIGHT);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & PSP_CTRL_UP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & PSP_CTRL_UP);
+	Input_SetNonRepeatable(CCKEY_UP,                  mods & PSP_CTRL_UP);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PSP_CTRL_DOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & PSP_CTRL_DOWN);
+	Input_SetNonRepeatable(CCKEY_DOWN,                mods & PSP_CTRL_DOWN);
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {

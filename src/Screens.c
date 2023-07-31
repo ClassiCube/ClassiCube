@@ -1211,7 +1211,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int playerListKey   = KeyBinds[KEYBIND_TABLIST];
-	cc_bool handlesList = playerListKey != IPT_TAB || !Gui.TabAutocomplete || !s->grabsInput;
+	cc_bool handlesList = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
 		if (!tablist_active && !Server.IsSinglePlayer) {
@@ -1225,25 +1225,25 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
 		/* See reason for this in HandleInputUp */
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == IPT_KP_ENTER) {
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == IPT_KP_ENTER || key == IPT_ESCAPE) {
-			ChatScreen_EnterChatInput(s, key == IPT_ESCAPE);
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || key == CCKEY_ESCAPE) {
+			ChatScreen_EnterChatInput(s, key == CCKEY_ESCAPE);
 #endif
-		} else if (key == IPT_PAGEUP) {
+		} else if (key == CCKEY_PAGEUP) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
-		} else if (key == IPT_PAGEDOWN) {
+		} else if (key == CCKEY_PAGEDOWN) {
 			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
 		}
-		return key < IPT_F1 || key > IPT_F24;
+		return key < CCKEY_F1 || key > CCKEY_F24;
 	}
 
 	if (key == KeyBinds[KEYBIND_CHAT]) {
 		ChatScreen_OpenInput(&String_Empty);
-	} else if (key == IPT_SLASH) {
+	} else if (key == CCKEY_SLASH) {
 		ChatScreen_OpenInput(&slash);
 	} else if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		InventoryScreen_Show();
@@ -1264,7 +1264,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
-	if (key == IPT_ESCAPE) ChatScreen_EnterChatInput(s, true);
+	if (key == CCKEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
 #endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
@@ -1597,7 +1597,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
 		Gui_Remove((struct Screen*)s);
-	} else if (key == IPT_ENTER && table->selectedIndex != -1) {
+	} else if (key == CCKEY_ENTER && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {

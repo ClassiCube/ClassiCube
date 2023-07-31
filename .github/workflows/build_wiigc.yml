@@ -16,6 +16,8 @@ jobs:
         id: compile
         run: |
           make wii
+          make clean
+          make gamecube
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -28,3 +30,9 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-wii.dol'
           DEST_NAME: 'ClassiCube-wii.dol'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-gc.dol'
+          DEST_NAME: 'ClassiCube-gc.dol'

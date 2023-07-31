@@ -72,30 +72,30 @@ static void HandleButtons_Game(u32 mods) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & KEY_X);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & KEY_Y);
 	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_START);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_SELECT);
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & KEY_START);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & KEY_SELECT);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & KEY_DLEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & KEY_DLEFT);
+	Input_SetNonRepeatable(CCKEY_LEFT,              mods & KEY_DLEFT);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(CCKEY_RIGHT,             mods & KEY_DRIGHT);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DUP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & KEY_DUP);
+	Input_SetNonRepeatable(CCKEY_UP,                  mods & KEY_DUP);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DDOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & KEY_DDOWN);
+	Input_SetNonRepeatable(CCKEY_DOWN,                mods & KEY_DDOWN);
 }
 
 static void HandleButtons_Launcher(u32 mods) {
-	Input_SetNonRepeatable(IPT_ENTER,  mods & KEY_A);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & KEY_B);
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & KEY_A);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & KEY_B);
 	// fake tab with down for Launcher
-	//Input_SetNonRepeatable(IPT_TAB, mods & KEY_DDOWN);
+	//Input_SetNonRepeatable(CCKEY_TAB, mods & KEY_DDOWN);
 	
-	Input_SetNonRepeatable(IPT_LEFT,   mods & KEY_DLEFT);
-	Input_SetNonRepeatable(IPT_RIGHT,  mods & KEY_DRIGHT);
-	Input_SetNonRepeatable(IPT_UP,     mods & KEY_DUP);
-	Input_SetNonRepeatable(IPT_DOWN,   mods & KEY_DDOWN);
+	Input_SetNonRepeatable(CCKEY_LEFT,   mods & KEY_DLEFT);
+	Input_SetNonRepeatable(CCKEY_RIGHT,  mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(CCKEY_UP,     mods & KEY_DUP);
+	Input_SetNonRepeatable(CCKEY_DOWN,   mods & KEY_DDOWN);
 }
 static void ProcessJoystickInput(circlePosition* pos) {	
 	// May not be exactly 0 on actual hardware
@@ -126,7 +126,7 @@ void Window_ProcessEvents(double delta) {
 	} else {
 		HandleButtons_Game(mods);
 	}
-	Input_SetNonRepeatable(IPT_LMOUSE, mods & KEY_TOUCH);
+	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
 	
 	touchPosition touch;
 	hidTouchRead(&touch);

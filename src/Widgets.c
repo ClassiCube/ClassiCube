@@ -931,13 +931,13 @@ static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
-	if (key == IPT_LEFT || key == IPT_KP4) {
+	if (key == CCKEY_LEFT || key == CCKEY_KP4) {
 		TableWidget_ScrollRelative(w, -1);
-	} else if (key == IPT_RIGHT || key == IPT_KP6) {
+	} else if (key == CCKEY_RIGHT || key == CCKEY_KP6) {
 		TableWidget_ScrollRelative(w, 1);
-	} else if (key == IPT_UP || key == IPT_KP8) {
+	} else if (key == CCKEY_UP || key == CCKEY_KP8) {
 		TableWidget_ScrollRelative(w, -w->blocksPerRow);
-	} else if (key == IPT_DOWN || key == IPT_KP2) {
+	} else if (key == CCKEY_DOWN || key == CCKEY_KP2) {
 		TableWidget_ScrollRelative(w, w->blocksPerRow);
 	} else {
 		return false;
@@ -1332,17 +1332,17 @@ static void InputWidget_Reposition(void* widget) {
 
 static int InputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (key == IPT_LEFT) {
+	if (key == CCKEY_LEFT) {
 		InputWidget_LeftKey(w);
-	} else if (key == IPT_RIGHT) {
+	} else if (key == CCKEY_RIGHT) {
 		InputWidget_RightKey(w);
-	} else if (key == IPT_BACKSPACE) {
+	} else if (key == CCKEY_BACKSPACE) {
 		InputWidget_BackspaceKey(w);
-	} else if (key == IPT_DELETE) {
+	} else if (key == CCKEY_DELETE) {
 		InputWidget_DeleteKey(w);
-	} else if (key == IPT_HOME) {
+	} else if (key == CCKEY_HOME) {
 		InputWidget_HomeKey(w);
-	} else if (key == IPT_END) {
+	} else if (key == CCKEY_END) {
 		InputWidget_EndKey(w);
 	} else if (!InputWidget_OtherKey(w, key)) {
 		return false;
@@ -1888,9 +1888,9 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 static int ChatInputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (key == IPT_TAB)  { ChatInputWidget_TabKey(w);  return true; }
-	if (key == IPT_UP)   { ChatInputWidget_UpKey(w);   return true; }
-	if (key == IPT_DOWN) { ChatInputWidget_DownKey(w); return true; }
+	if (key == CCKEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
+	if (key == CCKEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
+	if (key == CCKEY_DOWN) { ChatInputWidget_DownKey(w); return true; }
 	return InputWidget_KeyDown(w, key);
 }
 
