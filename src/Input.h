@@ -44,6 +44,7 @@ enum InputButtons {
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
 	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
+
 	INPUT_COUNT,
 
 	INPUT_CLIPBOARD_COPY  = 1001,
