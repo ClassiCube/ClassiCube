@@ -14,6 +14,9 @@ extern const u32 _3DS_coloured_shbin_size;
 extern const u8  _3DS_textured_shbin[];
 extern const u32 _3DS_textured_shbin_size;
 
+extern const u8  _3DS_offset_shbin[];
+extern const u32 _3DS_offset_shbin_size;
+
 #define DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
@@ -587,6 +590,8 @@ static void SetVertexBuffer(int startVertex) {
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	SetVertexBuffer(startVertex);
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
+	// this doesn't work properly, because (index buffer + offset) must be aligned to 16 bytes
+	// C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
@@ -599,17 +604,86 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
 }
 
-
-// this doesn't work properly, because (index buffer + offset) must be aligned to 16 bytes
-/*void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
+// TODO: Temp hack
+void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
+	struct VertexColoured v1, v2, v3, v4;
+	v1.X = (float)x;           v1.Y = (float)y;
+	v2.X = (float)(x + width); v2.Y = (float)y;
+	v3.X = (float)(x + width); v3.Y = (float)(y + height);
+	v4.X = (float)x;           v4.Y = (float)(y + height);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	
+	C3D_ImmDrawBegin(GPU_TRIANGLES);
+		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v2.X, v2.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		
+		C3D_ImmSendAttrib(v4.X, v4.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		
+		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+	C3D_ImmDrawEnd();
 }
 
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
+void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
+	struct VertexColoured v1, v2, v3, v4;
+	v1.X = (float)x;           v1.Y = (float)y;
+	v2.X = (float)(x + width); v2.Y = (float)y;
+	v3.X = (float)(x + width); v3.Y = (float)(y + height);
+	v4.X = (float)x;           v4.Y = (float)(y + height);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	
+	C3D_ImmDrawBegin(GPU_TRIANGLES);
+		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
+		C3D_ImmSendAttrib(v2.X, v2.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
+		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
+		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
+		
+		C3D_ImmSendAttrib(v4.X, v4.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
+		
+		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
+	C3D_ImmDrawEnd();
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
-}*/
+void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
+	struct VertexTextured v[4];
+	struct VertexTextured* ptr = v;
+	Gfx_Make2DQuad(tex, color, &ptr);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	
+	C3D_ImmDrawBegin(GPU_TRIANGLES);
+		C3D_ImmSendAttrib(v[0].X, v[0].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v[0].U, v[0].V, 0.0f, 0.0f);
+		C3D_ImmSendAttrib(v[1].X, v[1].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v[1].U, v[1].V, 0.0f, 0.0f);
+		C3D_ImmSendAttrib(v[2].X, v[2].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v[2].U, v[2].V, 0.0f, 0.0f);
+		C3D_ImmSendAttrib(v[2].X, v[2].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v[2].U, v[2].V, 0.0f, 0.0f);
+		
+		C3D_ImmSendAttrib(v[3].X, v[3].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v[3].U, v[3].V, 0.0f, 0.0f);
+		
+		C3D_ImmSendAttrib(v[0].X, v[0].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
+		C3D_ImmSendAttrib(v[0].U, v[0].V, 0.0f, 0.0f);
+	C3D_ImmDrawEnd();
+}
 #endif

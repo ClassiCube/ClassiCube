@@ -106,7 +106,7 @@ static void ProcessPAD_Game(PADStatus* pad) {
 		if (Math_AbsI(dx) <= 4) dx = 0;
 		if (Math_AbsI(dy) <= 4) dy = 0;
 	
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);
 	}		
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & PAD_TRIGGER_L);
