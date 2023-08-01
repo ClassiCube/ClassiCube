@@ -259,9 +259,9 @@ static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was) {
 		LInput_CopyFromClipboard(w);
 	} else if (key == CCKEY_ESCAPE) {
 		if (w->text.length) LInput_SetString(w, &String_Empty);
-	} else if (key == CCKEY_LEFT) {
+	} else if (Input_IsLeftButton(key)) {
 		LInput_AdvanceCaretPos(w, false);
-	} else if (key == CCKEY_RIGHT) {
+	} else if (Input_IsRightButton(key)) {
 		LInput_AdvanceCaretPos(w, true);
 	} else { return false; }
 
@@ -563,16 +563,17 @@ void LTable_RowClick(struct LTable* w, int row) {
 }
 
 cc_bool LTable_HandlesKey(int key) {
-	return key == CCKEY_UP || key == CCKEY_DOWN || key == CCKEY_PAGEUP || key == CCKEY_PAGEDOWN;
+	return Input_IsUpButton(key)   || key == CCKEY_PAGEUP ||
+		   Input_IsDownButton(key) || key == CCKEY_PAGEDOWN;
 }
 
 static cc_bool LTable_KeyDown(void* widget, int key, cc_bool was) {
 	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 
-	if (key == CCKEY_UP) {
+	if (Input_IsUpButton(key)) {
 		index--;
-	} else if (key == CCKEY_DOWN) {
+	} else if (Input_IsDownButton(key)) {
 		index++;
 	} else if (key == CCKEY_PAGEUP) {
 		index -= w->visibleRows;

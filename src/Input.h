@@ -45,6 +45,9 @@ enum InputButtons {
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
 	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
 
+	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R,
+	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
+
 	INPUT_COUNT,
 
 	INPUT_CLIPBOARD_COPY  = 1001,
@@ -60,6 +63,11 @@ extern const char* const Input_DisplayNames[INPUT_COUNT];
 #define Input_IsAltPressed()   (Input_Pressed[CCKEY_LALT]   || Input_Pressed[CCKEY_RALT])
 #define Input_IsCtrlPressed()  (Input_Pressed[CCKEY_LCTRL]  || Input_Pressed[CCKEY_RCTRL])
 #define Input_IsShiftPressed() (Input_Pressed[CCKEY_LSHIFT] || Input_Pressed[CCKEY_RSHIFT])
+
+#define Input_IsUpButton(btn)    ((btn) == CCKEY_UP    || (btn) == CCPAD_UP)
+#define Input_IsDownButton(btn)  ((btn) == CCKEY_DOWN  || (btn) == CCPAD_DOWN)
+#define Input_IsLeftButton(btn)  ((btn) == CCKEY_LEFT  || (btn) == CCPAD_LEFT)
+#define Input_IsRightButton(btn) ((btn) == CCKEY_RIGHT || (btn) == CCPAD_RIGHT)
 
 #if defined CC_BUILD_HAIKU
 /* Haiku uses ALT instead of CTRL for clipboard and stuff */

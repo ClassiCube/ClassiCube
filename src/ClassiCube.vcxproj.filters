@@ -542,9 +542,6 @@
     <ClCompile Include="Animations.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
-    <ClCompile Include="Platform_WinApi.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Platform_Web.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -601,6 +598,27 @@
     </ClCompile>
     <ClCompile Include="SSL.c">
       <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_PSP.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_GCWii.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_3DS.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_3DS.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_GCWii.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_PSP.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_WinApi.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

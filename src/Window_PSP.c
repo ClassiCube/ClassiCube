@@ -80,14 +80,14 @@ void Window_ProcessEvents(double delta) {
 	Input_SetNonRepeatable(CCKEY_TAB,    mods & PSP_CTRL_SQUARE);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PSP_CTRL_LEFT);
-	Input_SetNonRepeatable(CCKEY_LEFT,              mods & PSP_CTRL_LEFT);
+	Input_SetNonRepeatable(CCPAD_LEFT,              mods & PSP_CTRL_LEFT);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & PSP_CTRL_RIGHT);
-	Input_SetNonRepeatable(CCKEY_RIGHT,             mods & PSP_CTRL_RIGHT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,             mods & PSP_CTRL_RIGHT);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & PSP_CTRL_UP);
-	Input_SetNonRepeatable(CCKEY_UP,                  mods & PSP_CTRL_UP);
+	Input_SetNonRepeatable(CCPAD_UP,                  mods & PSP_CTRL_UP);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PSP_CTRL_DOWN);
-	Input_SetNonRepeatable(CCKEY_DOWN,                mods & PSP_CTRL_DOWN);
+	Input_SetNonRepeatable(CCPAD_DOWN,                mods & PSP_CTRL_DOWN);
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {

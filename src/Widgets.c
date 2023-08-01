@@ -931,13 +931,13 @@ static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
-	if (key == CCKEY_LEFT || key == CCKEY_KP4) {
+	if (Input_IsLeftButton(key)         || key == CCKEY_KP4) {
 		TableWidget_ScrollRelative(w, -1);
-	} else if (key == CCKEY_RIGHT || key == CCKEY_KP6) {
+	} else if (Input_IsRightButton(key) || key == CCKEY_KP6) {
 		TableWidget_ScrollRelative(w, 1);
-	} else if (key == CCKEY_UP || key == CCKEY_KP8) {
+	} else if (Input_IsUpButton(key)    || key == CCKEY_KP8) {
 		TableWidget_ScrollRelative(w, -w->blocksPerRow);
-	} else if (key == CCKEY_DOWN || key == CCKEY_KP2) {
+	} else if (Input_IsDownButton(key)  || key == CCKEY_KP2) {
 		TableWidget_ScrollRelative(w, w->blocksPerRow);
 	} else {
 		return false;
@@ -1332,9 +1332,9 @@ static void InputWidget_Reposition(void* widget) {
 
 static int InputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (key == CCKEY_LEFT) {
+	if (Input_IsLeftButton(key)) {
 		InputWidget_LeftKey(w);
-	} else if (key == CCKEY_RIGHT) {
+	} else if (Input_IsRightButton(key)) {
 		InputWidget_RightKey(w);
 	} else if (key == CCKEY_BACKSPACE) {
 		InputWidget_BackspaceKey(w);
@@ -1888,9 +1888,13 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 static int ChatInputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	if (key == CCKEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
-	if (key == CCKEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
-	if (key == CCKEY_DOWN) { ChatInputWidget_DownKey(w); return true; }
+	if (key == CCKEY_TAB) { 
+		ChatInputWidget_TabKey(w);  return true; 
+	} else if (Input_IsUpButton(key)) { 
+		ChatInputWidget_UpKey(w);   return true;
+	} else if (Input_IsDownButton(key)) { 
+		ChatInputWidget_DownKey(w); return true; 
+	}
 	return InputWidget_KeyDown(w, key);
 }
 

@@ -310,9 +310,9 @@ static void ListScreen_Select(struct ListScreen* s, const cc_string* str) {
 
 static int ListScreen_KeyDown(void* screen, int key) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	if (key == CCKEY_LEFT || key == CCKEY_PAGEUP) {
+	if (Input_IsLeftButton(key)         || key == CCKEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
-	} else if (key == CCKEY_RIGHT || key == CCKEY_PAGEDOWN) {
+	} else if (Input_IsRightButton(key) || key == CCKEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
 	}
 	return true;

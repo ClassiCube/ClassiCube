@@ -102,9 +102,9 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 
 	if (key == CCKEY_TAB) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
-	} else if (key == CCKEY_UP) {
+	} else if (Input_IsUpButton(key)) {
 		LScreen_CycleSelected(s, -1);
-	} else if (key == CCKEY_DOWN) {
+	} else if (Input_IsDownButton(key)) {
 		LScreen_CycleSelected(s,  1);
 	} else if (key == CCKEY_ESCAPE && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
@@ -379,13 +379,13 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 }
 
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == CCKEY_LEFT) {
+	if (Input_IsLeftButton(key)) {
 		ColoursScreen_AdjustSelected(s, -1);
-	} else if (key == CCKEY_RIGHT) {
+	} else if (Input_IsRightButton(key)) {
 		ColoursScreen_AdjustSelected(s, +1);
-	} else if (key == CCKEY_UP) {
+	} else if (Input_IsUpButton(key)) {
 		ColoursScreen_AdjustSelected(s, +10);
-	} else if (key == CCKEY_DOWN) {
+	} else if (Input_IsDownButton(key)) {
 		ColoursScreen_AdjustSelected(s, -10);
 	} else {
 		LScreen_KeyDown(s, key, was);

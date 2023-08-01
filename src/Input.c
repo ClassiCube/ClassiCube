@@ -189,6 +189,9 @@ cc_bool Input_Pressed[INPUT_COUNT];
 "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",\
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
+#define Pad_Names \
+"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
+"PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN",
 
 const char* const Input_StorageNames[INPUT_COUNT] = {
 	"None",
@@ -209,7 +212,8 @@ const char* const Input_StorageNames[INPUT_COUNT] = {
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",
-	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse"
+	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse",
+	Pad_Names
 };
 
 const char* const Input_DisplayNames[INPUT_COUNT] = {
@@ -232,6 +236,7 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
 	"XBUTTON1", "XBUTTON2", "LMOUSE", "RMOUSE", "MMOUSE"
+	Pad_Names
 };
 
 void Input_SetPressed(int key) {
@@ -833,9 +838,9 @@ static cc_bool InputHandler_IsShutdown(int key) {
 static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg, const char* disableMsg) {
 	*target = !(*target);
 	if (*target) {
-		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_StorageNames[key]);
+		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_DisplayNames[key]);
 	} else {
-		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Input_StorageNames[key]);
+		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Input_DisplayNames[key]);
 	}
 }
 
