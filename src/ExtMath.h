@@ -3,7 +3,7 @@
 #include "Core.h"
 /* Simple math functions and constants. Also implements a RNG algorithm, based on 
       Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define MATH_PI 3.1415926535897931f
@@ -33,8 +33,6 @@ CC_API double Math_Cos(double x);
 float Math_SinF(float x);
 float Math_CosF(float x);
 double Math_Atan2(double x, double y);
-/* Returns m * 2^exp */
-double Math_ldexp(double m, int exp);
 
 /* Computes loge(x). Can also be used to approximate logy(x). */
 /* e.g. for log3(x), use: Math_Log(x)/log(3) */

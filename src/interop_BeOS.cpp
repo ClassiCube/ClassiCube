@@ -53,6 +53,84 @@ cc_result Process_StartOpen(const cc_string* args) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------BeOS threading------------------------------------------------------*
+*#########################################################################################################################*/
+// NOTE: BeOS only, as haiku uses the more efficient pthreads implementation in Platform_Posix.c
+#if defined CC_BUILD_BEOS
+#include <OS.h>
+void Thread_Sleep(cc_uint32 milliseconds) { snooze(milliseconds * 1000); }
+
+static int32 ExecThread(void* param) {
+	((Thread_StartFunc)param)();
+	return 0;
+}
+
+void* Thread_Create(Thread_StartFunc func) {
+	thread_id thread = spawn_thread(ExecThread, "CC thread", B_NORMAL_PRIORITY, func);
+	return (void*)thread;
+}
+
+void Thread_Start2(void* handle, Thread_StartFunc func) {
+	thread_id thread = (thread_id)handle;
+	resume_thread(thread);
+}
+
+void Thread_Detach(void* handle) { }
+
+void Thread_Join(void* handle) {
+	thread_id thread = (thread_id)handle;
+	wait_for_thread(thread, NULL);
+}
+
+void* Mutex_Create(void) {
+	sem_id id = create_sem(1, "CC MUTEX");
+	return (void*)id;
+}
+
+void Mutex_Free(void* handle) {
+	sem_id id = (sem_id)handle;
+	delete_sem(id);
+}
+
+void Mutex_Lock(void* handle) {
+	sem_id id = (sem_id)handle;
+	acquire_sem(id);
+}
+
+void Mutex_Unlock(void* handle) {
+	sem_id id = (sem_id)handle;
+	release_sem(id);
+}
+
+void* Waitable_Create(void) {
+	sem_id id = create_sem(0, "CC WAITABLE");
+	return (void*)id;
+}
+
+void Waitable_Free(void* handle) {
+	sem_id id = (sem_id)handle;
+	delete_sem(id);
+}
+
+void Waitable_Signal(void* handle) {
+	sem_id id = (sem_id)handle;
+	release_sem(id);
+}
+
+void Waitable_Wait(void* handle) {
+	sem_id id = (sem_id)handle;
+	acquire_sem(id);
+}
+
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+	int microseconds = milliseconds * 1000;
+	sem_id id = (sem_id)handle;
+	acquire_sem_etc(id, 1, B_RELATIVE_TIMEOUT, microseconds);
+}
+#endif
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Window----------------------------------------------------------*
 *#########################################################################################################################*/
 #if !defined CC_BUILD_SDL
@@ -197,11 +275,11 @@ static void UpdateMouseButtons(int buttons) {
 	
 	// TODO move logic to UpdateMouseButton instead?
 	if (changed & B_PRIMARY_MOUSE_BUTTON)   
-		UpdateMouseButton(IPT_LMOUSE, buttons & B_PRIMARY_MOUSE_BUTTON);
+		UpdateMouseButton(CCMOUSE_L, buttons & B_PRIMARY_MOUSE_BUTTON);
 	if (changed & B_SECONDARY_MOUSE_BUTTON)
-		UpdateMouseButton(IPT_RMOUSE, buttons & B_SECONDARY_MOUSE_BUTTON);
+		UpdateMouseButton(CCMOUSE_R, buttons & B_SECONDARY_MOUSE_BUTTON);
 	if (changed & B_TERTIARY_MOUSE_BUTTON) 
-		UpdateMouseButton(IPT_MMOUSE, buttons & B_TERTIARY_MOUSE_BUTTON);
+		UpdateMouseButton(CCMOUSE_M, buttons & B_TERTIARY_MOUSE_BUTTON);
 	last_buttons = buttons;
 }
 
@@ -438,20 +516,20 @@ void Window_Close(void) {
 }
 
 static const cc_uint8 key_map[] = {
-	/* 0x00 */ 0,IPT_ESCAPE,IPT_F1,IPT_F2, IPT_F3,IPT_F4,IPT_F5,IPT_F6, 
-	/* 0x08 */ IPT_F7,IPT_F8,IPT_F9,IPT_F10, IPT_F11,IPT_F12,IPT_PRINTSCREEN,IPT_SCROLLLOCK,
-	/* 0x10 */ IPT_PAUSE,IPT_TILDE,'1','2', '3','4','5','6',
-	/* 0x18 */ '7','8','9','0', IPT_MINUS,IPT_EQUALS,IPT_BACKSPACE,IPT_INSERT,
-	/* 0x20 */ IPT_HOME,IPT_PAGEUP,IPT_NUMLOCK,IPT_KP_DIVIDE, IPT_KP_MULTIPLY,IPT_KP_MINUS,IPT_TAB,'Q',
+	/* 0x00 */ 0,CCKEY_ESCAPE,CCKEY_F1,CCKEY_F2, CCKEY_F3,CCKEY_F4,CCKEY_F5,CCKEY_F6, 
+	/* 0x08 */ CCKEY_F7,CCKEY_F8,CCKEY_F9,CCKEY_F10, CCKEY_F11,CCKEY_F12,CCKEY_PRINTSCREEN,CCKEY_SCROLLLOCK,
+	/* 0x10 */ CCKEY_PAUSE,CCKEY_TILDE,'1','2', '3','4','5','6',
+	/* 0x18 */ '7','8','9','0', CCKEY_MINUS,CCKEY_EQUALS,CCKEY_BACKSPACE,CCKEY_INSERT,
+	/* 0x20 */ CCKEY_HOME,CCKEY_PAGEUP,CCKEY_NUMLOCK,CCKEY_KP_DIVIDE, CCKEY_KP_MULTIPLY,CCKEY_KP_MINUS,CCKEY_TAB,'Q',
 	/* 0x28 */ 'W','E','R','T', 'Y','U','I','O',
-	/* 0x30 */ 'P',IPT_LBRACKET,IPT_RBRACKET,IPT_BACKSLASH, IPT_DELETE,IPT_END,IPT_PAGEDOWN,IPT_KP7,
-	/* 0x38 */ IPT_KP8,IPT_KP9,IPT_KP_PLUS,IPT_CAPSLOCK, 'A','S','D','F',
-	/* 0x40 */ 'G','H','J','K', 'L',IPT_SEMICOLON,IPT_QUOTE,IPT_ENTER,	
-	/* 0x48 */ IPT_KP4,IPT_KP5,IPT_KP6,IPT_LSHIFT, 'Z','X','C','V',	
-	/* 0x50 */ 'B','N','M',IPT_COMMA, IPT_PERIOD,IPT_SLASH,IPT_RSHIFT,IPT_UP,	
-	/* 0x58 */ IPT_KP1,IPT_KP2,IPT_KP3,IPT_KP_ENTER, IPT_LCTRL,IPT_LALT,IPT_SPACE,IPT_RALT,	
-	/* 0x60 */ IPT_RCTRL,IPT_LEFT,IPT_DOWN,IPT_RIGHT, IPT_KP0,IPT_KP_DECIMAL,IPT_LWIN,0,	
-	/* 0x68 */ IPT_RWIN,0,0,0, 0,0,0,0,
+	/* 0x30 */ 'P',CCKEY_LBRACKET,CCKEY_RBRACKET,CCKEY_BACKSLASH, CCKEY_DELETE,CCKEY_END,CCKEY_PAGEDOWN,CCKEY_KP7,
+	/* 0x38 */ CCKEY_KP8,CCKEY_KP9,CCKEY_KP_PLUS,CCKEY_CAPSLOCK, 'A','S','D','F',
+	/* 0x40 */ 'G','H','J','K', 'L',CCKEY_SEMICOLON,CCKEY_QUOTE,CCKEY_ENTER,	
+	/* 0x48 */ CCKEY_KP4,CCKEY_KP5,CCKEY_KP6,CCKEY_LSHIFT, 'Z','X','C','V',	
+	/* 0x50 */ 'B','N','M',CCKEY_COMMA, CCKEY_PERIOD,CCKEY_SLASH,CCKEY_RSHIFT,CCKEY_UP,	
+	/* 0x58 */ CCKEY_KP1,CCKEY_KP2,CCKEY_KP3,CCKEY_KP_ENTER, CCKEY_LCTRL,CCKEY_LALT,CCKEY_SPACE,CCKEY_RALT,	
+	/* 0x60 */ CCKEY_RCTRL,CCKEY_LEFT,CCKEY_DOWN,CCKEY_RIGHT, CCKEY_KP0,CCKEY_KP_DECIMAL,CCKEY_LWIN,0,	
+	/* 0x68 */ CCKEY_RWIN,0,0,0, 0,0,0,0,
 };
 
 static int MapNativeKey(int raw) {
@@ -460,7 +538,7 @@ static int MapNativeKey(int raw) {
 	return key;
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	CCEvent event;
 	int key;
 	

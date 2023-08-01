@@ -4,7 +4,7 @@
 /* 
 Provides ray tracer functionality for calculating picking/selecting intersection
   e.g. calculating block selected in the world by the user, clipping the camera
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /* Implements a voxel ray tracer

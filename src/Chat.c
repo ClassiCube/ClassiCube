@@ -138,9 +138,9 @@ static void OpenChatLog(struct DateTime* now) {
 		String_Format3(&logPath, "logs/%p4-%p2-%p2 ", &now->year, &now->month, &now->day);
 
 		if (i > 0) {
-			String_Format2(&logPath, "%s _%i.log", &logName, &i);
+			String_Format2(&logPath, "%s _%i.txt", &logName, &i);
 		} else {
-			String_Format1(&logPath, "%s.log", &logName);
+			String_Format1(&logPath, "%s.txt", &logName);
 		}
 
 		res = Stream_AppendFile(&logStream, &logPath);

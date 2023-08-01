@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Abstracts platform specific memory management, I/O, etc
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct DateTime;
 

@@ -4,7 +4,7 @@
 #include "BlockID.h"
 
 /* Manages inventory hotbar, and ordering of blocks in the inventory menu.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Inventory_Component;

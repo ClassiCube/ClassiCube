@@ -2,7 +2,7 @@
 #define CC_RESOURCES_H
 #include "Core.h"
 /* Implements checking, fetching, and patching the default game assets.
-	Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct HttpRequest;
 typedef void (*FetcherErrorCallback)(struct HttpRequest* req);

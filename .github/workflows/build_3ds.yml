@@ -1,0 +1,30 @@
+name: Build latest (3DS)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-3ds
+  cancel-in-progress: true
+
+jobs:
+  build-3DS:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile 3DS build
+        id: compile
+        run: |
+          make 3ds
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile 3DS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-3ds.3dsx'
+          DEST_NAME: 'ClassiCube-3ds.3dsx'

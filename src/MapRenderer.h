@@ -5,7 +5,7 @@
 /* Renders the blocks of the world by subdividing it into chunks.
    Also manages the process of building/deleting chunk meshes.
    Also sorts chunks so nearest chunks are rendered first, and calculates chunk visibility.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent MapRenderer_Component;

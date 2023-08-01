@@ -44,7 +44,7 @@ static void Http_BeginRequest(struct HttpRequest* req, cc_string* url) {
 
 	Mutex_Lock(curRequestMutex);
 	{
-		http_curRequest  = *req;
+		HttpRequest_Copy(&http_curRequest, req);
 		http_curProgress = HTTP_PROGRESS_MAKING_REQUEST;
 	}
 	Mutex_Unlock(curRequestMutex);
@@ -142,7 +142,7 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	Mutex_Lock(processedMutex);
 	{
 		i = RequestList_Find(&processedReqs, reqID);
-		if (i >= 0) *item = processedReqs.entries[i];
+		if (i >= 0) HttpRequest_Copy(item, &processedReqs.entries[i]);
 		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
 	}
 	Mutex_Unlock(processedMutex);
@@ -498,6 +498,7 @@ static cc_result HttpUrl_ResolveRedirect(struct HttpUrl* parts, const cc_string*
 struct HttpConnection {
 	cc_socket socket;
 	void* sslCtx;
+	cc_bool valid;
 };
 
 static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
@@ -515,6 +516,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	conn->sslCtx = NULL;
 	if ((res = Socket_Connect(&conn->socket, &host, portNum, false))) return res;
 
+	conn->valid  = true;
 	if (!url->https) return 0;
 	return SSL_Init(conn->socket, &host, &conn->sslCtx);
 }
@@ -541,6 +543,53 @@ static void HttpConnection_Close(struct HttpConnection* conn) {
 		Socket_Close(conn->socket);
 		conn->socket = 0;
 	}
+	conn->valid = false;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Connection Pool-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct ConnectionPoolEntry {
+	struct HttpConnection conn;
+	cc_string addr;
+	char addrBuffer[STRING_SIZE];
+	cc_bool https;
+} connection_pool[10];
+
+static cc_result ConnectionPool_Insert(int i, struct HttpConnection** conn, const struct HttpUrl* url) {
+	struct ConnectionPoolEntry* e = &connection_pool[i];
+	*conn = &e->conn;
+
+	String_InitArray(e->addr, e->addrBuffer);
+	String_Copy(&e->addr, &url->address);
+	e->https = url->https;
+	return HttpConnection_Open(&e->conn, url);
+}
+
+static cc_result ConnectionPool_Open(struct HttpConnection** conn, const struct HttpUrl* url) {
+	struct ConnectionPoolEntry* e;
+	int i;
+
+	for (i = 0; i < Array_Elems(connection_pool); i++)
+	{
+		e = &connection_pool[i];
+		if (e->conn.valid && e->https == url->https && String_Equals(&e->addr, &url->address)) {
+			*conn = &connection_pool[i].conn;
+			return 0;
+		}
+	}
+
+	for (i = 0; i < Array_Elems(connection_pool); i++)
+	{
+		e = &connection_pool[i];
+		if (!e->conn.valid) return ConnectionPool_Insert(i, conn, url);
+	}
+
+	/* TODO: Should we be consistent in which entry gets evicted? */
+	i = (cc_uint8)Stopwatch_Measure() % Array_Elems(connection_pool);
+	HttpConnection_Close(&connection_pool[i].conn);
+	return ConnectionPool_Insert(i, conn, url);
 }
 
 
@@ -561,7 +610,7 @@ enum HTTP_RESPONSE_STATE {
 
 struct HttpClientState {
 	enum HTTP_RESPONSE_STATE state;
-	struct HttpConnection conn;
+	struct HttpConnection* conn;
 	struct HttpRequest* req;
 	int chunked;
 	int chunkRead, chunkLength;
@@ -620,7 +669,7 @@ static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	HttpClient_Serialise(state);
 
 	/* TODO check that wrote is >= inputMsg.length */
-	return HttpConnection_Write(&state->conn, inputBuffer, inputMsg.length, &wrote);
+	return HttpConnection_Write(state->conn, inputBuffer, inputMsg.length, &wrote);
 }
 
 
@@ -811,7 +860,7 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	cc_result res;
 
 	for (;;) {
-		res = HttpConnection_Read(&state->conn, buffer, 8192, &total);
+		res = HttpConnection_Read(state->conn, buffer, 8192, &total);
 		if (res)        return res;
 		if (total == 0) return ERR_END_OF_STREAM;
 
@@ -858,15 +907,14 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 	state.req = req;
 
 	for (;;) {
-		res = HttpConnection_Open(&state.conn, &state.url);
-		if (res) { HttpConnection_Close(&state.conn); return res; }
+		res = ConnectionPool_Open(&state.conn, &state.url);
+		if (res) { HttpConnection_Close(state.conn); return res; }
 
 		res = HttpClient_SendRequest(&state);
-		if (res) { HttpConnection_Close(&state.conn); return res; }
+		if (res) { HttpConnection_Close(state.conn); return res; }
 
 		res = HttpClient_ParseResponse(&state);
 		http_curProgress = 100;
-		HttpConnection_Close(&state.conn);
 
 		if (res || !HttpClient_IsRedirect(req)) break;
 		if (redirects >= 20) return HTTP_ERR_REDIRECTS;
@@ -1419,7 +1467,7 @@ static void WorkerLoop(void) {
 		Mutex_Lock(pendingMutex);
 		{
 			if (pendingReqs.count) {
-				request    = pendingReqs.entries[0];
+				HttpRequest_Copy(&request, &pendingReqs.entries[0]);
 				hasRequest = true;
 				RequestList_RemoveAt(&pendingReqs, 0);
 			}

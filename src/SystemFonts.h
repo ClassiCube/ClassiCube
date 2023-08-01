@@ -2,7 +2,7 @@
 #define CC_SYSTEMFONTS_H
 #include "Core.h"
 /*  Manages loading and drawing platform specific system fonts
-	Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Bitmap;
 struct FontDesc;

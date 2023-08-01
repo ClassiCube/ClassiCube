@@ -54,8 +54,6 @@ void Gfx_Create(void) {
 	
 	InitGX();
 	Gfx_RestoreState();
-	// INITDFAULTRESOURCES causes stack overflow due to gfx_indices
-	//Thread_Sleep(20 * 1000);
 }
 
 void Gfx_Free(void) { 
@@ -276,10 +274,12 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Index Buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
+//static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	fillFunc(gfx_indices, count, obj);
+	//fillFunc(gfx_indices, count, obj);
+	// not used since render using GX_QUADS anyways
+	return 1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
@@ -392,62 +392,52 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-/*void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	// Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
+	// Transposed, source guOrtho https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	//   The simplified calculation below uses: L = 0, R = width, T = 0, B = height
-	// NOTE: Shared with OpenGL. might be wrong to do that though?
 	*matrix = Matrix_Identity;
-
+	
 	matrix->row1.X =  2.0f / width;
 	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row3.Z = -1.0f / (zFar - zNear);
 
 	matrix->row4.X = -1.0f;
 	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.Z = -zFar / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
 	float c = (float)Cotangent(0.5f * fov);
-
-	// Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum
-	// For a FOV based perspective matrix, left/right/top/bottom are calculated as:
-	//   left = -c * aspect, right = c * aspect, bottom = -c, top = c
-	// Calculations are simplified because of left/right and top/bottom symmetry
+	
+	// Transposed, source guPersepctive https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	*matrix = Matrix_Identity;
-
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row1.X = c / aspect;
+	matrix->row2.Y = c;
+	matrix->row3.Z = -(zNear)        / (zFar - zNear);
 	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.Z = -(zFar * zNear) / (zFar - zNear);
 	matrix->row4.W =  0.0f;
-}*/
-void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	guOrtho(matrix, 0, height, 0, width, zNear, zFar);
-}
-
-void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	guPerspective(matrix, fov * MATH_RAD2DEG, aspect, 0.1f, zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	const float* m = (const float*)matrix;
+	float tmp[16];
+	
+	// Transpose matrix
+	for (int i = 0; i < 4; i++)
+	{
+		tmp[i * 4 + 0] = m[0  + i];
+		tmp[i * 4 + 1] = m[4  + i];
+		tmp[i * 4 + 2] = m[8  + i];
+		tmp[i * 4 + 3] = m[12 + i];
+	}
+		
 	if (type == MATRIX_PROJECTION) {
-		GX_LoadProjectionMtx(matrix,
-			(((float*)matrix)[3*4+3]) == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
+		GX_LoadProjectionMtx(tmp,
+			tmp[3*4+3] == 0.0f ? GX_PERSPECTIVE : GX_ORTHOGRAPHIC);
 	} else {
-		float* m  = (float*)matrix;
-		float tmp[16];
-		// Transpose (TODO only first 3 rows matter.. ?)
-		for(int i = 0; i < 4; i++)
-		{
-			tmp[i * 4 + 0] = m[0  + i];
-			tmp[i * 4 + 1] = m[4  + i];
-			tmp[i * 4 + 2] = m[8  + i];
-			tmp[i * 4 + 3] = m[12 + i];
-		}
 		GX_LoadPosMtxImm(tmp, GX_PNMTX0);
 	}
 }
@@ -526,11 +516,11 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 
 static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
-	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, ICOUNT(verticesCount));
+	GX_Begin(GX_QUADS, GX_VTXFMT0, verticesCount);
 	// TODO: Ditch indexed rendering and use GX_QUADS instead ??
-	for (int i = 0; i < ICOUNT(verticesCount); i++) 
+	for (int i = 0; i < verticesCount; i++) 
 	{
-		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + gfx_indices[i];
+		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->X, v->Y, v->Z);
 		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
@@ -539,10 +529,10 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 }
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
-	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, ICOUNT(verticesCount));
-	for (int i = 0; i < ICOUNT(verticesCount); i++) 
+	GX_Begin(GX_QUADS, GX_VTXFMT0, verticesCount);
+	for (int i = 0; i < verticesCount; i++) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + gfx_indices[i];
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->X, v->Y, v->Z);
 		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));

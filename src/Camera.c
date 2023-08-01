@@ -138,7 +138,9 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	Camera.BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
 	Camera.BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
 
-	vel  = Math_Lerp(p->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
+	/* When standing on the ground, velocity.Y is -0.08 (-gravity) */
+	/* So add 0.08 to counteract that, so that vel is 0 when standing on ground */
+	vel  = 0.08f + Math_Lerp(p->OldVelocity.Y, e->Velocity.Y, t);
 	fall = -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale;
 
 	Matrix_RotateX(&velX, fall);

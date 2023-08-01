@@ -6,7 +6,7 @@ Contains everything relating to texture packs
   - Extracting the textures from a .zip archive
   - Caching terrain atlases and texture packs to avoid redundant downloads
   - Terrain atlas (including breaking it down into multiple 1D atlases)
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Stream;
@@ -53,8 +53,10 @@ CC_VAR extern struct _Atlas1DData {
 
 /* URL of the current custom texture pack, can be empty */
 extern cc_string TexturePack_Url;
-/* Path to the default texture pack to use */
+/* Path to the user selected custom texture pack to use */
 extern cc_string TexturePack_Path;
+/* Whether the default texture pack and its alternatives were all not found */
+extern cc_bool TexturePack_DefaultMissing;
 
 #define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */
 #define Atlas2D_TileY(texLoc) ((texLoc) >> ATLAS2D_SHIFT) /* texLoc / ATLAS2D_TILES_PER_ROW */
@@ -99,6 +101,9 @@ void TexturePack_CheckPending(void);
 /* Else tries extracting cached texture pack for the given URL, */
 /* then asynchronously downloads the texture pack from the given URL. */
 CC_API void TexturePack_Extract(const cc_string* url);
+
+typedef cc_result (*DefaultZipCallback)(const cc_string* path);
+cc_result TexturePack_ExtractDefault(DefaultZipCallback callback);
 
 struct TextureEntry;
 struct TextureEntry {

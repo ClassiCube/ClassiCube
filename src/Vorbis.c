@@ -194,6 +194,37 @@ static int iLog(int x) {
 	return bits;
 }
 
+/* https://en.wikipedia.org/wiki/Single-precision_floating-point_format */
+/* Float consists of: */
+/* - 1 bit for sign */
+/* - 8 bits for biased exponent */
+/* - 23 bits for mantissa */
+#define FLT_SIGN_MASK      0x80000000
+#define FLT_EXPONENT_BIAS  127
+#define FLT_EXPONENT_SHIFT 23
+#define FLT_EXPONENT_MASK  0x7F800000
+#define FLT_MANTISSA_MASK  0x007FFFFF
+
+/* returns m * 2^exp */
+static float Fast_ldexpf(int m, int exp) {
+	union IntAndFloat raw;
+	int e;
+	raw.f = m;
+
+	e  = (raw.i & FLT_EXPONENT_MASK) >> FLT_EXPONENT_SHIFT;
+	e -= FLT_EXPONENT_BIAS;
+	e += exp;
+
+	/* Treat denormal exponents as just +-0 */
+	if (e < -126) return m < 0 ? -0.0f : 0.0f;
+	/* Treat large exponents as infinity */
+	if (e >  128) e = 128;
+	e += FLT_EXPONENT_BIAS;
+
+	raw.i = (e << FLT_EXPONENT_SHIFT) | (raw.i & (FLT_MANTISSA_MASK | FLT_SIGN_MASK));
+	return raw.f;
+}
+
 static float float32_unpack(struct VorbisState* ctx) {
 	/* ReadBits can't reliably read over 24 bits */
 	cc_uint32 lo = Vorbis_ReadBits(ctx, 16);
@@ -204,7 +235,7 @@ static float float32_unpack(struct VorbisState* ctx) {
 	cc_uint32 exponent = (x & 0x7fe00000) >> 21;
 	if (x & 0x80000000UL) mantissa = -mantissa;
 
-	return (float)Math_ldexp(mantissa, (int)exponent - 788);
+	return Fast_ldexpf(mantissa, (int)exponent - 788);
 }
 
 

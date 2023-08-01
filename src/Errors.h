@@ -2,7 +2,7 @@
 #define CC_ERRORS_H
 /*
 Provides a list list of internal ClassiCube errors
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /* NOTE: When adding errors, remember to keep Logger.c up to date! */

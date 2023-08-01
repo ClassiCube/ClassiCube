@@ -149,7 +149,7 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 static cc_string font_candidates[] = {
 	String_FromConst(""),                /* replaced with font_default */
 	String_FromConst("Arial"),           /* preferred font on all platforms */
-	String_FromConst("Liberation Sans"), /* ice looking fallbacks for linux */
+	String_FromConst("Liberation Sans"), /* Nice looking fallbacks for linux */
 	String_FromConst("Nimbus Sans"),
 	String_FromConst("Bitstream Charter"),
 	String_FromConst("Cantarell"),
@@ -159,10 +159,11 @@ static cc_string font_candidates[] = {
 	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
 	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
 	String_FromConst("Geneva"), /* for ancient macOS versions */
-	String_FromConst("Droid Sans") /* for old Android versions */
+	String_FromConst("Droid Sans"), /* for old Android versions */
+	String_FromConst("Google Sans") /* Droid Sans is now known as Google Sans on some Android devices (e.g. a Pixel 6) */
 };
 
-static void SysFonts_InitLibrary(void) {
+static void InitFreeTypeLibrary(void) {
 	FT_Error err;
 	if (ft_lib) return;
 
@@ -175,32 +176,30 @@ static void SysFonts_InitLibrary(void) {
 	FT_Add_Default_Modules(ft_lib);
 }
 
-/* Updates fonts list cache with system's list of fonts */
+static cc_bool loadedPlatformFonts;
+/* Updates fonts list cache with platform's list of fonts */
 /* This should be avoided due to overhead potential */
-static void SysFonts_Update(void) {
-	static cc_bool updatedFonts;
-	if (updatedFonts) return;
-	updatedFonts = true;
+static void SysFonts_LoadPlatform(void) {
+	if (loadedPlatformFonts) return;
+	loadedPlatformFonts = true;
 
-	SysFonts_InitLibrary();
+	/* TODO this basically gets called all the time on non-Window platforms */
+	/* Maybe we can cache the default system font to avoid this extra work? */
+	if (font_list.count == 0)
+		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
+
+	InitFreeTypeLibrary();
 	Platform_LoadSysFonts();
+
 	if (fonts_changed) EntryList_Save(&font_list, FONT_CACHE_FILE);
 }
 
-static void SysFonts_Load(void) {
-	/* Need to keep track of whether font cache has been checked at least once */
-	/* (Otherwise if unable to find any cached fonts and then unable to load any fonts, */
-	/*  font_list.count will always be 0 and the 'Initialising font cache' dialog will 
-	    confusingly get shown over and over until all font_candidates entries are checked) */
-	static cc_bool checkedCache;
-	if (checkedCache) return;
-	checkedCache = true;
+static cc_bool loadedCachedFonts;
+static void SysFonts_LoadCached(void) {
+	if (loadedCachedFonts) return;
+	loadedCachedFonts = true;
 
 	EntryList_UNSAFE_Load(&font_list, FONT_CACHE_FILE);
-	if (font_list.count) return;
-	
-	Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
-	SysFonts_Update();
 }
 
 
@@ -299,19 +298,20 @@ static cc_string Font_LookupOf(const cc_string* fontName, const char type) {
 }
 
 static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
-	cc_string path;
-	if (!font_list.count) SysFonts_Load();
-	path = String_Empty;
+	cc_string path = String_Empty;
 
 	if (flags & FONT_FLAGS_BOLD) path = Font_LookupOf(fontName, 'B');
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
 static cc_string Font_Lookup(const cc_string* fontName, int flags) {
-	cc_string path = Font_DoLookup(fontName, flags);
+	cc_string path;
+	
+	SysFonts_LoadCached();
+	path = Font_DoLookup(fontName, flags);
 	if (path.length) return path;
 
-	SysFonts_Update();
+	SysFonts_LoadPlatform();
 	return Font_DoLookup(fontName, flags);
 }
 
@@ -334,8 +334,8 @@ const cc_string* SysFonts_UNSAFE_GetDefault(void) {
 void SysFonts_GetNames(struct StringsBuffer* buffer) {
 	cc_string entry, name, path;
 	int i;
-	if (!font_list.count) SysFonts_Load();
-	SysFonts_Update();
+	SysFonts_LoadCached();
+	SysFonts_LoadPlatform();
 
 	for (i = 0; i < font_list.count; i++) {
 		StringsBuffer_UNSAFE_GetRaw(&font_list, i, &entry);
@@ -369,7 +369,7 @@ cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int siz
 	font = (struct SysFont*)Mem_TryAlloc(1, sizeof(struct SysFont));
 	if (!font) return ERR_OUT_OF_MEMORY;
 
-	SysFonts_InitLibrary();
+	InitFreeTypeLibrary();
 	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
 	desc->handle = font;
 
@@ -395,6 +395,13 @@ void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
 		font = &font_candidates[i];
 		if (!font->length) continue;
 		res  = SysFont_Make(desc, &font_candidates[i], size, flags);
+
+		/* Cached system fonts list may be outdated - force update it */
+		if (res == ReturnCode_FileNotFound && !loadedPlatformFonts) {
+			StringsBuffer_Clear(&font_list);
+			SysFonts_LoadPlatform();
+			res = SysFont_Make(desc, &font_candidates[i], size, flags);
+		}
 
 		if (res == ERR_INVALID_ARGUMENT) {
 			/* Fon't doesn't exist in list, skip over it */
@@ -714,7 +721,7 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
     interop_SysTextDraw(args, bmp, x, y, shadow);
 }
-#elif defined CC_BUILD_PSP || defined CC_BUILD_GCWII
+#elif defined CC_BUILD_PSP
 void SysFonts_Register(const cc_string* path) { }
 
 const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
@@ -727,6 +734,9 @@ cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int siz
 	desc->height = Drawer2D_AdjHeight(size);
 
 	desc->handle = (void*)1;
+	
+	// TODO: Actually implement native font APIs
+	Font_MakeBitmapped(desc, size, flags);
 	return 0;
 }
 
@@ -742,6 +752,136 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 }
 
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+}
+#elif defined CC_BUILD_GCWII
+#include <ogc/system.h>
+void SysFonts_Register(const cc_string* path) { }
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) { }
+static union {
+	sys_fontheader hdr;
+	u8 data[SYS_FONTSIZE_ANSI];
+} __attribute__((aligned(32))) ipl_font;
+static cc_bool font_checked, font_okay;
+static void LoadIPLFont(void) {
+	font_checked = true;
+	// SJIS font layout not supported
+	if (SYS_GetFontEncoding() == 1) return;
+	
+	int res   = SYS_InitFont(&ipl_font.hdr);
+	font_okay = res == 1;
+}
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
+
+	desc->handle = (void*)1;
+	if (!font_checked) LoadIPLFont();
+	
+	if (!font_okay) Font_MakeBitmapped(desc, size, flags);
+	return 0;
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	SysFont_Make(desc, NULL, size, flags);
+}
+
+void SysFont_Free(struct FontDesc* desc) {
+}
+
+int SysFont_TextWidth(struct DrawTextArgs* args) {
+	// TODO: Optimise 
+	// u8* width_table = &ipl_font.data[ipl_font.header.width_table];
+	cc_string left = args->text, part;
+	char colorCode = 'f';	
+	int width = 0;
+	
+	void* image;
+	s32 cellX, cellY, glyphWidth;
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
+	{
+		for (int i = 0; i < part.length; i++) 
+		{
+			SYS_GetFontTexture((u8)part.buffer[i], &image, 
+						&cellX, &cellY, &glyphWidth);
+			width += glyphWidth;
+		}
+	}
+	return max(1, width);
+}
+// https://devkitpro.org/viewtopic.php?f=7&t=191
+//  Re: SYS_GetFontTexture & SYS_GetFontTexel
+static int DrawGlyph(struct Bitmap* bmp, int x, int y, u8 c, BitmapCol color) {
+	void* image;
+	s32 cellX, cellY, glyphWidth;
+	SYS_GetFontTexture(c, &image, &cellX, &cellY, &glyphWidth);
+	// after having been decompressed back in SYS_InitFont, 
+	//  font pixels are represented using I4 texture format
+		
+	int cellWidth  = ipl_font.hdr.cell_width;
+	int cellHeight = ipl_font.hdr.cell_height;
+	int sheetWidth = ipl_font.hdr.sheet_width;
+	u8 I, invI;
+	// TODO not very efficient.. but it works I guess
+	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
+	for (int glyphY = 0; glyphY < cellHeight; glyphY++) // glyphX, cellX
+	{
+		int dstY = glyphY + y;
+		int srcY = glyphY + cellY;
+		if (dstY < 0 || dstY >= bmp->height) continue;		
+			
+		for (int glyphX = 0; glyphX < glyphWidth; glyphX++)
+		{
+			int dstX = glyphX + x;
+			int srcX = glyphX + cellX;
+			if (dstX < 0 || dstX >= bmp->width) continue;
+			
+			// The I4 texture is divided into 8x8 blocks
+			//   https://wiki.tockdom.com/wiki/Image_Formats#I4
+			int tileX = srcX & ~0x07;
+                	int tileY = srcY & ~0x07;               	
+                	int tile_offset   = (tileY * sheetWidth) + (tileX << 3);
+                	int tile_location = ((srcY & 7) << 3) | (srcX & 7);
+                	
+                	// each byte stores two pixels in it
+                	I = ((u8*)image)[(tile_offset | tile_location) >> 1];
+			I = (glyphX & 1) ? (I & 0x0F) : (I >> 4);
+			I = I * 0x11; // 0-15 > 0-255
+			
+			if (!I) continue;
+			invI = UInt8_MaxValue - I;
+			
+			BitmapCol src = Bitmap_GetPixel(bmp, dstX, dstY);
+			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapCol_Make(
+				((BitmapCol_R(color) * I) >> 8) + ((BitmapCol_R(src) * invI) >> 8),
+				((BitmapCol_G(color) * I) >> 8) + ((BitmapCol_G(src) * invI) >> 8),
+				((BitmapCol_B(color) * I) >> 8) + ((BitmapCol_B(src) * invI) >> 8),
+				                             I  + ((BitmapCol_A(src) * invI) >> 8));
+		}
+	}
+	return glyphWidth;
+}
+
+void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	cc_string left = args->text, part;
+	char colorCode = 'f';
+	BitmapCol color;
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
+	{
+		color = Drawer2D_GetColor(colorCode);
+		if (shadow) color = GetShadowColor(color);
+	
+		for (int i = 0; i < part.length; i++) 
+		{
+			x += DrawGlyph(bmp, x, y, (u8)part.buffer[i], color);
+		}
+	}
 }
 #elif defined CC_BUILD_3DS
 #include <3ds.h>
@@ -814,43 +954,48 @@ static void DrawGlyph(CFNT_s* font, struct Bitmap* bmp, int x, int y, int glyphI
 	int sheetIdx = glyphIndex / glyphsPerSheet;
 	int sheetPos = glyphIndex % glyphsPerSheet;
 	u8* sheet    = tglp->sheetData + (sheetIdx * tglp->sheetSize);
-	u8 a, I, invI;
+	u8 I, invI;
 
-	int rowY = sheetPos / tglp->nRows;
 	int rowX = sheetPos % tglp->nRows;
+	int rowY = sheetPos / tglp->nRows;
 	
+	int cellX = rowX * (tglp->cellWidth  + 1) + 1;
+	int cellY = rowY * (tglp->cellHeight + 1) + 1;
 	charWidthInfo_s* wInfo = fontGetCharWidthInfo(font, glyphIndex);	
 	//int L = wInfo->left, W = wInfo->glyphWidth;
 	//Platform_Log3("Draw %r (L=%i, W=%i", &CP, &L, &W);
 	
 	// TODO not very efficient.. but it works I guess
 	// Can this be rewritten to use normal Drawer2D's bitmap font rendering somehow?
-	for (int Y = 0; Y < tglp->cellHeight; Y++)
+	for (int glyphY = 0; glyphY < tglp->cellHeight; glyphY++)
 	{
-		for (int X = 0; X < wInfo->glyphWidth; X++)
+		int dstY = glyphY + y;
+		int srcY = glyphY + cellY;
+		if (dstY < 0 || dstY >= bmp->height) continue;
+		
+		for (int glyphX = 0; glyphX < wInfo->glyphWidth; glyphX++)
 		{
-			int dstX = x + X + wInfo->left, dstY = y + Y;
-			if (dstX < 0 || dstY < 0 || dstX >= bmp->width || dstY >= bmp->height) continue;
-			
-			int srcX = X + rowX * (tglp->cellWidth  + 1);
-			int srcY = Y + rowY * (tglp->cellHeight + 1);
+			int dstX = glyphX + x + wInfo->left;
+			int srcX = glyphX + cellX;
+			if (dstX < 0 || dstX >= bmp->width) continue;
 			
 			int tile_offset   = (srcY & ~0x07) * tglp->sheetWidth + (srcX & ~0x07) * 8;
 			int tile_location = CalcMortonOffset(srcX & 0x07, srcY & 0x07);
 			
 			// each byte stores two pixels in it
-			a = sheet[(tile_offset + tile_location) >> 1];
-			a = (tile_location & 1) ? (a >> 4) : (a & 0x0F);
-			a = a * 0x11; // 0-15 > 0-255
+			I = sheet[(tile_offset + tile_location) >> 1];
+			I = (tile_location & 1) ? (I >> 4) : (I & 0x0F);
+			I = I * 0x11; // 0-15 > 0-255
 			
-			I = a; invI = UInt8_MaxValue - a;
+			if (!I) continue;
+			invI = UInt8_MaxValue - I;
 
 			BitmapCol src = Bitmap_GetPixel(bmp, dstX, dstY);
 			Bitmap_GetPixel(bmp, dstX, dstY) = BitmapCol_Make(
 				((BitmapCol_R(color) * I) >> 8) + ((BitmapCol_R(src) * invI) >> 8),
 				((BitmapCol_G(color) * I) >> 8) + ((BitmapCol_G(src) * invI) >> 8),
 				((BitmapCol_B(color) * I) >> 8) + ((BitmapCol_B(src) * invI) >> 8),
-				                           I  + ((BitmapCol_A(src) * invI) >> 8)
+				                             I  + ((BitmapCol_A(src) * invI) >> 8)
 			);
 				
 			/*Bitmap_GetPixel(bmp, dstX, dstY) = BitmapColor_RGB(

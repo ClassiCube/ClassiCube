@@ -4,7 +4,7 @@
 #include "Platform.h"
 /* Defines an abstract way of reading and writing data in a streaming manner.
    Also provides common helper methods for reading/writing data to/from streams.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Stream;

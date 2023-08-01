@@ -1,23 +1,43 @@
 #include "Core.h"
 #if defined CC_BUILD_GCWII
-#include "_WindowBase.h"
-#include "Graphics.h"
+#include "Window.h"
+#include "Platform.h"
+#include "Input.h"
+#include "Event.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "Graphics.h"
 #include <gccore.h>
 #if defined HW_RVL
 #include <wiiuse/wpad.h>
+#include <wiikeyboard/keyboard.h>
 #endif
 
+static cc_bool launcherMode;
 static void* xfb;
 static GXRModeObj* rmode;
-
 void* Window_XFB;
+struct _DisplayData DisplayInfo;
+struct _WinData WindowInfo;
+// no DPI scaling on Wii/GameCube
+int Display_ScaleX(int x) { return x; }
+int Display_ScaleY(int y) { return y; }
 
-void Window_Init(void) {
+
+static void OnPowerOff(void) {
+	Event_RaiseVoid(&WindowEvents.Closing);
+	WindowInfo.Exists = false;
+}
+
+void Window_Init(void) {	
+	// TODO: SYS_SetResetCallback(reload); too? not sure how reset differs on GC/WII
+	#if defined HW_RVL
+	SYS_SetPowerCallback(OnPowerOff);
+	#endif
+	
 	// Initialise the video system
 	VIDEO_Init();
 
@@ -50,133 +70,316 @@ void Window_Init(void) {
 	WindowInfo.Width   = rmode->fbWidth;
 	WindowInfo.Height  = rmode->xfbHeight;
 	WindowInfo.Focused = true;
+	WindowInfo.Exists  = true;
 	
 	#if defined HW_RVL
 	WPAD_Init();
-	#elif defined HW_DOL
-	PAD_Init();
+	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
+	KEYBOARD_Init(NULL);
 	#endif
+	PAD_Init();
 }
 
-static void DoCreateWindow(int _3d) {
-	WindowInfo.Exists = true;
-}
-void Window_Create2D(int width, int height) { DoCreateWindow(0); }
-void Window_Create3D(int width, int height) { DoCreateWindow(1); }
-
-void Window_SetTitle(const cc_string* title) { }
-void Clipboard_GetText(cc_string* value) { }
-void Clipboard_SetText(const cc_string* value) { }
-
-int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
-cc_result Window_EnterFullscreen(void) { return 0; }
-cc_result Window_ExitFullscreen(void)  { return 0; }
-int Window_IsObscured(void)            { return 0; }
-
-void Window_Show(void) { }
-void Window_SetSize(int width, int height) { }
+void Window_Create2D(int width, int height) { launcherMode = true;  }
+void Window_Create3D(int width, int height) { launcherMode = false; }
 
 void Window_Close(void) {
 	/* TODO implement */
 }
 
-#if defined HW_RVL
-void Window_ProcessEvents(void) {
-	/* TODO implement */
-	WPAD_ScanPads();
-	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);		
+
+/*########################################################################################################################*
+*---------------------------------------------GameCube controller processing----------------------------------------------*
+*#########################################################################################################################*/
+static void ProcessPAD_Launcher(PADStatus* pad) {
+	int mods = pad->button;	
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_BUTTON_1);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_BUTTON_2);
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PAD_BUTTON_A);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PAD_BUTTON_B);
+	// fake tab with down for Launcher
+	//Input_SetNonRepeatable(CCKEY_TAB, mods & PAD_BUTTON_DOWN);
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & WPAD_BUTTON_B);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_PLUS);
-	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & WPAD_BUTTON_HOME);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & WPAD_BUTTON_MINUS);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & WPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & WPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & WPAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & WPAD_BUTTON_RIGHT);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & WPAD_BUTTON_DOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & WPAD_BUTTON_DOWN);
-	
+	Input_SetNonRepeatable(CCPAD_LEFT,  mods & PAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT, mods & PAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,    mods & PAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
 }
-#elif defined HW_DOL
-void Window_ProcessEvents(void) {
-	/* TODO implement */
-	PADStatus pads[4];
-	PAD_Read(pads);
-	int mods = pads[0].button;
+
+static void ProcessPAD_Game(PADStatus* pad) {
+	int mods = pad->button;
+	int dx   = pad->substickX;
+	int dy   = pad->substickY;
+
+	if (Input_RawMode) {
+		// May not be exactly 0 on actual hardware
+		if (Math_AbsI(dx) <= 8) dx = 0;
+		if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	int dx = pads[0].stickX;
-	int dy = pads[0].stickY;
-	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
-	}
-			
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);
+	}		
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & PAD_TRIGGER_L);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & PAD_TRIGGER_R);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & PAD_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & PAD_BUTTON_X);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & PAD_BUTTON_Y);
-	// PAD_BUTTON_B
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & PAD_BUTTON_X);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & PAD_BUTTON_Y);
+	// TODO PAD_BUTTON_B
 	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & PAD_BUTTON_START);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & PAD_TRIGGER_Z);
-	// fake tab with PAD_BUTTON_B for Launcher too
-	Input_SetNonRepeatable(IPT_TAB,    mods & PAD_BUTTON_B);
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PAD_BUTTON_START);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PAD_TRIGGER_Z);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & PAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_LEFT,              mods & PAD_BUTTON_LEFT);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & PAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & PAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,             mods & PAD_BUTTON_RIGHT);
 	
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & PAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_UP,                  mods & PAD_BUTTON_UP);
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PAD_BUTTON_DOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & PAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_DOWN,                mods & PAD_BUTTON_DOWN);
 }
+
+static void ProcessPADInput(void) {
+	PADStatus pads[4];
+	PAD_Read(pads);
+	if (pads[0].err) return;
+	
+	if (launcherMode) {
+		ProcessPAD_Launcher(&pads[0]);
+	} else {
+		ProcessPAD_Game(&pads[0]);
+	}
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
+#if defined HW_RVL
+static int dragCurX, dragCurY;
+static int dragStartX, dragStartY;
+static cc_bool dragActive;
+
+static void ProcessWPAD_Launcher(int mods) {
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_B);
+
+	Input_SetNonRepeatable(CCPAD_LEFT,  mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT, mods & WPAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,    mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,  mods & WPAD_BUTTON_DOWN);
+}
+
+static void ProcessWPAD_Game(int mods) {
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_BUTTON_1);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_BUTTON_2);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_PLUS);
+	// TODO: WPAD_BUTTON_B
+      
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_HOME);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],    mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_LEFT,                mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT],   mods & WPAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,               mods & WPAD_BUTTON_RIGHT);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_UP,                  mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & WPAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_DOWN,                mods & WPAD_BUTTON_DOWN);
+}
+
+static void ProcessNunchuck_Game(int mods, double delta) {
+	WPADData* wd = WPAD_Data(0);
+	joystick_t analog = wd->exp.nunchuk.js;
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_NUNCHUK_BUTTON_C);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_NUNCHUK_BUTTON_Z);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & WPAD_BUTTON_1);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_2);
+
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_HOME);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
+
+	if (mods & WPAD_BUTTON_RIGHT) {
+		Mouse_ScrollWheel(1.0*delta);
+	}
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
+
+	const float ANGLE_DELTA = 50;
+	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);
+	bool nunchuckDown  = (analog.ang > 180-ANGLE_DELTA) && (analog.ang < 180+ANGLE_DELTA) && (analog.mag > 0.5);
+	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
+	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  nunchuckLeft);
+	Input_SetNonRepeatable(CCPAD_LEFT,              nunchuckLeft);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], nunchuckRight);
+	Input_SetNonRepeatable(CCPAD_RIGHT,             nunchuckRight);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], nunchuckUp);
+	Input_SetNonRepeatable(CCPAD_UP,                  nunchuckUp);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    nunchuckDown);
+	Input_SetNonRepeatable(CCPAD_DOWN,                nunchuckDown);
+}
+
+static void ProcessClassic_Joystick(struct joystick_t* js) {
+	// TODO: need to account for min/max??
+	int dx = js->pos.x - js->center.x;
+	int dy = js->pos.y - js->center.y;
+	
+	if (Math_AbsI(dx) <= 4) dx = 0;
+	if (Math_AbsI(dy) <= 4) dy = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
+}
+
+static void ProcessClassic_Game(void) {
+	WPADData* wd = WPAD_Data(0);
+	classic_ctrl_t ctrls = wd->exp.classic;
+	int mods = ctrls.btns | ctrls.btns_held;
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & CLASSIC_CTRL_BUTTON_FULL_L);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & CLASSIC_CTRL_BUTTON_FULL_R);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & CLASSIC_CTRL_BUTTON_A);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & CLASSIC_CTRL_BUTTON_X);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & CLASSIC_CTRL_BUTTON_Y);
+	// TODO: CLASSIC_CTRL_BUTTON_B
+      
+	Input_SetNonRepeatable(CCKEY_ENTER,  mods & CLASSIC_CTRL_BUTTON_PLUS);
+	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & CLASSIC_CTRL_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],    mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_LEFT,                mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT],   mods & CLASSIC_CTRL_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,               mods & CLASSIC_CTRL_BUTTON_RIGHT);
+      
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & CLASSIC_CTRL_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_UP,                  mods & CLASSIC_CTRL_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & CLASSIC_CTRL_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_DOWN,                mods & CLASSIC_CTRL_BUTTON_DOWN);
+	
+	if (Input_RawMode) {
+		ProcessClassic_Joystick(&ctrls.ljs);
+		ProcessClassic_Joystick(&ctrls.rjs);
+	}
+}
+
+static void GetIRPos(int res, int* x, int* y) {
+	if (res == WPAD_ERR_NONE) {
+		WPADData* wd = WPAD_Data(0);
+
+		*x = wd->ir.x;
+		*y = wd->ir.y;
+	} else {
+		*x = 0; 
+		*y = 0;
+	}
+}
+
+static void ProcessKeyboardInput(void) {
+	keyboard_event ke;
+	int res = KEYBOARD_GetEvent(&ke);
+	
+	if (res && ke.type == KEYBOARD_PRESSED)
+	{
+		//Platform_Log2("KEYCODE: %i (%i)", &ke.keycode, &ke.type);
+		if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
+	}
+}
+
+void Window_ProcessEvents(double delta) {
+	/* TODO implement */
+	WPAD_ScanPads();
+	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
+	u32 type;
+	int res  = WPAD_Probe(0, &type);
+
+	if (launcherMode) {
+		ProcessWPAD_Launcher(mods);
+	} else if (type == WPAD_EXP_NUNCHUK) {
+		ProcessNunchuck_Game(mods, delta);
+	} else if (type == WPAD_EXP_CLASSIC) {
+		ProcessClassic_Game();
+	} else {
+		ProcessWPAD_Game(mods);
+	}
+
+	int x, y;
+	GetIRPos(res, &x, &y);
+	
+	if (mods & WPAD_BUTTON_B) {
+		if (!dragActive) {
+			dragStartX = dragCurX = x;
+			dragStartY = dragCurY = y;
+		}
+		dragActive = true;
+	} else {
+		dragActive = false;
+	}
+	Pointer_SetPosition(0, x, y);
+	
+	ProcessPADInput();
+	ProcessKeyboardInput();
+}
+
+static void ScanAndGetIRPos(int* x, int* y) {
+	u32 type;
+	WPAD_ScanPads();
+	
+	int res = WPAD_Probe(0, &type);
+	GetIRPos(res, x, y);
+}
+#define FACTOR 2
+void Window_UpdateRawMouse(void)  {
+	if (!dragActive) return;
+	int x, y;
+	ScanAndGetIRPos(&x, &y);
+   
+	// TODO: Refactor the logic. is it 100% right too?
+	dragCurX = dragStartX + (dragCurX - dragStartX) / FACTOR;
+	dragCurY = dragStartY + (dragCurY - dragStartY) / FACTOR;
+	
+	int dx = x - dragCurX; Math_Clamp(dx, -40, 40);
+	int dy = y - dragCurY; Math_Clamp(dy, -40, 40);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
+	
+	dragCurX = x; dragCurY = y;
+}
+#else
+void Window_ProcessEvents(double delta) {
+	/* TODO implement */
+	ProcessPADInput();
+}
+
+void Window_UpdateRawMouse(void) { }
 #endif
 
-static void Cursor_GetRawPos(int* x, int* y) {
-	/* TODO implement */
-	*x = 0; *y = 0;
-}
-void Cursor_SetPosition(int x, int y) {
-	/* TODO implement */
-}
+void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
+// TODO: Display cursor on Wii when not raw mode
+void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
+void Window_DisableRawMouse(void) { Input_RawMode = false; }
 
-static void Cursor_DoSetVisible(cc_bool visible) {
-	/* TODO implement */
-}
 
-static void ShowDialogCore(const char* title, const char* msg) {
-	/* TODO implement */
-}
-
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
+/*########################################################################################################################*
+*------------------------------------------------------Framebuffer--------------------------------------------------------*
+*#########################################################################################################################*/
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp     = *bmp;
 }
-
-
 
 // TODO: Get rid of this complexity and use the 3D API instead..
 // https://github.com/devkitPro/gamecube-examples/blob/master/graphics/fb/pageflip/source/flip.c
@@ -222,18 +425,38 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Misc/Other--------------------------------------------------------*
+*#########################################################################################################################*/
+void Window_SetTitle(const cc_string* title)   { }
+void Clipboard_GetText(cc_string* value)       { }
+void Clipboard_SetText(const cc_string* value) { }
+
+int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
+cc_result Window_EnterFullscreen(void) { return 0; }
+cc_result Window_ExitFullscreen(void)  { return 0; }
+int Window_IsObscured(void)            { return 0; }
+
+void Window_Show(void) { }
+void Window_SetSize(int width, int height) { }
+
+
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
-void Window_EnableRawMouse(void) {
-	RegrabMouse();
-	Input_RawMode = true;
+void Window_ShowDialog(const char* title, const char* msg) {
+	/* TODO implement */
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
 }
-void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
-void Window_DisableRawMouse(void) {
-	RegrabMouse();
-	Input_RawMode = false;
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
 }
 #endif

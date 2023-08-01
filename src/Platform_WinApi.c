@@ -471,7 +471,7 @@ static int ParseHost(void* dst, char* host, int port) {
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
 
 	/* Must have at least one IPv4 address */
-	if (!res->h_addr_list[0]) return false;
+	if (!res->h_addr_list[0]) return ERR_INVALID_ARGUMENT;
 
 	addr4->sin_family = AF_INET;
 	addr4->sin_port   = _htons(port);

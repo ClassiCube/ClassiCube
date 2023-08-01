@@ -461,6 +461,9 @@ static int GetGameArgs(cc_string* args) {
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (gameHasArgs) return GetGameArgs(args);
+	// PSP *sometimes* doesn't use argv[0] for program name and so argc will be 0
+	if (!argc) return 0;
+	
 	argc--; argv++; // skip executable path argument
 
 	int count = min(argc, GAME_MAX_CMDARGS);

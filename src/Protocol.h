@@ -3,7 +3,7 @@
 #include "Vectors.h"
 /* 
 Implements network protocols for original classic, CPE, and WoM textures
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct RayTracer;
 

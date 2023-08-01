@@ -7,7 +7,7 @@
 #include "Inventory.h"
 #include "IsometricDrawer.h"
 /* Contains all 2D widget implementations.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 
@@ -64,6 +64,7 @@ struct ScrollbarWidget {
 /* Resets state of the given scrollbar widget to default. */
 CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 
+#define HOTBAR_CORE_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 /* A row of blocks with a background. */
 struct HotbarWidget {
 	Widget_Body
@@ -73,16 +74,19 @@ struct HotbarWidget {
 	float scrollAcc, scale;
 	cc_bool altHandled;
 	struct Texture ellipsisTex;
+	int state[HOTBAR_CORE_VERTICES / 4];
+	int verticesCount;
 #ifdef CC_BUILD_TOUCH
 	int touchId[HOTBAR_MAX_INDEX];
 	double touchTime[HOTBAR_MAX_INDEX];
 #endif
 };
-#define HOTBAR_MAX_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
+#define HOTBAR_MAX_VERTICES (4 + 4 + HOTBAR_CORE_VERTICES)
 
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
+CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, double delta);
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 /* A table of blocks. */

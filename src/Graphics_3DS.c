@@ -14,6 +14,9 @@ extern const u32 _3DS_coloured_shbin_size;
 extern const u8  _3DS_textured_shbin[];
 extern const u32 _3DS_textured_shbin_size;
 
+extern const u8  _3DS_offset_shbin[];
+extern const u32 _3DS_offset_shbin_size;
+
 #define DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
@@ -124,21 +127,6 @@ void Gfx_Create(void) {
 	SetDefaultState();
 	InitDefaultResources();
 	AllocShaders();
-	
-	// Configure the first fragment shading substage to just pass through the vertex color
-	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
-	//C3D_TexEnv* env = C3D_GetTexEnv(0);
-	//C3D_TexEnvInit(env);
-	//C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, 0, 0);
-	//C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
-	
-	 // Configure the first fragment shading substage to blend the texture color with
-  	// the vertex color (calculated by the vertex shader using a lighting algorithm)
-  	// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
-	C3D_TexEnv* env = C3D_GetTexEnv(0);
-	C3D_TexEnvInit(env);
-  	C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
- 	C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
  	
 	// 8x8 dummy white texture
 	//  (textures must be at least 8x8, see C3D_TexInitWithParams source)
@@ -260,7 +248,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFaceCulling(cc_bool enabled) { 
-	C3D_CullFace(enabled ? GPU_CULL_FRONT_CCW : GPU_CULL_NONE);
+	C3D_CullFace(enabled ? GPU_CULL_BACK_CCW : GPU_CULL_NONE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -291,7 +279,7 @@ void Gfx_ClearCol(PackedCol color) {
 static cc_bool depthTest, depthWrite;
 static int colorWriteMask = GPU_WRITE_COLOR;
 
-static void UpdateDepthWriteMask(void) {
+static void UpdateWriteState(void) {
 	//C3D_EarlyDepthTest(true, GPU_EARLYDEPTH_GREATER, 0);
 	//C3D_EarlyDepthTest(false, GPU_EARLYDEPTH_GREATER, 0);
 	int writeMask = colorWriteMask;
@@ -301,11 +289,11 @@ static void UpdateDepthWriteMask(void) {
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	depthWrite = enabled;
-	UpdateDepthWriteMask();
+	UpdateWriteState();
 }
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	depthTest = enabled;
-	UpdateDepthWriteMask();
+	UpdateWriteState();
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -314,7 +302,9 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	if (g) mask |= GPU_WRITE_GREEN;
 	if (b) mask |= GPU_WRITE_BLUE;
 	if (a) mask |= GPU_WRITE_ALPHA;
+	
 	colorWriteMask = mask;
+	UpdateWriteState();
 }
 
 
@@ -458,26 +448,45 @@ void Gfx_SetFogMode(FogFunc func) {
 static C3D_Mtx _view, _proj;
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	Mtx_OrthoTilt(matrix, 0.0f, width, height, 0.0f, zNear, zFar, true);
+	// See Mtx_OrthoTilt in Citro3D for the original basis
+	// (it's mostly just a standard orthograph matrix rotated by 90 degrees) 
+	Mem_Set(matrix, 0, sizeof(struct Matrix));
+	
+	matrix->row2.X = -2.0f / height;
+	matrix->row4.X =  1.0f;
+	matrix->row1.Y = -2.0f / width;
+	matrix->row4.Y =  1.0f;
+	
+	matrix->row3.Z = 1.0f / (zNear - zFar);		
+	matrix->row4.Z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
+	matrix->row4.W = 1.0f;
 }
 
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	Mtx_PerspTilt(matrix, fov, aspect, 0.1f, zFar, true);
+	// See Mtx_PerspTilt in Citro3D for the original basis
+	// (it's mostly just a standard perspective matrix rotated by 90 degrees) 
+	float zNear = 0.1f;
+	fov = tanf(fov / 2.0f);	 
+	Mem_Set(matrix, 0, sizeof(struct Matrix));
+	matrix->row2.X =  1.0f / fov;
+	matrix->row1.Y = -1.0f / (fov * aspect);
+	matrix->row4.Z = zFar * zNear  / (zNear - zFar);
+	matrix->row3.W = -1.0f;
+	matrix->row3.Z =  1.0f * zNear / (zNear - zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type == MATRIX_VIEW) {
-		float* m  = (float*)matrix;
-		// Transpose
-		for(int i = 0; i < 4; i++)
-		{
-			_view.r[i].x = m[0  + i];
-			_view.r[i].y = m[4  + i];
-			_view.r[i].z = m[8  + i];
-			_view.r[i].w = m[12 + i];
-		}
+	C3D_Mtx* dst = type == MATRIX_VIEW ? &_view : &_proj;
+	float* src   = (float*)matrix;
+	
+	// Transpose
+	for (int i = 0; i < 4; i++)
+	{
+		dst->r[i].x = src[0  + i];
+		dst->r[i].y = src[4  + i];
+		dst->r[i].z = src[8  + i];
+		dst->r[i].w = src[12 + i];
 	}
-	if (type == MATRIX_PROJECTION) _proj = *((C3D_Mtx*)matrix);
 
 	Mtx_Multiply(&_mvp, &_proj, &_view);
 	DirtyUniform(UNI_MVP_MATRIX);
@@ -524,12 +533,7 @@ void Gfx_DisableTextureOffset(void) {
 *#########################################################################################################################*/
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-	SwitchProgram();
-	
+static void UpdateAttribFormat(VertexFormat fmt) {
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
 	AttrInfo_Init(attrInfo);
 	
@@ -540,7 +544,36 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	}
 }
 
+static void UpdateTexEnv(VertexFormat fmt) {
+	C3D_TexEnv* env = C3D_GetTexEnv(0);
+	C3D_TexEnvInit(env);
+	
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		// Configure the first fragment shading substage to blend the texture color with
+  		// the vertex color (calculated by the vertex shader using a lighting algorithm)
+  		// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight	
+  		C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
+ 		C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+ 	} else {
+ 		// Configure the first fragment shading substage to just pass through the vertex color
+		// See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
+		C3D_TexEnvSrc(env, C3D_Both, GPU_PRIMARY_COLOR, 0, 0);
+		C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+ 	}
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+	
+	SwitchProgram();
+	UpdateAttribFormat(fmt);
+	UpdateTexEnv(fmt);
+}
+
 void Gfx_DrawVb_Lines(int verticesCount) {
+	/* TODO */
 }
 
 static void SetVertexBuffer(int startVertex) {
@@ -557,6 +590,8 @@ static void SetVertexBuffer(int startVertex) {
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	SetVertexBuffer(startVertex);
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
+	// this doesn't work properly, because (index buffer + offset) must be aligned to 16 bytes
+	// C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
@@ -569,17 +604,13 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
 }
 
-
-// this doesn't work properly, because (index buffer + offset) must be aligned to 16 bytes
-/*void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
+// TODO: Temp hack
+void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 }
 
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
+void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
 }
 
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
-}*/
+void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
+}
 #endif

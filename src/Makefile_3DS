@@ -54,7 +54,8 @@ LD		:=	$(CC)
 default: $(DEPSDIR) $(TARGET).3dsx
 
 $(DEPSDIR):
-	@mkdir -p $@
+	mkdir -p $(DEPSDIR)
+	mkdir -p $(DEPSDIR)/src
 
 clean:
 	@rm $(OFILES) $(TARGET).elf $(TARGET).3dsx $(SMDH_FILE)

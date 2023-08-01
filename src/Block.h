@@ -6,7 +6,7 @@
 #include "BlockID.h"
 /* Stores properties and data for blocks.
    Also performs automatic rotation of directional blocks.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Blocks_Component;

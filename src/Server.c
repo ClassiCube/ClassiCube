@@ -118,7 +118,7 @@ static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
 	RNGState rnd;
 	Chat_SetLogName(&logName);
-	Game_UseCPEBlocks = Game_UseCPE;
+	Game_UseCPEBlocks = Game_Version.HasCPE;
 
 	/* For when user drops a map file onto ClassiCube.exe */
 	if (SP_AutoloadMap.length) {

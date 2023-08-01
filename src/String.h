@@ -6,7 +6,7 @@ Provides various string related operations
    Also provides conversions betweens strings and numbers
    Also provides converting code page 437 indices to/from unicode
    Also provides wrapping a single line of text into multiple lines
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define STRING_INT_CHARS 24

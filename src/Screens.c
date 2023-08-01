@@ -76,7 +76,7 @@ static struct HUDScreen {
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
-#define HUD_MAX_VERTICES (TEXTWIDGET_MAX * 2 + 4)
+#define HUD_MAX_VERTICES (4 + TEXTWIDGET_MAX * 2 + HOTBAR_MAX_VERTICES)
 
 static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
@@ -277,6 +277,10 @@ static void HUDScreen_HacksChanged(void* obj) {
 	((struct HUDScreen*)obj)->hacksChanged = true;
 }
 
+static void HUDScreen_NeedRedrawing(void* obj) {
+	((struct HUDScreen*)obj)->dirty = true;
+}
+
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	s->maxVertices      = HUD_MAX_VERTICES;
@@ -284,7 +288,16 @@ static void HUDScreen_Init(void* screen) {
 	HotbarWidget_Create(&s->hotbar);
 	TextWidget_Init(&s->line1);
 	TextWidget_Init(&s->line2);
-	Event_Register_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
+
+	Event_Register_(&UserEvents.HacksStateChanged, s, HUDScreen_HacksChanged);
+	Event_Register_(&TextureEvents.AtlasChanged,   s, HUDScreen_NeedRedrawing);
+	Event_Register_(&BlockEvents.BlockDefChanged,  s, HUDScreen_NeedRedrawing);
+}
+
+static void HUDScreen_Free(void* screen) {
+	Event_Unregister_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
+	Event_Unregister_(&TextureEvents.AtlasChanged,   screen, HUDScreen_NeedRedrawing);
+	Event_Unregister_(&BlockEvents.BlockDefChanged,  screen, HUDScreen_NeedRedrawing);
 }
 
 static void HUDScreen_UpdateFPS(struct HUDScreen* s, double delta) {
@@ -300,7 +313,8 @@ static void HUDScreen_UpdateFPS(struct HUDScreen* s, double delta) {
 
 static void HUDScreen_Update(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	HUDScreen_UpdateFPS(s, delta);
+	HUDScreen_UpdateFPS(s,          delta);
+	HotbarWidget_Update(&s->hotbar, delta);
 	if (Game_ClassicMode) return;
 
 	if (IsOnlyChatActive() && Gui.ShowFPS) {
@@ -327,13 +341,16 @@ static void HUDScreen_BuildMesh(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	struct VertexTextured* data;
 	struct VertexTextured** ptr;
+	struct VertexTextured* DS;
 
 	data = Screen_LockVb(s);
 	ptr  = &data;
+	DS = data;
 
 	HUDScreen_BuildCrosshairsMesh(ptr);
-	Widget_BuildMesh(&s->line1, ptr);
-	Widget_BuildMesh(&s->line2, ptr);
+	Widget_BuildMesh(&s->line1,  ptr);
+	Widget_BuildMesh(&s->line2,  ptr);
+	Widget_BuildMesh(&s->hotbar, ptr);
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
@@ -343,8 +360,6 @@ static void HUDScreen_Render(void* screen, double delta) {
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
-
-	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
 	if (Gui.ShowFPS) Widget_Render2(&s->line1, 4);
 
 	if (Game_ClassicMode) {
@@ -355,18 +370,15 @@ static void HUDScreen_Render(void* screen, double delta) {
 		/* TODO swap these two lines back */
 	}
 
-	if (!Gui_GetBlocksWorld()) Elem_Render(&s->hotbar, delta);
+	if (Gui_GetBlocksWorld()) return;
+	Gfx_BindDynamicVb(s->vb);
+	Widget_Render2(&s->hotbar, 12);
 
-	if (!Gui.IconsTex) return;
-	if (!tablist_active && !Gui_GetBlocksWorld()) {
+	if (Gui.IconsTex && !tablist_active) {
 		Gfx_BindTexture(Gui.IconsTex);
-		Gfx_BindDynamicVb(s->vb);
+		Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
 		Gfx_DrawVb_IndexedTris(4);
 	}
-}
-
-static void HUDScreen_Free(void* screen) {
-	Event_Unregister_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
@@ -1199,7 +1211,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int playerListKey   = KeyBinds[KEYBIND_TABLIST];
-	cc_bool handlesList = playerListKey != IPT_TAB || !Gui.TabAutocomplete || !s->grabsInput;
+	cc_bool handlesList = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
 		if (!tablist_active && !Server.IsSinglePlayer) {
@@ -1213,25 +1225,25 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
 		/* See reason for this in HandleInputUp */
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == IPT_KP_ENTER) {
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == IPT_KP_ENTER || key == IPT_ESCAPE) {
-			ChatScreen_EnterChatInput(s, key == IPT_ESCAPE);
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || key == CCKEY_ESCAPE) {
+			ChatScreen_EnterChatInput(s, key == CCKEY_ESCAPE);
 #endif
-		} else if (key == IPT_PAGEUP) {
+		} else if (key == CCKEY_PAGEUP) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
-		} else if (key == IPT_PAGEDOWN) {
+		} else if (key == CCKEY_PAGEDOWN) {
 			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
 		}
-		return key < IPT_F1 || key > IPT_F24;
+		return key < CCKEY_F1 || key > CCKEY_F24;
 	}
 
 	if (key == KeyBinds[KEYBIND_CHAT]) {
 		ChatScreen_OpenInput(&String_Empty);
-	} else if (key == IPT_SLASH) {
+	} else if (key == CCKEY_SLASH) {
 		ChatScreen_OpenInput(&slash);
 	} else if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		InventoryScreen_Show();
@@ -1252,7 +1264,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
-	if (key == IPT_ESCAPE) ChatScreen_EnterChatInput(s, true);
+	if (key == CCKEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
 #endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
@@ -1585,7 +1597,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
 		Gui_Remove((struct Screen*)s);
-	} else if (key == IPT_ENTER && table->selectedIndex != -1) {
+	} else if (key == CCKEY_ENTER && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {

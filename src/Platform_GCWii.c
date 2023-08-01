@@ -21,6 +21,9 @@
 #include <ogc/cond.h>
 #include <ogc/lwp_watchdog.h>
 #include <fat.h>
+#ifdef HW_RVL
+#include <ogc/wiilaunch.h>
+#endif
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -111,16 +114,20 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
+static char root_buffer[NATIVE_STR_LEN];
+static cc_string root_path = String_FromArray(root_buffer);
+
 static bool fat_available; 
 // trying to call mkdir etc with no FAT device loaded seems to be broken (dolphin crashes due to trying to execute invalid instruction)
 //   https://github.com/Patater/newlib/blob/8a9e3aaad59732842b08ad5fc19e0acf550a418a/libgloss/libsysbase/mkdir.c and
 //   https://github.com/Patater/newlib/blob/8a9e3aaad59732842b08ad5fc19e0acf550a418a/newlib/libc/include/sys/iosupport.h
-// would suggest it should just return ENOSYS due to using the 'null' device, but whatever
+// FindDevice() returns -1 when no matching device, however the code still unconditionally does "if (devoptab_list[dev]->mkdir_r) {"
+// - so will either attempt to access or execute invalid memory
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[15] = "sd:/ClassiCube/";
-	Mem_Copy(str, root_path, sizeof(root_path));
-	str += sizeof(root_path);
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str   += root_path.length;
+	*str++ = '/';
 	String_EncodeUtf8(str, path);
 }
 
@@ -551,16 +558,19 @@ static int GetGameArgs(cc_string* args) {
 }
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (gameHasArgs) return GetGameArgs(args);
-	
 	// GC/WII *sometimes* doesn't use argv[0] for program name and so argc will be 0
 	if (!argc) return 0;
+	
+	// at least The Homebrew Channel loader uses argv[0] for executable filename
+	//  see strcpy(result->args, filename); in loader_load in loader.c
+	//  https://github.com/fail0verflow/hbc/blob/master/channel/channelapp/source/loader.c#L912
+	argc--; argv++;
 
 	int count = min(argc, GAME_MAX_CMDARGS);
 	for (int i = 0; i < count; i++) 
 	{
 		args[i] = String_FromReadonly(argv[i]);
 	}
-	
 	return count;
 }
 
@@ -570,10 +580,19 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 
 void Process_Exit(cc_result code) { exit(code); }
 
+#ifdef HW_RVL
 cc_result Process_StartOpen(const cc_string* args) {
-	// TODO launch browser
+	char url[NATIVE_STR_LEN];
+	String_EncodeUtf8(url, args);
+	
+	// TODO: Not sure if this works or not
+	return WII_OpenURL(url);
+}
+#else
+cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -620,11 +639,49 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static void AppendDevice(cc_string* path, char* cwd) {
+	// try to find device FAT mounted on, otherwise default to SD card
+	if (!cwd) {
+		String_AppendConst(path, "sd"); return;
+	}
+	
+	Platform_Log1("CWD: %c", cwd);
+	cc_string cwd_ = String_FromReadonly(cwd);
+	int deviceEnd  = String_IndexOf(&cwd_, ':');
+		
+	if (deviceEnd >= 0) {
+		// e.g. "card0:/" becomes "card0"
+		String_AppendAll(path, cwd, deviceEnd);
+	} else {
+		String_AppendConst(path, "sd");
+	}
+}
+
+static void FindRootDirectory(void) {
+	char cwdBuffer[NATIVE_STR_LEN] = { 0 };
+	char* cwd = getcwd(cwdBuffer, NATIVE_STR_LEN);
+	
+	root_path.length = 0;
+	AppendDevice(&root_path, cwd);
+	String_AppendConst(&root_path, ":/ClassiCube");
+}
+
+static void CreateRootDirectory(void) {
+	if (!fat_available) return;
+	root_buffer[root_path.length] = '\0';
+	
+	// irectory_Create(&String_Empty); just returns error 20
+	int res = mkdir(root_buffer, 0);
+	int err = res == -1 ? errno : 0;
+	Platform_Log1("Created root directory: %i", &err);
+}
+
 void Platform_Init(void) {
 	Platform_SingleProcess = true;
 	
 	fat_available = fatInitDefault();
-	if (fat_available) mkdir("sd:/ClassiCube", 0); // create root 'ClassiCube' directory
+	FindRootDirectory();
+	CreateRootDirectory();
 	
 	InitSockets();
 }

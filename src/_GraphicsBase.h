@@ -147,6 +147,7 @@ void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCoun
 	Gfx_DrawVb_IndexedTris(vCount);
 }
 
+#ifndef CC_BUILD_3DS
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured verts[4];
 	struct VertexColoured* v = verts;
@@ -180,6 +181,7 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
 }
+#endif
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);

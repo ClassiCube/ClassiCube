@@ -2,7 +2,7 @@
 #define CC_GAME_H
 #include "Core.h"
 /* Represents the game and related structures.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Bitmap;
@@ -38,7 +38,6 @@ extern cc_bool Game_ClassicMode;
 extern cc_bool Game_ClassicHacks;
 #define Game_PureClassic (Game_ClassicMode && !Game_ClassicHacks)
 extern cc_bool Game_AllowCustomBlocks;
-extern cc_bool Game_UseCPE;
 extern cc_bool Game_AllowServerTextures;
 
 extern cc_bool Game_ViewBobbing;
@@ -46,17 +45,18 @@ extern cc_bool Game_BreakableLiquids;
 /* Whether a screenshot should be taken at the end of this frame */
 extern cc_bool Game_ScreenshotRequested;
 extern cc_bool Game_HideGui;
-extern cc_bool Game_DefaultZipMissing;
 
 enum GAME_VERSION_ {
 	VERSION_0017 = 27, VERSION_0019 = 28, VERSION_0023 = 29, VERSION_0030 = 30, VERSION_CPE = 31
 };
-struct GameVersion { 
-	const char* Name; 
+struct GameVersion {
+	const char* Name;
+	cc_bool HasCPE;
 	cc_uint8 Version, Protocol, MaxCoreBlock;
 	cc_uint8 BlocksPerRow, InventorySize;
 	const cc_uint8* Inventory; 
 	const cc_uint8* Hotbar;
+	const char* DefaultTexpack;
 };
 extern struct GameVersion Game_Version;
 extern void GameVersion_Load(void);

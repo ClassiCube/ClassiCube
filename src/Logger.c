@@ -14,8 +14,10 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+
 #include <windows.h>
 #include <imagehlp.h>
+static HANDLE curProcess = (HANDLE)-1; /* GetCurrentProcess() always returns -1 */
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
 #include <signal.h>
 /* These operating systems don't provide sys/ucontext.h */
@@ -309,14 +311,12 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	cc_uintptr addrs[MAX_BACKTRACE_FRAMES];
 	int i, frames;
-	HANDLE process;
 
-	process = GetCurrentProcess();
-	SymInitialize(process, NULL, TRUE); /* TODO only in MSVC.. */
+	SymInitialize(curProcess, NULL, TRUE); /* TODO only in MSVC.. */
 	frames  = GetFrames((CONTEXT*)ctx, addrs, MAX_BACKTRACE_FRAMES);
 
 	for (i = 0; i < frames; i++) {
-		DumpFrame(process, trace, addrs[i]);
+		DumpFrame(curProcess, trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
 }
@@ -863,11 +863,10 @@ static BOOL CALLBACK DumpModule(const char* name, ULONG_PTR base, ULONG size, vo
 static BOOL (WINAPI *_EnumerateLoadedModules)(HANDLE process, PENUMLOADED_MODULES_CALLBACK callback, PVOID userContext);
 static void DumpMisc(void) {
 	static const cc_string modules = String_FromConst("-- modules --\r\n");
-	HANDLE process = GetCurrentProcess();
 
 	if (!_EnumerateLoadedModules) return;
 	Logger_Log(&modules);
-	_EnumerateLoadedModules(process, DumpModule, NULL);
+	_EnumerateLoadedModules(curProcess, DumpModule, NULL);
 }
 
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS || defined CC_BUILD_ANDROID
@@ -1023,11 +1022,21 @@ void Logger_Hook(void) {
 	#endif
 	};
 	static const cc_string imagehlp = String_FromConst("IMAGEHLP.DLL");
+	OSVERSIONINFOA osInfo;
 	void* lib;
 
 	SetUnhandledExceptionFilter(UnhandledFilter);
 	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
-	
+
+	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
+	/* https://documentation.help/DbgHelp/documentation.pdf */
+	osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+	osInfo.dwPlatformId        = 0;
+	GetVersionExA(&osInfo);
+
+	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+		curProcess = (HANDLE)GetCurrentProcessId();
+	}
 }
 #elif defined CC_BUILD_POSIX
 static const char* SignalDescribe(int type) {

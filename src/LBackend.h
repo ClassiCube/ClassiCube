@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Abstracts the gui drawing backend for the Launcher
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Context2D;
 struct LScreen;

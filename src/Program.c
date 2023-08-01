@@ -140,8 +140,10 @@ void android_main(void) {
 }
 #elif defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII
 int main(int argc, char** argv) {
-	SetupProgram(argc, argc);
-	for (;;) { RunProgram(argc, argv); }
+	SetupProgram(argc, argv);
+	while (WindowInfo.Exists) { 
+		RunProgram(argc, argv); 
+	}
 	return 0;
 }
 #else

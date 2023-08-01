@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), and in a web browser.<br>
+ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, BeOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), and in a web browser.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -81,14 +81,14 @@ I am assuming you used the installer from https://osdn.net/projects/mingw/
 2. Navigate to the directory with ClassiCube's source code
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
-##### Using TCC
+##### Using TCC (Tiny C Compiler)
 I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 1. Extract the .zip file
-2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
-3. In TCC's `include/math.h`, remove the inline definition for `fabs` at around line 217
-4. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext`
-5. Add missing include files from `winapi-full-for-0.9.27.zip` as required
-6. ???
+2. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext` at line 554 (In between `RtlAddFunctionTable` and `RtlDeleteFunctionTable`)
+3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+4. Navigate to the directory with ClassiCube's source code
+5. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
+6. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`
 
 ## Compiling - Linux
 
@@ -123,6 +123,8 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - for Android
 
+NOTE: If you are distributing a modified version, please change the package ID from `com.classicube.android.client` to something else - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
+
 ##### Using Android Studio GUI
 
 Open `android` folder in Android Studio (TODO explain more detailed)
@@ -134,6 +136,8 @@ Run `gradlew` in android folder (TODO explain more detailed)
 ## Compiling - for iOS
 
 iOS version will have issues as it's incomplete and only tested in iOS Simulator
+
+NOTE: If you are distributing a modified version, please change the bundle ID from `com.classicube.ios.client` to something else - otherwise iOS users won't be able to have both ClassiCube and your modified version installed at the same time on their iOS device
 
 ##### Using Xcode GUI
 
@@ -147,7 +151,7 @@ Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
 
 #### FreeBSD
 
-Install libexecinfo, curl and openal-soft package if needed
+Install libxi, libexecinfo, curl and openal-soft package if needed
 
 ```cc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
@@ -173,9 +177,13 @@ Install libexecinfo, curl and openal-soft package if needed
 
 #### Haiku
 
-Install openal_devel and libexecinfo_devel package if needed
+Install openal_devel package if needed
 
-```cc *.c Window_Haiku.cpp -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+
+#### BeOS
+
+```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lGL -lbe -lgame -ltracker```
 
 #### IRIX
 
@@ -199,11 +207,15 @@ The generated javascript file has some issues. [See here for how to fix](doc/com
 
 Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
 
+**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
+
 The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### 3DS
 
 Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
 
 The 3DS port needs assistance from someone experienced with 3DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
@@ -211,11 +223,15 @@ The 3DS port needs assistance from someone experienced with 3DS homebrew develop
 
 Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
+
 The Wii port needs assistance from someone experienced with Wii homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### GameCube
 
 Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
 
 The GC port needs assistance from someone experienced with GC homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
@@ -252,7 +268,11 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows
 * [Clang](https://clang.llvm.org/) - Compiles client for macOS
 * [Emscripten](https://emscripten.org/) - Compiles client for web
-* [RenderDoc](https://renderdoc.org/) - graphics debugging
+* [RenderDoc](https://renderdoc.org/) - Graphics debugging
+* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
+* [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
+* [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
+* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
 
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>

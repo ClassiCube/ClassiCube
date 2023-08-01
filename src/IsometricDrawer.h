@@ -2,7 +2,7 @@
 #define CC_ISOMETRICDRAWER_H
 #include "Core.h"
 /* Draws 2D isometric blocks for the hotbar and inventory UIs.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct VertexTextured;
 

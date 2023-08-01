@@ -6,7 +6,7 @@
 #include "PackedCol.h"
 #include "String.h"
 /* Represents an in-game entity.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Model;
 struct IGameComponent;

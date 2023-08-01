@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Abstracts interaction with a windowing system (creating window, moving cursor, etc)
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /*
@@ -121,7 +121,7 @@ void Window_SetSize(int width, int height);
 /* Raises the WindowClosing and WindowClosed events. */
 void Window_Close(void);
 /* Processes all pending window messages/events. */
-void Window_ProcessEvents(void);
+void Window_ProcessEvents(double delta);
 
 /* Sets the position of the cursor. */
 /* NOTE: This should be avoided because it is unsupported on some platforms. */

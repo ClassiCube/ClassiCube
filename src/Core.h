@@ -2,7 +2,7 @@
 #define CC_CORE_H
 /* 
 Core fixed-size integer types, automatic platform detection, and common small structs
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #if _MSC_VER
@@ -219,6 +219,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_GL
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
+#define CC_BACKTRACE_BUILTIN
 #elif defined __BEOS__
 #define CC_BUILD_BEOS
 #define CC_BUILD_POSIX
@@ -226,6 +227,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_GL11
 #define CC_BUILD_HTTPCLIENT
 #define CC_BUILD_OPENAL
+#define CC_BACKTRACE_BUILTIN
 #elif defined __sgi
 #define CC_BUILD_IRIX
 #define CC_BUILD_POSIX

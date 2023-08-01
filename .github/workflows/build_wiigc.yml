@@ -1,0 +1,38 @@
+name: Build latest (Wii/GameCube)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-wiigc
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile Wii and GameCube build
+        id: compile
+        run: |
+          make wii
+          make clean
+          make gamecube
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Wii/Gamecube build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-wii.dol'
+          DEST_NAME: 'ClassiCube-wii.dol'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-gc.dol'
+          DEST_NAME: 'ClassiCube-gc.dol'

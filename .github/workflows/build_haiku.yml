@@ -1,0 +1,31 @@
+name: Build latest (Haiku)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-haiku
+  cancel-in-progress: true
+
+jobs:
+  build-haiku:
+    runs-on: ubuntu-latest
+    container:
+      image: haiku/cross-compiler:x86_64-r1beta4
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile haiku build
+        id: compile
+        run: |
+          cd src        
+          x86_64-unknown-haiku-gcc *.c interop_BeOS.cpp -o ClassiCube-haiku -O1 -s -fno-stack-protector -fno-math-errno -Qn -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Haiku build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome  == 'success' }}
+        with:
+          SOURCE_FILE: 'src/ClassiCube-haiku'
+          DEST_NAME: 'ClassiCube-haiku'

@@ -1,0 +1,30 @@
+name: Build latest (PSP)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-psp
+  cancel-in-progress: true
+
+jobs:
+  build-PSP:
+    runs-on: ubuntu-latest
+    container:
+      image: pspdev/pspdev:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile PSP build
+        id: compile
+        run: |
+          make psp
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile PSP build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-psp.elf'
+          DEST_NAME: 'ClassiCube-psp.elf'

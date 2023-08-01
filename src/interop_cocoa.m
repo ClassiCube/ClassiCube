@@ -50,23 +50,23 @@ static void Window_CommonCreate(void) {
 // Sourced from https://www.meandmark.com/keycodes.html
 static const cc_uint8 key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
-	'Y', 'T', '1', '2', '3', '4', '6', '5', IPT_EQUALS, '9', '7', IPT_MINUS, '8', '0', IPT_RBRACKET, 'O',
-	'U', IPT_LBRACKET, 'I', 'P', IPT_ENTER, 'L', 'J', IPT_QUOTE, 'K', IPT_SEMICOLON, IPT_BACKSLASH, IPT_COMMA, IPT_SLASH, 'N', 'M', IPT_PERIOD,
-	IPT_TAB, IPT_SPACE, IPT_TILDE, IPT_BACKSPACE, 0, IPT_ESCAPE, 0, 0, 0, IPT_CAPSLOCK, 0, 0, 0, 0, 0, 0,
-	0, IPT_KP_DECIMAL, 0, IPT_KP_MULTIPLY, 0, IPT_KP_PLUS, 0, IPT_NUMLOCK, 0, 0, 0, IPT_KP_DIVIDE, IPT_KP_ENTER, 0, IPT_KP_MINUS, 0,
-	0, IPT_KP_ENTER, IPT_KP0, IPT_KP1, IPT_KP2, IPT_KP3, IPT_KP4, IPT_KP5, IPT_KP6, IPT_KP7, 0, IPT_KP8, IPT_KP9, 'N', 'M', IPT_PERIOD,
-	IPT_F5, IPT_F6, IPT_F7, IPT_F3, IPT_F8, IPT_F9, 0, IPT_F11, 0, IPT_F13, 0, IPT_F14, 0, IPT_F10, 0, IPT_F12,
-	'U', IPT_F15, IPT_INSERT, IPT_HOME, IPT_PAGEUP, IPT_DELETE, IPT_F4, IPT_END, IPT_F2, IPT_PAGEDOWN, IPT_F1, IPT_LEFT, IPT_RIGHT, IPT_DOWN, IPT_UP, 0,
+	'Y', 'T', '1', '2', '3', '4', '6', '5', CCKEY_EQUALS, '9', '7', CCKEY_MINUS, '8', '0', CCKEY_RBRACKET, 'O',
+	'U', CCKEY_LBRACKET, 'I', 'P', CCKEY_ENTER, 'L', 'J', CCKEY_QUOTE, 'K', CCKEY_SEMICOLON, CCKEY_BACKSLASH, CCKEY_COMMA, CCKEY_SLASH, 'N', 'M', CCKEY_PERIOD,
+	CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0, 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+	0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK, 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+	0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
+	CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11, 0, CCKEY_F13, 0, CCKEY_F14, 0, CCKEY_F10, 0, CCKEY_F12,
+	'U', CCKEY_F15, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_F4, CCKEY_END, CCKEY_F2, CCKEY_PAGEDOWN, CCKEY_F1, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_DOWN, CCKEY_UP, 0,
 };
 static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 // TODO: Check these..
-//   case 0x37: return IPT_LWIN;
-//   case 0x38: return IPT_LSHIFT;
-//   case 0x3A: return IPT_LALT;
+//   case 0x37: return CCKEY_LWIN;
+//   case 0x38: return CCKEY_LSHIFT;
+//   case 0x3A: return CCKEY_LALT;
 //   case 0x3B: return Key_ControlLeft;
 
 // TODO: Verify these differences from OpenTK
-//Backspace = 51,  (0x33, IPT_DELETE according to that link)
+//Backspace = 51,  (0x33, CCKEY_DELETE according to that link)
 //Return = 52,     (0x34, ??? according to that link)
 //Menu = 110,      (0x6E, ??? according to that link)
 
@@ -256,7 +256,7 @@ static void DoDrawFramebuffer(CGRect dirty);
 	//   Although the game receives a left mouse down event, it does NOT receive a left mouse up
 	//   This causes the game to get stuck with left mouse down after user finishes resizing
 	// So work arond that by always releasing left mouse when a live resize is finished
-	Input_SetReleased(IPT_LMOUSE);
+	Input_SetReleased(CCMOUSE_L);
 }
 @end
 
@@ -392,11 +392,11 @@ void Window_Close(void) {
 }
 
 static int MapNativeMouse(long button) {
-	if (button == 0) return IPT_LMOUSE;
-	if (button == 1) return IPT_RMOUSE;
-	if (button == 2) return IPT_MMOUSE;
-	if (button == 3) return IPT_XBUTTON1;
-	if (button == 4) return IPT_XBUTTON2;
+	if (button == 0) return CCMOUSE_L;
+	if (button == 1) return CCMOUSE_R;
+	if (button == 2) return CCMOUSE_M;
+	if (button == 3) return CCMOUSE_X1;
+	if (button == 4) return CCMOUSE_X2;
 	return 0;
 }
 
@@ -453,7 +453,7 @@ static void DebugScrollEvent(NSEvent* ev) {
 	Platform_Log3("SCROLL: %i.0 = (%i, %f3)", &steps, &raw, &dy);
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
 	CGFloat dx, dy;
@@ -497,15 +497,15 @@ void Window_ProcessEvents(void) {
 		case 12: // NSFlagsChanged
 			key = [ev modifierFlags];
 			// TODO: Figure out how to only get modifiers that changed
-			Input_Set(IPT_LCTRL,    key & 0x000001);
-			Input_Set(IPT_LSHIFT,   key & 0x000002);
-			Input_Set(IPT_RSHIFT,   key & 0x000004);
-			Input_Set(IPT_LWIN,     key & 0x000008);
-			Input_Set(IPT_RWIN,     key & 0x000010);
-			Input_Set(IPT_LALT,     key & 0x000020);
-			Input_Set(IPT_RALT,     key & 0x000040);
-			Input_Set(IPT_RCTRL,    key & 0x002000);
-			Input_Set(IPT_CAPSLOCK, key & 0x010000);
+			Input_Set(CCKEY_LCTRL,    key & 0x000001);
+			Input_Set(CCKEY_LSHIFT,   key & 0x000002);
+			Input_Set(CCKEY_RSHIFT,   key & 0x000004);
+			Input_Set(CCKEY_LWIN,     key & 0x000008);
+			Input_Set(CCKEY_RWIN,     key & 0x000010);
+			Input_Set(CCKEY_LALT,     key & 0x000020);
+			Input_Set(CCKEY_RALT,     key & 0x000040);
+			Input_Set(CCKEY_RCTRL,    key & 0x002000);
+			Input_Set(CCKEY_CAPSLOCK, key & 0x010000);
 			break;
 
 		case 22: // NSScrollWheel
