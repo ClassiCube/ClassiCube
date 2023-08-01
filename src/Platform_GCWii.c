@@ -126,7 +126,8 @@ static bool fat_available;
 
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
-	str += root_path.length;
+	str   += root_path.length;
+	*str++ = '/';
 	String_EncodeUtf8(str, path);
 }
 
@@ -662,7 +663,7 @@ static void FindRootDirectory(void) {
 	
 	root_path.length = 0;
 	AppendDevice(&root_path, cwd);
-	String_AppendConst(&root_path, ":/ClassiCube/");
+	String_AppendConst(&root_path, ":/ClassiCube");
 }
 
 static void CreateRootDirectory(void) {

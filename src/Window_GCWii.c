@@ -1,22 +1,31 @@
 #include "Core.h"
 #if defined CC_BUILD_GCWII
-#include "_WindowBase.h"
-#include "Graphics.h"
+#include "Window.h"
+#include "Platform.h"
+#include "Input.h"
+#include "Event.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "Graphics.h"
 #include <gccore.h>
 #if defined HW_RVL
 #include <wiiuse/wpad.h>
 #include <wiikeyboard/keyboard.h>
 #endif
-static cc_bool launcherMode;
 
+static cc_bool launcherMode;
 static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
+struct _DisplayData DisplayInfo;
+struct _WinData WindowInfo;
+// no DPI scaling on Wii/GameCube
+int Display_ScaleX(int x) { return x; }
+int Display_ScaleY(int y) { return y; }
+
 
 static void OnPowerOff(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
@@ -148,9 +157,9 @@ static void ProcessPADInput(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 #if defined HW_RVL
-static int dragCursorX;
-static int dragCursorY;
-static cc_bool dragOn;
+static int dragCurX, dragCurY;
+static int dragStartX, dragStartY;
+static cc_bool dragActive;
 
 static void ProcessWPAD_Launcher(int mods) {
 	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_A);
@@ -311,13 +320,13 @@ void Window_ProcessEvents(double delta) {
 	GetIRPos(res, &x, &y);
 	
 	if (mods & WPAD_BUTTON_B) {
-		if (dragOn == false) {
-			dragCursorX = x;
-			dragCursorY = y;
+		if (!dragActive) {
+			dragStartX = dragCurX = x;
+			dragStartY = dragCurY = y;
 		}
-		dragOn = true;
+		dragActive = true;
 	} else {
-		dragOn = false;
+		dragActive = false;
 	}
 	Pointer_SetPosition(0, x, y);
 	
@@ -325,12 +334,28 @@ void Window_ProcessEvents(double delta) {
 	ProcessKeyboardInput();
 }
 
-static void Cursor_GetRawPos(int* x, int* y) {
+static void ScanAndGetIRPos(int* x, int* y) {
 	u32 type;
 	WPAD_ScanPads();
 	
 	int res = WPAD_Probe(0, &type);
 	GetIRPos(res, x, y);
+}
+#define FACTOR 2
+void Window_UpdateRawMouse(void)  {
+	if (!dragActive) return;
+	int x, y;
+	ScanAndGetIRPos(&x, &y);
+   
+	// TODO: Refactor the logic. is it 100% right too?
+	dragCurX = dragStartX + (dragCurX - dragStartX) / FACTOR;
+	dragCurY = dragStartY + (dragCurY - dragStartY) / FACTOR;
+	
+	int dx = x - dragCurX; Math_Clamp(dx, -40, 40);
+	int dy = y - dragCurY; Math_Clamp(dy, -40, 40);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
+	
+	dragCurX = x; dragCurY = y;
 }
 #else
 void Window_ProcessEvents(double delta) {
@@ -338,44 +363,13 @@ void Window_ProcessEvents(double delta) {
 	ProcessPADInput();
 }
 
-static void Cursor_GetRawPos(int* x, int* y) {
-	/* TODO implement */
-	*x = 0; *y = 0;
-}
+void Window_UpdateRawMouse(void) { }
 #endif
 
-void Cursor_SetPosition(int x, int y) {
-	/* TODO implement */
-}
-
-static void Cursor_DoSetVisible(cc_bool visible) {
-	/* TODO implement */
-}
-
-void Window_EnableRawMouse(void) {
-	RegrabMouse();
-	Input_RawMode = true;
-}
-
-#define FACTOR 2
-void Window_UpdateRawMouse(void)  {
-
-#if defined HW_RVL
-   if (dragOn) {
-      cursorPrevX = (cursorPrevX-dragCursorX)/FACTOR+dragCursorX;
-      cursorPrevY = (cursorPrevY-dragCursorY)/FACTOR+dragCursorY;
-
-      DefaultUpdateRawMouse();
-   }
-#else
-   /* TODO implement */
-#endif
-}
-
-void Window_DisableRawMouse(void) {
-	RegrabMouse();
-	Input_RawMode = false;
-}
+void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
+// TODO: Display cursor on Wii when not raw mode
+void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
+void Window_DisableRawMouse(void) { Input_RawMode = false; }
 
 
 /*########################################################################################################################*
@@ -452,7 +446,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
-static void ShowDialogCore(const char* title, const char* msg) {
+void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */
 	Platform_LogConst(title);
 	Platform_LogConst(msg);

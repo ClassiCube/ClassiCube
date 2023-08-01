@@ -1,16 +1,27 @@
 #include "Core.h"
 #if defined CC_BUILD_3DS
+#include "Window.h"
+#include "Platform.h"
+#include "Input.h"
+#include "Event.h"
 #include "Graphics.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
-#include <3ds.h>
-#include "_WindowBase.h"
 #include "ExtMath.h"
-static int touchActive;
+#include <3ds.h>
+
+static int touchActive, touchBegX, touchBegY;
 static cc_bool launcherMode;
 static Result irrst_result;
+
+struct _DisplayData DisplayInfo;
+struct _WinData WindowInfo;
+// no DPI scaling on 3DS
+int Display_ScaleX(int x) { return x; }
+int Display_ScaleY(int y) { return y; }
+
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -140,8 +151,8 @@ void Window_ProcessEvents(double delta) {
 	}
 	// Set starting position for camera movement
 	if (hidKeysDown() & KEY_TOUCH) {
-		cursorPrevX = touch.px;
-		cursorPrevY = touch.py;
+		touchBegX = touch.px;
+		touchBegY = touch.py;
 	}
 	
 	if (Input_RawMode) {	
@@ -158,8 +169,7 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-static void Cursor_DoSetVisible(cc_bool visible) { } // Makes no sense for 3DS
-void Cursor_SetPosition(int x, int y) { }            // Makes no sense for 3DS
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
 
 void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
 void Window_DisableRawMouse(void) { Input_RawMode = false; }
@@ -171,9 +181,9 @@ void Window_UpdateRawMouse(void)  {
 	hidTouchRead(&touch);
 
 	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				touch.px - cursorPrevX, touch.py - cursorPrevY);	
-	cursorPrevX = touch.px;
-	cursorPrevY = touch.py;
+				touch.px - touchBegX, touch.py - touchBegY);	
+	touchBegX = touch.px;
+	touchBegY = touch.py;
 }
 
 
@@ -266,7 +276,7 @@ void Window_CloseKeyboard(void) { /* TODO implement */ }
 /*########################################################################################################################*
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
-static void ShowDialogCore(const char* title, const char* msg) {
+void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */
 	Platform_LogConst(title);
 	Platform_LogConst(msg);
