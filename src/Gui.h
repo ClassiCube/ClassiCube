@@ -158,10 +158,15 @@ struct WidgetVTABLE {
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
 	cc_bool active;                /* Whether this widget is currently being moused over */ \
-	cc_bool disabled;              /* Whether widget is prevented from being interacted with */ \
+	cc_uint8 flags;                /* Flags controlling the widget's interactability */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
+
+/* Whether a widget is prevented from being interacted with */
+#define WIDGET_FLAG_DISABLED   0x01
+/* Whether a widget can be selected via up/down */
+#define WIDGET_FLAG_SELECTABLE 0x02
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Body };
@@ -173,6 +178,8 @@ void Widget_CalcPosition(void* widget);
 void Widget_Reset(void* widget);
 /* Returns non-zero if the given point is located within the bounds of the widget. */
 int Widget_Contains(void* widget, int x, int y);
+/* Sets whether the widget is prevented from being interacted with */
+void Widget_SetDisabled(void* widget, int disabled);
 
 
 /* Higher priority handles input first and draws on top */

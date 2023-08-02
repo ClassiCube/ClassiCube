@@ -73,7 +73,8 @@ int Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 
 int Gui_ContainsPointers(int x, int y, int width, int height) {
 	int i, px, py;
-	for (i = 0; i < Pointers_Count; i++) {
+	for (i = 0; i < Pointers_Count; i++) 
+	{
 		px = Pointers[i].x;	py = Pointers[i].y;
 
 		if (px >= x && py >= y && px < (x + width) && py < (y + height)) return true;
@@ -112,7 +113,8 @@ static void LoseAllScreens(void) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		s->VTABLE->ContextLost(s);
 	}
@@ -122,7 +124,8 @@ static void OnContextRecreated(void* obj) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		s->VTABLE->ContextRecreated(s);
 		s->dirty = true;
@@ -134,7 +137,8 @@ void Gui_LayoutAll(void) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		s->VTABLE->Layout(s);
 		s->dirty = true;
@@ -158,11 +162,13 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	int i, j;
 	if (Gui.ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		if (priority <= priorities[i]) continue;
 
 		/* Shift lower priority screens right */
-		for (j = Gui.ScreensCount; j > i; j--) {
+		for (j = Gui.ScreensCount; j > i; j--) 
+		{
 			Gui_Screens[j] = Gui_Screens[j - 1];
 			priorities[j]  = priorities[j - 1];
 		}
@@ -179,7 +185,8 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	s->VTABLE->Layout(s);
 
 	/* for selecting active button etc */
-	for (i = 0; i < Pointers_Count; i++) {
+	for (i = 0; i < Pointers_Count; i++) 
+	{
 		s->VTABLE->HandlesPointerMove(s, i, Pointers[i].x, Pointers[i].y);
 	}
 }
@@ -187,7 +194,8 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 /* Returns index of the given screen in the screens list, -1 if not */
 static int IndexOfScreen(struct Screen* s) {
 	int i;
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++)
+	{
 		if (Gui_Screens[i] == s) return i;
 	}
 	return -1;
@@ -197,7 +205,8 @@ void Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
 	if (i == -1) return;
 
-	for (; i < Gui.ScreensCount - 1; i++) {
+	for (; i < Gui.ScreensCount - 1; i++) 
+	{
 		Gui_Screens[i] = Gui_Screens[i + 1];
 		priorities[i]  = priorities[i  + 1];
 	}
@@ -221,7 +230,8 @@ void Gui_Add(struct Screen* s, int priority) {
 	int i;
 	Gui_RemoveCore(s);
 	/* Backwards loop since removing changes count and gui_screens */
-	for (i = Gui.ScreensCount - 1; i >= 0; i--) {
+	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
+	{
 		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
 	}
 
@@ -231,7 +241,8 @@ void Gui_Add(struct Screen* s, int priority) {
 
 struct Screen* Gui_GetInputGrab(void) {
 	int i;
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		if (Gui_Screens[i]->grabsInput) return Gui_Screens[i];
 	}
 	return NULL;
@@ -239,7 +250,8 @@ struct Screen* Gui_GetInputGrab(void) {
 
 struct Screen* Gui_GetBlocksWorld(void) {
 	int i;
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		if (Gui_Screens[i]->blocksWorld) return Gui_Screens[i];
 	}
 	return NULL;
@@ -247,7 +259,8 @@ struct Screen* Gui_GetBlocksWorld(void) {
 
 struct Screen* Gui_GetClosable(void) {
 	int i;
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
@@ -271,7 +284,8 @@ void Gui_RenderGui(double delta) {
 	int i;
 
 	/* Draw back to front so highest priority screen is on top */
-	for (i = Gui.ScreensCount - 1; i >= 0; i--) {
+	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
+	{
 		s = Gui_Screens[i];
 		s->VTABLE->Update(s, delta);
 
@@ -295,7 +309,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	width = Drawer2D_TextWidth(&args);
 	atlas->offset = width;
 	
-	for (i = 0; i < chars->length; i++) {
+	for (i = 0; i < chars->length; i++) 
+	{
 		args.text = String_UNSAFE_Substring(chars, i, 1);
 		charWidth = Drawer2D_TextWidth(&args);
 
@@ -311,7 +326,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 		args.text = *prefix;
 		Context2D_DrawText(&ctx, &args, 0, 0);
 
-		for (i = 0; i < chars->length; i++) {
+		for (i = 0; i < chars->length; i++) 
+		{
 			args.text = String_UNSAFE_Substring(chars, i, 1);
 			Context2D_DrawText(&ctx, &args, atlas->offsets[i], 0);
 		}
@@ -347,7 +363,8 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 	}
 	count = String_MakeUInt32((cc_uint32)value, digits);
 
-	for (i = count - 1; i >= 0; i--) {
+	for (i = count - 1; i >= 0; i--) 
+	{
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}
 }
@@ -373,7 +390,7 @@ void Widget_CalcPosition(void* widget) {
 void Widget_Reset(void* widget) {
 	struct Widget* w = (struct Widget*)widget;
 	w->active   = false;
-	w->disabled = false;
+	w->flags    = 0;
 	w->x = 0; w->y = 0;
 	w->width = 0; w->height = 0;
 	w->horAnchor = ANCHOR_MIN;
@@ -385,6 +402,16 @@ void Widget_Reset(void* widget) {
 int Widget_Contains(void* widget, int x, int y) {
 	struct Widget* w = (struct Widget*)widget;
 	return Gui_Contains(w->x, w->y, w->width, w->height, x, y);
+}
+
+void Widget_SetDisabled(void* widget, int disabled) {
+	struct Widget* w = (struct Widget*)widget;
+
+	if (disabled) {
+		w->flags |=  WIDGET_FLAG_DISABLED;
+	} else {
+		w->flags &= ~WIDGET_FLAG_DISABLED;
+	}
 }
 
 
@@ -399,7 +426,8 @@ void Screen_Render2Widgets(void* screen, double delta) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < s->numWidgets; i++) 
+	{
 		if (!widgets[i]) continue;
 		offset = Widget_Render2(widgets[i], offset);
 	}
@@ -422,10 +450,11 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	int i, count = s->numWidgets;
 
 	/* iterate backwards (because last elements rendered are shown over others) */
-	for (i = count - 1; i >= 0; i--) {
+	for (i = count - 1; i >= 0; i--) 
+	{
 		struct Widget* w = widgets[i];
 		if (!w || !Widget_Contains(w, x, y)) continue;
-		if (w->disabled) return i;
+		if (w->flags & WIDGET_FLAG_DISABLED) return i;
 
 		if (w->MenuClick) {
 			w->MenuClick(s, w);
@@ -443,7 +472,8 @@ int Screen_Index(void* screen, void* widget) {
 	int i;
 
 	struct Widget* w = (struct Widget*)widget;
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < s->numWidgets; i++) 
+	{
 		if (widgets[i] == w) return i;
 	}
 	return -1;
@@ -459,7 +489,8 @@ void Screen_BuildMesh(void* screen) {
 	data = Screen_LockVb(s);
 	ptr  = &data;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < s->numWidgets; i++) 
+	{
 		if (!widgets[i]) continue;
 		Widget_BuildMesh(widgets[i], ptr);
 	}
@@ -471,7 +502,8 @@ void Screen_Layout(void* screen) {
 	struct Widget** widgets = s->widgets;
 	int i;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < s->numWidgets; i++) 
+	{
 		if (!widgets[i]) continue;
 		Widget_Layout(widgets[i]);
 	}
@@ -483,7 +515,8 @@ void Screen_ContextLost(void* screen) {
 	int i;
 	Gfx_DeleteDynamicVb(&s->vb);
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < s->numWidgets; i++) 
+	{
 		if (!widgets[i]) continue;
 		Elem_Free(widgets[i]);
 	}
@@ -526,7 +559,8 @@ static void OnKeyPress(void* obj, int cp) {
 	char c;
 	if (!Convert_TryCodepointToCP437(cp, &c)) return;
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesKeyPress(s, c)) return;
 	}
@@ -537,7 +571,8 @@ static void OnTextChanged(void* obj, const cc_string* str) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui.ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesTextChanged(s, str)) return;
 	}

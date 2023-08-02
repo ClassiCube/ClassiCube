@@ -246,8 +246,8 @@ static void ListScreen_UpdateTitle(struct ListScreen* s) {
 
 static void ListScreen_UpdatePage(struct ListScreen* s) {
 	int end = s->entries.count - LIST_SCREEN_ITEMS;
-	s->left.disabled  = s->currentIndex <= 0;
-	s->right.disabled = s->currentIndex >= end;
+	Widget_SetDisabled(&s->left,  s->currentIndex <= 0);
+	Widget_SetDisabled(&s->right, s->currentIndex >= end);
 	ListScreen_UpdateTitle(s);
 }
 
@@ -261,7 +261,7 @@ static void ListScreen_RedrawEntries(struct ListScreen* s) {
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		str = ListScreen_UNSAFE_Get(s, s->currentIndex + i);
 		
-		s->btns[i].disabled = String_CaselessEqualsConst(&str, LISTSCREEN_EMPTY);
+		Widget_SetDisabled(&s->btns[i], String_CaselessEqualsConst(&str, LISTSCREEN_EMPTY));
 		s->UpdateEntry(s, &s->btns[i], &str);
 	}
 }
@@ -467,7 +467,9 @@ static struct Widget* pause_widgets[] = {
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	if (Gui.ClassicMenu) return;
-	s->btns[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+
+	Widget_SetDisabled(&s->btns[4],
+			!LocalPlayer_Instance.Hacks.CanAnyHacks); /* select texture pack */
 	s->dirty = true;
 }
 
@@ -509,8 +511,8 @@ static void PauseScreen_Init(void* screen) {
 	PauseScreenBase_Init(s, 300);
 
 	if (Server.IsSinglePlayer) return;
-	s->btns[1].disabled = true;
-	s->btns[2].disabled = true;
+	s->btns[1].flags = WIDGET_FLAG_DISABLED;
+	s->btns[2].flags = WIDGET_FLAG_DISABLED;
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -576,8 +578,8 @@ static void ClassicPauseScreen_Init(void* screen) {
 	PauseScreenBase_Init(s, 400);
 
 	if (Server.IsSinglePlayer) return;
-	s->btns[1].disabled = true;
-	s->btns[3].disabled = true;
+	s->btns[1].flags = WIDGET_FLAG_DISABLED;
+	s->btns[3].flags = WIDGET_FLAG_DISABLED;
 }
 
 static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
@@ -640,7 +642,8 @@ static const struct SimpleButtonDesc optsGroup_btns[8] = {
 
 static void OptionsGroupScreen_CheckHacksAllowed(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	s->btns[6].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
+	Widget_SetDisabled(&s->btns[6],
+			!LocalPlayer_Instance.Hacks.CanAnyHacks); /* env settings */
 	s->dirty = true;
 }
 
@@ -1890,8 +1893,8 @@ static void KeyBindsScreen_Init(void* screen) {
 
 	ButtonWidget_Init(&s->left,  40, s->leftPage);
 	ButtonWidget_Init(&s->right, 40, s->rightPage);
-	s->left.disabled  = !s->leftPage;
-	s->right.disabled = !s->rightPage;
+	Widget_SetDisabled(&s->left,   !s->leftPage);
+	Widget_SetDisabled(&s->right, !s->rightPage);
 
 	if (!s->leftPage && !s->rightPage) return;
 	s->numWidgets += 2;
@@ -2297,7 +2300,9 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	if (s->activeI >= 0) return;
 	desc = s->descriptions[idx];
 	if (!desc) return;
-	if (!s->widgets[idx] || s->widgets[idx]->disabled) return;
+
+	if (!s->widgets[idx]) return;
+	if (s->widgets[idx]->flags & WIDGET_FLAG_DISABLED) return;
 
 	descRaw          = String_FromReadonly(desc);
 	s->extHelp.lines = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
@@ -2386,10 +2391,11 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 
 static void MenuInputOverlay_CheckStillValid(struct MenuOptionsScreen* s) {
 	if (s->activeI == -1) return;
-	if (!s->widgets[s->activeI]->disabled) return;
-
-	/* source button is disabled now, so close open input overlay */
-	MenuInputOverlay_Close(&MenuInputOverlay, false);
+	
+	if (s->widgets[s->activeI]->flags & WIDGET_FLAG_DISABLED) {
+		/* source button is disabled now, so close open input overlay */
+		MenuInputOverlay_Close(&MenuInputOverlay, false);
+	}
 }
 
 static void MenuOptionsScreen_Input(void* screen, void* widget) {
@@ -2983,10 +2989,10 @@ static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 	struct LocalPlayer* p   = &LocalPlayer_Instance;
 	cc_bool disabled        = !p->Hacks.Enabled;
 
-	widgets[3]->disabled = disabled || !p->Hacks.CanSpeed;
-	widgets[4]->disabled = disabled || !p->Hacks.CanSpeed;
-	widgets[5]->disabled = disabled || !p->Hacks.CanSpeed;
-	widgets[7]->disabled = disabled || !p->Hacks.CanPushbackBlocks;
+	Widget_SetDisabled(widgets[3], disabled || !p->Hacks.CanSpeed);
+	Widget_SetDisabled(widgets[4], disabled || !p->Hacks.CanSpeed);
+	Widget_SetDisabled(widgets[5], disabled || !p->Hacks.CanSpeed);
+	Widget_SetDisabled(widgets[7], disabled || !p->Hacks.CanPushbackBlocks);
 	MenuInputOverlay_CheckStillValid(s);
 }
 
@@ -3248,7 +3254,8 @@ void NostalgiaAppearanceScreen_Show(void) {
 *----------------------------------------------NostalgiaFunctionalityScreen-----------------------------------------------*
 *#########################################################################################################################*/
 static void NostalgiaScreen_UpdateVersionDisabled(void) {
-	MenuOptionsScreen_Instance.buttons[3].disabled = Game_Version.HasCPE;
+	struct ButtonWidget* gameVerBtn = &MenuOptionsScreen_Instance.buttons[3];
+	Widget_SetDisabled(gameVerBtn, Game_Version.HasCPE);
 }
 
 static void NostalgiaScreen_GetTexs(cc_string* v) { Menu_GetBool(v, Game_AllowServerTextures); }
@@ -3872,8 +3879,8 @@ static void TouchOnscreen_SetPage(struct TouchOnscreenScreen* s, cc_bool page1) 
 	s->btnDescs = page1 ? touchOnscreen_page1 : touchOnscreen_page2;
 	Menu_InitButtons(s->btns, 200, s->btnDescs, ONSCREEN_PAGE_BTNS);
 
-	s->left.disabled  =  page1;
-	s->right.disabled = !page1;
+	Widget_SetDisabled(&s->left,   page1);
+	Widget_SetDisabled(&s->right, !page1);
 }
 
 static void TouchOnscreen_Left(void* screen, void* b) {
