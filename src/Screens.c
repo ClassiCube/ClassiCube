@@ -1943,7 +1943,7 @@ static struct DisconnectScreen {
 	cc_string titleStr, messageStr;
 } DisconnectScreen;
 
-static struct Widget* disconnect_widgets[4] = {
+static struct Widget* disconnect_widgets[] = {
 	(struct Widget*)&DisconnectScreen.title, 
 	(struct Widget*)&DisconnectScreen.message,
 	(struct Widget*)&DisconnectScreen.reconnect,
