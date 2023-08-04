@@ -273,6 +273,10 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
 * [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
+* [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
+* [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
+* [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
+* [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test 3DS port
 
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>

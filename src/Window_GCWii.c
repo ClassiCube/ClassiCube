@@ -165,47 +165,42 @@ static void ProcessWPAD_Launcher(int mods) {
 	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_A);
 	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_B);
 
-	Input_SetNonRepeatable(CCPAD_LEFT,  mods & WPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT, mods & WPAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,    mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,  mods & WPAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & WPAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
 static void ProcessWPAD_Game(int mods) {
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_BUTTON_1);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_BUTTON_2);
+	Input_SetNonRepeatable(CCPAD_L, mods & WPAD_BUTTON_1);
+	Input_SetNonRepeatable(CCPAD_R, mods & WPAD_BUTTON_2);
       
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_PLUS);
-	// TODO: WPAD_BUTTON_B
+	Input_SetNonRepeatable(CCPAD_A, mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(CCPAD_B, mods & WPAD_BUTTON_B);
+	Input_SetNonRepeatable(CCPAD_X, mods & WPAD_BUTTON_PLUS);
       
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_HOME);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_MINUS);
+	Input_SetNonRepeatable(CCPAD_START,  mods & WPAD_BUTTON_HOME);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],    mods & WPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_LEFT,                mods & WPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT],   mods & WPAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,               mods & WPAD_BUTTON_RIGHT);
-      
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_UP,                  mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & WPAD_BUTTON_DOWN);
-	Input_SetNonRepeatable(CCPAD_DOWN,                mods & WPAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & WPAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
 static void ProcessNunchuck_Game(int mods, double delta) {
 	WPADData* wd = WPAD_Data(0);
 	joystick_t analog = wd->exp.nunchuk.js;
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & WPAD_NUNCHUK_BUTTON_C);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & WPAD_NUNCHUK_BUTTON_Z);
+	Input_SetNonRepeatable(CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
+	Input_SetNonRepeatable(CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_Z);
       
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & WPAD_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & WPAD_BUTTON_1);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & WPAD_BUTTON_2);
+	Input_SetNonRepeatable(CCPAD_A, mods & WPAD_BUTTON_A);
+	Input_SetNonRepeatable(CCPAD_Y, mods & WPAD_BUTTON_1);
+	Input_SetNonRepeatable(CCPAD_X, mods & WPAD_BUTTON_2);
 
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_HOME);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_MINUS);
+	Input_SetNonRepeatable(CCPAD_START,  mods & WPAD_BUTTON_HOME);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
 
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
 
@@ -222,15 +217,10 @@ static void ProcessNunchuck_Game(int mods, double delta) {
 	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
 	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  nunchuckLeft);
-	Input_SetNonRepeatable(CCPAD_LEFT,              nunchuckLeft);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], nunchuckRight);
-	Input_SetNonRepeatable(CCPAD_RIGHT,             nunchuckRight);
-
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], nunchuckUp);
-	Input_SetNonRepeatable(CCPAD_UP,                  nunchuckUp);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    nunchuckDown);
-	Input_SetNonRepeatable(CCPAD_DOWN,                nunchuckDown);
+	Input_SetNonRepeatable(CCPAD_LEFT,  nunchuckLeft);
+	Input_SetNonRepeatable(CCPAD_RIGHT, nunchuckRight);
+	Input_SetNonRepeatable(CCPAD_UP,    nunchuckUp);
+	Input_SetNonRepeatable(CCPAD_DOWN,  nunchuckDown);
 }
 
 static void ProcessClassic_Joystick(struct joystick_t* js) {
@@ -249,26 +239,21 @@ static void ProcessClassic_Game(void) {
 	classic_ctrl_t ctrls = wd->exp.classic;
 	int mods = ctrls.btns | ctrls.btns_held;
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & CLASSIC_CTRL_BUTTON_FULL_L);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & CLASSIC_CTRL_BUTTON_FULL_R);
+	Input_SetNonRepeatable(CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
+	Input_SetNonRepeatable(CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
       
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & CLASSIC_CTRL_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & CLASSIC_CTRL_BUTTON_X);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & CLASSIC_CTRL_BUTTON_Y);
-	// TODO: CLASSIC_CTRL_BUTTON_B
+	Input_SetNonRepeatable(CCPAD_A, mods & CLASSIC_CTRL_BUTTON_A);
+	Input_SetNonRepeatable(CCPAD_B, mods & CLASSIC_CTRL_BUTTON_B);
+	Input_SetNonRepeatable(CCPAD_X, mods & CLASSIC_CTRL_BUTTON_X);
+	Input_SetNonRepeatable(CCPAD_Y, mods & CLASSIC_CTRL_BUTTON_Y);
       
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & CLASSIC_CTRL_BUTTON_PLUS);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & CLASSIC_CTRL_BUTTON_MINUS);
+	Input_SetNonRepeatable(CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_PLUS);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_MINUS);
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],    mods & CLASSIC_CTRL_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_LEFT,                mods & CLASSIC_CTRL_BUTTON_LEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT],   mods & CLASSIC_CTRL_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,               mods & CLASSIC_CTRL_BUTTON_RIGHT);
-      
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & CLASSIC_CTRL_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_UP,                  mods & CLASSIC_CTRL_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & CLASSIC_CTRL_BUTTON_DOWN);
-	Input_SetNonRepeatable(CCPAD_DOWN,                mods & CLASSIC_CTRL_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CLASSIC_CTRL_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & CLASSIC_CTRL_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
 	
 	if (Input.RawMode) {
 		ProcessClassic_Joystick(&ctrls.ljs);

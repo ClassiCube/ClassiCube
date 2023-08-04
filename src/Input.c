@@ -322,6 +322,18 @@ void Pointer_SetPosition(int idx, int x, int y) {
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_uint8 KeyBinds[KEYBIND_COUNT];
+/* TODO find a better way than this. maybe alternative keybinds? */
+#if defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII
+const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
+	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
+	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
+	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
+	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
+	0, 0, 0, 0, 
+	CCKEY_F5, 0, 0, 0, 
+	0, CCPAD_L, 0, CCPAD_R,
+};
+#else
 const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
 	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
@@ -335,6 +347,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	0, 0, 0, 0,
 	'1','2','3', '4','5','6', '7','8','9'
 };
+#endif
 static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
@@ -359,7 +372,8 @@ static void KeyBind_Load(void) {
 	int i;
 
 	String_InitArray_NT(name, nameBuffer);
-	for (i = 0; i < KEYBIND_COUNT; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) 
+	{
 		name.length = 0;
 		String_Format1(&name, "key-%c", keybindNames[i]);
 		name.buffer[name.length] = '\0';
@@ -383,7 +397,8 @@ void KeyBind_Set(KeyBind binding, int key) {
 /* Initialises and loads key bindings from options */
 static void KeyBind_Init(void) {
 	int i;
-	for (i = 0; i < KEYBIND_COUNT; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) 
+	{
 		KeyBinds[i] = KeyBind_Defaults[i];
 	}
 	KeyBind_Load();
@@ -1057,7 +1072,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	int i;
 
 #ifndef CC_BUILD_WEB
-	if (key == CCKEY_ESCAPE && (s = Gui_GetClosable())) {
+	if (Input_IsEscapeButton(key) && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Remove(s);
 		return;
@@ -1077,7 +1092,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
-	if ((key == CCKEY_ESCAPE || key == CCKEY_PAUSE) && !Gui.InputGrab) {
+	if ((Input_IsEscapeButton(key) || key == CCKEY_PAUSE) && !Gui.InputGrab) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
