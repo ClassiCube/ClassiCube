@@ -60,7 +60,7 @@ void Window_ProcessEvents(double delta) {
 	
 	int dx = pad.Lx - 127;
 	int dy = pad.Ly - 127;
-	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
+	if (Input.RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
 		//Platform_Log2("RAW: %i, %i", &dx, &dy);
 		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
 	}
@@ -162,12 +162,12 @@ void Window_CloseKeyboard(void) { /* TODO implement */ }
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
-	Input_RawMode = true;
+	Input.RawMode = true;
 }
 void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
 	RegrabMouse();
-	Input_RawMode = false;
+	Input.RawMode = false;
 }
 #endif

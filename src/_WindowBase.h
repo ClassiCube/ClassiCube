@@ -41,7 +41,7 @@ static void RegrabMouse(void) {
 }
 
 static void DefaultEnableRawMouse(void) {
-	Input_RawMode = true;
+	Input.RawMode = true;
 	RegrabMouse();
 	Cursor_SetVisible(false);
 }
@@ -54,7 +54,7 @@ static void DefaultUpdateRawMouse(void) {
 }
 
 static void DefaultDisableRawMouse(void) {
-	Input_RawMode = false;
+	Input.RawMode = false;
 	RegrabMouse();
 	Cursor_SetVisible(true);
 }
@@ -63,7 +63,7 @@ static void DefaultDisableRawMouse(void) {
 static void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* Ensure cursor is usable while showing message box */
-	cc_bool rawMode = Input_RawMode;
+	cc_bool rawMode = Input.RawMode;
 
 	if (rawMode) Window_DisableRawMouse();
 	ShowDialogCore(title, msg);

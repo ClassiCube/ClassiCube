@@ -81,7 +81,7 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (key == CCKEY_ENTER || key == CCKEY_KP_ENTER) {
+	if (Input_IsEnterButton(key)) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -106,7 +106,7 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		LScreen_CycleSelected(s, -1);
 	} else if (Input_IsDownButton(key)) {
 		LScreen_CycleSelected(s,  1);
-	} else if (key == CCKEY_ESCAPE && s->onEscapeWidget) {
+	} else if (Input_IsEscapeButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
 	}
 }

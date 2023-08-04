@@ -155,13 +155,13 @@ void Window_ProcessEvents(double delta) {
 		touchBegY = touch.py;
 	}
 	
-	if (Input_RawMode) {	
+	if (Input.RawMode) {
 		circlePosition pos;
 		hidCircleRead(&pos);
 		ProcessJoystickInput(&pos);
 	}
 	
-	if (Input_RawMode && irrst_result == 0) {
+	if (Input.RawMode && irrst_result == 0) {
 		circlePosition pos;
 		irrstScanInput();
 		irrstCstickRead(&pos);
@@ -171,8 +171,8 @@ void Window_ProcessEvents(double delta) {
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
 
-void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
-void Window_DisableRawMouse(void) { Input_RawMode = false; }
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 void Window_UpdateRawMouse(void)  {
 	if (!touchActive) return;

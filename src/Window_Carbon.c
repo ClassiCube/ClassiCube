@@ -270,7 +270,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 		Logger_Abort2(res, "Getting mouse position");
 	}
 
-	if (Input_RawMode) {
+	if (Input.RawMode) {
 		raw.x = 0; raw.y = 0;
 		GetEventParameter(inEvent, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &raw);
 		Event_RaiseRawMove(&PointerEvents.RawMoved, raw.x, raw.y);

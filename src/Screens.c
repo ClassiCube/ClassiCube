@@ -1228,8 +1228,8 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || key == CCKEY_ESCAPE) {
-			ChatScreen_EnterChatInput(s, key == CCKEY_ESCAPE);
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
+			ChatScreen_EnterChatInput(s, Input_IsEscapeButton(key));
 #endif
 		} else if (key == CCKEY_PAGEUP) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
@@ -1597,7 +1597,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
 		Gui_Remove((struct Screen*)s);
-	} else if (key == CCKEY_ENTER && table->selectedIndex != -1) {
+	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {

@@ -166,7 +166,7 @@ static int Menu_InputDown(void* screen, int key) {
 		Menu_CycleSelected(s, -1);
 	} else if (Input_IsDownButton(key)) {
 		Menu_CycleSelected(s, +1);
-	} else if (key == CCKEY_ENTER) {
+	} else if (Input_IsEnterButton(key)) {
 		Menu_ClickSelected(s);
 	}
 	return Screen_InputDown(screen, key);
@@ -1876,7 +1876,7 @@ static int KeyBindsScreen_KeyDown(void* screen, int key) {
 
 	if (s->curI == -1) return Menu_InputDown(s, key);
 	bind = s->binds[s->curI];
-	if (key == CCKEY_ESCAPE) key = KeyBind_Defaults[bind];
+	if (Input_IsEscapeButton(key)) key = KeyBind_Defaults[bind];
 	KeyBind_Set(bind, key);
 
 	idx         = s->curI;
@@ -2144,7 +2144,7 @@ static int MenuInputOverlay_KeyDown(void* screen, int key) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
 
-	if (key == CCKEY_ENTER || key == CCKEY_KP_ENTER) {
+	if (Input_IsEnterButton(key)) {
 		MenuInputOverlay_EnterInput(s); return true;
 	}
 	return Menu_InputDown(screen, key);

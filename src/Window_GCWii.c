@@ -110,7 +110,7 @@ static void ProcessPAD_Game(PADStatus* pad) {
 	int dx   = pad->substickX;
 	int dy   = pad->substickY;
 
-	if (Input_RawMode) {
+	if (Input.RawMode) {
 		// May not be exactly 0 on actual hardware
 		if (Math_AbsI(dx) <= 8) dx = 0;
 		if (Math_AbsI(dy) <= 8) dy = 0;
@@ -270,7 +270,7 @@ static void ProcessClassic_Game(void) {
 	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & CLASSIC_CTRL_BUTTON_DOWN);
 	Input_SetNonRepeatable(CCPAD_DOWN,                mods & CLASSIC_CTRL_BUTTON_DOWN);
 	
-	if (Input_RawMode) {
+	if (Input.RawMode) {
 		ProcessClassic_Joystick(&ctrls.ljs);
 		ProcessClassic_Joystick(&ctrls.rjs);
 	}
@@ -368,8 +368,8 @@ void Window_UpdateRawMouse(void) { }
 
 void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
 // TODO: Display cursor on Wii when not raw mode
-void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
-void Window_DisableRawMouse(void) { Input_RawMode = false; }
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

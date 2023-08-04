@@ -47,6 +47,7 @@ enum InputButtons {
 
 	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R,
 	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
+	CCPAD_START, CCPAD_SELECT,
 
 	INPUT_COUNT,
 
@@ -54,33 +55,15 @@ enum InputButtons {
 	INPUT_CLIPBOARD_PASTE = 1002
 };
 
-/* Names for each input button when stored to disc */
-extern const char* const Input_StorageNames[INPUT_COUNT];
-/* Simple display names for each input button */
 extern const char* const Input_DisplayNames[INPUT_COUNT];
 
-#define Input_IsWinPressed()   (Input_Pressed[CCKEY_LWIN]   || Input_Pressed[CCKEY_RWIN])
-#define Input_IsAltPressed()   (Input_Pressed[CCKEY_LALT]   || Input_Pressed[CCKEY_RALT])
-#define Input_IsCtrlPressed()  (Input_Pressed[CCKEY_LCTRL]  || Input_Pressed[CCKEY_RCTRL])
-#define Input_IsShiftPressed() (Input_Pressed[CCKEY_LSHIFT] || Input_Pressed[CCKEY_RSHIFT])
+extern struct _InputState {
+	/* Pressed state of each input button. Use Input_Set to change */
+	cc_bool Pressed[INPUT_COUNT];
+	/* Whether raw mouse/touch input is currently being listened for */
+	cc_bool RawMode;
+} Input;
 
-#define Input_IsUpButton(btn)    ((btn) == CCKEY_UP    || (btn) == CCPAD_UP)
-#define Input_IsDownButton(btn)  ((btn) == CCKEY_DOWN  || (btn) == CCPAD_DOWN)
-#define Input_IsLeftButton(btn)  ((btn) == CCKEY_LEFT  || (btn) == CCPAD_LEFT)
-#define Input_IsRightButton(btn) ((btn) == CCKEY_RIGHT || (btn) == CCPAD_RIGHT)
-
-#if defined CC_BUILD_HAIKU
-/* Haiku uses ALT instead of CTRL for clipboard and stuff */
-#define Input_IsActionPressed() Input_IsAltPressed()
-#elif defined CC_BUILD_DARWIN
-/* macOS uses CMD instead of CTRL for clipboard and stuff */
-#define Input_IsActionPressed() Input_IsWinPressed()
-#else
-#define Input_IsActionPressed() Input_IsCtrlPressed()
-#endif
-
-/* Pressed state of each input button. Use Input_Set to change. */
-extern cc_bool Input_Pressed[INPUT_COUNT];
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
 void Input_SetPressed(int key);
 /* Sets Input_Pressed[key] to false and raises InputEvents.Up */
@@ -91,8 +74,28 @@ void Input_SetNonRepeatable(int key, int pressed);
 /* Resets all input buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
-/* Whether raw mouse/touch input is currently being listened for. */
-extern cc_bool Input_RawMode;
+
+#define Input_IsWinPressed()   (Input.Pressed[CCKEY_LWIN]   || Input.Pressed[CCKEY_RWIN])
+#define Input_IsAltPressed()   (Input.Pressed[CCKEY_LALT]   || Input.Pressed[CCKEY_RALT])
+#define Input_IsCtrlPressed()  (Input.Pressed[CCKEY_LCTRL]  || Input.Pressed[CCKEY_RCTRL])
+#define Input_IsShiftPressed() (Input.Pressed[CCKEY_LSHIFT] || Input.Pressed[CCKEY_RSHIFT])
+
+#define Input_IsUpButton(btn)     ((btn) == CCKEY_UP     || (btn) == CCPAD_UP)
+#define Input_IsDownButton(btn)   ((btn) == CCKEY_DOWN   || (btn) == CCPAD_DOWN)
+#define Input_IsLeftButton(btn)   ((btn) == CCKEY_LEFT   || (btn) == CCPAD_LEFT)
+#define Input_IsRightButton(btn)  ((btn) == CCKEY_RIGHT  || (btn) == CCPAD_RIGHT)
+#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER)
+#define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
+
+#if defined CC_BUILD_HAIKU
+/* Haiku uses ALT instead of CTRL for clipboard and stuff */
+#define Input_IsActionPressed() Input_IsAltPressed()
+#elif defined CC_BUILD_DARWIN
+/* macOS uses CMD instead of CTRL for clipboard and stuff */
+#define Input_IsActionPressed() Input_IsWinPressed()
+#else
+#define Input_IsActionPressed() Input_IsCtrlPressed()
+#endif
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
