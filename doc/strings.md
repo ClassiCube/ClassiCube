@@ -79,26 +79,29 @@ The following functions are provided to convert `cc_string` strings into operati
 
 ### cc_string -> Windows string
 
-`Platform_EncodeUtf16` converts a `cc_string` into a null terminated `WCHAR` string
+`Platform_EncodeString` converts a `cc_string` into a null terminated `WCHAR` and `CHAR` string
 
 #### Example
 ```C
 void SetWorkingDir(cc_string* title) {
-    WCHAR buffer[NATIVE_STR_LEN];
-    Platform_EncodeUtf16(buffer, title);
-    SetCurrentDirectoryW(buffer);
+    cc_winstring str;
+    Platform_EncodeUtf16(&str, title);
+    SetCurrentDirectoryW(str.uni);
+	
+	// it's recommended that you DON'T use the ansi format whenever possible
+    //SetCurrentDirectoryA(str.ansi); 
 }
 ```
 
-### cc_string -> Unix string
+### cc_string -> UTF8 string
 
-`Platform_EncodeUtf8` converts a `cc_string` into a null terminated UTF8-encoded `char*` string
+`String_EncodeUtf8` converts a `cc_string` into a null terminated UTF8-encoded `char*` string
 
 #### Example
 ```C
 void SetWorkingDir(cc_string* title) {
     char buffer[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(buffer, title);
+    String_EncodeUtf8(buffer, title);
     chdir(buffer);
 }
 ```

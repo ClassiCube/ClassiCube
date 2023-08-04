@@ -665,7 +665,7 @@ cc_bool Game_ShouldClose(void) {
 	/* Try to intercept Ctrl+W or Cmd+W for multiplayer */
 	if (Input_IsCtrlPressed() || Input_IsWinPressed()) return false;
 	/* Also try to intercept mouse back button (Mouse4) */
-	return !Input_Pressed[CCMOUSE_X1];
+	return !Input.Pressed[CCMOUSE_X1];
 }
 #else
 static void Game_RunLoop(void) {

@@ -46,10 +46,6 @@ typedef struct cc_winstring_ {
 void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
 
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
-#else
-/* Encodes a string in UTF8 format, also null terminating the string. */
-/* Returns the number of bytes written, excluding trailing NULL terminator. */
-int Platform_EncodeUtf8(void* data, const cc_string* src);
 #endif
 
 /* Initialises the platform specific state. */
