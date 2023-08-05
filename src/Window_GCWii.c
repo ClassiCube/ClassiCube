@@ -235,15 +235,28 @@ static void ProcessNunchuck_Game(int mods, double delta) {
 	Input_SetNonRepeatable(CCPAD_DOWN,  nunchuckDown);
 }
 
-static void ProcessClassic_Joystick(struct joystick_t* js) {
+static void ProcessClassic_LeftJoystick(struct joystick_t* js) {
 	// TODO: need to account for min/max??
 	int dx = js->pos.x - js->center.x;
 	int dy = js->pos.y - js->center.y;
 	
-	if (Math_AbsI(dx) <= 4) dx = 0;
-	if (Math_AbsI(dy) <= 4) dy = 0;
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
+	if (dx == 0 && dy == 0) return;
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = (js->ang - 90) * MATH_DEG2RAD;
+}
+
+static void ProcessClassic_RightJoystick(struct joystick_t* js) {
+	// TODO: need to account for min/max??
+	int dx = js->pos.x - js->center.x;
+	int dy = js->pos.y - js->center.y;
+	
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);
 }
 
 static void ProcessClassic_Game(void) {
@@ -268,8 +281,8 @@ static void ProcessClassic_Game(void) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
 	
 	if (Input.RawMode) {
-		ProcessClassic_Joystick(&ctrls.ljs);
-		ProcessClassic_Joystick(&ctrls.rjs);
+		ProcessClassic_LeftJoystick(&ctrls.ljs);
+		ProcessClassic_RightJoystick(&ctrls.rjs);
 	}
 }
 
