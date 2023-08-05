@@ -898,6 +898,11 @@ static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
 	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
 	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
 	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
+
+	/* TODO: Move to separate LocalPlayerInputSource */
+	if (!Input.JoystickMovement) return;
+	*xMoving = Math_CosF(Input.JoystickAngle);
+	*zMoving = Math_SinF(Input.JoystickAngle);
 }
 
 static const struct EntityVTABLE localPlayer_VTABLE = {

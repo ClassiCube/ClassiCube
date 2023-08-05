@@ -159,7 +159,7 @@ static void Menu_ClickSelected(struct Screen* s) {
 	if (w->MenuClick) w->MenuClick(s, w);
 }
 
-static int Menu_InputDown(void* screen, int key) {
+int Menu_InputDown(void* screen, int key) {
 	struct Screen* s = (struct Screen*)screen;
 	
 	if (Input_IsUpButton(key)) {

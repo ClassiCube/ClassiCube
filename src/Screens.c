@@ -2056,7 +2056,7 @@ static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
 	DisconnectScreen_Render, Screen_BuildMesh,
-	Screen_InputDown,        Screen_InputUp,          Screen_TKeyPress, Screen_TText,
+	Menu_InputDown,          Screen_InputUp,          Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,        Screen_PointerUp,        Menu_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };

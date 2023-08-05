@@ -62,6 +62,10 @@ extern struct _InputState {
 	cc_bool Pressed[INPUT_COUNT];
 	/* Whether raw mouse/touch input is currently being listened for */
 	cc_bool RawMode;
+	/* Whether a gamepad joystick is being used to control player movement */
+	cc_bool JoystickMovement;
+	/* Angle of the gamepad joystick being used to control player movement */
+	float JoystickAngle;
 } Input;
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */

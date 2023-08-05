@@ -104,40 +104,52 @@ static void ProcessPAD_Launcher(PADStatus* pad) {
 	Input_SetNonRepeatable(CCPAD_UP,    mods & PAD_BUTTON_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
 }
+static void ProcessPAD_LeftJoystick(PADStatus* pad) {
+	int dx = pad->stickX;
+	int dy = pad->stickY;
+
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
+	
+	if (dx == 0 && dy == 0) return;	
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(dx, -dy);
+}
+static void ProcessPAD_RightJoystick(PADStatus* pad) {
+	int dx = pad->substickX;
+	int dy = pad->substickY;
+
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);		
+}
 
 static void ProcessPAD_Game(PADStatus* pad) {
 	int mods = pad->button;
-	int dx   = pad->substickX;
-	int dy   = pad->substickY;
 
 	if (Input.RawMode) {
-		// May not be exactly 0 on actual hardware
-		if (Math_AbsI(dx) <= 8) dx = 0;
-		if (Math_AbsI(dy) <= 8) dy = 0;
-	
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);
+		ProcessPAD_LeftJoystick(pad);
+		ProcessPAD_RightJoystick(pad);
 	}		
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & PAD_TRIGGER_L);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & PAD_TRIGGER_R);
+	Input_SetNonRepeatable(CCPAD_L, mods & PAD_TRIGGER_L);
+	Input_SetNonRepeatable(CCPAD_R, mods & PAD_TRIGGER_R);
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & PAD_BUTTON_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & PAD_BUTTON_X);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & PAD_BUTTON_Y);
-	// TODO PAD_BUTTON_B
+	Input_SetNonRepeatable(CCPAD_A, mods & PAD_BUTTON_A);
+	Input_SetNonRepeatable(CCPAD_B, mods & PAD_BUTTON_B);
+	Input_SetNonRepeatable(CCPAD_X, mods & PAD_BUTTON_X);
+	Input_SetNonRepeatable(CCPAD_Y, mods & PAD_BUTTON_Y);
 	
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PAD_BUTTON_START);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PAD_TRIGGER_Z);
+	Input_SetNonRepeatable(CCPAD_START,  mods & PAD_BUTTON_START);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & PAD_TRIGGER_Z);
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_LEFT,              mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & PAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,             mods & PAD_BUTTON_RIGHT);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_UP,                  mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & PAD_BUTTON_DOWN);
-	Input_SetNonRepeatable(CCPAD_DOWN,                mods & PAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_LEFT,  mods & PAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT, mods & PAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,    mods & PAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
 }
 
 static void ProcessPADInput(void) {
@@ -285,7 +297,8 @@ static void ProcessKeyboardInput(void) {
 }
 
 void Window_ProcessEvents(double delta) {
-	/* TODO implement */
+	Input.JoystickMovement = false;
+	
 	WPAD_ScanPads();
 	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
 	u32 type;
@@ -344,7 +357,8 @@ void Window_UpdateRawMouse(void)  {
 }
 #else
 void Window_ProcessEvents(double delta) {
-	/* TODO implement */
+	Input.JoystickMovement = false;
+	
 	ProcessPADInput();
 }
 
