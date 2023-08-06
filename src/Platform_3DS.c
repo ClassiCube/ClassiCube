@@ -350,7 +350,7 @@ static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 
 int Socket_ValidAddress(const cc_string* address) {
 	union SocketAddress addr;
-	return ParseAddress(&addr, address);
+	return ParseAddress(&addr, address) == 0;
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {

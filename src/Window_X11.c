@@ -1161,7 +1161,7 @@ static void HandleGenericEvent(XEvent* e) {
 	if (!rawMouseSupported || e->xcookie.extension != xiOpcode) return;
 	if (!XGetEventData(win_display, &e->xcookie)) return;
 
-	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
+	if (e->xcookie.evtype == XI_RawMotion && Input.RawMode) {
 		ev     = (XIRawEvent*)e->xcookie.data;
 		values = ev->raw_values;
 

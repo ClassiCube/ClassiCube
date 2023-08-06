@@ -76,25 +76,21 @@ void Window_Close(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons_Game(u32 mods) {
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & KEY_L);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & KEY_R);
+	Input_SetNonRepeatable(CCPAD_L, mods & KEY_L);
+	Input_SetNonRepeatable(CCPAD_R, mods & KEY_R);
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & KEY_A);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & KEY_X);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & KEY_Y);
+	Input_SetNonRepeatable(CCPAD_A, mods & KEY_A);
+	Input_SetNonRepeatable(CCPAD_B, mods & KEY_B);
+	Input_SetNonRepeatable(CCPAD_X, mods & KEY_X);
+	Input_SetNonRepeatable(CCPAD_Y, mods & KEY_Y);
 	
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & KEY_START);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & KEY_SELECT);
+	Input_SetNonRepeatable(CCPAD_START,  mods & KEY_START);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & KEY_DLEFT);
-	Input_SetNonRepeatable(CCPAD_LEFT,              mods & KEY_DLEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & KEY_DRIGHT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,             mods & KEY_DRIGHT);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & KEY_DUP);
-	Input_SetNonRepeatable(CCPAD_UP,                  mods & KEY_DUP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & KEY_DDOWN);
-	Input_SetNonRepeatable(CCPAD_DOWN,                mods & KEY_DDOWN);
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & KEY_DLEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_DUP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
 }
 
 static void HandleButtons_Launcher(u32 mods) {
@@ -108,6 +104,7 @@ static void HandleButtons_Launcher(u32 mods) {
 	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_DUP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
 }
+
 static void ProcessJoystickInput(circlePosition* pos) {	
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->dx) <= 4) pos->dx = 0;
@@ -155,13 +152,13 @@ void Window_ProcessEvents(double delta) {
 		touchBegY = touch.py;
 	}
 	
-	if (Input_RawMode) {	
+	if (Input.RawMode) {
 		circlePosition pos;
 		hidCircleRead(&pos);
 		ProcessJoystickInput(&pos);
 	}
 	
-	if (Input_RawMode && irrst_result == 0) {
+	if (Input.RawMode && irrst_result == 0) {
 		circlePosition pos;
 		irrstScanInput();
 		irrstCstickRead(&pos);
@@ -171,8 +168,8 @@ void Window_ProcessEvents(double delta) {
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
 
-void Window_EnableRawMouse(void)  { Input_RawMode = true;  }
-void Window_DisableRawMouse(void) { Input_RawMode = false; }
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 void Window_UpdateRawMouse(void)  {
 	if (!touchActive) return;

@@ -446,8 +446,10 @@
   <ItemGroup>
     <ClCompile Include="Animations.c" />
     <ClCompile Include="GameVersion.c" />
+    <ClCompile Include="Graphics_3DS.c" />
     <ClCompile Include="Graphics_D3D11.c" />
     <ClCompile Include="Graphics_D3D9.c" />
+    <ClCompile Include="Graphics_GCWii.c" />
     <ClCompile Include="Graphics_GL1.c" />
     <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
@@ -465,6 +467,7 @@
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
+    <ClCompile Include="Graphics_PSP.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />

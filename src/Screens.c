@@ -1228,8 +1228,8 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || key == CCKEY_ESCAPE) {
-			ChatScreen_EnterChatInput(s, key == CCKEY_ESCAPE);
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
+			ChatScreen_EnterChatInput(s, Input_IsEscapeButton(key));
 #endif
 		} else if (key == CCKEY_PAGEUP) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
@@ -1425,7 +1425,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	args.placeholder = "Enter chat";
 	args.multiline   = true;
 	Window_OpenKeyboard(&args);
-	s->input.base.disabled = args.opaque;
+	Widget_SetDisabled(&s->input.base, args.opaque);
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);
@@ -1597,7 +1597,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
 		Gui_Remove((struct Screen*)s);
-	} else if (key == CCKEY_ENTER && table->selectedIndex != -1) {
+	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {
@@ -1943,7 +1943,7 @@ static struct DisconnectScreen {
 	cc_string titleStr, messageStr;
 } DisconnectScreen;
 
-static struct Widget* disconnect_widgets[4] = {
+static struct Widget* disconnect_widgets[] = {
 	(struct Widget*)&DisconnectScreen.title, 
 	(struct Widget*)&DisconnectScreen.message,
 	(struct Widget*)&DisconnectScreen.reconnect,
@@ -1972,7 +1972,7 @@ static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 		if (secsLeft > 0) {
 			String_Format1(&msg, "Reconnect in %i", &secsLeft);
 		}
-		s->reconnect.disabled = secsLeft > 0;
+		Widget_SetDisabled(&s->reconnect, secsLeft > 0);
 	}
 
 	if (!msg.length) String_AppendConst(&msg, "Reconnect");
@@ -2015,7 +2015,7 @@ static void DisconnectScreen_Init(void* screen) {
 
 	ButtonWidget_Init(&s->reconnect, 300, DisconnectScreen_OnReconnect);
 	ButtonWidget_Init(&s->quit,      300, DisconnectScreen_OnQuit);
-	s->reconnect.disabled = !s->canReconnect;
+	if (!s->canReconnect) s->reconnect.flags = WIDGET_FLAG_DISABLED;
 
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
 	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
@@ -2056,7 +2056,7 @@ static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
 	DisconnectScreen_Render, Screen_BuildMesh,
-	Screen_InputDown,        Screen_InputUp,          Screen_TKeyPress, Screen_TText,
+	Menu_InputDown,          Screen_InputUp,          Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,        Screen_PointerUp,        Menu_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
@@ -2192,7 +2192,8 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 		desc = &onscreenDescs[i];
 
 		ButtonWidget_Init(&s->onscreen[j], 100, desc->OnClick);
-		if (desc->enabled) s->onscreen[j].disabled = !(*desc->enabled);
+		if (desc->enabled) Widget_SetDisabled(&s->onscreen[j], !(*desc->enabled));
+
 		s->onscreenDescs[j] = desc;
 		s->widgets[j]       = (struct Widget*)&s->onscreen[j];
 		j++;

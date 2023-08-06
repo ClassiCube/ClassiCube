@@ -127,7 +127,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	float scale;
 		
 	back = w->active ? btnSelectedTex : btnShadowTex;
-	if (w->disabled) back = btnDisabledTex;
+	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
 	back.ID = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 	back.X = w->x; back.Width  = w->width;
@@ -152,7 +152,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	}
 
 	if (!w->tex.ID) return;
-	color = w->disabled ? disabledColor : (w->active ? activeColor : normColor);
+	color = (w->flags & WIDGET_FLAG_DISABLED) ? disabledColor 
+											: (w->active ? activeColor : normColor);
 	Texture_RenderShaded(&w->tex, color);
 }
 
@@ -167,7 +168,8 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	float scale;
 		
 	back = w->active ? btnSelectedTex : btnShadowTex;
-	if (w->disabled) back = btnDisabledTex;
+	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
+
 	back.X = w->x; back.Width  = w->width;
 	back.Y = w->y; back.Height = w->height;
 
@@ -189,7 +191,8 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 		Gfx_Make2DQuad(&back, w->col, vertices);
 	}
 
-	color = w->disabled ? disabledColor : (w->active ? activeColor : normColor);
+	color = (w->flags & WIDGET_FLAG_DISABLED) ? disabledColor 
+											: (w->active ? activeColor : normColor);
 	Gfx_Make2DQuad(&w->tex, color, vertices);
 }
 
@@ -222,6 +225,7 @@ void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->col       = PACKEDCOL_WHITE;
 	w->optName   = NULL;
+	w->flags     = WIDGET_FLAG_SELECTABLE;
 	w->minWidth  = Display_ScaleX(minWidth);
 	w->minHeight = Display_ScaleY(40);
 	w->MenuClick = onClick;
@@ -1640,6 +1644,7 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
 	w->base.showCaret       = !Input_TouchMode;
+	w->base.flags           = WIDGET_FLAG_SELECTABLE;
 
 	w->base.GetMaxLines    = TextInputWidget_GetMaxLines;
 	w->base.RemakeTexture  = TextInputWidget_RemakeTexture;
@@ -1713,7 +1718,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	if (!width)  width  = w->prefixWidth;
 	if (!height) height = w->lineHeight;
 	
-	if (w->disabled) {
+	if (w->flags & WIDGET_FLAG_DISABLED) {
 		Gfx_DeleteTexture(&w->inputTex.ID);
 	} else {
 		ChatInputWidget_MakeTexture(w, width, height);
@@ -1733,7 +1738,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 	int x = w->x, y = w->y;
 	cc_bool caretAtEnd;
 	int i, width;
-	if (w->disabled) return;
+	if (w->flags & WIDGET_FLAG_DISABLED) return;
 
 	for (i = 0; i < INPUTWIDGET_MAX_LINES; i++) {
 		if (i > 0 && !w->lines[i].length) break;

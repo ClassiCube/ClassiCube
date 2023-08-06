@@ -102,7 +102,7 @@ static void RefreshWindowBounds(void) {
 
 static void GrabCursor(void) {
 	RECT rect;
-	if (!grabCursor || !Input_RawMode) return;
+	if (!grabCursor || !Input.RawMode) return;
 
 	GetWindowRect(win_handle, &rect);
 	ClipCursor(&rect);
@@ -209,7 +209,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			dy = absY - prevPosY; prevPosY = absY;
 		} else { break; }
 
-		if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, (float)dx, (float)dy);
+		if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, (float)dx, (float)dy);
 	} break;
 
 	case WM_KEYDOWN:

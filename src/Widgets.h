@@ -301,7 +301,10 @@ CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
 
 #ifdef CC_BUILD_TOUCH
-struct ThumbstickWidget { Widget_Body; float scale; };
+struct ThumbstickWidget {
+	Widget_Body 
+	float scale; 
+};
 #define THUMBSTICKWIDGET_PER (4 * 4)
 #define THUMBSTICKWIDGET_MAX (THUMBSTICKWIDGET_PER * 2)
 

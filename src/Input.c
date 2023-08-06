@@ -25,6 +25,7 @@
 #include "AxisLinesRenderer.h"
 #include "Picking.h"
 
+struct _InputState Input;
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
 static TimeMS input_lastClick;
@@ -88,7 +89,7 @@ static cc_bool TryUpdateTouch(long id, int x, int y) {
 	for (i = 0; i < Pointers_Count; i++) {
 		if (touches[i].id != id || !touches[i].type) continue;
 
-		if (Input_RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
+		if (Input.RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
 			/* If the pointer hasn't been locked to gui or block yet, moving a bit */
 			/* should cause the pointer to get locked to camera movement. */
 			if (touches[i].type == TOUCH_TYPE_ALL && MovedFromBeg(i, x, y)) {
@@ -179,8 +180,6 @@ static void ClearTouches(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Input_Pressed[INPUT_COUNT];
-
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
 "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20",\
@@ -191,9 +190,11 @@ cc_bool Input_Pressed[INPUT_COUNT];
 "U", "V", "W", "X", "Y", "Z"
 #define Pad_Names \
 "PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
-"PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN",
+"PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
+"PAD_START", "PAD_SELECT"
 
-const char* const Input_StorageNames[INPUT_COUNT] = {
+/* Names for each input button when stored to disc */
+static const char* const storageNames[INPUT_COUNT] = {
 	"None",
 	Key_Function_Names,
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
@@ -240,8 +241,8 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 };
 
 void Input_SetPressed(int key) {
-	cc_bool wasPressed = Input_Pressed[key];
-	Input_Pressed[key] = true;
+	cc_bool wasPressed = Input.Pressed[key];
+	Input.Pressed[key] = true;
 	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
 
 	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
@@ -253,8 +254,8 @@ void Input_SetPressed(int key) {
 }
 
 void Input_SetReleased(int key) {
-	if (!Input_Pressed[key]) return;
-	Input_Pressed[key] = false;
+	if (!Input.Pressed[key]) return;
+	Input.Pressed[key] = false;
 
 	Event_RaiseInt(&InputEvents.Up, key);
 	if (key == CCMOUSE_L) Pointer_SetPressed(0, false);
@@ -270,7 +271,7 @@ void Input_Set(int key, int pressed) {
 
 void Input_SetNonRepeatable(int key, int pressed) {
 	if (pressed) {
-		if (Input_Pressed[key]) return;
+		if (Input.Pressed[key]) return;
 		Input_SetPressed(key);
 	} else {
 		Input_SetReleased(key);
@@ -279,8 +280,9 @@ void Input_SetNonRepeatable(int key, int pressed) {
 
 void Input_Clear(void) {
 	int i;
-	for (i = 0; i < INPUT_COUNT; i++) {
-		if (Input_Pressed[i]) Input_SetReleased(i);
+	for (i = 0; i < INPUT_COUNT; i++) 
+	{
+		if (Input.Pressed[i]) Input_SetReleased(i);
 	}
 	/* TODO: Properly release instead of just clearing */
 	ClearTouches();
@@ -291,7 +293,6 @@ void Input_Clear(void) {
 *----------------------------------------------------------Mouse----------------------------------------------------------*
 *#########################################################################################################################*/
 struct Pointer Pointers[INPUT_MAX_POINTERS];
-cc_bool Input_RawMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
 	if (pressed) {
@@ -321,6 +322,18 @@ void Pointer_SetPosition(int idx, int x, int y) {
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_uint8 KeyBinds[KEYBIND_COUNT];
+/* TODO find a better way than this. maybe alternative keybinds? */
+#if defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII
+const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
+	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
+	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
+	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
+	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
+	0, 0, 0, 0, 
+	CCKEY_F5, 0, 0, 0, 
+	0, CCPAD_L, 0, CCPAD_R,
+};
+#else
 const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
 	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
@@ -334,6 +347,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	0, 0, 0, 0,
 	'1','2','3', '4','5','6', '7','8','9'
 };
+#endif
 static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
@@ -350,7 +364,7 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Hotbar7", "Hotbar8", "Hotbar9"
 };
 
-cc_bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
+cc_bool KeyBind_IsPressed(KeyBind binding) { return Input.Pressed[KeyBinds[binding]]; }
 
 static void KeyBind_Load(void) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
@@ -358,12 +372,13 @@ static void KeyBind_Load(void) {
 	int i;
 
 	String_InitArray_NT(name, nameBuffer);
-	for (i = 0; i < KEYBIND_COUNT; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) 
+	{
 		name.length = 0;
 		String_Format1(&name, "key-%c", keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
-		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Input_StorageNames, INPUT_COUNT);
+		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], storageNames, INPUT_COUNT);
 		if (mapping != CCKEY_ESCAPE) KeyBinds[i] = mapping;
 	}
 }
@@ -374,7 +389,7 @@ void KeyBind_Set(KeyBind binding, int key) {
 	String_InitArray(name, nameBuffer);
 
 	String_Format1(&name, "key-%c", keybindNames[binding]);
-	value = String_FromReadonly(Input_StorageNames[key]);
+	value = String_FromReadonly(storageNames[key]);
 	Options_SetString(&name, &value);
 	KeyBinds[binding] = key;
 }
@@ -382,7 +397,8 @@ void KeyBind_Set(KeyBind binding, int key) {
 /* Initialises and loads key bindings from options */
 static void KeyBind_Init(void) {
 	int i;
-	for (i = 0; i < KEYBIND_COUNT; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) 
+	{
 		KeyBinds[i] = KeyBind_Defaults[i];
 	}
 	KeyBind_Load();
@@ -521,7 +537,7 @@ static void StoredHotkey_Parse(cc_string* key, cc_string* value) {
 	if (!String_UNSAFE_Separate(key,   '&', &strKey,  &strMods)) return;
 	if (!String_UNSAFE_Separate(value, '&', &strMore, &strText)) return;
 	
-	trigger = Utils_ParseEnum(&strKey, INPUT_NONE, Input_StorageNames, INPUT_COUNT);
+	trigger = Utils_ParseEnum(&strKey, INPUT_NONE, storageNames, INPUT_COUNT);
 	if (trigger == INPUT_NONE) return; 
 	if (!Convert_ParseUInt8(&strMods, &modifiers)) return;
 	if (!Convert_ParseBool(&strMore,  &more))      return;
@@ -546,7 +562,7 @@ void StoredHotkeys_Load(int trigger, cc_uint8 modifiers) {
 	cc_string key, value; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", storageNames[trigger], &modifiers);
 	key.buffer[key.length] = '\0'; /* TODO: Avoid this null terminator */
 
 	Options_UNSAFE_Get(key.buffer, &value);
@@ -557,7 +573,7 @@ void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers) {
 	cc_string key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", storageNames[trigger], &modifiers);
 	Options_SetString(&key, NULL);
 }
 
@@ -567,7 +583,7 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 	String_InitArray(key, keyBuffer);
 	String_InitArray(value, valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", storageNames[trigger], &modifiers);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_SetString(&key, &value);
 }
@@ -1056,7 +1072,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	int i;
 
 #ifndef CC_BUILD_WEB
-	if (key == CCKEY_ESCAPE && (s = Gui_GetClosable())) {
+	if (Input_IsEscapeButton(key) && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Remove(s);
 		return;
@@ -1076,7 +1092,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
-	if ((key == CCKEY_ESCAPE || key == CCKEY_PAUSE) && !Gui.InputGrab) {
+	if ((Input_IsEscapeButton(key) || key == CCKEY_PAUSE) && !Gui.InputGrab) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */

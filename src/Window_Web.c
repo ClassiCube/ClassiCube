@@ -39,7 +39,7 @@ static void SetFullscreenBounds(void) {
 /* Browser only allows pointer lock requests in response to user input */
 static void DeferredEnableRawMouse(void) {
 	EmscriptenPointerlockChangeEvent status;
-	if (!Input_RawMode) return;
+	if (!Input.RawMode) return;
 
 	status.isActive = false;
 	emscripten_get_pointerlock_status(&status);
@@ -92,7 +92,7 @@ static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data)
 	x = ev->targetX; y = ev->targetY;
 	RescaleXY(&x, &y);
 	Pointer_SetPosition(0, x, y);
-	if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
+	if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
 	return true;
 }
 
@@ -632,14 +632,14 @@ void Window_CloseKeyboard(void) {
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
 	/* defer pointerlock request until next user input */
-	Input_RawMode = true;
+	Input.RawMode = true;
 }
 void Window_UpdateRawMouse(void) { }
 
 void Window_DisableRawMouse(void) {
 	RegrabMouse();
 	emscripten_exit_pointerlock();
-	Input_RawMode = false;
+	Input.RawMode = false;
 }
 
 

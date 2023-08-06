@@ -527,7 +527,7 @@ void Window_ProcessEvents(double delta) {
 		case 27: // NSOtherMouseDragged
 			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
-			if (Input_RawMode) {
+			if (Input.RawMode) {
 				dx = [ev deltaX];
 				dy = [ev deltaY];
 				Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);

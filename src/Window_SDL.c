@@ -243,7 +243,7 @@ void Window_ProcessEvents(double delta) {
 			break;
 		case SDL_MOUSEMOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);
-			if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, e.motion.xrel, e.motion.yrel);
+			if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
 			OnTextEvent(&e); break;
@@ -339,14 +339,14 @@ void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
 	SDL_SetRelativeMouseMode(true);
-	Input_RawMode = true;
+	Input.RawMode = true;
 }
 void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
 	RegrabMouse();
 	SDL_SetRelativeMouseMode(false);
-	Input_RawMode = false;
+	Input.RawMode = false;
 }
 
 

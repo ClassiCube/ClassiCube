@@ -260,7 +260,7 @@ static cc_bool LInput_KeyDown(void* widget, int key, cc_bool was) {
 		if (w->text.length) Clipboard_SetText(&w->text);
 	} else if (key == INPUT_CLIPBOARD_PASTE) {
 		LInput_CopyFromClipboard(w);
-	} else if (key == CCKEY_ESCAPE) {
+	} else if (Input_IsEscapeButton(key)) {
 		if (w->text.length) LInput_SetString(w, &String_Empty);
 	} else if (Input_IsLeftButton(key)) {
 		LInput_AdvanceCaretPos(w, false);
