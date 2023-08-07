@@ -15,15 +15,17 @@ fi
 
 # create ClassiCube desktop entry
 echo 'Creating ClassiCube.desktop..'
-echo "[Desktop Entry]" >> $DESKTOP_FILE
-echo "Type=Application" >> $DESKTOP_FILE
-echo "Comment=Minecraft Classic inspired sandbox game" >> $DESKTOP_FILE
-echo "Name=ClassiCube" >> $DESKTOP_FILE
-echo "Exec=$GAME_DIR/ClassiCube" >> $DESKTOP_FILE
-echo "Icon=$GAME_DIR/CCicon.png" >> $DESKTOP_FILE
-echo "Path=$GAME_DIR" >> $DESKTOP_FILE
-echo "Terminal=false" >> $DESKTOP_FILE
-echo "Categories=Game;" >> $DESKTOP_FILE
+cat >> $DESKTOP_FILE << EOF
+[Desktop Entry]
+Type=Application
+Comment=Minecraft Classic inspired sandbox game
+Name=ClassiCube
+Exec=$GAME_DIR/ClassiCube
+Icon=$GAME_DIR/CCicon.png
+Path=$GAME_DIR
+Terminal=false
+Categories=Game
+EOF
 chmod +x $DESKTOP_FILE
 
 echo 'Installing ClassiCube.desktop..'
