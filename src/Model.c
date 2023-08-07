@@ -416,7 +416,7 @@ static struct ModelTex* textures_head;
 static struct ModelTex* textures_tail;
 
 #define Model_RetSize(x,y,z) static Vec3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; e->Size = P;
-#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
+#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f }, { (x2)/16.0f,(y2)/16.0f,(z2)/16.0f } }; e->ModelAABB = BB;
 
 static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;

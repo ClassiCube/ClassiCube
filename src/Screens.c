@@ -341,11 +341,9 @@ static void HUDScreen_BuildMesh(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	struct VertexTextured* data;
 	struct VertexTextured** ptr;
-	struct VertexTextured* DS;
 
 	data = Screen_LockVb(s);
 	ptr  = &data;
-	DS = data;
 
 	HUDScreen_BuildCrosshairsMesh(ptr);
 	Widget_BuildMesh(&s->line1,  ptr);
