@@ -121,7 +121,15 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_FREETYPE
 /*#define CC_BUILD_GL11*/
 #ifndef CC_BUILD_MANUAL
-#if defined _WIN32
+#if defined NXDK
+	/* XBox also defines _WIN32 */
+	#define CC_BUILD_XBOX
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_HTTPCLIENT
+	#undef CC_BUILD_FREETYPE
+#elif defined _WIN32
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9
 	#define CC_BUILD_WINGUI
