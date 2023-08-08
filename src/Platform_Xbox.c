@@ -13,6 +13,7 @@
 #include <lwip/arch.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
+#include <nxdk/net.h>
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -520,6 +521,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 void Platform_Init(void) {
 	Platform_SingleProcess = true;
 	Platform_InitStopwatch();
+	nxNetInit(NULL);
 }
 
 void Platform_Free(void) {
