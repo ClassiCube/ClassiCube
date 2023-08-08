@@ -1,25 +1,25 @@
 #include "Core.h"
-#if defined CC_BUILD_XBOX
+#if defined CC_BUILD_PSVITA
+
 #include "_PlatformBase.h"
 #include "Stream.h"
+#include "ExtMath.h"
 #include "Funcs.h"
+#include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <vitasdk.h>
 
-#include <windows.h>
-#include <hal/debug.h>
-#include <hal/video.h>
-#include <lwip/opt.h>
-#include <lwip/arch.h>
-#include <lwip/netdb.h>
-#include <lwip/sockets.h>
+const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
+const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_SocketInProgess  = SCE_NET_ERROR_EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
+static int epoll_id;
 
-static HANDLE heap;
-const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
-const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
-const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -49,55 +49,48 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Log(const char* msg, int len) {
-	char tmp[2048 + 1];
-	len = min(len, 2048);
-	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
-	
-	debugPrint(tmp);
-	debugPrint("\n");
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
+	if (end < beg) return 0;
+	return end - beg;
 }
 
-#define FILETIME_EPOCH 50491123200000ULL
-#define FILETIME_UNIX_EPOCH 11644473600LL
-#define FileTime_TotalMS(time)  ((time / 10000)    + FILETIME_EPOCH)
-#define FileTime_UnixTime(time) ((time / 10000000) - FILETIME_UNIX_EPOCH)
-TimeMS DateTime_CurrentUTC_MS(void) {
-	LARGE_INTEGER ft;
+void Platform_Log(const char* msg, int len) {
+	int fd = sceKernelGetStdout();
+	sceIoWrite(fd, msg, len);
+	sceIoWrite(fd, "\n",  1);
 	
-	KeQuerySystemTime(&ft);
-	/* in 100 nanosecond units, since Jan 1 1601 */
-	return FileTime_TotalMS(ft.QuadPart);
+	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
+	//cc_string str = String_Init(msg, len, len);
+	//cc_file file = 0;
+	//File_Open(&file, &str);
+	//File_Close(file);	
+}
+
+#define UnixTime_TotalMS(time) ((cc_uint64)time.sec * 1000 + UNIX_EPOCH + (time.usec / 1000))
+TimeMS DateTime_CurrentUTC_MS(void) {
+	struct SceKernelTimeval cur;
+	sceKernelLibcGettimeofday(&cur, NULL);
+	return UnixTime_TotalMS(cur);
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	SYSTEMTIME localTime;
-	GetLocalTime(&localTime);
+	SceDateTime curTime;
+	sceRtcGetCurrentClockLocalTime(&curTime);
 
-	t->year   = localTime.wYear;
-	t->month  = localTime.wMonth;
-	t->day    = localTime.wDay;
-	t->hour   = localTime.wHour;
-	t->minute = localTime.wMinute;
-	t->second = localTime.wSecond;
+	t->year   = curTime.year;
+	t->month  = curTime.month;
+	t->day    = curTime.day;
+	t->hour   = curTime.hour;
+	t->minute = curTime.minute;
+	t->second = curTime.second;
 }
 
-/* TODO: check this is actually accurate */
-static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
-cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
-	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
-}
-
+#define US_PER_SEC 1000000ULL
 cc_uint64 Stopwatch_Measure(void) {
-	return KeQueryPerformanceCounter();
-}
-
-static void Platform_InitStopwatch(void) {
-	ULONGLONG freq = KeQueryPerformanceFrequency();
-
-	sw_freqMul = 1000 * 1000;
-	sw_freqDiv = freq;
+	// TODO: sceKernelGetSystemTimeWide
+	struct SceKernelTimeval cur;
+	sceKernelLibcGettimeofday(&cur, NULL);
+	return (cc_uint64)cur.sec * US_PER_SEC + cur.usec;
 }
 
 
@@ -106,243 +99,238 @@ static void Platform_InitStopwatch(void) {
 *#########################################################################################################################*/
 void Directory_GetCachePath(cc_string* path) { }
 
-static void GetNativePath(char* str, const cc_string* src) {
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (int i = 0; i < src->length; i++) 
-	{
-		*str++ = (char)src->buffer[i];
-	}
-	*str = '\0';
+extern int __path_absolute(const char *in, char *out, int len);
+static void GetNativePath(char* str, const cc_string* path) {
+	static const char root_path[20] = "ux0:data/ClassiCube/";
+	Mem_Copy(str, root_path, sizeof(root_path));
+	str += sizeof(root_path);
+	String_EncodeUtf8(str, path);
 }
+
+#define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
 
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	cc_result res;
-
 	GetNativePath(str, path);
-	return CreateDirectoryA(str, NULL) ? 0 : GetLastError();
+	
+	int result = sceIoMkdir(str, 0777);
+	return GetSCEResult(result);
 }
 
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	DWORD attribs;
-
+	SceIoStat sb;
 	GetNativePath(str, path);
-	attribs = GetFileAttributesA(str);
-
-	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
-}
-
-static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
-									void* obj, Directory_EnumCallback callback) {
-	cc_string path; char pathBuffer[MAX_PATH + 10];
-	/* ignore . and .. entry */
-	if (file->length == 1 && file->buffer[0] == '.') return 0;
-	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
-
-	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "%s/%s", dirPath, file);
-
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
-	return 0;
+	return sceIoGetstat(str, &sb) == 0 && (sb.st_attr & SCE_SO_IFREG) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	cc_string path; char pathBuffer[MAX_PATH + 10];
-	WIN32_FIND_DATAA eA;
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	HANDLE find;
-	cc_result res;	
+	int res;
 
-	/* Need to append \* to search for files in directory */
+	GetNativePath(str, dirPath);
+	SceUID uid = sceIoDopen(str);
+	if (uid < 0) return GetSCEResult(uid); // error
+
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "%s\\*", dirPath);
-	GetNativePath(str, &path);
-	
-	find = FindFirstFileA(str, &eA);
-	if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	SceIoDirent entry;
 
-	do {
+	while ((res = sceIoDread(uid, &entry)) > 0) {
 		path.length = 0;
-		for (int i = 0; i < MAX_PATH && eA.cFileName[i]; i++) 
-		{
-			String_Append(&path, Convert_CodepointToCP437(eA.cFileName[i]));
-		}
-		if ((res = Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback))) return res;
-	} while (FindNextFileA(find, &eA));
+		String_Format1(&path, "%s/", dirPath);
 
-	res = GetLastError(); /* return code from FindNextFile */
-	FindClose(find);
-	return res == ERROR_NO_MORE_FILES ? 0 : res;
+		// ignore . and .. entry (PSP does return them)
+		char* src = entry.d_name;
+		if (src[0] == '.' && src[1] == '\0')                  continue;
+		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
+		
+		int len = String_Length(src);
+		String_AppendUtf8(&path, src, len);
+
+		if (entry.d_stat.st_attr & SCE_SO_IFDIR) {
+			res = Directory_Enum(&path, obj, callback);
+			if (res) break;
+		} else {
+			callback(&path, obj);
+		}
+	}
+
+	sceIoDclose(uid);
+	return GetSCEResult(res);
 }
 
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
+static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-	cc_result res;
-
-	*file = CreateFileA(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
-	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+	
+	int result = sceIoOpen(str, mode, 0777);
+	*file      = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
+	return File_Do(file, path, SCE_O_RDONLY);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
+	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT | SCE_O_TRUNC);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
+	return File_Do(file, path, SCE_O_RDWR | SCE_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
-	return success ? 0 : GetLastError();
+	int result = sceIoRead(file, data, count);
+	*bytesRead = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
-	return success ? 0 : GetLastError();
+	int result  = sceIoWrite(file, data, count);
+	*bytesWrote = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Close(cc_file file) {
-	return CloseHandle(file) ? 0 : GetLastError();
+	int result = sceIoDclose(file);
+	return GetSCEResult(result);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
-	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
-	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
+	static cc_uint8 modes[3] = { SCE_SEEK_SET, SCE_SEEK_CUR, SCE_SEEK_END };
+	
+	int result = sceIoLseek32(file, offset, modes[seekType]);
+	return GetSCEResult(result);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = SetFilePointer(file, 0, NULL, FILE_CURRENT);
-	return *pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
+	int result = sceIoLseek32(file, 0, SCE_SEEK_CUR);
+	*pos       = result;
+	return GetSCEResult(result);
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	*len = GetFileSize(file, NULL);
-	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
+	int curPos = sceIoLseek32(file, 0, SCE_SEEK_CUR);
+	if (curPos < 0) { *len = -1; return GetSCEResult(curPos); }
+	
+	*len = sceIoLseek32(file, 0, SCE_SEEK_END);
+	sceIoLseek32(file, curPos, SCE_SEEK_SET); // restore position
+	return 0;
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
-*#############################################################################################################p############*/
-void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
-static DWORD WINAPI ExecThread(void* param) {
-	Thread_StartFunc func = (Thread_StartFunc)param;
-	func();
+*#########################################################################################################################*/
+// !!! NOTE: PSP uses cooperative multithreading (not preemptive multithreading) !!!
+void Thread_Sleep(cc_uint32 milliseconds) { 
+	sceKernelDelayThread(milliseconds * 1000); 
+}
+
+static int ExecThread(unsigned int argc, void *argv) {
+	Thread_StartFunc* func = (Thread_StartFunc*)argv;
+	(*func)();
 	return 0;
 }
 
 void* Thread_Create(Thread_StartFunc func) {
-	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating thread");
-	}
-	return handle;
+	#define CC_THREAD_PRIORITY 0x10000100
+	#define CC_THREAD_STACKSIZE 128 * 1024
+	#define CC_THREAD_ATTRS 0 // TODO PSP_THREAD_ATTR_VFPU?
+	
+	return (void*)sceKernelCreateThread("CC thread", ExecThread, CC_THREAD_PRIORITY, 
+						CC_THREAD_STACKSIZE, CC_THREAD_ATTRS, 0, NULL);
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
-	NtResumeThread((HANDLE)handle, NULL);
+	Thread_StartFunc func_ = func;
+	sceKernelStartThread((int)handle, sizeof(func_), (void*)&func_);
 }
 
 void Thread_Detach(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing thread handle");
-	}
+	sceKernelDeleteThread((int)handle); // TODO don't call this??
 }
 
 void Thread_Join(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
-	Thread_Detach(handle);
+	sceKernelWaitThreadEnd((int)handle, NULL, NULL);
+	sceKernelDeleteThread((int)handle);
 }
 
 void* Mutex_Create(void) {
-	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
-	RtlInitializeCriticalSection(ptr);
+	SceKernelLwMutexWork* ptr = (SceKernelLwMutexWork*)Mem_Alloc(1, sizeof(SceKernelLwMutexWork), "mutex");
+	int res = sceKernelCreateLwMutex(ptr, "CC mutex", 0, 0, NULL);
+	if (res) Logger_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
-void Mutex_Free(void* handle)   { 
-	RtlDeleteCriticalSection((CRITICAL_SECTION*)handle); 
+void Mutex_Free(void* handle) {
+	int res = sceKernelDeleteLwMutex((SceKernelLwMutexWork*)handle);
+	if (res) Logger_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
-void Mutex_Lock(void* handle)   { RtlEnterCriticalSection((CRITICAL_SECTION*)handle); }
-void Mutex_Unlock(void* handle) { RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); }
+
+void Mutex_Lock(void* handle) {
+	int res = sceKernelLockLwMutex((SceKernelLwMutexWork*)handle, 1, NULL);
+	if (res) Logger_Abort2(res, "Locking mutex");
+}
+
+void Mutex_Unlock(void* handle) {
+	int res = sceKernelUnlockLwMutex((SceKernelLwMutexWork*)handle, 1);
+	if (res) Logger_Abort2(res, "Unlocking mutex");
+}
 
 void* Waitable_Create(void) {
-	void* handle = CreateEventA(NULL, false, false, NULL);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating waitable");
-	}
-	return handle;
+	int evid = sceKernelCreateEventFlag("CC event", SCE_EVENT_WAITMULTIPLE, 0, NULL);
+	if (evid < 0) Logger_Abort2(evid, "Creating waitable");
+	return (void*)evid;
 }
 
 void Waitable_Free(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing waitable");
-	}
+	sceKernelDeleteEventFlag((int)handle);
 }
 
-void Waitable_Signal(void* handle) { NtSetEvent((HANDLE)handle, NULL); }
+void Waitable_Signal(void* handle) {
+	int res = sceKernelSetEventFlag((int)handle, 0x1);
+	if (res < 0) Logger_Abort2(res, "Signalling event");
+}
+
 void Waitable_Wait(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
+	unsigned int match;
+	int res = sceKernelWaitEventFlag((int)handle, 0x1, SCE_EVENT_WAITAND | SCE_EVENT_WAITCLEAR, &match, NULL);
+	if (res < 0) Logger_Abort2(res, "Event wait");
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	WaitForSingleObject((HANDLE)handle, milliseconds);
+	SceUInt timeout = milliseconds * 1000;
+	unsigned int match;
+	int res = sceKernelWaitEventFlag((int)handle, 0x1, SCE_EVENT_WAITAND | SCE_EVENT_WAITCLEAR, &match, &timeout);
+	if (res < 0) Logger_Abort2(res, "Event timed wait");
 }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_LoadSysFonts(void) { }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in v4;
+	struct SceNetSockaddr raw;
+	struct SceNetSockaddrIn v4;
 };
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
-	struct addrinfo hints = { 0 };
-	struct addrinfo* result;
-	struct addrinfo* cur;
-	int family = 0, res;
+	int rid, ret;
 
-	hints.ai_family   = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
+	if ((rid = sceNetResolverCreate("CC resolver", NULL, 0)) < 0) return 0;
 
-	res = getaddrinfo(host, NULL, &hints, &result);
-	if (res) return 0;
-
-	for (cur = result; cur; cur = cur->ai_next) {
-		if (cur->ai_family != AF_INET) continue;
-		family = AF_INET;
-
-		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
-		break;
-	}
-
-	freeaddrinfo(result);
-	return family;
+	ret = sceNetResolverStartNtoa(rid, host, &addr->v4.sin_addr, 1 /* timeout */, 5 /* retries */, 0 /* flags */);
+	sceNetResolverDestroy(rid);
+	return ret >= 0;
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	if (sceNetInetPton(SCE_NET_AF_INET, str, &addr->v4.sin_addr) > 0) return true;
 	return ParseHost(addr, str);
 }
 
@@ -352,58 +340,62 @@ int Socket_ValidAddress(const cc_string* address) {
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	int family, addrSize = 0;
 	union SocketAddress addr;
-	cc_result res;
+	int res;
 
 	*s = -1;
-	if (!(family = ParseAddress(&addr, address)))
-		return ERR_INVALID_ARGUMENT;
+	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
 
-	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
-
+	*s = sceNetSocket("CC socket", SCE_NET_AF_INET, SCE_NET_SOCK_STREAM, SCE_NET_IPPROTO_TCP);
+	if (*s < 0) return *s;
+	
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+		int on = 1;
+		sceNetSetsockopt(*s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &on, sizeof(int));
 	}
+	
+	addr.v4.sin_family = SCE_NET_AF_INET;
+	addr.v4.sin_port   = sceNetHtons(port);
 
-	addr.v4.sin_family  = AF_INET;
-	addr.v4.sin_port    = htons(port);
-	addrSize = sizeof(addr.v4);
-
-	res = connect(*s, &addr.raw, addrSize);
-	return res == -1 ? errno : 0;
+	return sceNetConnect(*s, &addr.raw, sizeof(addr.v4));
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int recvCount = recv(s, data, count, 0);
-	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return errno;
+	int recvCount = sceNetRecv(s, data, count, 0);
+	if (recvCount < 0) { *modified = recvCount; return 0; }
+	
+	*modified = 0; 
+	return recvCount;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(s, data, count, 0);
-	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return errno;
+	int sentCount = sceNetSend(s, data, count, 0);
+	if (sentCount < 0) { *modified = sentCount; return 0; }
+	
+	*modified = 0; 
+	return sentCount;
 }
 
 void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
+	sceNetShutdown(s, SCE_NET_SHUT_RDWR);
+	sceNetSocketClose(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	struct pollfd pfd;
-	int flags;
+	SceNetEpollEvent ev = { 0 };
+	// to match select, closed socket still counts as readable
+	int flags = mode == SOCKET_POLL_READ ? (SCE_NET_EPOLLIN | SCE_NET_EPOLLHUP) : SCE_NET_EPOLLOUT;
+	int res;
 
-	pfd.fd     = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
+	ev.data.fd = s;
+	ev.events  = flags;
 	
-	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
+	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;
+	res = sceNetEpollWait(epoll_id, &ev, 1, 0);
+    sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_DEL, s, NULL);
+    if (res) return res;
+	
+	*success = (ev.events & flags) != 0;
 	return 0;
 }
 
@@ -412,12 +404,12 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	socklen_t resultSize = sizeof(socklen_t);
+	uint32_t resultSize = sizeof(uint32_t);
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
+	sceNetGetsockopt(s, SCE_NET_SOL_SOCKET, SCE_NET_SO_ERROR, &res, &resultSize);
 	return res;
 }
 
@@ -455,16 +447,16 @@ static int GetGameArgs(cc_string* args) {
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (gameHasArgs) return GetGameArgs(args);
-	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
-	//   (e.g. when running from Citra)
+	// PS VITA *sometimes* doesn't use argv[0] for program name and so argc will be 0
 	if (!argc) return 0;
 	
 	argc--; argv++; // skip executable path argument
-	
+
 	int count = min(argc, GAME_MAX_CMDARGS);
 	Platform_Log1("ARGS: %i", &count);
 	
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) 
+	{
 		args[i] = String_FromReadonly(argv[i]);
 		Platform_Log2("  ARG %i = %c", &i, argv[i]);
 	}
@@ -472,7 +464,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
+	return 0; // TODO switch to RomFS ??
 }
 
 void Process_Exit(cc_result code) { exit(code); }
@@ -490,22 +482,31 @@ cc_bool Updater_Clean(void) { return true; }
 
 const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 
-cc_result Updater_Start(const char** action) { *action = "Starting"; return ERR_NOT_SUPPORTED; }
+cc_result Updater_Start(const char** action) {
+	*action = "Starting game";
+	return ERR_NOT_SUPPORTED;
+}
 
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
+	return ERR_NOT_SUPPORTED;
+}
 
-cc_result Updater_MarkExecutable(void) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_MarkExecutable(void) {
+	return ERR_NOT_SUPPORTED;
+}
 
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
+	return ERR_NOT_SUPPORTED;
+}
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
+/* TODO can this actually be supported somehow */
 const cc_string DynamicLib_Ext = String_FromConst(".so");
 
-void* DynamicLib_Load2(const cc_string* path) { return NULL; }
-
+void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
 void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
 
 cc_bool DynamicLib_DescribeError(cc_string* dst) {
@@ -519,14 +520,27 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	Platform_SingleProcess = true;
-	Platform_InitStopwatch();
+	/*pspDebugSioInit();*/ 
+	// TODO: sceNetInit();
+	epoll_id = sceNetEpollCreate("CC poll", 0);
 }
-
-void Platform_Free(void) {
-}
+void Platform_Free(void) { }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	return false;
+	char chars[NATIVE_STR_LEN];
+	int len;
+
+	/* For unrecognised error codes, strerror_r might return messages */
+	/*  such as 'No error information', which is not very useful */
+	/* (could check errno here but quicker just to skip entirely) */
+	if (res >= 1000) return false;
+
+	len = strerror_r(res, chars, NATIVE_STR_LEN);
+	if (len == -1) return false;
+
+	len = String_CalcLen(chars, NATIVE_STR_LEN);
+	String_AppendUtf8(dst, chars, len);
+	return true;
 }
 
 

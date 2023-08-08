@@ -272,6 +272,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_GCWII
 	#define CC_BUILD_LOWMEM
 	#undef CC_BUILD_FREETYPE
+#elif defined __vita__
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_PSVITA
+	#define CC_BUILD_LOWMEM
+	#undef CC_BUILD_FREETYPE
 #endif
 #endif
 

@@ -1,0 +1,7 @@
+XBE_TITLE 	= ClassiCube
+GEN_XISO 	= $(XBE_TITLE).iso
+SRCS 		= $(wildcard src/*.c)
+NXDK_DIR 	= /home/test/Downloads/nxdk
+NXDK_NET 	= y
+
+include $(NXDK_DIR)/Makefile

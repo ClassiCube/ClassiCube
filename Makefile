@@ -155,6 +155,10 @@ wii:
 	$(MAKE) -f src/Makefile_wii PLAT=wii
 gamecube:
 	$(MAKE) -f src/Makefile_gamecube PLAT=gamecube
+xbox:
+	$(MAKE) -f src/Makefile_xbox PLAT=xbox
+vita:
+	$(MAKE) -f src/Makefile_vita PLAT=vita
 	
 clean:
 	$(DEL) $(OBJECTS)
