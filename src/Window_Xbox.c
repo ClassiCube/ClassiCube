@@ -33,9 +33,10 @@ static void OnDataReceived(UTR_T* utr) {
 	int len = min(utr->xfer_len, sizeof(gp_state));
 	Mem_Copy(&gp_state, utr->buff, len);
 	int mods = gp_state.dButtons;
-	Platform_Log1("MODS: %i", &mods);
+	//Platform_Log1("MODS: %i", &mods);
 
 	// queue USB transfer again
+	// TODO don't call
 	utr->xfer_len        = 0;
 	utr->bIsTransferDone = 0;
 	usbh_int_xfer(utr);
@@ -43,8 +44,8 @@ static void OnDataReceived(UTR_T* utr) {
 
 static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_dev_t* xid_dev = usbh_xid_get_device_list();
+    Platform_LogConst("DEVICE CHECK!!!");
 	
-	Platform_LogConst("SCANNING DEVICES..");
     while (xid_dev)
     {
     	int DEV = xid_dev->xid_desc.bType;
@@ -76,9 +77,9 @@ void Window_Init(void) {
 	
 	usbh_core_init();
 	usbh_xid_init();
-	// TODO will this produce wrong stuff when device disc/conn
+	
 	usbh_install_xid_conn_callback(OnDeviceChanged, OnDeviceChanged);
-	OnDeviceChanged(NULL, 0);
+	OnDeviceChanged(NULL, 0); // TODO useless call?
 }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
@@ -151,6 +152,7 @@ static void HandleButtons_Launcher(int mods) {
 }
 
 void Window_ProcessEvents(double delta) {
+	usbh_pooling_hubs();
 	if (!xid_ctrl) return;
 	int mods = gp_state.dButtons;
 	
@@ -177,7 +179,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r) {return;
 	void* fb = XVideoGetFB();
 	XVideoWaitForVBlank();
 
