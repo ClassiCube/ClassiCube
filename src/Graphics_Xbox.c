@@ -6,9 +6,11 @@
 #include "Window.h"
 #include <pbkit/pbkit.h>
 
-#define MAX_RAM_ADDR 0x03FFAFFF // TODO: builtin for ffs ??
-#define MASK(mask, val) (((val) << (ffs(mask)-1)) & (mask))
+#define MAX_RAM_ADDR 0x03FFAFFF
+#define MASK(mask, val) (((val) << (__builtin_ffs(mask)-1)) & (mask))
 
+// https://github.com/XboxDev/nxdk/blob/master/samples/triangle/main.c
+// https://xboxdevwiki.net/NV2A/Vertex_Shader#Output_registers
 #define VERTEX_ATTR_INDEX  0
 #define COLOUR_ATTR_INDEX  3
 #define TEXTURE_ATTR_INDEX 9
@@ -16,33 +18,84 @@
 // Current format and size of vertices
 static int gfx_stride, gfx_format = -1;
 
-// https://github.com/XboxDev/nxdk/blob/e955705ad7e5f59cdad456d0bd6680083d03758f/lib/pbkit/pbkit.c#L3611
-// funcs: never(0x200), less(0x201), equal(0x202), less or equal(0x203)
-// greater(0x204), not equal(0x205), greater or equal(0x206), always(0x207)
+static void LoadVertexShader(uint32_t* program, int programSize) {
+	uint32_t* p;
+	
+	// Set cursor for program upload
+	p = pb_begin();
+	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_LOAD, 0);
+	pb_end(p);
 
+	// Copy program instructions (16 bytes each)
+	for (int i = 0; i < programSize / 16; i++) 
+	{
+		p = pb_begin();
+		pb_push(p++, NV097_SET_TRANSFORM_PROGRAM, 4);
+		Mem_Copy(p, &program[i * 4], 4 * 4);
+		p += 4;
+		pb_end(p);
+	}
+}
+
+static void LoadFragmentShader(void) {
+	uint32_t* p;
+
+	p = pb_begin();
+	#include "ps.inl"
+	pb_end(p);
+}
+
+static uint32_t vs_program[] = {
+	#include "vs.inl"
+};
+
+static void SetupShaders(void) {
+	uint32_t *p;
+
+	p = pb_begin();
+	// Set run address of shader
+	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_START, 0);
+
+	// Set execution mode
+	p = pb_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
+					MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM)
+					| MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
+
+	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
+
+	pb_end(p);
+}
+ 
 static void ResetState(void) {
 	uint32_t* p = pb_begin();
 
 	p = pb_push1(p, NV097_SET_ALPHA_FUNC, 0x204); // GREATER
 	p = pb_push1(p, NV097_SET_ALPHA_REF,  0x7F);
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_SFACTOR,  NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR,  NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_DEPTH_FUNC, 0x206); // GEQUAL
+	p = pb_push1(p, NV097_SET_BLEND_FUNC_SFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
+	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_ALPHA);
+	p = pb_push1(p, NV097_SET_DEPTH_FUNC, 0x203); // LEQUAL
 	
-    p = pb_push1(p, NV097_SET_TRANSFORM_EXECUTION_MODE,
-                   MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED)
-                 | MASK(NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE, NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV));
+	/*pb_push(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 16); p++;
+	for (int i = 0; i < 16; i++) 
+	{
+		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
+	}*/
 	pb_end(p);
 }
+
 
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512; // TODO: 1024?
 	Gfx.Created      = true;
 
+	InitDefaultResources();	
 	pb_init();
 	pb_show_front_screen();
-	InitDefaultResources();
+
+	SetupShaders();
+	LoadVertexShader(vs_program, sizeof(vs_program));
+	LoadFragmentShader();
 	ResetState();
 }
 
@@ -88,7 +141,6 @@ static PackedCol clearColor;
 void Gfx_ClearCol(PackedCol color) {
 	clearColor = color;
 }
-
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
@@ -140,9 +192,6 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-
-	String_Format1(info, "-- Using Xbox (%i bit) --\n", &pointerSize);
 	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
@@ -152,27 +201,50 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) {
-	pb_wait_for_vbl(); // TODO: at end??
+	pb_wait_for_vbl();
 	pb_reset();
 	pb_target_back_buffer();
 }
 
 void Gfx_Clear(void) {
-	int width  = WindowInfo.Width;
-	int height = WindowInfo.Height;
+	int width  = pb_back_buffer_width();
+	int height = pb_back_buffer_height();
 	
 	pb_erase_depth_stencil_buffer(0, 0, width, height);
 	pb_fill(0, 0, width, height, clearColor);
+	//pb_erase_text_screen();
+	
+	while (pb_busy()) { } // Wait for completion TODO: necessary 
 }
 
+static int frames;
 void Gfx_EndFrame(void) {
+	//pb_print("Frame #%d\n", frames++);
+	//pb_draw_text_screen();
+
 	while (pb_busy())     { } // Wait for frame completion
 	while (pb_finished()) { } // Swap when possible
 	
 	if (gfx_minFrameMs) LimitFPS();
 }
 
-void Gfx_OnWindowResize(void) { }
+
+/* Construct a viewport transformation matrix */
+static void CalcViewportTransform(struct Matrix* m, float width, float height, float z_min, float z_max) {
+	*m = Matrix_Identity;
+	m->row1.X =  width  / 2.0f;
+	m->row2.Y = -height / 2.0f;
+	m->row3.Z =  z_max - z_min;
+	m->row4.X =  width  / 2.0f;
+	m->row4.Y =  height / 2.0f;
+	m->row4.Z =  z_min;
+	m->row4.W =  1.0f;
+}
+
+struct Matrix viewport;
+void Gfx_OnWindowResize(void) {
+	CalcViewportTransform(&viewport, WindowInfo.Width, WindowInfo.Height, 0, 65536.0f);
+}
 
 
 /*########################################################################################################################*
@@ -212,7 +284,7 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 
 static uint32_t* PushAttribOffset(uint32_t* p, int index, cc_uint8* data) {
 	return pb_push1(p, NV097_SET_VERTEX_DATA_ARRAY_OFFSET + index * 4,
-						(uint32_t)data & 0x03fffff);
+						(uint32_t)data & 0x03ffffff);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { 
@@ -275,7 +347,6 @@ void Gfx_SetFogMode(FogFunc func) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static int matrix_modes[] = { NV097_SET_PROJECTION_MATRIX, NV097_SET_MODEL_VIEW_MATRIX };
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
@@ -292,14 +363,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.Z = zNear / (zNear - zFar);
 }
 
+// https://github.com/XboxDev/nxdk/blob/master/samples/mesh/math3d.c#L292
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	/* Deliberately swap zNear/zFar in projection matrix calculation to produce */
-	/*  a projection matrix that results in a reversed depth buffer */
-	/* https://developer.nvidia.com/content/depth-precision-visualized */
-	float zNear_ = zFar;
-	float zFar_  = Reversed_CalcZNear(fov, 24);
-
+	float zNear = 0.1f;
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	float c = (float)Cotangent(0.5f * fov);
@@ -307,30 +374,36 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 	matrix->row1.X =  c / aspect;
 	matrix->row2.Y =  c;
-	matrix->row3.Z = zFar_ / (zNear_ - zFar_);
+	matrix->row3.Z = -zFar / (zFar - zNear);
 	matrix->row3.W = -1.0f;
-	matrix->row4.Z = (zNear_ * zFar_) / (zNear_ - zFar_);
+	matrix->row4.Z = (zNear * zFar) / (zFar - zNear);
 	matrix->row4.W =  0.0f;
 }
 
-static void LoadMatrix(int reg, const struct Matrix* matrix) {
-	float* m    = (float*)matrix;
-	uint32_t* p = pb_begin();
-	pb_push(p, reg, 4*4); p++;
-	
-	for (int i = 0; i < 4 * 4; i++)
-	{
-		*(p++) = *(uint32_t*)&m[i];
-	}
-    pb_end(p);
-}
+static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	LoadMatrix(matrix_modes[type], matrix);
+	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	*dst = *matrix;
+	
+	struct Matrix combined;
+	Matrix_Mul(&combined, &viewport, &_proj);
+	
+	uint32_t* p;
+	p = pb_begin();
+
+	// set shader constants cursor to C0
+	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
+
+	// upload transformation matrix
+	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 16);
+	Mem_Copy(p, &combined, 16 * 4); p += 16;
+
+	pb_end(p);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {	
-	LoadMatrix(matrix_modes[type], &Matrix_Identity);
+	Gfx_LoadMatrix(type, &Matrix_Identity);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -359,6 +432,13 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	uint32_t* p = pb_begin();
+	// Clear all attributes TODO optimise
+	pb_push(p++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT,16);
+	for (int i = 0; i < 16; i++) 
+	{
+		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
+	}
+
 	// TODO cache these..
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		p = PushAttrib(p, VERTEX_ATTR_INDEX,  NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F,
@@ -376,36 +456,26 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	pb_end(p);
 }
 
+static void DrawArrays(int mode, int start, int count) {
+	uint32_t *p = pb_begin();
+	p = pb_push1(p, NV097_SET_BEGIN_END, mode);
+
+	p = pb_push1(p, 0x40000000 | NV097_DRAW_ARRAYS,
+					MASK(NV097_DRAW_ARRAYS_COUNT, (count-1)) | 
+					MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
+
+	p = pb_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
+	pb_end(p);
+}
+
 void Gfx_DrawVb_Lines(int verticesCount) {
-	/* TODO */
+	DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
 }
 
 #define MAX_BATCH 120
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
-	cc_uint16* indices = gfx_indices + ICOUNT(startVertex);
-	int indicesCount   = ICOUNT(verticesCount);
-	return;
-	
-    uint32_t* p = pb_begin();
-    p = pb_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_TRIANGLES);
-    
-    
-    for (int i = 0; i < indicesCount; ) {
-        p = pb_begin();
-        
-
-        int batch_count = min(indicesCount - i, MAX_BATCH);
-        p = pb_push1(p, 0x40000000 | NV097_ARRAY_ELEMENT16, batch_count);
-        Mem_Copy(p, indices, batch_count * sizeof(uint16_t));
-        p += batch_count / 2; // push buffer is 32 bit elements
-
-		pb_end(p);
-        i += batch_count;
-        indices += batch_count;
-    }
-
-    p = pb_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-    pb_end(p);
+	// TODO switch to indexed rendering
+	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
