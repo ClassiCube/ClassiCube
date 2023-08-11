@@ -19,11 +19,6 @@ struct _WinData WindowInfo;
 int Display_ScaleX(int x) { return x; }
 int Display_ScaleY(int y) { return y; }
 
-
-// Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
-//  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
-//  * Width/height refer to the physical dimensions of the screen; that is, the top screen
-//  * is 240 pixels wide and 400 pixels tall; while the bottom screen is 240x320.
 void Window_Init(void) {
 	DisplayInfo.Width  = vid_mode->width;
 	DisplayInfo.Height = vid_mode->height;
@@ -62,18 +57,11 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void ProcessControllerInput(void) {
-	maple_device_t* cont;
-	cont_state_t* state;
-
-	cont  = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
-	if (!cont)  return;
-	state = (cont_state_t*)maple_dev_status(cont);
-	if (!state) return;
-	int mods = state->buttons;
+static void HandleButtons_Game(int mods) {
 	// TODO: https://github.com/KallistiOS/KallistiOS/blob/90e09d81d7c1f9dc3f31290a8fff94e4d5ff304a/kernel/arch/dreamcast/include/dc/maple/controller.h#L41
 	//Input_SetNonRepeatable(CCPAD_L, mods & CONT_L);
 	//Input_SetNonRepeatable(CCPAD_R, mods & CONT_R);
+	// TODO CONT_Z, joysticks
       
 	Input_SetNonRepeatable(CCPAD_A, mods & CONT_A);
 	Input_SetNonRepeatable(CCPAD_B, mods & CONT_B);
@@ -82,13 +70,23 @@ static void ProcessControllerInput(void) {
       
 	Input_SetNonRepeatable(CCPAD_START,  mods & CONT_START);
 	Input_SetNonRepeatable(CCPAD_SELECT, mods & CONT_D);
+
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
+}
+static void HandleButtons_Launcher(int mods) {     
+	Input_SetNonRepeatable(CCPAD_START,  mods & CONT_A);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & CONT_B);
+
 	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
 	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
 	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 }
 
-void Window_ProcessEvents(double delta) {
+static void ProcessControllerInput(void) {
 	maple_device_t* cont;
 	cont_state_t* state;
 
@@ -96,6 +94,17 @@ void Window_ProcessEvents(double delta) {
 	if (!cont)  return;
 	state = (cont_state_t*)maple_dev_status(cont);
 	if (!state) return;
+	
+	int mods = state->buttons;
+	if (launcherMode) {
+		HandleButtons_Launcher(mods);
+	} else {
+		HandleButtons_Game(mods);
+	}
+}
+
+void Window_ProcessEvents(double delta) {
+	ProcessControllerInput();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for Dreamcast

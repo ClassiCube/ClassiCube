@@ -159,6 +159,8 @@ xbox:
 	$(MAKE) -f src/Makefile_xbox PLAT=xbox
 vita:
 	$(MAKE) -f src/Makefile_vita PLAT=vita
+dreamcast:
+	$(MAKE) -f src/Makefile_dreamcast PLAT=dreamcast
 	
 clean:
 	$(DEL) $(OBJECTS)

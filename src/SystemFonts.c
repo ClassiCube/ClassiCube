@@ -1029,4 +1029,87 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 		}
 	}
 }
+#elif defined CC_BUILD_DREAMCAST
+#include <dc/biosfont.h>
+
+void SysFonts_Register(const cc_string* path) { }
+
+const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
+
+void SysFonts_GetNames(struct StringsBuffer* buffer) { }
+
+cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
+
+	desc->handle = (void*)1;
+	return 0;
+}
+
+void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	SysFont_Make(desc, NULL, size, flags);
+}
+
+void SysFont_Free(struct FontDesc* desc) {
+}
+
+int SysFont_TextWidth(struct DrawTextArgs* args) {
+	int width = 0;
+	cc_string left = args->text, part;
+	char colorCode = 'f';
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
+	{
+		width += part.length * BFONT_THIN_WIDTH;
+	}
+	return max(1, width);
+}
+static void DrawSpan(struct Bitmap* bmp, int x, int y, int row, BitmapCol color) {	
+	if (y < 0 || y >= bmp->height) return;
+	
+	for (int glyphX = 0; glyphX < BFONT_THIN_WIDTH; glyphX++)
+	{
+		int dstX = x + glyphX;
+		if (dstX < 0 || dstX >= bmp->width) continue;
+			
+		int bit = BFONT_THIN_WIDTH - glyphX;
+		if ((row >> bit) & 1) {
+			Bitmap_GetPixel(bmp, dstX, y) = color;
+		}
+	}
+}
+
+static void DrawGlyph(struct Bitmap* bmp, int x, int y, uint8* cell, BitmapCol color) {
+	// Each font glyph row contains 12 "1 bit" values horizontally
+	// 	as 3 bytes = 24 bits, it therefore encodes 2 rows	
+	for (int glyphY = 0; glyphY < BFONT_HEIGHT; glyphY += 2, y += 2, cell += 3)
+	{
+		int row1 = (cell[0] << 4) | ((cell[1] >> 4) & 0x0f);
+		DrawSpan(bmp, x, y + 0, row1, color);
+		
+		int row2 = ((cell[1] & 0x0f) << 8) | cell[2];
+		DrawSpan(bmp, x, y + 1, row2, color);
+	}
+}
+
+void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
+	cc_string left = args->text, part;
+	char colorCode = 'f';
+	BitmapCol color;
+
+	while (Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode))
+	{
+		color = Drawer2D_GetColor(colorCode);
+		if (shadow) color = GetShadowColor(color);
+	
+		for (int i = 0; i < part.length; i++) 
+		{
+			uint8* cell = bfont_find_char((uint8)part.buffer[i]);
+			
+			DrawGlyph(bmp, x, y, cell, color);
+			x += BFONT_THIN_WIDTH;
+		}
+	}
+}
 #endif
