@@ -197,7 +197,7 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	struct Entity* e;
 
 	if (id != ENTITIES_SELF_ID) {
-		if (Entities.List[id]) Entities_Remove(id);
+		Entities_Remove(id);
 		e = &NetPlayers_List[id].Base;
 
 		NetPlayer_Init((struct NetPlayer*)e);
@@ -217,13 +217,6 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	p->Spawn      = p->Base.Position;
 	p->SpawnYaw   = p->Base.Yaw;
 	p->SpawnPitch = p->Base.Pitch;
-}
-
-void Protocol_RemoveEntity(EntityID id) {
-	struct Entity* e = Entities.List[id];
-	if (!e || id == ENTITIES_SELF_ID) return;
-
-	Entities_Remove(id);
 }
 
 static void UpdateLocation(EntityID id, struct LocationUpdate* update) {
@@ -711,7 +704,7 @@ static void Classic_OrientationUpdate(cc_uint8* data) {
 
 static void Classic_RemoveEntity(cc_uint8* data) {
 	EntityID id = data[0];
-	Protocol_RemoveEntity(id);
+	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 }
 
 static void Classic_Message(cc_uint8* data) {
@@ -942,7 +935,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 	{
 		ext  = cpe_clientExtensions[i];
 		name = String_FromReadonly(ext->name);
-		ver  = ext->serverVersion; 
+		ver  = ext->serverVersion ? ext->serverVersion : ext->clientVersion;
 		/* Don't reply with version higher than what server supports to workaround some buggy server software */
 
 		if (!Game_AllowCustomBlocks) {
