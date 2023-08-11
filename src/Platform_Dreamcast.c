@@ -64,8 +64,8 @@ cc_uint64 Stopwatch_Measure(void) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	fs_write(STDOUT_FILENO, msg,  len);
+	fs_write(STDOUT_FILENO, "\n",   1);
 }
 
 TimeMS DateTime_CurrentUTC_MS(void) {

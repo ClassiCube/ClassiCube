@@ -316,9 +316,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-
-	String_Format1(info, "-- Using 3DS (%i bit) --\n", &pointerSize);
+	String_Format1(info, "-- Using 3DS --\n", NULL);
 	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
@@ -419,6 +417,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { gfx_vertices = vb; }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	gfx_vertices = vb;
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
 }
 

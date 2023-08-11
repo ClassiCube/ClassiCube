@@ -269,14 +269,19 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [Clang](https://clang.llvm.org/) - Compiles client for macOS
 * [Emscripten](https://emscripten.org/) - Compiles client for web
 * [RenderDoc](https://renderdoc.org/) - Graphics debugging
-* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
 * [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
-* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
-* [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
 * [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
-* [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
+* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
 * [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test 3DS port
+* [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
+* [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
+* [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
+* [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
+* [nullDC](https://github.com/skmp/nulldc) - Emulator used to test Dreamcast port
+* [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
+* [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
+
 
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>

@@ -229,9 +229,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-
-	String_Format1(info, "-- Using PSP (%i bit) --\n", &pointerSize);
+	String_Format1(info, "-- Using PSP--\n", NULL);
 	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
@@ -320,6 +318,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	gfx_vertices = vb;
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
 	sceKernelDcacheWritebackInvalidateRange(vertices, vCount * gfx_stride);
 }

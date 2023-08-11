@@ -238,9 +238,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-
-	String_Format1(info, "-- Using GC/WII (%i bit) --\n", &pointerSize);
+	String_Format1(info, "-- Using GC/WII --", NULL);
 	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
