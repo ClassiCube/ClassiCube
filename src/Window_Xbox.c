@@ -74,7 +74,8 @@ void Window_Init(void) {
 	WindowInfo.Height  = mode.height;
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
-	
+
+	Input.GamepadSource = true;
 	usbh_core_init();
 	usbh_xid_init();
 	
@@ -163,7 +164,7 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }

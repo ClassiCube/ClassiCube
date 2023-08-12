@@ -62,6 +62,8 @@ extern struct _InputState {
 	cc_bool Pressed[INPUT_COUNT];
 	/* Whether raw mouse/touch input is currently being listened for */
 	cc_bool RawMode;
+	/* Whether a gamepad is available as an input source */
+	cc_bool GamepadSource;
 	/* Whether a gamepad joystick is being used to control player movement */
 	cc_bool JoystickMovement;
 	/* Angle of the gamepad joystick being used to control player movement */
@@ -158,8 +160,11 @@ typedef int KeyBind;
 
 /* The keys that are bound to each key binding. */
 extern cc_uint8 KeyBinds[KEYBIND_COUNT];
-/* Default key that each key binding is bound to */
-extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
+/* Default keyboard/mouse button that each key binding is bound to */
+extern const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT];
+/* Default gamepad button that each key binding is bound to */
+extern const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT];
+#define KeyBind_GetDefaults() (Input.GamepadSource ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults)
 
 /* Gets whether the key bound to the given key binding is pressed. */
 CC_API cc_bool KeyBind_IsPressed(KeyBind binding);

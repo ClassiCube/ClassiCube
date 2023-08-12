@@ -1871,12 +1871,15 @@ static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 
 static int KeyBindsScreen_KeyDown(void* screen, int key) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
+	const cc_uint8* defaults;
 	KeyBind bind;
 	int idx;
 
 	if (s->curI == -1) return Menu_InputDown(s, key);
+	defaults = KeyBind_GetDefaults();
+
 	bind = s->binds[s->curI];
-	if (Input_IsEscapeButton(key)) key = KeyBind_Defaults[bind];
+	if (Input_IsEscapeButton(key)) key = defaults[bind];
 	KeyBind_Set(bind, key);
 
 	idx         = s->curI;

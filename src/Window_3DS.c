@@ -49,7 +49,8 @@ void Window_Init(void) {
 	WindowInfo.Height  = width;  // deliberately swapped
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
-	
+
+	Input.GamepadSource = true;
 	irrst_result = irrstInit();
 }
 

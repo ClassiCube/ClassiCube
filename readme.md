@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, BeOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), and in a web browser.<br>
+ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, BeOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), PS Vita (unfinished), Xbox (unfinished), Dreamcast (unfinished), and in a web browser.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -234,6 +234,18 @@ Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
 **NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
 
 The GC port needs assistance from someone experienced with GC homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+#### Xbox
+
+Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
+
+The Xbox port needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+#### Dreamcast
+
+Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
+
+The Dreamcast port needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 ##### Other
 

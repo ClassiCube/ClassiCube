@@ -1,6 +1,9 @@
 #include "Core.h"
 #if defined CC_BUILD_PSP
-#include "_WindowBase.h"
+#include "Window.h"
+#include "Platform.h"
+#include "Input.h"
+#include "Event.h"
 #include "Graphics.h"
 #include "String.h"
 #include "Funcs.h"
@@ -27,7 +30,8 @@ void Window_Init(void) {
 	WindowInfo.Height  = SCREEN_HEIGHT;
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
-	
+
+	Input.GamepadSource = true;	
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 }
@@ -51,6 +55,10 @@ void Window_Close(void) {
 	/* TODO implement */
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons_Launcher(int mods) {
 	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PSP_CTRL_TRIANGLE);
 	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PSP_CTRL_SQUARE);
@@ -101,30 +109,15 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-static void Cursor_GetRawPos(int* x, int* y) {
-	/* TODO implement */
-	*x = 0; *y = 0;
-}
-void Cursor_SetPosition(int x, int y) {
-	/* TODO implement */
-}
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
 
-static void Cursor_DoSetVisible(cc_bool visible) {
-	/* TODO implement */
-}
 
-static void ShowDialogCore(const char* title, const char* msg) {
-	/* TODO implement */
-}
-
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
+/*########################################################################################################################*
+*------------------------------------------------------Framebuffer--------------------------------------------------------*
+*#########################################################################################################################*/
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
@@ -141,7 +134,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
 	cc_uint32* dst = (cc_uint32*)fb           + r.X;
 
-	for (int y = r.Y; y < r.Y + r.Height; y++) {
+	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	{
 		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * fb_bmp.width, r.Width * 4);
 	}
 }
@@ -167,18 +161,29 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 }*/
 
+
+/*########################################################################################################################*
+*------------------------------------------------------Soft keyboard------------------------------------------------------*
+*#########################################################################################################################*/
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
-void Window_EnableRawMouse(void) {
-	RegrabMouse();
-	Input.RawMode = true;
-}
-void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
-void Window_DisableRawMouse(void) {
-	RegrabMouse();
-	Input.RawMode = false;
+/*########################################################################################################################*
+*-------------------------------------------------------Misc/Other--------------------------------------------------------*
+*#########################################################################################################################*/
+void Window_ShowDialog(const char* title, const char* msg) {
+	/* TODO implement */
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
 }
 #endif

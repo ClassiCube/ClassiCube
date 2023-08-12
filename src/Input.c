@@ -323,8 +323,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 *#########################################################################################################################*/
 cc_uint8 KeyBinds[KEYBIND_COUNT];
 /* TODO find a better way than this. maybe alternative keybinds? */
-#if defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII
-const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
+const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
 	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
 	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
@@ -333,8 +332,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	CCKEY_F5, 0, 0, 0, 
 	0, CCPAD_L, 0, CCPAD_R,
 };
-#else
-const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
+const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
 	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
 	'B', 'F', CCKEY_ENTER, CCKEY_TAB, 
@@ -347,7 +345,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	0, 0, 0, 0,
 	'1','2','3', '4','5','6', '7','8','9'
 };
-#endif
+
 static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
@@ -368,9 +366,11 @@ cc_bool KeyBind_IsPressed(KeyBind binding) { return Input.Pressed[KeyBinds[bindi
 
 static void KeyBind_Load(void) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
+	const cc_uint8* defaults;
 	int mapping;
 	int i;
 
+	defaults = KeyBind_GetDefaults();
 	String_InitArray_NT(name, nameBuffer);
 	for (i = 0; i < KEYBIND_COUNT; i++) 
 	{
@@ -378,7 +378,7 @@ static void KeyBind_Load(void) {
 		String_Format1(&name, "key-%c", keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
-		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], storageNames, INPUT_COUNT);
+		mapping = Options_GetEnum(name.buffer, defaults[i], storageNames, INPUT_COUNT);
 		if (mapping != CCKEY_ESCAPE) KeyBinds[i] = mapping;
 	}
 }
@@ -396,10 +396,13 @@ void KeyBind_Set(KeyBind binding, int key) {
 
 /* Initialises and loads key bindings from options */
 static void KeyBind_Init(void) {
+	const cc_uint8* defaults;
 	int i;
+
+	defaults = KeyBind_GetDefaults();
 	for (i = 0; i < KEYBIND_COUNT; i++) 
 	{
-		KeyBinds[i] = KeyBind_Defaults[i];
+		KeyBinds[i] = defaults[i];
 	}
 	KeyBind_Load();
 }

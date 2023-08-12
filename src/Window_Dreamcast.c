@@ -30,7 +30,8 @@ void Window_Init(void) {
 	WindowInfo.Height  = vid_mode->height;
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
-	
+
+	Input.GamepadSource = true;	
 	// TODO: So wasteful!!!!!
 	vid_set_mode(vid_mode->generic, PM_RGB0888);
 }
@@ -122,7 +123,7 @@ void Window_ProcessEvents(double delta) {
 	ProcessControllerInput();
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for Dreamcast
+void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
@@ -158,7 +159,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 

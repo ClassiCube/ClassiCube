@@ -124,6 +124,9 @@
     <Filter Include="Source Files\Graphics">
       <UniqueIdentifier>{e417a755-7f7f-4932-99d1-a1e9a1066e0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Window">
+      <UniqueIdentifier>{cd88d7cb-c252-4b8f-8f90-c776cfc1e6b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform.h">
@@ -560,24 +563,6 @@
     <ClCompile Include="Http_Worker.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
-    <ClCompile Include="Window_SDL.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Web.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Android.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_X11.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Win.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_Carbon.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics_D3D11.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -608,15 +593,6 @@
     <ClCompile Include="Platform_3DS.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Window_3DS.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_GCWii.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Window_PSP.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Platform_WinApi.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -628,6 +604,51 @@
     </ClCompile>
     <ClCompile Include="Graphics_GCWii.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_Dreamcast.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Dreamcast.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Carbon.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Android.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Dreamcast.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_GCWii.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_PSP.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_3DS.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_SDL.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Web.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Win.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_X11.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_PSVita.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Xbox.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Xbox.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
