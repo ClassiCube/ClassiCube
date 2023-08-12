@@ -138,7 +138,7 @@ void android_main(void) {
 	SetupProgram(0, NULL);
 	for (;;) { RunProgram(0, NULL); }
 }
-#elif defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII
+#elif defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII || defined CC_BUILD_DREAMCAST
 int main(int argc, char** argv) {
 	SetupProgram(argc, argv);
 	while (WindowInfo.Exists) { 
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
 	return 0;
 }
 #else
-/* NOTE: main_real is used for when compiling with MingW without linking to startup files. */
+/* NOTE: main_real is used for when compiling with MinGW without linking to startup files. */
 /*  Normally, the final code produced for "main" is our "main" combined with crt's main */
 /*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
 /* Using main_real instead and setting main_real as the entrypoint fixes the crash. */

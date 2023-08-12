@@ -229,19 +229,21 @@ static void* ExecThread(void* param) {
 }
 
 void* Thread_Create(Thread_StartFunc func) {
-	// TODO: Probably wrong to use 0 here....
-	return NULL;//return thd_create(0, ExecThread, func);
+	kthread_attr_t attrs = { 0 };
+	attrs.stack_size     = 64 * 1024;
+	attrs.label          = "CC thread";
+	return thd_create_ex(&attrs, ExecThread, func);
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
 }
 
 void Thread_Detach(void* handle) {
-	//thd_detach((kthread_t*)handle);
+	thd_detach((kthread_t*)handle);
 }
 
 void Thread_Join(void* handle) {
-	//thd_join((kthread_t*)handle, NULL);
+	thd_join((kthread_t*)handle, NULL);
 }
 
 void* Mutex_Create(void) {
@@ -540,6 +542,10 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 void Platform_Init(void) {
 	Platform_SingleProcess = true;
 	/*pspDebugSioInit();*/ 
+	
+	char cwd[600] = { 0 };
+	char* ptr = getcwd(cwd, 600);
+	Platform_Log1("WORKING DIR: %c", ptr);
 }
 void Platform_Free(void) { }
 

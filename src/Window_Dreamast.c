@@ -57,11 +57,17 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void HandleButtons_Launcher(int mods) {     
+	Input_SetNonRepeatable(CCPAD_START,  mods & CONT_A);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & CONT_B);
+
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
+}
 static void HandleButtons_Game(int mods) {
-	// TODO: https://github.com/KallistiOS/KallistiOS/blob/90e09d81d7c1f9dc3f31290a8fff94e4d5ff304a/kernel/arch/dreamcast/include/dc/maple/controller.h#L41
-	//Input_SetNonRepeatable(CCPAD_L, mods & CONT_L);
-	//Input_SetNonRepeatable(CCPAD_R, mods & CONT_R);
-	// TODO CONT_Z, joysticks
+	// TODO CONT_Z
       
 	Input_SetNonRepeatable(CCPAD_A, mods & CONT_A);
 	Input_SetNonRepeatable(CCPAD_B, mods & CONT_B);
@@ -76,14 +82,19 @@ static void HandleButtons_Game(int mods) {
 	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 }
-static void HandleButtons_Launcher(int mods) {     
-	Input_SetNonRepeatable(CCPAD_START,  mods & CONT_A);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & CONT_B);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
+static void HandleController(cont_state_t* state) {
+	Input_SetNonRepeatable(CCPAD_L, state->ltrig > 10);
+	Input_SetNonRepeatable(CCPAD_R, state->rtrig > 10);
+	// TODO CONT_Z, joysticks
+	// TODO: verify values are write
+      
+	if (Input.RawMode) {
+		int dx = state->joyx, dy = state->joyy;
+		if (Math_AbsI(dx) <= 8) dx = 0;
+		if (Math_AbsI(dy) <= 8) dy = 0;
+		
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
+	}
 }
 
 static void ProcessControllerInput(void) {
@@ -100,7 +111,9 @@ static void ProcessControllerInput(void) {
 		HandleButtons_Launcher(mods);
 	} else {
 		HandleButtons_Game(mods);
+		HandleController(state);
 	}
+	
 }
 
 void Window_ProcessEvents(double delta) {
@@ -127,6 +140,10 @@ void Window_DrawFramebuffer(Rect2D r) {
 	// TODO probably bogus..
 	// TODO: Don't redraw everything
 	int size = fb_bmp.width * fb_bmp.height * 4;
+	
+	cc_uint32* row = Bitmap_GetRow(&fb_bmp, 20);
+	bfont_draw_str_ex(row, fb_bmp.width, 0xFFEEDDCC, 0x55667788, 32,
+                       true, "ABC III LLL");
 	
 	// TODO: double buffering ??
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
