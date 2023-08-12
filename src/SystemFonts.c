@@ -1065,6 +1065,7 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 	}
 	return max(1, width);
 }
+
 static void DrawSpan(struct Bitmap* bmp, int x, int y, int row, BitmapCol color) {	
 	if (y < 0 || y >= bmp->height) return;
 	
@@ -1073,12 +1074,13 @@ static void DrawSpan(struct Bitmap* bmp, int x, int y, int row, BitmapCol color)
 		int dstX = x + glyphX;
 		if (dstX < 0 || dstX >= bmp->width) continue;
 			
-		int bit = BFONT_THIN_WIDTH - glyphX;
-		if ((row >> bit) & 1) {
+		// row encodes 12 "1 bit values", starting from hi to lo
+		if (row & (0x800 >> glyphX)) {
 			Bitmap_GetPixel(bmp, dstX, y) = color;
 		}
 	}
 }
+
 
 static void DrawGlyph(struct Bitmap* bmp, int x, int y, uint8* cell, BitmapCol color) {
 	// Each font glyph row contains 12 "1 bit" values horizontally

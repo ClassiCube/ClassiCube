@@ -66,6 +66,7 @@ static void HandleButtons_Launcher(int mods) {
 	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 }
+
 static void HandleButtons_Game(int mods) {
 	// TODO CONT_Z
       
@@ -82,11 +83,12 @@ static void HandleButtons_Game(int mods) {
 	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 }
+
 static void HandleController(cont_state_t* state) {
 	Input_SetNonRepeatable(CCPAD_L, state->ltrig > 10);
 	Input_SetNonRepeatable(CCPAD_R, state->rtrig > 10);
 	// TODO CONT_Z, joysticks
-	// TODO: verify values are write
+	// TODO: verify values are right
       
 	if (Input.RawMode) {
 		int dx = state->joyx, dy = state->joyy;
@@ -140,10 +142,6 @@ void Window_DrawFramebuffer(Rect2D r) {
 	// TODO probably bogus..
 	// TODO: Don't redraw everything
 	int size = fb_bmp.width * fb_bmp.height * 4;
-	
-	cc_uint32* row = Bitmap_GetRow(&fb_bmp, 20);
-	bfont_draw_str_ex(row, fb_bmp.width, 0xFFEEDDCC, 0x55667788, 32,
-                       true, "ABC III LLL");
 	
 	// TODO: double buffering ??
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
