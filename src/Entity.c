@@ -620,8 +620,11 @@ static void Entities_ChatFontChanged(void* obj) {
 }
 
 void Entities_Remove(EntityID id) {
+	struct Entity* e = Entities.List[id];
+	if (!e) return;
+
 	Event_RaiseInt(&EntityEvents.Removed, id);
-	Entities.List[id]->VTABLE->Despawn(Entities.List[id]);
+	e->VTABLE->Despawn(e);
 	Entities.List[id] = NULL;
 
 	/* TODO: Move to EntityEvents.Removed callback instead */
@@ -1207,8 +1210,8 @@ static void Entities_Init(void) {
 
 static void Entities_Free(void) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		Entities_Remove((EntityID)i);
 	}
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);

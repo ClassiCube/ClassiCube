@@ -41,12 +41,71 @@ static cc_uint64 map_receiveBeg;
 static struct Stream map_part;
 static int map_volume;
 
-/* CPE state */
+/*########################################################################################################################*
+*-----------------------------------------------------CPE extensions------------------------------------------------------*
+*#########################################################################################################################*/
+struct CpeExt {
+	const char* name;
+	cc_uint8 clientVersion, serverVersion;
+};
 cc_bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
-static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2, cpe_customModelsVer = 2;
-static cc_bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
-static cc_bool cpe_twoWayPing, cpe_pluginMessages, cpe_extTextures, cpe_extBlocks;
+
+static struct CpeExt 
+	clickDist_Ext       = { "ClickDistance", 1 },
+	customBlocks_Ext    = { "CustomBlocks", 1 },
+	heldBlock_Ext       = { "HeldBlock", 1 },  
+	emoteFix_Ext        = { "EmoteFix", 1 },
+	textHotKey_Ext      = { "TextHotKey", 1 },  
+	extPlayerList_Ext   = { "ExtPlayerList", 2 },
+	envColors_Ext       = { "EnvColors", 1 },
+	selectionCuboid_Ext = { "SelectionCuboid", 1 },
+	blockPerms_Ext      = { "BlockPermissions", 1 },
+	changeModel_Ext     = { "ChangeModel", 2 },
+	mapAppearance_Ext   = { "EnvMapAppearance", 2 },
+	weatherType_Ext     = { "EnvWeatherType", 1 },
+	messageTypes_Ext    = { "MessageTypes", 1 },
+	hackControl_Ext     = { "HackControl", 1 },
+	playerClick_Ext     = { "PlayerClick", 1 },
+	fullCP437_Ext       = { "FullCP437", 1 },
+	longerMessages_Ext  = { "LongerMessages", 1 },
+	blockDefs_Ext       = { "BlockDefinitions", 1 },
+	blockDefsExt_Ext    = { "BlockDefinitionsExt", 2 },
+	bulkBlockUpdate_Ext = { "BulkBlockUpdate", 1 },
+	textColors_Ext      = { "TextColors", 1 },
+	envMapAspect_Ext    = { "EnvMapAspect", 1 },
+	entityProperty_Ext  = { "EntityProperty", 1 },
+	extEntityPos_Ext    = { "ExtEntityPositions", 1 },
+	twoWayPing_Ext      = { "TwoWayPing", 1 },
+	invOrder_Ext        = { "InventoryOrder", 1 },
+	instantMOTD_Ext     = { "InstantMOTD", 1 },
+	fastMap_Ext         = { "FastMap", 1 },
+	setHotbar_Ext       = { "SetHotbar", 1 },
+	setSpawnpoint_Ext   = { "SetSpawnpoint", 1 },
+	velControl_Ext      = { "VelocityControl", 1 },
+	customParticles_Ext = { "CustomParticles", 1 },
+	customModels_Ext    = { "CustomModels", 2 },
+	pluginMessages_Ext  = { "PluginMessages", 1 },
+	extTeleport_Ext     = { "ExtEntityTeleport", 1 },
+	extTextures_Ext     = { "ExtendedTextures", 1 },
+	extBlocks_Ext       = { "ExtendedBlocks", 1 };
+
+static struct CpeExt* cpe_clientExtensions[] = {
+	&clickDist_Ext, &customBlocks_Ext, &heldBlock_Ext, &emoteFix_Ext, &textHotKey_Ext, &extPlayerList_Ext,
+	&envColors_Ext, &selectionCuboid_Ext, &blockPerms_Ext, &changeModel_Ext, &mapAppearance_Ext, &weatherType_Ext,
+	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
+	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
+	&twoWayPing_Ext, &invOrder_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
+	&customParticles_Ext, &customModels_Ext, &pluginMessages_Ext, &extTeleport_Ext,
+#ifdef EXTENDED_TEXTURES
+	&extTextures_Ext,
+#endif
+#ifdef EXTENDED_BLOCKS
+	&extBlocks_Ext,
+#endif
+}; 
+#define IsSupported(ext) (ext.serverVersion > 0)
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -56,7 +115,7 @@ static cc_bool cpe_twoWayPing, cpe_pluginMessages, cpe_extTextures, cpe_extBlock
 #define ReadBlock(data, value) value = *data++;
 #else
 #define ReadBlock(data, value)\
-if (cpe_extBlocks) {\
+if (IsSupported(extBlocks_Ext)) {\
 	value = Stream_GetU16_BE(data) % BLOCK_COUNT; data += 2;\
 } else { value = *data++; }
 #endif
@@ -65,7 +124,7 @@ if (cpe_extBlocks) {\
 #define WriteBlock(data, value) *data++ = value;
 #else
 #define WriteBlock(data, value)\
-if (cpe_extBlocks) {\
+if (IsSupported(extBlocks_Ext)) {\
 	Stream_SetU16_BE(data, value); data += 2;\
 } else { *data++ = (BlockRaw)value; }
 #endif
@@ -138,7 +197,7 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	struct Entity* e;
 
 	if (id != ENTITIES_SELF_ID) {
-		if (Entities.List[id]) Entities_Remove(id);
+		Entities_Remove(id);
 		e = &NetPlayers_List[id].Base;
 
 		NetPlayer_Init((struct NetPlayer*)e);
@@ -160,13 +219,6 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 	p->SpawnPitch = p->Base.Pitch;
 }
 
-void Protocol_RemoveEntity(EntityID id) {
-	struct Entity* e = Entities.List[id];
-	if (!e || id == ENTITIES_SELF_ID) return;
-
-	Entities_Remove(id);
-}
-
 static void UpdateLocation(EntityID id, struct LocationUpdate* update) {
 	struct Entity* e = Entities.List[id];
 	if (e) { e->VTABLE->SetLocation(e, update); }
@@ -175,7 +227,7 @@ static void UpdateLocation(EntityID id, struct LocationUpdate* update) {
 static void UpdateUserType(struct HacksComp* hacks, cc_uint8 value) {
 	cc_bool isOp = value >= 100 && value <= 127;
 	hacks->IsOp  = isOp;
-	if (cpe_blockPerms) return;
+	if (IsSupported(blockPerms_Ext)) return;
 
 	Blocks.CanPlace[BLOCK_BEDROCK]     = isOp;
 	Blocks.CanDelete[BLOCK_BEDROCK]    = isOp;
@@ -258,7 +310,7 @@ static void WoM_ParseConfig(struct HttpRequest* item) {
 			if (Convert_ParseInt(&value, &waterLevel)) {
 				Env_SetEdgeHeight(waterLevel);
 			}
-		} else if (String_CaselessEqualsConst(&key, "user.detail") && !cpe_useMessageTypes) {
+		} else if (String_CaselessEqualsConst(&key, "user.detail") && !IsSupported(messageTypes_Ext)) {
 			Chat_AddOf(&value, MSG_TYPE_STATUS_2);
 		}
 	}
@@ -407,13 +459,13 @@ static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, floa
 
 	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
-		payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
+		payload = IsSupported(heldBlock_Ext) ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
 		WriteBlock(data, payload);
 		x = (int)(pos.X * 32);
 		y = (int)(pos.Y * 32) + 51;
 		z = (int)(pos.Z * 32);
 
-		if (cpe_extEntityPos) {
+		if (IsSupported(extEntityPos_Ext)) {
 			Stream_SetU32_BE(data, x); data += 4;
 			Stream_SetU32_BE(data, y); data += 4;
 			Stream_SetU32_BE(data, z); data += 4;
@@ -486,7 +538,7 @@ static void Classic_LevelInit(cc_uint8* data) {
 	if (map_begunLoading) return;
 
 	Classic_StartLoading();
-	if (!cpe_fastMap) return;
+	if (!IsSupported(fastMap_Ext)) return;
 
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
 	map_volume = Stream_GetU32_BE(data);
@@ -515,7 +567,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	m = &map1;
 #else
 	/* progress byte in original classic, but we ignore it */
-	if (cpe_extBlocks && data[1026]) {
+	if (IsSupported(extBlocks_Ext) && data[1026]) {
 		m = &map2;
 	} else {
 		m = &map1;
@@ -568,7 +620,9 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	
 #ifdef EXTENDED_BLOCKS
 	/* defer allocation of second map array if possible */
-	if (cpe_extBlocks && map2.blocks) World_SetMapUpper(map2.blocks);
+	if (IsSupported(extBlocks_Ext) && map2.blocks) {
+		World_SetMapUpper(map2.blocks);
+	}
 	map2.blocks = NULL;
 #endif
 	World_SetNewMap(map1.blocks, width, height, length);
@@ -650,7 +704,7 @@ static void Classic_OrientationUpdate(cc_uint8* data) {
 
 static void Classic_RemoveEntity(cc_uint8* data) {
 	EntityID id = data[0];
-	Protocol_RemoveEntity(id);
+	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 }
 
 static void Classic_Message(cc_uint8* data) {
@@ -662,7 +716,7 @@ static void Classic_Message(cc_uint8* data) {
 	String_InitArray(text, textBuffer);
 
 	/* Original vanilla server uses player ids for type, 255 for server messages (&e prefix) */
-	if (!cpe_useMessageTypes) {
+	if (!IsSupported(messageTypes_Ext)) {
 		if (type == 0xFF) String_AppendConst(&text, "&e");
 		type = MSG_TYPE_NORMAL;
 	}
@@ -694,7 +748,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 	int x, y, z;
 	cc_uint8 mode;
 
-	if (cpe_extEntityPos) {
+	if (IsSupported(extEntityPos_Ext)) {
 		x = (int)Stream_GetU32_BE(&data[0]);
 		y = (int)Stream_GetU32_BE(&data[4]);
 		z = (int)Stream_GetU32_BE(&data[8]);
@@ -765,16 +819,29 @@ static cc_uint8* Classic_Tick(cc_uint8* data) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[] = {
-	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
-	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
-	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
-	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
-	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels", "PluginMessages", "ExtEntityTeleport",
-	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
-	"ExtendedTextures", "ExtendedBlocks"
-};
+
+static void CPEExtensions_Reset(void) {
+	struct CpeExt* ext;
+	int i;
+
+	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++)
+	{
+		ext = cpe_clientExtensions[i];
+		ext->serverVersion = 0;
+	}
+}
+
+static struct CpeExt* CPEExtensions_Find(const cc_string* name) {
+	struct CpeExt* ext;
+	int i;
+
+	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++)
+	{
+		ext = cpe_clientExtensions[i];
+		if (String_CaselessEqualsConst(name, ext->name)) return ext;
+	}
+	return NULL;
+}
 static void CPE_SetMapEnvUrl(cc_uint8* data);
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
@@ -810,8 +877,7 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 
 void CPE_SendPluginMessage(cc_uint8 channel, cc_uint8* data) {
 	cc_uint8 buffer[66];
-
-	if (!cpe_pluginMessages) return;
+	if (!IsSupported(pluginMessages_Ext)) return;
 
 	buffer[0] = OPCODE_PLUGIN_MESSAGE;
 	{
@@ -851,18 +917,12 @@ static cc_uint8* CPE_WriteTwoWayPing(cc_uint8* data, cc_bool serverToClient, int
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
+	struct CpeExt* ext;
 	int count = Array_Elems(cpe_clientExtensions);
 	cc_string name;
 	int i, ver;
 
 	if (cpe_serverExtensionsCount) return;
-	
-#ifndef EXTENDED_TEXTURES
-	count--;
-#endif
-#ifndef EXTENDED_BLOCKS
-	count--;
-#endif
 
 #ifdef EXTENDED_BLOCKS
 	if (!Game_AllowCustomBlocks) count -= 3;
@@ -871,14 +931,12 @@ static void CPE_SendCpeExtInfoReply(void) {
 #endif
 	CPE_SendExtInfo(count);
 
-	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
-		name = String_FromReadonly(cpe_clientExtensions[i]);
-		ver = 1;
-
-		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
-		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
-		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
-		if (String_CaselessEqualsConst(&name, "CustomModels"))        ver = cpe_customModelsVer;
+	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) 
+	{
+		ext  = cpe_clientExtensions[i];
+		name = String_FromReadonly(ext->name);
+		ver  = ext->serverVersion ? ext->serverVersion : ext->clientVersion;
+		/* Don't reply with version higher than what server supports to workaround some buggy server software */
 
 		if (!Game_AllowCustomBlocks) {
 			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
@@ -887,13 +945,6 @@ static void CPE_SendCpeExtInfoReply(void) {
 			if (String_CaselessEqualsConst(&name, "ExtendedBlocks"))      continue;
 #endif
 		}
-
-#ifndef EXTENDED_TEXTURES
-		if (String_CaselessEqualsConst(&name, "ExtendedTextures")) continue;
-#endif
-#ifndef EXTENDED_BLOCKS
-		if (String_CaselessEqualsConst(&name, "ExtendedBlocks")) continue;
-#endif
 		CPE_SendExtEntry(&name, ver);
 	}
 }
@@ -911,67 +962,55 @@ static void CPE_ExtInfo(cc_uint8* data) {
 }
 
 static void CPE_ExtEntry(cc_uint8* data) {
-	cc_string ext = UNSAFE_GetString(data);
-	int version   = data[67];
-	Platform_Log2("cpe ext: %s, %i", &ext, &version);
+	struct CpeExt* ext;
+	cc_string name = UNSAFE_GetString(data);
+	int version    = data[67];
+	Platform_Log2("cpe ext: %s, %i", &name, &version);
 
 	cpe_serverExtensionsCount--;
-	CPE_SendCpeExtInfoReply();	
+	CPE_SendCpeExtInfoReply();
+
+	ext = CPEExtensions_Find(&name);
+	if (!ext) return;
+	ext->serverVersion = min(ext->clientVersion, version);
 
 	/* update support state */
-	if (String_CaselessEqualsConst(&ext, "HeldBlock")) {
-		cpe_sendHeldBlock = true;
-	} else if (String_CaselessEqualsConst(&ext, "MessageTypes")) {
-		cpe_useMessageTypes = true;
-	} else if (String_CaselessEqualsConst(&ext, "ExtPlayerList")) {
+	if (ext == &extPlayerList_Ext) {
 		Server.SupportsExtPlayerList = true;
-	} else if (String_CaselessEqualsConst(&ext, "BlockPermissions")) {
-		cpe_blockPerms = true;
-	} else if (String_CaselessEqualsConst(&ext, "PlayerClick")) {
+	} else if (ext == &playerClick_Ext) {
 		Server.SupportsPlayerClick = true;
-	} else if (String_CaselessEqualsConst(&ext, "EnvMapAppearance")) {
-		cpe_envMapVer = version;
-		if (version == 1) return;
+	} else if (ext == &mapAppearance_Ext) {
+		if (ext->serverVersion == 1) return;
 		Protocol.Sizes[OPCODE_ENV_SET_MAP_APPEARANCE] += 4;
-	} else if (String_CaselessEqualsConst(&ext, "LongerMessages")) {
+	} else if (ext == &longerMessages_Ext) {
 		Server.SupportsPartialMessages = true;
-	} else if (String_CaselessEqualsConst(&ext, "FullCP437")) {
+	} else if (ext == &fullCP437_Ext) {
 		Server.SupportsFullCP437 = true;
-	} else if (String_CaselessEqualsConst(&ext, "BlockDefinitionsExt")) {
-		cpe_blockDefsExtVer = version;
-		if (version == 1) return;
+	} else if (ext == &blockDefsExt_Ext) {
+		if (ext->serverVersion == 1) return;
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
-	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
+	} else if (ext == &extEntityPos_Ext) {
 		Protocol.Sizes[OPCODE_ENTITY_TELEPORT]     += 6;
 		Protocol.Sizes[OPCODE_ADD_ENTITY]          += 6;
 		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2]     += 6;
 		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]      += 6;
 		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT] += 6;
-		cpe_extEntityPos = true;
-	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
-		cpe_twoWayPing = true;
-	} else if (String_CaselessEqualsConst(&ext, "FastMap")) {
+	} else if (ext == &fastMap_Ext) {
 		Protocol.Sizes[OPCODE_LEVEL_BEGIN] += 4;
-		cpe_fastMap = true;
-	} else if (String_CaselessEqualsConst(&ext, "CustomModels")) {
-		cpe_customModelsVer = min(2, version);
-		if (version == 2) {
+	} else if (ext == &customModels_Ext) {
+		if (ext->serverVersion == 2) {
 			Protocol.Sizes[OPCODE_DEFINE_MODEL_PART] = 167;
 		}
-	} else if (String_CaselessEqualsConst(&ext, "PluginMessages")) {
-		cpe_pluginMessages = true;
 	}
 #ifdef EXTENDED_TEXTURES
-	else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
+	else if (ext == &extTextures_Ext) {
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK]     += 3;
 		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 6;
-		cpe_extTextures = true;
 	}
 #endif
 #ifdef EXTENDED_BLOCKS
-	else if (String_CaselessEqualsConst(&ext, "ExtendedBlocks")) {
+	else if (ext == &extBlocks_Ext) {
 		if (!Game_AllowCustomBlocks) return;
-		cpe_extBlocks = true;
 
 		Protocol.Sizes[OPCODE_SET_BLOCK] += 1;
 		Protocol.Sizes[OPCODE_HOLD_THIS] += 1;
@@ -1140,7 +1179,7 @@ static void CPE_EnvSetMapAppearance(cc_uint8* data) {
 	Env_SetSidesBlock(data[64]);
 	Env_SetEdgeBlock(data[65]);
 	Env_SetEdgeHeight((cc_int16)Stream_GetU16_BE(data + 66));
-	if (cpe_envMapVer == 1) return;
+	if (mapAppearance_Ext.serverVersion == 1) return;
 
 	/* Version 2 */
 	Env_SetCloudsHeight((cc_int16)Stream_GetU16_BE(data + 68));
@@ -1203,7 +1242,7 @@ static void CPE_BulkBlockUpdate(cc_uint8* data) {
 	}
 	data += BULK_MAX_BLOCKS;
 
-	if (cpe_extBlocks) {
+	if (IsSupported(extBlocks_Ext)) {
 		for (i = 0; i < count; i += 4) {
 			cc_uint8 flags = data[i >> 2];
 			blocks[i + 0] |= (BlockID)((flags & 0x03) << 8);
@@ -1363,7 +1402,7 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	int x, y, z;
 
-	if (cpe_extEntityPos) {
+	if (IsSupported(extEntityPos_Ext)) {
 		x = (int)Stream_GetU32_BE(&data[0]);
 		y = (int)Stream_GetU32_BE(&data[4]);
 		z = (int)Stream_GetU32_BE(&data[8]);
@@ -1522,10 +1561,10 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	part->rotation.Y = GetFloat(data + 89);
 	part->rotation.Z = GetFloat(data + 93);
 
-	if (cpe_customModelsVer == 1) {
+	if (customModels_Ext.serverVersion == 1) {
 		/* ignore animations */
 		p.flags = data[102];
-	} else if (cpe_customModelsVer == 2) {
+	} else {
 		p.flags = data[165];
 
 		data += 97;
@@ -1583,11 +1622,9 @@ static void CPE_ExtEntityTeleport(cc_uint8* data) {
 
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
-	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
-	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2; cpe_customModelsVer = 2;
-	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
-	cpe_pluginMessages = false; cpe_extTextures = false; cpe_fastMap = false;
-	cpe_extBlocks = false; Game_UseCPEBlocks = false; cpe_blockPerms = false;
+	CPEExtensions_Reset();
+	cpe_needD3Fix = false;
+	Game_UseCPEBlocks = false;
 	if (!Game_Version.HasCPE) return;
 
 	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);
@@ -1632,7 +1669,7 @@ static void CPE_Reset(void) {
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {
 	cpe_pingTicks++;
-	if (cpe_pingTicks >= 20 && cpe_twoWayPing) {
+	if (cpe_pingTicks >= 20 && IsSupported(twoWayPing_Ext)) {
 		data = CPE_WriteTwoWayPing(data, false, Ping_NextPingId());
 		cpe_pingTicks = 0;
 	}
@@ -1653,7 +1690,7 @@ static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
 	TextureLoc loc; 
 	cc_uint8* data = *ptr;
 
-	if (!cpe_extTextures) {
+	if (!IsSupported(extTextures_Ext)) {
 		loc = *data++;
 	} else {
 		loc = Stream_GetU16_BE(data) % ATLAS1D_MAX_ATLASES; data += 2;
@@ -1743,7 +1780,8 @@ static void BlockDefs_UndefineBlock(cc_uint8* data) {
 
 static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 	Vec3 minBB, maxBB;
-	BlockID block = BlockDefs_DefineBlockCommonStart(&data, cpe_blockDefsExtVer >= 2);
+	BlockID block = BlockDefs_DefineBlockCommonStart(&data, 
+						blockDefsExt_Ext.serverVersion >= 2);
 
 	minBB.X = (cc_int8)(*data++) / 16.0f;
 	minBB.Y = (cc_int8)(*data++) / 16.0f;

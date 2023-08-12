@@ -61,7 +61,6 @@ struct RayTracer;
 struct IGameComponent;
 extern struct IGameComponent Protocol_Component;
 
-void Protocol_RemoveEntity(EntityID id);
 void Protocol_Tick(void);
 
 extern cc_bool cpe_needD3Fix;
