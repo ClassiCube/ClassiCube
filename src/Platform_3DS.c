@@ -36,6 +36,7 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const char* Platform_AppNameSuffix = " 3DS";
 
 // https://gbatemp.net/threads/homebrew-development.360646/page-245
 // 3DS defaults to stack size of *32 KB*.. way too small

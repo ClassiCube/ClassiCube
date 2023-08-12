@@ -469,6 +469,7 @@
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
     <ClCompile Include="Graphics_PSP.c" />
+    <ClCompile Include="Graphics_Xbox.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
@@ -489,6 +490,7 @@
     <ClCompile Include="Platform_GCWii.c" />
     <ClCompile Include="Platform_Posix.c" />
     <ClCompile Include="Platform_PSP.c" />
+    <ClCompile Include="Platform_PSVita.c" />
     <ClCompile Include="Platform_Web.c" />
     <ClCompile Include="Platform_WinApi.c" />
     <ClCompile Include="Platform_Xbox.c" />

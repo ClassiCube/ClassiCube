@@ -95,7 +95,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&envColors_Ext, &selectionCuboid_Ext, &blockPerms_Ext, &changeModel_Ext, &mapAppearance_Ext, &weatherType_Ext,
 	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
-	&twoWayPing_Ext, &invOrder_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
+	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
 	&customParticles_Ext, &customModels_Ext, &pluginMessages_Ext, &extTeleport_Ext,
 #ifdef EXTENDED_TEXTURES
 	&extTextures_Ext,

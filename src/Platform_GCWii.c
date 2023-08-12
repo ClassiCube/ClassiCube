@@ -30,6 +30,11 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = -EINPROGRESS; // net_XYZ error results are negative
 const cc_result ReturnCode_SocketWouldBlock = -EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+#ifdef HW_RVL
+const char* Platform_AppNameSuffix = " Wii";
+#else
+const char* Platform_AppNameSuffix = " GameCube";
+#endif
 
 
 /*########################################################################################################################*

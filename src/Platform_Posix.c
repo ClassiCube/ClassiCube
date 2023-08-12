@@ -36,6 +36,14 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
+#if defined CC_BUILD_ANDROID
+const char* Platform_AppNameSuffix = " android alpha";
+#elif defined CC_BUILD_IOS
+const char* Platform_AppNameSuffix = " iOS alpha";
+#else
+const char* Platform_AppNameSuffix = "";
+#endif
+
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN
 #include <mach/mach_time.h>

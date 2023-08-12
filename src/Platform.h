@@ -36,6 +36,8 @@ extern const cc_result ReturnCode_DirectoryExists;
 /* Whether the launcher and game must both be run in the same process */
 /*  (e.g. can't start a separate process on Mobile or Consoles) */
 extern cc_bool Platform_SingleProcess;
+/* Suffix added to app name sent to the server */
+extern const char* Platform_AppNameSuffix;
 
 #ifdef CC_BUILD_WIN
 typedef struct cc_winstring_ {
