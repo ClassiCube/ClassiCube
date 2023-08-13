@@ -1193,7 +1193,7 @@ static CGContextRef win_ctx;
 void LBackend_MarkDirty(void* widget) { }
 void LBackend_Tick(void) { }
 void LBackend_Free(void) { }
-void LBackend_UpdateLogoFont(void) { }
+void LBackend_UpdateTitleFont(void) { }
 
 static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int y) {
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
@@ -1204,11 +1204,11 @@ static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int 
     CTLineDraw(line, win_ctx);
 }
 
-void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
+void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
     if (Launcher_BitmappedText()) {
         struct FontDesc font;
-        Launcher_MakeLogoFont(&font);
-        Launcher_DrawLogo(&font, title, ctx);
+        Launcher_MakeTitleFont(&font);
+        Launcher_DrawTitle(&font, title, ctx);
         // bitmapped fonts don't need to be freed
         return;
     }

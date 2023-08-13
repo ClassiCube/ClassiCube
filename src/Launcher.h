@@ -54,10 +54,10 @@ void Launcher_SaveTheme(void);
 
 /* Whether logo should be drawn using bitmapped text */
 cc_bool Launcher_BitmappedText(void);
-/* Draws logo styled text using the given font */
-void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D* ctx);
-/* Allocates a font appropriate for drawing logo text */
-void Launcher_MakeLogoFont(struct FontDesc* font);
+/* Draws title styled text using the given font */
+void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx);
+/* Allocates a font appropriate for drawing title text */
+void Launcher_MakeTitleFont(struct FontDesc* font);
 
 /* Attempts to load font and terrain from texture pack. */
 void Launcher_TryLoadTexturePack(void);

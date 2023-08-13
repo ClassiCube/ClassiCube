@@ -87,6 +87,9 @@ extern const struct UpdaterInfo {
 	/* Metadata for the compiled builds available for this platform */
 	const struct UpdaterBuild builds[2]; // TODO name and path
 } Updater_Info;
+/* Whether updating is supported by the platform */
+extern cc_bool Updater_Supported;
+
 /* Attempts to clean up any leftover files from an update */
 cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */

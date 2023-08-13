@@ -92,7 +92,7 @@ void Process_Exit(cc_result code) { exit(code); }
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
-const char* const Updater_D3D9 = NULL;
+cc_bool Updater_Supported = false;
 cc_bool Updater_Clean(void) { return true; }
 
 const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };

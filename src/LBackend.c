@@ -88,12 +88,12 @@ void LBackend_Free(void) {
 	Font_Free(&rowFont);
 }
 
-void LBackend_UpdateLogoFont(void) {
+void LBackend_UpdateTitleFont(void) {
 	Font_Free(&logoFont);
-	Launcher_MakeLogoFont(&logoFont);
+	Launcher_MakeTitleFont(&logoFont);
 }
-void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
-	Launcher_DrawLogo(&logoFont, title, ctx);
+void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
+	Launcher_DrawTitle(&logoFont, title, ctx);
 }
 
 static void OnPointerMove(void* obj, int idx);

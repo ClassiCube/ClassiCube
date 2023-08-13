@@ -120,7 +120,7 @@ static void LScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
 		return;
 	}
 	Launcher_DrawBackgroundAll(ctx);
-	LBackend_DrawLogo(ctx, s->title);
+	LBackend_DrawTitle(ctx, s->title);
 }
 
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
@@ -204,7 +204,7 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 
 	Options_SaveIfChanged();
 	Launcher_LoadTheme();
-	LBackend_UpdateLogoFont();
+	LBackend_UpdateTitleFont();
 	MainScreen_SetActive();
 }
 
@@ -672,9 +672,7 @@ static struct LWidget* main_widgets[] = {
 	(struct LWidget*)&MainScreen.lblStatus,   (struct LWidget*)&MainScreen.btnDirect,
 	(struct LWidget*)&MainScreen.btnSPlayer,  (struct LWidget*)&MainScreen.btnRegister,
 	(struct LWidget*)&MainScreen.btnOptions,  (struct LWidget*)&MainScreen.lblUpdate,
-#ifndef CC_BUILD_FLATPAK
 	(struct LWidget*)&MainScreen.btnUpdates
-#endif
 };
 
 LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
@@ -691,11 +689,8 @@ LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,    6 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_btnOptions[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_btnUpdates[]  = { { ANCHOR_MAX,    6 }, { ANCHOR_MAX,  6 } };
 
-#ifndef CC_BUILD_FLATPAK
-LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
-#else
-LAYOUTS main_lblUpdate[]   = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 6 } };
-#endif
+LAYOUTS main_lblUpdate_N[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 45 } };
+LAYOUTS main_lblUpdate_H[] = { { ANCHOR_MAX,   10 }, { ANCHOR_MAX, 6 } };
 
 
 struct ResumeInfo {
@@ -815,6 +810,12 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->iptPassword.inputType = KEYBOARD_TYPE_PASSWORD;
 	s->lblUpdate.small       = true;
 
+	/* Hide update button when unsupported */
+#ifdef CC_BUILD_FLATPAK
+	Updater_Supported = false;
+#endif
+	if (!Updater_Supported) s->numWidgets--;
+
 	LInput_Init( &s->iptUsername, 280, "Username..",  main_iptUsername);
 	LInput_Init( &s->iptPassword, 280, "Password..",  main_iptPassword);
 	LButton_Init(&s->btnLogin,    100, 35, "Sign in", main_btnLogin);
@@ -824,7 +825,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LButton_Init(&s->btnDirect,  200, 35, "Direct connect", main_btnDirect);
 	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer",   main_btnSPlayer);
 
-	LLabel_Init( &s->lblUpdate,   "&eChecking..",      main_lblUpdate);
+	LLabel_Init( &s->lblUpdate,   "&eChecking..",      
+				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
 	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
 	LButton_Init(&s->btnUpdates,  100, 35, "Updates",  main_btnUpdates);

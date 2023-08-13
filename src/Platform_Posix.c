@@ -850,7 +850,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 #elif defined CC_BUILD_IOS
 /* implemented in interop_ios.m */
 #else
-const char* const Updater_D3D9 = NULL;
+cc_bool Updater_Supported = true;
 cc_bool Updater_Clean(void) { return true; }
 
 #if defined CC_BUILD_RPI

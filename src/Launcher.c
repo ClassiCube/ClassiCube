@@ -474,7 +474,7 @@ void Launcher_TryLoadTexturePack(void) {
 	if (!hasBitmappedFont || dirtBmp.scan0 == NULL)
 		TexturePack_ExtractDefault(ExtractTexturePack);
 
-	LBackend_UpdateLogoFont();
+	LBackend_UpdateTitleFont();
 }
 
 
@@ -521,10 +521,13 @@ cc_bool Launcher_BitmappedText(void) {
 	return (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
 }
 
-void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D* ctx) {
+void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx) {
 	cc_string title = String_FromReadonly(text);
 	struct DrawTextArgs args;
 	int x;
+
+	/* Skip dragging logo when very small window to save space */
+	if (WindowInfo.Height < 300) return;
 
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
@@ -535,7 +538,7 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D
 	Context2D_DrawText(ctx, &args, x,                     0);
 }
 
-void Launcher_MakeLogoFont(struct FontDesc* font) {
+void Launcher_MakeTitleFont(struct FontDesc* font) {
 	Drawer2D.BitmappedText = Launcher_BitmappedText();
 	Font_Make(font, 32, FONT_FLAGS_NONE);
 	Drawer2D.BitmappedText = false;

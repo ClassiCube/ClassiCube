@@ -663,6 +663,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 *#########################################################################################################################*/
 #define UPDATE_TMP TEXT("CC_prev.exe")
 #define UPDATE_SRC TEXT(UPDATE_FILE)
+cc_bool Updater_Supported = true;
 
 const struct UpdaterInfo Updater_Info = {
 	"&eDirect3D 9 is recommended", 2,

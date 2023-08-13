@@ -21,8 +21,8 @@ void LBackend_Free(void);
 void LBackend_SetScreen(struct LScreen* s);
 void LBackend_CloseScreen(struct LScreen* s);
 
-void LBackend_UpdateLogoFont(void);
-void LBackend_DrawLogo(struct Context2D* ctx, const char* title);
+void LBackend_UpdateTitleFont(void);
+void LBackend_DrawTitle(struct Context2D* ctx, const char* title);
 
 /* Resets pixels to default, then draws widgets of current screen over it */
 void LBackend_Redraw(void);
