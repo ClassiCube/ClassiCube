@@ -121,6 +121,17 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 	Http_AddHeader(req, "Cookie", &cookies);
 }
 
+/* TODO: Rewrite to use a local variable instead */
+static cc_string* Http_GetUserAgent_UNSAFE(void) {
+	static char userAgentBuffer[STRING_SIZE];
+	static cc_string userAgent;
+
+	String_InitArray(userAgent, userAgentBuffer);
+	String_AppendConst(&userAgent, GAME_APP_NAME);
+	String_AppendConst(&userAgent, Platform_AppNameSuffix);
+	return &userAgent;
+}
+
 static void Http_SignalWorker(void) { Waitable_Signal(workerWaitable); }
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
@@ -634,8 +645,7 @@ static void HttpClientState_Init(struct HttpClientState* state) {
 
 
 static void HttpClient_Serialise(struct HttpClientState* state) {
-	static const cc_string userAgent = String_FromConst(GAME_APP_NAME);
-	static const char* verbs[3] = { "GET", "HEAD", "POST" };
+	static const char* verbs[] = { "GET", "HEAD", "POST" };
 
 	struct HttpRequest* req = state->req;
 	cc_string* buffer = (cc_string*)req->meta;
@@ -645,7 +655,7 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 					verbs[req->requestType], &state->url.resource);
 
 	Http_AddHeader(req, "Host",       &state->url.address);
-	Http_AddHeader(req, "User-Agent", &userAgent);
+	Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
 	if (req->data) String_Format1(buffer, "Content-Length: %i\r\n", &req->size);
 
 	Http_SetRequestHeaders(req);
@@ -1306,7 +1316,6 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
-	static const cc_string userAgent = String_FromConst(GAME_APP_NAME);
 	JNIEnv* env;
 	jint res;
 
@@ -1315,7 +1324,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	java_req = req;
 
 	Http_SetRequestHeaders(req);
-	Http_AddHeader(req, "User-Agent", &userAgent);
+	Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
 	if (req->data && (res = Http_SetData(env, req))) return res;
 
 	req->_capacity   = 0;
@@ -1381,7 +1390,6 @@ static cc_result ParseResponseHeaders(struct HttpRequest* req, CFReadStreamRef s
 }
 
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
-    static const cc_string userAgent = String_FromConst(GAME_APP_NAME);
     static CFStringRef verbs[] = { CFSTR("GET"), CFSTR("HEAD"), CFSTR("POST") };
     cc_bool gotHeaders = false;
     char tmp[NATIVE_STR_LEN];
@@ -1400,7 +1408,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     request = CFHTTPMessageCreateRequest(NULL, verbs[req->requestType], urlRef, kCFHTTPVersion1_1);
     req->meta = request;
     Http_SetRequestHeaders(req);
-    Http_AddHeader(req, "User-Agent", &userAgent);
+    Http_AddHeader(req, "User-Agent", Http_GetUserAgent_UNSAFE());
     CFRelease(urlRef);
     
     if (req->data && req->size) {

@@ -73,7 +73,7 @@ static struct CpeExt
 	blockDefsExt_Ext    = { "BlockDefinitionsExt", 2 },
 	bulkBlockUpdate_Ext = { "BulkBlockUpdate", 1 },
 	textColors_Ext      = { "TextColors", 1 },
-	envMapAspect_Ext    = { "EnvMapAspect", 1 },
+	envMapAspect_Ext    = { "EnvMapAspect", 2 },
 	entityProperty_Ext  = { "EntityProperty", 1 },
 	extEntityPos_Ext    = { "ExtEntityPositions", 1 },
 	twoWayPing_Ext      = { "TwoWayPing", 1 },
@@ -819,7 +819,6 @@ static cc_uint8* Classic_Tick(cc_uint8* data) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-
 static void CPEExtensions_Reset(void) {
 	struct CpeExt* ext;
 	int i;
@@ -842,7 +841,6 @@ static struct CpeExt* CPEExtensions_Find(const cc_string* name) {
 	}
 	return NULL;
 }
-static void CPE_SetMapEnvUrl(cc_uint8* data);
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) {
@@ -1025,6 +1023,14 @@ static void CPE_ExtEntry(cc_uint8* data) {
 #endif
 }
 
+static void CPE_ApplyTexturePack(const cc_string* url) {
+	if (!url->length || Utils_IsUrlPrefix(url)) {
+		Server_RetrieveTexturePack(url);
+	}
+	Platform_Log1("Tex url: %s", url);
+}
+
+
 static void CPE_SetClickDistance(cc_uint8* data) {
 	LocalPlayer_Instance.ReachDistance = Stream_GetU16_BE(data) / 32.0f;
 }
@@ -1173,9 +1179,10 @@ static void CPE_ChangeModel(cc_uint8* data) {
 }
 
 static void CPE_EnvSetMapAppearance(cc_uint8* data) {
+	cc_string url = UNSAFE_GetString(data);
 	int maxViewDist;
+	CPE_ApplyTexturePack(&url);
 
-	CPE_SetMapEnvUrl(data);
 	Env_SetSidesBlock(data[64]);
 	Env_SetEdgeBlock(data[65]);
 	Env_SetEdgeHeight((cc_int16)Stream_GetU16_BE(data + 66));
@@ -1280,11 +1287,7 @@ static void CPE_SetTextColor(cc_uint8* data) {
 
 static void CPE_SetMapEnvUrl(cc_uint8* data) {
 	cc_string url = UNSAFE_GetString(data);
-
-	if (!url.length || Utils_IsUrlPrefix(&url)) {
-		Server_RetrieveTexturePack(&url);
-	}
-	Platform_Log1("Tex url: %s", &url);
+	CPE_ApplyTexturePack(&url);
 }
 
 static void CPE_SetMapEnvProperty(cc_uint8* data) {
