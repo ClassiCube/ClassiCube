@@ -43,6 +43,7 @@ const char* Platform_AppNameSuffix = " iOS alpha";
 #else
 const char* Platform_AppNameSuffix = "";
 #endif
+cc_bool Platform_SingleProcess;
 
 /* Operating system specific include files */
 #if defined CC_BUILD_DARWIN

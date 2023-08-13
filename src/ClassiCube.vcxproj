@@ -441,6 +441,7 @@
     <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_HttpBase.h" />
     <ClInclude Include="_PlatformBase.h" />
+    <ClInclude Include="_PlatformConsole.h" />
     <ClInclude Include="_WindowBase.h" />
   </ItemGroup>
   <ItemGroup>

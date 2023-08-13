@@ -1,6 +1,5 @@
 #include "Core.h"
 #if defined CC_BUILD_3DS
-
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -9,6 +8,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -27,6 +27,7 @@
 #include <netdb.h>
 #include <3ds.h>
 #include <citro3d.h>
+#include "_PlatformConsole.h"
 
 #define US_PER_SEC 1000000LL
 #define NS_PER_MS 1000000LL
@@ -41,31 +42,6 @@ const char* Platform_AppNameSuffix = " 3DS";
 // https://gbatemp.net/threads/homebrew-development.360646/page-245
 // 3DS defaults to stack size of *32 KB*.. way too small
 unsigned int __stacksize__ = 256 * 1024;
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
 
 
 /*########################################################################################################################*
@@ -120,7 +96,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path) { }
 static const cc_string root_path = String_FromConst("sdmc:/3ds/ClassiCube/");
 
 static void GetNativePath(char* str, const cc_string* path) {
@@ -422,59 +397,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Process/Module------------------------------------------------------*
+*--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
-static int gameNumArgs;
-static cc_bool gameHasArgs;
-
-cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	for (int i = 0; i < numArgs; i++) 
-	{
-		String_CopyToRawArray(gameArgs[i], &args[i]);
-	}
-	
-	Platform_LogConst("START GAME");
-	gameHasArgs = true;
-	gameNumArgs = numArgs;
-	return 0;
-}
-
-static int GetGameArgs(cc_string* args) {
-	int count = gameNumArgs;
-	for (int i = 0; i < count; i++) 
-	{
-		args[i] = String_FromRawArray(gameArgs[i]);
-	}
-	
-	// clear arguments so after game is closed, launcher is started
-	gameNumArgs = 0;
-	return count;
-}
-
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	if (gameHasArgs) return GetGameArgs(args);
-	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
-	//   (e.g. when running from Citra)
-	if (!argc) return 0;
-	
-	argc--; argv++; // skip executable path argument
-	
-	int count = min(argc, GAME_MAX_CMDARGS);
-	Platform_Log1("ARGS: %i", &count);
-	
-	for (int i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-		Platform_Log2("  ARG %i = %c", &i, argv[i]);
-	}
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
-}
-
-void Process_Exit(cc_result code) { exit(code); }
+#define SOC_CTX_ALIGN 0x1000
+#define SOC_CTX_SIZE  0x1000 * 128
 
 cc_result Process_StartOpen(const cc_string* args) {
 	char url[NATIVE_STR_LEN];
@@ -486,46 +412,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 	// len + 1 for null terminator
 }
 
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-const char* const Updater_D3D9 = NULL;
-cc_bool Updater_Clean(void) { return true; }
-
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-
-cc_result Updater_Start(const char** action) { *action = "Starting"; return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_MarkExecutable(void) { return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-
-const cc_string DynamicLib_Ext = String_FromConst(".so");
-
-void* DynamicLib_Load2(const cc_string* path) { return NULL; }
-
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	String_AppendConst(dst, "Dynamic linking unsupported");
-	return true;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Platform---------------------------------------------------------*
-*#########################################################################################################################*/
-#define SOC_CTX_ALIGN 0x1000
-#define SOC_CTX_SIZE  0x1000 * 128
-
 static void CreateRootDirectory(const char* path) {
 	// create root directories (no permissions anyways)
 	int res = mkdir(path, 0666);
@@ -536,8 +422,6 @@ static void CreateRootDirectory(const char* path) {
 }
 
 void Platform_Init(void) { 
-	Platform_SingleProcess = true;
-	
 	// create root directories (no permissions anyways)
 	CreateRootDirectory("sdmc:/3ds");
 	CreateRootDirectory("sdmc:/3ds/ClassiCube");
@@ -580,6 +464,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
