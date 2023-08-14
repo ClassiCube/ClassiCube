@@ -309,14 +309,12 @@ static void ProcessKeyboardInput(void) {
 		if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
 	}
 }
-
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
+static void ProcessWPADInput(double delta) {	
 	WPAD_ScanPads();
 	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
 	u32 type;
 	int res  = WPAD_Probe(0, &type);
+	if (res) return;
 
 	if (launcherMode) {
 		ProcessWPAD_Launcher(mods);
@@ -341,7 +339,12 @@ void Window_ProcessEvents(double delta) {
 		dragActive = false;
 	}
 	Pointer_SetPosition(0, x, y);
-	
+}
+
+void Window_ProcessEvents(double delta) {
+	Input.JoystickMovement = false;
+
+	ProcessWPADInput(delta);
 	ProcessPADInput();
 	ProcessKeyboardInput();
 }

@@ -260,7 +260,8 @@ void Gfx_EndFrame(void) {
 	
 	VIDEO_SetNextFramebuffer(xfbs[curFB]);
 	VIDEO_Flush();
-	VIDEO_WaitVSync();
+	
+	if (gfx_vsync) VIDEO_WaitVSync();
 	if (gfx_minFrameMs) LimitFPS();
 }
 
