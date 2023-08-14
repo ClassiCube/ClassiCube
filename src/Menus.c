@@ -3707,7 +3707,7 @@ static struct TexPackOverlay {
 	struct FontDesc textFont;
 	struct ButtonWidget btns[4];
 	struct TextWidget   lbls[4];
-	char _urlBuffer[STRING_SIZE + 1];
+	char _urlBuffer[URL_MAX_SIZE];
 } TexPackOverlay;
 
 static struct Widget* texpack_widgets[] = {

@@ -320,7 +320,7 @@ static void UpdateCache(struct HttpRequest* req) {
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-static char textureUrlBuffer[STRING_SIZE];
+static char textureUrlBuffer[URL_MAX_SIZE];
 static char texpackPathBuffer[FILENAME_SIZE];
 
 cc_string TexturePack_Url  = String_FromArray(textureUrlBuffer);

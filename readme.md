@@ -233,19 +233,19 @@ Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
 **NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
 
-The GC port needs assistance from someone experienced with GC homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+The GC port needs assistance from someone experienced with GameCube homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### Xbox
 
 Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
 
-The Xbox port needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+The Xbox port needs assistance from someone experienced with Xbox homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### Dreamcast
 
 Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
 
-The Dreamcast port needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+The Dreamcast port needs assistance from someone experienced with Dreamcast homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 ##### Other
 

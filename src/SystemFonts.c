@@ -760,11 +760,15 @@ void SysFonts_Register(const cc_string* path) { }
 const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
 
 void SysFonts_GetNames(struct StringsBuffer* buffer) { }
+
 static union {
 	sys_fontheader hdr;
 	u8 data[SYS_FONTSIZE_ANSI];
 } __attribute__((aligned(32))) ipl_font;
+// must be 32 byte aligned for correct font reading
+
 static cc_bool font_checked, font_okay;
+
 static void LoadIPLFont(void) {
 	font_checked = true;
 	// SJIS font layout not supported
@@ -775,12 +779,12 @@ static void LoadIPLFont(void) {
 }
 
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	if (!font_checked) LoadIPLFont();
+
 	desc->size   = size;
 	desc->flags  = flags;
-	desc->height = Drawer2D_AdjHeight(size);
-
-	desc->handle = (void*)1;
-	if (!font_checked) LoadIPLFont();
+	desc->height = ipl_font.hdr.cell_height;
+	desc->handle = (void*)1;	
 	
 	if (!font_okay) Font_MakeBitmapped(desc, size, flags);
 	return 0;
@@ -1041,7 +1045,7 @@ void SysFonts_GetNames(struct StringsBuffer* buffer) { }
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
 	desc->flags  = flags;
-	desc->height = Drawer2D_AdjHeight(size);
+	desc->height = BFONT_HEIGHT;
 
 	desc->handle = (void*)1;
 	return 0;
