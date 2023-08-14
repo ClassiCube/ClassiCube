@@ -43,7 +43,7 @@ build_win32() {
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit (Direct3D11)" >> "$ERRS_FILE"; fi
 
   # mingw defaults to i686, but some really old CPUs only support i586
-  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -march=i586 -o cc-w9x-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -march=i586 -o cc-w9x-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp -lopengl32
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 9x (OpenGL)" >> "$ERRS_FILE"; fi
 }
 
