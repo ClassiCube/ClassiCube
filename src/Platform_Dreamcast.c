@@ -71,8 +71,14 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+static const cc_string root_path = String_FromConst("/cd/");
+
 static void GetNativePath(char* str, const cc_string* path) {
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
+
 	String_EncodeUtf8(str, path);
+
 }
 
 cc_result Directory_Create(const cc_string* path) {

@@ -365,6 +365,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
+	col     = 0xFF; /* Unknown colour space */
 	trnsCol = BITMAPCOLOR_BLACK;
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 

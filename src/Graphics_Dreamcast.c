@@ -8,7 +8,6 @@
 #include "GL/glkos.h"
 #include "GL/glext.h"
 #include <malloc.h>
-#define PIXEL_FORMAT GL_RGBA
 
 #define TRANSFER_FORMAT GL_UNSIGNED_BYTE
 /* Current format and size of vertices */
@@ -224,48 +223,43 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	int tex = texId;
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 }
+static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
+	cc_uint8* src = (cc_uint8*)bmp->scan0;
+	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		for (int x = 0; x < bmp->width; x++, dst++, src += 4)
+		{
+			// B8 G8 R8 A8 > B4 G4 R4 A4
+			*dst = ((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);
+		}
+	}
+}
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
+	
+	void* temp = Mem_Alloc(bmp->width * bmp->height, 2, "texture conversion buffer");
+	ConvertTexture(temp, bmp);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, GL_BGRA, 
+			GL_UNSIGNED_SHORT_4_4_4_4_REV, temp);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp->scan0);
-
+	Mem_Free(temp);
 	return texId;
 }
 
-#define UPDATE_FAST_SIZE (64 * 64)
-static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth) {
-	BitmapCol buffer[UPDATE_FAST_SIZE];
-	void* ptr = (void*)buffer;
-	int count = part->width * part->height;
-
-	/* cannot allocate memory on the stack for very big updates */
-	if (count > UPDATE_FAST_SIZE) {
-		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
-	}
-
-	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, ptr);
-	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
-}
-
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-	/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL */
-
-	if (part->width == rowWidth) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, part->scan0);
-	} else {
-		UpdateTextureSlow(x, y, part, rowWidth);
-	}
+	// TODO: Doesn't work and triggers assertion failure
+	//	https://github.com/Kazade/GLdc/blob/master/GL/texture.c#L1895
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
@@ -321,7 +315,7 @@ void Gfx_SetFogEnd(float value) {
 }
 
 void Gfx_SetFogMode(FogFunc func) {
-	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
+	static GLint modes[] = { GL_LINEAR, GL_EXP, GL_EXP2 };
 	if (func == gfx_fogMode) return;
 
 	glFogi(GL_FOG_MODE, modes[func]);
