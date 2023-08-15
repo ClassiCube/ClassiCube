@@ -212,7 +212,7 @@ static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* include, co
 	if (String_ContainsConst(joined, include)) {
 		*target = true;
 	} else if (String_ContainsConst(joined, exclude)) {
-		*target = false;
+		*target = true;
 	}
 }
 
