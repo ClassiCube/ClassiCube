@@ -995,7 +995,10 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		Protocol.Sizes[OPCODE_ENTITY_TELEPORT_EXT] += 6;
 	} else if (ext == &fastMap_Ext) {
 		Protocol.Sizes[OPCODE_LEVEL_BEGIN] += 4;
-	} else if (ext == &customModels_Ext) {
+	} else if (ext == &envMapAspect_Ext) {
+		if (ext->serverVersion == 1) return;
+		Protocol.Sizes[OPCODE_ENV_SET_MAP_URL] += 64;
+	}  else if (ext == &customModels_Ext) {
 		if (ext->serverVersion == 2) {
 			Protocol.Sizes[OPCODE_DEFINE_MODEL_PART] = 167;
 		}
@@ -1286,7 +1289,19 @@ static void CPE_SetTextColor(cc_uint8* data) {
 }
 
 static void CPE_SetMapEnvUrl(cc_uint8* data) {
-	cc_string url = UNSAFE_GetString(data);
+	char urlBuffer[URL_MAX_SIZE];
+	cc_string url;
+
+	cc_string part1 = UNSAFE_GetString(data);
+	String_InitArray(url, urlBuffer);
+	String_Copy(&url, &part1);
+
+	/* Version 1 only supports URLs up to 64 characters long */
+	/* Version 2 supports URLs up to 128 characters long */
+	if (envMapAspect_Ext.serverVersion > 1) {
+		cc_string part2 = UNSAFE_GetString(data + 64);
+		String_AppendString(&url, &part2);
+	}
 	CPE_ApplyTexturePack(&url);
 }
 
