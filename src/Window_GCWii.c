@@ -167,6 +167,69 @@ static void ProcessPADInput(void) {
 
 
 /*########################################################################################################################*
+*--------------------------------------------------Kebyaord processing----------------------------------------------------*
+*#########################################################################################################################*/
+#if defined HW_RVL
+static const cc_uint8 key_map[] = {
+/* 0x00 */ 0,0,0,0,         'A','B','C','D', 
+/* 0x08 */ 'E','F','G','H', 'I','J','K','L',
+/* 0x10 */ 'M','N','O','P', 'Q','R','S','T',
+/* 0x18 */ 'U','V','W','X', 'Y','Z','1','2',
+/* 0x20 */ '3','4','5','6', '7','8','9','0',
+/* 0x28 */ CCKEY_ENTER,CCKEY_ESCAPE,CCKEY_BACKSPACE,CCKEY_TAB, CCKEY_SPACE,CCKEY_MINUS,CCKEY_EQUALS,CCKEY_LBRACKET,
+/* 0x30 */ CCKEY_RBRACKET,CCKEY_BACKSLASH,0,CCKEY_SEMICOLON, CCKEY_QUOTE,CCKEY_TILDE,CCKEY_COMMA,CCKEY_PERIOD,
+/* 0x38 */ CCKEY_SLASH,CCKEY_CAPSLOCK,CCKEY_F1,CCKEY_F2, CCKEY_F3,CCKEY_F4,CCKEY_F5,CCKEY_F6,
+/* 0x40 */ CCKEY_F7,CCKEY_F8,CCKEY_F9,CCKEY_F10, CCKEY_F11,CCKEY_F12,CCKEY_PRINTSCREEN,CCKEY_SCROLLLOCK,
+/* 0x48 */ CCKEY_PAUSE,CCKEY_INSERT,CCKEY_HOME,CCKEY_PAGEUP, CCKEY_DELETE,CCKEY_END,CCKEY_PAGEDOWN,CCKEY_RIGHT,
+/* 0x50 */ CCKEY_LEFT,CCKEY_DOWN,CCKEY_UP,CCKEY_NUMLOCK, CCKEY_KP_DIVIDE,CCKEY_KP_MULTIPLY,CCKEY_KP_MINUS,CCKEY_KP_PLUS,
+/* 0x58 */ CCKEY_KP_ENTER,CCKEY_KP1,CCKEY_KP2,CCKEY_KP3, CCKEY_KP4,CCKEY_KP5,CCKEY_KP6,CCKEY_KP7,
+/* 0x60 */ CCKEY_KP8,CCKEY_KP9,CCKEY_KP0,CCKEY_KP_DECIMAL, 0,0,0,0,
+/* 0x68 */ 0,0,0,0, 0,0,0,0,
+/* 0x70 */ 0,0,0,0, 0,0,0,0,
+/* 0x78 */ 0,0,0,0, 0,0,0,0,
+/* 0x80 */ 0,0,0,0, 0,0,0,0,
+/* 0x88 */ 0,0,0,0, 0,0,0,0,
+/* 0x90 */ 0,0,0,0, 0,0,0,0,
+/* 0x98 */ 0,0,0,0, 0,0,0,0,
+/* 0xA0 */ 0,0,0,0, 0,0,0,0,
+/* 0xA8 */ 0,0,0,0, 0,0,0,0,
+/* 0xB0 */ 0,0,0,0, 0,0,0,0,
+/* 0xB8 */ 0,0,0,0, 0,0,0,0,
+/* 0xC0 */ 0,0,0,0, 0,0,0,0,
+/* 0xC8 */ 0,0,0,0, 0,0,0,0,
+/* 0xD0 */ 0,0,0,0, 0,0,0,0,
+/* 0xD8 */ 0,0,0,0, 0,0,0,0,
+/* 0xE0 */ CCKEY_LCTRL,CCKEY_LSHIFT,CCKEY_LALT,CCKEY_LWIN, CCKEY_RCTRL,CCKEY_RSHIFT,CCKEY_RALT,CCKEY_RWIN
+};
+
+static int MapNativeKey(unsigned key) {
+	return key < Array_Elems(key_map) ? key_map[key] : 0;
+}
+
+static void ProcessKeyboardInput(void) {
+	keyboard_event ke;
+	int res = KEYBOARD_GetEvent(&ke);
+	int key;
+	
+	if (res && ke.type == KEYBOARD_PRESSED)
+	{
+		key = MapNativeKey(ke.keycode);
+		if (key) Input_SetPressed(key);
+		//Platform_Log2("KEYCODE: %i (%i)", &ke.keycode, &ke.type);
+		if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
+	}
+	if (res && ke.type == KEYBOARD_RELEASED)
+	{
+		key = MapNativeKey(ke.keycode);
+		if (key) Input_SetReleased(key);
+		//Platform_Log2("KEYCODE: %i (%i)", &ke.keycode, &ke.type);
+		if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
+	}
+}
+#endif
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 #if defined HW_RVL
@@ -299,16 +362,6 @@ static void GetIRPos(int res, int* x, int* y) {
 	}
 }
 
-static void ProcessKeyboardInput(void) {
-	keyboard_event ke;
-	int res = KEYBOARD_GetEvent(&ke);
-	
-	if (res && ke.type == KEYBOARD_PRESSED)
-	{
-		//Platform_Log2("KEYCODE: %i (%i)", &ke.keycode, &ke.type);
-		if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
-	}
-}
 static void ProcessWPADInput(double delta) {	
 	WPAD_ScanPads();
 	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
