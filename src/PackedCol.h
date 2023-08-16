@@ -6,7 +6,7 @@
 */
 
 typedef cc_uint32 PackedCol;
-#if defined CC_BUILD_D3D9 || defined CC_BUILD_XBOX
+#if defined CC_BUILD_D3D9 || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST
 #define PACKEDCOL_B_SHIFT  0
 #define PACKEDCOL_G_SHIFT  8
 #define PACKEDCOL_R_SHIFT 16

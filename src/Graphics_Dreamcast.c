@@ -377,13 +377,13 @@ cc_bool Gfx_WarnIfNecessary(void) {
 static void SetupVertices(int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-		glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-		glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-		glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+		glVertexPointer(3,  GL_FLOAT,             SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+		glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+		glTexCoordPointer(2, GL_FLOAT,            SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
 	} else {
 		cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-		glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-		glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+		glVertexPointer(3, GL_FLOAT,              SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+		glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
 	}
 }
 
@@ -418,9 +418,9 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	glVertexPointer(3, GL_FLOAT,              SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,            SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
 	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, gfx_indices);
 }
 #endif
