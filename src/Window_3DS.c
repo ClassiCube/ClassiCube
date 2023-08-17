@@ -106,12 +106,14 @@ static void HandleButtons_Launcher(u32 mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
 }
 
-static void ProcessJoystickInput(circlePosition* pos) {	
+static void ProcessJoystickInput(circlePosition* pos, double delta) {
+	float scale = (delta * 60.0) / 8.0f;
+	
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->dx) <= 4) pos->dx = 0;
 	if (Math_AbsI(pos->dy) <= 4) pos->dy = 0;
 		
-	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx / 8.0f, -pos->dy / 8.0f);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
 }
 
 void Window_ProcessEvents(double delta) {
@@ -156,14 +158,14 @@ void Window_ProcessEvents(double delta) {
 	if (Input.RawMode) {
 		circlePosition pos;
 		hidCircleRead(&pos);
-		ProcessJoystickInput(&pos);
+		ProcessJoystickInput(&pos, delta);
 	}
 	
 	if (Input.RawMode && irrst_result == 0) {
 		circlePosition pos;
 		irrstScanInput();
 		irrstCstickRead(&pos);
-		ProcessJoystickInput(&pos);
+		ProcessJoystickInput(&pos, delta);
 	}
 }
 
@@ -285,7 +287,6 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-
 	return ERR_NOT_SUPPORTED;
 }
 #endif

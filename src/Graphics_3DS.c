@@ -119,6 +119,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
+	gfx_vsync        = true;
 	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
@@ -326,10 +327,11 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) {
-	C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+	int flags = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
+	C3D_FrameBegin(flags);
 }
+
 void Gfx_Clear(void) {
-	//Platform_Log1("CLEAR: %i", &clear_color);
 	C3D_RenderTargetClear(target, C3D_CLEAR_ALL, clear_color, 0);
 	C3D_FrameDrawOn(target);
 }
