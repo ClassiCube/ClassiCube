@@ -309,6 +309,7 @@ static void ProcessNunchuck_Game(int mods, double delta) {
 	Input_SetNonRepeatable(CCPAD_DOWN,  nunchuckDown);
 }
 
+
 static void ProcessClassic_LeftJoystick(struct joystick_t* js) {
 	// TODO: need to account for min/max??
 	int dx = js->pos.x - js->center.x;
@@ -322,7 +323,8 @@ static void ProcessClassic_LeftJoystick(struct joystick_t* js) {
 	Input.JoystickAngle    = (js->ang - 90) * MATH_DEG2RAD;
 }
 
-static void ProcessClassic_RightJoystick(struct joystick_t* js) {
+static void ProcessClassic_RightJoystick(struct joystick_t* js, double delta) {
+	float scale = (delta * 60.0) / 2.0f;
 	// TODO: need to account for min/max??
 	int dx = js->pos.x - js->center.x;
 	int dy = js->pos.y - js->center.y;
@@ -330,14 +332,19 @@ static void ProcessClassic_RightJoystick(struct joystick_t* js) {
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);
+}
+static void ProcessClassic_Launcher(int mods) {
+	Input_SetNonRepeatable(CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_A);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_B);
+
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CLASSIC_CTRL_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & CLASSIC_CTRL_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
 }
 
-static void ProcessClassic_Game(void) {
-	WPADData* wd = WPAD_Data(0);
-	classic_ctrl_t ctrls = wd->exp.classic;
-	int mods = ctrls.btns | ctrls.btns_held;
-
+static void ProcessClassic_Game(int mods, double delta, classic_ctrl_t* ctrls) {
 	Input_SetNonRepeatable(CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
 	Input_SetNonRepeatable(CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
       
@@ -355,10 +362,22 @@ static void ProcessClassic_Game(void) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
 	
 	if (Input.RawMode) {
-		ProcessClassic_LeftJoystick(&ctrls.ljs);
-		ProcessClassic_RightJoystick(&ctrls.rjs);
+		ProcessClassic_LeftJoystick( &ctrls->ljs);
+		ProcessClassic_RightJoystick(&ctrls->rjs, delta);
 	}
 }
+static void ProcessClassicInput(double delta) {
+	WPADData* wd = WPAD_Data(0);
+	classic_ctrl_t ctrls = wd->exp.classic;
+	int mods = ctrls.btns | ctrls.btns_held;
+	
+	if (launcherMode) {
+		ProcessClassic_Launcher(mods);
+	} else {
+		ProcessClassic_Game(mods, delta, &ctrls);
+	}
+}
+
 
 static void GetIRPos(int res, int* x, int* y) {
 	if (res == WPAD_ERR_NONE) {
@@ -379,12 +398,12 @@ static void ProcessWPADInput(double delta) {
 	int res  = WPAD_Probe(0, &type);
 	if (res) return;
 
-	if (launcherMode) {
+	if (type == WPAD_EXP_CLASSIC) {
+		ProcessClassicInput(delta);
+	} else if (launcherMode) {
 		ProcessWPAD_Launcher(mods);
 	} else if (type == WPAD_EXP_NUNCHUK) {
 		ProcessNunchuck_Game(mods, delta);
-	} else if (type == WPAD_EXP_CLASSIC) {
-		ProcessClassic_Game();
 	} else {
 		ProcessWPAD_Game(mods);
 	}

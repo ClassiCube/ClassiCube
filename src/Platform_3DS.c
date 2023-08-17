@@ -380,6 +380,8 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
 	*success  = (pfd.revents & flags) != 0;
 	
+	int ret_events = pfd.revents;
+	Platform_Log2("POLL: %h (%h)", &ret_events, &flags);
 	return 0;
 }
 
