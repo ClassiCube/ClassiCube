@@ -34,8 +34,8 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_SocketInProgess  = -26;
-const cc_result ReturnCode_SocketWouldBlock = -6;
+const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const char* Platform_AppNameSuffix = " 3DS";
 
@@ -392,12 +392,12 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	// Actual 3DS hardware returns EINPROGRESS if connect is still in progress
+	// Actual 3DS hardware returns INPROGRESS error code if connect is still in progress
 	// Which is different from POSIX:
 	//   https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
 	Platform_Log1("--write poll failed-- = %i", &res);
-	if (res == ReturnCode_SocketInProgess) res = 0;
+	if (res == -26) res = 0;
 	return res;
 }
 

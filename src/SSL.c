@@ -420,13 +420,22 @@ cc_result SSL_Free(void* ctx_) {
 #elif defined CC_BUILD_3DS
 #include <3ds.h>
 #include "String.h"
+#define CERT_ATTRIBUTES
+#include "../misc/RootCerts.h"
+
 // https://github.com/devkitPro/3ds-examples/blob/master/network/sslc/source/ssl.c
 // https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/sslc.h
-static u32 certChainHandle;
+static u32 certChainHandle, certContextHandle;
 static cc_bool _verifyCerts;
+
 static void SSL_CreateRootChain(void) {
-	int ret = sslcCreateRootCertChain(&certChainHandle);
+	int ret;
+
+	ret = sslcCreateRootCertChain(&certChainHandle);
 	if (ret) { Platform_Log1("sslcCreateRootCertChain failed: %i", &ret); return; }
+		
+	ret = sslcAddTrustedRootCA(certChainHandle, Baltimore_RootCert, Baltimore_RootCert_Size, &certContextHandle);
+	if (ret) { Platform_Log1("sslcAddTrustedRootCA failed: %i", &ret); return; }
 }
 
 void SSLBackend_Init(cc_bool verifyCerts) {
@@ -495,6 +504,7 @@ cc_result SSL_Free(void* ctx_) {
 #define IOCTLV_SSL_WRITE 5
 #define IOCTLV_SSL_SHUTDOWN 6
 #define SSL_HEAP_SIZE 0xB000
+
 #define CERT_ATTRIBUTES ATTRIBUTE_ALIGN(32)
 //#include "../misc/RootCerts.h"
 
