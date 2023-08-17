@@ -276,10 +276,9 @@ void Launcher_Run(void) {
 
 	Options_SaveIfChanged();
 	Launcher_Free();
+	Launcher_ShouldExit = false;
 
 #ifdef CC_BUILD_MOBILE
-	/* infinite loop on mobile */
-	Launcher_ShouldExit = false;
 	/* Reset components */
 	Platform_LogConst("undoing components");
 	Drawer2D_Component.Free();

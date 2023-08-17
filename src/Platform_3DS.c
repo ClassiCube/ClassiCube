@@ -360,6 +360,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
+	
 	*modified = 0; return errno;
 }
 
@@ -378,6 +379,7 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	/* to match select, closed socket still counts as readable */
 	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
 	*success  = (pfd.revents & flags) != 0;
+	
 	return 0;
 }
 
@@ -392,6 +394,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	Platform_LogConst("--write poll failed--");
 	return res;
 }
 

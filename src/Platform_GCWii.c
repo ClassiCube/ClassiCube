@@ -368,16 +368,19 @@ union SocketAddress {
 static int ParseHost(union SocketAddress* addr, const char* host) {
 #ifdef HW_RVL
 	struct hostent* res = net_gethostbyname(host);
+	// avoid confusion with SSL error codes
+	// e.g. FFFF FFF7 > FF00 FFF7
+	if (!res) return -0xFF0000 + errno;
 	
-	if (!res || res->h_addrtype != AF_INET) return false;
 	// Must have at least one IPv4 address
-	if (!res->h_addr_list[0]) return false;
+	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list[0])       return ERR_INVALID_ARGUMENT;
 
 	addr->v4.sin_addr = *(struct in_addr*)res->h_addr_list[0];
-	return true;
+	return 0;
 #else
 	// DNS resolution not implemented in gamecube libbba
-	return false;
+	return ERR_NOT_SUPPORTED;
 #endif
 }
 
@@ -385,20 +388,21 @@ static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (inet_aton(str, &addr->v4.sin_addr) > 0) return true;
+	if (inet_aton(str, &addr->v4.sin_addr) > 0) return 0;
 	return ParseHost(addr, str);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
 	union SocketAddress addr;
-	return ParseAddress(&addr, address);
+	return ParseAddress(&addr, address) == 0;
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
+	int res;
 
 	*s = -1;
-	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
+	if ((res = ParseAddress(&addr, address))) return res;
 
 	*s = net_socket(AF_INET, SOCK_STREAM, 0);
 	if (*s < 0) return *s;
@@ -411,7 +415,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
 
-	int res = net_connect(*s, &addr.raw, sizeof(addr.v4));
+	res = net_connect(*s, &addr.raw, sizeof(addr.v4));
 	return res < 0 ? res : 0;
 }
 
