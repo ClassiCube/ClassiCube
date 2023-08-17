@@ -92,8 +92,10 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *---------------------------------------------GameCube controller processing----------------------------------------------*
 *#########################################################################################################################*/
-static void ProcessPAD_Launcher(PADStatus* pad) {
-	int mods = pad->button;	
+static PADStatus gc_pad;
+
+static void ProcessPAD_Launcher(void) {
+	int mods = gc_pad.button;	
 	
 	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PAD_BUTTON_A);
 	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PAD_BUTTON_B);
@@ -105,9 +107,10 @@ static void ProcessPAD_Launcher(PADStatus* pad) {
 	Input_SetNonRepeatable(CCPAD_UP,    mods & PAD_BUTTON_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
 }
-static void ProcessPAD_LeftJoystick(PADStatus* pad) {
-	int dx = pad->stickX;
-	int dy = pad->stickY;
+
+static void ProcessPAD_LeftJoystick(void) {
+	int dx = gc_pad.stickX;
+	int dy = gc_pad.stickY;
 
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(dx) <= 8) dx = 0;
@@ -117,23 +120,25 @@ static void ProcessPAD_LeftJoystick(PADStatus* pad) {
 	Input.JoystickMovement = true;
 	Input.JoystickAngle    = Math_Atan2(dx, -dy);
 }
-static void ProcessPAD_RightJoystick(PADStatus* pad) {
-	int dx = pad->substickX;
-	int dy = pad->substickY;
+
+static void ProcessPAD_RightJoystick(double delta) {
+	float scale = (delta * 60.0) / 8.0f;
+	int dx = gc_pad.substickX;
+	int dy = gc_pad.substickY;
 
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, -dy / 8.0f);		
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);		
 }
 
-static void ProcessPAD_Game(PADStatus* pad) {
-	int mods = pad->button;
+static void ProcessPAD_Game(double delta) {
+	int mods = gc_pad.button;
 
 	if (Input.RawMode) {
-		ProcessPAD_LeftJoystick(pad);
-		ProcessPAD_RightJoystick(pad);
+		ProcessPAD_LeftJoystick();
+		ProcessPAD_RightJoystick(delta);
 	}		
 	
 	Input_SetNonRepeatable(CCPAD_L, mods & PAD_TRIGGER_L);
@@ -153,15 +158,22 @@ static void ProcessPAD_Game(PADStatus* pad) {
 	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(void) {
+static void ProcessPADInput(double delta) {
 	PADStatus pads[4];
 	PAD_Read(pads);
-	if (pads[0].err) return;
+	int error = pads[0].err;
+	if (error == 0) {
+		gc_pad = pads[0]; // new state arrived
+	} else if (error == PAD_ERR_TRANSFER) {
+		// usually means still busy transferring state - use last state
+	} else {
+		return; // not connected, still busy, etc
+	}
 	
 	if (launcherMode) {
-		ProcessPAD_Launcher(&pads[0]);
+		ProcessPAD_Launcher();
 	} else {
-		ProcessPAD_Game(&pads[0]);
+		ProcessPAD_Game(delta);
 	}
 }
 
@@ -396,7 +408,7 @@ void Window_ProcessEvents(double delta) {
 	Input.JoystickMovement = false;
 
 	ProcessWPADInput(delta);
-	ProcessPADInput();
+	ProcessPADInput(delta);
 	ProcessKeyboardInput();
 }
 
@@ -427,7 +439,7 @@ void Window_UpdateRawMouse(void)  {
 void Window_ProcessEvents(double delta) {
 	Input.JoystickMovement = false;
 	
-	ProcessPADInput();
+	ProcessPADInput(delta);
 }
 
 void Window_UpdateRawMouse(void) { }

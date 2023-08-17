@@ -394,7 +394,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
-	Platform_LogConst("--write poll failed--");
+	Platform_Log1("--write poll failed-- = %i", &res);
 	return res;
 }
 
