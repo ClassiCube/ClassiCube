@@ -222,8 +222,6 @@ static void ProcessKeyboardInput(void) {
 	{
 		key = MapNativeKey(ke.keycode);
 		if (key) Input_SetReleased(key);
-		//Platform_Log2("KEYCODE: %i (%i)", &ke.keycode, &ke.type);
-		if (ke.symbol) Event_RaiseInt(&InputEvents.Press, ke.symbol);
 	}
 }
 #endif

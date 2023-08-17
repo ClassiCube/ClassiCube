@@ -335,7 +335,7 @@ struct NbtTag {
 		float     f32;
 		cc_uint8  small[NBT_SMALL_SIZE];
 		cc_uint8* big; /* malloc for big byte arrays */
-		struct { cc_string text; char buffer[NBT_STRING_SIZE]; } str;
+		struct { cc_string text; char buffer[STRING_SIZE * 2]; } str;
 	} value;
 	char _nameBuffer[NBT_STRING_SIZE];
 	cc_result result;
