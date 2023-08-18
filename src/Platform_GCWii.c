@@ -589,11 +589,16 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
+#if defined HW_RVL
+#include <ogc/es.h>
 
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
+static cc_result GetMachineID(cc_uint32* key) {
+	return ES_GetDeviceID(key);
+}
+#else
+static cc_result GetMachineID(cc_uint32* key) {
 	return ERR_NOT_SUPPORTED;
 }
+#endif
+
 #endif
