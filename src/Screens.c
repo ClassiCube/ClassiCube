@@ -1196,12 +1196,10 @@ static int ChatScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (!s->grabsInput) return false;
 
 	InputWidget_SetText(&s->input.base, str);
-#endif
 	return true;
 }
 
@@ -1419,13 +1417,14 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	s->grabsInput        = true;
 
 	Gui_UpdateInputGrab();
+	String_Copy(&s->input.base.text, text);
+
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	args.multiline   = true;
 	Window_OpenKeyboard(&args);
-	Widget_SetDisabled(&s->input.base, args.opaque);
 
-	String_Copy(&s->input.base.text, text);
+	Widget_SetDisabled(&s->input.base, args.opaque);
 	InputWidget_UpdateText(&s->input.base);
 }
 

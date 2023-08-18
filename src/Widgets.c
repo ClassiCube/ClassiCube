@@ -1615,13 +1615,12 @@ static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
 
 static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct TextInputWidget* w = (struct TextInputWidget*)widget;
-#ifdef CC_BUILD_TOUCH
 	struct OpenKeyboardArgs args;
 
 	OpenKeyboardArgs_Init(&args, &w->base.text, w->onscreenType);
 	args.placeholder = w->onscreenPlaceholder;
 	Window_OpenKeyboard(&args);
-#endif
+
 	w->base.showCaret = true;
 	return InputWidget_PointerDown(widget, id, x, y);
 }

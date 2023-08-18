@@ -566,7 +566,6 @@ static void OnKeyPress(void* obj, int cp) {
 	}
 }
 
-#ifdef CC_BUILD_TOUCH
 static void OnTextChanged(void* obj, const cc_string* str) {
 	struct Screen* s;
 	int i;
@@ -577,7 +576,6 @@ static void OnTextChanged(void* obj, const cc_string* str) {
 		if (s->VTABLE->HandlesTextChanged(s, str)) return;
 	}
 }
-#endif
 
 static void OnContextLost(void* obj) {
 	LoseAllScreens();
@@ -601,10 +599,9 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 	Event_Register_(&InputEvents.Press,          NULL, OnKeyPress);
 	Event_Register_(&WindowEvents.Resized,       NULL, OnResize);
-
-#ifdef CC_BUILD_TOUCH
 	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
 
+#ifdef CC_BUILD_TOUCH
 	#define DEFAULT_SP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED)
 	#define DEFAULT_MP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED | ONSCREEN_BTN_CHAT)
 	Gui._onscreenButtons = Options_GetInt(OPT_TOUCH_BUTTONS, 0, Int32_MaxValue,

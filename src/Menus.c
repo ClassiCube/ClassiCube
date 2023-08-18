@@ -932,10 +932,8 @@ static int EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static int EditHotkeyScreen_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	InputWidget_SetText(&s->input.base, str);
-#endif
 	return true;
 }
 
@@ -1155,10 +1153,8 @@ static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static int GenLevelScreen_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected) InputWidget_SetText(&s->selected->base, str);
-#endif
 	return true;
 }
 
@@ -1470,11 +1466,9 @@ static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static int SaveLevelScreen_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
 	InputWidget_SetText(&s->input.base, str);
-#endif
 	return true;
 }
 
@@ -2136,10 +2130,8 @@ static int MenuInputOverlay_KeyPress(void* screen, char keyChar) {
 }
 
 static int MenuInputOverlay_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	InputWidget_SetText(&s->input.base, str);
-#endif
 	return true;
 }
 
