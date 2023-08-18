@@ -2082,11 +2082,12 @@ void MouseBindingsScreen_Show(void) {
 *-------------------------------------------------HotbarBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void HotbarBindingsScreen_Show(void) {
-	static const cc_uint8 binds[] = { KEYBIND_HOTBAR_1,KEYBIND_HOTBAR_2,KEYBIND_HOTBAR_3, KEYBIND_HOTBAR_4,KEYBIND_HOTBAR_5,KEYBIND_HOTBAR_6, KEYBIND_HOTBAR_7,KEYBIND_HOTBAR_8,KEYBIND_HOTBAR_9 };
-	static const char* const descs[] = { "Slot #1","Slot #2","Slot #3", "Slot #4","Slot #5","Slot #6", "Slot #7","Slot #8","Slot #9" };
+	static const cc_uint8 binds[] = { KEYBIND_HOTBAR_1,KEYBIND_HOTBAR_2,KEYBIND_HOTBAR_3, KEYBIND_HOTBAR_4,KEYBIND_HOTBAR_5,KEYBIND_HOTBAR_6, KEYBIND_HOTBAR_7,KEYBIND_HOTBAR_8,KEYBIND_HOTBAR_9,
+										KEYBIND_HOTBAR_LEFT, KEYBIND_HOTBAR_RIGHT };
+	static const char* const descs[] = { "Slot #1","Slot #2","Slot #3", "Slot #4","Slot #5","Slot #6", "Slot #7","Slot #8","Slot #9", "Slot left","Slot right" };
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsMouse, NULL, 260);
-	KeyBindsScreen_SetLayout(-140, 10, 5);
+	KeyBindsScreen_SetLayout(-140, 10, 6);
 	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Hotbar controls");
 }
 

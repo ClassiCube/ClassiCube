@@ -162,6 +162,7 @@ static void ProcessPADInput(double delta) {
 	PADStatus pads[4];
 	PAD_Read(pads);
 	int error = pads[0].err;
+
 	if (error == 0) {
 		gc_pad = pads[0]; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
@@ -334,6 +335,7 @@ static void ProcessClassic_RightJoystick(struct joystick_t* js, double delta) {
 	
 	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);
 }
+
 static void ProcessClassic_Launcher(int mods) {
 	Input_SetNonRepeatable(CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_A);
 	Input_SetNonRepeatable(CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_B);
@@ -361,11 +363,15 @@ static void ProcessClassic_Game(int mods, double delta, classic_ctrl_t* ctrls) {
 	Input_SetNonRepeatable(CCPAD_UP,     mods & CLASSIC_CTRL_BUTTON_UP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
 	
+	Input_SetNonRepeatable(CCPAD_ZL, mods & CLASSIC_CTRL_BUTTON_ZL);
+	Input_SetNonRepeatable(CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
+	
 	if (Input.RawMode) {
 		ProcessClassic_LeftJoystick( &ctrls->ljs);
 		ProcessClassic_RightJoystick(&ctrls->rjs, delta);
 	}
 }
+
 static void ProcessClassicInput(double delta) {
 	WPADData* wd = WPAD_Data(0);
 	classic_ctrl_t ctrls = wd->exp.classic;

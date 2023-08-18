@@ -517,10 +517,27 @@ static int HotbarWidget_MapKey(int key) {
 	return -1;
 }
 
+static int HotbarWidget_CycleIndex(int dir) {
+	Inventory.SelectedIndex += dir;
+	if (Inventory.SelectedIndex < 0) 
+		Inventory.SelectedIndex += INVENTORY_BLOCKS_PER_HOTBAR;
+	if (Inventory.SelectedIndex >= INVENTORY_BLOCKS_PER_HOTBAR)
+		Inventory.SelectedIndex -= INVENTORY_BLOCKS_PER_HOTBAR;
+
+	return true;
+}
+
 static int HotbarWidget_KeyDown(void* widget, int key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index = HotbarWidget_MapKey(key);
-	if (index == -1) return false;
+
+	if (index == -1) {
+		if (key == KeyBinds[KEYBIND_HOTBAR_LEFT])
+			return HotbarWidget_CycleIndex(-1);
+		if (key == KeyBinds[KEYBIND_HOTBAR_RIGHT])
+			return HotbarWidget_CycleIndex(+1);
+		return false;
+	}
 
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */

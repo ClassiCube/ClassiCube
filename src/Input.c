@@ -191,7 +191,7 @@ static void ClearTouches(void) { }
 #define Pad_Names \
 "PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
 "PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
-"PAD_START", "PAD_SELECT"
+"PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR"
 
 /* Names for each input button when stored to disc */
 static const char* const storageNames[INPUT_COUNT] = {
@@ -327,10 +327,14 @@ const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
 	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
 	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
-	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
+	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', /* Hacks */
 	0, 0, 0, 0, 
 	CCKEY_F5, 0, 0, 0, 
 	0, CCPAD_L, 0, CCPAD_R,
+	0, 0, 0,
+	0,0,0, 0,0,0,0,
+	0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
+	CCPAD_ZL, CCPAD_ZR
 };
 const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
@@ -343,7 +347,8 @@ const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
 	CCKEY_F6, CCKEY_LALT, CCKEY_F8, 
 	'G', CCKEY_F10, 0,
 	0, 0, 0, 0,
-	'1','2','3', '4','5','6', '7','8','9'
+	'1','2','3', '4','5','6', '7','8','9',
+	0, 0
 };
 
 static const char* const keybindNames[KEYBIND_COUNT] = {
@@ -359,7 +364,8 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"LookUp", "LookDown", "LookRight", "LookLeft",
 	"Hotbar1", "Hotbar2", "Hotbar3",
 	"Hotbar4", "Hotbar5", "Horbar6",
-	"Hotbar7", "Hotbar8", "Hotbar9"
+	"Hotbar7", "Hotbar8", "Hotbar9",
+	"HotbarLeft", "HotbarRight"
 };
 
 cc_bool KeyBind_IsPressed(KeyBind binding) { return Input.Pressed[KeyBinds[binding]]; }

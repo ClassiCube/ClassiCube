@@ -92,6 +92,9 @@ static void HandleButtons_Game(u32 mods) {
 	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_DRIGHT);
 	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_DUP);
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
+	
+	Input_SetNonRepeatable(CCPAD_ZL, mods & KEY_ZL);
+	Input_SetNonRepeatable(CCPAD_ZR, mods & KEY_ZR);
 }
 
 static void HandleButtons_Launcher(u32 mods) {
@@ -115,30 +118,7 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 		
 	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
 }
-
-void Window_ProcessEvents(double delta) {
-	hidScanInput();
-	/* TODO implement */
-	
-	if (!aptMainLoop()) {
-		Event_RaiseVoid(&WindowEvents.Closing);
-		WindowInfo.Exists = false;
-		return;
-	}
-	
-	//u32 m1 = hidKeysDown(), m2 = hidKeysHeld();
-	//Platform_Log2("MODS: %h | %h", &m1, &m2);
-	// hidKeysDown hidKeysUp
-	//u32 mods = hidKeysDownRepeat();
-	
-	u32 mods = hidKeysDown() | hidKeysHeld();
-	if (launcherMode) {
-		HandleButtons_Launcher(mods);
-	} else {
-		HandleButtons_Game(mods);
-	}
-	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
-	
+static void ProcessTouchInput(int mods) {
 	touchPosition touch;
 	hidTouchRead(&touch);
 	touchActive = mods & KEY_TOUCH;
@@ -154,6 +134,27 @@ void Window_ProcessEvents(double delta) {
 		touchBegX = touch.px;
 		touchBegY = touch.py;
 	}
+}
+
+void Window_ProcessEvents(double delta) {
+	hidScanInput();
+	/* TODO implement */
+	
+	if (!aptMainLoop()) {
+		Event_RaiseVoid(&WindowEvents.Closing);
+		WindowInfo.Exists = false;
+		return;
+	}
+	
+	u32 mods = hidKeysDown() | hidKeysHeld();
+	if (launcherMode) {
+		HandleButtons_Launcher(mods);
+	} else {
+		HandleButtons_Game(mods);
+	}
+	
+	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
+	ProcessTouchInput(mods);
 	
 	if (Input.RawMode) {
 		circlePosition pos;
