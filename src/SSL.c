@@ -425,7 +425,7 @@ cc_result SSL_Free(void* ctx_) {
 
 // https://github.com/devkitPro/3ds-examples/blob/master/network/sslc/source/ssl.c
 // https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/sslc.h
-static u32 certChainHandle, certContextHandle;
+static u32 certChainHandle;
 static cc_bool _verifyCerts;
 
 static void SSL_CreateRootChain(void) {
@@ -434,7 +434,7 @@ static void SSL_CreateRootChain(void) {
 	ret = sslcCreateRootCertChain(&certChainHandle);
 	if (ret) { Platform_Log1("sslcCreateRootCertChain failed: %i", &ret); return; }
 		
-	ret = sslcAddTrustedRootCA(certChainHandle, Baltimore_RootCert, Baltimore_RootCert_Size, &certContextHandle);
+	ret = sslcAddTrustedRootCA(certChainHandle, Baltimore_RootCert, Baltimore_RootCert_Size, NULL);
 	if (ret) { Platform_Log1("sslcAddTrustedRootCA failed: %i", &ret); return; }
 }
 

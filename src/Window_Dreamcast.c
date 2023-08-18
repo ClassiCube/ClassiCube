@@ -34,6 +34,7 @@ void Window_Init(void) {
 	Input.GamepadSource = true;	
 	// TODO: So wasteful!!!!!
 	vid_set_mode(vid_mode->generic, PM_RGB0888);
+	vid_flip(0);
 }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }

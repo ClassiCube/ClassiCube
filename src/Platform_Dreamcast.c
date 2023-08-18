@@ -19,6 +19,7 @@
 #include <time.h>
 #include <kos.h>
 #include "_PlatformConsole.h"
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -76,9 +77,7 @@ static const cc_string root_path = String_FromConst("/cd/");
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
-
 	String_EncodeUtf8(str, path);
-
 }
 
 cc_result Directory_Create(const cc_string* path) {
@@ -453,6 +452,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }
+
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
 }

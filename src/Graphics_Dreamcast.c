@@ -12,6 +12,7 @@
 #define TRANSFER_FORMAT GL_UNSIGNED_BYTE
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
+static cc_bool renderingDisabled;
 
 
 /*########################################################################################################################*
@@ -55,7 +56,7 @@ void Gfx_ClearCol(PackedCol color) {
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	glColorMask(r, g, b, a);
+	// TODO: Doesn't work
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
@@ -66,8 +67,9 @@ void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	renderingDisabled = depthOnly;
+	
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 	gl_Toggle(GL_TEXTURE_2D);
 }
 
@@ -223,6 +225,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	int tex = texId;
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 }
+
 static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	cc_uint8* src = (cc_uint8*)bmp->scan0;
 	
@@ -417,10 +420,12 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	if (renderingDisabled) return;
+	
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	glVertexPointer(3, GL_FLOAT,              SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,            SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, gfx_indices);
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
 }
 #endif
