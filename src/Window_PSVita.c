@@ -117,34 +117,46 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 #define ALIGNUP(size, a) (((size) + ((a) - 1)) & ~((a) - 1))
+
+static void AllocGPUMemory(int size, SceUID* ret_uid, void** ret_mem) {
+	SceUID uid;
+	void* mem;
+	size = ALIGNUP(size, 256 * 1024);
+	
+	// https://wiki.henkaku.xyz/vita/SceSysmem
+	uid = sceKernelAllocMemBlock("CC Framebuffer", SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, size, NULL);
+	if (uid < 0) Logger_Abort2(uid, "Failed to allocate 2D framebuffer");
+		
+	int res1 = sceKernelGetMemBlockBase(uid, &mem);
+	if (res1 < 0) Logger_Abort2(res1, "Failed to get base of 2D framebuffer");
+		
+	int res2 = sceGxmMapMemory(mem, size, SCE_GXM_MEMORY_ATTRIB_READ | SCE_GXM_MEMORY_ATTRIB_WRITE);
+	if (res1 < 0) Logger_Abort2(res2, "Failed to map framebuffer for GPU usage");
+	// https://wiki.henkaku.xyz/vita/GPU
+	
+	*ret_uid = uid;
+	*ret_mem = mem;
+}
+
 void Window_DrawFramebuffer(Rect2D r) {
 	static SceUID fb_uid;
 	static void* fb;
-	// TODO: Purge when closing the 2D window, so more memory for 3D ClassiCube
-	if (!fb) {
-		int size = ALIGNUP(4 * BUFFER_WIDTH * SCREEN_HEIGHT, 256 * 1024);
-		// https://wiki.henkaku.xyz/vita/SceSysmem
-		fb_uid   = sceKernelAllocMemBlock("CC Framebuffer", SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, size, NULL);
-		if (fb_uid < 0) Logger_Abort2(fb_uid, "Failed to allocate 2D framebuffer");
-		
-		int res1 = sceKernelGetMemBlockBase(fb_uid, &fb);
-		if (res1 < 0) Logger_Abort2(res1, "Failed to get base of 2D framebuffer");
-		
-		int res2 = sceGxmMapMemory(fb, size, SCE_GXM_MEMORY_ATTRIB_READ | SCE_GXM_MEMORY_ATTRIB_WRITE);
-		if (res1 < 0) Logger_Abort2(res2, "Failed to map framebuffer for GPU usage");
-		// https://wiki.henkaku.xyz/vita/GPU
-	}
 	
+	// TODO: Purge when closing the 2D window, so more memory for 3D ClassiCube
+	// TODO: Use framebuffers directly instead of our own internal framebuffer too..
+	if (!fb)
+		AllocGPUMemory(4 * SCREEN_WIDTH * SCREEN_HEIGHT, &fb_uid, &fb);
+		
 	sceDisplayWaitVblankStart();
 	
 	SceDisplayFrameBuf framebuf = { 0 };
 	framebuf.size        = sizeof(SceDisplayFrameBuf);
 	framebuf.base        = fb;
-	framebuf.pitch       = BUFFER_WIDTH * 4;
+	framebuf.pitch       = SCREEN_WIDTH;
 	framebuf.pixelformat = SCE_DISPLAY_PIXELFORMAT_A8B8G8R8;
 	framebuf.width       = SCREEN_WIDTH;
 	framebuf.height      = SCREEN_HEIGHT;
-	
+
 	sceDisplaySetFrameBuf(&framebuf, SCE_DISPLAY_SETBUF_NEXTFRAME);
 
 	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
@@ -152,30 +164,13 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 	for (int y = r.Y; y < r.Y + r.Height; y++) 
 	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * fb_bmp.width, r.Width * 4);
+		Mem_Copy(dst + y * SCREEN_WIDTH, src + y * fb_bmp.width, r.Width * 4);
 	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
-
-/*void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	void* fb = sceGeEdramGetAddr();
-	bmp->scan0  = fb;
-	bmp->width  = BUFFER_WIDTH;
-	bmp->height = SCREEN_HEIGHT;
-}
-
-void Window_DrawFramebuffer(Rect2D r) {
-	//sceDisplayWaitVblankStart();
-	//sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	//sceDisplaySetFrameBuf(sceGeEdramGetAddr(), BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-
-}*/
 
 
 /*########################################################################################################################*
