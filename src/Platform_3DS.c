@@ -427,7 +427,10 @@ static void CreateRootDirectory(const char* path) {
 	Platform_Log2("mkdir %c FAILED: %i", path, &err);
 }
 
-void Platform_Init(void) { 
+void Platform_Init(void) {
+	// Take full advantage of new 3DS if running on it
+	osSetSpeedupEnable(true);
+	
 	// create root directories (no permissions anyways)
 	CreateRootDirectory("sdmc:/3ds");
 	CreateRootDirectory("sdmc:/3ds/ClassiCube");

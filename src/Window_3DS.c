@@ -110,8 +110,8 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 	float scale = (delta * 60.0) / 8.0f;
 	
 	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(pos->dx) <= 4) pos->dx = 0;
-	if (Math_AbsI(pos->dy) <= 4) pos->dy = 0;
+	if (Math_AbsI(pos->dx) <= 8) pos->dx = 0;
+	if (Math_AbsI(pos->dy) <= 8) pos->dy = 0;
 		
 	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
 }

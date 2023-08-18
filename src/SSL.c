@@ -461,26 +461,33 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	
 	int opts = _verifyCerts ? SSLCOPT_Default : SSLCOPT_DisableVerify;
 	if ((ret = sslcCreateContext(ctx, socket, opts, host))) return ret;
+	Platform_LogConst("--ssl context create--");
 	sslcContextSetRootCertChain(ctx, certChainHandle);
+	Platform_LogConst("--ssl root chain added--");
 	
 	// detect lack of proper SSL support in Citra
 	if (!ctx->sslchandle) return HTTP_ERR_NO_SSL;
 	if ((ret = sslcStartConnection(ctx, NULL, NULL))) return ret;
+	Platform_LogConst("--ssl connection started--");
 	return 0;
 }
 
 cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read) { 
+	Platform_Log1("<< IN: %i", &count); 
 	sslcContext* ctx = (sslcContext*)ctx_;
 	int ret = sslcRead(ctx, data, count, false);
 	
+	Platform_Log1("--ssl read-- = %i", &ret);
 	if (ret < 0) return ret;
 	*read = ret; return 0;
 }
 
-cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) { 
+cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
+	Platform_Log1(">> OUT: %i", &count); 
 	sslcContext* ctx = (sslcContext*)ctx_;
 	int ret = sslcWrite(ctx, data, count);
 	
+	Platform_Log1("--ssl write-- = %i", &ret);
 	if (ret < 0) return ret;
 	*wrote = ret; return 0;
 }
