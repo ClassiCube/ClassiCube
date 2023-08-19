@@ -21,6 +21,7 @@ const cc_result ReturnCode_SocketWouldBlock = SCE_NET_ERROR_EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const char* Platform_AppNameSuffix = " PS Vita";
 static int epoll_id;
+static int stdout_fd;
 
 
 /*########################################################################################################################*
@@ -32,15 +33,8 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	int fd = sceKernelGetStdout();
-	sceIoWrite(fd, msg, len);
-	sceIoWrite(fd, "\n",  1);
-	
-	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
-	//cc_string str = String_Init(msg, len, len);
-	//cc_file file = 0;
-	//File_Open(&file, &str);
-	//File_Close(file);	
+	if (!stdout_fd) stdout_fd = sceKernelGetStdout();
+	sceIoWrite(stdout_fd, msg, len);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.sec * 1000 + UNIX_EPOCH + (time.usec / 1000))

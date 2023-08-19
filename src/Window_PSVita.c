@@ -13,6 +13,7 @@
 #include "Logger.h"
 #include <vitasdk.h>
 static cc_bool launcherMode;
+static SceTouchPanelInfo frontPanel;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -38,6 +39,10 @@ void Window_Init(void) {
 
 	Input.GamepadSource = true;
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);
+	
+	sceTouchGetPanelInfo(SCE_TOUCH_PORT_FRONT, &frontPanel);
 }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
@@ -104,12 +109,45 @@ static void ProcessCircleInput(SceCtrlData* pad, double delta) {
 	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
 }
 
-void Window_ProcessEvents(double delta) {
-	SceCtrlData pad;
-	/* TODO implement */
-	sceCtrlReadBufferPositive(0, &pad, 1);
-	int mods = pad.buttons;
+
+static void ProcessTouchPress(int x, int y) {
+	if (!frontPanel.maxDispX || !frontPanel.maxDispY) {
+		// TODO: Shouldn't ever happen? need to check
+		Pointer_SetPosition(0, x, y);
+		return;
+	}
 	
+	// rescale from touch range to screen range
+	x = (x - frontPanel.minDispX) * SCREEN_WIDTH  / frontPanel.maxDispX;
+	y = (y - frontPanel.minDispY) * SCREEN_HEIGHT / frontPanel.maxDispY;
+	Pointer_SetPosition(0, x, y);
+}
+
+static void ProcessTouchInput(void) {
+	SceTouchData touch;
+	
+	// sceTouchRead is blocking (seems to block until vblank), and don't want that
+	int res = sceTouchPeek(SCE_TOUCH_PORT_FRONT, &touch, 1);
+	if (res == 0) return; // no data available yet
+	if (res < 0)  return; // error occurred
+	
+	if (touch.reportNum > 0) {
+		int x = touch.report[0].x;
+		int y = touch.report[0].y;
+		ProcessTouchPress(X, Y);
+	}
+	Input_SetNonRepeatable(CCMOUSE_L, touch.reportNum > 0);
+}
+
+static void ProcessPadInput(double delta) {
+	SceCtrlData pad;
+	
+	// sceCtrlReadBufferPositive is blocking (seems to block until vblank), and don't want that
+	int res = sceCtrlPeekBufferPositive(0, &pad, 1);
+	if (res == 0) return; // no data available yet
+	if (res < 0)  return; // error occurred
+	
+	int mods = pad.buttons;
 	if (launcherMode) {
 		HandleButtons_Launcher(mods);
 	} else {
@@ -119,6 +157,12 @@ void Window_ProcessEvents(double delta) {
 	if (Input.RawMode) {
 		ProcessCircleInput(&pad, delta);
 	}
+}
+
+void Window_ProcessEvents(double delta) {
+	/* TODO implement */
+	ProcessPadInput(delta);
+	ProcessTouchInput();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita

@@ -9,7 +9,7 @@ CFILES 	:=$(wildcard src/*.c)
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(CFILES:src/%.c=%.o))
 
 # Needed by psvDebugScreenPrintf
-LIBS += -lm -lSceDisplay_stub -lSceCtrl_stub -lSceGxm_stub
+LIBS += -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub
 
 
 #---------------------------------------------------------------------------------
