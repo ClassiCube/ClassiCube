@@ -98,6 +98,7 @@ static void HandleButtons_Game(int mods) {
 void Window_ProcessEvents(double delta) {
 	SceCtrlData pad;
 	/* TODO implement */
+	/* TODO: Change to Peek instead? */
 	sceCtrlReadBufferPositive(&pad, 1);
 	int mods = pad.Buttons;
 	

@@ -26,7 +26,7 @@ ifeq ($(PLAT),web)
 CC=emcc
 OEXT=.html
 CFLAGS=-g
-LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 --preload-file texpacks/default.zip@texpacks/default.zip
+LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1
 endif
 
 ifeq ($(PLAT),mingw)
@@ -106,13 +106,6 @@ CC=gcc
 LIBS=-lGL -lX11 -lXi -lm -lpthread -ldl
 endif
 
-ifeq ($(PLAT),psp)
-CC=psp-gcc
-CFLAGS=-g -pipe -fno-math-errno -I ${PSPDEV}/psp/sdk/include
-LIBS=-lm -lpspgum -lpspgu -lpspge -lpspdisplay -lpspctrl
-LDFLAGS=-g -L ${PSPDEV}/psp/sdk/lib
-endif
-
 ifeq ($(OS),Windows_NT)
 DEL=del
 endif
@@ -147,8 +140,11 @@ serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
+	
+# consoles builds require special handling, so are moved to
+#  separate makefiles to avoid having one giant messy makefile
 psp:
-	$(MAKE) ClassiCube-psp.elf PLAT=psp
+	$(MAKE) -f src/Makefile_PSP PLAT=psp
 3ds:
 	$(MAKE) -f src/Makefile_3DS PLAT=3ds
 wii:
@@ -176,8 +172,3 @@ src/interop_cocoa.o: src/interop_cocoa.m
 	
 src/interop_BeOS.o: src/interop_BeOS.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
-	
-# PSP requires fixups
-ClassiCube-psp.elf : $(ENAME)
-	cp $(ENAME) ClassiCube-psp.elf
-	psp-fixup-imports ClassiCube-psp.elf
