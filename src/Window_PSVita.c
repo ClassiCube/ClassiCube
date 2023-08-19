@@ -10,16 +10,17 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "Logger.h"
 #include <vitasdk.h>
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on Xbox
+// no DPI scaling on PS Vita
 int Display_ScaleX(int x) { return x; }
 int Display_ScaleY(int y) { return y; }
 
-#define BUFFER_WIDTH  960
+//#define BUFFER_WIDTH  960 TODO: 1024?
 #define SCREEN_WIDTH  960
 #define SCREEN_HEIGHT 544
 
@@ -62,49 +63,69 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(void) {
+static void HandleButtons_Launcher(int mods) {     
+	Input_SetNonRepeatable(CCPAD_START,  mods & SCE_CTRL_TRIANGLE);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & SCE_CTRL_SQUARE);
+	// fake tab with PSP_CTRL_SQUARE for Launcher too
+	//Input_SetNonRepeatable(IPT_TAB,    mods & SCE_CTRL_SQUARE);
+
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & SCE_CTRL_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
+}
+
+static void HandleButtons_Game(int mods) {
+	Input_SetNonRepeatable(CCPAD_A, mods & SCE_CTRL_TRIANGLE);
+	Input_SetNonRepeatable(CCPAD_B, mods & SCE_CTRL_SQUARE);
+	Input_SetNonRepeatable(CCPAD_X, mods & SCE_CTRL_CROSS);
+	Input_SetNonRepeatable(CCPAD_Y, mods & SCE_CTRL_CIRCLE);
+      
+	Input_SetNonRepeatable(CCPAD_START,  mods & SCE_CTRL_START);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & SCE_CTRL_SELECT);
+
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & SCE_CTRL_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
+	
+	Input_SetNonRepeatable(CCPAD_L, mods & SCE_CTRL_LTRIGGER);
+	Input_SetNonRepeatable(CCPAD_R, mods & SCE_CTRL_RTRIGGER);
+}
+
+static void ProcessCircleInput(SceCtrlData* pad, double delta) {
+	float scale = (delta * 60.0) / 32.0f;
+	int dx = pad->lx - 127;
+	int dy = pad->ly - 127;
+	
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+}
+
+void Window_ProcessEvents(double delta) {
 	SceCtrlData pad;
 	/* TODO implement */
 	sceCtrlReadBufferPositive(0, &pad, 1);
 	int mods = pad.buttons;
 	
-	int dx = pad.lx - 127;
-	int dy = pad.ly - 127;
-	if (Input_RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
-		//Platform_Log2("RAW: %i, %i", &dx, &dy);
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
+	if (launcherMode) {
+		HandleButtons_Launcher(mods);
+	} else {
+		HandleButtons_Game(mods);
 	}
-			
 	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_PLACE_BLOCK],  mods & SCE_CTRL_LTRIGGER);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_DELETE_BLOCK], mods & SCE_CTRL_RTRIGGER);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_JUMP],      mods & SCE_CTRL_TRIANGLE);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_CHAT],      mods & SCE_CTRL_CIRCLE);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_INVENTORY], mods & SCE_CTRL_CROSS);
-	// PSP_CTRL_SQUARE
-	
-	Input_SetNonRepeatable(IPT_ENTER,  mods & SCE_CTRL_START);
-	Input_SetNonRepeatable(IPT_ESCAPE, mods & SCE_CTRL_SELECT);
-	// fake tab with PSP_CTRL_SQUARE for Launcher too
-	Input_SetNonRepeatable(IPT_TAB,    mods & SCE_CTRL_SQUARE);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_LEFT],  mods & SCE_CTRL_LEFT);
-	Input_SetNonRepeatable(IPT_LEFT,                mods & SCE_CTRL_LEFT);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_RIGHT], mods & SCE_CTRL_RIGHT);
-	Input_SetNonRepeatable(IPT_RIGHT,               mods & SCE_CTRL_RIGHT);
-	
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FORWARD], mods & SCE_CTRL_UP);
-	Input_SetNonRepeatable(IPT_UP,                    mods & SCE_CTRL_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_BACK],    mods & SCE_CTRL_DOWN);
-	Input_SetNonRepeatable(IPT_DOWN,                  mods & SCE_CTRL_DOWN);
+	if (Input.RawMode) {
+		ProcessCircleInput(&pad, delta);
+	}
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
 
-void Window_EnableRawMouse(void)  { Input_RawMode = true; }
+void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
-void Window_DisableRawMouse(void) { Input_RawMode = false; }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

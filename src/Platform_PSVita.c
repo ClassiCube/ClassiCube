@@ -292,26 +292,25 @@ union SocketAddress {
 };
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
-	int rid, ret;
+	int rid = sceNetResolverCreate("CC resolver", NULL, 0);
+	if (rid < 0) return ERR_INVALID_ARGUMENT;
 
-	if ((rid = sceNetResolverCreate("CC resolver", NULL, 0)) < 0) return 0;
-
-	ret = sceNetResolverStartNtoa(rid, host, &addr->v4.sin_addr, 1 /* timeout */, 5 /* retries */, 0 /* flags */);
+	int ret = sceNetResolverStartNtoa(rid, host, &addr->v4.sin_addr, 1 /* timeout */, 5 /* retries */, 0 /* flags */);
 	sceNetResolverDestroy(rid);
-	return ret >= 0;
+	return ret;
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (sceNetInetPton(SCE_NET_AF_INET, str, &addr->v4.sin_addr) > 0) return true;
+	if (sceNetInetPton(SCE_NET_AF_INET, str, &addr->v4.sin_addr) > 0) return 0;
 	return ParseHost(addr, str);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
 	union SocketAddress addr;
-	return ParseAddress(&addr, address);
+	return ParseAddress(&addr, address) == 0;
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
@@ -319,7 +318,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	int res;
 
 	*s = -1;
-	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
+	if ((res = ParseAddress(&addr, address))) return res;
 
 	*s = sceNetSocket("CC socket", SCE_NET_AF_INET, SCE_NET_SOCK_STREAM, SCE_NET_IPPROTO_TCP);
 	if (*s < 0) return *s;
@@ -332,12 +331,13 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	addr.v4.sin_family = SCE_NET_AF_INET;
 	addr.v4.sin_port   = sceNetHtons(port);
 
-	return sceNetConnect(*s, &addr.raw, sizeof(addr.v4));
+	res = sceNetConnect(*s, &addr.raw, sizeof(addr.v4));
+	return res;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int recvCount = sceNetRecv(s, data, count, 0);
-	if (recvCount < 0) { *modified = recvCount; return 0; }
+	if (recvCount >= 0) { *modified = recvCount; return 0; }
 	
 	*modified = 0; 
 	return recvCount;
@@ -345,7 +345,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = sceNetSend(s, data, count, 0);
-	if (sentCount < 0) { *modified = sentCount; return 0; }
+	if (sentCount >= 0) { *modified = sentCount; return 0; }
 	
 	*modified = 0; 
 	return sentCount;
