@@ -351,7 +351,7 @@ static void AllocColouredShader(void) {
 		
 	attribs[1].streamIndex = 0;
 	attribs[1].offset      = 3 * sizeof(float);
-	attribs[1].format      = SCE_GXM_ATTRIBUTE_FORMAT_U8;
+	attribs[1].format      = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
 	attribs[1].componentCount = 4;
 	attribs[1].regIndex    = sceGxmProgramParameterGetResourceIndex(
 		gxm_colored_vertex_program_in_color_param);
@@ -405,7 +405,7 @@ static void AllocTexturedShader(void) {
 		
 	attribs[1].streamIndex = 0;
 	attribs[1].offset      = 3 * sizeof(float);
-	attribs[1].format      = SCE_GXM_ATTRIBUTE_FORMAT_U8;
+	attribs[1].format      = SCE_GXM_ATTRIBUTE_FORMAT_U8N;
 	attribs[1].componentCount = 4;
 	attribs[1].regIndex    = sceGxmProgramParameterGetResourceIndex(
 		gxm_textured_vertex_program_in_color_param);
@@ -434,6 +434,11 @@ static void AllocTexturedShader(void) {
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID white_square;
+static void SetDefaultStates(void) {
+	sceGxmSetFrontDepthFunc(gxm_context, SCE_GXM_DEPTH_FUNC_LESS_EQUAL);
+	sceGxmSetBackDepthFunc(gxm_context,  SCE_GXM_DEPTH_FUNC_LESS_EQUAL);
+}
+
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
@@ -454,7 +459,7 @@ void Gfx_Create(void) {
 	AllocColouredShader();
 	AllocTexturedShader();
 	
-	
+	Gfx_SetDepthTest(true);
 	InitDefaultResources();
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	frontBufferIndex = NUM_DISPLAY_BUFFERS - 1;
@@ -559,10 +564,33 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
  // TODO
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) {
- // TODO
+static cc_bool depth_write = true, depth_test = true;
+static void UpdateDepthWrite(void) {
+	// match Desktop behaviour, where disabling depth testing also disables depth writing
+	// TODO do we actually need to & here?
+	cc_bool enabled = depth_write & depth_test;
+	
+	int mode = enabled ? SCE_GXM_DEPTH_WRITE_ENABLED : SCE_GXM_DEPTH_WRITE_DISABLED;
+	sceGxmSetFrontDepthWriteEnable(gxm_context, mode);
+	sceGxmSetBackDepthWriteEnable(gxm_context,  mode);
 }
-void Gfx_SetDepthTest(cc_bool enabled)  { }  // TODO
+
+static void UpdateDepthFunction(void) {
+	int func = depth_test ? SCE_GXM_DEPTH_FUNC_LESS_EQUAL : SCE_GXM_DEPTH_FUNC_ALWAYS;
+	sceGxmSetFrontDepthFunc(gxm_context, func);
+	sceGxmSetBackDepthFunc(gxm_context,  func);
+}
+
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	depth_write = enabled;
+	UpdateDepthWrite();
+}
+
+void Gfx_SetDepthTest(cc_bool enabled) {
+	depth_test = enabled;
+	UpdateDepthWrite();
+	UpdateDepthFunction();
+}
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
@@ -664,14 +692,25 @@ struct GPUBuffer* GPUBuffer_Alloc(int size) {
 	buffer->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, SCE_GXM_MEMORY_ATTRIB_READ,
 		&buffer->uid);
+		
+	cc_uintptr addr = buffer->data;
+	Platform_Log2("VB ALLOC %h = %i bytes", &addr, &size);
 	return buffer;
 }
 
 static void GPUBuffer_Free(GfxResourceID* resource) {
 	GfxResourceID raw = *resource;
 	if (!raw) return;
+	return; 
+	// TODO:!!!!!! MASSIVE MEMORY LEAK !!!!!!!
+	// TODO:!!!!!! MASSIVE MEMORY LEAK !!!!!!!
+	// TODO:!!!!!! MASSIVE MEMORY LEAK !!!!!!!
+	// .. but it fixes crashing for now until I find a better solution
 	
 	struct GPUBuffer* buffer = (struct GPUBuffer*)raw;
+	cc_uintptr addr = buffer->data;
+	Platform_Log1("VB FREE %h", &addr);
+	
 	FreeGPUMemory(buffer->uid);
 	Mem_Free(buffer);
 	*resource = NULL;
@@ -706,8 +745,6 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 
 void Gfx_BindVb(GfxResourceID vb) { 
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	cc_uintptr addr = buffer->data;
-	Platform_Log1("BIND VB: %h", &addr); Thread_Sleep(100);
 	sceGxmSetVertexStream(gxm_context, 0, buffer->data);
 }
 
@@ -778,6 +815,7 @@ static struct Matrix mvp __attribute__((aligned(64)));
 static int loadedMatrices = 0x1 | 0x2;
 static int LOCKED;
 
+// TODO: Probably not even needed ??
 static void ReloadMatrices(void) {
 	SceGxmProgramParameter* param;
 	
@@ -793,16 +831,28 @@ static void ReloadMatrices(void) {
 		param = gxm_colored_vertex_program_u_mvp_param;
 	}
 	
+	float* m = &mvp;
+	float tmp[16];
+	
+	// Transpose matrix
+	for (int i = 0; i < 4; i++)
+	{
+		tmp[i * 4 + 0] = m[0  + i];
+		tmp[i * 4 + 1] = m[4  + i];
+		tmp[i * 4 + 2] = m[8  + i];
+		tmp[i * 4 + 3] = m[12 + i];
+	}
+	
 	void *uniform_buffer;
 	sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
 	sceGxmSetUniformDataF(uniform_buffer, param,
-		0, 4 * 4, &mvp);
+		0, 4 * 4, tmp);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
-	Matrix_Mul(&mvp, &_view, &_proj);
+	Matrix_Mul(&mvp, &_proj, &_view);
 	
 	loadedMatrices = 0;
 	ReloadMatrices();
@@ -847,19 +897,19 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	Platform_Log2("DRAW1: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
+	//Platform_Log2("DRAW1: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
 			SCE_GXM_INDEX_FORMAT_U16, gfx_indices + ICOUNT(startVertex), ICOUNT(verticesCount));
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	Platform_Log1("DRAW2: %i", &verticesCount); Thread_Sleep(100);
+	//Platform_Log1("DRAW2: %i", &verticesCount); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
 			SCE_GXM_INDEX_FORMAT_U16, gfx_indices, ICOUNT(verticesCount));
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	Platform_Log2("DRAW3: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
+	//Platform_Log2("DRAW3: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
 			SCE_GXM_INDEX_FORMAT_U16, gfx_indices + ICOUNT(startVertex), ICOUNT(verticesCount));
 }
@@ -877,10 +927,12 @@ void Gfx_Clear(void) {
 	clear_vertices_data[2] = (struct VertexColoured){-1.0f,  1.0f, 1.0f, clear_color };
 	clear_vertices_data[3] = (struct VertexColoured){ 1.0f,  1.0f, 1.0f, clear_color };
 	
+	Gfx_SetDepthTest(false);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
 	Gfx_BindVb(clear_vertices);
 	Gfx_DrawVb_IndexedTris(4);
+	Gfx_SetDepthTest(true);
 }
 #endif
