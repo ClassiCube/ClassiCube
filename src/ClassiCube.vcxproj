@@ -470,6 +470,7 @@
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
     <ClCompile Include="Graphics_PSP.c" />
+    <ClCompile Include="Graphics_PSVita.c" />
     <ClCompile Include="Graphics_Xbox.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />

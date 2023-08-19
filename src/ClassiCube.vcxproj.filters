@@ -659,6 +659,9 @@
     <ClCompile Include="Graphics_Xbox.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics_PSVita.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\CCicon.rc">

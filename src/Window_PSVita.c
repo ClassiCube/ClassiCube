@@ -137,27 +137,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_bmp     = *bmp;
 }
 
-#define ALIGNUP(size, a) (((size) + ((a) - 1)) & ~((a) - 1))
-
-static void AllocGPUMemory(int size, SceUID* ret_uid, void** ret_mem) {
-	SceUID uid;
-	void* mem;
-	size = ALIGNUP(size, 256 * 1024);
-	
-	// https://wiki.henkaku.xyz/vita/SceSysmem
-	uid = sceKernelAllocMemBlock("CC Framebuffer", SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, size, NULL);
-	if (uid < 0) Logger_Abort2(uid, "Failed to allocate 2D framebuffer");
-		
-	int res1 = sceKernelGetMemBlockBase(uid, &mem);
-	if (res1 < 0) Logger_Abort2(res1, "Failed to get base of 2D framebuffer");
-		
-	int res2 = sceGxmMapMemory(mem, size, SCE_GXM_MEMORY_ATTRIB_READ | SCE_GXM_MEMORY_ATTRIB_WRITE);
-	if (res1 < 0) Logger_Abort2(res2, "Failed to map framebuffer for GPU usage");
-	// https://wiki.henkaku.xyz/vita/GPU
-	
-	*ret_uid = uid;
-	*ret_mem = mem;
-}
+extern void* AllocGPUMemory(int size, int type, int gpu_access, SceUID* ret_uid);
 
 void Window_DrawFramebuffer(Rect2D r) {
 	static SceUID fb_uid;
@@ -165,8 +145,11 @@ void Window_DrawFramebuffer(Rect2D r) {
 	
 	// TODO: Purge when closing the 2D window, so more memory for 3D ClassiCube
 	// TODO: Use framebuffers directly instead of our own internal framebuffer too..
-	if (!fb)
-		AllocGPUMemory(4 * SCREEN_WIDTH * SCREEN_HEIGHT, &fb_uid, &fb);
+	if (!fb) {
+		int size = 4 * SCREEN_WIDTH * SCREEN_HEIGHT;
+		fb = AllocGPUMemory(size, SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, 
+							SCE_GXM_MEMORY_ATTRIB_RW, &fb_uid);
+	}
 		
 	sceDisplayWaitVblankStart();
 	
