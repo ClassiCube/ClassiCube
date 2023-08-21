@@ -122,7 +122,7 @@ void Window_Close(void) {
 #define XINPUT_GAMEPAD_X          0x4000
 #define XINPUT_GAMEPAD_Y          0x8000
 
-static void HandleButtons_Game(int mods) {
+static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_L, mods & XINPUT_GAMEPAD_LEFT_THUMB);
 	Input_SetNonRepeatable(CCPAD_R, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
 	
@@ -140,28 +140,12 @@ static void HandleButtons_Game(int mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
 }
 
-static void HandleButtons_Launcher(int mods) {
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & XINPUT_GAMEPAD_A);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & XINPUT_GAMEPAD_B);
-	// fake tab with down for Launcher
-	//Input_SetNonRepeatable(CCKEY_TAB, mods & KEY_DDOWN);
-	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & XINPUT_GAMEPAD_DPAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & XINPUT_GAMEPAD_DPAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & XINPUT_GAMEPAD_DPAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
-}
-
 void Window_ProcessEvents(double delta) {
 	usbh_pooling_hubs();
 	if (!xid_ctrl) return;
 	int mods = gp_state.dButtons;
 	
-	if (launcherMode) {
-		HandleButtons_Launcher(mods);
-	} else {
-		HandleButtons_Game(mods);
-	}
+	HandleButtons(mods);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox

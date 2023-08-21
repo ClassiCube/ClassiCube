@@ -76,7 +76,7 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons_Game(u32 mods) {
+static void HandleButtons(u32 mods) {
 	Input_SetNonRepeatable(CCPAD_L, mods & KEY_L);
 	Input_SetNonRepeatable(CCPAD_R, mods & KEY_R);
 	
@@ -97,18 +97,6 @@ static void HandleButtons_Game(u32 mods) {
 	Input_SetNonRepeatable(CCPAD_ZR, mods & KEY_ZR);
 }
 
-static void HandleButtons_Launcher(u32 mods) {
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & KEY_A);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & KEY_B);
-	// fake tab with down for Launcher
-	//Input_SetNonRepeatable(CCKEY_TAB, mods & KEY_DDOWN);
-	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & KEY_DLEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_DRIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_DUP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
-}
-
 static void ProcessJoystickInput(circlePosition* pos, double delta) {
 	float scale = (delta * 60.0) / 8.0f;
 	
@@ -118,6 +106,7 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 		
 	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
 }
+
 static void ProcessTouchInput(int mods) {
 	touchPosition touch;
 	hidTouchRead(&touch);
@@ -147,11 +136,7 @@ void Window_ProcessEvents(double delta) {
 	}
 	
 	u32 mods = hidKeysDown() | hidKeysHeld();
-	if (launcherMode) {
-		HandleButtons_Launcher(mods);
-	} else {
-		HandleButtons_Game(mods);
-	}
+	HandleButtons(mods);
 	
 	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
 	ProcessTouchInput(mods);

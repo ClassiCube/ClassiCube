@@ -59,17 +59,7 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons_Launcher(int mods) {     
-	Input_SetNonRepeatable(CCPAD_START,  mods & CONT_A);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & CONT_B);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & CONT_DPAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
-}
-
-static void HandleButtons_Game(int mods) {
+static void HandleButtons(int mods) {
 	// TODO CONT_Z
       
 	Input_SetNonRepeatable(CCPAD_A, mods & CONT_A);
@@ -110,14 +100,8 @@ static void ProcessControllerInput(void) {
 	state = (cont_state_t*)maple_dev_status(cont);
 	if (!state) return;
 	
-	int mods = state->buttons;
-	if (launcherMode) {
-		HandleButtons_Launcher(mods);
-	} else {
-		HandleButtons_Game(mods);
-		HandleController(state);
-	}
-	
+	HandleButtons(state->buttons);
+	HandleController(state);
 }
 
 void Window_ProcessEvents(double delta) {

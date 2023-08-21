@@ -65,19 +65,7 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons_Launcher(int mods) {
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PSP_CTRL_TRIANGLE);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PSP_CTRL_SQUARE);
-	// fake tab with PSP_CTRL_SQUARE for Launcher too
-	//Input_SetNonRepeatable(CCKEY_TAB,    mods & PSP_CTRL_SQUARE);
-	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & PSP_CTRL_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
-}
-
-static void HandleButtons_Game(int mods) {
+static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_L, mods & PSP_CTRL_LTRIGGER);
 	Input_SetNonRepeatable(CCPAD_R, mods & PSP_CTRL_RTRIGGER);
 	
@@ -95,25 +83,26 @@ static void HandleButtons_Game(int mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
 }
 
+static void ProcessCircleInput(SceCtrlData* pad, double delta) {
+	float scale = (delta * 60.0) / 16.0f;
+	int dx = pad->Lx - 127;
+	int dy = pad->Ly - 127;
+
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
+
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+}
+
 void Window_ProcessEvents(double delta) {
 	SceCtrlData pad;
 	/* TODO implement */
 	/* TODO: Change to Peek instead? */
 	sceCtrlReadBufferPositive(&pad, 1);
-	int mods = pad.Buttons;
-	
-	int dx = pad.Lx - 127;
-	int dy = pad.Ly - 127;
-	if (Input.RawMode && (Math_AbsI(dx) > 1 || Math_AbsI(dy) > 1)) {
-		//Platform_Log2("RAW: %i, %i", &dx, &dy);
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 32.0f, dy / 32.0f);
-	}		
-	
-	if (launcherMode) {
-		HandleButtons_Launcher(mods);
-	} else {
-		HandleButtons_Game(mods);
-	}
+
+	HandleButtons(pad.Buttons);
+	if (Input.RawMode) 
+		ProcessCircleInput(&pad, delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP

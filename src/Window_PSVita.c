@@ -68,19 +68,7 @@ void Window_Close(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons_Launcher(int mods) {     
-	Input_SetNonRepeatable(CCPAD_START,  mods & SCE_CTRL_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & SCE_CTRL_SQUARE);
-	// fake tab with PSP_CTRL_SQUARE for Launcher too
-	//Input_SetNonRepeatable(IPT_TAB,    mods & SCE_CTRL_SQUARE);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & SCE_CTRL_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
-}
-
-static void HandleButtons_Game(int mods) {
+static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_A, mods & SCE_CTRL_TRIANGLE);
 	Input_SetNonRepeatable(CCPAD_B, mods & SCE_CTRL_SQUARE);
 	Input_SetNonRepeatable(CCPAD_X, mods & SCE_CTRL_CROSS);
@@ -99,7 +87,7 @@ static void HandleButtons_Game(int mods) {
 }
 
 static void ProcessCircleInput(SceCtrlData* pad, double delta) {
-	float scale = (delta * 60.0) / 32.0f;
+	float scale = (delta * 60.0) / 16.0f;
 	int dx = pad->lx - 127;
 	int dy = pad->ly - 127;
 	
@@ -147,16 +135,9 @@ static void ProcessPadInput(double delta) {
 	if (res == 0) return; // no data available yet
 	if (res < 0)  return; // error occurred
 	
-	int mods = pad.buttons;
-	if (launcherMode) {
-		HandleButtons_Launcher(mods);
-	} else {
-		HandleButtons_Game(mods);
-	}
-	
-	if (Input.RawMode) {
+	HandleButtons(pad.buttons);
+	if (Input.RawMode)
 		ProcessCircleInput(&pad, delta);
-	}
 }
 
 void Window_ProcessEvents(double delta) {

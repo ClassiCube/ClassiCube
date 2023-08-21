@@ -18,7 +18,10 @@
 #include "Utils.h"
 #include "LBackend.h"
 #include "Http.h"
+
 #define LAYOUTS static const struct LLayout
+#define IsEnterButton(btn)  (Input_IsEnterButton(btn)  || btn == CCPAD_A)
+#define IsEscapeButton(btn) (Input_IsEscapeButton(btn) || btn == CCPAD_B)
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -81,7 +84,7 @@ static void LScreen_CycleSelected(struct LScreen* s, int dir) {
 }
 
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (Input_IsEnterButton(key)) {
+	if (IsEnterButton(key)) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
@@ -100,13 +103,13 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		if (s->selectedWidget->VTABLE->KeyDown(s->selectedWidget, key, was)) return;
 	}
 
-	if (key == CCKEY_TAB) {
+	if (key == CCKEY_TAB || key == CCPAD_X) {
 		LScreen_CycleSelected(s, Input_IsShiftPressed() ? -1 : 1);
 	} else if (Input_IsUpButton(key)) {
 		LScreen_CycleSelected(s, -1);
 	} else if (Input_IsDownButton(key)) {
 		LScreen_CycleSelected(s,  1);
-	} else if (Input_IsEscapeButton(key) && s->onEscapeWidget) {
+	} else if (IsEscapeButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
 	}
 }

@@ -94,20 +94,6 @@ void Window_Close(void) {
 *#########################################################################################################################*/
 static PADStatus gc_pad;
 
-static void ProcessPAD_Launcher(void) {
-	int mods = gc_pad.button;	
-	
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & PAD_BUTTON_A);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & PAD_BUTTON_B);
-	// fake tab with down for Launcher
-	//Input_SetNonRepeatable(CCKEY_TAB, mods & PAD_BUTTON_DOWN);
-	
-	Input_SetNonRepeatable(CCPAD_LEFT,  mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT, mods & PAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,    mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
-}
-
 static void ProcessPAD_LeftJoystick(void) {
 	int dx = gc_pad.stickX;
 	int dy = gc_pad.stickY;
@@ -133,14 +119,8 @@ static void ProcessPAD_RightJoystick(double delta) {
 	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);		
 }
 
-static void ProcessPAD_Game(double delta) {
+static void ProcessPAD_Buttons(void) {
 	int mods = gc_pad.button;
-
-	if (Input.RawMode) {
-		ProcessPAD_LeftJoystick();
-		ProcessPAD_RightJoystick(delta);
-	}		
-	
 	Input_SetNonRepeatable(CCPAD_L, mods & PAD_TRIGGER_L);
 	Input_SetNonRepeatable(CCPAD_R, mods & PAD_TRIGGER_R);
 	
@@ -152,10 +132,10 @@ static void ProcessPAD_Game(double delta) {
 	Input_SetNonRepeatable(CCPAD_START,  mods & PAD_BUTTON_START);
 	Input_SetNonRepeatable(CCPAD_SELECT, mods & PAD_TRIGGER_Z);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,  mods & PAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT, mods & PAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,    mods & PAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,  mods & PAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & PAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & PAD_BUTTON_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & PAD_BUTTON_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
 static void ProcessPADInput(double delta) {
@@ -171,10 +151,10 @@ static void ProcessPADInput(double delta) {
 		return; // not connected, still busy, etc
 	}
 	
-	if (launcherMode) {
-		ProcessPAD_Launcher();
-	} else {
-		ProcessPAD_Game(delta);
+	ProcessPAD_Buttons();
+	if (Input.RawMode) {
+		ProcessPAD_LeftJoystick();
+		ProcessPAD_RightJoystick(delta);
 	}
 }
 
@@ -248,17 +228,7 @@ static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
 
-static void ProcessWPAD_Launcher(int mods) {
-	Input_SetNonRepeatable(CCKEY_ENTER,  mods & WPAD_BUTTON_A);
-	Input_SetNonRepeatable(CCKEY_ESCAPE, mods & WPAD_BUTTON_B);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & WPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & WPAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
-}
-
-static void ProcessWPAD_Game(int mods) {
+static void ProcessWPAD_Buttons(int mods) {
 	Input_SetNonRepeatable(CCPAD_L, mods & WPAD_BUTTON_1);
 	Input_SetNonRepeatable(CCPAD_R, mods & WPAD_BUTTON_2);
       
@@ -336,17 +306,7 @@ static void ProcessClassic_RightJoystick(struct joystick_t* js, double delta) {
 	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);
 }
 
-static void ProcessClassic_Launcher(int mods) {
-	Input_SetNonRepeatable(CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_A);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_B);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & CLASSIC_CTRL_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & CLASSIC_CTRL_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & CLASSIC_CTRL_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
-}
-
-static void ProcessClassic_Game(int mods, double delta, classic_ctrl_t* ctrls) {
+static void ProcessClassicButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
 	Input_SetNonRepeatable(CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
       
@@ -365,22 +325,17 @@ static void ProcessClassic_Game(int mods, double delta, classic_ctrl_t* ctrls) {
 	
 	Input_SetNonRepeatable(CCPAD_ZL, mods & CLASSIC_CTRL_BUTTON_ZL);
 	Input_SetNonRepeatable(CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
-	
-	if (Input.RawMode) {
-		ProcessClassic_LeftJoystick( &ctrls->ljs);
-		ProcessClassic_RightJoystick(&ctrls->rjs, delta);
-	}
 }
 
 static void ProcessClassicInput(double delta) {
 	WPADData* wd = WPAD_Data(0);
 	classic_ctrl_t ctrls = wd->exp.classic;
 	int mods = ctrls.btns | ctrls.btns_held;
-	
-	if (launcherMode) {
-		ProcessClassic_Launcher(mods);
-	} else {
-		ProcessClassic_Game(mods, delta, &ctrls);
+
+	ProcessClassicButtons(mods);
+	if (Input.RawMode) {
+		ProcessClassic_LeftJoystick(&ctrls.ljs);
+		ProcessClassic_RightJoystick(&ctrls.rjs, delta);
 	}
 }
 
@@ -407,11 +362,11 @@ static void ProcessWPADInput(double delta) {
 	if (type == WPAD_EXP_CLASSIC) {
 		ProcessClassicInput(delta);
 	} else if (launcherMode) {
-		ProcessWPAD_Launcher(mods);
+		ProcessWPAD_Buttons(mods);
 	} else if (type == WPAD_EXP_NUNCHUK) {
 		ProcessNunchuck_Game(mods, delta);
 	} else {
-		ProcessWPAD_Game(mods);
+		ProcessWPAD_Buttons(mods);
 	}
 
 	int x, y;
