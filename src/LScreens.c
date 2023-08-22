@@ -224,7 +224,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	LLine_Init(  &s->seps[1], 490, mode_seps1);
 
 	LButton_Init(&s->btnEnhanced, 145, 35, "Enhanced",                        mode_btnEnhanced);
-	LLabel_Init( &s->lblEnhanced[0], "&eEnables custom blocks, changing env", mode_lblEnhanced0);
+	LLabel_Init( &s->lblEnhanced[0], "&eEnables custom blocks, changing env.", mode_lblEnhanced0);
 	LLabel_Init( &s->lblEnhanced[1], "&esettings, longer messages, and more", mode_lblEnhanced1);
 
 	LButton_Init(&s->btnClassicHax, 145, 35, "Classic +hax",                     mode_btnClassicHax);
@@ -233,7 +233,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 	LButton_Init(&s->btnClassic, 145, 35, "Classic",                        mode_btnClassic);
 	LLabel_Init( &s->lblClassic[0], "&eOnly uses blocks and features from", mode_lblClassic0);
-	LLabel_Init( &s->lblClassic[1], "&ethe original minecraft classic",     mode_lblClassic1);
+	LLabel_Init( &s->lblClassic[1], "&ethe original Minecraft Classic",     mode_lblClassic1);
 
 	LLabel_Init( &s->lblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.", mode_lblHelp);
 	LButton_Init(&s->btnBack, 80, 35, "Back",                                                  mode_btnBack);
@@ -563,9 +563,9 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	s->widgets    = directConnect_widgets;
 	s->numWidgets = Array_Elems(directConnect_widgets);
 
-	LInput_Init(&s->iptUsername, 330, "Username..",               dc_iptUsername);
-	LInput_Init(&s->iptAddress,  330, "IP address:Port number..", dc_iptAddress);
-	LInput_Init(&s->iptMppass,   330, "Mppass..",                 dc_iptMppass);
+	LInput_Init(&s->iptUsername, 330, "Username...",               dc_iptUsername);
+	LInput_Init(&s->iptAddress,  330, "IP address:Port number...", dc_iptAddress);
+	LInput_Init(&s->iptMppass,   330, "Mppass...",                 dc_iptMppass);
 
 	LButton_Init(&s->btnConnect, 110, 35, "Connect", dc_btnConnect);
 	LButton_Init(&s->btnBack,     80, 35, "Back",    dc_btnBack);
@@ -629,10 +629,10 @@ static void MFAScreen_Init(struct LScreen* s_) {
 	s->widgets    = mfa_widgets;
 	s->numWidgets = Array_Elems(mfa_widgets);
 	
-	LLabel_Init( &s->lblTitle,  "",                  mfa_lblTitle);
-	LInput_Init( &s->iptCode,   280, "Login code..", mfa_iptCode);
-	LButton_Init(&s->btnSignIn, 100, 35, "Sign in",  mfa_btnSignIn);
-	LButton_Init(&s->btnCancel, 100, 35, "Cancel",   mfa_btnCancel);
+	LLabel_Init( &s->lblTitle,  "",                   mfa_lblTitle);
+	LInput_Init( &s->iptCode,   280, "Login code...", mfa_iptCode);
+	LButton_Init(&s->btnSignIn, 100, 35, "Sign in",   mfa_btnSignIn);
+	LButton_Init(&s->btnCancel, 100, 35, "Cancel",    mfa_btnCancel);
 
 	s->btnSignIn.OnClick = MFAScreen_SignIn;
 	s->btnCancel.OnClick = MFAScreen_Cancel;
@@ -750,7 +750,7 @@ static void MainScreen_DoLogin(void) {
 	Options_SetSecure(LOPT_PASSWORD, pass);
 
 	GetTokenTask_Run();
-	LLabel_SetConst(&s->lblStatus, "&eSigning in..");
+	LLabel_SetConst(&s->lblStatus, "&eSigning in...");
 	s->signingIn = true;
 }
 static void MainScreen_Login(void* w) { MainScreen_DoLogin(); }
@@ -819,8 +819,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 #endif
 	if (!Updater_Supported) s->numWidgets--;
 
-	LInput_Init( &s->iptUsername, 280, "Username..",  main_iptUsername);
-	LInput_Init( &s->iptPassword, 280, "Password..",  main_iptPassword);
+	LInput_Init( &s->iptUsername, 280, "Username...", main_iptUsername);
+	LInput_Init( &s->iptPassword, 280, "Password...", main_iptPassword);
 	LButton_Init(&s->btnLogin,    100, 35, "Sign in", main_btnLogin);
 	LButton_Init(&s->btnResume,   100, 35, "Resume",  main_btnResume);
 
@@ -828,7 +828,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LButton_Init(&s->btnDirect,  200, 35, "Direct connect", main_btnDirect);
 	LButton_Init(&s->btnSPlayer, 200, 35, "Singleplayer",   main_btnSPlayer);
 
-	LLabel_Init( &s->lblUpdate,   "&eChecking..",      
+	LLabel_Init( &s->lblUpdate,   "&eChecking...",      
 				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	LButton_Init(&s->btnRegister, 100, 35, "Register", main_btnRegister);
 	LButton_Init(&s->btnOptions,  100, 35, "Options",  main_btnOptions);
@@ -906,7 +906,7 @@ static void MainScreen_LoginPhase2(struct MainScreen* s, const cc_string* user) 
 	String_Copy(&Launcher_Username, user);
 
 	FetchServersTask_Run();
-	LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");
+	LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list...");
 }
 
 static void MainScreen_SignInError(struct HttpRequest* req) {
@@ -1132,7 +1132,7 @@ static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, in
 
 	String_InitArray(str, strBuffer);
 	count = Fetcher_Downloaded + 1;
-	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
+	String_Format3(&str, "&eFetching %c... (%i/%i)", name, &count, &Resources_Count);
 
 	if (String_Equals(&str, &s->lblStatus.text)) return;
 	LLabel_SetText(&s->lblStatus, &str);
@@ -1219,7 +1219,7 @@ static void ServersScreen_Refresh(void* w) {
 
 	FetchServersTask_Run();
 	btn = &ServersScreen.btnRefresh;
-	LButton_SetConst(btn, "&eWorking..");
+	LButton_SetConst(btn, "&eWorking...");
 }
 
 static void ServersScreen_HashFilter(cc_string* str) {
@@ -1268,7 +1268,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->widgets    = servers_widgets;
 	s->numWidgets = Array_Elems(servers_widgets);
 
-	LInput_Init( &s->iptSearch, 370, "Search servers..",               srv_iptSearch);
+	LInput_Init( &s->iptSearch, 370, "Search servers...",              srv_iptSearch);
 	LInput_Init( &s->iptHash,   475, "classicube.net/server/play/...", srv_iptHash);
 
 	LButton_Init(&s->btnBack,    110, 30, "Back",    srv_btnBack);
@@ -1743,8 +1743,8 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	LLine_Init( &s->seps[0],   320,                   upd_seps0);
 	LLine_Init( &s->seps[1],   320,                   upd_seps1);
 
-	LLabel_Init( &s->lblRel, "Latest release: Checking..",   upd_lblRel);
-	LLabel_Init( &s->lblDev, "Latest dev build: Checking..", upd_lblDev);
+	LLabel_Init( &s->lblRel, "Latest release: Checking...",   upd_lblRel);
+	LLabel_Init( &s->lblDev, "Latest dev build: Checking...", upd_lblDev);
 	LLabel_Init( &s->lblStatus, "",           upd_lblStatus);
 	LButton_Init(&s->btnBack, 80, 35, "Back", upd_btnBack);
 

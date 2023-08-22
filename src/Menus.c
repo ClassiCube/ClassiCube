@@ -684,22 +684,22 @@ static struct Widget* optGroups_widgets[] = {
 
 static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
-	"&eGui scale, font settings, and more",
+	"&eGUI scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
 	"&eSet key bindings, bind keys to act as mouse clicks",
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
-	"&eEnv colours, water level, weather, and more",
-	"&eSettings for resembling the original classic",
+	"&eEnvironment colours, water level, weather, and more",
+	"&eSettings for resembling the original Classic",
 };
 static const struct SimpleButtonDesc optsGroup_btns[8] = {
-	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
-	{ -160,  -50, "Gui options...",       Menu_SwitchGui         },
+	{ -160, -100, "Misc. options...",     Menu_SwitchMisc        },
+	{ -160,  -50, "GUI options...",       Menu_SwitchGui         },
 	{ -160,    0, "Graphics options...",  Menu_SwitchGfx         },
 	{ -160,   50, "Controls...",          Menu_SwitchBindsNormal },
 	{  160, -100, "Chat options...",      Menu_SwitchChat        },
 	{  160,  -50, "Hacks settings...",    Menu_SwitchHacks       },
-	{  160,    0, "Env settings...",      Menu_SwitchEnv         },
+	{  160,    0, "Environment settings...", Menu_SwitchEnv         },
 	{  160,   50, "Nostalgia options...", Menu_SwitchNostalgia   }
 };
 
@@ -821,7 +821,7 @@ static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 	String_InitArray(text, textBuffer);
 
 	if (s->selectedI == 0) {
-		String_AppendConst(&text, "Key: press a key..");
+		String_AppendConst(&text, "Key: press a key...");
 	} else {
 		String_AppendConst(&text, "Key: ");
 		String_AppendConst(&text, Input_DisplayNames[s->curHotkey.trigger]);
@@ -834,7 +834,7 @@ static void EditHotkeyScreen_UpdateModifiers(struct EditHotkeyScreen* s) {
 	String_InitArray(text, textBuffer);
 
 	if (s->selectedI == 1) {
-		String_AppendConst(&text, "Modifiers: press a key..");
+		String_AppendConst(&text, "Modifiers: press a key...");
 	} else {
 		String_AppendConst(&text, "Modifiers:");
 		EditHotkeyScreen_MakeFlags(s->curHotkey.mods, &text);
@@ -1436,7 +1436,7 @@ static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 
 static void SaveLevelScreen_File(void* screen, void* b) {
 	static const char* const titles[] = {
-		"ClassiCube map", "Minecraft schematic", "Minecraft classic map", NULL
+		"ClassiCube map", "Minecraft schematic", "Minecraft Classic map", NULL
 	};
 	static const char* const filters[] = {
 		".cw", ".schematic", ".mine", NULL
@@ -3284,7 +3284,7 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
-		{ -1,  -50, "Classic walk anim",    MenuOptionsScreen_Bool,
+		{ -1,  -50, "Classic walk animation", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim },
         { -1,    0, "Classic chat",    MenuOptionsScreen_Bool,
             NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
@@ -3354,7 +3354,7 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 		{ -1,   0, "Allow custom blocks",  MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetCustom,  NostalgiaScreen_SetCustom },
 
-		{  1, -50, "Non-classic features", MenuOptionsScreen_Bool,
+		{  1, -50, "Non-Classic features", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetCPE,     NostalgiaScreen_SetCPE },
 		{  1,   0, "Game version",         NostalgiaScreen_Version,
 			NostalgiaScreen_GetVersion, NostalgiaScreen_SetVersion }

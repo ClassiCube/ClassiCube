@@ -205,7 +205,7 @@ static cc_bool UseDedicatedCache(cc_string* path, const cc_string* key) {
 	/*  (Several users have reported this happening on some Android devices) */
 	if (createdCache && res == 0) {
 		Chat_AddRaw("&cSomething has deleted system managed cache folder");
-		Chat_AddRaw("  &cFalling back to caching to game folder instead..");
+		Chat_AddRaw("  &cFalling back to caching to game folder instead...");
 		cacheInvalid = true;
 	}
 	if (res == 0) createdCache = true;
