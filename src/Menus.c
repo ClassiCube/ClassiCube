@@ -690,7 +690,7 @@ static const char* const optsGroup_descs[8] = {
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
 	"&eEnv colours, water level, weather, and more",
-	"&eSettings for resembling the original classic",
+	"&eSettings for resembling the original Classic",
 };
 static const struct SimpleButtonDesc optsGroup_btns[8] = {
 	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
@@ -1436,7 +1436,7 @@ static void SaveLevelScreen_UploadCallback(const cc_string* path) {
 
 static void SaveLevelScreen_File(void* screen, void* b) {
 	static const char* const titles[] = {
-		"ClassiCube map", "Minecraft schematic", "Minecraft classic map", NULL
+		"ClassiCube map", "Minecraft schematic", "Minecraft Classic map", NULL
 	};
 	static const char* const filters[] = {
 		".cw", ".schematic", ".mine", NULL
@@ -3354,7 +3354,7 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 		{ -1,   0, "Allow custom blocks",  MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetCustom,  NostalgiaScreen_SetCustom },
 
-		{  1, -50, "Non-classic features", MenuOptionsScreen_Bool,
+		{  1, -50, "Non-Classic features", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetCPE,     NostalgiaScreen_SetCPE },
 		{  1,   0, "Game version",         NostalgiaScreen_Version,
 			NostalgiaScreen_GetVersion, NostalgiaScreen_SetVersion }

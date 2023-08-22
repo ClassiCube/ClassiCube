@@ -233,7 +233,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 	LButton_Init(&s->btnClassic, 145, 35, "Classic",                        mode_btnClassic);
 	LLabel_Init( &s->lblClassic[0], "&eOnly uses blocks and features from", mode_lblClassic0);
-	LLabel_Init( &s->lblClassic[1], "&ethe original minecraft classic",     mode_lblClassic1);
+	LLabel_Init( &s->lblClassic[1], "&ethe original Minecraft Classic",     mode_lblClassic1);
 
 	LLabel_Init( &s->lblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.", mode_lblHelp);
 	LButton_Init(&s->btnBack, 80, 35, "Back",                                                  mode_btnBack);
