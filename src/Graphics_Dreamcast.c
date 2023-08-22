@@ -333,8 +333,9 @@ void Gfx_SetFogMode(FogFunc func) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static GLenum matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
-static int lastMatrix;
+static GLenum matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW };
+static int lastMatrix, textureOffset;
+float textureOffsetX, textureOffsetY;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
@@ -346,13 +347,32 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	glLoadIdentity();
 }
 
-static struct Matrix texMatrix = Matrix_IdentityValue;
+
 void Gfx_EnableTextureOffset(float x, float y) {
-	texMatrix.row4.X = x; texMatrix.row4.Y = y;
-	Gfx_LoadMatrix(2, &texMatrix);
+	textureOffset  = true;
+	textureOffsetX = x;
+	textureOffsetY = y;
 }
 
-void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
+void Gfx_DisableTextureOffset(void) {
+	textureOffset  = false;
+}
+static CC_NOINLINE void ShiftTextureCoords(int count) {
+	for (int i = 0; i < count; i++) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + i;
+		v->U += textureOffsetX;
+		v->V += textureOffsetY;
+	}
+}
+static CC_NOINLINE void UnshiftTextureCoords(int count) {
+	for (int i = 0; i < count; i++) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + i;
+		v->U -= textureOffsetX;
+		v->V -= textureOffsetY;
+	}
+}
 
 
 /*########################################################################################################################*
@@ -420,7 +440,10 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	SetupVertices(0);
+	
+	if (textureOffset) ShiftTextureCoords(verticesCount);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
