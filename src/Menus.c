@@ -628,8 +628,8 @@ static void ClassicPauseScreen_Init(void* screen) {
 	static const struct SimpleButtonDesc descs[] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
 		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
-		{    0,    0, "Save level...",          Menu_SwitchSaveLevel },
-		{    0,   50, "Load level...",          Menu_SwitchLoadLevel },
+		{    0,    0, "Save level..",           Menu_SwitchSaveLevel },
+		{    0,   50, "Load level..",           Menu_SwitchLoadLevel },
 		{    0,  100, "Nostalgia options...",   Menu_SwitchNostalgia }
 	};
 	s->widgets    = classicPause_widgets;
