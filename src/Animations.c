@@ -208,29 +208,29 @@ static void Animations_ReadDescription(struct Stream* stream, const cc_string* p
 		if (!line.length || line.buffer[0] == '#') continue;
 		count = String_UNSAFE_Split(&line, ' ', parts, ANIM_MIN_ARGS);
 		if (count < ANIM_MIN_ARGS) {
-			Chat_Add1("&cNot enough arguments for anim: %s", &line); continue;
+			Chat_Add1("&cNot enough arguments for animation: %s", &line); continue;
 		}
 
 		if (!Convert_ParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
-			Chat_Add1("&cInvalid anim tile X coord: %s", &parts[0]); continue;
+			Chat_Add1("&cInvalid animation tile X coord: %s", &parts[0]); continue;
 		}
 		if (!Convert_ParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_MAX_ROWS_COUNT) {
-			Chat_Add1("&cInvalid anim tile Y coord: %s", &parts[1]); continue;
+			Chat_Add1("&cInvalid animation tile Y coord: %s", &parts[1]); continue;
 		}
 		if (!Convert_ParseUInt16(&parts[2], &data.frameX)) {
-			Chat_Add1("&cInvalid anim frame X coord: %s", &parts[2]); continue;
+			Chat_Add1("&cInvalid animation frame X coord: %s", &parts[2]); continue;
 		}
 		if (!Convert_ParseUInt16(&parts[3], &data.frameY)) {
-			Chat_Add1("&cInvalid anim frame Y coord: %s", &parts[3]); continue;
+			Chat_Add1("&cInvalid animation frame Y coord: %s", &parts[3]); continue;
 		}
 		if (!Convert_ParseUInt16(&parts[4], &data.frameSize) || !data.frameSize) {
-			Chat_Add1("&cInvalid anim frame size: %s", &parts[4]); continue;
+			Chat_Add1("&cInvalid animation frame size: %s", &parts[4]); continue;
 		}
 		if (!Convert_ParseUInt16(&parts[5], &data.statesCount)) {
-			Chat_Add1("&cInvalid anim states count: %s", &parts[5]); continue;
+			Chat_Add1("&cInvalid animation states count: %s", &parts[5]); continue;
 		}
 		if (!Convert_ParseUInt16(&parts[6], &data.frameDelay)) {
-			Chat_Add1("&cInvalid anim frame delay: %s", &parts[6]); continue;
+			Chat_Add1("&cInvalid animation frame delay: %s", &parts[6]); continue;
 		}
 
 		if (anims_count == Array_Elems(anims_list)) {

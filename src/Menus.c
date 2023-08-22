@@ -684,22 +684,22 @@ static struct Widget* optGroups_widgets[] = {
 
 static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
-	"&eGui scale, font settings, and more",
+	"&eGUI scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
 	"&eSet key bindings, bind keys to act as mouse clicks",
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
-	"&eEnv colours, water level, weather, and more",
+	"&eEnvironment colours, water level, weather, and more",
 	"&eSettings for resembling the original Classic",
 };
 static const struct SimpleButtonDesc optsGroup_btns[8] = {
-	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
-	{ -160,  -50, "Gui options...",       Menu_SwitchGui         },
+	{ -160, -100, "Misc. options...",     Menu_SwitchMisc        },
+	{ -160,  -50, "GUI options...",       Menu_SwitchGui         },
 	{ -160,    0, "Graphics options...",  Menu_SwitchGfx         },
 	{ -160,   50, "Controls...",          Menu_SwitchBindsNormal },
 	{  160, -100, "Chat options...",      Menu_SwitchChat        },
 	{  160,  -50, "Hacks settings...",    Menu_SwitchHacks       },
-	{  160,    0, "Env settings...",      Menu_SwitchEnv         },
+	{  160,    0, "Environment settings...", Menu_SwitchEnv         },
 	{  160,   50, "Nostalgia options...", Menu_SwitchNostalgia   }
 };
 
@@ -3284,7 +3284,7 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
 		{ -1, -100, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
-		{ -1,  -50, "Classic walk anim",    MenuOptionsScreen_Bool,
+		{ -1,  -50, "Classic walk animation", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim },
         { -1,    0, "Classic chat",    MenuOptionsScreen_Bool,
             NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },

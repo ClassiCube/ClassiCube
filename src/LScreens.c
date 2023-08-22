@@ -224,7 +224,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	LLine_Init(  &s->seps[1], 490, mode_seps1);
 
 	LButton_Init(&s->btnEnhanced, 145, 35, "Enhanced",                        mode_btnEnhanced);
-	LLabel_Init( &s->lblEnhanced[0], "&eEnables custom blocks, changing env", mode_lblEnhanced0);
+	LLabel_Init( &s->lblEnhanced[0], "&eEnables custom blocks, changing env.", mode_lblEnhanced0);
 	LLabel_Init( &s->lblEnhanced[1], "&esettings, longer messages, and more", mode_lblEnhanced1);
 
 	LButton_Init(&s->btnClassicHax, 145, 35, "Classic +hax",                     mode_btnClassicHax);
