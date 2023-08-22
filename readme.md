@@ -15,7 +15,7 @@ ClassiCube runs on:
 
 And also runs on:
 * Raspberry Pi - needs `libcurl` and `libopenal`
-* FreeBSD - needs `libexecinfo`, `curl` and `openal-soft` packagea
+* FreeBSD - needs `libexecinfo`, `curl` and `openal-soft` packages
 * NetBSD - needs `libexecinfo`, `curl` and `openal-soft` packages
 * OpenBSD - needs `libexecinfo`, `curl` and `openal` packages
 * Solaris - needs `curl` and `openal` packages
