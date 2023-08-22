@@ -1,7 +1,35 @@
-ClassiCube is a custom Minecraft Classic compatible client written in C that works on Windows, macOS, Linux, iOS, Android, FreeBSD, NetBSD, OpenBSD, Solaris, Haiku, IRIX, SerenityOS, BeOS, 3DS (unfinished), PSP (unfinished), GameCube (unfinished), Wii (unfinished), PS Vita (unfinished), Xbox (unfinished), Dreamcast (unfinished), and in a web browser.<br>
+ClassiCube is a custom Minecraft Classic compatible client written in C from scratch.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
+
+### Supported systems
+
+ClassiCube runs on:
+* Windows - 95 and later
+* macOS - 10.5 or later (but can be compiled to work with 10.3/10.4 though)
+* Linux - needs `libcurl` and `libopenal`
+* Android - 2.3 or later
+* iOS - 10.3 or later
+* Most web browsers (even runs on IE11)
+
+And also runs on:
+* Raspberry Pi - needs `libcurl` and `libopenal`
+* FreeBSD - needs `libexecinfo`, `curl` and `openal-soft` packagea
+* NetBSD - needs `libexecinfo`, `curl` and `openal-soft` packages
+* OpenBSD - needs `libexecinfo`, `curl` and `openal` packages
+* Solaris - needs `curl` and `openal` packages
+* Haiku - needs `openal` package
+* BeOS - untested on actual hardware
+* IRIX - needs `curl` and `openal` packages
+* SerenityOS - needs SDL2
+* 3DS - unfinished, but [usable](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml)
+* Wii - unfinished, but [usable](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml)
+* GameCube - unfinished, but [usable](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml)
+* PSP - unfinished, rendering issues
+* Dreamcast - unfinished, but renders
+* PS Vita - majorly unfinished
+* Xbox - majorly unfinished
 
 You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
@@ -24,12 +52,6 @@ If you're interested in documenting or verifying the behaviour of the original M
 * It does not work with Minecraft Java or Bedrock edition servers
 * It does not have a survival mode (nor will such a mode be added)
 * It does not support logging in with Mojang/Minecraft accounts
-
-#### System requirements
-* Windows: 95 or later
-* macOS: 10.5 or later (can be compiled to work with 10.3/10.4 though)
-* Linux: libcurl and libopenal
-* Android: 2.3 or later
 
 **Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
 
@@ -285,7 +307,9 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
 * [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
 * [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
-* [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test 3DS port
+* [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test PSP port
+* [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
+* [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
 * [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
 * [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port

@@ -76,22 +76,23 @@ static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 }
 
-static void HandleController(cont_state_t* state) {
+static void HandleController(cont_state_t* state, double delta) {
 	Input_SetNonRepeatable(CCPAD_L, state->ltrig > 10);
 	Input_SetNonRepeatable(CCPAD_R, state->rtrig > 10);
 	// TODO CONT_Z, joysticks
 	// TODO: verify values are right
       
 	if (Input.RawMode) {
+		float scale = (delta * 60.0) / 8.0f;
 		int dx = state->joyx, dy = state->joyy;
 		if (Math_AbsI(dx) <= 8) dx = 0;
 		if (Math_AbsI(dy) <= 8) dy = 0;
 		
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx / 8.0f, dy / 8.0f);
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
 	}
 }
 
-static void ProcessControllerInput(void) {
+static void ProcessControllerInput(double delta) {
 	maple_device_t* cont;
 	cont_state_t* state;
 
@@ -101,11 +102,11 @@ static void ProcessControllerInput(void) {
 	if (!state) return;
 	
 	HandleButtons(state->buttons);
-	HandleController(state);
+	HandleController(state, delta);
 }
 
 void Window_ProcessEvents(double delta) {
-	ProcessControllerInput();
+	ProcessControllerInput(delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
