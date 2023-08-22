@@ -628,8 +628,8 @@ static void ClassicPauseScreen_Init(void* screen) {
 	static const struct SimpleButtonDesc descs[] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
 		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
-		{    0,    0, "Save level..",           Menu_SwitchSaveLevel },
-		{    0,   50, "Load level..",           Menu_SwitchLoadLevel },
+		{    0,    0, "Save level...",          Menu_SwitchSaveLevel },
+		{    0,   50, "Load level...",          Menu_SwitchLoadLevel },
 		{    0,  100, "Nostalgia options...",   Menu_SwitchNostalgia }
 	};
 	s->widgets    = classicPause_widgets;
@@ -821,7 +821,7 @@ static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 	String_InitArray(text, textBuffer);
 
 	if (s->selectedI == 0) {
-		String_AppendConst(&text, "Key: press a key..");
+		String_AppendConst(&text, "Key: press a key...");
 	} else {
 		String_AppendConst(&text, "Key: ");
 		String_AppendConst(&text, Input_DisplayNames[s->curHotkey.trigger]);
@@ -834,7 +834,7 @@ static void EditHotkeyScreen_UpdateModifiers(struct EditHotkeyScreen* s) {
 	String_InitArray(text, textBuffer);
 
 	if (s->selectedI == 1) {
-		String_AppendConst(&text, "Modifiers: press a key..");
+		String_AppendConst(&text, "Modifiers: press a key...");
 	} else {
 		String_AppendConst(&text, "Modifiers:");
 		EditHotkeyScreen_MakeFlags(s->curHotkey.mods, &text);

@@ -63,7 +63,7 @@ static void SetupProgram(int argc, char** argv) {
 	Window_Init();
 	
 	if (res) Logger_SysWarn(res, "setting current directory");
-	Platform_LogConst("Starting " GAME_APP_NAME " ..");
+	Platform_LogConst("Starting " GAME_APP_NAME "...");
 	String_InitArray(Server.Address, ipBuffer);
 }
 
