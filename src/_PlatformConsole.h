@@ -164,7 +164,7 @@ static cc_result GetMachineID(cc_uint32* key);
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
-	cc_uint32 header[4], key[4];
+	cc_uint32 header[4], key[4] = { 0 };
 	cc_result res;
 	if ((res = GetMachineID(key))) return res;
 
@@ -183,7 +183,7 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
-	cc_uint32 header[4], key[4];
+	cc_uint32 header[4], key[4] = { 0 };
 	cc_result res;
 	int dataLen;
 

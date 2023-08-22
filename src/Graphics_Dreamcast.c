@@ -9,7 +9,6 @@
 #include "GL/glext.h"
 #include <malloc.h>
 
-#define TRANSFER_FORMAT GL_UNSIGNED_BYTE
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
@@ -45,14 +44,14 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-static void GL_ClearColor(PackedCol color) {
-	glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
-				 PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
-}
 void Gfx_ClearCol(PackedCol color) {
 	if (color == gfx_clearColor) return;
-	GL_ClearColor(color);
 	gfx_clearColor = color;
+	
+	float r = PackedCol_R(color) / 255.0f;
+	float g = PackedCol_G(color) / 255.0f;
+	float b = PackedCol_B(color) / 255.0f;
+	pvr_set_bg_color(r, g, b);
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -67,10 +66,8 @@ void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	// don't need a fake second pass in this case
 	renderingDisabled = depthOnly;
-	
-	cc_bool enabled = !depthOnly;
-	gl_Toggle(GL_TEXTURE_2D);
 }
 
 
@@ -134,8 +131,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) { }
-void Gfx_Clear(void) { 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+void Gfx_Clear(void) {
+	// no need to use glClear
 }
 
 void Gfx_EndFrame(void) {
@@ -159,6 +156,7 @@ static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	fillFunc(gfx_indices, count, obj);
+	return 1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
@@ -276,7 +274,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = 0;
 }
 
-void Gfx_EnableMipmaps(void) { }
+void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 
 
@@ -284,8 +282,8 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_fogColor;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
-static int gfx_fogMode  = -1;
+static float gfx_fogEnd = 16.0f, gfx_fogDensity = 1.0f;
+static FogFunc gfx_fogMode = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
@@ -293,36 +291,42 @@ void Gfx_SetFog(cc_bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol color) {
-	float rgba[4];
 	if (color == gfx_fogColor) return;
-
-	rgba[0] = PackedCol_R(color) / 255.0f; 
-	rgba[1] = PackedCol_G(color) / 255.0f;
-	rgba[2] = PackedCol_B(color) / 255.0f; 
-	rgba[3] = PackedCol_A(color) / 255.0f;
-
-	glFogfv(GL_FOG_COLOR, rgba);
 	gfx_fogColor = color;
+
+	float r = PackedCol_R(color) / 255.0f; 
+	float g = PackedCol_G(color) / 255.0f;
+	float b = PackedCol_B(color) / 255.0f; 
+	float a = PackedCol_A(color) / 255.0f;
+
+	pvr_fog_table_color(a, r, g, b);
+}
+static void UpdateFog(void) {
+	if (gfx_fogMode == FOG_LINEAR) {
+		pvr_fog_table_linear(0.0f, gfx_fogEnd);
+	} else if (gfx_fogMode == FOG_EXP) {
+    		pvr_fog_table_exp(gfx_fogDensity);
+	} else if (gfx_fogMode == FOG_EXP2) {
+		pvr_fog_table_exp2(gfx_fogDensity);
+	}
 }
 
 void Gfx_SetFogDensity(float value) {
 	if (value == gfx_fogDensity) return;
-	glFogf(GL_FOG_DENSITY, value);
 	gfx_fogDensity = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
-	glFogf(GL_FOG_END, value);
 	gfx_fogEnd = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
-	static GLint modes[] = { GL_LINEAR, GL_EXP, GL_EXP2 };
 	if (func == gfx_fogMode) return;
-
-	glFogi(GL_FOG_MODE, modes[func]);
 	gfx_fogMode = func;
+	UpdateFog();
 }
 
 
