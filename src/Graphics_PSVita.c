@@ -59,37 +59,28 @@ static unsigned int shader_patcher_fragment_usse_offset;
 
 #include "../misc/vita/colored_fs.h"
 #include "../misc/vita/colored_vs.h"
-static SceGxmProgram* gxm_program_colored_vs = (SceGxmProgram *)&colored_vs;
-static SceGxmProgram* gxm_program_colored_fs = (SceGxmProgram *)&colored_fs;
+static SceGxmProgram* gxm_colored_VP = (SceGxmProgram *)&colored_vs;
+static SceGxmProgram* gxm_colored_FP = (SceGxmProgram *)&colored_fs;
 
 #include "../misc/vita/textured_fs.h"
 #include "../misc/vita/textured_vs.h"
-static SceGxmProgram* gxm_program_textured_vs = (SceGxmProgram *)&textured_vs;
-static SceGxmProgram* gxm_program_textured_fs = (SceGxmProgram *)&textured_fs;
+static SceGxmProgram* gxm_textured_VP = (SceGxmProgram *)&textured_vs;
+static SceGxmProgram* gxm_textured_FP = (SceGxmProgram *)&textured_fs;
 
 
 typedef struct CCVertexProgram {
-	SceGxmShaderPatcherId programID;
-	SceGxmVertexProgram*  programPatched;
+	SceGxmVertexProgram* programPatched;
 	const SceGxmProgramParameter* param_in_position;
 	const SceGxmProgramParameter* param_in_color;
 	const SceGxmProgramParameter* param_in_texcoord;
 	const SceGxmProgramParameter* param_uni_mvp;
 	int dirtyUniforms;
 } VertexProgram;
-
 #define VP_UNI_MATRIX 0x01
-static VertexProgram VP_colored, VP_textured;
 
 typedef struct CCFragmentProgram {
-	SceGxmShaderPatcherId  programID;
 	SceGxmFragmentProgram* programPatched;
-	const SceGxmProgramParameter* param_uni_tex;
-	int dirtyUniforms;
 } FragmentProgram;
-
-#define FP_UNI_TEXTURE 0x01
-static FragmentProgram FP_colored, FP_textured;
 
 
 /*########################################################################################################################*
@@ -180,8 +171,65 @@ static void FreeShaderPatcherMem(void* user_data, void* mem) {
 	Mem_Free(mem);
 }
 
-static void LogIt(const char* msg) { Platform_LogConst(msg); Thread_Sleep(100); }
 
+/*########################################################################################################################*
+*-----------------------------------------------------Vertex shaders------------------------------------------------------*
+*#########################################################################################################################*/
+static VertexProgram VP_list[2];
+static VertexProgram* VP_Active;
+static float transposed_mvp[4*4] __attribute__((aligned(64)));
+
+static void VP_DirtyUniform(int uniform) {
+	for (int i = 0; i < Array_Elems(VP_list); i++) 
+	{
+		VP_list[i].dirtyUniforms |= uniform;
+	}
+}
+
+static void VP_ReloadUniforms(void) {
+	VertexProgram* VP = VP_Active;
+	if (!VP) return;
+
+	if (VP->dirtyUniforms & VP_UNI_MATRIX) {
+		void *uniform_buffer;
+		
+		sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
+		sceGxmSetUniformDataF(uniform_buffer, VP->param_uni_mvp,
+			0, 4 * 4, transposed_mvp);
+			
+		VP->dirtyUniforms &= ~VP_UNI_MATRIX;
+	}
+}
+
+static void VP_SwitchActive(void) {
+	int index = 0;
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) index++;
+	
+	VertexProgram* VP = &VP_list[index];
+	if (VP == VP_Active) return;
+	VP_Active = VP;
+	
+	sceGxmSetVertexProgram(gxm_context, VP->programPatched);
+	VP_ReloadUniforms();
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Fragment shaders-----------------------------------------------------*
+*#########################################################################################################################*/
+static FragmentProgram FP_list[2];
+static FragmentProgram* FP_Active;
+
+static void FP_SwitchActive(void) {
+	int index = 0;
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) index++;
+	
+	FragmentProgram* FP = &FP_list[index];
+	if (FP == FP_Active) return;
+	FP_Active = FP;
+	
+	sceGxmSetFragmentProgram(gxm_context, FP->programPatched);
+}
 
 /*########################################################################################################################*
 *-----------------------------------------------------Initialisation------------------------------------------------------*
@@ -328,10 +376,12 @@ static void AllocShaderPatcher(void) {
 	sceGxmShaderPatcherCreate(&params, &gxm_shader_patcher);
 }
 
-static void AllocColouredVertexShader(VertexProgram* VP) {
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_program_colored_vs, &VP->programID);
+static void AllocColouredVertexProgram(int index) {
+	SceGxmShaderPatcherId programID;
+	VertexProgram* VP = &VP_list[index];
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_colored_VP, &programID);
 
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(VP->programID);
+	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID);
 
 	VP->param_in_position = sceGxmProgramFindParameterByName(prog, "in_position");
 	VP->param_in_color    = sceGxmProgramFindParameterByName(prog, "in_color");
@@ -356,25 +406,16 @@ static void AllocColouredVertexShader(VertexProgram* VP) {
 	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
 
 	sceGxmShaderPatcherCreateVertexProgram(gxm_shader_patcher,
-		VP->programID, attribs, 2,
+		programID, attribs, 2,
 		&vertex_stream, 1, &VP->programPatched);
 }
 
-static void AllocColouredFragmentShader(FragmentProgram* FP) {
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_program_colored_fs, &FP->programID);
-		
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(FP->programID);
-		
-	sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
-		FP->programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
-		SCE_GXM_MULTISAMPLE_NONE, NULL, prog,
-		&FP->programPatched);
-}
+static void AllocTexturedVertexProgram(int index) {
+	SceGxmShaderPatcherId programID;
+	VertexProgram* VP = &VP_list[index];
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_textured_VP, &programID);
 
-static void AllocTexturedVertexShader(VertexProgram* VP) {
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_program_textured_vs, &VP->programID);
-
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(VP->programID);
+	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID);
 
 	VP->param_in_position = sceGxmProgramFindParameterByName(prog, "in_position");
 	VP->param_in_color    = sceGxmProgramFindParameterByName(prog, "in_color");
@@ -406,19 +447,19 @@ static void AllocTexturedVertexShader(VertexProgram* VP) {
 	vertex_stream.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
 
 	sceGxmShaderPatcherCreateVertexProgram(gxm_shader_patcher,
-		VP->programID, attribs, 3,
+		programID, attribs, 3,
 		&vertex_stream, 1, &VP->programPatched);
 }
 
-static void AllocTexturedFragmentShader(FragmentProgram* FP) {
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, gxm_program_textured_fs, &FP->programID);
+static void CreateFragmentProgram(int index, const SceGxmProgram* programHeader) {
+	SceGxmShaderPatcherId programID;
+	FragmentProgram* FP = &FP_list[index];
+	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, programHeader, &programID);
 		
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(FP->programID);
-		
-	FP->param_uni_tex = sceGxmProgramFindParameterByName(prog, "tex");
+	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID); // TODO just use original program directly?
 
 	sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
-		FP->programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
+		programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
 		SCE_GXM_MULTISAMPLE_NONE, NULL, prog,
 		&FP->programPatched);
 }
@@ -450,10 +491,10 @@ void Gfx_Create(void) {
 	AllocShaderPatcherMemory();
 	AllocShaderPatcher();
 	
-	AllocColouredVertexShader(&VP_colored);
-	AllocColouredFragmentShader(&FP_colored);
-	AllocTexturedVertexShader(&VP_textured);
-	AllocTexturedFragmentShader(&FP_textured);
+	AllocColouredVertexProgram(0);
+	CreateFragmentProgram(0, gxm_colored_FP);
+	AllocTexturedVertexProgram(1);
+	CreateFragmentProgram(1, gxm_textured_FP);
 	
 	Gfx_SetDepthTest(true);
 	InitDefaultResources();
@@ -813,51 +854,26 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj;
-static struct Matrix mvp __attribute__((aligned(64)));
-static int loadedMatrices = 0x1 | 0x2;
-static int LOCKED;
-
-// TODO: Probably not even needed ??
-static void ReloadMatrices(void) {
-	const SceGxmProgramParameter* param;
-	
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		if (loadedMatrices & 0x1) return;
-		
-		loadedMatrices |= 0x1;
-		param = VP_textured.param_uni_mvp;
-	} else {
-		if (loadedMatrices & 0x2) return;
-		
-		loadedMatrices |= 0x2;
-		param = VP_colored.param_uni_mvp;
-	}
-	
-	float* m = &mvp;
-	float tmp[16];
-	
-	// Transpose matrix
-	for (int i = 0; i < 4; i++)
-	{
-		tmp[i * 4 + 0] = m[0  + i];
-		tmp[i * 4 + 1] = m[4  + i];
-		tmp[i * 4 + 2] = m[8  + i];
-		tmp[i * 4 + 3] = m[12 + i];
-	}
-	
-	void *uniform_buffer;
-	sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
-	sceGxmSetUniformDataF(uniform_buffer, param,
-		0, 4 * 4, tmp);
-}
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
+
+	struct Matrix mvp __attribute__((aligned(64)));	
 	Matrix_Mul(&mvp, &_view, &_proj);
+	float* m = &mvp;
 	
-	loadedMatrices = 0;
-	ReloadMatrices();
+	// Transpose matrix
+	for (int i = 0; i < 4; i++)
+	{
+		transposed_mvp[i * 4 + 0] = m[0  + i];
+		transposed_mvp[i * 4 + 1] = m[4  + i];
+		transposed_mvp[i * 4 + 2] = m[8  + i];
+		transposed_mvp[i * 4 + 3] = m[12 + i];
+	}
+	
+	VP_DirtyUniform(VP_UNI_MATRIX);
+	VP_ReloadUniforms();
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) { 
@@ -884,32 +900,29 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 	
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-			sceGxmSetVertexProgram(gxm_context,   VP_textured.programPatched);
-			sceGxmSetFragmentProgram(gxm_context, FP_textured.programPatched);
-	} else {
-			sceGxmSetVertexProgram(gxm_context,   VP_colored.programPatched);
-			sceGxmSetFragmentProgram(gxm_context, FP_colored.programPatched);
-	}
-	ReloadMatrices();
+	VP_SwitchActive();
+	FP_SwitchActive();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
  // TODO
 }
 
+// TODO probably wrong to offset index buffer
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	//Platform_Log2("DRAW1: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
 			SCE_GXM_INDEX_FORMAT_U16, gfx_indices + ICOUNT(startVertex), ICOUNT(verticesCount));
 }
 
+// TODO probably wrong to offset index buffer
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	//Platform_Log1("DRAW2: %i", &verticesCount); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
 			SCE_GXM_INDEX_FORMAT_U16, gfx_indices, ICOUNT(verticesCount));
 }
 
+// TODO probably wrong to offset index buffer
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	//Platform_Log2("DRAW3: %i, %i", &verticesCount, &startVertex); Thread_Sleep(100);
 	sceGxmDraw(gxm_context, SCE_GXM_PRIMITIVE_TRIANGLES,
