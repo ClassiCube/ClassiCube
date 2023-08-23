@@ -13,23 +13,27 @@ ClassiCube runs on:
 * iOS - 10.3 or later
 * Most web browsers (even runs on IE11)
 
-And also runs on:
-* Raspberry Pi - needs `libcurl` and `libopenal`
-* FreeBSD - needs `libexecinfo`, `curl` and `openal-soft` packagea
-* NetBSD - needs `libexecinfo`, `curl` and `openal-soft` packages
-* OpenBSD - needs `libexecinfo`, `curl` and `openal` packages
-* Solaris - needs `curl` and `openal` packages
-* Haiku - needs `openal` package
-* BeOS - untested on actual hardware
-* IRIX - needs `curl` and `openal` packages
-* SerenityOS - needs SDL2
-* 3DS - unfinished, but [usable](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml)
-* Wii - unfinished, but [usable](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml)
-* GameCube - unfinished, but [usable](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml)
-* PSP - unfinished, rendering issues
-* Dreamcast - unfinished, but renders
-* PS Vita - majorly unfinished
-* Xbox - majorly unfinished
+<details>
+  <summary>And also runs on:</summary>
+<ul>
+<li> Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code> </li>
+<li> FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages </li>
+<li> NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages </li>
+<li> OpenBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal</code> packages </li>
+<li> Solaris - needs <code>curl</code> and <code>openal</code> packages </li>
+<li> Haiku - needs <code>openal</code> package </li>
+<li> BeOS - untested on actual hardware </li>
+<li> IRIX - needs <code>curl</code> and <code>openal</code> packages </li>
+<li> SerenityOS - needs <code>SDL2</code> </li>
+<li> 3DS - unfinished, but <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml">usable</a> </li>
+<li> Wii - unfinished, but <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">usable</a> </li>
+<li> GameCube - unfinished, but <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">usable</a> </li>
+<li> PSP - unfinished, rendering issues </li>
+<li> Dreamcast - unfinished, but renders </li>
+<li> PS Vita - majorly unfinished </li>
+<li> Xbox - majorly unfinished </li>
+</ul>
+</details>
 
 You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
@@ -47,6 +51,9 @@ If you're interested in documenting or verifying the behaviour of the original M
 * Lightweight, minimal memory usage compared to original Minecraft Classic
 * Much better performance than original Minecraft Classic
 * Works with effectively all graphics cards that support OpenGL or Direct3D 9
+* Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
+* Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
+* Although still work in progresses, also runs on various consoles
 
 #### What ClassiCube isn't
 * It does not work with Minecraft Java or Bedrock edition servers
