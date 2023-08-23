@@ -321,7 +321,9 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
 * [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
+* [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
 * [nullDC](https://github.com/skmp/nulldc) - Emulator used to test Dreamcast port
+* [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
 * [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
 

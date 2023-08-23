@@ -5,8 +5,10 @@
 #include "Logger.h"
 #include "Window.h"
 #include <vitasdk.h>
+
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
+static cc_bool gfx_depthOnly, gfx_alphaBlending;
 static int frontBufferIndex, backBufferIndex;
 // Inspired from
 // https://github.com/xerpi/gxmfun/blob/master/source/main.c
@@ -202,8 +204,7 @@ static void VP_ReloadUniforms(void) {
 }
 
 static void VP_SwitchActive(void) {
-	int index = 0;
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) index++;
+	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
 	
 	VertexProgram* VP = &VP_list[index];
 	if (VP == VP_Active) return;
@@ -217,12 +218,18 @@ static void VP_SwitchActive(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Fragment shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-static FragmentProgram FP_list[2];
+static FragmentProgram FP_list[2 * 3];
 static FragmentProgram* FP_Active;
 
 static void FP_SwitchActive(void) {
-	int index = 0;
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) index++;
+	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 3 : 0;
+	
+	// [normal rendering, blend rendering, no rendering]
+	if (gfx_depthOnly) {
+		index += 2;
+	} else if (gfx_alphaBlending) {
+		index += 1;
+	}
 	
 	FragmentProgram* FP = &FP_list[index];
 	if (FP == FP_Active) return;
@@ -230,6 +237,45 @@ static void FP_SwitchActive(void) {
 	
 	sceGxmSetFragmentProgram(gxm_context, FP->programPatched);
 }
+
+
+static const SceGxmBlendInfo no_blending = {
+	SCE_GXM_COLOR_MASK_ALL,
+	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
+};
+static const SceGxmBlendInfo yes_blending = {
+	SCE_GXM_COLOR_MASK_ALL,
+	SCE_GXM_BLEND_FUNC_ADD,   SCE_GXM_BLEND_FUNC_ADD,
+	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+	SCE_GXM_BLEND_FACTOR_SRC_ALPHA, SCE_GXM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
+};
+static const SceGxmBlendInfo no_rendering = {
+	SCE_GXM_COLOR_MASK_NONE,
+	SCE_GXM_BLEND_FUNC_NONE,  SCE_GXM_BLEND_FUNC_NONE,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO,
+	SCE_GXM_BLEND_FACTOR_ONE, SCE_GXM_BLEND_FACTOR_ZERO
+};
+static const SceGxmBlendInfo* blend_modes[] = { &no_blending, &yes_blending, &no_rendering };
+
+static void CreateFragmentPrograms(int index, const SceGxmProgram* fragProgram, const SceGxmProgram* vertexProgram) {
+	SceGxmShaderPatcherId programID;
+	
+	for (int i = 0; i < Array_Elems(blend_modes); i++)
+	{
+		FragmentProgram* FP = &FP_list[index + i];
+		sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, fragProgram, &programID);
+		
+		const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID); // TODO just use original program directly?
+
+		sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
+			programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
+			SCE_GXM_MULTISAMPLE_NONE, blend_modes[i], vertexProgram,
+			&FP->programPatched);
+	}
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Initialisation------------------------------------------------------*
@@ -451,19 +497,6 @@ static void AllocTexturedVertexProgram(int index) {
 		&vertex_stream, 1, &VP->programPatched);
 }
 
-static void CreateFragmentProgram(int index, const SceGxmProgram* programHeader) {
-	SceGxmShaderPatcherId programID;
-	FragmentProgram* FP = &FP_list[index];
-	sceGxmShaderPatcherRegisterProgram(gxm_shader_patcher, programHeader, &programID);
-		
-	const SceGxmProgram* prog = sceGxmShaderPatcherGetProgramFromId(programID); // TODO just use original program directly?
-
-	sceGxmShaderPatcherCreateFragmentProgram(gxm_shader_patcher,
-		programID, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
-		SCE_GXM_MULTISAMPLE_NONE, NULL, prog,
-		&FP->programPatched);
-}
-
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -492,9 +525,9 @@ void Gfx_Create(void) {
 	AllocShaderPatcher();
 	
 	AllocColouredVertexProgram(0);
-	CreateFragmentProgram(0, gxm_colored_FP);
+	CreateFragmentPrograms(0, gxm_colored_FP,  gxm_colored_VP);
 	AllocTexturedVertexProgram(1);
-	CreateFragmentProgram(1, gxm_textured_FP);
+	CreateFragmentPrograms(3, gxm_textured_FP, gxm_textured_VP);
 	
 	Gfx_SetDepthTest(true);
 	InitDefaultResources();
@@ -587,53 +620,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	sceGxmSetFragmentTexture(gxm_context, 0, &tex->texture);
 }
 
-
-/*########################################################################################################################*
-*-----------------------------------------------------State management----------------------------------------------------*
-*#########################################################################################################################*/
-void Gfx_SetFaceCulling(cc_bool enabled) { 
-	sceGxmSetCullMode(gxm_context, enabled ? SCE_GXM_CULL_CW : SCE_GXM_CULL_NONE);
-}
-
-void Gfx_SetAlphaBlending(cc_bool enabled) { } // TODO
-void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
-
-static PackedCol clear_color;
-void Gfx_ClearCol(PackedCol color) {
-	clear_color = color;
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
- // TODO
-}
-
-static cc_bool depth_write = true, depth_test = true;
-static void UpdateDepthWrite(void) {
-	// match Desktop behaviour, where disabling depth testing also disables depth writing
-	// TODO do we actually need to & here?
-	cc_bool enabled = depth_write & depth_test;
-	
-	int mode = enabled ? SCE_GXM_DEPTH_WRITE_ENABLED : SCE_GXM_DEPTH_WRITE_DISABLED;
-	sceGxmSetFrontDepthWriteEnable(gxm_context, mode);
-	sceGxmSetBackDepthWriteEnable(gxm_context,  mode);
-}
-
-static void UpdateDepthFunction(void) {
-	int func = depth_test ? SCE_GXM_DEPTH_FUNC_LESS_EQUAL : SCE_GXM_DEPTH_FUNC_ALWAYS;
-	sceGxmSetFrontDepthFunc(gxm_context, func);
-	sceGxmSetBackDepthFunc(gxm_context,  func);
-}
-
-void Gfx_SetDepthWrite(cc_bool enabled) {
-	depth_write = enabled;
-	UpdateDepthWrite();
-}
-
-void Gfx_SetDepthTest(cc_bool enabled) {
-	depth_test = enabled;
-	UpdateDepthWrite();
-	UpdateDepthFunction();
-}
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
@@ -844,9 +830,60 @@ void Gfx_SetFogMode(FogFunc func) {
 
 void Gfx_SetAlphaTest(cc_bool enabled) { } 
  // TODO
+ 
+void Gfx_SetAlphaBlending(cc_bool enabled) {
+	gfx_alphaBlending = enabled;
+	FP_SwitchActive();
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	// TODO
+	gfx_depthOnly = depthOnly;
+	FP_SwitchActive();
+}
+
+void Gfx_SetFaceCulling(cc_bool enabled) { 
+	sceGxmSetCullMode(gxm_context, enabled ? SCE_GXM_CULL_CW : SCE_GXM_CULL_NONE);
+}
+
+
+void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
+
+static PackedCol clear_color;
+void Gfx_ClearCol(PackedCol color) {
+	clear_color = color;
+}
+
+void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
  // TODO
+}
+
+static cc_bool depth_write = true, depth_test = true;
+static void UpdateDepthWrite(void) {
+	// match Desktop behaviour, where disabling depth testing also disables depth writing
+	// TODO do we actually need to & here?
+	cc_bool enabled = depth_write & depth_test;
+	
+	int mode = enabled ? SCE_GXM_DEPTH_WRITE_ENABLED : SCE_GXM_DEPTH_WRITE_DISABLED;
+	sceGxmSetFrontDepthWriteEnable(gxm_context, mode);
+	sceGxmSetBackDepthWriteEnable(gxm_context,  mode);
+}
+
+static void UpdateDepthFunction(void) {
+	int func = depth_test ? SCE_GXM_DEPTH_FUNC_LESS_EQUAL : SCE_GXM_DEPTH_FUNC_ALWAYS;
+	sceGxmSetFrontDepthFunc(gxm_context, func);
+	sceGxmSetBackDepthFunc(gxm_context,  func);
+}
+
+void Gfx_SetDepthWrite(cc_bool enabled) {
+	depth_write = enabled;
+	UpdateDepthWrite();
+}
+
+void Gfx_SetDepthTest(cc_bool enabled) {
+	depth_test = enabled;
+	UpdateDepthWrite();
+	UpdateDepthFunction();
 }
 
 
