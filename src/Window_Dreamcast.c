@@ -31,14 +31,21 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
-	Input.GamepadSource = true;	
-	// TODO: So wasteful!!!!!
-	vid_set_mode(vid_mode->generic, PM_RGB0888);
+	Input.GamepadSource = true;
+}
+
+void Window_Create2D(int width, int height) { 
+	launcherMode = true;
+	vid_set_mode(DEFAULT_VID_MODE, PM_RGB0888);
 	vid_flip(0);
 }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create3D(int width, int height) { 
+	launcherMode = false;
+	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
+	vid_flip(0);
+	// TODO: Why doesn't 32 bit work on real hardware?
+}
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }

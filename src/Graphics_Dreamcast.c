@@ -6,8 +6,10 @@
 #include "Window.h"
 #include "GL/gl.h"
 #include "GL/glkos.h"
-#include "GL/glext.h"
 #include <malloc.h>
+#include <kos.h>
+#include <dc/matrix.h>
+#include <dc/pvr.h>
 
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
@@ -121,7 +123,6 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
 	String_Format1(info, "Vendor: %c\n",     glGetString(GL_VENDOR));
 	String_Format1(info, "Renderer: %c\n",   glGetString(GL_RENDERER));
-	String_Format1(info, "GL version: %c\n", glGetString(GL_VERSION));
 	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
@@ -241,8 +242,6 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Logger_Abort("Textures must have power of two dimensions");
@@ -301,6 +300,7 @@ void Gfx_SetFogCol(PackedCol color) {
 
 	pvr_fog_table_color(a, r, g, b);
 }
+
 static void UpdateFog(void) {
 	if (gfx_fogMode == FOG_LINEAR) {
 		pvr_fog_table_linear(0.0f, gfx_fogEnd);
@@ -357,6 +357,7 @@ void Gfx_EnableTextureOffset(float x, float y) {
 void Gfx_DisableTextureOffset(void) {
 	textureOffset  = false;
 }
+
 static CC_NOINLINE void ShiftTextureCoords(int count) {
 	for (int i = 0; i < count; i++) 
 	{
@@ -365,6 +366,7 @@ static CC_NOINLINE void ShiftTextureCoords(int count) {
 		v->V += textureOffsetY;
 	}
 }
+
 static CC_NOINLINE void UnshiftTextureCoords(int count) {
 	for (int i = 0; i < count; i++) 
 	{
@@ -385,7 +387,6 @@ static void Gfx_RestoreState(void) {
 	glEnableClientState(GL_COLOR_ARRAY);
 	gfx_format = -1;
 
-	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
