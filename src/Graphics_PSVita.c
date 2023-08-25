@@ -6,6 +6,7 @@
 #include "Window.h"
 #include <vitasdk.h>
 
+// TODO track last frame used on
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 static cc_bool gfx_depthOnly;
@@ -21,6 +22,10 @@ static int frontBufferIndex, backBufferIndex;
 
 #define NUM_DISPLAY_BUFFERS 3 // TODO: or just 2?
 #define MAX_PENDING_SWAPS   (NUM_DISPLAY_BUFFERS - 1)
+
+static void GPUBuffers_DeleteUnreferenced(void);
+static void GPUTextures_DeleteUnreferenced(void);
+static cc_uint32 frameCounter;
 
 static SceGxmContext* gxm_context;
 
@@ -303,6 +308,10 @@ static void DQCallback(const void *callback_data) {
 	sceDisplaySetFrameBuf(&fb, SCE_DISPLAY_SETBUF_NEXTFRAME);
 	
 	if (gfx_vsync) sceDisplayWaitVblankStart();
+	
+	 GPUBuffers_DeleteUnreferenced();
+	GPUTextures_DeleteUnreferenced();
+	frameCounter++;
 }
 
 static void InitGXM(void) {
@@ -566,14 +575,19 @@ void Gfx_FreeState(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------GPU Textures-----------------------------------------------------*
 *#########################################################################################################################*/
+struct GPUTexture;
 struct GPUTexture {
-	void* data;
+	cc_uint32* data;
 	SceUID uid;
 	SceGxmTexture texture;
+	struct GPUTexture* next;
+	cc_uint32 lastFrame;
 };
+static struct GPUTexture* del_textures_head;
+static struct GPUTexture* del_textures_tail;
 
 struct GPUTexture* GPUTexture_Alloc(int size) {
-	struct GPUTexture* tex = Mem_Alloc(1, sizeof(struct GPUTexture), "GPU texture");
+	struct GPUTexture* tex = Mem_AllocCleared(1, sizeof(struct GPUTexture), "GPU texture");
 	
 	tex->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_READ,
@@ -581,14 +595,54 @@ struct GPUTexture* GPUTexture_Alloc(int size) {
 	return tex;
 }
 
-static void GPUTexture_Free(GfxResourceID* resource) {
-	GfxResourceID raw = *resource;
-	if (!raw) return;
-	
-	struct GPUTexture* buffer = (struct GPUTexture*)raw;
-	FreeGPUMemory(buffer->uid);
-	Mem_Free(buffer);
+// can't delete textures until not used in any frames
+static void GPUTexture_Unref(GfxResourceID* resource) {
+	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
+	if (!tex) return;
 	*resource = NULL;
+	
+	cc_uintptr addr = tex;
+	Platform_Log1("TEX UNREF %h", &addr);
+	LinkedList_Append(tex, del_textures_head, del_textures_tail);
+}
+
+static void GPUTexture_Free(struct GPUTexture* tex) {
+	cc_uintptr addr = tex;
+	Platform_Log1("TEX DELETE %h", &addr);
+	FreeGPUMemory(tex->uid);
+	Mem_Free(tex);
+}
+
+static void GPUTextures_DeleteUnreferenced(void) {
+	if (!del_textures_head) return;
+	del_textures_tail = NULL;
+	
+	struct GPUTexture* tex;
+	struct GPUTexture* next;
+	struct GPUTexture* prev = NULL;
+	
+	for (tex = del_textures_head; tex != NULL; tex = next)
+	{
+		next = tex->next;
+		
+		if (tex->lastFrame + 4 > frameCounter) {
+			// texture was used within last 4 fames
+			prev              = tex;
+			del_textures_tail = tex; // update end of linked list
+			
+			cc_uintptr addr = tex;
+			Platform_Log1("TEX CHECK %h", &addr);
+		} else {
+			// advance the head of the linked list
+			if (del_textures_head == tex) 
+				del_textures_head = next;
+			
+			// unlink this texture from the linked list
+			if (prev) prev->next = next;
+			
+			GPUTexture_Free(tex);
+		}
+	}
 }
 
 
@@ -603,13 +657,21 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	sceGxmTextureInitLinear(&tex->texture, tex->data,
 		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, bmp->width, bmp->height, 0);
 		
-	tex->texture.generic.uaddr_mode = SCE_GXM_TEXTURE_ADDR_REPEAT;
-	tex->texture.generic.vaddr_mode = SCE_GXM_TEXTURE_ADDR_REPEAT;
+	sceGxmTextureSetUAddrMode(&tex->texture, SCE_GXM_TEXTURE_ADDR_REPEAT);
+	sceGxmTextureSetVAddrMode(&tex->texture, SCE_GXM_TEXTURE_ADDR_REPEAT);
 	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	 // TODO
+	struct GPUTexture* tex = (struct GPUTexture*)texId;
+	int texWidth = sceGxmTextureGetWidth(&tex->texture);
+	
+	// NOTE: Only valid for LINEAR textures
+	cc_uint32* dst = (tex->data + x) + y * texWidth;
+	
+	CopyTextureData(dst, texWidth * 4, part, rowWidth << 2);
+	// TODO: Do line by line and only invalidate the actually changed parts of lines?
+	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
@@ -617,7 +679,7 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GPUTexture_Free(texId);
+	GPUTexture_Unref(texId);
 }
 
 void Gfx_EnableMipmaps(void) { }
@@ -627,6 +689,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
  
  	struct GPUTexture* tex = (struct GPUTexture*)texId;
+ 	tex->lastFrame = frameCounter;
 	sceGxmSetFragmentTexture(gxm_context, 0, &tex->texture);
 }
 
@@ -720,13 +783,18 @@ void Gfx_OnWindowResize(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------GPU Buffers------------------------------------------------------*
 *#########################################################################################################################*/
+struct GPUBuffer;
 struct GPUBuffer {
 	void* data;
 	SceUID uid;
+	cc_uint32 lastFrame;
+	struct GPUBuffer* next;
 };
+static struct GPUBuffer* del_buffers_head;
+static struct GPUBuffer* del_buffers_tail;
 
 struct GPUBuffer* GPUBuffer_Alloc(int size) {
-	struct GPUBuffer* buffer = Mem_Alloc(1, sizeof(struct GPUBuffer), "GPU buffer");
+	struct GPUBuffer* buffer = Mem_AllocCleared(1, sizeof(struct GPUBuffer), "GPU buffer");
 	
 	buffer->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, SCE_GXM_MEMORY_ATTRIB_READ,
@@ -737,22 +805,55 @@ struct GPUBuffer* GPUBuffer_Alloc(int size) {
 	return buffer;
 }
 
-static void GPUBuffer_Free(GfxResourceID* resource) {
-	GfxResourceID raw = *resource;
-	if (!raw) return;
-	return; 
-	// TODO:!!!!!! MASSIVE MEMORY LEAK !!!!!!!
-	// TODO:!!!!!! MASSIVE MEMORY LEAK !!!!!!!
-	// TODO:!!!!!! MASSIVE MEMORY LEAK !!!!!!!
-	// .. but it fixes crashing for now until I find a better solution
-	
-	struct GPUBuffer* buffer = (struct GPUBuffer*)raw;
-	cc_uintptr addr = buffer->data;
-	Platform_Log1("VB FREE %h", &addr);
-	
-	FreeGPUMemory(buffer->uid);
-	Mem_Free(buffer);
+
+// can't delete buffers until not used in any frames
+static void GPUBuffer_Unref(GfxResourceID* resource) {
+	struct GPUBuffer* buf = (struct GPUBuffer*)(*resource);
+	if (!buf) return;
 	*resource = NULL;
+	
+	cc_uintptr addr = buf;
+	Platform_Log1("VB UNREF %h", &addr);
+	LinkedList_Append(buf, del_buffers_head, del_buffers_tail);
+}
+
+static void GPUBuffer_Free(struct GPUBuffer* buf) {
+	cc_uintptr addr = buf;
+	Platform_Log1("VB DELETE %h", &addr);
+	FreeGPUMemory(buf->uid);
+	Mem_Free(buf);
+}
+
+static void GPUBuffers_DeleteUnreferenced(void) {
+	if (!del_buffers_head) return;
+	del_buffers_tail = NULL;
+	
+	struct GPUBuffer* buf;
+	struct GPUBuffer* next;
+	struct GPUBuffer* prev = NULL;
+	
+	for (buf = del_buffers_head; buf != NULL; buf = next)
+	{
+		next = buf->next;
+		
+		if (buf->lastFrame + 4 > frameCounter) {
+			// texture was used within last 4 fames
+			prev             = buf;
+			del_buffers_tail = buf; // update end of linked list
+			
+			cc_uintptr addr = buf;
+			Platform_Log1("VB CHECK %h", &addr);
+		} else {
+			// advance the head of the linked list
+			if (del_buffers_head == buf) 
+				del_buffers_head = next;
+			
+			// unlink this texture from the linked list
+			if (prev) prev->next = next;
+			
+			GPUBuffer_Free(buf);
+		}
+	}
 }
 
 
@@ -772,7 +873,7 @@ void Gfx_BindIb(GfxResourceID ib) {
 	gfx_indices = buffer->data;
 }
 
-void Gfx_DeleteIb(GfxResourceID* ib) { GPUBuffer_Free(ib); }
+void Gfx_DeleteIb(GfxResourceID* ib) { GPUBuffer_Unref(ib); }
 
 
 /*########################################################################################################################*
@@ -784,10 +885,11 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 
 void Gfx_BindVb(GfxResourceID vb) { 
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	buffer->lastFrame = frameCounter;
 	sceGxmSetVertexStream(gxm_context, 0, buffer->data);
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Free(vb); }
+void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Unref(vb); }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
