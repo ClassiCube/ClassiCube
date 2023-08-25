@@ -8,7 +8,8 @@
 
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
-static cc_bool gfx_depthOnly, gfx_alphaBlending;
+static cc_bool gfx_depthOnly;
+static cc_bool gfx_alphaTesting, gfx_alphaBlending;
 static int frontBufferIndex, backBufferIndex;
 // Inspired from
 // https://github.com/xerpi/gxmfun/blob/master/source/main.c
@@ -68,6 +69,11 @@ static SceGxmProgram* gxm_colored_FP = (SceGxmProgram *)&colored_fs;
 #include "../misc/vita/textured_vs.h"
 static SceGxmProgram* gxm_textured_VP = (SceGxmProgram *)&textured_vs;
 static SceGxmProgram* gxm_textured_FP = (SceGxmProgram *)&textured_fs;
+
+#include "../misc/vita/colored_alpha_fs.h"
+static SceGxmProgram* gxm_colored_alpha_FP = (SceGxmProgram *)&colored_alpha_fs;
+#include "../misc/vita/textured_alpha_fs.h"
+static SceGxmProgram* gxm_textured_alpha_FP = (SceGxmProgram *)&textured_alpha_fs;
 
 
 typedef struct CCVertexProgram {
@@ -218,7 +224,7 @@ static void VP_SwitchActive(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Fragment shaders-----------------------------------------------------*
 *#########################################################################################################################*/
-static FragmentProgram FP_list[2 * 3];
+static FragmentProgram FP_list[4 * 3];
 static FragmentProgram* FP_Active;
 
 static void FP_SwitchActive(void) {
@@ -230,6 +236,8 @@ static void FP_SwitchActive(void) {
 	} else if (gfx_alphaBlending) {
 		index += 1;
 	}
+	
+	if (gfx_alphaTesting) index += 2 * 3;
 	
 	FragmentProgram* FP = &FP_list[index];
 	if (FP == FP_Active) return;
@@ -525,9 +533,11 @@ void Gfx_Create(void) {
 	AllocShaderPatcher();
 	
 	AllocColouredVertexProgram(0);
-	CreateFragmentPrograms(0, gxm_colored_FP,  gxm_colored_VP);
+	CreateFragmentPrograms(0, gxm_colored_FP,        gxm_colored_VP);
+	CreateFragmentPrograms(6, gxm_colored_alpha_FP,  gxm_colored_VP);
 	AllocTexturedVertexProgram(1);
-	CreateFragmentPrograms(3, gxm_textured_FP, gxm_textured_VP);
+	CreateFragmentPrograms(3, gxm_textured_FP,       gxm_textured_VP);
+	CreateFragmentPrograms(9, gxm_textured_alpha_FP, gxm_textured_VP);
 	
 	Gfx_SetDepthTest(true);
 	InitDefaultResources();
@@ -828,8 +838,10 @@ void Gfx_SetFogMode(FogFunc func) {
  // TODO
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { } 
- // TODO
+void Gfx_SetAlphaTest(cc_bool enabled) {
+	gfx_alphaTesting = enabled;
+	FP_SwitchActive();
+}
  
 void Gfx_SetAlphaBlending(cc_bool enabled) {
 	gfx_alphaBlending = enabled;
@@ -979,6 +991,7 @@ void Gfx_Clear(void) {
 	clear_vertices[2] = (struct VertexColoured){ 1.0f,  1.0f, 1.0f, clear_color };
 	clear_vertices[3] = (struct VertexColoured){-1.0f,  1.0f, 1.0f, clear_color };
 	
+	Gfx_SetAlphaTest(false);
 	// can't use Gfx_SetDepthTest because that also affects depth writing
 	depth_test = false; UpdateDepthFunction();
 	
