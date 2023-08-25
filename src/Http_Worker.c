@@ -609,7 +609,6 @@ static cc_result ConnectionPool_Open(struct HttpConnection** conn, const struct 
 *#########################################################################################################################*/
 enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_HEADER,
-	HTTP_RESPONSE_STATE_BODY_INIT,
 	HTTP_RESPONSE_STATE_BODY_DATA,
 	HTTP_RESPONSE_STATE_CHUNK_HEADER,
 	HTTP_RESPONSE_STATE_CHUNK_DATA,
@@ -707,6 +706,22 @@ static cc_bool HttpClient_HasBody(struct HttpRequest* req) {
 	return true;
 }
 
+static int HttpClient_BeginBody(struct HttpRequest* req, struct HttpClientState* state) {
+	if (!HttpClient_HasBody(req))
+		return HTTP_RESPONSE_STATE_DONE;
+	
+	if (state->chunked) {
+		Http_BufferInit(req);
+		return HTTP_RESPONSE_STATE_CHUNK_HEADER;
+	}
+	if (req->contentLength) {
+		Http_BufferInit(req);
+		return HTTP_RESPONSE_STATE_BODY_DATA;
+	}
+	/* Zero length response */
+	return HTTP_RESPONSE_STATE_DONE;
+}
+
 /* RFC 7230, section 4.1 - Chunked Transfer Coding */
 static int HttpClient_GetChunkLength(const cc_string* line) {
 	int length = 0, i, part;
@@ -740,29 +755,13 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 
 				/* Zero length header = end of message headers */
 				if (state->header.length == 0) {
-					state->state = HTTP_RESPONSE_STATE_BODY_INIT;
+					state->state = HttpClient_BeginBody(req, state);
 					break;
 				}
 
 				Http_ParseHeader(state->req, &state->header);
 				HttpClient_ParseHeader(state, &state->header);
 				state->header.length = 0;
-			}
-		}
-		break;
-
-		case HTTP_RESPONSE_STATE_BODY_INIT:
-		{
-			if (!HttpClient_HasBody(req)) {
-				state->state = HTTP_RESPONSE_STATE_DONE;
-			} else if (state->chunked) {
-				Http_BufferInit(req);
-				state->state = HTTP_RESPONSE_STATE_CHUNK_HEADER;
-			} else if (req->contentLength) {
-				Http_BufferInit(req);
-				state->state = HTTP_RESPONSE_STATE_BODY_DATA;
-			} else {
-				return HTTP_ERR_INVALID_BODY;
 			}
 		}
 		break;
