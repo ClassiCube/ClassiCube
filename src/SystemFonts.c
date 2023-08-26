@@ -1179,7 +1179,6 @@ static void InitPvfLib(void) {
 		Platform_Log3("F_CODES: %i, %i, %i", &LC, &RC, &CC);
 		
 	}
-	Platform_LogConst("--pgf fonts");
 }
 
 void SysFonts_Register(const cc_string* path) { }
@@ -1260,7 +1259,21 @@ static cc_result MakeSysFont(struct FontDesc* desc, const cc_string* fontName, i
 	font->fontID = scePvfOpen(lib_handle, idx, 1, &error);
 	Platform_Log1("FONT ID: %i", &font->fontID);
 	
-	if (!error) scePvfSetCharSize(font->fontID, size, size);
+	if (!error) {
+		ScePvfFontInfo fontInfo = { 0 };
+		int err2 = scePvfGetFontInfo(font->fontID, &fontInfo);
+		if (!err2) {
+			Platform_Log3("FONT METRICS: H %i, A %i, D %i", &fontInfo.maxIGlyphMetrics.height64,
+				&fontInfo.maxIGlyphMetrics.ascender64,&fontInfo.maxIGlyphMetrics.descender64);
+			Platform_Log3("FONT METRICS: X %i, Y %i, A %i", &fontInfo.maxIGlyphMetrics.horizontalBearingX64,
+				&fontInfo.maxIGlyphMetrics.horizontalBearingY64,&fontInfo.maxIGlyphMetrics.horizontalAdvance64);
+		}
+	}
+	
+	if (!error) {
+		float scale = size * 72.0f / 96.0f;
+		scePvfSetCharSize(font->fontID, scale, scale);
+	}
 	return error;
 }
 
@@ -1330,7 +1343,7 @@ static void RasteriseGlyph(ScePvfUserImageBufferRec* glyph, struct Bitmap* bmp, 
 
 // TODO optimise
 // See https://freetype.org/freetype2/docs/glyphs/glyphs-3.html
-static int DrawGlyph(struct SysFont* font, struct Bitmap* bmp, int x, int y, cc_uint8 c) {
+static int DrawGlyph(struct SysFont* font, int size, struct Bitmap* bmp, int x, int y, cc_uint8 c) {
 	ScePvfCharInfo charInfo;
 	ScePvfIrect charRect;
 	ScePvfError error;
@@ -1343,16 +1356,20 @@ static int DrawGlyph(struct SysFont* font, struct Bitmap* bmp, int x, int y, cc_
 	
 	ScePvfUserImageBufferRec glyph = { 0 };
 	cc_uint8* tmp = Mem_Alloc(charRect.width * charRect.height, 1, "temp font bitmap");
+	//Mem_Set(tmp, 0x00, charRect.width * charRect.height);
 	glyph.pixelFormat  = SCE_PVF_USERIMAGE_DIRECT8;
 	glyph.rect.width   = charRect.width;
 	glyph.rect.height  = charRect.height;
 	glyph.bytesPerLine = charRect.width;
 	glyph.buffer       = tmp;
 	
+	//glyph.xPos64 = -charInfo.glyphMetrics.horizontalBearingX64;
+	//glyph.yPos64 = +charInfo.glyphMetrics.horizontalBearingY64;
+	
 	// TODO: use charInfo.glyphMetrics.horizontalBearingX64 and Y64
 	Platform_Log1("ABOUT %r:", &c);
-	int BX = charInfo.glyphMetrics.horizontalBearingX64;
-	int BY = charInfo.glyphMetrics.horizontalBearingY64;
+	int BX = charInfo.glyphMetrics.horizontalBearingX64, BX2 = TEXT_CEIL(BX);
+	int BY = charInfo.glyphMetrics.horizontalBearingY64, BY2 = TEXT_CEIL(BY);
 	//Platform_Log4("  Bitmap: %i,%i --> %i, %i", &charInfo.bitmapLeft, &charInfo.bitmapTop, &charInfo.bitmapWidth, &charInfo.bitmapHeight);
 	
 	int W = charInfo.glyphMetrics.width64,     W2 =TEXT_CEIL(W);
@@ -1362,10 +1379,12 @@ static int DrawGlyph(struct SysFont* font, struct Bitmap* bmp, int x, int y, cc_
 	
 	Platform_Log4("  Size: %i,%i   (%i, %i)", &W, &H, &W2, &H2);
 	Platform_Log4("  Vert: %i,%i   (%i, %i)", &A, &D, &A2, &D2);
-	Platform_Log2("  Bearings: %i,%i", &BX, &BY);
+	Platform_Log4("  Bear: %i,%i   (%i, %i)", &BX, &BY, &BX2, &BY2);
 			
 	int CW = charRect.width, CH = charRect.height;
 	Platform_Log2("  CharSize: %i,%i", &CW, &CH);
+	
+	if (A2 < size) y += (size - A2);
 	
 	error = scePvfGetCharGlyphImage(font->fontID, c, &glyph);
 	if (!error) RasteriseGlyph(&glyph, bmp, x, y);
@@ -1380,6 +1399,11 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 	struct SysFont* font = (struct SysFont*)args->font->handle;
 	if (shadow) return;//{ x += 2; y += 2; }
 	
+	int W = SysFont_TextWidth(args);
+	int S = args->font->size;
+	int H = args->font->height;
+	Platform_Log3("TOTAL: %i  (%i/%i)", &W, &S, &H);
+	
 	cc_string left = args->text, part;
 	char colorCode = 'f';
 	BitmapCol color;
@@ -1391,7 +1415,7 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 	
 		for (int i = 0; i < part.length; i++) 
 		{
-			x += DrawGlyph(font, bmp, x, y, (cc_uint16)part.buffer[i]);		
+			x += DrawGlyph(font, S, bmp, x, y, (cc_uint16)part.buffer[i]);		
 		}
 	}
 }

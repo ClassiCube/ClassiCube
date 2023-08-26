@@ -2,11 +2,12 @@ PROJECT_TITLE 	:= ClassiCube
 PROJECT_TITLEID := CUBE00200
 TARGET 			:= ClassiCube-vita
 
-BUILD_DIR		:= build
+BUILD_DIR		:= build-vita
+SOURCE_DIR		:= src
 
 CFLAGS 	+= -Wl,-q -I../common
-CFILES 	:=$(wildcard src/*.c)
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(CFILES:src/%.c=%.o))
+C_FILES := $(wildcard $(SOURCE_DIR)/*.c)
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(C_FILES:$(SOURCE_DIR)/%.c=%.o))
 
 # Needed by psvDebugScreenPrintf
 LIBS += -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub
