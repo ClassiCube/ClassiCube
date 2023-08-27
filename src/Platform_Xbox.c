@@ -14,9 +14,9 @@
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <nxdk/net.h>
+#include <nxdk/mount.h>
 #include "_PlatformConsole.h"
 
-static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
@@ -86,15 +86,26 @@ static void Stopwatch_Init(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+static cc_string root_path = String_FromConst("E:\\ClassiCube\\");
+static BOOL hdd_mounted;
+
 static void GetNativePath(char* str, const cc_string* src) {
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
+	
+	// XBox kernel doesn't seem to convert /
 	for (int i = 0; i < src->length; i++) 
 	{
-		*str++ = (char)src->buffer[i];
+		char c = (char)src->buffer[i];
+		if (c == '/') c = '\\';
+		*str++ = c;
 	}
 	*str = '\0';
 }
 
 cc_result Directory_Create(const cc_string* path) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
+	
 	char str[NATIVE_STR_LEN];
 	cc_result res;
 
@@ -103,6 +114,8 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
+	
 	char str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -128,6 +141,8 @@ static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* f
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
+	
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	WIN32_FIND_DATAA eA;
 	char str[NATIVE_STR_LEN];
@@ -157,6 +172,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
+	
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 	cc_result res;
@@ -401,7 +418,17 @@ cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
+static void InitHDD(void) {
+    hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+    if (!hdd_mounted) {
+        Platform_LogConst("Failed to mount E:\ from Data partition");
+        return;
+    }
+    Directory_Create(&String_Empty);
+}
+
 void Platform_Init(void) {
+	InitHDD();
 	Stopwatch_Init();
 	nxNetInit(NULL);
 }
