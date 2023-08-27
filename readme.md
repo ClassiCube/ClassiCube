@@ -326,6 +326,7 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
 * [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
+* [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
 
 
 ## Sound Credits

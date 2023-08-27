@@ -33,8 +33,11 @@ void Platform_Log(const char* msg, int len) {
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	
+	// log to on-screen display
 	debugPrint(tmp);
 	debugPrint("\n");
+	// log to cxbx-reloaded console
+	OutputDebugStringA(tmp);
 }
 
 #define FILETIME_EPOCH 50491123200000ULL

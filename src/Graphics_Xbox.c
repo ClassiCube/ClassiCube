@@ -63,6 +63,12 @@ static void SetupShaders(void) {
 
 	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
 
+	
+	uint32_t control0 = 0;
+	#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE 0x100000
+	control0 |= NV097_SET_CONTROL0_TEXTUREPERSPECTIVE;
+	control0 |= NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+	p = pb_push1(p, NV097_SET_CONTROL0, control0);
 	pb_end(p);
 }
  
@@ -229,24 +235,6 @@ void Gfx_EndFrame(void) {
 }
 
 
-/* Construct a viewport transformation matrix */
-static void CalcViewportTransform(struct Matrix* m, float width, float height, float z_min, float z_max) {
-	*m = Matrix_Identity;
-	m->row1.X =  width  / 2.0f;
-	m->row2.Y = -height / 2.0f;
-	m->row3.Z =  z_max - z_min;
-	m->row4.X =  width  / 2.0f;
-	m->row4.Y =  height / 2.0f;
-	m->row4.Z =  z_min;
-	m->row4.W =  1.0f;
-}
-
-struct Matrix viewport;
-void Gfx_OnWindowResize(void) {
-	CalcViewportTransform(&viewport, WindowInfo.Width, WindowInfo.Height, 0, 65536.0f);
-}
-
-
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -380,6 +368,23 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row4.W =  0.0f;
 }
 
+/* Construct a viewport transformation matrix */
+static void CalcViewportTransform(struct Matrix* m, float width, float height, float z_min, float z_max) {
+	*m = Matrix_Identity;
+	m->row1.X =  width  / 2.0f;
+	m->row2.Y = -height / 2.0f;
+	m->row3.Z =  z_max - z_min;
+	m->row4.X =  width  / 2.0f;
+	m->row4.Y =  height / 2.0f;
+	m->row4.Z =  z_min;
+	m->row4.W =  1.0f;
+}
+
+struct Matrix viewport;
+void Gfx_OnWindowResize(void) {
+	CalcViewportTransform(&viewport, WindowInfo.Width, WindowInfo.Height, 0, 65536.0f);
+}
+
 static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -387,17 +392,33 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 	
 	struct Matrix combined;
-	Matrix_Mul(&combined, &viewport, &_proj);
+	Matrix_Mul(&combined, &_proj, &_view);
+	//Matrix_Mul(&combined, &viewport, &combined);
 	
+	//Platform_LogConst("--transform--");
+	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row1.X, &combined.row1.Y, &combined.row1.Z, &combined.row1.W);
+	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row2.X, &combined.row2.Y, &combined.row2.Z, &combined.row2.W);
+	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row3.X, &combined.row3.Y, &combined.row3.Z, &combined.row3.W);
+	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row4.X, &combined.row4.Y, &combined.row4.Z, &combined.row4.W);
 	uint32_t* p;
 	p = pb_begin();
+	
+		
+	uint32_t control0 = 0;
+	#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE 0x100000
+	control0 |= NV097_SET_CONTROL0_TEXTUREPERSPECTIVE;
+	control0 |= NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+	p = pb_push1(p, NV097_SET_CONTROL0, control0);
 
 	// set shader constants cursor to C0
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
 
 	// upload transformation matrix
-	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 16);
+	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4);
 	Mem_Copy(p, &combined, 16 * 4); p += 16;
+	// Upload viewport too
+	struct Vec4 viewport = { 320, 240, 8388608, 1 };
+	Mem_Copy(p, &viewport, 4 * 4); p += 4;
 
 	pb_end(p);
 }
@@ -438,6 +459,12 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	{
 		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
 	}
+		
+	uint32_t control0 = 0;
+	#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE 0x100000
+	control0 |= NV097_SET_CONTROL0_TEXTUREPERSPECTIVE;
+	control0 |= NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+	p = pb_push1(p, NV097_SET_CONTROL0, control0);
 
 	// TODO cache these..
 	if (fmt == VERTEX_FORMAT_TEXTURED) {

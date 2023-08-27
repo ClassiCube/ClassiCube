@@ -1,0 +1,32 @@
+struct vIn {
+	float4 color    : DIFFUSE;
+	float4 position : POSITION;
+};
+
+struct vOut {
+	float4 col : COLOR;
+	float4 pos : POSITION;
+};
+
+vOut main(
+	vIn              input,
+	uniform float4x4 mvp,
+	uniform float4 half_viewport
+	)
+{
+	vOut   result;
+	float4 position;
+
+	position = float4(input.position.xyz, 1.0f);
+	position = mul(position, mvp);
+	//position.xyz = position.xyz / position.w;
+	
+	position.x =  position.x * half_viewport.x + half_viewport.x;
+	position.y = -position.y * half_viewport.y + half_viewport.y;
+	position.z =  position.z * half_viewport.z + half_viewport.z;
+	position.w =  half_viewport.w;
+	
+	result.col = input.color;
+	result.pos = position;
+	return result;
+}
