@@ -424,7 +424,7 @@ static void InitHDD(void) {
         Platform_LogConst("Failed to mount E:\ from Data partition");
         return;
     }
-    Directory_Create(&String_Empty);
+    Directory_Create(&String_Empty); // create root ClassiCube folder
 }
 
 void Platform_Init(void) {

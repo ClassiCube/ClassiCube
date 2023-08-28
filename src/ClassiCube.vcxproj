@@ -553,7 +553,7 @@
     <ClCompile Include="_type1.c" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\misc\CCicon.rc" />
+    <ResourceCompile Include="..\misc\windows\CCicon.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

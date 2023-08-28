@@ -41,12 +41,12 @@ static void LoadFragmentShader(void) {
 	uint32_t* p;
 
 	p = pb_begin();
-	#include "ps.inl"
+	#include "../misc/xbox/ps_colored.inl"
 	pb_end(p);
 }
 
 static uint32_t vs_program[] = {
-	#include "vs.inl"
+	#include "../misc/xbox/vs_colored.inl"
 };
 
 static void SetupShaders(void) {
@@ -368,22 +368,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row4.W =  0.0f;
 }
 
-/* Construct a viewport transformation matrix */
-static void CalcViewportTransform(struct Matrix* m, float width, float height, float z_min, float z_max) {
-	*m = Matrix_Identity;
-	m->row1.X =  width  / 2.0f;
-	m->row2.Y = -height / 2.0f;
-	m->row3.Z =  z_max - z_min;
-	m->row4.X =  width  / 2.0f;
-	m->row4.Y =  height / 2.0f;
-	m->row4.Z =  z_min;
-	m->row4.W =  1.0f;
-}
-
-struct Matrix viewport;
-void Gfx_OnWindowResize(void) {
-	CalcViewportTransform(&viewport, WindowInfo.Width, WindowInfo.Height, 0, 65536.0f);
-}
+void Gfx_OnWindowResize(void) { }
 
 static struct Matrix _view, _proj, _mvp;
 

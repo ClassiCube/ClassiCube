@@ -33,7 +33,7 @@ WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
 
 build_win32() {
   echo "Building win32.."
-  cp $ROOT_DIR/misc/CCicon_32.res $ROOT_DIR/src/CCicon_32.res
+  cp $ROOT_DIR/misc/windows/CCicon_32.res $ROOT_DIR/src/CCicon_32.res
 
   $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lwinmm -limagehlp
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit" >> "$ERRS_FILE"; fi
@@ -49,7 +49,7 @@ build_win32() {
 
 build_win64() {
   echo "Building win64.."
-  cp $ROOT_DIR/misc/CCicon_64.res $ROOT_DIR/src/CCicon_64.res
+  cp $ROOT_DIR/misc/windows/CCicon_64.res $ROOT_DIR/src/CCicon_64.res
   
   $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-d3d.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -lwinmm -limagehlp
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 64 bit" >> "$ERRS_FILE"; fi
