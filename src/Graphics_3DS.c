@@ -165,7 +165,7 @@ void Gfx_FreeState(void) { }
 }*/
 static inline cc_uint32 CalcZOrder(cc_uint32 a) {
 	// Simplified "Interleave bits by Binary Magic Numbers" from
-	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveTableObvious
+	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
 	// TODO: Simplify to array lookup?
     	a = (a | (a << 2)) & 0x33;
     	a = (a | (a << 1)) & 0x55;
