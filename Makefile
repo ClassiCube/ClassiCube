@@ -2,7 +2,7 @@ C_SOURCES:=$(wildcard src/*.c)
 C_OBJECTS:=$(patsubst %.c, %.o, $(C_SOURCES))
 OBJECTS:=$(C_OBJECTS)
 ENAME=ClassiCube
-DEL=rm
+DEL=rm -f
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g -rdynamic
 
