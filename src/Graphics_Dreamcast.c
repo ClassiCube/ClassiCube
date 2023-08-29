@@ -151,12 +151,10 @@ void Gfx_OnWindowResize(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint16 __attribute__((aligned(16))) gfx_indices[GFX_MAX_INDICES];
 static void* gfx_vertices;
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	fillFunc(gfx_indices, count, obj);
 	return 1;
 }
 
@@ -188,7 +186,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
+	gfx_vertices = vb;
 	//sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
 }
 
@@ -333,18 +331,20 @@ void Gfx_SetFogMode(FogFunc func) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static GLenum matrix_modes[] = { GL_PROJECTION, GL_MODELVIEW };
-static int lastMatrix, textureOffset;
-float textureOffsetX, textureOffsetY;
+static matrix_t __attribute__((aligned(32))) _proj, _view;
+static float textureOffsetX, textureOffsetY;
+static int textureOffset;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadMatrixf((const float*)matrix);
+	if (type == MATRIX_PROJECTION) memcpy(&_proj, matrix, sizeof(struct Matrix));
+	if (type == MATRIX_VIEW)       memcpy(&_view, matrix, sizeof(struct Matrix));
+	
+	mat_load( &_proj);
+	mat_apply(&_view);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadIdentity();
+	Gfx_LoadMatrix(type, &Matrix_Identity);
 }
 
 
@@ -405,13 +405,10 @@ cc_bool Gfx_WarnIfNecessary(void) {
 static void SetupVertices(int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-		glVertexPointer(3,  GL_FLOAT,             SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-		glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-		glTexCoordPointer(2, GL_FLOAT,            SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+		glVertexPointer(3, GL_FLOAT, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	} else {
 		cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-		glVertexPointer(3, GL_FLOAT,              SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-		glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+		glVertexPointer(3, GL_FLOAT, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
 	}
 }
 
@@ -431,19 +428,19 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	SetupVertices(0);
-	glDrawArrays(GL_LINES, 0, verticesCount);
+	//glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	SetupVertices(startVertex);
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+	glDrawArrays(GL_QUADS, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	SetupVertices(0);
 	
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+	glDrawArrays(GL_QUADS, 0, verticesCount);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
@@ -451,9 +448,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3, GL_FLOAT,              SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,            SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, gfx_indices);
+	glVertexPointer(3, GL_FLOAT, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	glDrawArrays(GL_QUADS, 0, verticesCount);
 }
 #endif
