@@ -624,6 +624,7 @@ struct HttpClientState {
 	struct HttpRequest* req;
 	int chunked;
 	int chunkRead, chunkLength;
+	cc_bool autoClose;
 	cc_string header, location;
 	struct HttpUrl url;
 	char _headerBuffer[256], _locationBuffer[256];
@@ -634,6 +635,7 @@ static void HttpClientState_Reset(struct HttpClientState* state) {
 	state->chunked     = 0;
 	state->chunkRead   = 0;
 	state->chunkLength = 0;
+	state->autoClose   = false;
 	String_InitArray(state->header,   state->_headerBuffer);
 	String_InitArray(state->location, state->_locationBuffer);
 }
@@ -683,7 +685,11 @@ static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 
 
 static void HttpClient_ParseHeader(struct HttpClientState* state, const cc_string* line) {
+	static const cc_string HTTP_10_VERSION = String_FromConst("HTTP/1.0");
 	cc_string name, value;
+	/* HTTP 1.0 defaults to auto closing connection */
+	if (String_CaselessStarts(line, &HTTP_10_VERSION)) state->autoClose = true;
+
 	/* name: value */
 	if (!String_UNSAFE_Separate(line, ':', &name, &value)) return;
 
@@ -691,6 +697,9 @@ static void HttpClient_ParseHeader(struct HttpClientState* state, const cc_strin
 		state->chunked = String_CaselessEqualsConst(&value, "chunked");
 	} else if (String_CaselessEqualsConst(&name, "Location")) {
 		String_Copy(&state->location, &value);
+	} else if (String_CaselessEqualsConst(&name, "Connection")) {
+		if (String_CaselessEqualsConst(&value, "keep-alive")) state->autoClose = false;
+		if (String_CaselessEqualsConst(&value, "close"))      state->autoClose = true;
 	}
 }
 
@@ -924,6 +933,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 
 		res = HttpClient_ParseResponse(&state);
 		http_curProgress = 100;
+		if (state.autoClose) HttpConnection_Close(state.conn);
 
 		if (res || !HttpClient_IsRedirect(req)) break;
 		if (redirects >= 20) return HTTP_ERR_REDIRECTS;
