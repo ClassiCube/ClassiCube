@@ -219,60 +219,164 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_BindTexture(GfxResourceID texId) {
-	int tex = texId;
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-}
-
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
-	cc_uint8* src = (cc_uint8*)bmp->scan0;
-	
-	for (int y = 0; y < bmp->height; y++)
-	{
-		for (int x = 0; x < bmp->width; x++, dst++, src += 4)
-		{
-			// B8 G8 R8 A8 > B4 G4 R4 A4
-			*dst = ((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);
-		}
-	}
-}
-
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	GLuint texId;
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	
-	void* temp = Mem_Alloc(bmp->width * bmp->height, 2, "texture conversion buffer");
-	ConvertTexture(temp, bmp);
-	
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, GL_BGRA, 
-			GL_UNSIGNED_SHORT_4_4_4_4_REV, temp);
-
-	Mem_Free(temp);
-	return texId;
-}
-
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	// TODO: Doesn't work and triggers assertion failure
-	//	https://github.com/Kazade/GLdc/blob/master/GL/texture.c#L1895
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+	gldcBindTexture((GLuint)texId);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GLuint id = (GLuint)(*texId);
 	if (!id) return;
-	glDeleteTextures(1, &id);
+	gldcDeleteTexture(id);
 	*texId = 0;
 }
 
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
+
+
+static unsigned Interleave(unsigned x) {
+	// Simplified "Interleave bits by Binary Magic Numbers" from
+	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+
+	x = (x | (x << 8)) & 0x00FF00FF;
+	x = (x | (x << 4)) & 0x0F0F0F0F;
+	x = (x | (x << 2)) & 0x33333333;
+	x = (x | (x << 1)) & 0x55555555;
+	return x;
+}
+
+/*static int CalcTwiddledIndex(int x, int y, int w, int h) {
+	// Twiddled index looks like this (starting from lowest numbered bits):
+	//   e.g. w > h: yx_yx_xx_xx
+	//   e.g. h > w: yx_yx_yy_yy
+	// And can therefore be broken down into two components:
+	//  1) interleaved lower bits
+	//  2) masked and then shifted higher bits
+	
+	int min_dimension    = Math.Min(w, h);
+	
+	int interleave_mask  = min_dimension - 1;
+	int interleaved_bits = Math_Log2(min_dimension);
+	
+	int shifted_mask = (~0) & ~interleave_mask;
+	// as lower interleaved bits contain both X and Y, need to adjust the
+	//  higher bit shift by number of interleaved bits used by other axis
+	int shift_bits   = interleaved_bits;
+	
+	// For example, in the case of W=4 and H=8
+	//  the bit pattern is yx_yx_yx_Y
+	//  - lower 3 Y bits are interleaved
+	//  - upper 1 Y bit must be shifted right 3 bits
+	
+	int lo_Y = Interleave(y & interleave_mask);
+	int hi_Y = (y & shifted_mask) << shift_bits;
+	int Y    = lo_Y | hi_Y;
+	
+	int lo_X  = Interleave(x & interleave_mask) << 1;
+	int hi_X  = (x & shifted_mask) << shift_bits;
+	int X     = lo_X | hi_X;
+
+	return X | Y;
+}*/
+
+#define Twiddle_CalcFactors(w, h) \
+	min_dimension    = min(w, h); \
+	interleave_mask  = min_dimension - 1; \
+	interleaved_bits = Math_Log2(min_dimension); \
+	shifted_mask     = 0xFFFFFFFFU & ~interleave_mask; \
+	shift_bits       = interleaved_bits;
+	
+#define Twiddle_CalcY(y) \
+	lo_Y = Interleave(y & interleave_mask); \
+	hi_Y = (y & shifted_mask) << shift_bits; \
+	Y    = lo_Y | hi_Y;
+	
+#define Twiddle_CalcX(x) \
+	lo_X  = Interleave(x & interleave_mask) << 1; \
+	hi_X  = (x & shifted_mask) << shift_bits; \
+	X     = lo_X | hi_X;
+	
+	
+// B8 G8 R8 A8 > B4 G4 R4 A4
+#define BGRA8_to_BGRA4(src) \
+	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
+
+static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
+	unsigned min_dimension;
+	unsigned interleave_mask, interleaved_bits;
+	unsigned shifted_mask, shift_bits;
+	unsigned lo_Y, hi_Y, Y;
+	unsigned lo_X, hi_X, X;	
+	Twiddle_CalcFactors(bmp->width, bmp->height);
+	
+	cc_uint8* src = (cc_uint8*)bmp->scan0;	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		Twiddle_CalcY(y);
+		for (int x = 0; x < bmp->width; x++, src += 4)
+		{
+			Twiddle_CalcX(x);
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+		}
+	}
+}
+
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	GLuint texId = gldcGenTexture();
+	gldcBindTexture(texId);
+	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
+		Logger_Abort("Textures must have power of two dimensions");
+	}
+	
+	gldcAllocTexture(bmp->width, bmp->height, GL_RGBA,
+				GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS);
+				
+	void* pixels;
+	GLsizei width, height;
+	gldcGetTexture(&pixels, &width, &height);
+	ConvertTexture(pixels, bmp);
+	return texId;
+}
+// TODO: struct GPUTexture ??
+static void ConvertSubTexture(cc_uint16* dst, int texWidth, int texHeight,
+				int originX, int originY, 
+				struct Bitmap* bmp, int rowWidth) {
+	unsigned min_dimension;
+	unsigned interleave_mask, interleaved_bits;
+	unsigned shifted_mask, shift_bits;
+	unsigned lo_Y, hi_Y, Y;
+	unsigned lo_X, hi_X, X;
+	Twiddle_CalcFactors(texWidth, texHeight);
+	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		int dstY = y + originY;
+		Twiddle_CalcY(dstY);
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + rowWidth * y);
+		
+		for (int x = 0; x < bmp->width; x++, src += 4)
+		{
+			int dstX = x + originX;
+			Twiddle_CalcX(dstX);
+			dst[X | Y] = BGRA8_to_BGRA4(src);
+		}
+	}
+}
+
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	gldcBindTexture(texId);
+				
+	void* pixels;
+	GLsizei width, height;
+	gldcGetTexture(&pixels, &width, &height);
+	
+	ConvertSubTexture(pixels, width, height,
+				x, y, part, rowWidth);
+	// TODO: Do we need to flush VRAM?
+}
+
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+}
 
 
 /*########################################################################################################################*
