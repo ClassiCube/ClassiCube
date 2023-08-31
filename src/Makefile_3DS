@@ -21,12 +21,12 @@ TARGET 		:= ClassiCube-3ds
 DEPSDIR		:= $(CURDIR)/build
 CFILES		:= $(wildcard src/*.c)
 SFILES		:= $(wildcard src/*.s)
-PICAFILES	:= $(wildcard src/*.v.pica)
+PICAFILES	:= $(wildcard misc/3ds/*.v.pica)
 SMDH_FILE	:= src/ClassiCube.smdh
 
-OFILES_SOURCES := $(CFILES:.c=.o) $(SFILES:.s=.o)
-OFILES_SHADERS := $(PICAFILES:.v.pica=.shbin.o)
-OFILES 		:= $(OFILES_SHADERS) $(OFILES_SOURCES)
+OFILES_SOURCES 	:= $(CFILES:.c=.o) $(SFILES:.s=.o)
+OFILES_SHADERS 	:= $(PICAFILES:.v.pica=.shbin.o)
+OFILES 			:= $(OFILES_SHADERS) $(OFILES_SOURCES)
 
 INCLUDE 	:= $(foreach dir,$(CTRULIB),-I$(dir)/include)
 LIBPATHS	:= $(foreach dir,$(CTRULIB),-L$(dir)/lib)
@@ -37,15 +37,15 @@ _3DSXFLAGS 	+= --smdh=$(SMDH_FILE)
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
+ARCH		:= -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations -ffunction-sections \
+CFLAGS		:= -g -Wall -O2 -mword-relocations -ffunction-sections \
 			$(ARCH) $(INCLUDE) -D__3DS__
 
-ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-LIBS	:= 	-lcitro3d -lctru -lm
-LD		:=	$(CC)
+ASFLAGS		:= -g $(ARCH)
+LDFLAGS		:= -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+LIBS		:= -lcitro3d -lctru -lm
+LD			:= $(CC)
 
 
 #---------------------------------------------------------------------------------
