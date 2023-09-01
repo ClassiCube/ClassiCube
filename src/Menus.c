@@ -1842,6 +1842,8 @@ static void BindsSourceScreen_ModeGamepad(void* screen, void* b) {
 static void BindsSourceScreen_ContextRecreated(void* screen) {
 	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
 	struct FontDesc font;
+	Gui_MakeTitleFont(&font);
+	Screen_UpdateVb(screen);
 
 	ButtonWidget_SetConst(&s->btns[0], "Keyboard/Mouse",     &font);
 	ButtonWidget_SetConst(&s->btns[1], "Gamepad/Controller", &font);
@@ -1851,8 +1853,8 @@ static void BindsSourceScreen_ContextRecreated(void* screen) {
 
 static void BindsSourceScreen_Layout(void* screen) {
 	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
-	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -50);
-	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  50);
+	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -25);
+	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  25);
 	Menu_LayoutBack(&s->cancel);
 }
 
@@ -1866,7 +1868,7 @@ static void BindsSourceScreen_Init(void* screen) {
 
 	ButtonWidget_Init(&s->btns[0], 300, BindsSourceScreen_ModeNormal);
 	ButtonWidget_Init(&s->btns[1], 300, BindsSourceScreen_ModeGamepad);
-	ButtonWidget_Init(&s->cancel,  400, Menu_SwitchHotkeys);
+	ButtonWidget_Init(&s->cancel,  400, Menu_SwitchPause);
 }
 
 static const struct ScreenVTABLE BindsSourceScreen_VTABLE = {
@@ -1885,10 +1887,10 @@ void BindsSourceScreen_Show(void) {
 }
 
 static void SwitchBindsMain(void* s, void* w) {
-	if (Input.Sources & (INPUT_SOURCE_NORMAL | INPUT_SOURCE_GAMEPAD)) {
+	if (Input.Sources == (INPUT_SOURCE_NORMAL | INPUT_SOURCE_GAMEPAD)) {
 		/* User needs to decide whether to configure mouse/keyboard or gamepad */
 		BindsSourceScreen_Show();
-	} else if (Input.Sources & INPUT_SOURCE_GAMEPAD) {
+	} else if (Input.Sources == INPUT_SOURCE_GAMEPAD) {
 		binds_gamepad = true;
 		NormalBindingsScreen_Show();
 	} else {

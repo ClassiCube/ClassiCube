@@ -324,14 +324,13 @@ void Pointer_SetPosition(int idx, int x, int y) {
 cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
 cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
 
-/* TODO find a better way than this. maybe alternative keybinds? */
 const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
 	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
 	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
-	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', /* Hacks */
-	0, 0, 0, 0, 
-	CCKEY_F5, 0, 0, 0, 
+	0, 0, 0, 0, 0,                    /* Hacks */
+	0, 0, 0, 0,                       /* LAlt - F11 */
+	0, 0, 0, 0,                       /* F5 - C */
 	0, CCPAD_L, 0, CCPAD_R,
 	0, 0, 0,
 	0,0,0, 0,0,0,0,

@@ -513,9 +513,7 @@ void Window_Close(void) {
 }
 
 extern void interop_RequestCanvasResize(void);
-void Window_ProcessEvents(double delta) {
-	if (!needResize) return;
-	needResize = false;
+static void ProcessPendingResize(void) {
 	if (!WindowInfo.Exists) return;
 
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
@@ -525,6 +523,49 @@ void Window_ProcessEvents(double delta) {
 		interop_RequestCanvasResize();
 	}
 	UpdateWindowBounds();
+}
+
+#define GetGamePadButton(i) i < numButtons ? ev->digitalButton[i] : 0
+static void ProcessGamePadInput(EmscriptenGamepadEvent* ev) {
+	int numButtons = ev->numButtons;
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	/* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
+
+	Input_SetNonRepeatable(CCPAD_A, GetGamePadButton(0));
+	Input_SetNonRepeatable(CCPAD_B, GetGamePadButton(1));
+	Input_SetNonRepeatable(CCPAD_X, GetGamePadButton(2));
+	Input_SetNonRepeatable(CCPAD_Y, GetGamePadButton(3));
+
+	Input_SetNonRepeatable(CCPAD_L, GetGamePadButton(4));
+	Input_SetNonRepeatable(CCPAD_R, GetGamePadButton(5));
+
+	Input_SetNonRepeatable(CCPAD_SELECT, GetGamePadButton(8));
+	Input_SetNonRepeatable(CCPAD_START,  GetGamePadButton(9));
+	
+	Input_SetNonRepeatable(CCPAD_UP,    GetGamePadButton(12));
+	Input_SetNonRepeatable(CCPAD_DOWN,  GetGamePadButton(13));
+	Input_SetNonRepeatable(CCPAD_LEFT,  GetGamePadButton(14));
+	Input_SetNonRepeatable(CCPAD_RIGHT, GetGamePadButton(15));
+}
+
+void Window_ProcessEvents(double delta) {
+	int i, res, count;
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
+	if (emscripten_sample_gamepad_data() == 0) {
+		count = emscripten_get_num_gamepads();
+
+		for (i = 0; i < count; i++)
+		{
+			EmscriptenGamepadEvent ev;
+			res = emscripten_get_gamepad_status(i, &ev);
+			if (res == 0) ProcessGamePadInput(&ev);
+		}	
+	}
+
+	if (!needResize) return;
+	needResize = false;
+	ProcessPendingResize();
 }
 
 /* Not needed because browser provides relative mouse and touch events */
