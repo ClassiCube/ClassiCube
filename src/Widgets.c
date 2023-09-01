@@ -512,7 +512,7 @@ static int HotbarWidget_MapKey(int key) {
 	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++)
 	{
-		if (key == KeyBinds[KEYBIND_HOTBAR_1 + i]) return i;
+		if (KeyBind_Claims(KEYBIND_HOTBAR_1 + i, key)) return i;
 	}
 	return -1;
 }
@@ -532,9 +532,9 @@ static int HotbarWidget_KeyDown(void* widget, int key) {
 	int index = HotbarWidget_MapKey(key);
 
 	if (index == -1) {
-		if (key == KeyBinds[KEYBIND_HOTBAR_LEFT])
+		if (KeyBind_Claims(KEYBIND_HOTBAR_LEFT, key))
 			return HotbarWidget_CycleIndex(-1);
-		if (key == KeyBinds[KEYBIND_HOTBAR_RIGHT])
+		if (KeyBind_Claims(KEYBIND_HOTBAR_RIGHT, key))
 			return HotbarWidget_CycleIndex(+1);
 		return false;
 	}
@@ -555,7 +555,7 @@ static void HotbarWidget_InputUp(void* widget, int key) {
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (key != KeyBinds[KEYBIND_HOTBAR_SWITCH]) return;
+	if (!KeyBind_Claims(KEYBIND_HOTBAR_SWITCH, key)) return;
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */

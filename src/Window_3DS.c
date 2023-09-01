@@ -50,8 +50,8 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
-	Input.GamepadSource = true;
-	irrst_result = irrstInit();
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	irrst_result  = irrstInit();
 }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }

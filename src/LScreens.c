@@ -20,8 +20,8 @@
 #include "Http.h"
 
 #define LAYOUTS static const struct LLayout
-#define IsEnterButton(btn)  (Input_IsEnterButton(btn)  || btn == CCPAD_A)
-#define IsEscapeButton(btn) (Input_IsEscapeButton(btn) || btn == CCPAD_B)
+#define IsEnterButton(btn) (btn == CCKEY_ENTER  || btn == CCPAD_START  || btn == CCPAD_A || btn == CCKEY_KP_ENTER)
+#define IsBackButton(btn)  (btn == CCKEY_ESCAPE || btn == CCPAD_SELECT || btn == CCPAD_B)
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -109,7 +109,7 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		LScreen_CycleSelected(s, -1);
 	} else if (Input_IsDownButton(key)) {
 		LScreen_CycleSelected(s,  1);
-	} else if (IsEscapeButton(key) && s->onEscapeWidget) {
+	} else if (IsBackButton(key) && s->onEscapeWidget) {
 		s->onEscapeWidget->OnClick(s->onEscapeWidget);
 	}
 }

@@ -209,6 +209,7 @@ static void Menu_SwitchBindsHacks(void* a, void* b)        { HacksBindingsScreen
 static void Menu_SwitchBindsOther(void* a, void* b)        { OtherBindingsScreen_Show(); }
 static void Menu_SwitchBindsMouse(void* a, void* b)        { MouseBindingsScreen_Show(); }
 static void Menu_SwitchBindsHotbar(void* a, void* b)       { HotbarBindingsScreen_Show(); }
+static void SwitchBindsMain(void* s, void* w);
 
 static void Menu_SwitchMisc(void* a, void* b)      { MiscOptionsScreen_Show(); }
 static void Menu_SwitchChat(void* a, void* b)      { ChatOptionsScreen_Show(); }
@@ -696,7 +697,7 @@ static const struct SimpleButtonDesc optsGroup_btns[8] = {
 	{ -160, -100, "Misc options...",      Menu_SwitchMisc        },
 	{ -160,  -50, "Gui options...",       Menu_SwitchGui         },
 	{ -160,    0, "Graphics options...",  Menu_SwitchGfx         },
-	{ -160,   50, "Controls...",          Menu_SwitchBindsNormal },
+	{ -160,   50, "Controls...",          SwitchBindsMain        },
 	{  160, -100, "Chat options...",      Menu_SwitchChat        },
 	{  160,  -50, "Hacks settings...",    Menu_SwitchHacks       },
 	{  160,    0, "Env settings...",      Menu_SwitchEnv         },
@@ -1812,6 +1813,93 @@ void LoadLevelScreen_Show(void) {
 }
 
 
+
+/*########################################################################################################################*
+*----------------------------------------------------EditHotkeyScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct BindsSourceScreen {
+	Screen_Body
+	struct ButtonWidget btns[2], cancel;
+} BindsSourceScreen;
+static int binds_gamepad; /* Default to Normal (Keyboard/Mouse) */
+
+static struct Widget* bindsSource_widgets[] = {
+	(struct Widget*)&BindsSourceScreen.btns[0], (struct Widget*)&BindsSourceScreen.btns[1],
+	(struct Widget*)&BindsSourceScreen.cancel
+};
+#define BINDSSOURCE_MAX_VERTICES (BUTTONWIDGET_MAX * 3)
+
+static void BindsSourceScreen_ModeNormal(void* screen, void* b) {
+	binds_gamepad = false;
+	NormalBindingsScreen_Show();
+}
+
+static void BindsSourceScreen_ModeGamepad(void* screen, void* b) {
+	binds_gamepad = true;
+	NormalBindingsScreen_Show();
+}
+
+static void BindsSourceScreen_ContextRecreated(void* screen) {
+	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
+	struct FontDesc font;
+	Gui_MakeTitleFont(&font);
+	Screen_UpdateVb(screen);
+
+	ButtonWidget_SetConst(&s->btns[0], "Keyboard/Mouse",     &font);
+	ButtonWidget_SetConst(&s->btns[1], "Gamepad/Controller", &font);
+	ButtonWidget_SetConst(&s->cancel,  "Cancel",             &font);
+	Font_Free(&font);
+}
+
+static void BindsSourceScreen_Layout(void* screen) {
+	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
+	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -25);
+	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  25);
+	Menu_LayoutBack(&s->cancel);
+}
+
+static void BindsSourceScreen_Init(void* screen) {
+	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
+
+	s->widgets     = bindsSource_widgets;
+	s->numWidgets  = Array_Elems(bindsSource_widgets);
+	s->selectedI   = -1;
+	s->maxVertices = BINDSSOURCE_MAX_VERTICES;
+
+	ButtonWidget_Init(&s->btns[0], 300, BindsSourceScreen_ModeNormal);
+	ButtonWidget_Init(&s->btns[1], 300, BindsSourceScreen_ModeGamepad);
+	ButtonWidget_Init(&s->cancel,  400, Menu_SwitchPause);
+}
+
+static const struct ScreenVTABLE BindsSourceScreen_VTABLE = {
+	BindsSourceScreen_Init,    Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render2,        Screen_BuildMesh,
+	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,          Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
+	BindsSourceScreen_Layout,  Screen_ContextLost, BindsSourceScreen_ContextRecreated
+};
+void BindsSourceScreen_Show(void) {
+	struct BindsSourceScreen* s = &BindsSourceScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &BindsSourceScreen_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+
+static void SwitchBindsMain(void* s, void* w) {
+	if (Input.Sources == (INPUT_SOURCE_NORMAL | INPUT_SOURCE_GAMEPAD)) {
+		/* User needs to decide whether to configure mouse/keyboard or gamepad */
+		BindsSourceScreen_Show();
+	} else if (Input.Sources == INPUT_SOURCE_GAMEPAD) {
+		binds_gamepad = true;
+		NormalBindingsScreen_Show();
+	} else {
+		binds_gamepad = false;
+		NormalBindingsScreen_Show();
+	}
+}
+
+
 /*########################################################################################################################*
 *---------------------------------------------------KeyBindsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -1844,10 +1932,13 @@ static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5] = {
 
 static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	cc_string text; char textBuffer[STRING_SIZE];
+	const cc_uint8* curBinds;
+
 	String_InitArray(text, textBuffer);
+	curBinds = binds_gamepad ? KeyBinds_Gamepad : KeyBinds_Normal;
 
 	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
-		s->descs[i], Input_DisplayNames[KeyBinds[s->binds[i]]]);
+		s->descs[i], Input_DisplayNames[curBinds[s->binds[i]]]);
 	ButtonWidget_Set(&s->buttons[i], &text, &s->titleFont);
 	s->dirty = true;
 }
@@ -1866,15 +1957,17 @@ static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 static int KeyBindsScreen_KeyDown(void* screen, int key) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	const cc_uint8* defaults;
+	cc_uint8* curBinds;
 	KeyBind bind;
 	int idx;
 
 	if (s->curI == -1) return Menu_InputDown(s, key);
-	defaults = KeyBind_GetDefaults();
+	curBinds = binds_gamepad ? KeyBinds_Gamepad        : KeyBinds_Normal;
+	defaults = binds_gamepad ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults;
 
 	bind = s->binds[s->curI];
 	if (Input_IsEscapeButton(key)) key = defaults[bind];
-	KeyBind_Set(bind, key);
+	KeyBind_Set(bind, key, curBinds);
 
 	idx         = s->curI;
 	s->curI     = -1;
@@ -2000,7 +2093,8 @@ static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const cha
 void ClassicBindingsScreen_Show(void) {
 	static const cc_uint8 binds[]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Save location", "Left", "Right", "Build", "Toggle fog", "Load location" };
-	
+	binds_gamepad = false;
+
 	if (Game_ClassicHacks) {
 		KeyBindsScreen_Reset(NULL, Menu_SwitchBindsClassicHacks, 260);
 	} else {
@@ -2018,6 +2112,7 @@ void ClassicBindingsScreen_Show(void) {
 void ClassicHacksBindingsScreen_Show(void) {
 	static const cc_uint8 binds[6]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
 	static const char* const descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
+	binds_gamepad = false;
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsClassic, NULL, 260);
 	KeyBindsScreen_SetLayout(-90, -40, 3);
@@ -3582,7 +3677,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 
 static int TexIdsOverlay_KeyDown(void* screen, int key) {
 	struct Screen* s = (struct Screen*)screen;
-	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Gui_Remove(s); return true; }
+	if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
 	return false;
 }
 

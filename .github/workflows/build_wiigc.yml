@@ -7,6 +7,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitppc:latest
