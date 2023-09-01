@@ -31,7 +31,7 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
-	Input.GamepadSource = true;
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
 }
 
 void Window_Create2D(int width, int height) { 

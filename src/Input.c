@@ -393,15 +393,16 @@ static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8*
 	}
 }
 
-void KeyBind_Set(KeyBind binding, int key) {
+void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	cc_string value;
 	String_InitArray(name, nameBuffer);
 
-	String_Format1(&name, "key-%c", keybindNames[binding]);
+	String_Format1(&name, binds == KeyBinds_Gamepad ? "pad-%c" : "key-%c", 
+		keybindNames[binding]);
 	value = String_FromReadonly(storageNames[key]);
 	Options_SetString(&name, &value);
-	KeyBinds[binding] = key;
+	binds[binding] = key;
 }
 
 /* Initialises and loads key bindings from options */

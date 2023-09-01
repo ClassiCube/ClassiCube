@@ -62,13 +62,16 @@ extern struct _InputState {
 	cc_bool Pressed[INPUT_COUNT];
 	/* Whether raw mouse/touch input is currently being listened for */
 	cc_bool RawMode;
-	/* Whether a gamepad is available as an input source */
-	cc_bool GamepadSource;
+	/* Sources available for input (Mouse/Keyboard, Gamepad) */
+	cc_uint8 Sources;
 	/* Whether a gamepad joystick is being used to control player movement */
 	cc_bool JoystickMovement;
 	/* Angle of the gamepad joystick being used to control player movement */
 	float JoystickAngle;
 } Input;
+
+#define INPUT_SOURCE_NORMAL  (1 << 0)
+#define INPUT_SOURCE_GAMEPAD (1 << 1)
 
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
 void Input_SetPressed(int key);
@@ -176,7 +179,7 @@ extern const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT];
 /* Gets whether the key bound to the given key binding is pressed. */
 CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
-void KeyBind_Set(KeyBind binding, int key);
+void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
 
 /* whether to leave text input open for user to enter further input */
 #define HOTKEY_FLAG_STAYS_OPEN   0x01

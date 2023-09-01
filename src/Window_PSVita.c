@@ -37,7 +37,7 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
-	Input.GamepadSource = true;
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);

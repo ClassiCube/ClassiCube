@@ -72,7 +72,7 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
-	Input.GamepadSource = true;
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	#if defined HW_RVL
 	WPAD_Init();
 	WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);

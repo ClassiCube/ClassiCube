@@ -7,6 +7,7 @@ concurrency:
 
 jobs:
   build-haiku:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: haiku/cross-compiler:x86_64-r1beta4
