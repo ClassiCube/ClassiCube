@@ -259,14 +259,14 @@ static void ProcessNunchuck_Game(int mods, double delta) {
 	Input_SetNonRepeatable(CCPAD_START,  mods & WPAD_BUTTON_HOME);
 	Input_SetNonRepeatable(CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
+	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
 
 	if (mods & WPAD_BUTTON_RIGHT) {
 		Mouse_ScrollWheel(1.0*delta);
 	}
 
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
-	Input_SetNonRepeatable(KeyBinds[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
+	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
 
 	const float ANGLE_DELTA = 50;
 	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);

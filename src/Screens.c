@@ -708,7 +708,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 
 static void TabListOverlay_KeyUp(void* screen, int key) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	if (key != KeyBinds[KEYBIND_TABLIST] || s->staysOpen) return;
+	if (!KeyBind_Claims(KEYBIND_TABLIST, key) || s->staysOpen) return;
 	Gui_Remove((struct Screen*)s);
 }
 
@@ -1206,10 +1206,10 @@ static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
 static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int playerListKey   = KeyBinds[KEYBIND_TABLIST];
-	cc_bool handlesList = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
+	int playerListKey    = KeyBinds_Normal[KEYBIND_TABLIST];
+	cc_bool handlesList  = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
-	if (key == playerListKey && handlesList) {
+	if (KeyBind_Claims(KEYBIND_TABLIST, key) && handlesList) {
 		if (!tablist_active && !Server.IsSinglePlayer) {
 			TabListOverlay_Show();
 		}
@@ -1221,10 +1221,10 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
 		/* See reason for this in HandleInputUp */
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER) {
+		if (KeyBind_Claims(KEYBIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
+		if (KeyBind_Claims(KEYBIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
 			ChatScreen_EnterChatInput(s, Input_IsEscapeButton(key));
 #endif
 		} else if (key == CCKEY_PAGEUP) {
@@ -1237,11 +1237,11 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 		return key < CCKEY_F1 || key > CCKEY_F24;
 	}
 
-	if (key == KeyBinds[KEYBIND_CHAT]) {
+	if (KeyBind_Claims(KEYBIND_CHAT, key)) {
 		ChatScreen_OpenInput(&String_Empty);
 	} else if (key == CCKEY_SLASH) {
 		ChatScreen_OpenInput(&slash);
-	} else if (key == KeyBinds[KEYBIND_INVENTORY]) {
+	} else if (KeyBind_Claims(KEYBIND_INVENTORY, key)) {
 		InventoryScreen_Show();
 	} else {
 		return false;
@@ -1263,7 +1263,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 	if (key == CCKEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
 #endif
 
-	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
+	if (Server.SupportsFullCP437 && KeyBind_Claims(KEYBIND_EXT_INPUT, key)) {
 		if (!WindowInfo.Focused) return;
 		ChatScreen_ToggleAltInput(s);
 	}
@@ -1592,7 +1592,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 
-	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
+	if (KeyBind_Claims(KEYBIND_INVENTORY, key) && s->releasedInv) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
@@ -1612,7 +1612,7 @@ static cc_bool InventoryScreen_IsHotbarActive(void) {
 
 static void InventoryScreen_KeyUp(void* screen, int key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	if (key == KeyBinds[KEYBIND_INVENTORY]) s->releasedInv = true;
+	if (KeyBind_Claims(KEYBIND_INVENTORY, key)) s->releasedInv = true;
 }
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
@@ -2151,7 +2151,7 @@ static void TouchScreen_HalfClick(void* s, void* w) {
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i   = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
-	Input_Set(KeyBinds[s->descs[i].bind], true);
+	Input_Set(KeyBinds_Normal[s->descs[i].bind], true);
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
@@ -2283,7 +2283,7 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 		if (!(s->btns[i].active & id)) continue;
 
 		if (s->descs[i].bind < KEYBIND_COUNT) {
-			Input_Set(KeyBinds[s->descs[i].bind], false);
+			Input_Set(KeyBinds_Normal[s->descs[i].bind], false);
 		}
 		s->btns[i].active &= ~id;
 		return;

@@ -820,8 +820,8 @@ static void LocalPlayer_InputSet(int key, cc_bool pressed) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
 	if (pressed && !hacks->Enabled) return;
-	if (key == KeyBinds[KEYBIND_SPEED])      hacks->Speeding     = pressed;
-	if (key == KeyBinds[KEYBIND_HALF_SPEED]) hacks->HalfSpeeding = pressed;
+	if (KeyBind_Claims(KEYBIND_SPEED, key))      hacks->Speeding     = pressed;
+	if (KeyBind_Claims(KEYBIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
 }
 
 static void LocalPlayer_InputDown(void* obj, int key, cc_bool was) {

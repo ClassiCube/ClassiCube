@@ -321,7 +321,9 @@ void Pointer_SetPosition(int idx, int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint8 KeyBinds[KEYBIND_COUNT];
+cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
+cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
+
 /* TODO find a better way than this. maybe alternative keybinds? */
 const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
@@ -368,24 +370,26 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"HotbarLeft", "HotbarRight"
 };
 
-cc_bool KeyBind_IsPressed(KeyBind binding) { return Input.Pressed[KeyBinds[binding]]; }
+cc_bool KeyBind_IsPressed(KeyBind binding) { 
+	return Input.Pressed[KeyBinds_Normal[binding]] || 
+		   Input.Pressed[KeyBinds_Gamepad[binding]];
+}
 
-static void KeyBind_Load(void) {
+static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8* defaults) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
-	const cc_uint8* defaults;
-	int mapping;
-	int i;
+	int mapping, i;
 
-	defaults = KeyBind_GetDefaults();
 	String_InitArray_NT(name, nameBuffer);
 	for (i = 0; i < KEYBIND_COUNT; i++) 
 	{
 		name.length = 0;
-		String_Format1(&name, "key-%c", keybindNames[i]);
+		String_Format1(&name, prefix, keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
 		mapping = Options_GetEnum(name.buffer, defaults[i], storageNames, INPUT_COUNT);
-		if (mapping != CCKEY_ESCAPE) KeyBinds[i] = mapping;
+		if (mapping == CCKEY_ESCAPE) mapping = defaults[i];
+		
+		keybinds[i] = mapping;
 	}
 }
 
@@ -402,15 +406,8 @@ void KeyBind_Set(KeyBind binding, int key) {
 
 /* Initialises and loads key bindings from options */
 static void KeyBind_Init(void) {
-	const cc_uint8* defaults;
-	int i;
-
-	defaults = KeyBind_GetDefaults();
-	for (i = 0; i < KEYBIND_COUNT; i++) 
-	{
-		KeyBinds[i] = defaults[i];
-	}
-	KeyBind_Load();
+	KeyBind_Load("key-%c", KeyBinds_Normal,  KeyBind_NormalDefaults);
+	KeyBind_Load("pad-%c", KeyBinds_Gamepad, KeyBind_GamepadDefaults);
 }
 
 
@@ -904,13 +901,13 @@ static void InputHandler_CheckZoomFov(void* obj) {
 static cc_bool HandleBlockKey(int key) {
 	if (Gui.InputGrab) return false;
 
-	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
+	if (KeyBind_Claims(KEYBIND_DELETE_BLOCK, key)) {
 		MouseStatePress(MOUSE_LEFT);
 		InputHandler_DeleteBlock();
-	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
+	} else if (KeyBind_Claims(KEYBIND_PLACE_BLOCK, key)) {
 		MouseStatePress(MOUSE_RIGHT);
 		InputHandler_PlaceBlock();
-	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
+	} else if (KeyBind_Claims(KEYBIND_PICK_BLOCK, key)) {
 		MouseStatePress(MOUSE_MIDDLE);
 		InputHandler_PickBlock();
 	} else {
@@ -920,32 +917,32 @@ static cc_bool HandleBlockKey(int key) {
 }
 
 static cc_bool HandleNonClassicKey(int key) {
-	if (key == KeyBinds[KEYBIND_HIDE_GUI]) {
+	if (KeyBind_Claims(KEYBIND_HIDE_GUI, key)) {
 		Game_HideGui = !Game_HideGui;
-	} else if (key == KeyBinds[KEYBIND_SMOOTH_CAMERA]) {
+	} else if (KeyBind_Claims(KEYBIND_SMOOTH_CAMERA, key)) {
 		InputHandler_Toggle(key, &Camera.Smooth,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
-	} else if (key == KeyBinds[KEYBIND_AXIS_LINES]) {
+	} else if (KeyBind_Claims(KEYBIND_AXIS_LINES, key)) {
 		InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
-	} else if (key == KeyBinds[KEYBIND_AUTOROTATE]) {
+	} else if (KeyBind_Claims(KEYBIND_AUTOROTATE, key)) {
 		InputHandler_Toggle(key, &AutoRotate_Enabled,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
-	} else if (key == KeyBinds[KEYBIND_THIRD_PERSON]) {
+	} else if (KeyBind_Claims(KEYBIND_THIRD_PERSON, key)) {
 		Camera_CycleActive();
-	} else if (key == KeyBinds[KEYBIND_DROP_BLOCK]) {
+	} else if (KeyBind_Claims(KEYBIND_DROP_BLOCK, key)) {
 		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
-	} else if (key == KeyBinds[KEYBIND_IDOVERLAY]) {
+	} else if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) {
 		TexIdsOverlay_Show();
-	} else if (key == KeyBinds[KEYBIND_BREAK_LIQUIDS]) {
+	} else if (KeyBind_Claims(KEYBIND_BREAK_LIQUIDS, key)) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
 			"  &eBreakable liquids is &cdisabled");
@@ -956,11 +953,11 @@ static cc_bool HandleNonClassicKey(int key) {
 }
 
 static cc_bool HandleCoreKey(int key) {
-	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
+	if (KeyBind_Claims(KEYBIND_HIDE_FPS, key)) {
 		Gui.ShowFPS = !Gui.ShowFPS;
-	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
+	} else if (KeyBind_Claims(KEYBIND_FULLSCREEN, key)) {
 		Game_ToggleFullscreen();
-	} else if (key == KeyBinds[KEYBIND_FOG]) {
+	} else if (KeyBind_Claims(KEYBIND_FOG, key)) {
 		Game_CycleViewDistance();
 	} else if (key == CCKEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
@@ -989,15 +986,15 @@ static void HandleHotkeyDown(int key) {
 }
 
 static cc_bool HandleLocalPlayerKey(int key) {
-	if (key == KeyBinds[KEYBIND_RESPAWN]) {
+	if (KeyBind_Claims(KEYBIND_RESPAWN, key)) {
 		return LocalPlayer_HandleRespawn();
-	} else if (key == KeyBinds[KEYBIND_SET_SPAWN]) {
+	} else if (KeyBind_Claims(KEYBIND_SET_SPAWN, key)) {
 		return LocalPlayer_HandleSetSpawn();
-	} else if (key == KeyBinds[KEYBIND_FLY]) {
+	} else if (KeyBind_Claims(KEYBIND_FLY, key)) {
 		return LocalPlayer_HandleFly();
-	} else if (key == KeyBinds[KEYBIND_NOCLIP]) {
+	} else if (KeyBind_Claims(KEYBIND_NOCLIP, key)) {
 		return LocalPlayer_HandleNoclip();
-	} else if (key == KeyBinds[KEYBIND_JUMP]) {
+	} else if (KeyBind_Claims(KEYBIND_JUMP, key)) {
 		return LocalPlayer_HandleJump();
 	}
 	return false;
@@ -1091,7 +1088,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close(); return;
-	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
+	} else if (KeyBind_Claims(KEYBIND_SCREENSHOT, key) && !was) {
 		Game_ScreenshotRequested = true; return;
 	}
 	
@@ -1101,7 +1098,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
-	if ((Input_IsEscapeButton(key) || key == CCKEY_PAUSE) && !Gui.InputGrab) {
+	if (Input_IsPauseButton(key) && !Gui.InputGrab) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -1125,7 +1122,7 @@ static void OnInputUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
-	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Camera_SetFov(Camera.DefaultFov);
+	if (KeyBind_Claims(KEYBIND_ZOOM_SCROLL, key)) Camera_SetFov(Camera.DefaultFov);
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
@@ -1143,9 +1140,9 @@ static void OnInputUp(void* obj, int key) {
 	}
 
 	if (Gui.InputGrab) return;
-	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) MouseStateRelease(MOUSE_LEFT);
-	if (key == KeyBinds[KEYBIND_PLACE_BLOCK])  MouseStateRelease(MOUSE_RIGHT);
-	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
+	if (KeyBind_Claims(KEYBIND_DELETE_BLOCK, key)) MouseStateRelease(MOUSE_LEFT);
+	if (KeyBind_Claims(KEYBIND_PLACE_BLOCK,  key)) MouseStateRelease(MOUSE_RIGHT);
+	if (KeyBind_Claims(KEYBIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
 }
 
 static void OnFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }

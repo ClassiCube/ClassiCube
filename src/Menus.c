@@ -3582,7 +3582,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 
 static int TexIdsOverlay_KeyDown(void* screen, int key) {
 	struct Screen* s = (struct Screen*)screen;
-	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Gui_Remove(s); return true; }
+	if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
 	return false;
 }
 
