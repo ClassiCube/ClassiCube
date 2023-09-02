@@ -649,32 +649,37 @@ static struct ChatCommand TeleportCommand = {
 /*########################################################################################################################*
 *------------------------------------------------------BlockEditCommand----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool BlockEditCommand_GetTexture(const cc_string* value, int* tex) {
+static cc_bool BlockEditCommand_GetInt(const cc_string* str, const char* name, int* value, int min, int max) {
 	int maxTexs = ATLAS1D_MAX_ATLASES;
 
-	if (!Convert_ParseInt(value, tex)) {
-		Chat_AddRaw("&eBlockEdit: &eTexture must be an integer");
+	if (!Convert_ParseInt(str, value)) {
+		Chat_Add1("&eBlockEdit: &e%c must be an integer", name);
 		return false;
 	}
 
-	if (*tex < 0 || *tex >= maxTexs) {
-		Chat_Add1("&eBlockEdit: &eTexture must be between 0 and %i", &maxTexs);
+	if (*value < min || *value >= max) {
+		Chat_Add3("&eBlockEdit: &e%c must be between %i and %i", name, &min, &max);
 		return false;
 	}
 	return true;
+}
+static cc_bool BlockEditCommand_GetTexture(const cc_string* str, int* tex) {
+	return BlockEditCommand_GetInt(str, "Texture", tex, 0, ATLAS1D_MAX_ATLASES - 1);
 }
 
 static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 	cc_string parts[3];
 	cc_string* prop;
 	cc_string* value;
-	int argsCount, block, tex;
+	int argsCount, block, v;
 
 	if (String_CaselessEqualsConst(args, "properties")) {
 		Chat_AddRaw("&eEditable block properties:");
 		Chat_AddRaw("&a  name &e- Sets the name of the block");
 		Chat_AddRaw("&a  all &e- Sets textures on all six sides of the block");
 		Chat_AddRaw("&a  sides &e- Sets textures on four sides of the block");
+		Chat_AddRaw("&a  left/right/front/back/top/bottom &e- Sets one texture");
+		Chat_AddRaw("&a  collide &e- Sets collision mode of the block");
 		return;
 	}
 
@@ -690,20 +695,49 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		return;
 	}
 
+	/* TODO: Redo as an array */
 	prop  = &parts[1];
 	value = &parts[2];
 	if (String_CaselessEqualsConst(prop, "name")) {
 		Block_SetName(block, value);
 	} else if (String_CaselessEqualsConst(prop, "all")) {
-		if (!BlockEditCommand_GetTexture(value, &tex)) return;
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
 
-		Block_SetSide(tex, block);
-		Block_Tex(block, FACE_YMAX) = tex;
-		Block_Tex(block, FACE_YMIN) = tex;
+		Block_SetSide(v, block);
+		Block_Tex(block, FACE_YMAX) = v;
+		Block_Tex(block, FACE_YMIN) = v;
 	} else if (String_CaselessEqualsConst(prop, "sides")) {
-		if (!BlockEditCommand_GetTexture(value, &tex)) return;
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
 
-		Block_SetSide(tex, block);
+		Block_SetSide(v, block);
+	} else if (String_CaselessEqualsConst(prop, "left")) {
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
+
+		Block_Tex(block, FACE_XMIN) = v;
+	} else if (String_CaselessEqualsConst(prop, "right")) {
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
+
+		Block_Tex(block, FACE_XMAX) = v;
+	} else if (String_CaselessEqualsConst(prop, "bottom")) {
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
+
+		Block_Tex(block, FACE_YMIN) = v;
+	}  else if (String_CaselessEqualsConst(prop, "top")) {
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
+
+		Block_Tex(block, FACE_YMAX) = v;
+	} else if (String_CaselessEqualsConst(prop, "front")) {
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
+
+		Block_Tex(block, FACE_ZMIN) = v;
+	} else if (String_CaselessEqualsConst(prop, "back")) {
+		if (!BlockEditCommand_GetTexture(value, &v)) return;
+
+		Block_Tex(block, FACE_ZMAX) = v;
+	} else if (String_CaselessEqualsConst(prop, "collide")) {
+		if (!BlockEditCommand_GetInt(value, "Collide mode", &v, 0, COLLIDE_CLIMB)) return;
+
+		Blocks.Collide[block] = v;
 	} else {
 		Chat_Add1("&eBlockEdit: &eUnknown property %s &e(See &a/client help blockedit&e)", prop);
 		return;

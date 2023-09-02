@@ -204,6 +204,9 @@ static void ProcessKeyboardInput(void) {
 	int res = KEYBOARD_GetEvent(&ke);
 	int key;
 	
+	if (!res) return;
+	Input.Sources |= INPUT_SOURCE_NORMAL;
+	
 	if (res && ke.type == KEYBOARD_PRESSED)
 	{
 		key = MapNativeKey(ke.keycode);
@@ -386,6 +389,7 @@ static void ProcessWPADInput(double delta) {
 
 void Window_ProcessEvents(double delta) {
 	Input.JoystickMovement = false;
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
 	ProcessWPADInput(delta);
 	ProcessPADInput(delta);
