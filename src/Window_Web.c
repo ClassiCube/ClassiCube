@@ -525,27 +525,62 @@ static void ProcessPendingResize(void) {
 	UpdateWindowBounds();
 }
 
-#define GetGamePadButton(i) i < numButtons ? ev->digitalButton[i] : 0
-static void ProcessGamePadInput(EmscriptenGamepadEvent* ev) {
+/* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
+#define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
+static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
 	int numButtons = ev->numButtons;
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	/* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
 
-	Input_SetNonRepeatable(CCPAD_A, GetGamePadButton(0));
-	Input_SetNonRepeatable(CCPAD_B, GetGamePadButton(1));
-	Input_SetNonRepeatable(CCPAD_X, GetGamePadButton(2));
-	Input_SetNonRepeatable(CCPAD_Y, GetGamePadButton(3));
+	Input_SetNonRepeatable(CCPAD_A, GetGamepadButton(0));
+	Input_SetNonRepeatable(CCPAD_B, GetGamepadButton(1));
+	Input_SetNonRepeatable(CCPAD_X, GetGamepadButton(2));
+	Input_SetNonRepeatable(CCPAD_Y, GetGamepadButton(3));
 
-	Input_SetNonRepeatable(CCPAD_L, GetGamePadButton(4));
-	Input_SetNonRepeatable(CCPAD_R, GetGamePadButton(5));
+	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(4));
+	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(5));
+	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(6));
+	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(7));
 
-	Input_SetNonRepeatable(CCPAD_SELECT, GetGamePadButton(8));
-	Input_SetNonRepeatable(CCPAD_START,  GetGamePadButton(9));
+	Input_SetNonRepeatable(CCPAD_SELECT, GetGamepadButton(8));
+	Input_SetNonRepeatable(CCPAD_START,  GetGamepadButton(9));
 	
-	Input_SetNonRepeatable(CCPAD_UP,    GetGamePadButton(12));
-	Input_SetNonRepeatable(CCPAD_DOWN,  GetGamePadButton(13));
-	Input_SetNonRepeatable(CCPAD_LEFT,  GetGamePadButton(14));
-	Input_SetNonRepeatable(CCPAD_RIGHT, GetGamePadButton(15));
+	Input_SetNonRepeatable(CCPAD_UP,    GetGamepadButton(12));
+	Input_SetNonRepeatable(CCPAD_DOWN,  GetGamepadButton(13));
+	Input_SetNonRepeatable(CCPAD_LEFT,  GetGamepadButton(14));
+	Input_SetNonRepeatable(CCPAD_RIGHT, GetGamepadButton(15));
+}
+
+static void ProcessGamepadCamera(float x, float y, double delta) {
+	float scale = (delta * 60.0) * 8.0f;
+
+	/* Deadzone adjustment */
+	if (x >= -0.1 && x <= 0.1) x = 0;
+	if (y >= -0.1 && y <= 0.1) y = 0;
+	if (x == 0 && y == 0) return;
+
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, y * scale);
+}
+
+static void ProcessGamepadMovement(float x, float y) {
+	/* Deadzone adjustment */
+	if (x >= -0.1 && x <= 0.1) x = 0;
+	if (y >= -0.1 && y <= 0.1) y = 0;
+	if (x == 0 && y == 0) return;
+
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(x, y);
+}
+
+static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	Input.JoystickMovement = false;
+	ProcessGamepadButtons(ev);
+
+	if (ev->numAxes >= 4) {
+		ProcessGamepadMovement(ev->axis[0], ev->axis[1]);
+		ProcessGamepadCamera(  ev->axis[2], ev->axis[3], delta);
+	} else if (ev->numAxes >= 2) {
+		ProcessGamepadCamera(ev->axis[0], ev->axis[1], delta);
+	}
 }
 
 void Window_ProcessEvents(double delta) {
@@ -559,7 +594,7 @@ void Window_ProcessEvents(double delta) {
 		{
 			EmscriptenGamepadEvent ev;
 			res = emscripten_get_gamepad_status(i, &ev);
-			if (res == 0) ProcessGamePadInput(&ev);
+			if (res == 0) ProcessGamepadInput(&ev, delta);
 		}	
 	}
 
