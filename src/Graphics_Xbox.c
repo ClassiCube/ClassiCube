@@ -64,10 +64,7 @@ static void SetupShaders(void) {
 	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
 
 	
-	uint32_t control0 = 0;
-	#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE 0x100000
-	control0 |= NV097_SET_CONTROL0_TEXTUREPERSPECTIVE;
-	control0 |= NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+	uint32_t control0 = NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
 	p = pb_push1(p, NV097_SET_CONTROL0, control0);
 	pb_end(p);
 }
@@ -114,10 +111,76 @@ cc_bool Gfx_TryRestoreContext(void) { return true; }
 void Gfx_RestoreState(void) { }
 void Gfx_FreeState(void) { }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	// TODO
-	return 1;
+
+/*########################################################################################################################*
+*---------------------------------------------------------Texturing-------------------------------------------------------*
+*#########################################################################################################################*/
+typedef struct CCTexture_ {
+	cc_uint32 width, height;
+	cc_uint32 pitch, pad;
+	cc_uint32 pixels[];
+} CCTexture;
+
+// See Graphics_Dreamcast.c for twiddling explanation
+static unsigned Interleave(unsigned x) {
+	// Simplified "Interleave bits by Binary Magic Numbers" from
+	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+
+	x = (x | (x << 8)) & 0x00FF00FF;
+	x = (x | (x << 4)) & 0x0F0F0F0F;
+	x = (x | (x << 2)) & 0x33333333;
+	x = (x | (x << 1)) & 0x55555555;
+	return x;
 }
+
+#define Twiddle_CalcFactors(w, h) \
+	min_dimension    = min(w, h); \
+	interleave_mask  = min_dimension - 1; \
+	interleaved_bits = Math_Log2(min_dimension); \
+	shifted_mask     = 0xFFFFFFFFU & ~interleave_mask; \
+	shift_bits       = interleaved_bits;
+	
+#define Twiddle_CalcY(y) \
+	lo_Y = Interleave(y & interleave_mask) << 1; \
+	hi_Y = (y & shifted_mask) << shift_bits; \
+	Y    = lo_Y | hi_Y;
+	
+#define Twiddle_CalcX(x) \
+	lo_X  = Interleave(x & interleave_mask); \
+	hi_X  = (x & shifted_mask) << shift_bits; \
+	X     = lo_X | hi_X;
+
+static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
+	unsigned min_dimension;
+	unsigned interleave_mask, interleaved_bits;
+	unsigned shifted_mask, shift_bits;
+	unsigned lo_Y, hi_Y, Y;
+	unsigned lo_X, hi_X, X;	
+	Twiddle_CalcFactors(bmp->width, bmp->height);
+	
+	cc_uint32* src = bmp->scan0;	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		Twiddle_CalcY(y);
+		for (int x = 0; x < bmp->width; x++, src++)
+		{
+			Twiddle_CalcX(x);
+			dst[X | Y] = *src;
+		}
+	}
+}
+
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	int size = 16 + bmp->width * bmp->height * 4;
+	CCTexture* tex = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, 0x404);
+	
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	tex->pitch  = bmp->width * 4;
+	ConvertTexture(tex->pixels, bmp);
+	return tex;
+}
+
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	// TODO
@@ -135,7 +198,36 @@ void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	// TODO
+	CCTexture* tex = (CCTexture*)texId;
+	if (!tex) tex  = white_square;
+	
+	unsigned log_u = Math_Log2(tex->width);
+	unsigned log_v = Math_Log2(tex->height);
+	uint32_t* p;
+
+	p = pb_begin();
+	// set texture stage 0 state
+	p = pb_push1(p, NV097_SET_TEXTURE_OFFSET, (DWORD)tex->pixels & 0x03ffffff);
+	p = pb_push1(p, NV097_SET_TEXTURE_FORMAT,
+					0xA |
+					MASK(NV097_SET_TEXTURE_FORMAT_COLOR, NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8) |
+					MASK(NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY, 2)  | // textures have U and V
+					MASK(NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS,  1)  |
+					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U, log_u) |
+					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V, log_v) |
+					MASK(NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P, 1)); // 1 slice
+	p = pb_push1(p, NV097_SET_TEXTURE_CONTROL0, 
+					NV097_SET_TEXTURE_CONTROL0_ENABLE | NV097_SET_TEXTURE_CONTROL0_MAX_LOD_CLAMP);
+	p = pb_push1(p, NV097_SET_TEXTURE_ADDRESS, 
+					0x00010101); // modes (0x0W0V0U wrapping: 1=wrap 2=mirror 3=clamp 4=border 5=clamp to edge)
+	p = pb_push1(p, NV097_SET_TEXTURE_FILTER,
+					0x2000 |
+					MASK(NV097_SET_TEXTURE_FILTER_MIN, 1) |
+					MASK(NV097_SET_TEXTURE_FILTER_MAG, 1)); // 1 = nearest filter
+	
+	// set texture matrix state
+	p = pb_push1(p, NV097_SET_TEXTURE_MATRIX_ENABLE, 0);
+	pb_end(p);
 }
 
 
@@ -389,10 +481,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	p = pb_begin();
 	
 		
-	uint32_t control0 = 0;
-	#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE 0x100000
-	control0 |= NV097_SET_CONTROL0_TEXTUREPERSPECTIVE;
-	control0 |= NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+	uint32_t control0 = NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
 	p = pb_push1(p, NV097_SET_CONTROL0, control0);
 
 	// set shader constants cursor to C0
@@ -445,10 +534,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
 	}
 		
-	uint32_t control0 = 0;
-	#define NV097_SET_CONTROL0_TEXTUREPERSPECTIVE 0x100000
-	control0 |= NV097_SET_CONTROL0_TEXTUREPERSPECTIVE;
-	control0 |= NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+	uint32_t control0 = NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
 	p = pb_push1(p, NV097_SET_CONTROL0, control0);
 
 	// TODO cache these..

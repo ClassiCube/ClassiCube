@@ -360,8 +360,8 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	
 	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;	
 	num_events = sceNetEpollWait(epoll_id, &ev, 1, 0);
-    sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_DEL, s, NULL);
-    
+	sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_DEL, s, NULL);
+	
 	if (num_events < 0)  return num_events;
 	if (num_events == 0) return ERR_NOT_SUPPORTED; // TODO when can this ever happen?
 	
