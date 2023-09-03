@@ -42,7 +42,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Platform_Log(const char* msg, int len) {
 	int fd = sceKernelStdout();
 	sceIoWrite(fd, msg, len);
-	sceIoWrite(fd, "\n",  1);
 	
 	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
 	//cc_string str = String_Init(msg, len, len);

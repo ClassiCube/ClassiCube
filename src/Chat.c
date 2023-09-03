@@ -657,7 +657,7 @@ static cc_bool BlockEditCommand_GetInt(const cc_string* str, const char* name, i
 		return false;
 	}
 
-	if (*value < min || *value >= max) {
+	if (*value < min || *value > max) {
 		Chat_Add3("&eBlockEdit: &e%c must be between %i and %i", name, &min, &max);
 		return false;
 	}

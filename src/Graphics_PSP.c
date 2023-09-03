@@ -61,8 +61,7 @@ static void guInit(void) {
 	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDisable(GU_SCISSOR_TEST);
 	
-	
-    //sceGuDisable(GU_CLIP_PLANES);
+	sceGuEnable(GU_CLIP_PLANES);
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();

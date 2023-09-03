@@ -97,8 +97,9 @@ static void ProcessCircleInput(SceCtrlData* pad, double delta) {
 void Window_ProcessEvents(double delta) {
 	SceCtrlData pad;
 	/* TODO implement */
-	/* TODO: Change to Peek instead? */
-	sceCtrlReadBufferPositive(&pad, 1);
+	int ret = sceCtrlPeekBufferPositive(&pad, 1);
+	if (ret <= 0) return;
+	// TODO: need to use cached version still? like GameCube/Wii
 
 	HandleButtons(pad.Buttons);
 	if (Input.RawMode) 

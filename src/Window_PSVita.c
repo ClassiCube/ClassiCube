@@ -134,6 +134,7 @@ static void ProcessPadInput(double delta) {
 	int res = sceCtrlPeekBufferPositive(0, &pad, 1);
 	if (res == 0) return; // no data available yet
 	if (res < 0)  return; // error occurred
+	// TODO: need to use cached version still? like GameCube/Wii
 	
 	HandleButtons(pad.buttons);
 	if (Input.RawMode)
