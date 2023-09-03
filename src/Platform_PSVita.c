@@ -354,15 +354,16 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	SceNetEpollEvent ev = { 0 };
 	// to match select, closed socket still counts as readable
 	int flags = mode == SOCKET_POLL_READ ? (SCE_NET_EPOLLIN | SCE_NET_EPOLLHUP) : SCE_NET_EPOLLOUT;
-	int res;
-
+	int res, num_events;
 	ev.data.fd = s;
 	ev.events  = flags;
 	
-	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;
-	res = sceNetEpollWait(epoll_id, &ev, 1, 0);
+	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;	
+	num_events = sceNetEpollWait(epoll_id, &ev, 1, 0);
     sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_DEL, s, NULL);
-    if (res) return res;
+    
+	if (num_events < 0)  return num_events;
+	if (num_events == 0) return ERR_NOT_SUPPORTED; // TODO when can this ever happen?
 	
 	*success = (ev.events & flags) != 0;
 	return 0;

@@ -61,7 +61,7 @@ static void guInit(void) {
 	sceGuScissor(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDisable(GU_SCISSOR_TEST);
 	
-	sceGuEnable(GU_CLIP_PLANES);
+	sceGuEnable(GU_CLIP_PLANES); // TODO: swap near/far instead of this?
 	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 	
 	sceGuFinish();
@@ -217,6 +217,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row3.W = -1.0f;
 	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
 	matrix->row4.W =  0.0f;
+	// TODO: should direct3d9 one be used insted with clip range from -1,1 ?
 }
 
 
