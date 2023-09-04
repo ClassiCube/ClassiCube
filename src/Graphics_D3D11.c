@@ -1046,7 +1046,7 @@ static BitmapCol* D3D11_GetRow(struct Bitmap* bmp, int y) {
 }
 
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	ID3D11Texture2D* tmp;
+	ID3D11Texture2D* tmp = NULL;
 	struct Bitmap bmp;
 	HRESULT hr;
 
@@ -1080,6 +1080,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 finished:
 	if (tmp) { ID3D11Texture2D_Release(tmp); }
+	ID3D11Resource_Release(backbuffer_res);
 	return hr;
 }
 
