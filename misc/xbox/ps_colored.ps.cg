@@ -1,0 +1,10 @@
+struct vOut {
+	float4 color : COLOR;
+};
+
+float4 main(
+		vOut input
+	) : COLOR
+{
+	return input.color;
+}

@@ -199,12 +199,34 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 }
 
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	// TODO
+void Gfx_UpdateTexture(GfxResourceID texId, int originX, int originY, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;
+	cc_uint32* dst = tex->pixels;
+	
+	unsigned min_dimension;
+	unsigned interleave_mask, interleaved_bits;
+	unsigned shifted_mask, shift_bits;
+	unsigned lo_Y, hi_Y, Y;
+	unsigned lo_X, hi_X, X;
+	Twiddle_CalcFactors(tex->width, tex->height);
+	
+	for (int y = 0; y < part->height; y++)
+	{
+		int dstY = y + originY;
+		Twiddle_CalcY(dstY);
+		cc_uint32* src = part->scan0 + y * rowWidth;
+		
+		for (int x = 0; x < part->width; x++)
+		{
+			int dstX = x + originX;
+			Twiddle_CalcX(dstX);
+			dst[X | Y] = *src++;
+		}
+	}
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	// TODO
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
