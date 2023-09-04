@@ -15,6 +15,9 @@
 #define COLOUR_ATTR_INDEX  3
 #define TEXTURE_ATTR_INDEX 9
 
+// A lot of figuring out which GPU registers to use came from:
+// - comparing against pbgl and pbkit
+
 // Current format and size of vertices
 static int gfx_stride, gfx_format = -1;
 
@@ -41,12 +44,15 @@ static void LoadFragmentShader(void) {
 	uint32_t* p;
 
 	p = pb_begin();
-	#include "../misc/xbox/ps_colored.inl"
+	#include "../misc/xbox/ps_textured.inl"
 	pb_end(p);
 }
 
-static uint32_t vs_program[] = {
+static uint32_t vs_coloured_program[] = {
 	#include "../misc/xbox/vs_colored.inl"
+};
+static uint32_t vs_textured_program[] = {
+	#include "../misc/xbox/vs_textured.inl"
 };
 
 static void SetupShaders(void) {
@@ -64,19 +70,21 @@ static void SetupShaders(void) {
 	p = pb_push1(p, NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN, 0);
 
 	
-	uint32_t control0 = NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
-	p = pb_push1(p, NV097_SET_CONTROL0, control0);
+	// resets "z perspective" flag
+	p = pb_push1(p, NV097_SET_CONTROL0, 0);
 	pb_end(p);
 }
  
 static void ResetState(void) {
 	uint32_t* p = pb_begin();
 
-	p = pb_push1(p, NV097_SET_ALPHA_FUNC, 0x204); // GREATER
+	p = pb_push1(p, NV097_SET_ALPHA_FUNC, 0x04); // GL_GREATER & 0x0F
 	p = pb_push1(p, NV097_SET_ALPHA_REF,  0x7F);
+	p = pb_push1(p, NV097_SET_DEPTH_FUNC, 0x03); // GL_LEQUAL & 0x0F
+	
 	p = pb_push1(p, NV097_SET_BLEND_FUNC_SFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_ALPHA);
-	p = pb_push1(p, NV097_SET_DEPTH_FUNC, 0x203); // LEQUAL
+	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA);
+	p = pb_push1(p, NV097_SET_BLEND_EQUATION,     NV097_SET_BLEND_EQUATION_V_FUNC_ADD); // TODO not needed?
 	
 	/*pb_push(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 16); p++;
 	for (int i = 0; i < 16; i++) 
@@ -86,7 +94,7 @@ static void ResetState(void) {
 	pb_end(p);
 }
 
-
+static GfxResourceID white_square;
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512; // TODO: 1024?
@@ -97,9 +105,14 @@ void Gfx_Create(void) {
 	pb_show_front_screen();
 
 	SetupShaders();
-	LoadVertexShader(vs_program, sizeof(vs_program));
 	LoadFragmentShader();
 	ResetState();
+		
+	// 1x1 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 void Gfx_Free(void) { 
@@ -308,11 +321,12 @@ void Gfx_Clear(void) {
 	int width  = pb_back_buffer_width();
 	int height = pb_back_buffer_height();
 	
+	// TODO do ourselves
 	pb_erase_depth_stencil_buffer(0, 0, width, height);
 	pb_fill(0, 0, width, height, clearColor);
 	//pb_erase_text_screen();
 	
-	while (pb_busy()) { } // Wait for completion TODO: necessary 
+	while (pb_busy()) { } // Wait for completion TODO: necessary??
 }
 
 static int frames;
@@ -398,10 +412,11 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return vb;
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { }
+void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
+	Gfx_BindVb(vb);
 }
 
 
@@ -470,19 +485,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	
 	struct Matrix combined;
 	Matrix_Mul(&combined, &_proj, &_view);
-	//Matrix_Mul(&combined, &viewport, &combined);
-	
-	//Platform_LogConst("--transform--");
-	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row1.X, &combined.row1.Y, &combined.row1.Z, &combined.row1.W);
-	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row2.X, &combined.row2.Y, &combined.row2.Z, &combined.row2.W);
-	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row3.X, &combined.row3.Y, &combined.row3.Z, &combined.row3.W);
-	//Platform_Log4("[%f3, %f3, %f3, %f3]", &combined.row4.X, &combined.row4.Y, &combined.row4.Z, &combined.row4.W);
+
 	uint32_t* p;
 	p = pb_begin();
 	
-		
-	uint32_t control0 = NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
-	p = pb_push1(p, NV097_SET_CONTROL0, control0);
+	// resets "z perspective" flag
+	p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
 	// set shader constants cursor to C0
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
@@ -491,8 +499,12 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4);
 	Mem_Copy(p, &combined, 16 * 4); p += 16;
 	// Upload viewport too
-	struct Vec4 viewport = { 320, 240, 8388608, 1 };
+	struct Vec4 viewport = { 320, 240, 1388608, 1 };
 	Mem_Copy(p, &viewport, 4 * 4); p += 4;
+	// Upload constants too
+	//struct Vec4 v = { 1, 1, 1, 1 };
+	//Mem_Copy(p, &v, 4 * 4); p += 4;
+	// if necessary, look at vs.inl output for 'c[5]' etc..
 
 	pb_end(p);
 }
@@ -534,8 +546,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		*(p++) = NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_F;
 	}
 		
-	uint32_t control0 = NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
-	p = pb_push1(p, NV097_SET_CONTROL0, control0);
+	// resets "z perspective" flag
+	p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
 	// TODO cache these..
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
@@ -552,15 +564,30 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 						4, SIZEOF_VERTEX_COLOURED);
 	}
 	pb_end(p);
+	
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		LoadVertexShader(vs_textured_program, sizeof(vs_textured_program));
+	} else {		
+		LoadVertexShader(vs_coloured_program, sizeof(vs_coloured_program));
+	}
 }
 
 static void DrawArrays(int mode, int start, int count) {
 	uint32_t *p = pb_begin();
 	p = pb_push1(p, NV097_SET_BEGIN_END, mode);
 
-	p = pb_push1(p, 0x40000000 | NV097_DRAW_ARRAYS,
-					MASK(NV097_DRAW_ARRAYS_COUNT, (count-1)) | 
-					MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
+	// ARRAYS_COUNT is a 8 bit variable, so must be <= 256
+	while (count > 0)
+	{
+		int batch_count = min(count, 64); // TODO increase?
+		
+		p = pb_push1(p, 0x40000000 | NV097_DRAW_ARRAYS,
+						MASK(NV097_DRAW_ARRAYS_COUNT, (batch_count-1)) | 
+						MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
+		
+		start += batch_count;				
+		count -= batch_count;
+	}
 
 	p = pb_push1(p, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
 	pb_end(p);
@@ -573,6 +600,8 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 #define MAX_BATCH 120
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
 	// TODO switch to indexed rendering
+	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
+	// TODO REMOVE REMOVE REMOVE
 	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 
