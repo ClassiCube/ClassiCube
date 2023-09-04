@@ -71,7 +71,7 @@ static void SetupShaders(void) {
 
 	
 	// resets "z perspective" flag
-	p = pb_push1(p, NV097_SET_CONTROL0, 0);
+	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
 	pb_end(p);
 }
  
@@ -85,6 +85,10 @@ static void ResetState(void) {
 	p = pb_push1(p, NV097_SET_BLEND_FUNC_SFACTOR, NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA);
 	p = pb_push1(p, NV097_SET_BLEND_FUNC_DFACTOR, NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA);
 	p = pb_push1(p, NV097_SET_BLEND_EQUATION,     NV097_SET_BLEND_EQUATION_V_FUNC_ADD); // TODO not needed?
+	
+	p = pb_push1(p, NV097_SET_CULL_FACE, NV097_SET_CULL_FACE_V_FRONT);
+	// the order ClassiCube specifies quad vertices in are in the wrong order
+	//  compared to what the GPU expects for front and back facing quads
 	
 	/*pb_push(p, NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 16); p++;
 	for (int i = 0; i < 16; i++) 
@@ -255,7 +259,7 @@ void Gfx_ClearCol(PackedCol color) {
 
 void Gfx_SetFaceCulling(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	pb_push1(p, NV097_SET_CULL_FACE, enabled);
+	p = pb_push1(p, NV097_SET_CULL_FACE_ENABLE, enabled);
 	pb_end(p);
 }
 
@@ -263,35 +267,44 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	pb_push1(p, NV097_SET_BLEND_ENABLE, enabled);
+	p = pb_push1(p, NV097_SET_BLEND_ENABLE, enabled);
 	pb_end(p);
 }
 
 void Gfx_SetAlphaTest(cc_bool enabled) { 	
 	uint32_t* p = pb_begin();
-	pb_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
+	p = pb_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
 	pb_end(p);
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	uint32_t* p = pb_begin();
-	pb_push1(p, NV097_SET_DEPTH_MASK, enabled);
+	p = pb_push1(p, NV097_SET_DEPTH_MASK, enabled);
 	pb_end(p);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
-	pb_push1(p, NV097_SET_DEPTH_TEST_ENABLE, enabled);
+	p = pb_push1(p, NV097_SET_DEPTH_TEST_ENABLE, enabled);
 	pb_end(p);
 }
 
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	// TODO
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+	unsigned mask = 0;
+	if (r) mask |= NV097_SET_COLOR_MASK_RED_WRITE_ENABLE;
+	if (g) mask |= NV097_SET_COLOR_MASK_GREEN_WRITE_ENABLE;
+	if (b) mask |= NV097_SET_COLOR_MASK_BLUE_WRITE_ENABLE;
+	if (a) mask |= NV097_SET_COLOR_MASK_ALPHA_WRITE_ENABLE;
+	
+	uint32_t* p = pb_begin();
+	p = pb_push1(p, NV097_SET_COLOR_MASK, mask);
+	pb_end(p);
 }
 
 
@@ -469,10 +482,20 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 	matrix->row1.X =  c / aspect;
 	matrix->row2.Y =  c;
+	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.W = -1.0f;
+	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.W =  0.0f;
+	// TODO: The above matrix breaks the held block
+	// Below works but breaks map rendering
+	
+/*
+	matrix->row1.X =  c / aspect;
+	matrix->row2.Y =  c;
 	matrix->row3.Z = -zFar / (zFar - zNear);
 	matrix->row3.W = -1.0f;
 	matrix->row4.Z = (zNear * zFar) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row4.W =  0.0f;*/
 }
 
 void Gfx_OnWindowResize(void) { }
@@ -484,13 +507,13 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 	
 	struct Matrix combined;
-	Matrix_Mul(&combined, &_proj, &_view);
+	Matrix_Mul(&combined, &_view, &_proj);
 
 	uint32_t* p;
 	p = pb_begin();
 	
 	// resets "z perspective" flag
-	p = pb_push1(p, NV097_SET_CONTROL0, 0);
+	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
 	// set shader constants cursor to C0
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
@@ -547,7 +570,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	}
 		
 	// resets "z perspective" flag
-	p = pb_push1(p, NV097_SET_CONTROL0, 0);
+	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
 	// TODO cache these..
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
@@ -576,7 +599,7 @@ static void DrawArrays(int mode, int start, int count) {
 	uint32_t *p = pb_begin();
 	p = pb_push1(p, NV097_SET_BEGIN_END, mode);
 
-	// ARRAYS_COUNT is a 8 bit variable, so must be <= 256
+	// NV097_DRAW_ARRAYS_COUNT is an 8 bit mask, so must be < 256
 	while (count > 0)
 	{
 		int batch_count = min(count, 64); // TODO increase?
