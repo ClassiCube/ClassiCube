@@ -8,7 +8,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 struct DateTime;
 
 enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
 typedef cc_uintptr cc_socket;
 typedef void* cc_file;
 #define _NL "\r\n"

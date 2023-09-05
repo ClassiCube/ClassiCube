@@ -1,11 +1,13 @@
 struct vIn {
+	float4 tex      : TEXCOORD;
 	float4 color    : DIFFUSE;
 	float4 position : POSITION;
 };
 
 struct vOut {
-	float4 col : COLOR;
 	float4 pos : POSITION;
+	float4 col : COLOR;
+	float4 tex : TEXCOORD0;
 };
 
 vOut main(
@@ -19,14 +21,15 @@ vOut main(
 
 	position = float4(input.position.xyz, 1.0f);
 	position = mul(position, mvp);
-	//position.xyz = position.xyz / position.w;
+	position.xyz = position.xyz / position.w;
 	
 	position.x =  position.x * half_viewport.x + half_viewport.x;
 	position.y = -position.y * half_viewport.y + half_viewport.y;
 	position.z =  position.z * half_viewport.z + half_viewport.z;
-	position.w =  half_viewport.w;
+	//position.w =  1.0 / half_viewport.w;
 	
-	result.col = input.color;
 	result.pos = position;
+	result.col = input.color;
+	result.tex = input.tex;
 	return result;
 }

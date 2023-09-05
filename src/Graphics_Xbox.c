@@ -21,6 +21,7 @@
 // Current format and size of vertices
 static int gfx_stride, gfx_format = -1;
 
+
 static void LoadVertexShader(uint32_t* program, int programSize) {
 	uint32_t* p;
 	
@@ -40,7 +41,23 @@ static void LoadVertexShader(uint32_t* program, int programSize) {
 	}
 }
 
-static void LoadFragmentShader(void) {
+static uint32_t vs_coloured_program[] = {
+	#include "../misc/xbox/vs_coloured.inl"
+};
+static uint32_t vs_textured_program[] = {
+	#include "../misc/xbox/vs_textured.inl"
+};
+
+
+static void LoadFragmentShader_Coloured(void) {
+	uint32_t* p;
+
+	p = pb_begin();
+	#include "../misc/xbox/ps_coloured.inl"
+	pb_end(p);
+}
+
+static void LoadFragmentShader_Textured(void) {
 	uint32_t* p;
 
 	p = pb_begin();
@@ -48,12 +65,6 @@ static void LoadFragmentShader(void) {
 	pb_end(p);
 }
 
-static uint32_t vs_coloured_program[] = {
-	#include "../misc/xbox/vs_colored.inl"
-};
-static uint32_t vs_textured_program[] = {
-	#include "../misc/xbox/vs_textured.inl"
-};
 
 static void SetupShaders(void) {
 	uint32_t *p;
@@ -109,7 +120,7 @@ void Gfx_Create(void) {
 	pb_show_front_screen();
 
 	SetupShaders();
-	LoadFragmentShader();
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	ResetState();
 		
 	// 1x1 dummy white texture
@@ -612,8 +623,10 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		LoadVertexShader(vs_textured_program, sizeof(vs_textured_program));
+		LoadFragmentShader_Textured();
 	} else {		
 		LoadVertexShader(vs_coloured_program, sizeof(vs_coloured_program));
+		LoadFragmentShader_Coloured();
 	}
 }
 
@@ -645,8 +658,6 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 #define MAX_BATCH 120
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
 	// TODO switch to indexed rendering
-	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
-	// TODO REMOVE REMOVE REMOVE
 	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 

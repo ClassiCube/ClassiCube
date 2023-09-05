@@ -19,8 +19,8 @@
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
-const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
+const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 const char* Platform_AppNameSuffix = " XBox";
 
@@ -306,80 +306,82 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int family = 0, res;
+	int found = 0, res;
 
 	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	res = getaddrinfo(host, NULL, &hints, &result);
-	if (res) return 0;
+	res = lwip_getaddrinfo(host, NULL, &hints, &result);
+	if (res) return res;
 
 	for (cur = result; cur; cur = cur->ai_next) {
 		if (cur->ai_family != AF_INET) continue;
-		family = AF_INET;
+		found = true;
 
 		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
 		break;
 	}
 
-	freeaddrinfo(result);
-	return family;
+	lwip_freeaddrinfo(result);
+	return found ? 0 : ERR_INVALID_ARGUMENT;
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	if (inet_pton(AF_INET, str, &addr->v4.sin_addr) > 0) return 0;
 	return ParseHost(addr, str);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
 	union SocketAddress addr;
-	return ParseAddress(&addr, address);
+	return ParseAddress(&addr, address) == 0;
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	int family, addrSize = 0;
 	union SocketAddress addr;
-	cc_result res;
+	int res;
+	// TODO TODO TODO TODO TODO
+	// if 'addrSize = 0' is removed, then the game never gets past 'Fetching cdn.classicube.net...'
+	// so probably relying on undefined behaviour somewhere...
 
-	*s = -1;
-	if (!(family = ParseAddress(&addr, address)))
-		return ERR_INVALID_ARGUMENT;
+	*s  = -1;
+	res = ParseAddress(&addr, address);
+	if (res) return res;
 
-	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
+	*s = lwip_socket(AF_INET, SOCK_STREAM, 0);
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
 		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+		lwip_ioctl(*s, FIONBIO, &blocking_raw);
 	}
 
-	addr.v4.sin_family  = AF_INET;
-	addr.v4.sin_port    = htons(port);
-	addrSize = sizeof(addr.v4);
+	addr.v4.sin_family = AF_INET;
+	addr.v4.sin_port   = htons(port);
 
-	res = connect(*s, &addr.raw, addrSize);
+	res = lwip_connect(*s, &addr.raw, sizeof(addr.v4));
 	return res == -1 ? errno : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int recvCount = recv(s, data, count, 0);
+	int recvCount = lwip_recv(s, data, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return errno;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(s, data, count, 0);
+	int sentCount = lwip_send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return errno;
 }
 
 void Socket_Close(cc_socket s) {
-	shutdown(s, SHUT_RDWR);
-	close(s);
+	lwip_shutdown(s, SHUT_RDWR);
+	lwip_close(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -388,7 +390,7 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
+	if (lwip_poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
 	
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
@@ -406,7 +408,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	if (res || *writable) return res;
 
 	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
-	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	lwip_getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
 	return res;
 }
 
@@ -421,7 +423,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 static void InitHDD(void) {
     hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
     if (!hdd_mounted) {
-        Platform_LogConst("Failed to mount E:\ from Data partition");
+        Platform_LogConst("Failed to mount E:/ from Data partition");
         return;
     }
     Directory_Create(&String_Empty); // create root ClassiCube folder
