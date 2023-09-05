@@ -544,7 +544,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4);
 	Mem_Copy(p, &combined, 16 * 4); p += 16;
 	// Upload viewport too
-	struct Vec4 viewport = { 320, 240, 1388608, 1 };
+	struct Vec4 viewport = { 320, 240, 8388608, 1 };
 	Mem_Copy(p, &viewport, 4 * 4); p += 4;
 	// Upload constants too
 	//struct Vec4 v = { 1, 1, 1, 1 };

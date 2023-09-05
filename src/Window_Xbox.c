@@ -33,7 +33,6 @@ static void OnDataReceived(UTR_T* utr) {
 	int len = min(utr->xfer_len, sizeof(gp_state));
 	Mem_Copy(&gp_state, utr->buff, len);
 	int mods = gp_state.dButtons;
-	//Platform_Log1("MODS: %i", &mods);
 
 	// queue USB transfer again
 	// TODO don't call
@@ -75,7 +74,7 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	Input.GamepadSource = true;
 	usbh_core_init();
 	usbh_xid_init();
 	
@@ -107,29 +106,27 @@ void Window_Close(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 // https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_gamepad
-#define XINPUT_GAMEPAD_DPAD_UP    0x0001
-#define XINPUT_GAMEPAD_DPAD_DOWN  0x0002
-#define XINPUT_GAMEPAD_DPAD_LEFT  0x0004
-#define XINPUT_GAMEPAD_DPAD_RIGHT 0x0008
-#define XINPUT_GAMEPAD_START      0x0010
-#define XINPUT_GAMEPAD_BACK       0x0020
-#define XINPUT_GAMEPAD_LEFT_THUMB     0x0040
-#define XINPUT_GAMEPAD_RIGHT_THUMB    0x0080
-#define XINPUT_GAMEPAD_LEFT_SHOULDER  0x0100
-#define XINPUT_GAMEPAD_RIGHT_SHOULDER 0x0200
-#define XINPUT_GAMEPAD_A          0x1000
-#define XINPUT_GAMEPAD_B          0x2000
-#define XINPUT_GAMEPAD_X          0x4000
-#define XINPUT_GAMEPAD_Y          0x8000
+// NOTE: Analog buttons use dedicated field rather than being part of dButtons
+#define XINPUT_GAMEPAD_DPAD_UP     0x0001
+#define XINPUT_GAMEPAD_DPAD_DOWN   0x0002
+#define XINPUT_GAMEPAD_DPAD_LEFT   0x0004
+#define XINPUT_GAMEPAD_DPAD_RIGHT  0x0008
+#define XINPUT_GAMEPAD_START       0x0010
+#define XINPUT_GAMEPAD_BACK        0x0020
+#define XINPUT_GAMEPAD_LEFT_THUMB  0x0040
+#define XINPUT_GAMEPAD_RIGHT_THUMB 0x0080
 
-static void HandleButtons(int mods) {
-	Input_SetNonRepeatable(CCPAD_L, mods & XINPUT_GAMEPAD_LEFT_THUMB);
-	Input_SetNonRepeatable(CCPAD_R, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
+static void HandleButtons(xid_gamepad_in* gp) {
+	int mods = gp->dButtons;
+	Input_SetNonRepeatable(CCPAD_L,  gp->l     > 0x7F);
+	Input_SetNonRepeatable(CCPAD_R,  gp->r     > 0x7F);
+	Input_SetNonRepeatable(CCPAD_ZL, gp->white > 0x7F);
+	Input_SetNonRepeatable(CCPAD_ZR, gp->black > 0x7F);
 	
-	Input_SetNonRepeatable(CCPAD_A, mods & XINPUT_GAMEPAD_A);
-	Input_SetNonRepeatable(CCPAD_B, mods & XINPUT_GAMEPAD_B);
-	Input_SetNonRepeatable(CCPAD_X, mods & XINPUT_GAMEPAD_X);
-	Input_SetNonRepeatable(CCPAD_Y, mods & XINPUT_GAMEPAD_Y);
+	Input_SetNonRepeatable(CCPAD_A, gp->a > 0x7F);
+	Input_SetNonRepeatable(CCPAD_B, gp->b > 0x7F);
+	Input_SetNonRepeatable(CCPAD_X, gp->x > 0x7F);
+	Input_SetNonRepeatable(CCPAD_Y, gp->y > 0x7F);
 	
 	Input_SetNonRepeatable(CCPAD_START,  mods & XINPUT_GAMEPAD_START);
 	Input_SetNonRepeatable(CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);
@@ -140,12 +137,32 @@ static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
 }
 
+static void HandleJoystick_Left(int x, int y) {
+	if (Math_AbsI(x) <= 256) x = 0;
+	if (Math_AbsI(y) <= 256) y = 0;	
+	
+	if (x == 0 && y == 0) return;
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(x, -y);
+}
+
+static void HandleJoystick_Right(int x, int y, double delta) {
+	float scale = (delta * 60.0) / 8192.0f;
+	
+	if (Math_AbsI(x) <= 256) x = 0;
+	if (Math_AbsI(y) <= 256) y = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, -y * scale);	
+}
+
 void Window_ProcessEvents(double delta) {
+	Input.JoystickMovement = false;
 	usbh_pooling_hubs();
 	if (!xid_ctrl) return;
-	int mods = gp_state.dButtons;
 	
-	HandleButtons(mods);
+	HandleButtons(&gp_state);
+	HandleJoystick_Left( gp_state.leftStickX,  gp_state.leftStickY );
+	HandleJoystick_Right(gp_state.rightStickX, gp_state.rightStickY, delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
@@ -164,9 +181,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {return;
+void Window_DrawFramebuffer(Rect2D r) {
 	void* fb = XVideoGetFB();
-	XVideoWaitForVBlank();
+	//XVideoWaitForVBlank();
+	// XVideoWaitForVBlank installs an interrupt handler for VBlank - 
+	//  however this will cause pbkit's attempt to install an interrupt
+	//  handler fail - so instead just accept tearing in the launcher
 
 	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
 	cc_uint32* dst = (cc_uint32*)fb           + r.X;
