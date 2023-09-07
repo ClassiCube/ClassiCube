@@ -407,7 +407,7 @@ static struct TabListOverlay {
 	Screen_Body
 	int x, y, width, height;
 	cc_bool classic, staysOpen;
-	int namesCount, elementOffset;
+	int usedCount, elementOffset;
 	struct TextWidget title;
 	struct FontDesc font;
 	TabListEntryCompare compare;
@@ -433,10 +433,11 @@ static void TabListOverlay_DrawText(struct Texture* tex, struct TabListOverlay* 
 
 static int TabListOverlay_GetColumnWidth(struct TabListOverlay* s, int column) {
 	int i   = column * LIST_NAMES_PER_COLUMN;
-	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int end = min(s->usedCount, i + LIST_NAMES_PER_COLUMN);
 	int maxWidth = 0;
 
-	for (; i < end; i++) {
+	for (; i < end; i++) 
+	{
 		maxWidth = max(maxWidth, s->textures[i].Width);
 	}
 	return maxWidth + LIST_COLUMN_PADDING + s->elementOffset;
@@ -444,10 +445,11 @@ static int TabListOverlay_GetColumnWidth(struct TabListOverlay* s, int column) {
 
 static int TabListOverlay_GetColumnHeight(struct TabListOverlay* s, int column) {
 	int i   = column * LIST_NAMES_PER_COLUMN;
-	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int end = min(s->usedCount, i + LIST_NAMES_PER_COLUMN);
 	int height = 0;
 
-	for (; i < end; i++) {
+	for (; i < end; i++) 
+	{
 		height += s->textures[i].Height + 1;
 	}
 	return height;
@@ -456,9 +458,10 @@ static int TabListOverlay_GetColumnHeight(struct TabListOverlay* s, int column) 
 static void TabListOverlay_SetColumnPos(struct TabListOverlay* s, int column, int x, int y) {
 	struct Texture tex;
 	int i   = column * LIST_NAMES_PER_COLUMN;
-	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int end = min(s->usedCount, i + LIST_NAMES_PER_COLUMN);
 
-	for (; i < end; i++) {
+	for (; i < end; i++) 
+	{
 		tex = s->textures[i];
 		tex.X = x; tex.Y = y - 10;
 
@@ -475,9 +478,10 @@ static void TabListOverlay_Layout(void* screen) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
 	int minWidth, minHeight, paddingX, paddingY;
 	int i, x, y, width = 0, height = 0;
-	int columns = Math_CeilDiv(s->namesCount, LIST_NAMES_PER_COLUMN);
+	int columns = Math_CeilDiv(s->usedCount, LIST_NAMES_PER_COLUMN);
 
-	for (i = 0; i < columns; i++) {
+	for (i = 0; i < columns; i++) 
+	{
 		width += TabListOverlay_GetColumnWidth(s,  i);
 		y      = TabListOverlay_GetColumnHeight(s, i);
 		height = max(height, y);
@@ -498,7 +502,8 @@ static void TabListOverlay_Layout(void* screen) {
 	x = s->x + paddingX;
 	y = s->y + paddingY;
 
-	for (i = 0; i < columns; i++) {
+	for (i = 0; i < columns; i++) 
+	{
 		TabListOverlay_SetColumnPos(s, i, x, y);
 		x += TabListOverlay_GetColumnWidth(s, i);
 	}
@@ -516,7 +521,7 @@ static void TabListOverlay_Layout(void* screen) {
 static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
 	cc_string name;
 	/* insert at end of list */
-	if (index == -1) { index = s->namesCount; s->namesCount++; }
+	if (index == -1) { index = s->usedCount; s->usedCount++; }
 
 	name = TabList_UNSAFE_GetList(id);
 	s->ids[index] = id;
@@ -526,14 +531,15 @@ static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int in
 static void TabListOverlay_DeleteAt(struct TabListOverlay* s, int i) {
 	Gfx_DeleteTexture(&s->textures[i].ID);
 
-	for (; i < s->namesCount - 1; i++) {
+	for (; i < s->usedCount - 1; i++)
+	{
 		s->ids[i]      = s->ids[i + 1];
 		s->textures[i] = s->textures[i + 1];
 	}
 
-	s->namesCount--;
-	s->ids[s->namesCount]         = 0;
-	s->textures[s->namesCount].ID = 0;
+	s->usedCount--;
+	s->ids[s->usedCount]         = 0;
+	s->textures[s->usedCount].ID = 0;
 }
 
 static void TabListOverlay_AddGroup(struct TabListOverlay* s, int id, int* index) {
@@ -541,7 +547,8 @@ static void TabListOverlay_AddGroup(struct TabListOverlay* s, int id, int* index
 	int i;
 	group = TabList_UNSAFE_GetGroup(id);
 
-	for (i = Array_Elems(s->ids) - 1; i > (*index); i--) {
+	for (i = Array_Elems(s->ids) - 1; i > (*index); i--) 
+	{
 		s->ids[i]      = s->ids[i - 1];
 		s->textures[i] = s->textures[i - 1];
 	}
@@ -551,7 +558,7 @@ static void TabListOverlay_AddGroup(struct TabListOverlay* s, int id, int* index
 	TabListOverlay_DrawText(&s->textures[*index], s, &group);
 
 	(*index)++;
-	s->namesCount++;
+	s->usedCount++;
 }
 
 static int TabListOverlay_GetGroupCount(struct TabListOverlay* s, int id, int i) {
@@ -559,7 +566,8 @@ static int TabListOverlay_GetGroupCount(struct TabListOverlay* s, int id, int i)
 	int count;
 	group = TabList_UNSAFE_GetGroup(id);
 
-	for (count = 0; i < s->namesCount; i++, count++) {
+	for (count = 0; i < s->usedCount; i++, count++)
+	{
 		curGroup = TabList_UNSAFE_GetGroup(s->ids[i]);
 		if (!String_CaselessEquals(&group, &curGroup)) break;
 	}
@@ -617,26 +625,28 @@ static void TabListOverlay_QuickSort(int left, int right) {
 
 static void TabListOverlay_SortEntries(struct TabListOverlay* s) {
 	int i, id, count;
-	if (!s->namesCount) return;
+	if (!s->usedCount) return;
 
 	if (s->classic) {
 		TabListOverlay_Instance.compare = TabListOverlay_PlayerCompare;
-		TabListOverlay_QuickSort(0, s->namesCount - 1);
+		TabListOverlay_QuickSort(0, s->usedCount - 1);
 		return;
 	}
 
 	/* Sort the list by group */
 	/* Loop backwards, since DeleteAt() reduces NamesCount */
-	for (i = s->namesCount - 1; i >= 0; i--) {
+	for (i = s->usedCount - 1; i >= 0; i--)
+	{
 		if (s->ids[i] != GROUP_NAME_ID) continue;
 		TabListOverlay_DeleteAt(s, i);
 	}
 	TabListOverlay_Instance.compare = TabListOverlay_GroupCompare;
-	TabListOverlay_QuickSort(0, s->namesCount - 1);
+	TabListOverlay_QuickSort(0, s->usedCount - 1);
 
 	/* Sort the entries in each group */
 	TabListOverlay_Instance.compare = TabListOverlay_PlayerCompare;
-	for (i = 0; i < s->namesCount; ) {
+	for (i = 0; i < s->usedCount; )
+	{
 		id = s->ids[i];
 		TabListOverlay_AddGroup(s, id, &i);
 
@@ -649,6 +659,7 @@ static void TabListOverlay_SortEntries(struct TabListOverlay* s) {
 static void TabListOverlay_SortAndLayout(struct TabListOverlay* s) {
 	TabListOverlay_SortEntries(s);
 	TabListOverlay_Layout(s);
+	s->dirty = true;
 }
 
 static void TabListOverlay_Add(void* obj, int id) {
@@ -660,8 +671,8 @@ static void TabListOverlay_Add(void* obj, int id) {
 static void TabListOverlay_Update(void* obj, int id) {
 	struct TabListOverlay* s = (struct TabListOverlay*)obj;
 	int i;
-
-	for (i = 0; i < s->namesCount; i++) {
+	for (i = 0; i < s->usedCount; i++)
+	{
 		if (s->ids[i] != id) continue;
 		Gfx_DeleteTexture(&s->textures[i].ID);
 
@@ -674,7 +685,8 @@ static void TabListOverlay_Update(void* obj, int id) {
 static void TabListOverlay_Remove(void* obj, int id) {
 	struct TabListOverlay* s = (struct TabListOverlay*)obj;
 	int i;
-	for (i = 0; i < s->namesCount; i++) {
+	for (i = 0; i < s->usedCount; i++)
+	{
 		if (s->ids[i] != id) continue;
 
 		TabListOverlay_DeleteAt(s, i);
@@ -693,7 +705,8 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 	if (!((struct Screen*)Gui_Chat)->grabsInput) return false;
 	String_InitArray(text, textBuffer);
 
-	for (i = 0; i < s->namesCount; i++) {
+	for (i = 0; i < s->usedCount; i++)
+	{
 		if (!s->textures[i].ID || s->ids[i] == GROUP_NAME_ID) continue;
 		tex = s->textures[i];
 		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
@@ -715,12 +728,14 @@ static void TabListOverlay_KeyUp(void* screen, int key) {
 static void TabListOverlay_ContextLost(void* screen) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
 	int i;
-	for (i = 0; i < s->namesCount; i++) {
+	for (i = 0; i < s->usedCount; i++)
+	{
 		Gfx_DeleteTexture(&s->textures[i].ID);
 	}
 
 	Elem_Free(&s->title);
 	Font_Free(&s->font);
+	Screen_ContextLost(screen);
 }
 
 static void TabListOverlay_ContextRecreated(void* screen) {
@@ -729,44 +744,65 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 
 	size = Drawer2D.BitmappedText ? 16 : 11;
 	Font_Make(&s->font, size, FONT_FLAGS_PADDING);
-	s->namesCount = 0;
+	s->usedCount = 0;
 
 	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
 	Font_SetPadding(&s->font, 1);
+	Screen_UpdateVb(screen);
 
 	/* TODO: Just recreate instead of this? maybe */
-	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
+	for (id = 0; id < TABLIST_MAX_NAMES; id++) 
+	{
 		if (!TabList.NameOffsets[id]) continue;
 		TabListOverlay_AddName(s, (EntityID)id, -1);
 	}
 	TabListOverlay_SortAndLayout(s); /* TODO: Not do layout here too */
 }
 
-static void TabListOverlay_BuildMesh(void* screen) { }
+static void TabListOverlay_BuildMesh(void* screen) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	struct Screen*   grabbed = Gui_GetInputGrab();
+	struct VertexTextured* v;
+	struct Texture tex;
+	int i;
+	
+	v = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb,
+										VERTEX_FORMAT_TEXTURED, TEXTWIDGET_MAX + s->usedCount * 4);
+	Widget_BuildMesh(&s->title, &v);
+
+	for (i = 0; i < s->usedCount; i++)
+	{
+		if (!s->textures[i].ID) continue;
+		tex = s->textures[i];
+
+		if (grabbed && s->ids[i] != GROUP_NAME_ID) {
+			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
+		}
+		Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &v);
+	}
+	Gfx_UnlockDynamicVb(s->vb);
+}
 
 static void TabListOverlay_Render(void* screen, double delta) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	struct TextWidget* title = &s->title;
-	struct Screen* grabbed;
-	struct Texture tex;
-	int i;
+	int i, offset = 0;
 	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
-	Elem_Render(title, delta);
-	grabbed = Gui.InputGrab;
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
+	offset = Widget_Render2(&s->title, offset);
 
-	for (i = 0; i < s->namesCount; i++) {
+	for (i = 0; i < s->usedCount; i++)
+	{
 		if (!s->textures[i].ID) continue;
-		tex = s->textures[i];
-		
-		if (grabbed && s->ids[i] != GROUP_NAME_ID) {
-			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
-		}
-		Texture_Render(&tex);
+		Gfx_BindTexture(s->textures[i].ID);
+
+		Gfx_DrawVb_IndexedTris_Range(4, offset);
+		offset += 4;
 	}
 }
 
@@ -783,6 +819,7 @@ static void TabListOverlay_Init(void* screen) {
 	tablist_active   = true;
 	s->classic       = Gui.ClassicTabList || !Server.SupportsExtPlayerList;
 	s->elementOffset = s->classic ? 0 : 10;
+	s->maxVertices   = TABLIST_MAX_VERTICES;
 	TextWidget_Init(&s->title);
 
 	Event_Register_(&TabListEvents.Added,   s, TabListOverlay_Add);
