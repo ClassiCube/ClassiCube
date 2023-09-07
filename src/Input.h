@@ -54,6 +54,7 @@ enum InputButtons {
 	INPUT_CLIPBOARD_COPY  = 1001,
 	INPUT_CLIPBOARD_PASTE = 1002
 };
+#define Input_IsPadButton(btn) ((btn) >= CCPAD_A && (btn) < INPUT_COUNT)
 
 extern const char* const Input_DisplayNames[INPUT_COUNT];
 

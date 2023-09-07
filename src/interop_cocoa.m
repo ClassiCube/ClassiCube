@@ -150,6 +150,7 @@ static void LogUnhandledNSErrors(NSException* ex) {
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
 	pool = [[NSAutoreleasePool alloc] init];

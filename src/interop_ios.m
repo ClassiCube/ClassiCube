@@ -346,6 +346,7 @@ void Window_Init(void) {
     // keyboard now shifts up
     WindowInfo.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
+    Input.Sources = INPUT_SOURCE_NORMAL;
     
     DisplayInfo.Depth  = 32;
     DisplayInfo.ScaleX = 1; // TODO dpi scale

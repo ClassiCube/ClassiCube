@@ -29,6 +29,7 @@ void Window_Init(void) {
 	SDL_DisplayMode mode = { 0 };
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GetDesktopDisplayMode(0, &mode);
+	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	DisplayInfo.Width  = mode.w;
 	DisplayInfo.Height = mode.h;

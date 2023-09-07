@@ -285,9 +285,11 @@ void Window_Init(void) {
 	void* lib;
 	HDC hdc;
 
-	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
 	DynamicLib_LoadAll(&user32, funcs, Array_Elems(funcs), &lib);
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
 	/* Enable high DPI support */
+	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
 	if (DisplayInfo.DPIScaling && _SetProcessDPIAware) _SetProcessDPIAware();
 
 	hdc = GetDC(NULL);

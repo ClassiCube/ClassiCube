@@ -381,6 +381,8 @@ static void RunApp(void) {
 void Window_Init(void) {
 	Events_Init();
 	RunApp();
+	Input.Sources = INPUT_SOURCE_NORMAL;
+	
 	BScreen screen(B_MAIN_SCREEN_ID);
 	BRect frame = screen.Frame();
 	
