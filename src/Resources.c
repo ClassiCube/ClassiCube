@@ -1109,6 +1109,14 @@ static void Fetcher_Finish(void) {
 	}
 }
 
+static void Fetcher_Fail(struct HttpRequest* item) {
+	Http_ClearPending();
+
+	/* Only show error for first failed download */
+	if (!Fetcher_Failed) Fetcher_ErrorCallback(item);
+	Fetcher_Failed = true;
+}
+
 CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* item) {
 	if (!Http_GetResult(reqID, item)) return false;
 
@@ -1117,9 +1125,7 @@ CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* item) {
 		return true;
 	}
 
-	/* Only show error for first failed download */
-	if (!Fetcher_Failed) Fetcher_ErrorCallback(item);
-	Fetcher_Failed = true;
+	Fetcher_Fail(item);
 	HttpRequest_Free(item);
 	
 	Fetcher_Finish();

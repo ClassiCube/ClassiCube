@@ -774,8 +774,8 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
-/* kCGLCPCurrentRendererID is only defined on macOS 10.4 and later */
-#ifdef kCGLCPCurrentRendererID
+/* kCGLCPCurrentRendererID is only available on macOS 10.4 and later */
+#if defined MAC_OS_X_VERSION_10_4
 static const char* GetAccelerationMode(CGLContextObj ctx) {
 	GLint fGPU, vGPU;
 	
