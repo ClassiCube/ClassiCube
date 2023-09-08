@@ -129,6 +129,14 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_HTTPCLIENT
 	#undef CC_BUILD_FREETYPE
+#elif defined XENON
+	/* libxenon also defines __linux__ (yes, really) */
+	#define CC_BUILD_XBOX360
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_HTTPCLIENT
+	#undef CC_BUILD_FREETYPE
 #elif defined _WIN32
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9

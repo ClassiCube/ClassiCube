@@ -546,7 +546,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	p = pb_begin();
 	
 	// resets "z perspective" flag
-	//p = pb_push1(p, NV097_SET_CONTROL0, 0);
+	p = pb_push1(p, NV097_SET_CONTROL0, 0);
 
 	// set shader constants cursor to C0
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
