@@ -662,9 +662,18 @@
     <ClCompile Include="Graphics_PSVita.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics_PS3.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_PS3.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_PS3.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\misc\CCicon.rc">
+    <ResourceCompile Include="..\misc\windows\CCicon.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

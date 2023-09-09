@@ -21,14 +21,13 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <utime.h>
 #include <signal.h>
 #include <net/net.h>
 #include <net/poll.h>
 #include <ppu-lv2.h>
-#include <sys/lv2errno.h>
+#include <sys/file.h>
 #include <sys/mutex.h>
 #include <sys/sem.h>
 #include <sys/thread.h>
@@ -98,19 +97,26 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+static const cc_string root_path = String_FromConst("/dev_hdd0/ClassiCube/");
+static void GetNativePath(char* str, const cc_string* path) {
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
+	String_EncodeUtf8(str, path);
+}
+
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	GetNativePath(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	return sysLv2FsMkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	struct stat sb;
-	String_EncodeUtf8(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	sysFSStat sb;
+	GetNativePath(str, path);
+	return sysLv2FsStat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -121,7 +127,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res, is_dir;
 
-	String_EncodeUtf8(str, dirPath);
+	GetNativePath(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -142,17 +148,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS || defined CC_BUILD_IRIX || defined CC_BUILD_BEOS
-		{
-			char full_path[NATIVE_STR_LEN];
-			struct stat sb;
-			String_EncodeUtf8(full_path, &path);
-			is_dir = stat(full_path, &sb) == 0 && S_ISDIR(sb.st_mode);
-		}
-#else
 		is_dir = entry->d_type == DT_DIR;
 		/* TODO: fallback to stat when this fails */
-#endif
 
 		if (is_dir) {
 			res = Directory_Enum(&path, obj, callback);
@@ -170,7 +167,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
+	GetNativePath(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
@@ -196,7 +193,7 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return close(file) == -1 ? errno : 0;
+	return sysLv2FsClose(file);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -210,9 +207,14 @@ cc_result File_Position(cc_file file, cc_uint32* pos) {
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	sysFSStat st;
+	int res = sysLv2FsFStat(file, &st);
+	
+	if (res) {
+		*len = -1;         return res;
+	} else {
+		*len = st.st_size; return 0;
+	}
 }
 
 
@@ -445,6 +447,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 
 void Platform_Init(void) {
 	netInitialize();
+	// Create root directory
+	Directory_Create(&String_Empty);
 }
 
 void Platform_Free(void) { }

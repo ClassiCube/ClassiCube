@@ -19,7 +19,92 @@ static u32 cur_fb = 0;
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------- setup---------------------------------------------------------*
+*----------------------------------------------------- Vertex Shaders ----------------------------------------------------*
+*#########################################################################################################################*/
+typedef struct CCVertexProgram {
+	rsxVertexProgram* prog;
+	void* ucode;
+	rsxProgramConst* mvp;
+} VertexProgram;
+
+extern const u8 vs_textured_vpo[];
+extern const u8 vs_coloured_vpo[];
+
+static VertexProgram  VP_list[2];
+static VertexProgram* VP_active;
+
+
+static void VP_Load(VertexProgram* vp, const u8* source) {
+	vp->prog = (rsxVertexProgram*)source;
+	u32 size = 0;
+	rsxVertexProgramGetUCode(vp->prog, &vp->ucode, &size);
+	vp->mvp = rsxVertexProgramGetConst(vp->prog, "mvp");
+	
+	Platform_Log1("VP shader size: %i", &size);
+}
+
+static void LoadVertexPrograms(void) {
+	VP_Load(&VP_list[0], vs_coloured_vpo);
+	VP_Load(&VP_list[1], vs_textured_vpo);
+}
+
+static void VP_SwitchActive(void) {
+	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	
+	VertexProgram* VP = &VP_list[index];
+	if (VP == VP_active) return;
+	VP_active = VP;
+	
+	rsxLoadVertexProgram(context, VP->prog, VP->ucode);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------- Fragment Shaders ---------------------------------------------------*
+*#########################################################################################################################*/
+typedef struct CCFragmentProgram {
+	rsxFragmentProgram* prog;
+	void* ucode;
+	u32* buffer;
+	u32 offset;
+} FragmentProgram;
+
+extern const u8 ps_textured_fpo[];
+extern const u8 ps_coloured_fpo[];
+
+static FragmentProgram  FP_list[2];
+static FragmentProgram* FP_active;
+
+
+static void FP_Load(FragmentProgram* fp, const u8* source) {
+	fp->prog = (rsxFragmentProgram*)source;
+	u32 size = 0;
+	rsxFragmentProgramGetUCode(fp->prog, &fp->ucode, &size);
+	
+	Platform_Log1("FP shader size: %i", &size);
+	fp->buffer = (u32*)rsxMemalign(128, size);
+	Mem_Copy(fp->buffer, fp->ucode, size);
+	rsxAddressToOffset(fp->buffer, &fp->offset);
+}
+
+static void LoadFragmentPrograms(void) {
+	FP_Load(&FP_list[0], ps_textured_fpo);
+	FP_Load(&FP_list[1], ps_coloured_fpo);
+}
+
+static void FP_SwitchActive(void) {
+	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	
+	FragmentProgram* FP = &FP_list[index];
+	if (FP == FP_active) return;
+	FP_active = FP;
+	
+	rsxLoadFragmentProgramLocation(context, FP->prog, FP->offset, GCM_LOCATION_RSX);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------- Setup---------------------------------------------------------*
 *#########################################################################################################################*/
 static u32  color_pitch;
 static u32  color_offset[2];
@@ -37,6 +122,13 @@ static void Gfx_RestoreState(void) {
 	rsxSetColorMaskMrt(context, 0);
 	rsxSetDepthFunc(context, GCM_LEQUAL);
 	rsxSetClearDepthStencil(context, 0xFFFFFF);
+	
+	rsxSetUserClipPlaneControl(context,GCM_USER_CLIP_PLANE_DISABLE,
+									   GCM_USER_CLIP_PLANE_DISABLE,
+									   GCM_USER_CLIP_PLANE_DISABLE,
+									   GCM_USER_CLIP_PLANE_DISABLE,
+									   GCM_USER_CLIP_PLANE_DISABLE,
+									   GCM_USER_CLIP_PLANE_DISABLE);
 }
 
 static void CreateContext(void) {
@@ -136,6 +228,9 @@ void Gfx_Create(void) {
 	SetupBlendingState();
 	Gfx_RestoreState();
 	SetRenderTarget(cur_fb);
+	
+	LoadVertexPrograms();
+	LoadFragmentPrograms();
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
@@ -154,8 +249,9 @@ u32* Gfx_AllocImage(u32* offset, s32 w, s32 h) {
 
 void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 	rsxSetTransferImage(context, GCM_TRANSFER_LOCAL_TO_LOCAL,
-		color_offset[cur_fb], color_pitch, -w/2, -h/2,
-		offset, w * 4, 0, 0, w, h, 4);
+		color_offset[cur_fb], color_pitch, 0, 0,
+		offset, w * 4, 0, 0, 
+		w, h, 4);
 }
 
 
@@ -287,7 +383,26 @@ void Gfx_EndFrame(void) {
 	if (gfx_minFrameMs) LimitFPS();
 }
 
-void Gfx_OnWindowResize(void) {/* TODO */
+void Gfx_OnWindowResize(void) {
+	f32 scale[4], offset[4];
+
+	u16 w = DisplayInfo.Width;
+	u16 h = DisplayInfo.Height;
+	f32 zmin = 0.0f;
+	f32 zmax = 1.0f;
+	
+	scale[0]  = w * 0.5f;
+	scale[1]  = h * -0.5f;
+	scale[2]  = (zmax - zmin) * 0.5f;
+	scale[3]  = 0.0f;
+	offset[0] = w * 0.5f;
+	offset[1] = h * 0.5f;
+	offset[2] = (zmax + zmin) * 0.5f;
+	offset[3] = 0.0f;
+
+	rsxSetViewport(context, 0, 0, w, h, zmin, zmax, scale, offset);
+	rsxSetScissor(context, 0, 0, w, h);
+	/* TODO test */
 }
 
 
@@ -309,13 +424,32 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	void* data = memalign(16, count * strideSizes[fmt]);
+	void* data = rsxMemalign(128, count * strideSizes[fmt]);
 	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
 	return data;
-	//return Mem_Alloc(count, strideSizes[fmt], "gfx VB");/* TODO */
 }
 
-void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb;/* TODO */ }
+void Gfx_BindVb(GfxResourceID vb) { 
+	u32 offset;
+	rsxAddressToOffset(vb, &offset);
+	gfx_vertices = vb;
+	
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_POS,    0, offset, 
+			SIZEOF_VERTEX_TEXTURED, 3, GCM_VERTEX_DATA_TYPE_F32, GCM_LOCATION_RSX);
+		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_COLOR0, 0, offset + 12, 
+			SIZEOF_VERTEX_TEXTURED, 4, GCM_VERTEX_DATA_TYPE_U8,  GCM_LOCATION_RSX);
+		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_TEX0,   0, offset + 16,
+			SIZEOF_VERTEX_TEXTURED, 2, GCM_VERTEX_DATA_TYPE_F32, GCM_LOCATION_RSX);
+	} else {
+		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_POS,    0, offset, 
+			SIZEOF_VERTEX_COLOURED, 3, GCM_VERTEX_DATA_TYPE_F32, GCM_LOCATION_RSX);
+		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_COLOR0, 0, offset + 12, 
+			SIZEOF_VERTEX_COLOURED, 4, GCM_VERTEX_DATA_TYPE_U8,  GCM_LOCATION_RSX);
+	}
+	VP_SwitchActive();
+	FP_SwitchActive();
+}
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID data = *vb;/* TODO */
@@ -324,37 +458,36 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	vb_size = count * strideSizes[fmt];/* TODO */
+	vb_size = count * strideSizes[fmt];
 	return vb;
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb;/* TODO */
-	//sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
+	Gfx_BindVb(vb);
+	rsxInvalidateVertexCache(context); // TODO needed?
 }
 
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	void* data = memalign(16, maxVertices * strideSizes[fmt]);
+	void* data = rsxMemalign(128, maxVertices * strideSizes[fmt]);
 	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;/* TODO */
-	//return Mem_Alloc(maxVertices, strideSizes[fmt], "gfx VB");
+	return data;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
-	return vb; /* TODO */
+	return vb;
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
-	gfx_vertices = vb; /* TODO */
-	//dcache_flush_range(vb, vb_size);
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	Gfx_BindVb(vb);
+	rsxInvalidateVertexCache(context); // TODO needed?
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;/* TODO */
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	//dcache_flush_range(vertices, vCount * gfx_stride);
+	Gfx_BindVb(vb);
+	rsxInvalidateVertexCache(context); // TODO needed?
 }
 
 
@@ -377,6 +510,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 /* TODO */
 }
 
@@ -411,15 +545,26 @@ void Gfx_SetFogMode(FogFunc func) {/* TODO */
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
+static struct Matrix _view, _proj;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-/* TODO */
+	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	*dst = *matrix;
+	
+	struct Matrix mvp;
+	Matrix_Mul(&mvp, &_view, &_proj);
+	
+	// TODO: dity uniforms
+	for (int i = 0; i < Array_Elems(VP_list); i++)
+	{
+		VertexProgram* vp = &VP_list[i];
+		rsxSetVertexProgramParameter(context, vp->prog, vp->mvp, (float*)&mvp);
+	}
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
 	Gfx_LoadMatrix(type, &Matrix_Identity);
 }
-
 
 void Gfx_EnableTextureOffset(float x, float y) {
 /* TODO */
@@ -437,15 +582,21 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];/* TODO */
+	
+	VP_SwitchActive();
+	FP_SwitchActive();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {/* TODO */
+	rsxDrawVertexArray(context, GCM_TYPE_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {/* TODO */
+	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {/* TODO */
+	rsxDrawVertexArray(context, GCM_TYPE_QUADS, 0, verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {/* TODO */

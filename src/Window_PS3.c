@@ -75,6 +75,7 @@ void Window_Close(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(padData* data) {
+	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
 	Input_SetNonRepeatable(CCPAD_A, data->BTN_TRIANGLE);
 	Input_SetNonRepeatable(CCPAD_B, data->BTN_SQUARE);
 	Input_SetNonRepeatable(CCPAD_X, data->BTN_CROSS);
@@ -129,18 +130,17 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	u32* pixels = Gfx_AllocImage(&fb_offset, bmp->width, bmp->height);
 	bmp->scan0  = pixels;
 	fb_bmp      = *bmp;
+	
+	Gfx_ClearCol(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
 	// TODO test
-	Thread_Sleep(1000);
-	Platform_Log1("FRAME START (%h)", &fb_offset);
 	Gfx_BeginFrame();
-	Gfx_ClearCol(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
 	Gfx_Clear();
+	// TODO: Only transfer dirty region instead of the entire bitmap
 	Gfx_TransferImage(fb_offset, fb_bmp.width, fb_bmp.height);
 	Gfx_EndFrame();
-	Platform_LogConst("FRAME END");
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
