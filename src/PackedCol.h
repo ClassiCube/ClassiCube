@@ -6,21 +6,21 @@
 */
 
 typedef cc_uint32 PackedCol;
-#if defined CC_BUILD_D3D9 || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST
-#define PACKEDCOL_B_SHIFT  0
-#define PACKEDCOL_G_SHIFT  8
-#define PACKEDCOL_R_SHIFT 16
-#define PACKEDCOL_A_SHIFT 24
+#if defined CC_BUILD_D3D9 || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST || defined CC_BUILD_PS3
+	#define PACKEDCOL_B_SHIFT  0
+	#define PACKEDCOL_G_SHIFT  8
+	#define PACKEDCOL_R_SHIFT 16
+	#define PACKEDCOL_A_SHIFT 24
 #elif defined CC_BIG_ENDIAN
-#define PACKEDCOL_R_SHIFT 24
-#define PACKEDCOL_G_SHIFT 16
-#define PACKEDCOL_B_SHIFT  8
-#define PACKEDCOL_A_SHIFT  0
+	#define PACKEDCOL_R_SHIFT 24
+	#define PACKEDCOL_G_SHIFT 16
+	#define PACKEDCOL_B_SHIFT  8
+	#define PACKEDCOL_A_SHIFT  0
 #else
-#define PACKEDCOL_R_SHIFT  0
-#define PACKEDCOL_G_SHIFT  8
-#define PACKEDCOL_B_SHIFT 16
-#define PACKEDCOL_A_SHIFT 24
+	#define PACKEDCOL_R_SHIFT  0
+	#define PACKEDCOL_G_SHIFT  8
+	#define PACKEDCOL_B_SHIFT 16
+	#define PACKEDCOL_A_SHIFT 24
 #endif
 
 #define PACKEDCOL_R_MASK (0xFFU << PACKEDCOL_R_SHIFT)

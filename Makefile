@@ -147,6 +147,8 @@ psp:
 	$(MAKE) -f src/Makefile_PSP PLAT=psp
 vita:
 	$(MAKE) -f src/Makefile_vita PLAT=vita
+ps3:
+	$(MAKE) -f src/Makefile_PS3 PLAT=ps3
 3ds:
 	$(MAKE) -f src/Makefile_3DS PLAT=3ds
 wii:
