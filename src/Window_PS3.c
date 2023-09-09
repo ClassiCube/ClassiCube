@@ -12,6 +12,7 @@
 #include "ExtMath.h"
 #include "Logger.h"
 #include <io/pad.h>
+#include <sysutil/sysutil.h>
 #include <sysutil/video.h>
 static cc_bool launcherMode;
 static padInfo pad_info;
@@ -23,7 +24,18 @@ struct _WinData WindowInfo;
 int Display_ScaleX(int x) { return x; }
 int Display_ScaleY(int y) { return y; }
 
+static void sysutil_callback(u64 status, u64 param, void* usrdata) {
+	switch (status) {
+		case SYSUTIL_EXIT_GAME:
+			Event_RaiseVoid(&WindowEvents.Closing);
+			WindowInfo.Exists = false;
+			break;
+	}
+}
+
 void Window_Init(void) {
+	sysUtilRegisterCallback(0, sysutil_callback, NULL);
+	
 	videoState state;
 	videoResolution resolution;
 	

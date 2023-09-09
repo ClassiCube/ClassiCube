@@ -38,9 +38,8 @@ static void VP_Load(VertexProgram* vp, const u8* source) {
 	vp->prog = (rsxVertexProgram*)source;
 	u32 size = 0;
 	rsxVertexProgramGetUCode(vp->prog, &vp->ucode, &size);
-	vp->mvp = rsxVertexProgramGetConst(vp->prog, "mvp");
 	
-	Platform_Log1("VP shader size: %i", &size);
+	vp->mvp = rsxVertexProgramGetConst(vp->prog, "mvp");
 }
 
 static void LoadVertexPrograms(void) {
@@ -81,7 +80,6 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 	u32 size = 0;
 	rsxFragmentProgramGetUCode(fp->prog, &fp->ucode, &size);
 	
-	Platform_Log1("FP shader size: %i", &size);
 	fp->buffer = (u32*)rsxMemalign(128, size);
 	Mem_Copy(fp->buffer, fp->ucode, size);
 	rsxAddressToOffset(fp->buffer, &fp->offset);
@@ -121,7 +119,7 @@ static void Gfx_RestoreState(void) {
 	
 	rsxSetColorMaskMrt(context, 0);
 	rsxSetDepthFunc(context, GCM_LEQUAL);
-	rsxSetClearDepthStencil(context, 0xFFFFFF);
+	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
 	
 	rsxSetUserClipPlaneControl(context,GCM_USER_CLIP_PLANE_DISABLE,
 									   GCM_USER_CLIP_PLANE_DISABLE,
@@ -207,6 +205,7 @@ void SetRenderTarget(u32 index) {
 
 	rsxSetSurface(context,&sf);
 }
+static GfxResourceID white_square;
 
 void Gfx_Create(void) {
 	// TODO rethink all this
@@ -231,6 +230,12 @@ void Gfx_Create(void) {
 	
 	LoadVertexPrograms();
 	LoadFragmentPrograms();
+	
+	// 1x1 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
@@ -453,7 +458,7 @@ void Gfx_BindVb(GfxResourceID vb) {
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID data = *vb;/* TODO */
-	if (data) Mem_Free(data);
+	if (data) rsxFree(data);
 	*vb = 0;
 }
 
@@ -494,38 +499,79 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+typedef struct CCTexture_ {
+	cc_uint32 width, height;
+	cc_uint32 pad[(128 - 8)/4]; // TODO better way of aligning to 128 bytes
+	cc_uint32 pixels[];
+} CCTexture;
+
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	int size = bmp->width * bmp->height * 4;
+	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
+	
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	Mem_Copy(tex->pixels, bmp->scan0, size);
+	return tex;
+}
+
 void Gfx_BindTexture(GfxResourceID texId) {
+	CCTexture* tex = (CCTexture*)texId;
+	if (!tex) tex  = white_square; 
 	/* TODO */
+	
+	u32 offset;
+	rsxAddressToOffset(tex->pixels, &offset);
+	gcmTexture texture;
+
+	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_LIN;
+	texture.mipmap		= 1;
+	texture.dimension	= GCM_TEXTURE_DIMS_2D;
+	texture.cubemap		= GCM_FALSE;
+	texture.remap		= ((GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_B_SHIFT) |
+						   (GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_G_SHIFT) |
+						   (GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_R_SHIFT) |
+						   (GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_A_SHIFT) |
+						   (GCM_TEXTURE_REMAP_COLOR_B << GCM_TEXTURE_REMAP_COLOR_B_SHIFT) |
+						   (GCM_TEXTURE_REMAP_COLOR_G << GCM_TEXTURE_REMAP_COLOR_G_SHIFT) |
+						   (GCM_TEXTURE_REMAP_COLOR_R << GCM_TEXTURE_REMAP_COLOR_R_SHIFT) |
+						   (GCM_TEXTURE_REMAP_COLOR_A << GCM_TEXTURE_REMAP_COLOR_A_SHIFT));
+	texture.width		= tex->width;
+	texture.height		= tex->height;
+	texture.depth		= 1;
+	texture.location	= GCM_LOCATION_RSX;
+	texture.pitch		= tex->width * 4;
+	texture.offset		= offset;
+	
+	rsxLoadTexture(context,    0, &texture);
+	rsxTextureControl(context, 0, GCM_TRUE,0<<8,12<<8,GCM_TEXTURE_MAX_ANISO_1);
+	rsxTextureFilter(context, 0, 0, GCM_TEXTURE_NEAREST, GCM_TEXTURE_NEAREST,
+		GCM_TEXTURE_CONVOLUTION_QUINCUNX);			
+	rsxTextureWrapMode(context, 0, GCM_TEXTURE_REPEAT, GCM_TEXTURE_REPEAT, GCM_TEXTURE_REPEAT, 0, GCM_TEXTURE_ZFUNC_LESS, 0);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	/* TODO */
-}
-
-void Gfx_EnableMipmaps(void)  { }
-void Gfx_DisableMipmaps(void) { }
-
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	return 1;/* TODO */
+	GfxResourceID data = *texId;
+	if (data) rsxFree(data);
+	*texId = NULL;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
-/* TODO */
+	/* TODO */
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
+void Gfx_EnableMipmaps(void)  { }
+void Gfx_DisableMipmaps(void) { }
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogColor;
-static float gfx_fogEnd = 16.0f, gfx_fogDensity = 1.0f;
-static FogFunc gfx_fogMode = -1;
-
 void Gfx_SetFog(cc_bool enabled) {/* TODO */
 }
 
@@ -552,7 +598,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 	
 	struct Matrix mvp;
-	Matrix_Mul(&mvp, &_view, &_proj);
+	Matrix_Mul(&mvp, &_proj, &_view);
 	
 	// TODO: dity uniforms
 	for (int i = 0; i < Array_Elems(VP_list); i++)
@@ -600,5 +646,6 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {/* TODO */
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {/* TODO */
+	rsxDrawVertexArray(context, GCM_TYPE_QUADS, startVertex, verticesCount);
 }
 #endif

@@ -16,14 +16,11 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <utime.h>
-#include <signal.h>
 #include <net/net.h>
 #include <net/poll.h>
 #include <ppu-lv2.h>
@@ -98,6 +95,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 static const cc_string root_path = String_FromConst("/dev_hdd0/ClassiCube/");
+
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
@@ -122,74 +120,83 @@ int File_Exists(const cc_string* path) {
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
-	struct dirent* entry;
+	sysFSDirent entry;
 	char* src;
-	int len, res, is_dir;
+	int dir_fd, res;
 
 	GetNativePath(str, dirPath);
-	dirPtr = opendir(str);
-	if (!dirPtr) return errno;
+	if ((res = sysLv2FsOpenDir(str, &dir_fd))) return res;
 
-	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
-	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
-	errno = 0;
-	String_InitArray(path, pathBuffer);
+	for (;;)
+	{
+		u64 read = 0;
+		if ((res = sysLv2FsReadDir(dir_fd, &entry, &read))) return res;
+		if (!read) break; // end of entries
 
-	while ((entry = readdir(dirPtr))) {
-		path.length = 0;
-		String_Format1(&path, "%s/", dirPath);
-
-		/* ignore . and .. entry */
-		src = entry->d_name;
+		// ignore . and .. entry
+		src = entry.d_name;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-
-		len = String_Length(src);
+	
+		String_InitArray(path, pathBuffer);
+		String_Format1(&path, "%s/", dirPath);
+		
+		int len = String_Length(src);	
 		String_AppendUtf8(&path, src, len);
 
-		is_dir = entry->d_type == DT_DIR;
-		/* TODO: fallback to stat when this fails */
-
-		if (is_dir) {
+		if (entry.d_type == DT_DIR) {
 			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
+			if (res) break;
 		} else {
 			callback(&path, obj);
 		}
-		errno = 0;
 	}
 
-	res = errno; /* return code from readdir */
-	closedir(dirPtr);
+	sysLv2FsCloseDir(dir_fd);
 	return res;
 }
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
+	int fd = -1;
+	
+	int access = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+	int res    = sysLv2FsOpen(str, mode, &fd, access, NULL, 0);
+	
+	if (res) {
+		*file = -1; return res;
+	} else {
+		// TODO: is this actually needed?
+		if (mode & SYS_O_CREAT) sysLv2FsChmod(str, access);
+		*file = fd; return 0;
+	}
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path, SYS_O_RDONLY);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT | SYS_O_TRUNC);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path, SYS_O_RDWR | SYS_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	u64 read = 0;
+	int res  = sysLv2FsRead(file, data, count, &read);
+	
+	*bytesRead = read;
+	return res;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	u64 wrote = 0;
+	int res   = sysLv2FsWrite(file, data, count, &wrote);
+	
+	*bytesWrote = wrote;
+	return res;
 }
 
 cc_result File_Close(cc_file file) {
@@ -197,24 +204,25 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	static cc_uint8 modes[] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	u64 position = 0;
+	return sysLv2FsLSeek64(file, offset, modes[seekType], &position);
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	u64 position = 0;
+	int res = sysLv2FsLSeek64(file, 0, SEEK_CUR, &position);
+	
+	*pos = position;
+	return res;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
 	sysFSStat st;
 	int res = sysLv2FsFStat(file, &st);
 	
-	if (res) {
-		*len = -1;         return res;
-	} else {
-		*len = st.st_size; return 0;
-	}
+	*len = st.st_size;
+	return res;
 }
 
 
