@@ -160,7 +160,7 @@ dreamcast:
 xbox:
 	$(MAKE) -f src/Makefile_xbox PLAT=xbox
 xbox360:
-	$(MAKE) -f src/Makefile_xbox PLAT=xbox360
+	$(MAKE) -f src/Makefile_xbox360 PLAT=xbox360
 	
 clean:
 	$(DEL) $(OBJECTS)

@@ -1,0 +1,27 @@
+struct vIn {
+	float4 tex      : TEXCOORD;
+	float4 color    : DIFFUSE;
+	float4 position : POSITION;
+};
+
+struct vOut {
+	float4 pos : POSITION;
+	float4 col : COLOR;
+	float4 tex : TEXCOORD0;
+};
+
+vOut main(
+	vIn              input,
+	uniform float4x4 mvp
+	)
+{
+	vOut   result;
+	float4 position;
+
+	position = float4(input.position.xyz, 1.0f);
+	
+	result.pos = mul(position, mvp);
+	result.col = input.color;
+	result.tex = input.tex;
+	return result;
+}

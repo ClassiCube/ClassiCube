@@ -120,6 +120,7 @@ static void Gfx_RestoreState(void) {
 	rsxSetColorMaskMrt(context, 0);
 	rsxSetDepthFunc(context, GCM_LEQUAL);
 	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
+	//rsxSetFrontFace(context, GCM_FRONTFACE_CCW);
 	
 	rsxSetUserClipPlaneControl(context,GCM_USER_CLIP_PLANE_DISABLE,
 									   GCM_USER_CLIP_PLANE_DISABLE,
@@ -307,17 +308,16 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {/* TODO */
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
-	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	// Same as Direct3D9
 	*matrix = Matrix_Identity;
 
 	matrix->row1.X =  2.0f / width;
 	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row3.Z =  1.0f / (zNear - zFar);
 
 	matrix->row4.X = -1.0f;
 	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.Z = zNear / (zNear - zFar);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -325,17 +325,14 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float zNear = 0.1f;
 	float c = (float)Cotangent(0.5f * fov);
 
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
-	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
-	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
-	/* Calculations are simplified because of left/right and top/bottom symmetry */
+	// Same as Direct3D9
 	*matrix = Matrix_Identity;
 
 	matrix->row1.X =  c / aspect;
 	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.Z = zFar / (zNear - zFar);
 	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.Z = (zNear * zFar) / (zNear - zFar);
 	matrix->row4.W =  0.0f;
 }
 
@@ -407,6 +404,12 @@ void Gfx_OnWindowResize(void) {
 
 	rsxSetViewport(context, 0, 0, w, h, zmin, zmax, scale, offset);
 	rsxSetScissor(context, 0, 0, w, h);
+	
+	// TODO: even needed?
+	for (int i = 0; i < 8; i++)
+	{
+		rsxSetViewportClip(context, i, w, h);
+	}
 	/* TODO test */
 }
 
@@ -414,7 +417,6 @@ void Gfx_OnWindowResize(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static void* gfx_vertices;
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
@@ -437,7 +439,6 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 void Gfx_BindVb(GfxResourceID vb) { 
 	u32 offset;
 	rsxAddressToOffset(vb, &offset);
-	gfx_vertices = vb;
 	
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_POS,    0, offset, 
@@ -452,8 +453,6 @@ void Gfx_BindVb(GfxResourceID vb) {
 		rsxBindVertexArrayAttrib(context, GCM_VERTEX_ATTRIB_COLOR0, 0, offset + 12, 
 			SIZEOF_VERTEX_COLOURED, 4, GCM_VERTEX_DATA_TYPE_U8,  GCM_LOCATION_RSX);
 	}
-	VP_SwitchActive();
-	FP_SwitchActive();
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
@@ -543,8 +542,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	texture.pitch		= tex->width * 4;
 	texture.offset		= offset;
 	
+	rsxInvalidateTextureCache(context,GCM_INVALIDATE_TEXTURE); // TODO needed
+	
 	rsxLoadTexture(context,    0, &texture);
-	rsxTextureControl(context, 0, GCM_TRUE,0<<8,12<<8,GCM_TEXTURE_MAX_ANISO_1);
+	rsxTextureControl(context, 0, GCM_TRUE, 0<<8, 12<<8, GCM_TEXTURE_MAX_ANISO_1);
 	rsxTextureFilter(context, 0, 0, GCM_TEXTURE_NEAREST, GCM_TEXTURE_NEAREST,
 		GCM_TEXTURE_CONVOLUTION_QUINCUNX);			
 	rsxTextureWrapMode(context, 0, GCM_TEXTURE_REPEAT, GCM_TEXTURE_REPEAT, GCM_TEXTURE_REPEAT, 0, GCM_TEXTURE_ZFUNC_LESS, 0);
@@ -598,9 +599,9 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	*dst = *matrix;
 	
 	struct Matrix mvp;
-	Matrix_Mul(&mvp, &_proj, &_view);
+	Matrix_Mul(&mvp, &_view, &_proj);
 	
-	// TODO: dity uniforms
+	// TODO: dirty uniforms instead
 	for (int i = 0; i < Array_Elems(VP_list); i++)
 	{
 		VertexProgram* vp = &VP_list[i];

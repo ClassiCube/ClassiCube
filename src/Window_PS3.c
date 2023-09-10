@@ -106,15 +106,32 @@ static void HandleButtons(padData* data) {
 	Input_SetNonRepeatable(CCPAD_ZL, data->BTN_L2);
 	Input_SetNonRepeatable(CCPAD_ZR, data->BTN_R2);
 }
+static void HandleJoystick_Left(int x, int y) {
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;	
+	
+	if (x == 0 && y == 0) return;
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(x, -y);
+}
+static void HandleJoystick_Right(int x, int y, double delta) {
+	float scale = (delta * 60.0) / 128.0f;
+	
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, -y * scale);	
+}
 
 static void ProcessPadInput(double delta, padData* pad) {
 	HandleButtons(pad);
-	//if (Input.RawMode)
-	//	ProcessCircleInput(&pad, delta);
+	HandleJoystick_Left( pad->ANA_L_H - 0x80, pad->ANA_L_V - 0x80);
+	HandleJoystick_Right(pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
 }
 
 void Window_ProcessEvents(double delta) {
 	ioPadGetInfo(&pad_info);
+	Input.JoystickMovement = false;
 	
 	if (pad_info.status[0]) {
 		ioPadGetData(0, &pad_data);
