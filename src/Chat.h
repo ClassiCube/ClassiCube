@@ -61,7 +61,8 @@ struct ChatCommand {
 	struct ChatCommand* next; /* Next command in linked-list of client commands */
 };
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
-CC_API void Commands_Register(struct ChatCommand* cmd);
+CC_API  void Commands_Register(      struct ChatCommand* cmd);
+typedef void (*FP_Commands_Register)(struct ChatCommand* cmd);
 
 /* Sets the name of log file (no .txt, so e.g. just "singleplayer") */
 /* NOTE: This can only be set once. */
@@ -72,13 +73,16 @@ void Chat_DisableLogging(void);
 /*  NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
 /*  NOTE: /client is always interpreted as client-side commands. */
 /* In multiplayer this is sent to the server, in singleplayer just Chat_Add. */
-CC_API void Chat_Send(const cc_string* text, cc_bool logUsage);
+CC_API  void Chat_Send(      const cc_string* text, cc_bool logUsage);
+typedef void (*FP_Chat_Send)(const cc_string* text, cc_bool logUsage);
 /* Shorthand for Chat_AddOf(str, MSG_TYPE_NORMAL) */
-CC_API void Chat_Add(const cc_string* text);
+CC_API  void Chat_Add(      const cc_string* text);
+typedef void (*FP_Chat_Add)(const cc_string* text);
 /* Adds a chat message, raising ChatEvents.ChatReceived event. */
 /* MSG_TYPE_NORMAL is usually used for player chat and command messages. */
 /* Other message types are usually used for info/status messages. */
-CC_API void Chat_AddOf(const cc_string* text, int msgType);
+CC_API  void Chat_AddOf(      const cc_string* text, int msgType);
+typedef void (*FP_Chat_AddOf)(const cc_string* text, int msgType);
 /* Shorthand for Chat_AddOf(String_FromReadonly(raw), MSG_TYPE_NORMAL) */
 void Chat_AddRaw(const char* raw);
 

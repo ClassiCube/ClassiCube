@@ -62,10 +62,12 @@ typedef cc_uint64 RNGState;
 /* Initialises RNG using seed from current UTC time. */
 void Random_SeedFromCurrentTime(RNGState* rnd);
 /* Initialised RNG using the given seed. */
-CC_API void Random_Seed(RNGState* rnd, int seed);
+CC_API  void Random_Seed(      RNGState* rnd, int seed);
+typedef void (*FP_Random_Seed)(RNGState* rnd, int seed);
 
 /* Returns integer from 0 inclusive to n exclusive */
-CC_API int Random_Next(RNGState* rnd, int n);
+CC_API  int Random_Next(      RNGState* rnd, int n);
+typedef int (*FP_Random_Next)(RNGState* rnd, int n);
 /* Returns real from 0 inclusive to 1 exclusive */
 CC_API float Random_Float(RNGState* rnd);
 /* Returns integer from min inclusive to max exclusive */

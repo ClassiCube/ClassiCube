@@ -748,11 +748,15 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 *#########################################################################################################################*/
 const cc_string DynamicLib_Ext = String_FromConst(".dll");
 static cc_result dynamicErr;
+static cc_bool loadingPlugin;
 
 void* DynamicLib_Load2(const cc_string* path) {
+	static cc_string plugins_dir = String_FromConst("plugins/");
 	cc_winstring str;
 	void* lib;
+
 	Platform_EncodeString(&str, path);
+	loadingPlugin = String_CaselessStarts(path, &plugins_dir);
 
 	if ((lib = LoadLibraryW(str.uni))) return lib;
 	dynamicErr = GetLastError();
@@ -776,6 +780,12 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 
 	Platform_DescribeError(res, dst);
 	String_Format1(dst, " (error %i)", &res);
+
+	/* Plugin may have been compiled to load symbols from ClassiCube.exe, */
+	/*  but the user might have renamed it to something else */
+	if (res == ERROR_MOD_NOT_FOUND && loadingPlugin) {
+		String_AppendConst(dst, "\n    Make sure the ClassiCube executable is named ClassiCube.exe");
+	}
 	return true;
 }
 

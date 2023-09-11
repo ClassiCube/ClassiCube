@@ -70,12 +70,15 @@ CC_API void String_UNSAFE_SplitBy(STRING_REF cc_string* str, char c, cc_string* 
 CC_API int String_UNSAFE_Separate(STRING_REF const cc_string* str, char c, cc_string* key, cc_string* value);
 
 /* Returns non-zero if all characters of the strings are equal. */
-CC_API int String_Equals(const cc_string* a, const cc_string* b);
+CC_API  int String_Equals(      const cc_string* a, const cc_string* b);
+typedef int (*FP_String_Equals)(const cc_string* a, const cc_string* b);
 /* Returns non-zero if all characters of the strings are case-insensitively equal. */
-CC_API int String_CaselessEquals(const cc_string* a, const cc_string* b);
+CC_API  int String_CaselessEquals(      const cc_string* a, const cc_string* b);
+typedef int (*FP_String_CaselessEquals)(const cc_string* a, const cc_string* b);
 /* Returns non-zero if all characters of the strings are case-insensitively equal. */
 /* NOTE: Faster than String_CaselessEquals(a, String_FromReadonly(b)) */
-CC_API int String_CaselessEqualsConst(const cc_string* a, const char* b);
+CC_API  int String_CaselessEqualsConst(      const cc_string* a, const char* b);
+typedef int (*FP_String_CaselessEqualsConst)(const cc_string* a, const char* b);
 /* Breaks down an integer into an array of digits, and returns number of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
 int String_MakeUInt32(cc_uint32 num, char* digits);
@@ -98,7 +101,8 @@ CC_API void String_AppendPaddedInt(cc_string* str, int num, int minDigits);
 /*  e.g. 1.0f produces "1", 2.6745f produces "2.67" when fracDigits is 2 */
 CC_API void String_AppendFloat(cc_string* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
 /* Attempts to append characters. src MUST be null-terminated. */
-CC_API void String_AppendConst(cc_string* str, const char* src);
+CC_API  void String_AppendConst(      cc_string* str, const char* src);
+typedef void (*FP_String_AppendConst)(cc_string* str, const char* src);
 /* Attempts to append characters. */
 void String_AppendAll(cc_string* str, const void* data, int len);
 /* Attempts to append characters of a string. */
@@ -135,15 +139,18 @@ CC_API int String_IndexOfConst(const cc_string* str, const char* sub);
 /* Returns non-zero if given substring is inside the given string. */
 #define String_ContainsConst(str, sub) (String_IndexOfConst(str, sub) >= 0)
 /* Returns non-zero if given substring is case-insensitively inside the given string. */
-CC_API int String_CaselessContains(const cc_string* str, const cc_string* sub);
+CC_API  int String_CaselessContains(      const cc_string* str, const cc_string* sub);
+typedef int (*FP_String_CaselessContains)(const cc_string* str, const cc_string* sub);
 /* Returns non-zero if given substring is case-insensitively equal to the beginning of the given string. */
-CC_API int String_CaselessStarts(const cc_string* str, const cc_string* sub);
+CC_API  int String_CaselessStarts(      const cc_string* str, const cc_string* sub);
+typedef int (*FP_String_CaselessStarts)(const cc_string* str, const cc_string* sub);
 /* Returns non-zero if given substring is case-insensitively equal to the ending of the given string. */
-CC_API int String_CaselessEnds(const cc_string* str, const cc_string* sub);
+CC_API  int String_CaselessEnds(      const cc_string* str, const cc_string* sub);
+typedef int (*FP_String_CaselessEnds)(const cc_string* str, const cc_string* sub);
 /* Compares the length of the given strings, then compares the characters if same length. Returns: */
-/* -X if a.length < b.length, X if a.length > b.length */
-/* -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */
-/* else returns 0. NOTE: The return value is not just in -1,0,1! */
+/*  -X if a.length < b.length, X if a.length > b.length */
+/*  -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */
+/*  else returns 0. NOTE: The return value is not just in -1,0,1! */
 CC_API int String_Compare(const cc_string* a, const cc_string* b);
 
 /* String_Format is provided for formatting strings (similiar to printf)
@@ -162,14 +169,18 @@ Supported specifiers for string formatting:
 */
 
 /* See String_Format4 */
-CC_API void String_Format1(cc_string* str, const char* format, const void* a1);
+CC_API  void String_Format1(      cc_string* str, const char* format, const void* a1);
+typedef void (*FP_String_Format1)(cc_string* str, const char* format, const void* a1);
 /* See String_Format4 */
-CC_API void String_Format2(cc_string* str, const char* format, const void* a1, const void* a2);
+CC_API  void String_Format2(      cc_string* str, const char* format, const void* a1, const void* a2);
+typedef void (*FP_String_Format2)(cc_string* str, const char* format, const void* a1, const void* a2);
 /* See String_Format4 */
-CC_API void String_Format3(cc_string* str, const char* format, const void* a1, const void* a2, const void* a3);
+CC_API  void String_Format3(      cc_string* str, const char* format, const void* a1, const void* a2, const void* a3);
+typedef void (*FP_String_Format3)(cc_string* str, const char* format, const void* a1, const void* a2, const void* a3);
 /* Formats the arguments in a string, similiar to printf or C# String.Format
 NOTE: This is a low level API. Argument count and types are not checked at all. */
-CC_API void String_Format4(cc_string* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
+CC_API  void String_Format4(      cc_string* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
+typedef void (*FP_String_Format4)(cc_string* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 /* Converts a code page 437 character to its unicode equivalent. */
 cc_unichar Convert_CP437ToUnicode(char c);

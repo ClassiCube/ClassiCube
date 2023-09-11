@@ -124,7 +124,8 @@ void Block_ResetProps(BlockID block);
 
 /* Gets the name of the given block */
 /* NOTE: Name points directly within underlying buffer, you MUST NOT persist this string */
-CC_API STRING_REF cc_string Block_UNSAFE_GetName(BlockID block);
+CC_API STRING_REF  cc_string Block_UNSAFE_GetName(      BlockID block);
+typedef STRING_REF cc_string (*FP_Block_UNSAFE_GetName)(BlockID block);
 /* Sets the name of the given block. */
 void Block_SetName(BlockID block, const cc_string* name);
 /* Finds the ID of the block whose name caselessly matches given name */

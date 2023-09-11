@@ -110,12 +110,14 @@ CC_API void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state
 struct GZipState { struct DeflateState Base; cc_uint32 Crc32, Size; };
 /* Compresses input data using GZIP, then writes compressed output to another stream. Write only stream. */
 /* GZIP compression is GZIP header, followed by DEFLATE compressed data, followed by GZIP footer. */
-CC_API void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+CC_API  void GZip_MakeStream(      struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+typedef void (*FP_GZip_MakeStream)(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
 
 struct ZLibState { struct DeflateState Base; cc_uint32 Adler32; };
 /* Compresses input data using ZLIB, then writes compressed output to another stream. Write only stream. */
 /* ZLIB compression is ZLIB header, followed by DEFLATE compressed data, followed by ZLIB footer. */
-CC_API void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+CC_API  void ZLib_MakeStream(      struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+typedef void (*FP_ZLib_MakeStream)(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
 /* Minimal data needed to describe an entry in a .zip archive */
 struct ZipEntry { cc_uint32 CompressedSize, UncompressedSize, LocalHeaderOffset, CRC32; };
