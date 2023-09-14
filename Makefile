@@ -150,7 +150,7 @@ vita:
 ps3:
 	$(MAKE) -f src/Makefile_PS3 PLAT=ps3
 3ds:
-	$(MAKE) -f src/Makefile_3DS PLAT=3ds
+	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
 wii:
 	$(MAKE) -f src/Makefile_wii PLAT=wii
 gamecube:
