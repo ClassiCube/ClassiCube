@@ -152,9 +152,9 @@ ps3:
 3ds:
 	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
 wii:
-	$(MAKE) -f src/Makefile_wii PLAT=wii
+	$(MAKE) -f misc/wii/Makefile PLAT=wii
 gamecube:
-	$(MAKE) -f src/Makefile_gamecube PLAT=gamecube
+	$(MAKE) -f misc/gc/Makefile PLAT=gamecube
 dreamcast:
 	$(MAKE) -f src/Makefile_dreamcast PLAT=dreamcast
 xbox:

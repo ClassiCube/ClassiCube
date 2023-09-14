@@ -24,7 +24,7 @@ TARGET 		:= ClassiCube-3ds
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing header files
 #---------------------------------------------------------------------------------
-BUILD		:=	build
+BUILD		:=	build-3ds
 SOURCES		:= src misc/3ds third_party/bearssl/src
 INCLUDES	:=	third_party/bearssl/inc
 
