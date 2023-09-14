@@ -418,10 +418,9 @@ cc_result SSL_Free(void* ctx_) {
 	return 0; 
 }
 #elif defined CC_BUILD_BEARSSL
-#include "bearssl.h"
-#define CERT_ATTRIBUTES
-#include "../misc/certs.h"
 #include "String.h"
+#include "bearssl.h"
+#include "../misc/certs.h"
 // https://github.com/unkaktus/bearssl/blob/master/samples/client_basic.c#L283
 #define SSL_ERROR_SHIFT 0xB5510000
 
@@ -457,6 +456,20 @@ static void InjectEntropy(SSLContext* ctx) {
 	char buf[32];
 	// TODO: Is there an actual API to retrieve random data?
 	
+	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
+}
+#elif defined CC_BUILD_PSP
+static void InjectEntropy(SSLContext* ctx) {
+	char buf[32];
+	// TODO: Is there an actual API to retrieve random data?
+
+	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
+}
+#elif defined CC_BUILD_VITA
+static void InjectEntropy(SSLContext* ctx) {
+	char buf[32];
+	// TODO: Is there an actual API to retrieve random data?
+
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
 #else

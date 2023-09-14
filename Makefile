@@ -144,9 +144,9 @@ irix:
 # consoles builds require special handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
 psp:
-	$(MAKE) -f src/Makefile_PSP PLAT=psp
+	$(MAKE) -f misc/psp/Makefile PLAT=psp
 vita:
-	$(MAKE) -f src/Makefile_vita PLAT=vita
+	$(MAKE) -f misc/vita/Makefile PLAT=vita
 ps3:
 	$(MAKE) -f src/Makefile_PS3 PLAT=ps3
 3ds:

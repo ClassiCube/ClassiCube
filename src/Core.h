@@ -266,6 +266,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_PSP
+	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_LOWMEM
 	#undef CC_BUILD_FREETYPE
 #elif defined __3DS__
@@ -286,6 +287,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_PSVITA
+	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_LOWMEM
 	#undef CC_BUILD_FREETYPE
 #elif defined _arch_dreamcast
