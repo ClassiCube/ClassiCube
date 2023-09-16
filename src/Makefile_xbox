@@ -1,7 +1,10 @@
+ifeq ($(strip $(NXDK_DIR)),)
+$(error "Please set NXDK_DIR in your environment")
+endif
+
 XBE_TITLE 	= ClassiCube
-GEN_XISO 	= $(XBE_TITLE).iso
+GEN_XISO 	= ClassiCube-xbox.iso
 SRCS 		= $(wildcard src/*.c)
-NXDK_DIR 	= /home/test/Downloads/nxdk
 SHADER_OBJS = misc/xbox/vs_coloured.inl misc/xbox/vs_textured.inl misc/xbox/ps_coloured.inl misc/xbox/ps_textured.inl
 NXDK_NET 	= y
 NXDK_LDFLAGS = -stack:131072

@@ -232,14 +232,6 @@ Install SDL2 port if needed
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
-#### PSP
-
-Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
-
-**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
-
-The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
 #### 3DS
 
 Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
@@ -263,6 +255,26 @@ Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
 **NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
 
 The GC port needs assistance from someone experienced with GameCube homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+#### PlayStation Portable
+
+Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
+
+**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
+
+The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+#### PlayStation Vita
+
+Run `make vita`. You'll need [vitasdk](https://vitasdk.org/)
+
+The Vita port needs assistance from someone experienced with Vita homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+#### PlayStation 3
+
+Run `make ps3`. You'll need [PSL1GHT](https://github.com/ps3dev/PSL1GHT)
+
+The PS3 port needs assistance from someone experienced with PS3 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 #### Xbox
 
@@ -310,6 +322,7 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [Clang](https://clang.llvm.org/) - Compiles client for macOS
 * [Emscripten](https://emscripten.org/) - Compiles client for web
 * [RenderDoc](https://renderdoc.org/) - Graphics debugging
+* [BearSSL](https://www.bearssl.org/) - SSL/TLS support on consoles
 * [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
 * [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
@@ -317,6 +330,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test PSP port
 * [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
 * [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
+* [PSL1GHT](https://github.com/ps3dev/PSL1GHT) - Backend for PS3
+* [RPCS3](https://github.com/RPCS3/rpcs3) - Emulator used to test PS3 port
 * [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
 * [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port

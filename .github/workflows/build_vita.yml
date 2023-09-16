@@ -1,0 +1,31 @@
+name: Build latest (Vita)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-vita
+  cancel-in-progress: true
+
+jobs:
+  build-Vita:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: gnuton/vitasdk-docker:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile Vita build
+        id: compile
+        run: |
+          make vita
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Vita build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-vita.vpk'
+          DEST_NAME: 'ClassiCube-vita.vp'
