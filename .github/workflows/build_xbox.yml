@@ -18,12 +18,19 @@ jobs:
         run: |
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
+          
+
+      # otherwise notify_failure doesn't work
+      - name: Install curl when necessary
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        run: apk add curl
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:
           NOTIFY_MESSAGE: 'Failed to compile Xbox build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}

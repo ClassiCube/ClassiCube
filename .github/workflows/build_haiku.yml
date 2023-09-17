@@ -18,12 +18,14 @@ jobs:
         run: |
           cd src        
           x86_64-unknown-haiku-gcc *.c interop_BeOS.cpp -o ClassiCube-haiku -O1 -s -fno-stack-protector -fno-math-errno -Qn -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+          
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:
           NOTIFY_MESSAGE: 'Failed to compile Haiku build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome  == 'success' }}

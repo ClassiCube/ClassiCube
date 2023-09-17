@@ -20,11 +20,13 @@ jobs:
           make clean
           make gamecube
 
+
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:
           NOTIFY_MESSAGE: 'Failed to compile Wii/Gamecube build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}

@@ -70,13 +70,19 @@ static struct HUDScreen {
 	struct TextWidget line1, line2;
 	struct TextAtlas posAtlas;
 	double accumulator;
-	int frames;
+	int frames, posCount;
 	cc_bool hacksChanged;
 	float lastSpeed;
 	int lastFov;
+	int lastX, lastY, lastZ;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
-#define HUD_MAX_VERTICES (4 + TEXTWIDGET_MAX * 2 + HOTBAR_MAX_VERTICES)
+
+/* Each integer can be at most 10 digits + minus prefix */
+#define POSITION_VAL_CHARS 11
+/* [PREFIX] [(] [X] [,] [Y] [,] [Z] [)] */
+#define POSITION_HUD_CHARS (1 + 1 + POSITION_VAL_CHARS + 1 + POSITION_VAL_CHARS + 1 + POSITION_VAL_CHARS + 1)
+#define HUD_MAX_VERTICES (4 + TEXTWIDGET_MAX * 2 + HOTBAR_MAX_VERTICES + POSITION_HUD_CHARS * 4)
 
 static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
@@ -106,36 +112,30 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	s->dirty = true;
 }
 
-static void HUDScreen_DrawPosition(struct HUDScreen* s) {
-	struct VertexTextured vertices[4 * 64];
-	struct VertexTextured* ptr = vertices;
-
+static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* data) {
+	struct VertexTextured* cur = data;
 	struct TextAtlas* atlas = &s->posAtlas;
 	struct Texture tex;
 	IVec3 pos;
-	int count;	
 
 	/* Make "Position: " prefix */
 	tex = atlas->tex; 
 	tex.X = 2; tex.Width = atlas->offset;
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &cur);
 
 	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->curX = atlas->offset + 2;
 
 	/* Make (X, Y, Z) suffix */
-	TextAtlas_Add(atlas, 13, &ptr);
-	TextAtlas_AddInt(atlas, pos.X, &ptr);
-	TextAtlas_Add(atlas, 11, &ptr);
-	TextAtlas_AddInt(atlas, pos.Y, &ptr);
-	TextAtlas_Add(atlas, 11, &ptr);
-	TextAtlas_AddInt(atlas, pos.Z, &ptr);
-	TextAtlas_Add(atlas, 14, &ptr);
+	TextAtlas_Add(atlas,       13, &cur);
+	TextAtlas_AddInt(atlas, pos.X, &cur);
+	TextAtlas_Add(atlas,       11, &cur);
+	TextAtlas_AddInt(atlas, pos.Y, &cur);
+	TextAtlas_Add(atlas,       11, &cur);
+	TextAtlas_AddInt(atlas, pos.Z, &cur);
+	TextAtlas_Add(atlas,       14, &cur);
 
-	Gfx_BindTexture(atlas->tex.ID);
-	/* TODO: Do we need to use a separate VB here? */
-	count = (int)(ptr - vertices);
-	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
+	s->posCount = (int)(cur - data);
 }
 
 static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
@@ -313,6 +313,8 @@ static void HUDScreen_UpdateFPS(struct HUDScreen* s, double delta) {
 
 static void HUDScreen_Update(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
+	IVec3 pos;
+
 	HUDScreen_UpdateFPS(s,          delta);
 	HotbarWidget_Update(&s->hotbar, delta);
 	if (Game_ClassicMode) return;
@@ -320,6 +322,10 @@ static void HUDScreen_Update(void* screen, double delta) {
 	if (IsOnlyChatActive() && Gui.ShowFPS) {
 		if (HUDScreen_HasHacksChanged(s)) HUDScreen_RemakeLine2(s);
 	}
+
+	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
+	if (pos.X != s->lastX || pos.Y != s->lastY || pos.Z != s->lastZ)
+		s->dirty = true;
 }
 
 #define CH_EXTENT 16
@@ -349,6 +355,9 @@ static void HUDScreen_BuildMesh(void* screen) {
 	Widget_BuildMesh(&s->line1,  ptr);
 	Widget_BuildMesh(&s->line2,  ptr);
 	Widget_BuildMesh(&s->hotbar, ptr);
+
+	if (!Game_ClassicMode) 
+		HUDScreen_BuildPosition(s, data);
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
@@ -364,7 +373,8 @@ static void HUDScreen_Render(void* screen, double delta) {
 		Widget_Render2(&s->line2, 8);
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
 		Widget_Render2(&s->line2, 8);
-		HUDScreen_DrawPosition(s);
+		Gfx_BindTexture(s->posAtlas.tex.ID);
+		Gfx_DrawVb_IndexedTris_Range(s->posCount, 12 + HOTBAR_MAX_VERTICES);
 		/* TODO swap these two lines back */
 	}
 

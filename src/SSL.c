@@ -438,7 +438,15 @@ void SSLBackend_Init(cc_bool verifyCerts) {
 	_verifyCerts = verifyCerts; // TODO support
 }
 
-cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) { 
+cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
+	switch (res) {
+	case SSL_ERROR_SHIFT | BR_ERR_X509_EXPIRED:
+		String_AppendConst(dst, "The website's SSL certificate is expired or not yet valid");
+		return true;
+	case SSL_ERROR_SHIFT | BR_ERR_X509_NOT_TRUSTED:
+		String_AppendConst(dst, "The website's SSL certificate was issued by an authority that is not trusted");
+		return true;
+	}
 	return false; // TODO: error codes 
 }
 
