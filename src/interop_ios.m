@@ -72,18 +72,22 @@ static CGRect GetViewFrame(void) {
 @implementation CCWindow
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    // touchesMoved:withEvent - iOS 2.0
     for (UITouch* t in touches) UpdateTouch(t);
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    // touchesEnded:withEvent - iOS 2.0
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    // touchesCancelled:withEvent - iOS 2.0
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
@@ -93,14 +97,17 @@ static CGRect GetViewFrame(void) {
 
 @implementation CCViewController
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    // supportedInterfaceOrientations - iOS 6.0
     return SupportedOrientations();
 }
 
 - (BOOL)shouldAutorotate {
+    // shouldAutorotate - iOS 6.0
     return YES;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
+    // viewWillTransitionToSize:withTransitionCoordinator - iOS 8.0
     WindowInfo.Width  = size.width;
     WindowInfo.Height = size.height;
     
@@ -123,6 +130,7 @@ static void DeleteExportTempFile(void) {
 }
 
 - (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
+    // documentPicker:didPickDocumentAtURL - iOS 8.0
     NSString* str    = url.path;
     const char* utf8 = str.UTF8String;
     
@@ -137,6 +145,7 @@ static void DeleteExportTempFile(void) {
 }
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller {
+    // documentPickerWasCancelled - iOS 8.0
     DeleteExportTempFile();
 }
 
@@ -186,10 +195,12 @@ static UITextField* kb_widget;
 }
 
 - (BOOL)prefersStatusBarHidden {
+    // prefersStatusBarHidden - iOS 7.0
     return fullscreen;
 }
 
 - (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
+    // preferredScreenEdgesDeferringSystemGestures - iOS 11.0
     // recent iOS versions have a 'bottom home bar', which when swiped up,
     //  switches out of ClassiCube and to the app list menu
     // overriding this forces the user to swipe up twice, which should
@@ -214,6 +225,7 @@ static UITextField* kb_widget;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
+    // applicationWillResignActive - iOS 2.0
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
     Platform_LogConst("INACTIVE");
@@ -222,17 +234,20 @@ static UITextField* kb_widget;
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
+    // applicationDidEnterBackground - iOS 4.0
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     Platform_LogConst("BACKGROUND");
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
+    // applicationWillEnterForeground - iOS 4.0
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
     Platform_LogConst("FOREGROUND");
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
+    // applicationDidBecomeActive - iOS 2.0
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     Platform_LogConst("ACTIVE");
     WindowInfo.Focused = true;
@@ -240,11 +255,13 @@ static UITextField* kb_widget;
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
+    // applicationWillTerminate - iOS 2.0
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     // TODO implement somehow, prob need a variable in Program.c
 }
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+    // supportedInterfaceOrientationsForWindow - iOS 6.0
     return SupportedOrientations();
 }
 @end
@@ -264,6 +281,7 @@ void Clipboard_SetText(const cc_string* value) { }
  *------------------------------------------------------Common helpers--------------------------------------------------------*
  *#########################################################################################################################*/
 static UIColor* ToUIColor(BitmapCol color, float A) {
+    // colorWithRed:green:blue:alpha - iOS 2.0
     float R = BitmapCol_R(color) / 255.0f;
     float G = BitmapCol_G(color) / 255.0f;
     float B = BitmapCol_B(color) / 255.0f;
@@ -277,6 +295,8 @@ static NSString* ToNSString(const cc_string* text) {
 }
 
 static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
+    // NSMutableAttributedString - iOS 3.2
+    // NSForegroundColorAttributeName - iOS 6.0
     cc_string left = *text, part;
     char colorCode = 'f';
     NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
@@ -338,7 +358,7 @@ void Cursor_SetPosition(int x, int y) { }
 void Cursor_DoSetVisible(cc_bool visible) { }
 
 void Window_SetTitle(const cc_string* title) {
-	// TODO: Implement this somehow
+    // TODO: Implement this somehow
 }
 
 void Window_Init(void) {
@@ -361,6 +381,7 @@ static UIColor* CalcBackgroundColor(void) {
 }
 
 static CGRect DoCreateWindow(void) {
+    // UIKeyboardWillShowNotification - iOS 2.0
     CGRect bounds = GetViewFrame();
     cc_controller = [CCViewController alloc];
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
@@ -394,7 +415,10 @@ void Window_ProcessEvents(double delta) {
         res = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, TRUE);
     } while (res == kCFRunLoopRunHandledSource);
 }
+
 void ShowDialogCore(const char* title, const char* msg) {
+    // UIAlertController - iOS 8.0
+    // UIAlertAction - iOS 8.0
     Platform_LogConst(title);
     Platform_LogConst(msg);
     NSString* _title = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
@@ -432,6 +456,7 @@ void ShowDialogCore(const char* title, const char* msg) {
 
 // === UITextFieldDelegate ===
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    // textFieldShouldReturn - iOS 2.0
     Input_SetPressed(CCKEY_ENTER);
     Input_SetReleased(CCKEY_ENTER);
     return YES;
@@ -474,6 +499,7 @@ int Window_GetWindowState(void) {
 }
 
 static void ToggleFullscreen(cc_bool isFullscreen) {
+    // setNeedsStatusBarAppearanceUpdate - iOS 7.0
     fullscreen = isFullscreen;
     [cc_controller setNeedsStatusBarAppearanceUpdate];
     view_handle.frame = GetViewFrame();
@@ -492,6 +518,7 @@ void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 void Window_LockLandscapeOrientation(cc_bool lock) {
+    // attemptRotationToDeviceOrientation - iOS 5.0
     // TODO doesn't work properly.. setting 'UIInterfaceOrientationUnknown' apparently
     //  restores orientation, but doesn't actually do that when I tried it
     if (lock) {
@@ -507,6 +534,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+    // UIDocumentPickerViewController - iOS 8.0
     // see the custom UTITypes declared in Info.plist 
     NSDictionary<NSString*, NSString*>* fileExt_map =
     @{
@@ -538,6 +566,7 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     if (!args->defaultName.length) return SFD_ERR_NEED_DEFAULT_NAME;
+    // UIDocumentPickerViewController - iOS 8.0
     
     // save the item to a temp file, which is then (usually) later deleted by picker callbacks
     cc_string tmpDir = String_FromConst("Exported");
@@ -593,6 +622,7 @@ static void GLContext_OnLayout(void);
 @end
 
 void Window_Create3D(int width, int height) {
+    // CAEAGLLayer - iOS 2.0
     CGRect bounds = DoCreateWindow();
     view_handle   = [[CCGLView alloc] initWithFrame:bounds];
     view_handle.multipleTouchEnabled = true;
@@ -721,6 +751,7 @@ static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
 
 cc_result Process_StartOpen(const cc_string* args) {
+    // openURL - iOS 2.0 (deprecated)
     NSString* str = ToNSString(args);
     NSURL* url    = [[NSURL alloc] initWithString:str];
     [UIApplication.sharedApplication openURL:url];
@@ -750,6 +781,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+    // NSSearchPathForDirectoriesInDomains - iOS 2.0
     // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
     NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     if (array.count <= 0) return ERR_NOT_SUPPORTED;
@@ -762,6 +794,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 }
 
 void Platform_ShareScreenshot(const cc_string* filename) {
+    // UIActivityViewController - iOS 6.0
     cc_string path; char pathBuffer[FILENAME_SIZE];
     String_InitArray(path, pathBuffer);
     String_Format1(&path, "screenshots/%s", filename);
@@ -777,6 +810,7 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 }
 
 void GetDeviceUUID(cc_string* str) {
+    // identifierForVendor - iOS 6.0
     UIDevice* device = UIDevice.currentDevice;
     NSString* string = [[device identifierForVendor] UUIDString];
     
@@ -786,9 +820,10 @@ void GetDeviceUUID(cc_string* str) {
 }
 
 void Directory_GetCachePath(cc_string* path) {
+    // NSSearchPathForDirectoriesInDomains - iOS 2.0
     NSArray* array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     if (array.count <= 0) return;
-	
+    
     // try to use iOS app cache folder if possible
     // https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
     NSString* str    = [array objectAtIndex:0];
@@ -1132,6 +1167,7 @@ static NSString* cellID = @"CC_Cell";
 
 // === UITableViewDataSource ===
 - (nonnull UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // cellForRowAtIndexPath - iOS 2.0
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
     if (cell == nil) {
@@ -1143,12 +1179,14 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    // numberOfRowsInSection - iOS 2.0
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     return w ? w->rowsCount : 0;
 }
 
 // === UITableViewDelegate ===
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    // didSelectRowAtIndexPath - iOS 2.0
     int row = (int)indexPath.row;
     struct ServerInfo* server = LTable_Get(row);
     LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, true);
@@ -1159,6 +1197,7 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath {
+    // didDeselectRowAtIndexPath - iOS 2.0
     int row = (int)indexPath.row;
     struct ServerInfo* server = LTable_Get(row);
     LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, false);
@@ -1166,6 +1205,7 @@ static NSString* cellID = @"CC_Cell";
 
 // === UITextFieldDelegate ===
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    // textFieldShouldReturn - iOS 2.0
     struct LWidget* w   = FindWidgetForView(textField);
     if (w == NULL) return YES;
     struct LWidget* sel = Launcher_Active->onEnterWidget;
@@ -1179,6 +1219,7 @@ static NSString* cellID = @"CC_Cell";
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
+    // textFieldDidBeginEditing - iOS 2.0
     kb_widget = textField;
 }
 
@@ -1197,6 +1238,7 @@ void LBackend_Free(void) { }
 void LBackend_UpdateTitleFont(void) { }
 
 static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int y) {
+    // CTLineCreateWithAttributedString - iOS 3.2
     CTLineRef line = CTLineCreateWithAttributedString((CFAttributedStringRef)str);
     CGRect bounds  = CTLineGetImageBounds(line, win_ctx);
     int centreX    = (int)(ctx->width / 2.0f - bounds.size.width / 2.0f);
@@ -1206,6 +1248,7 @@ static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int 
 }
 
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
+    // NSFontAttributeName - iOS 6.0
     if (Launcher_BitmappedText()) {
         struct FontDesc font;
         Launcher_MakeTitleFont(&font);
