@@ -1313,7 +1313,7 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 	}
 	
 	width = TEXT_CEIL(width);
-	Platform_Log2("TEXT WIDTH: %i (%s)", &width, &args->text);
+	//Platform_Log2("TEXT WIDTH: %i (%s)", &width, &args->text);
 	if (args->useShadow) width += 2;
 	return max(1, width);
 }
@@ -1367,7 +1367,7 @@ static int DrawGlyph(struct SysFont* font, int size, struct Bitmap* bmp, int x, 
 	//glyph.yPos64 = +charInfo.glyphMetrics.horizontalBearingY64;
 	
 	// TODO: use charInfo.glyphMetrics.horizontalBearingX64 and Y64
-	Platform_Log1("ABOUT %r:", &c);
+	//Platform_Log1("ABOUT %r:", &c);
 	int BX = charInfo.glyphMetrics.horizontalBearingX64, BX2 = TEXT_CEIL(BX);
 	int BY = charInfo.glyphMetrics.horizontalBearingY64, BY2 = TEXT_CEIL(BY);
 	//Platform_Log4("  Bitmap: %i,%i --> %i, %i", &charInfo.bitmapLeft, &charInfo.bitmapTop, &charInfo.bitmapWidth, &charInfo.bitmapHeight);
@@ -1377,12 +1377,12 @@ static int DrawGlyph(struct SysFont* font, int size, struct Bitmap* bmp, int x, 
 	int A = charInfo.glyphMetrics.ascender64,  A2 =TEXT_CEIL(A);
 	int D = charInfo.glyphMetrics.descender64, D2 =TEXT_CEIL(D);
 	
-	Platform_Log4("  Size: %i,%i   (%i, %i)", &W, &H, &W2, &H2);
-	Platform_Log4("  Vert: %i,%i   (%i, %i)", &A, &D, &A2, &D2);
-	Platform_Log4("  Bear: %i,%i   (%i, %i)", &BX, &BY, &BX2, &BY2);
+	//Platform_Log4("  Size: %i,%i   (%i, %i)", &W, &H, &W2, &H2);
+	//Platform_Log4("  Vert: %i,%i   (%i, %i)", &A, &D, &A2, &D2);
+	//Platform_Log4("  Bear: %i,%i   (%i, %i)", &BX, &BY, &BX2, &BY2);
 			
 	int CW = charRect.width, CH = charRect.height;
-	Platform_Log2("  CharSize: %i,%i", &CW, &CH);
+	//Platform_Log2("  CharSize: %i,%i", &CW, &CH);
 	
 	if (A2 < size) y += (size - A2);
 	
@@ -1402,7 +1402,7 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 	int W = SysFont_TextWidth(args);
 	int S = args->font->size;
 	int H = args->font->height;
-	Platform_Log3("TOTAL: %i  (%i/%i)", &W, &S, &H);
+	//Platform_Log3("TOTAL: %i  (%i/%i)", &W, &S, &H);
 	
 	cc_string left = args->text, part;
 	char colorCode = 'f';
