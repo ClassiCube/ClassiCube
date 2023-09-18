@@ -1,0 +1,10 @@
+void main(
+	float3 in_position, 
+	float4 in_color,
+	uniform float4x4 mvp_matrix,
+	out float4 out_position: POSITION, 
+	out float4 out_color: COLOR)
+{
+	out_position = mul(mvp_matrix, float4(in_position, 1.0f));
+	out_color    = in_color;
+}

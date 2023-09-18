@@ -721,7 +721,7 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
     interop_SysTextDraw(args, bmp, x, y, shadow);
 }
-#elif defined CC_BUILD_PSP
+#elif defined CC_BUILD_PSP || defined CC_BUILD_XBOX
 void SysFonts_Register(const cc_string* path) { }
 
 const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }

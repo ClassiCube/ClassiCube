@@ -122,7 +122,7 @@ static void ProcessTouchInput(void) {
 	if (touch.reportNum > 0) {
 		int x = touch.report[0].x;
 		int y = touch.report[0].y;
-		ProcessTouchPress(X, Y);
+		ProcessTouchPress(x, y);
 	}
 	Input_SetNonRepeatable(CCMOUSE_L, touch.reportNum > 0);
 }
