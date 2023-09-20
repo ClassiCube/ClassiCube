@@ -1,6 +1,6 @@
 Although most of the code is platform-independent, some per-platform functionality is required.
 
-By default I try to automatically define appropriate backends for your OS in Core.h. Define ```CC_BUILD_MANUAL``` to disable this.
+By default I try to automatically define appropriate backends for your system in `Core.h`. Define ```CC_BUILD_MANUAL``` to disable this.
 
 ## Before you start
 * IEEE floating support is required.
@@ -58,7 +58,7 @@ I don't really test these platforms at all, only when I suspect some changes to 
 |Linux ARM | Raspberry pi | ARM64 should work too |
 |Linux SPARC | Debian | Didn't really work due to lack of 24-bit colours |
 |Linux Alpha | Debian | 
-|HaikuOS | Nightly | Requires SDL for windowing
+|HaikuOS | Nightly | 
 
 ## Porting
 
@@ -123,10 +123,11 @@ Define:
 - ```CC_BUILD_GLMODERN``` - Use modern OpenGL shaders
 - ```CC_BUILD_GLES``` - Makes these shaders compatible with OpenGL ES
 
-### Http
+### HTTP
 HTTP, HTTPS, and setting request/getting response headers
 
 Define:
-- ```CC_BUILD_CURL``` - use libcurl for http
+- ```CC_BUILD_HTTPCLIENT``` - use built in simple HTTP backend
+- ```CC_BUILD_CURL``` - use libcurl for HTTP
 
 Supporting connection reuse is highly recommended. (but not required)
