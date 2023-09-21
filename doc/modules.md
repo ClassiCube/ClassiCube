@@ -1,5 +1,7 @@
 The overall source code is structured where each .c represents a particular module. These modules are:
 
+TODO: explain multiple backends for some Modules
+
 ## 2D modules
 |Module|Functionality|
 |--------|-------|

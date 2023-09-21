@@ -1,11 +1,15 @@
-So you want to host your own version of the webclient? It's pretty easy to do, you need 3 files:
-1) A web page to initialise the .js and display the game
+Hosting your own version of the ClassiCube webclient is relatively straightforward
+
+Only the following 3 files are required:
+1) A web page to initialise the game .js and display the game
 2) The game .js file
 3) The default texture pack
 
+TODO: more advanced sample (authentication, custom game.js, skin server)
+
 ### Example setup
 
-For example, let's assume our site is setup like this:
+For example, let's assume your website is setup like this:
 * `example.com/play.html`
 * `example.com/static/classisphere.js`
 * `example.com/static/default.zip`
@@ -14,11 +18,11 @@ For simplicitly,
 1) Download `cs.classicube.net/client/latest/ClassiCube.js`, then upload it to `static/classisphere.js` on the webserver
 2) Download `classicube.net/static/default.zip`, then upload it to `static/default.zip` on the webserver
 
-The play.html page is the trickiest part, because how to implement this is website-specific. (depends on how your website is styled, what webserver you use, what programming language is used to generate the html, etc)
+The play.html page is the trickiest part, because how to implement this is website-specific. (depends on how the website is styled, what webserver is used, what programming language is used to generate the html, etc)
 
 #### Embedding the game in play.html
 
-You are required to have this HTML code somewhere in the page:
+The following HTML code is required to be somewhere in the webpage:
 ```HTML
 <!-- the canvas *must not* have any border or padding, or mouse coords will be wrong -->
 <canvas id="canvas" style="display:block; border:0; padding:0; background-color: black;" 
