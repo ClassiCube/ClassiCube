@@ -50,6 +50,7 @@ If you're interested in documenting or verifying the behaviour of the original M
 * Partially supports some features of Minecraft Classic versions before 0.30
 * Lightweight, minimal memory usage compared to original Minecraft Classic
 * Much better performance than original Minecraft Classic
+* It does **not** support Java (or require one) or UWP libraries.
 * Works with effectively all graphics cards that support OpenGL or Direct3D 9
 * Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
 * Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
@@ -59,6 +60,7 @@ If you're interested in documenting or verifying the behaviour of the original M
 * It does not work with Minecraft Java or Bedrock edition servers
 * It does not have a survival mode (nor will such a mode be added)
 * It does not support logging in with Mojang/Minecraft accounts
+* It does not support or require Java or UWP (which isnt supported on windows 8.1 and lower) meaning it can be run on all versions without Java installed.
 
 **Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
 
@@ -77,6 +79,7 @@ The most common reason for being stuck on OpenGL 1.1 is non-working GPU drivers 
 
 Otherwise:
 * On Windows, you can still run the OpenGL build of ClassiCube anyways. (You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
+* On Linux,just like Windows,you can either compile a OpenGL 1.1 (seen below) or use MESA´s software renderer LLVMPipe,which is built-in in many Linux distributions,such as Debian,and since LLVMPipe supports OpenGL 4.6,expect it to be slow at mininum and good at maximum.
 * On other operating systems, you will have to [compile the game yourself](#Compiling). Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
 
 # Compiling 
