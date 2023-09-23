@@ -100,7 +100,7 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/src/Makefile_PS3
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/misc/ps3/Makefile
 
 #---------------------------------------------------------------------------------
 clean:

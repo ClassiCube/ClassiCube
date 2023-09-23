@@ -35,7 +35,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube.xbe'
+          SOURCE_FILE: 'bin/default.xbe'
           DEST_NAME: 'ClassiCube-xbox.xbe'
           
       - uses: ./.github/actions/upload_build
