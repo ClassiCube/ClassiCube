@@ -30,4 +30,4 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-vita.vpk'
-          DEST_NAME: 'ClassiCube-vita.vp'
+          DEST_NAME: 'ClassiCube-vita.vpk'

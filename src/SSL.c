@@ -429,6 +429,8 @@ typedef struct SSLContext {
 	br_x509_minimal_context xc;
 	unsigned char iobuf[BR_SSL_BUFSIZE_BIDI];
 	br_sslio_context ioc;
+	cc_result readError, writeError;
+	cc_socket socket;
 } SSLContext;
 
 static cc_bool _verifyCerts;
@@ -484,19 +486,21 @@ static void InjectEntropy(SSLContext* ctx) {
 static void InjectEntropy(SSLContext* ctx) { }
 #endif
 
-static int sock_read(void *ctx, unsigned char *buf, size_t len) {
+static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
+	SSLContext* ctx = (SSLContext*)ctx_;
 	cc_uint32 read;
-	cc_result res = Socket_Read((int)ctx, buf, len, &read);
+	cc_result res = Socket_Read(ctx->socket, buf, len, &read);
 	
-	if (res) return -1;
+	if (res) { ctx->readError = res; return -1; }
 	return read;
 }
 
-static int sock_write(void *ctx, const unsigned char *buf, size_t len) {
+static int sock_write(void* ctx_, const unsigned char* buf, size_t len) {
+	SSLContext* ctx = (SSLContext*)ctx_;
 	cc_uint32 wrote;
-	cc_result res = Socket_Write((int)ctx, buf, len, &wrote);
+	cc_result res = Socket_Write(ctx->socket, buf, len, &wrote);
 	
-	if (res) return -1;
+	if (res) { ctx->writeError = res; return -1; }
 	return wrote;
 }
 
@@ -515,13 +519,14 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 		br_x509_minimal_set_ecdsa(&ctx->xc, &br_ec_prime_i31, &br_ecdsa_i31_vrfy_asn1);
 	}*/
 	InjectEntropy(ctx);
+	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);
 	br_ssl_client_reset(&ctx->sc, host, 0);
 	
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
-			sock_read,  (void*)socket, 
-			sock_write, (void*)socket);
+			sock_read,  ctx, 
+			sock_write, ctx);
 	
 	return 0;
 }
@@ -530,7 +535,11 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_read(&ctx->ioc, data, count);
-	if (res < 0) return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+	
+	if (res < 0) {
+		if (ctx->readError) return ctx->readError;
+		return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+	}
 	
 	br_sslio_flush(&ctx->ioc);
 	*read = res;
@@ -541,7 +550,11 @@ cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_write_all(&ctx->ioc, data, count);
-	if (res < 0) return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+	
+	if (res < 0) {
+		if (ctx->writeError) return ctx->writeError;
+		return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+	}
 	
 	br_sslio_flush(&ctx->ioc);
 	*wrote = res;
