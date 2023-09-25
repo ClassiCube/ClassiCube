@@ -5,7 +5,7 @@ TARGET 			:= ClassiCube-vita
 BUILD_DIR		:= build-vita
 SOURCE_DIRS		:= src third_party/bearssl/src
 
-CFLAGS 	+= -Wl,-q -Ithird_party/bearssl/inc -O1
+CFLAGS 	+= -Wl,-q -O1
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
 
@@ -41,7 +41,7 @@ $(BUILD_DIR)/%.o : src/%.c
 	arm-vita-eabi-gcc -c $(CFLAGS) -o $@ $<
 	
 $(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
-	arm-vita-eabi-gcc -c $(CFLAGS) -o $@ $<
+	arm-vita-eabi-gcc -c $(CFLAGS) -Ithird_party/bearssl/inc -o $@ $<
 	
 # TODO: There's gotta be a better way of .o to .c than this
 

@@ -130,6 +130,8 @@ static void HandleButtons(xid_gamepad_in* gp) {
 	
 	Input_SetNonRepeatable(CCPAD_START,  mods & XINPUT_GAMEPAD_START);
 	Input_SetNonRepeatable(CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);
+	Input_SetNonRepeatable(CCPAD_LSTICK, mods & XINPUT_GAMEPAD_LEFT_THUMB);
+	Input_SetNonRepeatable(CCPAD_RSTICK, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
 	
 	Input_SetNonRepeatable(CCPAD_LEFT,   mods & XINPUT_GAMEPAD_DPAD_LEFT);
 	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & XINPUT_GAMEPAD_DPAD_RIGHT);

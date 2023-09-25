@@ -26,6 +26,7 @@ static void RefreshWindowBounds(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
+// https://developer.android.com/ndk/reference/group/input
 static int MapNativeKey(int code) {
 	if (code >= AKEYCODE_0  && code <= AKEYCODE_9)   return (code - AKEYCODE_0)  + '0';
 	if (code >= AKEYCODE_A  && code <= AKEYCODE_Z)   return (code - AKEYCODE_A)  + 'A';
@@ -96,6 +97,8 @@ static int MapNativeKey(int code) {
 
 	case AKEYCODE_BUTTON_START:  return CCPAD_START;
 	case AKEYCODE_BUTTON_SELECT: return CCPAD_SELECT;
+	case AKEYCODE_BUTTON_THUMBL: return CCPAD_LSTICK;
+	case AKEYCODE_BUTTON_THUMBR: return CCPAD_RSTICK;
 	}
 	return INPUT_NONE;
 }
