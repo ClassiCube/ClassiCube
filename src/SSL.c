@@ -456,8 +456,8 @@ cc_bool SSLBackend_DescribeError(cc_result res, cc_string* dst) {
 #include <3ds.h>
 static void InjectEntropy(SSLContext* ctx) {
 	char buf[32];
-	int res = PS_GenerateRandomBytes(buf, 32);
-	if (res == 0) return; // NOTE: Not implemented in Citra
+	PS_GenerateRandomBytes(buf, 32);
+	// NOTE: PS_GenerateRandomBytes isn't implemented in Citra
 	
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
@@ -485,6 +485,18 @@ static void InjectEntropy(SSLContext* ctx) {
 #else
 static void InjectEntropy(SSLContext* ctx) { }
 #endif
+static void SetCurrentTime(SSLContext* ctx) {
+	cc_uint64 cur = DateTime_CurrentUTC_MS() / 1000;
+	uint32_t days = (uint32_t)(cur / 86400) + 366;
+	uint32_t secs = (uint32_t)(cur % 86400);
+		
+	br_x509_minimal_set_time(&ctx->xc, days, secs);
+	/* This matches bearssl's default time calculation
+		time_t x = time(NULL);
+		vd = (uint32_t)(x / 86400) + 719528;
+		vs = (uint32_t)(x % 86400);
+	 */
+}
 
 static int sock_read(void* ctx_, unsigned char* buf, size_t len) {
 	SSLContext* ctx = (SSLContext*)ctx_;
@@ -519,6 +531,7 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 		br_x509_minimal_set_ecdsa(&ctx->xc, &br_ec_prime_i31, &br_ecdsa_i31_vrfy_asn1);
 	}*/
 	InjectEntropy(ctx);
+	SetCurrentTime(ctx);
 	ctx->socket = socket;
 
 	br_ssl_engine_set_buffer(&ctx->sc.eng, ctx->iobuf, sizeof(ctx->iobuf), 1);

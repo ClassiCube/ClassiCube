@@ -85,6 +85,8 @@ ClassiCube runs on:
 <li> PS Vita - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml">unfinished, rendering issues</a> </li>
 <li> Xbox -<a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox"> unfinished, major rendering issues</a> </li>
 <li> PS3 - doesn't render properly yet </li>
+</ul>
+</details>
 
 # Compiling 
 

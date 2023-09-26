@@ -36,7 +36,7 @@ void Window_Init(void) {
 
 void Window_Create2D(int width, int height) { 
 	launcherMode = true;
-	vid_set_mode(DEFAULT_VID_MODE, PM_RGB0888);
+	vid_set_mode(DEFAULT_VID_MODE, PM_RGB888);
 	vid_flip(0);
 }
 
