@@ -1896,6 +1896,7 @@ static void ZombieModel_Register(void) {
 *#########################################################################################################################*/
 static BlockID bModel_block = BLOCK_AIR;
 static int bModel_index, bModel_texIndices[8];
+static struct VertexTextured* bModel_vertices;
 
 static float BlockModel_GetNameY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
@@ -1957,13 +1958,15 @@ static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 		else {        rec.U1 = 0.5f; xz1 =  5.5f/16.0f; }
 	}
 
-	ptr   = &Models.Vertices[(bModel_index - 1) << 2];
+	ptr   = bModel_vertices;
 	v.Col = col;
 
 	v.X = xz1; v.Y = 0.0f; v.Z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
 	           v.Y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
 	v.X = xz2;             v.Z = xz2; v.U = rec.U1;               *ptr++ = v;
 	           v.Y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
+
+	bModel_vertices = ptr;
 }
 
 static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
@@ -1985,21 +1988,30 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 		else {        rec.U2 = 0.5f; x2 =  5.5f/16.0f; z2 = -5.5f/16.0f; }
 	}
 
-	ptr   = &Models.Vertices[(bModel_index - 1) << 2];
+	ptr   = bModel_vertices;
 	v.Col = col;
 
 	v.X = x1; v.Y = 0.0f; v.Z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
 	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
 	v.X = x2;             v.Z = z2; v.U = rec.U1;               *ptr++ = v;
 	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
+
+	bModel_vertices = ptr;
 }
 
+#define BLOCKMODEL_SPRITE_COUNT (8 * 4)
+#define BLOCKMODEL_CUBE_COUNT   (6 * 4)
 static void BlockModel_BuildParts(cc_bool sprite) {
 	struct VertexTextured* ptr;
 	Vec3 min, max;
 	TextureLoc loc;
 
+	ptr = Gfx_LockDynamicVb(Models.Vb, VERTEX_FORMAT_TEXTURED, 
+				sprite ? BLOCKMODEL_SPRITE_COUNT : BLOCKMODEL_CUBE_COUNT);
+
 	if (sprite) {
+		bModel_vertices = ptr;
+
 		BlockModel_SpriteXQuad(false, false);
 		BlockModel_SpriteXQuad(false, true);
 		BlockModel_SpriteZQuad(false, false);
@@ -2015,7 +2027,6 @@ static void BlockModel_BuildParts(cc_bool sprite) {
 		Drawer.Tinted  = Blocks.Tinted[bModel_block];
 		Drawer.TintCol = Blocks.FogCol[bModel_block];
 
-		ptr = Models.Vertices;
 		min = Blocks.RenderMinBB[bModel_block];
 		max = Blocks.RenderMaxBB[bModel_block];
 
@@ -2029,11 +2040,12 @@ static void BlockModel_BuildParts(cc_bool sprite) {
 		loc = BlockModel_GetTex(FACE_XMIN); Drawer_XMin(1, Models.Cols[4], loc, &ptr);
 		loc = BlockModel_GetTex(FACE_YMAX); Drawer_YMax(1, Models.Cols[0], loc, &ptr);
 	}
+
+	Gfx_UnlockDynamicVb(Models.Vb);
 }
 
 static void BlockModel_DrawParts(void) {
 	int lastTexIndex, i, offset = 0, count = 0;
-	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, bModel_index * 4);
 
 	lastTexIndex = bModel_texIndices[0];
 	for (i = 0; i < bModel_index; i++, count += 4) {

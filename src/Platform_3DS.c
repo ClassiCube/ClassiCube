@@ -471,6 +471,8 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result GetMachineID(cc_uint32* key) {
+	// doesn't really matter if called multiple times
+	psInit();
 	return PS_GetDeviceId(key);
 }
 #endif

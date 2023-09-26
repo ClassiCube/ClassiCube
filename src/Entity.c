@@ -59,15 +59,22 @@ void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* 
 	struct Matrix tmp;
 	Matrix_Scale(m, scale.X, scale.Y, scale.Z);
 
-	Matrix_RotateZ(&tmp, -e->RotZ * MATH_DEG2RAD);
-	Matrix_MulBy(m, &tmp);
-	Matrix_RotateX(&tmp, -e->RotX * MATH_DEG2RAD);
-	Matrix_MulBy(m, &tmp);
-	Matrix_RotateY(&tmp, -e->RotY * MATH_DEG2RAD);
-	Matrix_MulBy(m, &tmp);
+	if (e->RotZ) {
+		Matrix_RotateZ( &tmp, -e->RotZ * MATH_DEG2RAD);
+		Matrix_MulBy(m, &tmp);
+	}
+	if (e->RotX) {
+		Matrix_RotateX( &tmp, -e->RotX * MATH_DEG2RAD);
+		Matrix_MulBy(m, &tmp);
+	}
+	if (e->RotY) {
+		Matrix_RotateY( &tmp, -e->RotY * MATH_DEG2RAD);
+		Matrix_MulBy(m, &tmp);
+	}
+
 	Matrix_Translate(&tmp, pos.X, pos.Y, pos.Z);
-	Matrix_MulBy(m, &tmp);
-	/* return rotZ * rotX * rotY * scale * translate; */
+	Matrix_MulBy(m,  &tmp);
+	/* return scale * rotZ * rotX * rotY * translate; */
 }
 
 void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb) {
