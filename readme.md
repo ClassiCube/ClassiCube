@@ -3,7 +3,59 @@ ClassiCube is a custom Minecraft Classic compatible client written in C from scr
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
 
-### Supported systems
+# Information
+
+ClassiCube aims to replicate the 2009 Minecraft Classic client while also:
+* offering **optional** additions to improve gameplay
+* providing much better performance for a large range of hardware
+* running on many different systems (desktop, web, mobile, consoles)
+
+ClassiCube is not trying to replicate modern Minecraft versions - and therefore it doesn't (and won't) support:
+* survival mode
+* logging in with Microsoft or Mojang accounts
+* connecting to Minecraft Java Edition or Bedrock Edition servers
+<br/>
+
+You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+
+### We need your help
+
+ClassiCube strives to replicate the original Minecraft Classic experience by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
+
+If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (`unknownshadow200` on Discord)
+
+### What ClassiCube is
+* A complete re-implementation of Minecraft Classic 0.30, with **optional** additions
+* Partially supports some features of Minecraft Classic versions before 0.30
+* Lightweight, minimal memory usage compared to original Minecraft Classic
+* Much better performance than original Minecraft Classic
+* Works with effectively all graphics cards that support OpenGL or Direct3D 9
+* Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
+* Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
+* Although still work in progresses, also runs on various consoles
+
+### Instructions
+Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net and classicube.net.<br>
+Just click 'OK' to the dialog menu that appears when you start the launcher.
+
+**Singleplayer**
+Run ClassiCube.exe, then click Singleplayer at the main menu.
+
+**Multiplayer**
+Run ClassiCube.exe. You can connect to LAN/locally hosted servers, and classicube.net servers if you have a [ClassiCube account](https://www.classicube.net/).
+
+<br/>
+
+**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
+
+#### *Stuck on OpenGL 1.1?*
+The most common reason for being stuck on OpenGL 1.1 is non-working GPU drivers - so if possible, you should try either installing or updating the drivers for your GPU.
+
+Otherwise:
+* On Windows, you can still run the OpenGL build of ClassiCube anyways. (You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
+* On other operating systems, you will have to [compile the game yourself](#Compiling). Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
+
+## Supported systems
 
 ClassiCube runs on:
 * Windows - 95 and later
@@ -25,59 +77,14 @@ ClassiCube runs on:
 <li> BeOS - untested on actual hardware </li>
 <li> IRIX - needs <code>curl</code> and <code>openal</code> packages </li>
 <li> SerenityOS - needs <code>SDL2</code> </li>
-<li> 3DS - unfinished, but <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml">usable</a> </li>
-<li> Wii - unfinished, but <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">usable</a> </li>
-<li> GameCube - unfinished, but <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">usable</a> </li>
-<li> PSP - unfinished, rendering issues </li>
-<li> Dreamcast - unfinished, but renders </li>
-<li> PS Vita - majorly unfinished </li>
-<li> Xbox - majorly unfinished </li>
-</ul>
-</details>
-
-You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
-
-### We need your help
-
-ClassiCube strives to support providing an experience identical to the original Minecraft Classic by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
-
-If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (`unknownshadow200` on Discord)
-
-## Information
-
-#### What ClassiCube is
-* A complete re-implementation of Minecraft Classic 0.30, with **optional** additions
-* Partially supports some features of Minecraft Classic versions before 0.30
-* Lightweight, minimal memory usage compared to original Minecraft Classic
-* Much better performance than original Minecraft Classic
-* Works with effectively all graphics cards that support OpenGL or Direct3D 9
-* Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
-* Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
-* Although still work in progresses, also runs on various consoles
-
-#### What ClassiCube isn't
-* It does not work with Minecraft Java or Bedrock edition servers
-* It does not have a survival mode (nor will such a mode be added)
-* It does not support logging in with Mojang/Minecraft accounts
-
-**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
-
-#### Instructions
-Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net and classicube.net.<br>
-Just click 'OK' to the dialog menu that appears when you start the launcher.
-
-**Singleplayer**
-Run ClassiCube.exe, then click Singleplayer at the main menu.
-
-**Multiplayer**
-Run ClassiCube.exe. You can connect to LAN/locally hosted servers, and classicube.net servers if you have a [ClassiCube account](https://www.classicube.net/).
-
-##### *Stuck on OpenGL 1.1?*
-The most common reason for being stuck on OpenGL 1.1 is non-working GPU drivers - so if possible, you should try either installing or updating the drivers for your GPU.
-
-Otherwise:
-* On Windows, you can still run the OpenGL build of ClassiCube anyways. (You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
-* On other operating systems, you will have to [compile the game yourself](#Compiling). Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
+<li> 3DS - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml">unfinished, but usable</a> </li>
+<li> Wii - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">unfinished, but usable</a> </li>
+<li> GameCube - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">unfinished, but usable</a> </li>
+<li> Dreamcast - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_dreamcast.yml">unfinished, but renders</a> </li>
+<li> PSP - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_psp.yml">unfinished, rendering issues</a> </li>
+<li> PS Vita - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml">unfinished, rendering issues</a> </li>
+<li> Xbox -<a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox"> unfinished, major rendering issues</a> </li>
+<li> PS3 - doesn't render properly yet </li>
 
 # Compiling 
 
