@@ -65,28 +65,24 @@ ClassiCube runs on:
 * iOS - 10.3 or later
 * Most web browsers (even runs on IE11)
 
-<details>
-  <summary>And also runs on:</summary>
-<ul>
-<li> Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code> </li>
-<li> FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages </li>
-<li> NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages </li>
-<li> OpenBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal</code> packages </li>
-<li> Solaris - needs <code>curl</code> and <code>openal</code> packages </li>
-<li> Haiku - needs <code>openal</code> package </li>
-<li> BeOS - untested on actual hardware </li>
-<li> IRIX - needs <code>curl</code> and <code>openal</code> packages </li>
-<li> SerenityOS - needs <code>SDL2</code> </li>
-<li> 3DS - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml">unfinished, but usable</a> </li>
-<li> Wii - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">unfinished, but usable</a> </li>
-<li> GameCube - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml">unfinished, but usable</a> </li>
-<li> Dreamcast - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_dreamcast.yml">unfinished, but renders</a> </li>
-<li> PSP - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_psp.yml">unfinished, rendering issues</a> </li>
-<li> PS Vita - <a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml">unfinished, rendering issues</a> </li>
-<li> Xbox -<a href="https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox"> unfinished, major rendering issues</a> </li>
-<li> PS3 - doesn't render properly yet </li>
-</ul>
-</details>
+And also runs on:
+* Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code>
+* FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages
+* NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages
+* OpenBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal</code> packages
+* Solaris - needs <code>curl</code> and <code>openal</code> packages
+* Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_haiku.yml))
+* BeOS - untested on actual hardware
+* IRIX - needs <code>curl</code> and <code>openal</code> packages
+* SerenityOS - needs <code>SDL2</code>
+* 3DS - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml))
+* Wii - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml))
+* GameCube - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml))
+* Dreamcast - unfinished, but renders (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_dreamcast.yml))
+* PSP - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_psp.yml))
+* PS Vita - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml))
+* Xbox - unfinished, major rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox.yml))
+* PS3 - doesn't render properly yet
 
 # Compiling 
 
@@ -98,7 +94,7 @@ If you (not recommended) want to override the defaults (e.g. to compile OpenGL b
 ##### Using Visual Studio
 Open ClassiCube.sln *(File -> Open -> Project/Solution)* and compile it *(Build -> Build Solution)*.
 
-If you get a ```The Windows SDK version 5.1 was not found``` compilation error, [see here for how to fix](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
+If you get a `The Windows SDK version 5.1 was not found` compilation error, [see here for how to fix](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
 
 ##### Using Visual Studio (command line)
 1. Use 'Developer Tools for Visual Studio' from Start Menu
@@ -161,7 +157,7 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - for Android
 
-NOTE: If you are distributing a modified version, please change the package ID from `com.classicube.android.client` to something else - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
+NOTE: If you are distributing a modified version, **please change the package ID from `com.classicube.android.client` to something else** - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
 
 ##### Using Android Studio GUI
 
@@ -175,7 +171,7 @@ Run `gradlew` in android folder (TODO explain more detailed)
 
 iOS version will have issues as it's incomplete and only tested in iOS Simulator
 
-NOTE: If you are distributing a modified version, please change the bundle ID from `com.classicube.ios.client` to something else - otherwise iOS users won't be able to have both ClassiCube and your modified version installed at the same time on their iOS device
+NOTE: If you are distributing a modified version, **please change the bundle ID from `com.classicube.ios.client` to something else** - otherwise iOS users won't be able to have both ClassiCube and your modified version installed at the same time on their iOS device
 
 ##### Using Xcode GUI
 

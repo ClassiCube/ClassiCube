@@ -540,6 +540,9 @@ cc_result SSL_Init(cc_socket socket, const cc_string* host_, void** out_ctx) {
 	br_sslio_init(&ctx->ioc, &ctx->sc.eng, 
 			sock_read,  ctx, 
 			sock_write, ctx);
+			
+	ctx->readError  = 0;
+	ctx->writeError = 0;
 	
 	return 0;
 }

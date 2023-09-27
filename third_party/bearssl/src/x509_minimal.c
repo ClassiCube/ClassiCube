@@ -200,14 +200,6 @@ void br_x509_minimal_run(void *t0ctx);
  *  then validation is reported as failed.
  */
 
-#if BR_USE_UNIX_TIME
-#include <time.h>
-#endif
-
-#if BR_USE_WIN32_TIME
-#include <windows.h>
-#endif
-
 /*
  * The T0 compiler will produce these prototypes declarations in the
  * header.
@@ -1216,25 +1208,8 @@ br_x509_minimal_run(void *t0ctx)
 		uint32_t vd = CTX->days;
 		uint32_t vs = CTX->seconds;
 		if (vd == 0 && vs == 0) {
-#if BR_USE_UNIX_TIME
-			time_t x = time(NULL);
-
-			vd = (uint32_t)(x / 86400) + 719528;
-			vs = (uint32_t)(x % 86400);
-#elif BR_USE_WIN32_TIME
-			FILETIME ft;
-			uint64_t x;
-
-			GetSystemTimeAsFileTime(&ft);
-			x = ((uint64_t)ft.dwHighDateTime << 32)
-				+ (uint64_t)ft.dwLowDateTime;
-			x = (x / 10000000);
-			vd = (uint32_t)(x / 86400) + 584754;
-			vs = (uint32_t)(x % 86400);
-#else
 			CTX->err = BR_ERR_X509_TIME_UNKNOWN;
 			T0_CO();
-#endif
 		}
 		if (vd < nbd || (vd == nbd && vs < nbs)) {
 			r = -1;
