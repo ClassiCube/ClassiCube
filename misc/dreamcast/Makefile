@@ -24,7 +24,7 @@ $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	
 
 $(TARGET).elf: $(OBJS)
-	kos-cc $< -o $@
+	kos-cc $^ -o $@
 	
 $(TARGET).bin: $(TARGET).elf
 	sh-elf-objcopy -R .stack -O binary $(TARGET).elf $(TARGET).bin

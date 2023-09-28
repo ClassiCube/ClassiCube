@@ -273,10 +273,20 @@ static void DumpFrame(cc_string* trace, void* addr) {
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
+/* This callback function is used so stack Walking works using StackWalk properly on Windows 9x: */
+/*  - on Windows 9x process ID is passed instead of process handle as the "process" argument */
+/*  - the SymXYZ functions expect a process ID on Windows 9x, so that works fine */
+/*  - if NULL is passed as the "ReadMemory" argument, the default callback using ReadProcessMemory is used */
+/*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
+/* So to work around this, instead manually call ReadProcessMemory with the current process handle */
+static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
+	return ReadProcessMemory(GetCurrentProcess(), (LPCVOID)baseAddress, buffer, size, numBytesRead);
+}
+
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
-	HANDLE process, thread;
 	int count, type;
+	HANDLE thread;
 
 	frame.AddrPC.Mode    = AddrModeFlat;
 	frame.AddrFrame.Mode = AddrModeFlat;
@@ -296,12 +306,11 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	/* Always available after XP, so use that */
 	return RtlCaptureStackBackTrace(0, max, (void**)addrs, NULL);
 #endif
-	process = GetCurrentProcess();
-	thread  = GetCurrentThread();
+	thread = GetCurrentThread();
 
 	for (count = 0; count < max; count++) 
 	{
-		if (!StackWalk(type, process, thread, &frame, ctx, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
+		if (!StackWalk(type, curProcess, thread, &frame, ctx, ReadMemCallback, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 		addrs[count] = frame.AddrPC.Offset;
 	}
@@ -1029,7 +1038,7 @@ void Logger_Hook(void) {
 	DynamicLib_LoadAll(&imagehlp, funcs, Array_Elems(funcs), &lib);
 
 	/* Windows 9x requires process IDs instead - see old DBGHELP docs */
-	/* https://documentation.help/DbgHelp/documentation.pdf */
+	/*   https://documentation.help/DbgHelp/documentation.pdf */
 	osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
 	osInfo.dwPlatformId        = 0;
 	GetVersionExA(&osInfo);
