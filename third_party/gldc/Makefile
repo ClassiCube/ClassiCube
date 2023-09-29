@@ -24,5 +24,5 @@ default: $(TARGET)
 	kos-cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -c $< -o $@
 
 $(TARGET): $(OBJS)
-	kos-ar cr $@ $<
+	kos-ar cr $@ $^
 	kos-ranlib $@

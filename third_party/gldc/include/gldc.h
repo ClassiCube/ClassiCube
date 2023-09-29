@@ -97,11 +97,6 @@ __BEGIN_DECLS
 /* Fog */
 #define GL_FOG              0x0004      /* capability bit */
 
-/* Client state caps */
-#define GL_VERTEX_ARRAY                   0x8074
-#define GL_COLOR_ARRAY                    0x8076
-#define GL_TEXTURE_COORD_ARRAY            0x8078
-
 #define GL_FRONT_AND_BACK                       0x0408
 #define GL_FRONT                                0x0404
 #define GL_BACK                                 0x0405
@@ -125,9 +120,6 @@ __BEGIN_DECLS
 #define GL_INVALID_VALUE                  0x0501
 #define GL_INVALID_OPERATION              0x0502
 #define GL_OUT_OF_MEMORY                  0x0505
-
-/* GetPName */
-#define GL_MAX_TEXTURE_SIZE               0x0D33
 
 /* StringName */
 #define GL_VENDOR                         0x1F00
@@ -258,9 +250,6 @@ GLAPI void glVertexPointer(GLint size, GLenum type,
 /* Array Data Submission */
 GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 GLAPI void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
-
-GLAPI void glEnableClientState(GLenum cap);
-GLAPI void glDisableClientState(GLenum cap);
 
 /* Transformation / Matrix Functions */
 

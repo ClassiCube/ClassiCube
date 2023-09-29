@@ -72,10 +72,23 @@ static void guInit(void) {
 
 static GfxResourceID white_square;
 void Gfx_Create(void) {
+	if (!Gfx.Created) guInit();
+	
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
-	guInit();
+	gfx_vsync        = true;
+	
+	Gfx_RestoreState();
+}
+
+void Gfx_Free(void) { 
+	Gfx_FreeState();
+}
+
+cc_bool Gfx_TryRestoreContext(void) { return true; }
+
+void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	
 	// 1x1 dummy white texture
@@ -85,14 +98,11 @@ void Gfx_Create(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_Free(void) { 
+void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
 
-cc_bool Gfx_TryRestoreContext(void) { return true; }
-void Gfx_RestoreState(void) { }
-void Gfx_FreeState(void) { }
 #define GU_Toggle(cap) if (enabled) { sceGuEnable(cap); } else { sceGuDisable(cap); }
 
 /*########################################################################################################################*

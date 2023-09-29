@@ -596,7 +596,7 @@
     <ClCompile Include="Platform_3DS.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Platform_WinApi.c">
+    <ClCompile Include="Platform_Windows.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="Graphics_3DS.c">

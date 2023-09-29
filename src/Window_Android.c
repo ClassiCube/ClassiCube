@@ -302,7 +302,7 @@ static void RemakeWindowSurface(void) {
 	/* Loop until window gets created by main UI thread */
 	/* (i.e. until processSurfaceCreated is received) */
 	while (!winCreated) {
-		Window_ProcessEvents(0.0);
+		Window_ProcessEvents(0.01);
 		Thread_Sleep(10);
 	}
 

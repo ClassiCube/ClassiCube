@@ -4,6 +4,8 @@ SOURCE_DIRS		:= src third_party/bearssl/src
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
 CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
+LDFLAGS=-g
+LIBS=-lm
 
 TARGET := ClassiCube-dc
 
@@ -24,7 +26,7 @@ $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	
 
 $(TARGET).elf: $(OBJS)
-	kos-cc $^ -o $@
+	kos-cc $(LDFLAGS) $^ -o $@ $(LIBS)
 	
 $(TARGET).bin: $(TARGET).elf
 	sh-elf-objcopy -R .stack -O binary $(TARGET).elf $(TARGET).bin

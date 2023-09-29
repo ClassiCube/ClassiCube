@@ -125,21 +125,37 @@ static void SetDefaultState(void) {
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(true);
 }
-
-static GfxResourceID white_square;
-void Gfx_Create(void) {
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
-	Gfx.Created      = true;
-	gfx_vsync        = true;
-	
+static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	SetDefaultState();
-	InitDefaultResources();
 	AllocShaders();
+}
+
+static GfxResourceID white_square;
+void Gfx_Create(void) {
+	if (!Gfx.Created) InitCitro3D();
+	
+	Gfx.MaxTexWidth  = 512;
+	Gfx.MaxTexHeight = 512;
+	Gfx.Created      = true;
+	gfx_vsync        = true;
+	
+	Gfx_RestoreState();
+}
+
+void Gfx_Free(void) {
+	Gfx_FreeState();
+	// FreeShaders()
+	// C3D_Fini()
+}
+
+cc_bool Gfx_TryRestoreContext(void) { return true; }
+
+void Gfx_RestoreState(void) {
+	InitDefaultResources();
  	
 	// 8x8 dummy white texture
 	//  (textures must be at least 8x8, see C3D_TexInitWithParams source)
@@ -150,15 +166,10 @@ void Gfx_Create(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-void Gfx_Free(void) { 
-	FreeShaders();
+void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
-
-cc_bool Gfx_TryRestoreContext(void) { return true; }
-void Gfx_RestoreState(void) { }
-void Gfx_FreeState(void) { }
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*

@@ -523,11 +523,7 @@ static void SetDefaultStates(void) {
 	sceGxmSetBackDepthFunc(gxm_context,  SCE_GXM_DEPTH_FUNC_LESS_EQUAL);
 }
 
-void Gfx_Create(void) {
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
-	Gfx.Created      = true;
-	
+static void InitGPU(void) {
 	InitGXM();
 	AllocRingBuffers();
 	AllocGXMContext();
@@ -547,12 +543,32 @@ void Gfx_Create(void) {
 	AllocTexturedVertexProgram(1);
 	CreateFragmentPrograms(3, gxm_textured_FP,       gxm_textured_VP);
 	CreateFragmentPrograms(9, gxm_textured_alpha_FP, gxm_textured_VP);
+}
+
+void Gfx_Create(void) {
+	if (!Gfx.Created) InitGPU();
+	
+	Gfx.MaxTexWidth  = 512;
+	Gfx.MaxTexHeight = 512;
+	Gfx.Created      = true;
+	gfx_vsync        = true;
 	
 	Gfx_SetDepthTest(true);
-	InitDefaultResources();
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	frontBufferIndex = NUM_DISPLAY_BUFFERS - 1;
 	backBufferIndex  = 0;
+	
+	Gfx_RestoreState();
+}
+
+void Gfx_Free(void) { 
+	Gfx_FreeState();
+}
+
+cc_bool Gfx_TryRestoreContext(void) { return true; }
+
+void Gfx_RestoreState(void) {
+	InitDefaultResources();
 	
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -562,14 +578,10 @@ void Gfx_Create(void) {
 	// TODO
 }
 
-void Gfx_Free(void) { 
+void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
-
-cc_bool Gfx_TryRestoreContext(void) { return true; }
-void Gfx_RestoreState(void) { }
-void Gfx_FreeState(void) { }
 
 
 /*########################################################################################################################*

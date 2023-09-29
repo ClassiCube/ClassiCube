@@ -48,12 +48,13 @@ static void InitGX(void) {
 }
 
 void Gfx_Create(void) {
+	if (!Gfx.Created) InitGX();
+	
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
-	InitGX();
 	Gfx_RestoreState();
 }
 
