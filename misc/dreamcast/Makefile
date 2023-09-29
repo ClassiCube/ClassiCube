@@ -4,8 +4,10 @@ SOURCE_DIRS		:= src third_party/bearssl/src
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
 CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
+
+GLDC_LIB=third_party/gldc/libGLdc.a
 LDFLAGS=-g
-LIBS=-lm
+LIBS=-lm $(GLDC_LIB)
 
 TARGET := ClassiCube-dc
 
@@ -13,10 +15,13 @@ ifeq ($(strip $(KOS_BASE)),)
 $(error "Please set KOS variables in your environment.")
 endif
 
-default: $(BUILD_DIR) $(TARGET).cdi
+default: $(GLDC_LIB) $(BUILD_DIR) $(TARGET).cdi
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+	
+$(GLDC_LIB):
+	$(MAKE) -C third_party/gldc
 
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@
