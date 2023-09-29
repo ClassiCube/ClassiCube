@@ -36,11 +36,6 @@ extern void* memcpy4 (void *dest, const void *src, size_t count);
 #define TRACE_ENABLED 0
 #define TRACE() if(TRACE_ENABLED) {fprintf(stderr, "%s\n", __func__);} (void) 0
 
-#define VERTEX_ENABLED_FLAG     (1 << 0)
-#define UV_ENABLED_FLAG         (1 << 1)
-#define ST_ENABLED_FLAG         (1 << 2)
-#define DIFFUSE_ENABLED_FLAG    (1 << 3)
-
 typedef struct {
     unsigned int flags;      /* Constant PVR_CMD_USERCLIP */
     unsigned int d1, d2, d3; /* Ignored for this type */
@@ -206,22 +201,6 @@ GLubyte _glInitTextures();
 
 void _glUpdatePVRTextureContext(PolyContext* context, GLshort textureUnit);
 
-typedef struct {
-    const void* ptr;  // 4
-    GLenum type;  // 4
-    GLsizei stride;  // 4
-    GLint size; // 4
-} AttribPointer;
-
-typedef struct {
-    AttribPointer vertex; // 16
-    AttribPointer colour; // 32
-    AttribPointer uv; // 48
-    AttribPointer st; // 64
-    AttribPointer normal; // 80
-    AttribPointer padding; // 96
-} AttribPointerList;
-
 GLboolean _glCheckValidEnum(GLint param, GLint* values, const char* func);
 
 GLenum _glGetShadeModel();
@@ -286,12 +265,6 @@ GL_FORCE_INLINE void _glKosResetError() {
     LAST_ERROR = GL_NO_ERROR;
     sprintf(ERROR_FUNCTION, "\n");
 }
-
-typedef struct {
-    float n[3]; // 12 bytes
-    float finalColour[4]; //28 bytes
-    uint32_t padding; // 32 bytes
-} EyeSpaceData;
 
 unsigned char _glIsClippingEnabled();
 void _glEnableClipping(unsigned char v);
