@@ -19,9 +19,10 @@ static cc_bool renderingDisabled;
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_Create(void) {
-	glKosInit();
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
-	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
+	if (!Gfx.Created) glKosInit();
+	// NOTE: technically 1024 is supported by hardware
+	Gfx.MaxTexWidth  = 512;
+	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
 	Gfx_RestoreState();
 }
@@ -242,9 +243,10 @@ static unsigned Interleave(unsigned x) {
 }
 
 /*static int CalcTwiddledIndex(int x, int y, int w, int h) {
-	// Twiddled index looks like this (starting from lowest numbered bits):
-	//   e.g. w > h: yx_yx_xx_xx
-	//   e.g. h > w: yx_yx_yy_yy
+	// Twiddled index looks like this (lowest numbered bits are leftmost):
+	//   - w = h: yxyx yxyx
+	//   - w > h: yxyx xxxx
+	//   - h > w: yxyx yyyy
 	// And can therefore be broken down into two components:
 	//  1) interleaved lower bits
 	//  2) masked and then shifted higher bits
@@ -484,8 +486,6 @@ static CC_NOINLINE void UnshiftTextureCoords(int count) {
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
 	gfx_format = -1;
 
 	glAlphaFunc(GL_GREATER, 0.5f);
@@ -519,10 +519,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 	} else {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisable(GL_TEXTURE_2D);
 	}
 }

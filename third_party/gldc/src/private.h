@@ -41,8 +41,6 @@ extern void* memcpy4 (void *dest, const void *src, size_t count);
 #define ST_ENABLED_FLAG         (1 << 2)
 #define DIFFUSE_ENABLED_FLAG    (1 << 3)
 
-#define MAX_TEXTURE_SIZE 1024
-
 typedef struct {
     unsigned int flags;      /* Constant PVR_CMD_USERCLIP */
     unsigned int d1, d2, d3; /* Ignored for this type */

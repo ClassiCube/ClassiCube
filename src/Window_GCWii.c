@@ -16,6 +16,7 @@
 #include <wiikeyboard/keyboard.h>
 #endif
 
+static cc_bool needsFBUpdate;
 static cc_bool launcherMode;
 static void* xfb;
 static GXRModeObj* rmode;
@@ -31,13 +32,7 @@ static void OnPowerOff(void) {
 	WindowInfo.Exists = false;
 	Window_Close();
 }
-
-void Window_Init(void) {	
-	// TODO: SYS_SetResetCallback(reload); too? not sure how reset differs on GC/WII
-	#if defined HW_RVL
-	SYS_SetPowerCallback(OnPowerOff);
-	#endif
-	
+static void InitVideo(void) {
 	// Initialise the video system
 	VIDEO_Init();
 
@@ -61,6 +56,14 @@ void Window_Init(void) {
 	VIDEO_Flush();
 	// Wait for Video setup to complete
 	VIDEO_WaitVSync();
+}
+
+void Window_Init(void) {	
+	// TODO: SYS_SetResetCallback(reload); too? not sure how reset differs on GC/WII
+	#if defined HW_RVL
+	SYS_SetPowerCallback(OnPowerOff);
+	#endif
+	InitVideo();
 	
 	DisplayInfo.Width  = rmode->fbWidth;
 	DisplayInfo.Height = rmode->xfbHeight;
@@ -81,8 +84,14 @@ void Window_Init(void) {
 	PAD_Init();
 }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) {
+	needsFBUpdate = true;
+	launcherMode  = true;  
+}
+
+void Window_Create3D(int width, int height) { 
+	launcherMode = false; 
+}
 
 void Window_Close(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
@@ -465,6 +474,13 @@ static u32 CvtRGB (u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2)
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
+	// When coming back from the 3D game, framebuffer might have changed
+	if (needsFBUpdate) {
+		VIDEO_SetNextFramebuffer(xfb);
+		VIDEO_Flush();
+		needsFBUpdate = false;
+	}
+	
 	VIDEO_WaitVSync();
 	r.X &= ~0x01; // round down to nearest even horizontal index
 	

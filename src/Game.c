@@ -366,7 +366,7 @@ static void LoadPlugins(void) {
 }
 #endif
 
-void Game_Free(void* obj);
+static void Game_Free(void* obj);
 static void Game_Load(void) {
 	struct IGameComponent* comp;
 	Game_UpdateDimensions();

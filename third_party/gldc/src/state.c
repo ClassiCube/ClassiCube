@@ -467,9 +467,6 @@ void _glApplyScissor(bool force) {
 
 void APIENTRY glGetIntegerv(GLenum pname, GLint *params) {
     switch(pname) {
-        case GL_MAX_TEXTURE_SIZE:
-            *params = MAX_TEXTURE_SIZE;
-        break;
         case GL_TEXTURE_FREE_MEMORY_ATI:
         case GL_FREE_TEXTURE_MEMORY_KOS:
             *params = _glFreeTextureMemory();

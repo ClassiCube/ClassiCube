@@ -10,7 +10,6 @@
 
 static void* VERTEX_PTR;
 static GLsizei VERTEX_STRIDE;
-static GLuint ENABLED_VERTEX_ATTRIBUTES;
 
 extern GLboolean AUTOSORT_ENABLED;
 
@@ -59,7 +58,7 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
 
     /* Copy the pos, uv and color directly in one go */
     const GLubyte* pos = VERTEX_PTR;
-    const GLubyte* uv  = (ENABLED_VERTEX_ATTRIBUTES & UV_ENABLED_FLAG) ? VERTEX_PTR : NULL;
+    const GLubyte* uv  = TEXTURES_ENABLED ? VERTEX_PTR : NULL;
     const GLubyte* col = VERTEX_PTR;
 
     Vertex* dst = start;
@@ -330,42 +329,6 @@ GL_FORCE_INLINE void submitVertices(GLenum mode, GLsizei first, GLuint count) {
 void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     TRACE();
     submitVertices(mode, first, count);
-}
-
-void APIENTRY glEnableClientState(GLenum cap) {
-    TRACE();
-
-    switch(cap) {
-    case GL_VERTEX_ARRAY:
-        ENABLED_VERTEX_ATTRIBUTES |= VERTEX_ENABLED_FLAG;
-    break;
-    case GL_COLOR_ARRAY:
-        ENABLED_VERTEX_ATTRIBUTES |= DIFFUSE_ENABLED_FLAG;
-    break;
-    case GL_TEXTURE_COORD_ARRAY:
-        ENABLED_VERTEX_ATTRIBUTES |= UV_ENABLED_FLAG;
-    break;
-    default:
-        _glKosThrowError(GL_INVALID_ENUM, __func__);
-    }
-}
-
-void APIENTRY glDisableClientState(GLenum cap) {
-    TRACE();
-
-    switch(cap) {
-    case GL_VERTEX_ARRAY:
-        ENABLED_VERTEX_ATTRIBUTES &= ~VERTEX_ENABLED_FLAG;
-    break;
-    case GL_COLOR_ARRAY:
-        ENABLED_VERTEX_ATTRIBUTES &= ~DIFFUSE_ENABLED_FLAG;
-    break;
-    case GL_TEXTURE_COORD_ARRAY:
-        ENABLED_VERTEX_ATTRIBUTES &= ~UV_ENABLED_FLAG;
-    break;
-    default:
-        _glKosThrowError(GL_INVALID_ENUM, __func__);
-    }
 }
 
 void APIENTRY glVertexPointer(GLint size, GLenum type,  GLsizei stride,  const GLvoid * pointer) {
