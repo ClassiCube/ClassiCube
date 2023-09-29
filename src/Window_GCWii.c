@@ -28,8 +28,8 @@ int Display_ScaleY(int y) { return y; }
 
 
 static void OnPowerOff(void) {
-	Event_RaiseVoid(&WindowEvents.Closing);
 	WindowInfo.Exists = false;
+	Window_Close();
 }
 
 void Window_Init(void) {	
@@ -85,7 +85,7 @@ void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
 
 void Window_Close(void) {
-	/* TODO implement */
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 
