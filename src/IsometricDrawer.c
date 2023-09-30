@@ -124,7 +124,6 @@ void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, int* state) {
 }
 
 void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
-	struct VertexTextured* beg = iso_vertices;
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 	
 	iso_posX = x; iso_posY = y;

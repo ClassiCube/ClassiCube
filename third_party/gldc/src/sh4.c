@@ -37,7 +37,7 @@ void InitGPU(_Bool autosort, _Bool fsaa) {
 }
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
-    return (1.f / __builtin_sqrtf(x * x));
+    return MATH_fsrra(x * x);
 }
 
 GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex, const float h) {
@@ -92,7 +92,7 @@ static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, V
     const static float o = 0.003921569f;  // 1 / 255
     const float d0 = v1->w + v1->xyz[2];
     const float d1 = v2->w + v2->xyz[2];
-    const float t = (fabs(d0) * (1.0f / sqrtf((d1 - d0) * (d1 - d0)))) + 0.000001f;
+    const float t = (fabs(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
     const float invt = 1.0f - t;
 
     vout->xyz[0] = invt * v1->xyz[0] + t * v2->xyz[0];

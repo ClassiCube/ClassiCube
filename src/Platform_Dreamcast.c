@@ -36,10 +36,31 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return (end - beg) / 1000;
 }
+// Borrowed from kos/kernel/arch/dreamcast/kernel/timer.c so it compiles
+//  with older toolchain versions
+#define _PMCR_CTRL_0  ( *((volatile uint16*)(0xff000084)) )
+#define _PMCTR_HIGH_0 ( *((volatile uint32*)(0xff100004)) )
+#define _PMCTR_LOW_0  ( *((volatile uint32*)(0xff100008)) )
+#define _PMCR_CLR        0x2000
+#define _PMCR_PMENABLE   0x8000
+#define _PMCR_RUN        0xc000
+#define _PMCR_PMM_MASK   0x003f
+#define _PMCR_CLOCK_TYPE_SHIFT 8
+#define _NS_PER_CYCLE 5
+#define _PMCR_COUNT_CPU_CYCLES  0
+#define _PMCR_ELAPSED_TIME_MODE 0x23
 
 cc_uint64 Stopwatch_Measure(void) {
-	return timer_ns_gettime64();
+	uint64 cycles = (uint64)(_PMCTR_HIGH_0 & 0xFFFF) << 32 | _PMCTR_LOW_0;
+	return cycles * _NS_PER_CYCLE;
 }
+static void Stopwatch_Init(void) {
+	_PMCR_CTRL_0 &= ~(_PMCR_PMM_MASK | _PMCR_PMENABLE);
+	_PMCR_CTRL_0 |= _PMCR_CLR;
+	_PMCR_CTRL_0  = _PMCR_RUN | _PMCR_ELAPSED_TIME_MODE | (_PMCR_COUNT_CPU_CYCLES << _PMCR_CLOCK_TYPE_SHIFT);
+}
+// NOTE: If using newer toolchain versions, only need this:
+//  cc_uint64 Stopwatch_Measure(void) { return timer_ns_gettime64(); }
 
 void Platform_Log(const char* msg, int len) {
 	fs_write(STDOUT_FILENO, msg,  len);
@@ -420,7 +441,7 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 
 void Platform_Init(void) {
-	/*pspDebugSioInit();*/ 
+	Stopwatch_Init();
 	
 	char cwd[600] = { 0 };
 	char* ptr = getcwd(cwd, 600);
