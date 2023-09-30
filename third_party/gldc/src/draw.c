@@ -111,7 +111,7 @@ GL_FORCE_INLINE void divide(SubmissionTarget* target) {
     /* Perform perspective divide on each vertex */
     Vertex* vertex = _glSubmissionTargetStart(target);
 
-    const float h = GetVideoMode()->height;
+    const float h = vid_mode->height;
 
     ITERATE(target->count) {
         const float f = MATH_Fast_Invert(vertex->w);
@@ -135,23 +135,19 @@ GL_FORCE_INLINE void divide(SubmissionTarget* target) {
 }
 
 GL_FORCE_INLINE int _calc_pvr_face_culling() {
-    if(!_glIsCullingEnabled()) {
+    if(!CULLING_ENABLED) {
         return GPU_CULLING_SMALL;
     } else {
-        if(_glGetCullFace() == GL_BACK) {
-            return (_glGetFrontFace() == GL_CW) ? GPU_CULLING_CCW : GPU_CULLING_CW;
-        } else {
-            return (_glGetFrontFace() == GL_CCW) ? GPU_CULLING_CCW : GPU_CULLING_CW;
-        }
+        return GPU_CULLING_CW;
     }
 }
 
 GL_FORCE_INLINE int _calc_pvr_depth_test() {
-    if(!_glIsDepthTestEnabled()) {
+    if(!DEPTH_TEST_ENABLED) {
         return GPU_DEPTHCMP_ALWAYS;
     }
 
-    switch(_glGetDepthFunc()) {
+    switch(DEPTH_FUNC) {
         case GL_NEVER:
             return GPU_DEPTHCMP_NEVER;
         case GL_LESS:
@@ -173,40 +169,15 @@ GL_FORCE_INLINE int _calc_pvr_depth_test() {
     }
 }
 
-GL_FORCE_INLINE int _calcPVRBlendFactor(GLenum factor) {
-    switch(factor) {
-    case GL_ZERO:
-        return GPU_BLEND_ZERO;
-    case GL_SRC_ALPHA:
-        return GPU_BLEND_SRCALPHA;
-    case GL_DST_COLOR:
-        return GPU_BLEND_DESTCOLOR;
-    case GL_DST_ALPHA:
-        return GPU_BLEND_DESTALPHA;
-    case GL_ONE_MINUS_DST_COLOR:
-        return GPU_BLEND_INVDESTCOLOR;
-    case GL_ONE_MINUS_SRC_ALPHA:
-        return GPU_BLEND_INVSRCALPHA;
-    case GL_ONE_MINUS_DST_ALPHA:
-        return GPU_BLEND_INVDESTALPHA;
-    case GL_ONE:
-        return GPU_BLEND_ONE;
-    default:
-        fprintf(stderr, "Invalid blend mode: %u\n", (unsigned int) factor);
-        return GPU_BLEND_ONE;
-    }
-}
-
-
 GL_FORCE_INLINE void _updatePVRBlend(PolyContext* context) {
-    if(_glIsBlendingEnabled() || _glIsAlphaTestEnabled()) {
+    if(BLEND_ENABLED || ALPHA_TEST_ENABLED) {
         context->gen.alpha = GPU_ALPHA_ENABLE;
     } else {
         context->gen.alpha = GPU_ALPHA_DISABLE;
     }
 
-    context->blend.src = _calcPVRBlendFactor(_glGetBlendSourceFactor());
-    context->blend.dst = _calcPVRBlendFactor(_glGetBlendDestFactor());
+    context->blend.src = BLEND_SRC_FACTOR;
+    context->blend.dst = BLEND_DST_FACTOR;
 }
 
 GL_FORCE_INLINE void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
@@ -223,17 +194,17 @@ GL_FORCE_INLINE void apply_poly_header(PolyHeader* header, PolyList* activePolyL
 
     ctx.gen.culling = _calc_pvr_face_culling();
     ctx.depth.comparison = _calc_pvr_depth_test();
-    ctx.depth.write = _glIsDepthWriteEnabled() ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
+    ctx.depth.write = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
 
-    ctx.gen.shading = (_glGetShadeModel() == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
+    ctx.gen.shading = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
 
-    if(_glIsScissorTestEnabled()) {
+    if(SCISSOR_TEST_ENABLED) {
         ctx.gen.clip_mode = GPU_USERCLIP_INSIDE;
     } else {
         ctx.gen.clip_mode = GPU_USERCLIP_DISABLE;
     }
 
-    if(_glIsFogEnabled()) {
+    if(FOG_ENABLED) {
         ctx.gen.fog_type = GPU_FOG_TABLE;
     } else {
         ctx.gen.fog_type = GPU_FOG_DISABLE;
@@ -243,12 +214,12 @@ GL_FORCE_INLINE void apply_poly_header(PolyHeader* header, PolyList* activePolyL
 
     if(ctx.list_type == GPU_LIST_OP_POLY) {
         /* Opaque polys are always one/zero */
-        ctx.blend.src = GPU_BLEND_ONE;
-        ctx.blend.dst = GPU_BLEND_ZERO;
+        ctx.blend.src = PVR_BLEND_ONE;
+        ctx.blend.dst = PVR_BLEND_ZERO;
     } else if(ctx.list_type == GPU_LIST_PT_POLY) {
         /* Punch-through polys require fixed blending and depth modes */
-        ctx.blend.src = GPU_BLEND_SRCALPHA;
-        ctx.blend.dst = GPU_BLEND_INVSRCALPHA;
+        ctx.blend.src = PVR_BLEND_SRCALPHA;
+        ctx.blend.dst = PVR_BLEND_INVSRCALPHA;
         ctx.depth.comparison = GPU_DEPTHCMP_LEQUAL;
     } else if(ctx.list_type == GPU_LIST_TR_POLY && AUTOSORT_ENABLED) {
         /* Autosort mode requires this mode for transparent polys */
@@ -305,7 +276,7 @@ GL_FORCE_INLINE void submitVertices(GLenum mode, GLsizei first, GLuint count) {
 
     uint32_t vector_size = aligned_vector_size(&target->output->vector);
 
-    GLboolean header_required = (vector_size == 0) || _glGPUStateIsDirty();
+    GLboolean header_required = (vector_size == 0) || STATE_DIRTY;
 
     target->count = count * 6 / 4; // quads -> triangles
     target->header_offset = vector_size;
@@ -320,7 +291,7 @@ GL_FORCE_INLINE void submitVertices(GLenum mode, GLsizei first, GLuint count) {
 
     if(header_required) {
         apply_poly_header(_glSubmissionTargetHeader(target), target->output);
-        _glGPUStateMarkClean();
+        STATE_DIRTY = GL_FALSE;
     }
 
     generateQuads(target, first, count);

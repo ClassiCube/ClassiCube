@@ -3,7 +3,7 @@ SOURCE_DIRS		:= src src/yalloc
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
 OBJS 	:= $(notdir $(C_FILES:%.c=%.o))
 
-C_FLAGS = -O3 -DNDEBUG -mfsrra -mfsca -ffp-contract=fast -ffast-math -O3 -mpretend-cmove -fexpensive-optimizations -fomit-frame-pointer -finline-functions -flto -fno-fat-lto-objects -ml -m4-single-only -ffunction-sections -fdata-sections -std=gnu99
+C_FLAGS = -O3 -DNDEBUG -mfsrra -mfsca -ffp-contract=fast -ffast-math -O3 -mpretend-cmove -fexpensive-optimizations -fomit-frame-pointer -finline-functions -ml -m4-single-only -ffunction-sections -fdata-sections -std=gnu99
 
 C_DEFINES = -DDREAMCAST -DNDEBUG -D__DREAMCAST__ -D__arch_dreamcast -D_arch_dreamcast -D_arch_sub_pristine
 

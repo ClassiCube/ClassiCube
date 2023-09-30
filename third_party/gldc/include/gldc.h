@@ -27,24 +27,6 @@ __BEGIN_DECLS
 #define GL_TRIANGLE_STRIP                       0x0005
 #define GL_QUADS                                0x0007
 
-/* FrontFaceDirection */
-#define GL_CW               0x0900
-#define GL_CCW              0x0901
-
-#define GL_NONE             0
-#define GL_FRONT_LEFT       0x0400
-#define GL_FRONT_RIGHT      0x0401
-#define GL_BACK_LEFT        0x0402
-#define GL_BACK_RIGHT       0x0403
-#define GL_FRONT            0x0404
-#define GL_BACK             0x0405
-#define GL_LEFT             0x0406
-#define GL_RIGHT            0x0407
-#define GL_FRONT_AND_BACK   0x0408
-#define GL_CULL_FACE        0x0B44
-#define GL_CULL_FACE_MODE   0x0B45
-#define GL_FRONT_FACE       0x0B46
-
 /* Scissor box */
 #define GL_SCISSOR_TEST     0x0008      /* capability bit */
 #define GL_SCISSOR_BOX      0x0C10
@@ -62,24 +44,9 @@ __BEGIN_DECLS
 #define GL_DEPTH_BITS         0x0D56
 #define GL_DEPTH_FUNC         0x0B74
 #define GL_DEPTH_WRITEMASK    0x0B72
-#define GL_DEPTH_COMPONENT    0x1902
 
-/* Blending: Simply Need to Map GL constants to PVR constants */
-#define GL_BLEND_DST            0x0BE0
-#define GL_BLEND_SRC            0x0BE1
-#define GL_BLEND                0x0BE2 /* capability bit */
-
-#define GL_ZERO                    0x0
-#define GL_ONE                     0x1
-#define GL_SRC_COLOR            0x0300
-#define GL_ONE_MINUS_SRC_COLOR  0x0301
-#define GL_SRC_ALPHA            0x0302
-#define GL_ONE_MINUS_SRC_ALPHA  0x0303
-#define GL_DST_ALPHA            0x0304
-#define GL_ONE_MINUS_DST_ALPHA  0x0305
-#define GL_DST_COLOR            0x0306
-#define GL_ONE_MINUS_DST_COLOR  0x0307
-#define GL_SRC_ALPHA_SATURATE   0x0308
+/* Blending */
+#define GL_BLEND              0x0BE2 /* capability bit */
 
 /* Misc texture constants */
 #define GL_TEXTURE_2D           0x0001      /* capability bit */
@@ -134,21 +101,7 @@ __BEGIN_DECLS
 
 #define GL_RGBA                           0x1908
 
-/* Polygons */
-#define GL_POINT				0x1B00
-#define GL_LINE					0x1B01
-#define GL_FILL					0x1B02
-#define GL_CW					0x0900
-#define GL_CCW					0x0901
-#define GL_FRONT				0x0404
-#define GL_BACK					0x0405
-#define GL_POLYGON_MODE				0x0B40
-#define GL_POLYGON_SMOOTH			0x0B41
-#define GL_POLYGON_STIPPLE			0x0B42
-#define GL_EDGE_FLAG				0x0B43
 #define GL_CULL_FACE				0x0B44
-#define GL_CULL_FACE_MODE			0x0B45
-#define GL_FRONT_FACE				0x0B46
 
 #define GLbyte   char
 #define GLshort  short
@@ -206,10 +159,6 @@ GLAPI void glDepthMask(GLboolean flag);
 GLAPI void glDepthFunc(GLenum func);
 GLAPI void glDepthRange(GLclampf n, GLclampf f);
 GLAPI void glDepthRangef(GLclampf n, GLclampf f);
-
-/* Culling */
-GLAPI void glFrontFace(GLenum mode);
-GLAPI void glCullFace(GLenum mode);
 
 /* Shading - Flat or Goraud */
 GLAPI void glShadeModel(GLenum mode);

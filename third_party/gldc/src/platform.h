@@ -32,17 +32,6 @@ typedef enum GPUList {
     GPU_LIST_PT_POLY       = 4
 } GPUList;
 
-typedef enum GPUBlend {
-    GPU_BLEND_ZERO          = 0,
-    GPU_BLEND_ONE           = 1,
-    GPU_BLEND_DESTCOLOR     = 2,
-    GPU_BLEND_INVDESTCOLOR  = 3,
-    GPU_BLEND_SRCALPHA      = 4,
-    GPU_BLEND_INVSRCALPHA   = 5,
-    GPU_BLEND_DESTALPHA     = 6,
-    GPU_BLEND_INVDESTALPHA  = 7
-} GPUBlend;
-
 typedef enum GPUDepthCompare {
     GPU_DEPTHCMP_NEVER      = 0,
     GPU_DEPTHCMP_LESS       = 1,
@@ -146,13 +135,6 @@ typedef enum GPUTextureEnv {
     GPU_TXRENV_MODULATEALPHA = 3
 } GPUTextureEnv;
 
-typedef struct VideoMode {
-    uint16_t width;
-    uint16_t height;
-} VideoMode;
-
-const VideoMode* GetVideoMode();
-
 /* Duplication of pvr_poly_cxt_t from KOS so that we can
  * compile on non-KOS platforms for testing */
 
@@ -241,15 +223,7 @@ enum GPUCommand {
     GPU_CMD_SPRITE = 0xA0000000
 };
 
-typedef float Matrix4x4[16];
-
-void SceneBegin();
-
-void SceneListBegin(GPUList list);
 void SceneListSubmit(Vertex* v2, int n);
-void SceneListFinish();
-
-void SceneFinish();
 
 #define GPU_TA_CMD_TYPE_SHIFT       24
 #define GPU_TA_CMD_TYPE_MASK        (7 << GPU_TA_CMD_TYPE_SHIFT)

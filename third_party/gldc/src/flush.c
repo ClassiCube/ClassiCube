@@ -16,18 +16,6 @@ PolyList TR_LIST;
 
 GLboolean AUTOSORT_ENABLED = GL_FALSE;
 
-PolyList* _glOpaquePolyList() {
-    return &OP_LIST;
-}
-
-PolyList* _glPunchThruPolyList() {
-    return &PT_LIST;
-}
-
-PolyList *_glTransparentPolyList() {
-    return &TR_LIST;
-}
-
 
 void APIENTRY glKosInitConfig(GLdcConfig* config) {
     config->autosort_enabled = GL_FALSE;
@@ -40,8 +28,6 @@ void APIENTRY glKosInitConfig(GLdcConfig* config) {
 
 void APIENTRY glKosInitEx(GLdcConfig* config) {
     TRACE();
-
-    puts("\nWelcome to GLdc!\n");
 
     InitGPU(config->autosort_enabled, config->fsaa_enabled);
 
@@ -74,27 +60,28 @@ void APIENTRY glKosInit() {
 
 void APIENTRY glKosSwapBuffers() {
     TRACE();
-
-    SceneBegin();
+    pvr_wait_ready();
+    
+    pvr_scene_begin();   
         if(aligned_vector_header(&OP_LIST.vector)->size > 2) {
-            SceneListBegin(GPU_LIST_OP_POLY);
+            pvr_list_begin(GPU_LIST_OP_POLY);
             SceneListSubmit((Vertex*) aligned_vector_front(&OP_LIST.vector), aligned_vector_size(&OP_LIST.vector));
-            SceneListFinish();
+            pvr_list_finish();
         }
 
         if(aligned_vector_header(&PT_LIST.vector)->size > 2) {
-            SceneListBegin(GPU_LIST_PT_POLY);
+            pvr_list_begin(GPU_LIST_PT_POLY);
             SceneListSubmit((Vertex*) aligned_vector_front(&PT_LIST.vector), aligned_vector_size(&PT_LIST.vector));
-            SceneListFinish();
+            pvr_list_finish();
         }
 
         if(aligned_vector_header(&TR_LIST.vector)->size > 2) {
-            SceneListBegin(GPU_LIST_TR_POLY);
+            pvr_list_begin(GPU_LIST_TR_POLY);
             SceneListSubmit((Vertex*) aligned_vector_front(&TR_LIST.vector), aligned_vector_size(&TR_LIST.vector));
-            SceneListFinish();
-        }
-    SceneFinish();
-
+            pvr_list_finish();
+        }        
+    pvr_scene_finish();
+    
     aligned_vector_clear(&OP_LIST.vector);
     aligned_vector_clear(&PT_LIST.vector);
     aligned_vector_clear(&TR_LIST.vector);

@@ -489,7 +489,7 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	glAlphaFunc(GL_GREATER, 0.5f);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(PVR_BLEND_SRCALPHA, PVR_BLEND_INVSRCALPHA);
 	glDepthFunc(GL_LEQUAL);
 }
 

@@ -24,15 +24,6 @@ extern void* memcpy4 (void *dest, const void *src, size_t count);
 #define GL_FORCE_INLINE static GL_INLINE_DEBUG
 #define _GL_UNUSED(x) (void)(x)
 
-#define _PACK4(v) ((v * 0xF) / 0xFF)
-#define PACK_ARGB4444(a,r,g,b) (_PACK4(a) << 12) | (_PACK4(r) << 8) | (_PACK4(g) << 4) | (_PACK4(b))
-#define PACK_ARGB8888(a,r,g,b) ( ((a & 0xFF) << 24) | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF) )
-#define PACK_ARGB1555(a,r,g,b) \
-    (((GLushort)(a > 0) << 15) | (((GLushort) r >> 3) << 10) | (((GLushort)g >> 3) << 5) | ((GLushort)b >> 3))
-
-#define PACK_RGB565(r,g,b) \
-    ((((GLushort)r & 0xf8) << 8) | (((GLushort) g & 0xfc) << 3) | ((GLushort) b >> 3))
-
 #define TRACE_ENABLED 0
 #define TRACE() if(TRACE_ENABLED) {fprintf(stderr, "%s\n", __func__);} (void) 0
 
@@ -89,35 +80,6 @@ typedef struct {
     GLubyte padding[32];  // Pad to 64-bytes
 } __attribute__((aligned(32))) TextureObject;
 
-
-#define argbcpy(dst, src) \
-    *((GLuint*) dst) = *((const GLuint*) src) \
-
-
-typedef struct {
-    float xy[2];
-} _glvec2;
-
-typedef struct {
-    float xyz[3];
-} _glvec3;
-
-typedef struct {
-    float xyzw[4];
-} _glvec4;
-
-#define vec2cpy(dst, src) \
-    *((_glvec2*) dst) = *((_glvec2*) src)
-
-#define vec3cpy(dst, src) \
-    *((_glvec3*) dst) = *((_glvec3*) src)
-
-#define vec4cpy(dst, src) \
-    *((_glvec4*) dst) = *((_glvec4*) src)
-
-GL_FORCE_INLINE float clamp(float d, float min, float max) {
-    return (d < min) ? min : (d > max) ? max : d;
-}
 
 GL_FORCE_INLINE void memcpy_vertex(Vertex *dest, const Vertex *src) {
 #ifdef __DREAMCAST__
@@ -179,56 +141,46 @@ typedef enum {
 } ClipResult;
 
 
-#define A8IDX 3
-#define R8IDX 2
-#define G8IDX 1
-#define B8IDX 0
-
 struct SubmissionTarget;
-
-PolyList* _glOpaquePolyList();
-PolyList* _glPunchThruPolyList();
-PolyList *_glTransparentPolyList();
 
 void _glInitAttributePointers();
 void _glInitContext();
 void _glInitMatrices();
 void _glInitSubmissionTarget();
 
-void _glMatrixLoadModelViewProjection();
-
 GLubyte _glInitTextures();
 
 void _glUpdatePVRTextureContext(PolyContext* context, GLshort textureUnit);
 
-GLboolean _glCheckValidEnum(GLint param, GLint* values, const char* func);
-
-GLenum _glGetShadeModel();
 
 extern TextureObject* TEXTURE_ACTIVE;
 extern GLboolean TEXTURES_ENABLED;
 
-GLboolean _glIsBlendingEnabled();
-GLboolean _glIsAlphaTestEnabled();
-GLboolean _glIsCullingEnabled();
-GLboolean _glIsDepthTestEnabled();
-GLboolean _glIsDepthWriteEnabled();
-GLboolean _glIsScissorTestEnabled();
-GLboolean _glIsFogEnabled();
-GLenum _glGetDepthFunc();
-GLenum _glGetCullFace();
-GLenum _glGetFrontFace();
-GLenum _glGetBlendSourceFactor();
-GLenum _glGetBlendDestFactor();
+extern GLenum DEPTH_FUNC;
+extern GLboolean DEPTH_TEST_ENABLED;
+extern GLboolean DEPTH_MASK_ENABLED;
+
+extern GLboolean CULLING_ENABLED;
+
+extern GLboolean FOG_ENABLED;
+extern GLboolean ALPHA_TEST_ENABLED;
+
+extern GLboolean SCISSOR_TEST_ENABLED;
+extern GLenum SHADE_MODEL;
+
+extern GLboolean BLEND_ENABLED;
+extern GLenum BLEND_SRC_FACTOR;
+extern GLenum BLEND_DST_FACTOR;
+
 
 extern PolyList OP_LIST;
 extern PolyList PT_LIST;
 extern PolyList TR_LIST;
 
 GL_FORCE_INLINE PolyList* _glActivePolyList() {
-    if(_glIsBlendingEnabled()) {
+    if(BLEND_ENABLED) {
         return &TR_LIST;
-    } else if(_glIsAlphaTestEnabled()) {
+    } else if(ALPHA_TEST_ENABLED) {
         return &PT_LIST;
     } else {
         return &OP_LIST;
@@ -257,10 +209,6 @@ GL_FORCE_INLINE void _glKosThrowError(GLenum error, const char *function) {
     }
 }
 
-GL_FORCE_INLINE GLubyte _glKosHasError() {
-    return (LAST_ERROR != GL_NO_ERROR) ? GL_TRUE : GL_FALSE;
-}
-
 GL_FORCE_INLINE void _glKosResetError() {
     LAST_ERROR = GL_NO_ERROR;
     sprintf(ERROR_FUNCTION, "\n");
@@ -275,13 +223,8 @@ GLuint _glFreeContiguousTextureMemory();
 
 void _glApplyScissor(bool force);
 
-GLboolean _glNearZClippingEnabled();
-
-GLboolean _glGPUStateIsDirty();
-void _glGPUStateMarkClean();
-void _glGPUStateMarkDirty();
-
-#define MAX_GLDC_TEXTURE_UNITS 2
+extern GLboolean ZNEAR_CLIPPING_ENABLED;
+extern GLboolean STATE_DIRTY;
 
 
 /* This is from KOS pvr_buffers.c */

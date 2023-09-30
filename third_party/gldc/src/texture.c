@@ -132,7 +132,7 @@ void APIENTRY gldcBindTexture(GLuint id) {
 
     gl_assert(TEXTURE_OBJECTS.element_size > 0);
 
-    _glGPUStateMarkDirty();
+    STATE_DIRTY = GL_TRUE;
 }
 
 static GLuint _determinePVRFormat(GLint internalFormat, GLenum type) {
@@ -235,7 +235,7 @@ void APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type)
      * code less flexible to change in the future */
     active->color &= ~(1 << 26);
 
-    _glGPUStateMarkDirty();
+    STATE_DIRTY = GL_TRUE;
 }
 
 GLAPI void APIENTRY gldcGetTexture(GLvoid** data, GLsizei* width, GLsizei* height) {

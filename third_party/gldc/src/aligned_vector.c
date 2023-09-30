@@ -25,31 +25,3 @@ void aligned_vector_init(AlignedVector* vector, uint32_t element_size) {
     assert(ptr);
     (void) ptr;
 }
-
-void aligned_vector_shrink_to_fit(AlignedVector* vector) {
-    AlignedVectorHeader* const hdr = &vector->hdr;
-    if(hdr->size == 0) {
-        uint32_t element_size = hdr->element_size;
-        free(vector->data);
-
-        /* Reallocate the header */
-        vector->data = NULL;
-        hdr->size = hdr->capacity = 0;
-        hdr->element_size = element_size;
-    } else {
-        uint32_t new_byte_size = (hdr->size * hdr->element_size);
-        uint8_t* original_data = vector->data;
-        vector->data = (unsigned char*) memalign(0x20, new_byte_size);
-
-        if(original_data) {
-            FASTCPY(vector->data, original_data, new_byte_size);
-            free(original_data);
-        }
-        hdr->capacity = hdr->size;
-    }
-}
-
-void aligned_vector_cleanup(AlignedVector* vector) {
-    aligned_vector_clear(vector);
-    aligned_vector_shrink_to_fit(vector);
-}

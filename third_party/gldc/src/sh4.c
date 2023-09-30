@@ -11,15 +11,6 @@
 
 #define SQ_BASE_ADDRESS (void*) 0xe0000000
 
-
-GL_FORCE_INLINE bool glIsVertex(const float flags) {
-    return flags == GPU_CMD_VERTEX_EOL || flags == GPU_CMD_VERTEX;
-}
-
-GL_FORCE_INLINE bool glIsLastVertex(const float flags) {
-    return flags == GPU_CMD_VERTEX_EOL;
-}
-
 void InitGPU(_Bool autosort, _Bool fsaa) {
     pvr_init_params_t params = {
         /* Enable opaque and translucent polygons with size 32 and 32 */
@@ -43,15 +34,6 @@ void InitGPU(_Bool autosort, _Bool fsaa) {
         printf("PAL region without VGA - enabling 50hz");
         vid_set_mode(DM_640x480_PAL_IL, PM_RGB565);
     }
-}
-
-void SceneBegin() {
-    pvr_wait_ready();
-    pvr_scene_begin();
-}
-
-void SceneListBegin(GPUList list) {
-    pvr_list_begin(list);
 }
 
 GL_FORCE_INLINE float _glFastInvert(float x) {
@@ -144,7 +126,7 @@ void SceneListSubmit(Vertex* v2, int n) {
         return;
     }
 
-    const float h = GetVideoMode()->height;
+    const float h = vid_mode->height;
 
     PVR_SET(SPAN_SORT_CFG, 0x0);
 
@@ -452,19 +434,4 @@ void SceneListSubmit(Vertex* v2, int n) {
     }
 
     _glFlushBuffer();
-}
-
-void SceneListFinish() {
-    pvr_list_finish();
-}
-
-void SceneFinish() {
-    pvr_scene_finish();
-}
-
-const VideoMode* GetVideoMode() {
-    static VideoMode mode;
-    mode.width = vid_mode->width;
-    mode.height = vid_mode->height;
-    return &mode;
 }

@@ -209,9 +209,6 @@ AV_FORCE_INLINE void aligned_vector_clear(AlignedVector* vector){
     hdr->size = 0;
 }
 
-void aligned_vector_shrink_to_fit(AlignedVector* vector);
-void aligned_vector_cleanup(AlignedVector* vector);
-
 #ifdef __cplusplus
 }
 #endif
