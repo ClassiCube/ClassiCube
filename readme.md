@@ -106,14 +106,14 @@ I am assuming you used the installer from https://sourceforge.net/projects/mingw
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
 3. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
+4. Enter `gcc -O2 -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using MinGW
 I am assuming you used the installer from https://osdn.net/projects/mingw/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 2. Navigate to the directory with ClassiCube's source code
-4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
+4. Enter `gcc -O2 -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using TCC (Tiny C Compiler)
 I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
@@ -130,30 +130,30 @@ I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 
 Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev and libgl1-mesa-dev
 
-```gcc *.c -o ClassiCube -rdynamic -lm -lpthread -lX11 -lXi -lGL -ldl```
+```gcc -O2 -fno-math-errno *.c -o ClassiCube -rdynamic -lpthread -lX11 -lXi -lGL -ldl```
 
 ##### Cross compiling for Windows (32 bit):
 
-```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
+```i686-w64-mingw32-gcc -O2 -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Cross compiling for Windows (64 bit):
 
-```x86_64-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
+```x86_64-w64-mingw32-gcc -O2 -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp```
 
 ##### Raspberry Pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lm -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
+```gcc -O2 -fno-math-errno *.c -o ClassiCube -DCC_BUILD_RPI -rdynamic -lpthread -lX11 -lXi -lEGL -lGLESv2 -ldl```
 
 ## Compiling - macOS
 
 ##### Using gcc/clang (32 bit)
 
-```cc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
+```cc -O2 -fno-math-errno *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
 
 ##### Using gcc/clang (64 bit)
 
-```cc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+```cc -O2 -fno-math-errno *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
 
 ## Compiling - for Android
 
@@ -207,21 +207,21 @@ Install libexecinfo, curl and openal-soft package if needed
 
 #### Solaris
 
-```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL```
+```gcc -fno-math-errno *.c -o ClassiCube -lsocket -lX11 -lXi -lGL```
 
 #### Haiku
 
 Install openal_devel package if needed
 
-```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
+```cc -fno-math-errno *.c interop_BeOS.cpp -o ClassiCube -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker```
 
 #### BeOS
 
-```cc *.c interop_BeOS.cpp -o ClassiCube -lm -lGL -lbe -lgame -ltracker```
+```cc -fno-math-errno *.c interop_BeOS.cpp -o ClassiCube -lGL -lbe -lgame -ltracker```
 
 #### IRIX
 
-```gcc -lGL -lX11 -lXi -lm -lpthread -ldl```
+```gcc -fno-math-errno -lGL -lX11 -lXi -lpthread -ldl```
 
 #### SerenityOS
 
