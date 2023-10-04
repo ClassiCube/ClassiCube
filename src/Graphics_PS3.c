@@ -86,8 +86,8 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 }
 
 static void LoadFragmentPrograms(void) {
-	FP_Load(&FP_list[0], ps_textured_fpo);
-	FP_Load(&FP_list[1], ps_coloured_fpo);
+	FP_Load(&FP_list[0], ps_coloured_fpo);
+	FP_Load(&FP_list[1], ps_textured_fpo);
 }
 
 static void FP_SwitchActive(void) {
@@ -526,8 +526,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	texture.format		= GCM_TEXTURE_FORMAT_A8R8G8B8 | GCM_TEXTURE_FORMAT_LIN;
 	texture.mipmap		= 1;
 	texture.dimension	= GCM_TEXTURE_DIMS_2D;
-	texture.cubemap		= GCM_FALSE;
-	texture.remap		= ((GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_B_SHIFT) |
+	texture.cubemap	= GCM_FALSE;
+	texture.remap		= 		  ((GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_B_SHIFT) |
 						   (GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_G_SHIFT) |
 						   (GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_R_SHIFT) |
 						   (GCM_TEXTURE_REMAP_TYPE_REMAP << GCM_TEXTURE_REMAP_TYPE_A_SHIFT) |
