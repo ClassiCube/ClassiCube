@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #ifndef __GNUC__
+#include <math.h>
 float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
 float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
 #endif
