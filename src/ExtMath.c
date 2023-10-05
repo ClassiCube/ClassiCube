@@ -394,7 +394,7 @@ double Atan(double x) {
  * Associated math function: atan2(y, x)
  * Allowed input range: anything
  */
-double Math_Atan2(double y, double x) {
+double Math_Atan2(double x, double y) {
 	if (x > 0)
 		return Atan(y / x);
 	if (x < 0) {
