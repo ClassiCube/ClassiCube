@@ -152,8 +152,8 @@ static double Log2Stage1(double);
 static double Log2(double);
 
 /* Global constants */
-static const double PI = 3.1415926535897932384626433832795028841971693993751058;
-static const double DIV_2_PI = 1.0 / (2.0 * PI);
+static const double DOUBLE_PI = 3.141592653589793238462643383279502884197169399;
+static const double DOUBLE_DIV_2_PI = 1.0 / (2.0 * DOUBLE_PI);
 static const double INF = 1.0 / 0.0;
 static const double NEGATIVE_INF = 1.0 / -0.0;
 static const double DOUBLE_NAN = 0.0 / 0.0;
@@ -244,7 +244,7 @@ double Math_Sin(double x) {
 	if (x == INF || x == NEGATIVE_INF || x == DOUBLE_NAN)
 		return DOUBLE_NAN;
 
-	x_div_pi = x * DIV_2_PI;
+	x_div_pi = x * DOUBLE_DIV_2_PI;
 	return SinStage3(x_div_pi - Floord(x_div_pi));
 }
 
@@ -264,7 +264,7 @@ double Math_Cos(double x) {
 	if (x == INF || x == NEGATIVE_INF || x == DOUBLE_NAN)
 		return DOUBLE_NAN;
 
-	x_div_pi_shifted = x * DIV_2_PI + 0.25;
+	x_div_pi_shifted = x * DOUBLE_DIV_2_PI + 0.25;
 	return SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
 }
 
@@ -368,9 +368,9 @@ double AtanStage2(double x) {
 
 	t = div_x_i[R] - div_x_i_2_plus_1[R] / (div_x_i[R] + x);
 	if (t >= 0)
-		return (2 * R - 2) * PI / 32.0 + AtanStage1(t);
+		return (2 * R - 2) * DOUBLE_PI / 32.0 + AtanStage1(t);
 
-	return (2 * R - 2) * PI / 32.0 - AtanStage1(-t);
+	return (2 * R - 2) * DOUBLE_PI / 32.0 - AtanStage1(-t);
 }
 
 /* Uses the property arctan(x) = -arctan(-x).
@@ -382,9 +382,9 @@ double Atan(double x) {
 	if (x == DOUBLE_NAN)
 		return DOUBLE_NAN;
 	if (x == NEGATIVE_INF)
-		return -PI / 2.0;
+		return -DOUBLE_PI / 2.0;
 	if (x == INF)
-		return PI / 2.0;
+		return DOUBLE_PI / 2.0;
 	if (x >= 0)
 		return AtanStage2(x);
 	return -AtanStage2(-x);
@@ -400,13 +400,13 @@ double Math_Atan2(double x, double y) {
 		return Atan(y / x);
 	if (x < 0) {
 		if (y >= 0)
-			return Atan(y / x) + PI;
-		return Atan(y / x) - PI;
+			return Atan(y / x) + DOUBLE_PI;
+		return Atan(y / x) - DOUBLE_PI;
 	}
 	if (y > 0)
-		return PI / 2.0;
+		return DOUBLE_PI / 2.0;
 	if (y < 0)
-		return -PI / 2.0;
+		return -DOUBLE_PI / 2.0;
 	return DOUBLE_NAN;
 }
 
