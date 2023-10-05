@@ -1142,8 +1142,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	data.rate       = 100;
 	data.volume     = Audio_SoundsVolume;
 
-	/* https://minecraft.fandom.com/wiki/Block_of_Gold#Sounds */
-	/* https://minecraft.fandom.com/wiki/Grass#Sounds */
+	/* https://minecraft.wiki/w/Block_of_Gold#Sounds */
+	/* https://minecraft.wiki/w/Grass#Sounds */
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) data.rate = 120;
 		else data.rate = 80;
