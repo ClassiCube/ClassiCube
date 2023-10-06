@@ -115,12 +115,12 @@ static void HandleJoystick_Left(int x, int y) {
 	Input.JoystickAngle    = Math_Atan2(x, -y);
 }
 static void HandleJoystick_Right(int x, int y, double delta) {
-	float scale = (delta * 60.0) / 128.0f;
+	float scale = (delta * 60.0) / 64.0f;
 	
 	if (Math_AbsI(x) <= 32) x = 0;
 	if (Math_AbsI(y) <= 32) y = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, -y * scale);	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, y * scale);	
 }
 
 static void ProcessPadInput(double delta, padData* pad) {

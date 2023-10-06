@@ -26,13 +26,19 @@ typedef struct CCVertexProgram {
 	rsxVertexProgram* prog;
 	void* ucode;
 	rsxProgramConst* mvp;
+	rsxProgramConst* uv_offset;
 } VertexProgram;
 
-extern const u8 vs_textured_vpo[];
 extern const u8 vs_coloured_vpo[];
+extern const u8 vs_textured_vpo[];
+extern const u8 vs_offset_vpo[];
 
-static VertexProgram  VP_list[2];
+static VertexProgram  VP_list[3];
 static VertexProgram* VP_active;
+
+static cc_bool textureOffseting;
+static float textureOffset[4] __attribute__((aligned(16)));
+static struct Matrix mvp      __attribute__((aligned(64)));
 
 
 static void VP_Load(VertexProgram* vp, const u8* source) {
@@ -40,22 +46,39 @@ static void VP_Load(VertexProgram* vp, const u8* source) {
 	u32 size = 0;
 	rsxVertexProgramGetUCode(vp->prog, &vp->ucode, &size);
 	
-	vp->mvp = rsxVertexProgramGetConst(vp->prog, "mvp");
+	vp->mvp       = rsxVertexProgramGetConst(vp->prog, "mvp");
+	vp->uv_offset = rsxVertexProgramGetConst(vp->prog, "uv_offset");
 }
 
 static void LoadVertexPrograms(void) {
 	VP_Load(&VP_list[0], vs_coloured_vpo);
 	VP_Load(&VP_list[1], vs_textured_vpo);
+	VP_Load(&VP_list[2], vs_offset_vpo);
 }
 
 static void VP_SwitchActive(void) {
 	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	if (textureOffseting) index = 2;
 	
 	VertexProgram* VP = &VP_list[index];
 	if (VP == VP_active) return;
 	VP_active = VP;
 	
 	rsxLoadVertexProgram(context, VP->prog, VP->ucode);
+}
+
+static void VP_UpdateUniforms() {
+	// TODO: dirty uniforms instead
+	for (int i = 0; i < Array_Elems(VP_list); i++)
+	{
+		VertexProgram* vp = &VP_list[i];
+		rsxSetVertexProgramParameter(context, vp->prog, vp->mvp, (float*)&mvp);
+	}
+	
+	if (VP_active == &VP_list[2]) {
+		VertexProgram* vp = &VP_list[2];
+		rsxSetVertexProgramParameter(context, vp->prog, vp->uv_offset, textureOffset);
+	}
 }
 
 
@@ -112,28 +135,6 @@ static u32* color_buffer[2];
 static u32  depth_pitch;
 static u32  depth_offset;
 static u32* depth_buffer;
-
-static void Gfx_FreeState(void) { FreeDefaultResources(); }
-static void Gfx_RestoreState(void) {
-	InitDefaultResources();
-	gfx_format = -1;/* TODO */
-	
-	rsxSetColorMaskMrt(context, 0);
-	rsxSetDepthFunc(context, GCM_LEQUAL);
-	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
-	//rsxSetFrontFace(context, GCM_FRONTFACE_CCW);
-	
-	rsxSetAlphaFunc(context, GCM_GREATER, 0.5f);
-	rsxSetBlendFunc(context, GCM_SRC_ALPHA, GCM_ONE_MINUS_SRC_ALPHA, GCM_SRC_ALPHA, GCM_ONE_MINUS_SRC_ALPHA);
-        rsxSetBlendEquation(context, GCM_FUNC_ADD, GCM_FUNC_ADD);
-	
-	rsxSetUserClipPlaneControl(context,GCM_USER_CLIP_PLANE_DISABLE,
-									   GCM_USER_CLIP_PLANE_DISABLE,
-									   GCM_USER_CLIP_PLANE_DISABLE,
-									   GCM_USER_CLIP_PLANE_DISABLE,
-									   GCM_USER_CLIP_PLANE_DISABLE,
-									   GCM_USER_CLIP_PLANE_DISABLE);
-}
 
 static void CreateContext(void) {
 	void* host_addr = memalign(1024 * 1024, HOST_SIZE);
@@ -211,11 +212,8 @@ void SetRenderTarget(u32 index) {
 
 	rsxSetSurface(context,&sf);
 }
-static GfxResourceID white_square;
 
-void Gfx_Create(void) {
-	// TODO rethink all this
-	if (Gfx.Created) return;
+static void InitGfxContext(void) {
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.Created      = true;
@@ -231,11 +229,29 @@ void Gfx_Create(void) {
 	gcmResetFlipStatus();
 	
 	SetupBlendingState();
-	Gfx_RestoreState();
 	SetRenderTarget(cur_fb);
 	
 	LoadVertexPrograms();
 	LoadFragmentPrograms();
+}
+static GfxResourceID white_square;
+
+void Gfx_Create(void) {
+	// TODO rethink all this
+	if (!Gfx.Created) InitGfxContext();
+	
+	Gfx_RestoreState();
+	gfx_format = -1;
+}
+
+void Gfx_Free(void) { Gfx_FreeState(); }
+
+
+cc_bool Gfx_TryRestoreContext(void) { return true; }
+cc_bool Gfx_WarnIfNecessary(void)   { return false; }
+
+void Gfx_RestoreState(void) {
+	InitDefaultResources();
 	
 	// 1x1 dummy white texture
 	struct Bitmap bmp;
@@ -244,13 +260,11 @@ void Gfx_Create(void) {
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
-cc_bool Gfx_TryRestoreContext(void) { return true; }
-
-cc_bool Gfx_WarnIfNecessary(void) { return false; }
-
-void Gfx_Free(void) {
-	Gfx_FreeState();
+void Gfx_FreeState(void) {
+	FreeDefaultResources(); 
+	Gfx_DeleteTexture(&white_square);
 }
+
 
 u32* Gfx_AllocImage(u32* offset, s32 w, s32 h) {
 	u32* pixels = (u32*)rsxMemalign(64, w * h * 4);
@@ -269,6 +283,8 @@ void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static cc_uint32 clearColor;
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	rsxSetCullFaceEnable(context, enabled);
 }
@@ -279,7 +295,11 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearCol(PackedCol color) {
-        rsxSetClearColor(context, color);
+        cc_uint32 R = PackedCol_R(color);
+        cc_uint32 G = PackedCol_G(color);
+        cc_uint32 B = PackedCol_B(color);
+        
+        clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -373,6 +393,29 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_vsync      = vsync;
 }
 
+static void ResetFrameState(void) {
+	// Seems these states aren't persisted across frames
+	// TODO: Why is that
+	rsxSetAlphaFunc(context, GCM_GREATER, 0.5f);
+	rsxSetBlendFunc(context, GCM_SRC_ALPHA, GCM_ONE_MINUS_SRC_ALPHA, GCM_SRC_ALPHA, GCM_ONE_MINUS_SRC_ALPHA);
+        rsxSetBlendEquation(context, GCM_FUNC_ADD, GCM_FUNC_ADD);
+        
+	rsxSetColorMaskMrt(context, 0);
+	rsxSetDepthFunc(context, GCM_LEQUAL);
+        rsxSetClearColor(context, clearColor);
+	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
+	rsxSetFrontFace(context, GCM_FRONTFACE_CCW);
+	
+	rsxSetUserClipPlaneControl(context, GCM_USER_CLIP_PLANE_DISABLE,
+						GCM_USER_CLIP_PLANE_DISABLE,
+						GCM_USER_CLIP_PLANE_DISABLE,
+						GCM_USER_CLIP_PLANE_DISABLE,
+						GCM_USER_CLIP_PLANE_DISABLE,
+						GCM_USER_CLIP_PLANE_DISABLE);
+        
+	// NOTE: Must be called each frame, otherwise renders upside down at 4x zoom
+	Gfx_OnWindowResize();
+}
 
 // https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
 static cc_bool everFlipped;
@@ -382,6 +425,7 @@ void Gfx_BeginFrame(void) {
 		while (gcmGetFlipStatus() != 0) usleep(200);
 	}
 	
+	ResetFrameState();
 	everFlipped = true;
 	gcmResetFlipStatus();
 }
@@ -398,8 +442,6 @@ void Gfx_EndFrame(void) {
 
 	cur_fb ^= 1;
 	SetRenderTarget(cur_fb);
-	// NOTE: Must be called, otherwise renders upside down at 4x zoom
-	Gfx_OnWindowResize();
 	
 	if (gfx_minFrameMs) LimitFPS();
 }
@@ -621,16 +663,9 @@ static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
 	*dst = *matrix;
-	
-	struct Matrix mvp;
+
 	Matrix_Mul(&mvp, &_view, &_proj);
-	
-	// TODO: dirty uniforms instead
-	for (int i = 0; i < Array_Elems(VP_list); i++)
-	{
-		VertexProgram* vp = &VP_list[i];
-		rsxSetVertexProgramParameter(context, vp->prog, vp->mvp, (float*)&mvp);
-	}
+	VP_UpdateUniforms();
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -638,11 +673,17 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
-/* TODO */
+	textureOffseting = true;
+	textureOffset[0] = x;
+	textureOffset[1] = y;
+	
+	VP_SwitchActive();
+	VP_UpdateUniforms();
 }
 
 void Gfx_DisableTextureOffset(void) {
-/* TODO */
+	textureOffseting = false;
+	VP_SwitchActive();
 }
 
 
