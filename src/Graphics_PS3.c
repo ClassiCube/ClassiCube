@@ -346,6 +346,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	// Same as Direct3D9
+	// TODO: should it be like OpenGL? ???
 	*matrix = Matrix_Identity;
 
 	matrix->row1.X =  2.0f / width;
@@ -363,6 +364,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float c = (float)Cotangent(0.5f * fov);
 
 	// Same as Direct3D9
+	// TODO: should it be like OpenGL? ???
 	*matrix = Matrix_Identity;
 
 	matrix->row1.X =  c / aspect;
@@ -401,10 +403,12 @@ static void ResetFrameState(void) {
         rsxSetBlendEquation(context, GCM_FUNC_ADD, GCM_FUNC_ADD);
         
 	rsxSetColorMaskMrt(context, 0);
-	rsxSetDepthFunc(context, GCM_LEQUAL);
-        rsxSetClearColor(context, clearColor);
+	rsxSetClearColor(context, clearColor);
 	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
-	rsxSetFrontFace(context, GCM_FRONTFACE_CCW);
+
+	rsxSetDepthFunc(context, GCM_LEQUAL);	
+	rsxSetDepthWriteEnable(context, true);
+	rsxSetDepthTestEnable(context,  true);
 	
 	rsxSetUserClipPlaneControl(context, GCM_USER_CLIP_PLANE_DISABLE,
 						GCM_USER_CLIP_PLANE_DISABLE,

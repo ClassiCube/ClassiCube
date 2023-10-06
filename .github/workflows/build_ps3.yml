@@ -1,0 +1,34 @@
+name: Build latest (PS3)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-ps3
+  cancel-in-progress: true
+
+jobs:
+  build-PS3:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: akusiroyo/ps3sdk:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile PS3 build
+        id: compile
+        run: |
+          pacman -S make --noconfirm
+          export PSL1GHT=/usr/local/ps3dev
+          export PS3DEV=/usr/local/ps3dev
+          make ps3
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile PS3 build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-ps3.self'
+          DEST_NAME: 'ClassiCube-ps3.self'
