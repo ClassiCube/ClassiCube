@@ -1,27 +1,14 @@
-struct vIn {
-	float4 tex      : TEXCOORD;
-	float4 color    : DIFFUSE;
-	float4 position : POSITION;
-};
-
-struct vOut {
-	float4 pos : POSITION;
-	float4 col : COLOR;
-	float4 tex : TEXCOORD0;
-};
-
-vOut main(
-	vIn              input,
-	uniform float4x4 mvp
-	)
+void main(
+	float4 in_position : POSITION,
+	float4 in_color    : DIFFUSE,
+	float4 in_tex      : TEXCOORD,
+	uniform float4x4 mvp,
+	out float4 out_pos   : POSITION, 
+	out float4 out_color : COLOR, 
+	out float2 out_tex   : TEXCOORD0)
 {
-	vOut   result;
-	float4 position;
-
-	position = float4(input.position.xyz, 1.0f);
-	
-	result.pos = mul(position, mvp);
-	result.col = input.color;
-	result.tex = input.tex;
-	return result;
+	float4 pos = float4(in_position.xyz, 1.0f);	
+	out_pos    = mul(pos, mvp);
+	out_color  = in_color;
+	out_tex    = in_tex;
 }

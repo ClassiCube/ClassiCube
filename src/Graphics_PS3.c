@@ -11,8 +11,10 @@
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
+static cc_bool alphaTesting;
+
 static gcmContextData* context;
-static u32 cur_fb = 0;
+static u32 cur_fb;
 
 #define CB_SIZE   0x100000 // TODO: smaller command buffer?
 #define HOST_SIZE (32 * 1024 * 1024)
@@ -70,8 +72,10 @@ typedef struct CCFragmentProgram {
 
 extern const u8 ps_textured_fpo[];
 extern const u8 ps_coloured_fpo[];
+extern const u8 ps_textured_alpha_fpo[];
+extern const u8 ps_coloured_alpha_fpo[];
 
-static FragmentProgram  FP_list[2];
+static FragmentProgram  FP_list[4];
 static FragmentProgram* FP_active;
 
 
@@ -88,10 +92,13 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 static void LoadFragmentPrograms(void) {
 	FP_Load(&FP_list[0], ps_coloured_fpo);
 	FP_Load(&FP_list[1], ps_textured_fpo);
+	FP_Load(&FP_list[2], ps_coloured_alpha_fpo);
+	FP_Load(&FP_list[3], ps_textured_alpha_fpo);
 }
 
 static void FP_SwitchActive(void) {
 	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
+	if (alphaTesting) index += 2; // TODO: Doesn't work
 	
 	FragmentProgram* FP = &FP_list[index];
 	if (FP == FP_active) return;
@@ -264,7 +271,6 @@ void Gfx_TransferImage(u32 offset, s32 w, s32 h) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_clearColor;
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	rsxSetCullFaceEnable(context, enabled);
 }
@@ -298,7 +304,10 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 
 void Gfx_SetTexturing(cc_bool enabled) { }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { /* TODO */ }
+void Gfx_SetAlphaTest(cc_bool enabled) {
+	alphaTesting = enabled;
+	FP_SwitchActive();
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {/* TODO */
 }
@@ -393,7 +402,7 @@ void Gfx_OnWindowResize(void) {
 	f32 zmin = 0.0f;
 	f32 zmax = 1.0f;
 	
-	scale[0]  = w * 0.5f;
+	scale[0]  = w *  0.5f;
 	scale[1]  = h * -0.5f;
 	scale[2]  = (zmax - zmin) * 0.5f;
 	scale[3]  = 0.0f;
@@ -403,7 +412,7 @@ void Gfx_OnWindowResize(void) {
 	offset[3] = 0.0f;
 
 	rsxSetViewport(context, 0, 0, w, h, zmin, zmax, scale, offset);
-	rsxSetScissor(context, 0, 0, w, h);
+	rsxSetScissor(context,  0, 0, w, h);
 	
 	// TODO: even needed?
 	for (int i = 0; i < 8; i++)
@@ -558,6 +567,12 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	CCTexture* tex = (CCTexture*)texId;
+	
+	// NOTE: Only valid for LINEAR textures
+	cc_uint32* dst = (tex->pixels + x) + y * tex->width;	
+	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
+	
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 	/* TODO */
 }
