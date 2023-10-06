@@ -11,7 +11,6 @@
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
-static cc_bool alphaTesting;
 
 static gcmContextData* context;
 static u32 cur_fb;
@@ -72,10 +71,8 @@ typedef struct CCFragmentProgram {
 
 extern const u8 ps_textured_fpo[];
 extern const u8 ps_coloured_fpo[];
-extern const u8 ps_textured_alpha_fpo[];
-extern const u8 ps_coloured_alpha_fpo[];
 
-static FragmentProgram  FP_list[4];
+static FragmentProgram  FP_list[2];
 static FragmentProgram* FP_active;
 
 
@@ -92,14 +89,11 @@ static void FP_Load(FragmentProgram* fp, const u8* source) {
 static void LoadFragmentPrograms(void) {
 	FP_Load(&FP_list[0], ps_coloured_fpo);
 	FP_Load(&FP_list[1], ps_textured_fpo);
-	FP_Load(&FP_list[2], ps_coloured_alpha_fpo);
-	FP_Load(&FP_list[3], ps_textured_alpha_fpo);
 }
 
 static void FP_SwitchActive(void) {
 	int index = gfx_format == VERTEX_FORMAT_TEXTURED ? 1 : 0;
-	if (alphaTesting) index += 2; // TODO: Doesn't work
-	
+
 	FragmentProgram* FP = &FP_list[index];
 	if (FP == FP_active) return;
 	FP_active = FP;
@@ -128,6 +122,10 @@ static void Gfx_RestoreState(void) {
 	rsxSetDepthFunc(context, GCM_LEQUAL);
 	rsxSetClearDepthStencil(context, 0xFFFFFFFF);
 	//rsxSetFrontFace(context, GCM_FRONTFACE_CCW);
+	
+	rsxSetAlphaFunc(context, GCM_GREATER, 0.5f);
+	rsxSetBlendFunc(context, GCM_SRC_ALPHA, GCM_ONE_MINUS_SRC_ALPHA, GCM_SRC_ALPHA, GCM_ONE_MINUS_SRC_ALPHA);
+        rsxSetBlendEquation(context, GCM_FUNC_ADD, GCM_FUNC_ADD);
 	
 	rsxSetUserClipPlaneControl(context,GCM_USER_CLIP_PLANE_DISABLE,
 									   GCM_USER_CLIP_PLANE_DISABLE,
@@ -294,22 +292,32 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	rsxSetColorMask(context, mask);
 }
 
+static cc_bool depth_write = true, depth_test = true;
+static void UpdateDepthState(void) {
+	// match Desktop behaviour, where disabling depth testing also disables depth writing
+	rsxSetDepthWriteEnable(context, depth_write & depth_test);
+	rsxSetDepthTestEnable(context,  depth_test);
+}
+
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	rsxSetDepthWriteEnable(context, enabled);
+	depth_write = enabled;
+	UpdateDepthState();
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
-	rsxSetDepthTestEnable(context, enabled);
+	depth_test = enabled;
+	UpdateDepthState();
 }
 
 void Gfx_SetTexturing(cc_bool enabled) { }
 
 void Gfx_SetAlphaTest(cc_bool enabled) {
-	alphaTesting = enabled;
-	FP_SwitchActive();
+	rsxSetAlphaTestEnable(context, enabled);
 }
 
-void Gfx_DepthOnlyRendering(cc_bool depthOnly) {/* TODO */
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 }
 
 
@@ -390,13 +398,15 @@ void Gfx_EndFrame(void) {
 
 	cur_fb ^= 1;
 	SetRenderTarget(cur_fb);
+	// NOTE: Must be called, otherwise renders upside down at 4x zoom
+	Gfx_OnWindowResize();
 	
 	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) {
 	f32 scale[4], offset[4];
-
+	
 	u16 w = DisplayInfo.Width;
 	u16 h = DisplayInfo.Height;
 	f32 zmin = 0.0f;
@@ -419,7 +429,6 @@ void Gfx_OnWindowResize(void) {
 	{
 		rsxSetViewportClip(context, i, w, h);
 	}
-	/* TODO test */
 }
 
 
