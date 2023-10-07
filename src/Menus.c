@@ -563,6 +563,7 @@ static void PauseScreen_Init(void* screen) {
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
+	        {  160,   100, "Friends",          Menu_SwitchSaveLevel },
 		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
@@ -788,6 +789,134 @@ void OptionsGroupScreen_Show(void) {
 	s->VTABLE     = &OptionsGroupScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
+
+/*########################################################################################################################*
+*----------------------------------------------------Friends--------------------------------------------------------------*
+*#########################################################################################################################*/
+static struct FriendsGroupScreen {
+	Screen_Body
+	struct FontDesc textFont;
+	struct ButtonWidget btns[8];
+	struct TextWidget desc;	
+	struct ButtonWidget done;	
+} FriendsGroupScreen;
+
+static struct Widget* friGroups_widgets[] = {
+	(struct Widget*)&FriendsGroupScreen.btns[0], (struct Widget*)&FriendsGroupScreen.btns[1],
+	(struct Widget*)&FriendsGroupScreen.btns[2], (struct Widget*)&FriendsGroupScreen.btns[3],
+	(struct Widget*)&FriendsGroupScreen.btns[4], (struct Widget*)&FriendsGroupScreen.btns[5],
+	(struct Widget*)&FriendsGroupScreen.btns[6], (struct Widget*)&FriendsGroupScreen.btns[7],
+	(struct Widget*)&FriendsGroupScreen.desc,    (struct Widget*)&FriendsGroupScreen.done
+};
+#define FRIGROUPS_MAX_VERTICES (8 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
+
+static const char* const friGroup_descs[8] = {
+	"&eMusic/Sound, view bobbing, and more",
+	"&eGui scale, font settings, and more",
+	"&eFPS limit, view distance, entity names/shadows",
+	"&eSet key bindings, bind keys to act as mouse clicks",
+	"&eChat options",
+	"&eHacks allowed, jump settings, and more",
+	"&eEnv colours, water level, weather, and more",
+	"&eSettings for resembling the original classic",
+};
+static const struct SimpleButtonDesc friGroup_btns[8] = {
+	{ -160, -100, "To share",      Menu_SwitchMisc        },
+	{ -160,  -50, "worlds with friends",       Menu_SwitchGui         },
+	{ -160,    0, "Fork this github",  Menu_SwitchGfx         },
+	{ -160,   50, "https://github.com/CrobyCheese/Classicube-Friends-List",          SwitchBindsMain        },
+	{  160, -100, "Error",      Menu_SwitchChat        },
+	{  160,  -50, "Error (enough errors)",    Menu_SwitchHacks       },
+	{  160,    0, "Error (YOU CAN STOP NOW)",      Menu_SwitchEnv         },
+	{  160,   50, "Error (STTTOOPPP)", Menu_SwitchNostalgia   }
+};
+
+static void FriendsGroupScreen_CheckHacksAllowed(void* screen) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+	Widget_SetDisabled(&s->btns[6],
+			!LocalPlayer_Instance.Hacks.CanAnyHacks); /* env settings */
+	s->dirty = true;
+}
+
+CC_NOINLINE static void FriendsGroupScreen_UpdateDesc(struct FriendsGroupScreen* s) {
+	TextWidget_SetConst(&s->desc, optsGroup_descs[s->selectedI], &s->textFont);
+}
+
+static void FriendsGroupScreen_ContextLost(void* screen) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+	Font_Free(&s->textFont);
+	Screen_ContextLost(screen);
+}
+
+static void FriendsGroupScreen_ContextRecreated(void* screen) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+	struct FontDesc titleFont;
+	Screen_UpdateVb(screen);
+
+	Gui_MakeTitleFont(&titleFont);
+	Gui_MakeBodyFont(&s->textFont);
+
+	Menu_SetButtons(s->btns, &titleFont, friGroup_btns, 8);
+	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
+
+	if (s->selectedI >= 0) FriendsGroupScreen_UpdateDesc(s);
+	FriendsGroupScreen_CheckHacksAllowed(s);
+	Font_Free(&titleFont);
+}
+
+static void FriendsGroupScreen_Layout(void* screen) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+	Menu_LayoutButtons(s->btns, friGroup_btns, 8);
+	Widget_SetLocation(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	Menu_LayoutBack(&s->done);
+}
+
+static void FriendsGroupScreen_Init(void* screen) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+
+	Event_Register_(&UserEvents.HackPermsChanged, s, FriendsGroupScreen_CheckHacksAllowed);
+	s->widgets     = friGroups_widgets;
+	s->numWidgets  = Array_Elems(friGroups_widgets);
+	s->selectedI   = -1;
+	s->maxVertices = FRIGROUPS_MAX_VERTICES;
+
+	Menu_InitButtons(s->btns, 300, friGroup_btns, 8);
+	TextWidget_Init(&s->desc);
+	ButtonWidget_Init(&s->done, 400, Menu_SwitchPause);
+}
+
+static void FriendsGroupScreen_Free(void* screen) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+	Event_Unregister_(&UserEvents.HackPermsChanged, s, FriendsGroupScreen_CheckHacksAllowed);
+}
+
+static int FriendsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
+	struct FriendsGroupScreen* s = (struct FriendsGroupScreen*)screen;
+	int i = Menu_DoPointerMove(s, id, x, y);
+	if (i == -1 || i == s->selectedI) return true;
+	if (i >= Array_Elems(friGroup_descs)) return true;
+
+	s->selectedI = i;
+	OptionsGroupScreen_UpdateDesc(s);
+	return true;
+}
+
+static const struct ScreenVTABLE FriendsGroupScreen_VTABLE = {
+	FriendsGroupScreen_Init,   Screen_NullUpdate, FriendsGroupScreen_Free,
+	MenuScreen_Render2,        Screen_BuildMesh,
+	Menu_InputDown,            Screen_InputUp,    Screen_TKeyPress,               Screen_TText,
+	Menu_PointerDown,          Screen_PointerUp,  FriendsGroupScreen_PointerMove, Screen_TMouseScroll,
+	FriendsGroupScreen_Layout, FriendsGroupScreen_ContextLost, FriendsGroupScreen_ContextRecreated
+};
+void FriendsGroupScreen_Show(void) {
+	struct FriendsGroupScreen* s = &FriendsGroupScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &FriendsGroupScreen_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+
+
 
 
 /*########################################################################################################################*
