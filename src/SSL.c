@@ -461,30 +461,16 @@ static void InjectEntropy(SSLContext* ctx) {
 	
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
-#elif defined CC_BUILD_GCWII
+#else
+#warning "Using uninitialised stack data for entropy. This should be replaced with actual cryptographic RNG data"
 static void InjectEntropy(SSLContext* ctx) {
 	char buf[32];
-	// TODO: Is there an actual API to retrieve random data?
+	// TODO: Use actual APIs to retrieve random data
 	
 	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
 }
-#elif defined CC_BUILD_PSP
-static void InjectEntropy(SSLContext* ctx) {
-	char buf[32];
-	// TODO: Is there an actual API to retrieve random data?
-
-	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
-}
-#elif defined CC_BUILD_VITA
-static void InjectEntropy(SSLContext* ctx) {
-	char buf[32];
-	// TODO: Is there an actual API to retrieve random data?
-
-	br_ssl_engine_inject_entropy(&ctx->sc.eng, buf, 32);
-}
-#else
-static void InjectEntropy(SSLContext* ctx) { }
 #endif
+
 static void SetCurrentTime(SSLContext* ctx) {
 	cc_uint64 cur = DateTime_CurrentUTC_MS() / 1000;
 	uint32_t days = (uint32_t)(cur / 86400) + 366;

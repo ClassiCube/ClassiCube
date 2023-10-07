@@ -26,7 +26,7 @@ int Math_Ceil(float value) {
 	return valueI < value ? valueI + 1 : valueI;
 }
 
-int Math_Log2(cc_uint32 value) {
+int Math_ilog2(cc_uint32 value) {
 	cc_uint32 r = 0;
 	while (value >>= 1) r++;
 	return r;
@@ -73,6 +73,7 @@ int Math_NextPowOf2(int value) {
 cc_bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Random number generator------------------------------------------------*
@@ -135,25 +136,12 @@ float Random_Float(RNGState* seed) {
  */
 
 /* Function prototypes */
-static double Floord(double);
-
-static double SinStage1(double);
-static double SinStage2(double);
-static double SinStage3(double);
-
-static double AtanStage1(double);
-static double AtanStage2(double);
-static double Atan(double);
-
-static double Exp2Stage1(double);
 static double Exp2(double);
-
-static double Log2Stage1(double);
 static double Log2(double);
 
 /* Global constants */
-static const double DOUBLE_PI = 3.141592653589793238462643383279502884197169399;
-static const double DOUBLE_DIV_2_PI = 1.0 / (2.0 * DOUBLE_PI);
+#define PI 3.141592653589793238462643383279502884197169399
+#define DIV_2_PI (1.0 / (2.0 * PI))
 static const double INF = 1.0 / 0.0;
 static const double NEGATIVE_INF = 1.0 / -0.0;
 static const double DOUBLE_NAN = 0.0 / 0.0;
@@ -165,7 +153,7 @@ static const double LOGE2 = 0.6931471805599453094172321214581765680755001343602;
 
 /* Calculates the floor of a double.
  */
-double Floord(double x) {
+static double Floord(double x) {
 	if (x >= 0)
 		return (double) ((int) x);
 	return (double) (((int) x) - 1);
@@ -182,7 +170,7 @@ double Floord(double x) {
  * Allowed input range: [0, 1]
  * Precision: 16.47
  */
-double SinStage1(double x) {
+static double SinStage1(double x) {
 	const double A[] = {
 		.52359877559829885532,
 		-.2392459620393377657e-1,
@@ -211,7 +199,7 @@ double SinStage1(double x) {
  * Associated math function: sin(2 * pi * x)
  * Allowed input range: [0, 0.25]
  */
-double SinStage2(double x) {
+static double SinStage2(double x) {
 	double sin_6 = SinStage1(x * 4.0);
 	return sin_6 * (3.0 - 4.0 * sin_6 * sin_6);
 }
@@ -222,7 +210,7 @@ double SinStage2(double x) {
  * Associated math function: sin(2 * pi * x)
  * Allowed input range: [0, 1]
  */
-double SinStage3(double x) {
+static double SinStage3(double x) {
 	if (x < 0.25)
 		return SinStage2(x);
 	if (x < 0.5)
@@ -244,7 +232,7 @@ double Math_Sin(double x) {
 	if (x == INF || x == NEGATIVE_INF || x == DOUBLE_NAN)
 		return DOUBLE_NAN;
 
-	x_div_pi = x * DOUBLE_DIV_2_PI;
+	x_div_pi = x * DIV_2_PI;
 	return SinStage3(x_div_pi - Floord(x_div_pi));
 }
 
@@ -264,7 +252,7 @@ double Math_Cos(double x) {
 	if (x == INF || x == NEGATIVE_INF || x == DOUBLE_NAN)
 		return DOUBLE_NAN;
 
-	x_div_pi_shifted = x * DOUBLE_DIV_2_PI + 0.25;
+	x_div_pi_shifted = x * DIV_2_PI + 0.25;
 	return SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
 }
 
@@ -279,7 +267,7 @@ double Math_Cos(double x) {
  * Allowed input range: [0, tan(pi/32)]
  * Precision: 16.52
  */
-double AtanStage1(double x) {
+static double AtanStage1(double x) {
 	const double A[] = {
 		.99999999999969557,
 		-.3333333333318,
@@ -314,7 +302,7 @@ double AtanStage1(double x) {
  * Associated math function: arctan(x)
  * Allowed input range: [0, infinity]
  */
-double AtanStage2(double x) {
+static double AtanStage2(double x) {
 	const double X_i[] = {
 		0.0,
 		0.0984914033571642477671304050090839155018329620361328125,
@@ -368,9 +356,9 @@ double AtanStage2(double x) {
 
 	t = div_x_i[R] - div_x_i_2_plus_1[R] / (div_x_i[R] + x);
 	if (t >= 0)
-		return (2 * R - 2) * DOUBLE_PI / 32.0 + AtanStage1(t);
+		return (2 * R - 2) * PI / 32.0 + AtanStage1(t);
 
-	return (2 * R - 2) * DOUBLE_PI / 32.0 - AtanStage1(-t);
+	return (2 * R - 2) * PI / 32.0 - AtanStage1(-t);
 }
 
 /* Uses the property arctan(x) = -arctan(-x).
@@ -378,13 +366,13 @@ double AtanStage2(double x) {
  * Associated math function: arctan(x)
  * Allowed input range: anything
  */
-double Atan(double x) {
+static double Atan(double x) {
 	if (x == DOUBLE_NAN)
 		return DOUBLE_NAN;
 	if (x == NEGATIVE_INF)
-		return -DOUBLE_PI / 2.0;
+		return -PI / 2.0;
 	if (x == INF)
-		return DOUBLE_PI / 2.0;
+		return PI / 2.0;
 	if (x >= 0)
 		return AtanStage2(x);
 	return -AtanStage2(-x);
@@ -400,13 +388,13 @@ double Math_Atan2(double x, double y) {
 		return Atan(y / x);
 	if (x < 0) {
 		if (y >= 0)
-			return Atan(y / x) + DOUBLE_PI;
-		return Atan(y / x) - DOUBLE_PI;
+			return Atan(y / x) + PI;
+		return Atan(y / x) - PI;
 	}
 	if (y > 0)
-		return DOUBLE_PI / 2.0;
+		return PI / 2.0;
 	if (y < 0)
-		return -DOUBLE_PI / 2.0;
+		return -PI / 2.0;
 	return DOUBLE_NAN;
 }
 
@@ -422,7 +410,7 @@ double Math_Atan2(double x, double y) {
  * Allowed input range: [-1/2, 1/2]
  * Precision: 18.08
  */
-double Exp2Stage1(double x) {
+static double Exp2Stage1(double x) {
 	const double A_P[] = {
 		.1513906799054338915894328e4,
 		.20202065651286927227886e2,
@@ -509,7 +497,7 @@ double Math_Exp(double x) {
  * Allowed input range: [0.5, 1]
  * Precision: 8.32
  */
-double Log2Stage1(double x) {
+static double Log2Stage1(double x) {
 	const double A_P[] = {
 		-.205466671951e1,
 		-.88626599391e1,

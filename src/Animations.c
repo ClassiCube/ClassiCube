@@ -41,7 +41,7 @@ static void LavaAnimation_Tick(void) {
 
 	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
 	mask  = size - 1;
-	shift = Math_Log2(size);
+	shift = Math_ilog2(size);
 
 	if (!L_rndInited) {
 		Random_SeedFromCurrentTime(&L_rnd);
@@ -122,7 +122,7 @@ static void WaterAnimation_Tick(void) {
 
 	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
 	mask  = size - 1;
-	shift = Math_Log2(size);
+	shift = Math_ilog2(size);
 
 	if (!W_rndInited) {
 		Random_SeedFromCurrentTime(&W_rnd);

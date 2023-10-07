@@ -337,7 +337,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_result res;
 
 	/* header variables */
-	static cc_uint32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
+	static const cc_uint32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 	cc_uint8 col, bitsPerSample, bytesPerPixel;
 	Png_RowExpander rowExpander;
 	cc_uint32 scanlineSize, scanlineBytes;
@@ -395,7 +395,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			bitsPerSample = tmp[8]; col = tmp[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
-			if (rowExpander == NULL) return PNG_ERR_INVALID_COL_BPP;
+			if (!rowExpander) return PNG_ERR_INVALID_COL_BPP;
 
 			if (tmp[10] != 0) return PNG_ERR_COMP_METHOD;
 			if (tmp[11] != 0) return PNG_ERR_FILTER;
@@ -605,7 +605,8 @@ static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, cc_boo
 
 static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* best, int lineLen, cc_bool alpha) {
 	cc_uint8* dst;
-	int bestFilter, bestEstimate = Int32_MaxValue;
+	int bestFilter   = PNG_FILTER_SUB;
+	int bestEstimate = Int32_MaxValue;
 	int x, filter, estimate;
 
 	dst = best + 1;

@@ -1018,7 +1018,7 @@ void imdct_init(struct imdct_state* state, int n) {
 	float *A = state->a, *B = state->b, *C = state->c;
 	cc_uint32* reversed;
 
-	log2_n   = Math_Log2(n);
+	log2_n   = Math_ilog2(n);
 	reversed = state->reversed;
 	state->n = n; state->log2_n = log2_n;
 

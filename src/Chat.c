@@ -650,8 +650,6 @@ static struct ChatCommand TeleportCommand = {
 *------------------------------------------------------BlockEditCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool BlockEditCommand_GetInt(const cc_string* str, const char* name, int* value, int min, int max) {
-	int maxTexs = ATLAS1D_MAX_ATLASES;
-
 	if (!Convert_ParseInt(str, value)) {
 		Chat_Add1("&eBlockEdit: &e%c must be an integer", name);
 		return false;

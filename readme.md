@@ -82,7 +82,7 @@ And also runs on:
 * PSP - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_psp.yml))
 * PS Vita - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml))
 * Xbox - unfinished, major rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox.yml))
-* PS3 - doesn't render properly yet
+* PS3 - unfinished, rendering issues
 
 # Compiling 
 

@@ -1529,7 +1529,7 @@ static int CellWidth(cc_uint8* rows) {
 	{
 		widest = max(widest, rows[y]);
 	}
-	return Math_Log2(widest) + 2; /* add padding for next character */
+	return Math_ilog2(widest) + 2; /* add padding for next character */
 }
 
 int SysFont_TextWidth(struct DrawTextArgs* args) {

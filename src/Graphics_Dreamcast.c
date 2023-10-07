@@ -254,7 +254,7 @@ static unsigned Interleave(unsigned x) {
 	int min_dimension    = Math.Min(w, h);
 	
 	int interleave_mask  = min_dimension - 1;
-	int interleaved_bits = Math_Log2(min_dimension);
+	int interleaved_bits = Math_ilog2(min_dimension);
 	
 	int shifted_mask = (~0) & ~interleave_mask;
 	// as lower interleaved bits contain both X and Y, need to adjust the
@@ -280,7 +280,7 @@ static unsigned Interleave(unsigned x) {
 #define Twiddle_CalcFactors(w, h) \
 	min_dimension    = min(w, h); \
 	interleave_mask  = min_dimension - 1; \
-	interleaved_bits = Math_Log2(min_dimension); \
+	interleaved_bits = Math_ilog2(min_dimension); \
 	shifted_mask     = 0xFFFFFFFFU & ~interleave_mask; \
 	shift_bits       = interleaved_bits;
 	

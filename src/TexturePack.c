@@ -73,7 +73,7 @@ static void Atlas_Update1D(void) {
 
 	Atlas1D.InvTileSize = 1.0f / Atlas1D.TilesPerAtlas;
 	Atlas1D.Mask  = Atlas1D.TilesPerAtlas - 1;
-	Atlas1D.Shift = Math_Log2(Atlas1D.TilesPerAtlas);
+	Atlas1D.Shift = Math_ilog2(Atlas1D.TilesPerAtlas);
 }
 
 /* Loads the given atlas and converts it into an array of 1D atlases. */

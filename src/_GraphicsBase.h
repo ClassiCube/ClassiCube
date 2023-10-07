@@ -324,7 +324,7 @@ static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, in
 
 /* Returns the maximum number of mipmaps levels used for given size. */
 static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
-	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
+	int lvlsWidth = Math_ilog2(width), lvlsHeight = Math_ilog2(height);
 	if (customMipmapsLevels) {
 		int lvls = min(lvlsWidth, lvlsHeight);
 		return min(lvls, 4);

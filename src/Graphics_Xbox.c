@@ -164,7 +164,7 @@ static unsigned Interleave(unsigned x) {
 #define Twiddle_CalcFactors(w, h) \
 	min_dimension    = min(w, h); \
 	interleave_mask  = min_dimension - 1; \
-	interleaved_bits = Math_Log2(min_dimension); \
+	interleaved_bits = Math_ilog2(min_dimension); \
 	shifted_mask     = 0xFFFFFFFFU & ~interleave_mask; \
 	shift_bits       = interleaved_bits;
 	
@@ -251,8 +251,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	CCTexture* tex = (CCTexture*)texId;
 	if (!tex) tex  = white_square;
 	
-	unsigned log_u = Math_Log2(tex->width);
-	unsigned log_v = Math_Log2(tex->height);
+	unsigned log_u = Math_ilog2(tex->width);
+	unsigned log_v = Math_ilog2(tex->height);
 	uint32_t* p;
 
 	p = pb_begin();
