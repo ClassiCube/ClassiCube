@@ -198,6 +198,17 @@ static PackedCol Menu_HexCol(const cc_string* str) {
 	return PackedCol_Make(rgb[0], rgb[1], rgb[2], 255);
 }
 
+static void friends()
+{   int verison = 1;
+    printf("|==FRIENDS==|\n");
+    printf("|===  1  ===|\n");
+    printf("|===share===|\n");
+    printf("https://github.com/CrobyCheese/Classicube-Friends-List/\n");
+    printf("|===save===|\n");
+    printf("|Save Level \nTHEN upload|\n");
+    return 0;
+}
+
 static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
 static void Menu_SwitchPause(void* a, void* b)          { Gui_ShowPauseMenu(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { ClassicOptionsScreen_Show(); }
@@ -223,6 +234,7 @@ static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show()
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
 static void Menu_SwitchLoadLevel(void* a, void* b)       { LoadLevelScreen_Show(); }
 static void Menu_SwitchSaveLevel(void* a, void* b)       { SaveLevelScreen_Show(); }
+static void Menu_SwitchFriLevel(void* a, void* b)        { friends(); }
 static void Menu_SwitchTexPacks(void* a, void* b)        { TexturePackScreen_Show(); }
 static void Menu_SwitchHotkeys(void* a, void* b)         { HotkeyListScreen_Show(); }
 static void Menu_SwitchFont(void* a, void* b)            { FontListScreen_Show(); }
@@ -564,7 +576,8 @@ static void PauseScreen_Init(void* screen) {
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
 		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
-		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
+		{  160,   100, "Friends...",          Menu_SwitchFriLevel },
+	        { -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
 	s->widgets     = pause_widgets;
 	s->numWidgets  = Array_Elems(pause_widgets);
