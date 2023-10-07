@@ -563,7 +563,7 @@ static void PauseScreen_Init(void* screen) {
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
 		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
-	        {  160,   100, "Friends",          Menu_SwitchSaveLevel },
+	        {  160,   100, "Friends",          System.Diagnostics.Process.Start("https://github.com/CrobyCheese/Classicube-Friends-List"); },
 		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
