@@ -538,7 +538,7 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		/* See https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/ */
 		/* 'Using normally distributed random numbers' */
 		d  = Random_Float(&rnd);
-		d  = Math_Exp(Math_Log(d) / 3.0); /* d^1/3 for better distribution */
+		d  = Math_Exp2(Math_Log2(d) / 3.0); /* d^1/3 for better distribution */
 		d *= e->spread;
 
 		p->base.lastPos.X = x + offset.X * d;

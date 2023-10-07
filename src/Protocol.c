@@ -1734,8 +1734,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSi
 	Blocks.Collide[block] = *data++;
 
 	speedLog2 = (*data++ - 128) / 64.0f;
-	#define LOG_2 0.693147180559945
-	Blocks.SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * speedLog2); /* pow(2, x) */
+	Blocks.SpeedMultiplier[block] = (float)Math_Exp2(speedLog2);
 
 	Block_Tex(block, FACE_YMAX) = BlockDefs_Tex(&data);
 	if (uniqueSideTexs) {

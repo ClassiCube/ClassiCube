@@ -135,20 +135,18 @@ float Random_Float(RNGState* seed) {
  *      appendix.
  */
 
-/* Function prototypes */
-static double Exp2(double);
-static double Log2(double);
-
 /* Global constants */
 #define PI 3.141592653589793238462643383279502884197169399
 #define DIV_2_PI (1.0 / (2.0 * PI))
-static const double INF = 1.0 / 0.0;
-static const double NEGATIVE_INF = 1.0 / -0.0;
-static const double DOUBLE_NAN = 0.0 / 0.0;
+
+static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
+#define DBL_NAN  *((double*)&_DBL_NAN)
+static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
+#define POS_INF *((double*)&_POS_INF)
+static const cc_uint64 _NEG_INF = 0xFFF0000000000000ULL;
+#define NEG_INF *((double*)&_NEG_INF)
 
 static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
-
-static const double LOG2E = 1.4426950408889634073599246810018921374266459541529;
 static const double LOGE2 = 0.6931471805599453094172321214581765680755001343602;
 
 /* Calculates the floor of a double.
@@ -229,8 +227,8 @@ static double SinStage3(double x) {
 double Math_Sin(double x) {
 	double x_div_pi;
 
-	if (x == INF || x == NEGATIVE_INF || x == DOUBLE_NAN)
-		return DOUBLE_NAN;
+	if (x == POS_INF || x == NEG_INF || x == DBL_NAN)
+		return DBL_NAN;
 
 	x_div_pi = x * DIV_2_PI;
 	return SinStage3(x_div_pi - Floord(x_div_pi));
@@ -249,8 +247,8 @@ double Math_Sin(double x) {
 double Math_Cos(double x) {
 	double x_div_pi_shifted;
 
-	if (x == INF || x == NEGATIVE_INF || x == DOUBLE_NAN)
-		return DOUBLE_NAN;
+	if (x == POS_INF || x == NEG_INF || x == DBL_NAN)
+		return DBL_NAN;
 
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;
 	return SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
@@ -312,7 +310,7 @@ static double AtanStage2(double x) {
 		1.218503525587976366040265929768793284893035888671875,
 		1.8708684117893887854933154812897555530071258544921875,
 		3.29655820893832096629694206058047711849212646484375,
-		INF,
+		(float)(1e+300 * 1e+300) /* Infinity */
 	};
 
 	const double div_x_i[] = {
@@ -367,11 +365,11 @@ static double AtanStage2(double x) {
  * Allowed input range: anything
  */
 static double Atan(double x) {
-	if (x == DOUBLE_NAN)
-		return DOUBLE_NAN;
-	if (x == NEGATIVE_INF)
+	if (x == DBL_NAN)
+		return DBL_NAN;
+	if (x == NEG_INF)
 		return -PI / 2.0;
-	if (x == INF)
+	if (x == POS_INF)
 		return PI / 2.0;
 	if (x >= 0)
 		return AtanStage2(x);
@@ -395,7 +393,7 @@ double Math_Atan2(double x, double y) {
 		return PI / 2.0;
 	if (y < 0)
 		return -PI / 2.0;
-	return DOUBLE_NAN;
+	return DBL_NAN;
 }
 
 /************
@@ -451,13 +449,13 @@ static double Exp2Stage1(double x) {
  * Associated math function: 2^x
  * Allowed input range: anything
  */
-double Exp2(double x) {
+double Math_Exp2(double x) {
 	int x_int;
 	union { double d; cc_uint64 i; } doi;
 
-	if (x == INF || x == DOUBLE_NAN)
+	if (x == POS_INF || x == DBL_NAN)
 		return x;
-	if (x == NEGATIVE_INF)
+	if (x == NEG_INF)
 		return 0.0;
 
 	x_int = (int) x;
@@ -468,22 +466,12 @@ double Exp2(double x) {
 	if (x_int < -1022)
 		return 0.0;
 	if (x_int > 1023)
-		return INF;
+		return POS_INF;
 
 	doi.i = x_int + 1023;
 	doi.i <<= 52;
 
 	return doi.d * SQRT2 * Exp2Stage1(x - (double) x_int - 0.5);
-}
-
-/* Uses the fact that
- *   exp(x) = 2^(x * log_2(e)).
- *
- * Associated math function: exp(x)
- * Allowed input range: anything
- */
-double Math_Exp(double x) {
-	return Exp2(x * LOG2E);
 }
 
 /************
@@ -538,24 +526,24 @@ static double Log2Stage1(double x) {
  * Associated math function: log_2(x)
  * Allowed input range: anything
  */
-double Log2(double x) {
+double Math_Log2(double x) {
 	union { double d; cc_uint64 i; } doi;
-	int integer_part;
+	int exponent;
 
-	if (x == INF)
-		return INF;
+	if (x == POS_INF)
+		return POS_INF;
 
-	if (x == NEGATIVE_INF || x == DOUBLE_NAN || x <= 0.0)
-		return DOUBLE_NAN;
+	if (x == NEG_INF || x == DBL_NAN || x <= 0.0)
+		return DBL_NAN;
 
 	doi.d = x;
-	integer_part = (doi.i >> 52);
-	integer_part -= 1023;
+	exponent = (doi.i >> 52);
+	exponent -= 1023;
 
 	doi.i |= (((cc_uint64) 1023) << 52);
 	doi.i &= ~(((cc_uint64) 1024) << 52);
 
-	return integer_part + Log2Stage1(doi.d);
+	return exponent + Log2Stage1(doi.d);
 }
 
 /* Uses the property that
@@ -565,7 +553,5 @@ double Log2(double x) {
  * Allowed input range: anything
  */
 double Math_Log(double x) {
-	return Log2(x) * LOGE2;
+	return Math_Log2(x) * LOGE2;
 }
-
-
