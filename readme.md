@@ -18,6 +18,13 @@ ClassiCube is not trying to replicate modern Minecraft versions - and therefore 
 
 You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
+### The Friends Update
+![screenshot_n](https://i.imgur.com/1fzYoSo.png)
+This update was a update no ClassiCube developer
+would care about. But MrSleet did it anyway.
+Fork the github to make worlds and share them with your friends!
+(The Friends list is pretty early in development)
+
 ### We need your help
 
 ClassiCube strives to replicate the original Minecraft Classic experience by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
