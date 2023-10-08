@@ -74,6 +74,12 @@ cc_bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
+#ifdef CC_BUILD_DREAMCAST
+/* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
+/* TODO: Properly investigate this issue */
+double make_dreamcast_build_compile(void) { fabs(4); }
+#endif
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Random number generator------------------------------------------------*

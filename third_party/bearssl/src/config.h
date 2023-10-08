@@ -32,6 +32,15 @@
  * non-zero integer (normally 1). If the macro is not defined, then
  * autodetection applies.
  */
+ 
+/* The x86 intrinsics seem to be incomplete compared to what aes_x86ni expects when compiling with NXDK */
+#ifdef NXDK
+#define BR_AES_X86NI 0
+#define BR_ENABLE_INTRINSICS 0
+#define BR_SSE2 0
+#define BR_RDRAND 0
+#undef _WIN32
+#endif
 
 /*
  * When BR_64 is enabled, 64-bit integer types are assumed to be
@@ -144,26 +153,6 @@
  * former takes precedence.
  *
 #define BR_USE_WIN32_RAND   1
- */
-
-/*
- * When BR_USE_UNIX_TIME is enabled, the X.509 validation engine obtains
- * the current time from the OS by calling time(), and assuming that the
- * returned value (a 'time_t') is an integer that counts time in seconds
- * since the Unix Epoch (Jan 1st, 1970, 00:00 UTC).
- *
-#define BR_USE_UNIX_TIME   1
- */
-
-/*
- * When BR_USE_WIN32_TIME is enabled, the X.509 validation engine obtains
- * the current time from the OS by calling the Win32 function
- * GetSystemTimeAsFileTime().
- *
- * Note: if both BR_USE_UNIX_TIME and BR_USE_WIN32_TIME are defined, the
- * former takes precedence.
- *
-#define BR_USE_WIN32_TIME   1
  */
 
 /*
