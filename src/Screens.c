@@ -1376,7 +1376,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	TextGroupWidget_GetSelected(&s->chat, &text, x, y);
 	if (!text.length) return false;
 
-	if (Utils_IsUrlPrefix(&text)) {
+	if (Utils_IsUrlPrefix(&text) && Process_OpenSupported) {
 		UrlWarningOverlay_Show(&text);
 	} else if (Gui.ClickableChat) {
 		ChatScreen_AppendInput(&text);

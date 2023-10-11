@@ -408,16 +408,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 #define SOC_CTX_ALIGN 0x1000
 #define SOC_CTX_SIZE  0x1000 * 128
 
-cc_result Process_StartOpen(const cc_string* args) {
-	char url[NATIVE_STR_LEN];
-	int len = String_EncodeUtf8(url, args);
-	
-	// TODO: Not sure if this works or not
-	APT_PrepareToStartSystemApplet(APPID_WEB);
-	return APT_StartSystemApplet(APPID_WEB, url, len + 1, CUR_PROCESS_HANDLE); 
-	// len + 1 for null terminator
-}
-
 static void CreateRootDirectory(const char* path) {
 	// create root directories (no permissions anyways)
 	int res = mkdir(path, 0666);

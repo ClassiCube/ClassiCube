@@ -811,13 +811,15 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LButton_Init(s, &s->btnDirect,  200, 35, "Direct connect", main_btnDirect);
 	LButton_Init(s, &s->btnSPlayer, 200, 35, "Singleplayer",   main_btnSPlayer);
 
-	LLabel_Init(s,  &s->lblUpdate,   "&eChecking..",      
+	LLabel_Init(s,  &s->lblUpdate,  "&eChecking..",      
 				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
-	LButton_Init(s, &s->btnRegister, 100, 35, "Register", main_btnRegister);
-	LButton_Init(s, &s->btnOptions,  100, 35, "Options",  main_btnOptions);
+	if (Process_OpenSupported) {
+		LButton_Init(s, &s->btnRegister, 100, 35, "Register", main_btnRegister);
+	}
 
+	LButton_Init(s, &s->btnOptions, 100, 35, "Options", main_btnOptions);
 	if (Updater_Supported) {
-		LButton_Init(s, &s->btnUpdates, 100, 35, "Updates", main_btnUpdates);
+		LButton_Init(s, &s->btnUpdates,  100, 35, "Updates", main_btnUpdates);
 	}
 	
 	s->btnLogin.OnClick    = MainScreen_Login;

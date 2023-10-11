@@ -510,20 +510,6 @@ static void InitSockets(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef HW_RVL
-cc_result Process_StartOpen(const cc_string* args) {
-	char url[NATIVE_STR_LEN];
-	String_EncodeUtf8(url, args);
-	
-	// TODO: Not sure if this works or not
-	return WII_OpenURL(url);
-}
-#else
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-#endif
-
 static void AppendDevice(cc_string* path, char* cwd) {
 	// try to find device FAT mounted on, otherwise default to SD card
 	if (!cwd) { String_AppendConst(path, "sd"); return;	}

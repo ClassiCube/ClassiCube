@@ -416,10 +416,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 static void InitHDD(void) {
     hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
     if (!hdd_mounted) {
