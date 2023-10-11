@@ -236,7 +236,7 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 }
 
 
-static float Reversed_CalcZNear(float fov, int depthbufferBits) {
+static CC_INLINE float Reversed_CalcZNear(float fov, int depthbufferBits) {
 	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
 	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
 	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
@@ -266,7 +266,7 @@ static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, 
 /* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/ */
 /* The short version: if you want your renderer to properly handle textures with alphas when using */
 /* bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
-static BitmapCol AverageCol(BitmapCol p1, BitmapCol p2) {
+static BitmapCol AverageColor(BitmapCol p1, BitmapCol p2) {
 	cc_uint32 a1, a2, aSum;
 	cc_uint32 b1, g1, r1;
 	cc_uint32 b2, g2, r2;
@@ -298,7 +298,7 @@ static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, in
 	if (srcWidth == 1) {
 		for (y = 0; y < height; y++) {
 			/* 1x2 bilinear filter */
-			dst[0] = AverageCol(*src, *(src + srcWidth));
+			dst[0] = AverageColor(*src, *(src + srcWidth));
 
 			dst += width;
 			src += (srcWidth << 1);
@@ -313,9 +313,9 @@ static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, in
 		for (x = 0; x < width; x++) {
 			int srcX = (x << 1);
 			/* 2x2 bilinear filter */
-			BitmapCol ave0 = AverageCol(src0[srcX], src0[srcX + 1]);
-			BitmapCol ave1 = AverageCol(src1[srcX], src1[srcX + 1]);
-			dst[x] = AverageCol(ave0, ave1);
+			BitmapCol ave0 = AverageColor(src0[srcX], src0[srcX + 1]);
+			BitmapCol ave1 = AverageColor(src1[srcX], src1[srcX + 1]);
+			dst[x] = AverageColor(ave0, ave1);
 		}
 		src += (srcWidth << 1);
 		dst += width;

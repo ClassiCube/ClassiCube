@@ -27,6 +27,7 @@ typedef void (*LScreen_Func)(struct LScreen* s);
 	struct LWidget* hoveredWidget;  /* Widget the mouse is currently hovering over. */ \
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \
 	int numWidgets;           /* Number of widgets actually used */ \
+	int maxWidgets;           /* Maximum number of widgets that can be added to the screen */ \
 	struct LWidget** widgets; /* Array of pointers to all the widgets in the screen */ \
 	const char* title;        /* Titlebar text */
 
@@ -34,6 +35,7 @@ struct LScreen { LScreen_Layout };
 
 void LScreen_SelectWidget(struct LScreen* s, int idx, struct LWidget* w, cc_bool was);
 void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w);
+void LScreen_AddWidget(void* screen, void* widget);
 	
 void ChooseModeScreen_SetActive(cc_bool firstTime);
 void ColoursScreen_SetActive(void);
