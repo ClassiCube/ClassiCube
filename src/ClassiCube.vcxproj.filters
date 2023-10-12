@@ -342,6 +342,9 @@
     <ClInclude Include="_PlatformConsole.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="EntityRenderers.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -670,6 +673,9 @@
     </ClCompile>
     <ClCompile Include="Window_PS3.c">
       <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityRenderers.c">
+      <Filter>Source Files\Entities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

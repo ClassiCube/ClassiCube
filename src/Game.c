@@ -38,6 +38,7 @@
 #include "Animations.h"
 #include "SystemFonts.h"
 #include "Formats.h"
+#include "EntityRenderers.h"
 
 struct _GameData Game;
 cc_uint64 Game_FrameStart;
@@ -416,6 +417,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
 	Game_AddComponent(&Formats_Component);
+	Game_AddComponent(&EntityRenderers_Component);
 
 	LoadPlugins();
 	for (comp = comps_head; comp; comp = comp->next) {
@@ -468,7 +470,7 @@ static void Game_Render3D(double delta, float t) {
 	MapRenderer_RenderNormal(delta);
 	EnvRenderer_RenderMapSides();
 
-	Entities_DrawShadows();
+	EntityShadows_Render();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
 		PickedPosRenderer_Render(&Game_SelectedPos, true);
 	}

@@ -584,7 +584,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Process_OpenSupported = false;
+cc_bool Process_OpenSupported = true;
 
 static cc_result Process_RawGetExePath(cc_winstring* path, int* len) {
 	cc_result res;

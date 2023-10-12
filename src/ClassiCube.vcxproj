@@ -373,6 +373,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animations.h" />
+    <ClInclude Include="EntityRenderers.h" />
     <ClInclude Include="LBackend.h" />
     <ClInclude Include="Http.h" />
     <ClInclude Include="Audio.h" />
@@ -446,6 +447,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
+    <ClCompile Include="EntityRenderers.c" />
     <ClCompile Include="GameVersion.c" />
     <ClCompile Include="Graphics_3DS.c" />
     <ClCompile Include="Graphics_D3D11.c" />

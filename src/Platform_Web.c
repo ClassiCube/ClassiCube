@@ -322,6 +322,8 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool Process_OpenSupported = true;
+
 void Process_Exit(cc_result code) {
 	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
 	if (code) Window_Close();
