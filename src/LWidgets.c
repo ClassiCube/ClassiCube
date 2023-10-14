@@ -114,9 +114,10 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_OnSelect, LButton_OnUnselect /* Select */
 };
 void LButton_Init(void* screen, struct LButton* w, int width, int height, const char* text, 
-					const struct LLayout* layouts) {
+					LWidgetFunc onClick, const struct LLayout* layouts) {
 	w->VTABLE  = &lbutton_VTABLE;
 	w->type    = LWIDGET_BUTTON;
+	w->OnClick = onClick;
 	w->layouts = layouts;
 	w->autoSelectable = true;
 

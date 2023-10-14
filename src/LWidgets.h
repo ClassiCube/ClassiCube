@@ -43,23 +43,26 @@ struct LWidgetVTABLE {
 	void (*TextChanged)(void* elem, const cc_string* str);
 };
 
+
+
 #define LWidget_Layout \
-	const struct LWidgetVTABLE* VTABLE;  /* General widget functions */ \
-	int x, y, width, height;       /* Top left corner and dimensions of this widget */ \
-	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
-	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
-	cc_bool autoSelectable;        /* Whether this widget can get auto selected (e.g. pressing tab) */ \
-	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
-	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
-	cc_uint8 type;                 /* Type of this widget */ \
-	cc_bool skipsEnter;            /* Whether clicking this widget DOESN'T trigger OnEnterWidget */ \
-	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
-	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
-	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
-	Rect2D last;                   /* Widget's last drawn area */ \
-	void* meta;                    /* Backend specific data */ \
+	const struct LWidgetVTABLE* VTABLE; /* General widget functions */ \
+	int x, y, width, height; /* Top left corner and dimensions of this widget */ \
+	cc_bool hovered;         /* Whether this widget is currently being moused over */ \
+	cc_bool selected;        /* Whether this widget is last widget to be clicked on */ \
+	cc_bool autoSelectable;  /* Whether this widget can get auto selected (e.g. pressing tab) */ \
+	cc_bool dirty;           /* Whether this widget needs to be redrawn */ \
+	cc_bool opaque;          /* Whether this widget completely obscures background behind it */ \
+	cc_uint8 type;           /* Type of this widget */ \
+	cc_bool skipsEnter;      /* Whether clicking this widget DOESN'T trigger OnEnterWidget */ \
+	LWidgetFunc OnClick;     /* Called when widget is clicked */ \
+	LWidgetFunc OnHover;     /* Called when widget is hovered over */ \
+	LWidgetFunc OnUnhover;   /* Called when widget is no longer hovered over */ \
+	Rect2D last;             /* Widget's last drawn area */ \
+	void* meta;              /* Backend specific data */ \
 	const struct LLayout* layouts;
 
+typedef void (*LWidgetFunc)(void* widget);
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
 void LWidget_CalcOffsets(void);
@@ -70,7 +73,7 @@ struct LButton {
 	int _textWidth, _textHeight;
 };
 CC_NOINLINE void LButton_Init(void* screen, struct LButton* w, int width, int height, const char* text, 
-							const struct LLayout* layouts);
+							LWidgetFunc onClick, const struct LLayout* layouts);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active);
 
