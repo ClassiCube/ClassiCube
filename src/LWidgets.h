@@ -44,7 +44,6 @@ struct LWidgetVTABLE {
 };
 
 
-
 #define LWidget_Layout \
 	const struct LWidgetVTABLE* VTABLE; /* General widget functions */ \
 	int x, y, width, height; /* Top left corner and dimensions of this widget */ \
@@ -78,14 +77,15 @@ CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active);
 
 struct LCheckbox;
+typedef void (*LCheckboxChanged)(struct LCheckbox* cb);
 struct LCheckbox {
 	LWidget_Layout
 	cc_bool value;
 	cc_string text;
-	void (*ValueChanged)(struct LCheckbox* w);
+	LCheckboxChanged ValueChanged;
 };
 CC_NOINLINE void LCheckbox_Init(void* screen, struct LCheckbox* w, const char* text, 
-								const struct LLayout* layouts);
+								LCheckboxChanged onChanged, const struct LLayout* layouts);
 CC_NOINLINE void LCheckbox_Set(struct LCheckbox* w, cc_bool value);
 
 struct LInput;

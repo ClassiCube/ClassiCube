@@ -147,11 +147,12 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 	NULL, NULL  /* Select */
 };
 void LCheckbox_Init(void* screen, struct LCheckbox* w, const char* text, 
-					const struct LLayout* layouts) {
+					LCheckboxChanged onChanged, const struct LLayout* layouts) {
 	w->VTABLE  = &lcheckbox_VTABLE;
 	w->type    = LWIDGET_CHECKBOX;
 	w->layouts = layouts;
 	w->autoSelectable = true;
+	w->ValueChanged   = onChanged;
 
 	w->text = String_FromReadonly(text);
 	LBackend_CheckboxInit(w);

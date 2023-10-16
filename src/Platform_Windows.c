@@ -785,8 +785,20 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 
 	/* Plugin may have been compiled to load symbols from ClassiCube.exe, */
 	/*  but the user might have renamed it to something else */
-	if (res == ERROR_MOD_NOT_FOUND && loadingPlugin) {
+	if (res == ERROR_MOD_NOT_FOUND  && loadingPlugin) {
 		String_AppendConst(dst, "\n    Make sure the ClassiCube executable is named ClassiCube.exe");
+	}
+	if (res == ERROR_PROC_NOT_FOUND && loadingPlugin) {
+		String_AppendConst(dst, "\n    The plugin or your game may be outdated");
+	}
+
+	/* User might be trying to use 32 bit plugin with 64 bit executable, or vice versa */
+	if (res == ERROR_BAD_EXE_FORMAT && loadingPlugin) {
+		if (sizeof(cc_uintptr) == 4) {
+			String_AppendConst(dst, "\n    Try using a 32 bit version of the plugin instead");
+		} else {
+			String_AppendConst(dst, "\n    Try using a 64 bit version of the plugin instead");
+		}
 	}
 	return true;
 }

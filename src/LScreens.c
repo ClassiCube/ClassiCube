@@ -221,13 +221,7 @@ static void UseModeEnhanced(void* w)   { ChooseMode_Click(false, false); }
 static void UseModeClassicHax(void* w) { ChooseMode_Click(true,  true);  }
 static void UseModeClassic(void* w)    { ChooseMode_Click(true,  false); }
 
-static void ChooseModeScreen_Show(struct LScreen* s_) {
-	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
-
-	s->widgets    = chooseMode_widgets;
-	s->maxWidgets = Array_Elems(chooseMode_widgets);
-	s->numWidgets = 0;
-
+static void ChooseModeScreen_AddWidgets(struct ChooseModeScreen* s) {
 	LLine_Init(s,   &s->seps[0], 490, mode_seps0);
 	LLine_Init(s,   &s->seps[1], 490, mode_seps1);
 
@@ -252,6 +246,15 @@ static void ChooseModeScreen_Show(struct LScreen* s_) {
 		LButton_Init(s, &s->btnBack, 80, 35, "Back", 
 					SwitchToSettings, mode_btnBack);
 	}
+}
+
+static void ChooseModeScreen_Show(struct LScreen* s_) {
+	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
+
+	s->widgets    = chooseMode_widgets;
+	s->maxWidgets = Array_Elems(chooseMode_widgets);
+	s->numWidgets = 0;
+	ChooseModeScreen_AddWidgets(s);
 }
 
 void ChooseModeScreen_SetActive(cc_bool firstTime) {
@@ -417,8 +420,8 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	LButton_Init(s, &s->btnBack, 80, 35, "Back",
 				SwitchToThemes, clr_btnBack);
 
-	LCheckbox_Init(s, &s->cbClassic, "Classic style", clr_cbClassic);
-	s->cbClassic.ValueChanged = ColoursScreen_ToggleBG;
+	LCheckbox_Init(s, &s->cbClassic, "Classic style", 
+					ColoursScreen_ToggleBG, clr_cbClassic);
 }
 
 static void ColoursScreen_Show(struct LScreen* s_) {
@@ -1401,13 +1404,17 @@ static void SettingsScreen_AddWidgets(struct SettingsScreen* s) {
 	}
 
 #if defined CC_BUILD_MOBILE
-	LCheckbox_Init(s, &s->cbExtra, "Force landscape", set_cbExtra);
+	LCheckbox_Init(s, &s->cbExtra, "Force landscape", 
+				SettingsScreen_LockOrientation, set_cbExtra);
 #else
-	LCheckbox_Init(s, &s->cbExtra, "Close this after game starts", set_cbExtra);
+	LCheckbox_Init(s, &s->cbExtra, "Close this after game starts", 
+				SettingsScreen_AutoClose,       set_cbExtra);
 #endif
 
-	LCheckbox_Init(s, &s->cbEmpty, "Show empty servers in list", set_cbEmpty);
-	LCheckbox_Init(s, &s->cbScale, "Use display scaling", set_cbScale);
+	LCheckbox_Init(s, &s->cbEmpty, "Show empty servers in list", 
+				SettingsScreen_ShowEmpty,  set_cbEmpty);
+	LCheckbox_Init(s, &s->cbScale, "Use display scaling", 
+				SettingsScreen_DPIScaling, set_cbScale);
 	LButton_Init(s,   &s->btnBack, 80, 35, "Back", 
 				SwitchToMain, set_btnBack);
 }
@@ -1421,17 +1428,12 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	SettingsScreen_AddWidgets(s);
 
 #if defined CC_BUILD_MOBILE
-	s->cbExtra.ValueChanged = SettingsScreen_LockOrientation;
 	LCheckbox_Set(&s->cbExtra, Options_GetBool(OPT_LANDSCAPE_MODE, false));
 #else
-	s->cbExtra.ValueChanged = SettingsScreen_AutoClose;
 	LCheckbox_Set(&s->cbExtra, Options_GetBool(LOPT_AUTO_CLOSE, false));
 #endif
 
-	s->cbEmpty.ValueChanged = SettingsScreen_ShowEmpty;
 	LCheckbox_Set(&s->cbEmpty, Launcher_ShowEmptyServers);
-
-	s->cbScale.ValueChanged = SettingsScreen_DPIScaling;
 	LCheckbox_Set(&s->cbScale, DisplayInfo.DPIScaling);
 }
 
@@ -1679,11 +1681,8 @@ static void UpdatesScreen_Rel_1(void* w) { UpdatesScreen_Get(true,  1); }
 static void UpdatesScreen_Dev_0(void* w) { UpdatesScreen_Get(false, 0); }
 static void UpdatesScreen_Dev_1(void* w) { UpdatesScreen_Get(false, 1); }
 
-static void UpdatesScreen_Init(struct LScreen* s_) {
-	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	int builds    = Updater_Info.numBuilds;
-	s->widgets    = updates_widgets;
-	s->maxWidgets = Array_Elems(updates_widgets);
+static void UpdatesScreen_AddWidgets(struct UpdatesScreen* s) {
+	int builds = Updater_Info.numBuilds;
 
 	LLine_Init(s,   &s->seps[0],   320,                   upd_seps0);
 	LLine_Init(s,   &s->seps[1],   320,                   upd_seps1);
@@ -1715,6 +1714,11 @@ static void UpdatesScreen_Show(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	cc_uint64 buildTime;
 	cc_result res;
+
+	s->widgets    = updates_widgets;
+	s->maxWidgets = Array_Elems(updates_widgets);
+	s->numWidgets = 0;
+	UpdatesScreen_AddWidgets(s);
 
 	/* Initially fill out with update check result from main menu */
 	if (CheckUpdateTask.Base.completed && CheckUpdateTask.Base.success) {
@@ -1748,10 +1752,9 @@ static void UpdatesScreen_Free(struct LScreen* s_) {
 void UpdatesScreen_SetActive(void) {
 	struct UpdatesScreen* s = &UpdatesScreen;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init   = UpdatesScreen_Init;
-	s->Show   = UpdatesScreen_Show;
-	s->Tick   = UpdatesScreen_Tick;
-	s->Free   = UpdatesScreen_Free;
+	s->Show = UpdatesScreen_Show;
+	s->Tick = UpdatesScreen_Tick;
+	s->Free = UpdatesScreen_Free;
 
 	s->title          = "Update game";
 	s->onEscapeWidget = (struct LWidget*)&s->btnBack;
