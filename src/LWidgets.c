@@ -113,7 +113,7 @@ static const struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Hover,    LButton_Unhover,   /* Hover  */
 	LButton_OnSelect, LButton_OnUnselect /* Select */
 };
-void LButton_Init(void* screen, struct LButton* w, int width, int height, const char* text, 
+void LButton_Add(void* screen, struct LButton* w, int width, int height, const char* text, 
 					LWidgetFunc onClick, const struct LLayout* layouts) {
 	w->VTABLE  = &lbutton_VTABLE;
 	w->type    = LWIDGET_BUTTON;
@@ -146,7 +146,7 @@ static const struct LWidgetVTABLE lcheckbox_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LCheckbox_Init(void* screen, struct LCheckbox* w, const char* text, 
+void LCheckbox_Add(void* screen, struct LCheckbox* w, const char* text, 
 					LCheckboxChanged onChanged, const struct LLayout* layouts) {
 	w->VTABLE  = &lcheckbox_VTABLE;
 	w->type    = LWIDGET_CHECKBOX;
@@ -321,14 +321,17 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Select, LInput_Unselect, /* Select */
 	NULL, LInput_TextChanged        /* TextChanged */
 };
-void LInput_Init(void* screen, struct LInput* w, int width, const char* hintText, 
+void LInput_Add(void* screen, struct LInput* w, int width, const char* hintText, 
 				const struct LLayout* layouts) {
 	w->VTABLE  = &linput_VTABLE;
 	w->type    = LWIDGET_INPUT;
 	w->autoSelectable = true;
 	w->opaque  = true;
 	w->layouts = layouts;
-	String_InitArray(w->text, w->_textBuffer);
+
+	if (!w->text.buffer) {
+		String_InitArray(w->text, w->_textBuffer);
+	}
 	
 	w->hintText = hintText;
 	w->caretPos = -1;
@@ -378,7 +381,7 @@ static const struct LWidgetVTABLE llabel_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLabel_Init(void* screen, struct LLabel* w, const char* text, 
+void LLabel_Add(void* screen, struct LLabel* w, const char* text, 
 				const struct LLayout* layouts) {
 	w->VTABLE  = &llabel_VTABLE;
 	w->type    = LWIDGET_LABEL;
@@ -416,7 +419,7 @@ static const struct LWidgetVTABLE lline_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLine_Init(void* screen, struct LLine* w, int width, 
+void LLine_Add(void* screen, struct LLine* w, int width, 
 				const struct LLayout* layouts) {
 	w->VTABLE  = &lline_VTABLE;
 	w->type    = LWIDGET_LINE;
@@ -446,7 +449,7 @@ static const struct LWidgetVTABLE lslider_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LSlider_Init(void* screen, struct LSlider* w, int width, int height, BitmapCol color, 
+void LSlider_Add(void* screen, struct LSlider* w, int width, int height, BitmapCol color, 
 				const struct LLayout* layouts) {
 	w->VTABLE  = &lslider_VTABLE;
 	w->type    = LWIDGET_SLIDER;
@@ -638,7 +641,7 @@ static const struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseDown, LTable_MouseUp, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
-void LTable_Init(void* screen, struct LTable* w, 
+void LTable_Add(void* screen, struct LTable* w, 
 				const struct LLayout* layouts) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;

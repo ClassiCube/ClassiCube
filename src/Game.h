@@ -90,6 +90,9 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 /* Checks that the given bitmap can be loaded into a native gfx texture. */
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
 cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp);
+/* Checks that the given bitmap is a power of two size */
+/*   NOTE: Game_ValidateBitmap should nearly always be used instead of this */
+cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp);
 /* Updates Game_Width and Game_Height. */
 void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */

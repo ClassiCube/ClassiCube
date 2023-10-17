@@ -244,6 +244,10 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 		return false;
 	}
 
+	return Game_ValidateBitmapPow2(file, bmp);
+}
+
+cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 

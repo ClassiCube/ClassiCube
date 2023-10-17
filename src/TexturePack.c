@@ -129,17 +129,33 @@ static void Atlas1D_Free(void) {
 
 cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 	static const cc_string terrain = String_FromConst("terrain.png");
-	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
+	int tileSize;
+
+	if (!Game_ValidateBitmapPow2(&terrain, atlas)) return false;
+	tileSize = atlas->width / ATLAS2D_TILES_PER_ROW;
 
 	if (atlas->height < atlas->width) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_AddRaw("&c Its height is less than its width.");
 		return false;
 	}
-	if (atlas->width < ATLAS2D_TILES_PER_ROW) {
+	if (tileSize <= 0) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_AddRaw("&c It must be 16 or more pixels wide.");
 		return false;
+	}
+
+	if (tileSize > Gfx.MaxTexWidth) {
+		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
+		Chat_Add4("&c Tile size is (%i,%i), your GPU supports (%i,%i) at most.", 
+			&tileSize, &tileSize, &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+		return false;
+	}
+	if (atlas->width > Gfx.MaxTexWidth) {
+		/* Super HD textures probably won't work great on this GPU */
+		Chat_AddRaw("&cYou may experience significantly reduced performance.");
+		Chat_Add4("&c terrain.png size is (%i,%i), your GPU supports (%i,%i) at most.", 
+			&atlas->width, &atlas->height, &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 	}
 
 	if (Gfx.LostContext) return false;
