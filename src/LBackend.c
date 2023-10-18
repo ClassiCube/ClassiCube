@@ -536,6 +536,9 @@ void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
 	w->height   = Display_ScaleY(LINPUT_HEIGHT);
 	w->minWidth = w->width;
+
+	/* Text may end up being wider than minimum width */
+	if (w->text.length) LBackend_InputUpdate(w);
 }
 
 void LBackend_InputUpdate(struct LInput* w) {

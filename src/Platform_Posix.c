@@ -847,7 +847,12 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_FLATPAK
+cc_bool Updater_Supported = false;
+#else
 cc_bool Updater_Supported = true;
+#endif
+
 #if defined CC_BUILD_ANDROID
 /* implemented in Platform_Android.c */
 #elif defined CC_BUILD_IOS

@@ -38,7 +38,7 @@ static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
 	if (!Launcher_Active) return;
 	
-	Launcher_Active->Free(Launcher_Active);
+	Launcher_Active->Deactivated(Launcher_Active);
 	LBackend_CloseScreen(Launcher_Active);
 	Launcher_Active = NULL;
 }
@@ -46,10 +46,12 @@ static void CloseActiveScreen(void) {
 void Launcher_SetScreen(struct LScreen* screen) {
 	CloseActiveScreen();
 	Launcher_Active = screen;
-	if (!screen->numWidgets) screen->Init(screen);
 
-	screen->Show(screen);
+	screen->Activated(screen);
 	screen->Layout(screen);
+
+	if (!screen->everShown) screen->LoadState(screen);
+	screen->everShown = true;
 
 	LBackend_SetScreen(screen);
 	LBackend_Redraw();
