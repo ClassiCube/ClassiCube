@@ -49,14 +49,22 @@ static void Window_CommonCreate(void) {
 
 // Sourced from https://www.meandmark.com/keycodes.html
 static const cc_uint8 key_map[8 * 16] = {
-	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
-	'Y', 'T', '1', '2', '3', '4', '6', '5', CCKEY_EQUALS, '9', '7', CCKEY_MINUS, '8', '0', CCKEY_RBRACKET, 'O',
-	'U', CCKEY_LBRACKET, 'I', 'P', CCKEY_ENTER, 'L', 'J', CCKEY_QUOTE, 'K', CCKEY_SEMICOLON, CCKEY_BACKSLASH, CCKEY_COMMA, CCKEY_SLASH, 'N', 'M', CCKEY_PERIOD,
-	CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0, 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
-	0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK, 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
-	0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
-	CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11, 0, CCKEY_F13, 0, CCKEY_F14, 0, CCKEY_F10, 0, CCKEY_F12,
-	'U', CCKEY_F15, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_F4, CCKEY_END, CCKEY_F2, CCKEY_PAGEDOWN, CCKEY_F1, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_DOWN, CCKEY_UP, 0,
+/* 0x00 */ 'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X',
+/* 0x08 */ 'C', 'V',   0, 'B', 'Q', 'W', 'E', 'R',
+/* 0x10 */ 'Y', 'T', '1', '2', '3', '4', '6', '5',
+/* 0x18 */ CCKEY_EQUALS, '9', '7', CCKEY_MINUS, '8', '0', CCKEY_RBRACKET, 'O',
+/* 0x20 */ 'U', CCKEY_LBRACKET, 'I', 'P', CCKEY_ENTER, 'L', 'J', CCKEY_QUOTE,
+/* 0x28 */ 'K', CCKEY_SEMICOLON, CCKEY_BACKSLASH, CCKEY_COMMA, CCKEY_SLASH, 'N', 'M', CCKEY_PERIOD,
+/* 0x30 */ CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0,
+/* 0x38 */ 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+/* 0x40 */ 0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK,
+/* 0x48 */ 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+/* 0x50 */ 0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5,
+/* 0x58 */ CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
+/* 0x60 */ CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11,
+/* 0x68 */ 0, CCKEY_F13, 0, CCKEY_F14, 0, CCKEY_F10, 0, CCKEY_F12,
+/* 0x70 */ 'U', CCKEY_F15, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_F4, CCKEY_END,
+/* 0x78 */ CCKEY_F2, CCKEY_PAGEDOWN, CCKEY_F1, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_DOWN, CCKEY_UP, 0,
 };
 static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 // TODO: Check these..
@@ -70,11 +78,44 @@ static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_ma
 //Return = 52,     (0x34, ??? according to that link)
 //Menu = 110,      (0x6E, ??? according to that link)
 
+
+/*########################################################################################################################*
+ *---------------------------------------------------------Cursor---------------------------------------------------------*
+ *#########################################################################################################################*/
+static cc_bool warping;
+static int warpDX, warpDY;
+
+static cc_bool GetMouseCoords(int* x, int* y) {
+	NSPoint loc = [NSEvent mouseLocation];
+	*x = (int)loc.x                        - windowX;
+	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
+	// TODO: this seems to be off by 1
+	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
+}
+
+static void ProcessRawMouseMovement(NSEvent* ev) {
+	float dx = [ev deltaX];
+	float dy = [ev deltaY];
+
+	if (warping) { dx -= warpDX; dy -= warpDY; }
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
+}
+
+
 void Cursor_SetPosition(int x, int y) {
+	int curX, curY;
+	GetMouseCoords(&curX, &curY);
+
 	CGPoint point;
 	point.x = x + windowX;
 	point.y = y + windowY;
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+
+	// Next mouse movement event will include the delta from
+	//  this warp - so need to adjust processing to remove the delta
+	warping = true;
+	warpDX  = x - curX;
+	warpDY  = y - curY;
 }
 
 static void Cursor_DoSetVisible(cc_bool visible) {
@@ -86,14 +127,16 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 }
 
 void Window_EnableRawMouse(void) {
+	CGAssociateMouseAndMouseCursorPosition(NO);
 	DefaultEnableRawMouse();
-	CGAssociateMouseAndMouseCursorPosition(0);
 }
 
-void Window_UpdateRawMouse(void) { CentreMousePosition(); }
+void Window_UpdateRawMouse(void) { }
+void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
+
 void Window_DisableRawMouse(void) {
-	CGAssociateMouseAndMouseCursorPosition(1);
 	DefaultDisableRawMouse();
+	CGAssociateMouseAndMouseCursorPosition(YES);
 }
 
 
@@ -164,7 +207,7 @@ void Window_Init(void) {
 
 
 /*########################################################################################################################*
-*----------------------------------------------------------Wwindow--------------------------------------------------------*
+*-----------------------------------------------------------Window--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef kCGBitmapByteOrder32Host
 // Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
@@ -392,6 +435,10 @@ void Window_Close(void) {
 	[winHandle close];
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Event processing----------------------------------------------------*
+*#########################################################################################################################*/
 static int MapNativeMouse(long button) {
 	if (button == 0) return CCMOUSE_L;
 	if (button == 1) return CCMOUSE_R;
@@ -426,14 +473,6 @@ static void ProcessKeyChars(id ev) {
 	}
 }
 
-static cc_bool GetMouseCoords(int* x, int* y) {
-	NSPoint loc = [NSEvent mouseLocation];
-	*x = (int)loc.x                        - windowX;	
-	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
-	// TODO: this seems to be off by 1
-	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
-}
-
 static int TryGetKey(NSEvent* ev) {
 	int code = [ev keyCode];
 	int key  = MapNativeKey(code);
@@ -459,7 +498,7 @@ static void DebugScrollEvent(NSEvent* ev) {
 void Window_ProcessEvents(double delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
-	float dx, dy;
+	float dy;
 	
 	// https://wiki.freepascal.org/Cocoa_Internals/Application 
 	[pool release];
@@ -530,18 +569,18 @@ void Window_ProcessEvents(double delta) {
 		case 27: // NSOtherMouseDragged
 			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
-			if (Input.RawMode) {
-				dx = [ev deltaX];
-				dy = [ev deltaY];
-				Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
-			}
+			if (Input.RawMode) ProcessRawMouseMovement(ev);
+			warping = false;
 			break;
 		}
 		[appHandle sendEvent:ev];
 	}
 }
 
-void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
+
+/*########################################################################################################################*
+*-----------------------------------------------------------Dialogs-------------------------------------------------------*
+*#########################################################################################################################*/
 void ShowDialogCore(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	NSAlert* alert;
@@ -591,9 +630,6 @@ static void OpenSaveDoCallback(NSURL* url, FileDialogCallback callback) {
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	NSSavePanel* dlg = [NSSavePanel savePanel];
-	NSString* str;
-	const char* src;
-	int len, i;
 	
 	// TODO: Use args->defaultName, but only macOS 10.6
 
@@ -607,11 +643,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-    const char* const* filters = args->filters;
     NSOpenPanel* dlg = [NSOpenPanel openPanel];
-    NSString* str;
-    const char* src;
-    int len, i;
     
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setCanChooseFiles: YES];
@@ -629,6 +661,10 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     return 0;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Framebuffer------------------------------------------------------*
+*#########################################################################################################################*/
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
