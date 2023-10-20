@@ -129,12 +129,13 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	return GL_GenAndBind(GL_ARRAY_BUFFER);
 }
 
-void Gfx_BindVb(GfxResourceID vb) { glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindVb(GfxResourceID vb) { 
+	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+}
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
-	if (!id) return;
-	glDeleteBuffers(1, &id);
+	if (id) glDeleteBuffers(1, &id);
 	*vb = 0;
 }
 
@@ -159,6 +160,16 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	size = maxVertices * strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
+	GLuint id = (GLuint)(*vb);
+	if (id) glDeleteBuffers(1, &id);
+	*vb = 0;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {

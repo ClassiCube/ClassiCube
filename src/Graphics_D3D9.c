@@ -631,13 +631,14 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	return D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
 }
 
+void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_stride);
 	if (res) Logger_Abort2(res, "D3D9_BindVb");
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return D3D9_LockVb(vb, fmt, count, 0);
 }
@@ -649,6 +650,44 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+	if (Gfx.LostContext) return 0;
+	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_stride);
+	if (res) Logger_Abort2(res, "D3D9_BindDynamicVb");
+}
+
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return D3D9_LockVb(vb, fmt, count, D3DLOCK_DISCARD);
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	Gfx_UnlockVb(vb);
+	Gfx_BindDynamicVb(vb); /* TODO: Inline this? */
+}
+
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	int size = vCount * gfx_stride;
+	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
+	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
+
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
+	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Vertex rendering----------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	cc_result res;
 	if (fmt == gfx_format) return;
@@ -686,33 +725,6 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
-*#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	if (Gfx.LostContext) return 0;
-	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
-}
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return D3D9_LockVb(vb, fmt, count, D3DLOCK_DISCARD);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	Gfx_UnlockVb(vb);
-	Gfx_BindVb(vb); /* TODO: Inline this? */
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	int size = vCount * gfx_stride;
-	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
-	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
-
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
-	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
 
