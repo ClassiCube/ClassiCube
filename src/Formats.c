@@ -836,8 +836,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 			if (!arr) return;
 
 			Blocks.FogDensity[id] = (arr[0] + 1) / 128.0f;
-			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
-			if (arr[0] == 0xFF) Blocks.FogDensity[id] = 0.0f;
+			/* Backwards compatibility with apps that use 0xFF to indicate no fog */
+			if (arr[0] == 0 || arr[0] == 0xFF) Blocks.FogDensity[id] = 0.0f;
 			Blocks.FogCol[id] = PackedCol_Make(arr[1], arr[2], arr[3], 255);
 			return;
 		}
@@ -1548,7 +1548,7 @@ static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 		cur = Nbt_WriteArray(cur, "Fog", 4);
 		fog = (cc_uint8)(128 * Blocks.FogDensity[b] - 1);
 		col = Blocks.FogCol[b];
-		cur[0] = Blocks.FogDensity[b] ? fog : 0;
+		cur[0] = Blocks.FogDensity[b] ? fog : 0xFF; /* write 0xFF instead of 0 for backwards compatibility */
 		cur[1] = PackedCol_R(col); cur[2] = PackedCol_G(col); cur[3] = PackedCol_B(col);
 		cur += 4;
 
