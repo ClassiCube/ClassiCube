@@ -118,12 +118,15 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-
-	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
-	String_Format1(info, "Vendor: %c\n",     glGetString(GL_VENDOR));
-	String_Format1(info, "Renderer: %c\n",   glGetString(GL_RENDERER));
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	GLint freeMem, usedMem;
+	glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &freeMem);
+	glGetIntegerv(GL_USED_TEXTURE_MEMORY_KOS, &usedMem);
+	
+	String_AppendConst(info, "-- Using Dreamcast --\n");
+	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");
+	String_AppendConst(info, "T&L: GLdc library (KallistiOS / Kazade)\n");
+	String_Format2(info,     "Texture memory: (%i, %i)\n", &freeMem, &usedMem);
+	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -281,7 +284,7 @@ static unsigned Interleave(unsigned x) {
 	min_dimension    = min(w, h); \
 	interleave_mask  = min_dimension - 1; \
 	interleaved_bits = Math_ilog2(min_dimension); \
-	shifted_mask     = 0xFFFFFFFFU & ~interleave_mask; \
+	shifted_mask     = ~interleave_mask; \
 	shift_bits       = interleaved_bits;
 	
 #define Twiddle_CalcY(y) \
@@ -489,7 +492,6 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	glAlphaFunc(GL_GREATER, 0.5f);
-	glBlendFunc(PVR_BLEND_SRCALPHA, PVR_BLEND_INVSRCALPHA);
 	glDepthFunc(GL_LEQUAL);
 }
 
@@ -506,10 +508,10 @@ cc_bool Gfx_WarnIfNecessary(void) {
 static void SetupVertices(int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-		glVertexPointer(3, GL_FLOAT, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+		gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	} else {
 		cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-		glVertexPointer(3, GL_FLOAT, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+		gldcVertexPointer(SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
 	}
 }
 
@@ -547,7 +549,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexPointer(3, GL_FLOAT, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	glDrawArrays(GL_QUADS, 0, verticesCount);
 }
 #endif

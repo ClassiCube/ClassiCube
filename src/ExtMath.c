@@ -74,12 +74,6 @@ cc_bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
-#ifdef CC_BUILD_DREAMCAST
-/* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
-/* TODO: Properly investigate this issue */
-double make_dreamcast_build_compile(void) { fabs(4); }
-#endif
-
 
 /*########################################################################################################################*
 *--------------------------------------------------Random number generator------------------------------------------------*
@@ -122,6 +116,22 @@ float Random_Float(RNGState* seed) {
 	return raw / ((float)(1 << 24));
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Transcendental functions-----------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_DREAMCAST
+/* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
+/* TODO: Properly investigate this issue */
+/* double make_dreamcast_build_compile(void) { fabs(4); } */
+
+double Math_Sin(double x)  { return sin(x); }
+double Math_Cos(double x)  { return cos(x); }
+double Math_Exp2(double x) { return exp2(x); }
+double Math_Log2(double x) { return log2(x); }
+
+double Math_Atan2(double x, double y) { return atan2(y, x); }
+#else
 /***** Caleb's Math functions *****/
 
 /* This code implements the math functions sine, cosine, arctangent, the
@@ -551,6 +561,8 @@ double Math_Log2(double x) {
 
 	return exponent + Log2Stage1(doi.d);
 }
+
+#endif
 
 /* Uses the property that
  *   log_e(x) = log_2(x) * log_e(2).

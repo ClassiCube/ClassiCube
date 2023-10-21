@@ -348,8 +348,6 @@ static inline void CompilePolyHeader(PolyHeader *dst, const PolyContext *src) {
     dst->cmd |= (src->gen.shading << GPU_TA_CMD_SHADE_SHIFT) & GPU_TA_CMD_SHADE_MASK;
     dst->cmd |= (src->fmt.uv << GPU_TA_CMD_UVFMT_SHIFT) & GPU_TA_CMD_UVFMT_MASK;
     dst->cmd |= (src->gen.clip_mode << GPU_TA_CMD_USERCLIP_SHIFT) & GPU_TA_CMD_USERCLIP_MASK;
-    dst->cmd |= (src->fmt.modifier << GPU_TA_CMD_MODIFIER_SHIFT) & GPU_TA_CMD_MODIFIER_MASK;
-    dst->cmd |= (src->gen.modifier_mode << GPU_TA_CMD_MODIFIERMODE_SHIFT) & GPU_TA_CMD_MODIFIERMODE_MASK;
     dst->cmd |= (src->gen.specular << GPU_TA_CMD_SPECULAR_SHIFT) & GPU_TA_CMD_SPECULAR_MASK;
 
     /* Polygon mode 1 */
@@ -391,16 +389,7 @@ static inline void CompilePolyHeader(PolyHeader *dst, const PolyContext *src) {
         dst->mode3 |= txr_base;
     }
 
-    if(src->fmt.modifier && src->gen.modifier_mode) {
-        /* If we're affected by a modifier volume, silently promote the header
-           to the one that is affected by a modifier volume. */
-        dst->d1 = dst->mode2;
-        dst->d2 = dst->mode3;
-    }
-    else {
-        dst->d1 = dst->d2 = 0xffffffff;
-    }
-
+    dst->d1 = dst->d2 = 0xffffffff;
     dst->d3 = dst->d4 = 0xffffffff;
 }
 

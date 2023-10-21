@@ -17,11 +17,9 @@ GLboolean ALPHA_TEST_ENABLED = GL_FALSE;
 
 GLboolean SCISSOR_TEST_ENABLED = GL_FALSE;
 GLenum SHADE_MODEL = GL_SMOOTH;
-GLboolean ZNEAR_CLIPPING_ENABLED = GL_TRUE;
+GLboolean ZNEAR_CLIPPING_ENABLED = GL_FALSE;
 
 GLboolean BLEND_ENABLED = GL_FALSE;
-GLenum BLEND_SRC_FACTOR = PVR_BLEND_ZERO;
-GLenum BLEND_DST_FACTOR = PVR_BLEND_ONE;
 
 GLboolean TEXTURES_ENABLED = GL_FALSE;
 
@@ -218,13 +216,6 @@ GLAPI void APIENTRY glShadeModel(GLenum mode) {
 }
 
 /* Blending */
-GLAPI void APIENTRY glBlendFunc(GLenum sfactor, GLenum dfactor) {
-    BLEND_SRC_FACTOR = sfactor;
-    BLEND_DST_FACTOR = dfactor;
-    STATE_DIRTY = GL_TRUE;
-}
-
-
 GLAPI void APIENTRY glAlphaFunc(GLenum func, GLclampf ref) {
     GLubyte val = (GLubyte)(ref * 255.0f);
     GPUSetAlphaCutOff(val);
@@ -316,7 +307,6 @@ void _glApplyScissor(bool force) {
 
 void APIENTRY glGetIntegerv(GLenum pname, GLint *params) {
     switch(pname) {
-        case GL_TEXTURE_FREE_MEMORY_ATI:
         case GL_FREE_TEXTURE_MEMORY_KOS:
             *params = _glFreeTextureMemory();
         break;
@@ -326,22 +316,7 @@ void APIENTRY glGetIntegerv(GLenum pname, GLint *params) {
         case GL_FREE_CONTIGUOUS_TEXTURE_MEMORY_KOS:
             *params = _glFreeContiguousTextureMemory();
         break;
-    default:
-        _glKosThrowError(GL_INVALID_ENUM, __func__);
-        break;
     }
-}
-
-const GLubyte *glGetString(GLenum name) {
-    switch(name) {
-        case GL_VENDOR:
-            return (const GLubyte*) "KallistiOS / Kazade";
-
-        case GL_RENDERER:
-            return (const GLubyte*) "PowerVR2 CLX2 100mHz";
-    }
-
-    return (const GLubyte*) "GL_KOS_ERROR: ENUM Unsupported\n";
 }
 
 

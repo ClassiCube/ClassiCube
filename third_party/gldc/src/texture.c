@@ -170,27 +170,24 @@ static GLuint _determinePVRFormat(GLint internalFormat, GLenum type) {
 #define TOSTRING(x) STRINGIFY(x)
 #define INFO_MSG(x) fprintf(stderr, "%s:%s > %s\n", __FILE__, TOSTRING(__LINE__), x)
 
-void APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) {
+int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) {
     TRACE();
 
     if (w > 1024 || h > 1024){
         INFO_MSG("Invalid texture size");
-        _glKosThrowError(GL_INVALID_VALUE, __func__);
-        return;
+        return GL_INVALID_VALUE;
     }
 
     if((w < 8 || (w & -w) != w)) {
         /* Width is not a power of two. Must be!*/
-        INFO_MSG("");
-        _glKosThrowError(GL_INVALID_VALUE, __func__);
-        return;
+        INFO_MSG("Invalid texture width");
+        return GL_INVALID_VALUE;
     }
 
     if((h < 8 || (h & -h) != h)) {
         /* height is not a power of two. Must be!*/
-        INFO_MSG("");
-        _glKosThrowError(GL_INVALID_VALUE, __func__);
-        return;
+        INFO_MSG("Invalid texture height");
+        return GL_INVALID_VALUE;
     }
 
     TextureObject* active = TEXTURE_ACTIVE;
@@ -223,8 +220,8 @@ void APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type)
 
     /* If we run out of PVR memory just return */
     if(!active->data) {
-        _glKosThrowError(GL_OUT_OF_MEMORY, __func__);
-        return;
+        INFO_MSG("Out of texture memory");
+        return GL_OUT_OF_MEMORY;
     }
 
     /* Mark level 0 as set in the mipmap bitmask */
@@ -236,6 +233,7 @@ void APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type)
     active->color &= ~(1 << 26);
 
     STATE_DIRTY = GL_TRUE;
+    return 0;
 }
 
 GLAPI void APIENTRY gldcGetTexture(GLvoid** data, GLsizei* width, GLsizei* height) {
@@ -277,4 +275,3 @@ GLAPI GLvoid APIENTRY glDefragmentTextureMemory_KOS(void) {
 
     yalloc_defrag_commit(YALLOC_BASE);
 }
-

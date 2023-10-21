@@ -58,14 +58,13 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
 
     /* Copy the pos, uv and color directly in one go */
     const GLubyte* pos = VERTEX_PTR;
-    const GLubyte* uv  = TEXTURES_ENABLED ? VERTEX_PTR : NULL;
-    const GLubyte* col = VERTEX_PTR;
+    const int has_uv   = TEXTURES_ENABLED;
 
     Vertex* dst = start;
     const float w = 1.0f;
 
     // TODO: optimise
-    for (GLuint i = 0; i < numQuads; ++i) {
+    ITERATE(numQuads) {
         // 4 vertices per quad
         Vertex* it = dst;
         PREFETCH(it); // TODO: more prefetching?
@@ -75,14 +74,12 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
             PREFETCH(pos);
             TransformVertex((const float*) pos, &w, it->xyz, &it->w);
             
-            col = pos + 12;
-            *((uint32_t*) it->bgra) = *((uint32_t*) col);
+            *((uint32_t*)it->bgra) = *((uint32_t*)(pos + 12));
 
-            if(uv) {
-                uv = pos + 16;
-                MEMCPY4(it->uv, uv, sizeof(float) * 2);
+            if(has_uv) {
+                MEMCPY4(it->uv, pos + 16, sizeof(float) * 2);
             } else {
-                *((Float2*) it->uv) = F2ZERO;
+                *((Float2*)it->uv) = F2ZERO;
             }
 
             it++;
@@ -98,8 +95,7 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
         dst[2].flags = GPU_CMD_VERTEX_EOL;
         dst[1].flags = GPU_CMD_VERTEX;
         dst[0].flags = GPU_CMD_VERTEX;
-        // TODO copy straight to dst?? 
-        
+        // TODO copy straight to dst??     
         
         dst += 6;
     }
@@ -176,8 +172,8 @@ GL_FORCE_INLINE void _updatePVRBlend(PolyContext* context) {
         context->gen.alpha = GPU_ALPHA_DISABLE;
     }
 
-    context->blend.src = BLEND_SRC_FACTOR;
-    context->blend.dst = BLEND_DST_FACTOR;
+    context->blend.src = PVR_BLEND_SRCALPHA;
+    context->blend.dst = PVR_BLEND_INVSRCALPHA;
 }
 
 GL_FORCE_INLINE void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
@@ -302,7 +298,7 @@ void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     submitVertices(mode, first, count);
 }
 
-void APIENTRY glVertexPointer(GLint size, GLenum type,  GLsizei stride,  const GLvoid * pointer) {
+void APIENTRY gldcVertexPointer(GLsizei stride,  const GLvoid * pointer) {
     VERTEX_PTR    = pointer;
     VERTEX_STRIDE = stride;
 }

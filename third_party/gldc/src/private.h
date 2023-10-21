@@ -164,13 +164,10 @@ extern GLboolean CULLING_ENABLED;
 
 extern GLboolean FOG_ENABLED;
 extern GLboolean ALPHA_TEST_ENABLED;
+extern GLboolean BLEND_ENABLED;
 
 extern GLboolean SCISSOR_TEST_ENABLED;
 extern GLenum SHADE_MODEL;
-
-extern GLboolean BLEND_ENABLED;
-extern GLenum BLEND_SRC_FACTOR;
-extern GLenum BLEND_DST_FACTOR;
 
 
 extern PolyList OP_LIST;
@@ -185,33 +182,6 @@ GL_FORCE_INLINE PolyList* _glActivePolyList() {
     } else {
         return &OP_LIST;
     }
-}
-
-extern GLenum LAST_ERROR;
-extern char ERROR_FUNCTION[64];
-
-GL_FORCE_INLINE const char* _glErrorEnumAsString(GLenum error) {
-    switch(error) {
-        case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
-        case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
-        case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
-        case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
-        default:
-            return "GL_UNKNOWN_ERROR";
-    }
-}
-
-GL_FORCE_INLINE void _glKosThrowError(GLenum error, const char *function) {
-    if(LAST_ERROR == GL_NO_ERROR) {
-        LAST_ERROR = error;
-        sprintf(ERROR_FUNCTION, "%s\n", function);
-        fprintf(stderr, "GL ERROR: %s when calling %s\n", _glErrorEnumAsString(LAST_ERROR), ERROR_FUNCTION);
-    }
-}
-
-GL_FORCE_INLINE void _glKosResetError() {
-    LAST_ERROR = GL_NO_ERROR;
-    sprintf(ERROR_FUNCTION, "\n");
 }
 
 unsigned char _glIsClippingEnabled();

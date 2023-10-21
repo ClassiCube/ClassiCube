@@ -82,15 +82,8 @@ __BEGIN_DECLS
 #define GL_FLOAT                                0x1406
 
 /* ErrorCode */
-#define GL_NO_ERROR                       0
-#define GL_INVALID_ENUM                   0x0500
 #define GL_INVALID_VALUE                  0x0501
-#define GL_INVALID_OPERATION              0x0502
 #define GL_OUT_OF_MEMORY                  0x0505
-
-/* StringName */
-#define GL_VENDOR                         0x1F00
-#define GL_RENDERER                       0x1F01
 
 #define GL_UNSIGNED_SHORT_4_4_4_4       0x8033
 #define GL_UNSIGNED_SHORT_5_5_5_1       0x8034
@@ -150,7 +143,6 @@ GLAPI void glDisable(GLenum cap);
 
 /* Clear Caps */
 GLAPI void glClear(GLuint mode);
-GLAPI void glClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 
 /* Depth Testing */
 GLAPI void glClearDepth(GLfloat depth);
@@ -162,9 +154,6 @@ GLAPI void glDepthRangef(GLclampf n, GLclampf f);
 
 /* Shading - Flat or Goraud */
 GLAPI void glShadeModel(GLenum mode);
-
-/* Blending */
-GLAPI void glBlendFunc(GLenum sfactor, GLenum dfactor);
 
 GLAPI GLuint gldcGenTexture(void);
 GLAPI void   gldcDeleteTexture(GLuint texture);
@@ -188,13 +177,12 @@ GLAPI void   gldcBindTexture(GLuint texture);
      GL_UNSIGNED_SHORT_1_5_5_5
      GL_UNSIGNED_SHORT_1_5_5_5_TWID
  */                      
-GLAPI void gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type);
+GLAPI int  gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type);
 GLAPI void gldcGetTexture(GLvoid** data, GLsizei* width, GLsizei* height);
 
 
 /* GL Array API - Only GL_TRIANGLES, GL_TRIANGLE_STRIP, and GL_QUADS are supported */
-GLAPI void glVertexPointer(GLint size, GLenum type,
-                                    GLsizei stride, const GLvoid *pointer);
+GLAPI void gldcVertexPointer(GLsizei stride, const GLvoid *pointer);
 
 /* Array Data Submission */
 GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
@@ -208,24 +196,8 @@ GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
 /* glGet Functions */
 GLAPI void glGetIntegerv(GLenum pname, GLint *params);
-GLAPI const GLubyte* glGetString(GLenum name);
-
-/* Error handling */
-GLAPI GLenum glGetError(void);
-
 
 GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
-/* Non Operational Stubs for portability */
-GLAPI void glPolygonOffset(GLfloat factor, GLfloat units);
-GLAPI void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-
-
-/* ATI_meminfo extension */
-#define GL_VBO_FREE_MEMORY_ATI               0x87FB
-#define GL_TEXTURE_FREE_MEMORY_ATI           0x87FC
-#define GL_RENDERBUFFER_FREE_MEMORY_ATI      0x87FD
-
-
 
 
 /*
@@ -275,7 +247,7 @@ GLAPI void glKosSwapBuffers();
 \
 
 /* Memory allocation extension (GL_KOS_texture_memory_management) */
-GLAPI GLvoid glDefragmentTextureMemory_KOS(void);
+GLAPI void glDefragmentTextureMemory_KOS(void);
 
 #define GL_FREE_TEXTURE_MEMORY_KOS                  0xEF3D
 #define GL_USED_TEXTURE_MEMORY_KOS                  0xEF3E
