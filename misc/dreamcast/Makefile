@@ -1,4 +1,4 @@
-BUILD_DIR		:= build-dreamcast
+BUILD_DIR		:= build-dc
 SOURCE_DIRS		:= src third_party/bearssl/src
 
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))

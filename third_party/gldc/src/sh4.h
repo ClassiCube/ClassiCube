@@ -9,14 +9,7 @@
 
 #include "types.h"
 #include "private.h"
-
 #include "sh4_math.h"
-
-#ifndef NDEBUG
-#define PERF_WARNING(msg) printf("[PERF] %s\n", msg)
-#else
-#define PERF_WARNING(msg) (void) 0
-#endif
 
 #ifndef GL_FORCE_INLINE
 #define GL_NO_INSTRUMENT inline __attribute__((no_instrument_function))
@@ -71,10 +64,6 @@ GL_FORCE_INLINE void* memcpy_fast(void *dest, const void *src, size_t len) {
 
 #define MEMSET4(dst, v, size) memset4((dst), (v), (size))
 
-#define VEC3_NORMALIZE(x, y, z) vec3f_normalize((x), (y), (z))
-#define VEC3_LENGTH(x, y, z, l) vec3f_length((x), (y), (z), (l))
-#define VEC3_DOT(x1, y1, z1, x2, y2, z2, d) vec3f_dot((x1), (y1), (z1), (x2), (y2), (z2), (d))
-
 GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* oxyz, float* ow) {
     register float __x __asm__("fr12") = (xyz[0]);
     register float __y __asm__("fr13") = (xyz[1]);
@@ -102,10 +91,6 @@ static inline size_t GPUMemoryAvailable() {
 
 static inline void* GPUMemoryAlloc(size_t size) {
     return pvr_mem_malloc(size);
-}
-
-static inline void GPUSetBackgroundColour(float r, float g, float b) {
-    pvr_set_bg_color(r, g, b);
 }
 
 #define PT_ALPHA_REF 0x011c

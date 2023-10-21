@@ -1,14 +1,8 @@
-#include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-
 #include "private.h"
 #include "platform.h"
 
-
-static void* VERTEX_PTR;
+static const void* VERTEX_PTR;
 static GLsizei VERTEX_STRIDE;
 
 extern GLboolean AUTOSORT_ENABLED;
@@ -25,18 +19,22 @@ void _glInitAttributePointers() {
 }
 
 
-GL_FORCE_INLINE PolyHeader *_glSubmissionTargetHeader(SubmissionTarget* target) {
-    gl_assert(target->header_offset < aligned_vector_size(&target->output->vector));
+/* Generating PVR vertices from the user-submitted data gets complicated, particularly
+ * when a realloc could invalidate pointers. This structure holds all the information
+ * we need on the target vertex array to allow passing around to the various stages (e.g. generate/clip etc.)
+ */
+typedef struct __attribute__((aligned(32))) {
+    PolyList* output;
+    uint32_t header_offset; // The offset of the header in the output list
+    uint32_t start_offset; // The offset into the output list
+} SubmissionTarget;
+
+GL_FORCE_INLINE PolyHeader* _glSubmissionTargetHeader(SubmissionTarget* target) {
     return aligned_vector_at(&target->output->vector, target->header_offset);
 }
 
-GL_INLINE_DEBUG Vertex* _glSubmissionTargetStart(SubmissionTarget* target) {
-    gl_assert(target->start_offset < aligned_vector_size(&target->output->vector));
+GL_FORCE_INLINE Vertex* _glSubmissionTargetStart(SubmissionTarget* target) {
     return aligned_vector_at(&target->output->vector, target->start_offset);
-}
-
-Vertex* _glSubmissionTargetEnd(SubmissionTarget* target) {
-    return _glSubmissionTargetStart(target) + target->count;
 }
 
 typedef struct {
@@ -50,14 +48,12 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
     TRACE();
     
     GLuint numQuads = count / 4;
-    GLuint idx      = first;
-    
-    Vertex* start = _glSubmissionTargetStart(target);
+    Vertex* start   = _glSubmissionTargetStart(target);
 
     const GLuint stride = VERTEX_STRIDE;
 
     /* Copy the pos, uv and color directly in one go */
-    const GLubyte* pos = VERTEX_PTR;
+    const GLubyte* src = VERTEX_PTR + (first * stride);
     const int has_uv   = TEXTURES_ENABLED;
 
     Vertex* dst = start;
@@ -68,22 +64,22 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
         // 4 vertices per quad
         Vertex* it = dst;
         PREFETCH(it); // TODO: more prefetching?
+        PREFETCH(src);
         
         for(GLuint j = 0; j < 4; ++j) {
-            pos = (GLubyte*) VERTEX_PTR + (idx * stride);
-            PREFETCH(pos);
-            TransformVertex((const float*) pos, &w, it->xyz, &it->w);
+            PREFETCH(src + stride);
+            TransformVertex((const float*)src, &w, it->xyz, &it->w);
             
-            *((uint32_t*)it->bgra) = *((uint32_t*)(pos + 12));
+            *((uint32_t*)it->bgra) = *((uint32_t*)(src + 12));
 
             if(has_uv) {
-                MEMCPY4(it->uv, pos + 16, sizeof(float) * 2);
+                MEMCPY4(it->uv, src + 16, sizeof(float) * 2);
             } else {
                 *((Float2*)it->uv) = F2ZERO;
             }
 
+            src += stride;	
             it++;
-            idx++;
         }
         
         // Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
@@ -98,35 +94,6 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
         // TODO copy straight to dst??     
         
         dst += 6;
-    }
-}
-
-GL_FORCE_INLINE void divide(SubmissionTarget* target) {
-    TRACE();
-
-    /* Perform perspective divide on each vertex */
-    Vertex* vertex = _glSubmissionTargetStart(target);
-
-    const float h = vid_mode->height;
-
-    ITERATE(target->count) {
-        const float f = MATH_Fast_Invert(vertex->w);
-
-        /* Convert to NDC and apply viewport */
-        vertex->xyz[0] = MATH_fmac(
-            VIEWPORT.hwidth, vertex->xyz[0] * f, VIEWPORT.x_plus_hwidth
-        );
-        vertex->xyz[1] = h - MATH_fmac(
-            VIEWPORT.hheight, vertex->xyz[1] * f, VIEWPORT.y_plus_hheight
-        );
-
-        /* Apply depth range */
-        vertex->xyz[2] = MAX(
-            1.0f - MATH_fmac(vertex->xyz[2] * f, 0.5f, 0.5f),
-            PVR_MIN_Z
-        );
-
-        ++vertex;
     }
 }
 
@@ -243,62 +210,47 @@ GL_FORCE_INLINE void apply_poly_header(PolyHeader* header, PolyList* activePolyL
     */
 }
 
-#define DEBUG_CLIPPING 0
-
-
 static SubmissionTarget SUBMISSION_TARGET;
-
 
 void _glInitSubmissionTarget() {
     SubmissionTarget* target = &SUBMISSION_TARGET;
 
-    target->count = 0;
     target->output = NULL;
     target->header_offset = target->start_offset = 0;
 }
 
 
-GL_FORCE_INLINE void submitVertices(GLenum mode, GLsizei first, GLuint count) {
-
+GL_FORCE_INLINE void submitVertices(GLuint vertexCount) {
     SubmissionTarget* const target = &SUBMISSION_TARGET;
-
     TRACE();
-
-    /* No vertices? Do nothing */
-    if(!count) return;
-
     target->output = _glActivePolyList();
-    gl_assert(target->output);
-
-    uint32_t vector_size = aligned_vector_size(&target->output->vector);
-
+    
+    uint32_t vector_size      = aligned_vector_size(&target->output->vector);
     GLboolean header_required = (vector_size == 0) || STATE_DIRTY;
 
-    target->count = count * 6 / 4; // quads -> triangles
     target->header_offset = vector_size;
-    target->start_offset = target->header_offset + (header_required ? 1 : 0);
-
+    target->start_offset  = target->header_offset + (header_required ? 1 : 0);
     gl_assert(target->header_offset >= 0);
-    gl_assert(target->start_offset >= target->header_offset);
-    gl_assert(target->count);
 
     /* Make room for the vertices and header */
-    aligned_vector_extend(&target->output->vector, target->count + (header_required));
+    aligned_vector_extend(&target->output->vector, (header_required) + vertexCount);    
+    gl_assert(target->header_offset < aligned_vector_size(&target->output->vector));
 
-    if(header_required) {
+    if (header_required) {
         apply_poly_header(_glSubmissionTargetHeader(target), target->output);
         STATE_DIRTY = GL_FALSE;
     }
-
-    generateQuads(target, first, count);
 }
 
 void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     TRACE();
-    submitVertices(mode, first, count);
+    if (!count) return;
+    
+    submitVertices(count * 6 / 4); // quads -> triangles
+    generateQuads(&SUBMISSION_TARGET, first, count);
 }
 
-void APIENTRY gldcVertexPointer(GLsizei stride,  const GLvoid * pointer) {
+void APIENTRY gldcVertexPointer(GLsizei stride, const GLvoid * pointer) {
     VERTEX_PTR    = pointer;
     VERTEX_STRIDE = stride;
 }

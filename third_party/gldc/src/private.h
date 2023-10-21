@@ -69,15 +69,14 @@ typedef struct {
     GLushort height;
     //24
     GLushort  mipmap;  /* Bitmask of supplied mipmap levels */
-	// 26
-	GLushort _pad0;
+    // 26
+    GLushort _pad0;
     // 28
     GLubyte mipmap_bias;
     GLubyte  env;
+    // 30
     GLubyte _pad1;
     GLubyte _pad2;
-    //32
-    GLubyte padding[32];  // Pad to 64-bytes
 } __attribute__((aligned(32))) TextureObject;
 
 
@@ -110,28 +109,6 @@ GL_FORCE_INLINE void memcpy_vertex(Vertex *dest, const Vertex *src) {
 #endif
 }
 
-#define swapVertex(a, b)   \
-do {                 \
-    Vertex __attribute__((aligned(32))) c;   \
-    memcpy_vertex(&c, a); \
-    memcpy_vertex(a, b); \
-    memcpy_vertex(b, &c); \
-} while(0)
-
-/* Generating PVR vertices from the user-submitted data gets complicated, particularly
- * when a realloc could invalidate pointers. This structure holds all the information
- * we need on the target vertex array to allow passing around to the various stages (e.g. generate/clip etc.)
- */
-typedef struct __attribute__((aligned(32))) {
-    PolyList* output;
-    uint32_t header_offset; // The offset of the header in the output list
-    uint32_t start_offset; // The offset into the output list
-    uint32_t count; // The number of vertices in this output
-} SubmissionTarget;
-
-Vertex* _glSubmissionTargetStart(SubmissionTarget* target);
-Vertex* _glSubmissionTargetEnd(SubmissionTarget* target);
-
 typedef enum {
     CLIP_RESULT_ALL_IN_FRONT,
     CLIP_RESULT_ALL_BEHIND,
@@ -139,9 +116,6 @@ typedef enum {
     CLIP_RESULT_FRONT_TO_BACK,
     CLIP_RESULT_BACK_TO_FRONT
 } ClipResult;
-
-
-struct SubmissionTarget;
 
 void _glInitAttributePointers();
 void _glInitContext();

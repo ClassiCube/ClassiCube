@@ -120,7 +120,12 @@ float Random_Float(RNGState* seed) {
 /*########################################################################################################################*
 *--------------------------------------------------Transcendental functions-----------------------------------------------*
 *#########################################################################################################################*/
+static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
+static const double LOGE2 = 0.6931471805599453094172321214581765680755001343602;
+
 #ifdef CC_BUILD_DREAMCAST
+#include <math.h>
+
 /* If don't have some code referencing libm, then gldc will fail to link with undefined reference to fabs */
 /* TODO: Properly investigate this issue */
 /* double make_dreamcast_build_compile(void) { fabs(4); } */
@@ -161,9 +166,6 @@ static const cc_uint64 _POS_INF = 0x7FF0000000000000ULL;
 #define POS_INF *((double*)&_POS_INF)
 static const cc_uint64 _NEG_INF = 0xFFF0000000000000ULL;
 #define NEG_INF *((double*)&_NEG_INF)
-
-static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
-static const double LOGE2 = 0.6931471805599453094172321214581765680755001343602;
 
 /* Calculates the floor of a double.
  */
