@@ -75,6 +75,7 @@ void Window_Init(void) {
 	WindowInfo.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	DisplayInfo.ContentOffset = 10;
 	usbh_core_init();
 	usbh_xid_init();
 	

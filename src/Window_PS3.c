@@ -54,6 +54,7 @@ void Window_Init(void) {
 	WindowInfo.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	DisplayInfo.ContentOffset = 10;
 	ioPadInit(7);
 }
 

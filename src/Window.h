@@ -57,6 +57,10 @@ CC_VAR extern struct _DisplayData {
 	int Width, Height;
 	/* Whether accounting for system DPI scaling is enabled */
 	cc_bool DPIScaling;
+	/* Amount to offset content near the edges of the window by */
+	/*  Mainly intended for when the game is rendered on TV displays, where */
+	/*  pixels on the edges of the screen may be hidden due to overscan */
+	int ContentOffset;
 } DisplayInfo;
 
 /* Scales the given X coordinate from 96 dpi to current display dpi. */

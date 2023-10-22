@@ -32,6 +32,7 @@ void Window_Init(void) {
 	WindowInfo.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	DisplayInfo.ContentOffset = 10;
 }
 
 void Window_Create2D(int width, int height) { 
@@ -156,13 +157,14 @@ static void ProcessKeyboardInput(void) {
 	has_prevState = true;
 	prevState     = *state;
 	
+	Input.Sources |= INPUT_SOURCE_NORMAL;
 	int ret = kbd_queue_pop(kb_dev, 1);
-        if (ret < 0) return;
+	if (ret < 0) return;
         
-        // Ascii printable characters
-        //  NOTE: Escape, Enter etc map to ASCII control characters
-        if (ret >= ' ' && ret <= 0x7F) 
-        	Event_RaiseInt(&InputEvents.Press, ret);
+	// Ascii printable characters
+	//  NOTE: Escape, Enter etc map to ASCII control characters
+	if (ret >= ' ' && ret <= 0x7F)
+		Event_RaiseInt(&InputEvents.Press, ret);
 }
 
 
