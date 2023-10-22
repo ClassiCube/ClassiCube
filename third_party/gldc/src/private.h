@@ -13,8 +13,7 @@
 #include "aligned_vector.h"
 #include "named_array.h"
 
-/* This figure is derived from the needs of Quake 1 */
-#define MAX_TEXTURE_COUNT 1088
+#define MAX_TEXTURE_COUNT 768
 
 
 extern void* memcpy4 (void *dest, const void *src, size_t count);

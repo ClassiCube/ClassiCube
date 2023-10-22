@@ -53,7 +53,7 @@ void Gfx_ClearCol(PackedCol color) {
 	float r = PackedCol_R(color) / 255.0f;
 	float g = PackedCol_G(color) / 255.0f;
 	float b = PackedCol_B(color) / 255.0f;
-	pvr_set_bg_color(r, g, b);
+	pvr_set_bg_color(r, g, b); // TODO: not working ?
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -107,45 +107,6 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	matrix->row3.W = -1.0f;
 	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
 	matrix->row4.W =  0.0f;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------------Misc----------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Gfx_GetApiInfo(cc_string* info) {
-	GLint freeMem, usedMem;
-	glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &freeMem);
-	glGetIntegerv(GL_USED_TEXTURE_MEMORY_KOS, &usedMem);
-	
-	String_AppendConst(info, "-- Using Dreamcast --\n");
-	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");
-	String_AppendConst(info, "T&L: GLdc library (KallistiOS / Kazade)\n");
-	String_Format2(info,     "Texture memory: (%i, %i)\n", &freeMem, &usedMem);
-	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-}
-
-void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	gfx_minFrameMs = minFrameMs;
-	gfx_vsync      = vsync;
-}
-
-void Gfx_BeginFrame(void) { }
-void Gfx_Clear(void) {
-	// no need to use glClear
-}
-
-void Gfx_EndFrame(void) {
-	glKosSwapBuffers();
-	if (gfx_minFrameMs) LimitFPS();
-}
-
-void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game.Width, Game.Height);
 }
 
 
@@ -551,5 +512,47 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	glDrawArrays(GL_QUADS, 0, verticesCount);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------------Misc----------------------------------------------------------*
+*#########################################################################################################################*/
+cc_result Gfx_TakeScreenshot(struct Stream* output) {
+	return ERR_NOT_SUPPORTED;
+}
+
+void Gfx_GetApiInfo(cc_string* info) {
+	GLint freeMem, usedMem;
+	glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &freeMem);
+	glGetIntegerv(GL_USED_TEXTURE_MEMORY_KOS, &usedMem);
+	
+	float freeMemMB = freeMem / (1024.0 * 1024.0);
+	float usedMemMB = usedMem / (1024.0 * 1024.0);
+	
+	String_AppendConst(info, "-- Using Dreamcast --\n");
+	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");
+	String_AppendConst(info, "T&L: GLdc library (KallistiOS / Kazade)\n");
+	String_Format2(info,     "Texture memory: %f2 MB used, %f2 MB free\n", &usedMemMB, &freeMemMB);
+	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+}
+
+void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+	gfx_minFrameMs = minFrameMs;
+	gfx_vsync      = vsync;
+}
+
+void Gfx_BeginFrame(void) { }
+void Gfx_Clear(void) {
+	// no need to use glClear
+}
+
+void Gfx_EndFrame(void) {
+	glKosSwapBuffers();
+	if (gfx_minFrameMs) LimitFPS();
+}
+
+void Gfx_OnWindowResize(void) {
+	glViewport(0, 0, Game.Width, Game.Height);
 }
 #endif

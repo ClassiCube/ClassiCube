@@ -63,6 +63,109 @@ void Window_Close(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
+// TODO: More intelligent diffing that uses less space
+static cc_bool has_prevState;
+static kbd_state_t prevState;
+static int MapKey(int k) {
+	if (k >= KBD_KEY_A  && k <= KBD_KEY_Z)   return 'A'      + (k - KBD_KEY_A);
+	if (k >= KBD_KEY_0  && k <= KBD_KEY_9)   return '0'      + (k - KBD_KEY_0);
+	if (k >= KBD_KEY_F1 && k <= KBD_KEY_F12) return CCKEY_F1 + (k - KBD_KEY_F1);
+	// KBD_KEY_PAD_0 isn't before KBD_KEY_PAD_1
+	if (k >= KBD_KEY_PAD_1 && k <= KBD_KEY_PAD_9) return CCKEY_KP1 + (k - KBD_KEY_PAD_1);
+	
+	switch (k) {
+	case KBD_KEY_ENTER:     return CCKEY_ENTER;
+	case KBD_KEY_ESCAPE:    return CCKEY_ESCAPE;
+	case KBD_KEY_BACKSPACE: return CCKEY_BACKSPACE;
+	case KBD_KEY_TAB:       return CCKEY_TAB;
+	case KBD_KEY_SPACE:     return CCKEY_SPACE;
+	case KBD_KEY_MINUS:     return CCKEY_MINUS;
+	case KBD_KEY_PLUS:      return CCKEY_EQUALS;
+	case KBD_KEY_LBRACKET:  return CCKEY_LBRACKET;
+	case KBD_KEY_RBRACKET:  return CCKEY_RBRACKET;
+	case KBD_KEY_BACKSLASH: return CCKEY_BACKSLASH;
+	case KBD_KEY_SEMICOLON: return CCKEY_SEMICOLON;
+	case KBD_KEY_QUOTE:     return CCKEY_QUOTE;
+	case KBD_KEY_TILDE:     return CCKEY_TILDE;
+	case KBD_KEY_COMMA:     return CCKEY_COMMA;
+	case KBD_KEY_PERIOD:    return CCKEY_PERIOD;
+	case KBD_KEY_SLASH:     return CCKEY_SLASH;
+	case KBD_KEY_CAPSLOCK:  return CCKEY_CAPSLOCK;
+	case KBD_KEY_PRINT:     return CCKEY_PRINTSCREEN;
+	case KBD_KEY_SCRLOCK:   return CCKEY_SCROLLLOCK;
+	case KBD_KEY_PAUSE:     return CCKEY_PAUSE;
+	case KBD_KEY_INSERT:    return CCKEY_INSERT;
+	case KBD_KEY_HOME:      return CCKEY_HOME;
+	case KBD_KEY_PGUP:      return CCKEY_PAGEUP;
+	case KBD_KEY_DEL:       return CCKEY_DELETE;
+	case KBD_KEY_END:       return CCKEY_END;
+	case KBD_KEY_PGDOWN:    return CCKEY_PAGEDOWN;
+	case KBD_KEY_RIGHT:     return CCKEY_RIGHT;
+	case KBD_KEY_LEFT:      return CCKEY_LEFT;
+	case KBD_KEY_DOWN:      return CCKEY_DOWN;
+	case KBD_KEY_UP:        return CCKEY_UP;
+	
+	case KBD_KEY_PAD_NUMLOCK:  return CCKEY_NUMLOCK;
+	case KBD_KEY_PAD_DIVIDE:   return CCKEY_KP_DIVIDE;
+	case KBD_KEY_PAD_MULTIPLY: return CCKEY_KP_MULTIPLY;
+	case KBD_KEY_PAD_MINUS:    return CCKEY_KP_MINUS;
+	case KBD_KEY_PAD_PLUS:     return CCKEY_KP_PLUS;
+	case KBD_KEY_PAD_ENTER:    return CCKEY_KP_ENTER;
+	case KBD_KEY_PAD_0:        return CCKEY_KP0;
+	case KBD_KEY_PAD_PERIOD:   return CCKEY_KP_DECIMAL;
+	}
+	return INPUT_NONE;
+}
+#define ToggleKey(diff, cur, mask, btn) if (diff & mask) Input_Set(btn, cur & mask)
+static void UpdateKeyboardState(kbd_state_t* state) {
+	int cur_keys  = state->shift_keys;
+	int diff_keys = prevState.shift_keys ^ state->shift_keys;
+	
+	if (diff_keys) {
+		ToggleKey(diff_keys, cur_keys, KBD_MOD_LALT,   CCKEY_LALT);
+		ToggleKey(diff_keys, cur_keys, KBD_MOD_RALT,   CCKEY_RALT);
+		ToggleKey(diff_keys, cur_keys, KBD_MOD_LCTRL,  CCKEY_LCTRL);
+		ToggleKey(diff_keys, cur_keys, KBD_MOD_RCTRL,  CCKEY_RCTRL);
+		ToggleKey(diff_keys, cur_keys, KBD_MOD_LSHIFT, CCKEY_LSHIFT);
+		ToggleKey(diff_keys, cur_keys, KBD_MOD_RSHIFT, CCKEY_RSHIFT);
+	}
+	
+	// see keyboard.h, KEY_S3 seems to be highest used key
+	for (int i = KBD_KEY_A; i < KBD_KEY_S3; i++)
+	{
+		if (state->matrix[i] == prevState.matrix[i]) continue;
+		int btn = MapKey(i);
+		if (btn) Input_Set(btn, state->matrix[i]);
+	}
+}
+
+static void ProcessKeyboardInput(void) {
+	maple_device_t* kb_dev;
+	kbd_state_t* state;
+
+	kb_dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+	if (!kb_dev) return;
+	state  = (kbd_state_t*)maple_dev_status(kb_dev);
+	if (!state)  return;
+	
+	if (has_prevState) UpdateKeyboardState(state);
+	has_prevState = true;
+	prevState     = *state;
+	
+	int ret = kbd_queue_pop(kb_dev, 1);
+        if (ret < 0) return;
+        
+        // Ascii printable characters
+        //  NOTE: Escape, Enter etc map to ASCII control characters
+        if (ret >= ' ' && ret <= 0x7F) 
+        	Event_RaiseInt(&InputEvents.Press, ret);
+}
+
+
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -114,6 +217,7 @@ static void ProcessControllerInput(double delta) {
 
 void Window_ProcessEvents(double delta) {
 	ProcessControllerInput(delta);
+	ProcessKeyboardInput();
 }
 
 void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
