@@ -805,8 +805,7 @@ void InputHandler_PickBlock(void) {
 
 void InputHandler_Tick(void) {
 	cc_bool left, middle, right;
-	double now;
-	int delta;
+	double now, delta;
 	
 	if (Gui.InputGrab) return;
 	now   = Game.Time;
