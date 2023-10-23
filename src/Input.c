@@ -28,7 +28,7 @@
 struct _InputState Input;
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
-static TimeMS input_lastClick;
+static double input_lastClick;
 static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
 static cc_bool suppressEscape;
@@ -48,6 +48,7 @@ static struct TouchPointer {
 	int begX, begY;
 	TimeMS start;
 } touches[INPUT_MAX_POINTERS];
+
 int Pointers_Count;
 int Input_TapMode  = INPUT_MODE_PLACE;
 int Input_HoldMode = INPUT_MODE_DELETE;
@@ -123,7 +124,7 @@ void Input_AddTouch(long id, int x, int y) {
 		/* Also set last click time, otherwise quickly tapping */
 		/* sometimes triggers a 'delete' in InputHandler_Tick, */
 		/* and then another 'delete' in CheckBlockTap. */
-		input_lastClick  = touches[i].start;
+		input_lastClick  = Game.Time;
 
 		if (i == Pointers_Count) Pointers_Count++;
 		Pointer_SetPosition(i, x, y);
@@ -624,7 +625,7 @@ static void MouseStateChanged(int button, cc_bool pressed) {
 }
 
 static void MouseStatePress(int button) {
-	input_lastClick = DateTime_CurrentUTC_MS();
+	input_lastClick = Game.Time;
 	input_pickingId = -1;
 	MouseStateChanged(button, true);
 }
@@ -635,7 +636,7 @@ static void MouseStateRelease(int button) {
 }
 
 void InputHandler_OnScreensChanged(void) {
-	input_lastClick = DateTime_CurrentUTC_MS();
+	input_lastClick = Game.Time;
 	input_pickingId = -1;
 	if (!Gui.InputGrab) return;
 
@@ -804,15 +805,17 @@ void InputHandler_PickBlock(void) {
 
 void InputHandler_Tick(void) {
 	cc_bool left, middle, right;
-	TimeMS now;
+	double now;
 	int delta;
 	
 	if (Gui.InputGrab) return;
+	now   = Game.Time;
+	delta = now - input_lastClick;
 
-	
-	now   = DateTime_CurrentUTC_MS();
-	delta = (int)(now - input_lastClick);
-	if (delta < 250) return; /* 4 times per second */
+	if (delta < 0.2495) return; /* 4 times per second */
+	/* NOTE: 0.2495 is used instead of 0.25 to produce delta time */
+	/*  values slightly closer to the old code which measured */
+	/*  elapsed time using DateTime_CurrentUTC_MS() instead */
 	input_lastClick = now;
 
 	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
