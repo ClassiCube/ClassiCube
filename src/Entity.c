@@ -416,7 +416,9 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 	if (bmp->width > Gfx.MaxTexWidth || bmp->height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", skin);
 	} else {
-		if (e->Model->usesHumanSkin) Entity_ClearHat(bmp, e->SkinType);
+		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT) 
+			Entity_ClearHat(bmp, e->SkinType);
+
 		Gfx_RecreateTexture(&e->TextureId, bmp, TEXTURE_FLAG_MANAGED, false);
 		Entity_SetSkinAll(e, false);
 	}

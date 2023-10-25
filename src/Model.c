@@ -423,7 +423,7 @@ static void MakeModel(struct Model* model) {
 	Models.Active = model;
 	model->MakeParts();
 
-	model->inited = true;
+	model->flags |= MODEL_FLAG_INITED;
 	model->index  = 0;
 	Models.Active = active;
 }
@@ -434,7 +434,8 @@ struct Model* Model_Get(const cc_string* name) {
 	for (model = models_head; model; model = model->next) {
 		if (!String_CaselessEqualsConst(name, model->name)) continue;
 
-		if (!model->inited) MakeModel(model);
+		if (!(model->flags & MODEL_FLAG_INITED))
+			MakeModel(model);
 		return model;
 	}
 	return NULL;
@@ -1089,8 +1090,11 @@ static struct Model  human_model = {
 static void HumanoidModel_Register(void) {
 	Model_Init(&human_model);
 	human_model.DrawArm  = HumanModel_DrawArm;
+
 	human_model.calcHumanAnims = true;
 	human_model.usesHumanSkin  = true;
+	human_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	Model_Register(&human_model);
 }
 
@@ -1178,9 +1182,13 @@ static struct Model chibi_model = { "chibi", chibi_vertices, &human_tex,
 static void ChibiModel_Register(void) {
 	Model_Init(&chibi_model);
 	chibi_model.DrawArm  = ChibiModel_DrawArm;
-	chibi_model.armX = 3; chibi_model.armY = 6;
+	chibi_model.armX = 3; 
+	chibi_model.armY = 6;
+
 	chibi_model.calcHumanAnims = true;
 	chibi_model.usesHumanSkin  = true;
+	chibi_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	chibi_model.maxScale    = 3.0f;
 	chibi_model.shadowScale = 0.5f;
 	Model_Register(&chibi_model);
@@ -1216,8 +1224,11 @@ static struct Model sitting_model = { "sit", human_vertices, &human_tex,
 static void SittingModel_Register(void) {
 	Model_Init(&sitting_model);
 	sitting_model.DrawArm  = HumanModel_DrawArm;
+
 	sitting_model.calcHumanAnims = true;
 	sitting_model.usesHumanSkin  = true;
+	sitting_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	sitting_model.shadowScale  = 0.5f;
 	sitting_model.GetTransform = SittingModel_GetTransform;
 	Model_Register(&sitting_model);
@@ -1278,6 +1289,8 @@ static struct Model head_model = { "head", human_vertices, &human_tex,
 static void HeadModel_Register(void) {
 	Model_Init(&head_model);
 	head_model.usesHumanSkin = true;
+	head_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	head_model.pushes        = false;
 	head_model.GetTransform  = HeadModel_GetTransform;
 	Model_Register(&head_model);
