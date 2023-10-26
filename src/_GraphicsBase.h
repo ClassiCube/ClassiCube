@@ -142,44 +142,47 @@ void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(*vb, fmt, count);
 }
 
-void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount) {
-	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawVb_IndexedTris(vCount);
-}
-
 #ifndef CC_BUILD_3DS
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
-	struct VertexColoured verts[4];
-	struct VertexColoured* v = verts;
+	struct VertexColoured* v;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 
 	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = color; v++;
 	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = color; v++;
 	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = color; v++;
 	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = color; v++;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
+	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
-	struct VertexColoured verts[4];
-	struct VertexColoured* v = verts;
+	struct VertexColoured* v;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 
 	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
 	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
 	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
+	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
-	struct VertexTextured texVerts[4];
-	struct VertexTextured* ptr = texVerts;
-	Gfx_Make2DQuad(tex, color, &ptr);
+	struct VertexTextured* ptr;
+
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
+	ptr = (struct VertexTextured*)Gfx_LockDynamicVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
+
+	Gfx_Make2DQuad(tex, color, &ptr);
+
+	Gfx_UnlockDynamicVb(Gfx_texVb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 #endif
 

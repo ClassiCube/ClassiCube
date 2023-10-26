@@ -198,7 +198,8 @@ static void EntityShadow_Draw(struct Entity* e) {
 	}
 
 	count = (int)(ptr - vertices);
-	Gfx_UpdateDynamicVb_IndexedTris(vb, vertices, count);
+	Gfx_SetDynamicVbData(vb, vertices, count);
+	Gfx_DrawVb_IndexedTris(count);
 }
 
 

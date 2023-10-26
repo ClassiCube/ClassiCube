@@ -232,10 +232,6 @@ void Gfx_RecreateContext(void);
 /* Attempts to restore a lost context */
 cc_bool Gfx_TryRestoreContext(void);
 
-/* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer */
-/* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing */
-void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
-
 /* Renders a 2D flat coloured rectangle */
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color);
 /* Renders a 2D flat vertical gradient rectangle */

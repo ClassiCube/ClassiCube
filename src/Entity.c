@@ -245,7 +245,7 @@ static void MakeNameTexture(struct Entity* e) {
 }
 
 static void DrawName(struct Entity* e) {
-	struct VertexTextured vertices[4];
+	struct VertexTextured* vertices;
 	struct Model* model;
 	struct Matrix mat;
 	Vec3 pos;
@@ -270,9 +270,13 @@ static void DrawName(struct Entity* e) {
 		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
 	}
 
-	Particle_DoRender(&size, &pos, &e->NameTex.uv, PACKEDCOL_WHITE, vertices);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, vertices, 4);
+
+	vertices = (struct VertexTextured*)Gfx_LockDynamicVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
+	Particle_DoRender(&size, &pos, &e->NameTex.uv, PACKEDCOL_WHITE, vertices);
+	Gfx_UnlockDynamicVb(Gfx_texVb);
+
+	Gfx_DrawVb_IndexedTris(4);
 }
 
 /* Deletes the texture containing the entity's nametag */

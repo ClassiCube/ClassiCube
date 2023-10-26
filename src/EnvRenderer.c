@@ -347,7 +347,8 @@ static double weather_accumulator;
 static IVec3 lastPos;
 
 #define WEATHER_EXTENT 4
-#define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
+#define WEATHER_RANGE  (WEATHER_EXTENT * 2 + 1)
+#define WEATHER_VERTS_COUNT 8 * WEATHER_RANGE * WEATHER_RANGE
 #define Weather_Pack(x, z) ((x) * World.Length + (z))
 
 static void InitWeatherHeightmap(void) {
@@ -431,6 +432,7 @@ static float CalcRainAlphaAt(float x) {
 static RNGState snowDirRng;
 void EnvRenderer_RenderWeather(double deltaTime) {
 	struct VertexTextured vertices[WEATHER_VERTS_COUNT];
+	IVec3 coords[WEATHER_RANGE * WEATHER_RANGE];
 	struct VertexTextured* v;
 	int weather, vCount;
 	IVec3 pos;
@@ -456,12 +458,12 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	/* Rain should extend up by 64 blocks, or to the top of the world. */
 	pos.Y += 64;
 	pos.Y = max(World.Height, pos.Y);
+	weather_accumulator += deltaTime;
 
 	speed         = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
 	vOffsetBase   = (float)Game.Time * speed;
 	vPlane1Offset = weather == WEATHER_RAINY ? 0 : 0.25f; /* Offset v on 1 plane while snowing to avoid the unnatural mirrored texture effect */
-	particles     = weather == WEATHER_RAINY;
-	weather_accumulator += deltaTime;
+	particles     = weather == WEATHER_RAINY && (weather_accumulator >= 0.25 || moved);
 
 	v   = vertices;
 	col = Env.SunCol;
@@ -471,12 +473,10 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			x = pos.X + dx; z = pos.Z + dz;
 
 			y = GetRainHeight(x, z);
+			if (pos.Y <= y) continue;
 			height = pos.Y - y;
-			if (height <= 0) continue;
 
-			if (particles && (weather_accumulator >= 0.25 || moved)) {
-				Particles_RainSnowEffect((float)x, y, (float)z);
-			}
+			if (particles) Particles_RainSnowEffect((float)x, y, (float)z);
 
 			dist  = dx * dx + dz * dz;
 			alpha = CalcRainAlphaAt((float)dist);
@@ -514,9 +514,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 		}
 	}
 
-	if (particles && (weather_accumulator >= 0.25f || moved)) {
-		weather_accumulator = 0;
-	}
+	if (particles) weather_accumulator = 0;
 	if (v == vertices) return;
 
 	Gfx_SetAlphaTest(false);
@@ -525,7 +523,8 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	vCount = (int)(v - vertices);
-	Gfx_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
+	Gfx_SetDynamicVbData(weather_vb, vertices, vCount);
+	Gfx_DrawVb_IndexedTris(vCount);
 
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(true);

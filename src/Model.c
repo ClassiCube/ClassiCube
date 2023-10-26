@@ -144,7 +144,9 @@ void Model_SetupState(struct Model* model, struct Entity* e) {
 
 void Model_UpdateVB(void) {
 	struct Model* model = Models.Active;
-	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, Models.Vertices, model->index);
+	
+	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, model->index);
+	Gfx_DrawVb_IndexedTris(model->index);
 	model->index = 0;
 }
 
