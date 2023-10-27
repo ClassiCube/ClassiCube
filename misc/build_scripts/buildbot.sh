@@ -61,8 +61,8 @@ build_win64() {
 
 # ----------------------------- compile linux
 #   I installed gcc and gcc-multilib packages
-NIX32_FLAGS="-no-pie -fno-pie -m32 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
-NIX64_FLAGS="-no-pie -fno-pie -m64 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
+NIX32_FLAGS="-no-pie -fno-pie -m32 -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON"
+NIX64_FLAGS="-no-pie -fno-pie -m64 -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON"
 
 build_nix32() {
   echo "Building linux32.."
