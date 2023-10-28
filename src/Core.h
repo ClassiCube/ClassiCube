@@ -304,6 +304,12 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_BEARSSL
 	#undef CC_BUILD_FREETYPE
+#elif defined NINTENDO64
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_N64
+	#define CC_BUILD_LOWMEM
+	#undef CC_BUILD_FREETYPE
 #endif
 #endif
 

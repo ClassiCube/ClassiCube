@@ -161,6 +161,8 @@ xbox:
 	$(MAKE) -f misc/xbox/Makefile PLAT=xbox
 xbox360:
 	$(MAKE) -f src/xbox360/Makefile PLAT=xbox360
+n64:
+	$(MAKE) -f misc/n64/Makefile PLAT=n64
 	
 clean:
 	$(DEL) $(OBJECTS)

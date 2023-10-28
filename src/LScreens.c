@@ -1239,9 +1239,7 @@ static void ServersScreen_ReloadServers(struct ServersScreen* s) {
 	}
 }
 
-static void ServersScreen_AddWidgets(struct LScreen* s_) {
-	struct ServersScreen* s = (struct ServersScreen*)s_;
-
+static void ServersScreen_AddWidgets(struct ServersScreen* s) {
 	LInput_Add(s,  &s->iptSearch, 370, "Search servers..",               srv_iptSearch);
 	LInput_Add(s,  &s->iptHash,   475, "classicube.net/server/play/...", srv_iptHash);
 

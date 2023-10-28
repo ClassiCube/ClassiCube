@@ -265,7 +265,7 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Statically initialises the position and dimensions of this texture */
 #define Tex_Rect(x,y, width,height) x,y,width,height
 /* Statically initialises the texture coordinate corners of this texture */
-#define Tex_UV(u1,v1, u2,v2)        u1,v1,u2,v2
+#define Tex_UV(u1,v1, u2,v2)        { u1,v1,u2,v2 }
 /* Sets the position and dimensions of this texture */
 #define Tex_SetRect(tex, x,y, width, height) tex.X = x; tex.Y = y; tex.Width = width; tex.Height = height;
 /* Sets texture coordinate corners of this texture */
