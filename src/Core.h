@@ -310,6 +310,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_N64
 	#define CC_BUILD_LOWMEM
 	#undef CC_BUILD_FREETYPE
+	#define CC_BIG_ENDIAN
 #endif
 #endif
 

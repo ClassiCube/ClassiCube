@@ -6,10 +6,15 @@
 #include "Window.h"
 #include <libdragon.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 #include <GL/gl_integration.h>
-#include <rspq_profile.h>
 #include <GL/gl.h>
+
+/* Current format and size of vertices */
+static int gfx_stride, gfx_format;
+typedef void (*GL_SetupVBFunc)(void);
+typedef void (*GL_SetupVBRangeFunc)(int startVertex);
+static GL_SetupVBFunc gfx_setupVBFunc;
+static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 
 /*########################################################################################################################*
@@ -21,21 +26,15 @@ static void GL_UpdateVsync(void) {
 static surface_t zbuffer;
 
 void Gfx_Create(void) {
-    rdpq_init(); // todo not needed
+//Platform_LogConst("GFX CREATE");
     gl_init();
+    //rdpq_debug_start(); // TODO debug
+    //rdpq_debug_log(true);
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
-
-    rspq_profile_start();
-    
-    glDisable(GL_LIGHTING);
-    glBegin(GL_LINES);
-    glEnd();
     
 	Gfx.MaxTexWidth  = 32;
 	Gfx.MaxTexHeight = 32;
 	Gfx.Created      = true;
-	/* necessary for android which "loses" context when window is closed */
-	Gfx.LostContext  = false;
 
 	Gfx_RestoreState();
 	GL_UpdateVsync();
@@ -56,6 +55,8 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+//static color_t gfx_clearColor;
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
@@ -69,38 +70,97 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (Gfx.Created) GL_UpdateVsync();
 }
 
-void Gfx_BeginFrame(void) { 
+void Gfx_OnWindowResize(void) { }
+
+
+void Gfx_BeginFrame(void) {
+Platform_LogConst("GFX BEG");
 	surface_t* disp = display_get();
     rdpq_attach(disp, &zbuffer);
+    
+    //rdpq_set_mode_fill(RGBA32(0, 255, 0, 255));
+    //rdpq_fill_rectangle(0, 0, 320, 120);
+    
+    //rdpq_clear(gfx_clearColor);
+    //rdpq_clear_z(0xFFFC);
+    
 	gl_context_begin();
+Platform_LogConst("GFX ctx beg");
 }
 
-void Gfx_Clear(void) { }
+static PackedCol clearColor;
+void Gfx_Clear(void) {
+	glClearColor(PackedCol_R(clearColor) / 255.0f, PackedCol_G(clearColor) / 255.0f,
+				 PackedCol_B(clearColor) / 255.0f, PackedCol_A(clearColor) / 255.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+} 
+
+void Gfx_ClearCol(PackedCol color) {
+	clearColor = color;
+	//color = PackedCol_Make(200, 150, 100, 255);
+	//memcpy(&gfx_clearColor, &color, sizeof(color_t)); // TODO maybe use proper conversion from graphics.h ??
+}
 
 void Gfx_EndFrame(void) {
+Platform_LogConst("GFX ctx end");
 	gl_context_end();
     rdpq_detach_show();
     
 	if (gfx_minFrameMs) LimitFPS();
+Platform_LogConst("GFX END");
 }
-
-void Gfx_OnWindowResize(void) {
-	//  TODO don't call
-	//glViewport(0, 0, Game.Width, Game.Height);
-}
-
-/* Current format and size of vertices */
-static int gfx_stride;
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+
+typedef struct CCTexture {
+	surface_t surface;
+	GLuint textureID;
+} CCTexture;
+
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	return 0;
+	Platform_Log2("make texture %i x %i", &bmp->width, &bmp->height);
+	if (bmp->width > 32 || bmp->height > 32) return NULL;
+
+	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "texture");
+	
+	glGenTextures(1, &tex->textureID);
+	glBindTexture(GL_TEXTURE_2D, tex->textureID);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+	tex->surface = surface_alloc(FMT_RGBA32, bmp->width, bmp->height);
+	
+	surface_t* fb  = &tex->surface;
+	cc_uint32* src = (cc_uint32*)bmp->scan0;
+	cc_uint8*  dst = (cc_uint8*)fb->buffer;
+
+	for (int y = 0; y < bmp->height; y++) 
+	{
+		Mem_Copy(dst + y * fb->stride,
+				 src + y * bmp->width, 
+				 bmp->width * 4);
+	}
+	
+	rdpq_texparms_t params = (rdpq_texparms_t){
+        .s.repeats = REPEAT_INFINITE,
+        .t.repeats = REPEAT_INFINITE,
+    };
+
+	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
+	return tex;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	CCTexture* tex = (CCTexture*)texId;
+	GLuint glID = tex ? tex->textureID : 0;
+	//Platform_Log1("BIND: %i", &glID);
+	
+    //rdpq_debug_log(true);
+	glBindTexture(GL_TEXTURE_2D, glID);	
+   // rdpq_debug_log(false);
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -111,10 +171,12 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GLuint id = (GLuint)(*texId);
-	if (!id) return;
-	glDeleteTextures(1, &id);
-	*texId = 0;
+	CCTexture* tex = (CCTexture*)(*texId);
+	if (!tex) return;
+	
+	glDeleteTextures(1, &tex->textureID);
+	Mem_Free(tex);
+	*texId = NULL;
 }
 
 void Gfx_EnableMipmaps(void) { }
@@ -124,20 +186,9 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   {  }
-void Gfx_SetAlphaBlending(cc_bool enabled) { }
+void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
+void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
-
-static void GL_ClearColor(PackedCol color) {
-	glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
-				 PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
-}
-void Gfx_ClearCol(PackedCol color) {
-	if (color == gfx_clearColor) return;
-	GL_ClearColor(color);
-	gfx_clearColor = color;
-}
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//glColorMask(r, g, b, a); TODO
@@ -145,6 +196,21 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 
 void Gfx_SetDepthWrite(cc_bool enabled) { }
 void Gfx_SetDepthTest(cc_bool enabled) { }
+
+static void Gfx_FreeState(void) { FreeDefaultResources(); }
+static void Gfx_RestoreState(void) {
+	InitDefaultResources();
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	gfx_format = -1;
+
+	glHint(GL_FOG_HINT, GL_NICEST);
+	glAlphaFunc(GL_GREATER, 0.5f);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthFunc(GL_LESS);
+}
+
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 
 /*########################################################################################################################*
@@ -261,52 +327,112 @@ void Gfx_SetFogMode(FogFunc func) {
 
 void Gfx_SetTexturing(cc_bool enabled) { }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+void Gfx_SetAlphaTest(cc_bool enabled) { 
+	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	//Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
+static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
+static int lastMatrix;
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	glLoadMatrixf((const float*)matrix);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	glLoadIdentity();
 }
 
+static struct Matrix texMatrix = Matrix_IdentityValue;
 void Gfx_EnableTextureOffset(float x, float y) {
+	texMatrix.row4.X = x; texMatrix.row4.Y = y;
+	Gfx_LoadMatrix(2, &texMatrix);
 }
 
-void Gfx_DisableTextureOffset(void) { }
+void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------State setup-------------------------------------------------------*
+*--------------------------------------------------------Rendering--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Gfx_FreeState(void) { FreeDefaultResources(); }
-static void Gfx_RestoreState(void) {
-	InitDefaultResources();
+#define VB_PTR gfx_vertices
+#define IB_PTR gfx_indices
+
+static void GL_SetupVbColoured(void) {
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
 }
 
-cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
+static void GL_SetupVbTextured(void) {
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
+	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
+}
+
+static void GL_SetupVbColoured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
+	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+}
+
+static void GL_SetupVbTextured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
+
+		gfx_setupVBFunc      = GL_SetupVbTextured;
+		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
+	} else {
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
+
+		gfx_setupVBFunc      = GL_SetupVbColoured;
+		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
+	}
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
+	gfx_setupVBFunc();
+	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	gfx_setupVBRangeFunc(startVertex);
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	gfx_setupVBFunc();
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
 }
 #endif
