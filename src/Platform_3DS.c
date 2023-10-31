@@ -1,15 +1,14 @@
 #include "Core.h"
 #if defined CC_BUILD_3DS
-
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
-#include "Drawer2D.h"
 #include "Funcs.h"
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
 #include "PackedCol.h"
+
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -28,6 +27,7 @@
 #include <netdb.h>
 #include <3ds.h>
 #include <citro3d.h>
+#include "_PlatformConsole.h"
 
 #define US_PER_SEC 1000000LL
 #define NS_PER_MS 1000000LL
@@ -37,35 +37,11 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const char* Platform_AppNameSuffix = " 3DS";
 
 // https://gbatemp.net/threads/homebrew-development.360646/page-245
 // 3DS defaults to stack size of *32 KB*.. way too small
 unsigned int __stacksize__ = 256 * 1024;
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
 
 
 /*########################################################################################################################*
@@ -120,18 +96,18 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path) { }
+static const cc_string root_path = String_FromConst("sdmc:/3ds/ClassiCube/");
 
 static void GetNativePath(char* str, const cc_string* path) {
-	static const char root_path[22] = "sdmc://3ds/ClassiCube/";
-	Mem_Copy(str, root_path, sizeof(root_path));
-	str += sizeof(root_path);
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
 	String_EncodeUtf8(str, path);
 }
 
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+	
 	return mkdir(str, 0666) == -1 ? errno : 0; // FS has no permissions anyways
 }
 
@@ -139,19 +115,19 @@ int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	GetNativePath(str, path);
+	
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
 	int len, res, is_dir;
 
 	GetNativePath(str, dirPath);
-	dirPtr = opendir(str);
+	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
@@ -186,6 +162,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+
 	*file = open(str, mode, 0666); // FS has no permissions anyways
 	return *file == -1 ? errno : 0;
 }
@@ -306,13 +283,6 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_LoadSysFonts(void) { 
-}
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 union SocketAddress {
@@ -324,55 +294,55 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int success = 0, res;
+	int found = false;
 
 	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	res = getaddrinfo(host, NULL, &hints, &result);
-	if (res) return 0;
+	int res = getaddrinfo(host, NULL, &hints, &result);
+	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
+	if (res) return res;
 
 	for (cur = result; cur; cur = cur->ai_next) {
 		if (cur->ai_family != AF_INET) continue;
-		success = true;
+		found = true;
 
 		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
 		break;
 	}
 
 	freeaddrinfo(result);
-	return success;
+	return found ? 0 : ERR_INVALID_ARGUMENT;
 }
 
 static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
 
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr) > 0) return true;
+	if (inet_pton(AF_INET, str, &addr->v4.sin_addr) > 0) return 0;
 	return ParseHost(addr, str);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
 	union SocketAddress addr;
-	return ParseAddress(&addr, address);
+	return ParseAddress(&addr, address) == 0;
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
-	cc_result res;
-	int flags;
+	int res;
 
 	*s = -1;
-	if (!ParseAddress(&addr, address))
-		return ERR_INVALID_ARGUMENT;
+	if ((res = ParseAddress(&addr, address))) return res;
 
 	*s = socket(AF_INET, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
 	
-	// non blocking mode
-	flags = fcntl(*s, F_GETFL, 0);
-	if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
+	if (nonblocking) {
+		int flags = fcntl(*s, F_GETFL, 0);
+		if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
+	}
 
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
@@ -390,6 +360,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
+	
 	*modified = 0; return errno;
 }
 
@@ -400,15 +371,15 @@ void Socket_Close(cc_socket s) {
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
-	int flags;
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
 	
 	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
+	int flags = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
+	*success  = (pfd.revents & flags) != 0;
+	
 	return 0;
 }
 
@@ -421,55 +392,13 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	// Actual 3DS hardware returns INPROGRESS error code if connect is still in progress
+	// Which is different from POSIX:
+	//   https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
 	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	Platform_Log1("--write poll failed-- = %i", &res);
+	if (res == -26) res = 0;
 	return res;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Process/Module------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	return ERR_NOT_SUPPORTED;
-}
-void Process_Exit(cc_result code) { exit(code); }
-
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-const char* const Updater_D3D9 = NULL;
-cc_bool Updater_Clean(void) { return true; }
-
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-
-cc_result Updater_Start(const char** action) { *action = "Starting"; return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) { return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_MarkExecutable(void) { return ERR_NOT_SUPPORTED; }
-
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) { return ERR_NOT_SUPPORTED; }
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-
-const cc_string DynamicLib_Ext = String_FromConst(".so");
-
-void* DynamicLib_Load2(const cc_string* path) { return NULL; }
-
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	String_AppendConst(dst, "Dynamic linking unsupported");
-	return true;
 }
 
 
@@ -479,10 +408,22 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 #define SOC_CTX_ALIGN 0x1000
 #define SOC_CTX_SIZE  0x1000 * 128
 
-void Platform_Init(void) { 
+static void CreateRootDirectory(const char* path) {
 	// create root directories (no permissions anyways)
-	mkdir("sdmc://3ds",            0666);
-	mkdir("sdmc://3ds/ClassiCube", 0666);
+	int res = mkdir(path, 0666);
+	if (res >= 0) return;
+	
+	int err = errno;
+	Platform_Log2("mkdir %c FAILED: %i", path, &err);
+}
+
+void Platform_Init(void) {
+	// Take full advantage of new 3DS if running on it
+	osSetSpeedupEnable(true);
+	
+	// create root directories (no permissions anyways)
+	CreateRootDirectory("sdmc:/3ds");
+	CreateRootDirectory("sdmc:/3ds/ClassiCube");
 	
 	// See https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/services/soc.h
 	//  * @param context_addr Address of a page-aligned (0x1000) buffer to be used.
@@ -519,30 +460,9 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
-*#########################################################################################################################*/
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	// 3DS *sometimes* doesn't use argv[0] for program name and so argc will be 0
-	// (e.g. when running from Citra)
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
+static cc_result GetMachineID(cc_uint32* key) {
+	// doesn't really matter if called multiple times
+	psInit();
+	return PS_GetDeviceId(key);
 }
 #endif

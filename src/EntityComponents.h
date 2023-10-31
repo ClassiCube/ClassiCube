@@ -3,7 +3,7 @@
 #include "Vectors.h"
 #include "Constants.h"
 /* Various components for entities.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct Entity;
@@ -99,12 +99,6 @@ struct NetInterpComp {
 
 void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, struct Entity* e);
 void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e);
-
-/* Entity component that draws square and circle shadows beneath entities */
-
-extern cc_bool ShadowComponent_BoundShadowTex;
-extern GfxResourceID ShadowComponent_ShadowTex;
-void ShadowComponent_Draw(struct Entity* entity);
 
 /* Entity component that performs collision detection */
 struct CollisionsComp {

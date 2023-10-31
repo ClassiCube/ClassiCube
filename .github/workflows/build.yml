@@ -126,8 +126,6 @@ jobs:
         if: matrix.config.plat == 'Mac' && matrix.config.bits == 64
         run: |
           cd src
-          # fix for "error: implicit declaration of function 'CGDisplayBitsPerPixel'"
-          sed -i '' 's|#include <Cocoa/Cocoa.h>|&\'$'\nextern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);|' interop_cocoa.m
           make mac_x64
 
       - name: Build for ${{ matrix.config.plat }} (${{ matrix.config.bits }} bit)

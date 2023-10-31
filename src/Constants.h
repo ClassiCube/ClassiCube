@@ -2,29 +2,20 @@
 #define CC_CONSTANTS_H
 /* 
 Defines useful constants
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.3.5"
+#define GAME_APP_VER "1.3.6"
 #define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
-#define GAME_APP_ALT   "ClassiCube 1.3.5 web mobile"
-#define GAME_APP_NAME  "ClassiCube 1.3.5 web"
+#define GAME_APP_ALT   "ClassiCube 1.3.6 web mobile"
+#define GAME_APP_NAME  "ClassiCube 1.3.6 web"
 #define GAME_APP_TITLE "ClassiCube"
-#elif defined CC_BUILD_ANDROID
-#define GAME_APP_NAME  "ClassiCube 1.3.5 android alpha"
-#define GAME_APP_TITLE "ClassiCube 1.3.5 android alpha"
-#elif defined CC_BUILD_IOS
-#define GAME_APP_NAME  "ClassiCube 1.3.5 iOS alpha"
-#define GAME_APP_TITLE "ClassiCube 1.3.5 iOS alpha"
-#elif defined CC_BUILD_3DS
-#define GAME_APP_NAME  "ClassiCube 1.3.5 3DS"
-#define GAME_APP_TITLE "ClassiCube 1.3.5 3DS"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.3.5"
-#define GAME_APP_TITLE "ClassiCube 1.3.5"
+#define GAME_APP_NAME  "ClassiCube 1.3.6"
+#define GAME_APP_TITLE "ClassiCube 1.3.6"
 #endif
 
 /* Max number of characters strings can have. */

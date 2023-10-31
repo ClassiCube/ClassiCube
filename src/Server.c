@@ -118,7 +118,7 @@ static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
 	RNGState rnd;
 	Chat_SetLogName(&logName);
-	Game_UseCPEBlocks = Game_UseCPE;
+	Game_UseCPEBlocks = Game_Version.HasCPE;
 
 	/* For when user drops a map file onto ClassiCube.exe */
 	if (SP_AutoloadMap.length) {
@@ -127,7 +127,11 @@ static void SPConnection_BeginConnect(void) {
 
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
+#if defined CC_BUILD_LOWMEM
+	World_SetDimensions(64, 64, 64);
+#else
 	World_SetDimensions(128, 64, 128);
+#endif
 
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
@@ -283,7 +287,7 @@ static void MPConnection_BeginConnect(void) {
 	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 	
-	res = Socket_Connect(&net_socket, &Server.Address, Server.Port);
+	res = Socket_Connect(&net_socket, &Server.Address, Server.Port, true);
 	if (res == ERR_INVALID_ARGUMENT) {
 		static const cc_string reason = String_FromConst("Invalid IP address");
 		MPConnection_Fail(&reason);
@@ -457,8 +461,9 @@ static void OnNewMap(void) {
 	if (Server.IsSinglePlayer) return;
 
 	/* wipe all existing entities */
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		Protocol_RemoveEntity((EntityID)i);
+	for (i = 0; i < ENTITIES_SELF_ID; i++) 
+	{
+		Entities_Remove((EntityID)i);
 	}
 }
 
@@ -475,6 +480,7 @@ static void OnInit(void) {
 
 	ScheduledTask_Add(GAME_NET_TICKS, Server.Tick);
 	String_AppendConst(&Server.AppName, GAME_APP_NAME);
+	String_AppendConst(&Server.AppName, Platform_AppNameSuffix);
 
 #ifdef CC_BUILD_WEB
 	if (!Input_TouchMode) return;

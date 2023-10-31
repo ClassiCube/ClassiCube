@@ -6,7 +6,7 @@ Abstracts lighting of blocks in the world
   Built-in lighting engines:
   - ClassicLighting: Uses a simple heightmap, where each block is either in sun or shadow
 
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Lighting_Component;

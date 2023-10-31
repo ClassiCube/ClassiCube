@@ -2,7 +2,7 @@
 #define CC_AXISLINESRENDERER_H
 #include "Core.h"
 /* Renders 3 lines showing direction of each axis.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;

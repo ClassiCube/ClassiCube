@@ -3,12 +3,12 @@
 #include "Core.h"
 /* 
 Abstracts platform specific memory management, I/O, etc
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct DateTime;
 
 enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN || defined CC_BUILD_XBOX
 typedef cc_uintptr cc_socket;
 typedef void* cc_file;
 #define _NL "\r\n"
@@ -33,17 +33,21 @@ extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
 extern const cc_result ReturnCode_DirectoryExists;
 
+/* Whether the launcher and game must both be run in the same process */
+/*  (e.g. can't start a separate process on Mobile or Consoles) */
+extern cc_bool Platform_SingleProcess;
+/* Suffix added to app name sent to the server */
+extern const char* Platform_AppNameSuffix;
+
 #ifdef CC_BUILD_WIN
-/* Encodes a string in UTF16 format, also null terminating the string. */
-/* Returns the number of bytes written, excluding trailing NULL terminator. */
-int Platform_EncodeUtf16(void* data, const cc_string* src);
-/* Converts a null terminated WCHAR* to char* in-place */
-void Platform_Utf16ToAnsi(void* data);
+typedef struct cc_winstring_ {
+	cc_unichar uni[NATIVE_STR_LEN]; /* String represented using UTF16 format */
+	char ansi[NATIVE_STR_LEN]; /* String lossily represented using ANSI format */
+} cc_winstring;
+/* Encodes a string in UTF16 and ASCII format, also null terminating the string. */
+void Platform_EncodeString(cc_winstring* dst, const cc_string* src);
+
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
-#else
-/* Encodes a string in UTF8 format, also null terminating the string. */
-/* Returns the number of bytes written, excluding trailing NULL terminator. */
-int Platform_EncodeUtf8(void* data, const cc_string* src);
 #endif
 
 /* Initialises the platform specific state. */
@@ -71,6 +75,8 @@ CC_API void Process_Exit(cc_result code);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API cc_result Process_StartOpen(const cc_string* args);
+/* Whether opening URLs is supported by the platform */
+extern cc_bool Process_OpenSupported;
 
 struct UpdaterBuild { 
 	const char* name; 
@@ -83,6 +89,9 @@ extern const struct UpdaterInfo {
 	/* Metadata for the compiled builds available for this platform */
 	const struct UpdaterBuild builds[2]; // TODO name and path
 } Updater_Info;
+/* Whether updating is supported by the platform */
+extern cc_bool Updater_Supported;
+
 /* Attempts to clean up any leftover files from an update */
 cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
@@ -241,8 +250,8 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
 /* Returns non-zero if the given address is valid for a socket to connect to */
 int Socket_ValidAddress(const cc_string* address);
 
-/* Allocates a new non-blocking socket and then begins connecting to the given address:port. */
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port);
+/* Allocates a new socket and then begins connecting to the given address:port. */
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking);
 /* Attempts to read data from the given socket. */
 /* NOTE: A closed socket may set modified to 0, but still return 'success' (i.e. 0) */
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);

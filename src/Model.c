@@ -416,14 +416,14 @@ static struct ModelTex* textures_head;
 static struct ModelTex* textures_tail;
 
 #define Model_RetSize(x,y,z) static Vec3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; e->Size = P;
-#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
+#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f }, { (x2)/16.0f,(y2)/16.0f,(z2)/16.0f } }; e->ModelAABB = BB;
 
 static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;
 	Models.Active = model;
 	model->MakeParts();
 
-	model->inited = true;
+	model->flags |= MODEL_FLAG_INITED;
 	model->index  = 0;
 	Models.Active = active;
 }
@@ -434,7 +434,8 @@ struct Model* Model_Get(const cc_string* name) {
 	for (model = models_head; model; model = model->next) {
 		if (!String_CaselessEqualsConst(name, model->name)) continue;
 
-		if (!model->inited) MakeModel(model);
+		if (!(model->flags & MODEL_FLAG_INITED))
+			MakeModel(model);
 		return model;
 	}
 	return NULL;
@@ -1089,8 +1090,11 @@ static struct Model  human_model = {
 static void HumanoidModel_Register(void) {
 	Model_Init(&human_model);
 	human_model.DrawArm  = HumanModel_DrawArm;
+
 	human_model.calcHumanAnims = true;
 	human_model.usesHumanSkin  = true;
+	human_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	Model_Register(&human_model);
 }
 
@@ -1178,9 +1182,13 @@ static struct Model chibi_model = { "chibi", chibi_vertices, &human_tex,
 static void ChibiModel_Register(void) {
 	Model_Init(&chibi_model);
 	chibi_model.DrawArm  = ChibiModel_DrawArm;
-	chibi_model.armX = 3; chibi_model.armY = 6;
+	chibi_model.armX = 3; 
+	chibi_model.armY = 6;
+
 	chibi_model.calcHumanAnims = true;
 	chibi_model.usesHumanSkin  = true;
+	chibi_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	chibi_model.maxScale    = 3.0f;
 	chibi_model.shadowScale = 0.5f;
 	Model_Register(&chibi_model);
@@ -1216,8 +1224,11 @@ static struct Model sitting_model = { "sit", human_vertices, &human_tex,
 static void SittingModel_Register(void) {
 	Model_Init(&sitting_model);
 	sitting_model.DrawArm  = HumanModel_DrawArm;
+
 	sitting_model.calcHumanAnims = true;
 	sitting_model.usesHumanSkin  = true;
+	sitting_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	sitting_model.shadowScale  = 0.5f;
 	sitting_model.GetTransform = SittingModel_GetTransform;
 	Model_Register(&sitting_model);
@@ -1278,6 +1289,8 @@ static struct Model head_model = { "head", human_vertices, &human_tex,
 static void HeadModel_Register(void) {
 	Model_Init(&head_model);
 	head_model.usesHumanSkin = true;
+	head_model.flags |= MODEL_FLAG_CLEAR_HAT;
+
 	head_model.pushes        = false;
 	head_model.GetTransform  = HeadModel_GetTransform;
 	Model_Register(&head_model);
@@ -1896,6 +1909,7 @@ static void ZombieModel_Register(void) {
 *#########################################################################################################################*/
 static BlockID bModel_block = BLOCK_AIR;
 static int bModel_index, bModel_texIndices[8];
+static struct VertexTextured* bModel_vertices;
 
 static float BlockModel_GetNameY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
@@ -1957,13 +1971,15 @@ static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 		else {        rec.U1 = 0.5f; xz1 =  5.5f/16.0f; }
 	}
 
-	ptr   = &Models.Vertices[(bModel_index - 1) << 2];
+	ptr   = bModel_vertices;
 	v.Col = col;
 
 	v.X = xz1; v.Y = 0.0f; v.Z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
 	           v.Y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
 	v.X = xz2;             v.Z = xz2; v.U = rec.U1;               *ptr++ = v;
 	           v.Y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
+
+	bModel_vertices = ptr;
 }
 
 static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
@@ -1985,21 +2001,30 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 		else {        rec.U2 = 0.5f; x2 =  5.5f/16.0f; z2 = -5.5f/16.0f; }
 	}
 
-	ptr   = &Models.Vertices[(bModel_index - 1) << 2];
+	ptr   = bModel_vertices;
 	v.Col = col;
 
 	v.X = x1; v.Y = 0.0f; v.Z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
 	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
 	v.X = x2;             v.Z = z2; v.U = rec.U1;               *ptr++ = v;
 	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
+
+	bModel_vertices = ptr;
 }
 
+#define BLOCKMODEL_SPRITE_COUNT (8 * 4)
+#define BLOCKMODEL_CUBE_COUNT   (6 * 4)
 static void BlockModel_BuildParts(cc_bool sprite) {
 	struct VertexTextured* ptr;
 	Vec3 min, max;
 	TextureLoc loc;
 
+	ptr = Gfx_LockDynamicVb(Models.Vb, VERTEX_FORMAT_TEXTURED, 
+				sprite ? BLOCKMODEL_SPRITE_COUNT : BLOCKMODEL_CUBE_COUNT);
+
 	if (sprite) {
+		bModel_vertices = ptr;
+
 		BlockModel_SpriteXQuad(false, false);
 		BlockModel_SpriteXQuad(false, true);
 		BlockModel_SpriteZQuad(false, false);
@@ -2015,7 +2040,6 @@ static void BlockModel_BuildParts(cc_bool sprite) {
 		Drawer.Tinted  = Blocks.Tinted[bModel_block];
 		Drawer.TintCol = Blocks.FogCol[bModel_block];
 
-		ptr = Models.Vertices;
 		min = Blocks.RenderMinBB[bModel_block];
 		max = Blocks.RenderMaxBB[bModel_block];
 
@@ -2029,11 +2053,12 @@ static void BlockModel_BuildParts(cc_bool sprite) {
 		loc = BlockModel_GetTex(FACE_XMIN); Drawer_XMin(1, Models.Cols[4], loc, &ptr);
 		loc = BlockModel_GetTex(FACE_YMAX); Drawer_YMax(1, Models.Cols[0], loc, &ptr);
 	}
+
+	Gfx_UnlockDynamicVb(Models.Vb);
 }
 
 static void BlockModel_DrawParts(void) {
 	int lastTexIndex, i, offset = 0, count = 0;
-	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, bModel_index * 4);
 
 	lastTexIndex = bModel_texIndices[0];
 	for (i = 0; i < bModel_index; i++, count += 4) {

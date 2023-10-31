@@ -39,7 +39,7 @@ static void SetFullscreenBounds(void) {
 /* Browser only allows pointer lock requests in response to user input */
 static void DeferredEnableRawMouse(void) {
 	EmscriptenPointerlockChangeEvent status;
-	if (!Input_RawMode) return;
+	if (!Input.RawMode) return;
 
 	status.isActive = false;
 	emscripten_get_pointerlock_status(&status);
@@ -57,11 +57,11 @@ static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* dat
 	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
 	/* https://stackoverflow.com/questions/60895686/how-to-get-mouse-buttons-4-5-browser-back-browser-forward-working-in-firef */
 	switch (ev->button) {
-		case 0: Input_Set(KEY_LMOUSE, down); break;
-		case 1: Input_Set(KEY_MMOUSE, down); break;
-		case 2: Input_Set(KEY_RMOUSE, down); break;
-		case 3: Input_Set(KEY_XBUTTON1, down); break;
-		case 4: Input_Set(KEY_XBUTTON2, down); break;
+		case 0: Input_Set(CCMOUSE_L, down); break;
+		case 1: Input_Set(CCMOUSE_M, down); break;
+		case 2: Input_Set(CCMOUSE_R, down); break;
+		case 3: Input_Set(CCMOUSE_X1, down); break;
+		case 4: Input_Set(CCMOUSE_X2, down); break;
 	}
 
 	DeferredEnableRawMouse();
@@ -85,14 +85,14 @@ static void RescaleXY(int* x, int* y) {
 static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	int x, y, buttons = ev->buttons;
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Input_SetNonRepeatable(KEY_LMOUSE, buttons & 0x01);
-	Input_SetNonRepeatable(KEY_RMOUSE, buttons & 0x02);
-	Input_SetNonRepeatable(KEY_MMOUSE, buttons & 0x04);
+	Input_SetNonRepeatable(CCMOUSE_L, buttons & 0x01);
+	Input_SetNonRepeatable(CCMOUSE_R, buttons & 0x02);
+	Input_SetNonRepeatable(CCMOUSE_M, buttons & 0x04);
 
 	x = ev->targetX; y = ev->targetY;
 	RescaleXY(&x, &y);
 	Pointer_SetPosition(0, x, y);
-	if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
+	if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
 	return true;
 }
 
@@ -199,66 +199,66 @@ static EM_BOOL OnVisibilityChanged(int eventType, const EmscriptenVisibilityChan
 static int MapNativeKey(int k, int l) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
-	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return KEY_F1  + (k - DOM_VK_F1); }
-	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9) { return KEY_KP0 + (k - DOM_VK_NUMPAD0); }
+	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return CCKEY_F1  + (k - DOM_VK_F1); }
+	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9) { return CCKEY_KP0 + (k - DOM_VK_NUMPAD0); }
 
 	switch (k) {
-	case DOM_VK_BACK_SPACE: return KEY_BACKSPACE;
-	case DOM_VK_TAB:        return KEY_TAB;
-	case DOM_VK_RETURN:     return l == DOM_KEY_LOCATION_NUMPAD ? KEY_KP_ENTER : KEY_ENTER;
-	case DOM_VK_SHIFT:      return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RSHIFT : KEY_LSHIFT;
-	case DOM_VK_CONTROL:    return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RCTRL  : KEY_LCTRL;
-	case DOM_VK_ALT:        return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RALT   : KEY_LALT;
-	case DOM_VK_PAUSE:      return KEY_PAUSE;
-	case DOM_VK_CAPS_LOCK:  return KEY_CAPSLOCK;
-	case DOM_VK_ESCAPE:     return KEY_ESCAPE;
-	case DOM_VK_SPACE:      return KEY_SPACE;
+	case DOM_VK_BACK_SPACE: return CCKEY_BACKSPACE;
+	case DOM_VK_TAB:        return CCKEY_TAB;
+	case DOM_VK_RETURN:     return l == DOM_KEY_LOCATION_NUMPAD ? CCKEY_KP_ENTER : CCKEY_ENTER;
+	case DOM_VK_SHIFT:      return l == DOM_KEY_LOCATION_RIGHT  ? CCKEY_RSHIFT : CCKEY_LSHIFT;
+	case DOM_VK_CONTROL:    return l == DOM_KEY_LOCATION_RIGHT  ? CCKEY_RCTRL  : CCKEY_LCTRL;
+	case DOM_VK_ALT:        return l == DOM_KEY_LOCATION_RIGHT  ? CCKEY_RALT   : CCKEY_LALT;
+	case DOM_VK_PAUSE:      return CCKEY_PAUSE;
+	case DOM_VK_CAPS_LOCK:  return CCKEY_CAPSLOCK;
+	case DOM_VK_ESCAPE:     return CCKEY_ESCAPE;
+	case DOM_VK_SPACE:      return CCKEY_SPACE;
 
-	case DOM_VK_PAGE_UP:     return KEY_PAGEUP;
-	case DOM_VK_PAGE_DOWN:   return KEY_PAGEDOWN;
-	case DOM_VK_END:         return KEY_END;
-	case DOM_VK_HOME:        return KEY_HOME;
-	case DOM_VK_LEFT:        return KEY_LEFT;
-	case DOM_VK_UP:          return KEY_UP;
-	case DOM_VK_RIGHT:       return KEY_RIGHT;
-	case DOM_VK_DOWN:        return KEY_DOWN;
-	case DOM_VK_PRINTSCREEN: return KEY_PRINTSCREEN;
-	case DOM_VK_INSERT:      return KEY_INSERT;
-	case DOM_VK_DELETE:      return KEY_DELETE;
+	case DOM_VK_PAGE_UP:     return CCKEY_PAGEUP;
+	case DOM_VK_PAGE_DOWN:   return CCKEY_PAGEDOWN;
+	case DOM_VK_END:         return CCKEY_END;
+	case DOM_VK_HOME:        return CCKEY_HOME;
+	case DOM_VK_LEFT:        return CCKEY_LEFT;
+	case DOM_VK_UP:          return CCKEY_UP;
+	case DOM_VK_RIGHT:       return CCKEY_RIGHT;
+	case DOM_VK_DOWN:        return CCKEY_DOWN;
+	case DOM_VK_PRINTSCREEN: return CCKEY_PRINTSCREEN;
+	case DOM_VK_INSERT:      return CCKEY_INSERT;
+	case DOM_VK_DELETE:      return CCKEY_DELETE;
 
-	case DOM_VK_SEMICOLON:   return KEY_SEMICOLON;
-	case DOM_VK_EQUALS:      return KEY_EQUALS;
-	case DOM_VK_WIN:         return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RWIN : KEY_LWIN;
-	case DOM_VK_MULTIPLY:    return KEY_KP_MULTIPLY;
-	case DOM_VK_ADD:         return KEY_KP_PLUS;
-	case DOM_VK_SUBTRACT:    return KEY_KP_MINUS;
-	case DOM_VK_DECIMAL:     return KEY_KP_DECIMAL;
-	case DOM_VK_DIVIDE:      return KEY_KP_DIVIDE;
-	case DOM_VK_NUM_LOCK:    return KEY_NUMLOCK;
-	case DOM_VK_SCROLL_LOCK: return KEY_SCROLLLOCK;
+	case DOM_VK_SEMICOLON:   return CCKEY_SEMICOLON;
+	case DOM_VK_EQUALS:      return CCKEY_EQUALS;
+	case DOM_VK_WIN:         return l == DOM_KEY_LOCATION_RIGHT ? CCKEY_RWIN : CCKEY_LWIN;
+	case DOM_VK_MULTIPLY:    return CCKEY_KP_MULTIPLY;
+	case DOM_VK_ADD:         return CCKEY_KP_PLUS;
+	case DOM_VK_SUBTRACT:    return CCKEY_KP_MINUS;
+	case DOM_VK_DECIMAL:     return CCKEY_KP_DECIMAL;
+	case DOM_VK_DIVIDE:      return CCKEY_KP_DIVIDE;
+	case DOM_VK_NUM_LOCK:    return CCKEY_NUMLOCK;
+	case DOM_VK_SCROLL_LOCK: return CCKEY_SCROLLLOCK;
 		
-	case DOM_VK_HYPHEN_MINUS:  return KEY_MINUS;
-	case DOM_VK_COMMA:         return KEY_COMMA;
-	case DOM_VK_PERIOD:        return KEY_PERIOD;
-	case DOM_VK_SLASH:         return KEY_SLASH;
-	case DOM_VK_BACK_QUOTE:    return KEY_TILDE;
-	case DOM_VK_OPEN_BRACKET:  return KEY_LBRACKET;
-	case DOM_VK_BACK_SLASH:    return KEY_BACKSLASH;
-	case DOM_VK_CLOSE_BRACKET: return KEY_RBRACKET;
-	case DOM_VK_QUOTE:         return KEY_QUOTE;
+	case DOM_VK_HYPHEN_MINUS:  return CCKEY_MINUS;
+	case DOM_VK_COMMA:         return CCKEY_COMMA;
+	case DOM_VK_PERIOD:        return CCKEY_PERIOD;
+	case DOM_VK_SLASH:         return CCKEY_SLASH;
+	case DOM_VK_BACK_QUOTE:    return CCKEY_TILDE;
+	case DOM_VK_OPEN_BRACKET:  return CCKEY_LBRACKET;
+	case DOM_VK_BACK_SLASH:    return CCKEY_BACKSLASH;
+	case DOM_VK_CLOSE_BRACKET: return CCKEY_RBRACKET;
+	case DOM_VK_QUOTE:         return CCKEY_QUOTE;
 
 	/* chrome */
-	case 186: return KEY_SEMICOLON;
-	case 187: return KEY_EQUALS;
-	case 189: return KEY_MINUS;
+	case 186: return CCKEY_SEMICOLON;
+	case 187: return CCKEY_EQUALS;
+	case 189: return CCKEY_MINUS;
 	}
-	return KEY_NONE;
+	return INPUT_NONE;
 }
 
 static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	int key = MapNativeKey(ev->keyCode, ev->location);
 	/* iOS safari still sends backspace key events, don't intercept those */
-	if (key == KEY_BACKSPACE && Input_TouchMode && keyboardOpen) return false;
+	if (key == CCKEY_BACKSPACE && Input_TouchMode && keyboardOpen) return false;
 	
 	if (key) Input_SetPressed(key);
 	DeferredEnableRawMouse();
@@ -267,26 +267,26 @@ static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
 	/*  NOTE: macOS uses Win (Command) key instead of Ctrl, have to account for that too */
-	if (Key_IsAltPressed())  return true;
-	if (Key_IsWinPressed())  return key != 'C' && key != 'V';
-	if (Key_IsCtrlPressed()) return key != 'C' && key != 'V';
+	if (Input_IsAltPressed())  return true;
+	if (Input_IsWinPressed())  return key != 'C' && key != 'V';
+	if (Input_IsCtrlPressed()) return key != 'C' && key != 'V';
 
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
-	if (key == KEY_SPACE) return !keyboardOpen;
+	if (key == CCKEY_SPACE) return !keyboardOpen;
 
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
-	return (key >= KEY_F1  && key <= KEY_F24)  || (key >= KEY_UP    && key <= KEY_RIGHT) ||
-		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
+	return (key >= CCKEY_F1  && key <= CCKEY_F24)  || (key >= CCKEY_UP    && key <= CCKEY_RIGHT) ||
+		(key >= CCKEY_INSERT && key <= CCKEY_MENU) || (key >= CCKEY_ENTER && key <= CCKEY_NUMLOCK);
 }
 
 static EM_BOOL OnKeyUp(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	int key = MapNativeKey(ev->keyCode, ev->location);
 	if (key) Input_SetReleased(key);
 	DeferredEnableRawMouse();
-	return key != KEY_NONE;
+	return key != INPUT_NONE;
 }
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
@@ -513,9 +513,7 @@ void Window_Close(void) {
 }
 
 extern void interop_RequestCanvasResize(void);
-void Window_ProcessEvents(void) {
-	if (!needResize) return;
-	needResize = false;
+static void ProcessPendingResize(void) {
 	if (!WindowInfo.Exists) return;
 
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
@@ -525,6 +523,86 @@ void Window_ProcessEvents(void) {
 		interop_RequestCanvasResize();
 	}
 	UpdateWindowBounds();
+}
+
+/* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
+#define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
+static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
+	int numButtons = ev->numButtons;
+
+	Input_SetNonRepeatable(CCPAD_A, GetGamepadButton(0));
+	Input_SetNonRepeatable(CCPAD_B, GetGamepadButton(1));
+	Input_SetNonRepeatable(CCPAD_X, GetGamepadButton(2));
+	Input_SetNonRepeatable(CCPAD_Y, GetGamepadButton(3));
+
+	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(4));
+	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(5));
+	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(6));
+	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(7));
+
+	Input_SetNonRepeatable(CCPAD_SELECT, GetGamepadButton( 8));
+	Input_SetNonRepeatable(CCPAD_START,  GetGamepadButton( 9));
+	Input_SetNonRepeatable(CCPAD_LSTICK, GetGamepadButton(10));
+	Input_SetNonRepeatable(CCPAD_RSTICK, GetGamepadButton(11));
+	
+	Input_SetNonRepeatable(CCPAD_UP,    GetGamepadButton(12));
+	Input_SetNonRepeatable(CCPAD_DOWN,  GetGamepadButton(13));
+	Input_SetNonRepeatable(CCPAD_LEFT,  GetGamepadButton(14));
+	Input_SetNonRepeatable(CCPAD_RIGHT, GetGamepadButton(15));
+}
+
+static void ProcessGamepadCamera(float x, float y, double delta) {
+	float scale = (delta * 60.0) * 8.0f;
+
+	/* Deadzone adjustment */
+	if (x >= -0.1 && x <= 0.1) x = 0;
+	if (y >= -0.1 && y <= 0.1) y = 0;
+	if (x == 0 && y == 0) return;
+
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, y * scale);
+}
+
+static void ProcessGamepadMovement(float x, float y) {
+	/* Deadzone adjustment */
+	if (x >= -0.1 && x <= 0.1) x = 0;
+	if (y >= -0.1 && y <= 0.1) y = 0;
+	if (x == 0 && y == 0) return;
+
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(x, y);
+}
+
+static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	Input.JoystickMovement = false;
+	ProcessGamepadButtons(ev);
+
+	if (ev->numAxes >= 4) {
+		ProcessGamepadMovement(ev->axis[0], ev->axis[1]);
+		ProcessGamepadCamera(  ev->axis[2], ev->axis[3], delta);
+	} else if (ev->numAxes >= 2) {
+		ProcessGamepadCamera(ev->axis[0], ev->axis[1], delta);
+	}
+}
+
+void Window_ProcessEvents(double delta) {
+	int i, res, count;
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
+	if (emscripten_sample_gamepad_data() == 0) {
+		count = emscripten_get_num_gamepads();
+
+		for (i = 0; i < count; i++)
+		{
+			EmscriptenGamepadEvent ev;
+			res = emscripten_get_gamepad_status(i, &ev);
+			if (res == 0) ProcessGamepadInput(&ev, delta);
+		}	
+	}
+
+	if (!needResize) return;
+	needResize = false;
+	ProcessPendingResize();
 }
 
 /* Not needed because browser provides relative mouse and touch events */
@@ -632,14 +710,14 @@ void Window_CloseKeyboard(void) {
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
 	/* defer pointerlock request until next user input */
-	Input_RawMode = true;
+	Input.RawMode = true;
 }
 void Window_UpdateRawMouse(void) { }
 
 void Window_DisableRawMouse(void) {
 	RegrabMouse();
 	emscripten_exit_pointerlock();
-	Input_RawMode = false;
+	Input.RawMode = false;
 }
 
 

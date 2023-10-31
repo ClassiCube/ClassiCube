@@ -89,6 +89,7 @@ static void Json_ConsumeString(struct JsonContext* ctx, cc_string* str) {
 		if (!ctx->left) break;
 		c = *ctx->cur; JsonContext_Consume(ctx, 1);
 		if (c == '/' || c == '\\' || c == '"') { String_Append(str, c); continue; }
+		if (c == 'n') { String_Append(str, '\n'); continue; }
 
 		/* form of \uYYYY */
 		if (c != 'u' || ctx->left < 4) break;
@@ -181,15 +182,17 @@ void Json_Init(struct JsonContext* ctx, STRING_REF char* str, int len) {
 	String_InitArray(ctx->_tmp, ctx->_tmpBuffer);
 }
 
-void Json_Parse(struct JsonContext* ctx) {
+cc_bool Json_Parse(struct JsonContext* ctx) {
 	int token;
 	do {
 		token = Json_ConsumeToken(ctx);
 		Json_ConsumeValue(token, ctx);
 	} while (token != TOKEN_NONE);
+
+	return !ctx->failed;
 }
 
-static void Json_Handle(cc_uint8* data, cc_uint32 len, 
+static cc_bool Json_Handle(cc_uint8* data, cc_uint32 len, 
 						JsonOnValue onVal, JsonOnNew newArr, JsonOnNew newObj) {
 	struct JsonContext ctx;
 	/* NOTE: classicube.net uses \u JSON for non ASCII, no need to UTF8 convert characters here */
@@ -198,7 +201,7 @@ static void Json_Handle(cc_uint8* data, cc_uint32 len,
 	if (onVal)  ctx.OnValue     = onVal;
 	if (newArr) ctx.OnNewArray  = newArr;
 	if (newObj) ctx.OnNewObject = newObj;
-	Json_Parse(&ctx);
+	return Json_Parse(&ctx);
 }
 
 
@@ -253,7 +256,10 @@ static void GetTokenTask_OnValue(struct JsonContext* ctx, const cc_string* str) 
 }
 
 static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
-	Json_Handle(data, len, GetTokenTask_OnValue, NULL, NULL);
+	static cc_string err_msg = String_FromConst("Error parsing get login token response JSON");
+
+	cc_bool success = Json_Handle(data, len, GetTokenTask_OnValue, NULL, NULL);
+	if (!success) Logger_WarnFunc(&err_msg);
 }
 
 void GetTokenTask_Run(void) {
@@ -309,7 +315,10 @@ static void SignInTask_OnValue(struct JsonContext* ctx, const cc_string* str) {
 }
 
 static void SignInTask_Handle(cc_uint8* data, cc_uint32 len) {
-	Json_Handle(data, len, SignInTask_OnValue, NULL, NULL);
+	static cc_string err_msg = String_FromConst("Error parsing sign in response JSON");
+
+	cc_bool success = Json_Handle(data, len, SignInTask_OnValue, NULL, NULL);
+	if (!success) Logger_WarnFunc(&err_msg);
 }
 
 static void SignInTask_Append(cc_string* dst, const char* key, const cc_string* value) {
@@ -437,7 +446,10 @@ static void FetchServersTask_Next(struct JsonContext* ctx) {
 }
 
 static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
+	static cc_string err_msg = String_FromConst("Error parsing servers list response JSON");
+
 	int count;
+	cc_bool success;
 	Mem_Free(FetchServersTask.servers);
 	Mem_Free(FetchServersTask.orders);
 	Session_Save();
@@ -447,9 +459,10 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 	FetchServersTask.orders     = NULL;
 
 	FetchServersTask.numServers = 0;
-	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
-	count = FetchServersTask.numServers;
+	success = Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
+	count   = FetchServersTask.numServers;
 
+	if (!success) Logger_WarnFunc(&err_msg);
 	if (count <= 0) return;
 	FetchServersTask.servers = (struct ServerInfo*)Mem_Alloc(count, sizeof(struct ServerInfo), "servers list");
 	FetchServersTask.orders  = (cc_uint16*)Mem_Alloc(count, 2, "servers order");
@@ -506,7 +519,10 @@ static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const cc_string* st
 }
 
 static void CheckUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
-	Json_Handle(data, len, CheckUpdateTask_OnValue, NULL, NULL);
+	static cc_string err_msg = String_FromConst("Error parsing update check response JSON");
+
+	cc_bool success = Json_Handle(data, len, CheckUpdateTask_OnValue, NULL, NULL);
+	if (!success) Logger_WarnFunc(&err_msg);
 }
 
 void CheckUpdateTask_Run(void) {

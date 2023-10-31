@@ -1,0 +1,7 @@
+float4 main
+(
+	float4 out_color : COLOR
+) : COLOR
+{
+	return out_color;
+}

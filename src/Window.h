@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Abstracts interaction with a windowing system (creating window, moving cursor, etc)
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /*
@@ -57,6 +57,10 @@ CC_VAR extern struct _DisplayData {
 	int Width, Height;
 	/* Whether accounting for system DPI scaling is enabled */
 	cc_bool DPIScaling;
+	/* Amount to offset content near the edges of the window by */
+	/*  Mainly intended for when the game is rendered on TV displays, where */
+	/*  pixels on the edges of the screen may be hidden due to overscan */
+	int ContentOffset;
 } DisplayInfo;
 
 /* Scales the given X coordinate from 96 dpi to current display dpi. */
@@ -121,7 +125,7 @@ void Window_SetSize(int width, int height);
 /* Raises the WindowClosing and WindowClosed events. */
 void Window_Close(void);
 /* Processes all pending window messages/events. */
-void Window_ProcessEvents(void);
+void Window_ProcessEvents(double delta);
 
 /* Sets the position of the cursor. */
 /* NOTE: This should be avoided because it is unsupported on some platforms. */
@@ -162,7 +166,14 @@ void Window_DrawFramebuffer(Rect2D r);
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
 struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; cc_bool opaque, multiline; };
-void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type);
+static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
+	args->text   = text;
+	args->type   = type;
+	args->placeholder = "";
+	args->opaque      = false;
+	args->multiline   = false;
+}
+
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args);

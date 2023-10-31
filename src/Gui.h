@@ -2,7 +2,7 @@
 #define CC_GUI_H
 #include "Core.h"
 /* Describes and manages 2D GUI elements on screen.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 enum GuiAnchor {
@@ -100,7 +100,9 @@ struct ScreenVTABLE {
 	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
-	int maxVertices; GfxResourceID vb; struct Widget** widgets; int numWidgets;
+	int maxVertices; GfxResourceID vb; /* Vertex buffer storing the contents of the screen */ \
+	struct Widget** widgets; int numWidgets; /* The widgets/individual elements in the screen */ \
+	int selectedI;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
@@ -158,10 +160,15 @@ struct WidgetVTABLE {
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
 	cc_bool active;                /* Whether this widget is currently being moused over */ \
-	cc_bool disabled;              /* Whether widget is prevented from being interacted with */ \
+	cc_uint8 flags;                /* Flags controlling the widget's interactability */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
+
+/* Whether a widget is prevented from being interacted with */
+#define WIDGET_FLAG_DISABLED   0x01
+/* Whether a widget can be selected via up/down */
+#define WIDGET_FLAG_SELECTABLE 0x02
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Body };
@@ -173,6 +180,8 @@ void Widget_CalcPosition(void* widget);
 void Widget_Reset(void* widget);
 /* Returns non-zero if the given point is located within the bounds of the widget. */
 int Widget_Contains(void* widget, int x, int y);
+/* Sets whether the widget is prevented from being interacted with */
+void Widget_SetDisabled(void* widget, int disabled);
 
 
 /* Higher priority handles input first and draws on top */

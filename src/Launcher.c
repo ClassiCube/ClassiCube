@@ -20,6 +20,8 @@
 #include "Options.h"
 #include "LBackend.h"
 #include "PackedCol.h"
+#include "SystemFonts.h"
+#include "TexturePack.h"
 
 struct LScreen* Launcher_Active;
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -36,7 +38,7 @@ static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
 	if (!Launcher_Active) return;
 	
-	Launcher_Active->Free(Launcher_Active);
+	Launcher_Active->Deactivated(Launcher_Active);
 	LBackend_CloseScreen(Launcher_Active);
 	Launcher_Active = NULL;
 }
@@ -44,10 +46,12 @@ static void CloseActiveScreen(void) {
 void Launcher_SetScreen(struct LScreen* screen) {
 	CloseActiveScreen();
 	Launcher_Active = screen;
-	if (!screen->numWidgets) screen->Init(screen);
 
-	screen->Show(screen);
+	screen->Activated(screen);
 	screen->Layout(screen);
+
+	if (!screen->everShown) screen->LoadState(screen);
+	screen->everShown = true;
 
 	LBackend_SetScreen(screen);
 	LBackend_Redraw();
@@ -60,7 +64,8 @@ void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_s
 	if (res) {
 		/* Non HTTP error - this is not good */
 		Http_LogError(action, req);
-		String_Format2(dst, "&cError %i when %c", &res, action);
+		String_Format2(dst, res >= 0x80000000 ? "&cError %h when %c" : "&cError %i when %c",
+						&res, action);
 	} else if (status != 200) {
 		String_Format2(dst, "&c%i error when %c", &status, action);
 	} else {
@@ -107,11 +112,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	res = Process_StartGame2(args, numArgs);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
-#ifdef CC_BUILD_MOBILE
-	Launcher_ShouldExit = true;
-#else
-	Launcher_ShouldExit = Options_GetBool(LOPT_AUTO_CLOSE, false);
-#endif
+	Launcher_ShouldExit = Platform_SingleProcess || Options_GetBool(LOPT_AUTO_CLOSE, false);
 	return true;
 }
 
@@ -172,11 +173,11 @@ static void OnResize(void* obj) {
 }
 
 static cc_bool IsShutdown(int key) {
-	if (key == KEY_F4 && Key_IsAltPressed()) return true;
+	if (key == CCKEY_F4 && Input_IsAltPressed()) return true;
 
 	/* On macOS, Cmd+Q should also end the process */
 #ifdef CC_BUILD_DARWIN
-	return key == 'Q' && Key_IsWinPressed();
+	return key == 'Q' && Input_IsWinPressed();
 #else
 	return false;
 #endif
@@ -234,6 +235,7 @@ void Launcher_Run(void) {
 #endif
 
 	Drawer2D_Component.Init();
+	SystemFonts_Component.Init();
 	Drawer2D.BitmappedText    = false;
 	Drawer2D.BlackTextShadows = true;
 
@@ -246,6 +248,8 @@ void Launcher_Run(void) {
 	Session_Load();
 	Launcher_LoadTheme();
 	Launcher_Init();
+
+	GameVersion_Load();
 	Launcher_TryLoadTexturePack();
 
 	Http_Component.Init();
@@ -264,7 +268,7 @@ void Launcher_Run(void) {
 #endif
 
 	for (;;) {
-		Window_ProcessEvents();
+		Window_ProcessEvents(10 / 1000.0);
 		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Active->Tick(Launcher_Active);
@@ -274,10 +278,9 @@ void Launcher_Run(void) {
 
 	Options_SaveIfChanged();
 	Launcher_Free();
+	Launcher_ShouldExit = false;
 
 #ifdef CC_BUILD_MOBILE
-	/* infinite loop on mobile */
-	Launcher_ShouldExit = false;
 	/* Reset components */
 	Platform_LogConst("undoing components");
 	Drawer2D_Component.Free();
@@ -363,7 +366,7 @@ void Launcher_SaveTheme(void) {
 	SaveColor("launcher-btn-fore-active-col",        Launcher_Theme.ButtonForeActiveColor);
 	SaveColor("launcher-btn-fore-inactive-col",      Launcher_Theme.ButtonForeColor);
 	SaveColor("launcher-btn-highlight-inactive-col", Launcher_Theme.ButtonHighlightColor);
-	Options_SetBool("nostalgia-classicbg",                 Launcher_Theme.ClassicBackground);
+	Options_SetBool("nostalgia-classicbg",           Launcher_Theme.ClassicBackground);
 }
 
 
@@ -440,13 +443,13 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 	return 0;
 }
 
-static void ExtractTexturePack(const cc_string* path) {
+static cc_result ExtractTexturePack(const cc_string* path) {
 	struct Stream stream;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn(res, "opening texture pack"); return; }
+	if (res == ReturnCode_FileNotFound) return res;
+	if (res) { Logger_SysWarn(res, "opening texture pack"); return res; }
 
 	res = Zip_Extract(&stream, 
 			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
@@ -454,22 +457,25 @@ static void ExtractTexturePack(const cc_string* path) {
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
+	return res;
 }
 
 void Launcher_TryLoadTexturePack(void) {
-	static const cc_string defZip = String_FromConst("texpacks/default.zip");
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string texPack;
 
+	/* TODO: Not duplicate TexturePack functionality */
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack)) {
 		String_InitArray(path, pathBuffer);
 		String_Format1(&path, "texpacks/%s", &texPack);
-		ExtractTexturePack(&path);
+		(void)ExtractTexturePack(&path);
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!hasBitmappedFont || dirtBmp.scan0 == NULL) ExtractTexturePack(&defZip);
-	LBackend_UpdateLogoFont();
+	if (!hasBitmappedFont || dirtBmp.scan0 == NULL)
+		TexturePack_ExtractDefault(ExtractTexturePack);
+
+	LBackend_UpdateTitleFont();
 }
 
 
@@ -516,10 +522,13 @@ cc_bool Launcher_BitmappedText(void) {
 	return (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
 }
 
-void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D* ctx) {
+void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx) {
 	cc_string title = String_FromReadonly(text);
 	struct DrawTextArgs args;
 	int x;
+
+	/* Skip dragging logo when very small window to save space */
+	if (WindowInfo.Height < 300) return;
 
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
@@ -530,7 +539,7 @@ void Launcher_DrawLogo(struct FontDesc* font, const char* text, struct Context2D
 	Context2D_DrawText(ctx, &args, x,                     0);
 }
 
-void Launcher_MakeLogoFont(struct FontDesc* font) {
+void Launcher_MakeTitleFont(struct FontDesc* font) {
 	Drawer2D.BitmappedText = Launcher_BitmappedText();
 	Font_Make(font, 32, FONT_FLAGS_NONE);
 	Drawer2D.BitmappedText = false;

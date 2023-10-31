@@ -489,18 +489,16 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 }
 
 static void NotchyGen_PlantFlowers(void) {
-	if (Game_Version.Version < VERSION_0023) {
-		return;
-	}
-	
 	int numPatches;
 	BlockRaw block;
 	int patchX,  patchZ;
 	int flowerX, flowerY, flowerZ;
 	int i, j, k, index;
 
+	if (Game_Version.Version < VERSION_0023) return;
 	numPatches       = World.Width * World.Length / 3000;
 	Gen_CurrentState = "Planting flowers";
+
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
 
@@ -527,18 +525,16 @@ static void NotchyGen_PlantFlowers(void) {
 }
 
 static void NotchyGen_PlantMushrooms(void) {
-	if (Game_Version.Version < VERSION_0023) {
-		return;
-	}
-
 	int numPatches, groundHeight;
 	BlockRaw block;
 	int patchX, patchY, patchZ;
 	int mushX,  mushY,  mushZ;
 	int i, j, k, index;
 
+	if (Game_Version.Version < VERSION_0023) return;
 	numPatches       = World.Volume / 2000;
 	Gen_CurrentState = "Planting mushrooms";
+
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
 

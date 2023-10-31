@@ -6,7 +6,7 @@
 #include "PackedCol.h"
 #include "String.h"
 /* Represents an in-game entity.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Model;
 struct IGameComponent;
@@ -163,8 +163,6 @@ void Entities_RenderHoveredNames(void);
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity */
 EntityID Entities_GetClosest(struct Entity* src);
-/* Draws shadows under entities, depending on Entities.ShadowsMode */
-void Entities_DrawShadows(void);
 
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */

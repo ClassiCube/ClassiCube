@@ -79,26 +79,29 @@ The following functions are provided to convert `cc_string` strings into operati
 
 ### cc_string -> Windows string
 
-`Platform_EncodeUtf16` converts a `cc_string` into a null terminated `WCHAR` string
+`Platform_EncodeString` converts a `cc_string` into a null terminated `WCHAR` and `CHAR` string
 
 #### Example
 ```C
 void SetWorkingDir(cc_string* title) {
-    WCHAR buffer[NATIVE_STR_LEN];
-    Platform_EncodeUtf16(buffer, title);
-    SetCurrentDirectoryW(buffer);
+    cc_winstring str;
+    Platform_EncodeUtf16(&str, title);
+    SetCurrentDirectoryW(str.uni);
+	
+	// it's recommended that you DON'T use the ansi format whenever possible
+    //SetCurrentDirectoryA(str.ansi); 
 }
 ```
 
-### cc_string -> Unix string
+### cc_string -> UTF8 string
 
-`Platform_EncodeUtf8` converts a `cc_string` into a null terminated UTF8-encoded `char*` string
+`String_EncodeUtf8` converts a `cc_string` into a null terminated UTF8-encoded `char*` string
 
 #### Example
 ```C
 void SetWorkingDir(cc_string* title) {
     char buffer[NATIVE_STR_LEN];
-    Platform_EncodeUtf8(buffer, title);
+    String_EncodeUtf8(buffer, title);
     chdir(buffer);
 }
 ```
@@ -200,10 +203,105 @@ std::sprintf -> String_Format1/2/3/4
 ```
 
 
-## lifetime examples
 
-Stack allocated returning example
 
-Mem_Alloc/Mem_Free and function example
+## Lifetime examples
 
-UNSAFE and mutating characters example
+Managing the lifetime of strings is important, as not properly managing them can cause issues.
+
+For example, consider the following function:
+```C
+const cc_string* GetString(void);
+
+void PrintSomething(void) {
+	cc_string* str = GetString();
+	// .. other code ..
+	Chat_Add(str);
+}
+```
+
+Without knowing the lifetime of the string returned from `GetString`, using it might either:
+* Work just fine
+* Sometimes work fine
+* Cause a subtle issue
+* Cause a major problem
+ptodo rearrange
+
+### Constant string return example
+```C
+const cc_string* GetString(void) {
+	static cc_string str = String_FromConst("ABC");
+	return &str;
+}
+```
+
+This will work fine - as long as the caller does not modify the returned string at all
+
+### Stack allocated string return example
+
+```C
+const cc_string* GetString(void) {
+	char strBuffer[1024];
+	cc_string str = String_FromArray(strBuffer);
+	
+	String_AppendConst(&str, "ABC");
+	return &str;
+}
+```
+
+This will **almost certainly cause problems** - after `GetString` returns, the contents of both `str` and `strBuffer` may be changed to arbitary values (as once `GetString` returns, their contents are then eligible to be overwritten by other stack allocated variables)
+
+As a general rule, you should **NEVER** return a string allocated on the stack
+
+### Dynamically allocated string return example
+
+```C
+const cc_string* GetString(void) {
+	char* buffer   = Mem_Alloc(1024, 1, "string buffer");
+	cc_string* str = Mem_Alloc(1, sizeof(cc_string), "string"); 
+	
+	*str = String_Init(buffer, 0, 1024);
+	String_AppendConst(str, "ABC");
+	return str;
+}
+```
+
+This will work fine - however, now you also need to remember to `Mem_Free` both the string and its buffer to avoid a memory leak
+
+As a general rule, you should avoid returning a dynamically allocated string
+
+### UNSAFE mutable string return example
+
+```C
+char global_buffer[1024];
+cc_string global_str = String_FromArray(global_buffer);
+
+const cc_string* GetString(void) {
+	return &global_str;
+}
+```
+
+Depending on what functions are called in-between `GetString` and `Chat_Add`, `global_str` or its contents may be modified - which can result in an unexpected value being displayed in chat
+
+This potential issue is not just theoretical - it has actually resulted in several real bugs in ClassiCube itself
+
+As a general rule, for unsafe functions returning a string that may be mutated behind your back, you should try to maintain a reference to the string for as short of time as possible
+
+### Reducing string lifetime issues
+
+In general, for functions that produce strings, you should try to leave the responsibility of managing the string's lifetime up to the calling function to avoid these pitfalls
+
+The example from before could instead be rewritten like so:
+
+```C
+void GetString(cc_string* str);
+
+void PrintSomething(void) {
+	char strBuffer[256];
+	cc_string str = String_InitArray(strBuffer);
+	GetString(&str);
+	
+	// .. other code ..
+	Chat_Add(&str);
+}
+```

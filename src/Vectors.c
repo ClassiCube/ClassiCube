@@ -166,37 +166,6 @@ void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct M
 	result->row4.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
 }
 
-void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar) {
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
-	*result = Matrix_Identity;
-
-	result->row1.X =  2.0f / (right - left);
-	result->row2.Y =  2.0f / (top - bottom);
-	result->row3.Z = -2.0f / (zFar - zNear);
-
-	result->row4.X = -(right + left) / (right - left);
-	result->row4.Y = -(top + bottom) / (top - bottom);
-	result->row4.Z = -(zFar + zNear) / (zFar - zNear);
-}
-
-static double Tan_Simple(double x) { return Math_Sin(x) / Math_Cos(x); }
-void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar) {
-	float c = (float)Tan_Simple(0.5f * fovy);
-
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
-	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
-	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
-	/* Calculations are simplified because of left/right and top/bottom symmetry */
-	*result = Matrix_Identity;
-
-	result->row1.X =  1.0f / (c * aspect);
-	result->row2.Y =  1.0f / c;
-	result->row3.Z = -(zFar + zNear) / (zFar - zNear);
-	result->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-	result->row3.W = -1.0f;
-	result->row4.W =  0.0f;
-}
-
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {
 	struct Matrix rotX, rotY, trans;
 	Matrix_RotateX(&rotX, rot.Y);
@@ -274,8 +243,8 @@ void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matri
 	FrustumCulling_Normalise(&frustum30, &frustum31, &frustum32, &frustum33);
 
 	/* Extract the FAR plane (Different for each graphics backend) */
-#if defined CC_BUILD_D3D9
-	/* OpenGL and Direct3D9 require slightly different behaviour for NEAR clipping planes */
+#if defined CC_BUILD_D3D9 || defined CC_BUILD_D3D11
+	/* OpenGL and Direct3D require slightly different behaviour for NEAR clipping planes */
 	/* https://www.gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf */
 	/* (and because reverse Z is used, 'NEAR' plane is actually the 'FAR' clipping plane) */
 	frustum40 = clip[2];

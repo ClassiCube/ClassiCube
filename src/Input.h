@@ -3,75 +3,78 @@
 #include "Core.h"
 /* 
 Manages input state, raising input related events, and base input handling
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct StringsBuffer;
 extern struct IGameComponent Input_Component;
 
 enum InputButtons {
-	KEY_NONE, /* Unrecognised key */
+	INPUT_NONE, /* Unrecognised key */
 
-	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
-	KEY_F11, KEY_F12, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, KEY_F19, KEY_F20,
-	KEY_F21, KEY_F22, KEY_F23, KEY_F24,
+	CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10,
+	CCKEY_F11, CCKEY_F12, CCKEY_F13, CCKEY_F14, CCKEY_F15, CCKEY_F16, CCKEY_F17, CCKEY_F18, CCKEY_F19, CCKEY_F20,
+	CCKEY_F21, CCKEY_F22, CCKEY_F23, CCKEY_F24,
 
-	KEY_TILDE, KEY_MINUS, KEY_EQUALS, KEY_LBRACKET, KEY_RBRACKET, KEY_SLASH,
-	KEY_SEMICOLON, KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH,
+	CCKEY_TILDE, CCKEY_MINUS, CCKEY_EQUALS, CCKEY_LBRACKET, CCKEY_RBRACKET, CCKEY_SLASH,
+	CCKEY_SEMICOLON, CCKEY_QUOTE, CCKEY_COMMA, CCKEY_PERIOD, CCKEY_BACKSLASH,
 
-	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL,
-	KEY_LALT, KEY_RALT, KEY_LWIN, KEY_RWIN,
+	CCKEY_LSHIFT, CCKEY_RSHIFT, CCKEY_LCTRL, CCKEY_RCTRL,
+	CCKEY_LALT, CCKEY_RALT, CCKEY_LWIN, CCKEY_RWIN,
 
-	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
+	CCKEY_UP, CCKEY_DOWN, CCKEY_LEFT, CCKEY_RIGHT,
 
-	KEY_0, KEY_1, KEY_2, KEY_3, KEY_4,
-	KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, /* same as '0'-'9' */
+	CCKEY_0, CCKEY_1, CCKEY_2, CCKEY_3, CCKEY_4,
+	CCKEY_5, CCKEY_6, CCKEY_7, CCKEY_8, CCKEY_9, /* same as '0'-'9' */
 
-	KEY_INSERT, KEY_DELETE, KEY_HOME, KEY_END, KEY_PAGEUP, KEY_PAGEDOWN,
-	KEY_MENU,
+	CCKEY_INSERT, CCKEY_DELETE, CCKEY_HOME, CCKEY_END, CCKEY_PAGEUP, CCKEY_PAGEDOWN,
+	CCKEY_MENU,
 
-	KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J,
-	KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T,
-	KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z, /* same as 'A'-'Z' */
+	CCKEY_A, CCKEY_B, CCKEY_C, CCKEY_D, CCKEY_E, CCKEY_F, CCKEY_G, CCKEY_H, CCKEY_I, CCKEY_J,
+	CCKEY_K, CCKEY_L, CCKEY_M, CCKEY_N, CCKEY_O, CCKEY_P, CCKEY_Q, CCKEY_R, CCKEY_S, CCKEY_T,
+	CCKEY_U, CCKEY_V, CCKEY_W, CCKEY_X, CCKEY_Y, CCKEY_Z, /* same as 'A'-'Z' */
 
-	KEY_ENTER, KEY_ESCAPE, KEY_SPACE, KEY_BACKSPACE, KEY_TAB, KEY_CAPSLOCK,
-	KEY_SCROLLLOCK, KEY_PRINTSCREEN, KEY_PAUSE, KEY_NUMLOCK,
+	CCKEY_ENTER, CCKEY_ESCAPE, CCKEY_SPACE, CCKEY_BACKSPACE, CCKEY_TAB, CCKEY_CAPSLOCK,
+	CCKEY_SCROLLLOCK, CCKEY_PRINTSCREEN, CCKEY_PAUSE, CCKEY_NUMLOCK,
 
-	KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4,
-	KEY_KP5, KEY_KP6, KEY_KP7, KEY_KP8, KEY_KP9,
-	KEY_KP_DIVIDE, KEY_KP_MULTIPLY, KEY_KP_MINUS,
-	KEY_KP_PLUS, KEY_KP_DECIMAL, KEY_KP_ENTER,
+	CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4,
+	CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, CCKEY_KP8, CCKEY_KP9,
+	CCKEY_KP_DIVIDE, CCKEY_KP_MULTIPLY, CCKEY_KP_MINUS,
+	CCKEY_KP_PLUS, CCKEY_KP_DECIMAL, CCKEY_KP_ENTER,
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
-	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
+	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
+
+	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R,
+	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
+	CCPAD_START, CCPAD_SELECT, CCPAD_ZL, CCPAD_ZR,
+	CCPAD_LSTICK, CCPAD_RSTICK,
+
 	INPUT_COUNT,
 
 	INPUT_CLIPBOARD_COPY  = 1001,
 	INPUT_CLIPBOARD_PASTE = 1002
 };
+#define Input_IsPadButton(btn) ((btn) >= CCPAD_A && (btn) < INPUT_COUNT)
 
-/* Names for each input button when stored to disc */
-extern const char* const Input_StorageNames[INPUT_COUNT];
-/* Simple display names for each input button */
 extern const char* const Input_DisplayNames[INPUT_COUNT];
 
-#define Key_IsWinPressed()   (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
-#define Key_IsAltPressed()   (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
-#define Key_IsCtrlPressed()  (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
-#define Key_IsShiftPressed() (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
+extern struct _InputState {
+	/* Pressed state of each input button. Use Input_Set to change */
+	cc_bool Pressed[INPUT_COUNT];
+	/* Whether raw mouse/touch input is currently being listened for */
+	cc_bool RawMode;
+	/* Sources available for input (Mouse/Keyboard, Gamepad) */
+	cc_uint8 Sources;
+	/* Whether a gamepad joystick is being used to control player movement */
+	cc_bool JoystickMovement;
+	/* Angle of the gamepad joystick being used to control player movement */
+	float JoystickAngle;
+} Input;
 
-#if defined CC_BUILD_HAIKU
-/* Haiku uses ALT instead of CTRL for clipboard and stuff */
-#define Key_IsActionPressed() Key_IsAltPressed()
-#elif defined CC_BUILD_DARWIN
-/* macOS uses CMD instead of CTRL for clipboard and stuff */
-#define Key_IsActionPressed() Key_IsWinPressed()
-#else
-#define Key_IsActionPressed() Key_IsCtrlPressed()
-#endif
+#define INPUT_SOURCE_NORMAL  (1 << 0)
+#define INPUT_SOURCE_GAMEPAD (1 << 1)
 
-/* Pressed state of each input button. Use Input_Set to change. */
-extern cc_bool Input_Pressed[INPUT_COUNT];
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
 void Input_SetPressed(int key);
 /* Sets Input_Pressed[key] to false and raises InputEvents.Up */
@@ -82,8 +85,30 @@ void Input_SetNonRepeatable(int key, int pressed);
 /* Resets all input buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
-/* Whether raw mouse/touch input is currently being listened for. */
-extern cc_bool Input_RawMode;
+
+#define Input_IsWinPressed()   (Input.Pressed[CCKEY_LWIN]   || Input.Pressed[CCKEY_RWIN])
+#define Input_IsAltPressed()   (Input.Pressed[CCKEY_LALT]   || Input.Pressed[CCKEY_RALT])
+#define Input_IsCtrlPressed()  (Input.Pressed[CCKEY_LCTRL]  || Input.Pressed[CCKEY_RCTRL])
+#define Input_IsShiftPressed() (Input.Pressed[CCKEY_LSHIFT] || Input.Pressed[CCKEY_RSHIFT])
+
+#define Input_IsUpButton(btn)     ((btn) == CCKEY_UP     || (btn) == CCPAD_UP)
+#define Input_IsDownButton(btn)   ((btn) == CCKEY_DOWN   || (btn) == CCPAD_DOWN)
+#define Input_IsLeftButton(btn)   ((btn) == CCKEY_LEFT   || (btn) == CCPAD_LEFT)
+#define Input_IsRightButton(btn)  ((btn) == CCKEY_RIGHT  || (btn) == CCPAD_RIGHT)
+
+#define Input_IsEnterButton(btn)  ((btn) == CCKEY_ENTER  || (btn) == CCPAD_START || (btn) == CCKEY_KP_ENTER)
+#define Input_IsPauseButton(btn)  ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_START || (btn) == CCKEY_PAUSE)
+#define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
+
+#if defined CC_BUILD_HAIKU
+/* Haiku uses ALT instead of CTRL for clipboard and stuff */
+#define Input_IsActionPressed() Input_IsAltPressed()
+#elif defined CC_BUILD_DARWIN
+/* macOS uses CMD instead of CTRL for clipboard and stuff */
+#define Input_IsActionPressed() Input_IsWinPressed()
+#else
+#define Input_IsActionPressed() Input_IsCtrlPressed()
+#endif
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
@@ -132,19 +157,31 @@ enum KeyBind_ {
 	KEYBIND_HALF_SPEED, KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK,
 	KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, KEYBIND_SMOOTH_CAMERA,
 	KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
+	KEYBIND_LOOK_UP, KEYBIND_LOOK_DOWN, KEYBIND_LOOK_RIGHT, KEYBIND_LOOK_LEFT,
+	KEYBIND_HOTBAR_1, KEYBIND_HOTBAR_2, KEYBIND_HOTBAR_3,
+	KEYBIND_HOTBAR_4, KEYBIND_HOTBAR_5, KEYBIND_HOTBAR_6,
+	KEYBIND_HOTBAR_7, KEYBIND_HOTBAR_8, KEYBIND_HOTBAR_9,
+	KEYBIND_HOTBAR_LEFT, KEYBIND_HOTBAR_RIGHT,
 	KEYBIND_COUNT
 };
 typedef int KeyBind;
 
-/* The keys that are bound to each key binding. */
-extern cc_uint8 KeyBinds[KEYBIND_COUNT];
-/* Default key that each key binding is bound to */
-extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
+/* The keyboard/mouse buttons that are bound to each key binding */
+extern cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
+/* The gamepad buttons that are bound to each key binding */
+extern cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
+/* Default keyboard/mouse button that each key binding is bound to */
+extern const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT];
+/* Default gamepad button that each key binding is bound to */
+extern const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT];
+#define KeyBind_GetDefaults() (Input.GamepadSource ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults)
 
+/* Whether the given keyboard/mouse or gamepad button is bound to the given keybinding */
+#define KeyBind_Claims(binding, btn) (KeyBinds_Normal[binding] == (btn) || KeyBinds_Gamepad[binding] == (btn))
 /* Gets whether the key bound to the given key binding is pressed. */
 CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
-void KeyBind_Set(KeyBind binding, int key);
+void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
 
 /* whether to leave text input open for user to enter further input */
 #define HOTKEY_FLAG_STAYS_OPEN   0x01

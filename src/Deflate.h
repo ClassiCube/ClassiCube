@@ -8,7 +8,7 @@
 	https://www.ietf.org/rfc/rfc1951.txt
 	https://github.com/nothings/stb/blob/master/stb_image.h
 	https://www.hanshq.net/zip.html
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
 
@@ -97,8 +97,10 @@ struct DeflateState {
 	
 	cc_uint8 Input[DEFLATE_BUFFER_SIZE];
 	cc_uint8 Output[DEFLATE_OUT_SIZE];
-	int Head[DEFLATE_HASH_SIZE];
-	int Prev[DEFLATE_BUFFER_SIZE];
+	cc_uint16 Head[DEFLATE_HASH_SIZE];
+	cc_uint16 Prev[DEFLATE_BUFFER_SIZE];
+	/* NOTE: The largest possible value that can get */
+	/*  stored in Head/Prev is <= DEFLATE_BUFFER_SIZE */
 	cc_bool WroteHeader;
 };
 /* Compresses input data using DEFLATE, then writes compressed output to another stream. Write only stream. */
@@ -108,12 +110,14 @@ CC_API void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state
 struct GZipState { struct DeflateState Base; cc_uint32 Crc32, Size; };
 /* Compresses input data using GZIP, then writes compressed output to another stream. Write only stream. */
 /* GZIP compression is GZIP header, followed by DEFLATE compressed data, followed by GZIP footer. */
-CC_API void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+CC_API  void GZip_MakeStream(      struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+typedef void (*FP_GZip_MakeStream)(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
 
 struct ZLibState { struct DeflateState Base; cc_uint32 Adler32; };
 /* Compresses input data using ZLIB, then writes compressed output to another stream. Write only stream. */
 /* ZLIB compression is ZLIB header, followed by DEFLATE compressed data, followed by ZLIB footer. */
-CC_API void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+CC_API  void ZLib_MakeStream(      struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+typedef void (*FP_ZLib_MakeStream)(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
 /* Minimal data needed to describe an entry in a .zip archive */
 struct ZipEntry { cc_uint32 CompressedSize, UncompressedSize, LocalHeaderOffset, CRC32; };

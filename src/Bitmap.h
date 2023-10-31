@@ -2,27 +2,27 @@
 #define CC_BITMAP_H
 #include "Core.h"
 /* Represents a 2D array of pixels.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
 
 /* Represents a packed 32 bit RGBA colour, suitable for native graphics API texture pixels. */
 typedef cc_uint32 BitmapCol;
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP
-#define BITMAPCOLOR_R_SHIFT  0
-#define BITMAPCOLOR_G_SHIFT  8
-#define BITMAPCOLOR_B_SHIFT 16
-#define BITMAPCOLOR_A_SHIFT 24
-#elif defined CC_BUILD_3DS
-#define BITMAPCOLOR_R_SHIFT 24
-#define BITMAPCOLOR_G_SHIFT 16
-#define BITMAPCOLOR_B_SHIFT  8
-#define BITMAPCOLOR_A_SHIFT  0
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_PSP || defined CC_BUILD_PSVITA
+	#define BITMAPCOLOR_R_SHIFT  0
+	#define BITMAPCOLOR_G_SHIFT  8
+	#define BITMAPCOLOR_B_SHIFT 16
+	#define BITMAPCOLOR_A_SHIFT 24
+#elif defined CC_BUILD_3DS || defined CC_BUILD_N64
+	#define BITMAPCOLOR_R_SHIFT 24
+	#define BITMAPCOLOR_G_SHIFT 16
+	#define BITMAPCOLOR_B_SHIFT  8
+	#define BITMAPCOLOR_A_SHIFT  0
 #else
-#define BITMAPCOLOR_B_SHIFT  0
-#define BITMAPCOLOR_G_SHIFT  8
-#define BITMAPCOLOR_R_SHIFT 16
-#define BITMAPCOLOR_A_SHIFT 24
+	#define BITMAPCOLOR_B_SHIFT  0
+	#define BITMAPCOLOR_G_SHIFT  8
+	#define BITMAPCOLOR_R_SHIFT 16
+	#define BITMAPCOLOR_A_SHIFT 24
 #endif
 
 #define BITMAPCOLOR_R_MASK (0xFFU << BITMAPCOLOR_R_SHIFT)
@@ -30,6 +30,7 @@ typedef cc_uint32 BitmapCol;
 #define BITMAPCOLOR_B_MASK (0xFFU << BITMAPCOLOR_B_SHIFT)
 #define BITMAPCOLOR_A_MASK (0xFFU << BITMAPCOLOR_A_SHIFT)
 
+/* Extracts just the R/G/B/A component from a bitmap color */
 #define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOLOR_R_SHIFT))
 #define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOLOR_G_SHIFT))
 #define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOLOR_B_SHIFT))
@@ -79,7 +80,7 @@ CC_API void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src,
 						int srcX, int srcY, int srcWidth, int srcHeight);
 
 #define PNG_SIG_SIZE 8
-#if defined CC_BUILD_PSP || defined CC_BUILD_3DS
+#if defined CC_BUILD_LOWMEM
 /* No point supporting > 1K x 1K bitmaps when system has less than 64 MB of RAM anyways */
 #define PNG_MAX_DIMS 1024
 #else

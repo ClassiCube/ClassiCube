@@ -3,7 +3,7 @@
 #include "Bitmap.h"
 #include "Constants.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 struct Context2D;
@@ -23,7 +23,8 @@ struct LWidgetVTABLE {
 	/* Called repeatedly to update this widget when selected. */
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
-	void (*KeyDown)(void* widget, int key, cc_bool wasDown);
+	/* Returns whether the key press was intercepted */
+	cc_bool (*KeyDown)(void* widget, int key, cc_bool wasDown);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
@@ -42,23 +43,25 @@ struct LWidgetVTABLE {
 	void (*TextChanged)(void* elem, const cc_string* str);
 };
 
+
 #define LWidget_Layout \
-	const struct LWidgetVTABLE* VTABLE;  /* General widget functions */ \
-	int x, y, width, height;       /* Top left corner and dimensions of this widget */ \
-	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
-	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
-	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
-	cc_bool dirty;                 /* Whether this widget needs to be redrawn */ \
-	cc_bool opaque;                /* Whether this widget completely obscures background behind it */ \
-	cc_uint8 type;                 /* Type of this widget */ \
-	cc_bool skipsEnter;            /* Whether clicking this widget DOESN'T trigger OnEnterWidget */ \
-	void (*OnClick)(void* widget); /* Called when widget is clicked */ \
-	void (*OnHover)(void* widget); /* Called when widget is hovered over */ \
-	void (*OnUnhover)(void* widget);/*Called when widget is no longer hovered over */ \
-	Rect2D last;                   /* Widget's last drawn area */ \
-	void* meta;                    /* Backend specific data */ \
+	const struct LWidgetVTABLE* VTABLE; /* General widget functions */ \
+	int x, y, width, height; /* Top left corner and dimensions of this widget */ \
+	cc_bool hovered;         /* Whether this widget is currently being moused over */ \
+	cc_bool selected;        /* Whether this widget is last widget to be clicked on */ \
+	cc_bool autoSelectable;  /* Whether this widget can get auto selected (e.g. pressing tab) */ \
+	cc_bool dirty;           /* Whether this widget needs to be redrawn */ \
+	cc_bool opaque;          /* Whether this widget completely obscures background behind it */ \
+	cc_uint8 type;           /* Type of this widget */ \
+	cc_bool skipsEnter;      /* Whether clicking this widget DOESN'T trigger OnEnterWidget */ \
+	LWidgetFunc OnClick;     /* Called when widget is clicked */ \
+	LWidgetFunc OnHover;     /* Called when widget is hovered over */ \
+	LWidgetFunc OnUnhover;   /* Called when widget is no longer hovered over */ \
+	Rect2D last;             /* Widget's last drawn area */ \
+	void* meta;              /* Backend specific data */ \
 	const struct LLayout* layouts;
 
+typedef void (*LWidgetFunc)(void* widget);
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
 void LWidget_CalcOffsets(void);
@@ -68,18 +71,21 @@ struct LButton {
 	cc_string text;
 	int _textWidth, _textHeight;
 };
-CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height, const char* text, const struct LLayout* layouts);
+CC_NOINLINE void LButton_Add(void* screen, struct LButton* w, int width, int height, const char* text, 
+							LWidgetFunc onClick, const struct LLayout* layouts);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
-CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool hovered);
+CC_NOINLINE void LButton_DrawBackground(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active);
 
 struct LCheckbox;
+typedef void (*LCheckboxChanged)(struct LCheckbox* cb);
 struct LCheckbox {
 	LWidget_Layout
 	cc_bool value;
 	cc_string text;
-	void (*ValueChanged)(struct LCheckbox* w);
+	LCheckboxChanged ValueChanged;
 };
-CC_NOINLINE void LCheckbox_Init(struct LCheckbox* w, const char* text, const struct LLayout* layouts);
+CC_NOINLINE void LCheckbox_Add(void* screen, struct LCheckbox* w, const char* text, 
+								LCheckboxChanged onChanged, const struct LLayout* layouts);
 CC_NOINLINE void LCheckbox_Set(struct LCheckbox* w, cc_bool value);
 
 struct LInput;
@@ -104,7 +110,8 @@ struct LInput {
 	int _textHeight;
 	char _textBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LInput_Init(struct LInput* w, int width, const char* hintText, const struct LLayout* layouts);
+CC_NOINLINE void LInput_Add(void* screen, struct LInput* w, int width, const char* hintText, 
+							const struct LLayout* layouts);
 CC_NOINLINE void LInput_UNSAFE_GetText(struct LInput* w, cc_string* text);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
 CC_NOINLINE void LInput_ClearText(struct LInput* w);
@@ -122,7 +129,8 @@ struct LLabel {
 	cc_string text;
 	char _textBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LLabel_Init(struct LLabel* w, const char* text, const struct LLayout* layouts);
+CC_NOINLINE void LLabel_Add(void* screen, struct LLabel* w, const char* text, 
+							const struct LLayout* layouts);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const cc_string* text);
 CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
@@ -131,7 +139,8 @@ struct LLine {
 	LWidget_Layout
 	int _width;
 };
-CC_NOINLINE void LLine_Init(struct LLine* w, int width, const struct LLayout* layouts);
+CC_NOINLINE void LLine_Add(void* screen, struct LLine* w, int width, 
+							const struct LLayout* layouts);
 CC_NOINLINE BitmapCol LLine_GetColor(void);
 #define LLINE_HEIGHT 2
 
@@ -141,7 +150,8 @@ struct LSlider {
 	int value, _width, _height;
 	BitmapCol color;
 };
-CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height, BitmapCol color, const struct LLayout* layouts);
+CC_NOINLINE void LSlider_Add(void* screen, struct LSlider* w, int width, int height, BitmapCol color, 
+							const struct LLayout* layouts);
 CC_NOINLINE void LSlider_SetProgress(struct LSlider* w, int progress);
 
 struct ServerInfo;
@@ -212,7 +222,8 @@ struct LTableCell { struct LTable* table; int x, y, width; };
 
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */
-void LTable_Init(struct LTable* table, const struct LLayout* layouts);
+void LTable_Add(void* screen, struct LTable* table, 
+				const struct LLayout* layouts);
 /* Resets state of a table (reset sorter, filter, etc) */
 void LTable_Reset(struct LTable* table);
 /* Whether this table would handle the given key being pressed. */

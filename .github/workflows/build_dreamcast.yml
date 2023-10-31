@@ -1,0 +1,33 @@
+name: Build latest (Dreamcast)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-dreamcast
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: kazade/dreamcast-sdk
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile Dreamcast build
+        id: compile
+        run: |
+          source /opt/toolchains/dc/kos/environ.sh
+          export PATH=/opt/toolchains/dc/kos/utils/img4dc/build/cdi4dc/:$PATH
+          make dreamcast
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Dreamcast build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-dc.cdi'
+          DEST_NAME: 'ClassiCube-dc.cdi'

@@ -1,0 +1,29 @@
+name: Notify failure
+description: Sends a notification that compiling a build has failed
+inputs:
+  BOT_USERNAME:
+    description: 'Username to use for the discord bot message'
+    default: 'CC BuildBot'
+    required: false
+    type: string
+  BOT_AVATAR:
+    description: 'URL to use for the avatar of the discord bot message'
+    default: 'https://static.classicube.net/img/cc-cube-small.png'
+    required: false
+    type: string
+  NOTIFY_MESSAGE:
+    description: 'Notification message to send'
+    required: true
+    type: string
+  WEBHOOK_URL:
+    description: 'Discord webhook URL'
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Notify failure
+      shell: sh
+      run: |
+        curl ${{ inputs.WEBHOOK_URL }} -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"username\": \"${{ inputs.BOT_USERNAME }}\", \"avatar_url\": \"${{ inputs.BOT_AVATAR }}\", \"content\": \"${{ inputs.NOTIFY_MESSAGE }}\" }"

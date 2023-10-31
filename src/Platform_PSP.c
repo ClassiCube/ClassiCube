@@ -1,6 +1,5 @@
 #include "Core.h"
 #if defined CC_BUILD_PSP
-
 #include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
@@ -8,6 +7,7 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,42 +16,19 @@
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
 #include <psprtc.h>
+#include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
+const char* Platform_AppNameSuffix = " PSP";
 
 PSP_MODULE_INFO("ClassiCube", PSP_MODULE_USER, 1, 0);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER);
 
 PSP_DISABLE_AUTOSTART_PTHREAD() // reduces .elf size by 140 kb
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Memory----------------------------------------------------------*
-*#########################################################################################################################*/
-void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
-
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? malloc(size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize);
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? realloc(mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) free(mem);
-}
 
 
 /*########################################################################################################################*
@@ -65,7 +42,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Platform_Log(const char* msg, int len) {
 	int fd = sceKernelStdout();
 	sceIoWrite(fd, msg, len);
-	sceIoWrite(fd, "\n",  1);
 	
 	//sceIoDevctl("emulator:", 2, msg, len, NULL, 0);
 	//cc_string str = String_Init(msg, len, len);
@@ -105,8 +81,6 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-void Directory_GetCachePath(cc_string* path) { }
-
 extern int __path_absolute(const char *in, char *out, int len);
 static void GetNativePath(char* str, const cc_string* path) {
 	char tmp[NATIVE_STR_LEN + 1];
@@ -316,12 +290,6 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Font/Text--------------------------------------------------------*
-*#########################################################################################################################*/
-void Platform_LoadSysFonts(void) { }
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 union SocketAddress {
@@ -353,7 +321,7 @@ int Socket_ValidAddress(const cc_string* address) {
 	return ParseAddress(&addr, address);
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
 	union SocketAddress addr;
 	int res;
 
@@ -363,8 +331,10 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	*s = sceNetInetSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
 	
-	int on = 1;
-	sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
+	if (nonblocking) {
+		int on = 1;
+		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
+	}
 	
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
@@ -426,71 +396,18 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
 	sceNetInetGetsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
 	return res;
 }
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------Process/Module------------------------------------------------------*
-*#########################################################################################################################*/
-cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	return ERR_NOT_SUPPORTED;
-}
-
-void Process_Exit(cc_result code) { exit(code); }
-
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Updater----------------------------------------------------------*
-*#########################################################################################################################*/
-const char* const Updater_D3D9 = NULL;
-cc_bool Updater_Clean(void) { return true; }
-
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
-
-cc_result Updater_Start(const char** action) {
-	*action = "Starting game";
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_MarkExecutable(void) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
-*#########################################################################################################################*/
-/* TODO can this actually be supported somehow */
-const cc_string DynamicLib_Ext = String_FromConst(".so");
-
-void* DynamicLib_Load2(const cc_string* path)      { return NULL; }
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	String_AppendConst(dst, "Dynamic linking unsupported");
-	return true;
-}
-
-
-/*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Init(void) { /*pspDebugSioInit();*/ }
+void Platform_Init(void) {
+	/*pspDebugSioInit();*/ 
+}
 void Platform_Free(void) { }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
@@ -514,29 +431,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
+static cc_result GetMachineID(cc_uint32* key) {
 	return ERR_NOT_SUPPORTED;
-}
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
-*#########################################################################################################################*/
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0; /* TODO switch to RomFS ?? */
 }
 #endif

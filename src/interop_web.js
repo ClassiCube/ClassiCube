@@ -162,17 +162,33 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //-------------------------------------------------------Main driver------------------------------------------------------
 //########################################################################################################################
+  fetchTexturePackAsync: function(url, onload, onerror) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'arraybuffer';
+    xhr.onerror = onerror;
+    
+    xhr.onload = function() {
+      if (xhr.status == 200) {
+        onload(xhr.response);
+      } else {
+        onerror();
+      }
+    };
+    xhr.send();
+  },
+  interop_AsyncDownloadTexturePack__deps: ['fetchTexturePackAsync'],
   interop_AsyncDownloadTexturePack: function (rawPath, rawUrl) {
     var path = UTF8ToString(rawPath);
     var url  = UTF8ToString(rawUrl);
     Module.setStatus('Downloading textures.. (1/2)');
     
-    Module.readAsync(url, 
-      function(buffer) { // onload
+    _fetchTexturePackAsync(url, 
+      function(buffer) {
         CCFS.writeFile(path, new Uint8Array(buffer));
         ccall('main_phase1', 'void');
       },
-      function() { // onerror
+      function() {
         ccall('main_phase1', 'void');
       }
     );

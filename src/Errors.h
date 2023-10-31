@@ -2,7 +2,7 @@
 #define CC_ERRORS_H
 /*
 Provides a list list of internal ClassiCube errors
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /* NOTE: When adding errors, remember to keep Logger.c up to date! */
@@ -97,6 +97,8 @@ enum CC_ERRORS {
 	JAVA_ERR_JOBJECT_FLAGS     = 0xCCDED04BUL, /* Object class isn't deserialisable */
 	JAVA_ERR_JVALUE_TYPE       = 0xCCDED04CUL, /* Value data type is invalid */
 
+	SOCK_ERR_UNKNOWN_HOST = 0xCCDED04FUL, /* Host (e.g. "example.com") was unknown to the DNS server(s) */
+
 	NBT_ERR_UNKNOWN   = 0xCCDED050UL, /* NBT tag has an unknown type */
 	CW_ERR_ROOT_TAG   = 0xCCDED051UL, /* NBT root tag isn't a Compound tag */
 	CW_ERR_STRING_LEN = 0xCCDED052UL, /* NBT string is too long */
@@ -124,5 +126,11 @@ enum CC_ERRORS {
 	NBT_ERR_EXPECTED_STR = 0xCCDED064UL, /* Expected String NBT tag */
 	NBT_ERR_EXPECTED_ARR = 0xCCDED065UL, /* Expected Byte Array NBT tag */
 	NBT_ERR_ARR_TOO_SMALL= 0xCCDED066UL, /* Byte Array NBT tag length is < expected length */
+
+	HTTP_ERR_NO_SSL      = 0xCCDED067UL, /* HTTP backend doesn't support SSL */
+	HTTP_ERR_REDIRECTS   = 0xCCDED068UL, /* Too many attempted HTTP redirects */
+	HTTP_ERR_RELATIVE    = 0xCCDED069UL, /* Unsupported relative URL format */
+	HTTP_ERR_INVALID_BODY= 0xCCDED06AUL, /* HTTP message doesn't have Content-Length or use Chunked transfer encoding */
+	HTTP_ERR_CHUNK_SIZE  = 0xCCDED06BUL, /* HTTP message chunk has negative size/length */
 };
 #endif

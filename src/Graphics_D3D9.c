@@ -30,6 +30,7 @@ static D3DFORMAT viewFormat, depthFormat;
 static int cachedWidth, cachedHeight;
 static int depthBits;
 static float totalMem;
+static cc_bool fallbackRendering;
 
 static void D3D9_RestoreRenderStates(void);
 static void D3D9_FreeResource(GfxResourceID* resource) {
@@ -68,14 +69,19 @@ static void LoadD3D9Library(void) {
 
 static void CreateD3D9Instance(void) {
 	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
+
 	/* Normal Direct3D9 supports POOL_MANAGED textures */
 	/*  (Direct3D9Ex does not support them however) */
 	Gfx.ManagedTextures = true;
 	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
+
+	fallbackRendering = Options_GetBool("fallback-rendering", false);
+	if (!fallbackRendering) return;
+	Platform_LogConst("WARNING: Using fallback rendering mode, which will reduce performance");
 }
 
 static void FindCompatibleViewFormat(void) {
-	static const D3DFORMAT formats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
+	static const D3DFORMAT formats[] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
 	cc_result res;
 	int i;
 
@@ -88,7 +94,7 @@ static void FindCompatibleViewFormat(void) {
 }
 
 static void FindCompatibleDepthFormat(void) {
-	static const D3DFORMAT formats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
+	static const D3DFORMAT formats[] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
 	cc_result res;
 	int i;
 
@@ -110,6 +116,7 @@ static void D3D9_FillPresentArgs(D3DPRESENT_PARAMETERS* args) {
 	args->PresentationInterval   = gfx_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
 	args->Windowed   = true;
+	//args->MultiSampleType = D3DMULTISAMPLE_8_SAMPLES;
 }
 
 static const int D3D9_DepthBufferBits(void) {
@@ -509,6 +516,29 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
 	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 	if (depthOnly) IDirect3DDevice9_SetTexture(device, 0, NULL);
+
+	/* For when Direct3D9 device doesn't support D3DRS_COLORWRITEENABLE */
+	/*  Technically, the correct way to check for whether it works or not */
+	/*  is by checking whether the PrimitiveMiscCaps field in D3DCAPS9 */
+	/*  has the D3DPMISCCAPS_COLORWRITEENABLE flag set */
+	/* But since I'm unsure if there might be some GPU drivers out there */
+	/*  that do support D3DRS_COLORWRITEENABLE but forget to set the flag, */
+	/*  I've decided to require the user to manually enable this fallback */
+	if (!fallbackRendering) return;
+
+	/* https://gamedev.net/forums/topic/375017-c-enabling-disabling-writing-to-buffers/3473819/ */
+	if (depthOnly) {
+		/* finalX = srcX*0 + dstX*1 */
+		/*  So in other words, final pixel = existing pixel */
+		/*  Pretty costly performance wise though */
+		IDirect3DDevice9_SetRenderState(device, D3DRS_SRCBLEND,  D3DBLEND_ZERO);
+		IDirect3DDevice9_SetRenderState(device, D3DRS_DESTBLEND, D3DBLEND_ONE);
+		Gfx_SetAlphaBlending(true);
+	} else {
+		/* finalX = srcX*srcA + dstX*(1-srcA) */
+		IDirect3DDevice9_SetRenderState(device, D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
+		IDirect3DDevice9_SetRenderState(device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+	}
 }
 
 static void D3D9_RestoreRenderStates(void) {
@@ -532,23 +562,23 @@ static void D3D9_RestoreRenderStates(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, int size) {
+static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	void* dst = NULL;
-	cc_result res = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
+	cc_result res = IDirect3DIndexBuffer9_Lock(buffer, 0, count * 2, &dst, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockIb");
 
-	Mem_Copy(dst, data, size);
+	fillFunc((cc_uint16*)dst, count, obj);
 	res = IDirect3DIndexBuffer9_Unlock(buffer);
 	if (res) Logger_Abort2(res, "D3D9_UnlockIb");
 }
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	int size = indicesCount * 2;
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
+	int size = count * 2;
 	IDirect3DIndexBuffer9* ibuffer;
 	cc_result res = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
 	if (res) Logger_Abort2(res, "D3D9_CreateIb");
 
-	D3D9_SetIbData(ibuffer, indices, size);
+	D3D9_SetIbData(ibuffer, count, fillFunc, obj);
 	return ibuffer;
 }
 
@@ -716,10 +746,10 @@ void Gfx_DisableTextureOffset(void) {
 	IDirect3DDevice9_SetTransform(device, D3DTS_TEXTURE0, (const D3DMATRIX*)&Matrix_Identity);
 }
 
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
-	/* The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
-	float zNear = ORTHO_NEAR, zFar = ORTHO_FAR;
+	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
 	matrix->row1.X =  2.0f / width;
@@ -731,25 +761,16 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	matrix->row4.Z = zNear / (zNear - zFar);
 }
 
-static float CalcZNear(float fov) {
-	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
-	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
-	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
-	if (depthBits < 24 || fov <= 70 * MATH_DEG2RAD) return 0.05f;
-	if (fov <= 100 * MATH_DEG2RAD) return 0.025f;
-	if (fov <= 150 * MATH_DEG2RAD) return 0.0125f;
-	return 0.00390625f;
-}
-
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	/* Deliberately swap zNear/zFar in projection matrix calculation to produce */
 	/*  a projection matrix that results in a reversed depth buffer */
 	/* https://developer.nvidia.com/content/depth-precision-visualized */
 	float zNear_ = zFar;
-	float zFar_  = CalcZNear(fov);
+	float zFar_  = Reversed_CalcZNear(fov, depthBits);
 
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 

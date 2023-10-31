@@ -2,7 +2,7 @@
 #define CC_SCREENS_H
 #include "Core.h"
 /* Contains all 2D non-menu screen implementations.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
 

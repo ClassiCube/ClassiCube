@@ -3,7 +3,7 @@
 #include "Core.h"
 /* Simple math functions and constants. Also implements a RNG algorithm, based on 
       Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define MATH_PI 3.1415926535897931f
@@ -35,15 +35,18 @@ float Math_CosF(float x);
 double Math_Atan2(double x, double y);
 
 /* Computes loge(x). Can also be used to approximate logy(x). */
-/* e.g. for log3(x), use: Math_Log(x)/log(3) */
+/*   e.g. for log3(x), use: Math_Log(x)/log(3) */
 double Math_Log(double x);
-/* Computes e^x. Can also be used to approximate y^x. */
-/* e.g. for 3^x, use: Math_Exp(log(3)*x) */
-double Math_Exp(double x);
+/* Computes log2(x). Can also be used to approximate log2(x). */
+/*   e.g. for log3(x), use: Math_Log2(x)/log2(3) */
+double Math_Log2(double x);
+/* Computes 2^x. Can also be used to approximate y^x. */
+/*   e.g. for 3^x, use: Math_Exp2(log2(3)*x) */
+double Math_Exp2(double x);
 
 int Math_Floor(float value);
 int Math_Ceil(float value);
-int Math_Log2(cc_uint32 value);
+int Math_ilog2(cc_uint32 value);
 int Math_CeilDiv(int a, int b);
 int Math_Sign(float value);
 
@@ -62,10 +65,12 @@ typedef cc_uint64 RNGState;
 /* Initialises RNG using seed from current UTC time. */
 void Random_SeedFromCurrentTime(RNGState* rnd);
 /* Initialised RNG using the given seed. */
-CC_API void Random_Seed(RNGState* rnd, int seed);
+CC_API  void Random_Seed(      RNGState* rnd, int seed);
+typedef void (*FP_Random_Seed)(RNGState* rnd, int seed);
 
 /* Returns integer from 0 inclusive to n exclusive */
-CC_API int Random_Next(RNGState* rnd, int n);
+CC_API  int Random_Next(      RNGState* rnd, int n);
+typedef int (*FP_Random_Next)(RNGState* rnd, int n);
 /* Returns real from 0 inclusive to 1 exclusive */
 CC_API float Random_Float(RNGState* rnd);
 /* Returns integer from min inclusive to max exclusive */

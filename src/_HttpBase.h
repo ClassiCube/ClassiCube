@@ -20,6 +20,7 @@ void HttpRequest_Free(struct HttpRequest* request) {
 	request->size  = 0;
 	request->error = NULL;
 }
+#define HttpRequest_Copy(dst, src) Mem_Copy(dst, src, sizeof(struct HttpRequest))
 
 /*########################################################################################################################*
 *----------------------------------------------------Http requests list---------------------------------------------------*
@@ -45,8 +46,9 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 
 	if (flags & HTTP_FLAG_PRIORITY) {
 		/* Shift all requests right one place */
-		for (i = list->count; i > 0; i--) {
-			list->entries[i] = list->entries[i - 1];
+		for (i = list->count; i > 0; i--) 
+		{
+			HttpRequest_Copy(&list->entries[i], &list->entries[i - 1]);
 		}
 		/* Insert new request at front/start */
 		i = 0;
@@ -55,7 +57,7 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 		i = list->count;
 	}
 
-	list->entries[i] = *item;
+	HttpRequest_Copy(&list->entries[i], item);
 	list->count++;
 }
 
@@ -63,8 +65,9 @@ static void RequestList_Append(struct RequestList* list, struct HttpRequest* ite
 static void RequestList_RemoveAt(struct RequestList* list, int i) {
 	if (i < 0 || i >= list->count) Logger_Abort("Tried to remove element at list end");
 
-	for (; i < list->count - 1; i++) {
-		list->entries[i] = list->entries[i + 1];
+	for (; i < list->count - 1; i++) 
+	{
+		HttpRequest_Copy(&list->entries[i], &list->entries[i + 1]);
 	}
 	list->count--;
 }
@@ -153,9 +156,11 @@ static int Http_Add(const cc_string* url, cc_uint8 flags, cc_uint8 type, const c
 	return req.id;
 }
 
-static const cc_string urlRewrites[4] = {
+static const cc_string urlRewrites[] = {
 	String_FromConst("http://dl.dropbox.com/"),  String_FromConst("https://dl.dropboxusercontent.com/"),
-	String_FromConst("https://dl.dropbox.com/"), String_FromConst("https://dl.dropboxusercontent.com/")
+	String_FromConst("https://dl.dropbox.com/"), String_FromConst("https://dl.dropboxusercontent.com/"),
+	String_FromConst("https://www.imgur.com/"),  String_FromConst("https://i.imgur.com/"),
+	String_FromConst("https://imgur.com/"),      String_FromConst("https://i.imgur.com/"),
 };
 /* Converts say dl.dropbox.com/xyZ into dl.dropboxusercontent.com/xyz */
 static void Http_GetUrl(struct HttpRequest* req, cc_string* dst) {

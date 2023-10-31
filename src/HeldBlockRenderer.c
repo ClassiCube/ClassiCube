@@ -13,7 +13,7 @@
 cc_bool HeldBlockRenderer_Show;
 static BlockID held_block;
 static struct Entity held_entity;
-static struct Matrix held_blockProjection;
+static struct Matrix held_blockProj;
 
 static cc_bool held_animating, held_breaking, held_swinging;
 static float held_swingY;
@@ -93,7 +93,7 @@ static void SetBaseOffset(void) {
 static void OnProjectionChanged(void* obj) {
 	float fov = 70.0f * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, (float)Game_ViewDistance, &held_blockProjection);
+	Gfx_CalcPerspectiveMatrix(&held_blockProj, fov, aspectRatio, (float)Game_ViewDistance);
 }
 
 /* Based off incredible gifs from (Thanks goodlyay!)
@@ -213,7 +213,7 @@ void HeldBlockRenderer_Render(double delta) {
 	held_block  = Inventory_SelectedBlock;
 	view = Gfx.View;
 
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &held_blockProjection);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &held_blockProj);
 	SetMatrix();
 
 	ResetHeldState();

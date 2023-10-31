@@ -373,6 +373,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animations.h" />
+    <ClInclude Include="EntityRenderers.h" />
     <ClInclude Include="LBackend.h" />
     <ClInclude Include="Http.h" />
     <ClInclude Include="Audio.h" />
@@ -419,7 +420,9 @@
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="SSL.h" />
     <ClInclude Include="Stream.h" />
+    <ClInclude Include="SystemFonts.h" />
     <ClInclude Include="TexturePack.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="PackedCol.h" />
@@ -439,13 +442,18 @@
     <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_HttpBase.h" />
     <ClInclude Include="_PlatformBase.h" />
+    <ClInclude Include="_PlatformConsole.h" />
     <ClInclude Include="_WindowBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
+    <ClCompile Include="EntityRenderers.c" />
     <ClCompile Include="GameVersion.c" />
+    <ClCompile Include="Graphics_3DS.c" />
     <ClCompile Include="Graphics_D3D11.c" />
     <ClCompile Include="Graphics_D3D9.c" />
+    <ClCompile Include="Graphics_Dreamcast.c" />
+    <ClCompile Include="Graphics_GCWii.c" />
     <ClCompile Include="Graphics_GL1.c" />
     <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
@@ -463,6 +471,10 @@
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
+    <ClCompile Include="Graphics_PS3.c" />
+    <ClCompile Include="Graphics_PSP.c" />
+    <ClCompile Include="Graphics_PSVita.c" />
+    <ClCompile Include="Graphics_Xbox.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
@@ -477,10 +489,17 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
+    <ClCompile Include="Platform_3DS.c" />
     <ClCompile Include="Platform_Android.c" />
+    <ClCompile Include="Platform_Dreamcast.c" />
+    <ClCompile Include="Platform_GCWii.c" />
     <ClCompile Include="Platform_Posix.c" />
+    <ClCompile Include="Platform_PS3.c" />
+    <ClCompile Include="Platform_PSP.c" />
+    <ClCompile Include="Platform_PSVita.c" />
     <ClCompile Include="Platform_Web.c" />
-    <ClCompile Include="Platform_WinApi.c" />
+    <ClCompile Include="Platform_Windows.c" />
+    <ClCompile Include="Platform_Xbox.c" />
     <ClCompile Include="Protocol.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
@@ -499,20 +518,29 @@
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="Server.c" />
+    <ClCompile Include="SSL.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
+    <ClCompile Include="SystemFonts.c" />
     <ClCompile Include="TexturePack.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="Logger.c" />
+    <ClCompile Include="Window_3DS.c" />
     <ClCompile Include="Window_Android.c" />
     <ClCompile Include="Window_Carbon.c" />
+    <ClCompile Include="Window_Dreamcast.c" />
+    <ClCompile Include="Window_GCWii.c" />
+    <ClCompile Include="Window_PS3.c" />
+    <ClCompile Include="Window_PSP.c" />
+    <ClCompile Include="Window_PSVita.c" />
     <ClCompile Include="Window_SDL.c" />
     <ClCompile Include="Window_Web.c" />
     <ClCompile Include="Window_Win.c" />
     <ClCompile Include="Window_X11.c" />
+    <ClCompile Include="Window_Xbox.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="_autofit.c" />
     <ClCompile Include="_cff.c" />
@@ -530,7 +558,7 @@
     <ClCompile Include="_type1.c" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\misc\CCicon.rc" />
+    <ResourceCompile Include="..\misc\windows\CCicon.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

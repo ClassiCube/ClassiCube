@@ -302,12 +302,14 @@ void Gfx_SetTexturing(cc_bool enabled) { }
 /*########################################################################################################################*
 *-------------------------------------------------------Index buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
+GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	ID3D11Buffer* buffer = NULL;
+	cc_uint16 indices[GFX_MAX_INDICES];
+	fillFunc(indices, count, obj);
 	
 	D3D11_BUFFER_DESC desc = { 0 };
 	desc.Usage     = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(cc_uint16) * indicesCount;
+	desc.ByteWidth = count * sizeof(cc_uint16);
 	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
 	D3D11_SUBRESOURCE_DATA data;
@@ -432,24 +434,40 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
-	matrix->row3.Z = 1.0f       / (ORTHO_NEAR - ORTHO_FAR);
-	matrix->row4.Z = ORTHO_NEAR / (ORTHO_NEAR - ORTHO_FAR);
+void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
+	// Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh
+	//   The simplified calculation below uses: L = 0, R = width, T = 0, B = height
+	// NOTE: This calculation is shared with Direct3D 9 backend
+	*matrix = Matrix_Identity;
+
+	matrix->row1.X =  2.0f / width;
+	matrix->row2.Y = -2.0f / height;
+	matrix->row3.Z =  1.0f / (zNear - zFar);
+
+	matrix->row4.X = -1.0f;
+	matrix->row4.Y =  1.0f;
+	matrix->row4.Z = zNear / (zNear - zFar);
 }
 
-static float CalcZNear(float fov) {
-	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
-	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
-	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
-	if (depthBits < 24 || fov <= 70 * MATH_DEG2RAD) return 0.05f;
-	if (fov <= 100 * MATH_DEG2RAD) return 0.025f;
-	if (fov <= 150 * MATH_DEG2RAD) return 0.0125f;
-	return 0.00390625f;
-}
+static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
+	// Deliberately swap zNear/zFar in projection matrix calculation to produce
+	//  a projection matrix that results in a reversed depth buffer
+	// https://developer.nvidia.com/content/depth-precision-visualized
+	float zNear_ = zFar;
+	float zFar_  = Reversed_CalcZNear(fov, 24); // TODO don't always hardcode to 24 bits
 
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
-	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, CalcZNear(fov), zFar);
+	// Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
+	// NOTE: This calculation is shared with Direct3D 9 backend
+	float c = (float)Cotangent(0.5f * fov);
+	*matrix = Matrix_Identity;
+
+	matrix->row1.X =  c / aspect;
+	matrix->row2.Y =  c;
+	matrix->row3.Z = zFar_ / (zNear_ - zFar_);
+	matrix->row3.W = -1.0f;
+	matrix->row4.Z = (zNear_ * zFar_) / (zNear_ - zFar_);
+	matrix->row4.W =  0.0f;
 }
 
 //#####################z###################################################################################################
@@ -874,7 +892,7 @@ static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(void) {
 	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
-	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
 }
 
 static void OM_InitTargets(void) {
@@ -906,7 +924,7 @@ static void OM_InitTargets(void) {
 static void OM_CreateDepthStates(void) {
 	D3D11_DEPTH_STENCIL_DESC desc = { 0 };
 	HRESULT hr;
-	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
 
 	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
 		desc.DepthEnable    = (i & 1) != 0;
@@ -1028,7 +1046,7 @@ static BitmapCol* D3D11_GetRow(struct Bitmap* bmp, int y) {
 }
 
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	ID3D11Texture2D* tmp;
+	ID3D11Texture2D* tmp = NULL;
 	struct Bitmap bmp;
 	HRESULT hr;
 
@@ -1062,6 +1080,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 finished:
 	if (tmp) { ID3D11Texture2D_Release(tmp); }
+	ID3D11Resource_Release(backbuffer_res);
 	return hr;
 }
 

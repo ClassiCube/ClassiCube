@@ -1,14 +1,14 @@
-This document details how to compile a basic plugin in Visual Studio, MinGW, or GCC.
+This document details how to compile a basic plugin in Visual Studio, MinGW, or GCC/Clang.
 
-To find the functions and variables available for use in plugins, look for CC_API/CC_VAR in the .h files.
+To find the functions and variables available for use in plugins, look for `CC_API`/`CC_VAR` in the .h files.
 
 [Source code of some actual plugins](https://github.com/UnknownShadow200/ClassiCube-Plugins/)
 
 ### Setup
 
-You need to download and install either Visual Studio, MinGW, or GCC.
+You need to download and install either Visual Studio, MinGW, or GCC/Clang.
 
-*Note: MinGW/GCC are relatively small, while Visual Studio is gigabytes in size.  
+*Note: MinGW/GCC/Clang are relatively small, while Visual Studio is gigabytes in size.  
 If you're just trying to compile a plugin on Windows you might want to use MinGW. See main readme.*
 
 I assume your directory is structured like this:
@@ -196,7 +196,7 @@ The simplest way of linking to the `.lib` file is simply adding the following co
     #pragma comment(lib, "[GAME SRC FOLDER]/x86/Debug/ClassiCube.lib")
   #endif
 #endif
-`
+```
 
 replacing `[GAME SRC FOLDER]` with the full path of `src` folder (e.g. `C:/Dev/ClassiCube/src`)
 
@@ -241,9 +241,22 @@ Then put `TestPlugin.dll` into your game's `plugins` folder. Done.
 
 Then put `TestPlugin.dll` into your game's `plugins` folder. Done.
 
-## Compiling - other notes
+## Notes for compiling for Windows
 
-##### Ultra small dlls - mingw
-If you **ONLY** use code from the game (no external libraries and no C standard library functions), add `-nostartfiles -Wl,--entry=0` to the compile flags
+### Ensuring your plugin works when the ClassiCube exe isn't named ClassiCube.exe
 
-This step isn't necessary, the dll works fine without it. But it does reduce the size of the dll from 11 to 4 kb.
+If you follow the prior compilation instructions, the compiled DLL will have a runtime dependancy on `ClassiCube.exe`
+
+However, this means that if the executable is e.g. named `ClassiCube (2).exe` instead. the plugin DLL will fail to load
+
+To avoid this problem, you must 
+1) Stop linking to `ClassiCube` (e.g. for `MinGW`, remove the ` -L . -lClassiCube`)
+2) Load all functions and variables exported from ClassiCube via `GetProcAddress` instead
+
+This is somewhat tedious to do - see [here](https://github.com/UnknownShadow200/ClassiCube-Plugins/) for some examples of plugins which do this
+
+#### Compiling ultra small plugin DLLs - MinGW
+If you **ONLY** use code from the game (no external libraries and no C standard library functions):
+* You can add `-nostartfiles -Wl,--entry=0` to the compile flags to reduce the DLL size (e.g from 11 to 4 kb)
+
+This isn't necessary to do though, and plugin DLLs work completely fine without doing this.

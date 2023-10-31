@@ -18,8 +18,6 @@ const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced perf
 static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
-#define ORTHO_NEAR -10000.0f
-#define ORTHO_FAR   10000.0f
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
@@ -34,10 +32,10 @@ CC_NOINLINE static void Gfx_FreeState(void);
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc */
-static void MakeIndices(cc_uint16* indices, int iCount) {
+static void MakeIndices(cc_uint16* indices, int count, void* obj) {
 	int element = 0, i;
 
-	for (i = 0; i < iCount; i += 6) {
+	for (i = 0; i < count; i += 6) {
 		indices[0] = (cc_uint16)(element + 0);
 		indices[1] = (cc_uint16)(element + 1);
 		indices[2] = (cc_uint16)(element + 2);
@@ -51,9 +49,7 @@ static void MakeIndices(cc_uint16* indices, int iCount) {
 }
 
 static void InitDefaultResources(void) {
-	cc_uint16 indices[GFX_MAX_INDICES];
-	MakeIndices(indices, GFX_MAX_INDICES);
-	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
+	Gfx_defaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
 
 	Gfx_RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 	Gfx_RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
@@ -77,7 +73,9 @@ static float gfx_targetTime, gfx_actualTime;
 /* Examines difference between expected and actual frame times, */
 /*  then sleeps if actual frame time is too fast */
 static void LimitFPS(void) {
-	cc_uint64 frameEnd = Stopwatch_Measure();
+	cc_uint64 frameEnd, sleepEnd;
+	
+	frameEnd = Stopwatch_Measure();
 	gfx_actualTime += Stopwatch_ElapsedMicroseconds(Game_FrameStart, frameEnd) / 1000.0f;
 	gfx_targetTime += gfx_minFrameMs;
 
@@ -89,7 +87,7 @@ static void LimitFPS(void) {
 		/* also accumulate Thread_Sleep duration, as actual sleep */
 		/*  duration can significantly deviate from requested time */ 
 		/*  (e.g. requested 4ms, but actually slept for 8ms) */
-		cc_uint64 sleepEnd = Stopwatch_Measure();
+		sleepEnd = Stopwatch_Measure();
 		gfx_actualTime += Stopwatch_ElapsedMicroseconds(frameEnd, sleepEnd) / 1000.0f;
 	}
 
@@ -149,6 +147,7 @@ void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCoun
 	Gfx_DrawVb_IndexedTris(vCount);
 }
 
+#ifndef CC_BUILD_3DS
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured verts[4];
 	struct VertexColoured* v = verts;
@@ -182,6 +181,7 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
 }
+#endif
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
@@ -205,7 +205,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
-	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
+	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -10000.0f, 10000.0f);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 
@@ -236,6 +236,17 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 }
 
 
+static CC_INLINE float Reversed_CalcZNear(float fov, int depthbufferBits) {
+	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
+	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
+	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
+	if (depthbufferBits < 24 || fov <= 70 * MATH_DEG2RAD) return 0.05f;
+	if (fov <= 100 * MATH_DEG2RAD) return 0.025f;
+	if (fov <= 150 * MATH_DEG2RAD) return 0.0125f;
+	return 0.00390625f;
+}
+
+
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -255,7 +266,7 @@ static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, 
 /* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/ */
 /* The short version: if you want your renderer to properly handle textures with alphas when using */
 /* bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
-static BitmapCol AverageCol(BitmapCol p1, BitmapCol p2) {
+static BitmapCol AverageColor(BitmapCol p1, BitmapCol p2) {
 	cc_uint32 a1, a2, aSum;
 	cc_uint32 b1, g1, r1;
 	cc_uint32 b2, g2, r2;
@@ -287,7 +298,7 @@ static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, in
 	if (srcWidth == 1) {
 		for (y = 0; y < height; y++) {
 			/* 1x2 bilinear filter */
-			dst[0] = AverageCol(*src, *(src + srcWidth));
+			dst[0] = AverageColor(*src, *(src + srcWidth));
 
 			dst += width;
 			src += (srcWidth << 1);
@@ -302,9 +313,9 @@ static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, in
 		for (x = 0; x < width; x++) {
 			int srcX = (x << 1);
 			/* 2x2 bilinear filter */
-			BitmapCol ave0 = AverageCol(src0[srcX], src0[srcX + 1]);
-			BitmapCol ave1 = AverageCol(src1[srcX], src1[srcX + 1]);
-			dst[x] = AverageCol(ave0, ave1);
+			BitmapCol ave0 = AverageColor(src0[srcX], src0[srcX + 1]);
+			BitmapCol ave1 = AverageColor(src1[srcX], src1[srcX + 1]);
+			dst[x] = AverageColor(ave0, ave1);
 		}
 		src += (srcWidth << 1);
 		dst += width;
@@ -313,7 +324,7 @@ static void GenMipmaps(int width, int height, BitmapCol* dst, BitmapCol* src, in
 
 /* Returns the maximum number of mipmaps levels used for given size. */
 static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
-	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
+	int lvlsWidth = Math_ilog2(width), lvlsHeight = Math_ilog2(height);
 	if (customMipmapsLevels) {
 		int lvls = min(lvlsWidth, lvlsHeight);
 		return min(lvls, 4);

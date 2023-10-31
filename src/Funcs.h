@@ -4,7 +4,7 @@
 /* 
 Simple function implementations
   NOTE: doing min(x++, y) etc will increment x twice!
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define min(x, y) ((x) < (y) ? (x) : (y))

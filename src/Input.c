@@ -25,9 +25,10 @@
 #include "AxisLinesRenderer.h"
 #include "Picking.h"
 
+struct _InputState Input;
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
-static TimeMS input_lastClick;
+static double input_lastClick;
 static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
 static cc_bool suppressEscape;
@@ -47,6 +48,7 @@ static struct TouchPointer {
 	int begX, begY;
 	TimeMS start;
 } touches[INPUT_MAX_POINTERS];
+
 int Pointers_Count;
 int Input_TapMode  = INPUT_MODE_PLACE;
 int Input_HoldMode = INPUT_MODE_DELETE;
@@ -88,7 +90,7 @@ static cc_bool TryUpdateTouch(long id, int x, int y) {
 	for (i = 0; i < Pointers_Count; i++) {
 		if (touches[i].id != id || !touches[i].type) continue;
 
-		if (Input_RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
+		if (Input.RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
 			/* If the pointer hasn't been locked to gui or block yet, moving a bit */
 			/* should cause the pointer to get locked to camera movement. */
 			if (touches[i].type == TOUCH_TYPE_ALL && MovedFromBeg(i, x, y)) {
@@ -122,7 +124,7 @@ void Input_AddTouch(long id, int x, int y) {
 		/* Also set last click time, otherwise quickly tapping */
 		/* sometimes triggers a 'delete' in InputHandler_Tick, */
 		/* and then another 'delete' in CheckBlockTap. */
-		input_lastClick  = touches[i].start;
+		input_lastClick  = Game.Time;
 
 		if (i == Pointers_Count) Pointers_Count++;
 		Pointer_SetPosition(i, x, y);
@@ -179,8 +181,6 @@ static void ClearTouches(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Input_Pressed[INPUT_COUNT];
-
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
 "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20",\
@@ -189,8 +189,14 @@ cc_bool Input_Pressed[INPUT_COUNT];
 "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",\
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
+#define Pad_Names \
+"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
+"PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
+"PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR", \
+"PAD_LSTICK", "PAD_RSTICK"
 
-const char* const Input_StorageNames[INPUT_COUNT] = {
+/* Names for each input button when stored to disc */
+static const char* const storageNames[INPUT_COUNT] = {
 	"None",
 	Key_Function_Names,
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
@@ -209,7 +215,8 @@ const char* const Input_StorageNames[INPUT_COUNT] = {
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",
-	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse"
+	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse",
+	Pad_Names
 };
 
 const char* const Input_DisplayNames[INPUT_COUNT] = {
@@ -231,28 +238,29 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
-	"XBUTTON1", "XBUTTON2", "LMOUSE", "RMOUSE", "MMOUSE"
+	"XBUTTON1", "XBUTTON2", "LMOUSE", "RMOUSE", "MMOUSE",
+	Pad_Names
 };
 
 void Input_SetPressed(int key) {
-	cc_bool wasPressed = Input_Pressed[key];
-	Input_Pressed[key] = true;
+	cc_bool wasPressed = Input.Pressed[key];
+	Input.Pressed[key] = true;
 	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
 
-	if (key == 'C' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
-	if (key == 'V' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+	if (key == 'C' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
+	if (key == 'V' && Input_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
 
 	/* don't allow multiple left mouse down events */
-	if (key != KEY_LMOUSE || wasPressed) return;
+	if (key != CCMOUSE_L || wasPressed) return;
 	Pointer_SetPressed(0, true);
 }
 
 void Input_SetReleased(int key) {
-	if (!Input_Pressed[key]) return;
-	Input_Pressed[key] = false;
+	if (!Input.Pressed[key]) return;
+	Input.Pressed[key] = false;
 
 	Event_RaiseInt(&InputEvents.Up, key);
-	if (key == KEY_LMOUSE) Pointer_SetPressed(0, false);
+	if (key == CCMOUSE_L) Pointer_SetPressed(0, false);
 }
 
 void Input_Set(int key, int pressed) {
@@ -265,7 +273,7 @@ void Input_Set(int key, int pressed) {
 
 void Input_SetNonRepeatable(int key, int pressed) {
 	if (pressed) {
-		if (Input_Pressed[key]) return;
+		if (Input.Pressed[key]) return;
 		Input_SetPressed(key);
 	} else {
 		Input_SetReleased(key);
@@ -274,8 +282,9 @@ void Input_SetNonRepeatable(int key, int pressed) {
 
 void Input_Clear(void) {
 	int i;
-	for (i = 0; i < INPUT_COUNT; i++) {
-		if (Input_Pressed[i]) Input_SetReleased(i);
+	for (i = 0; i < INPUT_COUNT; i++) 
+	{
+		if (Input.Pressed[i]) Input_SetReleased(i);
 	}
 	/* TODO: Properly release instead of just clearing */
 	ClearTouches();
@@ -286,7 +295,6 @@ void Input_Clear(void) {
 *----------------------------------------------------------Mouse----------------------------------------------------------*
 *#########################################################################################################################*/
 struct Pointer Pointers[INPUT_MAX_POINTERS];
-cc_bool Input_RawMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
 	if (pressed) {
@@ -315,18 +323,37 @@ void Pointer_SetPosition(int idx, int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint8 KeyBinds[KEYBIND_COUNT];
-const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
-	'W', 'S', 'A', 'D',
-	KEY_SPACE, 'R', KEY_ENTER, 'T',
-	'B', 'F', KEY_ENTER, KEY_TAB, 
-	KEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
-	KEY_LALT, KEY_F3, KEY_F12, KEY_F11, 
-	KEY_F5, KEY_F1, KEY_F7, 'C', 
-	KEY_LCTRL, KEY_LMOUSE, KEY_MMOUSE, KEY_RMOUSE, 
-	KEY_F6, KEY_LALT, KEY_F8, 
-	'G', KEY_F10, 0
+cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
+cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
+
+const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
+	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
+	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
+	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
+	0, 0, 0, 0, 0,                    /* Hacks */
+	0, 0, 0, 0,                       /* LAlt - F11 */
+	0, 0, 0, 0,                       /* F5 - C */
+	0, CCPAD_L, 0, CCPAD_R,
+	0, 0, 0,
+	0,0,0, 0,0,0,0,
+	0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
+	CCPAD_ZL, CCPAD_ZR
 };
+const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
+	'W', 'S', 'A', 'D',
+	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
+	'B', 'F', CCKEY_ENTER, CCKEY_TAB, 
+	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
+	CCKEY_LALT, CCKEY_F3, CCKEY_F12, CCKEY_F11, 
+	CCKEY_F5, CCKEY_F1, CCKEY_F7, 'C', 
+	CCKEY_LCTRL, CCMOUSE_L, CCMOUSE_M, CCMOUSE_R, 
+	CCKEY_F6, CCKEY_LALT, CCKEY_F8, 
+	'G', CCKEY_F10, 0,
+	0, 0, 0, 0,
+	'1','2','3', '4','5','6', '7','8','9',
+	0, 0
+};
+
 static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
@@ -336,45 +363,53 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"ThirdPerson", "HideGUI", "AxisLines", "ZoomScrolling", 
 	"HalfSpeed", "DeleteBlock", "PickBlock", "PlaceBlock", 
 	"AutoRotate", "HotbarSwitching", "SmoothCamera", 
-	"DropBlock", "IDOverlay", "BreakableLiquids"
+	"DropBlock", "IDOverlay", "BreakableLiquids",
+	"LookUp", "LookDown", "LookRight", "LookLeft",
+	"Hotbar1", "Hotbar2", "Hotbar3",
+	"Hotbar4", "Hotbar5", "Horbar6",
+	"Hotbar7", "Hotbar8", "Hotbar9",
+	"HotbarLeft", "HotbarRight"
 };
 
-cc_bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
+cc_bool KeyBind_IsPressed(KeyBind binding) { 
+	return Input.Pressed[KeyBinds_Normal[binding]] || 
+		   Input.Pressed[KeyBinds_Gamepad[binding]];
+}
 
-static void KeyBind_Load(void) {
+static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8* defaults) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
-	int mapping;
-	int i;
+	int mapping, i;
 
 	String_InitArray_NT(name, nameBuffer);
-	for (i = 0; i < KEYBIND_COUNT; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) 
+	{
 		name.length = 0;
-		String_Format1(&name, "key-%c", keybindNames[i]);
+		String_Format1(&name, prefix, keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
-		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Input_StorageNames, INPUT_COUNT);
-		if (mapping != KEY_ESCAPE) KeyBinds[i] = mapping;
+		mapping = Options_GetEnum(name.buffer, defaults[i], storageNames, INPUT_COUNT);
+		if (mapping == CCKEY_ESCAPE) mapping = defaults[i];
+		
+		keybinds[i] = mapping;
 	}
 }
 
-void KeyBind_Set(KeyBind binding, int key) {
+void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	cc_string value;
 	String_InitArray(name, nameBuffer);
 
-	String_Format1(&name, "key-%c", keybindNames[binding]);
-	value = String_FromReadonly(Input_StorageNames[key]);
+	String_Format1(&name, binds == KeyBinds_Gamepad ? "pad-%c" : "key-%c", 
+		keybindNames[binding]);
+	value = String_FromReadonly(storageNames[key]);
 	Options_SetString(&name, &value);
-	KeyBinds[binding] = key;
+	binds[binding] = key;
 }
 
 /* Initialises and loads key bindings from options */
 static void KeyBind_Init(void) {
-	int i;
-	for (i = 0; i < KEYBIND_COUNT; i++) {
-		KeyBinds[i] = KeyBind_Defaults[i];
-	}
-	KeyBind_Load();
+	KeyBind_Load("key-%c", KeyBinds_Normal,  KeyBind_NormalDefaults);
+	KeyBind_Load("pad-%c", KeyBinds_Gamepad, KeyBind_GamepadDefaults);
 }
 
 
@@ -382,20 +417,20 @@ static void KeyBind_Init(void) {
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
 const cc_uint8 Hotkeys_LWJGL[256] = {
-	0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_TAB,
-	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S',
-	'D', 'F', 'G', 'H', 'J', 'K', 'L', KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V',
-	'B', 'N', 'M', KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RSHIFT, 0, KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5,
-	KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7, KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1,
-	KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11, KEY_F12, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, 0, 0, 0, 0, 0, 0,
+	0, CCKEY_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB,
+	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', CCKEY_LBRACKET, CCKEY_RBRACKET, CCKEY_ENTER, CCKEY_LCTRL, 'A', 'S',
+	'D', 'F', 'G', 'H', 'J', 'K', 'L', CCKEY_SEMICOLON, CCKEY_QUOTE, CCKEY_TILDE, CCKEY_LSHIFT, CCKEY_BACKSLASH, 'Z', 'X', 'C', 'V',
+	'B', 'N', 'M', CCKEY_COMMA, CCKEY_PERIOD, CCKEY_SLASH, CCKEY_RSHIFT, 0, CCKEY_LALT, CCKEY_SPACE, CCKEY_CAPSLOCK, CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5,
+	CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, CCKEY_KP7, CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MINUS, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP_PLUS, CCKEY_KP1,
+	CCKEY_KP2, CCKEY_KP3, CCKEY_KP0, CCKEY_KP_DECIMAL, 0, 0, 0, CCKEY_F11, CCKEY_F12, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, CCKEY_F13, CCKEY_F14, CCKEY_F15, CCKEY_F16, CCKEY_F17, CCKEY_F18, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_KP_PLUS, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_KP_ENTER, KEY_RCTRL, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_KP_PLUS, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_KP_ENTER, CCKEY_RCTRL, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, KEY_KP_DIVIDE, 0, 0, KEY_RALT, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, KEY_PAUSE, 0, KEY_HOME, KEY_UP, KEY_PAGEUP, 0, KEY_LEFT, 0, KEY_RIGHT, 0, KEY_END,
-	KEY_DOWN, KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0, 0, 0, 0, KEY_LWIN, KEY_RWIN, 0, 0, 0,
+	0, 0, 0, 0, 0, CCKEY_KP_DIVIDE, 0, 0, CCKEY_RALT, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, CCKEY_PAUSE, 0, CCKEY_HOME, CCKEY_UP, CCKEY_PAGEUP, 0, CCKEY_LEFT, 0, CCKEY_RIGHT, 0, CCKEY_END,
+	CCKEY_DOWN, CCKEY_PAGEDOWN, CCKEY_INSERT, CCKEY_DELETE, 0, 0, 0, 0, 0, 0, 0, CCKEY_LWIN, CCKEY_RWIN, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
@@ -485,9 +520,9 @@ int Hotkeys_FindPartial(int key) {
 	struct HotkeyData hk;
 	int i, modifiers = 0;
 
-	if (Key_IsCtrlPressed())  modifiers |= HOTKEY_MOD_CTRL;
-	if (Key_IsShiftPressed()) modifiers |= HOTKEY_MOD_SHIFT;
-	if (Key_IsAltPressed())   modifiers |= HOTKEY_MOD_ALT;
+	if (Input_IsCtrlPressed())  modifiers |= HOTKEY_MOD_CTRL;
+	if (Input_IsShiftPressed()) modifiers |= HOTKEY_MOD_SHIFT;
+	if (Input_IsAltPressed())   modifiers |= HOTKEY_MOD_ALT;
 
 	for (i = 0; i < HotkeysText.count; i++) {
 		hk = HotkeysList[i];
@@ -510,8 +545,8 @@ static void StoredHotkey_Parse(cc_string* key, cc_string* value) {
 	if (!String_UNSAFE_Separate(key,   '&', &strKey,  &strMods)) return;
 	if (!String_UNSAFE_Separate(value, '&', &strMore, &strText)) return;
 	
-	trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_StorageNames, INPUT_COUNT);
-	if (trigger == KEY_NONE) return; 
+	trigger = Utils_ParseEnum(&strKey, INPUT_NONE, storageNames, INPUT_COUNT);
+	if (trigger == INPUT_NONE) return; 
 	if (!Convert_ParseUInt8(&strMods, &modifiers)) return;
 	if (!Convert_ParseBool(&strMore,  &more))      return;
 	
@@ -535,7 +570,7 @@ void StoredHotkeys_Load(int trigger, cc_uint8 modifiers) {
 	cc_string key, value; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", storageNames[trigger], &modifiers);
 	key.buffer[key.length] = '\0'; /* TODO: Avoid this null terminator */
 
 	Options_UNSAFE_Get(key.buffer, &value);
@@ -546,7 +581,7 @@ void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers) {
 	cc_string key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", storageNames[trigger], &modifiers);
 	Options_SetString(&key, NULL);
 }
 
@@ -556,7 +591,7 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 	String_InitArray(key, keyBuffer);
 	String_InitArray(value, valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Input_StorageNames[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", storageNames[trigger], &modifiers);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_SetString(&key, &value);
 }
@@ -590,7 +625,7 @@ static void MouseStateChanged(int button, cc_bool pressed) {
 }
 
 static void MouseStatePress(int button) {
-	input_lastClick = DateTime_CurrentUTC_MS();
+	input_lastClick = Game.Time;
 	input_pickingId = -1;
 	MouseStateChanged(button, true);
 }
@@ -601,7 +636,7 @@ static void MouseStateRelease(int button) {
 }
 
 void InputHandler_OnScreensChanged(void) {
-	input_lastClick = DateTime_CurrentUTC_MS();
+	input_lastClick = Game.Time;
 	input_pickingId = -1;
 	if (!Gui.InputGrab) return;
 
@@ -770,12 +805,17 @@ void InputHandler_PickBlock(void) {
 
 void InputHandler_Tick(void) {
 	cc_bool left, middle, right;
-	TimeMS now = DateTime_CurrentUTC_MS();
-	int delta  = (int)(now - input_lastClick);
-
-	if (delta < 250) return; /* 4 times per second */
-	input_lastClick = now;
+	double now, delta;
+	
 	if (Gui.InputGrab) return;
+	now   = Game.Time;
+	delta = now - input_lastClick;
+
+	if (delta < 0.2495) return; /* 4 times per second */
+	/* NOTE: 0.2495 is used instead of 0.25 to produce delta time */
+	/*  values slightly closer to the old code which measured */
+	/*  elapsed time using DateTime_CurrentUTC_MS() instead */
+	input_lastClick = now;
 
 	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
 	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
@@ -810,11 +850,11 @@ void InputHandler_Tick(void) {
 *-----------------------------------------------------Input helpers-------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool InputHandler_IsShutdown(int key) {
-	if (key == KEY_F4 && Key_IsAltPressed()) return true;
+	if (key == CCKEY_F4 && Input_IsAltPressed()) return true;
 
 	/* On macOS, Cmd+Q should also end the process */
 #ifdef CC_BUILD_DARWIN
-	return key == 'Q' && Key_IsWinPressed();
+	return key == 'Q' && Input_IsWinPressed();
 #else
 	return false;
 #endif
@@ -823,9 +863,9 @@ static cc_bool InputHandler_IsShutdown(int key) {
 static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg, const char* disableMsg) {
 	*target = !(*target);
 	if (*target) {
-		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_StorageNames[key]);
+		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_DisplayNames[key]);
 	} else {
-		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Input_StorageNames[key]);
+		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Input_DisplayNames[key]);
 	}
 }
 
@@ -842,7 +882,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 	struct HacksComp* h;
 	cc_bool hotbar;
 
-	hotbar = Key_IsAltPressed() || Key_IsCtrlPressed() || Key_IsShiftPressed();
+	hotbar = Input_IsAltPressed() || Input_IsCtrlPressed() || Input_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta))   return true;
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
@@ -864,13 +904,13 @@ static void InputHandler_CheckZoomFov(void* obj) {
 static cc_bool HandleBlockKey(int key) {
 	if (Gui.InputGrab) return false;
 
-	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
+	if (KeyBind_Claims(KEYBIND_DELETE_BLOCK, key)) {
 		MouseStatePress(MOUSE_LEFT);
 		InputHandler_DeleteBlock();
-	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
+	} else if (KeyBind_Claims(KEYBIND_PLACE_BLOCK, key)) {
 		MouseStatePress(MOUSE_RIGHT);
 		InputHandler_PlaceBlock();
-	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
+	} else if (KeyBind_Claims(KEYBIND_PICK_BLOCK, key)) {
 		MouseStatePress(MOUSE_MIDDLE);
 		InputHandler_PickBlock();
 	} else {
@@ -880,32 +920,32 @@ static cc_bool HandleBlockKey(int key) {
 }
 
 static cc_bool HandleNonClassicKey(int key) {
-	if (key == KeyBinds[KEYBIND_HIDE_GUI]) {
+	if (KeyBind_Claims(KEYBIND_HIDE_GUI, key)) {
 		Game_HideGui = !Game_HideGui;
-	} else if (key == KeyBinds[KEYBIND_SMOOTH_CAMERA]) {
+	} else if (KeyBind_Claims(KEYBIND_SMOOTH_CAMERA, key)) {
 		InputHandler_Toggle(key, &Camera.Smooth,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
-	} else if (key == KeyBinds[KEYBIND_AXIS_LINES]) {
+	} else if (KeyBind_Claims(KEYBIND_AXIS_LINES, key)) {
 		InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
-	} else if (key == KeyBinds[KEYBIND_AUTOROTATE]) {
+	} else if (KeyBind_Claims(KEYBIND_AUTOROTATE, key)) {
 		InputHandler_Toggle(key, &AutoRotate_Enabled,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
-	} else if (key == KeyBinds[KEYBIND_THIRD_PERSON]) {
+	} else if (KeyBind_Claims(KEYBIND_THIRD_PERSON, key)) {
 		Camera_CycleActive();
-	} else if (key == KeyBinds[KEYBIND_DROP_BLOCK]) {
+	} else if (KeyBind_Claims(KEYBIND_DROP_BLOCK, key)) {
 		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
-	} else if (key == KeyBinds[KEYBIND_IDOVERLAY]) {
+	} else if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) {
 		TexIdsOverlay_Show();
-	} else if (key == KeyBinds[KEYBIND_BREAK_LIQUIDS]) {
+	} else if (KeyBind_Claims(KEYBIND_BREAK_LIQUIDS, key)) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
 			"  &eBreakable liquids is &cdisabled");
@@ -916,13 +956,13 @@ static cc_bool HandleNonClassicKey(int key) {
 }
 
 static cc_bool HandleCoreKey(int key) {
-	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
+	if (KeyBind_Claims(KEYBIND_HIDE_FPS, key)) {
 		Gui.ShowFPS = !Gui.ShowFPS;
-	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
+	} else if (KeyBind_Claims(KEYBIND_FULLSCREEN, key)) {
 		Game_ToggleFullscreen();
-	} else if (key == KeyBinds[KEYBIND_FOG]) {
+	} else if (KeyBind_Claims(KEYBIND_FOG, key)) {
 		Game_CycleViewDistance();
-	} else if (key == KEY_F5 && Game_ClassicMode) {
+	} else if (key == CCKEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
 	} else {
@@ -949,15 +989,15 @@ static void HandleHotkeyDown(int key) {
 }
 
 static cc_bool HandleLocalPlayerKey(int key) {
-	if (key == KeyBinds[KEYBIND_RESPAWN]) {
+	if (KeyBind_Claims(KEYBIND_RESPAWN, key)) {
 		return LocalPlayer_HandleRespawn();
-	} else if (key == KeyBinds[KEYBIND_SET_SPAWN]) {
+	} else if (KeyBind_Claims(KEYBIND_SET_SPAWN, key)) {
 		return LocalPlayer_HandleSetSpawn();
-	} else if (key == KeyBinds[KEYBIND_FLY]) {
+	} else if (KeyBind_Claims(KEYBIND_FLY, key)) {
 		return LocalPlayer_HandleFly();
-	} else if (key == KeyBinds[KEYBIND_NOCLIP]) {
+	} else if (KeyBind_Claims(KEYBIND_NOCLIP, key)) {
 		return LocalPlayer_HandleNoclip();
-	} else if (key == KeyBinds[KEYBIND_JUMP]) {
+	} else if (KeyBind_Claims(KEYBIND_JUMP, key)) {
 		return LocalPlayer_HandleJump();
 	}
 	return false;
@@ -1041,7 +1081,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	int i;
 
 #ifndef CC_BUILD_WEB
-	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
+	if (Input_IsEscapeButton(key) && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Remove(s);
 		return;
@@ -1051,7 +1091,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close(); return;
-	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
+	} else if (KeyBind_Claims(KEYBIND_SCREENSHOT, key) && !was) {
 		Game_ScreenshotRequested = true; return;
 	}
 	
@@ -1061,7 +1101,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
-	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui.InputGrab) {
+	if (Input_IsPauseButton(key) && !Gui.InputGrab) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -1085,12 +1125,12 @@ static void OnInputUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
-	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Camera_SetFov(Camera.DefaultFov);
+	if (KeyBind_Claims(KEYBIND_ZOOM_SCROLL, key)) Camera_SetFov(Camera.DefaultFov);
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
 	/* done in key up, the cursor disappears as expected. */
-	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
+	if (key == CCKEY_ESCAPE && (s = Gui_GetClosable())) {
 		if (suppressEscape) { suppressEscape = false; return; }
 		Gui_Remove(s); return;
 	}
@@ -1103,9 +1143,9 @@ static void OnInputUp(void* obj, int key) {
 	}
 
 	if (Gui.InputGrab) return;
-	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) MouseStateRelease(MOUSE_LEFT);
-	if (key == KeyBinds[KEYBIND_PLACE_BLOCK])  MouseStateRelease(MOUSE_RIGHT);
-	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
+	if (KeyBind_Claims(KEYBIND_DELETE_BLOCK, key)) MouseStateRelease(MOUSE_LEFT);
+	if (KeyBind_Claims(KEYBIND_PLACE_BLOCK,  key)) MouseStateRelease(MOUSE_RIGHT);
+	if (KeyBind_Claims(KEYBIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
 }
 
 static void OnFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }

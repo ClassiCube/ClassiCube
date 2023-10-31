@@ -88,12 +88,12 @@ void LBackend_Free(void) {
 	Font_Free(&rowFont);
 }
 
-void LBackend_UpdateLogoFont(void) {
+void LBackend_UpdateTitleFont(void) {
 	Font_Free(&logoFont);
-	Launcher_MakeLogoFont(&logoFont);
+	Launcher_MakeTitleFont(&logoFont);
 }
-void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
-	Launcher_DrawLogo(&logoFont, title, ctx);
+void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
+	Launcher_DrawTitle(&logoFont, title, ctx);
 }
 
 static void OnPointerMove(void* obj, int idx);
@@ -401,17 +401,18 @@ void LBackend_ButtonUpdate(struct LButton* w) {
 void LBackend_ButtonDraw(struct LButton* w) {
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
+	cc_bool active = w->hovered || w->selected;
 
-	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, w->hovered);
+	LButton_DrawBackground(&framebuffer, w->x, w->y, w->width, w->height, active);
 	xOffset = w->width  - w->_textWidth;
 	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &titleFont, true);
 
-	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
+	if (!active) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
 	Context2D_DrawText(&framebuffer, &args, 
 					  w->x + xOffset / 2, w->y + yOffset / 2);
 
-	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
+	if (!active) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
 }
 
 
@@ -535,6 +536,9 @@ void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
 	w->height   = Display_ScaleY(LINPUT_HEIGHT);
 	w->minWidth = w->width;
+
+	/* Text may end up being wider than minimum width */
+	if (w->text.length) LBackend_InputUpdate(w);
 }
 
 void LBackend_InputUpdate(struct LInput* w) {

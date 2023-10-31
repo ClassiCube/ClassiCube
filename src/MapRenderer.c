@@ -158,7 +158,8 @@ static void RenderNormalBatch(int batch) {
 		Gfx_SetFaceCulling(true);
 		/* TODO: fix to not render them all */
 #ifdef CC_BUILD_GL11
-		Gfx_DrawIndexedTris_T2fC4b(part.Vbs[FACE_COUNT], 0);
+		Gfx_BindVb(part.Vbs[FACE_COUNT]);
+		Gfx_DrawIndexedTris_T2fC4b(0, 0);
 		Game_Vertices += count * 4;
 		Gfx_SetFaceCulling(false);
 		continue;

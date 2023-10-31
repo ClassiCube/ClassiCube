@@ -10,15 +10,31 @@
 #include "Event.h"
 #include "Options.h"
 #include "Picking.h"
+#include "Platform.h"
 
 struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
 static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
 static float cam_deltaX, cam_deltaY;
+static double last_time;
 
 static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
+}
+
+void Camera_KeyLookUpdate(void) {
+	float delta;
+	if (Gui.InputGrab) return;
+	/* divide by 25 to have reasonable sensitivity for default mouse sens */
+	delta = (Camera.Sensitivity / 25.0f) * (1000 * (Game.Time - last_time));
+
+	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += delta;
+
+	last_time = Game.Time;
 }
 
 /*########################################################################################################################*
@@ -27,7 +43,7 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	float fovy = Camera.Fov * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	Gfx_CalcPerspectiveMatrix(fovy, aspectRatio, (float)Game_ViewDistance, proj);
+	Gfx_CalcPerspectiveMatrix(proj, fovy, aspectRatio, (float)Game_ViewDistance);
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
@@ -79,7 +95,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	struct LocationUpdate update;
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
-	if (Key_IsAltPressed() && Camera.Active->isThirdPerson) {
+	if (Input_IsAltPressed() && Camera.Active->isThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
 	}
@@ -122,7 +138,9 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	Camera.BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
 	Camera.BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
 
-	vel  = Math_Lerp(p->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
+	/* When standing on the ground, velocity.Y is -0.08 (-gravity) */
+	/* So add 0.08 to counteract that, so that vel is 0 when standing on ground */
+	vel  = 0.08f + Math_Lerp(p->OldVelocity.Y, e->Velocity.Y, t);
 	fall = -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale;
 
 	Matrix_RotateX(&velX, fall);
@@ -137,7 +155,8 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 static Vec2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->Yaw * MATH_DEG2RAD; v.Y = p->Pitch * MATH_DEG2RAD;
+	v.X = p->Yaw   * MATH_DEG2RAD; 
+	v.Y = p->Pitch * MATH_DEG2RAD;
 	return v;
 }
 
@@ -173,7 +192,8 @@ static float dist_third = DEF_ZOOM, dist_forward = DEF_ZOOM;
 static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->Yaw * MATH_DEG2RAD; v.Y = p->Pitch * MATH_DEG2RAD;
+	v.X = p->Yaw   * MATH_DEG2RAD; 
+	v.Y = p->Pitch * MATH_DEG2RAD;
 	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
 
 	v.X += cam_rotOffset.X * MATH_DEG2RAD; 

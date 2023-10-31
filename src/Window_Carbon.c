@@ -42,23 +42,23 @@ static void Window_CommonCreate(void) {
 /* Sourced from https://www.meandmark.com/keycodes.html */
 static const cc_uint8 key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
-	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
-	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
-	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
-	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, KEY_NUMLOCK, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
-	0, KEY_KP_ENTER, KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, 0, KEY_KP8, KEY_KP9, 'N', 'M', KEY_PERIOD,
-	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
-	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
+	'Y', 'T', '1', '2', '3', '4', '6', '5', CCKEY_EQUALS, '9', '7', CCKEY_MINUS, '8', '0', CCKEY_RBRACKET, 'O',
+	'U', CCKEY_LBRACKET, 'I', 'P', CCKEY_ENTER, 'L', 'J', CCKEY_QUOTE, 'K', CCKEY_SEMICOLON, CCKEY_BACKSLASH, CCKEY_COMMA, CCKEY_SLASH, 'N', 'M', CCKEY_PERIOD,
+	CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0, 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+	0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK, 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+	0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
+	CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11, 0, CCKEY_F13, 0, CCKEY_F14, 0, CCKEY_F10, 0, CCKEY_F12,
+	'U', CCKEY_F15, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_F4, CCKEY_END, CCKEY_F2, CCKEY_PAGEDOWN, CCKEY_F1, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_DOWN, CCKEY_UP, 0,
 };
 static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 /* TODO: Check these.. */
-/*   case 0x37: return KEY_LWIN; */
-/*   case 0x38: return KEY_LSHIFT; */
-/*   case 0x3A: return KEY_LALT; */
+/*   case 0x37: return CCKEY_LWIN; */
+/*   case 0x38: return CCKEY_LSHIFT; */
+/*   case 0x3A: return CCKEY_LALT; */
 /*   case 0x3B: return Key_ControlLeft; */
 
 /* TODO: Verify these differences from OpenTK */
-/*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
+/*Backspace = 51,  (0x33, CCKEY_DELETE according to that link)*/
 /*Return = 52,     (0x34, ??? according to that link)*/
 /*Menu = 110,      (0x6E, ??? according to that link)*/
 
@@ -194,11 +194,11 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 									NULL, sizeof(UInt32), NULL, &code);
 			if (res) Logger_Abort2(res, "Getting key modifiers");
 			
-			Input_Set(KEY_LCTRL,    code & 0x1000);
-			Input_Set(KEY_LALT,     code & 0x0800);
-			Input_Set(KEY_LSHIFT,   code & 0x0200);
-			Input_Set(KEY_LWIN,     code & 0x0100);			
-			Input_Set(KEY_CAPSLOCK, code & 0x0400);
+			Input_Set(CCKEY_LCTRL,    code & 0x1000);
+			Input_Set(CCKEY_LALT,     code & 0x0800);
+			Input_Set(CCKEY_LSHIFT,   code & 0x0200);
+			Input_Set(CCKEY_LWIN,     code & 0x0100);			
+			Input_Set(CCKEY_CAPSLOCK, code & 0x0400);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
@@ -244,12 +244,12 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 }
 
 static int MapNativeMouse(EventMouseButton button) {
-	if (button == kEventMouseButtonPrimary)   return KEY_LMOUSE;
-	if (button == kEventMouseButtonSecondary) return KEY_RMOUSE;
-	if (button == kEventMouseButtonTertiary)  return KEY_MMOUSE;
+	if (button == kEventMouseButtonPrimary)   return CCMOUSE_L;
+	if (button == kEventMouseButtonSecondary) return CCMOUSE_R;
+	if (button == kEventMouseButtonTertiary)  return CCMOUSE_M;
 
-	if (button == 4) return KEY_XBUTTON1;
-	if (button == 5) return KEY_XBUTTON2;
+	if (button == 4) return CCMOUSE_X1;
+	if (button == 5) return CCMOUSE_X2;
 	return 0;
 }
 
@@ -270,7 +270,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 		Logger_Abort2(res, "Getting mouse position");
 	}
 
-	if (Input_RawMode) {
+	if (Input.RawMode) {
 		raw.x = 0; raw.y = 0;
 		GetEventParameter(inEvent, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &raw);
 		Event_RaiseRawMove(&PointerEvents.RawMoved, raw.x, raw.y);
@@ -551,7 +551,7 @@ void Window_Close(void) {
 	WindowInfo.Exists = false;
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	EventRef theEvent;
 	EventTargetRef target = GetEventDispatcherTarget();
 	OSStatus res;

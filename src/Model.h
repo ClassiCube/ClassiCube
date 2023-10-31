@@ -6,7 +6,7 @@
 #include "Physics.h"
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Entity;
 struct AABB;
@@ -36,6 +36,9 @@ static CC_INLINE void ModelPart_Init(struct ModelPart* part, int offset, int cou
 struct ModelTex;
 /* Contains information about a texture used for models. */
 struct ModelTex { const char* name; cc_uint8 skinType; GfxResourceID texID; struct ModelTex* next; };
+
+#define MODEL_FLAG_INITED    0x01
+#define MODEL_FLAG_CLEAR_HAT 0x02
 
 struct Model;
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
@@ -67,7 +70,7 @@ struct Model {
 	int index;
 	cc_uint8 armX, armY; /* these translate arm model part back to (0, 0) */
 
-	cc_bool inited;
+	cc_uint8 flags;
 	/* Whether the model should be slightly bobbed up and down when rendering. */
 	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
 	cc_bool bobbing;

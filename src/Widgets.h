@@ -5,8 +5,9 @@
 #include "Constants.h"
 #include "Entity.h"
 #include "Inventory.h"
+#include "IsometricDrawer.h"
 /* Contains all 2D widget implementations.
-   Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct FontDesc;
 
@@ -63,6 +64,7 @@ struct ScrollbarWidget {
 /* Resets state of the given scrollbar widget to default. */
 CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 
+#define HOTBAR_CORE_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 /* A row of blocks with a background. */
 struct HotbarWidget {
 	Widget_Body
@@ -72,15 +74,21 @@ struct HotbarWidget {
 	float scrollAcc, scale;
 	cc_bool altHandled;
 	struct Texture ellipsisTex;
+	int state[HOTBAR_CORE_VERTICES / 4];
+	int verticesCount;
 #ifdef CC_BUILD_TOUCH
 	int touchId[HOTBAR_MAX_INDEX];
 	double touchTime[HOTBAR_MAX_INDEX];
 #endif
 };
+#define HOTBAR_MAX_VERTICES (4 + 4 + HOTBAR_CORE_VERTICES)
+
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
+CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, double delta);
 
+#define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 /* A table of blocks. */
 struct TableWidget {
 	Widget_Body
@@ -98,6 +106,9 @@ struct TableWidget {
 	int lastX, lastY, paddingX;
 	int paddingL, paddingR, paddingT, paddingB;
 	void (*UpdateTitle)(BlockID block);
+
+	int state[TABLE_MAX_VERTICES / 4];
+	int verticesCount;
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
@@ -261,7 +272,7 @@ CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
 /* Typically only called in response to the ChatEvents.ColCodeChanged event. */
 CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, char col);
 /* Gets the text for the i'th line. */
-static cc_string TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(i); }
+static CC_INLINE cc_string TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(i); }
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
@@ -290,7 +301,10 @@ CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
 
 #ifdef CC_BUILD_TOUCH
-struct ThumbstickWidget { Widget_Body; float scale; };
+struct ThumbstickWidget {
+	Widget_Body 
+	float scale; 
+};
 #define THUMBSTICKWIDGET_PER (4 * 4)
 #define THUMBSTICKWIDGET_MAX (THUMBSTICKWIDGET_PER * 2)
 

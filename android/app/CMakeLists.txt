@@ -97,6 +97,7 @@ add_library(classicube SHARED
         ../../src/EnvRenderer.c
         ../../src/Animations.c
         ../../src/LBackend.c
+        ../../src/SystemFonts.c
         )
 
 # add lib dependencies

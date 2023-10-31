@@ -3,7 +3,7 @@
 #include "Core.h"
 /* 
 Manages loading and saving options
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #define OPT_MUSIC_VOLUME "musicvolume"

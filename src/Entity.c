@@ -59,15 +59,22 @@ void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* 
 	struct Matrix tmp;
 	Matrix_Scale(m, scale.X, scale.Y, scale.Z);
 
-	Matrix_RotateZ(&tmp, -e->RotZ * MATH_DEG2RAD);
-	Matrix_MulBy(m, &tmp);
-	Matrix_RotateX(&tmp, -e->RotX * MATH_DEG2RAD);
-	Matrix_MulBy(m, &tmp);
-	Matrix_RotateY(&tmp, -e->RotY * MATH_DEG2RAD);
-	Matrix_MulBy(m, &tmp);
+	if (e->RotZ) {
+		Matrix_RotateZ( &tmp, -e->RotZ * MATH_DEG2RAD);
+		Matrix_MulBy(m, &tmp);
+	}
+	if (e->RotX) {
+		Matrix_RotateX( &tmp, -e->RotX * MATH_DEG2RAD);
+		Matrix_MulBy(m, &tmp);
+	}
+	if (e->RotY) {
+		Matrix_RotateY( &tmp, -e->RotY * MATH_DEG2RAD);
+		Matrix_MulBy(m, &tmp);
+	}
+
 	Matrix_Translate(&tmp, pos.X, pos.Y, pos.Z);
-	Matrix_MulBy(m, &tmp);
-	/* return rotZ * rotX * rotY * scale * translate; */
+	Matrix_MulBy(m,  &tmp);
+	/* return scale * rotZ * rotX * rotY * translate; */
 }
 
 void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb) {
@@ -409,7 +416,9 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 	if (bmp->width > Gfx.MaxTexWidth || bmp->height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", skin);
 	} else {
-		if (e->Model->usesHumanSkin) Entity_ClearHat(bmp, e->SkinType);
+		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT) 
+			Entity_ClearHat(bmp, e->SkinType);
+
 		Gfx_RecreateTexture(&e->TextureId, bmp, TEXTURE_FLAG_MANAGED, false);
 		Entity_SetSkinAll(e, false);
 	}
@@ -600,7 +609,6 @@ static void Entities_ContextLost(void* obj) {
 		if (!Entities.List[i]) continue;
 		Entity_ContextLost(Entities.List[i]);
 	}
-	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 
 	if (Gfx.ManagedTextures) return;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
@@ -620,8 +628,11 @@ static void Entities_ChatFontChanged(void* obj) {
 }
 
 void Entities_Remove(EntityID id) {
+	struct Entity* e = Entities.List[id];
+	if (!e) return;
+
 	Event_RaiseInt(&EntityEvents.Removed, id);
-	Entities.List[id]->VTABLE->Despawn(Entities.List[id]);
+	e->VTABLE->Despawn(e);
 	Entities.List[id] = NULL;
 
 	/* TODO: Move to EntityEvents.Removed callback instead */
@@ -650,30 +661,6 @@ EntityID Entities_GetClosest(struct Entity* src) {
 		}
 	}
 	return targetId;
-}
-
-void Entities_DrawShadows(void) {
-	int i;
-	if (Entities.ShadowsMode == SHADOW_MODE_NONE) return;
-	ShadowComponent_BoundShadowTex = false;
-
-	Gfx_SetAlphaArgBlend(true);
-	Gfx_SetDepthWrite(false);
-	Gfx_SetAlphaBlending(true);
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	ShadowComponent_Draw(Entities.List[ENTITIES_SELF_ID]);
-
-	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
-		for (i = 0; i < ENTITIES_SELF_ID; i++) {
-			if (!Entities.List[i] || !Entities.List[i]->ShouldRender) continue;
-			ShadowComponent_Draw(Entities.List[i]);
-		}
-	}
-
-	Gfx_SetAlphaArgBlend(false);
-	Gfx_SetDepthWrite(true);
-	Gfx_SetAlphaBlending(false);
 }
 
 
@@ -817,8 +804,8 @@ static void LocalPlayer_InputSet(int key, cc_bool pressed) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
 	if (pressed && !hacks->Enabled) return;
-	if (key == KeyBinds[KEYBIND_SPEED])      hacks->Speeding     = pressed;
-	if (key == KeyBinds[KEYBIND_HALF_SPEED]) hacks->HalfSpeeding = pressed;
+	if (KeyBind_Claims(KEYBIND_SPEED, key))      hacks->Speeding     = pressed;
+	if (KeyBind_Claims(KEYBIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
 }
 
 static void LocalPlayer_InputDown(void* obj, int key, cc_bool was) {
@@ -898,6 +885,11 @@ static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
 	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
 	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
 	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
+
+	/* TODO: Move to separate LocalPlayerInputSource */
+	if (!Input.JoystickMovement) return;
+	*xMoving = Math_CosF(Input.JoystickAngle);
+	*zMoving = Math_SinF(Input.JoystickAngle);
 }
 
 static const struct EntityVTABLE localPlayer_VTABLE = {
@@ -1202,11 +1194,10 @@ static void Entities_Init(void) {
 
 static void Entities_Free(void) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		Entities_Remove((EntityID)i);
 	}
-	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
 
 struct IGameComponent Entities_Component = {

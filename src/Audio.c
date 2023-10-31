@@ -744,6 +744,127 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
 }
+#elif defined CC_BUILD_3DS
+/*########################################################################################################################*
+*-------------------------------------------------------3DS backend-------------------------------------------------------*
+*#########################################################################################################################*/
+#include <3ds.h>
+struct AudioContext {
+	int chanID, used;
+	ndspWaveBuf bufs[AUDIO_MAX_BUFFERS];
+	int count, channels, sampleRate;
+	void* _tmpData; int _tmpSize;
+};
+static int channelIDs;
+
+static cc_bool AudioBackend_Init(void) {
+	int result = ndspInit();
+	Platform_Log1("NDSP_INIT: %i", &result);
+	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
+	return result == 0; 
+}
+static void AudioBackend_Free(void) { }
+#define AUDIO_HAS_BACKEND
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	int chanID = -1;
+	
+	for (int i = 0; i < 24; i++)
+	{
+		// channel in use
+		if (channelIDs & (1 << i)) continue;
+		
+		chanID = i; break;
+	}
+	if (chanID == -1) return;
+	
+	channelIDs |= (1 << chanID);
+	ctx->count  = buffers;
+	ctx->chanID = chanID;
+	ctx->used   = true;
+	
+	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->used) {
+		ndspChnWaveBufClear(ctx->chanID);
+		ctx->channels &= ~(1 << ctx->chanID);
+	}
+	
+	ctx->used = false;
+	AudioBase_Clear(ctx);
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	int fmt = channels == 1 ? NDSP_FORMAT_MONO_PCM16 : NDSP_FORMAT_STEREO_PCM16;
+	
+	ndspChnSetFormat(ctx->chanID, fmt);
+	ndspChnSetRate(ctx->chanID, sampleRate);
+	return 0;
+}
+
+cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
+	ndspWaveBuf* buf;
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
+		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
+			continue;
+			
+		buf->data_pcm16 = data;
+		buf->nsamples   = dataSize / 2; // 16 bit samples
+		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
+		ndspChnWaveBufAdd(ctx->chanID, buf);
+		return 0;
+	}
+	// tried to queue data without polling for free buffers first
+	return ERR_INVALID_ARGUMENT;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	ndspWaveBuf* buf;
+	int count = 0;
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
+		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING) { 
+			count++; continue; 
+		}
+	}
+
+	*inUse = count; 
+	return 0;
+}
+
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	return true;
+}
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	float mix[12] = { 0 };
+ 	mix[0] = data->volume / 100.0f;
+ 	mix[1] = data->volume / 100.0f;
+ 	
+ 	ndspChnSetMix(ctx->chanID, mix);
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	cc_result res;
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
+	return 0;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
 #elif defined CC_BUILD_WEBAUDIO
 /*########################################################################################################################*
 *-----------------------------------------------------WebAudio backend----------------------------------------------------*
@@ -1021,8 +1142,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	data.rate       = 100;
 	data.volume     = Audio_SoundsVolume;
 
-	/* https://minecraft.fandom.com/wiki/Block_of_Gold#Sounds */
-	/* https://minecraft.fandom.com/wiki/Grass#Sounds */
+	/* https://minecraft.wiki/w/Block_of_Gold#Sounds */
+	/* https://minecraft.wiki/w/Grass#Sounds */
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) data.rate = 120;
 		else data.rate = 80;

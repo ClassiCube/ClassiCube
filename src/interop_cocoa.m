@@ -18,6 +18,9 @@ static cc_bool scroll_debugging;
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
 *#########################################################################################################################*/
+extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
+// TODO: Try replacing with NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
+
 // NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c
 static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
@@ -46,32 +49,73 @@ static void Window_CommonCreate(void) {
 
 // Sourced from https://www.meandmark.com/keycodes.html
 static const cc_uint8 key_map[8 * 16] = {
-	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
-	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
-	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
-	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
-	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, KEY_NUMLOCK, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
-	0, KEY_KP_ENTER, KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, 0, KEY_KP8, KEY_KP9, 'N', 'M', KEY_PERIOD,
-	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
-	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
+/* 0x00 */ 'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X',
+/* 0x08 */ 'C', 'V',   0, 'B', 'Q', 'W', 'E', 'R',
+/* 0x10 */ 'Y', 'T', '1', '2', '3', '4', '6', '5',
+/* 0x18 */ CCKEY_EQUALS, '9', '7', CCKEY_MINUS, '8', '0', CCKEY_RBRACKET, 'O',
+/* 0x20 */ 'U', CCKEY_LBRACKET, 'I', 'P', CCKEY_ENTER, 'L', 'J', CCKEY_QUOTE,
+/* 0x28 */ 'K', CCKEY_SEMICOLON, CCKEY_BACKSLASH, CCKEY_COMMA, CCKEY_SLASH, 'N', 'M', CCKEY_PERIOD,
+/* 0x30 */ CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0,
+/* 0x38 */ 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+/* 0x40 */ 0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK,
+/* 0x48 */ 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+/* 0x50 */ 0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5,
+/* 0x58 */ CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
+/* 0x60 */ CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11,
+/* 0x68 */ 0, CCKEY_F13, 0, CCKEY_F14, 0, CCKEY_F10, 0, CCKEY_F12,
+/* 0x70 */ 'U', CCKEY_F15, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_F4, CCKEY_END,
+/* 0x78 */ CCKEY_F2, CCKEY_PAGEDOWN, CCKEY_F1, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_DOWN, CCKEY_UP, 0,
 };
 static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 // TODO: Check these..
-//   case 0x37: return KEY_LWIN;
-//   case 0x38: return KEY_LSHIFT;
-//   case 0x3A: return KEY_LALT;
+//   case 0x37: return CCKEY_LWIN;
+//   case 0x38: return CCKEY_LSHIFT;
+//   case 0x3A: return CCKEY_LALT;
 //   case 0x3B: return Key_ControlLeft;
 
 // TODO: Verify these differences from OpenTK
-//Backspace = 51,  (0x33, KEY_DELETE according to that link)
+//Backspace = 51,  (0x33, CCKEY_DELETE according to that link)
 //Return = 52,     (0x34, ??? according to that link)
 //Menu = 110,      (0x6E, ??? according to that link)
 
+
+/*########################################################################################################################*
+ *---------------------------------------------------------Cursor---------------------------------------------------------*
+ *#########################################################################################################################*/
+static cc_bool warping;
+static int warpDX, warpDY;
+
+static cc_bool GetMouseCoords(int* x, int* y) {
+	NSPoint loc = [NSEvent mouseLocation];
+	*x = (int)loc.x                        - windowX;
+	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
+	// TODO: this seems to be off by 1
+	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
+}
+
+static void ProcessRawMouseMovement(NSEvent* ev) {
+	float dx = [ev deltaX];
+	float dy = [ev deltaY];
+
+	if (warping) { dx -= warpDX; dy -= warpDY; }
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
+}
+
+
 void Cursor_SetPosition(int x, int y) {
+	int curX, curY;
+	GetMouseCoords(&curX, &curY);
+
 	CGPoint point;
 	point.x = x + windowX;
 	point.y = y + windowY;
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+
+	// Next mouse movement event will include the delta from
+	//  this warp - so need to adjust processing to remove the delta
+	warping = true;
+	warpDX  = x - curX;
+	warpDY  = y - curY;
 }
 
 static void Cursor_DoSetVisible(cc_bool visible) {
@@ -83,14 +127,16 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 }
 
 void Window_EnableRawMouse(void) {
+	CGAssociateMouseAndMouseCursorPosition(NO);
 	DefaultEnableRawMouse();
-	CGAssociateMouseAndMouseCursorPosition(0);
 }
 
-void Window_UpdateRawMouse(void) { CentreMousePosition(); }
+void Window_UpdateRawMouse(void) { }
+void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
+
 void Window_DisableRawMouse(void) {
-	CGAssociateMouseAndMouseCursorPosition(1);
 	DefaultDisableRawMouse();
+	CGAssociateMouseAndMouseCursorPosition(YES);
 }
 
 
@@ -125,18 +171,43 @@ void Clipboard_SetText(const cc_string* value) {
 	[pasteboard setString:str forType:NSStringPboardType];
 }
 
+
+static void LogUnhandled(NSString* str) {
+	if (!str) return;
+	const char* src = [str UTF8String];
+	if (!src) return;
+	
+	cc_string msg = String_FromReadonly(src);
+	Platform_Log(msg.buffer, msg.length);
+	Logger_Log(&msg);
+}
+
+// TODO: Should really be handled elsewhere, in Logger or ErrorHandler
+static void LogUnhandledNSErrors(NSException* ex) {
+	// last chance to log exception details before process dies
+	LogUnhandled(@"About to die from unhandled NSException..");
+	LogUnhandled([ex name]);
+	LogUnhandled([ex reason]);
+}
+
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
+	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
 	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];
 	Window_CommonInit();
+
+	// NSApplication sometimes replaces the uncaught exception handler, so set it again
+	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
 }
 
 
 /*########################################################################################################################*
-*----------------------------------------------------------Wwindow--------------------------------------------------------*
+*-----------------------------------------------------------Window--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef kCGBitmapByteOrder32Host
 // Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
@@ -217,19 +288,19 @@ static void RefreshWindowBounds(void) {
 @end
 
 
-static void DoDrawFramebuffer(CGRect dirty);
+static void DoDrawFramebuffer(NSRect dirty);
 @interface CCView : NSView { }
 @end
 @implementation CCView
 
-- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
+- (void)drawRect:(NSRect)dirty { DoDrawFramebuffer(dirty); }
 
 - (void)viewDidEndLiveResize {
 	// When the user users left mouse to drag reisze window, this enters 'live resize' mode
 	//   Although the game receives a left mouse down event, it does NOT receive a left mouse up
 	//   This causes the game to get stuck with left mouse down after user finishes resizing
 	// So work arond that by always releasing left mouse when a live resize is finished
-	Input_SetReleased(KEY_LMOUSE);
+	Input_SetReleased(CCMOUSE_L);
 }
 @end
 
@@ -364,12 +435,16 @@ void Window_Close(void) {
 	[winHandle close];
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Event processing----------------------------------------------------*
+*#########################################################################################################################*/
 static int MapNativeMouse(long button) {
-	if (button == 0) return KEY_LMOUSE;
-	if (button == 1) return KEY_RMOUSE;
-	if (button == 2) return KEY_MMOUSE;
-	if (button == 3) return KEY_XBUTTON1;
-	if (button == 4) return KEY_XBUTTON2;
+	if (button == 0) return CCMOUSE_L;
+	if (button == 1) return CCMOUSE_R;
+	if (button == 2) return CCMOUSE_M;
+	if (button == 3) return CCMOUSE_X1;
+	if (button == 4) return CCMOUSE_X2;
 	return 0;
 }
 
@@ -398,14 +473,6 @@ static void ProcessKeyChars(id ev) {
 	}
 }
 
-static cc_bool GetMouseCoords(int* x, int* y) {
-	NSPoint loc = [NSEvent mouseLocation];
-	*x = (int)loc.x                        - windowX;	
-	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
-	// TODO: this seems to be off by 1
-	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
-}
-
 static int TryGetKey(NSEvent* ev) {
 	int code = [ev keyCode];
 	int key  = MapNativeKey(code);
@@ -416,6 +483,7 @@ static int TryGetKey(NSEvent* ev) {
 }
 
 static void DebugScrollEvent(NSEvent* ev) {
+#ifdef kCGScrollWheelEventDeltaAxis1
 	float dy = [ev deltaY];
 	int steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
 	
@@ -424,12 +492,13 @@ static void DebugScrollEvent(NSEvent* ev) {
 	int raw = CGEventGetIntegerValueField(ref, kCGScrollWheelEventDeltaAxis1);
 	
 	Platform_Log3("SCROLL: %i.0 = (%i, %f3)", &steps, &raw, &dy);
+#endif
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
-	CGFloat dx, dy;
+	float dy;
 	
 	// https://wiki.freepascal.org/Cocoa_Internals/Application 
 	[pool release];
@@ -470,15 +539,15 @@ void Window_ProcessEvents(void) {
 		case 12: // NSFlagsChanged
 			key = [ev modifierFlags];
 			// TODO: Figure out how to only get modifiers that changed
-			Input_Set(KEY_LCTRL,    key & 0x000001);
-			Input_Set(KEY_LSHIFT,   key & 0x000002);
-			Input_Set(KEY_RSHIFT,   key & 0x000004);
-			Input_Set(KEY_LWIN,     key & 0x000008);
-			Input_Set(KEY_RWIN,     key & 0x000010);
-			Input_Set(KEY_LALT,     key & 0x000020);
-			Input_Set(KEY_RALT,     key & 0x000040);
-			Input_Set(KEY_RCTRL,    key & 0x002000);
-			Input_Set(KEY_CAPSLOCK, key & 0x010000);
+			Input_Set(CCKEY_LCTRL,    key & 0x000001);
+			Input_Set(CCKEY_LSHIFT,   key & 0x000002);
+			Input_Set(CCKEY_RSHIFT,   key & 0x000004);
+			Input_Set(CCKEY_LWIN,     key & 0x000008);
+			Input_Set(CCKEY_RWIN,     key & 0x000010);
+			Input_Set(CCKEY_LALT,     key & 0x000020);
+			Input_Set(CCKEY_RALT,     key & 0x000040);
+			Input_Set(CCKEY_RCTRL,    key & 0x002000);
+			Input_Set(CCKEY_CAPSLOCK, key & 0x010000);
 			break;
 
 		case 22: // NSScrollWheel
@@ -500,26 +569,27 @@ void Window_ProcessEvents(void) {
 		case 27: // NSOtherMouseDragged
 			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
-			if (Input_RawMode) {
-				dx = [ev deltaX];
-				dy = [ev deltaY];
-				Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
-			}
+			if (Input.RawMode) ProcessRawMouseMovement(ev);
+			warping = false;
 			break;
 		}
 		[appHandle sendEvent:ev];
 	}
 }
 
-void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
+
+/*########################################################################################################################*
+*-----------------------------------------------------------Dialogs-------------------------------------------------------*
+*#########################################################################################################################*/
 void ShowDialogCore(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	NSAlert* alert;
 	
-	alert   = [NSAlert alloc];
-	alert   = [alert init];
 	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
 	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
+	
+	alert = [NSAlert alloc];
+	alert = [alert init];
 	
 	[alert setMessageText: titleCF];
 	[alert setInformativeText: msgCF];
@@ -532,7 +602,9 @@ void ShowDialogCore(const char* title, const char* msg) {
 
 static NSMutableArray* GetOpenSaveFilters(const char* const* filters) {
     NSMutableArray* types = [NSMutableArray array];
-    for (int i = 0; filters[i]; i++)
+    int i;
+
+    for (i = 0; filters[i]; i++)
     {
         NSString* filter = [NSString stringWithUTF8String:filters[i]];
         filter = [filter substringFromIndex:1];
@@ -558,9 +630,6 @@ static void OpenSaveDoCallback(NSURL* url, FileDialogCallback callback) {
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	NSSavePanel* dlg = [NSSavePanel savePanel];
-	NSString* str;
-	const char* src;
-	int len, i;
 	
 	// TODO: Use args->defaultName, but only macOS 10.6
 
@@ -574,11 +643,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-    const char* const* filters = args->filters;
     NSOpenPanel* dlg = [NSOpenPanel openPanel];
-    NSString* str;
-    const char* src;
-    int len, i;
     
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setCanChooseFiles: YES];
@@ -596,13 +661,17 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     return 0;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Framebuffer------------------------------------------------------*
+*#########################################################################################################################*/
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp = *bmp;
 }
 
-static void DoDrawFramebuffer(CGRect dirty) {
+static void DoDrawFramebuffer(NSRect dirty) {
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
@@ -741,8 +810,8 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
-/* kCGLCPCurrentRendererID is only defined on macOS 10.4 and later */
-#ifdef kCGLCPCurrentRendererID
+/* kCGLCPCurrentRendererID is only available on macOS 10.4 and later */
+#if defined MAC_OS_X_VERSION_10_4
 static const char* GetAccelerationMode(CGLContextObj ctx) {
 	GLint fGPU, vGPU;
 	

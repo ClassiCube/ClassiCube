@@ -36,6 +36,9 @@
 #include "Protocol.h"
 #include "Picking.h"
 #include "Animations.h"
+#include "SystemFonts.h"
+#include "Formats.h"
+#include "EntityRenderers.h"
 
 struct _GameData Game;
 cc_uint64 Game_FrameStart;
@@ -47,12 +50,13 @@ int Game_MaxViewDistance = DEFAULT_MAX_VIEWDIST;
 
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
+static cc_bool gameRunning;
 
 cc_bool Game_ClassicMode, Game_ClassicHacks;
-cc_bool Game_AllowCustomBlocks, Game_UseCPE;
+cc_bool Game_AllowCustomBlocks;
 cc_bool Game_AllowServerTextures;
 
-cc_bool Game_ViewBobbing, Game_HideGui, Game_DefaultZipMissing;
+cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 struct GameVersion Game_Version;
 
@@ -135,7 +139,7 @@ void Game_CycleViewDistance(void) {
 	const short* dists = Gui.ClassicMenu ? classicDists : normDists;
 	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
 
-	if (Key_IsShiftPressed()) {
+	if (Input_IsShiftPressed()) {
 		CycleViewDistanceBackwards(dists, count);
 	} else {
 		CycleViewDistanceForwards(dists, count);
@@ -240,6 +244,10 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 		return false;
 	}
 
+	return Game_ValidateBitmapPow2(file, bmp);
+}
+
+cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
@@ -303,7 +311,6 @@ static void LoadOptions(void) {
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
-	Game_UseCPE            = !Game_ClassicMode && Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
@@ -364,7 +371,7 @@ static void LoadPlugins(void) {
 }
 #endif
 
-void Game_Free(void* obj);
+static void Game_Free(void* obj);
 static void Game_Load(void) {
 	struct IGameComponent* comp;
 	Game_UpdateDimensions();
@@ -388,6 +395,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);
 	Game_AddComponent(&Drawer2D_Component);
+	Game_AddComponent(&SystemFonts_Component);
 
 	Game_AddComponent(&Chat_Component);
 	Game_AddComponent(&Particles_Component);
@@ -412,17 +420,18 @@ static void Game_Load(void) {
 	Game_AddComponent(&PickedPosRenderer_Component);
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
+	Game_AddComponent(&Formats_Component);
+	Game_AddComponent(&EntityRenderers_Component);
 
 	LoadPlugins();
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Init) comp->Init();
 	}
 
-	Game_DefaultZipMissing = false;
 	TexturePack_ExtractCurrent(true);
-	if (Game_DefaultZipMissing) {
+	if (TexturePack_DefaultMissing) {
 		Window_ShowDialog("Missing file",
-			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
+			"Both default.zip and classicube.zip are missing,\n try downloading resources first.\n\nClassiCube will still run, but without any textures.");
 	}
 
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
@@ -465,7 +474,7 @@ static void Game_Render3D(double delta, float t) {
 	MapRenderer_RenderNormal(delta);
 	EnvRenderer_RenderMapSides();
 
-	Entities_DrawShadows();
+	EntityShadows_Render();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
 		PickedPosRenderer_Render(&Game_SelectedPos, true);
 	}
@@ -488,6 +497,7 @@ static void Game_Render3D(double delta, float t) {
 
 	Selections_Render();
 	Entities_RenderHoveredNames();
+	Camera_KeyLookUpdate();
 	InputHandler_Tick();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
@@ -612,7 +622,7 @@ static void Game_RenderFrame(double delta) {
 	Gfx_EndFrame();
 }
 
-void Game_Free(void* obj) {
+static void Game_Free(void* obj) {
 	struct IGameComponent* comp;
 	/* Most components will call OnContextLost in their Free functions */
 	/* Set to false so components will always free managed textures too */
@@ -624,6 +634,7 @@ void Game_Free(void* obj) {
 		if (comp->Free) comp->Free();
 	}
 
+	gameRunning     = false;
 	Logger_WarnFunc = Logger_DialogWarn;
 	Gfx_Free();
 	Options_SaveIfChanged();
@@ -632,10 +643,10 @@ void Game_Free(void* obj) {
 
 #define Game_DoFrameBody() \
 	render = Stopwatch_Measure();\
-	Window_ProcessEvents();\
-	if (!WindowInfo.Exists) return;\
-	\
 	delta  = Stopwatch_ElapsedMicroseconds(Game_FrameStart, render) / (1000.0 * 1000.0);\
+	\
+	Window_ProcessEvents(delta);\
+	if (!gameRunning) return;\
 	\
 	if (delta > 1.0) delta = 1.0; /* avoid large delta with suspended process */ \
 	if (delta > 0.0) { Game_FrameStart = render; Game_RenderFrame(delta); }
@@ -660,9 +671,9 @@ cc_bool Game_ShouldClose(void) {
 	}
 
 	/* Try to intercept Ctrl+W or Cmd+W for multiplayer */
-	if (Key_IsCtrlPressed() || Key_IsWinPressed()) return false;
+	if (Input_IsCtrlPressed() || Input_IsWinPressed()) return false;
 	/* Also try to intercept mouse back button (Mouse4) */
-	return !Input_Pressed[KEY_XBUTTON1];
+	return !Input.Pressed[CCMOUSE_X1];
 }
 #else
 static void Game_RunLoop(void) {
@@ -678,6 +689,7 @@ void Game_Run(int width, int height, const cc_string* title) {
 	Window_Create3D(width, height);
 	Window_SetTitle(title);
 	Window_Show();
+	gameRunning = true;
 
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents.Resized);

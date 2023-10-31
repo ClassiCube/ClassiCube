@@ -1,15 +1,27 @@
 #include "Core.h"
 #if defined CC_BUILD_3DS
+#include "Window.h"
+#include "Platform.h"
+#include "Input.h"
+#include "Event.h"
 #include "Graphics.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
+#include "ExtMath.h"
 #include <3ds.h>
 
-#define CC_INPUT_H
-extern cc_bool Input_RawMode; // Otherwise KEY_ conflicts with 3DS keys
-#include "_WindowBase.h"
+static int touchActive, touchBegX, touchBegY;
+static cc_bool launcherMode;
+static Result irrst_result;
+
+struct _DisplayData DisplayInfo;
+struct _WinData WindowInfo;
+// no DPI scaling on 3DS
+int Display_ScaleX(int x) { return x; }
+int Display_ScaleY(int y) { return y; }
+
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -19,7 +31,7 @@ void Window_Init(void) {
 	//gfxInit(GSP_BGR8_OES,GSP_BGR8_OES,false); 
 	//gfxInit(GSP_BGR8_OES,GSP_RGBA8_OES,false);
 	//gfxInit(GSP_RGBA8_OES, GSP_BGR8_OES, false); 
-	gfxInit(GSP_BGR8_OES,GSP_BGR8_OES,false);
+	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
 	
 	//gfxInit(GSP_RGBA8_OES,GSP_RGBA8_OES,false);
 	consoleInit(GFX_BOTTOM, NULL);
@@ -36,13 +48,14 @@ void Window_Init(void) {
 	WindowInfo.Width   = height; // deliberately swapped
 	WindowInfo.Height  = width;  // deliberately swapped
 	WindowInfo.Focused = true;
+	WindowInfo.Exists  = true;
+
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	irrst_result  = irrstInit();
 }
 
-static void DoCreateWindow(int _3d) {
-	WindowInfo.Exists = true;
-}
-void Window_Create2D(int width, int height) { DoCreateWindow(0); }
-void Window_Create3D(int width, int height) { DoCreateWindow(1); }
+void Window_Create2D(int width, int height) { launcherMode = true;  }
+void Window_Create3D(int width, int height) { launcherMode = false; }
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -57,54 +70,112 @@ void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) {
-	/* TODO implement */
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
-void Window_ProcessEvents(void) {
-	hidScanInput();
-	/* TODO implement */
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(u32 mods) {
+	Input_SetNonRepeatable(CCPAD_L, mods & KEY_L);
+	Input_SetNonRepeatable(CCPAD_R, mods & KEY_R);
 	
-	if (hidKeysDown() & KEY_TOUCH)
-		Input_SetPressed(119); // LMOUSE
+	Input_SetNonRepeatable(CCPAD_A, mods & KEY_A);
+	Input_SetNonRepeatable(CCPAD_B, mods & KEY_B);
+	Input_SetNonRepeatable(CCPAD_X, mods & KEY_X);
+	Input_SetNonRepeatable(CCPAD_Y, mods & KEY_Y);
 	
-	if (hidKeysUp() & KEY_TOUCH)
-		Input_SetReleased(119); // LMOUSE
+	Input_SetNonRepeatable(CCPAD_START,  mods & KEY_START);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & KEY_SELECT);
 	
-	if (hidKeysHeld() & KEY_TOUCH) {
-		int x, y;
-		Cursor_GetRawPos(&x, &y);
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & KEY_DLEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_DRIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_DUP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
+	
+	Input_SetNonRepeatable(CCPAD_ZL, mods & KEY_ZL);
+	Input_SetNonRepeatable(CCPAD_ZR, mods & KEY_ZR);
+}
+
+static void ProcessJoystickInput(circlePosition* pos, double delta) {
+	float scale = (delta * 60.0) / 8.0f;
+	
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(pos->dx) <= 8) pos->dx = 0;
+	if (Math_AbsI(pos->dy) <= 8) pos->dy = 0;
+		
+	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
+}
+
+static void ProcessTouchInput(int mods) {
+	touchPosition touch;
+	hidTouchRead(&touch);
+	touchActive = mods & KEY_TOUCH;
+	
+	if (touchActive) {
+		// rescale X from [0, bottom_FB_width) to [0, top_FB_width)
+		int x = touch.px * WindowInfo.Width / GSP_SCREEN_HEIGHT_BOTTOM;
+	 	int y = touch.py;
 		Pointer_SetPosition(0, x, y);
+	}
+	// Set starting position for camera movement
+	if (hidKeysDown() & KEY_TOUCH) {
+		touchBegX = touch.px;
+		touchBegY = touch.py;
 	}
 }
 
-static void Cursor_GetRawPos(int* x, int* y) {
+void Window_ProcessEvents(double delta) {
+	hidScanInput();
+	/* TODO implement */
+	
+	if (!aptMainLoop()) {
+		Event_RaiseVoid(&WindowEvents.Closing);
+		WindowInfo.Exists = false;
+		return;
+	}
+	
+	u32 mods = hidKeysDown() | hidKeysHeld();
+	HandleButtons(mods);
+	
+	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
+	ProcessTouchInput(mods);
+	
+	if (Input.RawMode) {
+		circlePosition pos;
+		hidCircleRead(&pos);
+		ProcessJoystickInput(&pos, delta);
+	}
+	
+	if (Input.RawMode && irrst_result == 0) {
+		circlePosition pos;
+		irrstScanInput();
+		irrstCstickRead(&pos);
+		ProcessJoystickInput(&pos, delta);
+	}
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+void Window_UpdateRawMouse(void)  {
+	if (!touchActive) return;
+	
 	touchPosition touch;
 	hidTouchRead(&touch);
 
-	*x = touch.px;
-	*y = touch.py;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				touch.px - touchBegX, touch.py - touchBegY);	
+	touchBegX = touch.px;
+	touchBegY = touch.py;
 }
 
-static void Cursor_DoSetVisible(cc_bool visible) {
-	/* TODO implement */
-}
 
-void Cursor_SetPosition(int x, int y) {
-	/* TODO implement */
-}
-
-static void ShowDialogCore(const char* title, const char* msg) {
-	/* TODO implement */
-}
-
-cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
-cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
+/*########################################################################################################################*
+*------------------------------------------------------Framebuffer--------------------------------------------------------*
+*#########################################################################################################################*/
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
@@ -113,6 +184,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	u16 width, height;
+	gfxSetDoubleBuffering(GFX_TOP, false);
 	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
 
 	// SRC y = 0 to 240
@@ -129,21 +201,78 @@ void Window_DrawFramebuffer(Rect2D r) {
 		fb[addr+1] = BitmapCol_G(color);
 		fb[addr+2] = BitmapCol_R(color);
 	}
-	/* TODO implement */
-	Platform_LogConst("DRAW FB!!!");
+	// TODO implement
+	// TODO gspWaitForVBlank();
 	gfxFlushBuffers();
-	gfxSwapBuffers();
+	//gfxSwapBuffers();
+	// TODO: tearing??
+	gfxSetDoubleBuffering(GFX_TOP, false);
+	gfxScreenSwapBuffers(GFX_TOP, true);
+	gfxSetDoubleBuffering(GFX_TOP, true);
+	gfxScreenSwapBuffers(GFX_BOTTOM, true);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO implement */
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
+
+/*########################################################################################################################*
+*------------------------------------------------------Soft keyboard------------------------------------------------------*
+*#########################################################################################################################*/
+static void OnscreenTextChanged(const char* text) {
+	char tmpBuffer[NATIVE_STR_LEN];
+	cc_string tmp = String_FromArray(tmpBuffer);
+	String_AppendUtf8(&tmp, text, String_Length(text));
+    
+	Event_RaiseString(&InputEvents.TextChanged, &tmp);
+}
+
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+	const char* btnText = args->type & KEYBOARD_FLAG_SEND ? "Send" : "Enter";
+	char input[NATIVE_STR_LEN]  = { 0 };
+	char output[NATIVE_STR_LEN] = { 0 };
+	SwkbdState swkbd;
+	String_EncodeUtf8(input, args->text);
+	
+	int mode = args->type & 0xFF;
+	int type = (mode == KEYBOARD_TYPE_NUMBER || mode == KEYBOARD_TYPE_INTEGER) ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
+	
+	swkbdInit(&swkbd, type, 3, -1);
+	swkbdSetInitialText(&swkbd, input);
+	swkbdSetHintText(&swkbd, args->placeholder);
+	//swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
+	//swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, btnText, true);
+	swkbdSetButton(&swkbd, SWKBD_BUTTON_CONFIRM, btnText, true);
+	
+	if (type == KEYBOARD_TYPE_PASSWORD)
+		swkbdSetPasswordMode(&swkbd, SWKBD_PASSWORD_HIDE_DELAY);
+	if (args->multiline)
+		swkbdSetFeatures(&swkbd, SWKBD_MULTILINE);
+		
+	// TODO filter callbacks and Window_Setkeyboardtext ??
+	int btn = swkbdInputText(&swkbd, output, sizeof(output));
+	if (btn != SWKBD_BUTTON_CONFIRM) return;
+	OnscreenTextChanged(output);
+}
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { /* TODO implement */ }
 
-void Window_EnableRawMouse(void)  { DefaultEnableRawMouse();  }
-void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse();  }
-void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+
+/*########################################################################################################################*
+*-------------------------------------------------------Misc/Other--------------------------------------------------------*
+*#########################################################################################################################*/
+void Window_ShowDialog(const char* title, const char* msg) {
+	/* TODO implement */
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
+}
+
+cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+	return ERR_NOT_SUPPORTED;
+}
 #endif

@@ -332,12 +332,12 @@ static void ComputeTransparency(struct Bitmap* bmp, BitmapCol col) {
 
 /* TODO: Test a lot of .png files and ensure output is right */
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
-	cc_uint8 tmp[PNG_PALETTE * 3];
+	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
 	cc_result res;
 
 	/* header variables */
-	static cc_uint32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
+	static const cc_uint32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 	cc_uint8 col, bitsPerSample, bytesPerPixel;
 	Png_RowExpander rowExpander;
 	cc_uint32 scanlineSize, scanlineBytes;
@@ -352,6 +352,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 buffer[PNG_BUFFER_SIZE];
 	cc_uint32 bufferRows, bufferLen;
 	cc_uint32 bufferIdx, read, left;
+	cc_bool initedBuffer = false;
 
 	/* idat decompressor */
 	struct InflateState inflate;
@@ -365,6 +366,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
+	col     = 0xFF; /* Unknown colour space */
 	trnsCol = BITMAPCOLOR_BLACK;
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 
@@ -372,7 +374,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	ZLibHeader_Init(&zlibHeader);
 
 	for (;;) {
-		res = Stream_Read(stream, tmp, 8);
+		res = Stream_Read(stream,   tmp, 8);
 		if (res) return res;
 		dataSize = Stream_GetU32_BE(tmp + 0);
 		fourCC   = Stream_GetU32_BE(tmp + 4);
@@ -393,7 +395,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			bitsPerSample = tmp[8]; col = tmp[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
-			if (rowExpander == NULL) return PNG_ERR_INVALID_COL_BPP;
+			if (!rowExpander) return PNG_ERR_INVALID_COL_BPP;
 
 			if (tmp[10] != 0) return PNG_ERR_COMP_METHOD;
 			if (tmp[11] != 0) return PNG_ERR_FILTER;
@@ -402,54 +404,53 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
 			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
-
-			Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
-			bufferIdx  = scanlineBytes;
-			bufferRows = PNG_BUFFER_SIZE / scanlineBytes;
-			bufferLen  = bufferRows * scanlineBytes;
 		} break;
 
 		case PNG_FourCC('P','L','T','E'): {
 			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_SIZE;
 			if ((dataSize % 3) != 0)        return PNG_ERR_PAL_SIZE;
-			res = Stream_Read(stream, tmp, dataSize);
+
+			res = Stream_Read(stream, buffer, dataSize);
 			if (res) return res;
 
 			for (i = 0; i < dataSize; i += 3) {
 				palette[i / 3] &= BITMAPCOLOR_A_MASK; /* set RGB to 0 */
-				palette[i / 3] |= tmp[i    ] << BITMAPCOLOR_R_SHIFT;
-				palette[i / 3] |= tmp[i + 1] << BITMAPCOLOR_G_SHIFT;
-				palette[i / 3] |= tmp[i + 2] << BITMAPCOLOR_B_SHIFT;
+				palette[i / 3] |= buffer[i    ] << BITMAPCOLOR_R_SHIFT;
+				palette[i / 3] |= buffer[i + 1] << BITMAPCOLOR_G_SHIFT;
+				palette[i / 3] |= buffer[i + 2] << BITMAPCOLOR_B_SHIFT;
 			}
 		} break;
 
 		case PNG_FourCC('t','R','N','S'): {
 			if (col == PNG_COLOR_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
-				res = Stream_Read(stream, tmp, dataSize);
+
+				res = Stream_Read(stream, buffer, dataSize);
 				if (res) return res;
 
 				/* RGB is always two bytes */
 				/* TODO is this right for 16 bits per channel images? */
-				trnsCol = BitmapCol_Make(tmp[1], tmp[1], tmp[1], 0);
+				trnsCol = BitmapCol_Make(buffer[1], buffer[1], buffer[1], 0);
 			} else if (col == PNG_COLOR_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
-				res = Stream_Read(stream, tmp, dataSize);
+
+				res = Stream_Read(stream, buffer, dataSize);
 				if (res) return res;
 
 				/* set alpha component of palette */
 				for (i = 0; i < dataSize; i++) {
 					palette[i] &= BITMAPCOLOR_RGB_MASK; /* set A to 0 */
-					palette[i] |= tmp[i] << BITMAPCOLOR_A_SHIFT;
+					palette[i] |= buffer[i] << BITMAPCOLOR_A_SHIFT;
 				}
 			} else if (col == PNG_COLOR_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
-				res = Stream_Read(stream, tmp, dataSize);
+
+				res = Stream_Read(stream, buffer, dataSize);
 				if (res) return res;
 
 				/* R,G,B are always two bytes */
 				/* TODO is this right for 16 bits per channel images? */
-				trnsCol = BitmapCol_Make(tmp[1], tmp[3], tmp[5], 0);
+				trnsCol = BitmapCol_Make(buffer[1], buffer[3], buffer[5], 0);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}
@@ -464,6 +465,15 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
 			if (!bmp->scan0) return PNG_ERR_NO_DATA;
+
+			/* Initialise buffer for decoding */
+			if (!initedBuffer) {
+				Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
+				bufferIdx    = scanlineBytes;
+				bufferRows   = PNG_BUFFER_SIZE / scanlineBytes;
+				bufferLen    = bufferRows * scanlineBytes;
+				initedBuffer = true;
+			}
 
 			while (curY < bmp->height) {
 				/* Need to leave one row in buffer untouched for storing prior scanline. Illustrated example of process:
@@ -595,7 +605,8 @@ static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, cc_boo
 
 static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* best, int lineLen, cc_bool alpha) {
 	cc_uint8* dst;
-	int bestFilter, bestEstimate = Int32_MaxValue;
+	int bestFilter   = PNG_FILTER_SUB;
+	int bestEstimate = Int32_MaxValue;
 	int x, filter, estimate;
 
 	dst = best + 1;

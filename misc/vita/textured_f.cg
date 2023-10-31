@@ -1,0 +1,9 @@
+float4 main
+(
+	uniform sampler2D tex,
+	float4 out_color    : COLOR,
+	float2 out_texcoord : TEXCOORD0
+) : COLOR
+{
+	return tex2D(tex, out_texcoord) * out_color;
+}

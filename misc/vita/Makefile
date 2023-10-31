@@ -1,0 +1,49 @@
+PROJECT_TITLE 	:= ClassiCube
+PROJECT_TITLEID := CUBE00200
+TARGET 			:= ClassiCube-vita
+
+BUILD_DIR		:= build-vita
+SOURCE_DIRS		:= src third_party/bearssl/src
+
+CFLAGS += -Wl,-q -Ithird_party/bearssl/inc -O1
+C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+
+# Needed by psvDebugScreenPrintf
+LIBS += -lm -lSceDisplay_stub -lSceCtrl_stub -lSceTouch_stub -lSceGxm_stub -lScePvf_stub 
+
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+default: $(BUILD_DIR) $(TARGET).vpk
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(TARGET).vpk: eboot.bin param.sfo
+	vita-pack-vpk -s param.sfo -b eboot.bin $(TARGET).vpk
+
+eboot.bin: $(TARGET).velf
+	vita-make-fself $(TARGET).velf eboot.bin
+
+param.sfo:
+	vita-mksfoex -s TITLE_ID="$(PROJECT_TITLEID)" "$(PROJECT_TITLE)" param.sfo
+
+$(TARGET).velf: $(TARGET).elf
+	arm-vita-eabi-strip -g $<
+	vita-elf-create $< $@
+
+$(TARGET).elf: $(OBJS)
+	arm-vita-eabi-gcc $(CFLAGS) $^ $(LIBS) -o $@
+
+$(BUILD_DIR)/%.o : src/%.c
+	arm-vita-eabi-gcc -c $(CFLAGS) -o $@ $<
+	
+$(BUILD_DIR)/%.o : third_party/bearssl/src/%.c
+	arm-vita-eabi-gcc -c $(CFLAGS) -o $@ $<
+	
+# TODO: There's gotta be a better way of .o to .c than this
+
+clean:
+	rm $(TARGET).velf $(TARGET).elf $(TARGET).vpk param.sfo eboot.bin $(OBJS)

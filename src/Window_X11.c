@@ -50,22 +50,22 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
 	if (key >= XK_a && key <= XK_z) { return 'A' + (key - XK_a); }
 
-	if (key >= XK_F1 && key <= XK_F24)    { return KEY_F1  + (key - XK_F1); }
-	if (key >= XK_KP_0 && key <= XK_KP_9) { return KEY_KP0 + (key - XK_KP_0); }
+	if (key >= XK_F1 && key <= XK_F24)    { return CCKEY_F1  + (key - XK_F1); }
+	if (key >= XK_KP_0 && key <= XK_KP_9) { return CCKEY_KP0 + (key - XK_KP_0); }
 
 	/* Same Num Lock behaviour as Windows and text editors */
 	if (key >= XK_KP_Home && key <= XK_KP_Delete && !(state & Mod2Mask)) {
-		if (key == XK_KP_Home) return KEY_HOME;
-		if (key == XK_KP_Up)   return KEY_UP;
-		if (key == XK_KP_Page_Up) return KEY_PAGEUP;
+		if (key == XK_KP_Home) return CCKEY_HOME;
+		if (key == XK_KP_Up)   return CCKEY_UP;
+		if (key == XK_KP_Page_Up) return CCKEY_PAGEUP;
 
-		if (key == XK_KP_Left)   return KEY_LEFT;
-		if (key == XK_KP_Insert) return KEY_INSERT;
-		if (key == XK_KP_Right)  return KEY_RIGHT;
+		if (key == XK_KP_Left)   return CCKEY_LEFT;
+		if (key == XK_KP_Insert) return CCKEY_INSERT;
+		if (key == XK_KP_Right)  return CCKEY_RIGHT;
 
-		if (key == XK_KP_End)  return KEY_END;
-		if (key == XK_KP_Down) return KEY_DOWN;
-		if (key == XK_KP_Page_Down) return KEY_PAGEDOWN;
+		if (key == XK_KP_End)  return CCKEY_END;
+		if (key == XK_KP_Down) return CCKEY_DOWN;
+		if (key == XK_KP_Page_Down) return CCKEY_PAGEDOWN;
 	}
 
 	/* A chromebook user reported issues with pressing some keys: */
@@ -77,101 +77,101 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	key &= 0xFFFF;
 
 	switch (key) {
-		case XK_Escape: return KEY_ESCAPE;
-		case XK_Return: return KEY_ENTER;
-		case XK_space: return KEY_SPACE;
-		case XK_BackSpace: return KEY_BACKSPACE;
+		case XK_Escape: return CCKEY_ESCAPE;
+		case XK_Return: return CCKEY_ENTER;
+		case XK_space: return CCKEY_SPACE;
+		case XK_BackSpace: return CCKEY_BACKSPACE;
 
-		case XK_Shift_L: return KEY_LSHIFT;
-		case XK_Shift_R: return KEY_RSHIFT;
-		case XK_Alt_L: return KEY_LALT;
-		case XK_Alt_R: return KEY_RALT;
-		case XK_Control_L: return KEY_LCTRL;
-		case XK_Control_R: return KEY_RCTRL;
-		case XK_Super_L: return KEY_LWIN;
-		case XK_Super_R: return KEY_RWIN;
-		case XK_Meta_L: return KEY_LWIN;
-		case XK_Meta_R: return KEY_RWIN;
+		case XK_Shift_L: return CCKEY_LSHIFT;
+		case XK_Shift_R: return CCKEY_RSHIFT;
+		case XK_Alt_L: return CCKEY_LALT;
+		case XK_Alt_R: return CCKEY_RALT;
+		case XK_Control_L: return CCKEY_LCTRL;
+		case XK_Control_R: return CCKEY_RCTRL;
+		case XK_Super_L: return CCKEY_LWIN;
+		case XK_Super_R: return CCKEY_RWIN;
+		case XK_Meta_L: return CCKEY_LWIN;
+		case XK_Meta_R: return CCKEY_RWIN;
 
-		case XK_Menu:  return KEY_MENU;
-		case XK_Tab:   return KEY_TAB;
-		case XK_minus: return KEY_MINUS;
-		case XK_plus:  return KEY_EQUALS;
-		case XK_equal: return KEY_EQUALS;
+		case XK_Menu:  return CCKEY_MENU;
+		case XK_Tab:   return CCKEY_TAB;
+		case XK_minus: return CCKEY_MINUS;
+		case XK_plus:  return CCKEY_EQUALS;
+		case XK_equal: return CCKEY_EQUALS;
 
-		case XK_Caps_Lock: return KEY_CAPSLOCK;
-		case XK_Num_Lock:  return KEY_NUMLOCK;
+		case XK_Caps_Lock: return CCKEY_CAPSLOCK;
+		case XK_Num_Lock:  return CCKEY_NUMLOCK;
 
-		case XK_Pause: return KEY_PAUSE;
-		case XK_Break: return KEY_PAUSE;
-		case XK_Scroll_Lock: return KEY_SCROLLLOCK;
-		case XK_Insert:  return KEY_INSERT;
-		case XK_Print:   return KEY_PRINTSCREEN;
-		case XK_Sys_Req: return KEY_PRINTSCREEN;
+		case XK_Pause: return CCKEY_PAUSE;
+		case XK_Break: return CCKEY_PAUSE;
+		case XK_Scroll_Lock: return CCKEY_SCROLLLOCK;
+		case XK_Insert:  return CCKEY_INSERT;
+		case XK_Print:   return CCKEY_PRINTSCREEN;
+		case XK_Sys_Req: return CCKEY_PRINTSCREEN;
 
-		case XK_backslash: return KEY_BACKSLASH;
-		case XK_bar:       return KEY_BACKSLASH;
-		case XK_braceleft:    return KEY_LBRACKET;
-		case XK_bracketleft:  return KEY_LBRACKET;
-		case XK_braceright:   return KEY_RBRACKET;
-		case XK_bracketright: return KEY_RBRACKET;
-		case XK_colon:      return KEY_SEMICOLON;
-		case XK_semicolon:  return KEY_SEMICOLON;
-		case XK_quoteright: return KEY_QUOTE;
-		case XK_quotedbl:   return KEY_QUOTE;
-		case XK_quoteleft:  return KEY_TILDE;
-		case XK_asciitilde: return KEY_TILDE;
+		case XK_backslash: return CCKEY_BACKSLASH;
+		case XK_bar:       return CCKEY_BACKSLASH;
+		case XK_braceleft:    return CCKEY_LBRACKET;
+		case XK_bracketleft:  return CCKEY_LBRACKET;
+		case XK_braceright:   return CCKEY_RBRACKET;
+		case XK_bracketright: return CCKEY_RBRACKET;
+		case XK_colon:      return CCKEY_SEMICOLON;
+		case XK_semicolon:  return CCKEY_SEMICOLON;
+		case XK_quoteright: return CCKEY_QUOTE;
+		case XK_quotedbl:   return CCKEY_QUOTE;
+		case XK_quoteleft:  return CCKEY_TILDE;
+		case XK_asciitilde: return CCKEY_TILDE;
 
-		case XK_comma: return KEY_COMMA;
-		case XK_less:  return KEY_COMMA;
-		case XK_period:  return KEY_PERIOD;
-		case XK_greater: return KEY_PERIOD;
-		case XK_slash:    return KEY_SLASH;
-		case XK_question: return KEY_SLASH;
+		case XK_comma: return CCKEY_COMMA;
+		case XK_less:  return CCKEY_COMMA;
+		case XK_period:  return CCKEY_PERIOD;
+		case XK_greater: return CCKEY_PERIOD;
+		case XK_slash:    return CCKEY_SLASH;
+		case XK_question: return CCKEY_SLASH;
 
-		case XK_Left:  return KEY_LEFT;
-		case XK_Down:  return KEY_DOWN;
-		case XK_Right: return KEY_RIGHT;
-		case XK_Up:    return KEY_UP;
+		case XK_Left:  return CCKEY_LEFT;
+		case XK_Down:  return CCKEY_DOWN;
+		case XK_Right: return CCKEY_RIGHT;
+		case XK_Up:    return CCKEY_UP;
 
-		case XK_Delete: return KEY_DELETE;
-		case XK_Home:   return KEY_HOME;
-		case XK_End:    return KEY_END;
-		case XK_Page_Up:   return KEY_PAGEUP;
-		case XK_Page_Down: return KEY_PAGEDOWN;
+		case XK_Delete: return CCKEY_DELETE;
+		case XK_Home:   return CCKEY_HOME;
+		case XK_End:    return CCKEY_END;
+		case XK_Page_Up:   return CCKEY_PAGEUP;
+		case XK_Page_Down: return CCKEY_PAGEDOWN;
 
-		case XK_KP_Add: return KEY_KP_PLUS;
-		case XK_KP_Subtract: return KEY_KP_MINUS;
-		case XK_KP_Multiply: return KEY_KP_MULTIPLY;
-		case XK_KP_Divide:  return KEY_KP_DIVIDE;
-		case XK_KP_Decimal: return KEY_KP_DECIMAL;
-		case XK_KP_Insert: return KEY_KP0;
-		case XK_KP_End:  return KEY_KP1;
-		case XK_KP_Down: return KEY_KP2;
-		case XK_KP_Page_Down: return KEY_KP3;
-		case XK_KP_Left:  return KEY_KP4;
-		case XK_KP_Begin: return KEY_KP5;
-		case XK_KP_Right: return KEY_KP6;
-		case XK_KP_Home: return KEY_KP7;
-		case XK_KP_Up:   return KEY_KP8;
-		case XK_KP_Page_Up: return KEY_KP9;
-		case XK_KP_Delete:  return KEY_KP_DECIMAL;
-		case XK_KP_Enter:   return KEY_KP_ENTER;
+		case XK_KP_Add: return CCKEY_KP_PLUS;
+		case XK_KP_Subtract: return CCKEY_KP_MINUS;
+		case XK_KP_Multiply: return CCKEY_KP_MULTIPLY;
+		case XK_KP_Divide:  return CCKEY_KP_DIVIDE;
+		case XK_KP_Decimal: return CCKEY_KP_DECIMAL;
+		case XK_KP_Insert: return CCKEY_KP0;
+		case XK_KP_End:  return CCKEY_KP1;
+		case XK_KP_Down: return CCKEY_KP2;
+		case XK_KP_Page_Down: return CCKEY_KP3;
+		case XK_KP_Left:  return CCKEY_KP4;
+		case XK_KP_Begin: return CCKEY_KP5;
+		case XK_KP_Right: return CCKEY_KP6;
+		case XK_KP_Home: return CCKEY_KP7;
+		case XK_KP_Up:   return CCKEY_KP8;
+		case XK_KP_Page_Up: return CCKEY_KP9;
+		case XK_KP_Delete:  return CCKEY_KP_DECIMAL;
+		case XK_KP_Enter:   return CCKEY_KP_ENTER;
 	}
-	return KEY_NONE;
+	return INPUT_NONE;
 }
 
 /* NOTE: This may not be entirely accurate, because user can configure keycode mappings */
 static const cc_uint8 keycodeMap[136] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6',
-	'7', '8', '9', '0', KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_TAB, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
-	'O',  'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S', 'D', 'F', 'G', 'H',  'J', 'K', 'L', KEY_SEMICOLON,
-	KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', KEY_PERIOD, KEY_COMMA, KEY_SLASH, KEY_RSHIFT, KEY_KP_MULTIPLY,
-	KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7,
-	KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11,
-	KEY_F12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	KEY_RALT, KEY_RCTRL, KEY_HOME, KEY_UP, KEY_PAGEUP, KEY_LEFT, KEY_RIGHT, KEY_END, KEY_DOWN, KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0,
-	0, 0, 0, KEY_PAUSE, 0, 0, 0, 0, 0, KEY_LWIN, 0, KEY_RWIN
+	0, 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_ESCAPE, '1', '2', '3', '4', '5', '6',
+	'7', '8', '9', '0', CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+	'O',  'P', CCKEY_LBRACKET, CCKEY_RBRACKET, CCKEY_ENTER, CCKEY_LCTRL, 'A', 'S', 'D', 'F', 'G', 'H',  'J', 'K', 'L', CCKEY_SEMICOLON,
+	CCKEY_QUOTE, CCKEY_TILDE, CCKEY_LSHIFT, CCKEY_BACKSLASH, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', CCKEY_PERIOD, CCKEY_COMMA, CCKEY_SLASH, CCKEY_RSHIFT, CCKEY_KP_MULTIPLY,
+	CCKEY_LALT, CCKEY_SPACE, CCKEY_CAPSLOCK, CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, CCKEY_KP7,
+	CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MINUS, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP_PLUS, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP0, CCKEY_KP_DECIMAL, 0, 0, 0, CCKEY_F11,
+	CCKEY_F12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	CCKEY_RALT, CCKEY_RCTRL, CCKEY_HOME, CCKEY_UP, CCKEY_PAGEUP, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_END, CCKEY_DOWN, CCKEY_PAGEDOWN, CCKEY_INSERT, CCKEY_DELETE, 0, 0, 0, 0,
+	0, 0, 0, CCKEY_PAUSE, 0, 0, 0, 0, 0, CCKEY_LWIN, 0, CCKEY_RWIN
 };
 
 static int MapNativeKeycode(unsigned int keycode) {
@@ -260,6 +260,7 @@ void Window_Init(void) {
 
 	win_display = display;
 	win_rootWin = RootWindow(display, screen);
+	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	/* TODO: Use Xinerama and XRandR for querying these */
 	DisplayInfo.Width  = DisplayWidth(display,  screen);
@@ -370,7 +371,7 @@ void Clipboard_GetText(cc_string* value) {
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 100; i++) {
-		Window_ProcessEvents();
+		Window_ProcessEvents(0.0);
 		if (clipboard_paste_received) {
 			String_AppendString(value, &clipboard_paste_text);
 			return;
@@ -427,7 +428,7 @@ static void ToggleFullscreen(long op) {
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 	XSync(win_display, false);
 	XRaiseWindow(win_display, win_handle);
-	Window_ProcessEvents();
+	Window_ProcessEvents(0.0);
 }
 
 cc_result Window_EnterFullscreen(void) {
@@ -443,7 +444,7 @@ void Window_Show(void) { XMapWindow(win_display, win_handle); }
 
 void Window_SetSize(int width, int height) {
 	XResizeWindow(win_display, win_handle, width, height);
-	Window_ProcessEvents();
+	Window_ProcessEvents(0.0);
 }
 
 void Window_Close(void) {
@@ -459,11 +460,11 @@ void Window_Close(void) {
 }
 
 static int MapNativeMouse(int button) {
-	if (button == 1) return KEY_LMOUSE;
-	if (button == 2) return KEY_MMOUSE;
-	if (button == 3) return KEY_RMOUSE;
-	if (button == 8) return KEY_XBUTTON1;
-	if (button == 9) return KEY_XBUTTON2;
+	if (button == 1) return CCMOUSE_L;
+	if (button == 2) return CCMOUSE_M;
+	if (button == 3) return CCMOUSE_R;
+	if (button == 8) return CCMOUSE_X1;
+	if (button == 9) return CCMOUSE_X2;
 	return 0;
 }
 
@@ -513,7 +514,7 @@ static void HandleWMPing(XEvent* e) {
 }
 static void HandleGenericEvent(XEvent* e);
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents(double delta) {
 	XEvent e;
 	Window focus;
 	int focusRevert;
@@ -1161,7 +1162,7 @@ static void HandleGenericEvent(XEvent* e) {
 	if (!rawMouseSupported || e->xcookie.extension != xiOpcode) return;
 	if (!XGetEventData(win_display, &e->xcookie)) return;
 
-	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
+	if (e->xcookie.evtype == XI_RawMotion && Input.RawMode) {
 		ev     = (XIRawEvent*)e->xcookie.data;
 		values = ev->raw_values;
 

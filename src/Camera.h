@@ -3,7 +3,7 @@
 #include "Vectors.h"
 /*
 Represents a camera, may be first or third person
-Copyright 2014-2022 ClassiCube | Licensed under BSD-3
+Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct RayTracer;
 struct Camera;
@@ -80,4 +80,5 @@ CC_API void Camera_Register(struct Camera* camera);
 void Camera_CheckFocus(void);
 void Camera_UpdateProjection(void);
 void Camera_SetFov(int fov);
+void Camera_KeyLookUpdate(void);
 #endif
