@@ -228,7 +228,7 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 }
 
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	C3D_Tex* tex = Mem_Alloc(1, sizeof(C3D_Tex), "GPU texture desc");
 	bool success = C3D_TexInit(tex, bmp->width, bmp->height, GPU_RGBA8);
 	//if (!success) Logger_Abort("Failed to create 3DS texture");

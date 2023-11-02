@@ -9,13 +9,14 @@
 #include "Options.h"
 #include "Bitmap.h"
 #include "Chat.h"
+#include "Logger.h"
 
 struct _GfxData Gfx;
 GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced performance mode (game minimised or hidden)");
 
-static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
+static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
 
@@ -334,6 +335,17 @@ static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 	} else {
 		return max(lvlsWidth, lvlsHeight);
 	}
+}
+
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
+		Logger_Abort("Textures must have power of two dimensions");
+	}
+	if (Gfx.LostContext) return 0;
+
+	return Gfx_AllocTexture(bmp, flags, mipmaps);
 }
 
 void Texture_Render(const struct Texture* tex) {

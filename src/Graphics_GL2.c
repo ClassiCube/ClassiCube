@@ -2,7 +2,6 @@
 #if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
 

@@ -568,7 +568,7 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[];
 } CCTexture;
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
 	

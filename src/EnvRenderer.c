@@ -451,7 +451,11 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 
 	weather = Env.Weather;
 	if (weather == WEATHER_SUNNY) return;
-	if (!Weather_Heightmap) InitWeatherHeightmap();
+
+	if (!Weather_Heightmap) 
+		InitWeatherHeightmap();
+	if (!weather_vb)
+		weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 	moved   = pos.X != lastPos.X || pos.Y != lastPos.Y || pos.Z != lastPos.Z;
@@ -834,9 +838,8 @@ static void UpdateAll(void) {
 	EnvRenderer_UpdateFog();
 
 	Gfx_DeleteDynamicVb(&weather_vb);
+	/* TODO: Unnecessary to delete the weather VB? */
 	if (Gfx.LostContext) return;
-	/* TODO: Don't allocate unless used? */
-	Gfx_RecreateDynamicVb(&weather_vb, VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */
 	UpdateBorderTextures();
 }

@@ -2,7 +2,6 @@
 #ifdef CC_BUILD_D3D11
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 #include "_D3D11Shaders.h"
 
@@ -202,15 +201,10 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	if (Gfx.LostContext) return 0;
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
 	desc.Width     = bmp->width;

@@ -136,7 +136,7 @@ static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp,
 	}
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	if (bmp->width < 4 || bmp->height < 4) {
 		Platform_LogConst("ERROR: Tried to create texture smaller than 4x4");
 		return 0;

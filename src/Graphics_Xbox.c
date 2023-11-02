@@ -198,7 +198,7 @@ static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
 	}
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = 16 + bmp->width * bmp->height * 4;
 	CCTexture* tex = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, 0x404);
 	

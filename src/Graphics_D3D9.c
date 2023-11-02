@@ -2,7 +2,6 @@
 #ifdef CC_BUILD_D3D9
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 
 /* Avoid pointless includes */
@@ -19,7 +18,7 @@
 /* https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline */
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
-static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
+static DWORD d3d9_formatMappings[] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 
@@ -332,18 +331,13 @@ static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int po
 	return tex;
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
 	cc_result res;
 
 	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	if (Gfx.LostContext) return 0;
 
 	if (flags & TEXTURE_FLAG_MANAGED) {
 		while ((res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,

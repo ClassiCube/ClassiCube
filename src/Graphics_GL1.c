@@ -2,7 +2,6 @@
 #if defined CC_BUILD_GL && !defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 /* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
