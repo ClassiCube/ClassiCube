@@ -242,7 +242,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	GfxResourceID id = _genBuffer();
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	return id;
@@ -266,7 +266,9 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) { 
+	return glGenLists(1); 
+}
 void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
@@ -317,13 +319,9 @@ GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GfxResourceID id;
-	cc_uint32 size;
-	if (Gfx.LostContext) return 0;
-
-	id   = _genBuffer();
-	size = maxVertices * strideSizes[fmt];
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID id = _genBuffer();
+	cc_uint32 size   = maxVertices * strideSizes[fmt];
 
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
@@ -355,8 +353,8 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
-	return (GfxResourceID)Mem_Alloc(maxVertices, strideSizes[fmt], "creating dynamic vb");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return (GfxResourceID)Mem_TryAlloc(maxVertices, strideSizes[fmt]);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {

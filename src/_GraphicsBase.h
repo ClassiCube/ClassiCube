@@ -360,6 +360,37 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Vertex buffers-----------------------------------------------------*
+*#########################################################################################################################*/
+static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
+
+GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+	GfxResourceID vb;
+	/* if (Gfx.LostContext) return 0; TODO check this ???? probably breaks things */
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
+
+		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating static VB)");
+	}
+}
+
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID vb;
+	if (Gfx.LostContext) return 0; 
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocDynamicVb(fmt, maxVertices))) return vb;
+
+		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating dynamic VB)");
+	}
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Graphics component---------------------------------------------------*
 *#########################################################################################################################*/
 static void OnContextLost(void* obj)      { Gfx_FreeState(); }

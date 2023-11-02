@@ -891,7 +891,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { GPUBuffer_Unref(ib); }
 /*########################################################################################################################*
 *-------------------------------------------------------Vertex buffers----------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return GPUBuffer_Alloc(count * strideSizes[fmt]);
 }
 
@@ -911,7 +911,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return GPUBuffer_Alloc(maxVertices * strideSizes[fmt]);
 }
 

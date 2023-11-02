@@ -379,12 +379,9 @@ static cc_uint8* gfx_vertices;
 static cc_uint16* gfx_indices;
 
 static void* AllocBuffer(int count, int elemSize) {
-	void* ptr = linearAlloc(count * elemSize);
+	return linearAlloc(count * elemSize);
 	//cc_uintptr addr = ptr;
 	//Platform_Log3("BUFFER CREATE: %i X %i = %x", &count, &elemSize, &addr);
-	
-	if (!ptr) Logger_Abort("Failed to allocate memory for buffer");
-	return ptr;
 }
 
 static void FreeBuffer(GfxResourceID* buffer) {
@@ -396,6 +393,8 @@ static void FreeBuffer(GfxResourceID* buffer) {
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	void* ib = AllocBuffer(count, sizeof(cc_uint16));
+	if (!ib) Logger_Abort("Failed to allocate memory for index buffer");
+
 	fillFunc(ib, count, obj);
 	return ib;
 }
@@ -405,7 +404,7 @@ void Gfx_BindIb(GfxResourceID ib)    { gfx_indices = ib; }
 void Gfx_DeleteIb(GfxResourceID* ib) { FreeBuffer(ib); }
 
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return AllocBuffer(count, strideSizes[fmt]);
 }
 
@@ -431,7 +430,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices)  {
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return AllocBuffer(maxVertices, strideSizes[fmt]);
 }
 

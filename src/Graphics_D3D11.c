@@ -337,11 +337,11 @@ static ID3D11Buffer* CreateVertexBuffer(VertexFormat fmt, int count, cc_bool dyn
 	/* TODO set data initially */
 
 	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, NULL, &buffer);
-	if (hr) Logger_Abort2(hr, "Failed to create index buffer");
+	if (hr) Logger_Abort2(hr, "Failed to create vertex buffer");
 	return buffer;
 }
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	/* TODO immutable? */
 	return CreateVertexBuffer(fmt, count, false);
 }
@@ -369,8 +369,7 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	// TODO pass true instead
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return CreateVertexBuffer(fmt, maxVertices, true);
 }
 
