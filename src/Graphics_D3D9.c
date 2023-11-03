@@ -2,7 +2,6 @@
 #ifdef CC_BUILD_D3D9
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 
 /* Avoid pointless includes */
@@ -19,7 +18,7 @@
 /* https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline */
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
-static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
+static DWORD d3d9_formatMappings[] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 
@@ -247,17 +246,6 @@ static void Gfx_RestoreState(void) {
 	D3D9_RestoreRenderStates();
 }
 
-static cc_bool D3D9_CheckResult(cc_result res, const char* func) {
-	if (!res) return true;
-
-	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY) {
-		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory!");
-	} else {
-		Logger_Abort2(res, func);
-	}
-	return false;
-}
-
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -320,6 +308,17 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
+static cc_bool D3D9_CheckResult(cc_result res, const char* func) {
+	if (!res) return true;
+
+	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY) {
+		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory!");
+	} else {
+		Logger_Abort2(res, func);
+	}
+	return false;
+}
+
 static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int pool) {
 	IDirect3DTexture9* tex;
 	cc_result res;
@@ -332,18 +331,13 @@ static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int po
 	return tex;
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
 	cc_result res;
 
 	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	if (Gfx.LostContext) return 0;
 
 	if (flags & TEXTURE_FLAG_MANAGED) {
 		while ((res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
@@ -596,14 +590,16 @@ void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 *#########################################################################################################################*/
 static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int count, DWORD usage) {
 	IDirect3DVertexBuffer9* vbuffer;
-	cc_result res;
 	int size = count * strideSizes[fmt];
+	cc_result res;
 
-	for (;;) {
-		res = IDirect3DDevice9_CreateVertexBuffer(device, size, usage,
-					d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
-		if (D3D9_CheckResult(res, "D3D9_CreateVb failed")) break;
-	}
+	res = IDirect3DDevice9_CreateVertexBuffer(device, size, usage,
+				d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
+
+	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY)
+		return NULL;
+
+	if (res) Logger_Abort2(res, "D3D9_AllocVertexBuffer failed");
 	return vbuffer;
 }
 
@@ -627,9 +623,11 @@ static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lock
 	return dst;
 }
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
 }
+
+void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
@@ -637,7 +635,6 @@ void Gfx_BindVb(GfxResourceID vb) {
 	if (res) Logger_Abort2(res, "D3D9_BindVb");
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return D3D9_LockVb(vb, fmt, count, 0);
 }
@@ -649,6 +646,43 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_stride);
+	if (res) Logger_Abort2(res, "D3D9_BindDynamicVb");
+}
+
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return D3D9_LockVb(vb, fmt, count, D3DLOCK_DISCARD);
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	Gfx_UnlockVb(vb);
+	Gfx_BindDynamicVb(vb); /* TODO: Inline this? */
+}
+
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	int size = vCount * gfx_stride;
+	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
+	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
+
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
+	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Vertex rendering----------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	cc_result res;
 	if (fmt == gfx_format) return;
@@ -686,33 +720,6 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
-*#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	if (Gfx.LostContext) return 0;
-	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
-}
-
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return D3D9_LockVb(vb, fmt, count, D3DLOCK_DISCARD);
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	Gfx_UnlockVb(vb);
-	Gfx_BindVb(vb); /* TODO: Inline this? */
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	int size = vCount * gfx_stride;
-	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
-	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
-
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
-	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
 

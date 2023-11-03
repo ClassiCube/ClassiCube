@@ -2,7 +2,6 @@
 #ifdef CC_BUILD_D3D11
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 #include "_D3D11Shaders.h"
 
@@ -202,15 +201,10 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	if (Gfx.LostContext) return 0;
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
 	desc.Width     = bmp->width;
@@ -343,11 +337,11 @@ static ID3D11Buffer* CreateVertexBuffer(VertexFormat fmt, int count, cc_bool dyn
 	/* TODO set data initially */
 
 	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, NULL, &buffer);
-	if (hr) Logger_Abort2(hr, "Failed to create index buffer");
+	if (hr) Logger_Abort2(hr, "Failed to create vertex buffer");
 	return buffer;
 }
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	/* TODO immutable? */
 	return CreateVertexBuffer(fmt, count, false);
 }
@@ -371,6 +365,46 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	tmp = NULL;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return CreateVertexBuffer(fmt, maxVertices, true);
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { 
+	ID3D11Buffer* buffer = (ID3D11Buffer*)(*vb);
+	if (buffer) ID3D11Buffer_Release(buffer);
+	*vb = NULL;
+}
+
+static D3D11_MAPPED_SUBRESOURCE mapDesc;
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	mapDesc.pData = NULL;
+
+	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
+	if (hr) Logger_Abort2(hr, "Failed to lock dynamic VB");
+	return mapDesc.pData;
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	ID3D11DeviceContext_Unmap(context, buffer, 0);
+	Gfx_BindDynamicVb(vb);
+}
+
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
+	Mem_Copy(data, vertices, vCount * gfx_stride);
+	Gfx_UnlockDynamicVb(vb);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Vertex rendering----------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
@@ -397,37 +431,6 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	ID3D11DeviceContext_DrawIndexed(context, ICOUNT(verticesCount), 0, startVertex);
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
-*#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	// TODO pass true instead
-	return CreateVertexBuffer(fmt, maxVertices, true);
-}
-
-static D3D11_MAPPED_SUBRESOURCE mapDesc;
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	mapDesc.pData = NULL;
-
-	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
-	if (hr) Logger_Abort2(hr, "Failed to lock dynamic VB");
-	return mapDesc.pData;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	ID3D11DeviceContext_Unmap(context, buffer, 0);
-	Gfx_BindVb(vb);
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
-	Mem_Copy(data, vertices, vCount * gfx_stride);
-	Gfx_UnlockDynamicVb(vb);
 }
 
 
@@ -512,6 +515,12 @@ void Gfx_BindIb(GfxResourceID ib) {
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
+	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
+	static UINT32 offset[] = { 0 };
+	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
 	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
 	static UINT32 offset[] = { 0 };
 	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);

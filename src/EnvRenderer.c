@@ -272,11 +272,42 @@ static GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 cc_bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
+static void AllocateSkyboxVB(void) {
+	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
+		/* Front quad */
+		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
+		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
+		/* Left quad */
+		{ -1, -1,  1,  0, 0.00f, 1.00f }, { -1, -1, -1,  0, 0.25f, 1.00f },
+		{ -1,  1, -1,  0, 0.25f, 0.50f }, { -1,  1,  1,  0, 0.00f, 0.50f },
+		/* Back quad */
+		{  1, -1,  1,  0, 0.75f, 1.00f }, { -1, -1,  1,  0, 1.00f, 1.00f },
+		{ -1,  1,  1,  0, 1.00f, 0.50f }, {  1,  1,  1,  0, 0.75f, 0.50f },
+		/* Right quad */
+		{  1, -1, -1,  0, 0.50f, 1.00f }, {  1, -1,  1,  0, 0.75f, 1.00f },
+		{  1,  1,  1,  0, 0.75f, 0.50f }, {  1,  1, -1,  0, 0.50f, 0.50f },
+		/* Top quad */
+		{  1,  1, -1,  0, 0.50f, 0.50f }, {  1,  1,  1,  0, 0.50f, 0.00f },
+		{ -1,  1,  1,  0, 0.25f, 0.00f }, { -1,  1, -1,  0, 0.25f, 0.50f },
+		/* Bottom quad */
+		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
+		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
+	};
+	struct VertexTextured* data;
+	int i;
+
+	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
+										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	Mem_Copy(data, vertices, sizeof(vertices));
+	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
+	Gfx_UnlockVb(skybox_vb);
+}
+
 void EnvRenderer_RenderSkybox(void) {
 	struct Matrix m, rotX, rotY, view;
 	float rotTime;
 	Vec3 pos;
-	if (!skybox_vb) return;
+	if (!skybox_vb) AllocateSkyboxVB();
 
 	Gfx_SetDepthWrite(false);
 	Gfx_BindTexture(skybox_tex);
@@ -302,42 +333,6 @@ void EnvRenderer_RenderSkybox(void) {
 	Gfx_SetDepthWrite(true);
 }
 
-static void UpdateSkybox(void) {
-	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
-		/* Front quad */
-		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
-		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
-		/* Left quad */
-		{ -1, -1,  1,  0, 0.00f, 1.00f }, { -1, -1, -1,  0, 0.25f, 1.00f },
-		{ -1,  1, -1,  0, 0.25f, 0.50f }, { -1,  1,  1,  0, 0.00f, 0.50f },
-		/* Back quad */
-		{  1, -1,  1,  0, 0.75f, 1.00f }, { -1, -1,  1,  0, 1.00f, 1.00f },
-		{ -1,  1,  1,  0, 1.00f, 0.50f }, {  1,  1,  1,  0, 0.75f, 0.50f },
-		/* Right quad */
-		{  1, -1, -1,  0, 0.50f, 1.00f }, {  1, -1,  1,  0, 0.75f, 1.00f },
-		{  1,  1,  1,  0, 0.75f, 0.50f }, {  1,  1, -1,  0, 0.50f, 0.50f },
-		/* Top quad */
-		{  1,  1, -1,  0, 0.50f, 0.50f }, {  1,  1,  1,  0, 0.50f, 0.00f },
-		{ -1,  1,  1,  0, 0.25f, 0.00f }, { -1,  1, -1,  0, 0.25f, 0.50f },
-		/* Bottom quad */
-		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
-		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
-	};
-	struct VertexTextured* data;
-	int i;
-
-	Gfx_DeleteVb(&skybox_vb);
-	if (Gfx.LostContext)     return;
-	if (EnvRenderer_Minimal) return;
-
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
-										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
-	Mem_Copy(data, vertices, sizeof(vertices));
-	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
-	Gfx_UnlockVb(skybox_vb);
-}
-
-
 /*########################################################################################################################*
 *----------------------------------------------------------Weather--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -347,7 +342,10 @@ static double weather_accumulator;
 static IVec3 lastPos;
 
 #define WEATHER_EXTENT 4
-#define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
+#define WEATHER_VERTS  8 /* 2 quads per tile */
+#define WEATHER_RANGE  (WEATHER_EXTENT * 2 + 1)
+
+#define WEATHER_VERTS_COUNT WEATHER_RANGE * WEATHER_RANGE * WEATHER_VERTS
 #define Weather_Pack(x, z) ((x) * World.Length + (z))
 
 static void InitWeatherHeightmap(void) {
@@ -428,26 +426,31 @@ static float CalcRainAlphaAt(float x) {
 	return 178 + falloff * Env.WeatherFade;
 }
 
+struct RainCoord { int dx, dz; float y; };
 static RNGState snowDirRng;
+
 void EnvRenderer_RenderWeather(double deltaTime) {
-	struct VertexTextured vertices[WEATHER_VERTS_COUNT];
+	struct RainCoord coords[WEATHER_RANGE * WEATHER_RANGE];
+	int i, weather, numCoords = 0;
 	struct VertexTextured* v;
-	int weather, vCount;
-	IVec3 pos;
 	cc_bool moved, particles;
 	float speed, vOffsetBase, vOffset;
+	IVec3 pos;
 
-	PackedCol col;
+	PackedCol color;
 	int dist, dx, dz, x, z;
 	float alpha, y, height;
-	float uOffset1, uOffset2;
+	float uOffset1, uOffset2, uSpeed;
 	float worldV, v1, v2, vPlane1Offset;
 	float x1,y1,z1, x2,y2,z2;
 
 	weather = Env.Weather;
 	if (weather == WEATHER_SUNNY) return;
-	if (!Weather_Heightmap) InitWeatherHeightmap();
-	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
+
+	if (!Weather_Heightmap) 
+		InitWeatherHeightmap();
+	if (!weather_vb)
+		weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 	moved   = pos.X != lastPos.X || pos.Y != lastPos.Y || pos.Z != lastPos.Z;
@@ -457,75 +460,93 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.Y += 64;
 	pos.Y = max(World.Height, pos.Y);
 
-	speed         = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
-	vOffsetBase   = (float)Game.Time * speed;
-	vPlane1Offset = weather == WEATHER_RAINY ? 0 : 0.25f; /* Offset v on 1 plane while snowing to avoid the unnatural mirrored texture effect */
-	particles     = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
-
-	v   = vertices;
-	col = Env.SunCol;
+	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25 || moved);
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
 			x = pos.X + dx; z = pos.Z + dz;
 
 			y = GetRainHeight(x, z);
-			height = pos.Y - y;
-			if (height <= 0) continue;
+			if (pos.Y <= y) continue;
+			if (particles) Particles_RainSnowEffect((float)x, y, (float)z);
 
-			if (particles && (weather_accumulator >= 0.25 || moved)) {
-				Particles_RainSnowEffect((float)x, y, (float)z);
-			}
-
-			dist  = dx * dx + dz * dz;
-			alpha = CalcRainAlphaAt((float)dist);
-			Math_Clamp(alpha, 0.0f, 255.0f);
-			col   = (col & PACKEDCOL_RGB_MASK) | PackedCol_A_Bits(alpha);
-
-			uOffset1 = 0;
-			uOffset2 = 0;
-			if (weather == WEATHER_SNOWY) {
-				Random_Seed(&snowDirRng, (x + 1217 * z) & 0x7fffffff);
-				/* Multiply horizontal speed by a random float from -1 to 1 */
-				uOffset1 = ((float)Game.Time * (Random_Float(&snowDirRng) * 2 + -1)) * Env.WeatherSpeed * 0.5f;
-				uOffset2 = ((float)Game.Time * (Random_Float(&snowDirRng) * 2 + -1)) * Env.WeatherSpeed * 0.5f;
-				/* Multiply vertical speed by a random float from 1.0 to 0.25 */
-				vOffset = vOffsetBase * (float)(Random_Float(&snowDirRng) * (1.0f - 0.25f) + 0.25f);
-			} else {
-				vOffset = vOffsetBase;
-			}
-			
-			worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
-			v1 = y            / 6.0f + worldV; 
-			v2 = (y + height) / 6.0f + worldV;
-			x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
-			x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
-
-			v->X = x1; v->Y = y1; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v1+vPlane1Offset; v++;
-			v->X = x1; v->Y = y2; v->Z = z1; v->Col = col; v->U = 0.0f + uOffset1; v->V = v2+vPlane1Offset; v++;
-			v->X = x2; v->Y = y2; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v2+vPlane1Offset; v++;
-			v->X = x2; v->Y = y1; v->Z = z2; v->Col = col; v->U = 1.0f + uOffset1; v->V = v1+vPlane1Offset; v++;
-
-			v->X = x2; v->Y = y1; v->Z = z1; v->Col = col; v->U = 1.0f + uOffset2; v->V = v1; v++;
-			v->X = x2; v->Y = y2; v->Z = z1; v->Col = col; v->U = 1.0f + uOffset2; v->V = v2; v++;
-			v->X = x1; v->Y = y2; v->Z = z2; v->Col = col; v->U = 0.0f + uOffset2; v->V = v2; v++;
-			v->X = x1; v->Y = y1; v->Z = z2; v->Col = col; v->U = 0.0f + uOffset2; v->V = v1; v++;
+			coords[numCoords].dx = dx;
+			coords[numCoords].y  = y;
+			coords[numCoords].dz = dz;
+			numCoords++;
 		}
 	}
 
-	if (particles && (weather_accumulator >= 0.25f || moved)) {
-		weather_accumulator = 0;
-	}
-	if (v == vertices) return;
+	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
+	if (particles) weather_accumulator = 0;
+	if (!numCoords) return;
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	vCount = (int)(v - vertices);
-	Gfx_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
+	v = (struct VertexTextured*)Gfx_LockDynamicVb(weather_vb, 
+										VERTEX_FORMAT_TEXTURED, numCoords * WEATHER_VERTS);
+
+	color = Env.SunCol;
+	speed = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
+
+	vOffsetBase   = (float)Game.Time * speed;
+	vPlane1Offset = weather == WEATHER_RAINY  ? 0 : 0.25f; /* Offset v on 1 plane while snowing to avoid the unnatural mirrored texture effect */
+
+	for (i = 0; i < numCoords; i++)
+	{
+		dx = coords[i].dx;
+		y  = coords[i].y;
+		dz = coords[i].dz;
+
+		height = pos.Y - y;
+
+		dist  = dx * dx + dz * dz;
+		alpha = CalcRainAlphaAt((float)dist);
+		Math_Clamp(alpha, 0.0f, 255.0f);
+		color = (color & PACKEDCOL_RGB_MASK) | PackedCol_A_Bits(alpha);
+
+		x = dx + pos.X;
+		z = dz + pos.Z;
+
+		uOffset1 = 0;
+		uOffset2 = 0;
+		if (weather == WEATHER_SNOWY) {
+			Random_Seed(&snowDirRng, (x + 1217 * z) & 0x7fffffff);
+
+			/* Multiply horizontal speed by a random float from -1 to 1 */
+			uSpeed   = (float)Game.Time * Env.WeatherSpeed * 0.5f;
+			uOffset1 = uSpeed * (Random_Float(&snowDirRng) * 2 + -1);
+			uOffset2 = uSpeed * (Random_Float(&snowDirRng) * 2 + -1);
+
+			/* Multiply vertical speed by a random float from 1.0 to 0.25 */
+			vOffset = vOffsetBase * (float)(Random_Float(&snowDirRng) * (1.0f - 0.25f) + 0.25f);
+		} else {
+			vOffset = vOffsetBase;
+		}
+		
+		worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
+		v1 = y            / 6.0f + worldV; 
+		v2 = (y + height) / 6.0f + worldV;
+		x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
+		x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
+
+		v->X = x1; v->Y = y1; v->Z = z1; v->Col = color; v->U = uOffset1;        v->V = v1 + vPlane1Offset; v++;
+		v->X = x1; v->Y = y2; v->Z = z1; v->Col = color; v->U = uOffset1;        v->V = v2 + vPlane1Offset; v++;
+		v->X = x2; v->Y = y2; v->Z = z2; v->Col = color; v->U = uOffset1 + 1.0f; v->V = v2 + vPlane1Offset; v++;
+		v->X = x2; v->Y = y1; v->Z = z2; v->Col = color; v->U = uOffset1 + 1.0f; v->V = v1 + vPlane1Offset; v++;
+
+		v->X = x2; v->Y = y1; v->Z = z1; v->Col = color; v->U = uOffset2 + 1.0f; v->V = v1; v++;
+		v->X = x2; v->Y = y2; v->Z = z1; v->Col = color; v->U = uOffset2 + 1.0f; v->V = v2; v++;
+		v->X = x1; v->Y = y2; v->Z = z2; v->Col = color; v->U = uOffset2;        v->V = v2; v++;
+		v->X = x1; v->Y = y1; v->Z = z2; v->Col = color; v->U = uOffset2;        v->V = v1; v++;
+	}
+
+	Gfx_UnlockDynamicVb(weather_vb);
+	Gfx_DrawVb_IndexedTris(numCoords * WEATHER_VERTS);
 
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(true);
@@ -808,13 +829,12 @@ static void UpdateAll(void) {
 	UpdateMapEdges();
 	UpdateClouds();
 	UpdateSky();
-	UpdateSkybox();
+	Gfx_DeleteVb(&skybox_vb);
 	EnvRenderer_UpdateFog();
 
 	Gfx_DeleteDynamicVb(&weather_vb);
+	/* TODO: Unnecessary to delete the weather VB? */
 	if (Gfx.LostContext) return;
-	/* TODO: Don't allocate unless used? */
-	Gfx_RecreateDynamicVb(&weather_vb, VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */
 	UpdateBorderTextures();
 }
@@ -873,7 +893,7 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 		UpdateSky();
 		UpdateClouds();
 	} else if (envVar == ENV_VAR_SKYBOX_COLOR) {
-		UpdateSkybox();
+		Gfx_DeleteVb(&skybox_vb);
 	}
 }
 

@@ -2,7 +2,6 @@
 #if defined CC_BUILD_GL && !defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 /* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
@@ -243,18 +242,19 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	GfxResourceID id = _genBuffer();
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	return id;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, vb); }
+void Gfx_BindVb(GfxResourceID vb) { 
+	_glBindBuffer(GL_ARRAY_BUFFER, vb); 
+}
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID id = *vb;
-	if (!id) return;
-	_delBuffer(id);
+	if (id) _delBuffer(id);
 	*vb = 0;
 }
 
@@ -266,7 +266,9 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) { 
+	return glGenLists(1); 
+}
 void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
@@ -317,17 +319,23 @@ GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GfxResourceID id;
-	cc_uint32 size;
-	if (Gfx.LostContext) return 0;
-
-	id   = _genBuffer();
-	size = maxVertices * strideSizes[fmt];
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID id = _genBuffer();
+	cc_uint32 size   = maxVertices * strideSizes[fmt];
 
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	_glBindBuffer(GL_ARRAY_BUFFER, vb); 
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
+	GfxResourceID id = *vb;
+	if (id) _delBuffer(id);
+	*vb = 0;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
@@ -345,8 +353,8 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
-	return (GfxResourceID)Mem_Alloc(maxVertices, strideSizes[fmt], "creating dynamic vb");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return (GfxResourceID)Mem_TryAlloc(maxVertices, strideSizes[fmt]);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
@@ -368,6 +376,97 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Mem_Copy((void*)vb, vertices, vCount * gfx_stride);
 }
 #endif
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Drawing--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_GL11
+	/* point to client side dynamic array */
+	#define VB_PTR ((cc_uint8*)dynamicListData)
+	#define IB_PTR gl_indices
+#else
+	/* no client side array, use vertex buffer object */
+	#define VB_PTR 0
+	#define IB_PTR NULL
+#endif
+
+static void GL_SetupVbColoured(void) {
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
+}
+
+static void GL_SetupVbTextured(void) {
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
+}
+
+static void GL_SetupVbColoured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
+	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+}
+
+static void GL_SetupVbTextured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
+
+		gfx_setupVBFunc      = GL_SetupVbTextured;
+		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
+	} else {
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
+
+		gfx_setupVBFunc      = GL_SetupVbColoured;
+		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
+	}
+}
+
+void Gfx_DrawVb_Lines(int verticesCount) {
+	gfx_setupVBFunc();
+	glDrawArrays(GL_LINES, 0, verticesCount);
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+#ifdef CC_BUILD_GL11
+	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
+#endif
+	gfx_setupVBRangeFunc(startVertex);
+	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+}
+
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
+#ifdef CC_BUILD_GL11
+	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
+#endif
+	gfx_setupVBFunc();
+	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+}
+
+#ifdef CC_BUILD_GL11
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList(activeList); }
+#else
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),  GL_UNSIGNED_SHORT, IB_PTR);
+}
+#endif /* !CC_BUILD_GL11 */
 
 
 /*########################################################################################################################*
@@ -612,95 +711,4 @@ static void GLBackend_Init(void) {
 	}
 }
 #endif
-
-
-/*########################################################################################################################*
-*----------------------------------------------------------Drawing--------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_GL11
-/* point to client side dynamic array */
-#define VB_PTR ((cc_uint8*)dynamicListData)
-#define IB_PTR gl_indices
-#else
-/* no client side array, use vertex buffer object */
-#define VB_PTR 0
-#define IB_PTR NULL
-#endif
-
-static void GL_SetupVbColoured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
-}
-
-static void GL_SetupVbTextured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
-}
-
-static void GL_SetupVbColoured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
-}
-
-static void GL_SetupVbTextured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-}
-
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-
-		gfx_setupVBFunc      = GL_SetupVbTextured;
-		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
-	} else {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisable(GL_TEXTURE_2D);
-
-		gfx_setupVBFunc      = GL_SetupVbColoured;
-		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
-	}
-}
-
-void Gfx_DrawVb_Lines(int verticesCount) {
-	gfx_setupVBFunc();
-	glDrawArrays(GL_LINES, 0, verticesCount);
-}
-
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-#ifdef CC_BUILD_GL11
-	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
-#endif
-	gfx_setupVBRangeFunc(startVertex);
-	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
-}
-
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-#ifdef CC_BUILD_GL11
-	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
-#endif
-	gfx_setupVBFunc();
-	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
-}
-
-#ifdef CC_BUILD_GL11
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList(activeList); }
-#else
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
-}
-#endif /* !CC_BUILD_GL11 */
 #endif

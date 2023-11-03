@@ -9,13 +9,14 @@
 #include "Options.h"
 #include "Bitmap.h"
 #include "Chat.h"
+#include "Logger.h"
 
 struct _GfxData Gfx;
 GfxResourceID Gfx_defaultIb;
-GfxResourceID Gfx_quadVb, Gfx_texVb;
+static GfxResourceID Gfx_quadVb, Gfx_texVb;
 const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced performance mode (game minimised or hidden)");
 
-static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
+static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
 
@@ -142,44 +143,47 @@ void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(*vb, fmt, count);
 }
 
-void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount) {
-	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawVb_IndexedTris(vCount);
-}
-
 #ifndef CC_BUILD_3DS
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
-	struct VertexColoured verts[4];
-	struct VertexColoured* v = verts;
+	struct VertexColoured* v;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 
 	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = color; v++;
 	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = color; v++;
 	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = color; v++;
 	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = color; v++;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
+	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
-	struct VertexColoured verts[4];
-	struct VertexColoured* v = verts;
+	struct VertexColoured* v;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 
 	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
 	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
 	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
+	Gfx_UnlockDynamicVb(Gfx_quadVb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
-	struct VertexTextured texVerts[4];
-	struct VertexTextured* ptr = texVerts;
-	Gfx_Make2DQuad(tex, color, &ptr);
+	struct VertexTextured* ptr;
+
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
+	ptr = (struct VertexTextured*)Gfx_LockDynamicVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
+
+	Gfx_Make2DQuad(tex, color, &ptr);
+
+	Gfx_UnlockDynamicVb(Gfx_texVb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 #endif
 
@@ -333,6 +337,17 @@ static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 	}
 }
 
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
+		Logger_Abort("Textures must have power of two dimensions");
+	}
+	if (Gfx.LostContext) return 0;
+
+	return Gfx_AllocTexture(bmp, flags, mipmaps);
+}
+
 void Texture_Render(const struct Texture* tex) {
 	Gfx_BindTexture(tex->ID);
 	Gfx_Draw2DTexture(tex, PACKEDCOL_WHITE);
@@ -341,6 +356,37 @@ void Texture_Render(const struct Texture* tex) {
 void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 	Gfx_BindTexture(tex->ID);
 	Gfx_Draw2DTexture(tex, shadeColor);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Vertex buffers-----------------------------------------------------*
+*#########################################################################################################################*/
+static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
+
+GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+	GfxResourceID vb;
+	/* if (Gfx.LostContext) return 0; TODO check this ???? probably breaks things */
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocStaticVb(fmt, count))) return vb;
+
+		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating static VB)");
+	}
+}
+
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID vb;
+	if (Gfx.LostContext) return 0; 
+
+	for (;;)
+	{
+		if ((vb = Gfx_AllocDynamicVb(fmt, maxVertices))) return vb;
+
+		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating dynamic VB)");
+	}
 }
 
 

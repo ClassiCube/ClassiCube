@@ -108,7 +108,6 @@ static int selections_count;
 static struct SelectionBox selections_list[SELECTIONS_MAX];
 static cc_uint8 selections_ids[SELECTIONS_MAX];
 static GfxResourceID selections_VB, selections_LineVB;
-static cc_bool selections_used;
 
 void Selections_Add(cc_uint8 id, const IVec3* p1, const IVec3* p2, PackedCol color) {
 	struct SelectionBox sel;
@@ -142,10 +141,9 @@ static void Selections_ContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&selections_LineVB);
 }
 
-static void Selections_ContextRecreated(void* obj) {
-	if (!selections_used) return;
-	Gfx_RecreateDynamicVb(&selections_VB,     VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
-	Gfx_RecreateDynamicVb(&selections_LineVB, VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+static void AllocateVertexBuffers(void) {
+	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
 }
 
 static void Selections_QuickSort(int left, int right) {
@@ -181,10 +179,9 @@ void Selections_Render(void) {
 	}
 	Selections_QuickSort(0, selections_count - 1);
 
-	if (!selections_VB) { /* lazy init as most servers don't use this */
-		selections_used = true;
-		Selections_ContextRecreated(NULL);
-	}
+	/* lazy init as most servers don't use this */
+	if (!selections_VB) AllocateVertexBuffers();
+
 	count = selections_count * SELECTIONS_VERTICES;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
@@ -215,8 +212,7 @@ void Selections_Render(void) {
 *--------------------------------------------------Selections component---------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
-	Event_Register_(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
-	Event_Register_(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
+	Event_Register_(&GfxEvents.ContextLost, NULL, Selections_ContextLost);
 }
 
 static void OnReset(void) { selections_count = 0; }
