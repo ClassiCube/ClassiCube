@@ -13,7 +13,7 @@
 
 struct _GfxData Gfx;
 GfxResourceID Gfx_defaultIb;
-GfxResourceID Gfx_quadVb, Gfx_texVb;
+static GfxResourceID Gfx_quadVb, Gfx_texVb;
 const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced performance mode (game minimised or hidden)");
 
 static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };

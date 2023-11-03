@@ -463,7 +463,7 @@ static void Game_Render3D(double delta, float t) {
 
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
-	Entities_RenderNames();
+	EntityNames_Render();
 
 	Particles_Render(t);
 	Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
@@ -496,7 +496,7 @@ static void Game_Render3D(double delta, float t) {
 	}
 
 	Selections_Render();
-	Entities_RenderHoveredNames();
+	EntityNames_RenderHovered();
 	Camera_KeyLookUpdate();
 	InputHandler_Tick();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
@@ -573,6 +573,7 @@ static void Game_RenderFrame(double delta) {
 			Gfx_RecreateContext();
 			/* all good, context is back */
 		} else {
+			Game.Time += delta; /* TODO: Not set in two places? */
 			Server.Tick(NULL);
 			Thread_Sleep(16);
 			return;

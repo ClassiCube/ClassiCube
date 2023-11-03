@@ -190,6 +190,8 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return memalign(16, maxVertices * strideSizes[fmt]);
 }
 
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
+
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
 	return vb; 

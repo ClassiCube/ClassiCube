@@ -272,11 +272,42 @@ static GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 cc_bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
+static void AllocateSkyboxVB(void) {
+	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
+		/* Front quad */
+		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
+		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
+		/* Left quad */
+		{ -1, -1,  1,  0, 0.00f, 1.00f }, { -1, -1, -1,  0, 0.25f, 1.00f },
+		{ -1,  1, -1,  0, 0.25f, 0.50f }, { -1,  1,  1,  0, 0.00f, 0.50f },
+		/* Back quad */
+		{  1, -1,  1,  0, 0.75f, 1.00f }, { -1, -1,  1,  0, 1.00f, 1.00f },
+		{ -1,  1,  1,  0, 1.00f, 0.50f }, {  1,  1,  1,  0, 0.75f, 0.50f },
+		/* Right quad */
+		{  1, -1, -1,  0, 0.50f, 1.00f }, {  1, -1,  1,  0, 0.75f, 1.00f },
+		{  1,  1,  1,  0, 0.75f, 0.50f }, {  1,  1, -1,  0, 0.50f, 0.50f },
+		/* Top quad */
+		{  1,  1, -1,  0, 0.50f, 0.50f }, {  1,  1,  1,  0, 0.50f, 0.00f },
+		{ -1,  1,  1,  0, 0.25f, 0.00f }, { -1,  1, -1,  0, 0.25f, 0.50f },
+		/* Bottom quad */
+		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
+		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
+	};
+	struct VertexTextured* data;
+	int i;
+
+	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
+										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
+	Mem_Copy(data, vertices, sizeof(vertices));
+	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
+	Gfx_UnlockVb(skybox_vb);
+}
+
 void EnvRenderer_RenderSkybox(void) {
 	struct Matrix m, rotX, rotY, view;
 	float rotTime;
 	Vec3 pos;
-	if (!skybox_vb) return;
+	if (!skybox_vb) AllocateSkyboxVB();
 
 	Gfx_SetDepthWrite(false);
 	Gfx_BindTexture(skybox_tex);
@@ -301,42 +332,6 @@ void EnvRenderer_RenderSkybox(void) {
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 	Gfx_SetDepthWrite(true);
 }
-
-static void UpdateSkybox(void) {
-	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
-		/* Front quad */
-		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
-		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
-		/* Left quad */
-		{ -1, -1,  1,  0, 0.00f, 1.00f }, { -1, -1, -1,  0, 0.25f, 1.00f },
-		{ -1,  1, -1,  0, 0.25f, 0.50f }, { -1,  1,  1,  0, 0.00f, 0.50f },
-		/* Back quad */
-		{  1, -1,  1,  0, 0.75f, 1.00f }, { -1, -1,  1,  0, 1.00f, 1.00f },
-		{ -1,  1,  1,  0, 1.00f, 0.50f }, {  1,  1,  1,  0, 0.75f, 0.50f },
-		/* Right quad */
-		{  1, -1, -1,  0, 0.50f, 1.00f }, {  1, -1,  1,  0, 0.75f, 1.00f },
-		{  1,  1,  1,  0, 0.75f, 0.50f }, {  1,  1, -1,  0, 0.50f, 0.50f },
-		/* Top quad */
-		{  1,  1, -1,  0, 0.50f, 0.50f }, {  1,  1,  1,  0, 0.50f, 0.00f },
-		{ -1,  1,  1,  0, 0.25f, 0.00f }, { -1,  1, -1,  0, 0.25f, 0.50f },
-		/* Bottom quad */
-		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
-		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
-	};
-	struct VertexTextured* data;
-	int i;
-
-	Gfx_DeleteVb(&skybox_vb);
-	if (Gfx.LostContext)     return;
-	if (EnvRenderer_Minimal) return;
-
-	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
-										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
-	Mem_Copy(data, vertices, sizeof(vertices));
-	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
-	Gfx_UnlockVb(skybox_vb);
-}
-
 
 /*########################################################################################################################*
 *----------------------------------------------------------Weather--------------------------------------------------------*
@@ -834,7 +829,7 @@ static void UpdateAll(void) {
 	UpdateMapEdges();
 	UpdateClouds();
 	UpdateSky();
-	UpdateSkybox();
+	Gfx_DeleteVb(&skybox_vb);
 	EnvRenderer_UpdateFog();
 
 	Gfx_DeleteDynamicVb(&weather_vb);
@@ -898,7 +893,7 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 		UpdateSky();
 		UpdateClouds();
 	} else if (envVar == ENV_VAR_SKYBOX_COLOR) {
-		UpdateSkybox();
+		Gfx_DeleteVb(&skybox_vb);
 	}
 }
 

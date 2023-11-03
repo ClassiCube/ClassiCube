@@ -56,7 +56,6 @@ CC_VAR extern struct _GfxData {
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
-extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 extern const cc_string Gfx_LowPerfMessage;
 
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)

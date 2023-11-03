@@ -9,14 +9,28 @@
 #include "Graphics.h"
 #include "Model.h"
 #include "World.h"
+#include "Particle.h"
+#include "Drawer2D.h"
 
 /*########################################################################################################################*
 *------------------------------------------------------Entity Shadow------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool shadows_boundTex;
+static GfxResourceID shadows_VB;
 static GfxResourceID shadows_tex;
 static float shadow_radius, shadow_uvScale;
 struct ShadowData { float Y; BlockID Block; cc_uint8 A; };
+
+/* Circle shadows extend at most 4 blocks vertically */
+#define SHADOW_MAX_RANGE 4 
+/* Circle shadows on blocks underneath the top block can be chopped up into at most 4 pieces */
+#define SHADOW_MAX_PER_SUB_BLOCK (4 * 4) 
+/* Circle shadows use at most:
+   - 4 vertices for top most block
+   - MAX_PER_SUB_BLOCK for everyblock underneath the top block */
+#define SHADOW_MAX_PER_COLUMN (4 + SHADOW_MAX_PER_SUB_BLOCK * (SHADOW_MAX_RANGE - 1))
+/* Circle shadows may be split across (x,z), (x,z+1), (x+1,z), (x+1,z+1) */
+#define SHADOW_MAX_VERTS 4 * SHADOW_MAX_PER_COLUMN
 
 static cc_bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void EntityShadow_DrawCoords(struct VertexTextured** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
@@ -72,7 +86,8 @@ static void EntityShadow_DrawCircle(struct VertexTextured** vertices, struct Ent
 	min = Blocks.MinBB[data[0].Block]; max = Blocks.MaxBB[data[0].Block];
 
 	EntityShadow_DrawCoords(vertices, e, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
-	for (i = 1; i < 4; i++) {
+	for (i = 1; i < 4; i++) 
+	{
 		if (data[i].Block == BLOCK_AIR) return;
 		nMin = Blocks.MinBB[data[i].Block]; nMax = Blocks.MaxBB[data[i].Block];
 
@@ -112,7 +127,8 @@ static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, str
 	posY    = e->Position.Y;
 	outside = !World_ContainsXZ(x, z);
 
-	for (i = 0; y >= 0 && i < 4; y--) {
+	for (i = 0; y >= 0 && i < 4; y--) 
+	{
 		if (!outside) {
 			block = World_GetBlock(x, y, z);
 		} else if (y == Env.EdgeHeight - 1) {
@@ -146,10 +162,9 @@ static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, str
 }
 
 static void EntityShadow_Draw(struct Entity* e) {
-	struct VertexTextured vertices[128];
+	struct VertexTextured vertices[128]; /* TODO this is less than maxVertes */
 	struct VertexTextured* ptr;
 	struct ShadowData data[4];
-	GfxResourceID vb;
 	Vec3 pos;
 	float radius;
 	int y, count;
@@ -163,16 +178,13 @@ static void EntityShadow_Draw(struct Entity* e) {
 	shadow_radius  = radius / 16.0f;
 	shadow_uvScale = 16.0f / (radius * 2.0f);
 
-	/* TODO: Should shadow component use its own VB? */
 	ptr = vertices;
 	if (Entities.ShadowsMode == SHADOW_MODE_SNAP_TO_BLOCK) {
-		vb = Gfx_texVb;
 		x1 = Math_Floor(pos.X); z1 = Math_Floor(pos.Z);
 		if (!EntityShadow_GetBlocks(e, x1, y, z1, data)) return;
 
 		EntityShadow_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
-		vb = Models.Vb;
 		x1 = Math_Floor(pos.X - shadow_radius); z1 = Math_Floor(pos.Z - shadow_radius);
 		x2 = Math_Floor(pos.X + shadow_radius); z2 = Math_Floor(pos.Z + shadow_radius);
 
@@ -198,7 +210,7 @@ static void EntityShadow_Draw(struct Entity* e) {
 	}
 
 	count = (int)(ptr - vertices);
-	Gfx_SetDynamicVbData(vb, vertices, count);
+	Gfx_SetDynamicVbData(shadows_VB, vertices, count);
 	Gfx_DrawVb_IndexedTris(count);
 }
 
@@ -226,7 +238,7 @@ static void EntityShadows_MakeTexture(void) {
 			row[x] = dist < sh_half * sh_half ? color : 0;
 		}
 	}
-	Gfx_RecreateTexture(&shadows_tex, &bmp, 0, false);
+	shadows_tex = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 void EntityShadows_Render(void) {
@@ -234,7 +246,10 @@ void EntityShadows_Render(void) {
 	if (Entities.ShadowsMode == SHADOW_MODE_NONE) return;
 
 	shadows_boundTex = false;
-	if (!shadows_tex) EntityShadows_MakeTexture();
+	if (!shadows_tex) 
+		EntityShadows_MakeTexture();
+	if (!shadows_VB)
+		shadows_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, SHADOW_MAX_VERTS);
 
 	Gfx_SetAlphaArgBlend(true);
 	Gfx_SetDepthWrite(false);
@@ -258,18 +273,192 @@ void EntityShadows_Render(void) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Entity nametag------------------------------------------------------*
+*#########################################################################################################################*/
+static GfxResourceID names_VB;
+#define NAME_IS_EMPTY -30000
+#define NAME_OFFSET 3 /* offset of back layer of name above an entity */
+
+static void MakeNameTexture(struct Entity* e) {
+	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
+	BitmapCol shadowColor = BitmapCol_Make(80, 80, 80, 255);
+	BitmapCol origWhiteColor;
+
+	struct DrawTextArgs args;
+	struct FontDesc font;
+	struct Context2D ctx;
+	int width, height;
+	cc_string name;
+
+	/* Names are always drawn using default.png font */
+	Font_MakeBitmapped(&font, 24, FONT_FLAGS_NONE);
+	/* Don't want DPI scaling or padding */
+	font.size = 24; font.height = 24;
+
+	name = String_FromRawArray(e->NameRaw);
+	DrawTextArgs_Make(&args, &name, &font, false);
+	width = Drawer2D_TextWidth(&args);
+
+	if (!width) {
+		e->NameTex.ID = 0;
+		e->NameTex.X  = NAME_IS_EMPTY;
+	} else {
+		String_InitArray(colorlessName, colorlessBuffer);
+		width  += NAME_OFFSET; 
+		height = Drawer2D_TextHeight(&args) + NAME_OFFSET;
+
+		Context2D_Alloc(&ctx, width, height);
+		{
+			origWhiteColor = Drawer2D.Colors['f'];
+
+			Drawer2D.Colors['f'] = shadowColor;
+			Drawer2D_WithoutColors(&colorlessName, &name);
+			args.text = colorlessName;
+			Context2D_DrawText(&ctx, &args, NAME_OFFSET, NAME_OFFSET);
+
+			Drawer2D.Colors['f'] = origWhiteColor;
+			args.text = name;
+			Context2D_DrawText(&ctx, &args, 0, 0);
+		}
+		Context2D_MakeTexture(&e->NameTex, &ctx);
+		Context2D_Free(&ctx);
+	}
+}
+
+static void DrawName(struct Entity* e) {
+	struct VertexTextured* vertices;
+	struct Model* model;
+	struct Matrix mat;
+	Vec3 pos;
+	float scale;
+	Vec2 size;
+
+	if (!e->VTABLE->ShouldRenderName(e)) return;
+	if (e->NameTex.X == NAME_IS_EMPTY)   return;
+	if (!e->NameTex.ID) MakeNameTexture(e);
+	Gfx_BindTexture(e->NameTex.ID);
+
+	if (!names_VB)
+		names_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+
+	model = e->Model;
+	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
+
+	scale  = model->nameScale * e->ModelScale.Y;
+	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
+	size.X = e->NameTex.Width * scale; size.Y = e->NameTex.Height * scale;
+
+	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
+		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
+		/* Get W component of transformed position */
+		scale = pos.X * mat.row1.W + pos.Y * mat.row2.W + pos.Z * mat.row3.W + mat.row4.W;
+		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
+	}
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+
+	vertices = (struct VertexTextured*)Gfx_LockDynamicVb(names_VB, VERTEX_FORMAT_TEXTURED, 4);
+	Particle_DoRender(&size, &pos, &e->NameTex.uv, PACKEDCOL_WHITE, vertices);
+	Gfx_UnlockDynamicVb(names_VB);
+
+	Gfx_DrawVb_IndexedTris(4);
+}
+
+void EntityNames_Delete(struct Entity* e) {
+	Gfx_DeleteTexture(&e->NameTex.ID);
+	e->NameTex.X = 0; /* X is used as an 'empty name' flag */
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Names rendering-----------------------------------------------------*
+*#########################################################################################################################*/
+static EntityID closestEntityId;
+
+void EntityNames_Render(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	cc_bool hadFog;
+	int i;
+
+	if (Entities.NamesMode == NAME_MODE_NONE) return;
+	closestEntityId = Entities_GetClosest(&p->Base);
+	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
+
+	Gfx_SetAlphaTest(true);
+	hadFog = Gfx_GetFog();
+	if (hadFog) Gfx_SetFog(false);
+
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
+		if (!Entities.List[i]) continue;
+		if (i != closestEntityId || i == ENTITIES_SELF_ID) {
+			DrawName(Entities.List[i]);
+		}
+	}
+
+	Gfx_SetAlphaTest(false);
+	if (hadFog) Gfx_SetFog(true);
+}
+
+void EntityNames_RenderHovered(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	cc_bool allNames, hadFog;
+	int i;
+
+	if (Entities.NamesMode == NAME_MODE_NONE) return;
+	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
+		&& p->Hacks.CanSeeAllNames;
+
+	Gfx_SetAlphaTest(true);
+	Gfx_SetDepthTest(false);
+	hadFog = Gfx_GetFog();
+	if (hadFog) Gfx_SetFog(false);
+
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
+		if (!Entities.List[i]) continue;
+		if ((i == closestEntityId || allNames) && i != ENTITIES_SELF_ID) {
+			DrawName(Entities.List[i]);
+		}
+	}
+
+	Gfx_SetAlphaTest(false);
+	Gfx_SetDepthTest(true);
+	if (hadFog) Gfx_SetFog(true);
+}
+
+static void DeleteAllNameTextures(void) {
+	int i;
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
+		if (!Entities.List[i]) continue;
+		EntityNames_Delete(Entities.List[i]);
+	}
+}
+
+static void EntityNames_ChatFontChanged(void* obj) {
+	DeleteAllNameTextures();
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------Entity renderers component------------------------------------------------*
 *#########################################################################################################################*/
 static void EntityRenderers_ContextLost(void* obj) {
 	Gfx_DeleteTexture(&shadows_tex);
+	Gfx_DeleteDynamicVb(&shadows_VB);
+	
+	Gfx_DeleteDynamicVb(&names_VB);
+	DeleteAllNameTextures();
 }
 
 static void EntityRenderers_Init(void) {
-	Event_Register_(&GfxEvents.ContextLost, NULL, EntityRenderers_ContextLost);
+	Event_Register_(&GfxEvents.ContextLost,  NULL, EntityRenderers_ContextLost);
+	Event_Register_(&ChatEvents.FontChanged, NULL, EntityNames_ChatFontChanged);
 }
 
 static void EntityRenderers_Free(void) {
-	Gfx_DeleteTexture(&shadows_tex);
+	EntityRenderers_ContextLost(NULL);
 }
 
 struct IGameComponent EntityRenderers_Component = {

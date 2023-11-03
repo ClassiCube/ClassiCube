@@ -9,8 +9,6 @@
 #include "Funcs.h"
 #include "Graphics.h"
 #include "Lighting.h"
-#include "Drawer2D.h"
-#include "Particle.h"
 #include "Http.h"
 #include "Chat.h"
 #include "Model.h"
@@ -22,6 +20,7 @@
 #include "Options.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "EntityRenderers.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -45,6 +44,11 @@ void Entity_Init(struct Entity* e) {
 	e->SkinRaw[0] = '\0';
 	e->NameRaw[0] = '\0';
 	Entity_SetModel(e, &model);
+}
+
+void Entity_SetName(struct Entity* e, const cc_string* name) {
+	EntityNames_Delete(e);
+	String_CopyToRawArray(e->NameRaw, name);
 }
 
 Vec3 Entity_GetEyePosition(struct Entity* e) {
@@ -188,107 +192,6 @@ cc_bool Entity_TouchesAnyWater(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, IsWaterCollide);
-}
-
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Entity nametag------------------------------------------------------*
-*#########################################################################################################################*/
-#define NAME_IS_EMPTY -30000
-#define NAME_OFFSET 3 /* offset of back layer of name above an entity */
-
-static void MakeNameTexture(struct Entity* e) {
-	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
-	BitmapCol shadowColor = BitmapCol_Make(80, 80, 80, 255);
-	BitmapCol origWhiteColor;
-
-	struct DrawTextArgs args;
-	struct FontDesc font;
-	struct Context2D ctx;
-	int width, height;
-	cc_string name;
-
-	/* Names are always drawn using default.png font */
-	Font_MakeBitmapped(&font, 24, FONT_FLAGS_NONE);
-	/* Don't want DPI scaling or padding */
-	font.size = 24; font.height = 24;
-
-	name = String_FromRawArray(e->NameRaw);
-	DrawTextArgs_Make(&args, &name, &font, false);
-	width = Drawer2D_TextWidth(&args);
-
-	if (!width) {
-		e->NameTex.ID = 0;
-		e->NameTex.X  = NAME_IS_EMPTY;
-	} else {
-		String_InitArray(colorlessName, colorlessBuffer);
-		width  += NAME_OFFSET; 
-		height = Drawer2D_TextHeight(&args) + NAME_OFFSET;
-
-		Context2D_Alloc(&ctx, width, height);
-		{
-			origWhiteColor = Drawer2D.Colors['f'];
-
-			Drawer2D.Colors['f'] = shadowColor;
-			Drawer2D_WithoutColors(&colorlessName, &name);
-			args.text = colorlessName;
-			Context2D_DrawText(&ctx, &args, NAME_OFFSET, NAME_OFFSET);
-
-			Drawer2D.Colors['f'] = origWhiteColor;
-			args.text = name;
-			Context2D_DrawText(&ctx, &args, 0, 0);
-		}
-		Context2D_MakeTexture(&e->NameTex, &ctx);
-		Context2D_Free(&ctx);
-	}
-}
-
-static void DrawName(struct Entity* e) {
-	struct VertexTextured* vertices;
-	struct Model* model;
-	struct Matrix mat;
-	Vec3 pos;
-	float scale;
-	Vec2 size;
-
-	if (e->NameTex.X == NAME_IS_EMPTY) return;
-	if (!e->NameTex.ID) MakeNameTexture(e);
-	Gfx_BindTexture(e->NameTex.ID);
-
-	model = e->Model;
-	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
-
-	scale  = model->nameScale * e->ModelScale.Y;
-	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
-	size.X = e->NameTex.Width * scale; size.Y = e->NameTex.Height * scale;
-
-	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
-		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
-		/* Get W component of transformed position */
-		scale = pos.X * mat.row1.W + pos.Y * mat.row2.W + pos.Z * mat.row3.W + mat.row4.W;
-		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
-	}
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-
-	vertices = (struct VertexTextured*)Gfx_LockDynamicVb(Gfx_texVb, VERTEX_FORMAT_TEXTURED, 4);
-	Particle_DoRender(&size, &pos, &e->NameTex.uv, PACKEDCOL_WHITE, vertices);
-	Gfx_UnlockDynamicVb(Gfx_texVb);
-
-	Gfx_DrawVb_IndexedTris(4);
-}
-
-/* Deletes the texture containing the entity's nametag */
-CC_NOINLINE static void DeleteNameTex(struct Entity* e) {
-	Gfx_DeleteTexture(&e->NameTex.ID);
-	e->NameTex.X = 0; /* X is used as an 'empty name' flag */
-}
-
-void Entity_SetName(struct Entity* e, const cc_string* name) {
-	DeleteNameTex(e);
-	String_CopyToRawArray(e->NameRaw, name);
-	/* name texture redraw deferred until necessary */
 }
 
 
@@ -531,7 +434,6 @@ void Entity_LerpAngles(struct Entity* e, float t) {
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
 struct _EntitiesData Entities;
-static EntityID entities_closestId;
 
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
@@ -551,83 +453,17 @@ void Entities_RenderModels(double delta, float t) {
 	}
 	Gfx_SetAlphaTest(false);
 }
-	
-
-void Entities_RenderNames(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	cc_bool hadFog;
-	int i;
-
-	if (Entities.NamesMode == NAME_MODE_NONE) return;
-	entities_closestId = Entities_GetClosest(&p->Base);
-	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
-
-	Gfx_SetAlphaTest(true);
-	hadFog = Gfx_GetFog();
-	if (hadFog) Gfx_SetFog(false);
-
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
-		if (i != entities_closestId || i == ENTITIES_SELF_ID) {
-			Entities.List[i]->VTABLE->RenderName(Entities.List[i]);
-		}
-	}
-
-	Gfx_SetAlphaTest(false);
-	if (hadFog) Gfx_SetFog(true);
-}
-
-void Entities_RenderHoveredNames(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	cc_bool allNames, hadFog;
-	int i;
-
-	if (Entities.NamesMode == NAME_MODE_NONE) return;
-	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
-		&& p->Hacks.CanSeeAllNames;
-
-	Gfx_SetAlphaTest(true);
-	Gfx_SetDepthTest(false);
-	hadFog = Gfx_GetFog();
-	if (hadFog) Gfx_SetFog(false);
-
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
-		if ((i == entities_closestId || allNames) && i != ENTITIES_SELF_ID) {
-			Entities.List[i]->VTABLE->RenderName(Entities.List[i]);
-		}
-	}
-
-	Gfx_SetAlphaTest(false);
-	Gfx_SetDepthTest(true);
-	if (hadFog) Gfx_SetFog(true);
-}
-
-static void Entity_ContextLost(struct Entity* e) { DeleteNameTex(e); }
 
 static void Entities_ContextLost(void* obj) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
-		Entity_ContextLost(Entities.List[i]);
-	}
-
 	if (Gfx.ManagedTextures) return;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
 		DeleteSkin(Entities.List[i]);
 	}
 }
-/* No OnContextCreated, names/skin textures remade when needed */
-
-static void Entities_ChatFontChanged(void* obj) {
-	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
-		DeleteNameTex(Entities.List[i]);
-		/* name redraw is deferred until rendered */
-	}
-}
+/* No OnContextCreated, skin textures remade when needed */
 
 void Entities_Remove(EntityID id) {
 	struct Entity* e = Entities.List[id];
@@ -749,7 +585,7 @@ struct IGameComponent TabList_Component = {
 
 static void Player_Despawn(struct Entity* e) {
 	DeleteSkin(e);
-	Entity_ContextLost(e);
+	EntityNames_Delete(e);
 }
 
 
@@ -870,9 +706,8 @@ static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t)
 	Model_Render(e->Model, e);
 }
 
-static void LocalPlayer_RenderName(struct Entity* e) {
-	if (!Camera.Active->isThirdPerson) return;
-	DrawName(e);
+static cc_bool LocalPlayer_ShouldRenderName(struct Entity* e) {
+	return Camera.Active->isThirdPerson;
 }
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
@@ -896,7 +731,7 @@ static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
 
 static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
-	LocalPlayer_RenderModel, LocalPlayer_RenderName
+	LocalPlayer_RenderModel, LocalPlayer_ShouldRenderName
 };
 static void LocalPlayer_Init(void) {
 	struct LocalPlayer* p   = &LocalPlayer_Instance;
@@ -1152,19 +987,19 @@ static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 	if (e->ShouldRender) Model_Render(e->Model, e);
 }
 
-static void NetPlayer_RenderName(struct Entity* e) {
+static cc_bool NetPlayer_ShouldRenderName(struct Entity* e) {
 	float distance;
 	int threshold;
-	if (!e->ShouldRender) return;
+	if (!e->ShouldRender) return false;
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (distance <= (float)threshold) DrawName(e);
+	return distance <= (float)threshold;
 }
 
 static const struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetColor,
-	NetPlayer_RenderModel, NetPlayer_RenderName
+	NetPlayer_RenderModel, NetPlayer_ShouldRenderName
 };
 void NetPlayer_Init(struct NetPlayer* p) {
 	Mem_Set(p, 0, sizeof(struct NetPlayer));
@@ -1177,10 +1012,9 @@ void NetPlayer_Init(struct NetPlayer* p) {
 *---------------------------------------------------Entities component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Entities_Init(void) {
-	Event_Register_(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
-	Event_Register_(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
-	Event_Register_(&InputEvents.Down,       NULL, LocalPlayer_InputDown);
-	Event_Register_(&InputEvents.Up,         NULL, LocalPlayer_InputUp);
+	Event_Register_(&GfxEvents.ContextLost, NULL, Entities_ContextLost);
+	Event_Register_(&InputEvents.Down,      NULL, LocalPlayer_InputDown);
+	Event_Register_(&InputEvents.Up,        NULL, LocalPlayer_InputUp);
 
 	Entities.NamesMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));

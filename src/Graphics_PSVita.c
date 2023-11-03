@@ -915,6 +915,8 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return GPUBuffer_Alloc(maxVertices * strideSizes[fmt]);
 }
 
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
+
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
 	return buffer->data;
