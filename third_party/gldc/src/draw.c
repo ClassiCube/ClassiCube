@@ -5,15 +5,12 @@
 static const void* VERTEX_PTR;
 static GLsizei VERTEX_STRIDE;
 
-extern GLboolean AUTOSORT_ENABLED;
-
 #define ITERATE(count) \
     GLuint i = count; \
     while(i--)
 
 
 void _glInitAttributePointers() {
-    TRACE();
     VERTEX_PTR    = NULL;
     VERTEX_STRIDE = 0;
 }
@@ -97,119 +94,6 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
     }
 }
 
-GL_FORCE_INLINE int _calc_pvr_face_culling() {
-    if(!CULLING_ENABLED) {
-        return GPU_CULLING_SMALL;
-    } else {
-        return GPU_CULLING_CW;
-    }
-}
-
-GL_FORCE_INLINE int _calc_pvr_depth_test() {
-    if(!DEPTH_TEST_ENABLED) {
-        return GPU_DEPTHCMP_ALWAYS;
-    }
-
-    switch(DEPTH_FUNC) {
-        case GL_NEVER:
-            return GPU_DEPTHCMP_NEVER;
-        case GL_LESS:
-            return GPU_DEPTHCMP_GREATER;
-        case GL_EQUAL:
-            return GPU_DEPTHCMP_EQUAL;
-        case GL_LEQUAL:
-            return GPU_DEPTHCMP_GEQUAL;
-        case GL_GREATER:
-            return GPU_DEPTHCMP_LESS;
-        case GL_NOTEQUAL:
-            return GPU_DEPTHCMP_NOTEQUAL;
-        case GL_GEQUAL:
-            return GPU_DEPTHCMP_LEQUAL;
-        break;
-        case GL_ALWAYS:
-        default:
-            return GPU_DEPTHCMP_ALWAYS;
-    }
-}
-
-GL_FORCE_INLINE void _updatePVRBlend(PolyContext* context) {
-    if(BLEND_ENABLED || ALPHA_TEST_ENABLED) {
-        context->gen.alpha = GPU_ALPHA_ENABLE;
-    } else {
-        context->gen.alpha = GPU_ALPHA_DISABLE;
-    }
-
-    context->blend.src = PVR_BLEND_SRCALPHA;
-    context->blend.dst = PVR_BLEND_INVSRCALPHA;
-}
-
-GL_FORCE_INLINE void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
-    TRACE();
-
-    // Compile the header
-    PolyContext ctx;
-    memset(&ctx, 0, sizeof(PolyContext));
-
-    ctx.list_type = activePolyList->list_type;
-    ctx.fmt.color = GPU_CLRFMT_ARGBPACKED;
-    ctx.fmt.uv = GPU_UVFMT_32BIT;
-    ctx.gen.color_clamp = GPU_CLRCLAMP_DISABLE;
-
-    ctx.gen.culling = _calc_pvr_face_culling();
-    ctx.depth.comparison = _calc_pvr_depth_test();
-    ctx.depth.write = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
-
-    ctx.gen.shading = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
-
-    if(SCISSOR_TEST_ENABLED) {
-        ctx.gen.clip_mode = GPU_USERCLIP_INSIDE;
-    } else {
-        ctx.gen.clip_mode = GPU_USERCLIP_DISABLE;
-    }
-
-    if(FOG_ENABLED) {
-        ctx.gen.fog_type = GPU_FOG_TABLE;
-    } else {
-        ctx.gen.fog_type = GPU_FOG_DISABLE;
-    }
-
-    _updatePVRBlend(&ctx);
-
-    if(ctx.list_type == GPU_LIST_OP_POLY) {
-        /* Opaque polys are always one/zero */
-        ctx.blend.src = PVR_BLEND_ONE;
-        ctx.blend.dst = PVR_BLEND_ZERO;
-    } else if(ctx.list_type == GPU_LIST_PT_POLY) {
-        /* Punch-through polys require fixed blending and depth modes */
-        ctx.blend.src = PVR_BLEND_SRCALPHA;
-        ctx.blend.dst = PVR_BLEND_INVSRCALPHA;
-        ctx.depth.comparison = GPU_DEPTHCMP_LEQUAL;
-    } else if(ctx.list_type == GPU_LIST_TR_POLY && AUTOSORT_ENABLED) {
-        /* Autosort mode requires this mode for transparent polys */
-        ctx.depth.comparison = GPU_DEPTHCMP_GEQUAL;
-    }
-
-    _glUpdatePVRTextureContext(&ctx, 0);
-
-    CompilePolyHeader(header, &ctx);
-
-    /* Force bits 18 and 19 on to switch to 6 triangle strips */
-    header->cmd |= 0xC0000;
-
-    /* Post-process the vertex list */
-    /*
-     * This is currently unnecessary. aligned_vector memsets the allocated objects
-     * to zero, and we don't touch oargb, also, we don't *enable* oargb yet in the
-     * pvr header so it should be ignored anyway. If this ever becomes a problem,
-     * uncomment this.
-    ClipVertex* vout = output;
-    const ClipVertex* end = output + count;
-    while(vout < end) {
-        vout->oargb = 0;
-    }
-    */
-}
-
 static SubmissionTarget SUBMISSION_TARGET;
 
 void _glInitSubmissionTarget() {
@@ -219,6 +103,7 @@ void _glInitSubmissionTarget() {
     target->header_offset = target->start_offset = 0;
 }
 
+extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
 
 GL_FORCE_INLINE void submitVertices(GLuint vertexCount) {
     SubmissionTarget* const target = &SUBMISSION_TARGET;

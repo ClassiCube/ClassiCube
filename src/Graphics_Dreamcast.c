@@ -449,7 +449,6 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	glAlphaFunc(GL_GREATER, 0.5f);
-	glDepthFunc(GL_LEQUAL);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {

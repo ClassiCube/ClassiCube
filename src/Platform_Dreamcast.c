@@ -343,10 +343,8 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
-	// TODO is this even right
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-		fs_ioctl(*s, FNONBIO, &blocking_raw);
+		fcntl(*s, F_SETFL, O_NONBLOCK);
 	}
 
 	#ifdef AF_INET6
