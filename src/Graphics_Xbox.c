@@ -466,6 +466,8 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_BindVb(vb);
 }
 
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*

@@ -114,13 +114,12 @@ Platform_LogConst("GFX END");
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-
 typedef struct CCTexture {
 	surface_t surface;
 	GLuint textureID;
 } CCTexture;
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	Platform_Log2("make texture %i x %i", &bmp->width, &bmp->height);
 	if (bmp->width > 32 || bmp->height > 32) return NULL;
 
@@ -266,8 +265,8 @@ void Gfx_BindIb(GfxResourceID ib)    { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return Mem_Alloc(count, strideSizes[fmt], "GFX VB");
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
+	return Mem_TryAlloc(count, strideSizes[fmt]);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
@@ -288,9 +287,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_Alloc(maxVertices, strideSizes[fmt], "GFX VB");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
 }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
@@ -305,6 +306,8 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	gfx_vertices = vb;
 	Mem_Copy(vb, vertices, vCount * gfx_stride);
 }
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*

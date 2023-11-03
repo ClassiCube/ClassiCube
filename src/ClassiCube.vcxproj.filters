@@ -677,6 +677,15 @@
     <ClCompile Include="EntityRenderers.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics_N64.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_N64.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_N64.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">

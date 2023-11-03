@@ -340,6 +340,8 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	DCFlushRange(vertices, vCount * gfx_stride);
 }
 
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*

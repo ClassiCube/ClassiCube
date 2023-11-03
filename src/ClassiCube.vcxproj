@@ -471,6 +471,7 @@
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="Graphics_GL2.c" />
+    <ClCompile Include="Graphics_N64.c" />
     <ClCompile Include="Graphics_PS3.c" />
     <ClCompile Include="Graphics_PSP.c" />
     <ClCompile Include="Graphics_PSVita.c" />
@@ -493,6 +494,7 @@
     <ClCompile Include="Platform_Android.c" />
     <ClCompile Include="Platform_Dreamcast.c" />
     <ClCompile Include="Platform_GCWii.c" />
+    <ClCompile Include="Platform_N64.c" />
     <ClCompile Include="Platform_Posix.c" />
     <ClCompile Include="Platform_PS3.c" />
     <ClCompile Include="Platform_PSP.c" />
@@ -533,6 +535,7 @@
     <ClCompile Include="Window_Carbon.c" />
     <ClCompile Include="Window_Dreamcast.c" />
     <ClCompile Include="Window_GCWii.c" />
+    <ClCompile Include="Window_N64.c" />
     <ClCompile Include="Window_PS3.c" />
     <ClCompile Include="Window_PSP.c" />
     <ClCompile Include="Window_PSVita.c" />
