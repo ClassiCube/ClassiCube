@@ -176,10 +176,11 @@ CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count);
 /* Binds then submits the changed contents of a dynamic vertex buffer */
 CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb);
 
-/* Sets the format of the rendered vertices */
-CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
 /* Updates the data of a dynamic vertex buffer */
 CC_API void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
+
+/* Sets the format of the rendered vertices */
+CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
 /* Renders vertices from the currently bound vertex buffer as lines */
 CC_API void Gfx_DrawVb_Lines(int verticesCount);
 /* Renders vertices from the currently bound vertex and index buffer as triangles */

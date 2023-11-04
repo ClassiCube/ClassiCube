@@ -40,7 +40,6 @@ void _glInitContext() {
     scissor_rect.height = vid_mode->height;
 
     glClearDepth(1.0f);
-    glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
     glShadeModel(GL_SMOOTH);
 

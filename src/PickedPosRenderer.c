@@ -87,6 +87,9 @@ static void BuildMesh(struct RayTracer* selected) {
 
 void PickedPosRenderer_Render(struct RayTracer* selected, cc_bool dirty) {
 	if (Gfx.LostContext) return;
+
+	if (!pickedPos_vb)
+		pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 	
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetDepthWrite(false);
@@ -108,14 +111,8 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&pickedPos_vb);
 }
 
-static void OnContextRecreated(void* obj) {
-	Gfx_RecreateDynamicVb(&pickedPos_vb, VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
-}
-
 static void OnInit(void) {
-	OnContextRecreated(NULL);
-	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
 static void OnFree(void) { OnContextLost(NULL); }

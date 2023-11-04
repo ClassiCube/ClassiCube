@@ -173,7 +173,8 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
 	int lvl, width = bmp->width, height = bmp->height;
 
-	for (lvl = 1; lvl <= lvls; lvl++) {
+	for (lvl = 1; lvl <= lvls; lvl++) 
+	{
 		x /= 2; y /= 2;
 		if (width > 1)  width  /= 2;
 		if (height > 1) height /= 2;
@@ -545,7 +546,8 @@ static const struct ShaderDesc vs_descs[] = {
 };
 
 static void VS_CreateShaders(void) {
-	for (int i = 0; i < Array_Elems(vs_shaders); i++) {
+	for (int i = 0; i < Array_Elems(vs_shaders); i++)
+	{
 		HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_descs[i].data, vs_descs[i].len, NULL, &vs_shaders[i]);
 		if (hr) Logger_Abort2(hr, "Failed to compile vertex shader");
 	}
@@ -585,7 +587,8 @@ static void VS_UpdateShader(void) {
 }
 
 static void VS_FreeShaders(void) {
-	for (int i = 0; i < Array_Elems(vs_shaders); i++) {
+	for (int i = 0; i < Array_Elems(vs_shaders); i++) 
+	{
 		ID3D11VertexShader_Release(vs_shaders[i]);
 	}
 }
@@ -672,7 +675,8 @@ static void RS_UpdateRasterState(void) {
 }
 
 static void RS_FreeRasterStates(void) {
-	for (int i = 0; i < Array_Elems(rs_states); i++) {
+	for (int i = 0; i < Array_Elems(rs_states); i++) 
+	{
 		ID3D11RasterizerState_Release(rs_states[i]);
 	}
 }
@@ -725,7 +729,8 @@ static const struct ShaderDesc ps_descs[] = {
 };
 
 static void PS_CreateShaders(void) {
-	for (int i = 0; i < Array_Elems(ps_shaders); i++) {
+	for (int i = 0; i < Array_Elems(ps_shaders); i++) 
+	{
 		HRESULT hr = ID3D11Device_CreatePixelShader(device, ps_descs[i].data, ps_descs[i].len, NULL, &ps_shaders[i]);
 		if (hr) Logger_Abort2(hr, "Failed to compile pixel shader");
 	}
@@ -749,7 +754,8 @@ static void PS_UpdateShader(void) {
 }
 
 static void PS_FreeShaders(void) {
-	for (int i = 0; i < Array_Elems(ps_shaders); i++) {
+	for (int i = 0; i < Array_Elems(ps_shaders); i++) 
+	{
 		ID3D11PixelShader_Release(ps_shaders[i]);
 	}
 }
@@ -780,7 +786,8 @@ static void PS_UpdateSampler(void) {
 }
 
 static void PS_FreeSamplers(void) {
-	for (int i = 0; i < Array_Elems(ps_samplers); i++) {
+	for (int i = 0; i < Array_Elems(ps_samplers); i++) 
+	{
 		ID3D11SamplerState_Release(ps_samplers[i]);
 	}
 }
@@ -904,6 +911,10 @@ static void OM_Clear(void) {
 	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
 }
 
+static void OM_UpdateTarget(void) {
+	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, depthbufferView);
+}
+
 static void OM_InitTargets(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-depth-stencil
 	D3D11_TEXTURE2D_DESC desc;
@@ -926,8 +937,8 @@ static void OM_InitTargets(void) {
 	hr = ID3D11Device_CreateDepthStencilView(device, depthbuffer, NULL, &depthbufferView);
 	if (hr) Logger_Abort2(hr, "Failed to create depthbuffer view");
 
-	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, depthbufferView);
 	ID3D11Texture2D_Release(pBackBuffer);
+	OM_UpdateTarget();
 }
 
 static void OM_CreateDepthStates(void) {
@@ -935,7 +946,8 @@ static void OM_CreateDepthStates(void) {
 	HRESULT hr;
 	desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
 
-	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
+	for (int i = 0; i < Array_Elems(om_depthStates); i++) 
+	{
 		desc.DepthEnable    = (i & 1) != 0;
 		desc.DepthWriteMask = (i & 2) != 0;
 
@@ -950,7 +962,8 @@ static void OM_UpdateDepthState(void) {
 }
 
 static void OM_FreeDepthStates(void) {
-	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
+	for (int i = 0; i < Array_Elems(om_depthStates); i++) 
+	{
 		ID3D11DepthStencilState_Release(om_depthStates[i]);
 	}
 }
@@ -966,7 +979,8 @@ static void OM_CreateBlendStates(void) {
 	desc.RenderTarget[0].DestBlend      = D3D11_BLEND_INV_SRC_ALPHA;
 	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 
-	for (int i = 0; i < Array_Elems(om_blendStates); i++) {
+	for (int i = 0; i < Array_Elems(om_blendStates); i++) 
+	{
 		desc.RenderTarget[0].RenderTargetWriteMask = (i & 1) ? D3D11_COLOR_WRITE_ENABLE_ALL : 0;
 		desc.RenderTarget[0].BlendEnable           = (i & 2) != 0;
 
@@ -981,7 +995,8 @@ static void OM_UpdateBlendState(void) {
 }
 
 static void OM_FreeBlendStates(void) {
-	for (int i = 0; i < Array_Elems(om_blendStates); i++) {
+	for (int i = 0; i < Array_Elems(om_blendStates); i++) 
+	{
 		ID3D11BlendState_Release(om_blendStates[i]);
 	}
 }
@@ -1063,7 +1078,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	D3D11_RENDER_TARGET_VIEW_DESC backbuffer_desc;
 	D3D11_MAPPED_SUBRESOURCE buffer;
 	ID3D11RenderTargetView_GetResource(backbuffer, &backbuffer_res);
-	ID3D11RenderTargetView_GetDesc(backbuffer, &backbuffer_desc);
+	ID3D11RenderTargetView_GetDesc(backbuffer,     &backbuffer_desc);
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
 	desc.Width     = WindowInfo.Width;
@@ -1097,7 +1112,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync      = vsync;
 }
-void Gfx_BeginFrame(void) { }
+void Gfx_BeginFrame(void) { OM_UpdateTarget(); }
 void Gfx_Clear(void)      { OM_Clear(); }
 
 void Gfx_EndFrame(void) {

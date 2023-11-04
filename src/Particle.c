@@ -14,7 +14,7 @@
 /*########################################################################################################################*
 *------------------------------------------------------Particle base------------------------------------------------------*
 *#########################################################################################################################*/
-static GfxResourceID Particles_TexId, Particles_VB;
+static GfxResourceID particles_TexId, particles_VB;
 #define PARTICLES_MAX 600
 static RNGState rnd;
 static cc_bool hitTerrain;
@@ -159,15 +159,15 @@ static void Rain_Render(float t) {
 	int i;
 	if (!rain_count) return;
 	
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(Particles_VB, 
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
 		RainParticle_Render(&rain_Particles[i], t, data);
 		data += 4;
 	}
 
-	Gfx_BindTexture(Particles_TexId);
-	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_BindTexture(particles_TexId);
+	Gfx_UnlockDynamicVb(particles_VB);
 	Gfx_DrawVb_IndexedTris(rain_count * 4);
 }
 
@@ -253,7 +253,7 @@ static void Terrain_Render(float t) {
 	int i, index;
 	if (!terrain_count) return;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(Particles_VB, 
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
@@ -264,7 +264,7 @@ static void Terrain_Render(float t) {
 		terrain_1DIndices[index] += 4;
 	}
 
-	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_UnlockDynamicVb(particles_VB);
 	for (i = 0; i < Atlas1D.Count; i++) {
 		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;
@@ -360,15 +360,15 @@ static void Custom_Render(float t) {
 	int i;
 	if (!custom_count) return;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(Particles_VB, 
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
 										VERTEX_FORMAT_TEXTURED, custom_count * 4);
 	for (i = 0; i < custom_count; i++) {
 		CustomParticle_Render(&custom_particles[i], t, data);
 		data += 4;
 	}
 
-	Gfx_BindTexture(Particles_TexId);
-	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_BindTexture(particles_TexId);
+	Gfx_UnlockDynamicVb(particles_VB);
 	Gfx_DrawVb_IndexedTris(custom_count * 4);
 }
 
@@ -394,7 +394,10 @@ static void Custom_Tick(double delta) {
 *#########################################################################################################################*/
 void Particles_Render(float t) {
 	if (!terrain_count && !rain_count && !custom_count) return;
+
 	if (Gfx.LostContext) return;
+	if (!particles_VB)
+		particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
 
 	Gfx_SetAlphaTest(true);
 
@@ -571,20 +574,18 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 *---------------------------------------------------Particles component---------------------------------------------------*
 *#########################################################################################################################*/
 static void ParticlesPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Particles_TexId, stream, name, NULL);
+	Game_UpdateTexture(&particles_TexId, stream, name, NULL);
 }
 static struct TextureEntry particles_entry = { "particles.png", ParticlesPngProcess };
 
 
 static void OnContextLost(void* obj) {
-	Gfx_DeleteDynamicVb(&Particles_VB); 
+	Gfx_DeleteDynamicVb(&particles_VB); 
 
 	if (Gfx.ManagedTextures) return;
-	Gfx_DeleteTexture(&Particles_TexId);
+	Gfx_DeleteTexture(&particles_TexId);
 }
-static void OnContextRecreated(void* obj) {
-	Gfx_RecreateDynamicVb(&Particles_VB, VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
-}
+
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);
 }
@@ -592,12 +593,10 @@ static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, Blo
 static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	Random_SeedFromCurrentTime(&rnd);
-	OnContextRecreated(NULL);
 	TextureEntry_Register(&particles_entry);
 
-	Event_Register_(&UserEvents.BlockChanged,    NULL, OnBreakBlockEffect_Handler);
-	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&UserEvents.BlockChanged, NULL, OnBreakBlockEffect_Handler);
+	Event_Register_(&GfxEvents.ContextLost,   NULL, OnContextLost);
 }
 
 static void OnFree(void) { OnContextLost(NULL); }
