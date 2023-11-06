@@ -26,7 +26,6 @@ static void GL_UpdateVsync(void) {
 static surface_t zbuffer;
 
 void Gfx_Create(void) {
-//Platform_LogConst("GFX CREATE");
     gl_init();
     //rdpq_debug_start(); // TODO debug
     //rdpq_debug_log(true);
@@ -62,6 +61,10 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
+	String_AppendConst(info, "-- Using Nintendo 64 --\n");
+	String_AppendConst(info, "GPU: Nintendo 64 RDP (LibDragon OpenGL)\n");
+	String_AppendConst(info, "T&L: Nintendo 64 RSP (LibDragon OpenGL)\n");
+	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -74,7 +77,7 @@ void Gfx_OnWindowResize(void) { }
 
 
 void Gfx_BeginFrame(void) {
-Platform_LogConst("GFX BEG");
+//Platform_LogConst("GFX BEG");
 	surface_t* disp = display_get();
     rdpq_attach(disp, &zbuffer);
     
@@ -107,7 +110,7 @@ Platform_LogConst("GFX ctx end");
     rdpq_detach_show();
     
 	if (gfx_minFrameMs) LimitFPS();
-Platform_LogConst("GFX END");
+//Platform_LogConst("GFX END");
 }
 
 
@@ -120,15 +123,14 @@ typedef struct CCTexture {
 } CCTexture;
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	Platform_Log2("make texture %i x %i", &bmp->width, &bmp->height);
 	if (bmp->width > 32 || bmp->height > 32) return NULL;
 
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "texture");
 	
 	glGenTextures(1, &tex->textureID);
 	glBindTexture(GL_TEXTURE_2D, tex->textureID);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
 	tex->surface = surface_alloc(FMT_RGBA32, bmp->width, bmp->height);
 	
@@ -139,7 +141,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	for (int y = 0; y < bmp->height; y++) 
 	{
 		Mem_Copy(dst + y * fb->stride,
-				 src + y * bmp->width, 
+				 src + y * bmp->width,
 				 bmp->width * 4);
 	}
 	
@@ -148,6 +150,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
         .t.repeats = REPEAT_INFINITE,
     };
 
+	// rdpq_tex_upload(TILE0, &tex->surface, &params);
 	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
 	return tex;
 }
@@ -163,6 +166,19 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	// TODO: Doesn't actually work. maybe due to glSurfaceTexImageN64 caching the RSQ upload block?
+	/*CCTexture* tex = (CCTexture*)texId;
+	
+	surface_t* fb  = &tex->surface;
+	cc_uint32* src = (cc_uint32*)part->scan0 + x;
+	cc_uint8*  dst = (cc_uint8*)fb->buffer  + (x * 4) + (y * fb->stride);
+
+	for (int srcY = 0; srcY < part->height; srcY++) 
+	{
+		Mem_Copy(dst + srcY * fb->stride,
+				 src + srcY * rowWidth,
+				 part->width * 4);
+	}*/
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
@@ -207,6 +223,7 @@ static void Gfx_RestoreState(void) {
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
+	//glEnable(GL_RDPQ_TEXTURING_N64);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
