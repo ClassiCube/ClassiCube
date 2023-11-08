@@ -127,11 +127,15 @@ CC_API void Model_Render(struct Model* model, struct Entity* entity);
 /* Sets up state to be suitable for rendering the given model. */
 /* NOTE: Model_Render already calls this, you don't normally need to call this. */
 CC_API void Model_SetupState(struct Model* model, struct Entity* entity);
-/* Flushes buffered vertices to the GPU. */
-CC_API void Model_UpdateVB(void);
 /* Applies the skin texture of the given entity to the model. */
 /* Uses model's default texture if the entity doesn't have a custom skin. */
 CC_API void Model_ApplyTexture(struct Entity* entity);
+
+/* Flushes buffered vertices to the GPU. */
+CC_API void Model_UpdateVB(void);
+void Model_LockVB(int verticesCount);
+void Model_UnlockVB(void);
+
 /* Draws the given part with no part-specific rotation (e.g. torso). */
 CC_API void Model_DrawPart(struct ModelPart* part);
 /* Draws the given part with rotation around part's rotation origin. (e.g. arms, head) */
