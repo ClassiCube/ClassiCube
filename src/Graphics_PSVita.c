@@ -7,8 +7,6 @@
 #include <vitasdk.h>
 
 // TODO track last frame used on
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static cc_bool gfx_depthOnly;
 static cc_bool gfx_alphaTesting, gfx_alphaBlending;
 static int frontBufferIndex, backBufferIndex;

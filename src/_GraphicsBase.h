@@ -19,6 +19,8 @@ const cc_string Gfx_LowPerfMessage = String_FromConst("&eRunning in reduced perf
 static const int strideSizes[] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
+/* Current format and size of vertices */
+static int gfx_stride, gfx_format = -1;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
@@ -388,6 +390,16 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 		if (!Game_ReduceVRAM()) Logger_Abort("Out of video memory! (allocating dynamic VB)");
 	}
 }
+
+#if defined CC_BUILD_GL || defined CC_BUILD_D3D9
+/* Slightly more efficient implementations are defined in the backends */
+#else
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
+	Mem_Copy(data, vertices, vCount * gfx_stride);
+	Gfx_UnlockDynamicVb(vb);
+}
+#endif
 
 
 /*########################################################################################################################*

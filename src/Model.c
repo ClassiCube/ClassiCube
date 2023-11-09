@@ -882,17 +882,19 @@ struct ModelSet {
 	struct ModelPart head, torso, hat, torsoLayer;
 	struct ModelLimbs limbs[3];
 };
+#define HUMAN_BASE_VERTICES  (6 * MODEL_BOX_VERTICES)
+#define HUMAN_HAT32_VERTICES (1 * MODEL_BOX_VERTICES)
+#define HUMAN_HAT64_VERTICES (6 * MODEL_BOX_VERTICES)
 
-static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_bool opaque) {
+static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_bool opaqueBody) {
 	struct ModelLimbs* set;
-	int type;
-
+	int type, num;
 	Model_ApplyTexture(e);
-	/* human model draws the body opaque so players can't have invisible skins */
-	if (opaque) Gfx_SetAlphaTest(false);
 
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
+	num  = HUMAN_BASE_VERTICES + (type == SKIN_64x32 ? HUMAN_HAT32_VERTICES : HUMAN_HAT64_VERTICES);
+	Model_LockVB(num);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &model->head, true);
 	Model_DrawPart(&model->torso);
@@ -903,12 +905,6 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	Model_DrawRotate(e->Anim.LeftArmX,  0, e->Anim.LeftArmZ,  &set->leftArm,  false);
 	Model_DrawRotate(e->Anim.RightArmX, 0, e->Anim.RightArmZ, &set->rightArm, false);
 	Models.Rotation = ROTATE_ORDER_ZYX;
-
-	/* have to seperately draw these vertices without alpha testing */
-	if (opaque) {
-		Model_UpdateVB();
-		Gfx_SetAlphaTest(true);
-	}
 
 	if (type != SKIN_64x32) {
 		Model_DrawPart(&model->torsoLayer);
@@ -921,19 +917,33 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 		Models.Rotation = ROTATE_ORDER_ZYX;
 	}
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &model->hat, true);
-	Model_UpdateVB();
+
+	Model_UnlockVB();
+	if (opaqueBody) {
+		/* human model draws the body opaque so players can't have invisible skins */
+		Gfx_SetAlphaTest(false);
+		Gfx_DrawVb_IndexedTris_Range(HUMAN_BASE_VERTICES, 0);
+		Gfx_SetAlphaTest(true);
+		Gfx_DrawVb_IndexedTris_Range(num - HUMAN_BASE_VERTICES, HUMAN_BASE_VERTICES);
+	} else {
+		Gfx_DrawVb_IndexedTris(num);
+	}
 }
 
 static void HumanModel_DrawArmCore(struct ModelSet* model) {
 	struct ModelLimbs* set;
-	int type;
+	int type, num;
 
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
+	num  = type == SKIN_64x32 ? MODEL_BOX_VERTICES : (2 * MODEL_BOX_VERTICES);
+	Model_LockVB(num);
 
 	Model_DrawArmPart(&set->rightArm);
 	if (type != SKIN_64x32) Model_DrawArmPart(&set->rightArmLayer);
-	Model_UpdateVB();
+
+	Model_UnlockVB();
+	Gfx_DrawVb_IndexedTris(num);
 }
 
 

@@ -19,8 +19,6 @@
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
 static DWORD d3d9_formatMappings[] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;

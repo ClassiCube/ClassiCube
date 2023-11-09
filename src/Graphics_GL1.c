@@ -159,8 +159,6 @@ typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 
 #if defined CC_BUILD_WIN && !defined CC_BUILD_GL11
 /* Note the following about calling OpenGL functions on Windows */

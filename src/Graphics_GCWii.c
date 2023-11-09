@@ -332,14 +332,6 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	DCFlushRange(vb, vb_size);
 }
 
-// Current size of vertices
-static int gfx_stride; // TODO move down to Drawing area ??
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	DCFlushRange(vertices, vCount * gfx_stride);
-}
-
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
@@ -476,9 +468,6 @@ void Gfx_DisableTextureOffset(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Drawing---------------------------------------------------------*
 *#########################################################################################################################*/
-// Current format and size of vertices
-static int gfx_format = -1;
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
