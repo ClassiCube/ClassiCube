@@ -130,6 +130,7 @@ void Entity_SetModel(struct Entity* e, const cc_string* model) {
 
 	Entity_ParseScale(e, &scale);
 	Entity_UpdateModelBounds(e);
+	Gfx_DeleteDynamicVb(&e->ModelVB);
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -503,6 +504,12 @@ EntityID Entities_GetClosest(struct Entity* src) {
 	return targetId;
 }
 
+static void Player_Despawn(struct Entity* e) {
+	DeleteSkin(e);
+	EntityNames_Delete(e);
+	Gfx_DeleteDynamicVb(&e->ModelVB);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------TabList----------------------------------------------------------*
@@ -583,12 +590,6 @@ struct IGameComponent TabList_Component = {
 	TabList_Clear, /* Free  */
 	TabList_Clear  /* Reset */
 };
-
-
-static void Player_Despawn(struct Entity* e) {
-	DeleteSkin(e);
-	EntityNames_Delete(e);
-}
 
 
 /*########################################################################################################################*

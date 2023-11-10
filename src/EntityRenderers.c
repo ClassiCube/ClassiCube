@@ -344,7 +344,7 @@ static void DrawName(struct Entity* e) {
 	model = e->Model;
 	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
 
-	scale  = model->nameScale * e->ModelScale.Y;
+	scale  = e->ModelScale.Y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
 	size.X = e->NameTex.Width * scale; size.Y = e->NameTex.Height * scale;
 

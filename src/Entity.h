@@ -110,6 +110,7 @@ struct Entity {
 	/* Previous and next intended location of the entity */
 	/*  Current state is linearly interpolated between prev and next */
 	struct EntityLocation prev, next;
+	GfxResourceID ModelVB;
 };
 typedef cc_bool (*Entity_TouchesCondition)(BlockID block);
 

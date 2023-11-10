@@ -83,7 +83,8 @@ struct Model {
 	void (*GetTransform)(struct Entity* entity, Vec3 pos, struct Matrix* m);
 	void (*DrawArm)(struct Entity* entity);
 
-	float maxScale, shadowScale, nameScale;
+	float maxScale, shadowScale;
+	int maxVertices;
 	struct Model* next;
 };
 
@@ -133,7 +134,7 @@ CC_API void Model_ApplyTexture(struct Entity* entity);
 
 /* Flushes buffered vertices to the GPU. */
 CC_API void Model_UpdateVB(void);
-void Model_LockVB(int verticesCount);
+void Model_LockVB(struct Entity* entity, int verticesCount);
 void Model_UnlockVB(void);
 
 /* Draws the given part with no part-specific rotation (e.g. torso). */
@@ -274,6 +275,7 @@ struct CustomModel {
 	struct Model model;
 	char name[STRING_SIZE + 1];
 	cc_bool registered, defined;
+	cc_uint8 curPartIndex;
 
 	float nameY;
 	float eyeY;
@@ -284,7 +286,7 @@ struct CustomModel {
 	cc_uint16 vScale;
 
 	cc_uint8 numParts;
-	cc_uint8 curPartIndex;
+	cc_uint8 numArmParts;
 	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
 };
 

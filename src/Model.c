@@ -45,7 +45,6 @@ void Model_Init(struct Model* model) {
 
 	model->maxScale    = 2.0f;
 	model->shadowScale = 1.0f;
-	model->nameScale   = 1.0f;
 	model->armX = 6; model->armY = 12;
 
 	model->GetTransform = Model_GetTransform;
@@ -173,9 +172,9 @@ void Model_UpdateVB(void) {
 	model->index = 0;
 }
 
-/* Needed to keep third party plugins such as MoreModels working */
+/* Need to restore vertices array to keep third party plugins such as MoreModels working */
 static struct VertexTextured* real_vertices;
-void Model_LockVB(int verticesCount) {
+void Model_LockVB(struct Entity* entity, int verticesCount) {
 	real_vertices   = Models.Vertices;
 	Models.Vertices = Gfx_LockDynamicVb(Models.Vb, VERTEX_FORMAT_TEXTURED, verticesCount);
 }
@@ -508,17 +507,18 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const cc_str
 *------------------------------------------------------Custom Models------------------------------------------------------*
 *#########################################################################################################################*/
 /* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
-static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];	
+#define MODELS_MAX_VERTICES (MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS)
 struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
 void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part) {
 	float x1 = part->min.X, y1 = part->min.Y, z1 = part->min.Z;
 	float x2 = part->max.X, y2 = part->max.Y, z2 = part->max.Z;
+	struct CustomModelPart* p  = &cm->parts[cm->curPartIndex];
 
-	struct CustomModelPart* p = &cm->parts[cm->curPartIndex];
 	cm->model.index   = cm->curPartIndex * MODEL_BOX_VERTICES;
 	p->fullbright     = part->flags & 0x01;
 	p->firstPersonArm = part->flags & 0x02;
+	if (p->firstPersonArm) cm->numArmParts++;
 
 	BoxDesc_YQuad2(&cm->model, x1, x2, z2, z1, y2, /* top */
 		part->u1[0],                         part->v1[0],
@@ -644,7 +644,8 @@ static void CustomModel_DrawPart(
 	float value = 0.0f;
 
 	if (part->fullbright) {
-		for (i = 0; i < FACE_COUNT; i++) {
+		for (i = 0; i < FACE_COUNT; i++) 
+		{
 			oldCols[i] = Models.Cols[i];
 			Models.Cols[i] = PACKEDCOL_WHITE;
 		}
@@ -657,11 +658,10 @@ static void CustomModel_DrawPart(
 	rotY = part->rotation.Y * MATH_DEG2RAD;
 	rotZ = part->rotation.Z * MATH_DEG2RAD;
 
-	for (animIndex = 0; animIndex < MAX_CUSTOM_MODEL_ANIMS; animIndex++) {
+	for (animIndex = 0; animIndex < MAX_CUSTOM_MODEL_ANIMS; animIndex++) 
+	{
 		struct CustomModelAnim* anim = &part->anims[animIndex];
-		if (anim->type == CustomModelAnimType_None) {
-			continue;
-		}
+		if (anim->type == CustomModelAnimType_None) continue;
 
 		value = CustomModel_GetAnimationValue(anim, part, cm, e);
 	
@@ -764,7 +764,8 @@ static void CustomModel_DrawPart(
 	}
 
 	if (part->fullbright) {
-		for (i = 0; i < FACE_COUNT; i++) {
+		for (i = 0; i < FACE_COUNT; i++) 
+		{
 			Models.Cols[i] = oldCols[i];
 		}
 	}
@@ -772,17 +773,20 @@ static void CustomModel_DrawPart(
 
 static void CustomModel_Draw(struct Entity* e) {
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
-	int partIndex;
+	int i;
 
 	Model_ApplyTexture(e);
 	Models.uScale = e->uScale / cm->uScale;
 	Models.vScale = e->vScale / cm->vScale;
+	Model_LockVB(e, cm->numParts * MODEL_BOX_VERTICES);
 
-	for (partIndex = 0; partIndex < cm->numParts; partIndex++) {
-		CustomModel_DrawPart(&cm->parts[partIndex], cm, e);
+	for (i = 0; i < cm->numParts; i++) 
+	{
+		CustomModel_DrawPart(&cm->parts[i], cm, e);
 	}
 
-	Model_UpdateVB();
+	Model_UnlockVB();
+	Gfx_DrawVb_IndexedTris(cm->numParts * MODEL_BOX_VERTICES);
 	Models.Rotation = ROTATE_ORDER_ZYX;
 }
 
@@ -803,28 +807,31 @@ static void CustomModel_GetPickingBounds(struct Entity* e) {
 }
 
 static void CustomModel_DrawArm(struct Entity* e) {
-	int i;
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
+	int i;
+	if (!cm->numArmParts) return;
 
 	Models.uScale = 1.0f / cm->uScale;
 	Models.vScale = 1.0f / cm->vScale;
+	Model_LockVB(e, cm->numArmParts * MODEL_BOX_VERTICES);
 
-	for (i = 0; i < cm->numParts; i++) {
+	for (i = 0; i < cm->numParts; i++) 
+	{
 		struct CustomModelPart* part = &cm->parts[i];
 		if (part->firstPersonArm) {
 			Model_DrawArmPart(&part->modelPart);
 		}
 	}
 
-	if (cm->model.index) Model_UpdateVB();
+	Model_UnlockVB();
+	Gfx_DrawVb_IndexedTris(cm->numArmParts * MODEL_BOX_VERTICES);
 }
 
 static void CheckMaxVertices(void) {
 	/* hack to undo plugins setting a smaller vertices buffer */
-	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
+	if (Models.MaxVertices < MODELS_MAX_VERTICES) {
 		Platform_LogConst("CheckMaxVertices found smaller buffer, resetting Models.Vb");
-		Models.Vertices    = defaultVertices;
-		Models.MaxVertices = Array_Elems(defaultVertices);
+		Models.MaxVertices = MODELS_MAX_VERTICES;
 
 		Gfx_RecreateDynamicVb(&Models.Vb, VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 	}
@@ -866,7 +873,8 @@ void CustomModel_Undefine(struct CustomModel* cm) {
 
 static void CustomModel_FreeAll(void) {
 	int i;
-	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
+	for (i = 0; i < MAX_CUSTOM_MODELS; i++) 
+	{
 		CustomModel_Undefine(&custom_models[i]);
 	}
 }
@@ -885,6 +893,7 @@ struct ModelSet {
 #define HUMAN_BASE_VERTICES  (6 * MODEL_BOX_VERTICES)
 #define HUMAN_HAT32_VERTICES (1 * MODEL_BOX_VERTICES)
 #define HUMAN_HAT64_VERTICES (6 * MODEL_BOX_VERTICES)
+#define HUMAN_MAX_VERTICES   HUMAN_BASE_VERTICES + HUMAN_HAT64_VERTICES
 
 static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_bool opaqueBody) {
 	struct ModelLimbs* set;
@@ -894,7 +903,7 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
 	num  = HUMAN_BASE_VERTICES + (type == SKIN_64x32 ? HUMAN_HAT32_VERTICES : HUMAN_HAT64_VERTICES);
-	Model_LockVB(num);
+	Model_LockVB(e, num);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &model->head, true);
 	Model_DrawPart(&model->torso);
@@ -930,14 +939,14 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	}
 }
 
-static void HumanModel_DrawArmCore(struct ModelSet* model) {
+static void HumanModel_DrawArmCore(struct Entity* e, struct ModelSet* model) {
 	struct ModelLimbs* set;
 	int type, num;
 
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
 	num  = type == SKIN_64x32 ? MODEL_BOX_VERTICES : (2 * MODEL_BOX_VERTICES);
-	Model_LockVB(num);
+	Model_LockVB(e, num);
 
 	Model_DrawArmPart(&set->rightArm);
 	if (type != SKIN_64x32) Model_DrawArmPart(&set->rightArmLayer);
@@ -1096,7 +1105,7 @@ static void HumanModel_Draw(struct Entity* e) {
 }
 
 static void HumanModel_DrawArm(struct Entity* e) {
-	HumanModel_DrawArmCore(&human_set);
+	HumanModel_DrawArmCore(e, &human_set);
 }
 
 static float HumanModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
@@ -1120,6 +1129,7 @@ static void HumanoidModel_Register(void) {
 	human_model.calcHumanAnims = true;
 	human_model.usesHumanSkin  = true;
 	human_model.flags |= MODEL_FLAG_CLEAR_HAT;
+	human_model.maxVertices    = HUMAN_MAX_VERTICES;
 
 	Model_Register(&human_model);
 }
@@ -1190,7 +1200,7 @@ static void ChibiModel_Draw(struct Entity* e) {
 }
 
 static void ChibiModel_DrawArm(struct Entity* e) {
-	HumanModel_DrawArmCore(&chibi_set);
+	HumanModel_DrawArmCore(e, &chibi_set);
 }
 
 static float ChibiModel_GetNameY(struct Entity* e) { return 20.2f/16.0f; }
@@ -1214,6 +1224,7 @@ static void ChibiModel_Register(void) {
 	chibi_model.calcHumanAnims = true;
 	chibi_model.usesHumanSkin  = true;
 	chibi_model.flags |= MODEL_FLAG_CLEAR_HAT;
+	chibi_model.maxVertices    = HUMAN_MAX_VERTICES;
 
 	chibi_model.maxScale    = 3.0f;
 	chibi_model.shadowScale = 0.5f;
@@ -1254,6 +1265,7 @@ static void SittingModel_Register(void) {
 	sitting_model.calcHumanAnims = true;
 	sitting_model.usesHumanSkin  = true;
 	sitting_model.flags |= MODEL_FLAG_CLEAR_HAT;
+	sitting_model.maxVertices    = HUMAN_MAX_VERTICES;
 
 	sitting_model.shadowScale  = 0.5f;
 	sitting_model.GetTransform = SittingModel_GetTransform;
@@ -1276,8 +1288,9 @@ static struct Model corpse_model;
 static void CorpseModel_Register(void) {
 	corpse_model      = human_model;
 	corpse_model.name = "corpse";
+
 	corpse_model.MakeParts = Model_NoParts;
-	corpse_model.Draw = CorpseModel_Draw;
+	corpse_model.Draw      = CorpseModel_Draw;
 	Model_Register(&corpse_model);
 }
 
@@ -1295,7 +1308,7 @@ static void HeadModel_GetTransform(struct Entity* e, Vec3 pos, struct Matrix* m)
 static void HeadModel_Draw(struct Entity* e) {
 	struct ModelPart part;
 	Model_ApplyTexture(e);
-	Model_LockVB(HEAD_MAX_VERTICES);
+	Model_LockVB(e, HEAD_MAX_VERTICES);
 
 	part = human_set.head; part.rotY += 4.0f/16.0f;
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &part, true);
@@ -1323,6 +1336,7 @@ static void HeadModel_Register(void) {
 
 	head_model.pushes        = false;
 	head_model.GetTransform  = HeadModel_GetTransform;
+	head_model.maxVertices   = HEAD_MAX_VERTICES;
 	Model_Register(&head_model);
 }
 
@@ -1397,7 +1411,7 @@ static void ChickenModel_Draw(struct Entity* e) {
 	PackedCol col = Models.Cols[0];
 	int i;
 	Model_ApplyTexture(e);
-	Model_LockVB(CHICKEN_MAX_VERTICES);
+	Model_LockVB(e, CHICKEN_MAX_VERTICES);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &chicken_head,   true);
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &chicken_wattle, true);
@@ -1434,6 +1448,7 @@ static struct Model chicken_model = { "chicken", chicken_vertices, &chicken_tex,
 
 static void ChickenModel_Register(void) {
 	Model_Init(&chicken_model);
+	chicken_model.maxVertices = CHICKEN_MAX_VERTICES;
 	Model_Register(&chicken_model);
 }
 
@@ -1487,7 +1502,7 @@ static void CreeperModel_MakeParts(void) {
 
 static void CreeperModel_Draw(struct Entity* e) {
 	Model_ApplyTexture(e);
-	Model_LockVB(CREEPER_MAX_VERTICES);
+	Model_LockVB(e, CREEPER_MAX_VERTICES);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &creeper_head, true);
 	Model_DrawPart(&creeper_torso);
@@ -1516,6 +1531,7 @@ static struct Model creeper_model  = {
 
 static void CreeperModel_Register(void) {
 	Model_Init(&creeper_model);
+	creeper_model.maxVertices = CREEPER_MAX_VERTICES;
 	Model_Register(&creeper_model);
 }
 
@@ -1569,7 +1585,7 @@ static void PigModel_MakeParts(void) {
 
 static void PigModel_Draw(struct Entity* e) {
 	Model_ApplyTexture(e);
-	Model_LockVB(PIG_MAX_VERTICES);
+	Model_LockVB(e, PIG_MAX_VERTICES);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &pig_head, true);
 	Model_DrawPart(&pig_torso);
@@ -1597,6 +1613,7 @@ static struct Model pig_model  = { "pig", pig_vertices, &pig_tex,
 
 static void PigModel_Register(void) {
 	Model_Init(&pig_model);
+	pig_model.maxVertices = PIG_MAX_VERTICES;
 	Model_Register(&pig_model);
 }
 
@@ -1707,7 +1724,7 @@ static void SheepModel_DrawBody(struct Entity* e) {
 
 static void FurlessModel_Draw(struct Entity* e) {
 	Model_ApplyTexture(e);
-	Model_LockVB(SHEEP_BODY_VERTICES);
+	Model_LockVB(e, SHEEP_BODY_VERTICES);
 
 	SheepModel_DrawBody(e);
 
@@ -1717,7 +1734,7 @@ static void FurlessModel_Draw(struct Entity* e) {
 
 static void SheepModel_Draw(struct Entity* e) {
 	Model_ApplyTexture(e);
-	Model_LockVB(SHEEP_BODY_VERTICES + SHEEP_FUR_VERTICES);
+	Model_LockVB(e, SHEEP_BODY_VERTICES + SHEEP_FUR_VERTICES);
 
 	SheepModel_DrawBody(e);
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &fur_head, true);
@@ -1753,11 +1770,13 @@ static struct Model nofur_model  = { "sheep_nofur", sheep_vertices, &sheep_tex,
 
 static void SheepModel_Register(void) {
 	Model_Init(&sheep_model);
+	sheep_model.maxVertices = SHEEP_BODY_VERTICES + SHEEP_FUR_VERTICES;
 	Model_Register(&sheep_model);
 }
 
 static void NoFurModel_Register(void) {
 	Model_Init(&nofur_model);
+	nofur_model.maxVertices = SHEEP_BODY_VERTICES;
 	Model_Register(&nofur_model);
 }
 
@@ -1811,7 +1830,7 @@ static void SkeletonModel_MakeParts(void) {
 
 static void SkeletonModel_Draw(struct Entity* e) {
 	Model_ApplyTexture(e);
-	Model_LockVB(SKELETON_MAX_VERTICES);
+	Model_LockVB(e, SKELETON_MAX_VERTICES);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &skeleton_head, true);
 	Model_DrawPart(&skeleton_torso);
@@ -1825,7 +1844,7 @@ static void SkeletonModel_Draw(struct Entity* e) {
 }
 
 static void SkeletonModel_DrawArm(struct Entity* e) {
-	Model_LockVB(MODEL_BOX_VERTICES);
+	Model_LockVB(e, MODEL_BOX_VERTICES);
 
 	Model_DrawArmPart(&skeleton_rightArm);
 
@@ -1846,8 +1865,9 @@ static struct Model skeleton_model  = { "skeleton", skeleton_vertices, &skeleton
 
 static void SkeletonModel_Register(void) {
 	Model_Init(&skeleton_model);
-	skeleton_model.DrawArm  = SkeletonModel_DrawArm;
-	skeleton_model.armX = 5;
+	skeleton_model.DrawArm     = SkeletonModel_DrawArm;
+	skeleton_model.armX        = 5;
+	skeleton_model.maxVertices = SKELETON_MAX_VERTICES;
 	Model_Register(&skeleton_model);
 }
 
@@ -1899,7 +1919,7 @@ static void SpiderModel_MakeParts(void) {
 static void SpiderModel_Draw(struct Entity* e) {
 	float rotX, rotY, rotZ;
 	Model_ApplyTexture(e);
-	Model_LockVB(SPIDER_MAX_VERTICES);
+	Model_LockVB(e, SPIDER_MAX_VERTICES);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &spider_head, true);
 	Model_DrawPart(&spider_link);
@@ -1941,6 +1961,7 @@ static struct Model spider_model  = { "spider", spider_vertices, &spider_tex,
 
 static void SpiderModel_Register(void) {
 	Model_Init(&spider_model);
+	spider_model.maxVertices = SPIDER_MAX_VERTICES;
 	Model_Register(&spider_model);
 }
 
@@ -1954,7 +1975,7 @@ static void ZombieModel_Draw(struct Entity* e) {
 	HumanModel_DrawCore(e, &human_set, false);
 }
 static void ZombieModel_DrawArm(struct Entity* e) {
-	HumanModel_DrawArmCore(&human_set);
+	HumanModel_DrawArmCore(e, &human_set);
 }
 
 static void ZombieModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,32,4); }
@@ -1968,7 +1989,8 @@ static struct Model zombie_model  = { "zombie", human_vertices, &zombie_tex,
 
 static void ZombieModel_Register(void) {
 	Model_Init(&zombie_model);
-	zombie_model.DrawArm  = ZombieModel_DrawArm;
+	zombie_model.DrawArm     = ZombieModel_DrawArm;
+	zombie_model.maxVertices = HUMAN_MAX_VERTICES;
 	Model_Register(&zombie_model);
 }
 
@@ -1976,6 +1998,10 @@ static void ZombieModel_Register(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------BlockModel------------------------------------------------------*
 *#########################################################################################################################*/
+#define BLOCKMODEL_SPRITE_COUNT (8 * 4)
+#define BLOCKMODEL_CUBE_COUNT   (6 * 4)
+#define BLOCKMODEL_MAX_VERTICES BLOCKMODEL_SPRITE_COUNT
+
 static BlockID bModel_block = BLOCK_AIR;
 static int bModel_index, bModel_texIndices[8];
 static struct VertexTextured* bModel_vertices;
@@ -2081,14 +2107,12 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 	bModel_vertices = ptr;
 }
 
-#define BLOCKMODEL_SPRITE_COUNT (8 * 4)
-#define BLOCKMODEL_CUBE_COUNT   (6 * 4)
-static void BlockModel_BuildParts(cc_bool sprite) {
+static void BlockModel_BuildParts(struct Entity* e, cc_bool sprite) {
 	struct VertexTextured* ptr;
 	Vec3 min, max;
 	TextureLoc loc;
 
-	Model_LockVB(sprite ? BLOCKMODEL_SPRITE_COUNT : BLOCKMODEL_CUBE_COUNT);
+	Model_LockVB(e, sprite ? BLOCKMODEL_SPRITE_COUNT : BLOCKMODEL_CUBE_COUNT);
 	ptr = Models.Vertices;
 
 	if (sprite) {
@@ -2148,22 +2172,23 @@ static void BlockModel_DrawParts(void) {
 	Gfx_DrawVb_IndexedTris_Range(count, offset);
 }
 
-static void BlockModel_Draw(struct Entity* p) {
+static void BlockModel_Draw(struct Entity* e) {
 	cc_bool sprite;
 	int i;
 
-	bModel_block = p->ModelBlock;
+	bModel_block = e->ModelBlock;
 	bModel_index = 0;
 	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
 	if (Blocks.FullBright[bModel_block]) {
-		for (i = 0; i < FACE_COUNT; i++) {
+		for (i = 0; i < FACE_COUNT; i++) 
+		{
 			Models.Cols[i] = PACKEDCOL_WHITE;
 		}
 	}
 
 	sprite = Blocks.Draw[bModel_block] == DRAW_SPRITE;
-	BlockModel_BuildParts(sprite);
+	BlockModel_BuildParts(e, sprite);
 
 	if (sprite) Gfx_SetFaceCulling(true);
 	BlockModel_DrawParts();
@@ -2178,9 +2203,10 @@ static struct Model block_model = { "block", NULL, &human_tex,
 
 static void BlockModel_Register(void) {
 	Model_Init(&block_model);
-	block_model.bobbing  = false;
-	block_model.usesSkin = false;
-	block_model.pushes   = false;
+	block_model.bobbing     = false;
+	block_model.usesSkin    = false;
+	block_model.pushes      = false;
+	block_model.maxVertices = BLOCKMODEL_MAX_VERTICES;
 	Model_Register(&block_model);
 }
 
@@ -2203,7 +2229,7 @@ static void SkinnedCubeModel_MakeParts(void) {
 
 static void SkinnedCubeModel_Draw(struct Entity* e) {
 	Model_ApplyTexture(e);
-	Model_LockVB(SKINNEDCUBE_MAX_VERTICES);
+	Model_LockVB(e, SKINNEDCUBE_MAX_VERTICES);
 
 	Model_DrawRotate(-e->Pitch * MATH_DEG2RAD, 0, 0, &skinnedCube_head, true);
 
@@ -2227,7 +2253,8 @@ static struct Model skinnedCube_model = { "skinnedcube", skinnedCube_vertices, &
 static void SkinnedCubeModel_Register(void) {
 	Model_Init(&skinnedCube_model);
 	skinnedCube_model.usesHumanSkin = true;
-	skinnedCube_model.pushes = false;
+	skinnedCube_model.pushes        = false;
+	skinnedCube_model.maxVertices   = SKINNEDCUBE_MAX_VERTICES;
 	Model_Register(&skinnedCube_model);
 }
 
@@ -2299,8 +2326,8 @@ static void HoldModel_Register(void) {
 	hold_model = human_model;
 	hold_model.name = "hold";
 	hold_model.MakeParts = Model_NoParts;
-	hold_model.Draw = HoldModel_Draw;
-	hold_model.GetEyeY = HoldModel_GetEyeY;
+	hold_model.Draw      = HoldModel_Draw;
+	hold_model.GetEyeY   = HoldModel_GetEyeY;
 	Model_Register(&hold_model);
 }
 
@@ -2357,8 +2384,7 @@ static void OnContextRecreated(void* obj) {
 }
 
 static void OnInit(void) {
-	Models.Vertices    = defaultVertices;
-	Models.MaxVertices = Array_Elems(defaultVertices);
+	Models.MaxVertices = MODELS_MAX_VERTICES;
 
 	RegisterDefaultModels();
 	OnContextRecreated(NULL);

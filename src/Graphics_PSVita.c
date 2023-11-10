@@ -922,12 +922,6 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
-	Mem_Copy(buffer->data, vertices, vCount * gfx_stride);
-	Gfx_BindVb(vb);
-}
-
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
