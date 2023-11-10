@@ -23,8 +23,7 @@ static const GUID guid_IXDGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0
 // Some generally useful background links
 //   https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052
 
-static int gfx_format = -1, depthBits; // TODO implement depthBits?? for ZNear calc
-static UINT gfx_stride;
+static int depthBits; // TODO implement depthBits?? for ZNear calc
 static GfxResourceID white_square;
 
 #ifdef _MSC_VER
@@ -394,12 +393,6 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
 	ID3D11DeviceContext_Unmap(context, buffer, 0);
 	Gfx_BindDynamicVb(vb);
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
-	Mem_Copy(data, vertices, vCount * gfx_stride);
-	Gfx_UnlockDynamicVb(vb);
 }
 
 

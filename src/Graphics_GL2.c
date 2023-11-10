@@ -86,8 +86,6 @@ static const struct DynamicLibSym core_funcs[] = {
 #endif
 
 #include "_GLShared.h"
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static GfxResourceID white_square;
 
 

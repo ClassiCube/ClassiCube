@@ -7,9 +7,6 @@
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
-
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
 
 static gcmContextData* context;
@@ -546,12 +543,6 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	Gfx_BindVb(vb);
-	rsxInvalidateVertexCache(context); // TODO needed?
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
 	Gfx_BindVb(vb);
 	rsxInvalidateVertexCache(context); // TODO needed?
 }

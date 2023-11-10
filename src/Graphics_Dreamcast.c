@@ -9,9 +9,6 @@
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
-
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
 
 
@@ -164,12 +161,6 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
 	gfx_vertices = vb; 
 	//dcache_flush_range(vb, vb_size);
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	//dcache_flush_range(vertices, vCount * gfx_stride);
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }

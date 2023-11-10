@@ -266,8 +266,7 @@ void Gfx_OnWindowResize(void) { }
 
 
 static cc_uint8* gfx_vertices;
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1, gfx_fields;
+static int gfx_fields;
 
 
 /*########################################################################################################################*
@@ -321,12 +320,6 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { 
 	gfx_vertices = vb; 
 	sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	sceKernelDcacheWritebackInvalidateRange(vertices, vCount * gfx_stride);
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
