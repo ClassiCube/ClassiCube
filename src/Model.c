@@ -14,6 +14,8 @@
 #include "Options.h"
 
 struct _ModelsData Models;
+/* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
+#define MODELS_MAX_VERTICES (MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS)
 
 #define UV_POS_MASK ((cc_uint16)0x7FFF)
 #define UV_MAX ((cc_uint16)0x8000)
@@ -174,13 +176,21 @@ void Model_UpdateVB(void) {
 
 /* Need to restore vertices array to keep third party plugins such as MoreModels working */
 static struct VertexTextured* real_vertices;
+static GfxResourceID modelVB;
+
 void Model_LockVB(struct Entity* entity, int verticesCount) {
-	real_vertices   = Models.Vertices;
-	Models.Vertices = Gfx_LockDynamicVb(Models.Vb, VERTEX_FORMAT_TEXTURED, verticesCount);
+	real_vertices = Models.Vertices;
+	/*if (!entity->ModelVB) {
+		entity->ModelVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.Active->maxVertices);
+	}
+	modelVB = entity->ModelVB;*/
+	modelVB = Models.Vb;
+
+	Models.Vertices = Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
 }
 
 void Model_UnlockVB(void) {
-	Gfx_UnlockDynamicVb(Models.Vb);
+	Gfx_UnlockDynamicVb(modelVB);
 	Models.Vertices = real_vertices;
 }
 
@@ -503,11 +513,10 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const cc_str
 }
 
 
+#ifdef CUSTOM_MODELS
 /*########################################################################################################################*
 *------------------------------------------------------Custom Models------------------------------------------------------*
 *#########################################################################################################################*/
-/* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
-#define MODELS_MAX_VERTICES (MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS)
 struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
 void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part) {
@@ -878,6 +887,9 @@ static void CustomModel_FreeAll(void) {
 		CustomModel_Undefine(&custom_models[i]);
 	}
 }
+#else
+static void CustomModel_FreeAll(void) { }
+#endif
 
 
 /*########################################################################################################################*

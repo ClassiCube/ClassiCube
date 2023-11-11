@@ -96,7 +96,10 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
-	&customParticles_Ext, &customModels_Ext, &pluginMessages_Ext, &extTeleport_Ext,
+	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext,
+#ifdef CUSTOM_MODELS
+	&customModels_Ext,
+#endif
 #ifdef EXTENDED_TEXTURES
 	&extTextures_Ext,
 #endif
@@ -1495,6 +1498,88 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
 
+static void CPE_PluginMessage(cc_uint8* data) {
+	cc_uint8 channel = data[0];
+	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
+}
+
+static void CPE_ExtEntityTeleport(cc_uint8* data) {
+	EntityID id = *data++;
+	cc_uint8 packetFlags = *data++;
+	cc_uint8 flags = 0;
+
+	/* bit  0    includes position */
+	/* bits 1-2  position mode(absolute_instant / absolute_smooth / relative_smooth / relative_seamless) */
+	/* bit  3    unused */
+	/* bit  4    includes orientation */
+	/* bit  5    interpolate ori */
+	/* bit  6-7  unused */
+
+	if (packetFlags & 1) flags |= LU_HAS_POS;
+	flags |= (packetFlags & 6) << 4; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
+	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
+	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
+
+	Classic_ReadAbsoluteLocation(data, id, flags);
+}
+
+static void CPE_Reset(void) {
+	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
+	CPEExtensions_Reset();
+	cpe_needD3Fix = false;
+	Game_UseCPEBlocks = false;
+	if (!Game_Version.HasCPE) return;
+
+	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);
+	Net_Set(OPCODE_EXT_ENTRY, CPE_ExtEntry, 69);
+	Net_Set(OPCODE_SET_REACH, CPE_SetClickDistance, 3);
+	Net_Set(OPCODE_CUSTOM_BLOCK_LEVEL, CPE_CustomBlockLevel, 2);
+	Net_Set(OPCODE_HOLD_THIS, CPE_HoldThis, 3);
+	Net_Set(OPCODE_SET_TEXT_HOTKEY, CPE_SetTextHotkey, 134);
+
+	Net_Set(OPCODE_EXT_ADD_PLAYER_NAME, CPE_ExtAddPlayerName, 196);
+	Net_Set(OPCODE_EXT_ADD_ENTITY, CPE_ExtAddEntity, 130);
+	Net_Set(OPCODE_EXT_REMOVE_PLAYER_NAME, CPE_ExtRemovePlayerName, 3);
+
+	Net_Set(OPCODE_ENV_SET_COLOR, CPE_SetEnvCol, 8);
+	Net_Set(OPCODE_MAKE_SELECTION, CPE_MakeSelection, 86);
+	Net_Set(OPCODE_REMOVE_SELECTION, CPE_RemoveSelection, 2);
+	Net_Set(OPCODE_SET_BLOCK_PERMISSION, CPE_SetBlockPermission, 4);
+	Net_Set(OPCODE_SET_MODEL, CPE_ChangeModel, 66);
+	Net_Set(OPCODE_ENV_SET_MAP_APPEARANCE, CPE_EnvSetMapAppearance, 69);
+	Net_Set(OPCODE_ENV_SET_WEATHER, CPE_EnvWeatherType, 2);
+	Net_Set(OPCODE_HACK_CONTROL, CPE_HackControl, 8);
+	Net_Set(OPCODE_EXT_ADD_ENTITY2, CPE_ExtAddEntity2, 138);
+
+	Net_Set(OPCODE_BULK_BLOCK_UPDATE, CPE_BulkBlockUpdate, 1282);
+	Net_Set(OPCODE_SET_TEXT_COLOR, CPE_SetTextColor, 6);
+	Net_Set(OPCODE_ENV_SET_MAP_URL, CPE_SetMapEnvUrl, 65);
+	Net_Set(OPCODE_ENV_SET_MAP_PROPERTY, CPE_SetMapEnvProperty, 6);
+	Net_Set(OPCODE_SET_ENTITY_PROPERTY, CPE_SetEntityProperty, 7);
+	Net_Set(OPCODE_TWO_WAY_PING, CPE_TwoWayPing, 4);
+	Net_Set(OPCODE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
+	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
+	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
+	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
+	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
+	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
+	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
+	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
+}
+
+static cc_uint8* CPE_Tick(cc_uint8* data) {
+	cpe_pingTicks++;
+	if (cpe_pingTicks >= 20 && IsSupported(twoWayPing_Ext)) {
+		data = CPE_WriteTwoWayPing(data, false, Ping_NextPingId());
+		cpe_pingTicks = 0;
+	}
+	return data;
+}
+
+#ifdef CUSTOM_MODELS
+/*########################################################################################################################*
+*------------------------------------------------------Custom models------------------------------------------------------*
+*#########################################################################################################################*/
 static void CPE_DefineModel(cc_uint8* data) {
 	cc_uint8 id = data[0];
 	struct CustomModel* cm = &custom_models[id];
@@ -1613,86 +1698,16 @@ static void CPE_UndefineModel(cc_uint8* data) {
 	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
 }
 
-static void CPE_PluginMessage(cc_uint8* data) {
-	cc_uint8 channel = data[0];
-	Event_RaisePluginMessage(&NetEvents.PluginMessageReceived, channel, data + 1);
-}
-
-static void CPE_ExtEntityTeleport(cc_uint8* data) {
-	EntityID id = *data++;
-	cc_uint8 packetFlags = *data++;
-	cc_uint8 flags = 0;
-
-	/* bit  0    includes position */
-	/* bits 1-2  position mode(absolute_instant / absolute_smooth / relative_smooth / relative_seamless) */
-	/* bit  3    unused */
-	/* bit  4    includes orientation */
-	/* bit  5    interpolate ori */
-	/* bit  6-7  unused */
-
-	if (packetFlags & 1) flags |= LU_HAS_POS;
-	flags |= (packetFlags & 6) << 4; /* bit-and with 00000110 to isolate only pos mode, then left shift by 4 to match client mode offset */
-	if (packetFlags & 16) flags |= LU_HAS_PITCH | LU_HAS_YAW;
-	if (packetFlags & 32) flags |= LU_ORI_INTERPOLATE;
-
-	Classic_ReadAbsoluteLocation(data, id, flags);
-}
-
-static void CPE_Reset(void) {
-	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
-	CPEExtensions_Reset();
-	cpe_needD3Fix = false;
-	Game_UseCPEBlocks = false;
+static void CustomModels_Reset(void) {
 	if (!Game_Version.HasCPE) return;
 
-	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);
-	Net_Set(OPCODE_EXT_ENTRY, CPE_ExtEntry, 69);
-	Net_Set(OPCODE_SET_REACH, CPE_SetClickDistance, 3);
-	Net_Set(OPCODE_CUSTOM_BLOCK_LEVEL, CPE_CustomBlockLevel, 2);
-	Net_Set(OPCODE_HOLD_THIS, CPE_HoldThis, 3);
-	Net_Set(OPCODE_SET_TEXT_HOTKEY, CPE_SetTextHotkey, 134);
-
-	Net_Set(OPCODE_EXT_ADD_PLAYER_NAME, CPE_ExtAddPlayerName, 196);
-	Net_Set(OPCODE_EXT_ADD_ENTITY, CPE_ExtAddEntity, 130);
-	Net_Set(OPCODE_EXT_REMOVE_PLAYER_NAME, CPE_ExtRemovePlayerName, 3);
-
-	Net_Set(OPCODE_ENV_SET_COLOR, CPE_SetEnvCol, 8);
-	Net_Set(OPCODE_MAKE_SELECTION, CPE_MakeSelection, 86);
-	Net_Set(OPCODE_REMOVE_SELECTION, CPE_RemoveSelection, 2);
-	Net_Set(OPCODE_SET_BLOCK_PERMISSION, CPE_SetBlockPermission, 4);
-	Net_Set(OPCODE_SET_MODEL, CPE_ChangeModel, 66);
-	Net_Set(OPCODE_ENV_SET_MAP_APPEARANCE, CPE_EnvSetMapAppearance, 69);
-	Net_Set(OPCODE_ENV_SET_WEATHER, CPE_EnvWeatherType, 2);
-	Net_Set(OPCODE_HACK_CONTROL, CPE_HackControl, 8);
-	Net_Set(OPCODE_EXT_ADD_ENTITY2, CPE_ExtAddEntity2, 138);
-
-	Net_Set(OPCODE_BULK_BLOCK_UPDATE, CPE_BulkBlockUpdate, 1282);
-	Net_Set(OPCODE_SET_TEXT_COLOR, CPE_SetTextColor, 6);
-	Net_Set(OPCODE_ENV_SET_MAP_URL, CPE_SetMapEnvUrl, 65);
-	Net_Set(OPCODE_ENV_SET_MAP_PROPERTY, CPE_SetMapEnvProperty, 6);
-	Net_Set(OPCODE_SET_ENTITY_PROPERTY, CPE_SetEntityProperty, 7);
-	Net_Set(OPCODE_TWO_WAY_PING, CPE_TwoWayPing, 4);
-	Net_Set(OPCODE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
-	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
-	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
-	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
-	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
-	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
-	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
+	Net_Set(OPCODE_DEFINE_MODEL,      CPE_DefineModel, 116);
 	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
-	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
-	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
-	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
+	Net_Set(OPCODE_UNDEFINE_MODEL,    CPE_UndefineModel, 2);
 }
-
-static cc_uint8* CPE_Tick(cc_uint8* data) {
-	cpe_pingTicks++;
-	if (cpe_pingTicks >= 20 && IsSupported(twoWayPing_Ext)) {
-		data = CPE_WriteTwoWayPing(data, false, Ping_NextPingId());
-		cpe_pingTicks = 0;
-	}
-	return data;
-}
+#else
+static void CustomModels_Reset(void) { }
+#endif
 
 
 /*########################################################################################################################*
@@ -1829,6 +1844,7 @@ static void Protocol_Reset(void) {
 	Classic_Reset();
 	CPE_Reset();
 	BlockDefs_Reset();
+	CustomModels_Reset();
 	WoM_Reset();
 }
 

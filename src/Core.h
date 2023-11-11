@@ -317,6 +317,7 @@ typedef cc_uint8  cc_bool;
 
 #ifndef CC_BUILD_LOWMEM
 #define EXTENDED_BLOCKS
+#define CUSTOM_MODELS
 #endif
 #define EXTENDED_TEXTURES
 

@@ -225,6 +225,11 @@ void HeldBlockRenderer_Render(double delta) {
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 }
 
+
+static void OnContextLost(void* obj) {
+	Gfx_DeleteDynamicVb(&held_entity.ModelVB);
+}
+
 static const struct EntityVTABLE heldEntity_VTABLE = {
 	NULL, NULL, NULL, HeldBlockRenderer_GetCol,
 	NULL, NULL
@@ -240,6 +245,7 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ProjectionChanged, NULL, OnProjectionChanged);
 	Event_Register_(&UserEvents.HeldBlockChanged, NULL, DoSwitchBlockAnim);
 	Event_Register_(&UserEvents.BlockChanged,     NULL, OnBlockChanged);
+	Event_Register_(&GfxEvents.ContextLost,       NULL, OnContextLost);
 }
 
 struct IGameComponent HeldBlockRenderer_Component = {

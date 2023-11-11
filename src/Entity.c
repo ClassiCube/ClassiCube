@@ -440,7 +440,8 @@ struct _EntitiesData Entities;
 
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->interval);
 	}
@@ -450,7 +451,8 @@ void Entities_RenderModels(double delta, float t) {
 	int i;
 	Gfx_SetAlphaTest(true);
 	
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
 	}
@@ -458,12 +460,16 @@ void Entities_RenderModels(double delta, float t) {
 }
 
 static void Entities_ContextLost(void* obj) {
+	struct Entity* entity;
 	int i;
-	if (Gfx.ManagedTextures) return;
 
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
-		DeleteSkin(Entities.List[i]);
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
+		entity = Entities.List[i];
+		if (!entity) continue;
+		Gfx_DeleteDynamicVb(&entity->ModelVB);
+		
+		if (!Gfx.ManagedTextures) DeleteSkin(entity);
 	}
 }
 /* No OnContextCreated, skin textures remade when needed */
