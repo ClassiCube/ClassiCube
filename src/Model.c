@@ -168,6 +168,8 @@ void Model_ApplyTexture(struct Entity* e) {
 
 void Model_UpdateVB(void) {
 	struct Model* model = Models.Active;
+	if (!Models.Vb)
+		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 	
 	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, model->index);
 	Gfx_DrawVb_IndexedTris(model->index);
@@ -179,13 +181,19 @@ static struct VertexTextured* real_vertices;
 static GfxResourceID modelVB;
 
 void Model_LockVB(struct Entity* entity, int verticesCount) {
-	real_vertices = Models.Vertices;
-	/*if (!entity->ModelVB) {
+#ifdef CC_BUILD_LOWMEM
+	if (!entity->ModelVB) {
 		entity->ModelVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.Active->maxVertices);
 	}
-	modelVB = entity->ModelVB;*/
+	modelVB = entity->ModelVB;
+#else
+	if (!Models.Vb) {
+		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+	}
 	modelVB = Models.Vb;
+#endif
 
+	real_vertices   = Models.Vertices;
 	Models.Vertices = Gfx_LockDynamicVb(modelVB, VERTEX_FORMAT_TEXTURED, verticesCount);
 }
 
@@ -841,8 +849,7 @@ static void CheckMaxVertices(void) {
 	if (Models.MaxVertices < MODELS_MAX_VERTICES) {
 		Platform_LogConst("CheckMaxVertices found smaller buffer, resetting Models.Vb");
 		Models.MaxVertices = MODELS_MAX_VERTICES;
-
-		Gfx_RecreateDynamicVb(&Models.Vb, VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+		Gfx_DeleteDynamicVb(&Models.Vb);
 	}
 }
 
@@ -2386,25 +2393,19 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&Models.Vb);
 	if (Gfx.ManagedTextures) return;
 
-	for (tex = textures_head; tex; tex = tex->next) {
+	for (tex = textures_head; tex; tex = tex->next) 
+	{
 		Gfx_DeleteTexture(&tex->texID);
 	}
 }
 
-static void OnContextRecreated(void* obj) {
-	Gfx_RecreateDynamicVb(&Models.Vb, VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
-}
-
 static void OnInit(void) {
 	Models.MaxVertices = MODELS_MAX_VERTICES;
-
 	RegisterDefaultModels();
-	OnContextRecreated(NULL);
 	Models.ClassicArms = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
-	Event_Register_(&TextureEvents.FileChanged,  NULL, Models_TextureChanged);
-	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
+	Event_Register_(&GfxEvents.ContextLost,     NULL, OnContextLost);
 }
 
 static void OnFree(void) {
