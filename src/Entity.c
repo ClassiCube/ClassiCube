@@ -38,6 +38,7 @@ static PackedCol Entity_GetColor(struct Entity* e) {
 void Entity_Init(struct Entity* e) {
 	static const cc_string model = String_FromConst("humanoid");
 	Vec3_Set(e->ModelScale, 1,1,1);
+	e->Flags      = ENTITY_FLAG_HAS_MODELVB;
 	e->uScale     = 1.0f;
 	e->vScale     = 1.0f;
 	e->_skinReqID = 0;
@@ -92,11 +93,13 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 static void Entity_ParseScale(struct Entity* e, const cc_string* scale) {
 	float value;
 	if (!Convert_ParseFloat(scale, &value)) return;
-
 	value = max(value, 0.001f);
+
 	/* local player doesn't allow giant model scales */
 	/* (can't climb stairs, extremely CPU intensive collisions) */
-	if (e->ModelRestrictedScale) { value = min(value, e->Model->maxScale); }
+	if (e->Flags & ENTITY_FLAG_MODEL_RESTRICTED_SCALE) {
+		value = min(value, e->Model->maxScale); 
+	}
 	Vec3_Set(e->ModelScale, value,value,value);
 }
 
@@ -130,7 +133,9 @@ void Entity_SetModel(struct Entity* e, const cc_string* model) {
 
 	Entity_ParseScale(e, &scale);
 	Entity_UpdateModelBounds(e);
-	Gfx_DeleteDynamicVb(&e->ModelVB);
+
+	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
+		Gfx_DeleteDynamicVb(&e->ModelVB);
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -467,9 +472,12 @@ static void Entities_ContextLost(void* obj) {
 	{
 		entity = Entities.List[i];
 		if (!entity) continue;
-		Gfx_DeleteDynamicVb(&entity->ModelVB);
-		
-		if (!Gfx.ManagedTextures) DeleteSkin(entity);
+
+		if (entity->Flags & ENTITY_FLAG_HAS_MODELVB)
+			Gfx_DeleteDynamicVb(&entity->ModelVB);
+
+		if (!Gfx.ManagedTextures) 
+			DeleteSkin(entity);
 	}
 }
 /* No OnContextCreated, skin textures remade when needed */
@@ -513,7 +521,9 @@ EntityID Entities_GetClosest(struct Entity* src) {
 static void Player_Despawn(struct Entity* e) {
 	DeleteSkin(e);
 	EntityNames_Delete(e);
-	Gfx_DeleteDynamicVb(&e->ModelVB);
+
+	if (e->Flags & ENTITY_FLAG_HAS_MODELVB)
+		Gfx_DeleteDynamicVb(&e->ModelVB);
 }
 
 
@@ -757,7 +767,7 @@ static void LocalPlayer_Init(void) {
 	PhysicsComp_Init(&p->Physics, &p->Base);
 	TiltComp_Init(&p->Tilt);
 
-	p->Base.ModelRestrictedScale = true;
+	p->Base.Flags |= ENTITY_FLAG_MODEL_RESTRICTED_SCALE;
 	p->ReachDistance = 5.0f;
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;

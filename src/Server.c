@@ -349,8 +349,9 @@ static void DisconnectInvalidOpcode(cc_uint8 opcode) {
 }
 
 static void MPConnection_Tick(struct ScheduledTask* task) {
-	cc_uint8* readEnd;
 	Net_Handler handler;
+	cc_uint8* readEnd;
+	cc_uint8* readCur;
 	cc_uint32 read;
 	int i, remaining;
 	cc_result res;
@@ -373,36 +374,37 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		/* TODO: Should this be checked unconditonally instead of just when read = 0 ? */
 		if (net_lastPacket + 30 < Game.Time) { MPConnection_Disconnect(); return; }
 	} else {
-		readEnd         = net_readCurrent + read;
-		net_lastPacket  = Game.Time;
-		net_readCurrent = net_readBuffer;
+		readCur        = net_readBuffer;
+		readEnd        = net_readCurrent + read;
+		net_lastPacket = Game.Time;
 
-		while (net_readCurrent < readEnd) {
-			cc_uint8 opcode = net_readCurrent[0];
+		while (readCur < readEnd) {
+			cc_uint8 opcode = readCur[0];
 
 			/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
 			if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 				Platform_LogConst("Skipping invalid HackControl byte from D3 server");
-				net_readCurrent++;
+				readCur++;
 				LocalPlayer_ResetJumpVelocity();
 				continue;
 			}
 
-			if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
+			if (readCur + Protocol.Sizes[opcode] > readEnd) break;
 			handler = Protocol.Handlers[opcode];
 			if (!handler) { DisconnectInvalidOpcode(opcode); return; }
 
 			lastOpcode = opcode;
-			handler(net_readCurrent + 1); /* skip opcode */
-			net_readCurrent += Protocol.Sizes[opcode];
+			handler(readCur + 1); /* skip opcode */
+			readCur += Protocol.Sizes[opcode];
 		}
 
 		/* Protocol packets might be split up across TCP packets */
 		/* If so, copy last few unprocessed bytes back to beginning of buffer */
 		/* These bytes are then later combined with subsequently read TCP packet data */
-		remaining = (int)(readEnd - net_readCurrent);
-		for (i = 0; i < remaining; i++) {
-			net_readBuffer[i] = net_readCurrent[i];
+		remaining = (int)(readEnd - readCur);
+		for (i = 0; i < remaining; i++) 
+		{
+			net_readBuffer[i] = readCur[i];
 		}
 		net_readCurrent = net_readBuffer + remaining;
 	}

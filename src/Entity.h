@@ -79,6 +79,15 @@ struct EntityVTABLE {
 /* Skin was downloaded or copied from another entity with the same skin. */
 #define SKIN_FETCH_COMPLETED   2
 
+/* true to restrict model scale (needed for local player, giant model collisions are too costly) */
+#define ENTITY_FLAG_MODEL_RESTRICTED_SCALE 0x01
+/* Whether the ModelVB field of this Entity instance refers to valid memory */
+/* This is just a hack to work around CEF plugin which declares Entity structs instances, */
+/*   but those instances are declared using the older struct definition which lacked the ModelVB field */
+/* And therefore trying to access the ModelVB Field in entity struct instances created by the CEF plugin */
+/*   results in attempting to read or write data from potentially invalid memory */
+#define ENTITY_FLAG_HAS_MODELVB 0x02
+
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 struct Entity {
 	const struct EntityVTABLE* VTABLE;
@@ -89,7 +98,7 @@ struct Entity {
 
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a valid block. */
-	cc_bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, giant model collisions are too costly) */
+	cc_uint8 Flags;
 	cc_bool ShouldRender;
 	struct AABB ModelAABB;
 	Vec3 ModelScale, Size;
