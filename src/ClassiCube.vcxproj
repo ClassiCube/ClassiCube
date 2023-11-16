@@ -475,6 +475,7 @@
     <ClCompile Include="Graphics_PS3.c" />
     <ClCompile Include="Graphics_PSP.c" />
     <ClCompile Include="Graphics_PSVita.c" />
+    <ClCompile Include="Graphics_SoftGPU.c" />
     <ClCompile Include="Graphics_Xbox.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />

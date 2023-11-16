@@ -83,6 +83,7 @@ And also runs on:
 * PS Vita - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml))
 * Xbox - unfinished, major rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox.yml))
 * PS3 - unfinished, rendering issues
+* Nintendo 64 - unfinished, major rendering issues
 
 # Compiling 
 
@@ -293,6 +294,14 @@ Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/Kal
 
 The Dreamcast port needs assistance from someone experienced with Dreamcast homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
+#### Nintendo 64
+
+Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+
+The Nintendo 64 port needs assistance from someone experienced with Nintendo 64 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+You'll also need to stub out `WorkerLoop` function in `Http_Worker.c` for now
+
 ##### Other
 
 You'll have to write the necessary code. You should read portability.md in doc folder.
@@ -347,6 +356,9 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
 * [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
+* [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
+* [cen64](https://github.com/n64dev/cen64) - Emulator used to test Nintendo 64 port
+* [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
 
 
 ## Sound Credits

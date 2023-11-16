@@ -127,6 +127,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	
 	glGenTextures(1, &tex->textureID);
 	glBindTexture(GL_TEXTURE_2D, tex->textureID);
+	// NOTE: Enabling these fixes textures, but seems to break on cen64
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
@@ -207,8 +208,8 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//glColorMask(r, g, b, a); TODO
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { }
-void Gfx_SetDepthTest(cc_bool enabled) { }
+void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
+void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {

@@ -42,8 +42,8 @@ cc_uint64 Stopwatch_Measure(void) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	write(STDERR_FILENO, msg,  len);
+	write(STDERR_FILENO, "\n",   1);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
@@ -69,12 +69,17 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static const cc_string root_path = String_FromConst("");
+static const cc_string root_path = String_FromConst("/");
 
 static void GetNativePath(char* str, const cc_string* path) {
+	// TODO temp hack
+	cc_string path_ = *path;
+	int idx = String_IndexOf(path, '/');
+	if (idx >= 0) path_ = String_UNSAFE_SubstringAt(&path_, idx + 1);
+	
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
-	String_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, &path_);
 }
 
 cc_result Directory_Create(const cc_string* path) {
@@ -93,11 +98,12 @@ static cc_result File_Do(cc_file* file, const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 	
-	*file = -1;
-	return ReturnCode_FileNotFound;
+	//*file = -1;
+	//return ReturnCode_FileNotFound;
 	// TODO: Why does trying this code break everything
 	
 	int ret = dfs_open(str);
+	Platform_Log2("Opened %c = %i", str, &ret);
 	if (ret < 0) { *file = -1; return ret; }
 	
 	*file = ret;

@@ -686,6 +686,9 @@
     <ClCompile Include="Window_N64.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics_SoftGPU.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
