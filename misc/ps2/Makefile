@@ -5,9 +5,8 @@ OBJS	:=$(patsubst %.c, %.o, $(CFILES))
 
 EE_BIN = ClassiCube-ps2.elf
 EE_OBJS = $(OBJS)
-EE_LIBS = -ldebug -lpad -lc $(PS2DEV)/gsKit/lib/libgskit.a
+EE_LIBS = -lpad -lpacket -ldma -lgraph -ldraw -lc
 EE_CFLAGS = -DPLAT_PS2
-EE_INCS = -I$(PS2DEV)/gsKit/include
 
 all: $(EE_BIN)
 

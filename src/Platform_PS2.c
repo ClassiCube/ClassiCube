@@ -42,15 +42,10 @@ const char* Platform_AppNameSuffix = " PS2";
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	//u32 done = 0;
-	//sysTtyWrite(STDOUT_FILENO, msg,  len, &done);
-	//sysTtyWrite(STDOUT_FILENO, "\n", 1,   &done);
-	
 	char tmp[2048 + 1];
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	
-	scr_printf("%s\n", tmp);
 	_print("%s\n", tmp);
 }
 
@@ -372,7 +367,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 void Platform_Init(void) {
 	//InitDebug();
 	SifInitRpc(0);
-	init_scr();
 	//netInitialize();
 	// Create root directory
 	Directory_Create(&String_Empty);

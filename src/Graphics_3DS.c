@@ -222,6 +222,7 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
 		}
 	}
+	// TODO flush data cache GSPGPU_FlushDataCache
 }
 
 
@@ -406,7 +407,8 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 }
 
 void Gfx_BindVb(GfxResourceID vb) { 
-	gfx_vertices = vb; // https://github.com/devkitPro/citro3d/issues/47
+	gfx_vertices = vb; 
+	// https://github.com/devkitPro/citro3d/issues/47
 	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
   	BufInfo_Init(bufInfo);

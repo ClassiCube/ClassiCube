@@ -13,11 +13,19 @@
 #include "Logger.h"
 #include <loadfile.h>
 #include <libpad.h>
-#include <gsKit.h>
+#include <packet.h>
+#include <dma_tags.h>
+#include <gif_tags.h>
+#include <gs_psm.h>
+#include <dma.h>
+#include <graph.h>
+#include <draw.h>
+#include <draw3d.h>
 
 static cc_bool launcherMode;
 static char padBuf[256] __attribute__((aligned(64)));
-static GSGLOBAL *gsGlobal = NULL;
+static framebuffer_t win_fb;
+static void InitFramebuffer(void);
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -34,23 +42,21 @@ static void LoadModules(void) {
 }
 
 void Window_Init(void) {
-	gsGlobal = gsKit_init_global();
-      
-	DisplayInfo.Width  = gsGlobal->Width;
-	DisplayInfo.Height = gsGlobal->Height;
+	InitFramebuffer();
+    
+	DisplayInfo.Width  = win_fb.width;
+	DisplayInfo.Height = win_fb.height;
 	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = gsGlobal->Width;
-	WindowInfo.Height  = gsGlobal->Height;
+	WindowInfo.Width   = win_fb.width;
+	WindowInfo.Height  = win_fb.height;
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffset = 10;
-	
-	Platform_Log2("SIZE: %i x %i", &WindowInfo.Width, &WindowInfo.Height);
 	
 	LoadModules();
 	padInit(0);
@@ -157,12 +163,34 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Bitmap fb_bmp;
+
+static void InitFramebuffer(void) {
+	win_fb.width   = 640;
+	win_fb.height  = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
+	win_fb.mask    = 0;
+	win_fb.psm     = GS_PSM_32;
+	win_fb.address = graph_vram_allocate(win_fb.width, win_fb.height, win_fb.psm, GRAPH_ALIGN_PAGE);
+	
+	graph_initialize(win_fb.address, win_fb.width, win_fb.height, win_fb.psm, 0, 0);
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp     = *bmp;
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
+	packet_t* packet = packet_init(50,PACKET_NORMAL);
+	qword_t* q = packet->data;
+
+	q = draw_texture_transfer(q, fb_bmp.scan0, fb_bmp.width, fb_bmp.height, GS_PSM_32, 
+								 win_fb.address, win_fb.width);
+	q = draw_texture_flush(q);
+
+	dma_channel_send_chain(DMA_CHANNEL_GIF, packet->data, q - packet->data, 0, 0);
+	dma_wait_fast();
+
+	packet_free(packet);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
