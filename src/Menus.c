@@ -187,6 +187,8 @@ static void Menu_Remove(void* screen, int i) {
 static void Menu_BeginGen(int width, int height, int length) {
 	World_NewMap();
 	World_SetDimensions(width, height, length);
+
+	Gen_Start();
 	GeneratingScreen_Show();
 }
 
@@ -1098,7 +1100,7 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 	return GenLevelScreen_GetInt(s, index);
 }
 
-static void GenLevelScreen_Gen(void* screen, cc_bool vanilla) {
+static void GenLevelScreen_Gen(void* screen, const struct MapGenerator* gen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int width  = GenLevelScreen_GetInt(s, 0);
 	int height = GenLevelScreen_GetInt(s, 1);
@@ -1111,14 +1113,15 @@ static void GenLevelScreen_Gen(void* screen, cc_bool vanilla) {
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");
 	} else {
-		Gen_Vanilla = vanilla; Gen_Seed = seed;
+		Gen_Active  = gen;
+		Gen_Seed    = seed;
 		Gui_Remove((struct Screen*)s);
 		Menu_BeginGen(width, height, length);
 	}
 }
 
-static void GenLevelScreen_Flatgrass(void* a, void* b) { GenLevelScreen_Gen(a, false); }
-static void GenLevelScreen_Notchy(void* a, void* b)    { GenLevelScreen_Gen(a, true);  }
+static void GenLevelScreen_Flatgrass(void* a, void* b) { GenLevelScreen_Gen(a, &FlatgrassGen); }
+static void GenLevelScreen_Notchy(void* a, void* b)    { GenLevelScreen_Gen(a, &NotchyGen);    }
 
 static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int def) {
 	cc_string tmp; char tmpBuffer[STRING_SIZE];
@@ -1272,8 +1275,8 @@ static struct Widget* classicgen_widgets[] = {
 
 static void ClassicGenScreen_Gen(int size) {
 	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
-	Gen_Vanilla = true;
-	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
+	Gen_Active = &NotchyGen;
+	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
 
 	Gui_Remove((struct Screen*)&ClassicGenScreen);
 	Menu_BeginGen(size, 64, size);

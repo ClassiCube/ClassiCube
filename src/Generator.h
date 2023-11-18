@@ -15,11 +15,20 @@ extern volatile const char* Gen_CurrentState;
 /* Whether map generation has completed */
 extern volatile cc_bool Gen_Done;
 extern int Gen_Seed;
-extern cc_bool Gen_Vanilla;
 extern BlockRaw* Gen_Blocks;
+/* Starts generating a map using the Gen_Active generator */
+void Gen_Start(void);
 
-void FlatgrassGen_Generate(void);
-void NotchyGen_Generate(void);
+
+struct MapGenerator {
+	const cc_bool (*Prepare)(void);
+	const void   (*Generate)(void);
+};
+
+extern const struct MapGenerator* Gen_Active;
+extern const struct MapGenerator FlatgrassGen;
+extern const struct MapGenerator NotchyGen;
+
 
 extern BlockRaw* Tree_Blocks;
 extern RNGState* Tree_Rnd;

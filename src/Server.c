@@ -133,8 +133,10 @@ static void SPConnection_BeginConnect(void) {
 	World_SetDimensions(128, 64, 128);
 #endif
 
-	Gen_Vanilla = true;
-	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
+	Gen_Active = &NotchyGen;
+	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
+	Gen_Start();
+
 	GeneratingScreen_Show();
 }
 

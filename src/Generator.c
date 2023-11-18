@@ -6,18 +6,38 @@
 #include "World.h"
 #include "Utils.h"
 #include "Game.h"
+#include "Window.h"
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
 volatile cc_bool Gen_Done;
 int Gen_Seed;
-cc_bool Gen_Vanilla;
-BlockRaw* Gen_Blocks;
+BlockRaw* Gen_Blocks; 
+const struct MapGenerator* Gen_Active;
 
-static void Gen_Init(void) {
+static void Gen_Reset(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState    = "";
-	Gen_Done   = false;
+	Gen_Done = false;
+}
+
+static void Gen_DoGen(void) {
+	Gen_Active->Generate();
+}
+
+void Gen_Start(void) {
+	void* thread;
+	Gen_Reset();
+	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
+
+	if (!Gen_Blocks || !Gen_Active->Prepare()) {
+		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
+		Gen_Done = true;
+	} else {
+		thread = Thread_Create(Gen_DoGen);
+		Thread_Start2(thread, Gen_DoGen);
+		Thread_Detach(thread);
+	}
 }
 
 
@@ -39,9 +59,11 @@ static void FlatgrassGen_MapSet(int yBeg, int yEnd, BlockRaw block) {
 	}
 }
 
-void FlatgrassGen_Generate(void) {
-	Gen_Init();
+static cc_bool FlatgrassGen_Prepare(void) {
+	return true;
+}
 
+static void FlatgrassGen_Generate(void) {
 	Gen_CurrentState = "Setting air blocks";
 	FlatgrassGen_MapSet(World.Height / 2, World.MaxY, BLOCK_AIR);
 
@@ -53,6 +75,11 @@ void FlatgrassGen_Generate(void) {
 
 	Gen_Done = true;
 }
+
+const struct MapGenerator FlatgrassGen = {
+	FlatgrassGen_Prepare,
+	FlatgrassGen_Generate
+};
 
 
 /*########################################################################################################################*
@@ -610,10 +637,12 @@ static void NotchyGen_PlantTrees(void) {
 	}
 }
 
-void NotchyGen_Generate(void) {
-	Gen_Init();
-	Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
+static cc_bool NotchyGen_Prepare(void) {
+	Heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
+	return Heightmap != NULL;
+}
 
+static void NotchyGen_Generate(void) {
 	Random_Seed(&rnd, Gen_Seed);
 	waterLevel = World.Height / 2;	
 	minHeight  = World.Height;
@@ -638,6 +667,11 @@ void NotchyGen_Generate(void) {
 	Heightmap = NULL;
 	Gen_Done  = true;
 }
+
+const struct MapGenerator NotchyGen = {
+	NotchyGen_Prepare,
+	NotchyGen_Generate
+};
 
 
 /*########################################################################################################################*
