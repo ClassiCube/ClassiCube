@@ -156,6 +156,10 @@ double Math_Atan2(double x, double y) { return atan2(y, x); }
  *      appendix.
  */
 
+/* NOTE: NaN/Infinity checking was removed from Cos/Sin functions, */
+/*  since ClassiCube does not care about the exact return value */
+/*  from the mathematical functions anyways */
+
 /* Global constants */
 #define PI 3.141592653589793238462643383279502884197169399
 #define DIV_2_PI (1.0 / (2.0 * PI))
@@ -245,9 +249,6 @@ static double SinStage3(double x) {
 double Math_Sin(double x) {
 	double x_div_pi;
 
-	if (x == POS_INF || x == NEG_INF || x == DBL_NAN)
-		return DBL_NAN;
-
 	x_div_pi = x * DIV_2_PI;
 	return SinStage3(x_div_pi - Floord(x_div_pi));
 }
@@ -264,9 +265,6 @@ double Math_Sin(double x) {
  */
 double Math_Cos(double x) {
 	double x_div_pi_shifted;
-
-	if (x == POS_INF || x == NEG_INF || x == DBL_NAN)
-		return DBL_NAN;
 
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;
 	return SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
