@@ -262,6 +262,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_WEBAUDIO
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_MINFILES
+	#define CC_BUILD_COOPTHREADED
 	#undef  CC_BUILD_FREETYPE
 #elif defined __psp__
 	#define CC_BUILD_HTTPCLIENT

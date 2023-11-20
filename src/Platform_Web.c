@@ -227,10 +227,6 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 /* No real threading support with emscripten backend */
 void  Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Create(Thread_StartFunc func) { return NULL; }
-void  Thread_Start2(void* handle, Thread_StartFunc func) { func(); }
-void  Thread_Detach(void* handle) { }
-void  Thread_Join(void* handle) { }
 
 void* Mutex_Create(void) { return NULL; }
 void  Mutex_Free(void* handle) { }

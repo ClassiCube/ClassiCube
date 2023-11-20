@@ -1937,7 +1937,7 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	s->progress = Gen_CurrentProgress;
 	LoadingScreen_Render(s, delta);
-	if (Gen_Done) GeneratingScreen_EndGeneration();
+	if (Gen_IsDone()) GeneratingScreen_EndGeneration();
 }
 
 static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
