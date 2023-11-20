@@ -6,6 +6,7 @@
 #include "Errors.h"
 #include "Utils.h"
 #include "Logger.h"
+#include "PackedCol.h"
 
 struct StringsBuffer Options;
 static struct StringsBuffer changedOpts;
@@ -136,6 +137,19 @@ int Options_GetEnum(const char* key, int defValue, const char* const* names, int
 	if (!Options_UNSAFE_Get(key, &str)) return defValue;
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
+
+cc_bool Options_GetColor(const char* key, cc_uint8* rgb) {
+	cc_string value, parts[3];
+	if (!Options_UNSAFE_Get(key, &value))   return false;
+	if (PackedCol_TryParseHex(&value, rgb)) return true;
+
+	/* Try parsing as R,G,B instead */
+	return String_UNSAFE_Split(&value, ',', parts, 3)
+		&& Convert_ParseUInt8(&parts[0], &rgb[0])
+		&& Convert_ParseUInt8(&parts[1], &rgb[1])
+		&& Convert_ParseUInt8(&parts[2], &rgb[2]);
+}
+
 
 void Options_SetBool(const char* keyRaw, cc_bool value) {
 	static const cc_string str_true  = String_FromConst("True");

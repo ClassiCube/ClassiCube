@@ -123,6 +123,9 @@ CC_API float Options_GetFloat(const char*  key, float min, float max, float defV
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 /* NOTE: Conversion is done by going through all elements of names, returning index of a match. */
 CC_API int   Options_GetEnum(const char*   key, int defValue, const char* const* names, int namesCount);
+/* Attempts to parse the value of the given option into an RGB (3 byte) colour. */
+/* Returns whether the option was actually found and could be parsed into a colour. */
+cc_bool Options_GetColor(const char* key, cc_uint8* rgb);
 
 /* Sets value of given option to either "true" or "false". */
 CC_API void Options_SetBool(const char* keyRaw, cc_bool value);

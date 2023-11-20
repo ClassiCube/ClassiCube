@@ -415,19 +415,18 @@ static struct ChatCommand GpuInfoCommand = {
 };
 
 static void RenderTypeCommand_Execute(const cc_string* args, int argsCount) {
-	int flags;
-	if (!argsCount) {
-		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
-	}
+	char strBuffer[256];
+	cc_string safeStr = String_FromArray(strBuffer);
+	cc_string unsafeStr;
 
-	flags = EnvRenderer_CalcFlags(args);
-	if (flags >= 0) {
-		EnvRenderer_SetMode(flags);
-		Options_Set(OPT_RENDER_TYPE, args);
-		Chat_Add1("&e/client: &fRender type is now %s.", args);
-	} else {
-		Chat_Add1("&e/client: &cUnrecognised render type &f\"%s\"&c.", args);
-	}
+	Options_SetInt("xyz", 123456);
+	Options_Get("xyz", &safeStr, "");
+	Options_UNSAFE_Get("xyz", &unsafeStr);
+
+	Options_Reload();
+
+	Chat_Add1("Safe: %s", &safeStr);
+	Chat_Add1("Unsafe: %s", &unsafeStr);
 }
 
 static struct ChatCommand RenderTypeCommand = {

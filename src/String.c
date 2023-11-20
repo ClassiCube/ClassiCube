@@ -146,6 +146,13 @@ int String_CaselessEqualsConst(const cc_string* a, const char* b) {
 
 
 void String_Append(cc_string* str, char c) {
+	/* MSVC in debug mode will initialise all variables on the stack with 0xCC by default */
+	/* So if a string is being passed with CC in all its fields, then it's probably invalid */
+#if _MSC_VER && _DEBUG
+	if (str->length == 0xCCCC && str->capacity == 0xCCCC) 
+		Logger_Abort("String must be initialised before calling String_Append");
+#endif
+
 	if (str->length == str->capacity) return;
 	str->buffer[str->length++] = c;
 }

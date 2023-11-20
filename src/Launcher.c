@@ -328,9 +328,7 @@ const struct LauncherTheme Launcher_NordicTheme = {
 
 CC_NOINLINE static void ParseColor(const char* key, BitmapCol* color) {
 	cc_uint8 rgb[3];
-	cc_string value;
-	if (!Options_UNSAFE_Get(key, &value))    return;
-	if (!PackedCol_TryParseHex(&value, rgb)) return;
+	if (!Options_GetColor(key, rgb)) return;
 
 	*color = BitmapColor_RGB(rgb[0], rgb[1], rgb[2]);
 }
