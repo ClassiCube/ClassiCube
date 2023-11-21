@@ -186,7 +186,7 @@
     <ClInclude Include="AxisLinesRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
-    <ClInclude Include="PickedPosRenderer.h">
+    <ClInclude Include="SelOutlineRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
     <ClInclude Include="IsometricDrawer.h">
@@ -383,7 +383,7 @@
     <ClCompile Include="AxisLinesRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
-    <ClCompile Include="PickedPosRenderer.c">
+    <ClCompile Include="SelOutlineRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
     <ClCompile Include="IsometricDrawer.c">

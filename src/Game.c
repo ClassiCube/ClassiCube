@@ -28,7 +28,7 @@
 #include "AxisLinesRenderer.h"
 #include "EnvRenderer.h"
 #include "HeldBlockRenderer.h"
-#include "PickedPosRenderer.h"
+#include "SelOutlineRenderer.h"
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
@@ -417,7 +417,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Selections_Component);
 	Game_AddComponent(&HeldBlockRenderer_Component);
 	/* Gfx_SetDepthWrite(true) */
-	Game_AddComponent(&PickedPosRenderer_Component);
+	Game_AddComponent(&SelOutlineRenderer_Component);
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
 	Game_AddComponent(&Formats_Component);
@@ -476,7 +476,7 @@ static void Game_Render3D(double delta, float t) {
 
 	EntityShadows_Render();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
-		PickedPosRenderer_Render(&Game_SelectedPos, true);
+		SelOutlineRenderer_Render(&Game_SelectedPos, true);
 	}
 
 	/* Render water over translucent blocks when under the water outside the map for proper alpha blending */
@@ -492,7 +492,7 @@ static void Game_Render3D(double delta, float t) {
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
 	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.block] == DRAW_TRANSLUCENT) {
-		PickedPosRenderer_Render(&Game_SelectedPos, false);
+		SelOutlineRenderer_Render(&Game_SelectedPos, false);
 	}
 
 	Selections_Render();

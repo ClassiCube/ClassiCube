@@ -415,7 +415,7 @@
     <ClInclude Include="Particle.h" />
     <ClInclude Include="BlockPhysics.h" />
     <ClInclude Include="Picking.h" />
-    <ClInclude Include="PickedPosRenderer.h" />
+    <ClInclude Include="SelOutlineRenderer.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
@@ -514,7 +514,7 @@
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Particle.c" />
     <ClCompile Include="BlockPhysics.c" />
-    <ClCompile Include="PickedPosRenderer.c" />
+    <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Resources.c" />

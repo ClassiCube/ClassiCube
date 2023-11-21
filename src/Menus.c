@@ -1063,10 +1063,10 @@ static struct GenLevelScreen {
 	Screen_Body
 	struct FontDesc textFont;
 	struct ButtonWidget flatgrass, vanilla, cancel;
-	struct TextInputWidget* selected;
 	struct TextInputWidget inputs[4];
 	struct TextWidget labels[4], title;
 } GenLevelScreen;
+#define GENLEVEL_NUM_INPUTS 4
 
 static struct Widget* gen_widgets[12] = {
 	(struct Widget*)&GenLevelScreen.inputs[0], (struct Widget*)&GenLevelScreen.inputs[1],
@@ -1144,32 +1144,43 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int def) {
 	s->inputs[i].onscreenType = KEYBOARD_TYPE_INTEGER;
 }
 
+static struct InputWidget* GenLevelScreen_SelectedInput(struct GenLevelScreen* s) {
+	if (s->selectedI >= 0 && s->selectedI < GENLEVEL_NUM_INPUTS)
+		return &s->inputs[s->selectedI].base;
+	return NULL;
+}
+
 static int GenLevelScreen_KeyDown(void* screen, int key) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected && Elem_HandlesKeyDown(&s->selected->base, key)) return true;
-	return Screen_InputDown(s, key);
+	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+
+	if (selected && Elem_HandlesKeyDown(selected, key)) return true;
+	return Menu_InputDown(s, key);
 }
 
 static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected) InputWidget_Append(&s->selected->base, keyChar);
+	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+
+	if (selected) InputWidget_Append(selected, keyChar);
 	return true;
 }
 
 static int GenLevelScreen_TextChanged(void* screen, const cc_string* str) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected) InputWidget_SetText(&s->selected->base, str);
+	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+
+	if (selected) InputWidget_SetText(selected, str);
 	return true;
 }
 
 static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	int i = Screen_DoPointerDown(screen, id, x, y);
-	if (i == -1 || i >= 4) return TOUCH_TYPE_GUI;
+	struct InputWidget* selected;
+	s->selectedI = Screen_DoPointerDown(screen, id, x, y);
 
-	if (s->selected) s->selected->base.showCaret = false;
-	s->selected = (struct TextInputWidget*)&s->inputs[i];
-	Window_SetKeyboardText(&s->inputs[i].base.text);
+	selected = GenLevelScreen_SelectedInput(s);
+	if (selected) Window_SetKeyboardText(&selected->text);
 	return TOUCH_TYPE_GUI;
 }
 
@@ -1205,7 +1216,14 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 
 static void GenLevelScreen_Update(void* screen, double delta) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected) s->selected->base.caretAccumulator += delta;
+	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+	int i;
+	for (i = 0; i < GENLEVEL_NUM_INPUTS; i++)
+	{
+		s->inputs[i].base.showCaret = i == s->selectedI;
+	}
+
+	if (selected) selected->caretAccumulator += delta;
 }
 
 static void GenLevelScreen_Layout(void* screen) {
@@ -1227,7 +1245,7 @@ static void GenLevelScreen_Init(void* screen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	s->widgets     = gen_widgets;
 	s->numWidgets  = Array_Elems(gen_widgets);
-	s->selected    = NULL;
+	s->selectedI   = -1;
 	s->maxVertices = GEN_MAX_VERTICES;
 
 	GenLevelScreen_Make(s, 0, World.Width);
