@@ -6,6 +6,7 @@
 #include "Picking.h"
 #include "Funcs.h"
 #include "Camera.h"
+#include "Options.h"
 
 static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)
@@ -28,13 +29,17 @@ x,3,0,  x,2,0,  x,2,3,  x,3,3,
 0,0,z,  0,1,z,  3,1,z,  3,0,z,\
 0,3,z,  0,2,z,  3,2,z,  3,3,z,
 
+float scale;
+int opacity;
+PackedCol col;
+
 static void BuildMesh(struct RayTracer* selected) {
 	static const cc_uint8 indices[288] = {
 		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
 		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
 	};
-	PackedCol col = PackedCol_Make(0, 0, 0, 102);
+	
 	struct VertexColoured* ptr;
 	int i;
 	Vec3 delta;
@@ -48,12 +53,12 @@ static void BuildMesh(struct RayTracer* selected) {
 	if (dist < 4.0f * 4.0f) offset = 0.00625f;
 	if (dist < 2.0f * 2.0f) offset = 0.00500f;
 
-	size = 1.0f/16.0f;
-	if (dist < 32.0f * 32.0f) size = 1.0f/32.0f;
-	if (dist < 16.0f * 16.0f) size = 1.0f/64.0f;
-	if (dist <  8.0f *  8.0f) size = 1.0f/96.0f;
-	if (dist <  4.0f *  4.0f) size = 1.0f/128.0f;
-	if (dist <  2.0f *  2.0f) size = 1.0f/192.0f;
+	size = scale / 16.0f;
+	if (dist < 32.0f * 32.0f) size = scale / 32.0f;
+	if (dist < 16.0f * 16.0f) size = scale / 64.0f;
+	if (dist <  8.0f *  8.0f) size = scale / 96.0f;
+	if (dist <  4.0f *  4.0f) size = scale / 128.0f;
+	if (dist <  2.0f *  2.0f) size = scale / 192.0f;
 	
 	/*  How a face is laid out: 
 	                 #--#-------#--#<== OUTER_MAX (3)
@@ -113,6 +118,16 @@ static void OnContextLost(void* obj) {
 
 static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextLost, NULL, OnContextLost);
+
+	scale = Options_GetFloat(OPT_SELECTED_BLOCK_OUTLINE_SCALE, 1, 16, 1);
+	opacity = Options_GetInt(OPT_SELECTED_BLOCK_OUTLINE_OPACITY, 0, 255, 102);
+	col = PackedCol_Make(0, 0, 0, opacity); // Black by default
+
+	cc_uint8 rgb[3];
+
+	if (Options_GetColor(OPT_SELECTED_BLOCK_OUTLINE_COLOR, rgb)) {
+		col = PackedCol_Make(rgb[0], rgb[1], rgb[2], opacity);
+	}
 }
 
 static void OnFree(void) { OnContextLost(NULL); }
