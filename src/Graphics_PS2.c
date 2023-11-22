@@ -6,6 +6,8 @@
 #include <packet.h>
 #include <dma_tags.h>
 #include <gif_tags.h>
+#include <gs_privileged.h>
+#include <gs_gp.h>
 #include <gs_psm.h>
 #include <dma.h>
 #include <graph.h>
@@ -135,6 +137,9 @@ void Gfx_DisableMipmaps(void) { }
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
 static int clearR, clearG, clearB;
+static cc_bool gfx_alphaTest;
+static cc_bool gfx_depthTest;
+static cc_bool stateDirty;
 
 void Gfx_SetFog(cc_bool enabled)    { }
 void Gfx_SetFogCol(PackedCol col)   { }
@@ -142,12 +147,29 @@ void Gfx_SetFogDensity(float value) { }
 void Gfx_SetFogEnd(float value)     { }
 void Gfx_SetFogMode(FogFunc func)   { }
 
+// 
+static void UpdateState(int context) {
+	// TODO: toggle Enable instead of method ?
+	int aMethod = gfx_alphaTest ? ATEST_METHOD_GREATER_EQUAL : ATEST_METHOD_ALLPASS;
+	int dMethod = gfx_depthTest ? ZTEST_METHOD_GREATER_EQUAL : ZTEST_METHOD_ALLPASS;
+	
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_TEST(DRAW_ENABLE,  aMethod, 0x80, ATEST_KEEP_FRAMEBUFFER,
+							   DRAW_DISABLE, DRAW_DISABLE,
+							   DRAW_ENABLE,  dMethod), GS_REG_TEST + context);
+	q++;
+	
+	stateDirty = false;
+}
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	// TODO
 }
 
 void Gfx_SetAlphaTest(cc_bool enabled) {
-	// TODO
+	gfx_alphaTest = enabled;
+	stateDirty    = true;
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
@@ -160,7 +182,7 @@ void Gfx_Clear(void) {
 	q = draw_disable_tests(q, 0, &fb_depth);
 	q = draw_clear(q, 0, 2048.0f - fb_color.width / 2.0f, 2048.0f - fb_color.height / 2.0f,
 					fb_color.width, fb_color.height, clearR, clearG, clearB);
-	q = draw_enable_tests(q, 0, &fb_depth);
+	UpdateState(0);
 }
 
 void Gfx_ClearCol(PackedCol color) {
@@ -170,7 +192,8 @@ void Gfx_ClearCol(PackedCol color) {
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
-	// TODO
+	gfx_depthTest = enabled;
+	stateDirty    = true;
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
@@ -278,7 +301,8 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	float zNear = 0.1f;
+	float zNear_ = zFar;
+	float zFar_  = 0.1f;
 	float c = (float)Cotangent(0.5f * fov);
 
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
@@ -286,12 +310,13 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
 	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*matrix = Matrix_Identity;
+	// TODO: Check is Frustum culling needs changing for this
 
 	matrix->row1.X =  c / aspect;
 	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.Z = -(zFar_ + zNear_) / (zFar_ - zNear_);
 	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.Z = -(2.0f * zFar_ * zNear_) / (zFar_ - zNear_);
 	matrix->row4.W =  0.0f;
 }
 
@@ -324,13 +349,11 @@ static Vector4 TransformVertex(struct VertexTextured* pos) {
 
 #define VCopy(dst, src) dst.x = (vp_hwidth/2048) * (src.X / src.W); dst.y = (vp_hheight/2048) * (src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.X / src.W); dst.y = vp_hheight * (1 - src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
-#define CCopy(dst) dst.r = PackedCol_R(v->Col) / 255.0f; dst.g = PackedCol_G(v->Col) / 255.0f; dst.b = PackedCol_B(v->Col) / 255.0f; dst.a = PackedCol_A(v->Col) / 255.0f; 
+#define CCopy(dst) dst.r = PackedCol_R(v->Col); dst.g = PackedCol_G(v->Col); dst.b = PackedCol_B(v->Col); dst.a = PackedCol_A(v->Col); dst.q = 1.0f;
 
 static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* v) {
 	vertex_f_t in_vertices[3];
-	color_f_t in_color[3];
-	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.X, &v0.Y, &v0.Z, &v0.W);
-	
+	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.X, &v0.Y, &v0.Z, &v0.W);	
 	xyz_t out_vertices[3];
 	color_t out_color[3];
 	
@@ -338,11 +361,10 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	VCopy(in_vertices[1], v1);
 	VCopy(in_vertices[2], v2);
 	
-	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);
-	
-	CCopy(in_color[0]);
-	CCopy(in_color[1]);
-	CCopy(in_color[2]);
+	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
+	CCopy(out_color[0]);
+	CCopy(out_color[1]);
+	CCopy(out_color[2]);
 	
 	prim_t prim;
 	color_t color;
@@ -357,14 +379,13 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	prim.mapping_type = PRIM_MAP_ST;
 	prim.colorfix = PRIM_UNFIXED;
 
-	color.r = 0x80;
-	color.g = 0x80;
-	color.b = 0x80;
-	color.a = 0x80;
+	// NOTE: not actually used
+	color.r = 0x10;
+	color.g = 0x10;
+	color.b = 0x10;
+	color.a = 0x10;
 	color.q = 1.0f;
 	
-	
-	draw_convert_rgbaq(out_color, 3, in_vertices, in_color);
 	draw_convert_xyz(out_vertices, 2048, 2048, 32, 3, in_vertices);
 	
 	// Draw the triangles using triangle primitive type.
@@ -381,6 +402,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 }
 
 static void DrawTriangles(int verticesCount, int startVertex) {
+	if (stateDirty) UpdateState(0);
 	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
 	
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
