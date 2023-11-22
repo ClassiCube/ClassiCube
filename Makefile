@@ -149,6 +149,8 @@ vita:
 	$(MAKE) -f misc/vita/Makefile PLAT=vita
 ps3:
 	$(MAKE) -f misc/ps3/Makefile PLAT=ps3
+ps2:
+	$(MAKE) -f misc/ps2/Makefile PLAT=ps2
 3ds:
 	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
 wii:

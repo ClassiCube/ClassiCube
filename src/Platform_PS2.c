@@ -50,7 +50,7 @@ void Platform_Log(const char* msg, int len) {
 	len = min(len, 2048);
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	
-	_print("%s\n", tmp);
+	_print("%s", tmp);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))

@@ -24,8 +24,6 @@
 
 static cc_bool launcherMode;
 static char padBuf[256] __attribute__((aligned(64)));
-static framebuffer_t win_fb;
-static void InitFramebuffer(void);
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -42,16 +40,14 @@ static void LoadModules(void) {
 }
 
 void Window_Init(void) {
-	InitFramebuffer();
-    
-	DisplayInfo.Width  = win_fb.width;
-	DisplayInfo.Height = win_fb.height;
+	DisplayInfo.Width  = 640;
+	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
 	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = win_fb.width;
-	WindowInfo.Height  = win_fb.height;
+	WindowInfo.Width   = DisplayInfo.Width;
+	WindowInfo.Height  = DisplayInfo.Height;
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
@@ -63,12 +59,18 @@ void Window_Init(void) {
 	padPortOpen(0, 0, padBuf);
 }
 
-void Window_Create2D(int width, int height) { 
-	launcherMode = true;
-	Gfx_Create(); // launcher also uses RSX to draw
+static cc_bool hasCreated;
+static void ResetGfxState(void) {
+	if (!hasCreated) { hasCreated = true; return; }
+	
+	graph_shutdown();
+	graph_vram_clear();
+	
+	dma_channel_shutdown(DMA_CHANNEL_GIF,0);
 }
 
 void Window_Create3D(int width, int height) { 
+	ResetGfxState();
 	launcherMode = false; 
 }
 
@@ -162,11 +164,15 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+static framebuffer_t win_fb;
 static struct Bitmap fb_bmp;
 
-static void InitFramebuffer(void) {
-	win_fb.width   = 640;
-	win_fb.height  = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
+void Window_Create2D(int width, int height) {
+	ResetGfxState();
+	launcherMode = true;
+	
+	win_fb.width   = DisplayInfo.Width;
+	win_fb.height  = DisplayInfo.Height;
 	win_fb.mask    = 0;
 	win_fb.psm     = GS_PSM_32;
 	win_fb.address = graph_vram_allocate(win_fb.width, win_fb.height, win_fb.psm, GRAPH_ALIGN_PAGE);

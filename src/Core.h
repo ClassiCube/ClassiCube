@@ -318,6 +318,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_PS2
 	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#undef CC_BUILD_FREETYPE
 #endif
 #endif

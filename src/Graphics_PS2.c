@@ -15,6 +15,7 @@
 static void* gfx_vertices;
 static framebuffer_t fb_color;
 static zbuffer_t     fb_depth;
+static float vp_hwidth, vp_hheight;
 
 // double buffering
 static packet_t* packets[2];
@@ -31,6 +32,7 @@ void Gfx_FreeState(void) {
 	FreeDefaultResources();
 }
 
+// TODO: Maybe move to Window backend and just initialise once ??
 static void InitBuffers(void) {
 	fb_color.width   = DisplayInfo.Width;
 	fb_color.height  = DisplayInfo.Height;
@@ -53,7 +55,7 @@ static void InitDrawingEnv(void) {
 	
 	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
-	q = draw_primitive_xyoffset(q, 0, 2048 - DisplayInfo.Width / 2, 2048 - DisplayInfo.Height / 2);
+	q = draw_primitive_xyoffset(q, 0, 2048 - vp_hwidth, 2048 - vp_hheight);
 
 	q = draw_finish(q);
 
@@ -64,8 +66,8 @@ static void InitDrawingEnv(void) {
 }
 
 static void InitDMABuffers(void) {
-	packets[0] = packet_init(100, PACKET_NORMAL);
-	packets[1] = packet_init(100, PACKET_NORMAL);
+	packets[0] = packet_init(10000, PACKET_NORMAL);
+	packets[1] = packet_init(10000, PACKET_NORMAL);
 }
 
 static void FlipContext(void) {
@@ -78,6 +80,9 @@ static void FlipContext(void) {
 }
 
 void Gfx_Create(void) {
+	vp_hwidth  = DisplayInfo.Width  / 2;
+	vp_hheight = DisplayInfo.Height / 2;
+	
 	InitBuffers();
 	InitDrawingEnv();
 	InitDMABuffers();
@@ -234,11 +239,18 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
+static struct Matrix _view, _proj, mvp;
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	if (type == MATRIX_VIEW)       _view = *matrix;
+	if (type == MATRIX_PROJECTION) _proj = *matrix;
+
+	Matrix_Mul(&mvp, &_view, &_proj);
 	// TODO
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
+	Gfx_LoadMatrix(type, &Matrix_Identity);
 	// TODO
 }
 
@@ -292,17 +304,126 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_stride = strideSizes[fmt];
 }
 
+typedef struct Vector4 { float X, Y, Z, W; } Vector4;
+
+static cc_bool NotClipped(Vector4 pos) {
+	return
+		pos.X >= -pos.W && pos.X <= pos.W &&
+		pos.Y >= -pos.W && pos.Y <= pos.W &&
+		pos.Z >= -pos.W && pos.Z <= pos.W;
+}
+
+static Vector4 TransformVertex(struct VertexTextured* pos) {
+	Vector4 coord;
+	coord.X = pos->X * mvp.row1.X + pos->Y * mvp.row2.X + pos->Z * mvp.row3.X + mvp.row4.X;
+	coord.Y = pos->X * mvp.row1.Y + pos->Y * mvp.row2.Y + pos->Z * mvp.row3.Y + mvp.row4.Y;
+	coord.Z = pos->X * mvp.row1.Z + pos->Y * mvp.row2.Z + pos->Z * mvp.row3.Z + mvp.row4.Z;
+	coord.W = pos->X * mvp.row1.W + pos->Y * mvp.row2.W + pos->Z * mvp.row3.W + mvp.row4.W;
+	return coord;
+}
+
+#define VCopy(dst, src) dst.x = (vp_hwidth/2048) * (src.X / src.W); dst.y = (vp_hheight/2048) * (src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
+//#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.X / src.W); dst.y = vp_hheight * (1 - src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
+#define CCopy(dst) dst.r = PackedCol_R(v->Col) / 255.0f; dst.g = PackedCol_G(v->Col) / 255.0f; dst.b = PackedCol_B(v->Col) / 255.0f; dst.a = PackedCol_A(v->Col) / 255.0f; 
+
+static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* v) {
+	vertex_f_t in_vertices[3];
+	color_f_t in_color[3];
+	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.X, &v0.Y, &v0.Z, &v0.W);
+	
+	xyz_t out_vertices[3];
+	color_t out_color[3];
+	
+	VCopy(in_vertices[0], v0);
+	VCopy(in_vertices[1], v1);
+	VCopy(in_vertices[2], v2);
+	
+	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);
+	
+	CCopy(in_color[0]);
+	CCopy(in_color[1]);
+	CCopy(in_color[2]);
+	
+	prim_t prim;
+	color_t color;
+
+	// Define the triangle primitive we want to use.
+	prim.type = PRIM_TRIANGLE;
+	prim.shading = PRIM_SHADE_GOURAUD;
+	prim.mapping = DRAW_DISABLE;
+	prim.fogging = DRAW_DISABLE;
+	prim.blending = DRAW_DISABLE;
+	prim.antialiasing = DRAW_DISABLE;
+	prim.mapping_type = PRIM_MAP_ST;
+	prim.colorfix = PRIM_UNFIXED;
+
+	color.r = 0x80;
+	color.g = 0x80;
+	color.b = 0x80;
+	color.a = 0x80;
+	color.q = 1.0f;
+	
+	
+	draw_convert_rgbaq(out_color, 3, in_vertices, in_color);
+	draw_convert_xyz(out_vertices, 2048, 2048, 32, 3, in_vertices);
+	
+	// Draw the triangles using triangle primitive type.
+	q = draw_prim_start(q, 0, &prim, &color);
+
+	for(int i = 0; i < 3; i++)
+	{
+		q->dw[0] = out_color[i].rgbaq;
+		q->dw[1] = out_vertices[i].xyz;
+		q++;
+	}
+
+	q = draw_prim_end(q,2,DRAW_RGBAQ_REGLIST);
+}
+
+static void DrawTriangles(int verticesCount, int startVertex) {
+	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
+	
+	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
+	for (int i = 0; i < verticesCount / 4; i++, v += 4)
+	{
+		Vector4 V0 = TransformVertex(v + 0);
+		Vector4 V1 = TransformVertex(v + 1);
+		Vector4 V2 = TransformVertex(v + 2);
+		Vector4 V3 = TransformVertex(v + 3);
+		
+		
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[0].X, &v[0].Y, &v[0].Z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[1].X, &v[1].Y, &v[1].Z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[2].X, &v[2].Y, &v[2].Z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[3].X, &v[3].Y, &v[3].Z);
+	//Platform_LogConst(">>>>>>>>>>");
+		
+		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {
+			DrawTriangle(V0, V1, V2, v);
+		}
+		
+		if (NotClipped(V2) && NotClipped(V3) && NotClipped(V0)) {
+			DrawTriangle(V2, V3, V0, v);
+		}
+		
+		//Platform_LogConst("-----");
+	}
+}
+
 void Gfx_DrawVb_Lines(int verticesCount) { } /* TODO */
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	// TODO
+	DrawTriangles(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	DrawTriangles(verticesCount, 0);
 	// TODO
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	DrawTriangles(verticesCount, startVertex);
 	// TODO
 }
 
@@ -318,12 +439,8 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	return false;
 }
 
-static int FRAME;
 void Gfx_BeginFrame(void) { 
-	Platform_LogConst("--- Frame ---");
-	Gfx_ClearCol(PackedCol_Make(200 + FRAME, 51, 42, 255));
-	// TODO
-	FRAME++;
+	//Platform_LogConst("--- Frame ---");
 }
 
 void Gfx_EndFrame(void) {
