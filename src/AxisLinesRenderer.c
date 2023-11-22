@@ -20,7 +20,7 @@ void AxisLinesRenderer_Render(void) {
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
 	};
-	static const PackedCol colors[3] = {
+	static const PackedCol colors[] = {
 		PackedCol_Make(255,   0,   0, 255), /* Red   */
 		PackedCol_Make(  0,   0, 255, 255), /* Blue  */
 		PackedCol_Make(  0, 255,   0, 255), /* Green */
@@ -60,7 +60,8 @@ void AxisLinesRenderer_Render(void) {
 
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(axisLines_vb, 
 									VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
-	for (i = 0; i < count; i++, v++) {
+	for (i = 0; i < count; i++, v++) 
+	{
 		v->X   = coords[indices[i*3 + 0]].X;
 		v->Y   = coords[indices[i*3 + 1]].Y;
 		v->Z   = coords[indices[i*3 + 2]].Z;

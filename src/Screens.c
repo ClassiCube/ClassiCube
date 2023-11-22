@@ -2241,7 +2241,7 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	for (i = 0; i < s->numBtns; i++) {
 		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
 		ButtonWidget_Init(&s->btns[i], 60, s->descs[i].OnClick);
-		s->btns[i].col = TOUCHSCREEN_BTN_COL;
+		s->btns[i].color = TOUCHSCREEN_BTN_COL;
 	}
 }
 
@@ -2376,7 +2376,7 @@ static void TouchScreen_Init(void* screen) {
 
 	TouchScreen_InitButtons(s);
 	ButtonWidget_Init(&s->more, 40, TouchScreen_MoreClick);
-	s->more.col = TOUCHSCREEN_BTN_COL;
+	s->more.color = TOUCHSCREEN_BTN_COL;
 
 	ThumbstickWidget_Init(&s->thumbstick);
 	touchInput.GetMovement = TouchScreen_GetMovement;

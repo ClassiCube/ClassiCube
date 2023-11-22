@@ -3,7 +3,25 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#include <packet.h>
+#include <dma_tags.h>
+#include <gif_tags.h>
+#include <gs_psm.h>
+#include <dma.h>
+#include <graph.h>
+#include <draw.h>
+#include <draw3d.h>
+
 static void* gfx_vertices;
+static framebuffer_t fb_color;
+static zbuffer_t     fb_depth;
+
+// double buffering
+static packet_t* packets[2];
+static packet_t* current;
+static int context;
+static qword_t* dma_tag;
+static qword_t* q;
 
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
@@ -13,7 +31,60 @@ void Gfx_FreeState(void) {
 	FreeDefaultResources();
 }
 
+static void InitBuffers(void) {
+	fb_color.width   = DisplayInfo.Width;
+	fb_color.height  = DisplayInfo.Height;
+	fb_color.mask    = 0;
+	fb_color.psm     = GS_PSM_32;
+	fb_color.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_color.psm, GRAPH_ALIGN_PAGE);
+
+	fb_depth.enable  = DRAW_ENABLE;
+	fb_depth.mask    = 0;
+	fb_depth.method  = ZTEST_METHOD_GREATER_EQUAL;
+	fb_depth.zsm     = GS_ZBUF_32;
+	fb_depth.address = graph_vram_allocate(fb_color.width, fb_color.height, fb_depth.zsm, GRAPH_ALIGN_PAGE);
+
+	graph_initialize(fb_color.address, fb_color.width, fb_color.height, fb_color.psm, 0, 0);
+}
+
+static void InitDrawingEnv(void) {
+	packet_t *packet = packet_init(20, PACKET_NORMAL);
+	qword_t *q = packet->data;
+	
+	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
+	// GS can render from 0 to 4096, so set primitive origin to centre of that
+	q = draw_primitive_xyoffset(q, 0, 2048 - DisplayInfo.Width / 2, 2048 - DisplayInfo.Height / 2);
+
+	q = draw_finish(q);
+
+	dma_channel_send_normal(DMA_CHANNEL_GIF,packet->data,q - packet->data, 0, 0);
+	dma_wait_fast();
+
+	packet_free(packet);
+}
+
+static void InitDMABuffers(void) {
+	packets[0] = packet_init(100, PACKET_NORMAL);
+	packets[1] = packet_init(100, PACKET_NORMAL);
+}
+
+static void FlipContext(void) {
+	context ^= 1;
+	current  = packets[context];
+	
+	dma_tag = current->data;
+	// increment past the dmatag itself
+	q = dma_tag + 1;
+}
+
 void Gfx_Create(void) {
+	InitBuffers();
+	InitDrawingEnv();
+	InitDMABuffers();
+	
+	context = 1;
+	FlipContext();
+	
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
@@ -58,6 +129,8 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
+static int clearR, clearG, clearB;
+
 void Gfx_SetFog(cc_bool enabled)    { }
 void Gfx_SetFogCol(PackedCol col)   { }
 void Gfx_SetFogDensity(float value) { }
@@ -79,11 +152,16 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_Clear(void) {
-	// TODO
+	q = draw_disable_tests(q, 0, &fb_depth);
+	q = draw_clear(q, 0, 2048.0f - fb_color.width / 2.0f, 2048.0f - fb_color.height / 2.0f,
+					fb_color.width, fb_color.height, clearR, clearG, clearB);
+	q = draw_enable_tests(q, 0, &fb_depth);
 }
 
 void Gfx_ClearCol(PackedCol color) {
-	// TODO
+	clearR = PackedCol_R(color);
+	clearG = PackedCol_G(color);
+	clearB = PackedCol_B(color);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
@@ -240,17 +318,33 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	return false;
 }
 
+static int FRAME;
 void Gfx_BeginFrame(void) { 
+	Platform_LogConst("--- Frame ---");
+	Gfx_ClearCol(PackedCol_Make(200 + FRAME, 51, 42, 255));
 	// TODO
+	FRAME++;
 }
 
 void Gfx_EndFrame(void) {
-	// TODO
+	q = draw_finish(q);
+	
+	// Fill out and then send DMA chain
+	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
+	dma_wait_fast();
+	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+		
+	draw_wait_finish();
+	
+	if (gfx_vsync) graph_wait_vsync();
+	if (gfx_minFrameMs) LimitFPS();
+	
+	FlipContext();
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
-	gfx_vsync = vsync;
+	gfx_vsync      = vsync;
 }
 
 void Gfx_OnWindowResize(void) {

@@ -1139,48 +1139,54 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int def) {
 	TextInputWidget_Create(&s->inputs[i], 200, &tmp, &desc);
 	s->inputs[i].base.showCaret = false;
 	TextWidget_Init(&s->labels[i]);
-	s->labels[i].col = PackedCol_Make(224, 224, 224, 255);
+	s->labels[i].color = PackedCol_Make(224, 224, 224, 255);
 	/* TODO placeholder */
 	s->inputs[i].onscreenType = KEYBOARD_TYPE_INTEGER;
 }
 
-static struct InputWidget* GenLevelScreen_SelectedInput(struct GenLevelScreen* s) {
+static struct TextInputWidget* GenLevelScreen_SelectedInput(struct GenLevelScreen* s) {
 	if (s->selectedI >= 0 && s->selectedI < GENLEVEL_NUM_INPUTS)
-		return &s->inputs[s->selectedI].base;
+		return &s->inputs[s->selectedI];
 	return NULL;
 }
 
 static int GenLevelScreen_KeyDown(void* screen, int key) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
+	struct MenuInputDesc* desc;
 
-	if (selected && Elem_HandlesKeyDown(selected, key)) return true;
+	if (selected) {
+		if (Elem_HandlesKeyDown(&selected->base, key)) return true;
+
+		desc = &selected->desc;
+		if (desc->VTABLE->ProcessInput(desc, &selected->base.text, key)) return true;
+	}
 	return Menu_InputDown(s, key);
 }
 
 static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
 
-	if (selected) InputWidget_Append(selected, keyChar);
+	if (selected) InputWidget_Append(&selected->base, keyChar);
 	return true;
 }
 
 static int GenLevelScreen_TextChanged(void* screen, const cc_string* str) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
 
-	if (selected) InputWidget_SetText(selected, str);
+	if (selected) InputWidget_SetText(&selected->base, str);
 	return true;
 }
 
 static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	struct InputWidget* selected;
+	struct TextInputWidget* selected;
 	s->selectedI = Screen_DoPointerDown(screen, id, x, y);
 
 	selected = GenLevelScreen_SelectedInput(s);
-	if (selected) Window_SetKeyboardText(&selected->text);
+	if (selected) Window_SetKeyboardText(&selected->base.text);
 	return TOUCH_TYPE_GUI;
 }
 
@@ -1216,14 +1222,14 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 
 static void GenLevelScreen_Update(void* screen, double delta) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	struct InputWidget* selected = GenLevelScreen_SelectedInput(s);
+	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
 	int i;
 	for (i = 0; i < GENLEVEL_NUM_INPUTS; i++)
 	{
 		s->inputs[i].base.showCaret = i == s->selectedI;
 	}
 
-	if (selected) selected->caretAccumulator += delta;
+	if (selected) selected->base.caretAccumulator += delta;
 }
 
 static void GenLevelScreen_Layout(void* screen) {
@@ -3503,7 +3509,7 @@ static void Overlay_InitLabels(struct TextWidget* labels) {
 	TextWidget_Init(&labels[0]);
 	for (i = 1; i < 4; i++) {
 		TextWidget_Init(&labels[i]);
-		labels[i].col = PackedCol_Make(224, 224, 224, 255);
+		labels[i].color = PackedCol_Make(224, 224, 224, 255);
 	}
 }
 
@@ -4014,8 +4020,9 @@ static void TouchOnscreen_UpdateColors(struct TouchOnscreenScreen* s) {
 	PackedCol grey = PackedCol_Make(0x7F, 0x7F, 0x7F, 0xFF);
 	int i, j;
 
-	for (i = 0, j = s->offset; i < ONSCREEN_PAGE_BTNS; i++, j++) {
-		s->btns[i].col = (Gui._onscreenButtons & (1 << j)) ? PACKEDCOL_WHITE : grey;
+	for (i = 0, j = s->offset; i < ONSCREEN_PAGE_BTNS; i++, j++) 
+	{
+		s->btns[i].color = (Gui._onscreenButtons & (1 << j)) ? PACKEDCOL_WHITE : grey;
 	}
 }
 

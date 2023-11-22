@@ -15,7 +15,7 @@ struct FontDesc;
 struct TextWidget {
 	Widget_Body
 	struct Texture tex;
-	PackedCol col;
+	PackedCol color;
 };
 #define TEXTWIDGET_MAX 4
 
@@ -33,7 +33,7 @@ typedef void (*Button_Set)(const cc_string* raw);
 struct ButtonWidget {
 	Widget_Body
 	struct Texture tex;
-	PackedCol col;
+	PackedCol color;
 	int minWidth, minHeight;
 	const char* optName;
 	Button_Get GetValue;
@@ -181,6 +181,9 @@ struct MenuInputVTABLE {
 	cc_bool (*IsValidValue)(struct MenuInputDesc*  d, const cc_string* s);
 	/* Gets the default value for this input. */
 	void (*GetDefault)(struct MenuInputDesc*       d, cc_string* value);
+	/* Whether the given input button was processed */
+	/* E.g. Int input accepts using lef/right to increment/decrement */
+	cc_bool (*ProcessInput)(struct MenuInputDesc*  d, cc_string* value, int btn);
 };
 
 struct MenuInputDesc {

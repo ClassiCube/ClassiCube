@@ -25,6 +25,10 @@
 #include <timer_alarm.h>
 #include <debug.h>
 #include <sifrpc.h>
+#include <iopheap.h>
+#include <loadfile.h>
+#include <iopcontrol.h>
+#include <sbv_patches.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -331,6 +335,16 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Networking--------------------------------------------------------*
+*#########################################################################################################################*/
+static void InitNetworking(void) {
+	//SifExecModuleBuffer(DEV9_irx,   size_DEV9_irx,   0, NULL, NULL);
+	//SifExecModuleBuffer(NETMAN_irx, size_NETMAN_irx, 0, NULL, NULL);
+	//SifExecModuleBuffer(SMAP_irx,   size_SMAP_irx,   0, NULL, NULL);
+	//NetManInit();
+}
+
+/*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 int Socket_ValidAddress(const cc_string* address) {
@@ -364,10 +378,24 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+// Note that resetting IOP does mean can't debug through ps2client
+// 	https://github.com/libsdl-org/SDL/commit/d355ea9981358a1df335b1f7485ce94768bbf255
+// 	https://github.com/libsdl-org/SDL/pull/6022
+static void ResetIOP(void) { // reboots the IOP
+	SifInitRpc(0);
+	while (!SifIopReset("", 0)) { }
+	while (!SifIopSync())       { }
+}
+
 void Platform_Init(void) {
 	//InitDebug();
+	ResetIOP();
 	SifInitRpc(0);
-	//netInitialize();
+	SifLoadFileInit();
+	SifInitIopHeap();
+	sbv_patch_enable_lmb();
+	
+	InitNetworking();
 	// Create root directory
 	Directory_Create(&String_Empty);
 }

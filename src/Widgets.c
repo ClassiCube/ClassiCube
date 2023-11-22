@@ -31,7 +31,7 @@ static int  Widget_MouseScroll(void* elem, float delta) { return false; }
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->col);
+	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->color);
 }
 
 static void TextWidget_Free(void* widget) {
@@ -47,7 +47,7 @@ static void TextWidget_Reposition(void* widget) {
 
 static void TextWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	Gfx_Make2DQuad(&w->tex, w->col, vertices);
+	Gfx_Make2DQuad(&w->tex, w->color, vertices);
 }
 
 static int TextWidget_Render2(void* widget, int offset) {
@@ -68,7 +68,7 @@ static const struct WidgetVTABLE TextWidget_VTABLE = {
 void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
-	w->col    = PACKEDCOL_WHITE;
+	w->color  = PACKEDCOL_WHITE;
 }
 
 void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font) {
@@ -144,11 +144,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Draw2DTexture(&back, w->col);
+		Gfx_Draw2DTexture(&back, w->color);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Draw2DTexture(&back, w->col);
+		Gfx_Draw2DTexture(&back, w->color);
 	}
 
 	if (!w->tex.ID) return;
@@ -176,7 +176,7 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
 		/* Button can be drawn normally */
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices);
 		*vertices += 4; /* always use up 8 vertices for body */
 	} else {
 		/* Split button down the middle */
@@ -184,11 +184,11 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices);
 	}
 
 	color = (w->flags & WIDGET_FLAG_DISABLED) ? disabledColor 
@@ -223,7 +223,7 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
-	w->col       = PACKEDCOL_WHITE;
+	w->color     = PACKEDCOL_WHITE;
 	w->optName   = NULL;
 	w->flags     = WIDGET_FLAG_SELECTABLE;
 	w->minWidth  = Display_ScaleX(minWidth);
@@ -1414,6 +1414,9 @@ static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 /*########################################################################################################################*
 *-----------------------------------------------------MenuInputDesc-------------------------------------------------------*
 *#########################################################################################################################*/
+static void    MenuInput_NoDefault(struct MenuInputDesc* d, cc_string* value) { }
+static cc_bool MenuInput_NoProcess(struct MenuInputDesc* d, cc_string* value, int btn) { return false; }
+
 static void Hex_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
@@ -1436,7 +1439,8 @@ static void Hex_Default(struct MenuInputDesc* d, cc_string* value) {
 }
 
 const struct MenuInputVTABLE HexInput_VTABLE = {
-	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, Hex_Default
+	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, 
+	Hex_Default, MenuInput_NoProcess
 };
 
 static void Int_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1463,16 +1467,17 @@ static void Int_Default(struct MenuInputDesc* d, cc_string* value) {
 }
 
 const struct MenuInputVTABLE IntInput_VTABLE = {
-	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Int_Default
+	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, 
+	Int_Default, MenuInput_NoProcess
 };
 
 static void Seed_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(an integer)");
 }
-static void Seed_NoDefault(struct MenuInputDesc* d, cc_string* value) { }
 
 const struct MenuInputVTABLE SeedInput_VTABLE = {
-	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Seed_NoDefault
+	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
+	MenuInput_NoDefault, MenuInput_NoProcess
 };
 
 static void Float_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1499,7 +1504,8 @@ static void Float_Default(struct MenuInputDesc* d, cc_string* value) {
 }
 
 const struct MenuInputVTABLE FloatInput_VTABLE = {
-	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, Float_Default
+	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, 
+	Float_Default, MenuInput_NoProcess
 };
 
 static void Path_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1513,7 +1519,8 @@ static cc_bool Path_ValidChar(struct MenuInputDesc* d, char c) {
 static cc_bool Path_ValidString(struct MenuInputDesc* d, const cc_string* s) { return true; }
 
 const struct MenuInputVTABLE PathInput_VTABLE = {
-	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, Seed_NoDefault
+	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, 
+	MenuInput_NoDefault, MenuInput_NoProcess
 };
 
 static void String_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1529,7 +1536,8 @@ static cc_bool String_ValidString(struct MenuInputDesc* d, const cc_string* s) {
 }
 
 const struct MenuInputVTABLE StringInput_VTABLE = {
-	String_Range, String_ValidChar, String_ValidString, String_ValidString, Seed_NoDefault
+	String_Range, String_ValidChar, String_ValidString, String_ValidString, 
+	MenuInput_NoDefault, MenuInput_NoProcess
 };
 
 

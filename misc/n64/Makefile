@@ -8,7 +8,7 @@ N64_ROM_RTC = true
 CFILES 	:= $(notdir $(wildcard src/*.c))
 OFILES 	:= $(CFILES:.c=.o)
 OBJS 	:= $(addprefix $(BUILD_DIR)/,$(OFILES))
-CFLAGS	:= "-Wno-error=missing-braces -Wno-error=maybe-uninitialized"
+CFLAGS	:= "-Wno-error=missing-braces"
 
 include $(N64_INST)/include/n64.mk
 
