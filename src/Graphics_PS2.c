@@ -349,7 +349,7 @@ static Vector4 TransformVertex(struct VertexTextured* pos) {
 
 #define VCopy(dst, src) dst.x = (vp_hwidth/2048) * (src.X / src.W); dst.y = (vp_hheight/2048) * (src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.X / src.W); dst.y = vp_hheight * (1 - src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
-#define CCopy(dst) dst.r = PackedCol_R(v->Col); dst.g = PackedCol_G(v->Col); dst.b = PackedCol_B(v->Col); dst.a = PackedCol_A(v->Col); dst.q = 1.0f;
+#define CCopy(dst) dst.rgbaq = v->Col; dst.q = 1.0f;
 
 static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* v) {
 	vertex_f_t in_vertices[3];
@@ -366,39 +366,27 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	CCopy(out_color[1]);
 	CCopy(out_color[2]);
 	
-	prim_t prim;
-	color_t color;
-
-	// Define the triangle primitive we want to use.
-	prim.type = PRIM_TRIANGLE;
-	prim.shading = PRIM_SHADE_GOURAUD;
-	prim.mapping = DRAW_DISABLE;
-	prim.fogging = DRAW_DISABLE;
-	prim.blending = DRAW_DISABLE;
-	prim.antialiasing = DRAW_DISABLE;
-	prim.mapping_type = PRIM_MAP_ST;
-	prim.colorfix = PRIM_UNFIXED;
-
-	// NOTE: not actually used
-	color.r = 0x10;
-	color.g = 0x10;
-	color.b = 0x10;
-	color.a = 0x10;
-	color.q = 1.0f;
-	
 	draw_convert_xyz(out_vertices, 2048, 2048, 32, 3, in_vertices);
 	
-	// Draw the triangles using triangle primitive type.
-	q = draw_prim_start(q, 0, &prim, &color);
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, DRAW_DISABLE, DRAW_DISABLE,
+							  DRAW_DISABLE, DRAW_DISABLE, PRIM_MAP_ST,
+							  0, PRIM_UNFIXED), GS_REG_PRIM);
+	q++;
+	
+	// 3 "primitives" follow in the GIF packet (vertices in this case)
+	// 2 registers per "primitive" (colour, position)
+	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
+	q++;
 
-	for(int i = 0; i < 3; i++)
+	// Add the "primitives" to the GIF packet
+	for (int i = 0; i < 3; i++)
 	{
 		q->dw[0] = out_color[i].rgbaq;
 		q->dw[1] = out_vertices[i].xyz;
 		q++;
 	}
-
-	q = draw_prim_end(q,2,DRAW_RGBAQ_REGLIST);
 }
 
 static void DrawTriangles(int verticesCount, int startVertex) {

@@ -20,7 +20,7 @@
 #include <dma.h>
 #include <graph.h>
 #include <draw.h>
-#include <draw3d.h>
+#include <kernel.h>
 
 static cc_bool launcherMode;
 static char padBuf[256] __attribute__((aligned(64)));
@@ -194,6 +194,10 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
+	// FlushCache bios call https://psi-rockin.github.io/ps2tek/
+	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
+	FlushCache(0);
+	
 	packet_t* packet = packet_init(50,PACKET_NORMAL);
 	qword_t* q = packet->data;
 
