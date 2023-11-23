@@ -1,7 +1,6 @@
 #include "platform.h"
 #include "sh4.h"
 
-
 #define CLIP_DEBUG 0
 
 #define PVR_VERTEX_BUF_SIZE 2560 * 256
@@ -115,16 +114,18 @@ static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, V
 
 #define SPAN_SORT_CFG 0x005F8030
 static volatile uint32_t* PVR_LMMODE0 = (uint32_t*) 0xA05F6884;
-static volatile uint32_t *PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
-static volatile uint32_t *QACR = (uint32_t*) 0xFF000038;
+static volatile uint32_t* PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
+static volatile uint32_t* QACR = (uint32_t*) 0xFF000038;
+
+#define V0_VIS (1 << 0)
+#define V1_VIS (1 << 1)
+#define V2_VIS (1 << 2)
 
 void SceneListSubmit(Vertex* v2, int n) {
     TRACE();
 
     /* You need at least a header, and 3 vertices to render anything */
-    if(n < 4) {
-        return;
-    }
+    if(n < 4) return;
 
     const float h = vid_mode->height;
 
@@ -146,7 +147,6 @@ void SceneListSubmit(Vertex* v2, int n) {
     fprintf(stderr, "----\n");
 #endif
     uint8_t visible_mask = 0;
-    uint8_t counter = 0;
 
     sq = SQ_BASE_ADDRESS;
 
@@ -154,20 +154,11 @@ void SceneListSubmit(Vertex* v2, int n) {
         PREFETCH(v2 + 1);
         switch(v2->flags) {
         case GPU_CMD_VERTEX_EOL:
-            if(counter < 2) {
-                continue;
-            }
-            counter = 0;
             break;
         case GPU_CMD_VERTEX:
-            ++counter;
-            if(counter < 3) {
-                continue;
-            }
-            break;
+            continue;
         default:
             _glPushHeaderOrVertex(v2);
-            counter = 0;
             continue;
         };
 
@@ -177,12 +168,12 @@ void SceneListSubmit(Vertex* v2, int n) {
         visible_mask = (
             (v0->xyz[2] > -v0->w) << 0 |
             (v1->xyz[2] > -v1->w) << 1 |
-            (v2->xyz[2] > -v2->w) << 2 |
-            (counter == 0) << 3
+            (v2->xyz[2] > -v2->w) << 2
         );
+	Vertex __attribute__((aligned(32))) scratch[4];
 
         switch(visible_mask) {
-        case 15: /* All visible, but final vertex in strip */
+        case V0_VIS | V1_VIS | V2_VIS: /* All vertices visible */
         {
             _glPerspectiveDivideVertex(v0, h);
             _glPushHeaderOrVertex(v0);
@@ -194,90 +185,55 @@ void SceneListSubmit(Vertex* v2, int n) {
             _glPushHeaderOrVertex(v2);
         }
         break;
-        case 7:
-            /* All visible, push the first vertex and move on */
+        case V0_VIS: /* First vertex was visible */
+        {
+            Vertex* a = &scratch[0];
+            Vertex* b = &scratch[1];
+
+            _glClipEdge(v0, v1, a);
+            a->flags = GPU_CMD_VERTEX;
+
+            _glClipEdge(v2, v0, b);
+            b->flags = GPU_CMD_VERTEX_EOL;
+
             _glPerspectiveDivideVertex(v0, h);
             _glPushHeaderOrVertex(v0);
-            break;
-        case 9:
-            /* First vertex was visible, last in strip */
-            {
-                Vertex __attribute__((aligned(32))) scratch[2];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
 
-                _glClipEdge(v0, v1, a);
-                a->flags = GPU_CMD_VERTEX;
+            _glPerspectiveDivideVertex(a, h);
+            _glPushHeaderOrVertex(a);
 
-                _glClipEdge(v2, v0, b);
-                b->flags = GPU_CMD_VERTEX_EOL;
-
-                _glPerspectiveDivideVertex(v0, h);
-                _glPushHeaderOrVertex(v0);
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-            }
-            break;
-        case 1:
-            /* First vertex was visible, but not last in strip */
-            {
-                Vertex __attribute__((aligned(32))) scratch[2];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-
-                _glClipEdge(v0, v1, a);
-                a->flags = GPU_CMD_VERTEX;
-
-                _glClipEdge(v2, v0, b);
-                b->flags = GPU_CMD_VERTEX;
-
-                _glPerspectiveDivideVertex(v0, h);
-                _glPushHeaderOrVertex(v0);
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-                _glPushHeaderOrVertex(b);
-            }
-            break;
-        case 10:
-        case 2:
+            _glPerspectiveDivideVertex(b, h);
+            _glPushHeaderOrVertex(b);
+        }
+        break;
+        case V1_VIS: /* Second vertex was visible */
+        {
             /* Second vertex was visible. In self case we need to create a triangle and produce
                 two new vertices: 1-2, and 2-3. */
-            {
-                Vertex __attribute__((aligned(32))) scratch[3];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-                Vertex* c = &scratch[2];
+            Vertex* a = &scratch[0];
+            Vertex* b = &scratch[1];
+            Vertex* c = &scratch[2];
 
-                memcpy_vertex(c, v1);
+            memcpy_vertex(c, v1);
 
-                _glClipEdge(v0, v1, a);
-                a->flags = GPU_CMD_VERTEX;
+            _glClipEdge(v0, v1, a);
+            a->flags = GPU_CMD_VERTEX;
 
-                _glClipEdge(v1, v2, b);
-                b->flags = v2->flags;
+            _glClipEdge(v1, v2, b);
+            b->flags = GPU_CMD_VERTEX_EOL;
 
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
+            _glPerspectiveDivideVertex(a, h);
+            _glPushHeaderOrVertex(a);
 
-                _glPerspectiveDivideVertex(c, h);
-                _glPushHeaderOrVertex(c);
+            _glPerspectiveDivideVertex(c, h);
+            _glPushHeaderOrVertex(c);
 
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-            }
-            break;
-        case 11:
-        case 3:  /* First and second vertex were visible */
+            _glPerspectiveDivideVertex(b, h);
+            _glPushHeaderOrVertex(b);
+        }
+        break;
+        case V0_VIS | V1_VIS: /* First and second vertex were visible */
         {
-            Vertex __attribute__((aligned(32))) scratch[3];
             Vertex* a = &scratch[0];
             Vertex* b = &scratch[1];
             Vertex* c = &scratch[2];
@@ -291,7 +247,7 @@ void SceneListSubmit(Vertex* v2, int n) {
             _glPushHeaderOrVertex(v0);
 
             _glClipEdge(v1, v2, a);
-            a->flags = v2->flags;
+            a->flags = GPU_CMD_VERTEX_EOL;
 
             _glPerspectiveDivideVertex(c, h);
             _glPushHeaderOrVertex(c);
@@ -304,40 +260,32 @@ void SceneListSubmit(Vertex* v2, int n) {
             _glPushHeaderOrVertex(a);
         }
         break;
-        case 12:
-        case 4:
-            /* Third vertex was visible. */
-            {
-                Vertex __attribute__((aligned(32))) scratch[3];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-                Vertex* c = &scratch[2];
-
-                memcpy_vertex(c, v2);
-
-                _glClipEdge(v2, v0, a);
-                a->flags = GPU_CMD_VERTEX;
-
-                _glClipEdge(v1, v2, b);
-                b->flags = GPU_CMD_VERTEX;
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                if(counter % 2 == 1) {
-                    _glPushHeaderOrVertex(a);
-                }
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-
-                _glPerspectiveDivideVertex(c, h);
-                _glPushHeaderOrVertex(c);
-            }
-            break;
-        case 13:
+        case V2_VIS: /* Third vertex was visible */
         {
-            Vertex __attribute__((aligned(32))) scratch[3];
+            Vertex* a = &scratch[0];
+            Vertex* b = &scratch[1];
+            Vertex* c = &scratch[2];
+
+            memcpy_vertex(c, v2);
+
+            _glClipEdge(v2, v0, a);
+            a->flags = GPU_CMD_VERTEX;
+
+            _glClipEdge(v1, v2, b);
+            b->flags = GPU_CMD_VERTEX;
+
+            _glPerspectiveDivideVertex(a, h);
+            _glPushHeaderOrVertex(a);
+
+            _glPerspectiveDivideVertex(b, h);
+            _glPushHeaderOrVertex(b);
+
+            _glPerspectiveDivideVertex(c, h);
+            _glPushHeaderOrVertex(c);
+        }
+        break;
+        case V0_VIS | V2_VIS: /* First and third vertex were visible */
+        {
             Vertex* a = &scratch[0];
             Vertex* b = &scratch[1];
             Vertex* c = &scratch[2];
@@ -366,39 +314,8 @@ void SceneListSubmit(Vertex* v2, int n) {
             _glPushHeaderOrVertex(c);
         }
         break;
-        case 5:  /* First and third vertex were visible */
+        case V1_VIS | V2_VIS: /* Second and third vertex were visible */
         {
-            Vertex __attribute__((aligned(32))) scratch[3];
-            Vertex* a = &scratch[0];
-            Vertex* b = &scratch[1];
-            Vertex* c = &scratch[2];
-
-            memcpy_vertex(c, v2);
-            c->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v0, v1, a);
-            a->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v1, v2, b);
-            b->flags = GPU_CMD_VERTEX;
-
-            _glPerspectiveDivideVertex(v0, h);
-            _glPushHeaderOrVertex(v0);
-
-            _glPerspectiveDivideVertex(a, h);
-            _glPushHeaderOrVertex(a);
-
-            _glPerspectiveDivideVertex(c, h);
-            _glPushHeaderOrVertex(c);
-            _glPerspectiveDivideVertex(b, h);
-            _glPushHeaderOrVertex(b);
-            _glPushHeaderOrVertex(c);
-        }
-        break;
-        case 14:
-        case 6:  /* Second and third vertex were visible */
-        {
-            Vertex __attribute__((aligned(32))) scratch[4];
             Vertex* a = &scratch[0];
             Vertex* b = &scratch[1];
             Vertex* c = &scratch[2];
@@ -427,9 +344,6 @@ void SceneListSubmit(Vertex* v2, int n) {
             _glPushHeaderOrVertex(d);
         }
         break;
-        case 8:
-        default:
-            break;
         }
     }
 

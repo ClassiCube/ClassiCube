@@ -62,8 +62,6 @@ GL_FORCE_INLINE void* memcpy_fast(void *dest, const void *src, size_t len) {
 
 #define MEMCPY4(dst, src, bytes) memcpy_fast(dst, src, bytes)
 
-#define MEMSET4(dst, v, size) memset4((dst), (v), (size))
-
 GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* oxyz, float* ow) {
     register float __x __asm__("fr12") = (xyz[0]);
     register float __y __asm__("fr13") = (xyz[1]);
@@ -84,10 +82,6 @@ GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* ox
 }
 
 void InitGPU(_Bool autosort, _Bool fsaa);
-
-static inline size_t GPUMemoryAvailable() {
-    return pvr_mem_available();
-}
 
 static inline void* GPUMemoryAlloc(size_t size) {
     return pvr_mem_malloc(size);

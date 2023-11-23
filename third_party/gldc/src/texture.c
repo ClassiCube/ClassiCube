@@ -58,7 +58,7 @@ GLubyte _glInitTextures() {
     _glInitializeTextureObject(default_tex, 0);
     TEXTURE_ACTIVE = default_tex;
 
-    size_t vram_free = GPUMemoryAvailable();
+    size_t vram_free = pvr_mem_available();
     YALLOC_SIZE = vram_free - PVR_MEM_BUFFER_SIZE; /* Take all but 64kb VRAM */
     YALLOC_BASE = GPUMemoryAlloc(YALLOC_SIZE);
 
