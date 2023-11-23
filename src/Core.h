@@ -284,6 +284,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_GCWII
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_BEARSSL
+	#define CC_BUILD_COOPTHREADED
 	#undef CC_BUILD_FREETYPE
 #elif defined __vita__
 	#define CC_BUILD_HTTPCLIENT

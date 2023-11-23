@@ -298,8 +298,6 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
     }	
 }
 
-extern int PASSED, CLIPPED, SKIPPED;
-
 void SceneListSubmit(Vertex* v3, int n) {
     TRACE();
     /* You need at least a header, and 3 vertices to render anything */
@@ -358,10 +356,6 @@ void SceneListSubmit(Vertex* v3, int n) {
         //  partially visible quads a bit slower due to needing to be split into two triangles first
         // Performance measuring indicated that overall FPS improved from this change
         //  to switching to try to process 1 quad instead of 2 triangles though
-        
-        if (visible_mask == 15) PASSED += 2;
-        else if (visible_mask == 0) SKIPPED += 2;
-        else CLIPPED += 2;
 
         switch(visible_mask) {
         case V0_VIS | V1_VIS | V2_VIS | V3_VIS: // All vertices visible
@@ -406,7 +400,7 @@ void SceneListSubmit(Vertex* v3, int n) {
             SubmitTriangle(v0, v1, v2, visible_mask);
             
             visible_mask = (
-                (a2->xyz[2] > -v2->w) << 0 |
+                (a2->xyz[2] > -a2->w) << 0 |
                 (v3->xyz[2] > -v3->w) << 1 |
                 (a0->xyz[2] > -a0->w) << 2
             );         
