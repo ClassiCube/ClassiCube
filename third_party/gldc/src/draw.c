@@ -75,22 +75,13 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
                 *((Float2*)it->uv) = F2ZERO;
             }
 
-            src += stride;	
+            src += stride;
+            it->flags = GPU_CMD_VERTEX;
             it++;
         }
-        
-        // Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
-        PREFETCH(dst); // TODO: more prefetching?   
-        memcpy_vertex(dst + 5, dst + 0); dst[5].flags = GPU_CMD_VERTEX_EOL;
-        memcpy_vertex(dst + 4, dst + 3); dst[4].flags = GPU_CMD_VERTEX;
-        memcpy_vertex(dst + 3, dst + 2); dst[3].flags = GPU_CMD_VERTEX;
-        
-        dst[2].flags = GPU_CMD_VERTEX_EOL;
-        dst[1].flags = GPU_CMD_VERTEX;
-        dst[0].flags = GPU_CMD_VERTEX;
-        // TODO copy straight to dst??     
-        
-        dst += 6;
+
+        dst[3].flags = GPU_CMD_VERTEX_EOL;
+        dst += 4;
     }
 }
 
@@ -131,7 +122,7 @@ void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     TRACE();
     if (!count) return;
     
-    submitVertices(count * 6 / 4); // quads -> triangles
+    submitVertices(count);
     generateQuads(&SUBMISSION_TARGET, first, count);
 }
 
