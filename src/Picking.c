@@ -59,6 +59,10 @@ void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir) {
 	IVec3 cellBoundary;
 	t->origin = *origin; t->dir = *dir;
 
+	t->invDir.X = RayTracer_Div(1.0f, dir->X);
+	t->invDir.Y = RayTracer_Div(1.0f, dir->Y);
+	t->invDir.Z = RayTracer_Div(1.0f, dir->Z);
+
 	/* Rounds the position's X, Y and Z down to the nearest integer values. */
 	/* The cell in which the ray starts. */
 	IVec3_Floor(&t->pos, origin);
@@ -204,7 +208,7 @@ static cc_bool ClipBlock(struct RayTracer* t) {
 	if (!Game_CanPick(t->block)) return false;
 	/* This cell falls on the path of the ray. Now perform an additional AABB test,
 	since some blocks do not occupy a whole cell. */
-	if (!Intersection_RayIntersectsBox(t->origin, t->dir, t->Min, t->Max, &t0, &t1)) return false;
+	if (!Intersection_RayIntersectsBox(t->origin, t->invDir, t->Min, t->Max, &t0, &t1)) return false;
 	
 	Vec3_Mul1(&scaledDir, &t->dir, t0);              /* scaledDir = dir * t0 */
 	Vec3_Add(&t->Intersect, &t->origin, &scaledDir); /* intersect = origin + scaledDir */
@@ -227,12 +231,12 @@ static cc_bool ClipCamera(struct RayTracer* t) {
 	float t0, t1;
 
 	if (Blocks.Draw[t->block] == DRAW_GAS || Blocks.Collide[t->block] != COLLIDE_SOLID) return false;
-	if (!Intersection_RayIntersectsBox(t->origin, t->dir, t->Min, t->Max, &t0, &t1)) return false;
+	if (!Intersection_RayIntersectsBox(t->origin, t->invDir, t->Min, t->Max, &t0, &t1)) return false;
 
 	/* Need to collide with slightly outside block, to avoid camera clipping issues */
 	Vec3_Sub(&t->Min, &t->Min, &picking_adjust);
 	Vec3_Add(&t->Max, &t->Max, &picking_adjust);
-	Intersection_RayIntersectsBox(t->origin, t->dir, t->Min, t->Max, &t0, &t1);
+	Intersection_RayIntersectsBox(t->origin, t->invDir, t->Min, t->Max, &t0, &t1);
 	
 	Vec3_Mul1(&intersect,   &t->dir, t0);            /* intersect = dir * t0 */
 	Vec3_Add(&t->Intersect, &t->origin, &intersect); /* intersect = origin + dir * t0 */

@@ -58,7 +58,7 @@ static Vec3 Intersection_InverseRotate(Vec3 pos, struct Entity* target) {
 }
 
 cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax) {
-	Vec3 delta;
+	Vec3 delta, invDir;
 	struct AABB bb;
 
 	/* This is the rotated AABB of the model we want to test for intersection
@@ -75,43 +75,43 @@ cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entit
 
 	dir = Intersection_InverseRotate(dir, target);
 	Entity_GetPickingBounds(target, &bb);
-	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
+
+	invDir.X = 1.0f / dir.X;
+	invDir.Y = 1.0f / dir.Y;
+	invDir.Z = 1.0f / dir.Z;
+	return Intersection_RayIntersectsBox(origin, invDir, bb.Min, bb.Max, tMin, tMax);
 }
 
-cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1) {
+cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 invDir, Vec3 min, Vec3 max, float* t0, float* t1) {
 	float tmin, tmax, tymin, tymax, tzmin, tzmax;
-	float invDirX, invDirY, invDirZ;
 	*t0 = 0; *t1 = 0;
 	
-	invDirX = 1.0f / dir.X;
-	if (invDirX >= 0) {
-		tmin = (min.X - origin.X) * invDirX;
-		tmax = (max.X - origin.X) * invDirX;
+	if (invDir.X >= 0) {
+		tmin = (min.X - origin.X) * invDir.X;
+		tmax = (max.X - origin.X) * invDir.X;
 	} else {
-		tmin = (max.X - origin.X) * invDirX;
-		tmax = (min.X - origin.X) * invDirX;
+		tmin = (max.X - origin.X) * invDir.X;
+		tmax = (min.X - origin.X) * invDir.X;
 	}
 
-	invDirY = 1.0f / dir.Y;
-	if (invDirY >= 0) {
-		tymin = (min.Y - origin.Y) * invDirY;
-		tymax = (max.Y - origin.Y) * invDirY;
+	if (invDir.Y >= 0) {
+		tymin = (min.Y - origin.Y) * invDir.Y;
+		tymax = (max.Y - origin.Y) * invDir.Y;
 	} else {
-		tymin = (max.Y - origin.Y) * invDirY;
-		tymax = (min.Y - origin.Y) * invDirY;
+		tymin = (max.Y - origin.Y) * invDir.Y;
+		tymax = (min.Y - origin.Y) * invDir.Y;
 	}
 
 	if (tmin > tymax || tymin > tmax) return false;
 	if (tymin > tmin) tmin = tymin;
 	if (tymax < tmax) tmax = tymax;
 
-	invDirZ = 1.0f / dir.Z;
-	if (invDirZ >= 0) {
-		tzmin = (min.Z - origin.Z) * invDirZ;
-		tzmax = (max.Z - origin.Z) * invDirZ;
+	if (invDir.Z >= 0) {
+		tzmin = (min.Z - origin.Z) * invDir.Z;
+		tzmax = (max.Z - origin.Z) * invDir.Z;
 	} else {
-		tzmin = (max.Z - origin.Z) * invDirZ;
-		tzmax = (min.Z - origin.Z) * invDirZ;
+		tzmin = (max.Z - origin.Z) * invDir.Z;
+		tzmax = (min.Z - origin.Z) * invDir.Z;
 	}
 
 	if (tmin > tzmax || tzmin > tmax) return false;

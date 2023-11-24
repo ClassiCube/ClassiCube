@@ -30,7 +30,8 @@ cc_bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P);
 cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax);
 /* Calculates the intersection point of a ray and a bounding box.
 Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
-cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1);
+/* NOTE: invDir is inverse of ray's direction (i.e. 1.0f / dir) */
+cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 invDir, Vec3 min, Vec3 max, float* t0, float* t1);
 
 struct SearcherState { int X, Y, Z; float tSquared; };
 extern struct SearcherState* Searcher_States;
