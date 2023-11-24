@@ -197,7 +197,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-// !!! NOTE: Dreamcast uses cooperative multithreading (not preemptive multithreading) !!!
+// !!! NOTE: Dreamcast is configured to use preemptive multithreading !!!
 void Thread_Sleep(cc_uint32 milliseconds) { 
 	thd_sleep(milliseconds); 
 }
