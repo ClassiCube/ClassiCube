@@ -76,7 +76,8 @@ void Window_Init(void) {
 	WindowInfo.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	DisplayInfo.ContentOffset = 10;
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 10;
 
 	#if defined HW_RVL
 	WPAD_Init();

@@ -120,7 +120,7 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 
 	/* Make "Position: " prefix */
 	tex = atlas->tex; 
-	tex.X     = 2 + DisplayInfo.ContentOffset;
+	tex.X     = 2 + DisplayInfo.ContentOffsetX;
 	tex.Width = atlas->offset;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &cur);
 
@@ -214,11 +214,11 @@ static void HUDScreen_Layout(void* screen) {
 	int posY;
 
 	Widget_SetLocation(line1, ANCHOR_MIN, ANCHOR_MIN, 
-						2 + DisplayInfo.ContentOffset, 2 + DisplayInfo.ContentOffset);
+						2 + DisplayInfo.ContentOffsetX, 2 + DisplayInfo.ContentOffsetY);
 	posY = line1->y + line1->height;
 	s->posAtlas.tex.Y = posY;
 	Widget_SetLocation(line2, ANCHOR_MIN, ANCHOR_MIN, 
-						2 + DisplayInfo.ContentOffset, 0);
+						2 + DisplayInfo.ContentOffsetX, 0);
 
 	if (Game_ClassicMode) {
 		/* Swap around so 0.30 version is at top */

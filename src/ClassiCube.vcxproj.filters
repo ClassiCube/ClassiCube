@@ -689,6 +689,15 @@
     <ClCompile Include="Graphics_SoftGPU.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Window_PS2.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_PS2.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_PS2.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
