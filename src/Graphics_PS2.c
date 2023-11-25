@@ -13,6 +13,7 @@
 #include <graph.h>
 #include <draw.h>
 #include <draw3d.h>
+#include <malloc.h>
 
 static void* gfx_vertices;
 static framebuffer_t fb_color;
@@ -26,12 +27,23 @@ static int context;
 static qword_t* dma_tag;
 static qword_t* q;
 
+static GfxResourceID white_square;
+static int primitive_type;
+
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
+	
+	// 16x16 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[16 * 16];
+	Mem_Set(pixels, 0xFF, sizeof(pixels));
+	Bitmap_Init(bmp, 16, 16, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 void Gfx_FreeState(void) {
 	FreeDefaultResources();
+	Gfx_DeleteTexture(&white_square);
 }
 
 // TODO: Maybe move to Window backend and just initialise once ??
@@ -68,8 +80,8 @@ static void InitDrawingEnv(void) {
 }
 
 static void InitDMABuffers(void) {
-	packets[0] = packet_init(10000, PACKET_NORMAL);
-	packets[1] = packet_init(10000, PACKET_NORMAL);
+	packets[0] = packet_init(20000, PACKET_NORMAL);
+	packets[1] = packet_init(20000, PACKET_NORMAL);
 }
 
 static void FlipContext(void) {
@@ -81,13 +93,16 @@ static void FlipContext(void) {
 	q = dma_tag + 1;
 }
 
+static int tex_offset;
 void Gfx_Create(void) {
 	vp_hwidth  = DisplayInfo.Width  / 2;
 	vp_hheight = DisplayInfo.Height / 2;
+	primitive_type = 0; // PRIM_POINT, which isn't used here
 	
 	InitBuffers();
 	InitDrawingEnv();
 	InitDMABuffers();
+	tex_offset = graph_vram_size(16, 16, GS_PSM_32, GRAPH_ALIGN_PAGE);
 	
 	context = 1;
 	FlipContext();
@@ -107,17 +122,91 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+typedef struct CCTexture_ {
+	cc_uint32 width, height;
+	cc_uint32 log2_width, log2_height;
+	cc_uint32 pad[(64 - 4)/4];
+	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
+} CCTexture;
+
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	int size = bmp->width * bmp->height * 4;
+	CCTexture* tex = (CCTexture*)memalign(16, 64 + size);
+	
+	tex->width       = bmp->width;
+	tex->height      = bmp->height;
+	tex->log2_width  = draw_log2(bmp->width);
+	tex->log2_height = draw_log2(bmp->height);
+	
+	Mem_Copy(tex->pixels, bmp->scan0, size);
+	return tex;
+}
+
 void Gfx_BindTexture(GfxResourceID texId) {
+	if (!texId) texId = white_square;
+	CCTexture* tex = (CCTexture*)texId;
+	return;
+	Platform_Log2("BIND: %i x %i", &tex->width, &tex->height);
 	// TODO
+	
+	texbuffer_t texbuf;
+	clutbuffer_t clut;
+	lod_t lod;
+	
+	texbuf.width   = tex->width;
+	texbuf.psm     = GS_PSM_32;
+	texbuf.address = tex_offset;
+	
+	lod.calculation = LOD_USE_K;
+	lod.max_level   = 0;
+	lod.mag_filter  = LOD_MAG_NEAREST;
+	lod.min_filter  = LOD_MIN_NEAREST;
+	lod.l = 0;
+	lod.k = 0;
+
+	texbuf.info.width  = tex->log2_width;
+	texbuf.info.height = tex->log2_height;
+	texbuf.info.components = TEXTURE_COMPONENTS_RGBA;
+	texbuf.info.function   = TEXTURE_FUNCTION_MODULATE;
+
+	clut.storage_mode = CLUT_STORAGE_MODE1;
+	clut.start   = 0;
+	clut.psm     = 0;
+	clut.load_method = CLUT_NO_LOAD;
+	clut.address = 0;
+	
+	// TODO terrible perf
+	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
+	dma_wait_fast();
+	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+	//
+	
+	packet_t *packet = packet_init(200, PACKET_NORMAL);
+
+	qword_t *Q = packet->data;
+
+	Q = draw_texture_transfer(Q, tex->pixels, tex->width, tex->height, GS_PSM_32, tex_offset, max(256, tex->width));
+	Q = draw_texture_flush(Q);
+
+	dma_channel_send_chain(DMA_CHANNEL_GIF,packet->data, Q - packet->data, 0,0);
+	dma_wait_fast();
+
+	//packet_free(packet);
+	
+	// TODO terrible perf
+	q = dma_tag + 1;
+	// 
+
+	q = draw_texture_sampling(q, 0, &lod);
+	q = draw_texturebuffer(q, 0, &texbuf, &clut);
+	
+	Platform_LogConst("=====");
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	// TODO
-}
-		
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	// TODO
-	return (void*)1;
+	GfxResourceID data = *texId;
+	if (data) Mem_Free(data);
+	*texId = NULL;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -349,22 +438,21 @@ static Vector4 TransformVertex(struct VertexTextured* pos) {
 
 #define VCopy(dst, src) dst.x = (vp_hwidth/2048) * (src.X / src.W); dst.y = (vp_hheight/2048) * (src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.X / src.W); dst.y = vp_hheight * (1 - src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
-#define CCopy(dst) dst.rgbaq = v->Col; dst.q = 1.0f;
 
-static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* v) {
+static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
 	vertex_f_t in_vertices[3];
 	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.X, &v0.Y, &v0.Z, &v0.W);	
 	xyz_t out_vertices[3];
-	color_t out_color[3];
+	u64* dw;
 	
 	VCopy(in_vertices[0], v0);
 	VCopy(in_vertices[1], v1);
 	VCopy(in_vertices[2], v2);
 	
+	Vector4 verts[3] = { v0, v1, v2 };
+	struct VertexTextured* v[] = { V0, V1, V2 };
+	
 	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
-	CCopy(out_color[0]);
-	CCopy(out_color[1]);
-	CCopy(out_color[2]);
 	
 	draw_convert_xyz(out_vertices, 2048, 2048, 32, 3, in_vertices);
 	
@@ -377,16 +465,29 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	
 	// 3 "primitives" follow in the GIF packet (vertices in this case)
 	// 2 registers per "primitive" (colour, position)
-	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 2), DRAW_RGBAQ_REGLIST);
+	PACK_GIFTAG(q, GIF_SET_TAG(3,1,0,0, GIF_FLG_REGLIST, 3), DRAW_STQ_REGLIST);
 	q++;
 
+	// TODO optimise
 	// Add the "primitives" to the GIF packet
+	dw = (u64*)q;
 	for (int i = 0; i < 3; i++)
 	{
-		q->dw[0] = out_color[i].rgbaq;
-		q->dw[1] = out_vertices[i].xyz;
-		q++;
+		float Q = 1.0f / verts[i].W;
+		color_t color;
+		texel_t texel;
+		
+		color.rgbaq = v[i]->Col;
+		color.q     = Q;
+		texel.u     = v[i]->U * Q;
+		texel.v     = v[i]->V * Q;
+		
+		*dw++ = color.rgbaq;
+		*dw++ = texel.uv;
+		*dw++ = out_vertices[i].xyz;
 	}
+	dw++; // one more to even out number of doublewords
+	q = dw;
 }
 
 static void DrawTriangles(int verticesCount, int startVertex) {
@@ -409,30 +510,47 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 	//Platform_LogConst(">>>>>>>>>>");
 		
 		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {
-			DrawTriangle(V0, V1, V2, v);
+			DrawTriangle(V0, V1, V2, v + 0, v + 1, v + 2);
 		}
 		
 		if (NotClipped(V2) && NotClipped(V3) && NotClipped(V0)) {
-			DrawTriangle(V2, V3, V0, v);
+			DrawTriangle(V2, V3, V0, v + 2, v + 3, v + 0);
 		}
 		
 		//Platform_LogConst("-----");
 	}
 }
 
-void Gfx_DrawVb_Lines(int verticesCount) { } /* TODO */
+// TODO: Can this be used? need to understand EOP more
+static void SetPrimitiveType(int type) {
+	if (primitive_type == type) return;
+	primitive_type = type;
+	
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_PRIM(type, PRIM_SHADE_GOURAUD, DRAW_DISABLE, DRAW_DISABLE,
+							  DRAW_DISABLE, DRAW_DISABLE, PRIM_MAP_ST,
+							  0, PRIM_UNFIXED), GS_REG_PRIM);
+	q++;
+}
+
+void Gfx_DrawVb_Lines(int verticesCount) {
+	//SetPrimitiveType(PRIM_LINE);
+} /* TODO */
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	// TODO
+	//SetPrimitiveType(PRIM_TRIANGLE);
 	DrawTriangles(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	//SetPrimitiveType(PRIM_TRIANGLE);
 	DrawTriangles(verticesCount, 0);
 	// TODO
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	//SetPrimitiveType(PRIM_TRIANGLE);
 	DrawTriangles(verticesCount, startVertex);
 	// TODO
 }
@@ -450,23 +568,28 @@ cc_bool Gfx_WarnIfNecessary(void) {
 }
 
 void Gfx_BeginFrame(void) { 
-	//Platform_LogConst("--- Frame ---");
+	Platform_LogConst("--- Frame ---");
 }
 
 void Gfx_EndFrame(void) {
+	Platform_LogConst("--- EF1 ---");
 	q = draw_finish(q);
+	Platform_LogConst("--- EF2 ---");
 	
 	// Fill out and then send DMA chain
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
 	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
+	Platform_LogConst("--- EF3 ---");
 		
 	draw_wait_finish();
+	Platform_LogConst("--- EF4 ---");
 	
 	if (gfx_vsync) graph_wait_vsync();
 	if (gfx_minFrameMs) LimitFPS();
 	
 	FlipContext();
+	Platform_LogConst("--- EF5 ---");
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
