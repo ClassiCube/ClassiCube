@@ -12,6 +12,9 @@ struct StringsBuffer Options;
 static struct StringsBuffer changedOpts;
 cc_result Options_LoadResult;
 static cc_bool savingPaused;
+#if defined CC_BUILD_WEB || defined CC_BUILD_MOBILE || defined CC_BUILD_CONSOLE
+	#define OPTIONS_SAVE_IMMEDIATELY
+#endif
 
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options);
@@ -64,7 +67,6 @@ static void SaveOptions(void) {
 }
 
 void Options_SaveIfChanged(void) {
-	savingPaused = false;
 	if (!changedOpts.count) return;
 	
 	Options_Reload();
@@ -72,6 +74,13 @@ void Options_SaveIfChanged(void) {
 }
 
 void Options_PauseSaving(void) { savingPaused = true; }
+
+void Options_ResumeSaving(void) { 
+	savingPaused = false;
+#if defined OPTIONS_SAVE_IMMEDIATELY
+	SaveOptions();
+#endif
+}
 
 
 cc_bool Options_UNSAFE_Get(const char* keyRaw, cc_string* value) {
@@ -176,7 +185,7 @@ void Options_SetString(const cc_string* key, const cc_string* value) {
 		EntryList_Set(&Options, key, value, '=');
 	}
 
-#if defined CC_BUILD_WEB || defined CC_BUILD_MOBILE || defined CC_BUILD_CONSOLE
+#if defined OPTIONS_SAVE_IMMEDIATELY
 	if (!savingPaused) SaveOptions();
 #endif
 
