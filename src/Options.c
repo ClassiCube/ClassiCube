@@ -176,7 +176,7 @@ void Options_SetString(const cc_string* key, const cc_string* value) {
 		EntryList_Set(&Options, key, value, '=');
 	}
 
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_IOS
+#if defined CC_BUILD_WEB || defined CC_BUILD_MOBILE || defined CC_BUILD_CONSOLE
 	if (!savingPaused) SaveOptions();
 #endif
 

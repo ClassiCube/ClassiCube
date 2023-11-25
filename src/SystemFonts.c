@@ -34,7 +34,7 @@ struct IGameComponent SystemFonts_Component = {
 /*########################################################################################################################*
 *--------------------------------------------------------Freetype---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_FREETYPE
+#if defined CC_BUILD_FREETYPE && !defined CC_BUILD_CONSOLE
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"

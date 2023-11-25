@@ -521,10 +521,11 @@ static void DirectConnectScreen_StartClient(void* w) {
 	if (!mppass->length) mppass = &defMppass;
 
 	Options_PauseSaving();
-	Options_Set("launcher-dc-username", user);
-	Options_Set("launcher-dc-ip",       &ip);
-	Options_Set("launcher-dc-port",     &port);
-	Options_SetSecure("launcher-dc-mppass", mppass);
+		Options_Set("launcher-dc-username", user);
+		Options_Set("launcher-dc-ip",       &ip);
+		Options_Set("launcher-dc-port",     &port);
+		Options_SetSecure("launcher-dc-mppass", mppass);
+	Options_ResumeSaving();
 
 	LLabel_SetConst(status, "");
 	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
