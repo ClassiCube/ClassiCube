@@ -96,7 +96,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static const cc_string root_path = String_FromConst("mc0:/ClassiCube/");
+static const cc_string root_path = String_FromConst("mass:/ClassiCube/");
 
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
@@ -421,7 +421,7 @@ static int ethEnableDHCP(void) {
 	return 0;
 }
 
-static void SetupNetworking(void) {
+static void Networking_Setup(void) {
 	struct ip4_addr IP  = { 0 }, NM = { 0 }, GW = { 0 };
 	ps2ipInit(&IP, &NM, &GW);
 	ethEnableDHCP();
@@ -440,11 +440,21 @@ static void SetupNetworking(void) {
 	Platform_LogConst("Network setup done");
 }
 
-static void InitNetworking(void) {
-	SifExecModuleBuffer(DEV9_irx,   size_DEV9_irx,   0, NULL, NULL);
-	SifExecModuleBuffer(NETMAN_irx, size_NETMAN_irx, 0, NULL, NULL);
-	SifExecModuleBuffer(SMAP_irx,   size_SMAP_irx,   0, NULL, NULL);
+static void Networking_Init(void) {
 	NetManInit();
+}
+
+static void Networking_LoadIOPModules(void) {
+	int ret;
+	
+	ret = SifExecModuleBuffer(DEV9_irx,   size_DEV9_irx,   0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer DEV9_irx failed: %i", &ret);
+	
+	ret = SifExecModuleBuffer(NETMAN_irx, size_NETMAN_irx, 0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer NETMAN_irx failed: %i", &ret);
+	
+	ret = SifExecModuleBuffer(SMAP_irx,   size_SMAP_irx,   0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer SMAP_irx failed: %i", &ret);
 }
 
 /*########################################################################################################################*
@@ -591,6 +601,62 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------USB mass storage-----------------------------------------------------*
+*#########################################################################################################################*/
+extern unsigned char USBD_irx[];
+extern unsigned int  size_USBD_irx;
+
+extern unsigned char BDM_irx[];
+extern unsigned int  size_BDM_irx;
+
+extern unsigned char BDMFS_FATFS_irx[];
+extern unsigned int  size_BDMFS_FATFS_irx;
+
+extern unsigned char USBMASS_BD_irx[];
+extern unsigned int  size_USBMASS_BD_irx;
+
+extern unsigned char USBHDFSD_irx[];
+extern unsigned int  size_USBHDFSD_irx;
+
+static void USBStorage_LoadIOPModules(void) {   
+    int ret;
+    // TODO: Seems that
+    // BDM, BDMFS_FATFS, USBMASS_BD - newer ?
+    // USBHDFSD - older ?
+    
+	ret = SifExecModuleBuffer(USBD_irx, size_USBD_irx, 0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBD_irx failed: %i", &ret);
+    
+	//ret = SifExecModuleBuffer(USBHDFSD_irx,  size_USBHDFSD_irx,  0, NULL, NULL);
+    //if (ret < 0) Platform_Log1("SifExecModuleBuffer USBHDFSD_irx failed: %i", &ret);
+    
+	ret = SifExecModuleBuffer(BDM_irx,  size_BDM_irx,  0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer BDM_irx failed: %i", &ret);
+    
+	ret = SifExecModuleBuffer(BDMFS_FATFS_irx, size_BDMFS_FATFS_irx, 0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer BDMFS_FATFS_irx failed: %i", &ret);
+    
+	ret = SifExecModuleBuffer(USBMASS_BD_irx,  size_USBMASS_BD_irx,  0, NULL, NULL);
+    if (ret < 0) Platform_Log1("SifExecModuleBuffer USBMASS_BD_irx failed: %i", &ret);
+}
+
+// TODO Maybe needed ???
+/*
+static void USBStorage_WaitUntilDeviceReady() {
+	io_stat_t sb;
+	Thread_Sleep(50);
+
+	for (int retry = 0; retry < 50; retry++)
+	{
+		if (fioGetstat("mass:/", &sb) >= 0) return;
+		
+    	nopdelay();
+    }
+    Platform_LogConst("USB device still not ready ??");
+}*/
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 // Note that resetting IOP does mean can't debug through ps2client
@@ -607,24 +673,27 @@ static void LoadIOPModules(void) {
 	
 	// file I/O module
 	ret = SifLoadModule("rom0:FILEIO",  0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule FILEIO failed: %i", &ret);
+    if (ret < 0) Platform_Log1("SifLoadModule FILEIO failed: %i", &ret);
     sbv_patch_fileio();
 	
 	// serial I/O module (needed for memory card & input pad modules)
 	ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule SIO2MAN failed: %i", &ret);
+    if (ret < 0) Platform_Log1("SifLoadModule SIO2MAN failed: %i", &ret);
+	
 	
 	// memory card module
 	ret = SifLoadModule("rom0:MCMAN",   0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule MCMAN failed: %i", &ret);
+    if (ret < 0) Platform_Log1("SifLoadModule MCMAN failed: %i", &ret);
 	
-	// memory card module
+	// memory card server module
 	ret = SifLoadModule("rom0:MCSERV",  0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule MCSERV failed: %i", &ret);
+    if (ret < 0) Platform_Log1("SifLoadModule MCSERV failed: %i", &ret);
+    
     
     // Input pad module
     ret = SifLoadModule("rom0:PADMAN",  0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule PADMAN failed: %i", &ret);
+    if (ret < 0) Platform_Log1("SifLoadModule PADMAN failed: %i", &ret);
+ 
 }
 
 void Platform_Init(void) {
@@ -633,13 +702,18 @@ void Platform_Init(void) {
 	SifInitRpc(0);
 	SifLoadFileInit();
 	SifInitIopHeap();
-	sbv_patch_enable_lmb();
+	sbv_patch_enable_lmb(); // Allows loading IRX modules from a buffer in EE RAM
 
 	LoadIOPModules();
-	InitNetworking();
-	SetupNetworking();
+	USBStorage_LoadIOPModules();
+	//USBStorage_WaitUntilDeviceReady();
+	
+	Networking_LoadIOPModules();
+	Networking_Init();
+	Networking_Setup();
+	
 	// Create root directory
-	int res = fioMkdir("mc0:/ClassiCube");
+	int res = fioMkdir("mass:/ClassiCube");
 	Platform_Log1("ROOT CREATE %i", &res);
 }
 
