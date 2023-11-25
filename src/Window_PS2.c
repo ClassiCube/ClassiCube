@@ -11,7 +11,6 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
-#include <loadfile.h>
 #include <libpad.h>
 #include <packet.h>
 #include <dma_tags.h>
@@ -31,14 +30,6 @@ struct _WinData WindowInfo;
 int Display_ScaleX(int x) { return x; }
 int Display_ScaleY(int y) { return y; }
 
-static void LoadModules(void) {
-    int ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule SIO failed: %i", &ret);
-
-    ret = SifLoadModule("rom0:PADMAN", 0, NULL);
-    if (ret < 0) Platform_Log1("sifLoadModule PAD failed: %i", &ret);
-}
-
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
@@ -55,7 +46,6 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 	
-	LoadModules();
 	padInit(0);
 	padPortOpen(0, 0, padBuf);
 }

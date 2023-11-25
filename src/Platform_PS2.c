@@ -15,7 +15,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <fcntl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -31,11 +30,15 @@
 #include <sbv_patches.h>
 #include <netman.h>
 #include <ps2ip.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
+#include <io_common.h>
+#include <iox_stat.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
-const cc_result ReturnCode_FileNotFound       = ENOENT;
-const cc_result ReturnCode_DirectoryExists    = EEXIST;
+const cc_result ReturnCode_FileNotFound       = -ENOENT;
+const cc_result ReturnCode_DirectoryExists    = -EEXIST;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -93,7 +96,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static const cc_string root_path = String_FromConst("/dev_hdd0/ClassiCube/");
+static const cc_string root_path = String_FromConst("mc0:/ClassiCube/");
 
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
@@ -104,14 +107,14 @@ static void GetNativePath(char* str, const cc_string* path) {
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-	return mkdir(str, 0) == -1 ? errno : 0;
+	return fioMkdir(str);
 }
 
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	struct stat sb;
+	io_stat_t sb;
 	GetNativePath(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	return fioGetstat(str, &sb) >= 0 && (sb.mode & FIO_SO_IFREG);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -161,48 +164,61 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-	*file = open(str, mode, 0);
-	return *file == -1 ? errno : 0;
+	
+	int res = fioOpen(str, mode);
+	*file   = res;
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path, FIO_O_RDONLY);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT | FIO_O_TRUNC);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path, FIO_O_RDWR | FIO_O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	int res    = fioRead(file, data, count);
+	*bytesRead = res;
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	int res     = fioWrite(file, data, count);
+	*bytesWrote = res;
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Close(cc_file file) {
-	return close(file) == -1 ? errno : 0;
+	return fioClose(file);
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	
+	int res = fioLseek(file, offset, modes[seekType]);
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	int res = fioLseek(file, 0, SEEK_CUR);
+	*pos    = res;
+	return res < 0 ? res : 0;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	int cur_pos = fioLseek(file, 0, SEEK_CUR);
+	if (cur_pos < 0) return cur_pos; // error occurred
+	
+	// get end and then restore position
+	int res = fioLseek(file, 0, SEEK_END);
+	fioLseek(file, cur_pos, SEEK_SET);
+	
+	*len    = res;
+	return res < 0 ? res : 0;
 }
 
 
@@ -586,6 +602,31 @@ static void ResetIOP(void) { // reboots the IOP
 	while (!SifIopSync())       { }
 }
 
+static void LoadIOPModules(void) {
+	int ret;
+	
+	// file I/O module
+	ret = SifLoadModule("rom0:FILEIO",  0, NULL);
+    if (ret < 0) Platform_Log1("sifLoadModule FILEIO failed: %i", &ret);
+    sbv_patch_fileio();
+	
+	// serial I/O module (needed for memory card & input pad modules)
+	ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
+    if (ret < 0) Platform_Log1("sifLoadModule SIO2MAN failed: %i", &ret);
+	
+	// memory card module
+	ret = SifLoadModule("rom0:MCMAN",   0, NULL);
+    if (ret < 0) Platform_Log1("sifLoadModule MCMAN failed: %i", &ret);
+	
+	// memory card module
+	ret = SifLoadModule("rom0:MCSERV",  0, NULL);
+    if (ret < 0) Platform_Log1("sifLoadModule MCSERV failed: %i", &ret);
+    
+    // Input pad module
+    ret = SifLoadModule("rom0:PADMAN",  0, NULL);
+    if (ret < 0) Platform_Log1("sifLoadModule PADMAN failed: %i", &ret);
+}
+
 void Platform_Init(void) {
 	//InitDebug();
 	ResetIOP();
@@ -593,11 +634,13 @@ void Platform_Init(void) {
 	SifLoadFileInit();
 	SifInitIopHeap();
 	sbv_patch_enable_lmb();
-	
+
+	LoadIOPModules();
 	InitNetworking();
 	SetupNetworking();
 	// Create root directory
-	Directory_Create(&String_Empty);
+	int res = fioMkdir("mc0:/ClassiCube");
+	Platform_Log1("ROOT CREATE %i", &res);
 }
 
 void Platform_Free(void) { }

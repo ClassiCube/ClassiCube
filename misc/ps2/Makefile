@@ -5,7 +5,7 @@ OBJS	:=$(patsubst %.c, %.o, $(CFILES))
 
 EE_BIN = ClassiCube-ps2.elf
 EE_OBJS = $(OBJS) DEV9_irx.o NETMAN_irx.o SMAP_irx.o
-EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc
+EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman
 EE_CFLAGS = -DPLAT_PS2
 
 all: $(EE_BIN)
