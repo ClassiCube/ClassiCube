@@ -63,14 +63,37 @@ static void InitBuffers(void) {
 	graph_initialize(fb_color.address, fb_color.width, fb_color.height, fb_color.psm, 0, 0);
 }
 
+static qword_t* SetTextureWrapping(qword_t* q, int context) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	PACK_GIFTAG(q, GS_SET_CLAMP(WRAP_REPEAT, WRAP_REPEAT, 0, 0, 0, 0), 
+					GS_REG_CLAMP + context);
+	q++;
+	return q;
+}
+
+static qword_t* SetTextureSampling(qword_t* q, int context) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	// TODO: should mipmapselect (first 0 after MIN_NEAREST) be 1?
+	PACK_GIFTAG(q, GS_SET_TEX1(LOD_USE_K, 0, LOD_MAG_NEAREST, LOD_MIN_NEAREST, 0, 0, 0), 
+					GS_REG_TEX1 + context);
+	q++;
+	return q;
+}
+
 static void InitDrawingEnv(void) {
-	packet_t *packet = packet_init(20, PACKET_NORMAL);
+	packet_t *packet = packet_init(30, PACKET_NORMAL); // TODO: is 30 too much?
 	qword_t *q = packet->data;
 	
 	q = draw_setup_environment(q, 0, &fb_color, &fb_depth);
 	// GS can render from 0 to 4096, so set primitive origin to centre of that
 	q = draw_primitive_xyoffset(q, 0, 2048 - vp_hwidth, 2048 - vp_hheight);
 
+	q = SetTextureWrapping(q, 0);
+	q = SetTextureSampling(q, 0);
 	q = draw_finish(q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF,packet->data,q - packet->data, 0, 0);
@@ -102,7 +125,7 @@ void Gfx_Create(void) {
 	InitBuffers();
 	InitDrawingEnv();
 	InitDMABuffers();
-	tex_offset = graph_vram_size(16, 16, GS_PSM_32, GRAPH_ALIGN_PAGE);
+	tex_offset = graph_vram_size(64, 64, GS_PSM_32, GRAPH_ALIGN_PAGE);
 	
 	context = 1;
 	FlipContext();
@@ -142,38 +165,28 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	return tex;
 }
 
+static void UpdateTextureBuffer(int context, texbuffer_t *texture, CCTexture* tex) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	PACK_GIFTAG(q, GS_SET_TEX0(texture->address >> 6, texture->width >> 6, GS_PSM_32,
+							   tex->log2_width, tex->log2_height, TEXTURE_COMPONENTS_RGBA, TEXTURE_FUNCTION_MODULATE,
+							   0, 0, CLUT_STORAGE_MODE1, 0, CLUT_NO_LOAD), GS_REG_TEX0 + context);
+	q++;
+}
+
+static int BINDS;
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
-	return;
 	Platform_Log2("BIND: %i x %i", &tex->width, &tex->height);
 	// TODO
+	if (BINDS) return;
+	BINDS = 1;
 	
 	texbuffer_t texbuf;
-	clutbuffer_t clut;
-	lod_t lod;
-	
-	texbuf.width   = tex->width;
-	texbuf.psm     = GS_PSM_32;
+	texbuf.width   = max(256, tex->width);
 	texbuf.address = tex_offset;
-	
-	lod.calculation = LOD_USE_K;
-	lod.max_level   = 0;
-	lod.mag_filter  = LOD_MAG_NEAREST;
-	lod.min_filter  = LOD_MIN_NEAREST;
-	lod.l = 0;
-	lod.k = 0;
-
-	texbuf.info.width  = tex->log2_width;
-	texbuf.info.height = tex->log2_height;
-	texbuf.info.components = TEXTURE_COMPONENTS_RGBA;
-	texbuf.info.function   = TEXTURE_FUNCTION_MODULATE;
-
-	clut.storage_mode = CLUT_STORAGE_MODE1;
-	clut.start   = 0;
-	clut.psm     = 0;
-	clut.load_method = CLUT_NO_LOAD;
-	clut.address = 0;
 	
 	// TODO terrible perf
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
@@ -195,10 +208,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	
 	// TODO terrible perf
 	q = dma_tag + 1;
-	// 
-
-	q = draw_texture_sampling(q, 0, &lod);
-	q = draw_texturebuffer(q, 0, &texbuf, &clut);
+	UpdateTextureBuffer(0, &texbuf, tex);
 	
 	Platform_LogConst("=====");
 }
@@ -226,6 +236,7 @@ void Gfx_DisableMipmaps(void) { }
 *------------------------------------------------------State management---------------------------------------------------*
 *#########################################################################################################################*/
 static int clearR, clearG, clearB;
+static cc_bool gfx_alphaBlend;
 static cc_bool gfx_alphaTest;
 static cc_bool gfx_depthTest;
 static cc_bool stateDirty;
@@ -262,7 +273,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
-	// TODO
+	gfx_alphaBlend = enabled;
+	// TODO update primitive state
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -416,6 +428,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
+	// TODO update cached primitive state
 }
 
 typedef struct Vector4 { float X, Y, Z, W; } Vector4;
@@ -451,6 +464,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	
 	Vector4 verts[3] = { v0, v1, v2 };
 	struct VertexTextured* v[] = { V0, V1, V2 };
+	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
 	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
 	
@@ -458,8 +472,8 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
-	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, DRAW_DISABLE, DRAW_DISABLE,
-							  DRAW_DISABLE, DRAW_DISABLE, PRIM_MAP_ST,
+	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
+							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
 							  0, PRIM_UNFIXED), GS_REG_PRIM);
 	q++;
 	
@@ -572,6 +586,7 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
+	BINDS = 0;
 	Platform_LogConst("--- EF1 ---");
 	q = draw_finish(q);
 	Platform_LogConst("--- EF2 ---");
