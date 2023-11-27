@@ -435,7 +435,8 @@ void Screen_Render2Widgets(void* screen, double delta) {
 
 void Screen_UpdateVb(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
-	Gfx_RecreateDynamicVb(&s->vb, VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	Gfx_DeleteDynamicVb(&s->vb);
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, s->maxVertices);
 }
 
 struct VertexTextured* Screen_LockVb(void* screen) {

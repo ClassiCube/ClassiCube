@@ -1160,7 +1160,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 	String_Format1(info, "Adapter: %c\n", adapter);
 	String_Format2(info, "Graphics memory: %f2 MB total (%f2 MB VRAM)\n", &tram_, &vram_);
-	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 
 release_adapter:
 	IDXGIAdapter_Release(dxgi_adapter);

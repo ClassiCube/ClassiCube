@@ -240,8 +240,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	String_Format1(info, "-- Using GC/WII --", NULL);
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_AppendConst(info, "-- Using GC/Wii --\n");
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

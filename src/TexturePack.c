@@ -63,8 +63,16 @@ static void Atlas_Convert2DTo1D(void) {
 
 static void Atlas_Update1D(void) {
 	int maxAtlasHeight, maxTilesPerAtlas, maxTiles;
+	int maxTexHeight = Gfx.MaxTexHeight;
 
-	maxAtlasHeight   = min(4096, Gfx.MaxTexHeight);
+	/* E.g. a graphics backend may support textures up to 256 x 256 */
+	/*   dimension wise, but only have enough storage for 16 x 256 */
+	if (Gfx.MaxTexSize) {
+		int maxCurHeight = Gfx.MaxTexSize / Atlas2D.TileSize;
+		maxTexHeight     = min(maxTexHeight, maxCurHeight);
+	}
+
+	maxAtlasHeight   = min(4096, maxTexHeight);
 	maxTilesPerAtlas = maxAtlasHeight / Atlas2D.TileSize;
 	maxTiles         = Atlas2D.RowsCount * ATLAS2D_TILES_PER_ROW;
 
@@ -145,7 +153,7 @@ cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 		return false;
 	}
 
-	if (tileSize > Gfx.MaxTexWidth) {
+	if (!Gfx_CheckTextureSize(tileSize, tileSize)) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_Add4("&c Tile size is (%i,%i), your GPU supports (%i,%i) at most.", 
 			&tileSize, &tileSize, &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);

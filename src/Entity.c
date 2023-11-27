@@ -326,7 +326,7 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 	if ((res = EnsurePow2Skin(e, bmp))) return res;
 	e->SkinType = Utils_CalcSkinType(bmp);
 
-	if (bmp->width > Gfx.MaxTexWidth || bmp->height > Gfx.MaxTexHeight) {
+	if (!Gfx_CheckTextureSize(bmp->width, bmp->height)) {
 		Chat_Add1("&cSkin %s is too large", skin);
 	} else {
 		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT) 

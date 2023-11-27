@@ -520,7 +520,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");
 	String_AppendConst(info, "T&L: GLdc library (KallistiOS / Kazade)\n");
 	String_Format2(info,     "Texture memory: %f2 MB used, %f2 MB free\n", &usedMemMB, &freeMemMB);
-	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

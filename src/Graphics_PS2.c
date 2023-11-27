@@ -617,9 +617,8 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-	String_Format1(info, "-- Using PS2 (%i bit) --\n", &pointerSize);
-	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_AppendConst(info, "-- Using PS2 --\n");
+	PrintMaxTextureInfo(info);
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }

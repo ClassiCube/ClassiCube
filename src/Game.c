@@ -231,6 +231,8 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 
 cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
+	float texSize, maxSize;
+
 	if (!bmp->scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
@@ -240,7 +242,17 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
 		Chat_Add4("&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
-			&bmp->width, &bmp->height, &maxWidth, &maxHeight);
+				&bmp->width, &bmp->height, &maxWidth, &maxHeight);
+		return false;
+	}
+
+	if (Gfx.MaxTexSize && (bmp->width * bmp->height > Gfx.MaxTexSize)) {
+		Chat_Add1("&cUnable to use %s from the texture pack.", file);
+		texSize = (bmp->width * bmp->height) / (1024.0f * 1024.0f);
+		maxSize = Gfx.MaxTexSize             / (1024.0f * 1024.0f);
+
+		Chat_Add2("&c Its size is %f3 MB, your GPU supports %f3 MB at most.", 
+				&texSize, &maxSize);
 		return false;
 	}
 

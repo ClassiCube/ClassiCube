@@ -53,6 +53,9 @@ CC_VAR extern struct _GfxData {
 	/* Whether graphics context has been created */
 	cc_bool Created;
 	struct Matrix View, Projection;
+	/* Maximum size in pixels a texture can consist of */
+	/* NOTE: Not all graphics backends specify a value for this */
+	int MaxTexSize;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
@@ -69,10 +72,10 @@ extern const cc_string Gfx_LowPerfMessage;
 
 #define LOWPERF_EXIT_MESSAGE "&eExited reduced performance mode"
 
-void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
-void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
+cc_bool Gfx_CheckTextureSize(int width, int height);
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
 /* Supported flags: TEXTURE_FLAG_MANAGED, TEXTURE_FLAG_DYNAMIC */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
@@ -87,6 +90,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to 0 */
 CC_API void Gfx_DeleteTexture(GfxResourceID* texId);
+
 /* NOTE: Completely useless now, and does nothing in all graphics backends */
 /*  (used to set whether texture colour is used when rendering vertices) */
 CC_API void Gfx_SetTexturing(cc_bool enabled);

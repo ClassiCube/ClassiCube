@@ -357,10 +357,8 @@ void Gfx_EndFrame(void) {
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	int pointerSize = sizeof(void*) * 8;
-
-	String_Format1(info, "-- Using XBox 360 (%i bit) --\n", &pointerSize);
-	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_AppendConst(info, "-- Using XBox 360 --\n");
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_OnWindowResize(void) {

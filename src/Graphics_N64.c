@@ -62,7 +62,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using Nintendo 64 --\n");
 	String_AppendConst(info, "GPU: Nintendo 64 RDP (LibDragon OpenGL)\n");
 	String_AppendConst(info, "T&L: Nintendo 64 RSP (LibDragon OpenGL)\n");
-	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -121,8 +121,6 @@ typedef struct CCTexture {
 } CCTexture;
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	if (bmp->width > 32 || bmp->height > 32) return NULL;
-
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "texture");
 	
 	glGenTextures(1, &tex->textureID);

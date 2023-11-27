@@ -880,7 +880,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "Adapter: %c\n",         adapter.Description);
 	String_Format1(info, "Processing mode: %c\n", D3D9_StrFlags());
 	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &totalMem, &curMem);
-	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 	String_Format1(info, "Depth buffer bits: %i", &depthBits);
 }
 

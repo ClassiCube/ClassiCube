@@ -51,11 +51,16 @@ static void MakeIndices(cc_uint16* indices, int count, void* obj) {
 	}
 }
 
+static void RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices) {
+	Gfx_DeleteDynamicVb(vb);
+	*vb = Gfx_CreateDynamicVb(fmt, maxVertices);
+}
+
 static void InitDefaultResources(void) {
 	Gfx_defaultIb = Gfx_CreateIb2(GFX_MAX_INDICES, MakeIndices, NULL);
 
-	Gfx_RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
-	Gfx_RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
+	RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
+	RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
 }
 
 static void FreeDefaultResources(void) {
@@ -128,11 +133,6 @@ static void EndReducedPerformance(void) {
 	Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
 }
 
-
-void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices) {
-	Gfx_DeleteDynamicVb(vb);
-	*vb = Gfx_CreateDynamicVb(fmt, maxVertices);
-}
 
 void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	Gfx_DeleteTexture(tex);
@@ -252,6 +252,17 @@ static CC_INLINE float Reversed_CalcZNear(float fov, int depthbufferBits) {
 	return 0.00390625f;
 }
 
+static void PrintMaxTextureInfo(cc_string* info) {
+	if (Gfx.MaxTexSize) {
+		float maxSize = Gfx.MaxTexSize / (1024.0f * 1024.0f);
+		String_Format3(info, "Max texture size: (%i, %i), up to %f3 MB\n", 
+						&Gfx.MaxTexWidth, &Gfx.MaxTexHeight, &maxSize);
+	} else {
+		String_Format2(info, "Max texture size: (%i, %i)\n",
+						&Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	}
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -339,6 +350,15 @@ static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 	}
 }
 
+cc_bool Gfx_CheckTextureSize(int width, int height) {
+	if (width  > Gfx.MaxTexWidth)  return false;
+	if (height > Gfx.MaxTexHeight) return false;
+
+	if (Gfx.MaxTexSize && (width * height > Gfx.MaxTexSize))
+		return false;
+	return true;
+}
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
@@ -346,6 +366,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 		Logger_Abort("Textures must have power of two dimensions");
 	}
 	if (Gfx.LostContext) return 0;
+	if (!Gfx_CheckTextureSize(bmp->width, bmp->height)) return 0;
 
 	return Gfx_AllocTexture(bmp, flags, mipmaps);
 }
