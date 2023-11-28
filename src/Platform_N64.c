@@ -177,7 +177,7 @@ void* Thread_Create(Thread_StartFunc func) {
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
-	func(); // TODO: actual multithreading ???
+	// TODO: actual multithreading ???
 }
 
 void Thread_Detach(void* handle) {

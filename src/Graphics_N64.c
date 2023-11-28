@@ -52,7 +52,7 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-//static color_t gfx_clearColor;
+static color_t gfx_clearColor;
 
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
@@ -75,35 +75,30 @@ void Gfx_OnWindowResize(void) { }
 
 
 void Gfx_BeginFrame(void) {
-//Platform_LogConst("GFX BEG");
 	surface_t* disp = display_get();
     rdpq_attach(disp, &zbuffer);
     
-    //rdpq_set_mode_fill(RGBA32(0, 255, 0, 255));
-    //rdpq_fill_rectangle(0, 0, 320, 120);
-    
-    //rdpq_clear(gfx_clearColor);
-    //rdpq_clear_z(0xFFFC);
-    
 	gl_context_begin();
-Platform_LogConst("GFX ctx beg");
+	Platform_LogConst("GFX ctx beg");
 }
 
-static PackedCol clearColor;
+static color_t gfx_clearColor;
 void Gfx_Clear(void) {
-	glClearColor(PackedCol_R(clearColor) / 255.0f, PackedCol_G(clearColor) / 255.0f,
-				 PackedCol_B(clearColor) / 255.0f, PackedCol_A(clearColor) / 255.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	__rdpq_autosync_change(AUTOSYNC_PIPE);
+	rdpq_clear(gfx_clearColor);
+    rdpq_clear_z(0xFFFC);
 } 
 
 void Gfx_ClearCol(PackedCol color) {
-	clearColor = color;
-	//color = PackedCol_Make(200, 150, 100, 255);
+	gfx_clearColor.r = PackedCol_R(color);
+	gfx_clearColor.g = PackedCol_G(color);
+	gfx_clearColor.b = PackedCol_B(color);
+	gfx_clearColor.a = PackedCol_A(color);
 	//memcpy(&gfx_clearColor, &color, sizeof(color_t)); // TODO maybe use proper conversion from graphics.h ??
 }
 
 void Gfx_EndFrame(void) {
-Platform_LogConst("GFX ctx end");
+	Platform_LogConst("GFX ctx end");
 	gl_context_end();
     rdpq_detach_show();
     
@@ -163,8 +158,9 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	// TODO: Doesn't actually work. maybe due to glSurfaceTexImageN64 caching the RSQ upload block?
-	/*CCTexture* tex = (CCTexture*)texId;
+	// TODO: Just memcpying doesn't actually work. maybe due to glSurfaceTexImageN64 caching the RSQ upload block?
+	// TODO: Is there a more optimised approach than just calling glSurfaceTexImageN64
+	CCTexture* tex = (CCTexture*)texId;
 	
 	surface_t* fb  = &tex->surface;
 	cc_uint32* src = (cc_uint32*)part->scan0 + x;
@@ -175,7 +171,16 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 		Mem_Copy(dst + srcY * fb->stride,
 				 src + srcY * rowWidth,
 				 part->width * 4);
-	}*/
+	}
+	
+	
+	glBindTexture(GL_TEXTURE_2D, tex->textureID);
+	rdpq_texparms_t params = (rdpq_texparms_t){
+        .s.repeats = REPEAT_INFINITE,
+        .t.repeats = REPEAT_INFINITE,
+    };
+	// rdpq_tex_upload(TILE0, &tex->surface, &params);
+	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
@@ -219,7 +224,7 @@ static void Gfx_RestoreState(void) {
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthFunc(GL_LESS_INTERPENETRATING_N64);
+	glDepthFunc(GL_LESS);
 	//glEnable(GL_RDPQ_TEXTURING_N64);
 }
 
@@ -322,6 +327,8 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool depthOnlyRendering;
+
 void Gfx_SetFog(cc_bool enabled) {
 }
 
@@ -344,7 +351,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
+	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?
+	cc_bool enabled    = !depthOnly;
 	//Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
@@ -442,6 +450,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	if (depthOnlyRendering) return;
 	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
