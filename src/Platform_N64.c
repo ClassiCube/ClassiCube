@@ -7,6 +7,7 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "Options.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -114,10 +115,14 @@ cc_result File_Open(cc_file* file, const cc_string* path) {
 	return File_Do(file, path);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path);
+	*file = -1;
+	return ERR_NOT_SUPPORTED;
+	//return File_Do(file, path);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path);
+	*file = -1;
+	return ERR_NOT_SUPPORTED;
+	//return File_Do(file, path);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -247,6 +252,9 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 void Platform_Init(void) {
 	debug_init_isviewer();
 	debug_init_usblog();
+	
+	// TODO: Redesign Drawer2D to better handle this
+	Options_SetBool(OPT_USE_CHAT_FONT, true);
 	
     //console_init();
     //console_set_render_mode(RENDER_AUTOMATIC);
