@@ -75,14 +75,14 @@ And also runs on:
 * BeOS - untested on actual hardware
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
-* 3DS - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml))
-* Wii - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml))
-* GameCube - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml))
-* Dreamcast - unfinished, but renders (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_dreamcast.yml))
-* PSP - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_psp.yml))
-* PS Vita - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml))
-* Xbox - unfinished, major rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox.yml))
-* PS3 - unfinished, rendering issues
+* 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
+* Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
+* GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
+* Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
+* PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp), **untested on real hardware**)
+* PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita), **untested on real hardware**)
+* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
+* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
 * Nintendo 64 - unfinished, major rendering issues
 
 # Compiling 

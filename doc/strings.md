@@ -3,7 +3,7 @@
 ClassiCube uses a custom string type rather than the standard C `char*` string in most places
 
 ClassiCube strings (`cc_string`) are a struct with the following fields:
-- `buffer` -> Pointer to 8 bit characters (unsigned code page 437 indices)
+- `buffer` -> Pointer to 8 bit characters (unsigned [code page 437 indices](https://en.wikipedia.org/wiki/Code_page_437#Character_set))
 - `length` -> Number of characters currently used
 - `capacity` -> Maximum number of characters (i.e buffer size)
 
