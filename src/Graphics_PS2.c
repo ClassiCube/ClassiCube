@@ -84,6 +84,22 @@ static qword_t* SetTextureSampling(qword_t* q, int context) {
 	return q;
 }
 
+static qword_t* SetAlphaBlending(qword_t* q, int context) {
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+
+	// https://psi-rockin.github.io/ps2tek/#gsalphablending
+	// Output = (((A - B) * C) >> 7) + D
+	//        = (((src - dst) * alpha) >> 7) + dst
+	//        =  (src * alpha - dst * alpha) / 128 + dst
+	//        =  (src * alpha - dst * alpha) / 128 + dst * 128 / 128
+	//        = ((src * alpha + dst * (128 - alpha)) / 128
+	PACK_GIFTAG(q, GS_SET_ALPHA(BLEND_COLOR_SOURCE, BLEND_COLOR_DEST, BLEND_ALPHA_SOURCE,
+								BLEND_COLOR_DEST, 0x80), GS_REG_ALPHA + context);
+	q++;
+	return q;
+}
+
 static void InitDrawingEnv(void) {
 	packet_t *packet = packet_init(30, PACKET_NORMAL); // TODO: is 30 too much?
 	qword_t *q = packet->data;
@@ -94,6 +110,7 @@ static void InitDrawingEnv(void) {
 
 	q = SetTextureWrapping(q, 0);
 	q = SetTextureSampling(q, 0);
+	q = SetAlphaBlending(q,   0); // TODO has no effect ?
 	q = draw_finish(q);
 
 	dma_channel_send_normal(DMA_CHANNEL_GIF,packet->data,q - packet->data, 0, 0);
@@ -130,8 +147,9 @@ void Gfx_Create(void) {
 	context = 1;
 	FlipContext();
 	
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
@@ -434,9 +452,33 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 typedef struct Vector4 { float X, Y, Z, W; } Vector4;
 
 static cc_bool NotClipped(Vector4 pos) {
+	// The code below clips to the viewport clip planes
+	//  For e.g. X this is [2048 - vp_width / 2, 2048 + vp_width / 2]
+	//  However the guard band itself ranges from 0 to 4096
+	// To reduce need to clip, clip against guard band on X/Y axes instead
+	/*return
+		xAdj  >= -pos.W && xAdj  <= pos.W &&
+		yAdj  >= -pos.W && yAdj  <= pos.W &&
+		pos.Z >= -pos.W && pos.Z <= pos.W;*/	
+		
+	// Rescale clip planes to guard band extent:
+	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
+	//              X/W <= 1
+	//              X   <= W
+	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
+	//              X/W <= 2048 / vp_hwidth
+	//              X * vp_hwidth / 2048 <= W
+	float xAdj = pos.X * (vp_hwidth/2048);
+	float yAdj = pos.Y * (vp_hheight/2048);
+	
+	// X/W * vp_hwidth <= 2048
+	// 
+		
+	// Clip X/Y to INSIDE the guard band regions
+	// NOTE: This seems to result in lockup at end of frame
 	return
-		pos.X >= -pos.W && pos.X <= pos.W &&
-		pos.Y >= -pos.W && pos.Y <= pos.W &&
+		xAdj > -pos.W && xAdj < pos.W &&
+		yAdj > -pos.W && yAdj < pos.W &&
 		pos.Z >= -pos.W && pos.Z <= pos.W;
 }
 
@@ -449,26 +491,32 @@ static Vector4 TransformVertex(struct VertexTextured* pos) {
 	return coord;
 }
 
-#define VCopy(dst, src) dst.x = (vp_hwidth/2048) * (src.X / src.W); dst.y = (vp_hheight/2048) * (src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.X / src.W); dst.y = vp_hheight * (1 - src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
+static xyz_t FinishVertex(struct Vector4 src) {
+	float x = (vp_hwidth/2048)  * (src.X / src.W);
+	float y = (vp_hheight/2048) * (src.Y / src.W);
+	float z = src.Z / src.W;
+	
+	int originX = ftoi4(2048);
+	int originY = ftoi4(2048);
+	unsigned int maxZ = 1 << (32 - 1); // TODO: half this? or << 24 instead?
+	
+	xyz_t xyz;
+	xyz.x = (short)((x + 1.0f) *  originX);
+	xyz.y = (short)((y + 1.0f) * -originY);
+	xyz.z = (unsigned int)((z + 1.0f) * maxZ);
+	return xyz;
+}
 
 static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	vertex_f_t in_vertices[3];
 	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.X, &v0.Y, &v0.Z, &v0.W);	
-	xyz_t out_vertices[3];
 	u64* dw;
-	
-	VCopy(in_vertices[0], v0);
-	VCopy(in_vertices[1], v1);
-	VCopy(in_vertices[2], v2);
 	
 	Vector4 verts[3] = { v0, v1, v2 };
 	struct VertexTextured* v[] = { V0, V1, V2 };
 	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
 	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
-	
-	draw_convert_xyz(out_vertices, 2048, 2048, 32, 3, in_vertices);
 	
 	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
 	q++;
@@ -487,7 +535,8 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	dw = (u64*)q;
 	for (int i = 0; i < 3; i++)
 	{
-		float Q = 1.0f / verts[i].W;
+		float Q   = 1.0f / verts[i].W;
+		xyz_t xyz = FinishVertex(verts[i]);
 		color_t color;
 		texel_t texel;
 		
@@ -498,7 +547,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 		
 		*dw++ = color.rgbaq;
 		*dw++ = texel.uv;
-		*dw++ = out_vertices[i].xyz;
+		*dw++ = xyz.xyz;
 	}
 	dw++; // one more to even out number of doublewords
 	q = dw;
