@@ -531,7 +531,7 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
-static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices)
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return rsxMemalign(128, maxVertices * strideSizes[fmt]);
 }
 

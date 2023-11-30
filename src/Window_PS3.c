@@ -12,11 +12,15 @@
 #include "ExtMath.h"
 #include "Logger.h"
 #include <io/pad.h>
+#include <io/kb.h> 
 #include <sysutil/sysutil.h>
 #include <sysutil/video.h>
+
 static cc_bool launcherMode;
 static padInfo pad_info;
 static padData pad_data;
+static KbInfo  kb_info;
+static KbData  kb_data;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -57,7 +61,8 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 
-	ioPadInit(7);
+	ioPadInit(MAX_PORT_NUM);
+	//ioKbInit(MAX_KB_PORT_NUM);
 }
 
 void Window_Create2D(int width, int height) { 
@@ -133,13 +138,19 @@ static void ProcessPadInput(double delta, padData* pad) {
 }
 
 void Window_ProcessEvents(double delta) {
-	ioPadGetInfo(&pad_info);
 	Input.JoystickMovement = false;
 	
+	ioPadGetInfo(&pad_info);
 	if (pad_info.status[0]) {
 		ioPadGetData(0, &pad_data);
 		ProcessPadInput(delta, &pad_data);
 	}
+	
+	//ioKbGetInfo(&kb_info);
+	//if (kb_info.status[0]) {
+	//	int RES = ioKbRead(0, &kb_data);
+	//	Platform_Log1("RES: %i", &RES);
+	//}
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita

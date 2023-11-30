@@ -82,7 +82,7 @@ And also runs on:
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp), **untested on real hardware**)
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita), **untested on real hardware**)
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
-* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
+* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **untested on real hardware**)
 * Nintendo 64 - unfinished, major rendering issues
 
 # Compiling 
