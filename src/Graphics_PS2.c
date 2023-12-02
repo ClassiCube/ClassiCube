@@ -119,9 +119,10 @@ static void InitDrawingEnv(void) {
 	packet_free(packet);
 }
 
+// TODO: Find a better way than just increasing this hardcoded size
 static void InitDMABuffers(void) {
-	packets[0] = packet_init(20000, PACKET_NORMAL);
-	packets[1] = packet_init(20000, PACKET_NORMAL);
+	packets[0] = packet_init(50000, PACKET_NORMAL);
+	packets[1] = packet_init(50000, PACKET_NORMAL);
 }
 
 static void FlipContext(void) {
@@ -142,7 +143,7 @@ void Gfx_Create(void) {
 	InitBuffers();
 	InitDrawingEnv();
 	InitDMABuffers();
-	tex_offset = graph_vram_size(64, 64, GS_PSM_32, GRAPH_ALIGN_PAGE);
+	tex_offset = graph_vram_allocate(256, 256, GS_PSM_32, GRAPH_ALIGN_BLOCK);
 	
 	context = 1;
 	FlipContext();
