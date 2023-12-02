@@ -209,8 +209,8 @@ void Window_Init(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Window--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef kCGBitmapByteOrder32Host
-// Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
+#if !defined MAC_OS_X_VERSION_10_4
+// Doesn't exist in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
 #define kCGBitmapByteOrder32Host 0
 #endif
 
@@ -810,7 +810,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
 
-/* kCGLCPCurrentRendererID is only available on macOS 10.4 and later */
+// kCGLCPCurrentRendererID is only available on macOS 10.4 and later
 #if defined MAC_OS_X_VERSION_10_4
 static const char* GetAccelerationMode(CGLContextObj ctx) {
 	GLint fGPU, vGPU;
