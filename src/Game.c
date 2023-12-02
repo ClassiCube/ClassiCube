@@ -15,6 +15,7 @@
 #include "Logger.h"
 #include "Entity.h"
 #include "Chat.h"
+#include "Commands.h"
 #include "Drawer2D.h"
 #include "Model.h"
 #include "Particle.h"
@@ -410,6 +411,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&SystemFonts_Component);
 
 	Game_AddComponent(&Chat_Component);
+	Game_AddComponent(&Commands_Component);
 	Game_AddComponent(&Particles_Component);
 	Game_AddComponent(&TabList_Component);
 	Game_AddComponent(&Models_Component);
