@@ -515,16 +515,8 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	
 	Vector4 verts[3] = { v0, v1, v2 };
 	struct VertexTextured* v[] = { V0, V1, V2 };
-	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
 	
 	//Platform_Log4("   X: %f3, Y: %f3, Z: %f3, W: %f3", &in_vertices[0].x, &in_vertices[0].y, &in_vertices[0].z, &in_vertices[0].w);	
-	
-	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
-	q++;
-	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
-							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
-							  0, PRIM_UNFIXED), GS_REG_PRIM);
-	q++;
 	
 	// 3 "primitives" follow in the GIF packet (vertices in this case)
 	// 2 registers per "primitive" (colour, position)
@@ -541,7 +533,18 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 		color_t color;
 		texel_t texel;
 		
-		color.rgbaq = v[i]->Col;
+		// See 'Colour Functions' https://psi-rockin.github.io/ps2tek/#gstextures
+		// Essentially, colour blending is calculated as
+		//   finalR = (vertexR * textureR) >> 7
+		// However, this behaves contrary to standard expectations
+		//  and results in final vertex colour being too bright
+		//
+		// For instance, if vertexR was white and textureR was grey:
+		//   finalR = (255 * 127) / 128 = 255
+		// White would be produced as the final colour instead of expected grey
+		//
+		// To counteract this, just divide all vertex colours by 2 first
+		color.rgbaq = (v[i]->Col & 0xFEFEFEFE) >> 1;
 		color.q     = Q;
 		texel.u     = v[i]->U * Q;
 		texel.v     = v[i]->V * Q;
@@ -557,6 +560,15 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 static void DrawTriangles(int verticesCount, int startVertex) {
 	if (stateDirty) UpdateState(0);
 	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
+	cc_bool texturing = gfx_format == VERTEX_FORMAT_TEXTURED;
+	
+	// TODO: only when vertex format changes ?
+	PACK_GIFTAG(q, GIF_SET_TAG(1,0,0,0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	q++;
+	PACK_GIFTAG(q, GS_SET_PRIM(PRIM_TRIANGLE, PRIM_SHADE_GOURAUD, texturing, DRAW_DISABLE,
+							  gfx_alphaBlend, DRAW_DISABLE, PRIM_MAP_ST,
+							  0, PRIM_UNFIXED), GS_REG_PRIM);
+	q++;
 	
 	struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex;
 	for (int i = 0; i < verticesCount / 4; i++, v += 4)
