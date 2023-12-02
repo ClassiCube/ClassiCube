@@ -1,0 +1,46 @@
+name: Build latest (Linux 32 bit)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-linux32
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile 32 bit Linux builds
+        shell: bash
+        id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          NIX32_FLAGS:  "-no-pie -fno-pie -m32 -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON"
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get -y update
+          sudo apt-get -y install gcc-multilib libx11-dev:i386 libxi-dev:i386 libgl1-mesa-dev:i386
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
+          
+          cd src
+          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -o cc-nix32-gl1 -lX11 -lXi -lpthread -lGL -lm -ldl
+          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile 32 bit Linux build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-nix32-gl1'
+          DEST_NAME: 'ClassiCube-Linux32'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-nix32-gl2'
+          DEST_NAME: 'ClassiCube-Linux32-ModernGL'
