@@ -36,12 +36,14 @@ static struct ChatCommand* Commands_FindMatch(const cc_string* cmdName) {
 	struct ChatCommand* cmd;
 	cc_string name;
 
-	for (cmd = cmds_head; cmd; cmd = cmd->next) {
+	for (cmd = cmds_head; cmd; cmd = cmd->next) 
+	{
 		name = String_FromReadonly(cmd->name);
 		if (String_CaselessEquals(&name, cmdName)) return cmd;
 	}
 
-	for (cmd = cmds_head; cmd; cmd = cmd->next) {
+	for (cmd = cmds_head; cmd; cmd = cmd->next) 
+	{
 		name = String_FromReadonly(cmd->name);
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
@@ -82,10 +84,6 @@ static void Commands_PrintDefault(void) {
 	Chat_AddRaw("&eTo see help for a command, type /client help [cmd name]");
 }
 
-static cc_bool IsSingleplayerCommandPrefix(const cc_string* input) {
-	return input->length && Server.IsSinglePlayer && input->buffer[0] == '/';
-}
-
 cc_bool Commands_Execute(const cc_string* input) {
 	static const cc_string prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
 	static const cc_string prefix      = String_FromConst(COMMANDS_PREFIX);
@@ -96,11 +94,17 @@ cc_bool Commands_Execute(const cc_string* input) {
 	cc_string name, value;
 	cc_string args[50];
 
-	if (String_CaselessStarts(input, &prefixSpace)) { /* /client command args */
+	if (String_CaselessStarts(input, &prefixSpace)) { 
+		/* /client [command] [args] */
 		offset = prefixSpace.length;
-	} else if (String_CaselessStarts(input, &prefix)) { /* /clientcommand args */
+	} else if (String_CaselessEquals(input, &prefix)) { 
+		/* /client */
 		offset = prefix.length;
-	} else if (IsSingleplayerCommandPrefix(input)) { /* /command args */
+	} else if (Server.IsSinglePlayer && String_CaselessStarts(input, &prefix)) {
+		/* /client[command] [args] */
+		offset = prefix.length;
+	} else if (Server.IsSinglePlayer && input->length && input->buffer[0] == '/') {
+		/* /[command] [args] */
 		offset = 1;
 	} else {
 		return false;
@@ -265,23 +269,106 @@ static struct ChatCommand ClearDeniedCommand = {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------CuboidCommand-----------------------------------------------------*
+*-------------------------------------------------------DrawOpCommand-----------------------------------------------------*
 *#########################################################################################################################*/
-static int cuboid_block = -1;
-static IVec3 cuboid_mark1, cuboid_mark2;
-static cc_bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
-static const cc_string cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-static const cc_string yes_string = String_FromConst("yes");
+static IVec3 drawOp_mark1, drawOp_mark2;
+static cc_bool drawOp_persist, drawOp_hooked, drawOp_hasMark1;
+static const char* drawOp_name;
+static void (*drawOp_Func)(IVec3 min, IVec3 max);
 
-static void CuboidCommand_DoCuboid(void) {
+static void DrawOpCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now);
+static void DrawOpCommand_ResetState(void) {
+	if (drawOp_hooked) {
+		Event_Unregister_(&UserEvents.BlockChanged, NULL, DrawOpCommand_BlockChanged);
+		drawOp_hooked = false;
+	}
+
+	drawOp_hasMark1 = false;
+}
+
+static void DrawOpCommand_Begin(void) {
+	cc_string msg; char msgBuffer[STRING_SIZE];
+	String_InitArray(msg, msgBuffer);
+
+	String_Format1(&msg, "&e%c: &fPlace or delete a block.", drawOp_name);
+	Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
+
+	Event_Register_(&UserEvents.BlockChanged, NULL, DrawOpCommand_BlockChanged);
+	drawOp_hooked = true;
+}
+
+
+static void DrawOpCommand_Execute(void) {
 	IVec3 min, max;
-	BlockID toPlace;
-	int x, y, z;
 
-	IVec3_Min(&min, &cuboid_mark1, &cuboid_mark2);
-	IVec3_Max(&max, &cuboid_mark1, &cuboid_mark2);
+	IVec3_Min(&min, &drawOp_mark1, &drawOp_mark2);
+	IVec3_Max(&max, &drawOp_mark1, &drawOp_mark2);
 	if (!World_Contains(min.X, min.Y, min.Z)) return;
 	if (!World_Contains(max.X, max.Y, max.Z)) return;
+
+	drawOp_Func(min, max);
+}
+
+static void DrawOpCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
+	cc_string msg; char msgBuffer[STRING_SIZE];
+	String_InitArray(msg, msgBuffer);
+	Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);
+
+	if (!drawOp_hasMark1) {
+		drawOp_mark1    = coords;
+		drawOp_hasMark1 = true;
+
+		String_Format4(&msg, "&e%c: &fMark 1 placed at (%i, %i, %i), place mark 2.", 
+						drawOp_name, &coords.X, &coords.Y, &coords.Z);
+		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
+	} else {
+		drawOp_mark2 = coords;
+
+		DrawOpCommand_Execute();
+		DrawOpCommand_ResetState();
+
+		if (!drawOp_persist) {			
+			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
+		} else {
+			DrawOpCommand_Begin();
+		}
+	}
+}
+
+static const cc_string yes_string = String_FromConst("yes");
+static void DrawOpCommand_ExtractPersistArg(cc_string* value) {
+	drawOp_persist = false;
+	if (!String_CaselessEnds(value, &yes_string)) return;
+
+	drawOp_persist = true; 
+	value->length  -= 3;
+	String_UNSAFE_TrimEnd(value);
+}
+
+static int DrawOpCommand_ParseBlock(const cc_string* arg) {
+	int block = Block_Parse(arg);
+
+	if (block == -1) {
+		Chat_Add2("&e%c: &c\"%s\" is not a valid block name or id.", drawOp_name, arg); 
+		return -1;
+	}
+
+	if (block > Game_Version.MaxCoreBlock && !Block_IsCustomDefined(block)) {
+		Chat_Add2("&e%c: &cThere is no block with id \"%s\".", drawOp_name, arg); 
+		return -1;
+	}
+	return block;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------CuboidCommand-----------------------------------------------------*
+*#########################################################################################################################*/
+static int cuboid_block;
+
+static void CuboidCommand_Draw(IVec3 min, IVec3 max) {
+	BlockID toPlace;
+	int x, y, z;
 
 	toPlace = (BlockID)cuboid_block;
 	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;
@@ -295,73 +382,22 @@ static void CuboidCommand_DoCuboid(void) {
 	}
 }
 
-static void CuboidCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
-	cc_string msg; char msgBuffer[STRING_SIZE];
-	String_InitArray(msg, msgBuffer);
-
-	if (!cuboid_hasMark1) {
-		cuboid_mark1    = coords;
-		cuboid_hasMark1 = true;
-		Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);	
-
-		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);
-		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
-	} else {
-		cuboid_mark2 = coords;
-		CuboidCommand_DoCuboid();
-
-		if (!cuboid_persist) {
-			Event_Unregister_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
-			cuboid_hooked = false;
-			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
-		} else {
-			cuboid_hasMark1 = false;
-			Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
-		}
-	}
-}
-
-static cc_bool CuboidCommand_ParseArgs(const cc_string* args) {
-	cc_string value = *args;
-	int block;
-
-	/* Check for /cuboid [block] yes */
-	if (String_CaselessEnds(&value, &yes_string)) {
-		cuboid_persist = true; 
-		value.length  -= 3;
-		String_UNSAFE_TrimEnd(&value);
-
-		/* special case "/cuboid yes" */
-		if (!value.length) return true;
-	}
-
-	block = Block_Parse(&value);
-	if (block == -1) {
-		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &value); return false;
-	}
-
-	if (block > Game_Version.MaxCoreBlock && !Block_IsCustomDefined(block)) {
-		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &value); return false;
-	}
-
-	cuboid_block = block;
-	return true;
-}
-
 static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
-	if (cuboid_hooked) {
-		Event_Unregister_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
-		cuboid_hooked = false;
+	cc_string value = *args;
+
+	DrawOpCommand_ResetState();
+	drawOp_name = "Cuboid";
+	drawOp_Func = CuboidCommand_Draw;
+
+	DrawOpCommand_ExtractPersistArg(&value);
+	cuboid_block = -1; /* Default to cuboiding with currently held block */
+
+	if (value.length) {
+		cuboid_block = DrawOpCommand_ParseBlock(&value);
+		if (cuboid_block == -1) return;
 	}
 
-	cuboid_block    = -1;
-	cuboid_hasMark1 = false;
-	cuboid_persist  = false;
-	if (argsCount && !CuboidCommand_ParseArgs(args)) return;
-
-	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
-	Event_Register_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
-	cuboid_hooked = true;
+	DrawOpCommand_Begin();
 }
 
 static struct ChatCommand CuboidCommand = {
@@ -373,6 +409,71 @@ static struct ChatCommand CuboidCommand = {
 		"&eIf no block is given, uses your currently held block.",
 		"&e  If persist is given and is \"yes\", then the command",
 		"&e  will repeatedly cuboid, without needing to be typed in again.",
+	}
+};
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------ReplaceCommand-----------------------------------------------------*
+*#########################################################################################################################*/
+static int replace_source, replace_target;
+
+static void ReplaceCommand_Draw(IVec3 min, IVec3 max) {
+	BlockID cur, source, toPlace;
+	int x, y, z;
+
+	source  = (BlockID)replace_source;
+	toPlace = (BlockID)replace_target;
+	if (replace_target == -1) toPlace = Inventory_SelectedBlock;
+
+	for (y = min.Y; y <= max.Y; y++) {
+		for (z = min.Z; z <= max.Z; z++) {
+			for (x = min.X; x <= max.X; x++) {
+				cur = World_GetBlock(x, y, z);
+				if (cur != source) continue;
+				Game_ChangeBlock(x, y, z, toPlace);
+			}
+		}
+	}
+}
+
+static void ReplaceCommand_Execute(const cc_string* args, int argsCount) {
+	cc_string value = *args;
+	cc_string parts[2];
+	int count;
+
+	DrawOpCommand_ResetState();
+	drawOp_name = "Replace";
+	drawOp_Func = ReplaceCommand_Draw;
+
+	DrawOpCommand_ExtractPersistArg(&value);
+	replace_target = -1; /* Default to replacing with currently held block */
+
+	if (!value.length) {
+		Chat_AddRaw("&eReplace: &cAt least one argument is required"); return;
+	}
+	count = String_UNSAFE_Split(&value, ' ', parts, 2);
+
+	replace_source = DrawOpCommand_ParseBlock(&parts[0]);
+	if (replace_source == -1) return;
+
+	if (count > 1) {
+		replace_target = DrawOpCommand_ParseBlock(&parts[1]);
+		if (replace_target == -1) return;
+	}
+
+	DrawOpCommand_Begin();
+}
+
+static struct ChatCommand ReplaceCommand = {
+	"Replace", ReplaceCommand_Execute,
+	COMMAND_FLAG_SINGLEPLAYER_ONLY | COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client replace [source] [replacement] [persist]",
+		"&eReplaces all [source] blocks between two points with [replacement].",
+		"&eIf no [replacement] is given, replaces with your currently held block.",
+		"&e  If persist is given and is \"yes\", then the command",
+		"&e  will repeatedly replace, without needing to be typed in again.",
 	}
 };
 
@@ -564,10 +665,11 @@ static void OnInit(void) {
 	Commands_Register(&RenderTypeCommand);
 	Commands_Register(&ResolutionCommand);
 	Commands_Register(&ModelCommand);
-	Commands_Register(&CuboidCommand);
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 	Commands_Register(&BlockEditCommand);
+	Commands_Register(&CuboidCommand);
+	Commands_Register(&ReplaceCommand);
 }
 
 static void OnFree(void) {
