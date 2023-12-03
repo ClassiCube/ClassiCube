@@ -424,8 +424,29 @@ static cc_bool BlockEditCommand_GetInt(const cc_string* str, const char* name, i
 	}
 	return true;
 }
+
 static cc_bool BlockEditCommand_GetTexture(const cc_string* str, int* tex) {
 	return BlockEditCommand_GetInt(str, "Texture", tex, 0, ATLAS1D_MAX_ATLASES - 1);
+}
+
+static cc_bool BlockEditCommand_GetCoords(const cc_string* str, Vec3* coords) {
+	cc_string parts[3];
+	IVec3 xyz;
+
+	int numParts = String_UNSAFE_Split(str, ' ', parts, 3);
+	if (numParts != 3) {
+		Chat_AddRaw("&eBlockEdit: &c3 values are required for a coordinate (X Y Z)");
+		return false;
+	}
+
+	if (!BlockEditCommand_GetInt(&parts[0], "X coord", &xyz.X, -127, 127)) return false;
+	if (!BlockEditCommand_GetInt(&parts[1], "Y coord", &xyz.Y, -127, 127)) return false;
+	if (!BlockEditCommand_GetInt(&parts[2], "Z coord", &xyz.Z, -127, 127)) return false;
+
+	coords->X = xyz.X / 16.0f;
+	coords->Y = xyz.Y / 16.0f;
+	coords->Z = xyz.Z / 16.0f;
+	return true;
 }
 
 static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
@@ -433,6 +454,7 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 	cc_string* prop;
 	cc_string* value;
 	int argsCount, block, v;
+	Vec3 coords;
 
 	if (String_CaselessEqualsConst(args, "properties")) {
 		Chat_AddRaw("&eEditable block properties:");
@@ -441,6 +463,8 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		Chat_AddRaw("&a  sides &e- Sets textures on four sides of the block");
 		Chat_AddRaw("&a  left/right/front/back/top/bottom &e- Sets one texture");
 		Chat_AddRaw("&a  collide &e- Sets collision mode of the block");
+		Chat_AddRaw("&a  drawmode &e- Sets draw mode of the block");
+		Chat_AddRaw("&a  min/max &e- Sets min/max corner coordinates of the block");
 		return;
 	}
 
@@ -499,6 +523,18 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		if (!BlockEditCommand_GetInt(value, "Collide mode", &v, 0, COLLIDE_CLIMB)) return;
 
 		Blocks.Collide[block] = v;
+	} else if (String_CaselessEqualsConst(prop, "drawmode")) {
+		if (!BlockEditCommand_GetInt(value, "Draw mode", &v, 0, DRAW_SPRITE)) return;
+
+		Blocks.Draw[block] = v;
+	} else if (String_CaselessEqualsConst(prop, "min")) {
+		if (!BlockEditCommand_GetCoords(value, &coords)) return;
+
+		Blocks.MinBB[block] = coords;
+	} else if (String_CaselessEqualsConst(prop, "max")) {
+		if (!BlockEditCommand_GetCoords(value, &coords)) return;
+
+		Blocks.MaxBB[block] = coords;
 	} else {
 		Chat_Add1("&eBlockEdit: &eUnknown property %s &e(See &a/client help blockedit&e)", prop);
 		return;

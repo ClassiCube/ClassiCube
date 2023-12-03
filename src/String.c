@@ -71,9 +71,10 @@ cc_string String_UNSAFE_SubstringAt(STRING_REF const cc_string* str, int offset)
 int String_UNSAFE_Split(STRING_REF const cc_string* str, char c, cc_string* subs, int maxSubs) {
 	int beg = 0, end, count, i;
 
-	for (i = 0; i < maxSubs && beg <= str->length; i++) {
+	for (i = 0; i < maxSubs && beg <= str->length; i++) 
+	{
 		end = String_IndexOfAt(str, beg, c);
-		if (end == -1) end = str->length;
+		if (end == -1 || i == (maxSubs - 1)) end = str->length;
 
 		subs[i] = String_UNSAFE_Substring(str, beg, end - beg);
 		beg = end + 1;
@@ -679,7 +680,8 @@ static cc_bool Convert_TryParseDigits(const cc_string* str, cc_bool* negative, c
 	if (str->buffer[0] == '+') { offset = 1; }
 
 	/* add digits, starting at last digit */
-	for (i = str->length - 1; i >= offset; i--) {
+	for (i = str->length - 1; i >= offset; i--) 
+	{
 		char c = str->buffer[i];
 		if (c < '0' || c > '9' || digits < start) return false;
 		*digits-- = c;

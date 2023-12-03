@@ -851,7 +851,8 @@ CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
 	
 	/* 1.0.1 -> { 1, 0, 1, 0 } */
 	count = String_UNSAFE_Split(version, '.', parts, 4);
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count; i++) 
+	{
 		Convert_ParseUInt8(&parts[i], &raw[i]);
 	}
 	return Stream_GetU32_BE(raw);
