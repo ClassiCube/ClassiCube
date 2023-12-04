@@ -28,10 +28,15 @@ void Gfx_Create(void) {
     //rdpq_debug_log(true);
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
     
-	Gfx.MaxTexWidth  = 128;
-	Gfx.MaxTexHeight = 128;
-	Gfx.MaxTexSize   = 1024; // TMEM only has 4 KB in it
+	Gfx.MaxTexWidth  = 256;
+	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
+	
+	// TMEM only has 4 KB in it, which can be interpreted as
+	// - 1024 32bpp pixels
+	// - 2048 16bpp pixels 
+	Gfx.MaxTexSize       = 1024;
+	Gfx.MaxLowResTexSize = 2048;
 
 	Gfx.SupportsNonPowTwoTextures = true;
 	Gfx_RestoreState();
@@ -116,7 +121,12 @@ typedef struct CCTexture {
 	GLuint textureID;
 } CCTexture;
 
+// A8 B8 G8 R8 > A1 B5 G5 B5
+#define To16BitPixel(src) \
+	((src & 0x80) >> 7) | ((src & 0xF800) >> 10) | ((src & 0xF80000) >> 13) | ((src & 0xF8000000) >> 16);	
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	cc_bool bit16  = flags & TEXTURE_FLAG_LOWRES;
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "texture");
 	
 	glGenTextures(1, &tex->textureID);
@@ -125,18 +135,33 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
-	tex->surface = surface_alloc(FMT_RGBA32, bmp->width, bmp->height);
-	
+	tex->surface   = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
 	surface_t* fb  = &tex->surface;
 	cc_uint32* src = (cc_uint32*)bmp->scan0;
 	cc_uint8*  dst = (cc_uint8*)fb->buffer;
-
-	for (int y = 0; y < bmp->height; y++) 
-	{
-		Mem_Copy(dst + y * fb->stride,
-				 src + y * bmp->width,
-				 bmp->width * 4);
+		
+	if (bit16) {
+		// 16 bpp requires reducing A8R8G8B8 to A1R5G5B5
+		for (int y = 0; y < bmp->height; y++) 
+		{	
+			cc_uint32* src_row = src + y * bmp->width;
+			cc_uint16* dst_row = (cc_uint16*)(dst + y * fb->stride);
+			
+			for (int x = 0; x < bmp->width; x++) 
+			{
+				dst_row[x] = To16BitPixel(src_row[x]);
+			}
+		}
+	} else {
+		// 32 bpp can just be copied straight across
+		for (int y = 0; y < bmp->height; y++) 
+		{
+			Mem_Copy(dst + y * fb->stride,
+				 	src + y * bmp->width,
+				 	bmp->width * 4);
+		}
 	}
+	
 	
 	rdpq_texparms_t params =
 	{

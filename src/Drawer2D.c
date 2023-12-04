@@ -301,13 +301,15 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 }
 
 void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
-	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, TEXTURE_FLAG_NONPOW2, false);
+	int flags = TEXTURE_FLAG_NONPOW2 | TEXTURE_FLAG_LOWRES;
+	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, flags, false);
+	
 	tex->Width  = ctx->width;
 	tex->Height = ctx->height;
-
-	tex->uv.U1 = 0.0f; tex->uv.V1 = 0.0f;
-	tex->uv.U2 = (float)ctx->width  / (float)ctx->bmp.width;
-	tex->uv.V2 = (float)ctx->height / (float)ctx->bmp.height;
+	
+	tex->uv.U1  = 0.0f; tex->uv.V1 = 0.0f;
+	tex->uv.U2  = (float)ctx->width  / (float)ctx->bmp.width;
+	tex->uv.V2  = (float)ctx->height / (float)ctx->bmp.height;
 }
 
 cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {

@@ -2961,7 +2961,6 @@
     FT_Error   error;
     FT_Memory  memory;
     FT_Module  module = NULL;
-    FT_UInt    nn;
 
     memory = library->memory;
     error  = FT_Err_Ok;

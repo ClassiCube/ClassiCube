@@ -350,13 +350,17 @@ static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 	}
 }
 
-cc_bool Gfx_CheckTextureSize(int width, int height) {
+cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags) {
+	int maxSize;
 	if (width  > Gfx.MaxTexWidth)  return false;
 	if (height > Gfx.MaxTexHeight) return false;
+	
+	maxSize = Gfx.MaxTexSize;
+	// low resolution textures may support higher sizes (e.g. Nintendo 64)
+	if ((flags & TEXTURE_FLAG_LOWRES) && Gfx.MaxLowResTexSize)
+		maxSize = Gfx.MaxLowResTexSize;
 
-	if (Gfx.MaxTexSize && (width * height > Gfx.MaxTexSize))
-		return false;
-	return true;
+	return maxSize == 0 || (width * height <= maxSize);
 }
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
@@ -370,7 +374,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	}
 
 	if (Gfx.LostContext) return 0;
-	if (!Gfx_CheckTextureSize(bmp->width, bmp->height)) return 0;
+	if (!Gfx_CheckTextureSize(bmp->width, bmp->height, flags)) return 0;
 
 	return Gfx_AllocTexture(bmp, flags, mipmaps);
 }

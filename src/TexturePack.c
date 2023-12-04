@@ -153,7 +153,7 @@ cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 		return false;
 	}
 
-	if (!Gfx_CheckTextureSize(tileSize, tileSize)) {
+	if (!Gfx_CheckTextureSize(tileSize, tileSize, 0)) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_Add4("&c Tile size is (%i,%i), your GPU supports (%i,%i) at most.", 
 			&tileSize, &tileSize, &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
