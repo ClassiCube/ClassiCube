@@ -152,9 +152,11 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 	ctx->height = height;
 	ctx->meta   = NULL;
 
-	/* Allocates a power-of-2 sized bitmap equal to or greater than the given size, and clears it to 0 */
-	width  = Math_NextPowOf2(width);
-	height = Math_NextPowOf2(height);
+	if (!Gfx.SupportsNonPowTwoTextures) {
+		/* Allocate power-of-2 sized bitmap equal to or greater than the given size */
+		width  = Math_NextPowOf2(width);
+		height = Math_NextPowOf2(height);
+	}
 
 	ctx->bmp.width  = width; 
 	ctx->bmp.height = height;
@@ -299,7 +301,7 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 }
 
 void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
-	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, 0, false);
+	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, TEXTURE_FLAG_NONPOW2, false);
 	tex->Width  = ctx->width;
 	tex->Height = ctx->height;
 

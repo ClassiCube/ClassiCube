@@ -40,9 +40,12 @@ void Gfx_Create(void);
 void Gfx_Free(void);
 
 CC_VAR extern struct _GfxData {
-	/* Maximum dimensions textures can be created up to. (usually 1024 to 16384) */
+	/* Maximum dimensions in pixels that a texture can be created up to */
+	/* NOTE: usually 1024 to 16384 */
 	int MaxTexWidth, MaxTexHeight;
-	float _unused;
+	/* Maximum total size in pixels a texture can consist of */
+	/* NOTE: Not all graphics backends specify a value for this */
+	int MaxTexSize;
 	/* Whether context graphics has been lost (all creation/render calls fail) */
 	cc_bool LostContext;
 	/* Whether some textures are created with mipmaps */
@@ -53,9 +56,8 @@ CC_VAR extern struct _GfxData {
 	/* Whether graphics context has been created */
 	cc_bool Created;
 	struct Matrix View, Projection;
-	/* Maximum size in pixels a texture can consist of */
-	/* NOTE: Not all graphics backends specify a value for this */
-	int MaxTexSize;
+	/* Whether the graphics backend supports non power of two textures */
+	cc_bool SupportsNonPowTwoTextures;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
@@ -69,6 +71,8 @@ extern const cc_string Gfx_LowPerfMessage;
 #define TEXTURE_FLAG_MANAGED 0x01
 /* Texture should allow updating via Gfx_UpdateTexture */
 #define TEXTURE_FLAG_DYNAMIC 0x02
+/* Texture is deliberately (and not accidentally) being created with non power of two dimensions */
+#define TEXTURE_FLAG_NONPOW2 0x04
 
 #define LOWPERF_EXIT_MESSAGE "&eExited reduced performance mode"
 
@@ -77,7 +81,7 @@ void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
 cc_bool Gfx_CheckTextureSize(int width, int height);
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
-/* Supported flags: TEXTURE_FLAG_MANAGED, TEXTURE_FLAG_DYNAMIC */
+/*   See TEXTURE_FLAG values for supported flags */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend */
 CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);

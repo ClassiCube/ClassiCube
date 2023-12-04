@@ -332,7 +332,7 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT) 
 			Entity_ClearHat(bmp, e->SkinType);
 
-		Gfx_RecreateTexture(&e->TextureId, bmp, TEXTURE_FLAG_MANAGED, false);
+		e->TextureId = Gfx_CreateTexture(bmp, TEXTURE_FLAG_MANAGED, false);
 		Entity_SetSkinAll(e, false);
 	}
 	return 0;

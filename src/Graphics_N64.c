@@ -33,6 +33,7 @@ void Gfx_Create(void) {
 	Gfx.MaxTexSize   = 1024; // TMEM only has 4 KB in it
 	Gfx.Created      = true;
 
+	Gfx.SupportsNonPowTwoTextures = true;
 	Gfx_RestoreState();
 	GL_UpdateVsync();
 }
@@ -137,9 +138,10 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 				 bmp->width * 4);
 	}
 	
-	rdpq_texparms_t params = (rdpq_texparms_t){
-        .s.repeats = REPEAT_INFINITE,
-        .t.repeats = REPEAT_INFINITE,
+	rdpq_texparms_t params =
+	{
+        .s.repeats = (flags & TEXTURE_FLAG_NONPOW2) ? 1 : REPEAT_INFINITE,
+        .t.repeats = (flags & TEXTURE_FLAG_NONPOW2) ? 1 : REPEAT_INFINITE,
     };
 
 	// rdpq_tex_upload(TILE0, &tex->surface, &params);

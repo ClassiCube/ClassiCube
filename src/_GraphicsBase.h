@@ -362,9 +362,13 @@ cc_bool Gfx_CheckTextureSize(int width, int height) {
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
+	if (Gfx.SupportsNonPowTwoTextures && (flags & TEXTURE_FLAG_NONPOW2)) {
+		/* Texture is being deliberately created and can be successfully created */
+		/* with non power of two dimensions. Typically used for UI textures */
+	} else if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
+
 	if (Gfx.LostContext) return 0;
 	if (!Gfx_CheckTextureSize(bmp->width, bmp->height)) return 0;
 
