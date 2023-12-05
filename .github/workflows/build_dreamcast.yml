@@ -19,6 +19,7 @@ jobs:
           source /opt/toolchains/dc/kos/environ.sh
           export PATH=/opt/toolchains/dc/kos/utils/img4dc/build/cdi4dc/:$PATH
           make dreamcast
+          
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -26,8 +27,15 @@ jobs:
           NOTIFY_MESSAGE: 'Failed to compile Dreamcast build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
+          
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'ClassiCube-dc.cdi'
           DEST_NAME: 'ClassiCube-dc.cdi'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-dc.elf'
+          DEST_NAME: 'ClassiCube-dc.elf'
