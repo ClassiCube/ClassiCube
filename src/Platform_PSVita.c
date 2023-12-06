@@ -387,9 +387,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-static char net_memory[256 * 1024]; // TOD: 512 * 1024 ?
+static char net_memory[512 * 1024] __attribute__ ((aligned (16))); // TODO is just 256 kb enough ?
 
 static void InitNetworking(void) {
+	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);	
 	SceNetInitParam param;
 	
 	param.memory = net_memory;
