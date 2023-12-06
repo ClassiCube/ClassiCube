@@ -463,7 +463,7 @@ static void Networking_LoadIOPModules(void) {
 union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in v4;
-	struct sockaddr_storage total; // matches size of addr returned by getaddrinfo
+	struct sockaddr_storage total; // matches max size of addr returned by getaddrinfo
 };
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
