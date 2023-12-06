@@ -387,9 +387,22 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static char net_memory[256 * 1024]; // TOD: 512 * 1024 ?
+
+static void InitNetworking(void) {
+	SceNetInitParam param;
+	
+	param.memory = net_memory;
+	param.size = sizeof(net_memory);
+	param.flags = 0;
+	
+	int ret = sceNetInit(&param);
+	if (ret < 0) Platform_Log1("Network init failed: %i", &ret);
+}
+
 void Platform_Init(void) {
 	/*pspDebugSioInit();*/ 
-	// TODO: sceNetInit();
+	InitNetworking();
 	epoll_id = sceNetEpollCreate("CC poll", 0);
 }
 void Platform_Free(void) { }
