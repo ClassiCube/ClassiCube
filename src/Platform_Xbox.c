@@ -34,8 +34,7 @@ void Platform_Log(const char* msg, int len) {
 	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	
 	// log to on-screen display
-	debugPrint(tmp);
-	debugPrint("\n");
+	debugPrint("%s\n", tmp);
 	// log to cxbx-reloaded console
 	OutputDebugStringA(tmp);
 }
@@ -300,6 +299,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in v4;
+	struct sockaddr_storage total; // needed for lwip_getaddrinfo
 };
 
 static int ParseHost(union SocketAddress* addr, const char* host) {
@@ -315,10 +315,13 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	res = lwip_getaddrinfo(host, NULL, &hints, &result);
 	if (res) return res;
 
-	for (cur = result; cur; cur = cur->ai_next) {
+	for (cur = result; cur; cur = cur->ai_next) 
+	{
 		if (cur->ai_family != AF_INET) continue;
 		found = true;
 
+		// NOTE: cur->ai_addrlen will always be set to sizeof(struct sockaddr_storage) by lwip
+		//	https://github.com/m-labs/lwip/blob/0178d1d2ee35fb82ab0a13256425f9aa33b08f60/src/api/netdb.c#L402C20-L402C52
 		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
 		break;
 	}
@@ -341,12 +344,8 @@ int Socket_ValidAddress(const cc_string* address) {
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	int family, addrSize = 0;
 	union SocketAddress addr;
 	int res;
-	// TODO TODO TODO TODO TODO
-	// if 'addrSize = 0' is removed, then the game never gets past 'Fetching cdn.classicube.net...'
-	// so probably relying on undefined behaviour somewhere...
 
 	*s  = -1;
 	res = ParseAddress(&addr, address);
@@ -417,7 +416,12 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 static void InitHDD(void) {
-    hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+	if (nxIsDriveMounted('E')) {
+		hdd_mounted = true;
+	} else {
+		hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
+	}
+    
     if (!hdd_mounted) {
         Platform_LogConst("Failed to mount E:/ from Data partition");
         return;
