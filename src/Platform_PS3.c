@@ -378,11 +378,10 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	if (res < 0) return res;
 	*s  = res;
 
-	// TODO: RPCS3 makes sockets non blocking by default anyways ?
-	/*if (nonblocking) {
-		int blocking_raw = -1;
-		ioctl(*s, FIONBIO, &blocking_raw);
-	}*/
+	if (nonblocking) {
+		int on = 1;
+		netSetSockOpt(*s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &on, sizeof(int));
+	}
 
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
