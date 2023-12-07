@@ -289,7 +289,7 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	int rid = sceNetResolverCreate("CC resolver", NULL, 0);
 	if (rid < 0) return ERR_INVALID_ARGUMENT;
 
-	int ret = sceNetResolverStartNtoa(rid, host, &addr->v4.sin_addr, 1 /* timeout */, 5 /* retries */, 0 /* flags */);
+	int ret = sceNetResolverStartNtoa(rid, host, &addr->v4.sin_addr, 0, 0, 0);
 	sceNetResolverDestroy(rid);
 	return ret;
 }
@@ -358,7 +358,7 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	ev.data.fd = s;
 	ev.events  = flags;
 	
-	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;	
+	if ((res = sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_ADD, s, &ev))) return res;
 	num_events = sceNetEpollWait(epoll_id, &ev, 1, 0);
 	sceNetEpollControl(epoll_id, SCE_NET_EPOLL_CTL_DEL, s, NULL);
 	
@@ -390,7 +390,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 static char net_memory[512 * 1024] __attribute__ ((aligned (16))); // TODO is just 256 kb enough ?
 
 static void InitNetworking(void) {
-	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);	
+	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
 	SceNetInitParam param;
 	
 	param.memory = net_memory;

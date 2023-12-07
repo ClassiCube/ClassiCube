@@ -83,7 +83,8 @@ And also runs on:
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita), **untested on real hardware**)
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **untested on real hardware**)
-* Nintendo 64 - unfinished, major rendering issues
+* Nintendo 64 - unfinished, moderate rendering issues
+* PS2 - unfinished, major rendering and stability issues
 
 # Compiling 
 
@@ -359,6 +360,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
 * [cen64](https://github.com/n64dev/cen64) - Emulator used to test Nintendo 64 port
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
+* [ps2sdk](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
+* [PCSX2](https://github.com/ps2dev/ps2sdk) - Emulator used to test PS2 port
 
 
 ## Sound Credits
