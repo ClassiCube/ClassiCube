@@ -200,13 +200,15 @@ static void VP_DirtyUniform(int uniform) {
 static void VP_ReloadUniforms(void) {
 	VertexProgram* VP = VP_Active;
 	if (!VP) return;
+	int ret;
 
 	if (VP->dirtyUniforms & VP_UNI_MATRIX) {
-		void *uniform_buffer;
+		void *uniform_buffer = NULL;
 		
-		sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
-		sceGxmSetUniformDataF(uniform_buffer, VP->param_uni_mvp,
-			0, 4 * 4, transposed_mvp);
+		ret = sceGxmReserveVertexDefaultUniformBuffer(gxm_context, &uniform_buffer);
+		if (ret) Logger_Abort2(ret, "Reserving uniform buffer");
+		ret = sceGxmSetUniformDataF(uniform_buffer, VP->param_uni_mvp, 0, 4 * 4, transposed_mvp);
+		if (ret) Logger_Abort2(ret, "Updating uniform buffer");
 			
 		VP->dirtyUniforms &= ~VP_UNI_MATRIX;
 	}
@@ -307,7 +309,7 @@ static void DQCallback(const void *callback_data) {
 	
 	if (gfx_vsync) sceDisplayWaitVblankStart();
 	
-	 GPUBuffers_DeleteUnreferenced();
+	GPUBuffers_DeleteUnreferenced();
 	GPUTextures_DeleteUnreferenced();
 	frameCounter++;
 }
@@ -343,7 +345,7 @@ static void AllocRingBuffers(void) {
 static void AllocGXMContext(void) {
 	SceGxmContextParams params = { 0 };
 	
-	params.hostMem     = Mem_TryAlloc(1, SCE_GXM_MINIMUM_CONTEXT_HOST_MEM_SIZE);
+	params.hostMem     = Mem_Alloc(1, SCE_GXM_MINIMUM_CONTEXT_HOST_MEM_SIZE, "Host memory");
 	params.hostMemSize = SCE_GXM_MINIMUM_CONTEXT_HOST_MEM_SIZE;
 	
 	params.vdmRingBufferMem     = vdm_ring_buffer_addr;

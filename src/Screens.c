@@ -21,6 +21,7 @@
 #include "World.h"
 #include "Input.h"
 #include "Utils.h"
+#include "Options.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
@@ -1593,7 +1594,7 @@ static void InventoryScreen_Init(void* screen) {
 	s->maxVertices = TEXTWIDGET_MAX + TABLE_MAX_VERTICES;
 	
 	TextWidget_Init(&s->title);
-	TableWidget_Create(&s->table);
+	TableWidget_Create(&s->table, 22 * Options_GetFloat(OPT_INV_SCROLLBAR_SCALE, 0, 10, 1));
 	s->table.blocksPerRow = Inventory.BlocksPerRow;
 	s->table.UpdateTitle   = InventoryScreen_OnUpdateTitle;
 	TableWidget_RecreateBlocks(&s->table);

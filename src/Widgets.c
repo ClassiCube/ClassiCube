@@ -360,10 +360,10 @@ static const struct WidgetVTABLE ScrollbarWidget_VTABLE = {
 	Widget_InputDown,            Widget_InputUp,            ScrollbarWidget_MouseScroll,
 	ScrollbarWidget_PointerDown, ScrollbarWidget_PointerUp, ScrollbarWidget_PointerMove
 };
-void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
+void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width) {
 	Widget_Reset(w);
 	w->VTABLE    = &ScrollbarWidget_VTABLE;
-	w->width     = Display_ScaleX(22);
+	w->width     = Display_ScaleX(width);
 	w->borderX   = Display_ScaleX(2);
 	w->borderY   = Display_ScaleY(2);
 	w->nubsWidth = Display_ScaleX(3);
@@ -972,12 +972,12 @@ static const struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove,
 	TableWidget_BuildMesh,   TableWidget_Render2
 };
-void TableWidget_Create(struct TableWidget* w) {
+void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	cc_bool classic;
 	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
 	w->lastCreatedIndex = -1000;
-	ScrollbarWidget_Create(&w->scroll);
+	ScrollbarWidget_Create(&w->scroll, sbWidth);
 	
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_CENTRE;

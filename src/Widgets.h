@@ -62,7 +62,7 @@ struct ScrollbarWidget {
 	int nubsWidth, offsets[3];
 };
 /* Resets state of the given scrollbar widget to default. */
-CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
+CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width);
 
 #define HOTBAR_CORE_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 /* A row of blocks with a background. */
@@ -111,7 +111,7 @@ struct TableWidget {
 	int verticesCount;
 };
 
-CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
+CC_NOINLINE void TableWidget_Create(struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
 CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
