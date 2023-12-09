@@ -90,7 +90,7 @@ int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	SceIoStat sb;
 	GetNativePath(str, path);
-	return sceIoGetstat(str, &sb) == 0 && (sb.st_attr & SCE_SO_IFREG) != 0;
+	return sceIoGetstat(str, &sb) == 0 && SCE_S_ISREG(sb.st_mode) != 0;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {

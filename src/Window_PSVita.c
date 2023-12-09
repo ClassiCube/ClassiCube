@@ -103,17 +103,28 @@ static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_R, mods & SCE_CTRL_RTRIGGER);
 }
 
-static void ProcessCircleInput(SceCtrlData* pad, double delta) {
-	float scale = (delta * 60.0) / 16.0f;
+static void ProcessLCircleInput(SceCtrlData* pad) {
 	int dx = pad->lx - 127;
 	int dy = pad->ly - 127;
 	
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+	if (dx == 0 && dy == 0) return;
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(dx, dy);
 }
 
+static void ProcessRCircleInput(SceCtrlData* pad, double delta) {
+	float scale = (delta * 60.0) / 16.0f;
+	int dx = pad->rx - 127;
+	int dy = pad->ry - 127;
+	
+	if (Math_AbsI(dx) <= 8) dx = 0;
+	if (Math_AbsI(dy) <= 8) dy = 0;
+	
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+}
 
 static void ProcessTouchPress(int x, int y) {
 	if (!frontPanel.maxDispX || !frontPanel.maxDispY) {
@@ -154,12 +165,15 @@ static void ProcessPadInput(double delta) {
 	// TODO: need to use cached version still? like GameCube/Wii
 	
 	HandleButtons(pad.buttons);
-	if (Input.RawMode)
-		ProcessCircleInput(&pad, delta);
+	if (Input.RawMode) {
+		ProcessLCircleInput(&pad);
+		ProcessRCircleInput(&pad, delta);
+	}
 }
 
 void Window_ProcessEvents(double delta) {
-	/* TODO implement */
+	Input.JoystickMovement = false;
+	
 	ProcessPadInput(delta);
 	ProcessTouchInput();
 }
