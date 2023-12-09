@@ -8,18 +8,8 @@
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
 */
 
-#if defined CC_BUILD_WIN
-/* Avoid pointless includes */
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#include <windows.h>
-#define GLAPI WINGDIAPI
-#else
 #define GLAPI extern
 #define APIENTRY
-#endif
 /* === BEGIN OPENGL HEADERS === */
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
@@ -30,6 +20,14 @@ typedef unsigned char GLubyte;
 typedef unsigned int GLuint;
 typedef float GLfloat;
 typedef void GLvoid;
+
+/* NOTE: With the OpenGL 1.1 backend "pointer" arguments are actual pointers, 
+/* but with VBOs they are just offsets instead */
+#ifdef CC_BUILD_GL11
+typedef const void* GLpointer;
+#else
+typedef cc_uintptr GLpointer;
+#endif
 
 #define GL_LEQUAL                0x0203
 #define GL_GREATER               0x0204
@@ -103,7 +101,7 @@ GLAPI void APIENTRY glCallList(GLuint list);
 GLAPI void APIENTRY glClear(GLuint mask);
 GLAPI void APIENTRY glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 GLAPI void APIENTRY glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
 GLAPI void APIENTRY glDeleteLists(GLuint list, GLsizei range);
 GLAPI void APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures);
 GLAPI void APIENTRY glDepthFunc(GLenum func);
@@ -131,11 +129,11 @@ GLAPI void APIENTRY glLoadMatrixf(const GLfloat* m);
 GLAPI void APIENTRY glMatrixMode(GLenum mode);
 GLAPI void APIENTRY glNewList(GLuint list, GLenum mode);
 GLAPI void APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
-GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
 GLAPI void APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
 GLAPI void APIENTRY glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
-GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
 GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 /* === END OPENGL HEADERS === */
 
@@ -171,10 +169,10 @@ static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 /*    call [glDrawElements]  --> opengl32.dll thunk--> GL driver thunk --> GL driver implementation */
 /*    call [_glDrawElements] --> GL driver thunk --> GL driver implementation */
 
-static void (APIENTRY *_glColorPointer)(GLint size,    GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *_glColorPointer)(GLint size,    GLenum type, GLsizei stride, GLpointer pointer);
 static void (APIENTRY *_glDrawElements)(GLenum mode, GLsizei count,    GLenum type, const GLvoid* indices);
-static void (APIENTRY *_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
-static void (APIENTRY *_glVertexPointer)(GLint size,   GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
+static void (APIENTRY *_glVertexPointer)(GLint size,   GLenum type, GLsizei stride, GLpointer pointer);
 
 static const struct DynamicLibSym coreFuncs[] = {
 	DynamicLib_Sym2("glColorPointer",    glColorPointer),
@@ -390,27 +388,27 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 #endif
 
 static void GL_SetupVbColoured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, VB_PTR +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, VB_PTR + 12);
 }
 
 static void GL_SetupVbTextured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, VB_PTR + 12);
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + 16);
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
+	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, VB_PTR + offset +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, VB_PTR + offset + 12);
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 12);
+	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -459,9 +457,9 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList
 #else
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 12);
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
 	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),  GL_UNSIGNED_SHORT, IB_PTR);
 }
 #endif /* !CC_BUILD_GL11 */
@@ -645,14 +643,14 @@ static void APIENTRY fake_bufferSubData(GLenum target, cc_uintptr offset, cc_uin
 static void APIENTRY fake_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
 	glDrawElements(mode, count, type, (cc_uintptr)indices + cur_ib->data);
 }
-static void APIENTRY fake_colorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	glColorPointer(size,    type, stride, (cc_uintptr)pointer + cur_vb->data);
+static void APIENTRY fake_colorPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	glColorPointer(size,    type, stride, (cc_uintptr)cur_vb->data + offset);
 }
-static void APIENTRY fake_texCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	glTexCoordPointer(size, type, stride, (cc_uintptr)pointer + cur_vb->data);
+static void APIENTRY fake_texCoordPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	glTexCoordPointer(size, type, stride, (cc_uintptr)cur_vb->data + offset);
 }
-static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	glVertexPointer(size,   type, stride, (cc_uintptr)pointer + cur_vb->data);
+static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	glVertexPointer(size,   type, stride, (cc_uintptr)cur_vb->data + offset);
 }
 
 static void OpenGL11Fallback(void) {

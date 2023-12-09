@@ -390,25 +390,27 @@ int Window_GetWindowState(void) {
 	cc_bool fullscreen = false, minimised = false;
 	Atom prop_type;
 	unsigned long items, after;
+	unsigned char* data = NULL;
 	int i, prop_format;
-	Atom* data = NULL;
+	Atom* list;
 
 	XGetWindowProperty(win_display, win_handle,
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
 		&prop_format, &items, &after, &data);
 
-	if (data) {
-		for (i = 0; i < items; i++) {
-			Atom atom = data[i];
+	if (!data) return WINDOW_STATE_NORMAL;
+	list = (Atom*)data;
+		
+	for (i = 0; i < items; i++) {
+		Atom atom = list[i];
 
-			if (atom == net_wm_state_minimized) {
-				minimised  = true;
-			} else if (atom == net_wm_state_fullscreen) {
-				fullscreen = true;
-			}
+		if (atom == net_wm_state_minimized) {
+			minimised  = true;
+		} else if (atom == net_wm_state_fullscreen) {
+			fullscreen = true;
 		}
-		XFree(data);
 	}
+	XFree(data);
 
 	if (fullscreen) return WINDOW_STATE_FULLSCREEN;
 	if (minimised)  return WINDOW_STATE_MINIMISED;

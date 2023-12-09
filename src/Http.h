@@ -37,7 +37,7 @@ struct HttpRequest {
 	cc_uint32   size; /* Size of the contents. */
 	cc_uint32 _capacity; /* (private) Maximum size of data buffer */
 	void* meta;          /* Pointer to backend specific data */
-	const char* error;
+	char* error;         /* Pointer to dynamically allocated error message */
 
 	char lastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char etag[STRING_SIZE];         /* ETag of cached item (if any) */
