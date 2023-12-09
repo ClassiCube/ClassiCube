@@ -24,6 +24,7 @@ static int frontBufferIndex, backBufferIndex;
 static void GPUBuffers_DeleteUnreferenced(void);
 static void GPUTextures_DeleteUnreferenced(void);
 static cc_uint32 frameCounter;
+static cc_bool in_scene;
 
 static SceGxmContext* gxm_context;
 
@@ -48,7 +49,7 @@ static void*  gxm_depth_stencil_surface_addr;
 static SceGxmDepthStencilSurface gxm_depth_stencil_surface;
 
 static SceGxmShaderPatcher *gxm_shader_patcher;
-static const int shader_patcher_buffer_size = 64 * 1024;;
+static const int shader_patcher_buffer_size = 64 * 1024;
 static SceUID gxm_shader_patcher_buffer_uid;
 static void*  gxm_shader_patcher_buffer_addr;
 
@@ -199,7 +200,9 @@ static void VP_DirtyUniform(int uniform) {
 
 static void VP_ReloadUniforms(void) {
 	VertexProgram* VP = VP_Active;
-	if (!VP) return;
+	// Calling sceGxmReserveVertexDefaultUniformBuffer when not in a scene
+	//   results in SCE_GXM_ERROR_NOT_WITHIN_SCENE on real hardware
+	if (!VP || !in_scene) return;
 	int ret;
 
 	if (VP->dirtyUniforms & VP_UNI_MATRIX) {
@@ -294,6 +297,15 @@ static void CreateFragmentPrograms(int index, const SceGxmProgram* fragProgram, 
 *-----------------------------------------------------Initialisation------------------------------------------------------*
 *#########################################################################################################################*/
 struct DQCallbackData { void* addr; };
+void (*DQ_OnNextFrame)(void* fb);
+
+static void DQ_OnNextFrame3D(void* fb) {
+	if (gfx_vsync) sceDisplayWaitVblankStart();
+	
+	GPUBuffers_DeleteUnreferenced();
+	GPUTextures_DeleteUnreferenced();
+	frameCounter++;
+}
 
 static void DQCallback(const void *callback_data) {
 	SceDisplayFrameBuf fb = { 0 }; 
@@ -306,19 +318,14 @@ static void DQCallback(const void *callback_data) {
 	fb.height = DISPLAY_HEIGHT;
 
 	sceDisplaySetFrameBuf(&fb, SCE_DISPLAY_SETBUF_NEXTFRAME);
-	
-	if (gfx_vsync) sceDisplayWaitVblankStart();
-	
-	GPUBuffers_DeleteUnreferenced();
-	GPUTextures_DeleteUnreferenced();
-	frameCounter++;
+	DQ_OnNextFrame(fb.base);
 }
 
-static void InitGXM(void) {
+void Gfx_InitGXM(void) { // called from Window_Init
 	SceGxmInitializeParams params = { 0 };
 	
-	params.displayQueueMaxPendingCount = MAX_PENDING_SWAPS;
-	params.displayQueueCallback = DQCallback;
+	params.displayQueueMaxPendingCount  = MAX_PENDING_SWAPS;
+	params.displayQueueCallback         = DQCallback;
 	params.displayQueueCallbackDataSize = sizeof(struct DQCallbackData);
 	params.parameterBufferSize = SCE_GXM_DEFAULT_PARAMETER_BUFFER_SIZE;
 	
@@ -523,17 +530,22 @@ static void SetDefaultStates(void) {
 	sceGxmSetBackDepthFunc(gxm_context,  SCE_GXM_DEPTH_FUNC_LESS_EQUAL);
 }
 
-static void InitGPU(void) {
-	InitGXM();
-	AllocRingBuffers();
-	AllocGXMContext();
-	
-	AllocRenderTarget();
+void Gfx_AllocFramebuffers(void) { // called from Window_Init
 	for (int i = 0; i < NUM_DISPLAY_BUFFERS; i++) 
 	{
 		AllocColorBuffer(i);
 	}
 	AllocDepthBuffer();
+	
+	frontBufferIndex = NUM_DISPLAY_BUFFERS - 1;
+	backBufferIndex  = 0;
+}
+
+static void InitGPU(void) {
+	AllocRingBuffers();
+	AllocGXMContext();
+	
+	AllocRenderTarget();
 	AllocShaderPatcherMemory();
 	AllocShaderPatcher();
 	
@@ -546,7 +558,9 @@ static void InitGPU(void) {
 }
 
 void Gfx_Create(void) {
+	DQ_OnNextFrame = DQ_OnNextFrame3D;
 	if (!Gfx.Created) InitGPU();
+	in_scene = false;
 	
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
@@ -555,9 +569,6 @@ void Gfx_Create(void) {
 	
 	Gfx_SetDepthTest(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
-	frontBufferIndex = NUM_DISPLAY_BUFFERS - 1;
-	backBufferIndex  = 0;
-	
 	Gfx_RestoreState();
 }
 
@@ -762,6 +773,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) {
+	in_scene = true;
 	sceGxmBeginScene(gxm_context,
 			0, gxm_render_target,
 			NULL, NULL,
@@ -770,10 +782,21 @@ void Gfx_BeginFrame(void) {
 			&gxm_depth_stencil_surface);
 }
 
-void Gfx_EndFrame(void) {
-	//Platform_LogConst("SWAP BUFFERS");
-	sceGxmEndScene(gxm_context, NULL, NULL);
+void Gfx_UpdateCommonDialogBuffers(void) {
+	SceCommonDialogUpdateParam param = { 0 };
+	param.renderTarget.colorFormat   = SCE_GXM_COLOR_FORMAT_A8B8G8R8;
+	param.renderTarget.surfaceType   = SCE_GXM_COLOR_SURFACE_LINEAR;
+	param.renderTarget.width         = DISPLAY_WIDTH;
+	param.renderTarget.height        = DISPLAY_HEIGHT;
+	param.renderTarget.strideInPixels   = DISPLAY_STRIDE;
+	param.renderTarget.colorSurfaceData = gxm_color_surfaces_addr[backBufferIndex];
+	param.renderTarget.depthSurfaceData = gxm_depth_stencil_surface.depthData;
+	param.displaySyncObject = gxm_sync_objects[backBufferIndex];
+	
+	sceCommonDialogUpdate(&param);
+}
 
+void Gfx_NextFramebuffer(void) {
 	struct DQCallbackData cb_data;
 	cb_data.addr = gxm_color_surfaces_addr[backBufferIndex];
 
@@ -783,7 +806,13 @@ void Gfx_EndFrame(void) {
 	// Cycle through to next buffer pair
 	frontBufferIndex = backBufferIndex;
 	backBufferIndex  = (backBufferIndex + 1) % NUM_DISPLAY_BUFFERS;
-		
+}
+
+void Gfx_EndFrame(void) {
+	in_scene = false;
+	sceGxmEndScene(gxm_context, NULL, NULL);
+
+	Gfx_NextFramebuffer();
 	if (gfx_minFrameMs) LimitFPS();
 }
 
