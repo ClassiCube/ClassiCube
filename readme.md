@@ -360,7 +360,7 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
 * [cen64](https://github.com/n64dev/cen64) - Emulator used to test Nintendo 64 port
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
-* [ps2sdk](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
+* [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
 * [PCSX2](https://github.com/ps2dev/ps2sdk) - Emulator used to test PS2 port
 
 

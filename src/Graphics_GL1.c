@@ -8,8 +8,18 @@
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
 */
 
+#if defined CC_BUILD_WIN
+/* Avoid pointless includes */
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#include <windows.h>
+#define GLAPI WINGDIAPI
+#else
 #define GLAPI extern
 #define APIENTRY
+#endif
 /* === BEGIN OPENGL HEADERS === */
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
