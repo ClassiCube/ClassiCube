@@ -346,10 +346,12 @@ static int ParseHost(union SocketAddress* addr, const char* host) {
 	
 	// Must have at least one IPv4 address
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
-	if (!res->h_addr_list)       return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
+	
+	u32* addrlist = (u32*)res->h_addr_list;
+	char* addr0   = (char*)addrlist[0];
 
-	// TODO probably wrong....
-	addr->v4.sin_addr = *(struct in_addr*)&res->h_addr_list;
+	addr->v4.sin_addr = *(struct in_addr*)addr0;
 	return 0;
 }
 
@@ -374,44 +376,39 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 	res = ParseAddress(&addr, address);
 	if (res) return res;
 
-	res = sysNetSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (res < 0) return res;
+	res = netSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (res < 0) return net_errno;
 	*s  = res;
 
 	if (nonblocking) {
 		int on = 1;
-		netSetSockOpt(*s, SCE_NET_SOL_SOCKET, SCE_NET_SO_NBIO, &on, sizeof(int));
+		netSetSockOpt(*s, SOL_SOCKET, SO_NBIO, &on, sizeof(int));
 	}
 
 	addr.v4.sin_family = AF_INET;
 	addr.v4.sin_port   = htons(port);
 
-	return sysNetConnect(*s, &addr.raw, sizeof(addr.v4));
+	res = netConnect(*s, &addr.raw, sizeof(addr.v4));
+	return res < 0 ? net_errno : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int res = sysNetRecvfrom(s, data, count, 0, NULL, NULL);
-	if (res < 0) return res;
+	int res = netRecv(s, data, count, 0);
+	if (res < 0) return net_errno;
 	
 	*modified = res; return 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int res = sysNetSendto(s, data, count, 0, NULL, 0);
-	if (res < 0) return res;
+	int res = netSend(s, data, count, 0);
+	if (res < 0) return net_errno;
 	
 	*modified = res; return 0;
 }
 
 void Socket_Close(cc_socket s) {
-	sysNetShutdown(s, SHUT_RDWR);
-	sysNetClose(s);
-}
-
-LV2_SYSCALL CC_sysNetPoll(struct pollfd* fds, s32 nfds, s32 ms)
-{
-	lv2syscall3(715, (u64)fds, nfds, ms);
-	return_to_user_prog(s32);
+	netShutdown(s, SHUT_RDWR);
+	netClose(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
@@ -421,8 +418,8 @@ static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	
-	res = CC_sysNetPoll(&pfd, 1, 0);
-	if (res) return res;
+	res = netPoll(&pfd, 1, 0);
+	if (res) return net_errno;
 	
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;

@@ -72,6 +72,7 @@ void Window_Close(void) {
 // TODO: More intelligent diffing that uses less space
 static cc_bool has_prevState;
 static kbd_state_t prevState;
+
 static int MapKey(int k) {
 	if (k >= KBD_KEY_A  && k <= KBD_KEY_Z)   return 'A'      + (k - KBD_KEY_A);
 	if (k >= KBD_KEY_0  && k <= KBD_KEY_9)   return '0'      + (k - KBD_KEY_0);
