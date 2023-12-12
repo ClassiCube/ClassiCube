@@ -566,6 +566,13 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		Chat_AddRaw("&a  collide &e- Sets collision mode of the block");
 		Chat_AddRaw("&a  drawmode &e- Sets draw mode of the block");
 		Chat_AddRaw("&a  min/max &e- Sets min/max corner coordinates of the block");
+		Chat_AddRaw("&eSee &a/client blockedit properties 2 &efor more properties");
+		return;
+	}
+	if (String_CaselessEqualsConst(args, "properties 2")) {
+		Chat_AddRaw("&eEditable block properties (page 2):");
+		Chat_AddRaw("&a  walksound &e- Sets walk/step sound of the block");
+		Chat_AddRaw("&a  breaksound &e- Sets break sound of the block");
 		return;
 	}
 
@@ -636,6 +643,14 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		if (!BlockEditCommand_GetCoords(value, &coords)) return;
 
 		Blocks.MaxBB[block] = coords;
+	} else if (String_CaselessEqualsConst(prop, "walksound")) {
+		if (!BlockEditCommand_GetInt(value, "Sound", &v, 0, SOUND_COUNT - 1)) return;
+
+		Blocks.StepSounds[block] = v;
+	} else if (String_CaselessEqualsConst(prop, "breaksound")) {
+		if (!BlockEditCommand_GetInt(value, "Sound", &v, 0, SOUND_COUNT - 1)) return;
+
+		Blocks.DigSounds[block]  = v;
 	} else {
 		Chat_Add1("&eBlockEdit: &eUnknown property %s &e(See &a/client help blockedit&e)", prop);
 		return;

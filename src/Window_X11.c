@@ -627,7 +627,7 @@ void Window_ProcessEvents(double delta) {
 
 		case MappingNotify:
 			if (e.xmapping.request == MappingModifier || e.xmapping.request == MappingKeyboard) {
-				Platform_LogConst("keybard mapping refreshed");
+				Platform_LogConst("keyboard mapping refreshed");
 				XRefreshKeyboardMapping(&e.xmapping);
 			}
 			break;

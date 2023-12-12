@@ -32,7 +32,7 @@ If you're interested in documenting or verifying the behaviour of the original M
 * Works with effectively all graphics cards that support OpenGL or Direct3D 9
 * Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
 * Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
-* Although still work in progresses, also runs on various consoles
+* Although in various stages of early development, also runs on various consoles
 
 ### Instructions
 Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net and classicube.net.<br>

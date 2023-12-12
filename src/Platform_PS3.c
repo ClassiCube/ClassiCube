@@ -30,6 +30,7 @@
 #include <sys/thread.h>
 #include <sys/systime.h>
 #include <sys/tty.h>
+#include <sys/process.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -42,6 +43,7 @@ const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
 const char* Platform_AppNameSuffix = " PS3";
 
+SYS_PROCESS_PARAM(1001, 128 * 1024); // 128kb stack size
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
