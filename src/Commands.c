@@ -550,11 +550,28 @@ static cc_bool BlockEditCommand_GetCoords(const cc_string* str, Vec3* coords) {
 	return true;
 }
 
+static cc_bool BlockEditCommand_GetBool(const cc_string* str, const char* name, cc_bool* value) {
+	if (String_CaselessEqualsConst(str, "true") || String_CaselessEqualsConst(str, "yes")) {
+		*value = true;
+		return true;
+	}
+
+	if (String_CaselessEqualsConst(str, "false") || String_CaselessEqualsConst(str, "no")) {
+		*value = false;
+		return true;
+	}
+
+	Chat_Add1("&eBlockEdit: &e%c must be either &ayes &eor &ano", name);
+	return false;
+}
+
+
 static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 	cc_string parts[3];
 	cc_string* prop;
 	cc_string* value;
 	int argsCount, block, v;
+	cc_bool b;
 	Vec3 coords;
 
 	if (String_CaselessEqualsConst(args, "properties")) {
@@ -573,6 +590,8 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		Chat_AddRaw("&eEditable block properties (page 2):");
 		Chat_AddRaw("&a  walksound &e- Sets walk/step sound of the block");
 		Chat_AddRaw("&a  breaksound &e- Sets break sound of the block");
+		Chat_AddRaw("&a  emitslight &e- Sets whether the block emits light");
+		Chat_AddRaw("&a  blockslight &e- Sets whether the block stops light");
 		return;
 	}
 
@@ -651,6 +670,14 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		if (!BlockEditCommand_GetInt(value, "Sound", &v, 0, SOUND_COUNT - 1)) return;
 
 		Blocks.DigSounds[block]  = v;
+	} else if (String_CaselessEqualsConst(prop, "emitslight")) {
+		if (!BlockEditCommand_GetBool(value, "Emits light", &b))  return;
+
+		Blocks.FullBright[block] = b;
+	} else if (String_CaselessEqualsConst(prop, "blockslight")) {
+		if (!BlockEditCommand_GetBool(value, "Blocks light", &b)) return;
+
+		Blocks.BlocksLight[block] = b;
 	} else {
 		Chat_Add1("&eBlockEdit: &eUnknown property %s &e(See &a/client help blockedit&e)", prop);
 		return;
