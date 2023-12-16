@@ -112,6 +112,7 @@ void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
 int Screen_Index(void* screen, void* w);
+int Screen_CalcDefaultMaxVertices(void* screen);
 
 /* Default mesh building implementation for a screen */
 /*  (Locks vb, calls Widget_BuildMesh on each widget, then unlocks vb) */
@@ -156,7 +157,10 @@ struct WidgetVTABLE {
 	void (*BuildMesh)(void* elem, struct VertexTextured** vertices);
 	/* Draws this widget on-screen. */
 	int  (*Render2)(void* elem, int offset);
+	/* Returns the maximum number of vertices this widget may use */
+	int  (*GetMaxVertices)(void* elem);
 };
+
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
 	cc_bool active;                /* Whether this widget is currently being moused over */ \

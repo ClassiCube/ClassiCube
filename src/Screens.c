@@ -1502,7 +1502,11 @@ static struct InventoryScreen {
 	struct TableWidget table;
 	struct TextWidget title;
 	cc_bool releasedInv, deferredSelect;
-} InventoryScreen_Instance;
+} InventoryScreen;
+
+static struct Widget* inventory_widgets[] = {
+	(struct Widget*)&InventoryScreen.title, (struct Widget*)&InventoryScreen.table
+};
 
 
 static void InventoryScreen_GetTitleText(cc_string* desc, BlockID block) {
@@ -1531,7 +1535,7 @@ static void InventoryScreen_UpdateTitle(struct InventoryScreen* s, BlockID block
 }
 
 static void InventoryScreen_OnUpdateTitle(BlockID block) {
-	InventoryScreen_UpdateTitle(&InventoryScreen_Instance, block);
+	InventoryScreen_UpdateTitle(&InventoryScreen, block);
 }
 
 
@@ -1547,12 +1551,9 @@ static void InventoryScreen_NeedRedrawing(void* screen) {
 
 static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Gfx_DeleteDynamicVb(&s->vb);
-	s->table.vb = 0;
-
 	Font_Free(&s->font);
-	Elem_Free(&s->table);
-	Elem_Free(&s->title);
+	Screen_ContextLost(s);
+	s->table.vb = 0;
 }
 
 static void InventoryScreen_ContextRecreated(void* screen) {
@@ -1562,19 +1563,6 @@ static void InventoryScreen_ContextRecreated(void* screen) {
 
 	Gui_MakeBodyFont(&s->font);
 	TableWidget_Recreate(&s->table);
-}
-
-static void InventoryScreen_BuildMesh(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct VertexTextured* data;
-	struct VertexTextured** ptr;
-
-	data = Screen_LockVb(s);
-	ptr  = &data;
-
-	Widget_BuildMesh(&s->title, ptr);
-	Widget_BuildMesh(&s->table, ptr);
-	Gfx_UnlockDynamicVb(s->vb);
 }
 
 static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
@@ -1591,7 +1579,8 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 
 static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	s->maxVertices = TEXTWIDGET_MAX + TABLE_MAX_VERTICES;
+	s->widgets     = inventory_widgets;
+	s->numWidgets  = Array_Elems(inventory_widgets);
 	
 	TextWidget_Init(&s->title);
 	TableWidget_Create(&s->table, 22 * Options_GetFloat(OPT_INV_SCROLLBAR_SCALE, 0, 10, 1));
@@ -1607,6 +1596,8 @@ static void InventoryScreen_Init(void* screen) {
 	Event_Register_(&TextureEvents.AtlasChanged,     s, InventoryScreen_NeedRedrawing);
 	Event_Register_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
 	Event_Register_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
 static void InventoryScreen_Free(void* screen) {
@@ -1658,7 +1649,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 static cc_bool InventoryScreen_IsHotbarActive(void) {
 	struct Screen* grabbed = Gui.InputGrab;
 	/* Only toggle hotbar when inventory or no grab screen is open */
-	return !grabbed || grabbed == (struct Screen*)&InventoryScreen_Instance;
+	return !grabbed || grabbed == (struct Screen*)&InventoryScreen;
 }
 
 static void InventoryScreen_KeyUp(void* screen, int key) {
@@ -1702,13 +1693,13 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_Init,        InventoryScreen_Update,    InventoryScreen_Free,
-	InventoryScreen_Render,      InventoryScreen_BuildMesh,
+	InventoryScreen_Render,      Screen_BuildMesh,
 	InventoryScreen_KeyDown,     InventoryScreen_KeyUp,     Screen_TKeyPress,            Screen_TText,
 	InventoryScreen_PointerDown, InventoryScreen_PointerUp, InventoryScreen_PointerMove, InventoryScreen_MouseScroll,
 	InventoryScreen_Layout,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated
 };
 void InventoryScreen_Show(void) {
-	struct InventoryScreen* s = &InventoryScreen_Instance;
+	struct InventoryScreen* s = &InventoryScreen;
 	s->grabsInput = true;
 	s->closable   = true;
 
@@ -1734,10 +1725,9 @@ static struct LoadingScreen {
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
 } LoadingScreen;
-#define LOADING_MAX_VERTICES (2 * TEXTWIDGET_MAX)
 #define LOADING_TILE_SIZE 64
 
-static struct Widget* loading_widgets[2] = {
+static struct Widget* loading_widgets[] = {
 	(struct Widget*)&LoadingScreen.title, (struct Widget*)&LoadingScreen.message
 };
 
@@ -1752,7 +1742,7 @@ static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 
 static void LoadingScreen_CalcMaxVertices(struct LoadingScreen* s) {
 	s->rows = Math_CeilDiv(WindowInfo.Height, LOADING_TILE_SIZE);
-	s->maxVertices = LOADING_MAX_VERTICES + s->rows * 4;
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s) + s->rows * 4;
 }
 
 static void LoadingScreen_Layout(void* screen) {
@@ -1980,7 +1970,6 @@ static struct Widget* disconnect_widgets[] = {
 	(struct Widget*)&DisconnectScreen.reconnect,
 	(struct Widget*)&DisconnectScreen.quit
 };
-#define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + 2 * BUTTONWIDGET_MAX)
 #define DISCONNECT_DELAY_SECS 5
 
 static void DisconnectScreen_Layout(void* screen) {
@@ -2039,8 +2028,6 @@ static void DisconnectScreen_OnQuit(void* s, void* w) { Window_Close(); }
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	s->maxVertices             = DISCONNECT_MAX_VERTICES;
-
 	TextWidget_Init(&s->title);
 	TextWidget_Init(&s->message);
 
@@ -2055,6 +2042,7 @@ static void DisconnectScreen_Init(void* screen) {
 	s->lastSecsLeft = DISCONNECT_DELAY_SECS;
 	s->widgets      = disconnect_widgets;
 	s->numWidgets   = Array_Elems(disconnect_widgets);
+	s->maxVertices  = Screen_CalcDefaultMaxVertices(s);
 }
 
 static void DisconnectScreen_Update(void* screen, double delta) {

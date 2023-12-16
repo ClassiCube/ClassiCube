@@ -59,11 +59,13 @@ static int TextWidget_Render2(void* widget, int offset) {
 	return offset + 4;
 }
 
+static int TextWidget_MaxVertices(void* widget) { return TEXTWIDGET_MAX; }
+
 static const struct WidgetVTABLE TextWidget_VTABLE = {
 	TextWidget_Render, TextWidget_Free,  TextWidget_Reposition,
 	Widget_InputDown,  Widget_InputUp,   Widget_MouseScroll,
 	Widget_Pointer,    Widget_PointerUp, Widget_PointerMove,
-	TextWidget_BuildMesh, TextWidget_Render2
+	TextWidget_BuildMesh, TextWidget_Render2, TextWidget_MaxVertices
 };
 void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
@@ -209,11 +211,13 @@ static int ButtonWidget_Render2(void* widget, int offset) {
 	return offset + 12;
 }
 
+static int ButtonWidget_MaxVertices(void* widget) { return BUTTONWIDGET_MAX; }
+
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	ButtonWidget_Render, ButtonWidget_Free, ButtonWidget_Reposition,
 	Widget_InputDown,    Widget_InputUp,    Widget_MouseScroll,
 	Widget_Pointer,      Widget_PointerUp,  Widget_PointerMove,
-	ButtonWidget_BuildMesh, ButtonWidget_Render2
+	ButtonWidget_BuildMesh, ButtonWidget_Render2, ButtonWidget_MaxVertices
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	ButtonWidget_Init(w, minWidth, onClick);
@@ -456,6 +460,8 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 	return HOTBAR_MAX_VERTICES;
 }
 
+static int HotbarWidget_MaxVertices(void* w) { return HOTBAR_MAX_VERTICES; }
+
 void HotbarWidget_Update(struct HotbarWidget* w, double delta) {
 #ifdef CC_BUILD_TOUCH
 	int i;
@@ -653,7 +659,7 @@ static const struct WidgetVTABLE HotbarWidget_VTABLE = {
 	NULL,                     HotbarWidget_Free,      HotbarWidget_Reposition,
 	HotbarWidget_KeyDown,     HotbarWidget_InputUp,   HotbarWidget_MouseScroll,
 	HotbarWidget_PointerDown, HotbarWidget_PointerUp, HotbarWidget_PointerMove,
-	HotbarWidget_BuildMesh,   HotbarWidget_Render2,
+	HotbarWidget_BuildMesh,   HotbarWidget_Render2,   HotbarWidget_MaxVertices
 };
 void HotbarWidget_Create(struct HotbarWidget* w) {
 	Widget_Reset(w);
@@ -823,6 +829,8 @@ static int TableWidget_Render2(void* widget, int offset) {
 	return offset + TABLE_MAX_VERTICES;
 }
 
+static int TableWidget_MaxVertices(void* w) { return TABLE_MAX_VERTICES; }
+
 static void TableWidget_Free(void* widget) { }
 
 void TableWidget_Recreate(struct TableWidget* w) {
@@ -970,7 +978,7 @@ static const struct WidgetVTABLE TableWidget_VTABLE = {
 	NULL,                    TableWidget_Free,      TableWidget_Reposition,
 	TableWidget_KeyDown,     Widget_InputUp,        TableWidget_MouseScroll,
 	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove,
-	TableWidget_BuildMesh,   TableWidget_Render2
+	TableWidget_BuildMesh,   TableWidget_Render2,   TableWidget_MaxVertices
 };
 void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	cc_bool classic;
@@ -1569,6 +1577,8 @@ static int TextInputWidget_Render2(void* widget, int offset) {
 	return offset + 4;
 }
 
+static int TextInputWidget_MaxVertices(void* widget) { return MENUINPUTWIDGET_MAX; }
+
 static void TextInputWidget_RemakeTexture(void* widget) {
 	cc_string range; char rangeBuffer[STRING_SIZE];
 	struct TextInputWidget* w = (struct TextInputWidget*)widget;
@@ -1655,7 +1665,7 @@ static const struct WidgetVTABLE TextInputWidget_VTABLE = {
 	TextInputWidget_Render,      InputWidget_Free, InputWidget_Reposition,
 	InputWidget_KeyDown,         Widget_InputUp,   Widget_MouseScroll,
 	TextInputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove,
-	TextInputWidget_BuildMesh,   TextInputWidget_Render2
+	TextInputWidget_BuildMesh,   TextInputWidget_Render2, TextInputWidget_MaxVertices
 };
 void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);

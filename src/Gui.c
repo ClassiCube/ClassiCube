@@ -480,6 +480,20 @@ int Screen_Index(void* screen, void* widget) {
 	return -1;
 }
 
+int Screen_CalcDefaultMaxVertices(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i, count = 0;
+
+	for (i = 0; i < s->numWidgets; i++)
+	{
+		if (!widgets[i]) continue;
+		count += widgets[i]->VTABLE->GetMaxVertices(widgets[i]);
+	}
+	return count;
+}
+
+
 void Screen_BuildMesh(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;

@@ -590,7 +590,7 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		Chat_AddRaw("&eEditable block properties (page 2):");
 		Chat_AddRaw("&a  walksound &e- Sets walk/step sound of the block");
 		Chat_AddRaw("&a  breaksound &e- Sets break sound of the block");
-		Chat_AddRaw("&a  emitslight &e- Sets whether the block emits light");
+		Chat_AddRaw("&a  fullbright &e- Sets whether the block is fully lit");
 		Chat_AddRaw("&a  blockslight &e- Sets whether the block stops light");
 		return;
 	}
@@ -670,8 +670,8 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		if (!BlockEditCommand_GetInt(value, "Sound", &v, 0, SOUND_COUNT - 1)) return;
 
 		Blocks.DigSounds[block]  = v;
-	} else if (String_CaselessEqualsConst(prop, "emitslight")) {
-		if (!BlockEditCommand_GetBool(value, "Emits light", &b))  return;
+	} else if (String_CaselessEqualsConst(prop, "fullbright")) {
+		if (!BlockEditCommand_GetBool(value, "Full brightness", &b))  return;
 
 		Blocks.FullBright[block] = b;
 	} else if (String_CaselessEqualsConst(prop, "blockslight")) {
