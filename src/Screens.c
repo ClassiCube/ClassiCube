@@ -1047,6 +1047,8 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 	if (type == MSG_TYPE_NORMAL) {
 		s->chatIndex++;
 		if (!Gui.Chatlines) return;
+
+		s->dirty = true;
 		TextGroupWidget_ShiftUp(&s->chat);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
@@ -1116,9 +1118,12 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	Elem_Render(&s->bottomRight, delta);
 	Elem_Render(&s->clientStatus, delta);
 
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
 	now = Game.Time;
+
 	if (s->grabsInput) {
-		Elem_Render(&s->chat, delta);
+		Widget_Render2(&s->chat, 0);
 	} else {
 		/* Only render recent chat */
 		for (i = 0; i < s->chat.lines; i++) {
@@ -1127,7 +1132,11 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_GetLogTime(logIdx) + 10 >= now) Texture_Render(&tex);
+			/* Only draw chat within last 10 seconds */
+			if (Chat_GetLogTime(logIdx) + 10 < now) continue;
+			
+			Gfx_BindTexture(tex.ID);
+			Gfx_DrawVb_IndexedTris_Range(4, i * 4);
 		}
 	}
 
@@ -1153,6 +1162,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	ChatScreen_FreeChatFonts(s);
+	Screen_ContextLost(s);
 
 	Elem_Free(&s->chat);
 	Elem_Free(&s->input.base);
@@ -1176,6 +1186,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	struct FontDesc font;
 	ChatScreen_ChatUpdateFont(s);
 	ChatScreen_Redraw(s);
+	Screen_UpdateVb(s);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1187,7 +1198,24 @@ static void ChatScreen_ContextRecreated(void* screen) {
 #endif
 }
 
-static void ChatScreen_BuildMesh(void* screen) { }
+static int ChatScreen_CalcMaxVertices(void* screen) {
+	struct ChatScreen* s = (struct ChatScreen*)screen;
+	struct TextGroupWidget* chat = &s->chat;
+	/* In case chatlines is 0 */
+	return max(4, chat->VTABLE->GetMaxVertices(chat));
+}
+
+static void ChatScreen_BuildMesh(void* screen) {
+	struct ChatScreen* s = (struct ChatScreen*)screen;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
+
+	data = Screen_LockVb(s);
+	ptr  = &data;
+
+	Widget_BuildMesh(&s->chat, ptr);
+	Gfx_UnlockDynamicVb(s->vb);
+}
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
@@ -1416,6 +1444,8 @@ static void ChatScreen_Init(void* screen) {
 
 	Event_Register_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
 	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
+	
+	s->maxVertices = ChatScreen_CalcMaxVertices(s);
 
 #ifdef CC_BUILD_TOUCH
 	ButtonWidget_Init(&s->send,   100, NULL);
@@ -1490,6 +1520,10 @@ void ChatScreen_SetChatlines(int lines) {
 	s->chatIndex += s->chat.lines - lines;
 	s->chat.lines = lines;
 	TextGroupWidget_RedrawAll(&s->chat);
+
+	s->maxVertices = ChatScreen_CalcMaxVertices(s);
+	Screen_UpdateVb(s);
+	s->dirty = true;
 }
 
 
