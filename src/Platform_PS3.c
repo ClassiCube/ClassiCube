@@ -35,15 +35,13 @@
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
-//const cc_result ReturnCode_SocketInProgess  = 0x80010032; // EINPROGRESS
-//const cc_result ReturnCode_SocketWouldBlock = 0x80010001; // EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
-
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
+const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
+
 const char* Platform_AppNameSuffix = " PS3";
 
-SYS_PROCESS_PARAM(1001, 128 * 1024); // 128kb stack size
+SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -415,13 +413,12 @@ void Socket_Close(cc_socket s) {
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
-	int flags, res;
+	int flags;
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	
-	res = netPoll(&pfd, 1, 0);
-	if (res) return net_errno;
+	if (netPoll(&pfd, 1, 0) < 0) return net_errno;
 	
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
@@ -438,7 +435,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
 	netGetSockOpt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
 	return res;
 }

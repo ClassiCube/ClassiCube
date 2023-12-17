@@ -59,8 +59,8 @@ void Window_Init(void) {
 	WindowInfo.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	DisplayInfo.ContentOffsetX = 10;
-	DisplayInfo.ContentOffsetY = 10;
+	DisplayInfo.ContentOffsetX = 20;
+	DisplayInfo.ContentOffsetY = 20;
 
 	ioPadInit(MAX_PORT_NUM);
 	ioKbInit(MAX_KB_PORT_NUM);
