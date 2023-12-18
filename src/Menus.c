@@ -4014,7 +4014,6 @@ static struct Widget* touchOnscreen_widgets[3 + ONSCREEN_PAGE_BTNS] = {
 	(struct Widget*)&TouchOnscreenScreen.btns[5], (struct Widget*)&TouchOnscreenScreen.btns[6],
 	(struct Widget*)&TouchOnscreenScreen.btns[7]
 };
-#define TOUCHONSCREEN_MAX_VERTICES ((3 + ONSCREEN_PAGE_BTNS) * BUTTONWIDGET_MAX)
 
 static void TouchOnscreen_UpdateColors(struct TouchOnscreenScreen* s) {
 	PackedCol grey = PackedCol_Make(0x7F, 0x7F, 0x7F, 0xFF);
@@ -4105,13 +4104,14 @@ static void TouchOnscreenScreen_Init(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
 	s->widgets     = touchOnscreen_widgets;
 	s->numWidgets  = Array_Elems(touchOnscreen_widgets);
-	s->maxVertices = TOUCHONSCREEN_MAX_VERTICES;
 
 	ButtonWidget_Init(&s->back, 400, TouchOnscreen_More);
 	ButtonWidget_Init(&s->left,  40, TouchOnscreen_Left);
 	ButtonWidget_Init(&s->right, 40, TouchOnscreen_Right);
 	TouchOnscreen_SetPage(s, true);
 	TouchOnscreen_UpdateColors(screen);
+
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
 static const struct ScreenVTABLE TouchOnscreenScreen_VTABLE = {
@@ -4147,7 +4147,6 @@ static struct Widget* touchCtrls_widgets[1 + TOUCHCTRLS_BTNS] = {
 	(struct Widget*)&TouchCtrlsScreen.btns[1], (struct Widget*)&TouchCtrlsScreen.btns[2], 
 	(struct Widget*)&TouchCtrlsScreen.btns[3], (struct Widget*)&TouchCtrlsScreen.btns[4]
 };
-#define TOUCHCTRLS_MAX_VERTICES (BUTTONWIDGET_MAX + TOUCHCTRLS_BTNS * BUTTONWIDGET_MAX)
 
 static const char* GetTapDesc(int mode) {
 	if (mode == INPUT_MODE_PLACE)  return "Tap: Place";
@@ -4280,11 +4279,12 @@ static void TouchCtrlsScreen_Init(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	s->widgets     = touchCtrls_widgets;
 	s->numWidgets  = Array_Elems(touchCtrls_widgets);
-	s->maxVertices = TOUCHCTRLS_MAX_VERTICES;
 
 	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     4);
 	Menu_InitButtons(s->btns + 4, 400, touchCtrls_btns + 4, 1);
 	ButtonWidget_Init(&s->back,   400, TouchCtrls_More);
+
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
 static const struct ScreenVTABLE TouchCtrlsScreen_VTABLE = {
@@ -4320,7 +4320,6 @@ static struct Widget* touchMore_widgets[1 + TOUCHMORE_BTNS] = {
 	(struct Widget*)&TouchMoreScreen.btns[3], (struct Widget*)&TouchMoreScreen.btns[4],
 	(struct Widget*)&TouchMoreScreen.btns[5]
 };
-#define TOUCHMORE_MAX_VERTICES (BUTTONWIDGET_MAX + TOUCHMORE_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchMore_Take(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
@@ -4374,11 +4373,12 @@ static void TouchMoreScreen_Init(void* screen) {
 	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
 	s->widgets     = touchMore_widgets;
 	s->numWidgets  = Array_Elems(touchMore_widgets);
-	s->maxVertices = TOUCHMORE_MAX_VERTICES;
 
 	Menu_InitButtons(s->btns,     195, touchMore_btns,     4);
 	Menu_InitButtons(s->btns + 4, 400, touchMore_btns + 4, 2);
 	ButtonWidget_Init(&s->back,   400, TouchMore_Game);
+
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
 static const struct ScreenVTABLE TouchMoreScreen_VTABLE = {

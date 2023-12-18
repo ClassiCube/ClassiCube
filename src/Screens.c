@@ -2233,14 +2233,15 @@ static const struct TouchButtonDesc hackDescs[2] = {
 	{ "\x1F", KEYBIND_FLY_DOWN, 50,  10, TouchScreen_BindClick }
 };
 
-#define TOUCHSCREEN_BTN_COL PackedCol_Make(255, 255, 255, 220)
+#define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 220)
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	const struct TouchButtonDesc* desc;
 	int i, j;
 	for (i = 0; i < ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS; i++) s->widgets[i] = NULL;
 
-	for (i = 0, j = 0; i < ONSCREEN_MAX_BTNS; i++) {
+	for (i = 0, j = 0; i < ONSCREEN_MAX_BTNS; i++) 
+	{
 		if (!(Gui._onscreenButtons & (1 << i))) continue;
 		desc = &onscreenDescs[i];
 
@@ -2261,10 +2262,11 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 		s->numBtns = Array_Elems(normDescs);
 	}
 
-	for (i = 0; i < s->numBtns; i++) {
+	for (i = 0; i < s->numBtns; i++) 
+	{
 		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
 		ButtonWidget_Init(&s->btns[i], 60, s->descs[i].OnClick);
-		s->btns[i].color = TOUCHSCREEN_BTN_COL;
+		s->btns[i].color = TOUCHSCREEN_BTN_COLOR;
 	}
 }
 
@@ -2291,11 +2293,13 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	Screen_UpdateVb(screen);
 	Gui_MakeTitleFont(&s->font);
 
-	for (i = 0; i < s->numOnscreen; i++) {
+	for (i = 0; i < s->numOnscreen; i++) 
+	{
 		desc = s->onscreenDescs[i];
 		ButtonWidget_SetConst(&s->onscreen[i], desc->text, &s->font);
 	}
-	for (i = 0; i < s->numBtns; i++) {
+	for (i = 0; i < s->numBtns; i++) 
+	{
 		desc = &s->descs[i];
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
@@ -2322,7 +2326,8 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	w->active |= id;
 
 	/* Clicking on jump or fly buttons should still move camera */
-	for (i = 0; i < s->numBtns; i++) {
+	for (i = 0; i < s->numBtns; i++) 
+	{
 		if (w == (struct Widget*)&s->btns[i]) return TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA;
 	}
 	return TOUCH_TYPE_GUI;
@@ -2335,7 +2340,8 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	s->thumbstick.active &= ~id;
 	s->more.active       &= ~id;
 
-	for (i = 0; i < s->numBtns; i++) {
+	for (i = 0; i < s->numBtns; i++) 
+	{
 		if (!(s->btns[i].active & id)) continue;
 
 		if (s->descs[i].bind < KEYBIND_COUNT) {
@@ -2355,7 +2361,8 @@ static void TouchScreen_Layout(void* screen) {
 	/* Need to align these relative to the hotbar */
 	height = HUDScreen_LayoutHotbar();
 
-	for (i = 0; i < s->numBtns; i++) {
+	for (i = 0; i < s->numBtns; i++) 
+	{
 		desc = &s->descs[i];
 		Widget_SetLocation(&s->btns[i], ANCHOR_MAX, ANCHOR_MAX, desc->x, desc->y);
 		s->btns[i].yOffset += height;
@@ -2366,7 +2373,8 @@ static void TouchScreen_Layout(void* screen) {
 		Widget_Layout(&s->btns[i]);
 	}
 
-	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++, y += 40) {
+	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++, y += 40) 
+	{
 		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, x, y);
 		if (s->onscreen[i].y + s->onscreen[i].height <= s->btns[0].y) continue;
 
@@ -2399,7 +2407,7 @@ static void TouchScreen_Init(void* screen) {
 
 	TouchScreen_InitButtons(s);
 	ButtonWidget_Init(&s->more, 40, TouchScreen_MoreClick);
-	s->more.color = TOUCHSCREEN_BTN_COL;
+	s->more.color = TOUCHSCREEN_BTN_COLOR;
 
 	ThumbstickWidget_Init(&s->thumbstick);
 	touchInput.GetMovement = TouchScreen_GetMovement;

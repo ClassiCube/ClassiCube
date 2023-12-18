@@ -26,8 +26,8 @@ static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
 
-	DisplayInfo.X      = (int)bounds.origin.x;
-	DisplayInfo.Y      = (int)bounds.origin.y;
+	DisplayInfo.x      = (int)bounds.origin.x;
+	DisplayInfo.y      = (int)bounds.origin.y;
 	DisplayInfo.Width  = (int)bounds.size.width;
 	DisplayInfo.Height = (int)bounds.size.height;
 	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
@@ -709,8 +709,8 @@ static void DoDrawFramebuffer(NSRect dirty) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	NSRect rect;
-	rect.origin.x    = r.X; 
-	rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
+	rect.origin.x    = r.x; 
+	rect.origin.y    = WindowInfo.Height - r.y - r.Height;
 	rect.size.width  = r.Width;
 	rect.size.height = r.Height;
 	
