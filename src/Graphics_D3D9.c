@@ -738,7 +738,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 static struct Matrix texMatrix = Matrix_IdentityValue;
 void Gfx_EnableTextureOffset(float x, float y) {
-	texMatrix.row3.X = x; texMatrix.row3.Y = y;
+	texMatrix.row3.x = x; texMatrix.row3.y = y;
 	if (Gfx.LostContext) return;
 
 	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
@@ -757,13 +757,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z =  1.0f / (zNear - zFar);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = zNear / (zNear - zFar);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -779,12 +779,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = zFar_ / (zNear_ - zFar_);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = (zNear_ * zFar_) / (zNear_ - zFar_);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = zFar_ / (zNear_ - zFar_);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = (zNear_ * zFar_) / (zNear_ - zFar_);
+	matrix->row4.w =  0.0f;
 }
 
 

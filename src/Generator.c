@@ -683,7 +683,7 @@ static void NotchyGen_PlantTrees(void) {
 					count = TreeGen_Grow(treeX, treeY, treeZ, treeHeight, coords, blocks);
 
 					for (m = 0; m < count; m++) {
-						index = World_Pack(coords[m].X, coords[m].Y, coords[m].Z);
+						index = World_Pack(coords[m].x, coords[m].y, coords[m].z);
 						Gen_Blocks[index] = blocks[m];
 					}
 				}
@@ -768,8 +768,8 @@ cc_bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
 	return true;
 }
 
-#define TreeGen_Place(x, y, z, block)\
-coords[count].X = (x); coords[count].Y = (y); coords[count].Z = (z);\
+#define TreeGen_Place(xVal, yVal, zVal, block)\
+coords[count].x = (xVal); coords[count].y = (yVal); coords[count].z = (zVal);\
 blocks[count] = block; count++;
 
 int TreeGen_Grow(int treeX, int treeY, int treeZ, int height, IVec3* coords, BlockRaw* blocks) {

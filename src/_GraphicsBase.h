@@ -152,10 +152,10 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 
-	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = color; v++;
-	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = color; v++;
-	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = color; v++;
-	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = color; v++;
+	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = color; v++;
+	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = color; v++;
+	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
+	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = color; v++;
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris(4);
@@ -167,10 +167,10 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
 
-	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
-	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
-	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
-	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
+	v->x = (float)x;           v->y = (float)y;            v->z = 0; v->Col = top; v++;
+	v->x = (float)(x + width); v->y = (float)y;            v->z = 0; v->Col = top; v++;
+	v->x = (float)(x + width); v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
+	v->x = (float)x;           v->y = (float)(y + height); v->z = 0; v->Col = bottom; v++;
 
 	Gfx_UnlockDynamicVb(Gfx_quadVb);
 	Gfx_DrawVb_IndexedTris(4);
@@ -190,8 +190,8 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 #endif
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
-	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
-	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
+	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->Width);
+	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->Height);
 	struct VertexTextured* v = *vertices;
 
 #ifdef CC_BUILD_D3D9
@@ -201,10 +201,10 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	y1 -= 0.5f; y2 -= 0.5f;
 #endif
 
-	v->X = x1; v->Y = y1; v->Z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V1; v++;
-	v->X = x2; v->Y = y1; v->Z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V1; v++;
-	v->X = x2; v->Y = y2; v->Z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
-	v->X = x1; v->Y = y2; v->Z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
+	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V1; v++;
+	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V1; v++;
+	v->x = x2; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
+	v->x = x1; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
 	*vertices = v;
 }
 

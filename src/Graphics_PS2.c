@@ -410,13 +410,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z = -2.0f / (zFar - zNear);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -432,12 +432,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	*matrix = Matrix_Identity;
 	// TODO: Check is Frustum culling needs changing for this
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar_ + zNear_) / (zFar_ - zNear_);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar_ * zNear_) / (zFar_ - zNear_);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -(zFar_ + zNear_) / (zFar_ - zNear_);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(2.0f * zFar_ * zNear_) / (zFar_ - zNear_);
+	matrix->row4.w =  0.0f;
 }
 
 
@@ -458,9 +458,9 @@ static cc_bool NotClipped(Vector4 pos) {
 	//  However the guard band itself ranges from 0 to 4096
 	// To reduce need to clip, clip against guard band on X/Y axes instead
 	/*return
-		xAdj  >= -pos.W && xAdj  <= pos.W &&
-		yAdj  >= -pos.W && yAdj  <= pos.W &&
-		pos.Z >= -pos.W && pos.Z <= pos.W;*/	
+		xAdj  >= -pos.w && xAdj  <= pos.w &&
+		yAdj  >= -pos.w && yAdj  <= pos.w &&
+		pos.z >= -pos.w && pos.z <= pos.w;*/	
 		
 	// Rescale clip planes to guard band extent:
 	//  X/W * vp_hwidth <= vp_hwidth -- clipping against viewport
@@ -469,8 +469,8 @@ static cc_bool NotClipped(Vector4 pos) {
 	//  X/W * vp_hwidth <= 2048      -- clipping against guard band
 	//              X/W <= 2048 / vp_hwidth
 	//              X * vp_hwidth / 2048 <= W
-	float xAdj = pos.X * (vp_hwidth/2048);
-	float yAdj = pos.Y * (vp_hheight/2048);
+	float xAdj = pos.x * (vp_hwidth/2048);
+	float yAdj = pos.y * (vp_hheight/2048);
 	
 	// X/W * vp_hwidth <= 2048
 	// 
@@ -478,25 +478,25 @@ static cc_bool NotClipped(Vector4 pos) {
 	// Clip X/Y to INSIDE the guard band regions
 	// NOTE: This seems to result in lockup at end of frame
 	return
-		xAdj > -pos.W && xAdj < pos.W &&
-		yAdj > -pos.W && yAdj < pos.W &&
-		pos.Z >= -pos.W && pos.Z <= pos.W;
+		xAdj > -pos.w && xAdj < pos.w &&
+		yAdj > -pos.w && yAdj < pos.w &&
+		pos.z >= -pos.w && pos.z <= pos.w;
 }
 
 static Vector4 TransformVertex(struct VertexTextured* pos) {
 	Vector4 coord;
-	coord.X = pos->X * mvp.row1.X + pos->Y * mvp.row2.X + pos->Z * mvp.row3.X + mvp.row4.X;
-	coord.Y = pos->X * mvp.row1.Y + pos->Y * mvp.row2.Y + pos->Z * mvp.row3.Y + mvp.row4.Y;
-	coord.Z = pos->X * mvp.row1.Z + pos->Y * mvp.row2.Z + pos->Z * mvp.row3.Z + mvp.row4.Z;
-	coord.W = pos->X * mvp.row1.W + pos->Y * mvp.row2.W + pos->Z * mvp.row3.W + mvp.row4.W;
+	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
+	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
+	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
+	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
 	return coord;
 }
 
-//#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.X / src.W); dst.y = vp_hheight * (1 - src.Y / src.W); dst.z = src.Z / src.W; dst.w = src.W;
+//#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
 static xyz_t FinishVertex(struct Vector4 src) {
-	float x = (vp_hwidth/2048)  * (src.X / src.W);
-	float y = (vp_hheight/2048) * (src.Y / src.W);
-	float z = src.Z / src.W;
+	float x = (vp_hwidth/2048)  * (src.x / src.w);
+	float y = (vp_hheight/2048) * (src.y / src.w);
+	float z = src.z / src.w;
 	
 	int originX = ftoi4(2048);
 	int originY = ftoi4(2048);
@@ -510,7 +510,7 @@ static xyz_t FinishVertex(struct Vector4 src) {
 }
 
 static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextured* V0, struct VertexTextured* V1, struct VertexTextured* V2) {
-	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.X, &v0.Y, &v0.Z, &v0.W);	
+	//Platform_Log4("X: %f3, Y: %f3, Z: %f3, W: %f3", &v0.x, &v0.y, &v0.z, &v0.w);	
 	u64* dw;
 	
 	Vector4 verts[3] = { v0, v1, v2 };
@@ -528,7 +528,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	dw = (u64*)q;
 	for (int i = 0; i < 3; i++)
 	{
-		float Q   = 1.0f / verts[i].W;
+		float Q   = 1.0f / verts[i].w;
 		xyz_t xyz = FinishVertex(verts[i]);
 		color_t color;
 		texel_t texel;
@@ -579,10 +579,10 @@ static void DrawTriangles(int verticesCount, int startVertex) {
 		Vector4 V3 = TransformVertex(v + 3);
 		
 		
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[0].X, &v[0].Y, &v[0].Z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[1].X, &v[1].Y, &v[1].Z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[2].X, &v[2].Y, &v[2].Z);
-	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[3].X, &v[3].Y, &v[3].Z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[0].x, &v[0].y, &v[0].z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[1].x, &v[1].y, &v[1].z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[2].x, &v[2].y, &v[2].z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &v[3].x, &v[3].y, &v[3].z);
 	//Platform_LogConst(">>>>>>>>>>");
 		
 		if (NotClipped(V0) && NotClipped(V1) && NotClipped(V2)) {

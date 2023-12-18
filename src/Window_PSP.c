@@ -128,10 +128,10 @@ void Window_DrawFramebuffer(Rect2D r) {
 	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
 
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
-	cc_uint32* dst = (cc_uint32*)fb           + r.X;
+	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.x;
+	cc_uint32* dst = (cc_uint32*)fb           + r.x;
 
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
 		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * fb_bmp.width, r.Width * 4);
 	}

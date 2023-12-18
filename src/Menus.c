@@ -3598,8 +3598,8 @@ static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTex
 	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
 		for (i = 0; i < TEXIDS_MAX_PER_PAGE; i++) {
 
-			tex.X = xOffset    + Atlas2D_TileX(i) * size;
-			tex.Y = s->yOffset + Atlas2D_TileY(i) * size;
+			tex.x = xOffset    + Atlas2D_TileX(i) * size;
+			tex.y = s->yOffset + Atlas2D_TileY(i) * size;
 
 			tex.uv.V1 = Atlas1D_RowId(i + baseLoc) * Atlas1D.InvTileSize;
 			tex.uv.V2 = tex.uv.V1      + UV2_Scale * Atlas1D.InvTileSize;
@@ -3624,14 +3624,14 @@ static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextur
 	beg     = *ptr;
 	
 	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
-		idAtlas->tex.Y = s->yOffset + (size - idAtlas->tex.Height);
+		idAtlas->tex.y = s->yOffset + (size - idAtlas->tex.Height);
 
 		for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 			for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
 				idAtlas->curX = xOffset + size * x + 3; /* offset text by 3 pixels */
 				TextAtlas_AddInt(idAtlas, id++, ptr);
 			}
-			idAtlas->tex.Y += size;
+			idAtlas->tex.y += size;
 		}
 		xOffset += size * ATLAS2D_TILES_PER_ROW;
 	}	

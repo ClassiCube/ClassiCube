@@ -9,13 +9,13 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 /* 2 component vector (2D vector) */
-typedef struct Vec2_ { float X, Y; } Vec2;
+typedef struct Vec2_ { float x, y; } Vec2;
 /* 3 component vector (3D vector) */
-typedef struct Vec3_ { float X, Y, Z; } Vec3;
+typedef struct Vec3_ { float x, y, z; } Vec3;
 /* 3 component vector (3D integer vector) */
-typedef struct IVec3_ { int X, Y, Z; } IVec3;
+typedef struct IVec3_ { int x, y, z; } IVec3;
 /* 4 component vector */
-struct Vec4 { float X, Y, Z, W; };
+struct Vec4 { float x, y, z, w; };
 /* 4x4 matrix. (for vertex transformations) */
 struct Matrix { struct Vec4 row1, row2, row3, row4; };
 
@@ -38,43 +38,43 @@ static CC_INLINE Vec3 Vec3_BigPos(void) {
 }
 
 static CC_INLINE Vec3 Vec3_Create3(float x, float y, float z) {
-	Vec3 v; v.X = x; v.Y = y; v.Z = z; return v;
+	Vec3 v; v.x = x; v.y = y; v.z = z; return v;
 }
 
 /* Sets the X, Y, and Z components of a 3D vector */
-#define Vec3_Set(v, x, y, z) (v).X = x; (v).Y = y; (v).Z = z;
+#define Vec3_Set(v, xVal, yVal, zVal) (v).x = xVal; (v).y = yVal; (v).z = zVal;
 /* Whether all components of a 3D vector are 0 */
-#define Vec3_IsZero(v) ((v).X == 0 && (v).Y == 0 && (v).Z == 0)
+#define Vec3_IsZero(v) ((v).x == 0 && (v).y == 0 && (v).z == 0)
 
 /* Returns the squared length of the vector. */
 /* Squared length can be used for comparison, to avoid a costly sqrt() */
 /* However, you must sqrt() this when adding lengths. */
 static CC_INLINE float Vec3_LengthSquared(const Vec3* v) {
-	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
+	return v->x * v->x + v->y * v->y + v->z * v->z;
 }
 /* Adds components of two vectors together. */
 static CC_INLINE void Vec3_Add(Vec3* result, const Vec3* a, const Vec3* b) {
-	result->X = a->X + b->X; result->Y = a->Y + b->Y; result->Z = a->Z + b->Z;
+	result->x = a->x + b->x; result->y = a->y + b->y; result->z = a->z + b->z;
 }
 /* Adds a value to each component of a vector. */
 static CC_INLINE void Vec3_Add1(Vec3* result, const Vec3* a, float b) {
-	result->X = a->X + b; result->Y = a->Y + b; result->Z = a->Z + b;
+	result->x = a->x + b; result->y = a->y + b; result->z = a->z + b;
 }
 /* Subtracts components of two vectors from each other. */
 static CC_INLINE void Vec3_Sub(Vec3* result, const Vec3* a, const Vec3* b) {
-	result->X = a->X - b->X; result->Y = a->Y - b->Y; result->Z = a->Z - b->Z;
+	result->x = a->x - b->x; result->y = a->y - b->y; result->z = a->z - b->z;
 }
 /* Mulitplies each component of a vector by a value. */
 static CC_INLINE void Vec3_Mul1(Vec3* result, const Vec3* a, float b) {
-	result->X = a->X * b; result->Y = a->Y * b; result->Z = a->Z * b;
+	result->x = a->x * b; result->y = a->y * b; result->z = a->z * b;
 }
 /* Multiplies components of two vectors together. */
 static CC_INLINE void Vec3_Mul3(Vec3* result, const Vec3* a, const Vec3* b) {
-	result->X = a->X * b->X; result->Y = a->Y * b->Y; result->Z = a->Z * b->Z;
+	result->x = a->x * b->x; result->y = a->y * b->y; result->z = a->z * b->z;
 }
 /* Negates the components of a vector. */
 static CC_INLINE void Vec3_Negate(Vec3* result, Vec3* a) {
-	result->X = -a->X; result->Y = -a->Y; result->Z = -a->Z;
+	result->x = -a->x; result->y = -a->y; result->z = -a->z;
 }
 
 #define Vec3_AddBy(dst, value) Vec3_Add(dst, dst, value)
@@ -99,7 +99,7 @@ Vec3 Vec3_RotateZ(Vec3 v, float angle);
 
 /* Whether all of the components of the two vectors are equal. */
 static CC_INLINE cc_bool Vec3_Equals(const Vec3* a, const Vec3* b) {
-	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
+	return a->x == b->x && a->y == b->y && a->z == b->z;
 }
 
 void IVec3_Floor(IVec3* result, const Vec3* a);

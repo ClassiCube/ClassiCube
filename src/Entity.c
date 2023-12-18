@@ -32,7 +32,7 @@ const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock",
 static PackedCol Entity_GetColor(struct Entity* e) {
 	Vec3 eyePos = Entity_GetEyePosition(e);
 	IVec3 pos; IVec3_Floor(&pos, &eyePos);
-	return Lighting.Color(pos.X, pos.Y, pos.Z);
+	return Lighting.Color(pos.x, pos.y, pos.z);
 }
 
 void Entity_Init(struct Entity* e) {
@@ -53,16 +53,16 @@ void Entity_SetName(struct Entity* e, const cc_string* name) {
 }
 
 Vec3 Entity_GetEyePosition(struct Entity* e) {
-	Vec3 pos = e->Position; pos.Y += Entity_GetEyeHeight(e); return pos;
+	Vec3 pos = e->Position; pos.y += Entity_GetEyeHeight(e); return pos;
 }
 
 float Entity_GetEyeHeight(struct Entity* e) {
-	return e->Model->GetEyeY(e) * e->ModelScale.Y;
+	return e->Model->GetEyeY(e) * e->ModelScale.y;
 }
 
 void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* m) {
 	struct Matrix tmp;
-	Matrix_Scale(m, scale.X, scale.Y, scale.Z);
+	Matrix_Scale(m, scale.x, scale.y, scale.z);
 
 	if (e->RotZ) {
 		Matrix_RotateZ( &tmp, -e->RotZ * MATH_DEG2RAD);
@@ -77,7 +77,7 @@ void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* 
 		Matrix_MulBy(m, &tmp);
 	}
 
-	Matrix_Translate(&tmp, pos.X, pos.Y, pos.Z);
+	Matrix_Translate(&tmp, pos.x, pos.y, pos.z);
 	Matrix_MulBy(m,  &tmp);
 	/* return scale * rotZ * rotX * rotY * translate; */
 }
@@ -158,13 +158,13 @@ cc_bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition
 	IVec3_Floor(&bbMin, &bounds->Min);
 	IVec3_Floor(&bbMax, &bounds->Max);
 
-	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World.MaxX);
-	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World.MaxY);
-	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World.MaxZ);
+	bbMin.x = max(bbMin.x, 0); bbMax.x = min(bbMax.x, World.MaxX);
+	bbMin.y = max(bbMin.y, 0); bbMax.y = min(bbMax.y, World.MaxY);
+	bbMin.z = max(bbMin.z, 0); bbMax.z = min(bbMax.z, World.MaxZ);
 
-	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
-		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
-			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
+	for (y = bbMin.y; y <= bbMax.y; y++) { v.y = (float)y;
+		for (z = bbMin.z; z <= bbMax.z; z++) { v.z = (float)z;
+			for (x = bbMin.x; x <= bbMax.x; x++) { v.x = (float)x;
 
 				block = World_GetBlock(x, y, z);
 				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
@@ -181,7 +181,7 @@ cc_bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition
 static cc_bool IsRopeCollide(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB; }
 cc_bool Entity_TouchesAnyRope(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
-	bounds.Max.Y += 0.5f / 16.0f;
+	bounds.Max.y += 0.5f / 16.0f;
 	return Entity_TouchesAny(&bounds, IsRopeCollide);
 }
 
@@ -706,7 +706,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
-	if (p->Hacks.Floating) e->Velocity.Y = 0.0f;
+	if (p->Hacks.Floating) e->Velocity.y = 0.0f;
 
 	e->next.pos = e->Position; e->Position = e->prev.pos;
 	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
@@ -831,22 +831,22 @@ static void LocalPlayer_DoRespawn(void) {
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
 	if (p->Hacks.CanNoclip) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
-		for (y = pos.Y; y <= World.Height; y++) {
+		for (y = pos.y; y <= World.Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);
 
 			if (spawnY == RESPAWN_NOT_FOUND) {
-				block   = World_SafeGetBlock(pos.X, y, pos.Z);
-				height  = Blocks.Collide[block] == COLLIDE_SOLID ? Blocks.MaxBB[block].Y : 0.0f;
-				spawn.Y = y + height + ENTITY_ADJUSTMENT;
+				block   = World_SafeGetBlock(pos.x, y, pos.z);
+				height  = Blocks.Collide[block] == COLLIDE_SOLID ? Blocks.MaxBB[block].y : 0.0f;
+				spawn.y = y + height + ENTITY_ADJUSTMENT;
 				break;
 			}
-			bb.Min.Y += 1.0f; bb.Max.Y += 1.0f;
+			bb.Min.y += 1.0f; bb.Max.y += 1.0f;
 		}
 	}
 
 	/* Adjust the position to be slightly above the ground, so that */
 	/*  it's obvious to the player that they are being respawned */
-	spawn.Y += 2.0f/16.0f;
+	spawn.y += 2.0f/16.0f;
 
 	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
 	update.pos   = spawn;
@@ -857,7 +857,7 @@ static void LocalPlayer_DoRespawn(void) {
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);
-	bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
+	bb.Min.y -= 0.01f; bb.Max.y = bb.Min.y;
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
@@ -886,9 +886,9 @@ cc_bool LocalPlayer_HandleSetSpawn(void) {
 		if (!p->Hacks.CanNoclip) {
 			p->Spawn   = p->Base.Position;
 		} else {
-			p->Spawn.X = Math_Floor(p->Base.Position.X) + 0.5f;
-			p->Spawn.Y = p->Base.Position.Y;
-			p->Spawn.Z = Math_Floor(p->Base.Position.Z) + 0.5f;
+			p->Spawn.x = Math_Floor(p->Base.Position.x) + 0.5f;
+			p->Spawn.y = p->Base.Position.y;
+			p->Spawn.z = Math_Floor(p->Base.Position.z) + 0.5f;
 		}
 		
 		p->SpawnYaw   = p->Base.Yaw;
@@ -913,7 +913,7 @@ cc_bool LocalPlayer_HandleNoclip(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
-		if (p->Hacks.Noclip) p->Base.Velocity.Y = 0;
+		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
 
 		HacksComp_SetNoclip(&p->Hacks, !p->Hacks.Noclip);
 		return true;

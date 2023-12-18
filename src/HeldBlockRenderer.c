@@ -51,21 +51,21 @@ static void HeldBlockRenderer_RenderModel(void) {
 static void SetMatrix(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	struct Matrix lookAt;
-	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
+	Vec3 eye = { 0,0,0 }; eye.y = Entity_GetEyeHeight(p);
 
-	Matrix_Translate(&lookAt, -eye.X, -eye.Y, -eye.Z);
+	Matrix_Translate(&lookAt, -eye.x, -eye.y, -eye.z);
 	Matrix_Mul(&Gfx.View, &lookAt, &Camera.TiltM);
 }
 
 static void ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
+	Vec3 eye = { 0,0,0 }; eye.y = Entity_GetEyeHeight(p);
 	held_entity.Position = eye;
 
-	held_entity.Position.X -= Camera.BobbingHor;
-	held_entity.Position.Y -= Camera.BobbingVer;
-	held_entity.Position.Z -= Camera.BobbingHor;
+	held_entity.Position.x -= Camera.BobbingHor;
+	held_entity.Position.y -= Camera.BobbingVer;
+	held_entity.Position.z -= Camera.BobbingHor;
 
 	held_entity.Yaw   = -45.0f; held_entity.RotY = -45.0f;
 	held_entity.Pitch = 0.0f;   held_entity.RotX = 0.0f;
@@ -86,8 +86,8 @@ static void SetBaseOffset(void) {
 
 	Vec3_AddBy(&held_entity.Position, &offset);
 	if (!sprite && Blocks.Draw[held_block] != DRAW_GAS) {
-		float height = Blocks.MaxBB[held_block].Y - Blocks.MinBB[held_block].Y;
-		held_entity.Position.Y += 0.2f * (1.0f - height);
+		float height = Blocks.MaxBB[held_block].y - Blocks.MinBB[held_block].y;
+		held_entity.Position.y += 0.2f * (1.0f - height);
 	}
 }
 
@@ -113,9 +113,9 @@ static void HeldBlockRenderer_DigAnimation(void) {
 	sinHalfCircle = Math_Sin(t * MATH_PI);
 	sqrtLerpPI    = Math_SqrtF(t) * MATH_PI;
 
-	held_entity.Position.X -= (float)Math_Sin(sqrtLerpPI)     * 0.4f;
-	held_entity.Position.Y += (float)Math_Sin(sqrtLerpPI * 2) * 0.2f;
-	held_entity.Position.Z -= (float)sinHalfCircle            * 0.2f;
+	held_entity.Position.x -= (float)Math_Sin(sqrtLerpPI)     * 0.4f;
+	held_entity.Position.y += (float)Math_Sin(sqrtLerpPI * 2) * 0.2f;
+	held_entity.Position.z -= (float)sinHalfCircle            * 0.2f;
 
 	sinHalfCircleWeird = Math_Sin(t * t * MATH_PI);
 	held_entity.RotY  -= (float)Math_Sin(sqrtLerpPI) * 80.0f;
@@ -185,7 +185,7 @@ static void DoAnimation(double delta, float lastSwingY) {
 	if (held_swinging || !held_breaking) {
 		t = held_time / held_period;
 		held_swingY = -0.4f * (float)Math_Sin(t * MATH_PI);
-		held_entity.Position.Y += held_swingY;
+		held_entity.Position.y += held_swingY;
 
 		if (held_swinging) {
 			/* i.e. the block has gone to bottom of screen and is now returning back up. 

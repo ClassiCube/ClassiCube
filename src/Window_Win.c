@@ -677,7 +677,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BitBlt(win_DC, r.X, r.Y, r.Width, r.Height, draw_DC, r.X, r.Y, SRCCOPY);
+	BitBlt(win_DC, r.x, r.y, r.Width, r.Height, draw_DC, r.x, r.y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);
 }
 

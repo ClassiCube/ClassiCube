@@ -193,10 +193,10 @@ void Window_DrawFramebuffer(Rect2D r) {
 	//  however this will cause pbkit's attempt to install an interrupt
 	//  handler fail - so instead just accept tearing in the launcher
 
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
-	cc_uint32* dst = (cc_uint32*)fb           + r.X;
+	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.x;
+	cc_uint32* dst = (cc_uint32*)fb           + r.x;
 
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
 		Mem_Copy(dst + y * fb_bmp.width, src + y * fb_bmp.width, r.Width * 4);
 	}

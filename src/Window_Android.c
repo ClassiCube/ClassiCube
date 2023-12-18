@@ -466,8 +466,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 	/* window not created yet */
 	if (!win_handle) return;
-	b.left = r.X; b.right  = r.X + r.Width;
-	b.top  = r.Y; b.bottom = r.Y + r.Height;
+	b.left = r.x; b.right  = r.x + r.Width;
+	b.top  = r.y; b.bottom = r.y + r.Height;
 
 	/* Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 	res  = ANativeWindow_lock(win_handle, &buffer, &b);

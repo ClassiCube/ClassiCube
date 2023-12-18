@@ -20,9 +20,9 @@ struct _ModelsData Models;
 #define UV_POS_MASK ((cc_uint16)0x7FFF)
 #define UV_MAX ((cc_uint16)0x8000)
 #define UV_MAX_SHIFT 15
-#define AABB_Width(bb)  ((bb)->Max.X - (bb)->Min.X)
-#define AABB_Height(bb) ((bb)->Max.Y - (bb)->Min.Y)
-#define AABB_Length(bb) ((bb)->Max.Z - (bb)->Min.Z)
+#define AABB_Width(bb)  ((bb)->Max.x - (bb)->Min.x)
+#define AABB_Height(bb) ((bb)->Max.y - (bb)->Min.y)
+#define AABB_Length(bb) ((bb)->Max.z - (bb)->Min.z)
 
 
 /*########################################################################################################################*
@@ -66,8 +66,8 @@ cc_bool Model_ShouldRender(struct Entity* e) {
 
 	maxYZ  = max(bbHeight, bbLength);
 	maxXYZ = max(bbWidth,  maxYZ);
-	pos.Y += bbHeight * 0.5f; /* Centre Y coordinate. */
-	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
+	pos.y += bbHeight * 0.5f; /* Centre Y coordinate. */
+	return FrustumCulling_SphereInFrustum(pos.x, pos.y, pos.z, maxXYZ);
 }
 
 static float Model_MinDist(float dist, float extent) {
@@ -85,20 +85,20 @@ float Model_RenderDistance(struct Entity* e) {
 
 	/* X and Z are already at centre of model */
 	/* Y is at feet, so needs to be moved up to centre */
-	pos.Y += AABB_Height(bb) * 0.5f;
+	pos.y += AABB_Height(bb) * 0.5f;
 
-	dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb)  * 0.5f);
-	dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
-	dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
+	dx = Model_MinDist(camPos.x - pos.x, AABB_Width(bb)  * 0.5f);
+	dy = Model_MinDist(camPos.y - pos.y, AABB_Height(bb) * 0.5f);
+	dz = Model_MinDist(camPos.z - pos.z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;
 }
 
 void Model_Render(struct Model* model, struct Entity* e) {
 	struct Matrix m;
 	Vec3 pos = e->Position;
-	if (model->bobbing) pos.Y += e->Anim.BobbingModel;
+	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 	/* Original classic offsets models slightly into ground */
-	if (Game_ClassicMode) pos.Y -= 1.5f / 16.0f;
+	if (Game_ClassicMode) pos.y -= 1.5f / 16.0f;
 
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -213,7 +213,7 @@ void Model_DrawPart(struct ModelPart* part) {
 
 	for (i = 0; i < count; i++) {
 		v = *src;
-		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
+		dst->x = v.x; dst->y = v.y; dst->z = v.z;
 		dst->Col = Models.Cols[i >> 2];
 
 		dst->U = (v.U & UV_POS_MASK) * Models.uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
@@ -223,9 +223,9 @@ void Model_DrawPart(struct ModelPart* part) {
 	model->index += count;
 }
 
-#define Model_RotateX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
-#define Model_RotateY t = cosY * v.X - sinY * v.Z; v.Z =  sinY * v.X + cosY * v.Z; v.X = t;
-#define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
+#define Model_RotateX t = cosX * v.y + sinX * v.z; v.z = -sinX * v.y + cosX * v.z; v.y = t;
+#define Model_RotateY t = cosY * v.x - sinY * v.z; v.z =  sinY * v.x + cosY * v.z; v.x = t;
+#define Model_RotateZ t = cosZ * v.x + sinZ * v.y; v.y = -sinZ * v.x + cosZ * v.y; v.x = t;
 
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, cc_bool head) {
 	struct Model* model        = Models.Active;
@@ -242,7 +242,7 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 
 	for (i = 0; i < count; i++) {
 		v = *src;
-		v.X -= x; v.Y -= y; v.Z -= z;
+		v.x -= x; v.y -= y; v.z -= z;
 
 		/* Rotate locally */
 		if (Models.Rotation == ROTATE_ORDER_ZYX) {
@@ -265,9 +265,9 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 
 		/* Rotate globally (inlined RotY) */
 		if (head) {
-			t = Models.cosHead * v.X - Models.sinHead * v.Z; v.Z = Models.sinHead * v.X + Models.cosHead * v.Z; v.X = t;
+			t = Models.cosHead * v.x - Models.sinHead * v.z; v.z = Models.sinHead * v.x + Models.cosHead * v.z; v.x = t;
 		}
-		dst->X = v.X + x; dst->Y = v.Y + y; dst->Z = v.Z + z;
+		dst->x = v.x + x; dst->y = v.y + y; dst->z = v.z + z;
 		dst->Col = Models.Cols[i >> 2];
 
 		dst->U = (v.U & UV_POS_MASK) * Models.uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
@@ -280,7 +280,7 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 void Model_RenderArm(struct Model* model, struct Entity* e) {
 	struct Matrix m, translate;
 	Vec3 pos = e->Position;
-	if (model->bobbing) pos.Y += e->Anim.BobbingModel;
+	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -382,7 +382,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc)
 	/* rotate left and right 90 degrees	*/
 	for (i = m->index - 8; i < m->index; i++) {
 		struct ModelVertex vertex = m->vertices[i];
-		float z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
+		float z = vertex.z; vertex.z = vertex.y; vertex.y = z;
 		m->vertices[i] = vertex;
 	}
 
@@ -528,8 +528,8 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const cc_str
 struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
 void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part) {
-	float x1 = part->min.X, y1 = part->min.Y, z1 = part->min.Z;
-	float x2 = part->max.X, y2 = part->max.Y, z2 = part->max.Z;
+	float x1 = part->min.x, y1 = part->min.y, z1 = part->min.z;
+	float x2 = part->max.x, y2 = part->max.y, z2 = part->max.z;
 	struct CustomModelPart* p  = &cm->parts[cm->curPartIndex];
 
 	cm->model.index   = cm->curPartIndex * MODEL_BOX_VERTICES;
@@ -557,7 +557,7 @@ void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* pa
 		part->u2[5],                         part->v2[5]);
 
 	ModelPart_Init(&p->modelPart, cm->model.index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
-		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z);
+		part->rotationOrigin.x, part->rotationOrigin.y, part->rotationOrigin.z);
 }
 
 /* fmodf behaves differently on negatives vs positives,
@@ -671,9 +671,9 @@ static void CustomModel_DrawPart(
 	/* bbmodels use xyz rotation order */
 	Models.Rotation = ROTATE_ORDER_XYZ;
 	
-	rotX = part->rotation.X * MATH_DEG2RAD;
-	rotY = part->rotation.Y * MATH_DEG2RAD;
-	rotZ = part->rotation.Z * MATH_DEG2RAD;
+	rotX = part->rotation.x * MATH_DEG2RAD;
+	rotY = part->rotation.y * MATH_DEG2RAD;
+	rotZ = part->rotation.z * MATH_DEG2RAD;
 
 	for (animIndex = 0; animIndex < MAX_CUSTOM_MODEL_ANIMS; animIndex++) 
 	{
@@ -711,15 +711,15 @@ static void CustomModel_DrawPart(
 				struct ModelVertex* vertex = &cm->model.vertices[part->modelPart.offset + i];
 				switch (anim->axis) {
 					case CustomModelAnimAxis_X:
-						vertex->X += value;
+						vertex->x += value;
 						break;
 
 					case CustomModelAnimAxis_Y:
-						vertex->Y += value;
+						vertex->y += value;
 						break;
 
 					case CustomModelAnimAxis_Z:
-						vertex->Z += value;
+						vertex->z += value;
 						break;
 				}
 			}
@@ -733,15 +733,15 @@ static void CustomModel_DrawPart(
 				struct ModelVertex* vertex = &cm->model.vertices[part->modelPart.offset + i];
 				switch (anim->axis) {
 					case CustomModelAnimAxis_X:
-						vertex->X = Math_Lerp(part->modelPart.rotX, vertex->X, value);
+						vertex->x = Math_Lerp(part->modelPart.rotX, vertex->x, value);
 						break;
 
 					case CustomModelAnimAxis_Y:
-						vertex->Y = Math_Lerp(part->modelPart.rotY, vertex->Y, value);
+						vertex->y = Math_Lerp(part->modelPart.rotY, vertex->y, value);
 						break;
 
 					case CustomModelAnimAxis_Z:
-						vertex->Z = Math_Lerp(part->modelPart.rotZ, vertex->Z, value);
+						vertex->z = Math_Lerp(part->modelPart.rotZ, vertex->z, value);
 						break;
 				}
 			}
@@ -1169,9 +1169,9 @@ CC_NOINLINE static void ChibiModel_ScalePart(struct ModelPart* dst, struct Model
 	for (i = src->offset; i < src->offset + src->count; i++) {
 		chibi->vertices[i] = human_model.vertices[i];
 
-		chibi->vertices[i].X *= 0.5f;
-		chibi->vertices[i].Y *= 0.5f;
-		chibi->vertices[i].Z *= 0.5f;
+		chibi->vertices[i].x *= 0.5f;
+		chibi->vertices[i].y *= 0.5f;
+		chibi->vertices[i].z *= 0.5f;
 	}
 }
 
@@ -1257,7 +1257,7 @@ static void ChibiModel_Register(void) {
 #define SIT_OFFSET 10.0f
 
 static void SittingModel_GetTransform(struct Entity* e, Vec3 pos, struct Matrix* m) {
-	pos.Y -= (SIT_OFFSET / 16.0f) * e->ModelScale.Y;
+	pos.y -= (SIT_OFFSET / 16.0f) * e->ModelScale.y;
 	Entity_GetTransform(e, pos, e->ModelScale, m);
 }
 
@@ -1320,7 +1320,7 @@ static void CorpseModel_Register(void) {
 #define HEAD_MAX_VERTICES (2 * MODEL_BOX_VERTICES)
 
 static void HeadModel_GetTransform(struct Entity* e, Vec3 pos, struct Matrix* m) {
-	pos.Y -= (24.0f/16.0f) * e->ModelScale.Y;
+	pos.y -= (24.0f/16.0f) * e->ModelScale.y;
 	Entity_GetTransform(e, pos, e->ModelScale, m);
 }
 
@@ -2027,13 +2027,13 @@ static struct VertexTextured* bModel_vertices;
 
 static float BlockModel_GetNameY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
-	return Blocks.MaxBB[block].Y + 0.075f;
+	return Blocks.MaxBB[block].y + 0.075f;
 }
 
 static float BlockModel_GetEyeY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
-	float minY    = Blocks.MinBB[block].Y;
-	float maxY    = Blocks.MaxBB[block].Y;
+	float minY    = Blocks.MinBB[block].y;
+	float maxY    = Blocks.MaxBB[block].y;
 	return (minY + maxY) / 2.0f;
 }
 
@@ -2047,9 +2047,9 @@ static void BlockModel_GetSize(struct Entity* e) {
 	Vec3_SubBy(size, &shrink);
 
 	/* fix for 0 size blocks */
-	size->X = max(size->X, 0.125f/16.0f);
-	size->Y = max(size->Y, 0.125f/16.0f);
-	size->Z = max(size->Z, 0.125f/16.0f);
+	size->x = max(size->x, 0.125f/16.0f);
+	size->y = max(size->y, 0.125f/16.0f);
+	size->z = max(size->z, 0.125f/16.0f);
 }
 
 static void BlockModel_GetBounds(struct Entity* e) {
@@ -2088,10 +2088,10 @@ static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 	ptr   = bModel_vertices;
 	v.Col = col;
 
-	v.X = xz1; v.Y = 0.0f; v.Z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
-	           v.Y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
-	v.X = xz2;             v.Z = xz2; v.U = rec.U1;               *ptr++ = v;
-	           v.Y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
+	v.x = xz1; v.y = 0.0f; v.z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
+	           v.y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
+	v.x = xz2;             v.z = xz2; v.U = rec.U1;               *ptr++ = v;
+	           v.y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
 
 	bModel_vertices = ptr;
 }
@@ -2118,10 +2118,10 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 	ptr   = bModel_vertices;
 	v.Col = col;
 
-	v.X = x1; v.Y = 0.0f; v.Z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
-	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
-	v.X = x2;             v.Z = z2; v.U = rec.U1;               *ptr++ = v;
-	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
+	v.x = x1; v.y = 0.0f; v.z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
+	          v.y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
+	v.x = x2;             v.z = z2; v.U = rec.U1;               *ptr++ = v;
+	          v.y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
 
 	bModel_vertices = ptr;
 }
@@ -2147,16 +2147,16 @@ static void BlockModel_BuildParts(struct Entity* e, cc_bool sprite) {
 		BlockModel_SpriteXQuad(true, false);
 		BlockModel_SpriteXQuad(true, true);
 	} else {
-		Drawer.MinBB = Blocks.MinBB[bModel_block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
-		Drawer.MaxBB = Blocks.MaxBB[bModel_block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
+		Drawer.MinBB = Blocks.MinBB[bModel_block]; Drawer.MinBB.y = 1.0f - Drawer.MinBB.y;
+		Drawer.MaxBB = Blocks.MaxBB[bModel_block]; Drawer.MaxBB.y = 1.0f - Drawer.MaxBB.y;
 		Drawer.Tinted  = Blocks.Tinted[bModel_block];
 		Drawer.TintCol = Blocks.FogCol[bModel_block];
 
 		min = Blocks.RenderMinBB[bModel_block];
 		max = Blocks.RenderMaxBB[bModel_block];
 
-		Drawer.X1 = min.X - 0.5f; Drawer.Y1 = min.Y; Drawer.Z1 = min.Z - 0.5f;
-		Drawer.X2 = max.X - 0.5f; Drawer.Y2 = max.Y; Drawer.Z2 = max.Z - 0.5f;		
+		Drawer.X1 = min.x - 0.5f; Drawer.Y1 = min.y; Drawer.Z1 = min.z - 0.5f;
+		Drawer.X2 = max.x - 0.5f; Drawer.Y2 = max.y; Drawer.Z2 = max.z - 0.5f;		
 
 		loc = BlockModel_GetTex(FACE_YMIN); Drawer_YMin(1, Models.Cols[1], loc, &ptr);
 		loc = BlockModel_GetTex(FACE_ZMIN); Drawer_ZMin(1, Models.Cols[3], loc, &ptr);
@@ -2285,7 +2285,7 @@ static void SkinnedCubeModel_Register(void) {
 static void RecalcProperties(struct Entity* e) {
 	// Calculate block ID based on the X scale of the model
 	// E.g, hold|1.001 = stone (ID = 1), hold|1.041 = gold (ID = 41) etc.
-	BlockID block = (BlockID)((e->ModelScale.X - 0.9999f) * 1000);
+	BlockID block = (BlockID)((e->ModelScale.x - 0.9999f) * 1000);
 
 	if (block > 0) {
 		// Change the block that the player is holding
@@ -2302,7 +2302,7 @@ static void DrawBlockTransform(struct Entity* e, float dispX, float dispY, float
 	static struct Matrix m, temp;
 
 	pos = e->Position;
-	pos.Y += e->Anim.BobbingModel;
+	pos.y += e->Anim.BobbingModel;
 
 	Entity_GetTransform(e, pos, e->ModelScale, &m);
 	Matrix_Mul(&m, &m, &Gfx.View);

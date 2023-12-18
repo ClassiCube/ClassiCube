@@ -19,7 +19,7 @@ static cc_bool shadows_boundTex;
 static GfxResourceID shadows_VB;
 static GfxResourceID shadows_tex;
 static float shadow_radius, shadow_uvScale;
-struct ShadowData { float Y; BlockID Block; cc_uint8 A; };
+struct ShadowData { float y; BlockID Block; cc_uint8 A; };
 
 /* Circle shadows extend at most 4 blocks vertically */
 #define SHADOW_MAX_RANGE 4 
@@ -42,24 +42,24 @@ static void EntityShadow_DrawCoords(struct VertexTextured** vertices, struct Ent
 	if (lequal(x2, x1) || lequal(z2, z1)) return;
 	cen = e->Position;
 
-	u1 = (x1 - cen.X) * shadow_uvScale + 0.5f;
-	v1 = (z1 - cen.Z) * shadow_uvScale + 0.5f;
-	u2 = (x2 - cen.X) * shadow_uvScale + 0.5f;
-	v2 = (z2 - cen.Z) * shadow_uvScale + 0.5f;
+	u1 = (x1 - cen.x) * shadow_uvScale + 0.5f;
+	v1 = (z1 - cen.z) * shadow_uvScale + 0.5f;
+	u2 = (x2 - cen.x) * shadow_uvScale + 0.5f;
+	v2 = (z2 - cen.z) * shadow_uvScale + 0.5f;
 	if (u2 <= 0.0f || v2 <= 0.0f || u1 >= 1.0f || v1 >= 1.0f) return;
 
-	x1 = max(x1, cen.X - shadow_radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
-	z1 = max(z1, cen.Z - shadow_radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
-	x2 = min(x2, cen.X + shadow_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
-	z2 = min(z2, cen.Z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
+	x1 = max(x1, cen.x - shadow_radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
+	z1 = max(z1, cen.z - shadow_radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
+	x2 = min(x2, cen.x + shadow_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
+	z2 = min(z2, cen.z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
 	v   = *vertices;
 	col = PackedCol_Make(255, 255, 255, data->A);
 
-	v->X = x1; v->Y = data->Y; v->Z = z1; v->Col = col; v->U = u1; v->V = v1; v++;
-	v->X = x2; v->Y = data->Y; v->Z = z1; v->Col = col; v->U = u2; v->V = v1; v++;
-	v->X = x2; v->Y = data->Y; v->Z = z2; v->Col = col; v->U = u2; v->V = v2; v++;
-	v->X = x1; v->Y = data->Y; v->Z = z2; v->Col = col; v->U = u1; v->V = v2; v++;
+	v->x = x1; v->y = data->y; v->z = z1; v->Col = col; v->U = u1; v->V = v1; v++;
+	v->x = x2; v->y = data->y; v->z = z1; v->Col = col; v->U = u2; v->V = v1; v++;
+	v->x = x2; v->y = data->y; v->z = z2; v->Col = col; v->U = u2; v->V = v2; v++;
+	v->x = x1; v->y = data->y; v->z = z2; v->Col = col; v->U = u1; v->V = v2; v++;
 
 	*vertices = v;
 }
@@ -69,10 +69,10 @@ static void EntityShadow_DrawSquareShadow(struct VertexTextured** vertices, floa
 	float     uv1 = 63/128.0f, uv2 = 64/128.0f;
 	struct VertexTextured* v = *vertices;
 
-	v->X = x;     v->Y = y; v->Z = z;     v->Col = col; v->U = uv1; v->V = uv1; v++;
-	v->X = x + 1; v->Y = y; v->Z = z;     v->Col = col; v->U = uv2; v->V = uv1; v++;
-	v->X = x + 1; v->Y = y; v->Z = z + 1; v->Col = col; v->U = uv2; v->V = uv2; v++;
-	v->X = x;     v->Y = y; v->Z = z + 1; v->Col = col; v->U = uv1; v->V = uv2; v++;
+	v->x = x;     v->y = y; v->z = z;     v->Col = col; v->U = uv1; v->V = uv1; v++;
+	v->x = x + 1; v->y = y; v->z = z;     v->Col = col; v->U = uv2; v->V = uv1; v++;
+	v->x = x + 1; v->y = y; v->z = z + 1; v->Col = col; v->U = uv2; v->V = uv2; v++;
+	v->x = x;     v->y = y; v->z = z + 1; v->Col = col; v->U = uv1; v->V = uv2; v++;
 
 	*vertices = v;
 }
@@ -85,33 +85,33 @@ static void EntityShadow_DrawCircle(struct VertexTextured** vertices, struct Ent
 	x = (float)Math_Floor(x); z = (float)Math_Floor(z);
 	min = Blocks.MinBB[data[0].Block]; max = Blocks.MaxBB[data[0].Block];
 
-	EntityShadow_DrawCoords(vertices, e, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
+	EntityShadow_DrawCoords(vertices, e, &data[0], x + min.x, z + min.z, x + max.x, z + max.z);
 	for (i = 1; i < 4; i++) 
 	{
 		if (data[i].Block == BLOCK_AIR) return;
 		nMin = Blocks.MinBB[data[i].Block]; nMax = Blocks.MaxBB[data[i].Block];
 
-		EntityShadow_DrawCoords(vertices, e, &data[i], x +  min.X, z + nMin.Z, x +  max.X, z +  min.Z);
-		EntityShadow_DrawCoords(vertices, e, &data[i], x +  min.X, z +  max.Z, x +  max.X, z + nMax.Z);
+		EntityShadow_DrawCoords(vertices, e, &data[i], x +  min.x, z + nMin.z, x +  max.x, z +  min.z);
+		EntityShadow_DrawCoords(vertices, e, &data[i], x +  min.x, z +  max.z, x +  max.x, z + nMax.z);
 
-		EntityShadow_DrawCoords(vertices, e, &data[i], x + nMin.X, z + nMin.Z, x +  min.X, z + nMax.Z);
-		EntityShadow_DrawCoords(vertices, e, &data[i], x +  max.X, z + nMin.Z, x + nMax.X, z + nMax.Z);
+		EntityShadow_DrawCoords(vertices, e, &data[i], x + nMin.x, z + nMin.z, x +  min.x, z + nMax.z);
+		EntityShadow_DrawCoords(vertices, e, &data[i], x +  max.x, z + nMin.z, x + nMax.x, z + nMax.z);
 		min = nMin; max = nMax;
 	}
 }
 
 static void EntityShadow_CalcAlpha(float playerY, struct ShadowData* data) {
-	float height = playerY - data->Y;
+	float height = playerY - data->y;
 	if (height <= 6.0f) {
 		data->A = (cc_uint8)(160 - 160 * height / 6.0f);
-		data->Y += 1.0f / 64.0f; return;
+		data->y += 1.0f / 64.0f; return;
 	}
 
 	data->A = 0;
-	if (height <= 16.0f)      data->Y += 1.0f / 64.0f;
-	else if (height <= 32.0f) data->Y += 1.0f / 16.0f;
-	else if (height <= 96.0f) data->Y += 1.0f / 8.0f;
-	else data->Y += 1.0f / 4.0f;
+	if (height <= 16.0f)      data->y += 1.0f / 64.0f;
+	else if (height <= 32.0f) data->y += 1.0f / 16.0f;
+	else if (height <= 96.0f) data->y += 1.0f / 8.0f;
+	else data->y += 1.0f / 4.0f;
 }
 
 static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, struct ShadowData* data) {
@@ -124,7 +124,7 @@ static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, str
 
 	for (i = 0; i < 4; i++) { data[i] = zeroData; }
 	cur     = data;
-	posY    = e->Position.Y;
+	posY    = e->Position.y;
 	outside = !World_ContainsXZ(x, z);
 
 	for (i = 0; y >= 0 && i < 4; y--) 
@@ -141,20 +141,20 @@ static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, str
 
 		draw = Blocks.Draw[block];
 		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Blocks.IsLiquid[block]) continue;
-		topY = y + Blocks.MaxBB[block].Y;
+		topY = y + Blocks.MaxBB[block].y;
 		if (topY >= posY + 0.01f) continue;
 
-		cur->Block = block; cur->Y = topY;
+		cur->Block = block; cur->y = topY;
 		EntityShadow_CalcAlpha(posY, cur);
 		i++; cur++;
 
 		/* Check if the casted shadow will continue on further down. */
-		if (Blocks.MinBB[block].X == 0.0f && Blocks.MaxBB[block].X == 1.0f &&
-			Blocks.MinBB[block].Z == 0.0f && Blocks.MaxBB[block].Z == 1.0f) return true;
+		if (Blocks.MinBB[block].x == 0.0f && Blocks.MaxBB[block].x == 1.0f &&
+			Blocks.MinBB[block].z == 0.0f && Blocks.MaxBB[block].z == 1.0f) return true;
 	}
 
 	if (i < 4) {
-		cur->Block = Env.EdgeBlock; cur->Y = 0.0f;
+		cur->Block = Env.EdgeBlock; cur->y = 0.0f;
 		EntityShadow_CalcAlpha(posY, cur);
 		i++; cur++;
 	}
@@ -171,22 +171,22 @@ static void EntityShadow_Draw(struct Entity* e) {
 	int x1, z1, x2, z2;
 
 	pos = e->Position;
-	if (pos.Y < 0.0f) return;
-	y = min((int)pos.Y, World.MaxY);
+	if (pos.y < 0.0f) return;
+	y = min((int)pos.y, World.MaxY);
 
-	radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->shadowScale;
+	radius = 7.0f * min(e->ModelScale.y, 1.0f) * e->Model->shadowScale;
 	shadow_radius  = radius / 16.0f;
 	shadow_uvScale = 16.0f / (radius * 2.0f);
 
 	ptr = vertices;
 	if (Entities.ShadowsMode == SHADOW_MODE_SNAP_TO_BLOCK) {
-		x1 = Math_Floor(pos.X); z1 = Math_Floor(pos.Z);
+		x1 = Math_Floor(pos.x); z1 = Math_Floor(pos.z);
 		if (!EntityShadow_GetBlocks(e, x1, y, z1, data)) return;
 
-		EntityShadow_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
+		EntityShadow_DrawSquareShadow(&ptr, data[0].y, x1, z1);
 	} else {
-		x1 = Math_Floor(pos.X - shadow_radius); z1 = Math_Floor(pos.Z - shadow_radius);
-		x2 = Math_Floor(pos.X + shadow_radius); z2 = Math_Floor(pos.Z + shadow_radius);
+		x1 = Math_Floor(pos.x - shadow_radius); z1 = Math_Floor(pos.z - shadow_radius);
+		x2 = Math_Floor(pos.x + shadow_radius); z2 = Math_Floor(pos.z + shadow_radius);
 
 		if (EntityShadow_GetBlocks(e, x1, y, z1, data) && data[0].A > 0) {
 			EntityShadow_DrawCircle(&ptr, e, data, (float)x1, (float)z1);
@@ -301,7 +301,7 @@ static void MakeNameTexture(struct Entity* e) {
 
 	if (!width) {
 		e->NameTex.ID = 0;
-		e->NameTex.X  = NAME_IS_EMPTY;
+		e->NameTex.x  = NAME_IS_EMPTY;
 	} else {
 		String_InitArray(colorlessName, colorlessBuffer);
 		width  += NAME_OFFSET; 
@@ -334,7 +334,7 @@ static void DrawName(struct Entity* e) {
 	Vec2 size;
 
 	if (!e->VTABLE->ShouldRenderName(e)) return;
-	if (e->NameTex.X == NAME_IS_EMPTY)   return;
+	if (e->NameTex.x == NAME_IS_EMPTY)   return;
 	if (!e->NameTex.ID) MakeNameTexture(e);
 	Gfx_BindTexture(e->NameTex.ID);
 
@@ -344,15 +344,15 @@ static void DrawName(struct Entity* e) {
 	model = e->Model;
 	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
 
-	scale  = e->ModelScale.Y;
+	scale  = e->ModelScale.y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
-	size.X = e->NameTex.Width * scale; size.Y = e->NameTex.Height * scale;
+	size.x = e->NameTex.Width * scale; size.y = e->NameTex.Height * scale;
 
 	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
 		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
-		scale = pos.X * mat.row1.W + pos.Y * mat.row2.W + pos.Z * mat.row3.W + mat.row4.W;
-		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
+		scale = pos.x * mat.row1.w + pos.y * mat.row2.w + pos.z * mat.row3.w + mat.row4.w;
+		size.x *= scale * 0.2f; size.y *= scale * 0.2f;
 	}
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -366,7 +366,7 @@ static void DrawName(struct Entity* e) {
 
 void EntityNames_Delete(struct Entity* e) {
 	Gfx_DeleteTexture(&e->NameTex.ID);
-	e->NameTex.X = 0; /* X is used as an 'empty name' flag */
+	e->NameTex.x = 0; /* X is used as an 'empty name' flag */
 }
 
 

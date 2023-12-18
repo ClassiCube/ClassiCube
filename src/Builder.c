@@ -506,31 +506,31 @@ static void Builder_DrawSprite(int x, int y, int z) {
 
 	/* Draw Z axis */
 	index = part->sOffset;
-	v.X = x1; v.Y = y1; v.Z = z1; v.U = s_u2; v.V = v2; Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x2;           v.Z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v.x = x1; v.y = y1; v.z = z1; v.U = s_u2; v.V = v2; Builder_Vertices[index + 0] = v;
+	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.x = x2;           v.z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw Z axis mirrored */
 	index += part->sAdvance;
-	v.X = x2; v.Y = y1; v.Z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x1;           v.Z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v.x = x2; v.y = y1; v.z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
+	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.x = x1;           v.z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw X axis */
 	index += part->sAdvance;
-	v.X = x1; v.Y = y1; v.Z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x2;           v.Z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v.x = x1; v.y = y1; v.z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
+	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.x = x2;           v.z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw X axis mirrored */
 	index += part->sAdvance;
-	v.X = x2; v.Y = y1; v.Z = z1; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x1;           v.Z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v.x = x2; v.y = y1; v.z = z1; v.U = s_u2;           Builder_Vertices[index + 0] = v;
+	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.x = x1;           v.z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	part->sOffset += 4;
 }
@@ -659,12 +659,12 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 	baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	lightFlags = Blocks.LightOffset[Builder_Block];
 
-	Drawer.MinBB = Blocks.MinBB[Builder_Block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
-	Drawer.MaxBB = Blocks.MaxBB[Builder_Block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
+	Drawer.MinBB = Blocks.MinBB[Builder_Block]; Drawer.MinBB.y = 1.0f - Drawer.MinBB.y;
+	Drawer.MaxBB = Blocks.MaxBB[Builder_Block]; Drawer.MaxBB.y = 1.0f - Drawer.MaxBB.y;
 
 	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
-	Drawer.X1 = x + min.X; Drawer.Y1 = y + min.Y; Drawer.Z1 = z + min.Z;
-	Drawer.X2 = x + max.X; Drawer.Y2 = y + max.Y; Drawer.Z2 = z + max.Z;
+	Drawer.X1 = x + min.x; Drawer.Y1 = y + min.y; Drawer.Z1 = z + min.z;
+	Drawer.X2 = x + max.x; Drawer.Y2 = y + max.y; Drawer.Z2 = z + max.z;
 
 	Drawer.Tinted  = Blocks.Tinted[Builder_Block];
 	Drawer.TintCol = Blocks.FogCol[Builder_Block];
@@ -941,9 +941,9 @@ static void Adv_DrawXMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
-	float u1 = adv_minBB.Z, u2 = (count - 1) + adv_maxBB.Z * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
+	float u1 = adv_minBB.z, u2 = (count - 1) + adv_maxBB.z * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -964,17 +964,17 @@ static void Adv_DrawXMin(int count) {
 	}
 
 	vertices = part->fVertices[FACE_XMIN];
-	v.X = adv_x1;
+	v.x = adv_x1;
 	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
-		v.Y = adv_y2; v.Z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
-		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
-		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
-		v.Y = adv_y2;                                       v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.y = adv_y2; v.z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
+		v.y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
+		              v.z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
+		v.y = adv_y2;                                       v.V = v1; v.Col = col1_1; *vertices++ = v;
 	} else {
-		v.Y = adv_y2; v.Z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
-		              v.Z = adv_z1;               v.U = u1;           v.Col = col1_0; *vertices++ = v;
-		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
-		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
+		v.y = adv_y2; v.z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		              v.z = adv_z1;               v.U = u1;           v.Col = col1_0; *vertices++ = v;
+		v.y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
+		              v.z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
 	}
 	part->fVertices[FACE_XMIN] = vertices;
 }
@@ -983,9 +983,9 @@ static void Adv_DrawXMax(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
-	float u1 = (count - adv_minBB.Z), u2 = (1 - adv_maxBB.Z) * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
+	float u1 = (count - adv_minBB.z), u2 = (1 - adv_maxBB.z) * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1006,17 +1006,17 @@ static void Adv_DrawXMax(int count) {
 	}
 
 	vertices = part->fVertices[FACE_XMAX];
-	v.X = adv_x2;
+	v.x = adv_x2;
 	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
-		v.Y = adv_y2; v.Z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
-		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col1_1; *vertices++ = v;
-		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
-		              v.Z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		v.y = adv_y2; v.z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
+		              v.z = adv_z2 + (count - 1); v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		v.y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
+		              v.z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
 	} else {
-		v.Y = adv_y2; v.Z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
-		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
-		              v.Z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
-		v.Y = adv_y2;                                       v.V = v1; v.Col = col1_0; *vertices++ = v;
+		v.y = adv_y2; v.z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
+		              v.z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		v.y = adv_y2;                                       v.V = v1; v.Col = col1_0; *vertices++ = v;
 	}
 	part->fVertices[FACE_XMAX] = vertices;
 }
@@ -1025,9 +1025,9 @@ static void Adv_DrawZMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_ZMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
-	float u1 = (count - adv_minBB.X), u2 = (1 - adv_maxBB.X) * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
+	float u1 = (count - adv_minBB.x), u2 = (1 - adv_maxBB.x) * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1048,17 +1048,17 @@ static void Adv_DrawZMin(int count) {
 	}
 
 	vertices = part->fVertices[FACE_ZMIN];
-	v.Z = adv_z1;
+	v.z = adv_z1;
 	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
-		v.X = adv_x2 + (count - 1); v.Y = adv_y1; v.U = u2; v.V = v2; v.Col = col1_0; *vertices++ = v;
-		v.X = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
-		                            v.Y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1); v.y = adv_y1; v.U = u2; v.V = v2; v.Col = col1_0; *vertices++ = v;
+		v.x = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		                            v.y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
 	} else {
-		v.X = adv_x1;               v.Y = adv_y1; v.U = u1; v.V = v2; v.Col = col0_0; *vertices++ = v;
-		                            v.Y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
-		                            v.Y = adv_y1;           v.V = v2; v.Col = col1_0; *vertices++ = v;
+		v.x = adv_x1;               v.y = adv_y1; v.U = u1; v.V = v2; v.Col = col0_0; *vertices++ = v;
+		                            v.y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		                            v.y = adv_y1;           v.V = v2; v.Col = col1_0; *vertices++ = v;
 	}
 	part->fVertices[FACE_ZMIN] = vertices;
 }
@@ -1067,9 +1067,9 @@ static void Adv_DrawZMax(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_ZMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
-	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
+	float u1 = adv_minBB.x, u2 = (count - 1) + adv_maxBB.x * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1090,17 +1090,17 @@ static void Adv_DrawZMax(int count) {
 	}
 
 	vertices = part->fVertices[FACE_ZMAX];
-	v.Z = adv_z2;
+	v.z = adv_z2;
 	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
-		v.X = adv_x1;               v.Y = adv_y2; v.U = u1; v.V = v1; v.Col = col0_1; *vertices++ = v;
-		                            v.Y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
-		                            v.Y = adv_y2;           v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x1;               v.y = adv_y2; v.U = u1; v.V = v1; v.Col = col0_1; *vertices++ = v;
+		                            v.y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		                            v.y = adv_y2;           v.V = v1; v.Col = col1_1; *vertices++ = v;
 	} else {
-		v.X = adv_x2 + (count - 1); v.Y = adv_y2; v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
-		v.X = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
-		                            v.Y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1); v.y = adv_y2; v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
+		                            v.y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
 	}
 	part->fVertices[FACE_ZMAX] = vertices;
 }
@@ -1109,9 +1109,9 @@ static void Adv_DrawYMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_YMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
-	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
-	float v1 = vOrigin + adv_minBB.Z * Atlas1D.InvTileSize;
-	float v2 = vOrigin + adv_maxBB.Z * Atlas1D.InvTileSize * UV2_Scale;
+	float u1 = adv_minBB.x, u2 = (count - 1) + adv_maxBB.x * UV2_Scale;
+	float v1 = vOrigin + adv_minBB.z * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_maxBB.z * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1132,17 +1132,17 @@ static void Adv_DrawYMin(int count) {
 	}
 
 	vertices = part->fVertices[FACE_YMIN];
-	v.Y = adv_y1;
+	v.y = adv_y1;
 	if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
-		v.X = adv_x2 + (count - 1); v.Z = adv_z2; v.U = u2; v.V = v2; v.Col = col1_1; *vertices++ = v;
-		v.X = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
-		                            v.Z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1); v.z = adv_z2; v.U = u2; v.V = v2; v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
+		                            v.z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
 	} else {
-		v.X = adv_x1;               v.Z = adv_z2; v.U = u1; v.V = v2; v.Col = col0_1; *vertices++ = v;
-		                            v.Z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
-		                            v.Z = adv_z2;           v.V = v2; v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x1;               v.z = adv_z2; v.U = u1; v.V = v2; v.Col = col0_1; *vertices++ = v;
+		                            v.z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		                            v.z = adv_z2;           v.V = v2; v.Col = col1_1; *vertices++ = v;
 	}
 	part->fVertices[FACE_YMIN] = vertices;
 }
@@ -1151,9 +1151,9 @@ static void Adv_DrawYMax(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_YMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
-	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
-	float v1 = vOrigin + adv_minBB.Z * Atlas1D.InvTileSize;
-	float v2 = vOrigin + adv_maxBB.Z * Atlas1D.InvTileSize * UV2_Scale;
+	float u1 = adv_minBB.x, u2 = (count - 1) + adv_maxBB.x * UV2_Scale;
+	float v1 = vOrigin + adv_minBB.z * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_maxBB.z * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1174,17 +1174,17 @@ static void Adv_DrawYMax(int count) {
 	}
 
 	vertices = part->fVertices[FACE_YMAX];
-	v.Y = adv_y2;
+	v.y = adv_y2;
 	if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
-		v.X = adv_x2 + (count - 1); v.Z = adv_z1; v.U = u2; v.V = v1; v.Col = col1_0; *vertices++ = v;
-		v.X = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
-		                            v.Z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1); v.z = adv_z1; v.U = u2; v.V = v1; v.Col = col1_0; *vertices++ = v;
+		v.x = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		                            v.z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
 	} else {
-		v.X = adv_x1;               v.Z = adv_z1; v.U = u1; v.V = v1; v.Col = col0_0; *vertices++ = v;
-		                            v.Z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
-		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
-		                            v.Z = adv_z1;           v.V = v1; v.Col = col1_0; *vertices++ = v;
+		v.x = adv_x1;               v.z = adv_z1; v.U = u1; v.V = v1; v.Col = col0_0; *vertices++ = v;
+		                            v.z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		                            v.z = adv_z1;           v.V = v1; v.Col = col1_0; *vertices++ = v;
 	}
 	part->fVertices[FACE_YMAX] = vertices;
 }
@@ -1213,11 +1213,11 @@ static void Adv_RenderBlock(int index, int x, int y, int z) {
 	adv_tinted     = Blocks.Tinted[Builder_Block];
 
 	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
-	adv_x1 = x + min.X; adv_y1 = y + min.Y; adv_z1 = z + min.Z;
-	adv_x2 = x + max.X; adv_y2 = y + max.Y; adv_z2 = z + max.Z;
+	adv_x1 = x + min.x; adv_y1 = y + min.y; adv_z1 = z + min.z;
+	adv_x2 = x + max.x; adv_y2 = y + max.y; adv_z2 = z + max.z;
 
 	adv_minBB = Blocks.MinBB[Builder_Block]; adv_maxBB = Blocks.MaxBB[Builder_Block];
-	adv_minBB.Y = 1.0f - adv_minBB.Y; adv_maxBB.Y = 1.0f - adv_maxBB.Y;
+	adv_minBB.y = 1.0f - adv_minBB.y; adv_maxBB.y = 1.0f - adv_maxBB.y;
 
 	if (count_XMin) Adv_DrawXMin(count_XMin);
 	if (count_XMax) Adv_DrawXMax(count_XMax);

@@ -303,8 +303,8 @@ static void DrawOpCommand_Execute(void) {
 
 	IVec3_Min(&min, &drawOp_mark1, &drawOp_mark2);
 	IVec3_Max(&max, &drawOp_mark1, &drawOp_mark2);
-	if (!World_Contains(min.X, min.Y, min.Z)) return;
-	if (!World_Contains(max.X, max.Y, max.Z)) return;
+	if (!World_Contains(min.x, min.y, min.z)) return;
+	if (!World_Contains(max.x, max.y, max.z)) return;
 
 	drawOp_Func(min, max);
 }
@@ -312,14 +312,14 @@ static void DrawOpCommand_Execute(void) {
 static void DrawOpCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	cc_string msg; char msgBuffer[STRING_SIZE];
 	String_InitArray(msg, msgBuffer);
-	Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);
+	Game_UpdateBlock(coords.x, coords.y, coords.z, old);
 
 	if (!drawOp_hasMark1) {
 		drawOp_mark1    = coords;
 		drawOp_hasMark1 = true;
 
 		String_Format4(&msg, "&e%c: &fMark 1 placed at (%i, %i, %i), place mark 2.", 
-						drawOp_name, &coords.X, &coords.Y, &coords.Z);
+						drawOp_name, &coords.x, &coords.y, &coords.z);
 		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
 	} else {
 		drawOp_mark2 = coords;
@@ -373,9 +373,9 @@ static void CuboidCommand_Draw(IVec3 min, IVec3 max) {
 	toPlace = (BlockID)cuboid_block;
 	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;
 
-	for (y = min.Y; y <= max.Y; y++) {
-		for (z = min.Z; z <= max.Z; z++) {
-			for (x = min.X; x <= max.X; x++) {
+	for (y = min.y; y <= max.y; y++) {
+		for (z = min.z; z <= max.z; z++) {
+			for (x = min.x; x <= max.x; x++) {
 				Game_ChangeBlock(x, y, z, toPlace);
 			}
 		}
@@ -426,9 +426,9 @@ static void ReplaceCommand_Draw(IVec3 min, IVec3 max) {
 	toPlace = (BlockID)replace_target;
 	if (replace_target == -1) toPlace = Inventory_SelectedBlock;
 
-	for (y = min.Y; y <= max.Y; y++) {
-		for (z = min.Z; z <= max.Z; z++) {
-			for (x = min.X; x <= max.X; x++) {
+	for (y = min.y; y <= max.y; y++) {
+		for (z = min.z; z <= max.z; z++) {
+			for (x = min.x; x <= max.x; x++) {
 				cur = World_GetBlock(x, y, z);
 				if (cur != source) continue;
 				Game_ChangeBlock(x, y, z, toPlace);
@@ -490,7 +490,7 @@ static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 		return;
 	}
-	if (!Convert_ParseFloat(&args[0], &v.X) || !Convert_ParseFloat(&args[1], &v.Y) || !Convert_ParseFloat(&args[2], &v.Z)) {
+	if (!Convert_ParseFloat(&args[0], &v.x) || !Convert_ParseFloat(&args[1], &v.y) || !Convert_ParseFloat(&args[2], &v.z)) {
 		Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
 		return;
 	}
@@ -540,13 +540,13 @@ static cc_bool BlockEditCommand_GetCoords(const cc_string* str, Vec3* coords) {
 		return false;
 	}
 
-	if (!BlockEditCommand_GetInt(&parts[0], "X coord", &xyz.X, -127, 127)) return false;
-	if (!BlockEditCommand_GetInt(&parts[1], "Y coord", &xyz.Y, -127, 127)) return false;
-	if (!BlockEditCommand_GetInt(&parts[2], "Z coord", &xyz.Z, -127, 127)) return false;
+	if (!BlockEditCommand_GetInt(&parts[0], "X coord", &xyz.x, -127, 127)) return false;
+	if (!BlockEditCommand_GetInt(&parts[1], "Y coord", &xyz.y, -127, 127)) return false;
+	if (!BlockEditCommand_GetInt(&parts[2], "Z coord", &xyz.z, -127, 127)) return false;
 
-	coords->X = xyz.X / 16.0f;
-	coords->Y = xyz.Y / 16.0f;
-	coords->Z = xyz.Z / 16.0f;
+	coords->x = xyz.x / 16.0f;
+	coords->y = xyz.y / 16.0f;
+	coords->z = xyz.z / 16.0f;
 	return true;
 }
 

@@ -246,13 +246,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z = -2.0f / (zFar - zNear);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -266,12 +266,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.w =  0.0f;
 }
 
 
@@ -288,15 +288,15 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	Vector3* pos = (Vector3*)ptr;
 
 	Vector4 coord;
-	coord.X = pos->X * mvp.row1.X + pos->Y * mvp.row2.X + pos->Z * mvp.row3.X + mvp.row4.X;
-	coord.Y = pos->X * mvp.row1.Y + pos->Y * mvp.row2.Y + pos->Z * mvp.row3.Y + mvp.row4.Y;
-	coord.Z = pos->X * mvp.row1.Z + pos->Y * mvp.row2.Z + pos->Z * mvp.row3.Z + mvp.row4.Z;
-	coord.W = pos->X * mvp.row1.W + pos->Y * mvp.row2.W + pos->Z * mvp.row3.W + mvp.row4.W;
+	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
+	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
+	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
+	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
 
-	frag->X = vp_hwidth  * (1 + coord.X / coord.W);
-	frag->Y = vp_hheight * (1 - coord.Y / coord.W);
-	frag->Z = coord.Z / coord.W;
-	frag->W = 1.0f    / coord.W;
+	frag->x = vp_hwidth  * (1 + coord.x / coord.w);
+	frag->y = vp_hheight * (1 - coord.y / coord.w);
+	frag->z = coord.z / coord.w;
+	frag.w = 1.0f    / coord.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
@@ -304,8 +304,8 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
 		*color = v->Col;
-		uv->X  = v->U + texOffsetX;
-		uv->Y  = v->V + texOffsetY;
+		uv->x  = v->U + texOffsetX;
+		uv->y  = v->V + texOffsetY;
 	}
 }
 	
@@ -323,9 +323,9 @@ static int MultiplyColours(PackedCol vColor, BitmapCol tColor) {
 
 static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 						Vector2 uv1, Vector2 uv2, Vector2 uv3, PackedCol color) {
-	int x1 = (int)frag1.X, y1 = (int)frag1.Y;
-	int x2 = (int)frag2.X, y2 = (int)frag2.Y;
-	int x3 = (int)frag3.X, y3 = (int)frag3.Y;
+	int x1 = (int)frag1.x, y1 = (int)frag1.y;
+	int x2 = (int)frag2.x, y2 = (int)frag2.y;
+	int x3 = (int)frag3.x, y3 = (int)frag3.y;
 	int minX = min(x1, min(x2, x3));
 	int minY = min(y1, min(y2, y3));
 	int maxX = max(x1, max(x2, x3));
@@ -357,7 +357,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			if (ic2 < 0 || ic2 > 1) continue;
 
 			int index = y * width + x;
-			float w = 1 / (ic0 * frag1.W + ic1 * frag2.W + ic2 * frag3.W);
+			float w = 1 / (ic0 * frag1.w + ic1 * frag2.w + ic2 * frag3.w);
 
 			if (depthTest && w <= depthBuffer[index]) continue;
 			if (depthWrite) depthBuffer[index] = w;
@@ -365,8 +365,8 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 
 			PackedCol fragColor = color;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-				float u = (ic0 * uv1.X * frag1.W + ic1 * uv2.X * frag2.W + ic2 * uv3.X * frag3.W) * w;
-				float v = (ic0 * uv1.Y * frag1.W + ic1 * uv2.Y * frag2.W + ic2 * uv3.Y * frag3.W) * w;
+				float u = (ic0 * uv1.x * frag1.w + ic1 * uv2.x * frag2.w + ic2 * uv3.x * frag3.w) * w;
+				float v = (ic0 * uv1.y * frag1.w + ic1 * uv2.y * frag2.w + ic2 * uv3.y * frag3.w) * w;
 				int texX = (int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth);
 				int texY = (int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight);
 				int texIndex = texY * curTexWidth + texX;

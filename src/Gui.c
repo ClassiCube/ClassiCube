@@ -346,7 +346,7 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** v
 	struct Texture part = atlas->tex;
 	int width = atlas->widths[charI];
 
-	part.X  = atlas->curX; part.Width = width;
+	part.x  = atlas->curX; part.Width = width;
 	part.uv.U1 = atlas->offsets[charI] * atlas->uScale;
 	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
 

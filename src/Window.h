@@ -52,7 +52,7 @@ CC_VAR extern struct _DisplayData {
 	/* GUI elements must be scaled by this to look correct. */
 	float ScaleX, ScaleY;
 	/* Position of this display. (may be non-zero in multi-monitor setup. Platform dependent) */
-	int X, Y;
+	int x, y;
 	/* Size/Dimensions of this display in pixels. */
 	int Width, Height;
 	/* Whether accounting for system DPI scaling is enabled */

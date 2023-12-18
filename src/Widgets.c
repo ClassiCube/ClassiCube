@@ -42,7 +42,7 @@ static void TextWidget_Free(void* widget) {
 static void TextWidget_Reposition(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	Widget_CalcPosition(w);
-	w->tex.X = w->x; w->tex.Y = w->y;
+	w->tex.x = w->x; w->tex.y = w->y;
 }
 
 static void TextWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
@@ -114,8 +114,8 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->height = max(w->tex.Height, w->minHeight);
 
 	Widget_CalcPosition(w);
-	w->tex.X = w->x + (w->width  / 2 - w->tex.Width  / 2);
-	w->tex.Y = w->y + (w->height / 2 - w->tex.Height / 2);
+	w->tex.x = w->x + (w->width  / 2 - w->tex.Width  / 2);
+	w->tex.y = w->y + (w->height / 2 - w->tex.Height / 2);
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
@@ -132,8 +132,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
 	back.ID = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
-	back.X = w->x; back.Width  = w->width;
-	back.Y = w->y; back.Height = w->height;
+	back.x = w->x; back.Width  = w->width;
+	back.y = w->y; back.Height = w->height;
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
@@ -148,7 +148,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
 		Gfx_Draw2DTexture(&back, w->color);
 
-		back.X += (w->width / 2);
+		back.x += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
 		Gfx_Draw2DTexture(&back, w->color);
 	}
@@ -172,8 +172,8 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
-	back.X = w->x; back.Width  = w->width;
-	back.Y = w->y; back.Height = w->height;
+	back.x = w->x; back.Width  = w->width;
+	back.y = w->y; back.Height = w->height;
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
@@ -188,7 +188,7 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
 		Gfx_Make2DQuad(&back, w->color, vertices);
 
-		back.X += (w->width / 2);
+		back.x += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
 		Gfx_Make2DQuad(&back, w->color, vertices);
 	}
@@ -400,7 +400,7 @@ static void HotbarWidget_BuildOutlineMesh(struct HotbarWidget* w, struct VertexT
 	Gfx_Make2DQuad(&w->backTex, PACKEDCOL_WHITE, vertices);
 
 	x = HotbarWidget_TileX(w, Inventory.SelectedIndex);
-	w->selTex.X = (int)(x - w->selWidth / 2);
+	w->selTex.x = (int)(x - w->selWidth / 2);
 	Gfx_Make2DQuad(&w->selTex, PACKEDCOL_WHITE, vertices);
 }
 
@@ -453,8 +453,8 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return HOTBAR_MAX_VERTICES;
-	w->ellipsisTex.X = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
-	w->ellipsisTex.Y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
+	w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
+	w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
 	Texture_Render(&w->ellipsisTex);
 #endif
 	return HOTBAR_MAX_VERTICES;
@@ -1127,8 +1127,8 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 		}
 	}
 
-	w->caretTex.X = w->x + w->padding + lineWidth;
-	w->caretTex.Y = (w->inputTex.Y + w->caretOffset) + w->caretY * w->lineHeight;
+	w->caretTex.x = w->x + w->padding + lineWidth;
+	w->caretTex.y = (w->inputTex.y + w->caretOffset) + w->caretY * w->lineHeight;
 	colCode = InputWidget_GetLastCol(w, w->caretX, w->caretY);
 
 	if (colCode) {
@@ -1355,8 +1355,8 @@ static void InputWidget_Reposition(void* widget) {
 	int oldX = w->x, oldY = w->y;
 	Widget_CalcPosition(w);
 	
-	w->caretTex.X += w->x - oldX; w->caretTex.Y += w->y - oldY;
-	w->inputTex.X += w->x - oldX; w->inputTex.Y += w->y - oldY;
+	w->caretTex.x += w->x - oldX; w->caretTex.y += w->y - oldY;
+	w->inputTex.x += w->x - oldX; w->inputTex.y += w->y - oldY;
 }
 
 static int InputWidget_KeyDown(void* widget, int key) {
@@ -1386,7 +1386,7 @@ static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	int cx, cy, offset = 0;
 	int charX, charWidth, charHeight;
 
-	x -= w->inputTex.X; y -= w->inputTex.Y;
+	x -= w->inputTex.x; y -= w->inputTex.y;
 	DrawTextArgs_MakeEmpty(&args, w->font, true);
 	charHeight = w->lineHeight;
 	String_InitArray(line, lineBuffer);
@@ -1625,7 +1625,7 @@ static void TextInputWidget_RemakeTexture(void* widget) {
 	Context2D_Free(&ctx);
 
 	Widget_Layout(&w->base);
-	tex->X = w->base.x; tex->Y = w->base.y;
+	tex->x = w->base.x; tex->y = w->base.y;
 }
 
 static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
@@ -1762,8 +1762,8 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->width  = width;
 	w->height = height;
 	Widget_Layout(w);
-	w->inputTex.X = w->x + w->padding;
-	w->inputTex.Y = w->y;
+	w->inputTex.x = w->x + w->padding;
+	w->inputTex.y = w->y;
 }
 
 static void ChatInputWidget_Render(void* widget, double delta) {
@@ -2035,8 +2035,8 @@ static void TextGroupWidget_Reposition(void* widget) {
 
 	for (i = 0, y = w->y; i < w->lines; i++) 
 	{
-		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, WindowInfo.Width);
-		textures[i].Y = y;
+		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, WindowInfo.Width);
+		textures[i].y = y;
 		y += textures[i].Height;
 	}
 }
@@ -2189,7 +2189,7 @@ static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text
 	int portionsCount;
 	int i, x, width;
 
-	mouseX -= w->textures[index].X;
+	mouseX -= w->textures[index].x;
 	args.useShadow = true;
 	line = TextGroupWidget_UNSAFE_Get(w, index);
 
@@ -2224,7 +2224,7 @@ int TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int 
 	{
 		if (!w->textures[i].ID) continue;
 		tex = w->textures[i];
-		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+		if (!Gui_Contains(tex.x, tex.y, tex.Width, tex.Height, x, y)) continue;
 
 		if (!TextGroupWidget_GetUrl(w, text, i, x)) {
 			line = TextGroupWidget_UNSAFE_Get(w, i);
@@ -2313,7 +2313,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
-	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, WindowInfo.Width);
+	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, WindowInfo.Width);
 	w->textures[index] = tex;
 	Widget_Layout(w);
 }
@@ -2623,7 +2623,7 @@ static void SpecialInputWidget_Reposition(void* widget) {
 	w->width  = w->tex.Width;
 	w->height = w->active ? w->tex.Height : 0;
 	Widget_CalcPosition(w);
-	w->tex.X = w->x; w->tex.Y = w->y;
+	w->tex.x = w->x; w->tex.y = w->y;
 }
 
 static int SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
@@ -2685,20 +2685,20 @@ static void ThumbstickWidget_Rotate(void* widget, struct VertexTextured** vertic
 
 	ptr = *vertices - 4;
 	for (i = 0; i < 4; i++) {
-		int x = ptr[i].X - w->x;
-		int y = ptr[i].Y - w->y;
-		ptr[i].X = -y + w->x + offset;
-		ptr[i].Y =  x + w->y;
+		int x = ptr[i].x - w->x;
+		int y = ptr[i].y - w->y;
+		ptr[i].x = -y + w->x + offset;
+		ptr[i].y =  x + w->y;
 	}
 }
 
 static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured** vertices) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	float tmp;
-	tex->Y = w->y + w->height / 2;
+	tex->y = w->y + w->height / 2;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
-	tex->Y = w->y;
+	tex->y = w->y;
 	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
@@ -2714,7 +2714,7 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	struct Texture tex;
 
-	tex.X     = w->x;
+	tex.x     = w->x;
 	tex.Width = w->width; tex.Height = w->height / 2;
 	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
 

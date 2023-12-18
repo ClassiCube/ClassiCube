@@ -1115,10 +1115,10 @@ static void BlitFramebuffer(int x1, int y1, int width, int height) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	/* Convert 32 bit depth to window depth when required */
-	if (!fb_fast) BlitFramebuffer(r.X, r.Y, r.Width, r.Height);
+	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.Width, r.Height);
 
 	XPutImage(win_display, win_handle, fb_gc, fb_image,
-		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
+		r.x, r.y, r.x, r.y, r.Width, r.Height);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {

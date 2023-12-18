@@ -262,9 +262,9 @@ void Env_SetShadowCol(PackedCol color) {
 *-------------------------------------------------------Respawning--------------------------------------------------------*
 *#########################################################################################################################*/
 float Respawn_HighestSolidY(struct AABB* bb) {
-	int minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
-	int minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
-	int minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
+	int minX = Math_Floor(bb->Min.x), maxX = Math_Floor(bb->Max.x);
+	int minY = Math_Floor(bb->Min.y), maxY = Math_Floor(bb->Max.y);
+	int minZ = Math_Floor(bb->Min.z), maxZ = Math_Floor(bb->Max.z);
 	float highestY = RESPAWN_NOT_FOUND;
 
 	BlockID block;
@@ -272,9 +272,9 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 	Vec3 v;
 	int x, y, z;	
 
-	for (y = minY; y <= maxY; y++) { v.Y = (float)y;
-		for (z = minZ; z <= maxZ; z++) { v.Z = (float)z;
-			for (x = minX; x <= maxX; x++) { v.X = (float)x;
+	for (y = minY; y <= maxY; y++) { v.y = (float)y;
+		for (z = minZ; z <= maxZ; z++) { v.z = (float)z;
+			for (x = minX; x <= maxX; x++) { v.x = (float)x;
 
 				/* TODO: Maybe use how picking gets blocks, so the bedrock */
 				/* just below and just on borders of the map is treated as such */
@@ -286,7 +286,7 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 
 				if (Blocks.Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
-				if (blockBB.Max.Y > highestY) highestY = blockBB.Max.Y;
+				if (blockBB.Max.y > highestY) highestY = blockBB.Max.y;
 			}
 		}
 	}
@@ -301,14 +301,14 @@ Vec3 Respawn_FindSpawnPosition(float x, float z, Vec3 modelSize) {
 
 	Vec3_Set(spawn, x, World.Height + ENTITY_ADJUSTMENT, z);
 	AABB_Make(&bb, &spawn, &modelSize);
-	spawn.Y = 0.0f;
+	spawn.y = 0.0f;
 	
 	for (y = World.Height; y >= 0; y--) {
 		highestY = Respawn_HighestSolidY(&bb);
 		if (highestY != RESPAWN_NOT_FOUND) {
-			spawn.Y = highestY; break;
+			spawn.y = highestY; break;
 		}
-		bb.Min.Y -= 1.0f; bb.Max.Y -= 1.0f;
+		bb.Min.y -= 1.0f; bb.Max.y -= 1.0f;
 	}
 	return spawn;
 }

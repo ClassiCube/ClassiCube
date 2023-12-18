@@ -19,8 +19,8 @@ static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
 
-	DisplayInfo.X      = (int)bounds.origin.x;
-	DisplayInfo.Y      = (int)bounds.origin.y;
+	DisplayInfo.x      = (int)bounds.origin.x;
+	DisplayInfo.y      = (int)bounds.origin.y;
 	DisplayInfo.Width  = (int)bounds.size.width;
 	DisplayInfo.Height = (int)bounds.size.height;
 	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
@@ -701,8 +701,8 @@ cc_result Window_EnterFullscreen(void) {
 	ctx_windowWidth  = WindowInfo.Width;
 	ctx_windowHeight = WindowInfo.Height;
 
-	windowX = DisplayInfo.X; WindowInfo.Width  = DisplayInfo.Width;
-	windowY = DisplayInfo.Y; WindowInfo.Height = DisplayInfo.Height;	
+	windowX = DisplayInfo.x; WindowInfo.Width  = DisplayInfo.Width;
+	windowY = DisplayInfo.y; WindowInfo.Height = DisplayInfo.Height;	
 	
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;

@@ -61,8 +61,8 @@ CC_VAR extern struct _BlockLists {
 	/* Can be < 1 to slow player down, or > 1 to speed up. */
 	float SpeedMultiplier[BLOCK_COUNT];
 	/* Bit flags of which faces of this block uses light colour from neighbouring blocks. */
-	/*   e.g. a block with Min.X of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
-	/*   e.g. a block with Min.X of 0.1 uses light colour at X,Y,Z   for XMIN face. */
+	/*   e.g. a block with Min.x of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
+	/*   e.g. a block with Min.x of 0.1 uses light colour at X,Y,Z   for XMIN face. */
 	cc_uint8 LightOffset[BLOCK_COUNT];
 	/* Draw method used when rendering this block. See DrawType enum. */
 	cc_uint8 Draw[BLOCK_COUNT];

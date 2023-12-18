@@ -41,7 +41,7 @@ void AxisLinesRenderer_Render(void) {
 		pos = LocalPlayer_Instance.Base.Position;
 		axisLengthScale = 1;
 		axisThicknessScale = 1;
-		pos.Y += 0.05f;
+		pos.y += 0.05f;
 	} else {
 		pos = Camera.CurrentPos;
 		dirVector = Vec3_GetDirVector(LocalPlayer_Instance.Base.Yaw * MATH_DEG2RAD, LocalPlayer_Instance.Base.Pitch * MATH_DEG2RAD);
@@ -62,9 +62,9 @@ void AxisLinesRenderer_Render(void) {
 									VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	for (i = 0; i < count; i++, v++) 
 	{
-		v->X   = coords[indices[i*3 + 0]].X;
-		v->Y   = coords[indices[i*3 + 1]].Y;
-		v->Z   = coords[indices[i*3 + 2]].Z;
+		v->x   = coords[indices[i*3 + 0]].x;
+		v->y   = coords[indices[i*3 + 1]].y;
+		v->z   = coords[indices[i*3 + 2]].z;
 		v->Col = colors[i >> 2];
 	}
 

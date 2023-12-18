@@ -41,9 +41,9 @@ static void BuildFaces(struct SelectionBox* box, struct VertexColoured* v) {
 	color = box->color;
 	for (i = 0; i < Array_Elems(faceIndices); i++, v++) {
 		flags  = faceIndices[i];
-		v->X   = coords[(flags     ) & 1].X;
-		v->Y   = coords[(flags >> 1) & 1].Y;
-		v->Z   = coords[(flags >> 2)    ].Z;
+		v->x   = coords[(flags     ) & 1].x;
+		v->y   = coords[(flags >> 1) & 1].y;
+		v->z   = coords[(flags >> 2)    ].z;
 		v->Col = color;
 	}
 }
@@ -68,9 +68,9 @@ static void BuildEdges(struct SelectionBox* box, struct VertexColoured* v) {
 
 	for (i = 0; i < Array_Elems(edgeIndices); i++, v++) {
 		flags  = edgeIndices[i];
-		v->X   = coords[(flags     ) & 1].X;
-		v->Y   = coords[(flags >> 1) & 1].Y;
-		v->Z   = coords[(flags >> 2)    ].Z;
+		v->x   = coords[(flags     ) & 1].x;
+		v->y   = coords[(flags >> 1) & 1].y;
+		v->z   = coords[(flags >> 2)    ].z;
 		v->Col = color;
 	}
 }
@@ -90,9 +90,9 @@ static int CompareDists(struct SelectionBox* a, struct SelectionBox* b) {
 }
 
 static void CalcDists(struct SelectionBox* box, Vec3 P) {
-	float dx0 = (P.X - box->p0.X) * (P.X - box->p0.X), dx1 = (P.X - box->p1.X) * (P.X - box->p1.X);
-	float dy0 = (P.Y - box->p0.Y) * (P.Y - box->p0.Y), dy1 = (P.Y - box->p1.Y) * (P.Y - box->p1.Y);
-	float dz0 = (P.Z - box->p0.Z) * (P.Z - box->p0.Z), dz1 = (P.Z - box->p1.Z) * (P.Z - box->p1.Z);
+	float dx0 = (P.x - box->p0.x) * (P.x - box->p0.x), dx1 = (P.x - box->p1.x) * (P.x - box->p1.x);
+	float dy0 = (P.y - box->p0.y) * (P.y - box->p0.y), dy1 = (P.y - box->p1.y) * (P.y - box->p1.y);
+	float dz0 = (P.z - box->p0.z) * (P.z - box->p0.z), dz1 = (P.z - box->p1.z) * (P.z - box->p1.z);
 
 	/* Distance to closest and furthest of the eight box corners */
 	box->minDist = min(dx0, dx1) + min(dy0, dy1) + min(dz0, dz1);

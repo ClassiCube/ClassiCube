@@ -473,14 +473,14 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	// (it's mostly just a standard orthograph matrix rotated by 90 degrees) 
 	Mem_Set(matrix, 0, sizeof(struct Matrix));
 	
-	matrix->row2.X = -2.0f / height;
-	matrix->row4.X =  1.0f;
-	matrix->row1.Y = -2.0f / width;
-	matrix->row4.Y =  1.0f;
+	matrix->row2.x = -2.0f / height;
+	matrix->row4.x =  1.0f;
+	matrix->row1.y = -2.0f / width;
+	matrix->row4.y =  1.0f;
 	
-	matrix->row3.Z = 1.0f / (zNear - zFar);		
-	matrix->row4.Z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
-	matrix->row4.W = 1.0f;
+	matrix->row3.z = 1.0f / (zNear - zFar);		
+	matrix->row4.z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
+	matrix->row4.w = 1.0f;
 }
 
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
@@ -489,11 +489,11 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float zNear = 0.1f;
 	fov = tanf(fov / 2.0f);	 
 	Mem_Set(matrix, 0, sizeof(struct Matrix));
-	matrix->row2.X =  1.0f / fov;
-	matrix->row1.Y = -1.0f / (fov * aspect);
-	matrix->row4.Z = zFar * zNear  / (zNear - zFar);
-	matrix->row3.W = -1.0f;
-	matrix->row3.Z =  1.0f * zNear / (zNear - zFar);
+	matrix->row2.x =  1.0f / fov;
+	matrix->row1.y = -1.0f / (fov * aspect);
+	matrix->row4.z = zFar * zNear  / (zNear - zFar);
+	matrix->row3.w = -1.0f;
+	matrix->row3.z =  1.0f * zNear / (zNear - zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -525,8 +525,8 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	// https://open.gl/transformations
 	if (type == MATRIX_PROJECTION) {
 		struct Matrix rot = Matrix_Identity;
-		rot.row1.X =  0; rot.row1.Y = 1;
-		rot.row2.X = -1; rot.row2.Y = 0;
+		rot.row1.x =  0; rot.row1.y = 1;
+		rot.row2.x = -1; rot.row2.y = 0;
 		//Matrix_RotateZ(&rot, 90 * MATH_DEG2RAD);
 		//Matrix_Mul(&_proj, &_proj, &rot); // TODO avoid Matrix_Mul ??
 		Matrix_Mul(&_proj, matrix, &rot); // TODO avoid Matrix_Mul ?
@@ -635,46 +635,46 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 // TODO: TEMP HACK !!
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured v1, v2, v3, v4;
-	v1.X = (float)x;           v1.Y = (float)y;
-	v2.X = (float)(x + width); v2.Y = (float)y;
-	v3.X = (float)(x + width); v3.Y = (float)(y + height);
-	v4.X = (float)x;           v4.Y = (float)(y + height);
+	v1.x = (float)x;           v1.y = (float)y;
+	v2.x = (float)(x + width); v2.y = (float)y;
+	v3.x = (float)(x + width); v3.y = (float)(y + height);
+	v4.x = (float)x;           v4.y = (float)(y + height);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	C3D_ImmDrawBegin(GPU_TRIANGLES);
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v2.X, v2.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v2.x, v2.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v4.X, v4.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v4.x, v4.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 	C3D_ImmDrawEnd();
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
 	struct VertexColoured v1, v2, v3, v4;
-	v1.X = (float)x;           v1.Y = (float)y;
-	v2.X = (float)(x + width); v2.Y = (float)y;
-	v3.X = (float)(x + width); v3.Y = (float)(y + height);
-	v4.X = (float)x;           v4.Y = (float)(y + height);
+	v1.x = (float)x;           v1.y = (float)y;
+	v2.x = (float)(x + width); v2.y = (float)y;
+	v3.x = (float)(x + width); v3.y = (float)(y + height);
+	v4.x = (float)x;           v4.y = (float)(y + height);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	C3D_ImmDrawBegin(GPU_TRIANGLES);
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
-		C3D_ImmSendAttrib(v2.X, v2.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v2.x, v2.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
-		C3D_ImmSendAttrib(v4.X, v4.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v4.x, v4.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
 	C3D_ImmDrawEnd();
 }
@@ -685,22 +685,22 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_Make2DQuad(tex, color, &ptr);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	C3D_ImmDrawBegin(GPU_TRIANGLES);
-		C3D_ImmSendAttrib(v[0].X, v[0].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[0].x, v[0].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[0].U, v[0].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[1].X, v[1].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[1].x, v[1].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[1].U, v[1].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[2].X, v[2].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[2].x, v[2].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[2].U, v[2].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[2].X, v[2].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[2].x, v[2].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[2].U, v[2].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[3].X, v[3].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[3].x, v[3].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[3].U, v[3].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[0].X, v[0].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[0].x, v[0].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[0].U, v[0].V, 0.0f, 0.0f);
 	C3D_ImmDrawEnd();

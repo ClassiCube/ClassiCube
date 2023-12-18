@@ -464,9 +464,9 @@ static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, floa
 	{
 		payload = IsSupported(heldBlock_Ext) ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
 		WriteBlock(data, payload);
-		x = (int)(pos.X * 32);
-		y = (int)(pos.Y * 32) + 51;
-		z = (int)(pos.Z * 32);
+		x = (int)(pos.x * 32);
+		y = (int)(pos.y * 32) + 51;
+		z = (int)(pos.z * 32);
 
 		if (IsSupported(extEntityPos_Ext)) {
 			Stream_SetU32_BE(data, x); data += 4;
@@ -676,9 +676,9 @@ static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	EntityID id = data[0];
 
 	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
-	update.pos.X = (cc_int8)data[1] / 32.0f;
-	update.pos.Y = (cc_int8)data[2] / 32.0f;
-	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	update.pos.x = (cc_int8)data[1] / 32.0f;
+	update.pos.y = (cc_int8)data[2] / 32.0f;
+	update.pos.z = (cc_int8)data[3] / 32.0f;
 	update.yaw   = Math_Packed2Deg(data[4]);
 	update.pitch = Math_Packed2Deg(data[5]);
 	UpdateLocation(id, &update);
@@ -689,9 +689,9 @@ static void Classic_RelPositionUpdate(cc_uint8* data) {
 	EntityID id = data[0];
 
 	update.flags = LU_HAS_POS | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
-	update.pos.X = (cc_int8)data[1] / 32.0f;
-	update.pos.Y = (cc_int8)data[2] / 32.0f;
-	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	update.pos.x = (cc_int8)data[1] / 32.0f;
+	update.pos.y = (cc_int8)data[2] / 32.0f;
+	update.pos.z = (cc_int8)data[3] / 32.0f;
 	UpdateLocation(id, &update);
 }
 
@@ -774,9 +774,9 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 	}
 
 	update.flags = flags;
-	update.pos.X = x/32.0f; 
-	update.pos.Y = y/32.0f; 
-	update.pos.Z = z/32.0f;
+	update.pos.x = x/32.0f; 
+	update.pos.y = y/32.0f; 
+	update.pos.z = z/32.0f;
 	update.yaw   = Math_Packed2Deg(*data++);
 	update.pitch = Math_Packed2Deg(*data++);
 
@@ -858,9 +858,9 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->Pitch));
 
 		data[7] = targetId;
-		Stream_SetU16_BE(&data[8],  t->pos.X);
-		Stream_SetU16_BE(&data[10], t->pos.Y);
-		Stream_SetU16_BE(&data[12], t->pos.Z);
+		Stream_SetU16_BE(&data[8],  t->pos.x);
+		Stream_SetU16_BE(&data[10], t->pos.y);
+		Stream_SetU16_BE(&data[12], t->pos.z);
 
 		data[14] = 255;
 		/* FACE enum values differ from CPE block face values */
@@ -1124,12 +1124,12 @@ static void CPE_MakeSelection(cc_uint8* data) {
 	PackedCol c;
 	/* data[0] is id, data[1..64] is label */
 
-	p1.X = (cc_int16)Stream_GetU16_BE(data + 65);
-	p1.Y = (cc_int16)Stream_GetU16_BE(data + 67);
-	p1.Z = (cc_int16)Stream_GetU16_BE(data + 69);
-	p2.X = (cc_int16)Stream_GetU16_BE(data + 71);
-	p2.Y = (cc_int16)Stream_GetU16_BE(data + 73);
-	p2.Z = (cc_int16)Stream_GetU16_BE(data + 75);
+	p1.x = (cc_int16)Stream_GetU16_BE(data + 65);
+	p1.y = (cc_int16)Stream_GetU16_BE(data + 67);
+	p1.z = (cc_int16)Stream_GetU16_BE(data + 69);
+	p2.x = (cc_int16)Stream_GetU16_BE(data + 71);
+	p2.y = (cc_int16)Stream_GetU16_BE(data + 73);
+	p2.z = (cc_int16)Stream_GetU16_BE(data + 75);
 
 	/* R,G,B,A are actually 16 bit unsigned integers */
 	c = PackedCol_Make(data[78], data[80], data[82], data[84]);
@@ -1375,9 +1375,9 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 			Math_Clamp(scale, 0.01f, e->Model->maxScale);
 		}
 
-		if (type == 3) e->ModelScale.X = scale;
-		if (type == 4) e->ModelScale.Y = scale;
-		if (type == 5) e->ModelScale.Z = scale;
+		if (type == 3) e->ModelScale.x = scale;
+		if (type == 4) e->ModelScale.y = scale;
+		if (type == 5) e->ModelScale.z = scale;
 
 		Entity_UpdateModelBounds(e);
 		return;
@@ -1455,9 +1455,9 @@ static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
 
 static void CPE_VelocityControl(cc_uint8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	CalcVelocity(&p->Base.Velocity.X, data + 0, data[12]);
-	CalcVelocity(&p->Base.Velocity.Y, data + 4, data[13]);
-	CalcVelocity(&p->Base.Velocity.Z, data + 8, data[14]);
+	CalcVelocity(&p->Base.Velocity.x, data + 0, data[12]);
+	CalcVelocity(&p->Base.Velocity.y, data + 4, data[13]);
+	CalcVelocity(&p->Base.Velocity.z, data + 8, data[14]);
 }
 
 static void CPE_DefineEffect(cc_uint8* data) {
@@ -1603,17 +1603,17 @@ static void CPE_DefineModel(cc_uint8* data) {
 	cm->nameY = GetFloat(data + 66);
 	cm->eyeY  = GetFloat(data + 70);
 
-	cm->collisionBounds.X = GetFloat(data + 74);
-	cm->collisionBounds.Y = GetFloat(data + 78);
-	cm->collisionBounds.Z = GetFloat(data + 82);
+	cm->collisionBounds.x = GetFloat(data + 74);
+	cm->collisionBounds.y = GetFloat(data + 78);
+	cm->collisionBounds.z = GetFloat(data + 82);
 
-	cm->pickingBoundsAABB.Min.X = GetFloat(data + 86);
-	cm->pickingBoundsAABB.Min.Y = GetFloat(data + 90);
-	cm->pickingBoundsAABB.Min.Z = GetFloat(data + 94);
+	cm->pickingBoundsAABB.Min.x = GetFloat(data + 86);
+	cm->pickingBoundsAABB.Min.y = GetFloat(data + 90);
+	cm->pickingBoundsAABB.Min.z = GetFloat(data + 94);
 
-	cm->pickingBoundsAABB.Max.X = GetFloat(data + 98);
-	cm->pickingBoundsAABB.Max.Y = GetFloat(data + 102);
-	cm->pickingBoundsAABB.Max.Z = GetFloat(data + 106);
+	cm->pickingBoundsAABB.Max.x = GetFloat(data + 98);
+	cm->pickingBoundsAABB.Max.y = GetFloat(data + 102);
+	cm->pickingBoundsAABB.Max.z = GetFloat(data + 106);
 
 	cm->uScale = Stream_GetU16_BE(data + 110);
 	cm->vScale = Stream_GetU16_BE(data + 112);
@@ -1641,12 +1641,12 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	if (id >= MAX_CUSTOM_MODELS || !m->defined || m->curPartIndex >= m->numParts) return;
 	part = &m->parts[m->curPartIndex];
 
-	p.min.X = GetFloat(data +  1);
-	p.min.Y = GetFloat(data +  5);
-	p.min.Z = GetFloat(data +  9);
-	p.max.X = GetFloat(data + 13);
-	p.max.Y = GetFloat(data + 17);
-	p.max.Z = GetFloat(data + 21);
+	p.min.x = GetFloat(data +  1);
+	p.min.y = GetFloat(data +  5);
+	p.min.z = GetFloat(data +  9);
+	p.max.x = GetFloat(data + 13);
+	p.max.y = GetFloat(data + 17);
+	p.max.z = GetFloat(data + 21);
 
 	/* read u, v coords for our 6 faces */
 	for (i = 0; i < 6; i++) {
@@ -1656,13 +1656,13 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 		p.v2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 6));
 	}
 
-	p.rotationOrigin.X = GetFloat(data + 73);
-	p.rotationOrigin.Y = GetFloat(data + 77);
-	p.rotationOrigin.Z = GetFloat(data + 81);
+	p.rotationOrigin.x = GetFloat(data + 73);
+	p.rotationOrigin.y = GetFloat(data + 77);
+	p.rotationOrigin.z = GetFloat(data + 81);
 
-	part->rotation.X = GetFloat(data + 85);
-	part->rotation.Y = GetFloat(data + 89);
-	part->rotation.Z = GetFloat(data + 93);
+	part->rotation.x = GetFloat(data + 85);
+	part->rotation.y = GetFloat(data + 89);
+	part->rotation.z = GetFloat(data + 93);
 
 	if (customModels_Ext.serverVersion == 1) {
 		/* ignore animations */
@@ -1792,7 +1792,7 @@ static void BlockDefs_DefineBlock(cc_uint8* data) {
 
 	cc_uint8 shape = *data++;
 	if (shape > 0 && shape <= 16) {
-		Blocks.MaxBB[block].Y = shape / 16.0f;
+		Blocks.MaxBB[block].y = shape / 16.0f;
 	}
 
 	BlockDefs_DefineBlockCommonEnd(data, shape, block);
@@ -1815,13 +1815,13 @@ static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 	BlockID block = BlockDefs_DefineBlockCommonStart(&data, 
 						blockDefsExt_Ext.serverVersion >= 2);
 
-	minBB.X = (cc_int8)(*data++) / 16.0f;
-	minBB.Y = (cc_int8)(*data++) / 16.0f;
-	minBB.Z = (cc_int8)(*data++) / 16.0f;
+	minBB.x = (cc_int8)(*data++) / 16.0f;
+	minBB.y = (cc_int8)(*data++) / 16.0f;
+	minBB.z = (cc_int8)(*data++) / 16.0f;
 
-	maxBB.X = (cc_int8)(*data++) / 16.0f;
-	maxBB.Y = (cc_int8)(*data++) / 16.0f;
-	maxBB.Z = (cc_int8)(*data++) / 16.0f;
+	maxBB.x = (cc_int8)(*data++) / 16.0f;
+	maxBB.y = (cc_int8)(*data++) / 16.0f;
+	maxBB.z = (cc_int8)(*data++) / 16.0f;
 
 	Blocks.MinBB[block] = minBB;
 	Blocks.MaxBB[block] = maxBB;

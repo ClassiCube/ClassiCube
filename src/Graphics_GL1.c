@@ -565,7 +565,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 static struct Matrix texMatrix = Matrix_IdentityValue;
 void Gfx_EnableTextureOffset(float x, float y) {
-	texMatrix.row4.X = x; texMatrix.row4.Y = y;
+	texMatrix.row4.x = x; texMatrix.row4.y = y;
 	Gfx_LoadMatrix(2, &texMatrix);
 }
 

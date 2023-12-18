@@ -26,25 +26,25 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	Vec3 centre;
 	float aX, aY, aZ, bX, bY, bZ;
 
-	sX = size->X * 0.5f; sY = size->Y * 0.5f;
-	centre = *pos; centre.Y += sY;
+	sX = size->x * 0.5f; sY = size->y * 0.5f;
+	centre = *pos; centre.y += sY;
 	view   = &Gfx.View;
 	
-	aX = view->row1.X * sX; aY = view->row2.X * sX; aZ = view->row3.X * sX; /* right * size.X * 0.5f */
-	bX = view->row1.Y * sY; bY = view->row2.Y * sY; bZ = view->row3.Y * sY; /* up    * size.Y * 0.5f */
+	aX = view->row1.x * sX; aY = view->row2.x * sX; aZ = view->row3.x * sX; /* right * size.x * 0.5f */
+	bX = view->row1.y * sY; bY = view->row2.y * sY; bZ = view->row3.y * sY; /* up    * size.y * 0.5f */
 
-	v->X = centre.X - aX - bX; v->Y = centre.Y - aY - bY; v->Z = centre.Z - aZ - bZ; v->Col = col; v->U = rec->U1; v->V = rec->V2; v++;
-	v->X = centre.X - aX + bX; v->Y = centre.Y - aY + bY; v->Z = centre.Z - aZ + bZ; v->Col = col; v->U = rec->U1; v->V = rec->V1; v++;
-	v->X = centre.X + aX + bX; v->Y = centre.Y + aY + bY; v->Z = centre.Z + aZ + bZ; v->Col = col; v->U = rec->U2; v->V = rec->V1; v++;
-	v->X = centre.X + aX - bX; v->Y = centre.Y + aY - bY; v->Z = centre.Z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
+	v->x = centre.x - aX - bX; v->y = centre.y - aY - bY; v->z = centre.z - aZ - bZ; v->Col = col; v->U = rec->U1; v->V = rec->V2; v++;
+	v->x = centre.x - aX + bX; v->y = centre.y - aY + bY; v->z = centre.z - aZ + bZ; v->Col = col; v->U = rec->U1; v->V = rec->V1; v++;
+	v->x = centre.x + aX + bX; v->y = centre.y + aY + bY; v->z = centre.z + aZ + bZ; v->Col = col; v->U = rec->U2; v->V = rec->V1; v++;
+	v->x = centre.x + aX - bX; v->y = centre.y + aY - bY; v->z = centre.z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
 }
 
 static cc_bool CollidesHor(Vec3* nextPos, BlockID block) {
-	Vec3 horPos = Vec3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
+	Vec3 horPos = Vec3_Create3((float)Math_Floor(nextPos->x), 0.0f, (float)Math_Floor(nextPos->z));
 	Vec3 min, max;
 	Vec3_Add(&min, &Blocks.MinBB[block], &horPos);
 	Vec3_Add(&max, &Blocks.MaxBB[block], &horPos);
-	return nextPos->X >= min.X && nextPos->Z >= min.Z && nextPos->X < max.X && nextPos->Z < max.Z;
+	return nextPos->x >= min.x && nextPos->z >= min.z && nextPos->x < max.x && nextPos->z < max.z;
 }
 
 static BlockID GetBlock(int x, int y, int z) {
@@ -62,25 +62,25 @@ static cc_bool ClipY(struct Particle* p, int y, cc_bool topFace, CanPassThroughF
 	cc_bool collideVer;
 
 	if (y < 0) {
-		p->nextPos.Y = ENTITY_ADJUSTMENT; 
-		p->lastPos.Y = ENTITY_ADJUSTMENT;
+		p->nextPos.y = ENTITY_ADJUSTMENT; 
+		p->lastPos.y = ENTITY_ADJUSTMENT;
 
 		Vec3_Set(p->velocity, 0,0,0);
 		hitTerrain = true;
 		return false;
 	}
 
-	block = GetBlock((int)p->nextPos.X, y, (int)p->nextPos.Z);
+	block = GetBlock((int)p->nextPos.x, y, (int)p->nextPos.z);
 	if (canPassThrough(block)) return true;
 	minBB = Blocks.MinBB[block]; maxBB = Blocks.MaxBB[block];
 
-	collideY   = y + (topFace ? maxBB.Y : minBB.Y);
-	collideVer = topFace ? (p->nextPos.Y < collideY) : (p->nextPos.Y > collideY);
+	collideY   = y + (topFace ? maxBB.y : minBB.y);
+	collideVer = topFace ? (p->nextPos.y < collideY) : (p->nextPos.y > collideY);
 
 	if (collideVer && CollidesHor(&p->nextPos, block)) {
 		float adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
-		p->lastPos.Y = collideY + adjust;
-		p->nextPos.Y = p->lastPos.Y;
+		p->lastPos.y = collideY + adjust;
+		p->nextPos.y = p->lastPos.y;
 
 		Vec3_Set(p->velocity, 0,0,0);
 		hitTerrain = true;
@@ -90,11 +90,11 @@ static cc_bool ClipY(struct Particle* p, int y, cc_bool topFace, CanPassThroughF
 }
 
 static cc_bool IntersectsBlock(struct Particle* p, CanPassThroughFunc canPassThrough) {
-	BlockID cur = GetBlock((int)p->nextPos.X, (int)p->nextPos.Y, (int)p->nextPos.Z);
-	float minY  = Math_Floor(p->nextPos.Y) + Blocks.MinBB[cur].Y;
-	float maxY  = Math_Floor(p->nextPos.Y) + Blocks.MaxBB[cur].Y;
+	BlockID cur = GetBlock((int)p->nextPos.x, (int)p->nextPos.y, (int)p->nextPos.z);
+	float minY  = Math_Floor(p->nextPos.y) + Blocks.MinBB[cur].y;
+	float maxY  = Math_Floor(p->nextPos.y) + Blocks.MaxBB[cur].y;
 
-	return !canPassThrough(cur) && p->nextPos.Y >= minY && p->nextPos.Y < maxY && CollidesHor(&p->nextPos, cur);
+	return !canPassThrough(cur) && p->nextPos.y >= minY && p->nextPos.y < maxY && CollidesHor(&p->nextPos, cur);
 }
 
 static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, double delta) {
@@ -104,14 +104,14 @@ static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc
 	p->lastPos = p->nextPos;
 	if (IntersectsBlock(p, canPassThrough)) return true;
 
-	p->velocity.Y -= gravity * (float)delta;
-	begY = Math_Floor(p->nextPos.Y);
+	p->velocity.y -= gravity * (float)delta;
+	begY = Math_Floor(p->nextPos.y);
 	
 	Vec3_Mul1(&velocity, &p->velocity, (float)delta * 3.0f);
 	Vec3_Add(&p->nextPos, &p->nextPos, &velocity);
-	endY = Math_Floor(p->nextPos.Y);
+	endY = Math_Floor(p->nextPos.y);
 
-	if (p->velocity.Y > 0.0f) {
+	if (p->velocity.y > 0.0f) {
 		/* don't test block we are already in */
 		for (y = begY + 1; y <= endY && ClipY(p, y, false, canPassThrough); y++) {}
 	} else {
@@ -147,9 +147,9 @@ static void RainParticle_Render(struct Particle* p, float t, struct VertexTextur
 	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->lastPos, &p->nextPos, t);
-	size.X = p->size * 0.015625f; size.Y = size.X;
+	size.x = p->size * 0.015625f; size.y = size.x;
 
-	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
+	x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
 	col = Lighting.Color(x, y, z);
 	Particle_DoRender(&size, &pos, &rain_rec, col, vertices);
 }
@@ -219,10 +219,10 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct Ve
 	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
-	size.X = p->base.size * 0.015625f; size.Y = size.X;
+	size.x = p->base.size * 0.015625f; size.y = size.x;
 	
 	if (!Blocks.FullBright[p->block]) {
-		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
+		x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
 		col = Lighting.Color_XSide(x, y, z);
 	}
 
@@ -346,9 +346,9 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, struct Vert
 	rec.U2 += shiftU;/* * 0.0078125f; */
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
-	size.X = p->base.size; size.Y = size.X;
+	size.x = p->base.size; size.y = size.x;
 
-	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
+	x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
 	col = e->fullBright ? PACKEDCOL_WHITE : Lighting.Color(x, y, z);
 	col = PackedCol_Tint(col, e->tintCol);
 
@@ -442,11 +442,11 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D.InvTileSize;
 
 	minBB = Blocks.MinBB[old];    maxBB = Blocks.MaxBB[old];
-	minX  = (int)(minBB.X * 16); maxX  = (int)(maxBB.X * 16);
-	minZ  = (int)(minBB.Z * 16); maxZ  = (int)(maxBB.Z * 16);
+	minX  = (int)(minBB.x * 16); maxX  = (int)(maxBB.x * 16);
+	minZ  = (int)(minBB.z * 16); maxZ  = (int)(maxBB.z * 16);
 
-	minU = min(minX, minZ); minV = (int)(16 - maxBB.Y * 16);
-	maxU = min(maxX, maxZ); maxV = (int)(16 - minBB.Y * 16);
+	minU = min(minX, minZ); minV = (int)(16 - maxBB.y * 16);
+	maxU = min(maxX, maxZ); maxV = (int)(16 - minBB.y * 16);
 	/* This way we can avoid creating particles which outside the bounds and need to be clamped */
 	maxUsedU = maxU; maxUsedV = maxV;
 	if (minU < 12 && maxU > 12) maxUsedU = 12;
@@ -464,16 +464,16 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 
 				cellX = (float)x / GRID_SIZE; cellY = (float)y / GRID_SIZE; cellZ = (float)z / GRID_SIZE;
 				cell  = Vec3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
-				if (cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y
-					|| cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z) continue;
+				if (cell.x < minBB.x || cell.x > maxBB.x || cell.y < minBB.y
+					|| cell.y > maxBB.y || cell.z < minBB.z || cell.z > maxBB.z) continue;
 
 				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
 				p = &terrain_particles[terrain_count++];
 
 				/* centre random offset around [-0.2, 0.2] */
-				p->base.velocity.X = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-				p->base.velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-				p->base.velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.x = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
 				rec = baseRec;
 				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
@@ -505,13 +505,13 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
 		p = &rain_Particles[rain_count++];
 
-		p->velocity.X = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
-		p->velocity.Z = Random_Float(&rnd) * 0.8f - 0.4f;
-		p->velocity.Y = Random_Float(&rnd) + 0.4f;
+		p->velocity.x = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
+		p->velocity.z = Random_Float(&rnd) * 0.8f - 0.4f;
+		p->velocity.y = Random_Float(&rnd) + 0.4f;
 
-		p->lastPos.X = x + Random_Float(&rnd); /* [0.0, 1.0] */
-		p->lastPos.Y = y + Random_Float(&rnd) * 0.1f + 0.01f;
-		p->lastPos.Z = z + Random_Float(&rnd);
+		p->lastPos.x = x + Random_Float(&rnd); /* [0.0, 1.0] */
+		p->lastPos.y = y + Random_Float(&rnd) * 0.1f + 0.01f;
+		p->lastPos.z = z + Random_Float(&rnd);
 
 		p->nextPos  = p->lastPos;
 		p->lifetime = 40.0f;
@@ -533,9 +533,9 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		p = &custom_particles[custom_count++];
 		p->effectId = effectID;
 
-		offset.X = Random_Float(&rnd) - 0.5f;
-		offset.Y = Random_Float(&rnd) - 0.5f;
-		offset.Z = Random_Float(&rnd) - 0.5f;
+		offset.x = Random_Float(&rnd) - 0.5f;
+		offset.y = Random_Float(&rnd) - 0.5f;
+		offset.z = Random_Float(&rnd) - 0.5f;
 		Vec3_Normalise(&offset);
 
 		/* See https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/ */
@@ -544,17 +544,17 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		d  = Math_Exp2(Math_Log2(d) / 3.0); /* d^1/3 for better distribution */
 		d *= e->spread;
 
-		p->base.lastPos.X = x + offset.X * d;
-		p->base.lastPos.Y = y + offset.Y * d;
-		p->base.lastPos.Z = z + offset.Z * d;
+		p->base.lastPos.x = x + offset.x * d;
+		p->base.lastPos.y = y + offset.y * d;
+		p->base.lastPos.z = z + offset.z * d;
 		
 		Vec3 origin = { originX, originY, originZ };
 		Vec3_Sub(&delta, &p->base.lastPos, &origin);
 		Vec3_Normalise(&delta);
 
-		p->base.velocity.X = delta.X * e->speed;
-		p->base.velocity.Y = delta.Y * e->speed;
-		p->base.velocity.Z = delta.Z * e->speed;
+		p->base.velocity.x = delta.x * e->speed;
+		p->base.velocity.y = delta.y * e->speed;
+		p->base.velocity.z = delta.z * e->speed;
 
 		p->base.nextPos  = p->base.lastPos;
 		p->base.lifetime = e->baseLifetime + (e->baseLifetime * e->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);

@@ -84,9 +84,9 @@ static void BuildMesh(struct RayTracer* selected) {
 									VERTEX_FORMAT_COLOURED, SELOUTLINE_NUM_VERTICES);
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) 
 	{
-		ptr->X   = coords[indices[i + 0]].X;
-		ptr->Y   = coords[indices[i + 1]].Y;
-		ptr->Z   = coords[indices[i + 2]].Z;
+		ptr->x   = coords[indices[i + 0]].x;
+		ptr->y   = coords[indices[i + 1]].y;
+		ptr->z   = coords[indices[i + 2]].z;
 		ptr->Col = color;
 	}
 	Gfx_UnlockDynamicVb(selOutline_vb);

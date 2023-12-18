@@ -26,14 +26,14 @@ typedef enum MatrixType_ {
 
 #if defined CC_BUILD_PSP
 /* 3 floats for position (XYZ), 4 bytes for colour */
-struct VertexColoured { PackedCol Col; float X, Y, Z; };
+struct VertexColoured { PackedCol Col; float x, y, z; };
 /* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour */
-struct VertexTextured { float U, V; PackedCol Col; float X, Y, Z; };
+struct VertexTextured { float U, V; PackedCol Col; float x, y, z; };
 #else
 /* 3 floats for position (XYZ), 4 bytes for colour */
-struct VertexColoured { float X, Y, Z; PackedCol Col; };
+struct VertexColoured { float x, y, z; PackedCol Col; };
 /* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour */
-struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; };
+struct VertexTextured { float x, y, z; PackedCol Col; float U, V; };
 #endif
 
 void Gfx_Create(void);
@@ -271,7 +271,7 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Statically initialises the texture coordinate corners of this texture */
 #define Tex_UV(u1,v1, u2,v2)        { u1,v1,u2,v2 }
 /* Sets the position and dimensions of this texture */
-#define Tex_SetRect(tex, x,y, width, height) tex.X = x; tex.Y = y; tex.Width = width; tex.Height = height;
+#define Tex_SetRect(tex, xVal,yVal, width, height) tex.x = xVal; tex.y = yVal; tex.Width = width; tex.Height = height;
 /* Sets texture coordinate corners of this texture */
 /* Useful to only draw a sub-region of the texture's pixels */
 #define Tex_SetUV(tex, u1,v1, u2,v2) tex.uv.U1 = u1; tex.uv.V1 = v1; tex.uv.U2 = u2; tex.uv.V2 = v2;

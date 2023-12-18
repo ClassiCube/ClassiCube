@@ -84,9 +84,9 @@ static void CheckWeather(double delta) {
 	cc_bool outside;
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 
-	block   = World_SafeGetBlock(pos.X, pos.Y, pos.Z);
-	outside = pos.Y < 0 || !World_ContainsXZ(pos.X, pos.Z);
-	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env.EdgeHeight && outside);
+	block   = World_SafeGetBlock(pos.x, pos.y, pos.z);
+	outside = pos.y < 0 || !World_ContainsXZ(pos.x, pos.z);
+	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.y < Env.EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
 	if (!inTranslucent || Env.Weather == WEATHER_SUNNY) return;
@@ -651,19 +651,19 @@ static void UpdateSortOrder(void) {
 
 	/* pos is centre coordinate of chunk camera is in */
 	IVec3_Floor(&pos, &Camera.CurrentPos);
-	pos.X = (pos.X & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
-	pos.Y = (pos.Y & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
-	pos.Z = (pos.Z & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
+	pos.x = (pos.x & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
+	pos.y = (pos.y & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
+	pos.z = (pos.z & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 
 	/* If in same chunk, don't need to recalculate sort order */
-	if (pos.X == chunkPos.X && pos.Y == chunkPos.Y && pos.Z == chunkPos.Z) return;
+	if (pos.x == chunkPos.x && pos.y == chunkPos.y && pos.z == chunkPos.z) return;
 	chunkPos = pos;
 	if (!chunksCount) return;
 
 	for (i = 0; i < chunksCount; i++) {
 		info = sortedChunks[i];
 		/* Calculate distance to chunk centre */
-		dx = info->CentreX - pos.X; dy = info->CentreY - pos.Y; dz = info->CentreZ - pos.Z;
+		dx = info->CentreX - pos.x; dy = info->CentreY - pos.y; dz = info->CentreZ - pos.z;
 		distances[i] = dx * dx + dy * dy + dz * dz;
 
 		/* Consider these 3 chunks: */

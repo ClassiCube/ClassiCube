@@ -390,13 +390,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	//   The simplified calculation below uses: L = 0, R = width, T = 0, B = height
 	*matrix = Matrix_Identity;
 	
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -1.0f / (zFar - zNear);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z = -1.0f / (zFar - zNear);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -zFar / (zFar - zNear);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = -zFar / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -406,12 +406,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	
 	// Transposed, source guPersepctive https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	*matrix = Matrix_Identity;
-	matrix->row1.X = c / aspect;
-	matrix->row2.Y = c;
-	matrix->row3.Z = -(zNear)        / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(zFar * zNear) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x = c / aspect;
+	matrix->row2.y = c;
+	matrix->row3.z = -(zNear)        / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(zFar * zNear) / (zFar - zNear);
+	matrix->row4.w =  0.0f;
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -512,7 +512,7 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	{
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
-		GX_Position3f32(v->X, v->Y, v->Z);
+		GX_Position3f32(v->x, v->y, v->z);
 		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
 	}
 	GX_End();
@@ -524,7 +524,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
-		GX_Position3f32(v->X, v->Y, v->Z);
+		GX_Position3f32(v->x, v->y, v->z);
 		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
 		GX_TexCoord2f32(v->U, v->V);
 	}

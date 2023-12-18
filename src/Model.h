@@ -19,9 +19,9 @@ extern struct IGameComponent Models_Component;
 enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX, ROTATE_ORDER_XYZ };
 
 /* Describes a vertex within a model. */
-struct ModelVertex { float X, Y, Z; cc_uint16 U, V; };
+struct ModelVertex { float x, y, z; cc_uint16 U, V; };
 static CC_INLINE void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
-	vertex->X = x; vertex->Y = y; vertex->Z = z;
+	vertex->x = x; vertex->y = y; vertex->z = z;
 	vertex->U = u; vertex->V = v;
 }
 

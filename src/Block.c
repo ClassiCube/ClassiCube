@@ -159,8 +159,8 @@ static void Block_SetDrawType(BlockID block, cc_uint8 draw) {
 	/* Whether a block is opaque and exactly occupies a cell in the world */
 	/* The mesh builder module needs this information for optimisation purposes */
 	Blocks.FullOpaque[block] = draw == DRAW_OPAQUE
-		&& Blocks.MinBB[block].X == 0 && Blocks.MinBB[block].Y == 0 && Blocks.MinBB[block].Z == 0
-		&& Blocks.MaxBB[block].X == 1 && Blocks.MaxBB[block].Y == 1 && Blocks.MaxBB[block].Z == 1;
+		&& Blocks.MinBB[block].x == 0 && Blocks.MinBB[block].y == 0 && Blocks.MinBB[block].z == 0
+		&& Blocks.MaxBB[block].x == 1 && Blocks.MaxBB[block].y == 1 && Blocks.MaxBB[block].z == 1;
 }
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
@@ -181,13 +181,13 @@ static void Block_CalcRenderBounds(BlockID block) {
 	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
 	if (Blocks.IsLiquid[block]) {
-		min.X += 0.1f/16.0f; max.X += 0.1f/16.0f;
-		min.Z += 0.1f/16.0f; max.Z += 0.1f/16.0f;
-		min.Y -= 1.5f/16.0f; max.Y -= 1.5f/16.0f;
+		min.x += 0.1f/16.0f; max.x += 0.1f/16.0f;
+		min.z += 0.1f/16.0f; max.z += 0.1f/16.0f;
+		min.y -= 1.5f/16.0f; max.y -= 1.5f/16.0f;
 	} else if (Blocks.Draw[block] == DRAW_TRANSLUCENT && Blocks.Collide[block] != COLLIDE_SOLID) {
-		min.X += 0.1f/16.0f; max.X += 0.1f/16.0f;
-		min.Z += 0.1f/16.0f; max.Z += 0.1f/16.0f;
-		min.Y -= 0.1f/16.0f; max.Y -= 0.1f/16.0f;
+		min.x += 0.1f/16.0f; max.x += 0.1f/16.0f;
+		min.z += 0.1f/16.0f; max.z += 0.1f/16.0f;
+		min.y -= 0.1f/16.0f; max.y -= 0.1f/16.0f;
 	}
 
 	Blocks.RenderMinBB[block] = min; Blocks.RenderMaxBB[block] = max;
@@ -198,14 +198,14 @@ static void Block_CalcLightOffset(BlockID block) {
 	int flags = 0xFF;
 	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
-	if (min.X != 0) flags &= ~(1 << FACE_XMIN);
-	if (max.X != 1) flags &= ~(1 << FACE_XMAX);
-	if (min.Z != 0) flags &= ~(1 << FACE_ZMIN);
-	if (max.Z != 1) flags &= ~(1 << FACE_ZMAX);
-	if (min.Y != 0) flags &= ~(1 << FACE_YMIN);
-	if (max.Y != 1) flags &= ~(1 << FACE_YMAX);
+	if (min.x != 0) flags &= ~(1 << FACE_XMIN);
+	if (max.x != 1) flags &= ~(1 << FACE_XMAX);
+	if (min.z != 0) flags &= ~(1 << FACE_ZMIN);
+	if (max.z != 1) flags &= ~(1 << FACE_ZMAX);
+	if (min.y != 0) flags &= ~(1 << FACE_YMIN);
+	if (max.y != 1) flags &= ~(1 << FACE_YMAX);
 
-	if ((min.Y != 0 && max.Y == 1) && Blocks.Draw[block] != DRAW_GAS) {
+	if ((min.y != 0 && max.y == 1) && Blocks.Draw[block] != DRAW_GAS) {
 		flags &= ~(1 << LIGHT_FLAG_SHADES_FROM_BELOW);
 	}
 	Blocks.LightOffset[block] = flags;
@@ -302,14 +302,14 @@ static void Block_RecalculateAllSpriteBB(void) {
 
 static void Block_CalcStretch(BlockID block) {
 	/* faces which can be stretched on X axis */
-	if (Blocks.MinBB[block].X == 0.0f && Blocks.MaxBB[block].X == 1.0f) {
+	if (Blocks.MinBB[block].x == 0.0f && Blocks.MaxBB[block].x == 1.0f) {
 		Blocks.CanStretch[block] |= 0x3C;
 	} else {
 		Blocks.CanStretch[block] &= 0xC3; /* ~0x3C */
 	}
 
 	/* faces which can be stretched on Z axis */
-	if (Blocks.MinBB[block].Z == 0.0f && Blocks.MaxBB[block].Z == 1.0f) {
+	if (Blocks.MinBB[block].z == 0.0f && Blocks.MaxBB[block].z == 1.0f) {
 		Blocks.CanStretch[block] |= 0x03;
 	} else {
 		Blocks.CanStretch[block] &= 0xFC; /* ~0x03 */
@@ -357,23 +357,23 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 
 	/* Extend offsets of liquid down to match rendered position */
 	/* This isn't completely correct, but works well enough */
-	if (Blocks.IsLiquid[block]) bMax.Y -= 1.50f / 16.0f;
-	if (Blocks.IsLiquid[other]) oMax.Y -= 1.50f / 16.0f;
+	if (Blocks.IsLiquid[block]) bMax.y -= 1.50f / 16.0f;
+	if (Blocks.IsLiquid[other]) oMax.y -= 1.50f / 16.0f;
 
 	bothLiquid = Blocks.IsLiquid[block] && Blocks.IsLiquid[other];
 	f = 0; /* mark all faces initially 'not hidden' */
 
 	/* Whether the 'texture region' of a face on block fits inside corresponding region on other block */
-	occludedX = (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
-	occludedY = (bMin.X >= oMin.X && bMax.X <= oMax.X) && (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z);
-	occludedZ = (bMin.X >= oMin.X && bMax.X <= oMax.X) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
+	occludedX = (bMin.z >= oMin.z && bMax.z <= oMax.z) && (bMin.y >= oMin.y && bMax.y <= oMax.y);
+	occludedY = (bMin.x >= oMin.x && bMax.x <= oMax.x) && (bMin.z >= oMin.z && bMax.z <= oMax.z);
+	occludedZ = (bMin.x >= oMin.x && bMax.x <= oMax.x) && (bMin.y >= oMin.y && bMax.y <= oMax.y);
 
-	f |= occludedX && oMax.X == 1.0f && bMin.X == 0.0f ? (1 << FACE_XMIN) : 0;
-	f |= occludedX && oMin.X == 0.0f && bMax.X == 1.0f ? (1 << FACE_XMAX) : 0;
-	f |= occludedZ && oMax.Z == 1.0f && bMin.Z == 0.0f ? (1 << FACE_ZMIN) : 0;
-	f |= occludedZ && oMin.Z == 0.0f && bMax.Z == 1.0f ? (1 << FACE_ZMAX) : 0;
-	f |= occludedY && (bothLiquid || (oMax.Y == 1.0f && bMin.Y == 0.0f)) ? (1 << FACE_YMIN) : 0;
-	f |= occludedY && (bothLiquid || (oMin.Y == 0.0f && bMax.Y == 1.0f)) ? (1 << FACE_YMAX) : 0;
+	f |= occludedX && oMax.x == 1.0f && bMin.x == 0.0f ? (1 << FACE_XMIN) : 0;
+	f |= occludedX && oMin.x == 0.0f && bMax.x == 1.0f ? (1 << FACE_XMAX) : 0;
+	f |= occludedZ && oMax.z == 1.0f && bMin.z == 0.0f ? (1 << FACE_ZMIN) : 0;
+	f |= occludedZ && oMin.z == 0.0f && bMax.z == 1.0f ? (1 << FACE_ZMAX) : 0;
+	f |= occludedY && (bothLiquid || (oMax.y == 1.0f && bMin.y == 0.0f)) ? (1 << FACE_YMIN) : 0;
+	f |= occludedY && (bothLiquid || (oMin.y == 0.0f && bMax.y == 1.0f)) ? (1 << FACE_YMAX) : 0;
 	Blocks.Hidden[(block * BLOCK_COUNT) + other] = f;
 }
 
@@ -569,8 +569,8 @@ static int GetRotated(cc_string* name, int offset) {
 }
 
 static int RotateCorner(cc_string* name, int offset) {
-	float x = Game_SelectedPos.Intersect.X - (float)Game_SelectedPos.TranslatedPos.X;
-	float z = Game_SelectedPos.Intersect.Z - (float)Game_SelectedPos.TranslatedPos.Z;
+	float x = Game_SelectedPos.Intersect.x - (float)Game_SelectedPos.TranslatedPos.x;
+	float z = Game_SelectedPos.Intersect.z - (float)Game_SelectedPos.TranslatedPos.z;
 
 	if (x < 0.5f && z < 0.5f) {
 		AutoRotate_Insert(name, offset, "-NW");
@@ -585,7 +585,7 @@ static int RotateCorner(cc_string* name, int offset) {
 }
 
 static int RotateVertical(cc_string* name, int offset) {
-	float y = Game_SelectedPos.Intersect.Y - (float)Game_SelectedPos.TranslatedPos.Y;
+	float y = Game_SelectedPos.Intersect.y - (float)Game_SelectedPos.TranslatedPos.y;
 
 	if (y >= 0.5f) {
 		AutoRotate_Insert(name, offset, "-U");

@@ -317,8 +317,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	SDL_Rect rect;
-	rect.x = r.X; rect.w = r.Width;
-	rect.y = r.Y; rect.h = r.Height;
+	rect.x = r.x; rect.w = r.Width;
+	rect.y = r.y; rect.h = r.Height;
 
 	if (blit_surface) SDL_BlitSurface(blit_surface, &rect, win_surface, &rect);
 	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);

@@ -50,7 +50,7 @@ static void CalcFog(float* density, PackedCol* color) {
 	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
 	IVec3_ToVec3(&pos, &coords);              /* pos = coords; */
 
-	block = World_SafeGetBlock(coords.X, coords.Y, coords.Z);
+	block = World_SafeGetBlock(coords.x, coords.y, coords.z);
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
@@ -164,10 +164,10 @@ static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, struct VertexText
 			u1 = (float)x1 / 2048.0f + offset; u2 = (float)x2 / 2048.0f + offset;
 			v1 = (float)z1 / 2048.0f + offset; v2 = (float)z2 / 2048.0f + offset;
 
-			v->X = (float)x1; v->Y = yy; v->Z = (float)z1; v->Col = col; v->U = u1; v->V = v1; v++;
-			v->X = (float)x1; v->Y = yy; v->Z = (float)z2; v->Col = col; v->U = u1; v->V = v2; v++;
-			v->X = (float)x2; v->Y = yy; v->Z = (float)z2; v->Col = col; v->U = u2; v->V = v2; v++;
-			v->X = (float)x2; v->Y = yy; v->Z = (float)z1; v->Col = col; v->U = u2; v->V = v1; v++;
+			v->x = (float)x1; v->y = yy; v->z = (float)z1; v->Col = col; v->U = u1; v->V = v1; v++;
+			v->x = (float)x1; v->y = yy; v->z = (float)z2; v->Col = col; v->U = u1; v->V = v2; v++;
+			v->x = (float)x2; v->y = yy; v->z = (float)z2; v->Col = col; v->U = u2; v->V = v2; v++;
+			v->x = (float)x2; v->y = yy; v->z = (float)z1; v->Col = col; v->U = u2; v->V = v1; v++;
 		}
 	}
 }
@@ -205,7 +205,7 @@ void EnvRenderer_RenderSky(void) {
 	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
 
 	normY = (float)World.Height + 8.0f;
-	skyY  = max(Camera.CurrentPos.Y + 8.0f, normY);
+	skyY  = max(Camera.CurrentPos.y + 8.0f, normY);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_BindVb(sky_vb);
 
@@ -215,8 +215,8 @@ void EnvRenderer_RenderSky(void) {
 		m  = Gfx.View;
 		dy = skyY - normY; 
 		/* inlined Y translation matrix multiply */
-		m.row4.X += dy * m.row2.X; m.row4.Y += dy * m.row2.Y;
-		m.row4.Z += dy * m.row2.Z; m.row4.W += dy * m.row2.W;
+		m.row4.x += dy * m.row2.x; m.row4.y += dy * m.row2.y;
+		m.row4.z += dy * m.row2.z; m.row4.w += dy * m.row2.w;
 
 		Gfx_LoadMatrix(MATRIX_VIEW, &m);
 		Gfx_DrawVb_IndexedTris(sky_vertices);
@@ -236,10 +236,10 @@ static void DrawSkyY(int x1, int z1, int x2, int z2, int y, struct VertexColoure
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			v->X = (float)x1; v->Y = (float)y; v->Z = (float)z1; v->Col = col; v++;
-			v->X = (float)x1; v->Y = (float)y; v->Z = (float)z2; v->Col = col; v++;
-			v->X = (float)x2; v->Y = (float)y; v->Z = (float)z2; v->Col = col; v++;
-			v->X = (float)x2; v->Y = (float)y; v->Z = (float)z1; v->Col = col; v++;
+			v->x = (float)x1; v->y = (float)y; v->z = (float)z1; v->Col = col; v++;
+			v->x = (float)x1; v->y = (float)y; v->z = (float)z2; v->Col = col; v++;
+			v->x = (float)x2; v->y = (float)y; v->z = (float)z2; v->Col = col; v++;
+			v->x = (float)x2; v->y = (float)y; v->z = (float)z1; v->Col = col; v++;
 		}
 	}
 }
@@ -394,7 +394,7 @@ static float GetRainHeight(int x, int z) {
 	height = Weather_Heightmap[hIndex];
 
 	y = height == Int16_MaxValue ? CalcRainHeightAt(x, World.MaxY, z, hIndex) : height;
-	return y == -1 ? 0 : y + Blocks.MaxBB[World_GetBlock(x, y, z)].Y;
+	return y == -1 ? 0 : y + Blocks.MaxBB[World_GetBlock(x, y, z)].y;
 }
 
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
@@ -453,22 +453,22 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 		weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 
 	IVec3_Floor(&pos, &Camera.CurrentPos);
-	moved   = pos.X != lastPos.X || pos.Y != lastPos.Y || pos.Z != lastPos.Z;
+	moved   = pos.x != lastPos.x || pos.y != lastPos.y || pos.z != lastPos.z;
 	lastPos = pos;
 
 	/* Rain should extend up by 64 blocks, or to the top of the world. */
-	pos.Y += 64;
-	pos.Y = max(World.Height, pos.Y);
+	pos.y += 64;
+	pos.y = max(World.Height, pos.y);
 
 	weather_accumulator += deltaTime;
 	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25 || moved);
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
-			x = pos.X + dx; z = pos.Z + dz;
+			x = pos.x + dx; z = pos.z + dz;
 
 			y = GetRainHeight(x, z);
-			if (pos.Y <= y) continue;
+			if (pos.y <= y) continue;
 			if (particles) Particles_RainSnowEffect((float)x, y, (float)z);
 
 			coords[numCoords].dx = dx;
@@ -502,15 +502,15 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 		y  = coords[i].y;
 		dz = coords[i].dz;
 
-		height = pos.Y - y;
+		height = pos.y - y;
 
 		dist  = dx * dx + dz * dz;
 		alpha = CalcRainAlphaAt((float)dist);
 		Math_Clamp(alpha, 0.0f, 255.0f);
 		color = (color & PACKEDCOL_RGB_MASK) | PackedCol_A_Bits(alpha);
 
-		x = dx + pos.X;
-		z = dz + pos.Z;
+		x = dx + pos.x;
+		z = dz + pos.z;
 
 		uOffset1 = 0;
 		uOffset2 = 0;
@@ -534,15 +534,15 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 		x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
 		x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
 
-		v->X = x1; v->Y = y1; v->Z = z1; v->Col = color; v->U = uOffset1;        v->V = v1 + vPlane1Offset; v++;
-		v->X = x1; v->Y = y2; v->Z = z1; v->Col = color; v->U = uOffset1;        v->V = v2 + vPlane1Offset; v++;
-		v->X = x2; v->Y = y2; v->Z = z2; v->Col = color; v->U = uOffset1 + 1.0f; v->V = v2 + vPlane1Offset; v++;
-		v->X = x2; v->Y = y1; v->Z = z2; v->Col = color; v->U = uOffset1 + 1.0f; v->V = v1 + vPlane1Offset; v++;
+		v->x = x1; v->y = y1; v->z = z1; v->Col = color; v->U = uOffset1;        v->V = v1 + vPlane1Offset; v++;
+		v->x = x1; v->y = y2; v->z = z1; v->Col = color; v->U = uOffset1;        v->V = v2 + vPlane1Offset; v++;
+		v->x = x2; v->y = y2; v->z = z2; v->Col = color; v->U = uOffset1 + 1.0f; v->V = v2 + vPlane1Offset; v++;
+		v->x = x2; v->y = y1; v->z = z2; v->Col = color; v->U = uOffset1 + 1.0f; v->V = v1 + vPlane1Offset; v++;
 
-		v->X = x2; v->Y = y1; v->Z = z1; v->Col = color; v->U = uOffset2 + 1.0f; v->V = v1; v++;
-		v->X = x2; v->Y = y2; v->Z = z1; v->Col = color; v->U = uOffset2 + 1.0f; v->V = v2; v++;
-		v->X = x1; v->Y = y2; v->Z = z2; v->Col = color; v->U = uOffset2;        v->V = v2; v++;
-		v->X = x1; v->Y = y1; v->Z = z2; v->Col = color; v->U = uOffset2;        v->V = v1; v++;
+		v->x = x2; v->y = y1; v->z = z1; v->Col = color; v->U = uOffset2 + 1.0f; v->V = v1; v++;
+		v->x = x2; v->y = y2; v->z = z1; v->Col = color; v->U = uOffset2 + 1.0f; v->V = v2; v++;
+		v->x = x1; v->y = y2; v->z = z2; v->Col = color; v->U = uOffset2;        v->V = v2; v++;
+		v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = uOffset2;        v->V = v1; v++;
 	}
 
 	Gfx_UnlockDynamicVb(weather_vb);
@@ -585,7 +585,7 @@ void EnvRenderer_RenderMapEdges(void) {
 	/* Do not draw water when player cannot see it */
 	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps */
 	int yVisible = min(0, Env_SidesHeight);
-	if (Camera.CurrentPos.Y < yVisible && sides_vb) return;
+	if (Camera.CurrentPos.y < yVisible && sides_vb) return;
 
 	RenderBorders(Env.EdgeBlock, edges_vb, edges_tex, edges_vertices);
 }
@@ -600,7 +600,7 @@ static void MakeBorderTex(GfxResourceID* texId, BlockID block) {
 
 static Rect2D EnvRenderer_Rect(int x, int y, int width, int height) {
 	Rect2D r;
-	r.X = x; r.Y = y; r.Width = width; r.Height = height; 
+	r.x = x; r.y = y; r.Width = width; r.Height = height; 
 	return r;
 }
 
@@ -618,8 +618,8 @@ static void UpdateBorderTextures(void) {
 	MakeBorderTex(&sides_tex, Env.SidesBlock);
 }
 
-#define Borders_HorOffset(block) (Blocks.RenderMinBB[block].X - Blocks.MinBB[block].X)
-#define Borders_YOffset(block)   (Blocks.RenderMinBB[block].Y - Blocks.MinBB[block].Y)
+#define Borders_HorOffset(block) (Blocks.RenderMinBB[block].x - Blocks.MinBB[block].x)
+#define Borders_YOffset(block)   (Blocks.RenderMinBB[block].y - Blocks.MinBB[block].y)
 
 static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol color, struct VertexTextured** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
@@ -635,10 +635,10 @@ static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol color, 
 			if (y2 > endY) y2 = endY;
 
 			u2   = (float)z2 - (float)z1;      v2   = (float)y2 - (float)y1;
-			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z1; v->Col = color; v->U = 0;  v->V = v2; v++;
-			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z1; v->Col = color; v->U = 0;  v->V = 0;  v++;
-			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z2; v->Col = color; v->U = u2; v->V = 0;  v++;
-			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z2; v->Col = color; v->U = u2; v->V = v2; v++;
+			v->x = (float)x; v->y = (float)y1; v->z = (float)z1; v->Col = color; v->U = 0;  v->V = v2; v++;
+			v->x = (float)x; v->y = (float)y2; v->z = (float)z1; v->Col = color; v->U = 0;  v->V = 0;  v++;
+			v->x = (float)x; v->y = (float)y2; v->z = (float)z2; v->Col = color; v->U = u2; v->V = 0;  v++;
+			v->x = (float)x; v->y = (float)y1; v->z = (float)z2; v->Col = color; v->U = u2; v->V = v2; v++;
 		}
 	}
 	*vertices = v;
@@ -658,10 +658,10 @@ static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol color, 
 			if (y2 > endY) y2 = endY;
 
 			u2   = (float)x2 - (float)x1;       v2   = (float)y2 - (float)y1;
-			v->X = (float)x1; v->Y = (float)y1; v->Z = (float)z; v->Col = color; v->U = 0;  v->V = v2; v++;
-			v->X = (float)x1; v->Y = (float)y2; v->Z = (float)z; v->Col = color; v->U = 0;  v->V = 0;  v++;
-			v->X = (float)x2; v->Y = (float)y2; v->Z = (float)z; v->Col = color; v->U = u2; v->V = 0;  v++;
-			v->X = (float)x2; v->Y = (float)y1; v->Z = (float)z; v->Col = color; v->U = u2; v->V = v2; v++;
+			v->x = (float)x1; v->y = (float)y1; v->z = (float)z; v->Col = color; v->U = 0;  v->V = v2; v++;
+			v->x = (float)x1; v->y = (float)y2; v->z = (float)z; v->Col = color; v->U = 0;  v->V = 0;  v++;
+			v->x = (float)x2; v->y = (float)y2; v->z = (float)z; v->Col = color; v->U = u2; v->V = 0;  v++;
+			v->x = (float)x2; v->y = (float)y1; v->z = (float)z; v->Col = color; v->U = u2; v->V = v2; v++;
 		}
 	}
 	*vertices = v;
@@ -682,10 +682,10 @@ static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol color
 			if (z2 > endZ) z2 = endZ;
 
 			u2   = (float)x2 - (float)x1;         v2   = (float)z2 - (float)z1;
-			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = color; v->U = 0;  v->V = 0;  v++;
-			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = color; v->U = 0;  v->V = v2; v++;
-			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = color; v->U = u2; v->V = v2; v++;
-			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = color; v->U = u2; v->V = 0;  v++;
+			v->x = (float)x1 + offset; v->y = yy; v->z = (float)z1 + offset; v->Col = color; v->U = 0;  v->V = 0;  v++;
+			v->x = (float)x1 + offset; v->y = yy; v->z = (float)z2 + offset; v->Col = color; v->U = 0;  v->V = v2; v++;
+			v->x = (float)x2 + offset; v->y = yy; v->z = (float)z2 + offset; v->Col = color; v->U = u2; v->V = v2; v++;
+			v->x = (float)x2 + offset; v->y = yy; v->z = (float)z1 + offset; v->Col = color; v->U = u2; v->V = 0;  v++;
 		}
 	}
 	*vertices = v;
@@ -725,7 +725,7 @@ static void UpdateMapSides(void) {
 
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (float)y, color,
+		DrawBorderY(r.x, r.y, r.x + r.Width, r.y + r.Height, (float)y, color,
 			0, Borders_YOffset(block), &data);
 	}
 
@@ -772,7 +772,7 @@ static void UpdateMapEdges(void) {
 	y = (float)Env.EdgeHeight;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, color,
+		DrawBorderY(r.x, r.y, r.x + r.Width, r.y + r.Height, y, color,
 			Borders_HorOffset(block), Borders_YOffset(block), &data);
 	}
 	Gfx_UnlockVb(edges_vb);
