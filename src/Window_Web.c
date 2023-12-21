@@ -535,10 +535,10 @@ static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
 	Input_SetNonRepeatable(CCPAD_X, GetGamepadButton(2));
 	Input_SetNonRepeatable(CCPAD_Y, GetGamepadButton(3));
 
-	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(4));
-	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(5));
-	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(6));
-	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(7));
+	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(4));
+	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(5));
+	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(6));
+	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(7));
 
 	Input_SetNonRepeatable(CCPAD_SELECT, GetGamepadButton( 8));
 	Input_SetNonRepeatable(CCPAD_START,  GetGamepadButton( 9));
