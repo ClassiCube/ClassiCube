@@ -516,6 +516,8 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_string host, port;
 	cc_uint16 portNum;
 	cc_result res;
+	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
+	int numAddrs;
 
 	/* address can be either "host" or "host:port" */
 	String_UNSAFE_Separate(&url->address, ':', &host, &port);
@@ -523,9 +525,12 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 		portNum = url->https ? 443 : 80;
 	}
 
-	conn->socket = 0;
+	conn->socket = -1;
 	conn->sslCtx = NULL;
-	if ((res = Socket_Connect(&conn->socket, &host, portNum, false))) return res;
+	if ((res = Socket_ParseAddress(&host, portNum, addrs, &numAddrs))) return res;
+
+	/* TODO multi addresses support */
+	if ((res = Socket_Connect(&conn->socket, &addrs[0], false))) return res;
 
 	conn->valid  = true;
 	if (!url->https) return 0;
@@ -550,9 +555,9 @@ static void HttpConnection_Close(struct HttpConnection* conn) {
 		conn->sslCtx = NULL;
 	}
 
-	if (conn->socket) { /* Closing socket 0 will crash on GC/Wii */
+	if (conn->socket != -1) {
 		Socket_Close(conn->socket);
-		conn->socket = 0;
+		conn->socket = -1;
 	}
 	conn->valid = false;
 }

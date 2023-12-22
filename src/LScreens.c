@@ -494,6 +494,8 @@ static void DirectConnectScreen_StartClient(void* w) {
 
 	cc_string ip, port;
 	cc_uint16 raw_port;
+	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
+	int numAddrs;
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index == 0 || index == addr->length - 1) {
@@ -512,7 +514,7 @@ static void DirectConnectScreen_StartClient(void* w) {
 	if (!user->length) {
 		LLabel_SetConst(status, "&cUsername required"); return;
 	}
-	if (!Socket_ValidAddress(&ip)) {
+	if (Socket_ParseAddress(&ip, 0, addrs, &numAddrs)) {
 		LLabel_SetConst(status, "&cInvalid ip"); return;
 	}
 	if (!Convert_ParseUInt16(&port, &raw_port)) {
