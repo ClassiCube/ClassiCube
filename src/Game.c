@@ -511,7 +511,7 @@ static void Game_Render3D(double delta, float t) {
 
 	Selections_Render();
 	EntityNames_RenderHovered();
-	Camera_KeyLookUpdate();
+	Camera_KeyLookUpdate(delta);
 	InputHandler_Tick();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }

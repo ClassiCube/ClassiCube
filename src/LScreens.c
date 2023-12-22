@@ -790,6 +790,37 @@ static void MainScreen_ResumeUnhover(void* w) {
 	LLabel_SetConst(&s->lblStatus, "");
 }
 
+CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
+	cc_uint8 raw[4] = { 0, 0, 0, 0 };
+	cc_string parts[4];
+	int i, count;
+	
+	/* 1.0.1 -> { 1, 0, 1, 0 } */
+	count = String_UNSAFE_Split(version, '.', parts, 4);
+	for (i = 0; i < count; i++) 
+	{
+		Convert_ParseUInt8(&parts[i], &raw[i]);
+	}
+	return Stream_GetU32_BE(raw);
+}
+
+static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
+	static const cc_string currentStr = String_FromConst(GAME_APP_VER);
+	cc_uint32 latest, current;
+
+	if (CheckUpdateTask.Base.success) {
+		latest  = MainScreen_GetVersion(&CheckUpdateTask.latestRelease);
+		current = MainScreen_GetVersion(&currentStr);
+#ifdef CC_BUILD_FLATPAK
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aUpdate available" : "&eUp to date");
+#else
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
+#endif
+	} else {
+		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
+	}
+}
+
 static void MainScreen_Activated(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 
@@ -825,6 +856,9 @@ static void MainScreen_Activated(struct LScreen* s_) {
 
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
+
+	if (CheckUpdateTask.Base.completed)
+		MainScreen_ApplyUpdateLabel(s);
 }
 
 static void MainScreen_Load(struct LScreen* s_) {
@@ -844,39 +878,12 @@ static void MainScreen_Load(struct LScreen* s_) {
 	MainScreen_DoLogin();
 }
 
-CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
-	cc_uint8 raw[4] = { 0, 0, 0, 0 };
-	cc_string parts[4];
-	int i, count;
-	
-	/* 1.0.1 -> { 1, 0, 1, 0 } */
-	count = String_UNSAFE_Split(version, '.', parts, 4);
-	for (i = 0; i < count; i++) 
-	{
-		Convert_ParseUInt8(&parts[i], &raw[i]);
-	}
-	return Stream_GetU32_BE(raw);
-}
-
 static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
-	static const cc_string currentStr = String_FromConst(GAME_APP_VER);
-	cc_uint32 latest, current;
-
 	if (!CheckUpdateTask.Base.working)   return;
 	LWebTask_Tick(&CheckUpdateTask.Base, NULL);
-	if (!CheckUpdateTask.Base.completed) return;
 
-	if (CheckUpdateTask.Base.success) {
-		latest  = MainScreen_GetVersion(&CheckUpdateTask.latestRelease);
-		current = MainScreen_GetVersion(&currentStr);
-#ifdef CC_BUILD_FLATPAK
-		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aUpdate available" : "&eUp to date");
-#else
-		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
-#endif
-	} else {
-		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
-	}
+	if (!CheckUpdateTask.Base.completed) return;
+	MainScreen_ApplyUpdateLabel(s);
 }
 
 static void MainScreen_LoginPhase2(struct MainScreen* s, const cc_string* user) {
@@ -1027,9 +1034,12 @@ static void CheckResourcesScreen_Activated(struct LScreen* s_) {
 	LLabel_SetText(&s->lblStatus, &str);
 }
 
-#define RESOURCES_FORE_COLOR BitmapColor_RGB(120,  85, 151)
 static void CheckResourcesScreen_ResetArea(struct Context2D* ctx, int x, int y, int width, int height) {
-	Gradient_Noise(ctx, RESOURCES_FORE_COLOR, 4, x, y, width, height);
+	int R = BitmapCol_R(Launcher_Theme.BackgroundColor) * 0.78f; /* 153 -> 120 */
+	int G = BitmapCol_G(Launcher_Theme.BackgroundColor) * 0.70f; /* 127 ->  89 */
+	int B = BitmapCol_B(Launcher_Theme.BackgroundColor) * 0.88f; /* 172 -> 151 */
+
+	Gradient_Noise(ctx, BitmapColor_RGB(R, G, B), 4, x, y, width, height);
 }
 
 static void CheckResourcesScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
