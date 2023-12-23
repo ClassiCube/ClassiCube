@@ -243,7 +243,7 @@ CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 void Platform_LoadSysFonts(void);
 
 #define CC_SOCKETADDR_MAXSIZE 512
-#define SOCKET_MAX_ADDRS 5
+#define SOCKET_MAX_ADDRS 8
 
 typedef struct cc_sockaddr_ {
 	int size; /* Actual size of the raw socket address */
@@ -257,7 +257,7 @@ cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable);
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable);
 /* If the input represents an IP address, then parses the input into a single IP address */
 /* Otherwise, attempts to resolve the input via DNS into one or more IP addresses */
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numAddrs);
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs);
 
 /* Allocates a new socket and then begins connecting to the given address */
 cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking);

@@ -251,13 +251,13 @@ void Platform_LoadSysFonts(void) { }
 *#########################################################################################################################*/
 extern void interop_InitSockets(void);
 
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numAddrs) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	int len = String_EncodeUtf8(addrs[0].data, address);
 	/* TODO can this ever happen */
 	if (len >= CC_SOCKETADDR_MAXSIZE) Logger_Abort("Overrun in Socket_ParseAddress");
 
-	addrs[0].size = port;
-	*numAddrs     = 1;
+	addrs[0].size  = port;
+	*numValidAddrs = 1;
 	return 0;
 }
 

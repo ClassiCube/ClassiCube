@@ -517,7 +517,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_uint16 portNum;
 	cc_result res;
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
-	int numAddrs;
+	int numValidAddrs;
 
 	/* address can be either "host" or "host:port" */
 	String_UNSAFE_Separate(&url->address, ':', &host, &port);
@@ -527,7 +527,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 
 	conn->socket = -1;
 	conn->sslCtx = NULL;
-	if ((res = Socket_ParseAddress(&host, portNum, addrs, &numAddrs))) return res;
+	if ((res = Socket_ParseAddress(&host, portNum, addrs, &numValidAddrs))) return res;
 
 	/* TODO multi addresses support */
 	if ((res = Socket_Connect(&conn->socket, &addrs[0], false))) return res;

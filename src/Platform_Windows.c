@@ -459,10 +459,9 @@ static void LoadWinsockFuncs(void) {
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
-static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numAddrs) {
+static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct hostent* res;
 	cc_result wsa_res;
-	cc_sockaddr* dst_addr;
 	SOCKADDR_IN* addr4;
 	char* src_addr;
 	int i;
@@ -478,41 +477,40 @@ static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numAdd
 		
 	/* per MSDN, should only be getting AF_INET returned from this */
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
 
 	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
 	{
 		src_addr = res->h_addr_list[i];
 		if (!src_addr) break;
+		addrs[i].size = sizeof(SOCKADDR_IN);
 
-		dst_addr = &addrs[i];
-		dst_addr->size = sizeof(SOCKADDR_IN);
-
-		addr4 = (SOCKADDR_IN*)dst_addr->data;
+		addr4 = (SOCKADDR_IN*)addrs[i].data;
 		addr4->sin_family = AF_INET;
 		addr4->sin_port   = _htons(port);
 		addr4->sin_addr   = *(IN_ADDR*)src_addr;
 	}
 
-	*numAddrs = i;
+	*numValidAddrs = i;
 	/* Must have at least one IPv4 address */
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numAddrs) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	SOCKADDR_IN*  addr4 = (SOCKADDR_IN* )addrs[0].data;
 	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)addrs[0].data;
 	cc_winstring str;
 	INT size;
 
-	*numAddrs = 0;
+	*numValidAddrs = 0;
 	Platform_EncodeString(&str, address);
 
 	size = sizeof(*addr4);
 	if (!_WSAStringToAddressW(str.uni, AF_INET,  NULL, addr4, &size)) {
 		addr4->sin_port  = _htons(port);
 
-		addrs[0].size = size;
-		*numAddrs     = 1;
+		addrs[0].size  = size;
+		*numValidAddrs = 1;
 		return 0;
 	}
 
@@ -520,12 +518,12 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	if (!_WSAStringToAddressW(str.uni, AF_INET6, NULL, addr6, &size)) {
 		addr6->sin6_port = _htons(port);
 
-		addrs[0].size = size;
-		*numAddrs     = 1;
+		addrs[0].size  = size;
+		*numValidAddrs = 1;
 		return 0;
 	}
 
-	return ParseHost(str.ansi, port, addrs, numAddrs);
+	return ParseHost(str.ansi, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {

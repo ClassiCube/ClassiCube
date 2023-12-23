@@ -450,7 +450,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	// TODO update cached primitive state
 }
 
-typedef struct Vector4 { float X, Y, Z, W; } Vector4;
+typedef struct Vector4 { float x, y, z, w; } Vector4;
 
 static cc_bool NotClipped(Vector4 pos) {
 	// The code below clips to the viewport clip planes

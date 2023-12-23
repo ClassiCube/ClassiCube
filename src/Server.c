@@ -280,7 +280,7 @@ static void MPConnection_BeginConnect(void) {
 	static const cc_string invalid_reason = String_FromConst("Invalid IP address");
 	cc_string title; char titleBuffer[STRING_SIZE];
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
-	int numAddrs;
+	int numValidAddrs;
 	cc_result res;
 	String_InitArray(title, titleBuffer);
 
@@ -292,7 +292,7 @@ static void MPConnection_BeginConnect(void) {
 	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 	
-	res = Socket_ParseAddress(&Server.Address, Server.Port, addrs, &numAddrs);
+	res = Socket_ParseAddress(&Server.Address, Server.Port, addrs, &numValidAddrs);
 	if (res == ERR_INVALID_ARGUMENT) {
 		MPConnection_Fail(&invalid_reason); return;
 	} else if (res) {

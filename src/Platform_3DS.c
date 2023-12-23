@@ -285,59 +285,60 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in v4;
-	struct sockaddr_storage total; // matches max size of addr returned by getaddrinfo
-};
-
-static int ParseHost(union SocketAddress* addr, const char* host) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char str[NATIVE_STR_LEN];
+	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int found = false;
+	int i = 0;
+	
+	String_EncodeUtf8(str, address);
+	*numValidAddrs = 0;
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	if (inet_aton(str, &addr4->sin_addr) > 0) {
+		// TODO have to have this path, otherwise Citra crashes when crashing connecting to server if you always use getaddrinfo instead
+		// Need to investigate further as I'm probably doing something wrong
+		// TODO still doesn't work
+	
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		
+		addrs[0].size  = sizeof(*addr4);
+		*numValidAddrs = 1;
+		return 0;
+	}
 
-	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
+	
+	String_InitArray(portStr,  portRaw);
+	String_AppendInt(&portStr, port);
+	portRaw[portStr.length] = '\0';
 
-	int res = getaddrinfo(host, NULL, &hints, &result);
+	int res = getaddrinfo(str, portRaw, &hints, &result);
 	if (res == -NO_DATA) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
-	for (cur = result; cur; cur = cur->ai_next) {
-		if (cur->ai_family != AF_INET) continue;
-		found = true;
-
-		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
-		break;
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
+	{
+		if (!cur->ai_addrlen) break; 
+		// TODO citra returns empty addresses past first one? does that happen on real hardware too?
+		
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen;
 	}
 
 	freeaddrinfo(result);
-	return found ? 0 : ERR_INVALID_ARGUMENT;
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-
-	if (inet_pton(AF_INET, str, &addr->v4.sin_addr) > 0) return 0;
-	return ParseHost(addr, str);
-}
-
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address) == 0;
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	int res;
 
-	*s = -1;
-	if ((res = ParseAddress(&addr, address))) return res;
-
-	*s = socket(AF_INET, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
+	*s = socket(raw->sa_family, SOCK_STREAM, 0); // https://www.3dbrew.org/wiki/SOCU:socket
 	if (*s == -1) return errno;
 	
 	if (nonblocking) {
@@ -345,10 +346,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 		if (flags >= 0) fcntl(*s, F_SETFL, flags | O_NONBLOCK);
 	}
 
-	addr.v4.sin_family = AF_INET;
-	addr.v4.sin_port   = htons(port);
-
-	res = connect(*s, &addr.raw, sizeof(addr.v4));
+	res = connect(*s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 

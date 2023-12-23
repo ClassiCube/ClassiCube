@@ -480,6 +480,7 @@
     <ClCompile Include="Graphics_PSVita.c" />
     <ClCompile Include="Graphics_SoftGPU.c" />
     <ClCompile Include="Graphics_Xbox.c" />
+    <ClCompile Include="Graphics_Xbox360.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
@@ -507,6 +508,7 @@
     <ClCompile Include="Platform_Web.c" />
     <ClCompile Include="Platform_Windows.c" />
     <ClCompile Include="Platform_Xbox.c" />
+    <ClCompile Include="Platform_Xbox360.c" />
     <ClCompile Include="Protocol.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
@@ -550,6 +552,7 @@
     <ClCompile Include="Window_Win.c" />
     <ClCompile Include="Window_X11.c" />
     <ClCompile Include="Window_Xbox.c" />
+    <ClCompile Include="Window_Xbox360.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="_autofit.c" />
     <ClCompile Include="_cff.c" />

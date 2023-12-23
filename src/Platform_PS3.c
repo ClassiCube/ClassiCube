@@ -339,44 +339,57 @@ union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in v4;
 };
-
-static int ParseHost(union SocketAddress* addr, const char* host) {
+static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct net_hostent* res = netGetHostByName(host);
+	struct sockaddr_in* addr4;
 	if (!res) return net_h_errno;
 	
 	// Must have at least one IPv4 address
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
 	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
 	
-	u32* addrlist = (u32*)res->h_addr_list;
-	char* addr0   = (char*)addrlist[0];
-
-	addr->v4.sin_addr = *(struct in_addr*)addr0;
-	return 0;
+	// each address pointer is only 4 bytes long
+	u32* addr_list = (u32*)res->h_addr_list;
+	char* src_addr;
+	int i;
+	
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = (char*)addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(struct sockaddr_in);
+		addr4 = (struct sockaddr_in*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		addr4->sin_addr   = *(struct in_addr*)src_addr;
+	}
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
+	*numValidAddrs = 0;
 
-	if (inet_aton(str, &addr->v4.sin_addr) > 0) return 0;
-	return ParseHost(addr, str);
+	if (inet_aton(str, &addr4->sin_addr) > 0) {
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		
+		addrs[0].size  = sizeof(*addr4);
+		*numValidAddrs = 1;
+		return 0;
+	}
+	
+	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address) == 0;
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	int res;
 
-	*s  = -1;
-	res = ParseAddress(&addr, address);
-	if (res) return res;
-
-	res = netSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	res = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (res < 0) return net_errno;
 	*s  = res;
 
@@ -385,10 +398,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 		netSetSockOpt(*s, SOL_SOCKET, SO_NBIO, &on, sizeof(int));
 	}
 
-	addr.v4.sin_family = AF_INET;
-	addr.v4.sin_port   = htons(port);
-
-	res = netConnect(*s, &addr.raw, sizeof(addr.v4));
+	res = netConnect(*s, raw, addr->size);
 	return res < 0 ? net_errno : 0;
 }
 
