@@ -297,10 +297,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	*numValidAddrs = 0;
 	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
 	if (inet_aton(str, &addr4->sin_addr) > 0) {
-		// TODO have to have this path, otherwise Citra crashes when crashing connecting to server if you always use getaddrinfo instead
-		// Need to investigate further as I'm probably doing something wrong
-		// TODO still doesn't work
-	
+		// TODO eliminate this path?
 		addr4->sin_family = AF_INET;
 		addr4->sin_port   = htons(port);
 		
@@ -309,6 +306,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		return 0;
 	}
 
+	hints.ai_family   = AF_INET; // TODO: you need this, otherwise resolving dl.dropboxusercontent.com crashes in Citra. probably something to do with IPv6 addresses
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 	
