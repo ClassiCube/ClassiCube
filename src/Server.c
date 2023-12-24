@@ -214,7 +214,7 @@ static void SPConnection_Init(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-static cc_socket net_socket;
+static cc_socket net_socket = -1;
 static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8* net_readCurrent;
 
@@ -277,7 +277,10 @@ static void MPConnection_TickConnect(void) {
 }
 
 static void MPConnection_BeginConnect(void) {
+	static const cc_string invalid_reason = String_FromConst("Invalid IP address");
 	cc_string title; char titleBuffer[STRING_SIZE];
+	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
+	int numValidAddrs;
 	cc_result res;
 	String_InitArray(title, titleBuffer);
 
@@ -289,10 +292,16 @@ static void MPConnection_BeginConnect(void) {
 	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 	
-	res = Socket_Connect(&net_socket, &Server.Address, Server.Port, true);
+	res = Socket_ParseAddress(&Server.Address, Server.Port, addrs, &numValidAddrs);
 	if (res == ERR_INVALID_ARGUMENT) {
-		static const cc_string reason = String_FromConst("Invalid IP address");
-		MPConnection_Fail(&reason);
+		MPConnection_Fail(&invalid_reason); return;
+	} else if (res) {
+		MPConnection_FailConnect(res); return;
+	}
+
+	res = Socket_Connect(&net_socket, &addrs[0], true);
+	if (res == ERR_INVALID_ARGUMENT) {
+		MPConnection_Fail(&invalid_reason);
 	} else if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	} else {

@@ -31,7 +31,7 @@ typedef unsigned int GLuint;
 typedef float GLfloat;
 typedef void GLvoid;
 
-/* NOTE: With the OpenGL 1.1 backend "pointer" arguments are actual pointers, 
+/* NOTE: With the OpenGL 1.1 backend "pointer" arguments are actual pointers, */
 /* but with VBOs they are just offsets instead */
 #ifdef CC_BUILD_GL11
 typedef const void* GLpointer;

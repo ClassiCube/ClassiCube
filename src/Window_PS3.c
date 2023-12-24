@@ -155,11 +155,36 @@ static int MapKey(int k) {
 	}
 	return 0;
 }
+static cc_bool kb_deferredClear;
 static void ProcessKBButtons(void) {
-	// PS3 keyboard APIs only seem to return current keys pressed ?
-	if (!kb_data.nb_keycode) return;
+	// PS3 keyboard APIs only seem to return current keys pressed,
+	//  which is a massive pain to work with
+	// 
+	// The API is really strange and when pressing two keys produces e.g.
+	//   - Event 1) pressed 82
+	//   - Event 2) pressed 46
+	// instead of
+	//   - Event 1) pressed 82
+	//   - Event 2) pressed 82 46
+	// 
+	// Additionally on real hardware, the following events when observed
+	//   - Releasing key: [key] [0]
+	//   - Holding key: [key] [0] [key] [0] [key] [0]
+	// I don't really know why this happens, so try to detect this by
+	//  deferring resetting all keys to next Window_ProcessEvents
+	// TODO properly investigate this	
 	
-	Mem_Set(now_pressed, 0, sizeof(now_pressed));
+	if (kb_deferredClear && (kb_data.nb_keycode == 0 || kb_data.keycode[0] == 0)) {
+		Mem_Set(now_pressed, 0, sizeof(now_pressed));
+		kb_deferredClear = false;
+	} else {
+		kb_deferredClear = false;
+		if (!kb_data.nb_keycode) return;
+	}
+	
+	// possibly unpress all keys next time around
+	if (kb_data.keycode[0] == 0) kb_deferredClear = true;
+	
 	for (int i = 0; i < kb_data.nb_keycode; i++)
 	{
 		int rawcode = kb_data.keycode[i];
@@ -248,7 +273,7 @@ static void HandleJoystick_Left(int x, int y) {
 }
 
 static void HandleJoystick_Right(int x, int y, double delta) {
-	float scale = (delta * 60.0) / 64.0f;
+	float scale = (delta * 60.0) / 32.0f;
 	
 	if (Math_AbsI(x) <= 32) x = 0;
 	if (Math_AbsI(y) <= 32) y = 0;

@@ -284,86 +284,52 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in  v4;
-	#ifdef AF_INET6
-	struct sockaddr_in6 v6;
-	struct sockaddr_storage total;
-	#endif
-};
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char str[NATIVE_STR_LEN];
 
-static int ParseHost(union SocketAddress* addr, const char* host) {
+	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int family = 0, res;
+	int res, i = 0;
+	
+	String_EncodeUtf8(str, address);
+	*numValidAddrs = 0;
 
-	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
+	
+	String_InitArray(portStr,  portRaw);
+	String_AppendInt(&portStr, port);
+	portRaw[portStr.length] = '\0';
 
-	res = getaddrinfo(host, NULL, &hints, &result);
-	if (res) return 0;
+	res = getaddrinfo(str, portRaw, &hints, &result);
+	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
+	if (res) return res;
 
-	for (cur = result; cur; cur = cur->ai_next) {
-		if (cur->ai_family != AF_INET) continue;
-		family = AF_INET;
-
-		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
-		break;
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
+	{
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen;
 	}
 
 	freeaddrinfo(result);
-	return family;
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, address);
-
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
-	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) return AF_INET6;
-	#endif
-	return ParseHost(addr, str);
-}
-
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address);
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	int family, addrSize = 0;
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	cc_result res;
 
-	*s = -1;
-	if (!(family = ParseAddress(&addr, address)))
-		return ERR_INVALID_ARGUMENT;
-
-	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
+	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
 		fcntl(*s, F_SETFL, O_NONBLOCK);
 	}
 
-	#ifdef AF_INET6
-	if (family == AF_INET6) {
-		addr.v6.sin6_family = AF_INET6;
-		addr.v6.sin6_port   = htons(port);
-		addrSize = sizeof(addr.v6);
-	}
-	#endif
-	if (family == AF_INET) {
-		addr.v4.sin_family  = AF_INET;
-		addr.v4.sin_port    = htons(port);
-		addrSize = sizeof(addr.v4);
-	}
-
-	res = connect(*s, &addr.raw, addrSize);
+	res = connect(*s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 

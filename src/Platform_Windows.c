@@ -395,6 +395,9 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+/* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
+static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
+
 static int (WSAAPI *_WSAStartup)(WORD versionRequested, LPWSADATA wsaData);
 static int (WSAAPI *_WSACleanup)(void);
 static int (WSAAPI *_WSAGetLastError)(void);
@@ -456,12 +459,15 @@ static void LoadWinsockFuncs(void) {
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
-static int ParseHost(void* dst, char* host, int port) {
-	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
+static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct hostent* res;
 	cc_result wsa_res;
+	SOCKADDR_IN* addr4;
+	char* src_addr;
+	int i;
 
 	res = _gethostbyname(host);
+
 	if (!res) {
 		wsa_res = _WSAGetLastError();
 
@@ -471,54 +477,60 @@ static int ParseHost(void* dst, char* host, int port) {
 		
 	/* per MSDN, should only be getting AF_INET returned from this */
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
 
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = res->h_addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(SOCKADDR_IN);
+
+		addr4 = (SOCKADDR_IN*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = _htons(port);
+		addr4->sin_addr   = *(IN_ADDR*)src_addr;
+	}
+
+	*numValidAddrs = i;
 	/* Must have at least one IPv4 address */
-	if (!res->h_addr_list[0]) return ERR_INVALID_ARGUMENT;
-
-	addr4->sin_family = AF_INET;
-	addr4->sin_port   = _htons(port);
-	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
-	return 0;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, int port) {
-	SOCKADDR_IN*  addr4 =  (SOCKADDR_IN*)dst;
-	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)dst;
-	cc_winstring addr;
-	Platform_EncodeString(&addr, address);
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	SOCKADDR_IN*  addr4 = (SOCKADDR_IN* )addrs[0].data;
+	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)addrs[0].data;
+	cc_winstring str;
+	INT size;
 
-	*size = sizeof(*addr4);
-	if (!_WSAStringToAddressW(addr.uni, AF_INET,  NULL, addr4, size)) {
+	*numValidAddrs = 0;
+	Platform_EncodeString(&str, address);
+
+	size = sizeof(*addr4);
+	if (!_WSAStringToAddressW(str.uni, AF_INET,  NULL, addr4, &size)) {
 		addr4->sin_port  = _htons(port);
+
+		addrs[0].size  = size;
+		*numValidAddrs = 1;
 		return 0;
 	}
 
-	*size = sizeof(*addr6);
-	if (!_WSAStringToAddressW(addr.uni, AF_INET6, NULL, addr6, size)) {
+	size = sizeof(*addr6);
+	if (!_WSAStringToAddressW(str.uni, AF_INET6, NULL, addr6, &size)) {
 		addr6->sin6_port = _htons(port);
+
+		addrs[0].size  = size;
+		*numValidAddrs = 1;
 		return 0;
 	}
 
-	*size = sizeof(*addr4);
-	return ParseHost(dst, addr.ansi, port);
+	return ParseHost(str.ansi, port, addrs, numValidAddrs);
 }
 
-int Socket_ValidAddress(const cc_string* address) {
-	SOCKADDR_STORAGE addr;
-	INT addrSize;
-	return Socket_ParseAddress(&addr, &addrSize, address, 0) == 0;
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	SOCKADDR_STORAGE addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
 	cc_result res;
-	INT addrSize;
 
-	*s  = -1;
-	res = Socket_ParseAddress(&addr, &addrSize, address, port);
-	if (res) return res;
-
-	*s = _socket(addr.ss_family, SOCK_STREAM, IPPROTO_TCP);
+	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
 
 	if (nonblocking) {
@@ -526,7 +538,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 		_ioctlsocket(*s, FIONBIO, &blockingMode);
 	}
 
-	res = _connect(*s, (SOCKADDR*)&addr, addrSize);
+	res = _connect(*s, raw_addr, addr->size);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 

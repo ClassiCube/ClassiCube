@@ -292,54 +292,45 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in v4;
-};
-
-static int ParseHost(union SocketAddress* addr, const char* host) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	char str[NATIVE_STR_LEN];
 	char buf[1024];
 	int rid, ret;
-
-	if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) return 0;
-
-	ret = sceNetResolverStartNtoA(rid, host, &addr->v4.sin_addr, 1 /* timeout */, 5 /* retries */);
-	sceNetResolverDelete(rid);
-	return ret >= 0;
-}
-
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
-	char str[NATIVE_STR_LEN];
+	
 	String_EncodeUtf8(str, address);
+	*numValidAddrs = 1;
 
-	if (sceNetInetInetPton(AF_INET,str, &addr->v4.sin_addr) > 0) return true;
-	return ParseHost(addr, str);
+	if (sceNetInetInetPton(AF_INET, str, &addr4->sin_addr) <= 0) {
+		/* Fallback to resolving as DNS name */
+		if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) 
+			return ERR_INVALID_ARGUMENT;
+
+		ret = sceNetResolverStartNtoA(rid, str, &addr4->sin_addr, 1 /* timeout */, 5 /* retries */);
+		sceNetResolverDelete(rid);
+		if (ret < 0) return ret;
+	}
+	
+	addr4->sin_family = AF_INET;
+	addr4->sin_port   = htons(port);
+		
+	addrs[0].size = sizeof(*addr4);
+	return 0;
 }
 
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address);
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	int res;
 
-	*s = -1;
-	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
-
-	*s = sceNetInetSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	*s = sceNetInetSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
 	
 	if (nonblocking) {
 		int on = 1;
 		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
 	}
-	
-	addr.v4.sin_family = AF_INET;
-	addr.v4.sin_port   = htons(port);
 
-	res = sceNetInetConnect(*s, &addr.raw, sizeof(addr.v4));
+	res = sceNetInetConnect(*s, raw, addr->size);
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 
