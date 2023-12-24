@@ -512,6 +512,21 @@ struct HttpConnection {
 	cc_bool valid;
 };
 
+static void ExtractHostPort(const struct HttpUrl* url, cc_string* host, cc_string* port) {
+	/* address can have the form of either "host" or "host:port" */
+	/* Slightly more complicated because IPv6 hosts can be e.g. [::1] */
+	cc_string* str = &url->address;
+	int idx = String_LastIndexOf(str, ':');
+
+	if (idx == -1) {
+		*host = *str;
+		*port = String_Empty;
+	} else {
+		*host = String_UNSAFE_Substring(str, 0, idx);
+		*port = String_UNSAFE_SubstringAt(str, idx + 1);
+	}
+}
+
 static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct HttpUrl* url) {
 	cc_string host, port;
 	cc_uint16 portNum;
@@ -519,8 +534,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	cc_sockaddr addrs[SOCKET_MAX_ADDRS];
 	int numValidAddrs;
 
-	/* address can be either "host" or "host:port" */
-	String_UNSAFE_Separate(&url->address, ':', &host, &port);
+	ExtractHostPort(url, &host, &port);
 	if (!Convert_ParseUInt16(&port, &portNum)) {
 		portNum = url->https ? 443 : 80;
 	}

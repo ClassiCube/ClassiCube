@@ -416,6 +416,9 @@ static int (WSAAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set
 
 static struct hostent* (WSAAPI *_gethostbyname)(const char* name);
 static unsigned short  (WSAAPI *_htons)(u_short hostshort);
+static int  (WSAAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, PADDRINFOA* result);
+static void (WSAAPI* _freeaddrinfo)(PADDRINFOA addrInfo);
+
 
 
 static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
@@ -445,6 +448,7 @@ static void LoadWinsockFuncs(void) {
 		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
 		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
 		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
+		DynamicLib_Sym(getaddrinfo),     DynamicLib_Sym(freeaddrinfo),
 		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
 	};
 	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
@@ -459,7 +463,7 @@ static void LoadWinsockFuncs(void) {
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
-static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+static cc_result ParseHostOld(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct hostent* res;
 	cc_result wsa_res;
 	SOCKADDR_IN* addr4;
@@ -496,6 +500,44 @@ static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numVal
 	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
+static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char portRaw[32]; cc_string portStr;
+	struct addrinfo hints = { 0 };
+	struct addrinfo* result;
+	struct addrinfo* cur;
+	int res, i = 0;
+
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	
+	String_InitArray(portStr,  portRaw);
+	String_AppendInt(&portStr, port);
+	portRaw[portStr.length] = '\0';
+
+	res = _getaddrinfo(host, portRaw, &hints, &result);
+	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
+	if (res) return res;
+
+	/* Prefer IPv4 addresses first */
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
+	{
+		if (cur->ai_family != AF_INET) continue;
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen; i++;
+	}
+	
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
+	{
+		if (cur->ai_family == AF_INET) continue;
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen; i++;
+	}
+
+	_freeaddrinfo(result);
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	SOCKADDR_IN*  addr4 = (SOCKADDR_IN* )addrs[0].data;
 	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)addrs[0].data;
@@ -523,7 +565,11 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		return 0;
 	}
 
-	return ParseHost(str.ansi, port, addrs, numValidAddrs);
+	if (_getaddrinfo) {
+		return ParseHostNew(str.ansi, port, addrs, numValidAddrs);
+	} else {
+		return ParseHostOld(str.ansi, port, addrs, numValidAddrs);
+	}
 }
 
 cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
