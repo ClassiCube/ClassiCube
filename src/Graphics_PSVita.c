@@ -224,6 +224,7 @@ static void VP_SwitchActive(void) {
 	if (VP == VP_Active) return;
 	VP_Active = VP;
 	
+	VP->dirtyUniforms |= VP_UNI_MATRIX; // Need to update uniforms after switching program
 	sceGxmSetVertexProgram(gxm_context, VP->programPatched);
 	VP_ReloadUniforms();
 }

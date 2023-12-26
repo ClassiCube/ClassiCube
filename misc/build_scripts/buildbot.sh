@@ -37,9 +37,9 @@ build_win32() {
 
   $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lwinmm -limagehlp
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit" >> "$ERRS_FILE"; fi
-  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp -lopengl32
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit (OpenGL)" >> "$ERRS_FILE"; fi
-  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d11.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d11.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp
   if [ $? -ne 0 ]; then echo "Failed to compile Windows 32 bit (Direct3D11)" >> "$ERRS_FILE"; fi
 
   # mingw defaults to i686, but some really old CPUs only support i586

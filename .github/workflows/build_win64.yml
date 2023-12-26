@@ -24,8 +24,8 @@ jobs:
           cp misc/windows/CCicon_64.res src/CCicon_64.res
           cd src
           x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d9.exe CCicon_64.res $LATEST_FLAG -lwinmm -limagehlp
-          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-ogl.exe CCicon_64.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
-          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d11.exe CCicon_64.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp
+          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-ogl.exe CCicon_64.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp -lopengl32
+          x86_64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-w64-d3d11.exe CCicon_64.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp
           
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}

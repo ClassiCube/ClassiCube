@@ -24,8 +24,8 @@ jobs:
           cp misc/windows/CCicon_32.res src/CCicon_32.res
           cd src
           i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d9.exe CCicon_32.res $LATEST_FLAG -lwinmm -limagehlp
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-ogl.exe CCicon_32.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp -lopengl32
-          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d11.exe CCicon_32.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lwinmm -limagehlp
+          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-ogl.exe CCicon_32.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp -lopengl32
+          i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-w32-d3d11.exe CCicon_32.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D11 -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp
           
           # mingw defaults to i686, but some really old CPUs only support i586
           i686-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -march=i586 -o cc-w9x-ogl.exe CCicon_32.res $LATEST_FLAG -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_HTTPCLIENT -DCC_BUILD_SCHANNEL -lwinmm -limagehlp -lopengl32

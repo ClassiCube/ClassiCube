@@ -270,7 +270,7 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
+	static cc_uint8 modes[] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }

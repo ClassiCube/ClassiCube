@@ -144,7 +144,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9
 	#define CC_BUILD_WINGUI
-	#define CC_BUILD_WININET
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_SCHANNEL
 	#define CC_BUILD_WINMM
 #elif defined __ANDROID__
 	#define CC_BUILD_ANDROID
