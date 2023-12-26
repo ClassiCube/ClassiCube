@@ -558,6 +558,7 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 	if ((res = Socket_ParseAddress(&host, portNum, addrs, &numValidAddrs))) return res;
 	res = ERR_INVALID_ARGUMENT; /* in case 0 valid addresses */
 
+	/* TODO: Connect in parallel instead of serial, but that's a lot of work */
 	for (i = 0; i < numValidAddrs; i++)
 	{
 		res = Socket_Connect(&conn->socket, &addrs[i], false);
@@ -636,9 +637,8 @@ static cc_result ConnectionPool_Open(struct HttpConnection** conn, const struct 
 *#########################################################################################################################*/
 enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_HEADER,
-	HTTP_RESPONSE_STATE_BODY_DATA,
+	HTTP_RESPONSE_STATE_DATA,
 	HTTP_RESPONSE_STATE_CHUNK_HEADER,
-	HTTP_RESPONSE_STATE_CHUNK_DATA,
 	HTTP_RESPONSE_STATE_CHUNK_END_R,
 	HTTP_RESPONSE_STATE_CHUNK_END_N,
 	HTTP_RESPONSE_STATE_CHUNK_TRAILERS,
@@ -649,8 +649,8 @@ struct HttpClientState {
 	enum HTTP_RESPONSE_STATE state;
 	struct HttpConnection* conn;
 	struct HttpRequest* req;
+	cc_uint32 dataLeft; /* Number of bytes still to read from the current chunk or body */
 	int chunked;
-	int chunkRead, chunkLength;
 	cc_bool autoClose;
 	cc_string header, location;
 	struct HttpUrl url;
@@ -660,8 +660,7 @@ struct HttpClientState {
 static void HttpClientState_Reset(struct HttpClientState* state) {
 	state->state       = HTTP_RESPONSE_STATE_HEADER;
 	state->chunked     = 0;
-	state->chunkRead   = 0;
-	state->chunkLength = 0;
+	state->dataLeft    = 0;
 	state->autoClose   = false;
 	String_InitArray(state->header,   state->_headerBuffer);
 	String_InitArray(state->location, state->_locationBuffer);
@@ -752,7 +751,7 @@ static int HttpClient_BeginBody(struct HttpRequest* req, struct HttpClientState*
 	}
 	if (req->contentLength) {
 		Http_BufferInit(req);
-		return HTTP_RESPONSE_STATE_BODY_DATA;
+		return HTTP_RESPONSE_STATE_DATA;
 	}
 	/* Zero length response */
 	return HTTP_RESPONSE_STATE_DONE;
@@ -777,7 +776,8 @@ static int HttpClient_GetChunkLength(const cc_string* line) {
 /* https://httpwg.org/specs/rfc7230.html */
 static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer, int total) {
 	struct HttpRequest* req = state->req;
-	int offset = 0;
+	cc_uint32 left, avail, read;
+	int offset = 0, chunkLen;
 
 	while (offset < total) {
 		switch (state->state) {
@@ -792,6 +792,12 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 				/* Zero length header = end of message headers */
 				if (state->header.length == 0) {
 					state->state = HttpClient_BeginBody(req, state);
+
+					/* The rest of the request body is just content/data */
+					if (state->state == HTTP_RESPONSE_STATE_DATA) {
+						Http_BufferEnsure(req, req->contentLength);
+						state->dataLeft = req->contentLength;
+					}
 					break;
 				}
 
@@ -802,22 +808,22 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 		}
 		break;
 
-		case HTTP_RESPONSE_STATE_BODY_DATA:
+		case HTTP_RESPONSE_STATE_DATA:
 		{
-			cc_uint32 left  = total - offset;
-			cc_uint32 avail = req->contentLength - req->size;
-			cc_uint32 read  = min(left, avail);
+			left  = total - offset;
+			avail = state->dataLeft;
+			read  = min(left, avail);
 
-			Http_BufferEnsure(req, read);
 			Mem_Copy(req->data + req->size, buffer + offset, read);
-			Http_BufferExpanded(req, read);
+			Http_BufferExpanded(req, read); state->dataLeft -= read;
 			offset += read;
 
-			if (req->size >= req->contentLength) {
-				state->state = HTTP_RESPONSE_STATE_DONE;
+			if (!state->dataLeft) {
+				state->state = state->chunked ? HTTP_RESPONSE_STATE_CHUNK_END_R : HTTP_RESPONSE_STATE_DONE;
 			}
 		}
 		break;
+
 
 		/* RFC 7230, section 4.1 - Chunked Transfer Coding */
 		case HTTP_RESPONSE_STATE_CHUNK_HEADER:
@@ -827,36 +833,18 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 				if (c == '\r') continue;
 				if (c != '\n') { String_Append(&state->header, c); continue; }
 
-				state->chunkLength = HttpClient_GetChunkLength(&state->header);
-				if (state->chunkLength < 0) return HTTP_ERR_CHUNK_SIZE;
+				chunkLen = HttpClient_GetChunkLength(&state->header);
+				if (chunkLen < 0) return HTTP_ERR_CHUNK_SIZE;
 				state->header.length = 0;
 
-				if (state->chunkLength == 0) {
+				if (chunkLen == 0) {
 					state->state = HTTP_RESPONSE_STATE_CHUNK_TRAILERS;
 				} else {
-					state->state = HTTP_RESPONSE_STATE_CHUNK_DATA;
+					state->state = HTTP_RESPONSE_STATE_DATA;
+					Http_BufferEnsure(req, chunkLen);
+					state->dataLeft = chunkLen;
 				}
 				break;
-			}
-		}
-		break;
-
-		case HTTP_RESPONSE_STATE_CHUNK_DATA:
-		{
-			cc_uint32 left  = total - offset;
-			cc_uint32 avail = state->chunkLength - state->chunkRead;
-			cc_uint32 read  = min(left, avail);
-
-			Http_BufferEnsure(req, read);
-			Mem_Copy(req->data + req->size, buffer + offset, read);
-			Http_BufferExpanded(req, read);
-			state->chunkRead += read;
-			offset += read;
-
-			if (state->chunkRead >= state->chunkLength) {
-				state->state       = HTTP_RESPONSE_STATE_CHUNK_END_R;
-				state->chunkRead   = 0;
-				state->chunkLength = 0;
 			}
 		}
 		break;
@@ -899,17 +887,30 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 	return 0;
 }
 
+#define INPUT_BUFFER_LEN 8192
 static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
-	char buffer[8192];
+	struct HttpRequest* req = state->req;
+	char buffer[INPUT_BUFFER_LEN];
+	char* dst;
 	cc_uint32 total;
 	cc_result res;
 
 	for (;;) {
-		res = HttpConnection_Read(state->conn, buffer, 8192, &total);
+		dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
+		res = HttpConnection_Read(state->conn, dst, INPUT_BUFFER_LEN, &total);
+
 		if (res)        return res;
 		if (total == 0) return ERR_END_OF_STREAM;
 
-		res = HttpClient_Process(state, buffer, total);
+		if (dst != buffer) {
+			/* When there is more than INPUT_BUFFER_LEN bytes of unread data/content, */
+			/*  there is no need to run the HTTP client state machine - just read directly */
+			/*  into the output buffer to avoid a pointless Mem_Copy call */
+			Http_BufferExpanded(req, total); state->dataLeft -= total;
+		} else {
+			res = HttpClient_Process(state, buffer, total);
+		}
+
 		if (res) return res;
 		if (state->state == HTTP_RESPONSE_STATE_DONE) return 0;
 	}

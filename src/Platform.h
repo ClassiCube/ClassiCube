@@ -243,7 +243,7 @@ CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 void Platform_LoadSysFonts(void);
 
 #define CC_SOCKETADDR_MAXSIZE 512
-#define SOCKET_MAX_ADDRS 8
+#define SOCKET_MAX_ADDRS 5
 
 typedef struct cc_sockaddr_ {
 	int size; /* Actual size of the raw socket address */
