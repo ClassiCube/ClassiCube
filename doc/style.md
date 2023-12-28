@@ -1,6 +1,6 @@
 ### Guidelines
 * Code should be C89 compatible and compilable as C++.
-* Each .c file should represent a module. (see architecture.md for more details)
+* Each .c file should represent a module. (see modules.md for more details)
 * Public functions and variables should be prefixed by module to avoid name collisions. (e.g. `Game_Reset`)
 * Private functions should be named using pascal case. Prefixing module is optional - do it when it makes sense.
 * Private variables don't really have a consistent style.
