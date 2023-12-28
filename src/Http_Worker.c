@@ -644,6 +644,7 @@ enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_CHUNK_TRAILERS,
 	HTTP_RESPONSE_STATE_DONE
 };
+#define HTTP_HEADER_MAX_LENGTH 512
 
 struct HttpClientState {
 	enum HTTP_RESPONSE_STATE state;
@@ -654,7 +655,8 @@ struct HttpClientState {
 	cc_bool autoClose;
 	cc_string header, location;
 	struct HttpUrl url;
-	char _headerBuffer[256], _locationBuffer[256];
+	char _headerBuffer[HTTP_HEADER_MAX_LENGTH];
+	char _locationBuffer[HTTP_HEADER_MAX_LENGTH];
 };
 
 static void HttpClientState_Reset(struct HttpClientState* state) {
@@ -787,7 +789,14 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 			for (; offset < total;) {
 				char c = buffer[offset++];
 				if (c == '\r') continue;
-				if (c != '\n') { String_Append(&state->header, c); continue; }
+				if (c != '\n') {
+					/* Warn when a header would be truncated */
+					if (state->header.length == HTTP_HEADER_MAX_LENGTH) 
+						return HTTP_ERR_TRUNCATED;
+
+					String_Append(&state->header, c); 
+					continue; 
+				}
 
 				/* Zero length header = end of message headers */
 				if (state->header.length == 0) {
