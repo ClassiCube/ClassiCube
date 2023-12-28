@@ -943,9 +943,25 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 	String_Format2((cc_string*)req->meta, "%c:%s\r\n", key, value);
 }
 
+static cc_result HttpBackend_PerformRequest(struct HttpClientState* state) {
+	cc_result res;
+
+	res = ConnectionPool_Open(&state->conn, &state->url);
+	if (res) { HttpConnection_Close(state->conn); return res; }
+
+	res = HttpClient_SendRequest(state);
+	if (res) { HttpConnection_Close(state->conn); return res; }
+
+	res = HttpClient_ParseResponse(state);
+	if (res) HttpConnection_Close(state->conn);
+
+	return res;
+}
+
 static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 	struct HttpClientState state;
-	int redirects = 0;
+	cc_bool retried = false;
+	int redirects   = 0;
 	cc_result res;
 
 	HttpClientState_Init(&state);
@@ -953,15 +969,13 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 	state.req = req;
 
 	for (;;) {
-		res = ConnectionPool_Open(&state.conn, &state.url);
-		if (res) { HttpConnection_Close(state.conn); return res; }
-
-		res = HttpClient_SendRequest(&state);
-		if (res) { HttpConnection_Close(state.conn); return res; }
-
-		res = HttpClient_ParseResponse(&state);
-		http_curProgress = 100;
-		if (state.autoClose) HttpConnection_Close(state.conn);
+		res = HttpBackend_PerformRequest(&state);
+		/* TODO: Can we handle this while preserving the TCP connection */
+		if (res == SSL_ERR_CONTEXT_DEAD && !retried) {
+			Platform_LogConst("KILLIN AND TRYIN AGAIN");
+			res = HttpBackend_PerformRequest(&state);
+			retried = true;
+		}
 
 		if (res || !HttpClient_IsRedirect(req)) break;
 		if (redirects >= 20) return HTTP_ERR_REDIRECTS;

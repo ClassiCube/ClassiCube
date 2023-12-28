@@ -347,6 +347,9 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 
 				return SSL_ReadDecrypted(ctx, data, count, read);
 			}
+
+			/* TODO properly close the connection with TLS shutdown when this happens */
+			if (sec == SEC_I_CONTEXT_EXPIRED) return SSL_ERR_CONTEXT_DEAD;
 			
 			if (sec != SEC_E_INCOMPLETE_MESSAGE) return sec;
 			/* SEC_E_INCOMPLETE_MESSAGE case - still need to read more data from the server first */
