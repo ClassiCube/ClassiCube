@@ -972,7 +972,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 		res = HttpBackend_PerformRequest(&state);
 		/* TODO: Can we handle this while preserving the TCP connection */
 		if (res == SSL_ERR_CONTEXT_DEAD && !retried) {
-			Platform_LogConst("KILLIN AND TRYIN AGAIN");
+			Platform_LogConst("Resetting connection due to SSL context being dropped..");
 			res = HttpBackend_PerformRequest(&state);
 			retried = true;
 		}

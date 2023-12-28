@@ -540,10 +540,16 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_read(&ctx->ioc, data, count);
+	int err;
 	
 	if (res < 0) {
 		if (ctx->readError) return ctx->readError;
-		return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+		
+		// TODO session resumption, proper connection closing ??
+		err = br_ssl_engine_last_error(&ctx->sc.eng);
+		if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
+			return SSL_ERR_CONTEXT_DEAD;
+		return SSL_ERROR_SHIFT + err;
 	}
 	
 	br_sslio_flush(&ctx->ioc);
