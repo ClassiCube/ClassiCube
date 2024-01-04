@@ -6,6 +6,7 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#define NOMINMAX
 #include <windows.h>
 #define SECURITY_WIN32
 #include <sspi.h>

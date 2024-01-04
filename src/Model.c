@@ -2369,6 +2369,7 @@ static void RegisterDefaultModels(void) {
 	HumanoidModel_Register();
 	MakeModel(&human_model);
 	Models.Human = &human_model;
+	BlockModel_Register();
 
 	ChickenModel_Register();
 	CreeperModel_Register();
@@ -2379,7 +2380,6 @@ static void RegisterDefaultModels(void) {
 	SpiderModel_Register();
 	ZombieModel_Register();
 
-	BlockModel_Register();
 	ChibiModel_Register();
 	HeadModel_Register();
 	SittingModel_Register();

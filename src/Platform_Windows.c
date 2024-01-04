@@ -663,16 +663,20 @@ static cc_result Process_RawGetExePath(cc_winstring* path, int* len) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	union STARTUPINFO_union {
+		STARTUPINFOW wide;
+		STARTUPINFOA ansi;
+	} si = { 0 }; // less compiler warnings this way
+	
 	cc_winstring path;
 	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	STARTUPINFOW si        = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	cc_winstring raw;
 	cc_result res;
 	int len, i;
 
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
-	si.cb = sizeof(STARTUPINFOW);
+	si.wide.cb = sizeof(STARTUPINFOW);
 	
 	String_InitArray(argv, argvBuffer);
 	/* Game doesn't actually care about argv[0] */
@@ -689,11 +693,11 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 
 	if (path.uni[0]) {
 		if (!CreateProcessW(path.uni, raw.uni, NULL, NULL,
-				false, 0, NULL, NULL, &si, &pi)) return GetLastError();
+				false, 0, NULL, NULL, &si.wide, &pi)) return GetLastError();
 	} else {
 		/* Windows 9x does not support W API functions */
 		if (!CreateProcessA(path.ansi, raw.ansi, NULL, NULL,
-				false, 0, NULL, NULL, &si, &pi)) return GetLastError();
+				false, 0, NULL, NULL, &si.ansi, &pi)) return GetLastError();
 	}
 
 	/* Don't leak memory for process return code */
