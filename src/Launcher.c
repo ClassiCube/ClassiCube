@@ -256,9 +256,7 @@ void Launcher_Run(void) {
 	Http_Component.Init();
 	CheckUpdateTask_Run();
 
-#ifdef CC_BUILD_FLATPAK
-	MainScreen_SetActive();
-#else
+#ifdef CC_BUILD_RESOURCES
 	Resources_CheckExistence();
 
 	if (Resources_Count) {
@@ -266,6 +264,8 @@ void Launcher_Run(void) {
 	} else {
 		MainScreen_SetActive();
 	}
+#else
+	MainScreen_SetActive();
 #endif
 
 	for (;;) {

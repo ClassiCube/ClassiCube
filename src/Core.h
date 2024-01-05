@@ -119,7 +119,11 @@ typedef cc_uint8  cc_bool;
 
 
 #define CC_BUILD_FREETYPE
+#ifndef CC_BUILD_FLATPAK
+#define CC_BUILD_RESOURCES
+#endif
 /*#define CC_BUILD_GL11*/
+
 #ifndef CC_BUILD_MANUAL
 #if defined NXDK
 	/* XBox also defines _WIN32 */
@@ -267,6 +271,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_MINFILES
 	#define CC_BUILD_COOPTHREADED
 	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
 #elif defined __psp__
 	#define CC_BUILD_PSP
 	#define CC_BUILD_OPENAL
@@ -307,6 +312,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
 	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
 	#define CC_BUILD_OPENAL
@@ -324,6 +330,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
 	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
 	#define CC_BUILD_OPENAL
