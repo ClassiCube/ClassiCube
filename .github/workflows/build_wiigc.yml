@@ -19,6 +19,13 @@ jobs:
           make wii
           make clean
           make gamecube
+          
+      - name: Create Wii homebrew
+        run: |
+          mkdir -p wiitest/apps/ClassiCube
+          cp ClassiCube-wii.dol wiitest/apps/ClassiCube/boot.dol
+          cp misc/wii/icon.png wiitest/apps/ClassiCube/icon.png
+          cp misc/wii/meta.xml wiitest/apps/ClassiCube/meta.xml
 
 
       - uses: ./.github/actions/notify_failure
@@ -51,3 +58,9 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-gc.elf'
           DEST_NAME: 'ClassiCube-gc.elf'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'wiitest'
+          DEST_NAME: 'ClassiCube-Wii-Homebrew'

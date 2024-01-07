@@ -26,7 +26,7 @@ ifeq ($(PLAT),web)
 CC=emcc
 OEXT=.html
 CFLAGS=-g
-LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1
+LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 --js-library src/interop_web.js
 endif
 
 ifeq ($(PLAT),mingw)
