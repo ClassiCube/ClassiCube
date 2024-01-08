@@ -499,20 +499,22 @@ void Entities_Remove(EntityID id) {
 
 EntityID Entities_GetClosest(struct Entity* src) {
 	Vec3 eyePos = Entity_GetEyePosition(src);
-	Vec3 dir = Vec3_GetDirVector(src->Yaw * MATH_DEG2RAD, src->Pitch * MATH_DEG2RAD);
-	float closestDist = MATH_POS_INF;
+	Vec3 dir    = Vec3_GetDirVector(src->Yaw * MATH_DEG2RAD, src->Pitch * MATH_DEG2RAD);
+	float closestDist = -200.5f; /* NOTE: was previously positive infinity */
 	EntityID targetId = ENTITIES_SELF_ID;
 
 	float t0, t1;
 	int i;
 
-	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
+	for (i = 0; i < ENTITIES_SELF_ID; i++) /* because we don't want to pick against local player */
+	{
 		struct Entity* entity = Entities.List[i];
 		if (!entity) continue;
+		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1)) continue;
 
-		if (Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1) && t0 < closestDist) {
+		if (closestDist < -200 || t0 < closestDist) {
 			closestDist = t0;
-			targetId = (EntityID)i;
+			targetId    = (EntityID)i;
 		}
 	}
 	return targetId;
