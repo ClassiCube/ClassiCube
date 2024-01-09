@@ -16,6 +16,7 @@ def notify_webhook(body):
 			"avatar_url": "https://static.classicube.net/img/cc-cube-small.png",
 			"content" : body
 		}
+		
 		r = requests.post(WEBHOOK_URL, json=webhook_data)
 		print("BuildNotify response: " + r.text)
 	except Exception as e:
@@ -23,7 +24,7 @@ def notify_webhook(body):
 
 cc_errors = None
 try:
-	with open('client/cc_errors.txt', 'r') as file:
+	with open(sys.argv[1], 'r') as file:
 		cc_errors = file.read()
 except FileNotFoundError:
 	# nothing to as no compile errors

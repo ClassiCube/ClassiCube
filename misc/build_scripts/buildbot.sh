@@ -112,7 +112,7 @@ WEB_CC="/home/buildbot/emsdk/emscripten/1.38.31/emcc"
 build_web() {
   echo "Building web.."
   rm cc.js
-  $WEB_CC *.c -O1 -o cc.js --js-library interop_web.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web
+  $WEB_CC *.c -s WASM=0 -s NO_EXIT_RUNTIME=1 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web --js-library interop_web.js -Os -g2 -s SINGLE_FILE
   if [ $? -ne 0 ]; then echo "Failed to compile Webclient" >> "$ERRS_FILE"; fi
   # fix mouse wheel scrolling page not being properly prevented
   # "[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."
@@ -262,6 +262,49 @@ run_timed build_web
 run_timed build_rpi32
 run_timed build_rpi64
 run_timed build_android
+run_timed build_ios
+
+~/upload_build.sh latest/ClassiCube.rpi cc-rpi
+~/upload_build.sh latest/cc-rpi-64 cc-rpi64
+
+~/upload_build.sh latest/ClassiCube.ipa cc.ipa
+~/upload_build.sh latest/ClassiCube.apk cc.apk
+
+~/upload_build.sh latest/ClassiCube.ipa cc.ipa
+~/upload_build.sh latest/ClassiCube.apk cc.apk
+
+~/upload_build.sh latest/ClassiCube.exe cc-w32-d3d.exe
+~/upload_build.sh latest/ClassiCube.opengl.exe cc-w32-ogl.exe
+~/upload_build.sh latest/cc-w32-d3d11.exe cc-w32-d3d11.exe
+
+~/upload_build.sh latest/ClassiCube.64.exe cc-w64-d3d.exe
+~/upload_build.sh latest/ClassiCube.64-opengl.exe cc-w64-ogl.exe
+~/upload_build.sh latest/cc-w64-d3d11.exe cc-w64-d3d11.exe
+
+~/upload_build.sh latest/ClassiCube.64.osx cc-osx64
+~/upload_build.sh latest/cc-osx64-gl2 cc-osx64-gl2
+
+~/upload_build.sh latest/ClassiCube.osx cc-osx32
+~/upload_build.sh latest/cc-osx32-gl2 cc-osx32-gl2
+
+~/upload_build.sh latest/ClassiCube cc-nix64
+~/upload_build.sh latest/cc-nix64-gl2 cc-nix64-gl2
+
+~/upload_build.sh latest/ClassiCube.32 cc-nix32
+~/upload_build.sh latest/cc-nix32-gl2 cc-nix32-gl2
+
+~/upload_build.sh latest/ClassiCube.js cc.js
+
+rm builds.zip
+zip builds.zip cc-w32-d3d.exe cc-w32-ogl.exe cc-w32-d3d11.exe cc-w64-d3d.exe cc-w64-ogl.exe cc-w64-d3d11.exe
+~/upload_build.sh $LATEST/builds.zip builds.zip
+# nightlies page on classicube.net
+~/upload_build.sh $LATEST/ClassiCube.exe cc-w32-d3d.exe
+~/upload_build.sh $LATEST/ClassiCube.64.exe cc-w64-d3d.exe
+~/upload_build.sh $LATEST/ClassiCube.32 cc-nix32
+~/upload_build.sh $LATEST/ClassiCube cc-nix64
+~/upload_build.sh $LATEST/ClassiCube.osx cc-osx32
+~/upload_build.sh $LATEST/ClassiCube.64.osx cc-osx64
 
 cd ~
-python3 notify.py
+python3 notify.py 'client/cc_errors.txt'

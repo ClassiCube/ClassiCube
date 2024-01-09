@@ -407,7 +407,7 @@ static char** _argv;
 
 extern void interop_FS_Init(void);
 extern void interop_DirectorySetWorking(const char* path);
-extern void interop_AsyncDownloadTexturePack(const char* path, const char* url);
+extern void interop_AsyncDownloadTexturePack(const char* path);
 
 int main(int argc, char** argv) {
 	_argc = argc; _argv = argv;
@@ -419,7 +419,7 @@ int main(int argc, char** argv) {
 	/*        > web_main (game actually starts) */
 	interop_FS_Init();
 	interop_DirectorySetWorking("/classicube");
-	interop_AsyncDownloadTexturePack("texpacks/default.zip", "/static/default.zip");
+	interop_AsyncDownloadTexturePack("texpacks/default.zip");
 }
 
 extern void interop_LoadIndexedDB(void);

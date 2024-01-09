@@ -178,18 +178,18 @@ mergeInto(LibraryManager.library, {
     xhr.send();
   },
   interop_AsyncDownloadTexturePack__deps: ['fetchTexturePackAsync'],
-  interop_AsyncDownloadTexturePack: function (rawPath, rawUrl) {
+  interop_AsyncDownloadTexturePack: function (rawPath) {
     var path = UTF8ToString(rawPath);
-    var url  = UTF8ToString(rawUrl);
+    var url  = '/static/default.zip';
     Module.setStatus('Downloading textures.. (1/2)');
     
     _fetchTexturePackAsync(url, 
       function(buffer) {
         CCFS.writeFile(path, new Uint8Array(buffer));
-        ccall('main_phase1', 'void');
+        Module['_main_phase1']();
       },
       function() {
-        ccall('main_phase1', 'void');
+        Module['_main_phase1']();
       }
     );
   },
@@ -200,7 +200,7 @@ mergeInto(LibraryManager.library, {
     _IDBFS_loadFS(function(err) { 
       if (err) window.cc_idbErr = err;
       Module.setStatus('');
-      ccall('main_phase2', 'void');
+      Module['_main_phase2']();
     });
   },
 

@@ -16,10 +16,10 @@ Common compilation errors
 Add ```-lrt``` when compiling. Occurs when using glibc versions before 2.17.
 
 #### fatal error: execinfo.h: No such file or directory
-Install ```libexecinfo``` package. Occurs when using musl.
+Define `CC_BACKTRACE_BUILTIN` when compiling. Usually occurs when using musl.
 
 #### Undefined reference to 'backtrace'
-Add ```-lexecinfo``` when compiling. Occurs when using musl.
+Define `CC_BACKTRACE_BUILTIN` when compiling. Usually occurs when using musl.
 
 Webclient patches
 ---------------------
