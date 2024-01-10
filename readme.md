@@ -235,7 +235,7 @@ Install SDL2 port if needed
 
 #### Web
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js```
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
