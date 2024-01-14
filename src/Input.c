@@ -190,10 +190,11 @@ static void ClearTouches(void) { }
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 #define Pad_Names \
-"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
+"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", "PAD_Z", \
 "PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
 "PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR", \
-"PAD_LSTICK", "PAD_RSTICK"
+"PAD_LSTICK", "PAD_RSTICK",					   \
+"PAD_CLEFT", "PAD_CRIGHT", "PAD_CUP", "PAD_CDOWN"
 
 /* Names for each input button when stored to disc */
 static const char* const storageNames[INPUT_COUNT] = {
@@ -326,19 +327,36 @@ void Pointer_SetPosition(int idx, int x, int y) {
 cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
 cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
 
-const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
-	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
-	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
-	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
-	0, 0, 0, 0, 0,                    /* Hacks */
-	0, 0, 0, 0,                       /* LAlt - F11 */
-	0, 0, 0, 0,                       /* F5 - C */
-	0, CCPAD_L, 0, CCPAD_R,
-	0, 0, 0,
-	0,0,0, 0,0,0,0,
-	0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
-	CCPAD_ZL, CCPAD_ZR
-};
+#ifndef ULTRA64
+	const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
+		CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
+		CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
+		CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
+		0, 0, 0, 0, 0,                    /* Hacks */
+		0, 0, 0, 0,                       /* LAlt - F11 */
+		0, 0, 0, 0,                       /* F5 - C */
+		0, CCPAD_L, 0, CCPAD_R,
+		0, 0, 0,
+		0,0,0, 0,0,0,0,
+		0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
+		CCPAD_ZL, CCPAD_ZR
+	};
+#else
+	const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
+		CCPAD_CUP, CCPAD_CDOWN, CCPAD_CLEFT, CCPAD_CRIGHT, /* Movement */
+		CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
+		CCPAD_B, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
+		0, 0, 0, 0, 0,                    /* Hacks */
+		0, 0, 0, 0,                       /* LAlt - F11 */
+		0, 0, 0, 0,                       /* F5 - C */
+		0, CCPAD_R, 0, CCPAD_Z,			  /* ???, Place, ???, Break */
+		0, 0, 0,
+		0,0,0, 0,0,0,0,
+		0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
+		CCPAD_ZL, CCPAD_ZR
+	};
+#endif
+
 const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
 	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
