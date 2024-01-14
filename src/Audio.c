@@ -1494,6 +1494,9 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 		Waitable_Free(music_waitable);
 	}
 #else
+
+	#include <libdragon.h> //Needed for the 64
+
 	/* TODO, N64 Specific Code. */
 
 	//	From Digi-Space Productions @ 4:44P, 1/14/2024
@@ -1502,13 +1505,14 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 	//	music it normally has.
 
 	//	I might be insane with that one.
-	//
+
+	xm64player_t xm; //Needed for XM Modules, will get to playback soon.
 
 	static void Music_Init(void) { }
 	static void Music_Free(void) { }
 	static void Music_Stop(void) { }
 	static void Music_Start(void) {
-		Chat_AddRaw("&cMusic is not supported currently");
+		Chat_AddRaw("&cXM module implementation unfinished.");
 		Audio_MusicVolume = 0;
 	}
 #endif
