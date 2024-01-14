@@ -1508,9 +1508,15 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 
 	xm64player_t xm; //Needed for XM Modules, will get to playback soon.
 
-	static void Music_Init(void) { }
-	static void Music_Free(void) { }
-	static void Music_Stop(void) { }
+	static void Music_Init(void) {
+		Chat_AddRaw("&cXM module should load here.");
+	}
+	static void Music_Free(void) {
+		Chat_AddRaw("&cXM module should unload here.");
+	}
+	static void Music_Stop(void) {
+		Chat_AddRaw("&cXM module should cease here.");
+	}
 	static void Music_Start(void) {
 		Chat_AddRaw("&cXM module implementation unfinished.");
 		Audio_MusicVolume = 0;
