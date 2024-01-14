@@ -134,8 +134,14 @@ static void CycleViewDistanceBackwards(const short* viewDists, int count) {
 	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
-static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-static const short classicDists[4] = { 8, 32, 128, 512 };
+#ifndef FORCE_LOW_RENDDIST
+	static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+	static const short classicDists[4] = { 8, 32, 128, 512 };
+#else
+	static const short normDists[1]   = { STATIC_RENDDIST }; //For the N64/Other platforms that opt into this define,
+	static const short classicDists[1] = { STATIC_RENDDIST };//	It just makes it so there is only 1 possible render distance.
+#endif
+
 void Game_CycleViewDistance(void) {
 	const short* dists = Gui.ClassicMenu ? classicDists : normDists;
 	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
@@ -327,7 +333,11 @@ static void LoadOptions(void) {
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
-	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, 512);
+	#ifndef FORCE_LOW_RENDDIST
+		Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, 512);
+	#else
+		Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, STATIC_RENDDIST, STATIC_RENDDIST, STATIC_RENDDIST); //Same as before, just one single distance, make it low.
+	#endif
 	Game_UserViewDistance = Game_ViewDistance;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
 	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);

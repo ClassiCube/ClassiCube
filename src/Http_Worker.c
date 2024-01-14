@@ -905,7 +905,11 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	cc_result res;
 
 	for (;;) {
-		dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
+		#ifndef ULTRA64
+			dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
+		#else
+			dst = NULL; //Since networking wont be a factor here, set it to null, TODO: Implement defines for other systems todo the same thing.
+		#endif
 		res = HttpConnection_Read(state->conn, dst, INPUT_BUFFER_LEN, &total);
 
 		if (res)        return res;
