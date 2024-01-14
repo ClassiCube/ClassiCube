@@ -84,6 +84,12 @@ static void HandleButtons(joypad_buttons_t btns) {
 	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.d_right);
 	Input_SetNonRepeatable(CCPAD_UP,     btns.d_up);
 	Input_SetNonRepeatable(CCPAD_DOWN,   btns.d_down);
+
+	//TEMP: Mirror D-Pad on C-Pad
+	Input_SetNonRepeatable(CCPAD_LEFT,   btns.c_left);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.c_right);
+	Input_SetNonRepeatable(CCPAD_UP,     btns.c_up);
+	Input_SetNonRepeatable(CCPAD_DOWN,   btns.c_down);
 	
 	// TODO: How to map the right digital buttons (c_left/c_down) etc
 	/*
