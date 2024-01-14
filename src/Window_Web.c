@@ -183,7 +183,7 @@ static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 		emscripten_exit_pointerlock();
 		return "You have unsaved changes. Are you sure you want to quit?";
 	}
-	Window_Close();
+	Window_RequestClose();
 	return NULL;
 }
 
@@ -498,7 +498,7 @@ void Window_SetSize(int width, int height) {
 	UpdateWindowBounds();
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 	/* If the game is closed while in fullscreen, the last rendered frame stays */

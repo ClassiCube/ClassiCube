@@ -293,7 +293,7 @@ void Launcher_Run(void) {
 		if (res) Logger_SysWarn(res, action);
 	}
 
-	if (WindowInfo.Exists) Window_Close();
+	if (WindowInfo.Exists) Window_RequestClose();
 #endif
 }
 

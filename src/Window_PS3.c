@@ -33,7 +33,7 @@ static void sysutil_callback(u64 status, u64 param, void* usrdata) {
 	switch (status) {
 		case SYSUTIL_EXIT_GAME:
 			WindowInfo.Exists = false;
-			Window_Close();
+			Window_RequestClose();
 			break;
 	}
 }
@@ -89,7 +89,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 

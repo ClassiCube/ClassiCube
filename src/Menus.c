@@ -500,7 +500,7 @@ static struct PauseScreen {
 	struct TextWidget title;
 } PauseScreen;
 
-static void PauseScreenBase_Quit(void* a, void* b) { Window_Close(); }
+static void PauseScreenBase_Quit(void* a, void* b) { Window_RequestClose(); }
 static void PauseScreenBase_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen); }
 
 static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontDesc* titleFont) {

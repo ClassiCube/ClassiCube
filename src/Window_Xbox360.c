@@ -69,7 +69,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	/* TODO implement */
 }
 

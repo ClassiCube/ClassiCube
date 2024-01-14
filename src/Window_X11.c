@@ -449,7 +449,7 @@ void Window_SetSize(int width, int height) {
 	Window_ProcessEvents(0.0);
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	XEvent ev = { 0 };
 	ev.type = ClientMessage;
 	ev.xclient.format  = 32;

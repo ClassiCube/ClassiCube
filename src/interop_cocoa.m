@@ -36,7 +36,7 @@ static void Window_CommonInit(void) {
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
-	Window_Close();
+	Window_RequestClose();
 	return 0;
 }
 
@@ -431,7 +431,7 @@ void Window_SetSize(int width, int height) {
 	[winHandle setFrame:rect display:YES];
 }
 
-void Window_Close(void) { 
+void Window_RequestClose(void) { 
 	[winHandle close];
 }
 

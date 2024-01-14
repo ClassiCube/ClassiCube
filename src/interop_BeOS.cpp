@@ -512,7 +512,7 @@ void Window_SetSize(int width, int height) {
 	win_handle->Unlock();
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	BMessage* msg = new BMessage(B_QUIT_REQUESTED);
 	app_handle->PostMessage(msg);
 }

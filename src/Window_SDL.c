@@ -96,7 +96,7 @@ void Window_SetSize(int width, int height) {
 	SDL_SetWindowSize(win_handle, width, height);
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	SDL_Event e;
 	e.type = SDL_QUIT;
 	SDL_PushEvent(&e);
@@ -223,7 +223,7 @@ static void OnWindowEvent(const SDL_Event* e) {
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			break;
 		case SDL_WINDOWEVENT_CLOSE:
-			Window_Close();
+			Window_RequestClose();
 			break;
 		}
 }

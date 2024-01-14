@@ -2058,7 +2058,7 @@ static void DisconnectScreen_OnReconnect(void* s, void* w) {
 	Gui_ShowDefault();
 	Server.BeginConnect();
 }
-static void DisconnectScreen_OnQuit(void* s, void* w) { Window_Close(); }
+static void DisconnectScreen_OnQuit(void* s, void* w) { Window_RequestClose(); }
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;

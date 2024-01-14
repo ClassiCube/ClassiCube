@@ -403,7 +403,7 @@ void Window_Show(void) {
     [win_handle makeKeyAndVisible];
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
     WindowInfo.Exists = false;
     Event_RaiseVoid(&WindowEvents.Closing);
 }

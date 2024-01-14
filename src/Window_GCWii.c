@@ -30,7 +30,7 @@ int Display_ScaleY(int y) { return y; }
 
 static void OnPowerOff(void) {
 	WindowInfo.Exists = false;
-	Window_Close();
+	Window_RequestClose();
 }
 static void InitVideo(void) {
 	// Initialise the video system
@@ -96,7 +96,7 @@ void Window_Create3D(int width, int height) {
 	launcherMode = false; 
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 

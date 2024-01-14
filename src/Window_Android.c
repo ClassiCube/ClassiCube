@@ -198,7 +198,7 @@ static void JNICALL java_onPause(JNIEnv* env, jobject o) {
 static void JNICALL java_onDestroy(JNIEnv* env, jobject o) {
 	Platform_LogConst("APP - ON DESTROY");
 
-	if (WindowInfo.Exists) Window_Close();
+	if (WindowInfo.Exists) Window_RequestClose();
 	/* TODO: signal to java code we're done */
 	/* JavaICall_Void(env, JAVA_processedDestroyed", NULL); */
 }
@@ -355,7 +355,7 @@ int Window_IsObscured(void) { return 0; }
 void Window_Show(void) { } /* Window already visible */
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 	/* TODO: Do we need to call finish here */

@@ -507,7 +507,7 @@ void Window_SetSize(int width, int height) {
 				Rect_Width(rect), Rect_Height(rect), SWP_NOMOVE);
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	PostMessageA(win_handle, WM_CLOSE, 0, 0);
 }
 

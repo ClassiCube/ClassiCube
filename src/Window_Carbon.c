@@ -29,7 +29,7 @@ static void Window_CommonInit(void) {
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
-	Window_Close();
+	Window_RequestClose();
 	return 0;
 }
 
@@ -544,7 +544,7 @@ void Window_SetSize(int width, int height) {
 	SizeWindow(win_handle, width, height, true);
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	/* DisposeWindow only sends a kEventWindowClosed */
 	Event_RaiseVoid(&WindowEvents.Closing);
 	if (WindowInfo.Exists) DisposeWindow(win_handle);

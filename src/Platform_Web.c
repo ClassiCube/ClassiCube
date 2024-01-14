@@ -330,7 +330,7 @@ cc_bool Process_OpenSupported = true;
 
 void Process_Exit(cc_result code) {
 	/* 'Window' (i.e. the web canvas) isn't implicitly closed when process is exited */
-	if (code) Window_Close();
+	if (code) Window_RequestClose();
 	/* game normally calls exit with code = 0 due to async IndexedDB loading */
 	if (code) exit(code);
 }
