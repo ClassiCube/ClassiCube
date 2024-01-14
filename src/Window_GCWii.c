@@ -87,6 +87,8 @@ void Window_Init(void) {
 	PAD_Init();
 }
 
+void Window_Free(void) { }
+
 void Window_Create2D(int width, int height) {
 	needsFBUpdate = true;
 	launcherMode  = true;  

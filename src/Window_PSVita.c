@@ -56,6 +56,8 @@ void Window_Init(void) {
 	Gfx_AllocFramebuffers();
 }
 
+void Window_Free(void) { }
+
 void Window_Create2D(int width, int height) { 
 	launcherMode   = true;  
 	DQ_OnNextFrame = DQ_OnNextFrame2D;

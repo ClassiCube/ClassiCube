@@ -38,6 +38,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = 1;
 }
 
+void Window_Free(void) { }
+
 static void DoCreateWindow(int width, int height, int flags) {
 	int x = Display_CentreX(width);
 	int y = Display_CentreY(height);

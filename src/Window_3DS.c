@@ -54,6 +54,8 @@ void Window_Init(void) {
 	irrst_result  = irrstInit();
 }
 
+void Window_Free(void) { irrstExit(); }
+
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
 
@@ -130,8 +132,8 @@ void Window_ProcessEvents(double delta) {
 	/* TODO implement */
 	
 	if (!aptMainLoop()) {
-		Event_RaiseVoid(&WindowEvents.Closing);
 		WindowInfo.Exists = false;
+		Window_RequestClose();
 		return;
 	}
 	

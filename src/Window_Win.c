@@ -307,6 +307,8 @@ void Window_Init(void) {
 	DisplayInfo.Depth *= GetDeviceCaps(hdc, PLANES);
 }
 
+void Window_Free(void) { }
+
 static ATOM DoRegisterClass(void) {
 	ATOM atom;
 	WNDCLASSEXW wc = { 0 };

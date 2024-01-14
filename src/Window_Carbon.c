@@ -439,6 +439,8 @@ static void HookEvents(void) {
  *#########################################################################################################################*/
 void Window_Init(void) { Window_CommonInit(); }
 
+void Window_Free(void) { }
+
 /* Private CGS/CGL stuff */
 typedef int CGSConnectionID;
 typedef int CGSWindowID;

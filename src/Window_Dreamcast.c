@@ -36,6 +36,8 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetY = 20;
 }
 
+void Window_Free(void) { }
+
 void Window_Create2D(int width, int height) { 
 	launcherMode = true;
 	vid_set_mode(DEFAULT_VID_MODE, PM_RGB888);

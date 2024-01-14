@@ -85,6 +85,8 @@ void Window_Init(void) {
 	OnDeviceChanged(NULL, 0); // TODO useless call?
 }
 
+void Window_Free(void) { usbh_core_deinit(); }
+
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
 

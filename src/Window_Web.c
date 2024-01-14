@@ -394,6 +394,8 @@ void Window_Init(void) {
 	interop_ForceTouchPageLayout();
 }
 
+void Window_Free(void) { }
+
 extern void interop_InitContainer(void);
 static void DoCreateWindow(void) {
 	WindowInfo.Exists  = true;

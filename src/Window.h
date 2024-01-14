@@ -86,8 +86,10 @@ CC_VAR extern struct _WinData {
 	cc_bool Inactive;
 } WindowInfo;
 
-/* Initialises state for window. Also sets Display_ members. */
+/* Initialises state for window, input, and display. */
 void Window_Init(void);
+/* Potentially frees/resets state for window, input, and display. */
+void Window_Free(void);
 /* Creates a window of the given size at centre of the screen. */
 /* NOTE: The created window is compatible with 2D drawing */
 void Window_Create2D(int width, int height);

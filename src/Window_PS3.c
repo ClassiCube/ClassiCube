@@ -68,6 +68,8 @@ void Window_Init(void) {
 	ioKbGetConfiguration(0, &kb_config);
 }
 
+void Window_Free(void) { }
+
 void Window_Create2D(int width, int height) { 
 	launcherMode = true;
 	Gfx_Create(); // launcher also uses RSX to draw

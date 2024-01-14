@@ -373,6 +373,8 @@ void Window_Init(void) {
     DisplayInfo.ScaleY = 1; // TODO dpi scale
 }
 
+void Window_Free(void) { }
+
 static UIColor* CalcBackgroundColor(void) {
     // default to purple if no themed background color yet
     if (!Launcher_Theme.BackgroundColor)

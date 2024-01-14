@@ -289,6 +289,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = JavaICall_Float(env, JAVA_getDpiY, NULL);
 }
 
+void Window_Free(void) { }
+
 static void RemakeWindowSurface(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);

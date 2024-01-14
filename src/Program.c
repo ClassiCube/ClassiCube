@@ -144,6 +144,8 @@ int main(int argc, char** argv) {
 	while (WindowInfo.Exists) { 
 		RunProgram(argc, argv); 
 	}
+	
+	Window_Free();
 	return 0;
 }
 #else

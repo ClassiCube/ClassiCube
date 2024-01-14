@@ -54,6 +54,8 @@ void Window_Init(void) {
 	//xenon_atapi_init();
 }
 
+void Window_Free(void) { }
+
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
 

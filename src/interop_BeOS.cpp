@@ -394,6 +394,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = 1;
 }
 
+void Window_Free(void) { }
+
 static void DoCreateWindow(int width, int height) {
 	// https://www.haiku-os.org/docs/api/classBRect.html#details
 	// right/bottom coordinates are inclusive of the coordinates,

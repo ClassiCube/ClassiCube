@@ -270,6 +270,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = 1;
 }
 
+void Window_Free(void) { }
+
 #ifdef CC_BUILD_ICON
 /* See misc/linux_icon_gen.cs for how to generate this file */
 #include "_CCIcon_X11.h"

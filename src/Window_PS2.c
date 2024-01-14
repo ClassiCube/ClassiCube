@@ -50,6 +50,8 @@ void Window_Init(void) {
 	padPortOpen(0, 0, padBuf);
 }
 
+void Window_Free(void) { }
+
 static cc_bool hasCreated;
 static void ResetGfxState(void) {
 	if (!hasCreated) { hasCreated = true; return; }
