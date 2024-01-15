@@ -106,7 +106,7 @@ TODO: explain multiple backends for some Modules
 |EnvRenderer|Renders environment of the world (clouds, sky, skybox, world sides/edges, etc)
 |HeldBlockRenderer|Renders the block currently being held in bottom right corner
 |MapRenderer|Renders the blocks of the world by diving it into chunks, and manages sorting/updating these chunks
-|PickedPosRenderer|Renders an outline around the block currently being looked at
+|SelOutlineRenderer|Renders an outline around the block currently being looked at
 |SelectionBox|Renders and stores selection boxes
 
 ## Texture pack modules

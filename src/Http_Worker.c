@@ -899,8 +899,8 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 #define INPUT_BUFFER_LEN 8192
 static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	struct HttpRequest* req = state->req;
-	char buffer[INPUT_BUFFER_LEN];
-	char* dst;
+	cc_uint8 buffer[INPUT_BUFFER_LEN];
+	cc_uint8* dst;
 	cc_uint32 total;
 	cc_result res;
 
@@ -915,9 +915,10 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 			/* When there is more than INPUT_BUFFER_LEN bytes of unread data/content, */
 			/*  there is no need to run the HTTP client state machine - just read directly */
 			/*  into the output buffer to avoid a pointless Mem_Copy call */
-			Http_BufferExpanded(req, total); state->dataLeft -= total;
+			Http_BufferExpanded(req, total); 
+			state->dataLeft -= total;
 		} else {
-			res = HttpClient_Process(state, buffer, total);
+			res = HttpClient_Process(state, (char*)buffer, total);
 		}
 
 		if (res) return res;

@@ -69,7 +69,7 @@
 		9A89D57E27F802F600FF3F80 /* Resources.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4BE27F802F600FF3F80 /* Resources.c */; };
 		9A89D57F27F802F600FF3F80 /* LWeb.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4C427F802F600FF3F80 /* LWeb.c */; };
 		9A89D58027F802F600FF3F80 /* Formats.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4C627F802F600FF3F80 /* Formats.c */; };
-		9A89D58127F802F600FF3F80 /* PickedPosRenderer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4C927F802F600FF3F80 /* PickedPosRenderer.c */; };
+		9A89D58127F802F600FF3F80 /* SelOutlineRenderer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4C927F802F600FF3F80 /* SelOutlineRenderer.c */; };
 		9A89D58327F802F600FF3F80 /* EntityComponents.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4CC27F802F600FF3F80 /* EntityComponents.c */; };
 		9A89D58427F802F600FF3F80 /* Camera.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4CF27F802F600FF3F80 /* Camera.c */; };
 		9A89D58627F802F600FF3F80 /* Screens.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D4D127F802F600FF3F80 /* Screens.c */; };
@@ -153,7 +153,7 @@
 		9A89D4BE27F802F600FF3F80 /* Resources.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Resources.c; sourceTree = "<group>"; };
 		9A89D4C427F802F600FF3F80 /* LWeb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LWeb.c; sourceTree = "<group>"; };
 		9A89D4C627F802F600FF3F80 /* Formats.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Formats.c; sourceTree = "<group>"; };
-		9A89D4C927F802F600FF3F80 /* PickedPosRenderer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PickedPosRenderer.c; sourceTree = "<group>"; };
+		9A89D4C927F802F600FF3F80 /* SelOutlineRenderer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SelOutlineRenderer.c; sourceTree = "<group>"; };
 		9A89D4CC27F802F600FF3F80 /* EntityComponents.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EntityComponents.c; sourceTree = "<group>"; };
 		9A89D4CF27F802F600FF3F80 /* Camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Camera.c; sourceTree = "<group>"; };
 		9A89D4D127F802F600FF3F80 /* Screens.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Screens.c; sourceTree = "<group>"; };
@@ -263,7 +263,7 @@
 				9A89D39C27F802F500FF3F80 /* PackedCol.c */,
 				9A89D39B27F802F500FF3F80 /* Particle.c */,
 				9A89D49B27F802F600FF3F80 /* Physics.c */,
-				9A89D4C927F802F600FF3F80 /* PickedPosRenderer.c */,
+				9A89D4C927F802F600FF3F80 /* SelOutlineRenderer.c */,
 				9A89D4AA27F802F600FF3F80 /* Picking.c */,
 				9A89D39227F802F500FF3F80 /* Platform_Posix.c */,
 				9A89D48127F802F600FF3F80 /* Program.c */,
@@ -373,7 +373,7 @@
 				9A89D58D27F802F600FF3F80 /* Options.c in Sources */,
 				9A89D57927F802F600FF3F80 /* Event.c in Sources */,
 				9A89D55B27F802F600FF3F80 /* _type1.c in Sources */,
-				9A89D58127F802F600FF3F80 /* PickedPosRenderer.c in Sources */,
+				9A89D58127F802F600FF3F80 /* SelOutlineRenderer.c in Sources */,
 				9A89D56027F802F600FF3F80 /* _ftbitmap.c in Sources */,
 				9A89D50327F802F600FF3F80 /* Platform_Posix.c in Sources */,
 				9A89D58027F802F600FF3F80 /* Formats.c in Sources */,

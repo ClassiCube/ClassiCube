@@ -341,10 +341,10 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_result res;
 
 	/* header variables */
-	static const cc_uint32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
-	cc_uint8 col, bitsPerSample, bytesPerPixel;
-	Png_RowExpander rowExpander;
-	cc_uint32 scanlineSize, scanlineBytes;
+	static const cc_uint8 samplesPerPixel[] = { 1, 0, 3, 1, 2, 0, 4 };
+	cc_uint8 col, bitsPerSample, bytesPerPixel = 0;
+	Png_RowExpander rowExpander = NULL;
+	cc_uint32 scanlineSize = 0, scanlineBytes = 0;
 
 	/* palette data */
 	BitmapCol trnsCol;

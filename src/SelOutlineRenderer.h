@@ -1,5 +1,5 @@
-#ifndef CC_PICKEDPOSRENDERER_H
-#define CC_PICKEDPOSRENDERER_H
+#ifndef CC_SELOUTLINERENDERER_H
+#define CC_SELOUTLINERENDERER_H
 #include "Core.h"
 /* Renders an outline around the block the player is looking at.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3

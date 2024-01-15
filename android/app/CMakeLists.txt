@@ -47,7 +47,7 @@ add_library(classicube SHARED
         ../../src/Vorbis.c
         ../../src/Protocol.c
         ../../src/World.c
-        ../../src/PickedPosRenderer.c
+        ../../src/SelOutlineRenderer.c
         ../../src/Platform_Posix.c
         ../../src/Platform_Android.c
         ../../src/LScreens.c
