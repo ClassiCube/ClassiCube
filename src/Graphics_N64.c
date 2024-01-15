@@ -36,7 +36,7 @@ void Gfx_Create(void) {
 	// - 1024 32bpp pixels
 	// - 2048 16bpp pixels 
 	Gfx.MaxTexSize       = 256; //Having this as 256 seems to fix weird issues with rendering textures.
-	Gfx.MaxLowResTexSize = 2048;
+	Gfx.MaxLowResTexSize = 2048; //Changing this seems to break text.
 
 	Gfx.SupportsNonPowTwoTextures = true;
 	Gfx_RestoreState();

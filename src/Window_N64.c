@@ -111,7 +111,7 @@ static void HandleButtons(joypad_buttons_t btns) {
 }
 
 static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
-	float scale = (delta * 60.0) / 8.0f; //Make stick faster, div'ng by 32 is way too slow.
+	float scale = (delta * 60.0) / 6.0f; //Make stick faster, div'ng by 32 is way too slow.
 	int dx = inputs->stick_x;
 	int dy = inputs->stick_y;
 
