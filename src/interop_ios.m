@@ -71,22 +71,22 @@ static CGRect GetViewFrame(void) {
 
 @implementation CCWindow
 
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
 }
 
-- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesMoved:withEvent - iOS 2.0
     for (UITouch* t in touches) UpdateTouch(t);
 }
 
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesEnded:withEvent - iOS 2.0
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
-- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesCancelled:withEvent - iOS 2.0
     for (UITouch* t in touches) RemoveTouch(t);
 }
@@ -538,7 +538,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     // UIDocumentPickerViewController - iOS 8.0
     // see the custom UTITypes declared in Info.plist 
-    NSDictionary<NSString*, NSString*>* fileExt_map =
+    NSDictionary* fileExt_map =
     @{
       @".cw"  : @"com.classicube.client.ios-cw",
       @".dat" : @"com.classicube.client.ios-dat",
@@ -546,10 +546,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
       @".fcm" : @"com.classicube.client.ios-fcm",
       @".zip" : @"public.zip-archive"
     };
-    NSMutableArray<NSString*>* types = [NSMutableArray array];
+    NSMutableArray* types = [NSMutableArray array];
     const char* const* filters = args->filters;
 
-    for (int i = 0; filters[i]; i++) {
+    for (int i = 0; filters[i]; i++) 
+    {
         NSString* fileExt = [NSString stringWithUTF8String:filters[i]];
         NSString* utType  = [fileExt_map objectForKey:fileExt];
         if (utType) [types addObject:utType];
@@ -840,7 +841,7 @@ void Directory_GetCachePath(cc_string* path) {
  *#########################################################################################################################*/
 #ifndef CC_BUILD_FREETYPE
 void interop_GetFontNames(struct StringsBuffer* buffer) {
-    NSArray<NSString*>* families = UIFont.familyNames;
+    NSArray* families = UIFont.familyNames;
     NSLog(@"Families: %@", families);
     char tmpBuffer[NATIVE_STR_LEN];
     cc_string tmp = String_FromArray(tmpBuffer);
@@ -865,7 +866,7 @@ void interop_GetFontNames(struct StringsBuffer* buffer) {
 }
  
 static CTFontRef TryCreateBoldFont(NSString* name, CGFloat uiSize) {
-    NSArray<NSString*>* fontNames = [UIFont fontNamesForFamilyName:name];
+    NSArray* fontNames = [UIFont fontNamesForFamilyName:name];
     for (NSString* fontName in fontNames)
     {
         if ([fontName rangeOfString:@"Bold" options:NSCaseInsensitiveSearch].location != NSNotFound)
@@ -980,7 +981,7 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
 }
 
 static UIFont* TryCreateBoldFont(NSString* name, CGFloat uiSize) {
-    NSArray<NSString*>* fontNames = [UIFont fontNamesForFamilyName:name];
+    NSArray* fontNames = [UIFont fontNamesForFamilyName:name];
     for (NSString* fontName in fontNames)
     {
         if ([fontName rangeOfString:@"Bold" options:NSCaseInsensitiveSearch].location != NSNotFound)
@@ -1698,7 +1699,7 @@ void LBackend_CloseScreen(struct LScreen* s) {
     }
     
     // remove all widgets from previous screen
-    NSArray<UIView*>* elems = [view_handle subviews];
+    NSArray* elems = [view_handle subviews];
     for (UIView* view in elems)
     {
         [view removeFromSuperview];
