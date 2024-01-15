@@ -158,3 +158,13 @@ UpgradeLog*.htm
 
 /build-n64
 /ClassiCube-n64.z64
+
+/misc/n64/Mdefault.zip
+/misc/n64/Odefault.zip
+
+/misc/n64/Adefault.zip
+/misc/n64/Bdefault.zip
+/misc/n64/Cdefault.zip
+/misc/n64/Ddefault.zip
+/misc/n64/Edefault.zip
+/misc/n64/Fdefault.zip
