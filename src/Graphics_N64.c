@@ -35,7 +35,7 @@ void Gfx_Create(void) {
 	// TMEM only has 4 KB in it, which can be interpreted as
 	// - 1024 32bpp pixels
 	// - 2048 16bpp pixels 
-	Gfx.MaxTexSize       = 1024;
+	Gfx.MaxTexSize       = 256; //Having this as 256 seems to fix weird issues with rendering textures.
 	Gfx.MaxLowResTexSize = 2048;
 
 	Gfx.SupportsNonPowTwoTextures = true;
