@@ -8,8 +8,8 @@ N64_ROM_RTC = true
 CFILES 	:= $(notdir $(wildcard src/*.c))
 OFILES 	:= $(CFILES:.c=.o)
 OBJS 	:= $(addprefix $(BUILD_DIR)/,$(OFILES))
-U64FLAGS:= "-DR480i" #"-DTFILTER" 
-CFLAGS	:= "-DULTRA64" $(U64FLAGS) "-Wno-error=pointer-sign" "-Wno-error=return-type" "-Wno-error=missing-braces" "-Wno-error=incompatible-pointer-types" "-Wno-error=implicit-function-declaration" "-Wno-error=strict-aliasing" "-Wno-error=maybe-uninitialized"
+U64FLG	:=  "-DFLAT_GEN" "-DR480i"
+CFLAGS	:= "-DULTRA64" $(U64FLG) "-Wno-error=pointer-sign" "-Wno-error=return-type" "-Wno-error=missing-braces" "-Wno-error=incompatible-pointer-types" "-Wno-error=implicit-function-declaration" "-Wno-error=strict-aliasing" "-Wno-error=maybe-uninitialized"
 
 #	Digi-Space Productions comment on 2:34P 1/14/2024:
 #
@@ -22,7 +22,7 @@ CFLAGS	:= "-DULTRA64" $(U64FLAGS) "-Wno-error=pointer-sign" "-Wno-error=return-t
 #	ULTRA64:	Just makes it so Ultra64/N64 specific code blocks can be enabled/disabled
 #	TFILTER:	Enable the Trilinear/3-Point texture filter.
 #	R480i:		Enable 640x480i resolution.
-#
+#	FLAT_GEN:	Generate with Flat terrain
 #
 #
 #
@@ -38,6 +38,7 @@ $(BUILD_DIR)/ClassiCube-n64.elf: $(OBJS)
 
 clean:
 	rm -rf $(BUILD_DIR) *.z64
+	rm -rf $(BUILD_DIR)/build-n64
 .PHONY: clean
 
 -include $(wildcard $(BUILD_DIR)/*.d)

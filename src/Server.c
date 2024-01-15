@@ -134,6 +134,10 @@ static void SPConnection_BeginConnect(void) {
 #endif
 
 	Gen_Active = &NotchyGen;
+	#ifdef FLAT_GEN
+		Gen_Active = &FlatgrassGen; //Force a flat world.
+	#endif
+
 	Gen_Seed   = Random_Next(&rnd, Int32_MaxValue);
 	Gen_Start();
 
