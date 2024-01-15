@@ -353,7 +353,7 @@ cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
 		0, 0, 0,
 		0,0,0, 0,0,0,0,
 		0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
-		CCPAD_ZL, CCPAD_ZR
+		CCPAD_DOWN, CCPAD_RIGHT
 	};
 #endif
 
