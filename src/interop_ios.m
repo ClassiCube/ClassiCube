@@ -21,6 +21,16 @@
 #include <OpenGLES/ES2/glext.h>
 #include <CoreText/CoreText.h>
 
+#ifdef TARGET_OS_TV
+	// NSFontAttributeName etc - iOS 6.0
+	#define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
+	#define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
+#else
+	// UITextAttributeFont etc - iOS 5.0
+	#define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
+	#define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
+#endif
+
 @interface CCWindow : UIWindow
 @end
 
@@ -296,7 +306,6 @@ static NSString* ToNSString(const cc_string* text) {
 
 static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
     // NSMutableAttributedString - iOS 3.2
-    // NSForegroundColorAttributeName - iOS 6.0
     cc_string left = *text, part;
     char colorCode = 'f';
     NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
@@ -307,8 +316,8 @@ static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
         NSString* bit   = ToNSString(&part);
         NSDictionary* attrs =
         @{
-          //NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+          //TEXT_ATTRIBUTE_FONT : font,
+          TEXT_ATTRIBUTE_COLOR  : ToUIColor(color, 1.0f)
         };
         NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
         [str appendAttributedString:attr_bit];
@@ -950,9 +959,9 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
         NSString* bit = ToNSString(&part);
         NSDictionary* attrs =
         @{
-          NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
-          };
+          TEXT_ATTRIBUTE_FONT  : font,
+          TEXT_ATTRIBUTE_COLOR : ToUIColor(color, 1.0f)
+        };
         
         if (args->font->flags & FONT_FLAGS_UNDERLINE) {
             NSNumber* value = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
@@ -1033,8 +1042,8 @@ static NSMutableAttributedString* GetAttributedString(struct DrawTextArgs* args,
         NSRange range = NSMakeRange(str.length, bit.length);
         [str.mutableString appendString:bit];
         
-        [str addAttribute:NSFontAttributeName            value:font                   range:range];
-        [str addAttribute:NSForegroundColorAttributeName value:ToUIColor(color, 1.0f) range:range];
+        [str addAttribute:TEXT_ATTRIBUTE_FONT  value:font                   range:range];
+        [str addAttribute:TEXT_ATTRIBUTE_COLOR value:ToUIColor(color, 1.0f) range:range];
         
         if (args->font->flags & FONT_FLAGS_UNDERLINE) {
             NSNumber* style = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
@@ -1091,7 +1100,7 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
         NSString* bit = ToNSString(&part);
         NSDictionary* attrs =
         @{
-          NSFontAttributeName : font,
+          TEXT_ATTRIBUTE_FONT : font,
           NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
           };
         NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
@@ -1137,7 +1146,7 @@ static NSString* cellID = @"CC_Cell";
 
 - (void)handleButtonPress:(id)sender {
     struct LWidget* w = FindWidgetForView(sender);
-    if (w == NULL) return;
+    if (!w) return;
         
     struct LButton* btn = (struct LButton*)w;
     btn->OnClick(btn);
@@ -1145,7 +1154,7 @@ static NSString* cellID = @"CC_Cell";
 
 - (void)handleTextChanged:(id)sender {
     struct LWidget* w = FindWidgetForView(sender);
-    if (w == NULL) return;
+    if (!w) return;
     
     UITextField* src   = (UITextField*)sender;
     const char* str    = src.text.UTF8String;
@@ -1160,7 +1169,7 @@ static NSString* cellID = @"CC_Cell";
     UISwitch* swt     = (UISwitch*)sender;
     UIView* parent    = swt.superview;
     struct LWidget* w = FindWidgetForView(parent);
-    if (w == NULL) return;
+    if (!w) return;
 
     struct LCheckbox* cb = (struct LCheckbox*)w;
     cb->value = [swt isOn];
@@ -1169,7 +1178,7 @@ static NSString* cellID = @"CC_Cell";
 }
 
 // === UITableViewDataSource ===
-- (nonnull UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // cellForRowAtIndexPath - iOS 2.0
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
@@ -1181,7 +1190,7 @@ static NSString* cellID = @"CC_Cell";
     return cell;
 }
 
-- (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // numberOfRowsInSection - iOS 2.0
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     return w ? w->rowsCount : 0;
@@ -1195,7 +1204,7 @@ static NSString* cellID = @"CC_Cell";
     LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, true);
     
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
-    if (w == NULL) return;
+    if (!w) return;
     LTable_RowClick(w, row);
 }
 
@@ -1210,7 +1219,7 @@ static NSString* cellID = @"CC_Cell";
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     // textFieldShouldReturn - iOS 2.0
     struct LWidget* w   = FindWidgetForView(textField);
-    if (w == NULL) return YES;
+    if (!w) return YES;
     struct LWidget* sel = Launcher_Active->onEnterWidget;
     
     if (sel && !w->skipsEnter) {
@@ -1251,7 +1260,6 @@ static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int 
 }
 
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
-    // NSFontAttributeName - iOS 6.0
     if (Launcher_BitmappedText()) {
         struct FontDesc font;
         Launcher_MakeTitleFont(&font);
@@ -1259,21 +1267,22 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
         // bitmapped fonts don't need to be freed
         return;
     }
+    // systemFontOfSize:weight: - iOS 8.2
     UIFont* font   = [UIFont systemFontOfSize:42 weight:0.2f]; //UIFontWeightSemibold
     NSString* text = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
         
     NSDictionary* attrs_bg =
     @{
-      NSFontAttributeName : font,
-      NSForegroundColorAttributeName : UIColor.blackColor
+      TEXT_ATTRIBUTE_FONT  : font,
+      TEXT_ATTRIBUTE_COLOR : UIColor.blackColor
     };
     NSAttributedString* str_bg = [[NSAttributedString alloc] initWithString:text attributes:attrs_bg];
     DrawText(str_bg, ctx, 4, 42);
         
     NSDictionary* attrs_fg =
     @{
-      NSFontAttributeName : font,
-      NSForegroundColorAttributeName : UIColor.whiteColor
+      TEXT_ATTRIBUTE_FONT  : font,
+      TEXT_ATTRIBUTE_COLOR : UIColor.whiteColor
     };
     NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
     DrawText(str_fg, ctx, 0, 38);
