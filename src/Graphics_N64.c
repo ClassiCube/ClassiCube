@@ -28,8 +28,8 @@ void Gfx_Create(void) {
     //rdpq_debug_log(true);
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
     
-	Gfx.MaxTexWidth  = 256;
-	Gfx.MaxTexHeight = 256;
+	Gfx.MaxTexWidth  = 512;
+	Gfx.MaxTexHeight = 512;
 	Gfx.Created      = true;
 	
 	// TMEM only has 4 KB in it, which can be interpreted as
