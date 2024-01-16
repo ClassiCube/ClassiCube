@@ -190,10 +190,11 @@ static void ClearTouches(void) { }
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 #define Pad_Names \
-"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
+"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", "PAD_Z", \
 "PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
 "PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR", \
-"PAD_LSTICK", "PAD_RSTICK"
+"PAD_LSTICK", "PAD_RSTICK", \
+"PAD_CLEFT", "PAD_CRIGHT", "PAD_CUP", "PAD_CDOWN"
 
 /* Names for each input button when stored to disc */
 static const char* const storageNames[INPUT_COUNT] = {

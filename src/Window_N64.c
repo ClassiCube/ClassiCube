@@ -39,6 +39,10 @@ void Window_Init(void) {
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 	joypad_init();
+
+	// change defaults to make more sense for N64
+	cc_uint8* binds = (cc_uint8*)KeyBind_GamepadDefaults;
+	binds[KEYBIND_INVENTORY] = CCPAD_Z;
 }
 
 void Window_Free(void) { }
@@ -72,7 +76,7 @@ static void HandleButtons(joypad_buttons_t btns) {
 	
 	Input_SetNonRepeatable(CCPAD_A, btns.a);
 	Input_SetNonRepeatable(CCPAD_B, btns.b);
-	Input_SetNonRepeatable(CCPAD_X, btns.z); // TODO: Or Y?
+	Input_SetNonRepeatable(CCPAD_Z, btns.z);
 	
 	Input_SetNonRepeatable(CCPAD_START,  btns.start);
 	
@@ -80,12 +84,15 @@ static void HandleButtons(joypad_buttons_t btns) {
 	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.d_right);
 	Input_SetNonRepeatable(CCPAD_UP,     btns.d_up);
 	Input_SetNonRepeatable(CCPAD_DOWN,   btns.d_down);
-	
-	// TODO: How to map the right digital buttons (c_left/c_down etc
+
+	Input_SetNonRepeatable(CCPAD_CLEFT,  btns.c_left);
+	Input_SetNonRepeatable(CCPAD_CRIGHT, btns.c_right);
+	Input_SetNonRepeatable(CCPAD_CUP,    btns.c_up);
+	Input_SetNonRepeatable(CCPAD_CDOWN,  btns.c_down);
 }
 
 static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
-	float scale = (delta * 60.0) / 32.0f;
+	float scale = (delta * 60.0) / 8.0f;
 	int dx = inputs->stick_x;
 	int dy = inputs->stick_y;
 

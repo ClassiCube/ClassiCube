@@ -500,8 +500,8 @@ void Entities_Remove(EntityID id) {
 EntityID Entities_GetClosest(struct Entity* src) {
 	Vec3 eyePos = Entity_GetEyePosition(src);
 	Vec3 dir    = Vec3_GetDirVector(src->Yaw * MATH_DEG2RAD, src->Pitch * MATH_DEG2RAD);
-	float closestDist = -200.5f; /* NOTE: was previously positive infinity */
-	EntityID targetId = ENTITIES_SELF_ID;
+	float closestDist = -200; /* NOTE: was previously positive infinity */
+	EntityID targetID = ENTITIES_SELF_ID;
 
 	float t0, t1;
 	int i;
@@ -512,12 +512,12 @@ EntityID Entities_GetClosest(struct Entity* src) {
 		if (!entity) continue;
 		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1)) continue;
 
-		if (closestDist < -200 || t0 < closestDist) {
+		if (targetID == ENTITIES_SELF_ID || t0 < closestDist) {
 			closestDist = t0;
-			targetId    = (EntityID)i;
+			targetID    = (EntityID)i;
 		}
 	}
-	return targetId;
+	return targetID;
 }
 
 static void Player_Despawn(struct Entity* e) {

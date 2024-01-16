@@ -46,8 +46,9 @@ cc_uint64 Game_FrameStart;
 cc_bool Game_UseCPEBlocks;
 
 struct RayTracer Game_SelectedPos;
-int Game_ViewDistance = 512, Game_UserViewDistance = 512;
-int Game_MaxViewDistance = DEFAULT_MAX_VIEWDIST;
+int Game_ViewDistance     = DEFAULT_VIEWDIST;
+int Game_UserViewDistance = DEFAULT_VIEWDIST;
+int Game_MaxViewDistance  = DEFAULT_MAX_VIEWDIST;
 
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
@@ -134,16 +135,16 @@ static void CycleViewDistanceBackwards(const short* viewDists, int count) {
 	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
-static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-static const short classicDists[4] = { 8, 32, 128, 512 };
+static const short normalDists[]  = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+static const short classicDists[] = { 8, 32, 128, 512 };
 void Game_CycleViewDistance(void) {
-	const short* dists = Gui.ClassicMenu ? classicDists : normDists;
-	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
+	const short* dists = Gui.ClassicMenu ? classicDists : normalDists;
+	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normalDists);
 
 	if (Input_IsShiftPressed()) {
 		CycleViewDistanceBackwards(dists, count);
 	} else {
-		CycleViewDistanceForwards(dists, count);
+		CycleViewDistanceForwards(dists,  count);
 	}
 }
 
@@ -327,7 +328,7 @@ static void LoadOptions(void) {
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
-	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, 512);
+	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, DEFAULT_VIEWDIST);
 	Game_UserViewDistance = Game_ViewDistance;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
 	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
