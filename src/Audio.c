@@ -1282,215 +1282,245 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_NOMUSIC
-/* Can't use mojang's music assets, so just stub everything out */
-static void Music_Init(void) { }
-static void Music_Free(void) { }
-static void Music_Stop(void) { }
-static void Music_Start(void) {
-	Chat_AddRaw("&cMusic is not supported currently");
-	Audio_MusicVolume = 0;
-}
-#else
-static struct AudioContext music_ctx;
-static void* music_thread;
-static void* music_waitable;
-static volatile cc_bool music_stopping, music_joining;
-static int music_minDelay, music_maxDelay;
-
-static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
-	int samples = 0;
-	cc_int16* cur;
-	cc_result res = 0, res2;
-
-	while (samples < maxSamples) {
-		if ((res = Vorbis_DecodeFrame(ctx))) break;
-
-		cur = &data[samples];
-		samples += Vorbis_OutputFrame(ctx, cur);
+	/* Can't use mojang's music assets, so just stub everything out */
+	static void Music_Init(void) { }
+	static void Music_Free(void) { }
+	static void Music_Stop(void) { }
+	static void Music_Start(void) {
+		Chat_AddRaw("&cMusic is not supported currently");
+		Audio_MusicVolume = 0;
 	}
-	if (Audio_MusicVolume < 100) { ApplyVolume(data, samples, Audio_MusicVolume); }
-
-	res2 = Audio_QueueData(&music_ctx, data, samples * 2);
-	if (res2) { music_stopping = true; return res2; }
-	return res;
-}
-
-static cc_result Music_PlayOgg(struct Stream* source) {
-	struct OggState ogg;
-	struct VorbisState vorbis = { 0 };
-	int channels, sampleRate;
-
-	int chunkSize, samplesPerSecond;
-	cc_int16* data = NULL;
-	int inUse, i, cur;
-	cc_result res;
-
-	Ogg_Init(&ogg, source);
-	vorbis.source = &ogg;
-	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
-	
-	channels   = vorbis.channels;
-	sampleRate = vorbis.sampleRate;
-	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate))) goto cleanup;
-
-	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
-	/*  so can end up decoding slightly over a second of audio */
-	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
-	samplesPerSecond = channels * sampleRate;
-
-	cur  = 0;
-	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
-	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
-
-	/* fill up with some samples before playing */
-	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {
-		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
-		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
-	}
-	if (music_stopping) goto cleanup;
-
-	res  = Audio_Play(&music_ctx);
-	if (res) goto cleanup;
-
-	while (!music_stopping) {
-#ifdef CC_BUILD_ANDROID
-		/* Don't play music while in the background on Android */
-    	/* TODO: Not use such a terrible approach */
-    	if (!WindowInfo.Handle) {
-    		Audio_Pause(&music_ctx);
-    		while (!WindowInfo.Handle && !music_stopping) {
-    			Thread_Sleep(10); continue;
-    		}
-    		Audio_Play(&music_ctx);
-    	}
 #endif
 
-		res = Audio_Poll(&music_ctx, &inUse);
-		if (res) { music_stopping = true; break; }
+#ifndef ULTRA64
+	static struct AudioContext music_ctx;
+	static void* music_thread;
+	static void* music_waitable;
+	static volatile cc_bool music_stopping, music_joining;
+	static int music_minDelay, music_maxDelay;
 
-		if (inUse >= AUDIO_MAX_BUFFERS) {
-			Thread_Sleep(10); continue;
+	static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
+		int samples = 0;
+		cc_int16* cur;
+		cc_result res = 0, res2;
+
+		while (samples < maxSamples) {
+			if ((res = Vorbis_DecodeFrame(ctx))) break;
+
+			cur = &data[samples];
+			samples += Vorbis_OutputFrame(ctx, cur);
 		}
+		if (Audio_MusicVolume < 100) { ApplyVolume(data, samples, Audio_MusicVolume); }
 
-		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
-		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
-
-		/* need to specially handle last bit of audio */
-		if (res) break;
+		res2 = Audio_QueueData(&music_ctx, data, samples * 2);
+		if (res2) { music_stopping = true; return res2; }
+		return res;
 	}
 
-	if (music_stopping) {
-		/* must close audio context, as otherwise some of the audio */
-		/*  context's internal audio buffers may have a reference */
-		/*  to the `data` buffer which will be freed after this */
+	static cc_result Music_PlayOgg(struct Stream* source) {
+		struct OggState ogg;
+		struct VorbisState vorbis = { 0 };
+		int channels, sampleRate;
+
+		int chunkSize, samplesPerSecond;
+		cc_int16* data = NULL;
+		int inUse, i, cur;
+		cc_result res;
+
+		Ogg_Init(&ogg, source);
+		vorbis.source = &ogg;
+		if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
+		
+		channels   = vorbis.channels;
+		sampleRate = vorbis.sampleRate;
+		if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate))) goto cleanup;
+
+		/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
+		/*  so can end up decoding slightly over a second of audio */
+		chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
+		samplesPerSecond = channels * sampleRate;
+
+		cur  = 0;
+		data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
+		if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+		/* fill up with some samples before playing */
+		for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {
+			res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
+			cur = (cur + 1) % AUDIO_MAX_BUFFERS;
+		}
+		if (music_stopping) goto cleanup;
+
+		res  = Audio_Play(&music_ctx);
+		if (res) goto cleanup;
+
+		while (!music_stopping) {
+	#ifdef CC_BUILD_ANDROID
+			/* Don't play music while in the background on Android */
+			/* TODO: Not use such a terrible approach */
+			if (!WindowInfo.Handle) {
+				Audio_Pause(&music_ctx);
+				while (!WindowInfo.Handle && !music_stopping) {
+					Thread_Sleep(10); continue;
+				}
+				Audio_Play(&music_ctx);
+			}
+	#endif
+
+			res = Audio_Poll(&music_ctx, &inUse);
+			if (res) { music_stopping = true; break; }
+
+			if (inUse >= AUDIO_MAX_BUFFERS) {
+				Thread_Sleep(10); continue;
+			}
+
+			res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
+			cur = (cur + 1) % AUDIO_MAX_BUFFERS;
+
+			/* need to specially handle last bit of audio */
+			if (res) break;
+		}
+
+		if (music_stopping) {
+			/* must close audio context, as otherwise some of the audio */
+			/*  context's internal audio buffers may have a reference */
+			/*  to the `data` buffer which will be freed after this */
+			Audio_Close(&music_ctx);
+		} else {
+			/* Wait until the buffers finished playing */
+			for (;;) {
+				if (Audio_Poll(&music_ctx, &inUse) || inUse == 0) break;
+				Thread_Sleep(10);
+			}
+		}
+
+	cleanup:
+		Mem_Free(data);
+		Vorbis_Free(&vorbis);
+		return res == ERR_END_OF_STREAM ? 0 : res;
+	}
+
+	static void Music_AddFile(const cc_string* path, void* obj) {
+		struct StringsBuffer* files = (struct StringsBuffer*)obj;
+		static const cc_string ogg  = String_FromConst(".ogg");
+
+		if (!String_CaselessEnds(path, &ogg)) return;
+		StringsBuffer_Add(files, path);
+	}
+
+	static void Music_RunLoop(void) {
+		struct StringsBuffer files;
+		cc_string path;
+		RNGState rnd;
+		struct Stream stream;
+		int idx, delay;
+		cc_result res = 0;
+
+		StringsBuffer_SetLengthBits(&files, STRINGSBUFFER_DEF_LEN_SHIFT);
+		StringsBuffer_Init(&files);
+		Directory_Enum(&audio_dir, &files, Music_AddFile);
+
+		Random_SeedFromCurrentTime(&rnd);
+		Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
+
+		while (!music_stopping && files.count) {
+			idx  = Random_Next(&rnd, files.count);
+			path = StringsBuffer_UNSAFE_Get(&files, idx);
+			Platform_Log1("playing music file: %s", &path);
+
+			res = Stream_OpenFile(&stream, &path);
+			if (res) { Logger_SysWarn2(res, "opening", &path); break; }
+
+			res = Music_PlayOgg(&stream);
+			if (res) { Logger_SimpleWarn2(res, "playing", &path); }
+
+			/* No point logging error for closing readonly file */
+			(void)stream.Close(&stream);
+
+			if (music_stopping) break;
+			delay = Random_Range(&rnd, music_minDelay, music_maxDelay);
+			Waitable_WaitFor(music_waitable, delay);
+		}
+
+		if (res) {
+			Chat_AddRaw("&cDisabling music");
+			Audio_MusicVolume = 0;
+		}
 		Audio_Close(&music_ctx);
-	} else {
-		/* Wait until the buffers finished playing */
-		for (;;) {
-			if (Audio_Poll(&music_ctx, &inUse) || inUse == 0) break;
-			Thread_Sleep(10);
+		StringsBuffer_Clear(&files);
+
+		if (music_joining) return;
+		Thread_Detach(music_thread);
+		music_thread = NULL;
+	}
+
+	static void Music_Start(void) {
+		if (music_thread) return;
+		if (!AudioBackend_Init()) {
+			AudioBackend_Free(); 
+			Audio_MusicVolume = 0;
+			return; 
 		}
+
+		music_joining  = false;
+		music_stopping = false;
+
+		music_thread = Thread_Create(Music_RunLoop);
+		Thread_Start2(music_thread, Music_RunLoop);
 	}
 
-cleanup:
-	Mem_Free(data);
-	Vorbis_Free(&vorbis);
-	return res == ERR_END_OF_STREAM ? 0 : res;
-}
-
-static void Music_AddFile(const cc_string* path, void* obj) {
-	struct StringsBuffer* files = (struct StringsBuffer*)obj;
-	static const cc_string ogg  = String_FromConst(".ogg");
-
-	if (!String_CaselessEnds(path, &ogg)) return;
-	StringsBuffer_Add(files, path);
-}
-
-static void Music_RunLoop(void) {
-	struct StringsBuffer files;
-	cc_string path;
-	RNGState rnd;
-	struct Stream stream;
-	int idx, delay;
-	cc_result res = 0;
-
-	StringsBuffer_SetLengthBits(&files, STRINGSBUFFER_DEF_LEN_SHIFT);
-	StringsBuffer_Init(&files);
-	Directory_Enum(&audio_dir, &files, Music_AddFile);
-
-	Random_SeedFromCurrentTime(&rnd);
-	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
-
-	while (!music_stopping && files.count) {
-		idx  = Random_Next(&rnd, files.count);
-		path = StringsBuffer_UNSAFE_Get(&files, idx);
-		Platform_Log1("playing music file: %s", &path);
-
-		res = Stream_OpenFile(&stream, &path);
-		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
-
-		res = Music_PlayOgg(&stream);
-		if (res) { Logger_SimpleWarn2(res, "playing", &path); }
-
-		/* No point logging error for closing readonly file */
-		(void)stream.Close(&stream);
-
-		if (music_stopping) break;
-		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);
-		Waitable_WaitFor(music_waitable, delay);
+	static void Music_Stop(void) {
+		music_joining  = true;
+		music_stopping = true;
+		Waitable_Signal(music_waitable);
+		
+		if (music_thread) Thread_Join(music_thread);
+		music_thread = NULL;
 	}
 
-	if (res) {
-		Chat_AddRaw("&cDisabling music");
-		Audio_MusicVolume = 0;
-	}
-	Audio_Close(&music_ctx);
-	StringsBuffer_Clear(&files);
+	static void Music_Init(void) {
+		int volume;
+		/* music is delayed between 2 - 7 minutes by default */
+		music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
+		music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
+		music_waitable = Waitable_Create();
 
-	if (music_joining) return;
-	Thread_Detach(music_thread);
-	music_thread = NULL;
-}
-
-static void Music_Start(void) {
-	if (music_thread) return;
-	if (!AudioBackend_Init()) {
-		AudioBackend_Free(); 
-		Audio_MusicVolume = 0;
-		return; 
+		volume = Options_GetInt(OPT_MUSIC_VOLUME, 0, 100, DEFAULT_MUSIC_VOLUME);
+		Audio_SetMusic(volume);
 	}
 
-	music_joining  = false;
-	music_stopping = false;
+	static void Music_Free(void) {
+		Music_Stop();
+		Waitable_Free(music_waitable);
+	}
+#else
 
-	music_thread = Thread_Create(Music_RunLoop);
-	Thread_Start2(music_thread, Music_RunLoop);
-}
+	#include <libdragon.h> //Needed for the 64
 
-static void Music_Stop(void) {
-	music_joining  = true;
-	music_stopping = true;
-	Waitable_Signal(music_waitable);
+	/* TODO, N64 Specific Code. */
+
+	//	From Digi-Space Productions @ 4:44P, 1/14/2024
 	
-	if (music_thread) Thread_Join(music_thread);
-	music_thread = NULL;
-}
+	//	I might get shot down, but I think we could implement XM music instead of the *.ogg/*.mp3
+	//	music it normally has.
 
-static void Music_Init(void) {
-	int volume;
-	/* music is delayed between 2 - 7 minutes by default */
-	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
-	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
-	music_waitable = Waitable_Create();
+	//	I might be insane with that one.
 
-	volume = Options_GetInt(OPT_MUSIC_VOLUME, 0, 100, DEFAULT_MUSIC_VOLUME);
-	Audio_SetMusic(volume);
-}
+	xm64player_t xm; //Needed for XM Modules, will get to playback soon.
 
-static void Music_Free(void) {
-	Music_Stop();
-	Waitable_Free(music_waitable);
-}
+	static void Music_Init(void) {
+		Chat_AddRaw("&cXM module should load here.");
+	}
+	static void Music_Free(void) {
+		Chat_AddRaw("&cXM module should unload here.");
+	}
+	static void Music_Stop(void) {
+		Chat_AddRaw("&cXM module should cease here.");
+	}
+	static void Music_Start(void) {
+		Chat_AddRaw("&cXM module implementation unfinished.");
+		Audio_MusicVolume = 0;
+	}
 #endif
 
 

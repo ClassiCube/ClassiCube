@@ -41,7 +41,14 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 #define EXTCHUNK_SIZE_3 (EXTCHUNK_SIZE * EXTCHUNK_SIZE * EXTCHUNK_SIZE)
 
 /* Minor adjustment to max UV coords, to avoid pixel bleeding errors due to rounding. */
-#define UV2_Scale (15.99f / 16.0f)
+#ifndef ULTRA64
+	#define UV2_Scale (15.99f / 16.0f)
+#else
+	#define UV2_Scale 1.0f
+	#define FORCE_LOW_RENDDIST
+#endif
+
+#define STATIC_RENDDIST 20 //For FORCE_LOW_RENDDIST
 
 #define GAME_DEF_TICKS (1.0 / 20)
 #define GAME_NET_TICKS (1.0 / 60)

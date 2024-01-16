@@ -21,7 +21,11 @@ int Display_ScaleX(int x) { return x; }
 int Display_ScaleY(int y) { return y; }
 
 void Window_Init(void) {
-    display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
+	#ifndef R480i
+    	display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
+		#else
+			display_init(RESOLUTION_640x480, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
+	#endif
     //display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);
     
 	DisplayInfo.Width  = display_get_width();
@@ -72,7 +76,7 @@ static void HandleButtons(joypad_buttons_t btns) {
 	
 	Input_SetNonRepeatable(CCPAD_A, btns.a);
 	Input_SetNonRepeatable(CCPAD_B, btns.b);
-	Input_SetNonRepeatable(CCPAD_X, btns.z); // TODO: Or Y?
+	Input_SetNonRepeatable(CCPAD_Z, btns.z); // TODO: Or Y?
 	
 	Input_SetNonRepeatable(CCPAD_START,  btns.start);
 	
@@ -80,12 +84,34 @@ static void HandleButtons(joypad_buttons_t btns) {
 	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.d_right);
 	Input_SetNonRepeatable(CCPAD_UP,     btns.d_up);
 	Input_SetNonRepeatable(CCPAD_DOWN,   btns.d_down);
+
+	Input_SetNonRepeatable(CCPAD_CLEFT,   btns.c_left);
+	Input_SetNonRepeatable(CCPAD_CRIGHT,  btns.c_right);
+	Input_SetNonRepeatable(CCPAD_CUP,     btns.c_up);
+	Input_SetNonRepeatable(CCPAD_CDOWN,   btns.c_down);
 	
-	// TODO: How to map the right digital buttons (c_left/c_down etc
+	// TODO: How to map the right digital buttons (c_left/c_down) etc
+	/*
+		Digi-Space Productions asks at 3:05P, on 1/14/2024
+
+		Would it be possible to implement a system or something so the user can map Stick Directions?
+		I did a mod earier and had this map, which is far more usable tbh:
+			Stick Up/Down: Forward/Backpedal
+			Stick Left/Right: Look Left/Right
+			C-Left/Right: Strafe Left/Right
+			C-Up/Down: Aim Up/Down
+
+			Z: Place
+			R: Punch
+			A: Jump
+			B: Inventory
+
+		Else, maybe make it so on specific platforms (eg. Ultra 64), instead of custom maps, we have presets.
+	*/
 }
 
 static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
-	float scale = (delta * 60.0) / 32.0f;
+	float scale = (delta * 60.0) / 6.0f; //Make stick faster, div'ng by 32 is way too slow.
 	int dx = inputs->stick_x;
 	int dy = inputs->stick_y;
 

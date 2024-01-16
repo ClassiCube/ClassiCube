@@ -20,6 +20,10 @@ struct AudioContext;
 #define DEFAULT_MUSIC_VOLUME 100
 #endif
 
+#ifdef ULTRA64
+	#define DEFAULT_MUSIC_VOLUME 100
+#endif
+
 struct AudioData {
 	void* data; cc_uint32 size; /* the raw 16 bit integer samples */
 	int channels;
