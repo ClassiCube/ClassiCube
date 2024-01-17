@@ -1267,8 +1267,9 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
         // bitmapped fonts don't need to be freed
         return;
     }
-    // systemFontOfSize:weight: - iOS 8.2
-    UIFont* font   = [UIFont systemFontOfSize:42 weight:0.2f]; //UIFontWeightSemibold
+    
+    // systemFontOfSize: - iOS 2.0
+    UIFont* font   = [UIFont systemFontOfSize:42];
     NSString* text = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
         
     NSDictionary* attrs_bg =
