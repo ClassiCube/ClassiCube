@@ -18,9 +18,9 @@ static Result irrst_result;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on 3DS
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+// Render everything at half size due to the small resolution
+int Display_ScaleX(int x) { return x / 2; }
+int Display_ScaleY(int y) { return y / 2; }
 
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
@@ -42,8 +42,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = height; // deliberately swapped
 	DisplayInfo.Height = width;  // deliberately swapped
 	DisplayInfo.Depth  = 4; // 32 bit
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
+	DisplayInfo.ScaleX = 0.5;
+	DisplayInfo.ScaleY = 0.5;
 	
 	WindowInfo.Width   = height; // deliberately swapped
 	WindowInfo.Height  = width;  // deliberately swapped

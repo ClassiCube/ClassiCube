@@ -19,8 +19,14 @@ static int oneX, twoX, fourX;
 static int oneY, twoY, fourY;
 
 void LWidget_CalcOffsets(void) {
-	oneX = Display_ScaleX(1); twoX = oneX * 2; fourX = oneX * 4;
-	oneY = Display_ScaleY(1); twoY = oneY * 2; fourY = oneY * 4;
+	oneX = Display_ScaleX(1);
+	oneY = Display_ScaleY(1);
+
+	if (oneX < 1) { oneX = 1; }
+	if (oneY < 1) { oneY = 1; }
+
+	twoX = oneX * 2; fourX = oneX * 4;
+	twoY = oneY * 2; fourY = oneY * 4;
 
 	flagXOffset  = Display_ScaleX(2);
 	flagYOffset  = Display_ScaleY(6);
