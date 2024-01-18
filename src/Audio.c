@@ -754,6 +754,7 @@ struct AudioContext {
 	ndspWaveBuf bufs[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate;
 	void* _tmpData; int _tmpSize;
+	cc_bool stereo;
 };
 static int channelIDs;
 
@@ -797,7 +798,8 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	int fmt = channels == 1 ? NDSP_FORMAT_MONO_PCM16 : NDSP_FORMAT_STEREO_PCM16;
+	ctx->stereo = (channels == 2);
+	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
 	
 	ndspChnSetFormat(ctx->chanID, fmt);
 	ndspChnSetRate(ctx->chanID, sampleRate);
@@ -807,16 +809,25 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
 	ndspWaveBuf* buf;
 
+	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
+	if (((uintptr_t)data & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%08X\n", &data);
+	}
+	if ((dataSize & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%X\n", &dataSize);
+	}
+
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
 		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
-			
+
 		buf->data_pcm16 = data;
-		buf->nsamples   = dataSize / 2; // 16 bit samples
+		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
+		DSP_FlushDataCache(buf->data_pcm16, dataSize);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
 		return 0;
 	}
@@ -1336,10 +1347,18 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */
 	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
+#ifdef __3DS__
+	chunkSize &= ~0x7F;  // all data sent to the DSP needs to be aligned to a multiple of 0x80
+#endif
 	samplesPerSecond = channels * sampleRate;
 
 	cur  = 0;
+#ifdef __3DS__
+	// linearAlloc aligns data to a multiple of 0x80
+	data = linearAlloc(chunkSize * AUDIO_MAX_BUFFERS * 2);
+#else
 	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
+#endif
 	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
 	/* fill up with some samples before playing */
@@ -1393,7 +1412,11 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	}
 
 cleanup:
+#ifdef __3DS__
+	linearFree(data);
+#else
 	Mem_Free(data);
+#endif
 	Vorbis_Free(&vorbis);
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
