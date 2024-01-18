@@ -811,10 +811,10 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 
 	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
 	if (((uintptr_t)data & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%08X\n", &data);
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &data);
 	}
 	if ((dataSize & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%X\n", &dataSize);
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
 	}
 
 	for (int i = 0; i < ctx->count; i++) 
@@ -1043,7 +1043,11 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
+#ifdef __3DS__
+			snd->data = linearAlloc(size);
+#else
 			snd->data = Mem_TryAlloc(size, 1);
+#endif
 			snd->size = size;
 
 			if (!snd->data) return ERR_OUT_OF_MEMORY;
