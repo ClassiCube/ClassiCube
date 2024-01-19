@@ -15,6 +15,7 @@
 static int touchActive, touchBegX, touchBegY;
 static cc_bool launcherMode;
 static Result irrst_result;
+static enum Screen3DS renderScreen = TOP_SCREEN;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -31,7 +32,7 @@ void Window_Init(void) {
 	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
 	
 	//gfxInit(GSP_RGBA8_OES,GSP_RGBA8_OES,false);
-	consoleInit(GFX_BOTTOM, NULL);
+	//consoleInit(GFX_BOTTOM, NULL);
 	
 	u16 width, height;
 	gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
@@ -47,11 +48,27 @@ void Window_Init(void) {
 	WindowInfo.Focused = true;
 	WindowInfo.Exists  = true;
 
+	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	irrst_result  = irrstInit();
 }
 
 void Window_Free(void) { irrstExit(); }
+
+enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen) {
+	enum Screen3DS prev = renderScreen;
+	if (screen != prev)
+	{
+		renderScreen = screen;
+		DisplayInfo.Width = (screen == TOP_SCREEN) ? 400 : 320;
+		WindowInfo.Width = DisplayInfo.Width;
+		if (screen == TOP_SCREEN)
+			Gfx_3DS_DrawToTopScreen();
+		else
+			Gfx_3DS_DrawToBottomScreen();
+	}
+	return prev;
+}
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
@@ -94,6 +111,9 @@ static void HandleButtons(u32 mods) {
 	
 	Input_SetNonRepeatable(CCPAD_ZL, mods & KEY_ZL);
 	Input_SetNonRepeatable(CCPAD_ZR, mods & KEY_ZR);
+
+	if (mods == (KEY_A|KEY_B|KEY_START|KEY_SELECT))
+		Process_Exit(0);
 }
 
 static void ProcessJoystickInput(circlePosition* pos, double delta) {
@@ -117,10 +137,19 @@ static void ProcessTouchInput(int mods) {
 	 	int y = touch.py;
 		Pointer_SetPosition(0, x, y);
 	}
+	int x = touch.px;
+	int y = touch.py;
+	
 	// Set starting position for camera movement
 	if (hidKeysDown() & KEY_TOUCH) {
+		//Platform_Log2("touch down: %i,%i", &x, &y);
 		touchBegX = touch.px;
 		touchBegY = touch.py;
+		Input_AddTouch(1, touch.px, touch.py);
+	}
+	if (hidKeysUp() & KEY_TOUCH) {
+		//Platform_Log2("touch up: %i,%i", &x, &y);
+		Input_RemoveTouch(1, touch.px, touch.py);  // TODO: coordinates are 0
 	}
 }
 
@@ -182,8 +211,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	u16 width, height;
-	gfxSetDoubleBuffering(GFX_TOP, false);
-	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
+	gfxScreen_t screen = (renderScreen == TOP_SCREEN) ? GFX_TOP : GFX_BOTTOM;
+	gfxSetDoubleBuffering(screen, false);
+	u8* fb = gfxGetFramebuffer(screen, GFX_LEFT, &width, &height);
 
 	// SRC y = 0 to 240
 	// SRC x = 0 to 400

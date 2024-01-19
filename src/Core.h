@@ -287,6 +287,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_TOUCH
 	#undef  CC_BUILD_FREETYPE
 #elif defined GEKKO
 	#define CC_BUILD_GCWII

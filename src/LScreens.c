@@ -118,6 +118,18 @@ static void LScreen_MouseUp(struct LScreen* s, int idx) { }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
 static void LScreen_DrawBackground(struct LScreen* s, struct Context2D* ctx) {
+	// I don't know of a good place to do this, so I'm sticking it here
+#ifdef __3DS__
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
+	// Draw top screen background
+	Launcher_DrawBackgroundAll(ctx);
+	Rect2D r = { 0, 0, WindowInfo.Width, WindowInfo.Height };
+	Window_DrawFramebuffer(r);
+
+	Window_3DS_SetRenderScreen(scr);
+#endif
+
 	if (!s->title) {
 		Launcher_DrawBackground(ctx, 0, 0, ctx->width, ctx->height);
 		return;

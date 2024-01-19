@@ -32,10 +32,14 @@ static CC_NOINLINE int GetWindowScale(void) {
 
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
+#ifndef __3DS__
 	if (!Input_TouchMode) {
+#endif
 		widthScale  /= DisplayInfo.ScaleX;
 		heightScale /= DisplayInfo.ScaleY;
+#ifndef __3DS__
 	}
+#endif
 	return 1 + (int)(min(widthScale, heightScale));
 }
 

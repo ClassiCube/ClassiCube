@@ -102,7 +102,8 @@ static void SwitchProgram(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static C3D_RenderTarget* target;
+static C3D_RenderTarget* topTarget;
+static C3D_RenderTarget* bottomTarget;
 
 static void AllocShaders(void) {
 	Shader_Alloc(&shaders[0], coloured_shbin, coloured_shbin_size);
@@ -124,8 +125,12 @@ static void SetDefaultState(void) {
 }
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
-	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+
+	topTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderTargetSetOutput(topTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+
+	bottomTarget = C3D_RenderTargetCreate(240, 400 /* uhh... not correct, but it works */, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderTargetSetOutput(bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	SetDefaultState();
 	AllocShaders();
@@ -166,6 +171,14 @@ void Gfx_RestoreState(void) {
 void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
+}
+
+void Gfx_3DS_DrawToTopScreen(void) {
+	C3D_FrameDrawOn(topTarget);
+}
+
+void Gfx_3DS_DrawToBottomScreen(void) {
+	C3D_FrameDrawOn(bottomTarget);
 }
 
 /*########################################################################################################################*
@@ -350,11 +363,12 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) {
 	int flags = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
 	C3D_FrameBegin(flags);
+	C3D_FrameDrawOn(topTarget);
 }
 
 void Gfx_Clear(void) {
-	C3D_RenderTargetClear(target, C3D_CLEAR_ALL, clear_color, 0);
-	C3D_FrameDrawOn(target);
+	C3D_RenderTargetClear(topTarget, C3D_CLEAR_ALL, clear_color, 0);
+	C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL, 0, 0);
 }
 
 void Gfx_EndFrame(void) {

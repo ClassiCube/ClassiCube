@@ -114,6 +114,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
 	Launcher_ShouldExit = Platform_SingleProcess || Options_GetBool(LOPT_AUTO_CLOSE, false);
+
 	return true;
 }
 
@@ -235,6 +236,8 @@ void Launcher_Run(void) {
 	}
 #endif
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	Drawer2D_Component.Init();
 	SystemFonts_Component.Init();
 	Drawer2D.BitmappedText    = false;
@@ -295,6 +298,8 @@ void Launcher_Run(void) {
 
 	if (WindowInfo.Exists) Window_RequestClose();
 #endif
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 
