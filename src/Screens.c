@@ -389,8 +389,6 @@ static void HUDScreen_Render(void* screen, double delta) {
 
 	if (Gui_GetBlocksWorld()) return;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	Gfx_BindDynamicVb(s->vb);
 	Widget_Render2(&s->hotbar, 12);
 
@@ -399,8 +397,6 @@ static void HUDScreen_Render(void* screen, double delta) {
 		Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
 		Gfx_DrawVb_IndexedTris(4);
 	}
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {

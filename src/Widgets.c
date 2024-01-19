@@ -447,16 +447,21 @@ static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {
 }
 
 static int HotbarWidget_Render2(void* widget, int offset) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderOutline(w, offset    );
 	HotbarWidget_RenderEntries(w, offset + 8);
 
 #ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return HOTBAR_MAX_VERTICES;
-	w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
-	w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
-	Texture_Render(&w->ellipsisTex);
+	if (Input_TouchMode) {
+		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
+		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
+		Texture_Render(&w->ellipsisTex);
+	}
 #endif
+
+	Window_3DS_SetRenderScreen(scr);
 	return HOTBAR_MAX_VERTICES;
 }
 

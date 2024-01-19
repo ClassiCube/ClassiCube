@@ -261,6 +261,8 @@ static struct Widget* list_widgets[] = {
 #define LISTSCREEN_EMPTY "-"
 
 static void ListScreen_Layout(void* screen) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i;
 
@@ -280,6 +282,8 @@ static void ListScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static STRING_REF cc_string ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
@@ -4145,11 +4149,15 @@ static void TouchOnscreenScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchOnscreenScreen_Layout(void* screen) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
 	Menu_LayoutButtons(s->btns, s->btnDescs, ONSCREEN_PAGE_BTNS);
 	Menu_LayoutBack(&s->back);
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -260,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  260,    0);
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TouchOnscreenScreen_Init(void* screen) {
@@ -4322,9 +4330,13 @@ static void TouchCtrlsScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchCtrlsScreen_Layout(void* screen) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	Menu_LayoutButtons(s->btns, touchCtrls_btns, TOUCHCTRLS_BTNS);
 	Menu_LayoutBack(&s->back);
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TouchCtrlsScreen_Init(void* screen) {
