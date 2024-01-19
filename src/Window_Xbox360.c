@@ -18,9 +18,6 @@ static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on Xbox
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
 
 // https://github.com/Free60Project/libxenon/blob/71a411cddfc26c9ccade08d054d87180c359797a/libxenon/drivers/console/console.c#L47
 struct ati_info {

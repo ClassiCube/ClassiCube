@@ -20,12 +20,19 @@ android/app/.externalNativeBuild/
 android/local.properties
 *.iml
 
-# 3DS build results
+# Console build results
+build-360/
 build-3ds/
+build-dc/
+build-gc/
+build-n64/
+build-ps2/
+build-ps3/
+build-vita/
+build-wii/
 
 # Build results
 [Dd]ebug/
-[Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
 x64/

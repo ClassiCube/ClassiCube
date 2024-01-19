@@ -20,9 +20,6 @@ static xid_gamepad_in gp_state;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on Xbox
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
 
 // TODO No idea if this even works
 static void OnDataReceived(UTR_T* utr) {

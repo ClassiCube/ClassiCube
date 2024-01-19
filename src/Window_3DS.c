@@ -18,9 +18,6 @@ static Result irrst_result;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// Render everything at half size due to the small resolution
-int Display_ScaleX(int x) { return x / 2; }
-int Display_ScaleY(int y) { return y / 2; }
 
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h

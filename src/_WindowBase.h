@@ -10,9 +10,6 @@ struct _WinData WindowInfo;
 #define Display_CentreX(width)  (DisplayInfo.x + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.y + (DisplayInfo.Height - height) / 2)
 
-int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
-int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
-
 static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates */

@@ -64,9 +64,9 @@ CC_VAR extern struct _DisplayData {
 } DisplayInfo;
 
 /* Scales the given X coordinate from 96 dpi to current display dpi. */
-int Display_ScaleX(int x);
+static CC_INLINE int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
-int Display_ScaleY(int y);
+static CC_INLINE int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
 /* Data for the game/launcher window. */
 CC_VAR extern struct _WinData {
