@@ -47,8 +47,14 @@ static int flagXOffset, flagYOffset;
 
 static void HookEvents(void);
 void LBackend_Init(void) {
-	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
-	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
+	xBorder = Display_ScaleX(1);
+	yBorder = Display_ScaleY(1);
+
+	if (xBorder < 1) { xBorder = 1; }
+	if (yBorder < 1) { yBorder = 1; }
+
+	xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
+	yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
 
 	xInputOffset = Display_ScaleX(5);
 	yInputOffset = Display_ScaleY(2);

@@ -20,6 +20,9 @@ android/app/.externalNativeBuild/
 android/local.properties
 *.iml
 
+# 3DS build results
+build-3ds/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
