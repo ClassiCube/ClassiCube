@@ -708,7 +708,7 @@ static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	HttpClient_Serialise(state);
 
 	/* TODO check that wrote is >= inputMsg.length */
-	return HttpConnection_Write(state->conn, inputBuffer, inputMsg.length, &wrote);
+	return HttpConnection_Write(state->conn, (cc_uint8*)inputBuffer, inputMsg.length, &wrote);
 }
 
 
@@ -763,7 +763,8 @@ static int HttpClient_BeginBody(struct HttpRequest* req, struct HttpClientState*
 static int HttpClient_GetChunkLength(const cc_string* line) {
 	int length = 0, i, part;
 
-	for (i = 0; i < line->length; i++) {
+	for (i = 0; i < line->length; i++) 
+	{
 		char c = line->buffer[i];
 		/* RFC 7230, section 4.1.1 - Chunk Extensions */
 		if (c == ';') break;
@@ -786,7 +787,8 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 
 		case HTTP_RESPONSE_STATE_HEADER:
 		{
-			for (; offset < total;) {
+			for (; offset < total;) 
+			{
 				char c = buffer[offset++];
 				if (c == '\r') continue;
 				if (c != '\n') {
@@ -837,7 +839,8 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 		/* RFC 7230, section 4.1 - Chunked Transfer Coding */
 		case HTTP_RESPONSE_STATE_CHUNK_HEADER:
 		{
-			for (; offset < total;) {
+			for (; offset < total;) 
+			{
 				char c = buffer[offset++];
 				if (c == '\r') continue;
 				if (c != '\n') { String_Append(&state->header, c); continue; }
@@ -874,7 +877,8 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 		/* RFC 7230, section 4.1.2 - Chunked Trailer Part */
 		case HTTP_RESPONSE_STATE_CHUNK_TRAILERS:
 		{
-			for (; offset < total;) {
+			for (; offset < total;) 
+			{
 				char c = buffer[offset++];
 				if (c == '\r') continue;
 				if (c != '\n') { String_Append(&state->header, c); continue; }
@@ -904,7 +908,8 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	cc_uint32 total;
 	cc_result res;
 
-	for (;;) {
+	for (;;) 
+	{
 		dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
 		res = HttpConnection_Read(state->conn, dst, INPUT_BUFFER_LEN, &total);
 

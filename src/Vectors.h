@@ -19,11 +19,12 @@ struct Vec4 { float x, y, z, w; };
 /* 4x4 matrix. (for vertex transformations) */
 struct Matrix { struct Vec4 row1, row2, row3, row4; };
 
-#define Matrix_IdentityValue { \
-1.0f, 0.0f, 0.0f, 0.0f, \
-0.0f, 1.0f, 0.0f, 0.0f, \
-0.0f, 0.0f, 1.0f, 0.0f, \
-0.0f, 0.0f, 0.0f, 1.0f  \
+#define Matrix_IdentityValue \
+{ \
+	{ 1.0f, 0.0f, 0.0f, 0.0f }, \
+	{ 0.0f, 1.0f, 0.0f, 0.0f }, \
+	{ 0.0f, 0.0f, 1.0f, 0.0f }, \
+	{ 0.0f, 0.0f, 0.0f, 1.0f }  \
 }
 
 /* Identity matrix. (A * Identity = A) */

@@ -48,11 +48,11 @@ void Audio_Close(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
-/* Queues the given audio data for playing. */
+/* Queues the given audio chunk for playing. */
 /* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
 /* NOTE: Some backends directly read from the data - therefore you MUST NOT modify it */
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size);
-/* Begins playing audio. Audio_QueueData must have been used before this. */
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size);
+/* Begins playing audio. Audio_QueueChunk must have been used before this. */
 cc_result Audio_Play(struct AudioContext* ctx);
 /* Polls the audio context and then potentially unqueues buffer */
 /* Returns the number of buffers being played or queued */
@@ -65,4 +65,9 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data);
 cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
+
+/* Allocates a chunk of data to store audio samples */
+void* Audio_AllocChunk(cc_uint32 size);
+/* Frees a previously allocated chunk of data */
+void  Audio_FreeChunk(void* chunk);
 #endif
