@@ -272,7 +272,7 @@ static void AppendVRAMStats(cc_string* info) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	GLint depthBits;
+	GLint depthBits = 0;
 	int pointerSize = sizeof(void*) * 8;
 
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);

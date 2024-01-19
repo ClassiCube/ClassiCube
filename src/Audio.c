@@ -248,14 +248,14 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
 	ALuint buffer;
 	ALenum err;
 	
 	if (!ctx->free) return ERR_INVALID_ARGUMENT;
 	buffer = ctx->freeIDs[--ctx->free];
 
-	_alBufferData(buffer, ctx->channels, data, size, ctx->sampleRate);
+	_alBufferData(buffer, ctx->channels, chunk, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
@@ -299,7 +299,7 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	data->sampleRate = Audio_AdjustSampleRate(data);
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,     data->size)))       return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,     data->size)))      return res;
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }
@@ -321,6 +321,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = GetError(res);
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
+}
+
+void* Audio_AllocChunk(cc_uint32 size) {
+	return Mem_TryAlloc(size, 1);
+}
+
+void Audio_FreeChunk(void* data) {
+	Mem_Free(data);
 }
 #elif defined CC_BUILD_WINMM
 /*########################################################################################################################*
@@ -448,7 +456,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return res;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	cc_result res = 0;
 	WAVEHDR* hdr;
 	int i;
@@ -458,7 +466,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 		if (!(hdr->dwFlags & WHDR_DONE)) continue;
 
 		Mem_Set(hdr, 0, sizeof(WAVEHDR));
-		hdr->lpData         = (LPSTR)data;
+		hdr->lpData         = (LPSTR)chunk;
 		hdr->dwBufferLength = dataSize;
 		hdr->dwLoops        = 1;
 		
@@ -504,7 +512,7 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	data->sampleRate = Audio_AdjustSampleRate(data);
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
 	return 0;
 }
 
@@ -515,6 +523,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (!buffer[0]) return false;
 	String_AppendConst(dst, buffer);
 	return true;
+}
+
+void* Audio_AllocChunk(cc_uint32 size) {
+	return Mem_TryAlloc(size, 1);
+}
+
+void Audio_FreeChunk(void* data) {
+	Mem_Free(data);
 }
 #elif defined CC_BUILD_OPENSLES
 /*########################################################################################################################*
@@ -676,8 +692,8 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
-	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, data, size);
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk, size);
 }
 
 static cc_result Audio_Pause(struct AudioContext* ctx) {
@@ -712,7 +728,7 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	/* rate is in milli, so 1000 = normal rate */
 	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, data->rate * 10))) return res;
 
-	if ((res = Audio_QueueData(ctx, data->data, data->size))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data, data->size))) return res;
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }
@@ -743,6 +759,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = GetError(res);
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
+}
+
+void* Audio_AllocChunk(cc_uint32 size) {
+	return Mem_TryAlloc(size, 1);
+}
+
+void Audio_FreeChunk(void* data) {
+	Mem_Free(data);
 }
 #elif defined CC_BUILD_3DS
 /*########################################################################################################################*
@@ -807,12 +831,12 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	ndspWaveBuf* buf;
 
 	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
-	if (((uintptr_t)data & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &data);
+	if (((uintptr_t)chunk & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
 	}
 	if ((dataSize & 0x7F) != 0) {
 		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
@@ -825,7 +849,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
 
-		buf->data_pcm16 = data;
+		buf->data_pcm16 = chunk;
 		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
 		DSP_FlushDataCache(buf->data_pcm16, dataSize);
@@ -870,12 +894,21 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	cc_result res;
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
 	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
+}
+
+void* Audio_AllocChunk(cc_uint32 size) {
+	// The DSP needs audio data aligned to a multiple of 0x80 according to examples, and linearAlloc does just that.
+	return linearAlloc(size);
+}
+
+void Audio_FreeChunk(void* data) {
+	linearFree(data);
 }
 #elif defined CC_BUILD_WEBAUDIO
 /*########################################################################################################################*
@@ -904,7 +937,7 @@ void Audio_Close(struct AudioContext* ctx) {
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	return ERR_NOT_SUPPORTED;
 }
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
 	return ERR_NOT_SUPPORTED;
 }
 cc_result Audio_Play(struct AudioContext* ctx) { return ERR_NOT_SUPPORTED; }
@@ -933,6 +966,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 	String_AppendUtf8(dst, buffer, len);
 	return len > 0;
+}
+
+void* Audio_AllocChunk(cc_uint32 size) {
+	return Mem_TryAlloc(size, 1);
+}
+
+void Audio_FreeChunk(void* data) {
+	Mem_Free(data);
 }
 #endif
 
@@ -1044,11 +1085,7 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-#ifdef __3DS__
-			snd->data = linearAlloc(size);
-#else
-			snd->data = Mem_TryAlloc(size, 1);
-#endif
+			snd->data = Audio_AllocChunk(size);
 			snd->size = size;
 
 			if (!snd->data) return ERR_OUT_OF_MEMORY;
@@ -1326,7 +1363,7 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 	}
 	if (Audio_MusicVolume < 100) { ApplyVolume(data, samples, Audio_MusicVolume); }
 
-	res2 = Audio_QueueData(&music_ctx, data, samples * 2);
+	res2 = Audio_QueueChunk(&music_ctx, data, samples * 2);
 	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
@@ -1358,12 +1395,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	samplesPerSecond = channels * sampleRate;
 
 	cur  = 0;
-#ifdef __3DS__
-	// linearAlloc aligns data to a multiple of 0x80
-	data = linearAlloc(chunkSize * AUDIO_MAX_BUFFERS * 2);
-#else
-	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
-#endif
+	data = (cc_int16*)Audio_AllocChunk(chunkSize * AUDIO_MAX_BUFFERS * 2);
 	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
 	/* fill up with some samples before playing */

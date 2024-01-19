@@ -529,7 +529,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	int x;
 
 	/* Skip dragging logo when very small window to save space */
-	if (WindowInfo.Height < 300) return;
+	if (WindowInfo.Height < 240) return;
 
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;

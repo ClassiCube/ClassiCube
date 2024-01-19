@@ -25,9 +25,6 @@ static KbConfig kb_config;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on PS Vita
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
 
 static void sysutil_callback(u64 status, u64 param, void* usrdata) {
 	switch (status) {

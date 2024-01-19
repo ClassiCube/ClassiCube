@@ -26,9 +26,6 @@ static char padBuf[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on PS Vita
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
 
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;

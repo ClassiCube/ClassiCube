@@ -16,9 +16,6 @@ static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
-// no DPI scaling on Wii/GameCube
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
 
 void Window_Init(void) {
     display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
