@@ -66,8 +66,8 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
 
-/* Allocates a chunk of data to store audio samples */
-void* Audio_AllocChunk(cc_uint32 size);
-/* Frees a previously allocated chunk of data */
-void  Audio_FreeChunk(void* chunk);
+/* Allocates a group of chunks of data to store audio samples */
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
+/* Frees a previously allocated group of chunks of data */
+void Audio_FreeChunks(void** chunks, int numChunks);
 #endif

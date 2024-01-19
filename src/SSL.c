@@ -153,7 +153,7 @@ static SECURITY_STATUS SSL_Connect(struct SSLContext* ctx, const char* hostname)
 	out_desc.cBuffers  = Array_Elems(out_buffers);
 	out_desc.pBuffers  = out_buffers;
 
-	res = FP_InitializeSecurityContextA(&ctx->handle, NULL, hostname, flags, 0, 0,
+	res = FP_InitializeSecurityContextA(&ctx->handle, NULL, (char*)hostname, flags, 0, 0,
 						NULL, 0, &ctx->context, &out_desc, &flags, NULL);
 	if (res != SEC_I_CONTINUE_NEEDED) return res;
 	res = 0;
