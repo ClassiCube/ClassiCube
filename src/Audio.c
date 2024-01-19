@@ -783,7 +783,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
 	ctx->used   = true;
-	
+
 	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
 }
 
@@ -791,6 +791,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->used) {
 		ndspChnWaveBufClear(ctx->chanID);
 		ctx->channels &= ~(1 << ctx->chanID);
+		channelIDs &= ~(1 << ctx->chanID);
 	}
 	
 	ctx->used = false;
