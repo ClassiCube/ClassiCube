@@ -261,8 +261,6 @@ static struct Widget* list_widgets[] = {
 #define LISTSCREEN_EMPTY "-"
 
 static void ListScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i;
 
@@ -282,8 +280,6 @@ static void ListScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static STRING_REF cc_string ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
@@ -487,12 +483,8 @@ void ListScreen_Show(void) {
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static void MenuScreen_Render2(void* screen, double delta) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	Menu_RenderBounds();
 	Screen_Render2Widgets(screen, delta);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 
@@ -559,15 +551,11 @@ static void PauseScreen_ContextRecreated(void* screen) {
 }
 
 static void PauseScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
 	Menu_LayoutBack(&s->back);
 	Widget_SetLocation(&s->quit,  ANCHOR_MAX,    ANCHOR_MAX,    5,    5);
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void PauseScreen_Init(void* screen) {
@@ -632,14 +620,10 @@ static void ClassicPauseScreen_ContextRecreated(void* screen) {
 }
 
 static void ClassicPauseScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
 	Widget_SetLocation(&s->back,  ANCHOR_CENTRE, ANCHOR_MAX, 0, Game_ClassicMode ? 80 : 25);
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -150);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void ClassicPauseScreen_Init(void* screen) {
@@ -755,14 +739,10 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 }
 
 static void OptionsGroupScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	Menu_LayoutButtons(s->btns, optsGroup_btns, 8);
 	Widget_SetLocation(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 	Menu_LayoutBack(&s->done);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void OptionsGroupScreen_Init(void* screen) {
@@ -1012,8 +992,6 @@ static void EditHotkeyScreen_Update(void* screen, double delta) {
 }
 
 static void EditHotkeyScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	s->barWidth  = Display_ScaleX(500);
 	s->barX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->barWidth, WindowInfo.Width);
@@ -1031,8 +1009,6 @@ static void EditHotkeyScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->btns[4], ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  130);
 	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  -35);
 	Menu_LayoutBack(&s->cancel);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void EditHotkeyScreen_Init(void* screen) {
@@ -1256,8 +1232,6 @@ static void GenLevelScreen_Update(void* screen, double delta) {
 }
 
 static void GenLevelScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int i, y;
 	for (i = 0; i < 4; i++) {
@@ -1270,8 +1244,6 @@ static void GenLevelScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->flatgrass, ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
 	Widget_SetLocation(&s->vanilla,   ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
 	Menu_LayoutBack(&s->cancel);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void GenLevelScreen_Init(void* screen) {
@@ -1353,16 +1325,12 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 }
 
 static void ClassicGenScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -150);
 	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
 	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -50);
 	Widget_SetLocation(&s->btns[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,    0);
 	Widget_SetLocation(&s->cancel,  ANCHOR_CENTRE, ANCHOR_MAX,    0,   80);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void ClassicGenScreen_Init(void* screen) {
@@ -1570,8 +1538,6 @@ static void SaveLevelScreen_Update(void* screen, double delta) {
 }
 
 static void SaveLevelScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	Widget_SetLocation(&s->input, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	Widget_SetLocation(&s->save,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  20);
@@ -1579,8 +1545,6 @@ static void SaveLevelScreen_Layout(void* screen) {
 
 	Widget_SetLocation(&s->file, ANCHOR_CENTRE, ANCHOR_MAX, 0, 70);
 	Menu_LayoutBack(&s->cancel);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void SaveLevelScreen_Init(void* screen) {
@@ -1913,14 +1877,10 @@ static void BindsSourceScreen_ContextRecreated(void* screen) {
 }
 
 static void BindsSourceScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
 	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -25);
 	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  25);
 	Menu_LayoutBack(&s->cancel);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void BindsSourceScreen_Init(void* screen) {
@@ -2068,8 +2028,6 @@ static void KeyBindsScreen_ContextRecreated(void* screen) {
 }
 
 static void KeyBindsScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	int i, x, y, xDir, leftLen;
 	x = s->btnWidth / 2 + 5;
@@ -2090,8 +2048,6 @@ static void KeyBindsScreen_Layout(void* screen) {
 	
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -s->btnWidth - 35, s->arrowsY);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  s->btnWidth + 35, s->arrowsY);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void KeyBindsScreen_Init(void* screen) {
@@ -2373,8 +2329,6 @@ static void MenuInputOverlay_Free(void* screen) {
 }
 
 static void MenuInputOverlay_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (!Input_TouchMode) {
 		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 110);
@@ -2389,8 +2343,6 @@ static void MenuInputOverlay_Layout(void* screen) {
 		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE,  120, 150);
 		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE, -120, 150);
 	}
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void MenuInputOverlay_ContextLost(void* screen) {
@@ -2692,14 +2644,10 @@ static void MenuOptionsScreen_Free(void* screen) {
 }
 
 static void MenuOptionsScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Screen_Layout(s);
 	Menu_LayoutBack(&s->done);
 	MenuOptionsScreen_LayoutExtHelp(s);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void MenuOptionsScreen_ContextLost(void* screen) {
@@ -3389,15 +3337,11 @@ static void NostalgiaMenuScreen_ContextRecreated(void* screen) {
 }
 
 static void NostalgiaMenuScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
 	Widget_SetLocation(&s->btnA,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -25);
 	Widget_SetLocation(&s->btnF,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,   25);
 	Menu_LayoutBack(&s->done);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void NostalgiaMenuScreen_Init(void* screen) {
@@ -4149,15 +4093,11 @@ static void TouchOnscreenScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchOnscreenScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
 	Menu_LayoutButtons(s->btns, s->btnDescs, ONSCREEN_PAGE_BTNS);
 	Menu_LayoutBack(&s->back);
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -260,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  260,    0);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TouchOnscreenScreen_Init(void* screen) {
@@ -4330,13 +4270,9 @@ static void TouchCtrlsScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchCtrlsScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	Menu_LayoutButtons(s->btns, touchCtrls_btns, TOUCHCTRLS_BTNS);
 	Menu_LayoutBack(&s->back);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TouchCtrlsScreen_Init(void* screen) {
@@ -4428,13 +4364,9 @@ static void TouchMoreScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchMoreScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
 	Menu_LayoutButtons(s->btns, touchMore_btns, TOUCHMORE_BTNS);
 	Menu_LayoutBack(&s->back);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TouchMoreScreen_Init(void* screen) {

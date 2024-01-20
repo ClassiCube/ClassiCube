@@ -141,12 +141,16 @@ void Gui_LayoutAll(void) {
 	struct Screen* s;
 	int i;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{
 		s = Gui_Screens[i];
 		s->VTABLE->Layout(s);
 		s->dirty = true;
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 void Gui_RefreshAll(void) { 
@@ -156,10 +160,14 @@ void Gui_RefreshAll(void) {
 }
 
 void Gui_Refresh(struct Screen* s) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
 	s->VTABLE->Layout(s);
 	s->dirty = true;
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void Gui_AddCore(struct Screen* s, int priority) {
@@ -183,6 +191,8 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	priorities[i]  = priority;
 	Gui.ScreensCount++;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	s->dirty = true;
 	s->VTABLE->Init(s);
 	s->VTABLE->ContextRecreated(s);
@@ -193,6 +203,8 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	{
 		s->VTABLE->HandlesPointerMove(s, i, Pointers[i].x, Pointers[i].y);
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 /* Returns index of the given screen in the screens list, -1 if not */
@@ -287,6 +299,8 @@ void Gui_RenderGui(double delta) {
 	struct Screen* s;
 	int i;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
 	{
@@ -296,6 +310,8 @@ void Gui_RenderGui(double delta) {
 		if (s->dirty) { s->VTABLE->BuildMesh(s); s->dirty = false; }
 		s->VTABLE->Render(s, delta);
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 
