@@ -565,7 +565,7 @@ static void HotbarWidget_InputUp(void* widget, int key) {
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
-	if (WindowInfo.Focused) Inventory_SwitchHotbar();
+	if (Window_Main.Focused) Inventory_SwitchHotbar();
 }
 
 static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
@@ -1780,7 +1780,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match Minecraft behaviour */
-		width      = max(width, WindowInfo.Width - x * 4);
+		width      = max(width, Window_Main.Width - x * 4);
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backColor);
 		y += w->lineHeight;
@@ -2035,7 +2035,7 @@ static void TextGroupWidget_Reposition(void* widget) {
 
 	for (i = 0, y = w->y; i < w->lines; i++) 
 	{
-		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, WindowInfo.Width);
+		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Main.Width);
 		textures[i].y = y;
 		y += textures[i].Height;
 	}
@@ -2313,7 +2313,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
-	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, WindowInfo.Width);
+	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Main.Width);
 	w->textures[index] = tex;
 	Widget_Layout(w);
 }

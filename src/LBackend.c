@@ -120,11 +120,11 @@ static void LBackend_LayoutDimensions(struct LWidget* w) {
 		switch (l->type)
 		{
 		case LLAYOUT_WIDTH:
-			w->width  = WindowInfo.Width  - w->x - Display_ScaleX(l->offset);
+			w->width  = Window_Main.Width  - w->x - Display_ScaleX(l->offset);
 			w->width  = max(1, w->width);
 			break;
 		case LLAYOUT_HEIGHT:
-			w->height = WindowInfo.Height - w->y - Display_ScaleY(l->offset);
+			w->height = Window_Main.Height - w->y - Display_ScaleY(l->offset);
 			w->height = max(1, w->height);
 			break;
 		}
@@ -135,8 +135,8 @@ static void LBackend_LayoutDimensions(struct LWidget* w) {
 void LBackend_LayoutWidget(struct LWidget* w) {
 	const struct LLayout* l = w->layouts;
 
-	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  WindowInfo.Width);
-	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, WindowInfo.Height);
+	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  Window_Main.Width);
+	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, Window_Main.Height);
 
 	/* e.g. Table widget needs adjusts width/height based on window */
 	if (l[1].type & LLAYOUT_EXTRA)
@@ -181,8 +181,8 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 
 void LBackend_InitFramebuffer(void) {
 	struct Bitmap bmp;
-	bmp.width  = max(WindowInfo.Width,  1);
-	bmp.height = max(WindowInfo.Height, 1);
+	bmp.width  = max(Window_Main.Width,  1);
+	bmp.height = max(Window_Main.Height, 1);
 
 	Window_AllocFramebuffer(&bmp);
 	Context2D_Wrap(&framebuffer, &bmp);
@@ -1088,7 +1088,7 @@ static void LTable_ScrollbarClick(struct LTable* w, int idx) {
 }
 
 void LBackend_TableMouseDown(struct LTable* w, int idx) {
-	if (Pointers[idx].x >= WindowInfo.Width - scrollbarWidth) {
+	if (Pointers[idx].x >= Window_Main.Width - scrollbarWidth) {
 		LTable_ScrollbarClick(w, idx);
 		w->_lastRow = -1;
 	} else if (Pointers[idx].y < w->rowsBegY) {

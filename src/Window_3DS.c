@@ -17,7 +17,8 @@ static cc_bool launcherMode;
 static Result irrst_result;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
+struct _WindowData Window_Alt;
 
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
@@ -42,13 +43,17 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 0.5;
 	DisplayInfo.ScaleY = 0.5;
 	
-	WindowInfo.Width   = height; // deliberately swapped
-	WindowInfo.Height  = width;  // deliberately swapped
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = height; // deliberately swapped
+	Window_Main.Height  = width;  // deliberately swapped
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	irrst_result  = irrstInit();
+	
+	gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, &width, &height);
+	Window_Alt.Width  = height; // deliberately swapped
+	Window_Alt.Height = width;  // deliberately swapped
 }
 
 void Window_Free(void) { irrstExit(); }
@@ -113,7 +118,7 @@ static void ProcessTouchInput(int mods) {
 	
 	if (touchActive) {
 		// rescale X from [0, bottom_FB_width) to [0, top_FB_width)
-		int x = touch.px * WindowInfo.Width / GSP_SCREEN_HEIGHT_BOTTOM;
+		int x = touch.px * Window_Main.Width / GSP_SCREEN_HEIGHT_BOTTOM;
 	 	int y = touch.py;
 		Pointer_SetPosition(0, x, y);
 	}
@@ -129,7 +134,7 @@ void Window_ProcessEvents(double delta) {
 	/* TODO implement */
 	
 	if (!aptMainLoop()) {
-		WindowInfo.Exists = false;
+		Window_Main.Exists = false;
 		Window_RequestClose();
 		return;
 	}

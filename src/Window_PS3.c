@@ -24,12 +24,12 @@ static KbData   kb_data;
 static KbConfig kb_config;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 static void sysutil_callback(u64 status, u64 param, void* usrdata) {
 	switch (status) {
 		case SYSUTIL_EXIT_GAME:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			Window_RequestClose();
 			break;
 	}
@@ -50,10 +50,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = resolution.width;
-	WindowInfo.Height  = resolution.height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = resolution.width;
+	Window_Main.Height  = resolution.height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 20;

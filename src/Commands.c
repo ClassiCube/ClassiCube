@@ -213,7 +213,7 @@ static void ResolutionCommand_Execute(const cc_string* args, int argsCount) {
 	int width, height;
 	if (argsCount < 2) {
 		Chat_Add4("&e/client: &fCurrent resolution is %i@%f2 x %i@%f2", 
-				&WindowInfo.Width, &DisplayInfo.ScaleX, &WindowInfo.Height, &DisplayInfo.ScaleY);
+				&Window_Main.Width, &DisplayInfo.ScaleX, &Window_Main.Height, &DisplayInfo.ScaleY);
 	} else if (!Convert_ParseInt(&args[0], &width) || !Convert_ParseInt(&args[1], &height)) {
 		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {

@@ -22,11 +22,11 @@ static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 
 static void OnPowerOff(void) {
-	WindowInfo.Exists = false;
+	Window_Main.Exists = false;
 	Window_RequestClose();
 }
 static void InitVideo(void) {
@@ -67,10 +67,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = rmode->fbWidth;
-	WindowInfo.Height  = rmode->xfbHeight;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = rmode->fbWidth;
+	Window_Main.Height  = rmode->xfbHeight;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;

@@ -27,8 +27,8 @@ static cc_uint8 priorities[GUI_MAX_SCREENS];
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
 static CC_NOINLINE int GetWindowScale(void) {
-	float widthScale  = WindowInfo.Width  / 640.0f;
-	float heightScale = WindowInfo.Height / 480.0f;
+	float widthScale  = Window_Main.Width  / 640.0f;
+	float heightScale = Window_Main.Height / 480.0f;
 
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
@@ -383,8 +383,8 @@ void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, in
 
 void Widget_CalcPosition(void* widget) {
 	struct Widget* w = (struct Widget*)widget;
-	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , WindowInfo.Width );
-	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, WindowInfo.Height);
+	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , Window_Main.Width );
+	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, Window_Main.Height);
 }
 
 void Widget_Reset(void* widget) {

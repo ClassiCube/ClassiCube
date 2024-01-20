@@ -12,7 +12,7 @@ static SDL_Window* win_handle;
 #error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
 
 static void RefreshWindowBounds(void) {
-	SDL_GetWindowSize(win_handle, &WindowInfo.Width, &WindowInfo.Height);
+	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
 }
 
 static void Window_SDLFail(const char* place) {
@@ -49,8 +49,8 @@ static void DoCreateWindow(int width, int height, int flags) {
 	if (!win_handle) Window_SDLFail("creating window");
 
 	RefreshWindowBounds();
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = win_handle;
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
@@ -217,11 +217,11 @@ static void OnWindowEvent(const SDL_Event* e) {
 			Event_RaiseVoid(&WindowEvents.StateChanged);
 			break;
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			WindowInfo.Focused = true;
+			Window_Main.Focused = true;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			break;
 		case SDL_WINDOWEVENT_FOCUS_LOST:
-			WindowInfo.Focused = false;
+			Window_Main.Focused = false;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			break;
 		case SDL_WINDOWEVENT_CLOSE:
@@ -254,7 +254,7 @@ void Window_ProcessEvents(double delta) {
 			OnWindowEvent(&e); break;
 
 		case SDL_QUIT:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			SDL_DestroyWindow(win_handle);
 			break;

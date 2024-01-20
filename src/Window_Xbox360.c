@@ -17,7 +17,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 // https://github.com/Free60Project/libxenon/blob/71a411cddfc26c9ccade08d054d87180c359797a/libxenon/drivers/console/console.c#L47
 struct ati_info {
@@ -37,10 +37,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = ai->width;
-	WindowInfo.Height  = ai->height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = ai->width;
+	Window_Main.Height  = ai->height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	

@@ -90,7 +90,7 @@ static cc_bool GetMouseCoords(int* x, int* y) {
 	*x = (int)loc.x                        - windowX;
 	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
 	// TODO: this seems to be off by 1
-	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
+	return *x >= 0 && *y >= 0 && *x < Window_Main.Width && *y < Window_Main.Height;
 }
 
 static void ProcessRawMouseMovement(NSEvent* ev) {
@@ -223,8 +223,8 @@ static void RefreshWindowBounds(void) {
 		windowY = (int)rect.origin.y; // usually 0
 		// TODO is it correct to use display bounds and not just 0?
 		
-		WindowInfo.Width  = (int)rect.size.width;
-		WindowInfo.Height = (int)rect.size.height;
+		Window_Main.Width  = (int)rect.size.width;
+		Window_Main.Height = (int)rect.size.height;
 		return;
 	}
 
@@ -241,8 +241,8 @@ static void RefreshWindowBounds(void) {
 	windowX = (int)win.origin.x    + (int)view.origin.x;
 	windowY = DisplayInfo.Height   - ((int)win.origin.y  + (int)win.size.height) + viewY;
 
-	WindowInfo.Width  = (int)view.size.width;
-	WindowInfo.Height = (int)view.size.height;
+	Window_Main.Width  = (int)view.size.width;
+	Window_Main.Height = (int)view.size.height;
 }
 
 @interface CCWindow : NSWindow { }
@@ -266,12 +266,12 @@ static void RefreshWindowBounds(void) {
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
-	WindowInfo.Focused = true;
+	Window_Main.Focused = true;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification {
-	WindowInfo.Focused = false;
+	Window_Main.Focused = false;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
@@ -284,7 +284,7 @@ static void RefreshWindowBounds(void) {
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
-	WindowInfo.Exists = false;
+	Window_Main.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 @end
@@ -366,8 +366,8 @@ static void DoCreateWindow(int width, int height) {
 	[winHandle setAcceptsMouseMovedEvents:YES];
 	
 	Window_CommonCreate();
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = winHandle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = winHandle;
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
 
 	del = [CCWindowDelegate alloc];
@@ -427,9 +427,9 @@ void Window_SetSize(int width, int height) {
 	// Can't use setContentSize:, because that resizes from the bottom left corner
 	NSRect rect = [winHandle frame];
 
-	rect.origin.y    += WindowInfo.Height - height;
-	rect.size.width  += width  - WindowInfo.Width;
-	rect.size.height += height - WindowInfo.Height;
+	rect.origin.y    += Window_Main.Height - height;
+	rect.size.width  += width  - Window_Main.Width;
+	rect.size.height += height - Window_Main.Height;
 	[winHandle setFrame:rect display:YES];
 }
 
@@ -692,8 +692,8 @@ static void DoDrawFramebuffer(NSRect dirty) {
 
 	// TODO: Only update changed bit..
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = WindowInfo.Width;
-	rect.size.height = WindowInfo.Height;
+	rect.size.width  = Window_Main.Width;
+	rect.size.height = Window_Main.Height;
 
 	// TODO: REPLACE THIS AWFUL HACK
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
@@ -712,7 +712,7 @@ static void DoDrawFramebuffer(NSRect dirty) {
 void Window_DrawFramebuffer(Rect2D r) {
 	NSRect rect;
 	rect.origin.x    = r.x; 
-	rect.origin.y    = WindowInfo.Height - r.y - r.Height;
+	rect.origin.y    = Window_Main.Height - r.y - r.Height;
 	rect.size.width  = r.Width;
 	rect.size.height = r.Height;
 	

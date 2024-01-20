@@ -20,7 +20,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
@@ -29,10 +29,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = SCREEN_WIDTH;
-	WindowInfo.Height  = SCREEN_HEIGHT;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = SCREEN_WIDTH;
+	Window_Main.Height  = SCREEN_HEIGHT;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceCtrlSetSamplingCycle(0);
