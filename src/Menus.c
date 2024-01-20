@@ -2941,8 +2941,13 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			GraphicsOptionsScreen_GetNames,   GraphicsOptionsScreen_SetNames },
 		{ 1,   0,  "Shadows", MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows },
+#ifdef CC_BUILD_N64
+		{ 1,  50,  "Filtering", MenuOptionsScreen_Bool,
+			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
+#else
 		{ 1,  50,  "Mipmaps", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
+#endif
 	};
 
 	s->numCore      = 8;

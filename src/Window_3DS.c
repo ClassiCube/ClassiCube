@@ -40,8 +40,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = height; // deliberately swapped
 	DisplayInfo.Height = width;  // deliberately swapped
 	DisplayInfo.Depth  = 4; // 32 bit
-	DisplayInfo.ScaleX = 0.5;
-	DisplayInfo.ScaleY = 0.5;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
 	
 	Window_Main.Width   = height; // deliberately swapped
 	Window_Main.Height  = width;  // deliberately swapped

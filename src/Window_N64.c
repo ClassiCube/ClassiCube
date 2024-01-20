@@ -40,6 +40,10 @@ void Window_Init(void) {
 	// change defaults to make more sense for N64
 	cc_uint8* binds = (cc_uint8*)KeyBind_GamepadDefaults;
 	binds[KEYBIND_INVENTORY] = CCPAD_Z;
+	binds[KEYBIND_FORWARD]   = CCPAD_CUP;
+	binds[KEYBIND_BACK]      = CCPAD_CDOWN;
+	binds[KEYBIND_LEFT]      = CCPAD_CLEFT;
+	binds[KEYBIND_RIGHT]     = CCPAD_CRIGHT;
 }
 
 void Window_Free(void) { }
