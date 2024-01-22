@@ -213,13 +213,18 @@ cc_bool Game_CanPick(BlockID block) {
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, cc_uint8* skinType) {
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
+							cc_uint8* skinType, int* heightDivisor) {
 	struct Bitmap bmp;
 	cc_bool success;
 	cc_result res;
 	
 	res = Png_Decode(&bmp, src);
 	if (res) { Logger_SysWarn2(res, "decoding", file); }
+	
+	/* E.g. gui.png, icons.png only need top half of the texture loaded */
+	if (heightDivisor && bmp.height >= *heightDivisor) 
+		bmp.height /= *heightDivisor;
 
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {

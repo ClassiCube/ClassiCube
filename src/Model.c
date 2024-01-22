@@ -512,10 +512,11 @@ void Model_RegisterTexture(struct ModelTex* tex) {
 static void Models_TextureChanged(void* obj, struct Stream* stream, const cc_string* name) {
 	struct ModelTex* tex;
 
-	for (tex = textures_head; tex; tex = tex->next) {
+	for (tex = textures_head; tex; tex = tex->next) 
+	{
 		if (!String_CaselessEqualsConst(name, tex->name)) continue;
 
-		Game_UpdateTexture(&tex->texID, stream, name, &tex->skinType);
+		Game_UpdateTexture(&tex->texID, stream, name, &tex->skinType, NULL);
 		return;
 	}
 }

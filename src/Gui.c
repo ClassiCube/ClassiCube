@@ -546,22 +546,25 @@ void Screen_PointerUp(void* s, int id, int x, int y) { }
 *------------------------------------------------------Gui component------------------------------------------------------*
 *#########################################################################################################################*/
 static void GuiPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.GuiTex, stream, name, NULL);
+	int heightDivisor = 2; /* only top half of gui png is used */
+	Game_UpdateTexture(&Gui.GuiTex, stream, name, NULL, &heightDivisor);
 }
 static struct TextureEntry gui_entry = { "gui.png", GuiPngProcess };
 
 static void GuiClassicPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.GuiClassicTex, stream, name, NULL);
+	int heightDivisor = 2; /* only top half of gui png is used */
+	Game_UpdateTexture(&Gui.GuiClassicTex, stream, name, NULL, &heightDivisor);
 }
 static struct TextureEntry guiClassic_entry = { "gui_classic.png", GuiClassicPngProcess };
 
 static void IconsPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.IconsTex, stream, name, NULL);
+	int heightDivisor = 4; /* only top quarter of icons png is used */
+	Game_UpdateTexture(&Gui.IconsTex, stream, name, NULL, &heightDivisor);
 }
 static struct TextureEntry icons_entry = { "icons.png", IconsPngProcess };
 
 static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL);
+	Game_UpdateTexture(&Gui.TouchTex, stream, name, NULL, NULL);
 }
 static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
 
