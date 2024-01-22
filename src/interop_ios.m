@@ -118,8 +118,8 @@ static CGRect GetViewFrame(void) {
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
     // viewWillTransitionToSize:withTransitionCoordinator - iOS 8.0
-    WindowInfo.Width  = size.width;
-    WindowInfo.Height = size.height;
+    Window_Main.Width  = size.width;
+    Window_Main.Height = size.height;
     
     Event_RaiseVoid(&WindowEvents.Resized);
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
@@ -239,7 +239,7 @@ static UITextField* kb_widget;
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
     Platform_LogConst("INACTIVE");
-    WindowInfo.Focused = false;
+    Window_Main.Focused = false;
     Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
@@ -260,7 +260,7 @@ static UITextField* kb_widget;
     // applicationDidBecomeActive - iOS 2.0
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     Platform_LogConst("ACTIVE");
-    WindowInfo.Focused = true;
+    Window_Main.Focused = true;
     Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
@@ -371,9 +371,9 @@ void Window_SetTitle(const cc_string* title) {
 }
 
 void Window_Init(void) {
-    //WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+    //Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
     // keyboard now shifts up
-    WindowInfo.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
+    Window_Main.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
     Input.Sources = INPUT_SOURCE_NORMAL;
     
@@ -399,9 +399,9 @@ static CGRect DoCreateWindow(void) {
     
     win_handle.rootViewController = cc_controller;
     win_handle.backgroundColor = CalcBackgroundColor();
-    WindowInfo.Exists = true;
-    WindowInfo.Width  = bounds.size.width;
-    WindowInfo.Height = bounds.size.height;
+    Window_Main.Exists = true;
+    Window_Main.Width  = bounds.size.width;
+    Window_Main.Height = bounds.size.height;
     
     NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
     [notifications addObserver:cc_controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
@@ -415,7 +415,7 @@ void Window_Show(void) {
 }
 
 void Window_RequestClose(void) {
-    WindowInfo.Exists = false;
+    Window_Main.Exists = false;
     Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -670,15 +670,15 @@ static void CreateFramebuffer(void) {
     
     glGenRenderbuffers(1, &depth_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, WindowInfo.Width, WindowInfo.Height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
         Logger_Abort2(status, "Failed to create renderbuffer");
     
-    fb_width  = WindowInfo.Width;
-    fb_height = WindowInfo.Height;
+    fb_width  = Window_Main.Width;
+    fb_height = Window_Main.Height;
 }
 
 void GLContext_Create(void) {
@@ -698,15 +698,15 @@ static void GLContext_OnLayout(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
     
     // only resize buffers when absolutely have to
-    if (fb_width == WindowInfo.Width && fb_height == WindowInfo.Height) return;
-    fb_width  = WindowInfo.Width;
-    fb_height = WindowInfo.Height;
+    if (fb_width == Window_Main.Width && fb_height == Window_Main.Height) return;
+    fb_width  = Window_Main.Width;
+    fb_height = Window_Main.Height;
     
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
     
     glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, WindowInfo.Width, WindowInfo.Height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
 }
 
 void GLContext_Free(void) {
@@ -1295,8 +1295,8 @@ void LBackend_FreeFramebuffer(void) { }
 void LBackend_Redraw(void) {
     struct Context2D ctx;
     struct Bitmap bmp;
-    bmp.width  = max(WindowInfo.Width,  1);
-    bmp.height = max(WindowInfo.Height, 1);
+    bmp.width  = max(Window_Main.Width,  1);
+    bmp.height = max(Window_Main.Height, 1);
     bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, 4, "window pixels");
     
     Context2D_Wrap(&ctx, &bmp);
@@ -1640,10 +1640,10 @@ static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
         switch (l->type)
         {
             case LLAYOUT_WIDTH:
-                r->size.width  = WindowInfo.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
+                r->size.width  = Window_Main.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
                 break;
             case LLAYOUT_HEIGHT:
-                r->size.height = WindowInfo.Height - (int)r->origin.y - Display_ScaleY(l->offset);
+                r->size.height = Window_Main.Height - (int)r->origin.y - Display_ScaleY(l->offset);
                 break;
         }
         l++;
@@ -1657,8 +1657,8 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     int width    = (int)r.size.width;
     int height   = (int)r.size.height;
     
-    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
-    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
+    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  Window_Main.Width);
+    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, Window_Main.Height);
     
     // e.g. Table widget needs adjusts width/height based on window
     if (l[1].type & LLAYOUT_EXTRA)

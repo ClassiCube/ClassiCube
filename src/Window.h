@@ -68,8 +68,8 @@ static CC_INLINE int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
 static CC_INLINE int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
-/* Data for the game/launcher window. */
-CC_VAR extern struct _WinData {
+/* Data for a window */
+struct _WindowData {
 	/* Readonly platform-specific handle to the window. */
 	void* Handle;
 	/* Size of the content area of the window. (i.e. area that can draw to) */
@@ -84,7 +84,13 @@ CC_VAR extern struct _WinData {
 	/* Whether this window is backgrounded / inactivated */
 	/* (rendering is not performed when window is inactive) */
 	cc_bool Inactive;
-} WindowInfo;
+};
+
+/* Data for the game/launcher window */
+CC_VAR extern struct _WindowData WindowInfo; /* Named WindowInfo for backwards compatibility */
+#define Window_Main WindowInfo
+/* Data for alternate game window (e.g. 3DS) */
+extern struct _WindowData Window_Alt;
 
 /* Initialises state for window, input, and display. */
 void Window_Init(void);

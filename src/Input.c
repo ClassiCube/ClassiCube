@@ -1149,7 +1149,7 @@ static void OnInputUp(void* obj, int key) {
 	if (KeyBind_Claims(KEYBIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
 }
 
-static void OnFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }
+static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
 static void OnInit(void) {
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);

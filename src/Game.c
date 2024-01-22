@@ -213,13 +213,18 @@ cc_bool Game_CanPick(BlockID block) {
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, cc_uint8* skinType) {
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
+							cc_uint8* skinType, int* heightDivisor) {
 	struct Bitmap bmp;
 	cc_bool success;
 	cc_result res;
 	
 	res = Png_Decode(&bmp, src);
 	if (res) { Logger_SysWarn2(res, "decoding", file); }
+	
+	/* E.g. gui.png, icons.png only need top half of the texture loaded */
+	if (heightDivisor && bmp.height >= *heightDivisor) 
+		bmp.height /= *heightDivisor;
 
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
@@ -273,8 +278,8 @@ cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 }
 
 void Game_UpdateDimensions(void) {
-	Game.Width  = max(WindowInfo.Width,  1);
-	Game.Height = max(WindowInfo.Height, 1);
+	Game.Width  = max(Window_Main.Width,  1);
+	Game.Height = max(Window_Main.Height, 1);
 }
 
 static void Game_OnResize(void* obj) {
@@ -298,7 +303,7 @@ static void HandleOnNewMapLoaded(void* obj) {
 }
 
 static void HandleInactiveChanged(void* obj) {
-	if (WindowInfo.Inactive) {
+	if (Window_Main.Inactive) {
 		Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 		Gfx_SetFpsLimit(false, 1000 / 1.0f);
 	} else {
@@ -601,7 +606,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!WindowInfo.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
+	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
 	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);
@@ -618,7 +623,7 @@ static void Game_RenderFrame(double delta) {
 	UpdateViewMatrix();
 
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
-	if (WindowInfo.Inactive) return;
+	if (Window_Main.Inactive) return;
 	Gfx_Clear();
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);

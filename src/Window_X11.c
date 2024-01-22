@@ -193,9 +193,9 @@ static void RegisterAtoms(void) {
 }
 
 static void RefreshWindowBounds(int width, int height) {
-	if (width != WindowInfo.Width || height != WindowInfo.Height) {
-		WindowInfo.Width  = width;
-		WindowInfo.Height = height;
+	if (width != Window_Main.Width || height != Window_Main.Height) {
+		Window_Main.Width  = width;
+		Window_Main.Height = height;
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
@@ -332,8 +332,8 @@ static void DoCreateWindow(int width, int height) {
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 
 	RefreshWindowBounds(width, height);
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = (void*)win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = (void*)win_handle;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
@@ -345,7 +345,7 @@ static void DoCreateWindow(int width, int height) {
 
 	/* Check for focus initially, in case WM doesn't send a FocusIn event */
 	XGetInputFocus(win_display, &focus, &focusRevert);
-	if (focus == win_handle) WindowInfo.Focused = true;
+	if (focus == win_handle) Window_Main.Focused = true;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
@@ -508,7 +508,7 @@ static void HandleWMDestroy(void) {
 	/* sync and discard all events queued */
 	XSync(win_display, true);
 	XDestroyWindow(win_display, win_handle);
-	WindowInfo.Exists = false;
+	Window_Main.Exists = false;
 }
 
 static void HandleWMPing(XEvent* e) {
@@ -524,7 +524,7 @@ void Window_ProcessEvents(double delta) {
 	int focusRevert;
 	int i, btn, key, status;
 
-	while (WindowInfo.Exists) {
+	while (Window_Main.Exists) {
 		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
 		if (XFilterEvent(&e, None) == True) continue;
 
@@ -541,7 +541,7 @@ void Window_ProcessEvents(double delta) {
 
 		case DestroyNotify:
 			Platform_LogConst("Window destroyed");
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			break;
 
 		case ConfigureNotify:
@@ -555,14 +555,14 @@ void Window_ProcessEvents(double delta) {
 		case LeaveNotify:
 			XGetInputFocus(win_display, &focus, &focusRevert);
 			if (focus == PointerRoot) {
-				WindowInfo.Focused = false; Event_RaiseVoid(&WindowEvents.FocusChanged);
+				Window_Main.Focused = false; Event_RaiseVoid(&WindowEvents.FocusChanged);
 			}
 			break;
 
 		case EnterNotify:
 			XGetInputFocus(win_display, &focus, &focusRevert);
 			if (focus == PointerRoot) {
-				WindowInfo.Focused = true; Event_RaiseVoid(&WindowEvents.FocusChanged);
+				Window_Main.Focused = true; Event_RaiseVoid(&WindowEvents.FocusChanged);
 			}
 			break;
 
@@ -621,10 +621,10 @@ void Window_ProcessEvents(double delta) {
 			/* Don't lose focus when another app grabs key or mouse */
 			if (e.xfocus.mode == NotifyGrab || e.xfocus.mode == NotifyUngrab) break;
 
-			WindowInfo.Focused = e.type == FocusIn;
+			Window_Main.Focused = e.type == FocusIn;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			/* TODO: Keep track of keyboard when focus is lost */
-			if (!WindowInfo.Focused) Input_Clear();
+			if (!Window_Main.Focused) Input_Clear();
 			break;
 
 		case MappingNotify:

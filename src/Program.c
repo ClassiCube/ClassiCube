@@ -141,7 +141,7 @@ void android_main(void) {
 #elif defined CC_BUILD_CONSOLE
 int main(int argc, char** argv) {
 	SetupProgram(argc, argv);
-	while (WindowInfo.Exists) { 
+	while (Window_Main.Exists) { 
 		RunProgram(argc, argv); 
 	}
 	

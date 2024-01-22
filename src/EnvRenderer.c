@@ -783,22 +783,22 @@ static void UpdateMapEdges(void) {
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
 static void CloudsPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&clouds_tex, stream, name, NULL);
+	Game_UpdateTexture(&clouds_tex, stream, name, NULL, NULL);
 }
 static struct TextureEntry clouds_entry = { "clouds.png", CloudsPngProcess };
 
 static void SkyboxPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&skybox_tex, stream, name, NULL);
+	Game_UpdateTexture(&skybox_tex, stream, name, NULL, NULL);
 }
 static struct TextureEntry skybox_entry = { "skybox.png", SkyboxPngProcess };
 
 static void SnowPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&snow_tex, stream, name, NULL);
+	Game_UpdateTexture(&snow_tex, stream, name, NULL, NULL);
 }
 static struct TextureEntry snow_entry = { "snow.png", SnowPngProcess };
 
 static void RainPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&rain_tex, stream, name, NULL);
+	Game_UpdateTexture(&rain_tex, stream, name, NULL, NULL);
 }
 static struct TextureEntry rain_entry = { "rain.png", RainPngProcess };
 

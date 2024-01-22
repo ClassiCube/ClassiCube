@@ -15,7 +15,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 void Window_Init(void) {
     display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
@@ -27,10 +27,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	
-	WindowInfo.Width   = DisplayInfo.Width;
-	WindowInfo.Height  = DisplayInfo.Height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
@@ -39,7 +39,15 @@ void Window_Init(void) {
 
 	// change defaults to make more sense for N64
 	cc_uint8* binds = (cc_uint8*)KeyBind_GamepadDefaults;
-	binds[KEYBIND_INVENTORY] = CCPAD_Z;
+	binds[KEYBIND_INVENTORY]    = CCPAD_B;
+	binds[KEYBIND_PLACE_BLOCK]  = CCPAD_Z;
+	binds[KEYBIND_HOTBAR_RIGHT] = CCPAD_L;
+	binds[KEYBIND_DELETE_BLOCK] = CCPAD_R;
+
+	binds[KEYBIND_FORWARD]   = CCPAD_CUP;
+	binds[KEYBIND_BACK]      = CCPAD_CDOWN;
+	binds[KEYBIND_LEFT]      = CCPAD_CLEFT;
+	binds[KEYBIND_RIGHT]     = CCPAD_CRIGHT;
 }
 
 void Window_Free(void) { }

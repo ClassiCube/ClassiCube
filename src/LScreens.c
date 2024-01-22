@@ -1292,7 +1292,7 @@ static void ServersScreen_Activated(struct LScreen* s_) {
 	ServersScreen_ReloadServers(s);
 	/* This is so typing on keyboard by default searchs server list */
 	/* But don't do that when it would cause on-screen keyboard to show */
-	if (WindowInfo.SoftKeyboard) return;
+	if (Window_Main.SoftKeyboard) return;
 	LScreen_SelectWidget(s_, 0, (struct LWidget*)&s->iptSearch, false);
 }
 

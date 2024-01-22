@@ -574,7 +574,7 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 *---------------------------------------------------Particles component---------------------------------------------------*
 *#########################################################################################################################*/
 static void ParticlesPngProcess(struct Stream* stream, const cc_string* name) {
-	Game_UpdateTexture(&particles_TexId, stream, name, NULL);
+	Game_UpdateTexture(&particles_TexId, stream, name, NULL, NULL);
 }
 static struct TextureEntry particles_entry = { "particles.png", ParticlesPngProcess };
 

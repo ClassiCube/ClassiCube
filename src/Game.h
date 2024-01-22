@@ -92,18 +92,20 @@ CC_API void Game_UpdateBlock(int x, int y, int z, BlockID block);
 CC_API void Game_ChangeBlock(int x, int y, int z, BlockID block);
 
 cc_bool Game_CanPick(BlockID block);
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, cc_uint8* skinType);
+/* Updates Game_Width and Game_Height. */
+void Game_UpdateDimensions(void);
+/* Sets the strategy/method used to limit frames per second. */
+/* See FPS_LIMIT_ for valid strategies/methods */
+void Game_SetFpsLimit(int method);
+
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
+							cc_uint8* skinType, int* heightDivisor);
 /* Checks that the given bitmap can be loaded into a native gfx texture. */
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
 cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp);
 /* Checks that the given bitmap is a power of two size */
 /*   NOTE: Game_ValidateBitmap should nearly always be used instead of this */
 cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp);
-/* Updates Game_Width and Game_Height. */
-void Game_UpdateDimensions(void);
-/* Sets the strategy/method used to limit frames per second. */
-/* See FPS_LIMIT_ for valid strategies/methods */
-void Game_SetFpsLimit(int method);
 
 /* Runs the main game loop until the window is closed. */
 void Game_Run(int width, int height, const cc_string* title);
