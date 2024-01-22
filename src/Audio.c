@@ -781,6 +781,7 @@ struct AudioContext {
 	ndspWaveBuf bufs[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate;
 	void* _tmpData; int _tmpSize;
+	cc_bool stereo;
 };
 static int channelIDs;
 
@@ -809,7 +810,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
 	ctx->used   = true;
-	
+
 	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
 }
 
@@ -817,6 +818,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->used) {
 		ndspChnWaveBufClear(ctx->chanID);
 		ctx->channels &= ~(1 << ctx->chanID);
+		channelIDs &= ~(1 << ctx->chanID);
 	}
 	
 	ctx->used = false;
@@ -824,7 +826,8 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	int fmt = channels == 1 ? NDSP_FORMAT_MONO_PCM16 : NDSP_FORMAT_STEREO_PCM16;
+	ctx->stereo = (channels == 2);
+	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
 	
 	ndspChnSetFormat(ctx->chanID, fmt);
 	ndspChnSetRate(ctx->chanID, sampleRate);
@@ -834,16 +837,25 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	ndspWaveBuf* buf;
 
+	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
+	if (((uintptr_t)chunk & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	}
+	if ((dataSize & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	}
+
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
 		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
-			
+
 		buf->data_pcm16 = chunk;
-		buf->nsamples   = dataSize / 2; // 16 bit samples
+		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
+		DSP_FlushDataCache(buf->data_pcm16, dataSize);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
 		return 0;
 	}
@@ -892,6 +904,19 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	size = (size + 0x7F) & ~0x7F;  // round up to nearest multiple of 0x80
+	cc_uint8* dst = linearAlloc(size * numChunks);
+	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst ? (dst + size * i) : NULL;
+	}
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	linearFree(chunks[0]);
+}
+
 #elif defined CC_BUILD_WEBAUDIO
 /*########################################################################################################################*
 *-----------------------------------------------------WebAudio backend----------------------------------------------------*
