@@ -273,7 +273,7 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents(10 / 1000.0);
-		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
+		if (!Window_Main.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Active->Tick(Launcher_Active);
 		LBackend_Tick();
@@ -296,7 +296,7 @@ void Launcher_Run(void) {
 		if (res) Logger_SysWarn(res, action);
 	}
 
-	if (WindowInfo.Exists) Window_RequestClose();
+	if (Window_Main.Exists) Window_RequestClose();
 #endif
 
 	Window_3DS_SetRenderScreen(scr);
@@ -534,7 +534,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	int x;
 
 	/* Skip dragging logo when very small window to save space */
-	if (WindowInfo.Height < 240) return;
+	if (Window_Main.Height < 240) return;
 
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;

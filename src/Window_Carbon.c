@@ -163,8 +163,8 @@ static void RefreshWindowBounds(void) {
 	
 	/* TODO: kWindowContentRgn ??? */
 	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	windowX = r.left; WindowInfo.Width  = r.right  - r.left;
-	windowY = r.top;  WindowInfo.Height = r.bottom - r.top;
+	windowX = r.left; Window_Main.Width  = r.right  - r.left;
+	windowY = r.top;  Window_Main.Height = r.bottom - r.top;
 }
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
@@ -209,30 +209,30 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 	
 	switch (GetEventKind(inEvent)) {
 		case kEventWindowClose:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			return eventNotHandledErr;
 			
 		case kEventWindowClosed:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			return 0;
 			
 		case kEventWindowBoundsChanged:
-			oldWidth = WindowInfo.Width; oldHeight = WindowInfo.Height;
+			oldWidth = Window_Main.Width; oldHeight = Window_Main.Height;
 			RefreshWindowBounds();
 			
-			if (oldWidth != WindowInfo.Width || oldHeight != WindowInfo.Height) {
+			if (oldWidth != Window_Main.Width || oldHeight != Window_Main.Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 			return eventNotHandledErr;
 			
 		case kEventWindowActivated:
-			WindowInfo.Focused = true;
+			Window_Main.Focused = true;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 			
 		case kEventWindowDeactivated:
-			WindowInfo.Focused = false;
+			Window_Main.Focused = false;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 			
@@ -285,8 +285,8 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	if (!win_fullscreen) {
 		mouseX -= windowX; mouseY -= windowY;
 
-		if (mouseX < 0 || mouseX >= WindowInfo.Width)  return eventNotHandledErr;
-		if (mouseY < 0 || mouseY >= WindowInfo.Height) return eventNotHandledErr;
+		if (mouseX < 0 || mouseX >= Window_Main.Width)  return eventNotHandledErr;
+		if (mouseY < 0 || mouseY >= Window_Main.Height) return eventNotHandledErr;
 	}
 	
 	kind = GetEventKind(inEvent);
@@ -501,8 +501,8 @@ static void DoCreateWindow(int width, int height) {
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	HookEvents();
 	Window_CommonCreate();
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = win_handle;
 	/* CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor */
 
 	conn  = _CGSDefaultConnection();
@@ -549,8 +549,8 @@ void Window_SetSize(int width, int height) {
 void Window_RequestClose(void) {
 	/* DisposeWindow only sends a kEventWindowClosed */
 	Event_RaiseVoid(&WindowEvents.Closing);
-	if (WindowInfo.Exists) DisposeWindow(win_handle);
-	WindowInfo.Exists = false;
+	if (Window_Main.Exists) DisposeWindow(win_handle);
+	Window_Main.Exists = false;
 }
 
 void Window_ProcessEvents(double delta) {
@@ -626,8 +626,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = WindowInfo.Width;
-	rect.size.height = WindowInfo.Height;
+	rect.size.width  = Window_Main.Width;
+	rect.size.height = Window_Main.Height;
 
 	err = QDBeginCGContext(fb_port, &context);
 	if (err) Logger_Abort2(err, "Begin draw");
@@ -700,11 +700,11 @@ cc_result Window_EnterFullscreen(void) {
 	}
 
 	win_fullscreen   = true;
-	ctx_windowWidth  = WindowInfo.Width;
-	ctx_windowHeight = WindowInfo.Height;
+	ctx_windowWidth  = Window_Main.Width;
+	ctx_windowHeight = Window_Main.Height;
 
-	windowX = DisplayInfo.x; WindowInfo.Width  = DisplayInfo.Width;
-	windowY = DisplayInfo.y; WindowInfo.Height = DisplayInfo.Height;	
+	windowX = DisplayInfo.x; Window_Main.Width  = DisplayInfo.Width;
+	windowY = DisplayInfo.y; Window_Main.Height = DisplayInfo.Height;	
 	
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;

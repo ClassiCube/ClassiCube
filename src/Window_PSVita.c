@@ -17,7 +17,7 @@ static cc_bool launcherMode;
 static SceTouchPanelInfo frontPanel;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 #define DISPLAY_WIDTH   960
 #define DISPLAY_HEIGHT  544
@@ -37,10 +37,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = DISPLAY_WIDTH;
-	WindowInfo.Height  = DISPLAY_HEIGHT;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = DISPLAY_WIDTH;
+	Window_Main.Height  = DISPLAY_HEIGHT;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);

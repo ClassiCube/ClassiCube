@@ -19,7 +19,7 @@ static xid_dev_t* xid_ctrl;
 static xid_gamepad_in gp_state;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 // TODO No idea if this even works
 static void OnDataReceived(UTR_T* utr) {
@@ -66,10 +66,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = mode.width;
-	WindowInfo.Height  = mode.height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = mode.width;
+	Window_Main.Height  = mode.height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;

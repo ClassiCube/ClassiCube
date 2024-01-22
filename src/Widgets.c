@@ -17,7 +17,6 @@
 #include "Block.h"
 #include "Input.h"
 
-#define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }
 static void Widget_InputUp(void* elem, int key)   { }
@@ -98,10 +97,12 @@ void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
+/* Only top half of gui.png is used */
+#define Button_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/128.0f, u2/256.0f,v2/128.0f)
 
-static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
-static struct Texture btnSelectedTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
-static struct Texture btnDisabledTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
+static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Button_UV(0,66, 200,86)  };
+static struct Texture btnSelectedTex = { 0, Tex_Rect(0,0, 0,0), Button_UV(0,86, 200,106) };
+static struct Texture btnDisabledTex = { 0, Tex_Rect(0,0, 0,0), Button_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
@@ -512,11 +513,13 @@ static void HotbarWidget_Reposition(void* widget) {
 	w->slotWidth   = 20.0f * scaleX;
 
 	Tex_SetRect(w->backTex, w->x,w->y, w->width,w->height);
-	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/256.0f);
+	/* Only top half of gui png is used */
+	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/128.0f);
 
 	y = w->y + (w->height - (int)(23.0f * scaleY));
 	Tex_SetRect(w->selTex, 0,y, (int)w->selWidth,w->height);
-	Tex_SetUV(w->selTex,   0,22/256.0f, 24/256.0f,44/256.0f);
+	/* Only top half of gui png is used */
+	Tex_SetUV(w->selTex,   0,22/128.0f, 24/256.0f,44/128.0f);
 }
 
 static int HotbarWidget_MapKey(int key) {
@@ -570,7 +573,7 @@ static void HotbarWidget_InputUp(void* widget, int key) {
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
-	if (WindowInfo.Focused) Inventory_SwitchHotbar();
+	if (Window_Main.Focused) Inventory_SwitchHotbar();
 }
 
 static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
@@ -1785,7 +1788,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match Minecraft behaviour */
-		width      = max(width, WindowInfo.Width - x * 4);
+		width      = max(width, Window_Main.Width - x * 4);
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backColor);
 		y += w->lineHeight;
@@ -2040,7 +2043,7 @@ static void TextGroupWidget_Reposition(void* widget) {
 
 	for (i = 0, y = w->y; i < w->lines; i++) 
 	{
-		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, WindowInfo.Width);
+		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Main.Width);
 		textures[i].y = y;
 		y += textures[i].Height;
 	}
@@ -2318,7 +2321,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
-	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, WindowInfo.Width);
+	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Main.Width);
 	w->textures[index] = tex;
 	Widget_Layout(w);
 }

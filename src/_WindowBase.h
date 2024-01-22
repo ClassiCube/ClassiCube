@@ -5,7 +5,7 @@
 #include "Platform.h"
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 #define Display_CentreX(width)  (DisplayInfo.x + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.y + (DisplayInfo.Height - height) / 2)
@@ -27,13 +27,13 @@ static void Cursor_SetVisible(cc_bool visible) {
 }
 
 static void CentreMousePosition(void) {
-	Cursor_SetPosition(WindowInfo.Width / 2, WindowInfo.Height / 2);
+	Cursor_SetPosition(Window_Main.Width / 2, Window_Main.Height / 2);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
 	Cursor_GetRawPos(&cursorPrevX, &cursorPrevY);
 }
 
 static void RegrabMouse(void) {
-	if (!WindowInfo.Focused || !WindowInfo.Exists) return;
+	if (!Window_Main.Focused || !Window_Main.Exists) return;
 	CentreMousePosition();
 }
 
@@ -108,7 +108,7 @@ static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
 
 static void GLContext_InitSurface(void) {
-	void* window = WindowInfo.Handle;
+	void* window = Window_Main.Handle;
 	if (!window) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 

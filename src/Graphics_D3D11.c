@@ -74,7 +74,7 @@ static void CreateDeviceAndSwapChain(void) {
 	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	// RefreshRate intentionally left at 0 so display's refresh rate is used
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.OutputWindow = WindowInfo.Handle;
+	desc.OutputWindow = Window_Main.Handle;
 	desc.SampleDesc.Count   = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Windowed           = TRUE;
@@ -656,8 +656,8 @@ static void RS_UpdateViewport(void) {
 	D3D11_VIEWPORT viewport;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width    = WindowInfo.Width;
-	viewport.Height   = WindowInfo.Height;
+	viewport.Width    = Window_Main.Width;
+	viewport.Height   = Window_Main.Height;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
@@ -1074,8 +1074,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	ID3D11RenderTargetView_GetDesc(backbuffer,     &backbuffer_desc);
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
-	desc.Width     = WindowInfo.Width;
-	desc.Height    = WindowInfo.Height;
+	desc.Width     = Window_Main.Width;
+	desc.Height    = Window_Main.Height;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
 	desc.Format    = DXGI_FORMAT_B8G8R8A8_UNORM;

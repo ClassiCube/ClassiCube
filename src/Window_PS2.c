@@ -25,7 +25,7 @@ static cc_bool launcherMode;
 static char padBuf[256] __attribute__((aligned(64)));
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
+struct _WindowData WindowInfo;
 
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
@@ -34,10 +34,10 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = DisplayInfo.Width;
-	WindowInfo.Height  = DisplayInfo.Height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;

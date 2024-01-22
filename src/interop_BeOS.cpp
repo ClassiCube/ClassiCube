@@ -404,12 +404,12 @@ static void DoCreateWindow(int width, int height) {
 	BRect frame(x, y, x + width - 1, y + height - 1);
 	win_handle = new CC_BWindow(frame);
 	
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = win_handle;
 	
 	frame = win_handle->Bounds();
-	WindowInfo.Width  = frame.IntegerWidth()  + 1;
-	WindowInfo.Height = frame.IntegerHeight() + 1;
+	Window_Main.Width  = frame.IntegerWidth()  + 1;
+	Window_Main.Height = frame.IntegerHeight() + 1;
 }
 
 void Window_Create2D(int width, int height) {
@@ -574,19 +574,19 @@ void Window_ProcessEvents(double delta) {
 			Event_RaiseInt(&InputEvents.Press, event.v1.i32);
 			break;
 		case CC_WIN_RESIZED:
-			WindowInfo.Width  = event.v1.i32;
-			WindowInfo.Height = event.v2.i32;
+			Window_Main.Width  = event.v1.i32;
+			Window_Main.Height = event.v2.i32;
 			Event_RaiseVoid(&WindowEvents.Resized);
 			break;
 		case CC_WIN_FOCUS:
-			WindowInfo.Focused = event.v1.i32;
+			Window_Main.Focused = event.v1.i32;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			break;
 		case CC_WIN_REDRAW:
 			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
 		case CC_WIN_QUIT:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			break;
 		}

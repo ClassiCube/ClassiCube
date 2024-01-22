@@ -327,8 +327,11 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	cc_string path; char pathBuffer[STRING_SIZE];
 	struct OggState ogg;
 	struct Stream src, dst;
-	struct VorbisState ctx = { 0 };
+	struct VorbisState* ctx;
 	cc_result res;
+
+	ctx = (struct VorbisState*)Mem_TryAllocCleared(1, sizeof(struct VorbisState));
+	if (!ctx) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); return; }
 
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	String_InitArray(path, pathBuffer);
@@ -338,12 +341,14 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	if (res) { Logger_SysWarn(res, "creating .wav file"); return; }
 
 	Ogg_Init(&ogg, &src);
-	ctx.source = &ogg;
-	SoundPatcher_WriteWav(&dst, &ctx);
+	ctx->source = &ogg;
+	SoundPatcher_WriteWav(&dst, ctx);
 
 	res = dst.Close(&dst);
 	if (res) Logger_SysWarn(res, "closing .wav file");
-	Vorbis_Free(&ctx);
+
+	Vorbis_Free(ctx);
+	Mem_Free(ctx);
 }
 
 

@@ -92,8 +92,8 @@ static void RefreshWindowBounds(void) {
 	win_totalHeight = Rect_Height(rect);
 
 	GetClientRect(win_handle, &rect);
-	WindowInfo.Width  = Rect_Width(rect);
-	WindowInfo.Height = Rect_Height(rect);
+	Window_Main.Width  = Rect_Width(rect);
+	Window_Main.Height = Rect_Height(rect);
 
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
 	ClientToScreen(win_handle, &topLeft);
@@ -113,7 +113,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	switch (message) {
 	case WM_ACTIVATE:
-		WindowInfo.Focused = LOWORD(wParam) != 0;
+		Window_Main.Focused = LOWORD(wParam) != 0;
 		Event_RaiseVoid(&WindowEvents.FocusChanged);
 		break;
 
@@ -256,12 +256,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CLOSE:
 		Event_RaiseVoid(&WindowEvents.Closing);
-		if (WindowInfo.Exists) DestroyWindow(win_handle);
-		WindowInfo.Exists = false;
+		if (Window_Main.Exists) DestroyWindow(win_handle);
+		Window_Main.Exists = false;
 		break;
 
 	case WM_DESTROY:
-		WindowInfo.Exists = false;
+		Window_Main.Exists = false;
 		UnregisterClassW(CC_WIN_CLASSNAME, win_instance);
 
 		if (win_DC) ReleaseDC(win_handle, win_DC);
@@ -365,8 +365,8 @@ static void DoCreateWindow(int width, int height) {
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
 
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = win_handle;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
@@ -529,7 +529,7 @@ void Window_ProcessEvents(double delta) {
 
 	foreground = GetForegroundWindow();
 	if (foreground) {
-		WindowInfo.Focused = foreground == win_handle;
+		Window_Main.Focused = foreground == win_handle;
 	}
 }
 
