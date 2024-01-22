@@ -504,6 +504,8 @@ static void TabListOverlay_Layout(void* screen) {
 	int i, x, y, width = 0, height = 0;
 	int columns = Math_CeilDiv(s->usedCount, LIST_NAMES_PER_COLUMN);
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
 	for (i = 0; i < columns; i++) 
 	{
 		width += TabListOverlay_GetColumnWidth(s,  i);
@@ -540,6 +542,8 @@ static void TabListOverlay_Layout(void* screen) {
 	s->title.horAnchor = ANCHOR_CENTRE;
 	s->title.yOffset   = s->y + paddingY / 2;
 	Widget_Layout(&s->title);
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
@@ -814,6 +818,9 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
+
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -828,6 +835,8 @@ static void TabListOverlay_Render(void* screen, double delta) {
 		Gfx_DrawVb_IndexedTris_Range(4, offset);
 		offset += 4;
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TabListOverlay_Free(void* screen) {
