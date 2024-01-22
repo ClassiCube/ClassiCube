@@ -308,6 +308,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_DREAMCAST
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
 	#undef  CC_BUILD_FREETYPE
