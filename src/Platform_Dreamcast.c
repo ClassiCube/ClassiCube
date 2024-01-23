@@ -50,8 +50,8 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
-	// TODO: Can we get away with not adding boot time.. ?
-	return (rtc_boot_time() + secs) * 1000 + ms;
+	cc_uint64 curSecs = rtc_boot_time() + secs;
+	return (curSecs * 1000 + ms) + UNIX_EPOCH;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -302,6 +302,19 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 	String_InitArray(portStr,  portRaw);
 	String_AppendInt(&portStr, port);
 	portRaw[portStr.length] = '\0';
+	
+	// getaddrinfo IP address resolution was only added in Nov 2023
+	//   https://github.com/KallistiOS/KallistiOS/pull/358
+	// So include this special case for backwards compatibility
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	if (inet_pton(AF_INET, str, &addr4->sin_addr) > 0) {
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		
+		addrs[0].size  = sizeof(struct sockaddr_in);
+		*numValidAddrs = 1;
+		return 0;
+	}
 
 	res = getaddrinfo(str, portRaw, &hints, &result);
 	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
