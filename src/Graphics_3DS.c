@@ -134,6 +134,7 @@ static void InitCitro3D(void) {
 	bottomTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
+	gfxSetDoubleBuffering(GFX_TOP, true);
 	SetDefaultState();
 	AllocShaders();
 }
