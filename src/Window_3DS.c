@@ -170,8 +170,7 @@ void Window_ProcessEvents(double delta) {
 	
 	u32 mods = hidKeysDown() | hidKeysHeld();
 	HandleButtons(mods);
-	
-	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
+
 	ProcessTouchInput(mods);
 	
 	if (Input.RawMode) {
