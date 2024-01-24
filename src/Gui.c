@@ -469,22 +469,26 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, count = s->numWidgets;
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) 
 	{
 		struct Widget* w = widgets[i];
 		if (!w || !Widget_Contains(w, x, y)) continue;
-		if (w->flags & WIDGET_FLAG_DISABLED) return i;
+		if (w->flags & WIDGET_FLAG_DISABLED) break;
 
 		if (w->MenuClick) {
 			w->MenuClick(s, w);
 		} else {
 			Elem_HandlesPointerDown(w, id, x, y);
 		}
-		return i;
+		break;
 	}
-	return -1;
+
+	Window_3DS_SetRenderScreen(scr);
+
+	return i;
 }
 
 int Screen_Index(void* screen, void* widget) {
