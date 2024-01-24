@@ -21,7 +21,9 @@
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 static cc_uint8 priorities[GUI_MAX_SCREENS];
-
+#ifdef __3DS__
+static struct Texture touchBgTex;
+#endif
 
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
@@ -300,6 +302,10 @@ void Gui_RenderGui(double delta) {
 	int i;
 
 	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
+#ifdef __3DS__
+	Texture_Render(&touchBgTex);
+#endif
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
@@ -592,7 +598,6 @@ static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
 }
 static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
 
-
 static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
 static void OnKeyPress(void* obj, int cp) {
@@ -635,6 +640,19 @@ static void OnInit(void) {
 	TextureEntry_Register(&guiClassic_entry);
 	TextureEntry_Register(&icons_entry);
 	TextureEntry_Register(&touch_entry);
+
+#ifdef __3DS__
+	struct Context2D ctx;
+	Context2D_Alloc(&ctx, 32, 32);
+	Gradient_Noise(&ctx, BitmapColor_RGB(0x40, 0x30, 0x20), 6, 0, 0, ctx.width, ctx.height);
+	Context2D_MakeTexture(&touchBgTex, &ctx);
+	Context2D_Free(&ctx);
+	// Tile the texture to fill the entire screen
+	int tilesX = (320 + ctx.width - 1) / ctx.width;
+	int tilesY = (240 + ctx.height - 1) / ctx.height;
+	touchBgTex.Width *= tilesX; touchBgTex.Height *= tilesY;
+	touchBgTex.uv.U2 *= tilesX; touchBgTex.uv.V2  *= tilesY;
+#endif
 
 	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
