@@ -1171,9 +1171,11 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 
 #ifdef CC_BUILD_TOUCH
 		if (!Input_TouchMode) return;
+		enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 		Elem_Render(&s->more,   delta);
 		Elem_Render(&s->send,   delta);
 		Elem_Render(&s->cancel, delta);
+		Window_3DS_SetRenderScreen(scr);
 #endif
 	}
 }
@@ -1269,6 +1271,8 @@ static void ChatScreen_Layout(void* screen) {
 	s->smallAnnouncement.yOffset = Window_Main.Height / 20;
 	Widget_Layout(&s->smallAnnouncement);
 
+	Window_3DS_SetRenderScreen(scr);
+
 #ifdef CC_BUILD_TOUCH
 	if (Window_Main.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
 		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10,  60);
@@ -1280,8 +1284,6 @@ static void ChatScreen_Layout(void* screen) {
 		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MIN, 10, 110);
 	}
 #endif
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static int ChatScreen_KeyPress(void* screen, char keyChar) {
