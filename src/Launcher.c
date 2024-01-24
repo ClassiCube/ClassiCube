@@ -536,6 +536,20 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	/* Skip dragging logo when very small window to save space */
 	if (Window_Main.Height < 240) return;
 
+#ifdef __3DS__
+	/* Put title on top screen */
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+	struct Bitmap bmp;
+	struct Context2D topCtx;
+
+	ctx = &topCtx;
+	bmp.width  = max(Window_Main.Width,  1);
+	bmp.height = max(Window_Main.Height, 1);
+	Window_AllocFramebuffer(&bmp);
+	Context2D_Wrap(ctx, &bmp);
+	Launcher_DrawBackgroundAll(ctx);
+#endif
+
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
 
@@ -543,6 +557,11 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
 	Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
 	Context2D_DrawText(ctx, &args, x,                     0);
+
+#ifdef __3DS__
+	Window_DrawFramebuffer((Rect2D){ 0, 0, bmp.width, bmp.height });
+	Window_3DS_SetRenderScreen(scr);
+#endif
 }
 
 void Launcher_MakeTitleFont(struct FontDesc* font) {

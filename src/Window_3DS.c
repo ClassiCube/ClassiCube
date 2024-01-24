@@ -186,10 +186,16 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
+static struct Bitmap top_fb_bmp;
+static struct Bitmap bottom_fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
+	if (renderScreen == TOP_SCREEN) {
+		top_fb_bmp = *bmp;
+	}
+	else {
+		bottom_fb_bmp = *bmp;
+	}
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
@@ -197,7 +203,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	gfxScreen_t screen = (renderScreen == TOP_SCREEN) ? GFX_TOP : GFX_BOTTOM;
 	gfxSetDoubleBuffering(screen, false);
 	u8* fb = gfxGetFramebuffer(screen, GFX_LEFT, &width, &height);
-
+	struct Bitmap *bmp = (renderScreen == TOP_SCREEN) ? &top_fb_bmp : &bottom_fb_bmp;
 	// SRC y = 0 to 240
 	// SRC x = 0 to 400
 	// DST X = 0 to 240
@@ -206,7 +212,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	for (int y = r.y; y < r.y + r.Height; y++)
 		for (int x = r.x; x < r.x + r.Width; x++)
 	{
-		BitmapCol color = Bitmap_GetPixel(&fb_bmp, x, y);
+		BitmapCol color = Bitmap_GetPixel(bmp, x, y);
 		int addr   = (width - 1 - y + x * width) * 3; // TODO -1 or not
 		fb[addr+0] = BitmapCol_B(color);
 		fb[addr+1] = BitmapCol_G(color);
@@ -217,10 +223,12 @@ void Window_DrawFramebuffer(Rect2D r) {
 	gfxFlushBuffers();
 	//gfxSwapBuffers();
 	// TODO: tearing??
+	/*
 	gfxSetDoubleBuffering(GFX_TOP, false);
 	gfxScreenSwapBuffers(GFX_TOP, true);
 	gfxSetDoubleBuffering(GFX_TOP, true);
 	gfxScreenSwapBuffers(GFX_BOTTOM, true);
+	*/
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
