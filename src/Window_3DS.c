@@ -12,7 +12,6 @@
 #include "ExtMath.h"
 #include <3ds.h>
 
-static int touchActive, touchBegX, touchBegY;
 static cc_bool launcherMode;
 static Result irrst_result;
 static enum Screen3DS renderScreen = TOP_SCREEN;
@@ -132,36 +131,27 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 }
 
 static void ProcessTouchInput(int mods) {
+	static int currX, currY;  // current touch position
 	touchPosition touch;
 	hidTouchRead(&touch);
-	touchActive = mods & KEY_TOUCH;
-	
-	if (touchActive) {
-		// rescale X from [0, bottom_FB_width) to [0, top_FB_width)
-		int x = touch.px * Window_Main.Width / GSP_SCREEN_HEIGHT_BOTTOM;
-	 	int y = touch.py;
-		Pointer_SetPosition(0, x, y);
+	if (hidKeysDown() & KEY_TOUCH) {  // stylus went down
+		currX = touch.px;
+		currY = touch.py;
+		Input_AddTouch(0, currX, currY);
 	}
-	int x = touch.px;
-	int y = touch.py;
-	
-	// Set starting position for camera movement
-	if (hidKeysDown() & KEY_TOUCH) {
-		//Platform_Log2("touch down: %i,%i", &x, &y);
-		touchBegX = touch.px;
-		touchBegY = touch.py;
-		Input_AddTouch(1, touch.px, touch.py);
+	else if (mods & KEY_TOUCH) {  // stylus is down
+		currX = touch.px;
+		currY = touch.py;
+		Input_UpdateTouch(0, currX, currY);
 	}
-	if (hidKeysUp() & KEY_TOUCH) {
-		//Platform_Log2("touch up: %i,%i", &x, &y);
-		Input_RemoveTouch(1, touch.px, touch.py);  // TODO: coordinates are 0
+	else if (hidKeysUp() & KEY_TOUCH) {  // stylus was lifted
+		Input_RemoveTouch(0, currX, currY);
 	}
 }
 
 void Window_ProcessEvents(double delta) {
 	hidScanInput();
-	/* TODO implement */
-	
+
 	if (!aptMainLoop()) {
 		Window_Main.Exists = false;
 		Window_RequestClose();
@@ -191,18 +181,7 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
-void Window_UpdateRawMouse(void)  {
-	if (!touchActive) return;
-	
-	touchPosition touch;
-	hidTouchRead(&touch);
-
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				touch.px - touchBegX, touch.py - touchBegY);	
-	touchBegX = touch.px;
-	touchBegY = touch.py;
-}
-
+void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
