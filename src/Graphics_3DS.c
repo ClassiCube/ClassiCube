@@ -129,7 +129,9 @@ static void InitCitro3D(void) {
 	topTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(topTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
-	bottomTarget = C3D_RenderTargetCreate(240, 400 /* uhh... not correct, but it works */, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
+	// can be used for both screens. The output is clipped to the actual screen width, anyway.
+	bottomTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	SetDefaultState();
