@@ -532,6 +532,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	cc_string title = String_FromReadonly(text);
 	struct DrawTextArgs args;
 	int x;
+	int y;
 
 	/* Skip dragging logo when very small window to save space */
 	if (Window_Main.Height < 240) return;
@@ -552,11 +553,17 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
+	y = 0;
+
+#ifdef __3DS__
+	// vertically center the title
+	y = ctx->height / 2 - Drawer2D_TextHeight(&args) / 2;
+#endif
 
 	Drawer2D.Colors['f'] = BITMAPCOLOR_BLACK;
-	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
+	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), y + Display_ScaleY(4));
 	Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
-	Context2D_DrawText(ctx, &args, x,                     0);
+	Context2D_DrawText(ctx, &args, x,                     y);
 
 #ifdef __3DS__
 	Window_DrawFramebuffer((Rect2D){ 0, 0, bmp.width, bmp.height });
