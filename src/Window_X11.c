@@ -304,7 +304,7 @@ static void DoCreateWindow(int width, int height) {
 
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
-		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
+		CWColormap | CWEventMask, &attributes);
 	if (!win_handle) Logger_Abort("XCreateWindow failed");
 
 #ifdef CC_BUILD_XIM
