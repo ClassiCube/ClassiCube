@@ -916,6 +916,150 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	linearFree(chunks[0]);
 }
+#elif defined CC_BUILD_DREAMCAST
+/*########################################################################################################################*
+*----------------------------------------------------Dreamcast backend----------------------------------------------------*
+*#########################################################################################################################*/
+#include <kos.h>
+/* TODO needs way more testing, especially with sounds */
+
+struct AudioBuffer {
+	int available;
+	int bytesLeft;
+	void* samples;
+};
+
+struct AudioContext {
+	int used, bufHead, channels;
+	snd_stream_hnd_t hnd;
+	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
+	int count, sampleRate;
+	void* _tmpData; int _tmpSize;
+};
+
+static cc_bool AudioBackend_Init(void) {
+	return snd_stream_init() == 0;
+}
+
+static void AudioBackend_Free(void) { 
+	snd_stream_shutdown();
+}
+#define AUDIO_HAS_BACKEND
+
+static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
+	struct AudioContext* ctx = snd_stream_get_userdata(hnd);
+	struct AudioBuffer* buf  = &ctx->bufs[ctx->bufHead]; 
+	
+	int samples = min(buf->bytesLeft, smp_req);
+	*smp_recv   = samples;
+	void* ptr   = buf->samples;
+	
+	buf->samples   += samples;
+	buf->bytesLeft -= samples;
+	
+	if (buf->bytesLeft == 0) {
+		ctx->bufHead   = (ctx->bufHead + 1) % ctx->count;
+		buf->samples   = NULL;
+		buf->available = true;
+	}
+	return ptr;
+}
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	ctx->hnd = snd_stream_alloc(AudioCallback, SND_STREAM_BUFFER_MAX);
+	if (ctx->hnd == SND_STREAM_INVALID) return;
+	snd_stream_set_userdata(ctx->hnd, ctx);
+	
+	Mem_Set(ctx->bufs, 0, sizeof(ctx->bufs));
+	for (int i = 0; i < buffers; i++) {
+		ctx->bufs[i].available = true;
+	}
+	
+	ctx->count   = buffers;
+	ctx->used    = true;
+	ctx->bufHead = 0;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->used) {
+		snd_stream_stop(ctx->hnd);
+		snd_stream_destroy(ctx->hnd);
+	}
+	
+	ctx->used = false;
+	ctx->hnd  = SND_STREAM_INVALID;
+	AudioBase_Clear(ctx);
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+	return 0;
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+	struct AudioBuffer* buf;
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) continue;
+
+		buf->samples   = chunk;
+		buf->bytesLeft = dataSize;
+		buf->available = false;
+		return 0;
+	}
+	// tried to queue data without polling for free buffers first
+	return ERR_INVALID_ARGUMENT;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+	snd_stream_start(ctx->hnd, ctx->sampleRate, ctx->channels == 2);
+	return 0; 
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	struct AudioBuffer* buf;
+	snd_stream_poll(ctx->hnd);
+	int count = 0;
+
+	for (int i = 0; i < ctx->count; i++)
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) count++;
+	}
+
+	*inUse = count;
+	return 0;
+}
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	return true;
+}
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	snd_stream_volume(ctx->hnd, data->volume);
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	cc_result res;
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
+}
 
 #elif defined CC_BUILD_WEBAUDIO
 /*########################################################################################################################*

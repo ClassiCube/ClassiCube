@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include <time.h>
+#include <ppp/ppp.h>
 #include <kos.h>
 #include "_PlatformConsole.h"
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
@@ -88,7 +89,12 @@ cc_result Directory_Create(const cc_string* path) {
 	GetNativePath(str, path);
 	
 	int res = fs_mkdir(str);
-	return res == -1 ? errno : 0;
+	int err = res == -1 ? errno : 0;
+	
+	// Filesystem returns EINVAL when operation unsupported (e.g. CD system)
+	//  so rather than logging an error, just pretend it already exists
+	if (err == EINVAL) err = EEXIST;
+	return err;
 }
 
 int File_Exists(const cc_string* path) {
@@ -210,7 +216,7 @@ static void* ExecThread(void* param) {
 
 void* Thread_Create(Thread_StartFunc func) {
 	kthread_attr_t attrs = { 0 };
-	attrs.stack_size     = 64 * 1024;
+	attrs.stack_size     = 96 * 1024;
 	attrs.label          = "CC thread";
 	return thd_create_ex(&attrs, ExecThread, func);
 }
@@ -395,10 +401,35 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitModem(void) { // in case Broadband Adapter isn't active
+	if (net_default_dev) return;
+	int err;
+	
+	Platform_LogConst("Trying to init modem..");
+	
+	if (!modem_init()) {
+		Platform_LogConst("Modem initing failed"); return;
+	}
+
+	ppp_init();
+	err = ppp_modem_init("555", 0, NULL);
+	if (err) {
+		Platform_Log1("Establishing link failed (%i)", &err); return;
+	}
+
+	ppp_set_login("dream", "dreamcast");
+
+	err = ppp_connect();
+	if (err) {
+		Platform_Log1("Connecting link failed (%i)", &err); return;
+ 	}
+}
+
 void Platform_Init(void) {
 	char cwd[600] = { 0 };
 	char* ptr = getcwd(cwd, 600);
 	Platform_Log1("WORKING DIR: %c", ptr);
+	InitModem();
 }
 void Platform_Free(void) { }
 
