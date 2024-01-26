@@ -108,6 +108,9 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
 	int res;
+	// CD filesystem loader doesn't usually set errno
+	//  when it can't find the requested file
+	errno = 0;
 
 	GetNativePath(str, dirPath);
 	int fd = fs_open(str, O_DIR | O_RDONLY);
@@ -147,10 +150,16 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-	
+	// CD filesystem loader doesn't usually set errno
+	//  when it can't find the requested file
+	errno = 0;
+
 	int res = fs_open(str, mode);
 	*file   = res;
-	return res == -1 ? errno : 0;
+	
+	int err = res == -1 ? errno : 0;
+	if (res == -1 && err == 0) err = ENOENT;
+	return err;
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
