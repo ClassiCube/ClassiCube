@@ -115,9 +115,6 @@ static void HandleButtons(u32 mods) {
 	
 	Input_SetNonRepeatable(CCPAD_ZL, mods & KEY_ZL);
 	Input_SetNonRepeatable(CCPAD_ZR, mods & KEY_ZR);
-
-	if (mods == (KEY_A|KEY_B|KEY_START|KEY_SELECT))
-		Process_Exit(0);
 }
 
 static void ProcessJoystickInput(circlePosition* pos, double delta) {
