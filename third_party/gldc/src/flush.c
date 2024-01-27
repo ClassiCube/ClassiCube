@@ -16,22 +16,15 @@ PolyList TR_LIST;
 
 GLboolean AUTOSORT_ENABLED = GL_FALSE;
 
-
-void APIENTRY glKosInitConfig(GLdcConfig* config) {
-    config->autosort_enabled = GL_FALSE;
-    config->fsaa_enabled = GL_FALSE;
-
-    config->initial_op_capacity = 1024 * 3;
-    config->initial_pt_capacity = 512 * 3;
-    config->initial_tr_capacity = 1024 * 3;
-}
-
-void APIENTRY glKosInitEx(GLdcConfig* config) {
+void APIENTRY glKosInit() {
     TRACE();
+    
+    GLdcConfig config;
+    config.autosort_enabled = GL_FALSE;
+    config.fsaa_enabled     = GL_FALSE;
 
-    InitGPU(config->autosort_enabled, config->fsaa_enabled);
-
-    AUTOSORT_ENABLED = config->autosort_enabled;
+    InitGPU(config.autosort_enabled, config.fsaa_enabled);
+    AUTOSORT_ENABLED = config.autosort_enabled;
 
     _glInitSubmissionTarget();
     _glInitMatrices();
@@ -47,16 +40,11 @@ void APIENTRY glKosInitEx(GLdcConfig* config) {
     aligned_vector_init(&PT_LIST.vector, sizeof(Vertex));
     aligned_vector_init(&TR_LIST.vector, sizeof(Vertex));
 
-    aligned_vector_reserve(&OP_LIST.vector, config->initial_op_capacity);
-    aligned_vector_reserve(&PT_LIST.vector, config->initial_pt_capacity);
-    aligned_vector_reserve(&TR_LIST.vector, config->initial_tr_capacity);
+    aligned_vector_reserve(&OP_LIST.vector, 1024 * 3);
+    aligned_vector_reserve(&PT_LIST.vector,  512 * 3);
+    aligned_vector_reserve(&TR_LIST.vector, 1024 * 3);
 }
 
-void APIENTRY glKosInit() {
-    GLdcConfig config;
-    glKosInitConfig(&config);
-    glKosInitEx(&config);
-}
 
 void APIENTRY glKosSwapBuffers() {
     TRACE();

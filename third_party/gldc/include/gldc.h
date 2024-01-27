@@ -215,6 +215,7 @@ GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
 
 /* Initialize the GL pipeline. GL will initialize the PVR. */
 GLAPI void glKosInit();
+GLAPI void glKosSwapBuffers();
 
 typedef struct {
     /* If GL_TRUE, enables pvr autosorting, this *will* break glDepthFunc/glDepthTest */
@@ -222,29 +223,8 @@ typedef struct {
 
     /* If GL_TRUE, enables the PVR FSAA */
     GLboolean fsaa_enabled;
-
-    /* Initial capacity of each of the OP, TR and PT lists in vertices */
-    GLuint initial_op_capacity;
-    GLuint initial_tr_capacity;
-    GLuint initial_pt_capacity;
-
 } GLdcConfig;
 
-
-GLAPI void glKosInitConfig(GLdcConfig* config);
-
-/* Usage:
- *
- * GLdcConfig config;
- * glKosInitConfig(&config);
- *
- * config.autosort_enabled = GL_TRUE;
- *
- * glKosInitEx(&config);
- */
-GLAPI void glKosInitEx(GLdcConfig* config);
-GLAPI void glKosSwapBuffers();
-\
 
 /* Memory allocation extension (GL_KOS_texture_memory_management) */
 GLAPI void glDefragmentTextureMemory_KOS(void);

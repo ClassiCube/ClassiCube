@@ -11,7 +11,6 @@
 #include "../include/gldc.h"
 
 #include "aligned_vector.h"
-#include "named_array.h"
 
 #define MAX_TEXTURE_COUNT 768
 

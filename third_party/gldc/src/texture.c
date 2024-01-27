@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "platform.h"
-
 #include "yalloc/yalloc.h"
 
 /* We always leave this amount of vram unallocated to prevent
@@ -14,7 +13,42 @@
 #define PVR_MEM_BUFFER_SIZE (64 * 1024)
 
 TextureObject* TEXTURE_ACTIVE = NULL;
-static NamedArray TEXTURE_OBJECTS;
+static TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
+static unsigned char TEXTURE_USED[MAX_TEXTURE_COUNT / 8];
+
+static char texture_id_map_used(unsigned int id) {
+    unsigned int i = id / 8;
+    unsigned int j = id % 8;
+
+    unsigned char v = TEXTURE_USED[i] & (unsigned char) (1 << j);
+    return !!(v);
+}
+
+static void texture_id_map_reserve(unsigned int id) {
+    unsigned int j = (id % 8);
+    unsigned int i = id / 8;
+
+    TEXTURE_USED[i] |= (unsigned char) 1 << j;
+}
+
+static void texture_id_map_release(unsigned int id) {
+    unsigned int i = id / 8;
+    unsigned int j = id % 8;
+    TEXTURE_USED[i] &= (unsigned char) ~(1 << j);
+}
+
+unsigned int texture_id_map_alloc(void) {
+    unsigned int id;
+    
+    for(id = 0; id < MAX_TEXTURE_COUNT; ++id) {
+        if(!texture_id_map_used(id)) {
+            texture_id_map_reserve(id);
+            return id;
+        }
+    }
+    return 0;
+}
+
 
 static void* YALLOC_BASE = NULL;
 static size_t YALLOC_SIZE = 0;
@@ -48,13 +82,12 @@ static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
 }
 
 GLubyte _glInitTextures() {
-    named_array_init(&TEXTURE_OBJECTS, sizeof(TextureObject), MAX_TEXTURE_COUNT);
-
+    memset(TEXTURE_USED, 0, sizeof(TEXTURE_USED));
     // Reserve zero so that it is never given to anyone as an ID!
-    named_array_reserve(&TEXTURE_OBJECTS, 0);
+    texture_id_map_reserve(0);
 
     // Initialize zero as an actual texture object though because apparently it is!
-    TextureObject* default_tex = (TextureObject*) named_array_get(&TEXTURE_OBJECTS, 0);
+    TextureObject* default_tex = &TEXTURE_LIST[0];
     _glInitializeTextureObject(default_tex, 0);
     TEXTURE_ACTIVE = default_tex;
 
@@ -68,25 +101,19 @@ GLubyte _glInitTextures() {
 #endif
 
     yalloc_init(YALLOC_BASE, YALLOC_SIZE);
-
-    gl_assert(TEXTURE_OBJECTS.element_size > 0);
     return 1;
 }
 
 GLuint APIENTRY gldcGenTexture(void) {
     TRACE();
 
-    gl_assert(TEXTURE_OBJECTS.element_size > 0);
-
-    GLuint id = 0;
-    TextureObject* txr = (TextureObject*) named_array_alloc(&TEXTURE_OBJECTS, &id);
-    gl_assert(txr);
+    GLuint id = texture_id_map_alloc();
     gl_assert(id);  // Generated IDs must never be zero
-
+    
+    TextureObject* txr = &TEXTURE_LIST[id];
     _glInitializeTextureObject(txr, id);
 
     gl_assert(txr->index == id);
-    gl_assert(TEXTURE_OBJECTS.element_size > 0);
     
     return id;
 }
@@ -94,21 +121,18 @@ GLuint APIENTRY gldcGenTexture(void) {
 void APIENTRY gldcDeleteTexture(GLuint id) {
     TRACE();
 
-    gl_assert(TEXTURE_OBJECTS.element_size > 0);
-
     if(id == 0) {
         /* Zero is the "default texture" and we never allow deletion of it */
         return;
     }
 
-    TextureObject* txr = (TextureObject*) named_array_get(&TEXTURE_OBJECTS, id);
-
-    if(txr) {
+    if(texture_id_map_used(id)) {
+    	TextureObject* txr = &TEXTURE_LIST[id];
         gl_assert(txr->index == id);
 
         if(txr == TEXTURE_ACTIVE) {
             // Reset to the default texture
-            TEXTURE_ACTIVE = (TextureObject*) named_array_get(&TEXTURE_OBJECTS, 0);
+            TEXTURE_ACTIVE = &TEXTURE_LIST[0];
         }
 
         if(txr->data) {
@@ -116,21 +140,18 @@ void APIENTRY gldcDeleteTexture(GLuint id) {
             txr->data = NULL;
         }
 
-        named_array_release(&TEXTURE_OBJECTS, id);
+        texture_id_map_release(id);
     }
-
-    gl_assert(TEXTURE_OBJECTS.element_size > 0);
 }
 
 void APIENTRY gldcBindTexture(GLuint id) {
     TRACE();
 
-    TextureObject* txr = (TextureObject*) named_array_get(&TEXTURE_OBJECTS, id);
+    gl_assert(texture_id_map_used(id));
+    TextureObject* txr = &TEXTURE_LIST[id];
 
     TEXTURE_ACTIVE = txr;
     gl_assert(TEXTURE_ACTIVE->index == id);
-
-    gl_assert(TEXTURE_OBJECTS.element_size > 0);
 
     STATE_DIRTY = GL_TRUE;
 }
@@ -266,8 +287,8 @@ GLAPI GLvoid APIENTRY glDefragmentTextureMemory_KOS(void) {
 
     /* Replace all texture pointers */
     for(id = 0; id < MAX_TEXTURE_COUNT; id++){
-        TextureObject* txr = (TextureObject*) named_array_get(&TEXTURE_OBJECTS, id);
-        if(txr){
+        if(texture_id_map_used(id)){
+            TextureObject* txr = &TEXTURE_LIST[id];
             gl_assert(txr->index == id);
             txr->data = yalloc_defrag_address(YALLOC_BASE, txr->data);
         }
