@@ -88,6 +88,7 @@ void Gfx_BeginFrame(void) {
 	Platform_LogConst("GFX ctx beg");
 }
 
+extern void __rdpq_autosync_change(int mode);
 static color_t gfx_clearColor;
 void Gfx_Clear(void) {
 	__rdpq_autosync_change(AUTOSYNC_PIPE);
