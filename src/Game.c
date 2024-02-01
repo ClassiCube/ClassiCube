@@ -222,7 +222,7 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 	res = Png_Decode(&bmp, src);
 	if (res) { Logger_SysWarn2(res, "decoding", file); }
 	
-	/* E.g. gui.png, icons.png only need top half of the texture loaded */
+	/* E.g. gui.png only need top half of the texture loaded */
 	if (heightDivisor && bmp.height >= *heightDivisor) 
 		bmp.height /= *heightDivisor;
 

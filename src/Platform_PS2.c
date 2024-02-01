@@ -228,8 +228,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 #define STACK_SIZE (128 * 1024)
 
 void Thread_Sleep(cc_uint32 milliseconds) {
-	uint64_t cycles = MSec2TimerBusClock(milliseconds);
-	ThreadWaitClock(cycles);
+	DelayThread(milliseconds * 1000);
 }
 
 static int ExecThread(void* param) {
