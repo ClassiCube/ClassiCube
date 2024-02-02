@@ -22,6 +22,10 @@ extern const u32 offset_shbin_size;
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 	
+static void GPUBuffers_DeleteUnreferenced(void);
+static void GPUTextures_DeleteUnreferenced(void);
+static cc_uint32 frameCounter;
+	
 	
 /*########################################################################################################################*
 *------------------------------------------------------Vertex shaders-----------------------------------------------------*
@@ -33,7 +37,7 @@ static C3D_Mtx _mvp;
 static float texOffsetX, texOffsetY;
 static int texOffset;
 
-static struct CCShader {
+struct CCShader {
 	DVLB_s* dvlb;
 	shaderProgram_s program;
 	int uniforms;     // which associated uniforms need to be resent to GPU
@@ -122,6 +126,7 @@ static void SetDefaultState(void) {
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(true);
 }
+
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
@@ -365,6 +370,10 @@ void Gfx_EndFrame(void) {
 	//Platform_LogConst("FRAME!");
 	//if (gfx_vsync) gspWaitForVBlank();
 	if (gfx_minFrameMs) LimitFPS();
+		
+	GPUBuffers_DeleteUnreferenced();
+	//GPUTextures_DeleteUnreferenced();
+	frameCounter++;
 }
 
 void Gfx_OnWindowResize(void) { }
@@ -373,73 +382,139 @@ void Gfx_OnWindowResize(void) { }
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint8* gfx_vertices;
+struct GPUBuffer {
+	cc_uint32 lastFrame;
+	struct GPUBuffer* next;
+	int pad1, pad2;
+	cc_uint8 data[]; // aligned to 16 bytes
+};
+static struct GPUBuffer* del_buffers_head;
+static struct GPUBuffer* del_buffers_tail;
+
+static struct GPUBuffer* GPUBuffer_Alloc(int count, int elemSize) {
+	void* ptr = linearAlloc(16 + count * elemSize);
+	return (struct GPUBuffer*)ptr;
+}
+
+// can't delete buffers until not used in any frames
+static void GPUBuffer_Unref(GfxResourceID* resource) {
+	struct GPUBuffer* buf = (struct GPUBuffer*)(*resource);
+	if (!buf) return;
+	*resource = NULL;
+	
+	LinkedList_Append(buf, del_buffers_head, del_buffers_tail);
+}
+
+static void GPUBuffer_Free(struct GPUBuffer* buf) {
+	linearFree(buf);
+}
+
+static void GPUBuffers_DeleteUnreferenced(void) {
+	if (!del_buffers_head) return;
+	
+	struct GPUBuffer* buf;
+	struct GPUBuffer* next;
+	struct GPUBuffer* prev = NULL;
+	
+	for (buf = del_buffers_head; buf != NULL; buf = next)
+	{
+		next = buf->next;
+		
+		if (buf->lastFrame + 4 > frameCounter) {
+			// texture was used within last 4 fames
+			prev = buf;
+		} else {
+			// advance the head of the linked list
+			if (del_buffers_head == buf) 
+				del_buffers_head = next;
+			// update end of linked list if necessary
+			if (del_buffers_tail == buf)
+				del_buffers_tail = prev;
+			
+			// unlink this texture from the linked list
+			if (prev) prev->next = next;
+			
+			GPUBuffer_Free(buf);
+		}
+	}
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Index buffers-----------------------------------------------------*
+*#########################################################################################################################*/
 static cc_uint16* gfx_indices;
 
-static void* AllocBuffer(int count, int elemSize) {
-	return linearAlloc(count * elemSize);
-	//cc_uintptr addr = ptr;
-	//Platform_Log3("BUFFER CREATE: %i X %i = %x", &count, &elemSize, &addr);
-}
-
-static void FreeBuffer(GfxResourceID* buffer) {
-	GfxResourceID ptr = *buffer;
-	if (!ptr) return;
-	linearFree(ptr);
-	*buffer = 0;
-}
-
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	void* ib = AllocBuffer(count, sizeof(cc_uint16));
-	if (!ib) Logger_Abort("Failed to allocate memory for index buffer");
+	struct GPUBuffer* buffer = GPUBuffer_Alloc(count, sizeof(cc_uint16));
+	if (!buffer) Logger_Abort("Failed to allocate memory for index buffer");
 
-	fillFunc(ib, count, obj);
-	return ib;
+	fillFunc((cc_uint16*)buffer->data, count, obj);
+	return buffer;
 }
 
-void Gfx_BindIb(GfxResourceID ib)    { gfx_indices = ib; }
+void Gfx_BindIb(GfxResourceID ib) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)ib;
+	gfx_indices = (cc_uint16*)buffer->data;
+}
 
-void Gfx_DeleteIb(GfxResourceID* ib) { FreeBuffer(ib); }
+void Gfx_DeleteIb(GfxResourceID* ib) { GPUBuffer_Unref(ib); }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Vertex buffers----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_uint8* gfx_vertices;
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return AllocBuffer(count, strideSizes[fmt]);
+	return GPUBuffer_Alloc(count, strideSizes[fmt]);
 }
 
-void Gfx_BindVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
+void Gfx_BindVb(GfxResourceID vb) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	buffer->lastFrame = frameCounter;
+	gfx_vertices = buffer->data;
+	
 	// https://github.com/devkitPro/citro3d/issues/47
 	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
   	BufInfo_Init(bufInfo);
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		BufInfo_Add(bufInfo, vb, SIZEOF_VERTEX_TEXTURED, 3, 0x210);
+		BufInfo_Add(bufInfo, buffer->data, SIZEOF_VERTEX_TEXTURED, 3, 0x210);
 	} else {
-		BufInfo_Add(bufInfo, vb, SIZEOF_VERTEX_COLOURED, 2,  0x10);
+		BufInfo_Add(bufInfo, buffer->data, SIZEOF_VERTEX_COLOURED, 2,  0x10);
 	}
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) { FreeBuffer(vb); }
+void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Unref(vb); }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb;
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	return buffer->data;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
+void Gfx_UnlockVb(GfxResourceID vb) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	gfx_vertices = buffer->data;
+}
 
 
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
-	return AllocBuffer(maxVertices, strideSizes[fmt]);
+	return GPUBuffer_Alloc(maxVertices, strideSizes[fmt]);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
-	return vb; 
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	return buffer->data;
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { gfx_vertices = vb; }
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	gfx_vertices = buffer->data;
+}
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
