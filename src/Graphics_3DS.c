@@ -348,8 +348,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) {
-	int flags = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
-	C3D_FrameBegin(flags);
+	C3D_FrameBegin(0);
 }
 
 void Gfx_Clear(void) {
@@ -363,7 +362,7 @@ void Gfx_EndFrame(void) {
 	//gfxSwapBuffers();
 
 	//Platform_LogConst("FRAME!");
-	//if (gfx_vsync) gspWaitForVBlank();
+	if (gfx_vsync) gspWaitForVBlank();
 	if (gfx_minFrameMs) LimitFPS();
 }
 
