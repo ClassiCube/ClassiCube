@@ -398,6 +398,8 @@ void Platform_Init(void) {
 	/*pspDebugSioInit();*/ 
 	InitNetworking();
 	epoll_id = sceNetEpollCreate("CC poll", 0);
+	// Create root directory
+	Directory_Create(&String_Empty);
 }
 void Platform_Free(void) { }
 

@@ -644,7 +644,8 @@ enum HTTP_RESPONSE_STATE {
 	HTTP_RESPONSE_STATE_CHUNK_TRAILERS,
 	HTTP_RESPONSE_STATE_DONE
 };
-#define HTTP_HEADER_MAX_LENGTH 512
+#define HTTP_HEADER_MAX_LENGTH   4096
+#define HTTP_LOCATION_MAX_LENGTH 256
 
 struct HttpClientState {
 	enum HTTP_RESPONSE_STATE state;
@@ -656,7 +657,7 @@ struct HttpClientState {
 	cc_string header, location;
 	struct HttpUrl url;
 	char _headerBuffer[HTTP_HEADER_MAX_LENGTH];
-	char _locationBuffer[HTTP_HEADER_MAX_LENGTH];
+	char _locationBuffer[HTTP_LOCATION_MAX_LENGTH];
 };
 
 static void HttpClientState_Reset(struct HttpClientState* state) {
