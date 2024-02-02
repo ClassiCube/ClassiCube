@@ -16,31 +16,30 @@ TextureObject* TEXTURE_ACTIVE = NULL;
 static TextureObject TEXTURE_LIST[MAX_TEXTURE_COUNT];
 static unsigned char TEXTURE_USED[MAX_TEXTURE_COUNT / 8];
 
-static char texture_id_map_used(unsigned int id) {
+static int texture_id_map_used(unsigned int id) {
     unsigned int i = id / 8;
     unsigned int j = id % 8;
 
-    unsigned char v = TEXTURE_USED[i] & (unsigned char) (1 << j);
-    return !!(v);
+    return TEXTURE_USED[i] & (unsigned char)(1 << j);
 }
 
 static void texture_id_map_reserve(unsigned int id) {
-    unsigned int j = (id % 8);
     unsigned int i = id / 8;
-
-    TEXTURE_USED[i] |= (unsigned char) 1 << j;
+    unsigned int j = id % 8;
+    TEXTURE_USED[i] |= (unsigned char)(1 << j);
 }
 
 static void texture_id_map_release(unsigned int id) {
     unsigned int i = id / 8;
     unsigned int j = id % 8;
-    TEXTURE_USED[i] &= (unsigned char) ~(1 << j);
+    TEXTURE_USED[i] &= (unsigned char)~(1 << j);
 }
 
 unsigned int texture_id_map_alloc(void) {
     unsigned int id;
     
-    for(id = 0; id < MAX_TEXTURE_COUNT; ++id) {
+    // ID 0 is reserved for default texture
+    for(id = 1; id < MAX_TEXTURE_COUNT; ++id) {
         if(!texture_id_map_used(id)) {
             texture_id_map_reserve(id);
             return id;
@@ -71,11 +70,11 @@ static void* yalloc_alloc_and_defrag(size_t size) {
 
 #define GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS 4
 static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
-    txr->index = id;
-    txr->width = txr->height = 0;
+    txr->index  = id;
+    txr->width  = txr->height = 0;
     txr->mipmap = 0;
-    txr->env = GPU_TXRENV_MODULATEALPHA;
-    txr->data = NULL;
+    txr->env    = GPU_TXRENV_MODULATEALPHA;
+    txr->data   = NULL;
     txr->minFilter = GL_NEAREST;
     txr->magFilter = GL_NEAREST;
     txr->mipmap_bias = GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS;
@@ -83,8 +82,6 @@ static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
 
 GLubyte _glInitTextures() {
     memset(TEXTURE_USED, 0, sizeof(TEXTURE_USED));
-    // Reserve zero so that it is never given to anyone as an ID!
-    texture_id_map_reserve(0);
 
     // Initialize zero as an actual texture object though because apparently it is!
     TextureObject* default_tex = &TEXTURE_LIST[0];
@@ -121,10 +118,8 @@ GLuint APIENTRY gldcGenTexture(void) {
 void APIENTRY gldcDeleteTexture(GLuint id) {
     TRACE();
 
-    if(id == 0) {
-        /* Zero is the "default texture" and we never allow deletion of it */
-        return;
-    }
+    if(id == 0) return;
+    /* Zero is the "default texture" and we never allow deletion of it */
 
     if(texture_id_map_used(id)) {
     	TextureObject* txr = &TEXTURE_LIST[id];

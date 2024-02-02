@@ -31,21 +31,19 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 20;
+	
+	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
+	vid_flip(0);
+	// TODO: Why doesn't 32 bit work on real hardware for in-game?
 }
 
 void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
 	launcherMode = true;
-	vid_set_mode(DEFAULT_VID_MODE, PM_RGB888);
-	vid_flip(0);
 }
-
 void Window_Create3D(int width, int height) { 
 	launcherMode = false;
-	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
-	vid_flip(0);
-	// TODO: Why doesn't 32 bit work on real hardware?
 }
 
 void Window_SetTitle(const cc_string* title) { }
@@ -234,21 +232,30 @@ void Window_UpdateRawMouse(void)  { }
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Bitmap fb_bmp;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp = *bmp;
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
-	// TODO probably bogus..
-	// TODO: Don't redraw everything
-	int size = fb_bmp.width * fb_bmp.height * 4;
-	
 	// TODO: double buffering ??
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
-	sq_cpy(vram_l, fb_bmp.scan0, size);
+	
+	for (int y = r.y; y < r.y + r.Height; y++)
+	{
+		BitmapCol* src = Bitmap_GetRow(&fb_bmp, y);
+		uint16_t*  dst = vram_s + vid_mode->width * y;
+		
+		for (int x = r.x; x < r.x + r.Width; x++)
+		{
+			BitmapCol color = src[x];
+			// 888 to 565 (discard least significant bits)
+			dst[x] = ((BitmapCol_R(color) & 0xF8) << 8) | ((BitmapCol_G(color) & 0xFC) << 3) | (BitmapCol_B(color) >> 3);
+		}
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
