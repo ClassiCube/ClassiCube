@@ -26,13 +26,7 @@ struct _WindowData Window_Alt;
 //  * Width/height refer to the physical dimensions of the screen; that is, the top screen
 //  * is 240 pixels wide and 400 pixels tall; while the bottom screen is 240x320.
 void Window_Init(void) {
-	//gfxInit(GSP_BGR8_OES,GSP_BGR8_OES,false); 
-	//gfxInit(GSP_BGR8_OES,GSP_RGBA8_OES,false);
-	//gfxInit(GSP_RGBA8_OES, GSP_BGR8_OES, false); 
 	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
-	
-	//gfxInit(GSP_RGBA8_OES,GSP_RGBA8_OES,false);
-	//consoleInit(GFX_BOTTOM, NULL);
 	
 	u16 width, height;
 	gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);

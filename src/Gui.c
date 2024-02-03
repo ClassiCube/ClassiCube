@@ -21,7 +21,7 @@
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 static cc_uint8 priorities[GUI_MAX_SCREENS];
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 static struct Texture touchBgTex;
 #endif
 
@@ -34,12 +34,12 @@ static CC_NOINLINE int GetWindowScale(void) {
 
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
-#ifndef __3DS__
+#ifndef CC_BUILD_DUALSCREEN
 	if (!Input_TouchMode) {
 #endif
 		widthScale  /= DisplayInfo.ScaleX;
 		heightScale /= DisplayInfo.ScaleY;
-#ifndef __3DS__
+#ifndef CC_BUILD_DUALSCREEN
 	}
 #endif
 	return 1 + (int)(min(widthScale, heightScale));
@@ -303,7 +303,7 @@ void Gui_RenderGui(double delta) {
 
 	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 	Texture_Render(&touchBgTex);
 #endif
 
@@ -641,7 +641,7 @@ static void OnInit(void) {
 	TextureEntry_Register(&icons_entry);
 	TextureEntry_Register(&touch_entry);
 
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 	struct Context2D ctx;
 	Context2D_Alloc(&ctx, 32, 32);
 	Gradient_Noise(&ctx, BitmapColor_RGB(0x40, 0x30, 0x20), 6, 0, 0, ctx.width, ctx.height);

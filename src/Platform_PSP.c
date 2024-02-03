@@ -58,15 +58,15 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	pspTime curTime;
+	ScePspDateTime curTime;
 	sceRtcGetCurrentClockLocalTime(&curTime);
 
 	t->year   = curTime.year;
 	t->month  = curTime.month;
 	t->day    = curTime.day;
 	t->hour   = curTime.hour;
-	t->minute = curTime.minutes;
-	t->second = curTime.seconds;
+	t->minute = curTime.minute;
+	t->second = curTime.second;
 }
 
 #define US_PER_SEC 1000000ULL

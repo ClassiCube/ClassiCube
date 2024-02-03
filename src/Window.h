@@ -235,7 +235,7 @@ void GLContext_GetApiInfo(cc_string* info);
 #endif
 
 enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 /* Selects which screen on the 3DS to render to. Returns the previous screen */
 enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen);
 #else

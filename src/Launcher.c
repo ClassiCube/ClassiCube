@@ -537,7 +537,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	/* Skip dragging logo when very small window to save space */
 	if (Window_Main.Height < 240) return;
 
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 	/* Put title on top screen */
 	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
 	struct Bitmap bmp;
@@ -555,7 +555,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
 	y = 0;
 
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 	// vertically center the title
 	y = ctx->height / 2 - Drawer2D_TextHeight(&args) / 2;
 #endif
@@ -565,7 +565,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
 	Context2D_DrawText(ctx, &args, x,                     y);
 
-#ifdef __3DS__
+#ifdef CC_BUILD_DUALSCREEN
 	Window_DrawFramebuffer((Rect2D){ 0, 0, bmp.width, bmp.height });
 	Window_3DS_SetRenderScreen(scr);
 #endif
