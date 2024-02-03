@@ -709,7 +709,7 @@ static void DoDrawFramebuffer(NSRect dirty) {
 	CGColorSpaceRelease(colorSpace);
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	NSRect rect;
 	rect.origin.x    = r.x; 
 	rect.origin.y    = Window_Main.Height - r.y - r.Height;

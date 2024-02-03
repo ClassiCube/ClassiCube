@@ -449,10 +449,8 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
@@ -475,7 +473,7 @@ static u32 CvtRGB (u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2)
   return (y1 << 24) | (cb << 16) | (y2 << 8) | cr;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// When coming back from the 3D game, framebuffer might have changed
 	if (needsFBUpdate) {
 		VIDEO_SetNextFramebuffer(xfb);
@@ -489,8 +487,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
 	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
-		cc_uint32* src = fb_bmp.scan0 + y * fb_bmp.width   + r.x;
-		u16* dst       = (u16*)xfb    + y * rmode->fbWidth + r.x;
+		cc_uint32* src = bmp->scan0 + y * bmp->width     + r.x;
+		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
 		
 		for (int x = 0; x < r.Width / 2; x++) {
 			cc_uint32 rgb0 = src[(x<<1) + 0];

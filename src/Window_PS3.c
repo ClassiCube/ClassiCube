@@ -318,7 +318,6 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 static u32 fb_offset;
 
 extern u32* Gfx_AllocImage(u32* offset, s32 w, s32 h);
@@ -327,17 +326,16 @@ extern void Gfx_TransferImage(u32 offset, s32 w, s32 h);
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	u32* pixels = Gfx_AllocImage(&fb_offset, bmp->width, bmp->height);
 	bmp->scan0  = pixels;
-	fb_bmp      = *bmp;
 	
 	Gfx_ClearCol(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO test
 	Gfx_BeginFrame();
 	Gfx_Clear();
 	// TODO: Only transfer dirty region instead of the entire bitmap
-	Gfx_TransferImage(fb_offset, fb_bmp.width, fb_bmp.height);
+	Gfx_TransferImage(fb_offset, bmp->width, bmp->height);
 	Gfx_EndFrame();
 }
 

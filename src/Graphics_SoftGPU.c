@@ -453,7 +453,7 @@ void Gfx_BeginFrame(void) { }
 
 void Gfx_EndFrame(void) {
 	Rect2D r = { 0, 0, width, height };
-	Window_DrawFramebuffer(r);
+	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

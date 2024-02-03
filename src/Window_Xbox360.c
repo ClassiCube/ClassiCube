@@ -124,22 +124,21 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {return;
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	return;
 	//void* fb = XVideoGetFB();
 	//XVideoWaitForVBlank();
 
-	/*cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
+	/*cc_uint32* src = (cc_uint32*)bmp->scan0 + r.X;
 	cc_uint32* dst = (cc_uint32*)fb           + r.X;
 
 	for (int y = r.Y; y < r.Y + r.Height; y++) 
 	{
-		Mem_Copy(dst + y * fb_bmp.width, src + y * fb_bmp.width, r.Width * 4);
+		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.Width * 4);
 	}*/
 }
 

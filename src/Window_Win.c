@@ -683,7 +683,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!draw_DIB) Logger_Abort2(GetLastError(), "Failed to create DIB");
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
 	BitBlt(win_DC, r.x, r.y, r.Width, r.Height, draw_DC, r.x, r.y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);

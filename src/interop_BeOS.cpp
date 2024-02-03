@@ -705,7 +705,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)win_framebuffer->Bits();
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO rect should maybe subtract -1 too ????
 	BRect rect(r.x, r.y, r.x + r.Width, r.y + r.Height);
 	win_handle->Lock();

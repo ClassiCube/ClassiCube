@@ -125,22 +125,20 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	surface_t* fb  = display_get();
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0;
+	cc_uint32* src = (cc_uint32*)bmp->scan0;
 	cc_uint8*  dst = (cc_uint8*)fb->buffer;
 
-	for (int y = 0; y < fb_bmp.height; y++) 
+	for (int y = 0; y < bmp->height; y++) 
 	{
 		Mem_Copy(dst + y * fb->stride,
-				 src + y * fb_bmp.width, 
-				 fb_bmp.width * 4);
+				 src + y * bmp->width, 
+				 bmp->width * 4);
 	}
 	
     display_show(fb);

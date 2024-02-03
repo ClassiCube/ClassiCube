@@ -602,7 +602,6 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 static CGrafPtr fb_port;
-static struct Bitmap fb_bmp;
 static CGColorSpaceRef colorSpace;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
@@ -610,10 +609,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 	bmp->scan0 = Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	colorSpace = CGColorSpaceCreateDeviceRGB();
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
 	CGImageRef image;
@@ -633,9 +631,9 @@ void Window_DrawFramebuffer(Rect2D r) {
 	if (err) Logger_Abort2(err, "Begin draw");
 	/* TODO: REPLACE THIS AWFUL HACK */
 
-	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
-		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
-	image    = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
+	provider = CGDataProviderCreateWithData(NULL, bmp->scan0,
+		Bitmap_DataSize(bmp->width, bmp->height), NULL);
+	image    = CGImageCreate(bmp->width, bmp->height, 8, 32, bmp->width * 4, colorSpace,
 				kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);

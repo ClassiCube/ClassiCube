@@ -231,14 +231,11 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
-
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO: double buffering ??
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
@@ -246,7 +243,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	
 	for (int y = r.y; y < r.y + r.Height; y++)
 	{
-		BitmapCol* src = Bitmap_GetRow(&fb_bmp, y);
+		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		uint16_t*  dst = vram_s + vid_mode->width * y;
 		
 		for (int x = r.x; x < r.x + r.Width; x++)

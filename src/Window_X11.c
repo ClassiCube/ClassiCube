@@ -1053,7 +1053,6 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static GC fb_gc;
 static XImage* fb_image;
-static struct Bitmap fb_bmp;
 static void* fb_data;
 static int fb_fast;
 
@@ -1067,13 +1066,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
 	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(bmp->width * bmp->height, 4, "window blit");
 
-	fb_bmp   = *bmp;
 	fb_image = XCreateImage(win_display, win_visual.visual,
 		win_visual.depth, ZPixmap, 0, fb_data,
 		bmp->width, bmp->height, 32, 0);
 }
 
-static void BlitFramebuffer(int x1, int y1, int width, int height) {
+static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap* bmp) {
 	unsigned char* dst;
 	BitmapCol* row;
 	BitmapCol src;
@@ -1082,7 +1080,7 @@ static void BlitFramebuffer(int x1, int y1, int width, int height) {
 	int x, y;
 
 	for (y = y1; y < y1 + height; y++) {
-		row = Bitmap_GetRow(&fb_bmp, y);
+		row = Bitmap_GetRow(bmp, y);
 		dst = ((unsigned char*)fb_image->data) + y * fb_image->bytes_per_line;
 
 		for (x = x1; x < x1 + width; x++) {
@@ -1115,9 +1113,9 @@ static void BlitFramebuffer(int x1, int y1, int width, int height) {
 	}
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	/* Convert 32 bit depth to window depth when required */
-	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.Width, r.Height);
+	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.Width, r.Height, bmp);
 
 	XPutImage(win_display, win_handle, fb_gc, fb_image,
 		r.x, r.y, r.x, r.y, r.Width, r.Height);

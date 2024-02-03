@@ -453,13 +453,11 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* save_args) {
     return OK ? 0 : ERR_INVALID_ARGUMENT;
 }
 
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	ANativeWindow_Buffer buffer;
 	cc_uint32* src;
 	cc_uint32* dst;
@@ -479,15 +477,16 @@ void Window_DrawFramebuffer(Rect2D r) {
 	/* In some rare cases, the returned locked region will be entire area of the surface */
 	/* This can cause a crash if the surface has been resized (i.e. device rotated), */
 	/* but the framebuffer has not been resized yet. So always constrain bounds. */
-	b.left = min(b.left, fb_bmp.width);  b.right  = min(b.right,  fb_bmp.width);
-	b.top  = min(b.top,  fb_bmp.height); b.bottom = min(b.bottom, fb_bmp.height);
+	b.left = min(b.left, bmp->width);  b.right  = min(b.right,  bmp->width);
+	b.top  = min(b.top,  bmp->height); b.bottom = min(b.bottom, bmp->height);
 
-	src  = (cc_uint32*)fb_bmp.scan0 + b.left;
-	dst  = (cc_uint32*)buffer.bits  + b.left;
+	src  = (cc_uint32*)bmp->scan0  + b.left;
+	dst  = (cc_uint32*)buffer.bits + b.left;
 	size = (b.right - b.left) * 4;
 
-	for (y = b.top; y < b.bottom; y++) {
-		Mem_Copy(dst + y * buffer.stride, src + y * fb_bmp.width, size);
+	for (y = b.top; y < b.bottom; y++) 
+	{
+		Mem_Copy(dst + y * buffer.stride, src + y * bmp->width, size);
 	}
 	res = ANativeWindow_unlockAndPost(win_handle);
 	if (res) Logger_Abort2(res, "Unlocking window pixels");

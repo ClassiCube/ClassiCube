@@ -178,24 +178,16 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap top_fb_bmp, btm_fb_bmp;
-
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	if (renderScreen == TOP_SCREEN) {
-		top_fb_bmp = *bmp;
-	} else {
-		btm_fb_bmp = *bmp;
-	}
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	u16 width, height;
 	gfxScreen_t screen = (renderScreen == TOP_SCREEN) ? GFX_TOP : GFX_BOTTOM;
 	
 	gfxSetDoubleBuffering(screen, false);
 	u8* fb = gfxGetFramebuffer(screen, GFX_LEFT, &width, &height);
-	struct Bitmap *bmp = (renderScreen == TOP_SCREEN) ? &top_fb_bmp : &btm_fb_bmp;
 	// SRC y = 0 to 240
 	// SRC x = 0 to 400
 	// DST X = 0 to 240
@@ -223,9 +215,6 @@ void Window_DrawFramebuffer(Rect2D r) {
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	if (top_fb_bmp.scan0 == bmp->scan0) top_fb_bmp.scan0 = NULL;
-	if (btm_fb_bmp.scan0 == bmp->scan0) btm_fb_bmp.scan0 = NULL;
-	
 	Mem_Free(bmp->scan0);
 }
 

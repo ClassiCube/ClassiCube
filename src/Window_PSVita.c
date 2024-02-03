@@ -193,7 +193,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	sceDisplayWaitVblankStart();
 	Gfx_NextFramebuffer();
 }

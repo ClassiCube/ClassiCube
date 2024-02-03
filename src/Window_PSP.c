@@ -114,25 +114,23 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
 	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
 
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.x;
-	cc_uint32* dst = (cc_uint32*)fb           + r.x;
+	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
+	cc_uint32* dst = (cc_uint32*)fb         + r.x;
 
 	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * fb_bmp.width, r.Width * 4);
+		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.Width * 4);
 	}
 }
 
@@ -147,7 +145,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	bmp->height = SCREEN_HEIGHT;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//sceDisplayWaitVblankStart();
 	//sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	//sceDisplaySetFrameBuf(sceGeEdramGetAddr(), BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);

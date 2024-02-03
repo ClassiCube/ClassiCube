@@ -317,7 +317,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	}
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	SDL_Rect rect;
 	rect.x = r.x; rect.w = r.Width;
 	rect.y = r.y; rect.h = r.Height;

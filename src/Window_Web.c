@@ -669,7 +669,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
-void Window_DrawFramebuffer(Rect2D r)     { }
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 extern void interop_OpenKeyboard(const char* text, int type, const char* placeholder);

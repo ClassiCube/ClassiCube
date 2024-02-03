@@ -168,8 +168,9 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args);
 /* NOTE: This MUST be called whenever the window is resized. */
 void Window_AllocFramebuffer(struct Bitmap* bmp);
 /* Transfers pixels from the allocated framebuffer to the on-screen window. */
-/* r can be used to only update a small region of pixels (may be ignored) */
-void Window_DrawFramebuffer(Rect2D r);
+/*   r can be used to only update a small region of pixels (may be ignored) */
+/* NOTE: bmp must have come from Window_AllocFramebuffer */
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 

@@ -562,7 +562,7 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	DrawTitleText(font, text, ctx, ANCHOR_CENTRE, ANCHOR_CENTRE);
 
 	Rect2D rect = { 0, 0, bmp.width, bmp.height };
-	Window_DrawFramebuffer(rect);
+	Window_DrawFramebuffer(rect, &bmp);
 	Window_3DS_SetRenderScreen(scr);
 	Window_FreeFramebuffer(&bmp);
 }

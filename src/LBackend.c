@@ -270,7 +270,7 @@ void LBackend_Tick(void) {
 	DoRedraw();
 	if (!dirty_rect.Width) return;
 
-	Window_DrawFramebuffer(dirty_rect);
+	Window_DrawFramebuffer(dirty_rect, &framebuffer.bmp);
 	dirty_rect.x = 0; dirty_rect.Width   = 0;
 	dirty_rect.y = 0; dirty_rect.Height  = 0;
 }
