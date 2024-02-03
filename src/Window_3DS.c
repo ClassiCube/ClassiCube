@@ -69,8 +69,14 @@ enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen) {
 	return prev;
 }
 
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create2D(int width, int height) {  
+	Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+	launcherMode = true;  
+}
+void Window_Create3D(int width, int height) { 
+	Window_3DS_SetRenderScreen(TOP_SCREEN);
+	launcherMode = false; 
+}
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }

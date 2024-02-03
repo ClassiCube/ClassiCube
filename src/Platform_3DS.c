@@ -57,7 +57,7 @@ void Platform_Log(const char* msg, int len) {
 	write(STDOUT_FILENO, msg,  len);
 	write(STDOUT_FILENO, "\n",   1);
 
-	// output to debug service (visible in Citra with log level set to "*:Debug", or on console via remote gdb)
+	// output to debug service (visible in Citra with log level set to "Debug.Emulated:Debug", or on console via remote gdb)
 	svcOutputDebugString(msg, len);
 	svcOutputDebugString("\n", 1);
 }

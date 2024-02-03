@@ -236,9 +236,6 @@ void Launcher_Run(void) {
 		Options_Set("update-dirty", NULL);
 	}
 #endif
-
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	Drawer2D_Component.Init();
 	SystemFonts_Component.Init();
 	Drawer2D.BitmappedText    = false;
@@ -299,8 +296,6 @@ void Launcher_Run(void) {
 
 	if (Window_Main.Exists) Window_RequestClose();
 #endif
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 
@@ -548,7 +543,7 @@ static void DrawTitleText(struct FontDesc* font, const char* text, struct Contex
 #ifdef CC_BUILD_DUALSCREEN
 void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx) {
 	/* Put title on top screen */
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+	Window_3DS_SetRenderScreen(TOP_SCREEN);
 	struct Context2D topCtx;
 	struct Bitmap bmp;
 
@@ -560,10 +555,10 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	
 	Launcher_DrawBackgroundAll(ctx);
 	DrawTitleText(font, text, ctx, ANCHOR_CENTRE, ANCHOR_CENTRE);
-
 	Rect2D rect = { 0, 0, bmp.width, bmp.height };
 	Window_DrawFramebuffer(rect, &bmp);
-	Window_3DS_SetRenderScreen(scr);
+	
+	Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 	Window_FreeFramebuffer(&bmp);
 }
 #else
