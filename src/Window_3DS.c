@@ -15,11 +15,12 @@
 static cc_bool launcherMode;
 static Result irrst_result;
 static enum Screen3DS renderScreen = TOP_SCREEN;
+static u16 top_width, top_height;
+static u16 btm_width, btm_height;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 struct _WindowData Window_Alt;
-
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -28,17 +29,18 @@ struct _WindowData Window_Alt;
 void Window_Init(void) {
 	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
 	
-	u16 width, height;
-	gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
+	// deliberately swapped
+	gfxGetFramebuffer(GFX_TOP,    GFX_LEFT, &top_height, &top_width);
+	gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, &btm_height, &btm_width);
 	
-	DisplayInfo.Width  = height; // deliberately swapped
-	DisplayInfo.Height = width;  // deliberately swapped
+	DisplayInfo.Width  = top_width; 
+	DisplayInfo.Height = top_height;
 	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	
-	Window_Main.Width   = height; // deliberately swapped
-	Window_Main.Height  = width;  // deliberately swapped
+	Window_Main.Width   = top_width;
+	Window_Main.Height  = top_height;
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
@@ -46,9 +48,8 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	irrst_result  = irrstInit();
 	
-	gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, &width, &height);
-	Window_Alt.Width  = height; // deliberately swapped
-	Window_Alt.Height = width;  // deliberately swapped
+	Window_Alt.Width  = btm_width;
+	Window_Alt.Height = btm_height;
 }
 
 void Window_Free(void) { irrstExit(); }
@@ -177,24 +178,24 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap top_fb_bmp;
-static struct Bitmap bottom_fb_bmp;
+static struct Bitmap top_fb_bmp, btm_fb_bmp;
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	if (renderScreen == TOP_SCREEN) {
 		top_fb_bmp = *bmp;
-	}
-	else {
-		bottom_fb_bmp = *bmp;
+	} else {
+		btm_fb_bmp = *bmp;
 	}
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
 	u16 width, height;
 	gfxScreen_t screen = (renderScreen == TOP_SCREEN) ? GFX_TOP : GFX_BOTTOM;
+	
 	gfxSetDoubleBuffering(screen, false);
 	u8* fb = gfxGetFramebuffer(screen, GFX_LEFT, &width, &height);
-	struct Bitmap *bmp = (renderScreen == TOP_SCREEN) ? &top_fb_bmp : &bottom_fb_bmp;
+	struct Bitmap *bmp = (renderScreen == TOP_SCREEN) ? &top_fb_bmp : &btm_fb_bmp;
 	// SRC y = 0 to 240
 	// SRC x = 0 to 400
 	// DST X = 0 to 240
@@ -209,7 +210,6 @@ void Window_DrawFramebuffer(Rect2D r) {
 		fb[addr+1] = BitmapCol_G(color);
 		fb[addr+2] = BitmapCol_R(color);
 	}
-	// TODO implement
 	// TODO gspWaitForVBlank();
 	gfxFlushBuffers();
 	//gfxSwapBuffers();
@@ -223,7 +223,10 @@ void Window_DrawFramebuffer(Rect2D r) {
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	/* TODO implement */
+	if (top_fb_bmp.scan0 == bmp->scan0) top_fb_bmp.scan0 = NULL;
+	if (btm_fb_bmp.scan0 == bmp->scan0) btm_fb_bmp.scan0 = NULL;
+	
+	Mem_Free(bmp->scan0);
 }
 
 
