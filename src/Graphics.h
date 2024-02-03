@@ -238,6 +238,9 @@ void Gfx_OnWindowResize(void);
 /* NOTE: Each line is separated by \n */
 void Gfx_GetApiInfo(cc_string* info);
 
+void Gfx_3DS_DrawToTopScreen(void);
+void Gfx_3DS_DrawToBottomScreen(void);
+
 /* Raises ContextLost event and updates state for lost contexts */
 void Gfx_LoseContext(const char* reason);
 /* Raises ContextRecreated event and restores internal state */

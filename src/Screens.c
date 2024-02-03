@@ -202,9 +202,11 @@ static void HUDScreen_ContextRecreated(void* screen) {
 }
 
 static int HUDScreen_LayoutHotbar(void) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->hotbar.scale     = Gui_GetHotbarScale();
 	Widget_Layout(&s->hotbar);
+	Window_3DS_SetRenderScreen(scr);
 	return s->hotbar.height;
 }
 
@@ -337,6 +339,7 @@ static void HUDScreen_BuildCrosshairsMesh(struct VertexTextured** ptr) {
 	/* Only top quarter of icons.png is used */
 	static struct Texture tex = { 0, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/64.0f) };
 	int extent;
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
 
 	extent = (int)(CH_EXTENT * Gui_Scale(Window_Main.Height / 480.0f));
 	tex.x  = (Window_Main.Width  / 2) - extent;
@@ -345,6 +348,8 @@ static void HUDScreen_BuildCrosshairsMesh(struct VertexTextured** ptr) {
 	tex.Width  = extent * 2;
 	tex.Height = extent * 2;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void HUDScreen_BuildMesh(void* screen) {
@@ -369,6 +374,8 @@ static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (Game_HideGui) return;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 	if (Gui.ShowFPS) Widget_Render2(&s->line1, 4);
@@ -382,15 +389,18 @@ static void HUDScreen_Render(void* screen, double delta) {
 		/* TODO swap these two lines back */
 	}
 
-	if (Gui_GetBlocksWorld()) return;
-	Gfx_BindDynamicVb(s->vb);
-	Widget_Render2(&s->hotbar, 12);
+	if (!Gui_GetBlocksWorld()) {
+		Gfx_BindDynamicVb(s->vb);
+		Widget_Render2(&s->hotbar, 12);
 
-	if (Gui.IconsTex && !tablist_active) {
-		Gfx_BindTexture(Gui.IconsTex);
-		Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
-		Gfx_DrawVb_IndexedTris(4);
+		if (Gui.IconsTex && !tablist_active) {
+			Gfx_BindTexture(Gui.IconsTex);
+			Gfx_BindDynamicVb(s->vb); /* Have to rebind for mobile right now... */
+			Gfx_DrawVb_IndexedTris(4);
+		}
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
@@ -494,6 +504,8 @@ static void TabListOverlay_Layout(void* screen) {
 	int i, x, y, width = 0, height = 0;
 	int columns = Math_CeilDiv(s->usedCount, LIST_NAMES_PER_COLUMN);
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
 	for (i = 0; i < columns; i++) 
 	{
 		width += TabListOverlay_GetColumnWidth(s,  i);
@@ -530,6 +542,8 @@ static void TabListOverlay_Layout(void* screen) {
 	s->title.horAnchor = ANCHOR_CENTRE;
 	s->title.yOffset   = s->y + paddingY / 2;
 	Widget_Layout(&s->title);
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
@@ -804,6 +818,9 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
+
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -818,6 +835,8 @@ static void TabListOverlay_Render(void* screen, double delta) {
 		Gfx_DrawVb_IndexedTris_Range(4, offset);
 		offset += 4;
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TabListOverlay_Free(void* screen) {
@@ -1152,9 +1171,11 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 
 #ifdef CC_BUILD_TOUCH
 		if (!Input_TouchMode) return;
+		enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 		Elem_Render(&s->more,   delta);
 		Elem_Render(&s->send,   delta);
 		Elem_Render(&s->cancel, delta);
+		Window_3DS_SetRenderScreen(scr);
 #endif
 	}
 }
@@ -1218,6 +1239,8 @@ static void ChatScreen_BuildMesh(void* screen) {
 }
 
 static void ChatScreen_Layout(void* screen) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 
@@ -1247,6 +1270,8 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->smallAnnouncement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
 	s->smallAnnouncement.yOffset = Window_Main.Height / 20;
 	Widget_Layout(&s->smallAnnouncement);
+
+	Window_3DS_SetRenderScreen(scr);
 
 #ifdef CC_BUILD_TOUCH
 	if (Window_Main.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
@@ -1456,17 +1481,19 @@ static void ChatScreen_Init(void* screen) {
 
 static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
 
 	if (Game_HideGui && s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
 	}
-	if (Game_HideGui) return;
+	if (!Game_HideGui) {
+		if (s->grabsInput && !Gui.ClassicChat) {
+			ChatScreen_DrawChatBackground(s);
+		}
 
-	if (s->grabsInput && !Gui.ClassicChat) {
-		ChatScreen_DrawChatBackground(s);
+		ChatScreen_DrawChat(s, delta);
 	}
-
-	ChatScreen_DrawChat(s, delta);
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void ChatScreen_Free(void* screen) {

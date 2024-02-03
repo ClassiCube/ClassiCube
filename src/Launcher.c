@@ -114,6 +114,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
 	Launcher_ShouldExit = Platform_SingleProcess || Options_GetBool(LOPT_AUTO_CLOSE, false);
+
 	return true;
 }
 
@@ -235,6 +236,8 @@ void Launcher_Run(void) {
 	}
 #endif
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	Drawer2D_Component.Init();
 	SystemFonts_Component.Init();
 	Drawer2D.BitmappedText    = false;
@@ -295,6 +298,8 @@ void Launcher_Run(void) {
 
 	if (Window_Main.Exists) Window_RequestClose();
 #endif
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 
@@ -527,17 +532,43 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	cc_string title = String_FromReadonly(text);
 	struct DrawTextArgs args;
 	int x;
+	int y;
 
 	/* Skip dragging logo when very small window to save space */
 	if (Window_Main.Height < 240) return;
 
+#ifdef __3DS__
+	/* Put title on top screen */
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+	struct Bitmap bmp;
+	struct Context2D topCtx;
+
+	ctx = &topCtx;
+	bmp.width  = max(Window_Main.Width,  1);
+	bmp.height = max(Window_Main.Height, 1);
+	Window_AllocFramebuffer(&bmp);
+	Context2D_Wrap(ctx, &bmp);
+	Launcher_DrawBackgroundAll(ctx);
+#endif
+
 	DrawTextArgs_Make(&args, &title, font, false);
 	x = ctx->width / 2 - Drawer2D_TextWidth(&args) / 2;
+	y = 0;
+
+#ifdef __3DS__
+	// vertically center the title
+	y = ctx->height / 2 - Drawer2D_TextHeight(&args) / 2;
+#endif
 
 	Drawer2D.Colors['f'] = BITMAPCOLOR_BLACK;
-	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), Display_ScaleY(4));
+	Context2D_DrawText(ctx, &args, x + Display_ScaleX(4), y + Display_ScaleY(4));
 	Drawer2D.Colors['f'] = BITMAPCOLOR_WHITE;
-	Context2D_DrawText(ctx, &args, x,                     0);
+	Context2D_DrawText(ctx, &args, x,                     y);
+
+#ifdef __3DS__
+	Window_DrawFramebuffer((Rect2D){ 0, 0, bmp.width, bmp.height });
+	Window_3DS_SetRenderScreen(scr);
+#endif
 }
 
 void Launcher_MakeTitleFont(struct FontDesc* font) {

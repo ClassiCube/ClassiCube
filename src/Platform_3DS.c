@@ -56,6 +56,10 @@ void Platform_Log(const char* msg, int len) {
 	
 	write(STDOUT_FILENO, msg,  len);
 	write(STDOUT_FILENO, "\n",   1);
+
+	// output to debug service (visible in Citra with log level set to "*:Debug", or on console via remote gdb)
+	svcOutputDebugString(msg, len);
+	svcOutputDebugString("\n", 1);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))

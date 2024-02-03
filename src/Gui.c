@@ -21,7 +21,9 @@
 struct _GuiData Gui;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 static cc_uint8 priorities[GUI_MAX_SCREENS];
-
+#ifdef __3DS__
+static struct Texture touchBgTex;
+#endif
 
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
@@ -32,10 +34,14 @@ static CC_NOINLINE int GetWindowScale(void) {
 
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
+#ifndef __3DS__
 	if (!Input_TouchMode) {
+#endif
 		widthScale  /= DisplayInfo.ScaleX;
 		heightScale /= DisplayInfo.ScaleY;
+#ifndef __3DS__
 	}
+#endif
 	return 1 + (int)(min(widthScale, heightScale));
 }
 
@@ -137,12 +143,16 @@ void Gui_LayoutAll(void) {
 	struct Screen* s;
 	int i;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{
 		s = Gui_Screens[i];
 		s->VTABLE->Layout(s);
 		s->dirty = true;
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 void Gui_RefreshAll(void) { 
@@ -152,10 +162,14 @@ void Gui_RefreshAll(void) {
 }
 
 void Gui_Refresh(struct Screen* s) {
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
 	s->VTABLE->Layout(s);
 	s->dirty = true;
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 static void Gui_AddCore(struct Screen* s, int priority) {
@@ -179,6 +193,8 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	priorities[i]  = priority;
 	Gui.ScreensCount++;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	s->dirty = true;
 	s->VTABLE->Init(s);
 	s->VTABLE->ContextRecreated(s);
@@ -189,6 +205,8 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	{
 		s->VTABLE->HandlesPointerMove(s, i, Pointers[i].x, Pointers[i].y);
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 /* Returns index of the given screen in the screens list, -1 if not */
@@ -283,6 +301,12 @@ void Gui_RenderGui(double delta) {
 	struct Screen* s;
 	int i;
 
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
+#ifdef __3DS__
+	Texture_Render(&touchBgTex);
+#endif
+
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
 	{
@@ -292,6 +316,8 @@ void Gui_RenderGui(double delta) {
 		if (s->dirty) { s->VTABLE->BuildMesh(s); s->dirty = false; }
 		s->VTABLE->Render(s, delta);
 	}
+
+	Window_3DS_SetRenderScreen(scr);
 }
 
 
@@ -449,22 +475,26 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, count = s->numWidgets;
+	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) 
 	{
 		struct Widget* w = widgets[i];
 		if (!w || !Widget_Contains(w, x, y)) continue;
-		if (w->flags & WIDGET_FLAG_DISABLED) return i;
+		if (w->flags & WIDGET_FLAG_DISABLED) break;
 
 		if (w->MenuClick) {
 			w->MenuClick(s, w);
 		} else {
 			Elem_HandlesPointerDown(w, id, x, y);
 		}
-		return i;
+		break;
 	}
-	return -1;
+
+	Window_3DS_SetRenderScreen(scr);
+
+	return i;
 }
 
 int Screen_Index(void* screen, void* widget) {
@@ -568,7 +598,6 @@ static void TouchPngProcess(struct Stream* stream, const cc_string* name) {
 }
 static struct TextureEntry touch_entry = { "touch.png", TouchPngProcess };
 
-
 static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
 static void OnKeyPress(void* obj, int cp) {
@@ -611,6 +640,19 @@ static void OnInit(void) {
 	TextureEntry_Register(&guiClassic_entry);
 	TextureEntry_Register(&icons_entry);
 	TextureEntry_Register(&touch_entry);
+
+#ifdef __3DS__
+	struct Context2D ctx;
+	Context2D_Alloc(&ctx, 32, 32);
+	Gradient_Noise(&ctx, BitmapColor_RGB(0x40, 0x30, 0x20), 6, 0, 0, ctx.width, ctx.height);
+	Context2D_MakeTexture(&touchBgTex, &ctx);
+	Context2D_Free(&ctx);
+	// Tile the texture to fill the entire screen
+	int tilesX = (320 + ctx.width - 1) / ctx.width;
+	int tilesY = (240 + ctx.height - 1) / ctx.height;
+	touchBgTex.Width *= tilesX; touchBgTex.Height *= tilesY;
+	touchBgTex.uv.U2 *= tilesX; touchBgTex.uv.V2  *= tilesY;
+#endif
 
 	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);

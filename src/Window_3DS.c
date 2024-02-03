@@ -12,9 +12,9 @@
 #include "ExtMath.h"
 #include <3ds.h>
 
-static int touchActive, touchBegX, touchBegY;
 static cc_bool launcherMode;
 static Result irrst_result;
+static enum Screen3DS renderScreen = TOP_SCREEN;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
@@ -32,7 +32,7 @@ void Window_Init(void) {
 	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
 	
 	//gfxInit(GSP_RGBA8_OES,GSP_RGBA8_OES,false);
-	consoleInit(GFX_BOTTOM, NULL);
+	//consoleInit(GFX_BOTTOM, NULL);
 	
 	u16 width, height;
 	gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
@@ -48,6 +48,7 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	irrst_result  = irrstInit();
 	
@@ -57,6 +58,21 @@ void Window_Init(void) {
 }
 
 void Window_Free(void) { irrstExit(); }
+
+enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen) {
+	enum Screen3DS prev = renderScreen;
+	if (screen != prev)
+	{
+		renderScreen = screen;
+		DisplayInfo.Width = (screen == TOP_SCREEN) ? 400 : 320;
+		WindowInfo.Width = DisplayInfo.Width;
+		if (screen == TOP_SCREEN)
+			Gfx_3DS_DrawToTopScreen();
+		else
+			Gfx_3DS_DrawToBottomScreen();
+	}
+	return prev;
+}
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
@@ -112,27 +128,27 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 }
 
 static void ProcessTouchInput(int mods) {
+	static int currX, currY;  // current touch position
 	touchPosition touch;
 	hidTouchRead(&touch);
-	touchActive = mods & KEY_TOUCH;
-	
-	if (touchActive) {
-		// rescale X from [0, bottom_FB_width) to [0, top_FB_width)
-		int x = touch.px * Window_Main.Width / GSP_SCREEN_HEIGHT_BOTTOM;
-	 	int y = touch.py;
-		Pointer_SetPosition(0, x, y);
+	if (hidKeysDown() & KEY_TOUCH) {  // stylus went down
+		currX = touch.px;
+		currY = touch.py;
+		Input_AddTouch(0, currX, currY);
 	}
-	// Set starting position for camera movement
-	if (hidKeysDown() & KEY_TOUCH) {
-		touchBegX = touch.px;
-		touchBegY = touch.py;
+	else if (mods & KEY_TOUCH) {  // stylus is down
+		currX = touch.px;
+		currY = touch.py;
+		Input_UpdateTouch(0, currX, currY);
+	}
+	else if (hidKeysUp() & KEY_TOUCH) {  // stylus was lifted
+		Input_RemoveTouch(0, currX, currY);
 	}
 }
 
 void Window_ProcessEvents(double delta) {
 	hidScanInput();
-	/* TODO implement */
-	
+
 	if (!aptMainLoop()) {
 		Window_Main.Exists = false;
 		Window_RequestClose();
@@ -141,8 +157,7 @@ void Window_ProcessEvents(double delta) {
 	
 	u32 mods = hidKeysDown() | hidKeysHeld();
 	HandleButtons(mods);
-	
-	Input_SetNonRepeatable(CCMOUSE_L, mods & KEY_TOUCH);
+
 	ProcessTouchInput(mods);
 	
 	if (Input.RawMode) {
@@ -163,33 +178,29 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
-void Window_UpdateRawMouse(void)  {
-	if (!touchActive) return;
-	
-	touchPosition touch;
-	hidTouchRead(&touch);
-
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				touch.px - touchBegX, touch.py - touchBegY);	
-	touchBegX = touch.px;
-	touchBegY = touch.py;
-}
-
+void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
+static struct Bitmap top_fb_bmp;
+static struct Bitmap bottom_fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
+	if (renderScreen == TOP_SCREEN) {
+		top_fb_bmp = *bmp;
+	}
+	else {
+		bottom_fb_bmp = *bmp;
+	}
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
 	u16 width, height;
-	gfxSetDoubleBuffering(GFX_TOP, false);
-	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
-
+	gfxScreen_t screen = (renderScreen == TOP_SCREEN) ? GFX_TOP : GFX_BOTTOM;
+	gfxSetDoubleBuffering(screen, false);
+	u8* fb = gfxGetFramebuffer(screen, GFX_LEFT, &width, &height);
+	struct Bitmap *bmp = (renderScreen == TOP_SCREEN) ? &top_fb_bmp : &bottom_fb_bmp;
 	// SRC y = 0 to 240
 	// SRC x = 0 to 400
 	// DST X = 0 to 240
@@ -198,7 +209,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	for (int y = r.y; y < r.y + r.Height; y++)
 		for (int x = r.x; x < r.x + r.Width; x++)
 	{
-		BitmapCol color = Bitmap_GetPixel(&fb_bmp, x, y);
+		BitmapCol color = Bitmap_GetPixel(bmp, x, y);
 		int addr   = (width - 1 - y + x * width) * 3; // TODO -1 or not
 		fb[addr+0] = BitmapCol_B(color);
 		fb[addr+1] = BitmapCol_G(color);
@@ -209,10 +220,12 @@ void Window_DrawFramebuffer(Rect2D r) {
 	gfxFlushBuffers();
 	//gfxSwapBuffers();
 	// TODO: tearing??
+	/*
 	gfxSetDoubleBuffering(GFX_TOP, false);
 	gfxScreenSwapBuffers(GFX_TOP, true);
 	gfxSetDoubleBuffering(GFX_TOP, true);
 	gfxScreenSwapBuffers(GFX_BOTTOM, true);
+	*/
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
