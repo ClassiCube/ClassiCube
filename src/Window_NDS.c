@@ -105,7 +105,8 @@ static void ProcessTouchInput(int mods) {
 void Window_ProcessEvents(double delta) {
 	scanKeys();
 	
-	int keys = keysDown();
+	int keys = keysDown() | keysHeld();
+	Platform_Log1("KEYS: %h", &keys);
 	HandleButtons(keys);
 	
 	Input_SetNonRepeatable(CCMOUSE_L, keys & KEY_TOUCH);
@@ -115,7 +116,21 @@ void Window_ProcessEvents(double delta) {
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
+
+void Window_UpdateRawMouse(void)  {
+	if (!touchActive) return;
+	
+	touchPosition touch;
+	touchRead(&touch);
+
+	int DX = touch.px - touchBegX;
+	int DY = touch.py - touchBegY;
+	Platform_Log2("DELTA: %i, %i", &DX, &DY);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				touch.px - touchBegX, touch.py - touchBegY);	
+	touchBegX = touch.px;
+	touchBegY = touch.py;
+}
 
 
 /*########################################################################################################################*
