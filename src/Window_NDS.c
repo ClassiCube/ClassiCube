@@ -11,7 +11,9 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include <nds/arm9/background.h>
+#include <nds/arm9/input.h>
 
+static int touchActive, touchBegX, touchBegY;
 static cc_bool launcherMode;
 static int bg_id;
 static u16* bg_ptr;
@@ -67,7 +69,47 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void HandleButtons(int mods) {
+	Input_SetNonRepeatable(CCPAD_L, mods & KEY_L);
+	Input_SetNonRepeatable(CCPAD_R, mods & KEY_R);
+	
+	Input_SetNonRepeatable(CCPAD_A, mods & KEY_A);
+	Input_SetNonRepeatable(CCPAD_B, mods & KEY_B);
+	Input_SetNonRepeatable(CCPAD_X, mods & KEY_X);
+	Input_SetNonRepeatable(CCPAD_Y, mods & KEY_Y);
+	
+	Input_SetNonRepeatable(CCPAD_START,  mods & KEY_START);
+	Input_SetNonRepeatable(CCPAD_SELECT, mods & KEY_SELECT);
+	
+	Input_SetNonRepeatable(CCPAD_LEFT,   mods & KEY_LEFT);
+	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_UP);
+	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DOWN);
+}
+
+static void ProcessTouchInput(int mods) {
+	touchPosition pos;
+	touchRead(&pos);
+	touchActive = mods & KEY_TOUCH;
+	
+	if (touchActive) {
+		Pointer_SetPosition(0, pos.px, pos.py);
+	}
+	// Set starting position for camera movement
+	if (mods & KEY_TOUCH) {
+		touchBegX = pos.px;
+		touchBegY = pos.py;
+	}
+}
+
 void Window_ProcessEvents(double delta) {
+	scanKeys();
+	
+	int keys = keysDown();
+	HandleButtons(keys);
+	
+	Input_SetNonRepeatable(CCMOUSE_L, keys & KEY_TOUCH);
+	ProcessTouchInput(keys);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
@@ -84,6 +126,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	swiWaitForVBlank();
+	 
 	for (int y = r.y; y < r.y + r.Height; y++)
 	{
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
