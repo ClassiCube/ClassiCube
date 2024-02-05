@@ -173,7 +173,7 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	int result = sceIoDclose(file);
+	int result = sceIoClose(file);
 	return GetSCEResult(result);
 }
 

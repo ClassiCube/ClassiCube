@@ -37,6 +37,8 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+	
+	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void Window_Free(void) { }
@@ -122,7 +124,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
-	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
 
 	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;

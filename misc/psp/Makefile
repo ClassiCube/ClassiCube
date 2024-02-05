@@ -10,7 +10,7 @@ LIBDIR  =
 LDFLAGS =
 LIBS    = -lm -lpspgum -lpspgu -lpspge -lpspdisplay -lpspctrl
 
-BUILD_PRX = 1 
+BUILD_PRX = 1
 
 EXTRA_TARGETS   = EBOOT.PBP
 PSP_EBOOT_TITLE = ClassiCube
