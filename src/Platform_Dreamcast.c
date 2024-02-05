@@ -42,9 +42,32 @@ cc_uint64 Stopwatch_Measure(void) {
 	return timer_us_gettime64();
 }
 
+static uint32 str_offset;
+extern cc_bool window_inited;
+static void LogOnscreen(const char* msg, int len) {
+	char buffer[40];
+	cc_string str;
+	uint32 secs, ms;
+	timer_ms_gettime(&secs, &ms);
+	
+	String_InitArray_NT(str, buffer);
+	String_Format2(&str,"[%i.%i] ", &secs, &ms);
+	String_AppendAll(&str, msg, len);
+	buffer[str.length] = '\0';
+	
+	uint32 line_offset = (10 + (str_offset * BFONT_HEIGHT)) * vid_mode->width;
+    	bfont_draw_str(vram_s + line_offset, vid_mode->width, 1, buffer);
+    	str_offset = (str_offset + 1) % 20;
+}
+
 void Platform_Log(const char* msg, int len) {
 	fs_write(STDOUT_FILENO, msg,  len);
 	fs_write(STDOUT_FILENO, "\n",   1);
+	
+	if (window_inited) return;
+	// Log details on-screen for initial model initing etc
+	//  (this can take around 40 seconds on average)	
+	LogOnscreen(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC_MS(void) {
@@ -56,10 +79,9 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	int boot_time_2000 =  946684800;
 	int boot_time_2024 = 1704067200;
 	if (boot_time < boot_time_2000) boot_time = boot_time_2024;
-
+	
 	cc_uint64 curSecs = boot_time + secs;
 	return (curSecs * 1000 + ms) + UNIX_EPOCH;
-
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -417,8 +439,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-static void InitModem(void) { // in case Broadband Adapter isn't active
-	if (net_default_dev) return;
+static void InitModem(void) {
 	int err;
 	
 	Platform_LogConst("Trying to init modem..");
@@ -427,14 +448,20 @@ static void InitModem(void) { // in case Broadband Adapter isn't active
 		Platform_LogConst("Modem initing failed"); return;
 	}
 
+	Platform_LogConst("Trying to init ppp..");
 	ppp_init();
-	err = ppp_modem_init("555", 0, NULL);
+	
+	
+	Platform_LogConst("Trying to init ppp modem..");
+	err = ppp_modem_init("111", 0, NULL);
 	if (err) {
 		Platform_Log1("Establishing link failed (%i)", &err); return;
 	}
 
+	Platform_LogConst("Trying to ppp login..");
 	ppp_set_login("dream", "dreamcast");
 
+	Platform_LogConst("Trying to ppp connect..");
 	err = ppp_connect();
 	if (err) {
 		Platform_Log1("Connecting link failed (%i)", &err); return;
@@ -444,8 +471,14 @@ static void InitModem(void) { // in case Broadband Adapter isn't active
 void Platform_Init(void) {
 	char cwd[600] = { 0 };
 	char* ptr = getcwd(cwd, 600);
-	Platform_Log1("WORKING DIR: %c", ptr);
+	Platform_Log1("Working directory: %c", ptr);
+	
+	if (net_default_dev) return;
+	// in case Broadband Adapter isn't active
 	InitModem();
+	// give some time for messages to stay on-screen
+	Platform_LogConst("Starting in 5 seconds..");
+	Thread_Sleep(5000);
 }
 void Platform_Free(void) { }
 

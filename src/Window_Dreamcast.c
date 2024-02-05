@@ -12,6 +12,7 @@
 #include "ExtMath.h"
 #include <kos.h>
 static cc_bool launcherMode;
+cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
@@ -35,6 +36,7 @@ void Window_Init(void) {
 	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 	vid_flip(0);
 	// TODO: Why doesn't 32 bit work on real hardware for in-game?
+	window_inited = true;
 }
 
 void Window_Free(void) { }
