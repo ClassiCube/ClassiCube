@@ -563,7 +563,6 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 }
 #else
 void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx) {
-	int x;
 	/* Skip dragging logo when very small window to save space */
 	if (Window_Main.Height < 240) return;
 	

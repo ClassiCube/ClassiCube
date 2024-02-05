@@ -51,8 +51,15 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
-	cc_uint64 curSecs = rtc_boot_time() + secs;
+	time_t boot_time = rtc_boot_time();
+	// workaround when RTC clock hasn't been setup
+	int boot_time_2000 =  946684800;
+	int boot_time_2024 = 1704067200;
+	if (boot_time < boot_time_2000) boot_time = boot_time_2024;
+
+	cc_uint64 curSecs = boot_time + secs;
 	return (curSecs * 1000 + ms) + UNIX_EPOCH;
+
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

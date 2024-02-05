@@ -132,6 +132,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	{
 		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.Width * 4);
 	}
+	sceKernelDcacheWritebackAll();
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
