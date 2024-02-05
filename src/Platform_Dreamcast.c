@@ -453,12 +453,11 @@ static void InitModem(void) {
 	
 	
 	Platform_LogConst("Trying to init ppp modem..");
-	err = ppp_modem_init("111", 0, NULL);
+	err = ppp_modem_init("111111111111", 0, NULL);
 	if (err) {
 		Platform_Log1("Establishing link failed (%i)", &err); return;
 	}
 
-	Platform_LogConst("Trying to ppp login..");
 	ppp_set_login("dream", "dreamcast");
 
 	Platform_LogConst("Trying to ppp connect..");
