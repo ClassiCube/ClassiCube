@@ -205,7 +205,7 @@ static void HandleController(cont_state_t* state, double delta) {
 
 static void ProcessControllerInput(double delta) {
 	maple_device_t* cont;
-	cont_state_t* state;
+	cont_state_t*  state;
 
 	cont  = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 	if (!cont)  return;
@@ -216,9 +216,30 @@ static void ProcessControllerInput(double delta) {
 	HandleController(state, delta);
 }
 
+static void ProcessMouseInput(double delta) {
+	maple_device_t* mouse;
+	mouse_state_t*  state;
+
+	mouse = maple_enum_type(0, MAPLE_FUNC_MOUSE);
+	if (!mouse) return;
+	state = (mouse_state_t*)maple_dev_status(mouse);
+	if (!state) return;
+	
+	int mods = state->buttons;
+	Input_SetNonRepeatable(CCMOUSE_L, mods & MOUSE_LEFTBUTTON);
+	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
+	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
+	
+	if (!Input.RawMode) return;	
+	float scale = (delta * 60.0) / 8.0f;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				state->dx * scale, state->dy * scale);
+}
+
 void Window_ProcessEvents(double delta) {
 	ProcessControllerInput(delta);
 	ProcessKeyboardInput();
+	ProcessMouseInput(delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
