@@ -13,8 +13,12 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <pspkernel.h>
+#include <psputility.h>
+#include <pspsdk.h>
+#include <pspnet.h>
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
+#include <pspnet_apctl.h>
 #include <psprtc.h>
 #include "_PlatformConsole.h"
 
@@ -396,7 +400,40 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitNetworking(void) {
+    sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
+    sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
+    int res;
+
+    res = sceNetInit(0x20000, 0x20, 4096, 0x20, 4096);
+    if (res < 0) { Platform_Log1("sceNetInit failed: %i", &res); return; }
+
+    res = sceNetInetInit();
+    if (res < 0) { Platform_Log1("sceNetInetInit failed: %i", &res); return; }
+
+    res = sceNetResolverInit();
+    if (res < 0) { Platform_Log1("sceNetResolverInit failed: %i", &res); return; }
+
+    res = sceNetApctlInit(0x1800, 0x30);
+    if (res < 0) { Platform_Log1("sceNetApctlInit failed: %i", &res); return; }
+    
+    res = sceNetApctlConnect(1); // 1 = first profile
+    if (res) { Platform_Log1("sceNetApctlConnect failed: %i", &res); return; }
+
+    for (;;) {
+        int state;
+        res = sceNetApctlGetState(&state);
+        if (res) { Platform_Log1("sceNetApctlGetState failed: %i", &res); return; }
+        
+        if (state == 4) break; // connected with static IP
+
+        // not successful yet? try polling again in 50 ms
+        sceKernelDelayThread(50 * 1000);
+    }
+}
+
 void Platform_Init(void) {
+	InitNetworking();
 	/*pspDebugSioInit();*/ 
 	
 	// Disabling FPU exceptions avoids sometimes crashing with this line in Physics.c

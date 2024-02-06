@@ -11,7 +11,6 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <pspgu.h>
-#include <pspgum.h>
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -34,7 +33,7 @@ static void guInit(void) {
 	void* framebuffer0 = (void*)0;
 	void* framebuffer1 = (void*)FB_SIZE;
 	void* depthbuffer  = (void*)(FB_SIZE + FB_SIZE);
-	gumLoadIdentity(&identity);
+	Mem_Copy(&identity, &Matrix_Identity, sizeof(ScePspFMatrix4));
 	
 	sceGuInit();
 	sceGuStart(GU_DIRECT, list);
@@ -368,10 +367,10 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static int matrix_modes[] = { GU_PROJECTION, GU_VIEW };
-static ScePspFMatrix4 tmp_matrix;
+static ScePspFMatrix4 tmp_matrix; // 16 byte aligned
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	gumLoadMatrix(&tmp_matrix, matrix);
+	Mem_Copy(&tmp_matrix, matrix, sizeof(ScePspFMatrix4));
 	sceGuSetMatrix(matrix_modes[type], &tmp_matrix);
 }
 
