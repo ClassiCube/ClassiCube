@@ -398,6 +398,11 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	/*pspDebugSioInit();*/ 
+	
+	// Disabling FPU exceptions avoids sometimes crashing with this line in Physics.c
+	//  *tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
+	// TODO: work out why this error is actually happening (inexact or underflow?) and properly fix it
+	pspSdkDisableFPUExceptions();
 }
 void Platform_Free(void) { }
 

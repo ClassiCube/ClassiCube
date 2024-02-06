@@ -76,10 +76,10 @@ And also runs on:
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
-* PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp), **untested on real hardware**)
-* PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita), **untested on real hardware**)
+* PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
+* PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
-* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **untested on real hardware**)
+* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
 * Nintendo 64 - unfinished, moderate rendering issues
 * PS2 - unfinished, major rendering and stability issues
 

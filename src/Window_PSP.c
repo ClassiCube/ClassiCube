@@ -13,6 +13,7 @@
 #include <pspdisplay.h>
 #include <pspge.h>
 #include <pspctrl.h>
+#include <pspkernel.h>
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -124,7 +125,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
-	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
+	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTBUF);
 
 	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
 	cc_uint32* dst = (cc_uint32*)fb         + r.x;
