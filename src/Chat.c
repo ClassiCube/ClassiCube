@@ -122,7 +122,7 @@ static cc_bool CreateLogsDirectory(void) {
 static void OpenChatLog(struct DateTime* now) {
 	cc_result res;
 	int i;
-	if (!CreateLogsDirectory()) return;
+	if (Platform_ReadonlyFilesystem || !CreateLogsDirectory()) return;
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	for (i = 0; i < 20; i++) {

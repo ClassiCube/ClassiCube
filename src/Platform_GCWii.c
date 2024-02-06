@@ -554,6 +554,8 @@ static void CreateRootDirectory(void) {
 
 void Platform_Init(void) {
 	fat_available = fatInitDefault();
+	Platform_ReadonlyFilesystem = !fat_available;
+
 	FindRootDirectory();
 	CreateRootDirectory();
 	

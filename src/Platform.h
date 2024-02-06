@@ -38,6 +38,8 @@ extern const cc_result ReturnCode_DirectoryExists;
 extern cc_bool Platform_SingleProcess;
 /* Suffix added to app name sent to the server */
 extern const char* Platform_AppNameSuffix;
+/* Whether the filesystem is readonly (i.e. cannot make chat logs, cache, etc) */
+extern cc_bool Platform_ReadonlyFilesystem;
 
 #ifdef CC_BUILD_WIN
 typedef struct cc_winstring_ {

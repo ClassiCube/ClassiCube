@@ -471,6 +471,7 @@ void Platform_Init(void) {
 	char cwd[600] = { 0 };
 	char* ptr = getcwd(cwd, 600);
 	Platform_Log1("Working directory: %c", ptr);
+	Platform_ReadonlyFilesystem = true;
 	
 	if (net_default_dev) return;
 	// in case Broadband Adapter isn't active

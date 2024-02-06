@@ -253,6 +253,7 @@ void Platform_Init(void) {
 	debug_init_isviewer();
 	debug_init_usblog();
 	
+	Platform_ReadonlyFilesystem = true;
 	// TODO: Redesign Drawer2D to better handle this
 	Options_SetBool(OPT_USE_CHAT_FONT, true);
 	

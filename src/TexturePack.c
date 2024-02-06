@@ -480,7 +480,7 @@ static void ApplyDownloaded(struct HttpRequest* item) {
 	cc_string url;
 
 	url = String_FromRawArray(item->url);
-	UpdateCache(item);
+	if (!Platform_ReadonlyFilesystem) UpdateCache(item);
 	/* Took too long to download and is no longer active texture pack */
 	if (!String_Equals(&TexturePack_Url, &url)) return;
 
