@@ -125,7 +125,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
-	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTBUF);
+	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
 
 	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
 	cc_uint32* dst = (cc_uint32*)fb         + r.x;
@@ -140,23 +140,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
-
-/*void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	void* fb = sceGeEdramGetAddr();
-	bmp->scan0  = fb;
-	bmp->width  = BUFFER_WIDTH;
-	bmp->height = SCREEN_HEIGHT;
-}
-
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	//sceDisplayWaitVblankStart();
-	//sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	//sceDisplaySetFrameBuf(sceGeEdramGetAddr(), BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-
-}*/
 
 
 /*########################################################################################################################*
