@@ -7,7 +7,7 @@ CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
 GLDC_LIB=third_party/gldc/libGLdc.a
 LDFLAGS=-g
-LIBS=-lm $(GLDC_LIB) -lppp
+LIBS=-lm $(GLDC_LIB) -lppp -lkosfat
 
 TARGET := ClassiCube-dc
 CC_TEXTURES = classicube.zip

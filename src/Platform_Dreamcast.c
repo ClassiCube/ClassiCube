@@ -19,6 +19,8 @@
 #include <time.h>
 #include <ppp/ppp.h>
 #include <kos.h>
+#include <dc/sd.h>
+#include <fat/fs_fat.h>
 #include "_PlatformConsole.h"
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
@@ -105,7 +107,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static const cc_string root_path = String_FromConst("/cd/");
+static cc_string root_path = String_FromConst("/cd/");
 
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
@@ -439,9 +441,33 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static kos_blockdev_t sd_dev;
+static uint8 partition_type;
+
+static void InitSDCard(void) {
+	if (sd_init()) {
+		Platform_LogConst("Failed to init SD card"); return;
+	}
+	
+	if (sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
+		Platform_LogConst("Unable to find first partition on SD card"); return;
+  	}
+  	
+  	if (fs_fat_init()) {
+		Platform_LogConst("Failed to init FAT filesystem"); return;
+	}
+	
+  	if (fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
+		Platform_LogConst("Failed to mount SD card"); return;
+  	}
+  	
+  	root_path = String_FromReadonly("/sd/ClassiCube");
+	fs_mkdir("/sd/ClassiCube");
+	Platform_ReadonlyFilesystem = false;
+}
+
 static void InitModem(void) {
 	int err;
-	
 	Platform_LogConst("Trying to init modem..");
 	
 	if (!modem_init()) {
@@ -468,10 +494,8 @@ static void InitModem(void) {
 }
 
 void Platform_Init(void) {
-	char cwd[600] = { 0 };
-	char* ptr = getcwd(cwd, 600);
-	Platform_Log1("Working directory: %c", ptr);
 	Platform_ReadonlyFilesystem = true;
+	InitSDCard();
 	
 	if (net_default_dev) return;
 	// in case Broadband Adapter isn't active
