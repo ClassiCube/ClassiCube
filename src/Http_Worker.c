@@ -1229,8 +1229,9 @@ void Http_TryCancel(int reqID) {
 *#########################################################################################################################*/
 /* Sets up state to begin a http request */
 static void PrepareCurrentRequest(struct HttpRequest* req, cc_string* url) {
+	static const char* verbs[] = { "GET", "HEAD", "POST" };
 	Http_GetUrl(req, url);
-	Platform_Log2("Fetching %s (type %b)", url, &req->requestType);
+	Platform_Log2("Fetching %s (%c)", url, verbs[req->requestType]);
 	/* TODO change to verbs etc */
 
 	Mutex_Lock(curRequestMutex);
