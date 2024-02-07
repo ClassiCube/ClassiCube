@@ -233,7 +233,7 @@ static void ProcessMouseInput(double delta) {
 	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
 	
 	if (!Input.RawMode) return;	
-	float scale = (delta * 60.0) / 8.0f;
+	float scale = (delta * 60.0) / 2.0f;
 	Event_RaiseRawMove(&PointerEvents.RawMoved, 
 				state->dx * scale, state->dy * scale);
 }
