@@ -219,7 +219,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->source) {
 		Audio_Stop(ctx);
 		Audio_Reset(ctx);
-		_alGetError();
+		_alGetError(); /* Reset error state */
 	}
 	ClearFree(ctx);
 	AudioBase_Clear(ctx);
@@ -228,6 +228,7 @@ void Audio_Close(struct AudioContext* ctx) {
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	ALenum i, err;
 	if (!ctx->source) {
+		_alGetError(); /* Reset error state */
 		_alGenSources(1, &ctx->source);
 		if ((err = _alGetError())) return err;
 
@@ -257,6 +258,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 	
 	if (!ctx->free) return ERR_INVALID_ARGUMENT;
 	buffer = ctx->freeIDs[--ctx->free];
+	_alGetError(); /* Reset error state */
 
 	_alBufferData(buffer, ctx->channels, chunk, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
@@ -278,6 +280,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = 0;
 	if (!ctx->source) return 0;
 
+	_alGetError(); /* Reset error state */
 	_alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
 	if ((err = _alGetError())) return err;
 
