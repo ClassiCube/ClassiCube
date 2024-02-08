@@ -340,7 +340,7 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int recvCount = sceNetInetRecv(s, data, count, 0);
-	if (recvCount < 0) { *modified = recvCount; return 0; }
+	if (recvCount >= 0) { *modified = recvCount; return 0; }
 	
 	*modified = 0; 
 	return sceNetInetGetErrno();
@@ -348,7 +348,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = sceNetInetSend(s, data, count, 0);
-	if (sentCount < 0) { *modified = sentCount; return 0; }
+	if (sentCount >= 0) { *modified = sentCount; return 0; }
 	
 	*modified = 0; 
 	return sceNetInetGetErrno();
@@ -405,7 +405,7 @@ static void InitNetworking(void) {
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
     int res;
 
-    res = sceNetInit(0x20000, 0x20, 4096, 0x20, 4096);
+    res = sceNetInit(128 * 1024, 0x20, 4096, 0x20, 4096);
     if (res < 0) { Platform_Log1("sceNetInit failed: %i", &res); return; }
 
     res = sceNetInetInit();
@@ -414,18 +414,18 @@ static void InitNetworking(void) {
     res = sceNetResolverInit();
     if (res < 0) { Platform_Log1("sceNetResolverInit failed: %i", &res); return; }
 
-    res = sceNetApctlInit(0x1800, 0x30);
+    res = sceNetApctlInit(10 * 1024, 0x30);
     if (res < 0) { Platform_Log1("sceNetApctlInit failed: %i", &res); return; }
     
     res = sceNetApctlConnect(1); // 1 = first profile
     if (res) { Platform_Log1("sceNetApctlConnect failed: %i", &res); return; }
 
-    for (;;) {
+    for (int try = 0; try < 20; try++) {
         int state;
         res = sceNetApctlGetState(&state);
         if (res) { Platform_Log1("sceNetApctlGetState failed: %i", &res); return; }
         
-        if (state == 4) break; // connected with static IP
+        if (state == PSP_NET_APCTL_STATE_GOT_IP) break;
 
         // not successful yet? try polling again in 50 ms
         sceKernelDelayThread(50 * 1000);
