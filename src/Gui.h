@@ -173,6 +173,14 @@ struct WidgetVTABLE {
 #define WIDGET_FLAG_DISABLED   0x01
 /* Whether a widget can be selected via up/down */
 #define WIDGET_FLAG_SELECTABLE 0x02
+/* Whether for dual screen builds, this widget still appears on */
+/*  the main game screen instead of the dedicated UI screen */
+#define WIDGET_FLAG_MAINSCREEN 0x04
+#ifdef CC_BUILD_DUALSCREEN
+	#define Window_UI Window_Alt
+#else
+	#define Window_UI Window_Main
+#endif
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Body };
