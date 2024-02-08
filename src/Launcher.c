@@ -541,15 +541,17 @@ static void DrawTitleText(struct FontDesc* font, const char* text, struct Contex
 }
 
 #ifdef CC_BUILD_DUALSCREEN
+extern cc_bool launcherTop;
+
 void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx) {
 	/* Put title on top screen */
-	Window_3DS_SetRenderScreen(TOP_SCREEN);
 	struct Context2D topCtx;
 	struct Bitmap bmp;
+	launcherTop = true;
 
 	ctx = &topCtx;
-	bmp.width  = max(Window_Main.Width,  1);
-	bmp.height = max(Window_Main.Height, 1);
+	bmp.width  = Window_Alt.Width;
+	bmp.height = Window_Alt.Height;
 	Window_AllocFramebuffer(&bmp);
 	Context2D_Wrap(ctx, &bmp);
 	
@@ -558,8 +560,8 @@ void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2
 	Rect2D rect = { 0, 0, bmp.width, bmp.height };
 	Window_DrawFramebuffer(rect, &bmp);
 	
-	Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 	Window_FreeFramebuffer(&bmp);
+	launcherTop = false;
 }
 #else
 void Launcher_DrawTitle(struct FontDesc* font, const char* text, struct Context2D* ctx) {

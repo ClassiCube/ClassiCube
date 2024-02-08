@@ -448,7 +448,7 @@ static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {
 }
 
 static int HotbarWidget_Render2(void* widget, int offset) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderOutline(w, offset    );
@@ -462,7 +462,7 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 	}
 #endif
 
-	Window_3DS_SetRenderScreen(scr);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 	return HOTBAR_MAX_VERTICES;
 }
 

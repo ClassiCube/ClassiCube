@@ -79,7 +79,7 @@ static void Menu_RenderBounds(void) {
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PackedCol_Make(24, 24, 24, 105);
 	PackedCol bottomCol = PackedCol_Make(51, 51, 98, 162);
-	Gfx_Draw2DGradient(0, 0, Window_Main.Width, Window_Main.Height, topCol, bottomCol);
+	Gfx_Draw2DGradient(0, 0, Window_UI.Width, Window_UI.Height, topCol, bottomCol);
 }
 
 

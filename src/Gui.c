@@ -190,15 +190,11 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	s->VTABLE->ContextRecreated(s);
 	s->VTABLE->Layout(s);
 	
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	/* for selecting active button etc */
 	for (i = 0; i < Pointers_Count; i++) 
 	{
 		s->VTABLE->HandlesPointerMove(s, i, Pointers[i].x, Pointers[i].y);
 	}
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 /* Returns index of the given screen in the screens list, -1 if not */
@@ -293,8 +289,7 @@ void Gui_RenderGui(double delta) {
 	struct Screen* s;
 	int i;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 #ifdef CC_BUILD_DUALSCREEN
 	Texture_Render(&touchBgTex);
 #endif
@@ -309,7 +304,7 @@ void Gui_RenderGui(double delta) {
 		s->VTABLE->Render(s, delta);
 	}
 
-	Window_3DS_SetRenderScreen(scr);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 }
 
 
@@ -477,7 +472,6 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, count = s->numWidgets;
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) 
@@ -493,9 +487,6 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 		}
 		break;
 	}
-
-	Window_3DS_SetRenderScreen(scr);
-
 	return i;
 }
 

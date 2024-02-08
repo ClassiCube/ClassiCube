@@ -238,8 +238,14 @@ void Gfx_OnWindowResize(void);
 /* NOTE: Each line is separated by \n */
 void Gfx_GetApiInfo(cc_string* info);
 
-void Gfx_3DS_DrawToTopScreen(void);
-void Gfx_3DS_DrawToBottomScreen(void);
+enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
+#ifdef CC_BUILD_DUALSCREEN
+/* Selects which screen on the 3DS to render to */
+void Gfx_3DS_SetRenderScreen(enum Screen3DS screen);
+#else
+static inline
+void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) { }
+#endif
 
 /* Raises ContextLost event and updates state for lost contexts */
 void Gfx_LoseContext(const char* reason);
