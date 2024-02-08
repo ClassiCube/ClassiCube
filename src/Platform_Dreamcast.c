@@ -468,17 +468,14 @@ static void InitSDCard(void) {
 
 static void InitModem(void) {
 	int err;
-	Platform_LogConst("Trying to init modem..");
+	Platform_LogConst("Initialising modem..");
 	
 	if (!modem_init()) {
 		Platform_LogConst("Modem initing failed"); return;
 	}
-
-	Platform_LogConst("Trying to init ppp..");
 	ppp_init();
 	
-	
-	Platform_LogConst("Trying to init ppp modem..");
+	Platform_LogConst("Dialling modem.. (can take around 20 seconds)");
 	err = ppp_modem_init("111111111111", 0, NULL);
 	if (err) {
 		Platform_Log1("Establishing link failed (%i)", &err); return;
@@ -486,7 +483,7 @@ static void InitModem(void) {
 
 	ppp_set_login("dream", "dreamcast");
 
-	Platform_LogConst("Trying to ppp connect..");
+	Platform_LogConst("Connecting link.. (can take around 20 seconds)");
 	err = ppp_connect();
 	if (err) {
 		Platform_Log1("Connecting link failed (%i)", &err); return;

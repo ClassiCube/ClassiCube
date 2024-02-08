@@ -218,13 +218,23 @@ void Searcher_CalcTime(Vec3* vel, struct AABB *entityBB, struct AABB* blockBB, f
 	float dy = vel->y > 0.0f ? blockBB->Min.y - entityBB->Max.y : entityBB->Min.y - blockBB->Max.y;
 	float dz = vel->z > 0.0f ? blockBB->Min.z - entityBB->Max.z : entityBB->Min.z - blockBB->Max.z;
 
-	*tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
-	*ty = vel->y == 0.0f ? MATH_LARGENUM : Math_AbsF(dy / vel->y);
-	*tz = vel->z == 0.0f ? MATH_LARGENUM : Math_AbsF(dz / vel->z);
+	if (entityBB->Max.x >= blockBB->Min.x && entityBB->Min.x <= blockBB->Max.x) {
+		*tx = 0.0f; /* Inlined XIntersects test */
+	} else {
+		*tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
+	}
 
-	if (entityBB->Max.x >= blockBB->Min.x && entityBB->Min.x <= blockBB->Max.x) *tx = 0.0f; /* Inlined XIntersects */
-	if (entityBB->Max.y >= blockBB->Min.y && entityBB->Min.y <= blockBB->Max.y) *ty = 0.0f; /* Inlined YIntersects */
-	if (entityBB->Max.z >= blockBB->Min.z && entityBB->Min.z <= blockBB->Max.z) *tz = 0.0f; /* Inlined ZIntersects */
+	if (entityBB->Max.y >= blockBB->Min.y && entityBB->Min.y <= blockBB->Max.y) {
+		*ty = 0.0f; /* Inlined YIntersects test */
+	} else {
+		*ty = vel->y == 0.0f ? MATH_LARGENUM : Math_AbsF(dy / vel->y);
+	}
+
+	if (entityBB->Max.z >= blockBB->Min.z && entityBB->Min.z <= blockBB->Max.z) {
+		*tz = 0.0f; /* Inlined ZIntersects test */
+	} else {
+		*tz = vel->z == 0.0f ? MATH_LARGENUM : Math_AbsF(dz / vel->z);
+	}
 }
 
 void Searcher_Free(void) {
