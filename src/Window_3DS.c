@@ -14,13 +14,13 @@
 
 static cc_bool launcherMode;
 static Result irrst_result;
-static enum Screen3DS renderScreen = TOP_SCREEN;
 static u16 top_width, top_height;
 static u16 btm_width, btm_height;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 struct _WindowData Window_Alt;
+cc_bool launcherTop;
 
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
@@ -54,28 +54,18 @@ void Window_Init(void) {
 
 void Window_Free(void) { irrstExit(); }
 
-enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen) {
-	enum Screen3DS prev = renderScreen;
-	if (screen != prev)
-	{
-		renderScreen = screen;
-		DisplayInfo.Width = (screen == TOP_SCREEN) ? 400 : 320;
-		WindowInfo.Width = DisplayInfo.Width;
-		if (screen == TOP_SCREEN)
-			Gfx_3DS_DrawToTopScreen();
-		else
-			Gfx_3DS_DrawToBottomScreen();
-	}
-	return prev;
+void Window_Create2D(int width, int height) {  
+	DisplayInfo.Width = btm_width;
+	Window_Main.Width = btm_width;
+	Window_Alt.Width  = top_width;
+	launcherMode      = true;  
 }
 
-void Window_Create2D(int width, int height) {  
-	Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-	launcherMode = true;  
-}
 void Window_Create3D(int width, int height) { 
-	Window_3DS_SetRenderScreen(TOP_SCREEN);
-	launcherMode = false; 
+	DisplayInfo.Width = top_width;
+	Window_Main.Width = top_width;
+	Window_Alt.Width  = btm_width;
+	launcherMode      = false; 
 }
 
 void Window_SetTitle(const cc_string* title) { }
@@ -190,7 +180,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	u16 width, height;
-	gfxScreen_t screen = (renderScreen == TOP_SCREEN) ? GFX_TOP : GFX_BOTTOM;
+	gfxScreen_t screen = launcherTop ? GFX_TOP : GFX_BOTTOM;
 	
 	gfxSetDoubleBuffering(screen, false);
 	u8* fb = gfxGetFramebuffer(screen, GFX_LEFT, &width, &height);

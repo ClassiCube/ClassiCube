@@ -143,16 +143,12 @@ void Gui_LayoutAll(void) {
 	struct Screen* s;
 	int i;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{
 		s = Gui_Screens[i];
 		s->VTABLE->Layout(s);
 		s->dirty = true;
 	}
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 void Gui_RefreshAll(void) { 
@@ -162,14 +158,10 @@ void Gui_RefreshAll(void) {
 }
 
 void Gui_Refresh(struct Screen* s) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
 	s->VTABLE->Layout(s);
 	s->dirty = true;
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void Gui_AddCore(struct Screen* s, int priority) {
@@ -193,20 +185,16 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	priorities[i]  = priority;
 	Gui.ScreensCount++;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
 	s->dirty = true;
 	s->VTABLE->Init(s);
 	s->VTABLE->ContextRecreated(s);
 	s->VTABLE->Layout(s);
-
+	
 	/* for selecting active button etc */
 	for (i = 0; i < Pointers_Count; i++) 
 	{
 		s->VTABLE->HandlesPointerMove(s, i, Pointers[i].x, Pointers[i].y);
 	}
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 /* Returns index of the given screen in the screens list, -1 if not */
@@ -301,8 +289,7 @@ void Gui_RenderGui(double delta) {
 	struct Screen* s;
 	int i;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
-
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 #ifdef CC_BUILD_DUALSCREEN
 	Texture_Render(&touchBgTex);
 #endif
@@ -317,7 +304,7 @@ void Gui_RenderGui(double delta) {
 		s->VTABLE->Render(s, delta);
 	}
 
-	Window_3DS_SetRenderScreen(scr);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 }
 
 
@@ -409,8 +396,18 @@ void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, in
 
 void Widget_CalcPosition(void* widget) {
 	struct Widget* w = (struct Widget*)widget;
-	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , Window_Main.Width );
-	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, Window_Main.Height);
+	int windowWidth, windowHeight;
+	
+#ifdef CC_BUILD_DUALSCREEN
+	windowWidth  = (w->flags & WIDGET_FLAG_MAINSCREEN) ? Window_Main.Width  : Window_Alt.Width;
+	windowHeight = (w->flags & WIDGET_FLAG_MAINSCREEN) ? Window_Main.Height : Window_Alt.Height;
+#else
+	windowWidth  = Window_Main.Width;
+	windowHeight = Window_Main.Height;
+#endif
+	
+	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , windowWidth );
+	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, windowHeight);
 }
 
 void Widget_Reset(void* widget) {
@@ -475,7 +472,6 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, count = s->numWidgets;
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) 
@@ -491,9 +487,6 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 		}
 		break;
 	}
-
-	Window_3DS_SetRenderScreen(scr);
-
 	return i;
 }
 

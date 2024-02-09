@@ -202,11 +202,9 @@ static void HUDScreen_ContextRecreated(void* screen) {
 }
 
 static int HUDScreen_LayoutHotbar(void) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->hotbar.scale     = Gui_GetHotbarScale();
 	Widget_Layout(&s->hotbar);
-	Window_3DS_SetRenderScreen(scr);
 	return s->hotbar.height;
 }
 
@@ -294,6 +292,9 @@ static void HUDScreen_Init(void* screen) {
 	HotbarWidget_Create(&s->hotbar);
 	TextWidget_Init(&s->line1);
 	TextWidget_Init(&s->line2);
+	
+	s->line1.flags  |= WIDGET_FLAG_MAINSCREEN;
+	s->line2.flags  |= WIDGET_FLAG_MAINSCREEN;
 
 	Event_Register_(&UserEvents.HacksStateChanged, s, HUDScreen_HacksChanged);
 	Event_Register_(&TextureEvents.AtlasChanged,   s, HUDScreen_NeedRedrawing);
@@ -339,7 +340,6 @@ static void HUDScreen_BuildCrosshairsMesh(struct VertexTextured** ptr) {
 	/* Only top quarter of icons.png is used */
 	static struct Texture tex = { 0, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/64.0f) };
 	int extent;
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
 
 	extent = (int)(CH_EXTENT * Gui_Scale(Window_Main.Height / 480.0f));
 	tex.x  = (Window_Main.Width  / 2) - extent;
@@ -348,8 +348,6 @@ static void HUDScreen_BuildCrosshairsMesh(struct VertexTextured** ptr) {
 	tex.Width  = extent * 2;
 	tex.Height = extent * 2;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void HUDScreen_BuildMesh(void* screen) {
@@ -374,7 +372,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (Game_HideGui) return;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
@@ -400,7 +398,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 		}
 	}
 
-	Window_3DS_SetRenderScreen(scr);
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
@@ -504,8 +502,6 @@ static void TabListOverlay_Layout(void* screen) {
 	int i, x, y, width = 0, height = 0;
 	int columns = Math_CeilDiv(s->usedCount, LIST_NAMES_PER_COLUMN);
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
-
 	for (i = 0; i < columns; i++) 
 	{
 		width += TabListOverlay_GetColumnWidth(s,  i);
@@ -521,9 +517,9 @@ static void TabListOverlay_Layout(void* screen) {
 	width  += paddingX * 2;
 	height += paddingY * 2;
 
-	y    = Window_Main.Height / 4 - height / 2;
-	s->x = Gui_CalcPos(ANCHOR_CENTRE,          0, width , Window_Main.Width );
-	s->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), height, Window_Main.Height);
+	y    = Window_UI.Height / 4 - height / 2;
+	s->x = Gui_CalcPos(ANCHOR_CENTRE,          0, width , Window_UI.Width );
+	s->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), height, Window_UI.Height);
 
 	x = s->x + paddingX;
 	y = s->y + paddingY;
@@ -542,8 +538,6 @@ static void TabListOverlay_Layout(void* screen) {
 	s->title.horAnchor = ANCHOR_CENTRE;
 	s->title.yOffset   = s->y + paddingY / 2;
 	Widget_Layout(&s->title);
-
-	Window_3DS_SetRenderScreen(scr);
 }
 
 static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
@@ -819,7 +813,7 @@ static void TabListOverlay_Render(void* screen, double delta) {
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
 
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 
 	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
@@ -836,7 +830,7 @@ static void TabListOverlay_Render(void* screen, double delta) {
 		offset += 4;
 	}
 
-	Window_3DS_SetRenderScreen(scr);
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 }
 
 static void TabListOverlay_Free(void* screen) {
@@ -906,11 +900,11 @@ static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 		
 	y = min(s->input.base.y, Gui_HUD->hotbar.y);
 	y -= s->input.base.yOffset; /* add some padding */
-	s->altText.yOffset = Window_Main.Height - y;
+	s->altText.yOffset = Window_UI.Height - y;
 	Widget_Layout(&s->altText);
 
 	pad = s->altText.active ? 5 : 10;
-	s->clientStatus.yOffset = Window_Main.Height - s->altText.y + pad;
+	s->clientStatus.yOffset = Window_UI.Height - s->altText.y + pad;
 	Widget_Layout(&s->clientStatus);
 	s->chat.yOffset = s->clientStatus.yOffset + s->clientStatus.height;
 	Widget_Layout(&s->chat);
@@ -1171,11 +1165,11 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 
 #ifdef CC_BUILD_TOUCH
 		if (!Input_TouchMode) return;
-		enum Screen3DS scr = Window_3DS_SetRenderScreen(BOTTOM_SCREEN);
+		Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 		Elem_Render(&s->more,   delta);
 		Elem_Render(&s->send,   delta);
 		Elem_Render(&s->cancel, delta);
-		Window_3DS_SetRenderScreen(scr);
+		Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 #endif
 	}
 }
@@ -1239,8 +1233,6 @@ static void ChatScreen_BuildMesh(void* screen) {
 }
 
 static void ChatScreen_Layout(void* screen) {
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
-
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 
@@ -1260,18 +1252,16 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_Layout(&s->bottomRight);
 
 	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
-	s->announcement.yOffset = -Window_Main.Height / 4;
+	s->announcement.yOffset = -Window_UI.Height / 4;
 	Widget_Layout(&s->announcement);
 
 	Widget_SetLocation(&s->bigAnnouncement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
-	s->bigAnnouncement.yOffset = -Window_Main.Height / 16;
+	s->bigAnnouncement.yOffset = -Window_UI.Height / 16;
 	Widget_Layout(&s->bigAnnouncement);
 
 	Widget_SetLocation(&s->smallAnnouncement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
-	s->smallAnnouncement.yOffset = Window_Main.Height / 20;
+	s->smallAnnouncement.yOffset = Window_UI.Height / 20;
 	Widget_Layout(&s->smallAnnouncement);
-
-	Window_3DS_SetRenderScreen(scr);
 
 #ifdef CC_BUILD_TOUCH
 	if (Window_Main.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
@@ -1471,6 +1461,19 @@ static void ChatScreen_Init(void* screen) {
 	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
 	
 	s->maxVertices = ChatScreen_CalcMaxVertices(s);
+	
+	/* For dual screen builds, chat is still rendered on the main game screen */
+	s->input.base.flags   |= WIDGET_FLAG_MAINSCREEN;
+	s->altText.flags      |= WIDGET_FLAG_MAINSCREEN;
+	s->status.flags       |= WIDGET_FLAG_MAINSCREEN;
+	s->bottomRight.flags  |= WIDGET_FLAG_MAINSCREEN;
+	s->chat.flags         |= WIDGET_FLAG_MAINSCREEN;
+	s->clientStatus.flags |= WIDGET_FLAG_MAINSCREEN;
+
+	s->bottomRight.flags       |= WIDGET_FLAG_MAINSCREEN;
+	s->announcement.flags      |= WIDGET_FLAG_MAINSCREEN;
+	s->bigAnnouncement.flags   |= WIDGET_FLAG_MAINSCREEN;
+	s->smallAnnouncement.flags |= WIDGET_FLAG_MAINSCREEN;
 
 #ifdef CC_BUILD_TOUCH
 	ButtonWidget_Init(&s->send,   100, NULL);
@@ -1481,7 +1484,7 @@ static void ChatScreen_Init(void* screen) {
 
 static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	enum Screen3DS scr = Window_3DS_SetRenderScreen(TOP_SCREEN);
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 
 	if (Game_HideGui && s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
@@ -1493,7 +1496,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 
 		ChatScreen_DrawChat(s, delta);
 	}
-	Window_3DS_SetRenderScreen(scr);
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 }
 
 static void ChatScreen_Free(void* screen) {
@@ -1802,7 +1805,7 @@ static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 }
 
 static void LoadingScreen_CalcMaxVertices(struct LoadingScreen* s) {
-	s->rows = Math_CeilDiv(Window_Main.Height, LOADING_TILE_SIZE);
+	s->rows = Math_CeilDiv(Window_UI.Height, LOADING_TILE_SIZE);
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s) + s->rows * 4;
 }
 
@@ -1814,9 +1817,9 @@ static void LoadingScreen_Layout(void* screen) {
 	y = Display_ScaleY(34);
 
 	s->progWidth  = Display_ScaleX(200);
-	s->progX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->progWidth, Window_Main.Width);
+	s->progX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->progWidth,  Window_UI.Width);
 	s->progHeight = Display_ScaleY(4);
-	s->progY      = Gui_CalcPos(ANCHOR_CENTRE, y, s->progHeight, Window_Main.Height);
+	s->progY      = Gui_CalcPos(ANCHOR_CENTRE, y, s->progHeight, Window_UI.Height);
 
 	oldRows = s->rows;
 	LoadingScreen_CalcMaxVertices(s);
@@ -1850,9 +1853,9 @@ static void LoadingScreen_BuildMesh(void* screen) {
 	ptr  = &data;
 
 	loc       = Block_Tex(BLOCK_DIRT, FACE_YMAX);
-	Tex_SetRect(tex, 0,0, Window_Main.Width,LOADING_TILE_SIZE);
+	Tex_SetRect(tex, 0,0, Window_UI.Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
-	tex.uv.U2 = (float)Window_Main.Width / LOADING_TILE_SIZE;
+	tex.uv.U2 = (float)Window_UI.Width / LOADING_TILE_SIZE;
 	
 	for (i = 0; i < s->rows; i++) {
 		tex.y = i * LOADING_TILE_SIZE;
@@ -2126,7 +2129,7 @@ static void DisconnectScreen_Update(void* screen, double delta) {
 static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
-	Gfx_Draw2DGradient(0, 0, Window_Main.Width, Window_Main.Height, top, bottom);
+	Gfx_Draw2DGradient(0, 0, Window_UI.Width, Window_UI.Height, top, bottom);
 
 	Screen_Render2Widgets(screen, delta);
 }

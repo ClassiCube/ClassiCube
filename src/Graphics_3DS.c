@@ -181,12 +181,8 @@ void Gfx_FreeState(void) {
 	Gfx_DeleteTexture(&white_square);
 }
 
-void Gfx_3DS_DrawToTopScreen(void) {
-	C3D_FrameDrawOn(topTarget);
-}
-
-void Gfx_3DS_DrawToBottomScreen(void) {
-	C3D_FrameDrawOn(bottomTarget);
+void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
+	C3D_FrameDrawOn(screen == TOP_SCREEN ? topTarget : bottomTarget);
 }
 
 /*########################################################################################################################*
@@ -375,8 +371,8 @@ void Gfx_BeginFrame(void) {
 }
 
 void Gfx_Clear(void) {
-	C3D_RenderTargetClear(topTarget, C3D_CLEAR_ALL, clear_color, 0);
-	C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL, 0, 0);
+	C3D_RenderTargetClear(topTarget,    C3D_CLEAR_ALL, clear_color, 0);
+	C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL,           0, 0);
 }
 
 void Gfx_EndFrame(void) {

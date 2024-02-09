@@ -79,7 +79,7 @@ static void Menu_RenderBounds(void) {
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PackedCol_Make(24, 24, 24, 105);
 	PackedCol bottomCol = PackedCol_Make(51, 51, 98, 162);
-	Gfx_Draw2DGradient(0, 0, Window_Main.Width, Window_Main.Height, topCol, bottomCol);
+	Gfx_Draw2DGradient(0, 0, Window_UI.Width, Window_UI.Height, topCol, bottomCol);
 }
 
 
@@ -994,13 +994,13 @@ static void EditHotkeyScreen_Update(void* screen, double delta) {
 static void EditHotkeyScreen_Layout(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	s->barWidth  = Display_ScaleX(500);
-	s->barX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->barWidth, Window_Main.Width);
+	s->barX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->barWidth, Window_UI.Width);
 	s->barHeight = Display_ScaleY(2);
 
 	s->barY[0] = Gui_CalcPos(ANCHOR_CENTRE, Display_ScaleY(-65), 
-					s->barHeight, Window_Main.Height);
+					s->barHeight, Window_UI.Height);
 	s->barY[1] = Gui_CalcPos(ANCHOR_CENTRE, Display_ScaleY( 45), 
-					s->barHeight, Window_Main.Height);
+					s->barHeight, Window_UI.Height);
 
 	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -150);
 	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -100);
@@ -2458,7 +2458,7 @@ static void MenuOptionsScreen_LayoutExtHelp(struct MenuOptionsScreen* s) {
 	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_CENTRE_MIN, 0, 100);
 	/* If use centre align above, then each line in extended help gets */
 	/* centered aligned separately - which is not the desired behaviour. */
-	s->extHelp.xOffset = Window_Main.Width / 2 - s->extHelp.width / 2;
+	s->extHelp.xOffset = Window_UI.Width / 2 - s->extHelp.width / 2;
 	Widget_Layout(&s->extHelp);
 }
 
@@ -3551,12 +3551,12 @@ static void TexIdsOverlay_Layout(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int size;
 
-	size = Window_Main.Height / ATLAS2D_TILES_PER_ROW;
+	size = Window_UI.Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	s->xOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     Window_Main.Width);
-	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Window_Main.Height);
+	s->xOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     Window_UI.Width);
+	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Window_UI.Height);
 	s->tileSize = size;
 
 	/* Can't use vertical centreing here */

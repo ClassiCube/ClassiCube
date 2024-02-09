@@ -235,13 +235,4 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs);
 void GLContext_GetApiInfo(cc_string* info);
 #endif
 
-enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
-#ifdef CC_BUILD_DUALSCREEN
-/* Selects which screen on the 3DS to render to. Returns the previous screen */
-enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen);
-#else
-static inline
-enum Screen3DS Window_3DS_SetRenderScreen(enum Screen3DS screen) { return TOP_SCREEN; }
-#endif
-
 #endif
