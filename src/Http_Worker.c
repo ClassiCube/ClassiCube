@@ -1266,8 +1266,16 @@ static void ClearCurrentRequest(void) {
 	Mutex_Unlock(curRequestMutex);
 }
 
-static void WorkerLoop(void) {
+static void DoRequest(struct HttpRequest* request) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
+
+	String_InitArray(url, urlBuffer);
+	PrepareCurrentRequest(request, &url);
+	PerformRequest(&http_curRequest, &url);
+	ClearCurrentRequest();
+}
+
+static void WorkerLoop(void) {
 	struct HttpRequest request;
 	cc_bool hasRequest;
 
@@ -1284,28 +1292,29 @@ static void WorkerLoop(void) {
 		}
 		Mutex_Unlock(pendingMutex);
 
-		/* Block until another thread submits a request to do */
-		if (!hasRequest) {
+		if (hasRequest) {
+			DoRequest(&request);
+		} else {
+			/* Block until another thread submits a request to do */
 			Platform_LogConst("Going back to sleep...");
 			Waitable_Wait(workerWaitable);
-			continue;
 		}
-
-		String_InitArray(url, urlBuffer);
-		PrepareCurrentRequest(&request, &url);
-		PerformRequest(&http_curRequest, &url);
-		ClearCurrentRequest();
 	}
 }
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
 static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
+#ifdef CC_BUILD_PSP
+	/* TODO why doesn't threading work properly */
+	DoRequest(req);
+#else
 	Mutex_Lock(pendingMutex);
 	{
 		RequestList_Append(&pendingReqs, req, flags);
 	}
 	Mutex_Unlock(pendingMutex);
 	Waitable_Signal(workerWaitable);
+#endif
 }
 
 /*########################################################################################################################*
