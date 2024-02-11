@@ -1206,19 +1206,28 @@ static cc_result GetMachineID(cc_uint32* key) {
 /* Read kIOPlatformUUIDKey from I/O registry for the key */
 static cc_result GetMachineID(cc_uint32* key) {
 	io_registry_entry_t registry;
-	CFStringRef uuid = NULL;
+	CFStringRef devID = NULL;
 	char tmp[256] = { 0 };
 
-	registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
-	if (!registry) return ERR_NOT_SUPPORTED;
-
 #ifdef kIOPlatformUUIDKey
-	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
-	if (uuid && CFStringGetCString(uuid, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
+    registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+    if (!registry) return ERR_NOT_SUPPORTED;
+    
+	devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
+	if (devID && CFStringGetCString(devID, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
 		DecodeMachineID(tmp, String_Length(tmp), key);	
 	}
+#else
+    registry = IOServiceGetMatchingService(kIOMasterPortDefault,
+                                           IOServiceMatching("IOPlatformExpertDevice"));
+    
+    devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
+    if (devID && CFStringGetCString(devID, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
+        Mem_Copy(key, tmp, MACHINEID_LEN / 2);
+    }
 #endif
-	if (uuid) CFRelease(uuid);
+    
+	if (devID) CFRelease(devID);
 	IOObjectRelease(registry);
 	return tmp[0] ? 0 : ERR_NOT_SUPPORTED;
 }
