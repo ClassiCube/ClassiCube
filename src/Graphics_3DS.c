@@ -186,6 +186,65 @@ void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
 }
 
 /*########################################################################################################################*
+*--------------------------------------------------------GPU Textures-----------------------------------------------------*
+*#########################################################################################################################*/
+struct GPUTexture;
+struct GPUTexture {
+	cc_uint32* data;
+	C3D_Tex texture;
+	struct GPUTexture* next;
+	cc_uint32 lastFrame;
+};
+static struct GPUTexture* del_textures_head;
+static struct GPUTexture* del_textures_tail;
+struct GPUTexture* GPUTexture_Alloc(void) {
+	struct GPUTexture* tex = Mem_AllocCleared(1, sizeof(struct GPUTexture), "GPU texture");
+	return tex;
+}
+// can't delete textures until not used in any frames
+static void GPUTexture_Unref(GfxResourceID* resource) {
+	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
+	if (!tex) return;
+	*resource = NULL;
+	
+	LinkedList_Append(tex, del_textures_head, del_textures_tail);
+}
+static void GPUTexture_Free(struct GPUTexture* tex) {
+	C3D_TexDelete(&tex->texture);
+	Mem_Free(tex);
+}
+static void GPUTextures_DeleteUnreferenced(void) {
+	if (!del_textures_head) return;
+	
+	struct GPUTexture* tex;
+	struct GPUTexture* next;
+	struct GPUTexture* prev = NULL;
+	
+	for (tex = del_textures_head; tex != NULL; tex = next)
+	{
+		next = tex->next;
+		
+		if (tex->lastFrame + 4 > frameCounter) {
+			// texture was used within last 4 fames
+			prev = tex;
+		} else {
+			// advance the head of the linked list
+			if (del_textures_head == tex) 
+				del_textures_head = next;
+			// update end of linked list if necessary
+			if (del_textures_tail == tex)
+				del_textures_tail = prev;
+			
+			// unlink this texture from the linked list
+			if (prev) prev->next = next;
+			
+			GPUTexture_Free(tex);
+		}
+	}
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 /*static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
@@ -244,42 +303,37 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	C3D_Tex* tex = Mem_Alloc(1, sizeof(C3D_Tex), "GPU texture desc");
-	bool success = C3D_TexInit(tex, bmp->width, bmp->height, GPU_RGBA8);
+	struct GPUTexture* tex = GPUTexture_Alloc();
+	bool success = C3D_TexInit(&tex->texture, bmp->width, bmp->height, GPU_RGBA8);
 	//if (!success) Logger_Abort("Failed to create 3DS texture");
 	
-	ToMortonTexture(tex, 0, 0, bmp, bmp->width);
-    	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
-    	C3D_TexSetWrap(tex, GPU_REPEAT, GPU_REPEAT);
+	ToMortonTexture(&tex->texture,  0, 0, bmp, bmp->width);
+    	C3D_TexSetFilter(&tex->texture, GPU_NEAREST, GPU_NEAREST);
+    	C3D_TexSetWrap(&tex->texture,   GPU_REPEAT,  GPU_REPEAT);
     	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	C3D_Tex* tex = (C3D_Tex*)texId;
-	ToMortonTexture(tex, x, y, part, rowWidth);
+ 	struct GPUTexture* tex = (struct GPUTexture*)texId;
+	ToMortonTexture(&tex->texture, x, y, part, rowWidth);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	C3D_Tex* tex = *texId;
-	if (!tex) return;
-	
-	C3D_TexDelete(tex);
-	Mem_Free(tex);
-	*texId = NULL;
+	GPUTexture_Unref(texId);
 }
 
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	C3D_Tex* tex  = (C3D_Tex*)texId;
-	if (!tex) tex = white_square;
+	if (!texId) texId = white_square; 
+ 	struct GPUTexture* tex = (struct GPUTexture*)texId;
 	
-	C3D_TexBind(0, tex);
+	tex->lastFrame = frameCounter;
+	C3D_TexBind(0, &tex->texture);
 }
 
 
