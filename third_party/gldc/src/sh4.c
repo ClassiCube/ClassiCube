@@ -360,26 +360,18 @@ void SceneListSubmit(Vertex* v3, int n) {
         switch(visible_mask) {
         case V0_VIS | V1_VIS | V2_VIS | V3_VIS: // All vertices visible
         {
-            _glPerspectiveDivideVertex(v0);
-            _glPushHeaderOrVertex(v0);
-
+            // Triangle strip: {1,2,0} {2,0,3}
             _glPerspectiveDivideVertex(v1);
             _glPushHeaderOrVertex(v1);
 
-            v2->flags = GPU_CMD_VERTEX_EOL;
             _glPerspectiveDivideVertex(v2);
             _glPushHeaderOrVertex(v2);
             
-            
-            v2->flags = GPU_CMD_VERTEX;
-            _glPushHeaderOrVertex(v2);
+            _glPerspectiveDivideVertex(v0);
+            _glPushHeaderOrVertex(v0);
 
-            v3->flags = GPU_CMD_VERTEX;
             _glPerspectiveDivideVertex(v3);
             _glPushHeaderOrVertex(v3);
-            
-            v0->flags = GPU_CMD_VERTEX_EOL;
-            _glPushHeaderOrVertex(v0);
         }
         break;
         
