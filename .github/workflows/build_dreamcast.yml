@@ -12,7 +12,7 @@ jobs:
     container:
       image: kazade/dreamcast-sdk
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile Dreamcast build
         id: compile
         run: |

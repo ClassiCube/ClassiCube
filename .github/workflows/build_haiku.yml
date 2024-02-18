@@ -12,12 +12,14 @@ jobs:
     container:
       image: haiku/cross-compiler:x86_64-r1beta4
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile haiku build
         id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
         run: |
           cd src        
-          x86_64-unknown-haiku-gcc *.c interop_BeOS.cpp -o ClassiCube-haiku -O1 -s -fno-stack-protector -fno-math-errno -Qn -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+          x86_64-unknown-haiku-gcc *.c interop_BeOS.cpp -o ClassiCube-haiku ${{ env.COMMON_FLAGS }} -lm -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
           
 
       - uses: ./.github/actions/notify_failure

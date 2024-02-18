@@ -10,7 +10,7 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile 64 bit Linux builds
         shell: bash
         id: compile
@@ -25,11 +25,13 @@ jobs:
           gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -o cc-nix64-gl1 -lX11 -lXi -lpthread -lGL -lm -ldl
           gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX64_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-nix64-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
 
+
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:
           NOTIFY_MESSAGE: 'Failed to compile 64 bit Linux build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
