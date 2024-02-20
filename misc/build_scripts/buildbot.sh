@@ -238,7 +238,7 @@ build_ios() {
 # ----------------------------- driver
 cd $ROOT_DIR/src/
 echo $PWD
-git pull https://github.com/UnknownShadow200/ClassiCube.git
+git pull https://github.com/ClassiCube/ClassiCube.git
 git fetch --all
 git reset --hard origin/master
 LATEST=$(git rev-parse --short HEAD)

@@ -320,6 +320,6 @@ void Gfx_OnWindowResize(void) {
 	/* Normally this doesn't matter, but it does when game is compiled against recent */
 	/*  macOS SDK *and* the display is a high DPI display - where glViewport(width, height) */
 	/*  above would otherwise result in game rendering to only 1/4 of the screen */
-	/*  https://github.com/UnknownShadow200/ClassiCube/issues/888 */
+	/*  https://github.com/ClassiCube/ClassiCube/issues/888 */
 	GLContext_Update();
 }

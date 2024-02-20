@@ -46,20 +46,22 @@ cc_uint64 Stopwatch_Measure(void) {
 
 static uint32 str_offset;
 extern cc_bool window_inited;
+#define MAX_ONSCREEN_LINES 20
+
 static void LogOnscreen(const char* msg, int len) {
-	char buffer[40];
+	char buffer[50];
 	cc_string str;
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
 	String_InitArray_NT(str, buffer);
-	String_Format2(&str,"[%i.%i] ", &secs, &ms);
+	String_Format2(&str, "[%p2.%p3] ", &secs, &ms);
 	String_AppendAll(&str, msg, len);
 	buffer[str.length] = '\0';
 	
 	uint32 line_offset = (10 + (str_offset * BFONT_HEIGHT)) * vid_mode->width;
-    	bfont_draw_str(vram_s + line_offset, vid_mode->width, 1, buffer);
-    	str_offset = (str_offset + 1) % 20;
+	bfont_draw_str(vram_s + line_offset, vid_mode->width, 1, buffer);
+	str_offset = (str_offset + 1) % MAX_ONSCREEN_LINES;
 }
 
 void Platform_Log(const char* msg, int len) {
@@ -475,7 +477,7 @@ static void InitModem(void) {
 	}
 	ppp_init();
 	
-	Platform_LogConst("Dialling modem.. (can take around 20 seconds)");
+	Platform_LogConst("Dialling modem.. (can take ~20 seconds)");
 	err = ppp_modem_init("111111111111", 0, NULL);
 	if (err) {
 		Platform_Log1("Establishing link failed (%i)", &err); return;
@@ -483,7 +485,7 @@ static void InitModem(void) {
 
 	ppp_set_login("dream", "dreamcast");
 
-	Platform_LogConst("Connecting link.. (can take around 20 seconds)");
+	Platform_LogConst("Connecting link.. (can take ~20 seconds)");
 	err = ppp_connect();
 	if (err) {
 		Platform_Log1("Connecting link failed (%i)", &err); return;
