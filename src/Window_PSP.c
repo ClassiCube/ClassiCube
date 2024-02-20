@@ -93,7 +93,7 @@ static void ProcessCircleInput(SceCtrlData* pad, double delta) {
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
 }
 
 void Window_ProcessEvents(double delta) {

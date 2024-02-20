@@ -277,7 +277,7 @@ static void HandleJoystick_Right(int x, int y, double delta) {
 	if (Math_AbsI(x) <= 32) x = 0;
 	if (Math_AbsI(y) <= 32) y = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, y * scale);	
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);	
 }
 
 static void ProcessPadInput(double delta, padData* pad) {

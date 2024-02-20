@@ -561,7 +561,7 @@ static void ProcessGamepadCamera(float x, float y, double delta) {
 	if (y >= -0.1 && y <= 0.1) y = 0;
 	if (x == 0 && y == 0) return;
 
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, y * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
 }
 
 static void ProcessGamepadMovement(float x, float y) {

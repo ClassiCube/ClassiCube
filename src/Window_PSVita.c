@@ -122,7 +122,7 @@ static void ProcessRCircleInput(SceCtrlData* pad, double delta) {
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
 }
 
 static void ProcessTouchPress(int x, int y) {

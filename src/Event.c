@@ -13,6 +13,7 @@ struct _ChatEventsList          ChatEvents;
 struct _WindowEventsList        WindowEvents;
 struct _InputEventsList         InputEvents;
 struct _PointerEventsList       PointerEvents;
+struct _ControllerEventsList    ControllerEvents;
 struct _NetEventsList           NetEvents;
 
 void Event_Register(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
@@ -106,6 +107,8 @@ void Event_UnregisterAll(void) {
 	PointerEvents.Down.Count  = 0;
 	PointerEvents.Up.Count    = 0;
 	PointerEvents.RawMoved.Count = 0;
+	
+	ControllerEvents.RawMoved.Count = 0;
 
 	NetEvents.Connected.Count    = 0;
 	NetEvents.Disconnected.Count = 0;

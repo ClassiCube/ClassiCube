@@ -316,6 +316,7 @@ static void OnInit(void) {
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
+	Event_Register_(&ControllerEvents.RawMoved,   NULL, OnRawMovement);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN

@@ -115,7 +115,7 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 	if (Math_AbsI(pos->dx) <= 16) pos->dx = 0;
 	if (Math_AbsI(pos->dy) <= 16) pos->dy = 0;
 		
-	Event_RaiseRawMove(&PointerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
 }
 
 static void ProcessTouchInput(int mods) {
