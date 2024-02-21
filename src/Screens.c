@@ -88,13 +88,20 @@ static struct HUDScreen {
 static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
 	int indices, ping, fps;
+	float real_fps;
 
 	String_InitArray(status, statusBuffer);
 	/* Don't remake texture when FPS isn't being shown */
 	if (!Gui.ShowFPS && s->line1.tex.ID) return;
-
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
-	String_Format1(&status, "%i fps, ", &fps);
+
+	if (fps == 0) {
+		/* Running at less than 1 FPS.. */
+		real_fps = s->frames / s->accumulator;
+		String_Format1(&status, "%f1 fps, ", &real_fps);
+	} else {
+		String_Format1(&status, "%i fps, ", &fps);
+	}
 
 	if (Game_ClassicMode) {
 		String_Format1(&status, "%i chunk updates", &Game.ChunkUpdates);

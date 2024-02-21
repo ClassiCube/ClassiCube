@@ -669,7 +669,7 @@ static void Game_Free(void* obj) {
 	Window_ProcessEvents(delta);\
 	if (!gameRunning) return;\
 	\
-	if (delta > 1.0) delta = 1.0; /* avoid large delta with suspended process */ \
+	if (delta > 5.0) delta = 5.0; /* avoid large delta with suspended process */ \
 	if (delta > 0.0) { Game_FrameStart = render; Game_RenderFrame(delta); }
 
 #ifdef CC_BUILD_WEB
