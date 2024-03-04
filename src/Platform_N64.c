@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libdragon.h>
+#include <cop1.h>
 //#include <dragonfs.h>
 //#include <rtc.h>
 //#include <timer.h>
@@ -249,9 +250,21 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+// See src/n64sys.c
+static void DisableFpuExceptions(void) {
+    uint32_t fcr31 = C1_FCR31();
+    
+    fcr31 &= ~(C1_CAUSE_OVERFLOW | C1_CAUSE_UNDERFLOW | C1_CAUSE_NOT_IMPLEMENTED | C1_CAUSE_INEXACT_OP);
+    fcr31 |= C1_ENABLE_DIV_BY_0 | C1_ENABLE_INVALID_OP;
+    fcr31 |= C1_FCR31_FS;
+
+    C1_WRITE_FCR31(fcr31);	
+}
+
 void Platform_Init(void) {
 	debug_init_isviewer();
 	debug_init_usblog();
+	DisableFpuExceptions();
 	
 	Platform_ReadonlyFilesystem = true;
 	// TODO: Redesign Drawer2D to better handle this
