@@ -919,6 +919,168 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	linearFree(chunks[0]);
 }
+#elif defined CC_BUILD_SWITCH
+/*########################################################################################################################*
+*-----------------------------------------------------Switch backend------------------------------------------------------*
+*#########################################################################################################################*/
+#include <switch.h>
+struct AudioContext {
+	AudioDriverWaveBuf bufs[AUDIO_MAX_BUFFERS];
+	int count, channels, sampleRate;
+	void* _tmpData; int _tmpSize;
+};
+//static int channelIDs;
+static AudioDriver drv;
+
+static cc_bool AudioBackend_Init(void) {
+	static const AudioRendererConfig arConfig =
+    {
+        .output_rate     = AudioRendererOutputRate_48kHz,
+        .num_voices      = 24,
+        .num_effects     = 0,
+        .num_sinks       = 1,
+        .num_mix_objs    = 1,
+        .num_mix_buffers = 2,
+    };
+	Result res;
+
+	res = audrenInitialize(&arConfig);
+	Platform_Log1("audrenInitialize: %i", &res);
+
+	res = audrvCreate(&drv, &arConfig, 2);
+	Platform_Log1("audrvCreate: %i", &res);
+	
+	return R_SUCCEEDED(res); 
+}
+static void AudioBackend_Free(void) {
+	audrvClose(&drv);
+	audrenExit();
+}
+#define AUDIO_HAS_BACKEND
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	/*int chanID = -1;
+	
+	for (int i = 0; i < 24; i++)
+	{
+		// channel in use
+		if (channelIDs & (1 << i)) continue;
+		
+		chanID = i; break;
+	}
+	if (chanID == -1) return;
+	
+	channelIDs |= (1 << chanID);
+	ctx->count  = buffers;
+	ctx->chanID = chanID;
+	ctx->used   = true;
+
+	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);*/
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	/*if (ctx->used) {
+		ndspChnWaveBufClear(ctx->chanID);
+		ctx->channels &= ~(1 << ctx->chanID);
+		channelIDs &= ~(1 << ctx->chanID);
+	}
+	
+	ctx->used = false;*/
+	AudioBase_Clear(ctx);
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	/*ctx->stereo = (channels == 2);
+	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
+	
+	ndspChnSetFormat(ctx->chanID, fmt);
+	ndspChnSetRate(ctx->chanID, sampleRate);*/
+	return 0;
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+	/*ndspWaveBuf* buf;
+
+	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
+	if (((uintptr_t)chunk & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	}
+	if ((dataSize & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	}
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
+		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
+			continue;
+
+		buf->data_pcm16 = chunk;
+		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
+		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
+		DSP_FlushDataCache(buf->data_pcm16, dataSize);
+		ndspChnWaveBufAdd(ctx->chanID, buf);
+		return 0;
+	}
+	// tried to queue data without polling for free buffers first
+	return ERR_INVALID_ARGUMENT;*/
+	return 0;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	/*ndspWaveBuf* buf;
+	int count = 0;
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
+		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING) { 
+			count++; continue; 
+		}
+	}
+
+	*inUse = count; */
+	return 0;
+}
+
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	return true;
+}
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	/*float mix[12] = { 0 };
+ 	mix[0] = data->volume / 100.0f;
+ 	mix[1] = data->volume / 100.0f;
+ 	
+ 	ndspChnSetMix(ctx->chanID, mix);
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	cc_result res;
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;*/
+	return 0;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	/*size = (size + 0x7F) & ~0x7F;  // round up to nearest multiple of 0x80
+	cc_uint8* dst = linearAlloc(size * numChunks);
+	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst ? (dst + size * i) : NULL;
+	}*/
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	//linearFree(chunks[0]);
+}
 #elif defined CC_BUILD_DREAMCAST
 /*########################################################################################################################*
 *----------------------------------------------------Dreamcast backend----------------------------------------------------*

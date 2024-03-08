@@ -1,0 +1,39 @@
+name: Build latest (Switch)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-switch
+  cancel-in-progress: true
+
+jobs:
+  build-switch:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Switch build
+        id: compile
+        run: |
+          make switch
+          
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Switch build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-switch.nro'
+          DEST_NAME: 'ClassiCube-switch.nro'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-switch.elf'
+          DEST_NAME: 'ClassiCube-switch.elf'
