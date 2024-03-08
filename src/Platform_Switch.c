@@ -253,10 +253,11 @@ void Thread_Start2(void* handle, Thread_StartFunc func) {
 }
 
 void Thread_Detach(void* handle) {
-	pthread_t* ptr = (pthread_t*)handle;
+	// crashes when loading singleplayer. pthread_detach isn't implemented, apparently?
+	/*pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_detach(*ptr);
 	if (res) Logger_Abort2(res, "Detaching thread");
-	Mem_Free(ptr);
+	Mem_Free(ptr);*/
 }
 
 void Thread_Join(void* handle) {
