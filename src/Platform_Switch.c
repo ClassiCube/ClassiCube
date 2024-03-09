@@ -235,21 +235,23 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
+void Thread_Sleep(cc_uint32 milliseconds) {
+	cc_uint64 timeout_ns = milliseconds * (1000 * 1000); // to nanoseconds
+	svcSleepThread(timeout_ns);
+}
 
-static void* ExecThread(void* param) {
+static void ExecSwitchThread(void* param) {
 	((Thread_StartFunc)param)(); 
-	return NULL;
 }
 
 void* Thread_Create(Thread_StartFunc func) {
-	return Mem_Alloc(1, sizeof(pthread_t), "thread");
+	Thread* thread = (Thread*)Mem_Alloc(1, sizeof(Thread), "thread");
+	threadCreate(thread, ExecSwitchThread, (void*)func, NULL, 0x10000, 0x2C, -2);
+	return thread;
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
-	pthread_t* ptr = (pthread_t*)handle;
-	int res = pthread_create(ptr, NULL, ExecThread, (void*)func);
-	if (res) Logger_Abort2(res, "Creating thread");
+	threadStart((Thread*)handle);
 }
 
 void Thread_Detach(void* handle) {
@@ -261,49 +263,41 @@ void Thread_Detach(void* handle) {
 }
 
 void Thread_Join(void* handle) {
-	pthread_t* ptr = (pthread_t*)handle;
-	int res = pthread_join(*ptr, NULL);
-	if (res) Logger_Abort2(res, "Joining thread");
-	Mem_Free(ptr);
+	Thread* thread = (Thread*)handle;
+	threadWaitForExit(thread);
+	threadClose(thread);
+	Mem_Free(thread);
 }
 
 void* Mutex_Create(void) {
-	pthread_mutex_t* ptr = (pthread_mutex_t*)Mem_Alloc(1, sizeof(pthread_mutex_t), "mutex");
-	int res = pthread_mutex_init(ptr, NULL);
-	if (res) Logger_Abort2(res, "Creating mutex");
-	return ptr;
+	Mutex* mutex = (Mutex*)Mem_Alloc(1, sizeof(Mutex), "mutex");
+	mutexInit(mutex);
+	return mutex;
 }
 
 void Mutex_Free(void* handle) {
-	int res = pthread_mutex_destroy((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
-	int res = pthread_mutex_lock((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Locking mutex");
+	mutexLock((Mutex*)handle);
 }
 
 void Mutex_Unlock(void* handle) {
-	int res = pthread_mutex_unlock((pthread_mutex_t*)handle);
-	if (res) Logger_Abort2(res, "Unlocking mutex");
+	mutexUnlock((Mutex*)handle);
 }
 
 struct WaitData {
-	pthread_cond_t  cond;
-	pthread_mutex_t mutex;
+	CondVar cond;
+	Mutex mutex;
 	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
 };
 
 void* Waitable_Create(void) {
 	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
-	int res;
 	
-	res = pthread_cond_init(&ptr->cond, NULL);
-	if (res) Logger_Abort2(res, "Creating waitable");
-	res = pthread_mutex_init(&ptr->mutex, NULL);
-	if (res) Logger_Abort2(res, "Creating waitable mutex");
+	mutexInit(&ptr->mutex);
+	condvarInit(&ptr->cond);
 
 	ptr->signalled = false;
 	return ptr;
@@ -311,35 +305,25 @@ void* Waitable_Create(void) {
 
 void Waitable_Free(void* handle) {
 	struct WaitData* ptr = (struct WaitData*)handle;
-	int res;
-	
-	res = pthread_cond_destroy(&ptr->cond);
-	if (res) Logger_Abort2(res, "Destroying waitable");
-	res = pthread_mutex_destroy(&ptr->mutex);
-	if (res) Logger_Abort2(res, "Destroying waitable mutex");
-	Mem_Free(handle);
+	Mem_Free(ptr);
 }
 
 void Waitable_Signal(void* handle) {
 	struct WaitData* ptr = (struct WaitData*)handle;
-	int res;
 
 	Mutex_Lock(&ptr->mutex);
-	ptr->signalled = true;
+	condvarWakeOne(&ptr->cond);
 	Mutex_Unlock(&ptr->mutex);
 
-	res = pthread_cond_signal(&ptr->cond);
-	if (res) Logger_Abort2(res, "Signalling event");
+	ptr->signalled = true;
 }
 
 void Waitable_Wait(void* handle) {
 	struct WaitData* ptr = (struct WaitData*)handle;
-	int res;
 
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
-		res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
-		if (res) Logger_Abort2(res, "Waitable wait");
+		condvarWait(&ptr->cond, &ptr->mutex);
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
@@ -347,25 +331,12 @@ void Waitable_Wait(void* handle) {
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	struct WaitData* ptr = (struct WaitData*)handle;
-	struct timeval tv;
-	struct timespec ts;
-	int res;
-	gettimeofday(&tv, NULL);
 
-	/* absolute time for some silly reason */
-	ts.tv_sec  = tv.tv_sec + milliseconds / 1000;
-	ts.tv_nsec = 1000 * (tv.tv_usec + 1000 * (milliseconds % 1000));
-
-	/* statement above might exceed max nsec, so adjust for that */
-	while (ts.tv_nsec >= 1e9) {
-		ts.tv_sec++;
-		ts.tv_nsec -= 1e9;
-	}
+	cc_uint64 timeout_ns = milliseconds * (1000 * 1000); // to nanoseconds
 
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
-		res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
-		if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+		condvarWaitTimeout(&ptr->cond, &ptr->mutex, timeout_ns);
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
