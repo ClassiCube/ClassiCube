@@ -1044,15 +1044,16 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 			continue;
 
 		buf->data_pcm16 = chunk;
-		buf->size       = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
+		buf->size       = dataSize;
 		buf->start_sample_offset = 0;
 		buf->end_sample_offset = dataSize/2;
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
 		armDCacheFlush(buf->data_pcm16, dataSize);
-		audrvVoiceInit(&drv, ctx->chanID, 1, PcmFormat_Int16, ctx->sampleRate);
+		audrvVoiceStop(&drv, ctx->chanID);
+		audrvVoiceInit(&drv, ctx->chanID, ctx->channels, PcmFormat_Int16, ctx->sampleRate);
 		audrvVoiceSetDestinationMix(&drv, ctx->chanID, AUDREN_FINAL_MIX_ID);
-		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
-		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+		//audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		//audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
 		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
 		return 0;
 	}
@@ -1159,31 +1160,33 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 	}*/
 	size = (size + 0xFFF) & ~0xFFF;  // round up to nearest multiple of 0x1000
 	cc_uint8* dst = (cc_uint8*)memalign(0x1000, size * numChunks);
-	armDCacheFlush(dst, size * numChunks);
+	//armDCacheFlush(dst, size * numChunks);
 
 	for (int i = 0; i < numChunks; i++) {
 		int mpid = audrvMemPoolAdd(&drv, dst + size * i, size);
 		audrvMemPoolAttach(&drv, mpid);
 
+		chunks[i] = dst ? (dst + size * i) : NULL;
+
 		for (int j = 0; j < 64; j++) {
 			if (audioPools[j].chunk != NULL) continue;
-			audioPools[j].chunk = chunks[0];
+			audioPools[j].chunk = chunks[i];
 			audioPools[j].mpid = mpid;
 			break;
 		}
-
-		chunks[i] = dst ? (dst + size * i) : NULL;
 	}
 }
 
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	// remove memory pool from audren
-	for (int i=0; i<64; i++) {
-		if (audioPools[i].chunk == chunks[0]) {
-			audrvMemPoolDetach(&drv, audioPools[i].mpid);
-			audrvMemPoolRemove(&drv, audioPools[i].mpid);
-			Mem_Set(&audioPools[i], 0, sizeof(struct AudioMemPools));
-			break;
+	for (int i=0; i<numChunks; i++) {
+		for (int j=0; j<64; j++) {
+			if (audioPools[j].chunk == chunks[i]) {
+				audrvMemPoolDetach(&drv, audioPools[j].mpid);
+				audrvMemPoolRemove(&drv, audioPools[j].mpid);
+				Mem_Set(&audioPools[j], 0, sizeof(struct AudioMemPools));
+				break;
+			}
 		}
 	}
 
