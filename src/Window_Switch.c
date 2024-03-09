@@ -22,6 +22,8 @@
 static EGLDisplay s_display;
 static EGLContext s_context;
 static EGLSurface s_surface;
+extern AudioDriver drv; // temporary
+extern bool switchAudio; // temporary
 
 static cc_bool launcherMode;
 static Framebuffer fb;
@@ -135,6 +137,9 @@ static void ProcessTouchInput(void) {
 void Window_ProcessEvents(double delta) {
 	// Scan the gamepad. This should be done once for each frame
 	padUpdate(&pad);
+
+	if (switchAudio)
+		audrvUpdate(&drv);
 
 	if (!appletMainLoop()) {
 		Window_Main.Exists = false;
