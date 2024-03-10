@@ -26,7 +26,6 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <netdb.h>
-#include <pthread.h>
 #include "_PlatformConsole.h"
 
 
@@ -246,7 +245,7 @@ static void ExecSwitchThread(void* param) {
 
 void* Thread_Create(Thread_StartFunc func) {
 	Thread* thread = (Thread*)Mem_Alloc(1, sizeof(Thread), "thread");
-	threadCreate(thread, ExecSwitchThread, (void*)func, NULL, 0x20000, 0x2C, -2);
+	threadCreate(thread, ExecSwitchThread, (void*)func, NULL, 0x100000, 0x2C, -2);
 	return thread;
 }
 
