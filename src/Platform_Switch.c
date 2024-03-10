@@ -281,11 +281,11 @@ void Mutex_Unlock(void* handle) {
 	mutexUnlock((Mutex*)handle);
 }
 
-/*
+
 struct WaitData {
 	CondVar cond;
 	Mutex mutex;
-	int signalled; /& For when Waitable_Signal is called before Waitable_Wait
+	int signalled; // For when Waitable_Signal is called before Waitable_Wait
 };
 
 void* Waitable_Create(void) {
@@ -336,7 +336,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
 }
-*/
+/*
 
 void* Waitable_Create(void) {
 	LEvent* ptr = (LEvent*)Mem_Alloc(1, sizeof(LEvent), "waitable");
@@ -362,7 +362,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	cc_uint64 timeout_ns = milliseconds * (1000 * 1000); // to nanoseconds
 	leventWait((LEvent*)handle, timeout_ns);
 }
-
+*/
 
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
