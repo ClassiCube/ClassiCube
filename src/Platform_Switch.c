@@ -510,6 +510,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 static void CreateRootDirectory(void) {
+	mkdir("sdmc:/switch", 0);
 	int res = mkdir(root_path.buffer, 0);
 	int err = res == -1 ? errno : 0;
 	Platform_Log1("Created root directory: %i", &err);
