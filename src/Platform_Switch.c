@@ -254,11 +254,7 @@ void Thread_Start2(void* handle, Thread_StartFunc func) {
 	threadStart((Thread*)handle);
 }
 
-void Thread_Detach(void* handle) {
-	Thread* thread = (Thread*)handle;
-	threadClose(thread);
-	Mem_Free(thread);
-}
+void Thread_Detach(void* handle) { }
 
 void Thread_Join(void* handle) {
 	Thread* thread = (Thread*)handle;
@@ -285,10 +281,11 @@ void Mutex_Unlock(void* handle) {
 	mutexUnlock((Mutex*)handle);
 }
 
+/*
 struct WaitData {
 	CondVar cond;
 	Mutex mutex;
-	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
+	int signalled; /& For when Waitable_Signal is called before Waitable_Wait
 };
 
 void* Waitable_Create(void) {
@@ -338,6 +335,32 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	}
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
+}
+*/
+
+void* Waitable_Create(void) {
+	LEvent* ptr = (LEvent*)Mem_Alloc(1, sizeof(LEvent), "waitable");
+	leventInit(ptr, false, true);
+	return ptr;
+}
+
+void Waitable_Free(void* handle) {
+	LEvent* ptr = (LEvent*)handle;
+	leventClear(ptr);
+	Mem_Free(ptr);
+}
+
+void Waitable_Signal(void* handle) {
+	//leventSignal((LEvent*)handle);
+}
+
+void Waitable_Wait(void* handle) {
+	leventWait((LEvent*)handle, UINT64_MAX);
+}
+
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
+	cc_uint64 timeout_ns = milliseconds * (1000 * 1000); // to nanoseconds
+	leventWait((LEvent*)handle, timeout_ns);
 }
 
 
