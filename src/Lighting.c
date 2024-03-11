@@ -640,73 +640,73 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 
 	while (lightQueue.count > 0) {
 		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
-		cc_uint8 curLight = GetBlocklight(curNode.X, curNode.Y, curNode.Z, false);
+		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, false);
 		if (curLight <= 0) {
 			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
 			return;
 		}
 
-		BlockID thisBlock = World_GetBlock(curNode.X, curNode.Y, curNode.Z);
+		BlockID thisBlock = World_GetBlock(curNode.x, curNode.y, curNode.z);
 		curLight--; // 1 light level less in each neighbour
 		if (curLight == 0) continue;
 
 
-		curNode.X--;
-		if (curNode.X > 0 &&
+		curNode.x--;
+		if (curNode.x > 0 &&
 			CanLightPass(thisBlock, FACE_XMAX) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, false) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMIN) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, false);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.X += 2;
-		if (curNode.X < World.MaxX &&
+		curNode.x += 2;
+		if (curNode.x < World.MaxX &&
 			CanLightPass(thisBlock, FACE_XMIN) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, false) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMAX) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, false);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.X--;
+		curNode.x--;
 
-		curNode.Y--;
-		if (curNode.Y > 0 &&
+		curNode.y--;
+		if (curNode.y > 0 &&
 			CanLightPass(thisBlock, FACE_YMAX) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, false) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMIN) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, false);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.Y += 2;
-		if (curNode.Y < World.MaxY &&
+		curNode.y += 2;
+		if (curNode.y < World.MaxY &&
 			CanLightPass(thisBlock, FACE_YMIN) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, false) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMAX) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, false);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.Y--;
+		curNode.y--;
 
-		curNode.Z--;
-		if (curNode.Z > 0 &&
+		curNode.z--;
+		if (curNode.z > 0 &&
 			CanLightPass(thisBlock, FACE_ZMAX) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, false) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMIN) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, false);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.Z += 2;
-		if (curNode.Z < World.MaxZ &&
+		curNode.z += 2;
+		if (curNode.z < World.MaxZ &&
 			CanLightPass(thisBlock, FACE_ZMIN) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, false) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMAX) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, false);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 	}
@@ -721,80 +721,80 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 
 	while (lightQueue.count > 0) {
 		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
-		cc_uint8 curLight = GetBlocklight(curNode.X, curNode.Y, curNode.Z, true);
+		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, true);
 		if (curLight <= 0) {
 			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
 			return;
 		}
 
-		BlockID thisBlock = World_GetBlock(curNode.X, curNode.Y, curNode.Z);
+		BlockID thisBlock = World_GetBlock(curNode.x, curNode.y, curNode.z);
 		curLight--; // 1 light level less in each neighbour
 		if (curLight == MODERN_LIGHTING_LEVELS - SUN_LEVELS) continue;
 
 
-		curNode.X--;
-		if (curNode.X > 0 &&
-			curNode.Y <= Heightmap_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+		curNode.x--;
+		if (curNode.x > 0 &&
+			curNode.y <= Heightmap_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
 			CanLightPass(thisBlock, FACE_XMAX) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, true) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMIN) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, true);
-			IVec3 entry = { curNode.X, curNode.Y, curNode.Z };
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
+			IVec3 entry = { curNode.x, curNode.y, curNode.z };
 			LightQueue_Enqueue(&lightQueue, entry);
 		}
-		curNode.X += 2;
-		if (curNode.X < World.MaxX &&
-			curNode.Y <= Heightmap_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+		curNode.x += 2;
+		if (curNode.x < World.MaxX &&
+			curNode.y <= Heightmap_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
 			CanLightPass(thisBlock, FACE_XMIN) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_XMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, true) < curLight)
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMAX) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight)
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, true);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.X--;
+		curNode.x--;
 
-		curNode.Y--;
-		if (curNode.Y > 0 &&
-			curNode.Y <= Heightmap_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+		curNode.y--;
+		if (curNode.y > 0 &&
+			curNode.y <= Heightmap_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
 			CanLightPass(thisBlock, FACE_YMAX) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, true) < curLight)
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMIN) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight)
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, true);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.Y += 2;
-		if (curNode.Y < World.MaxY &&
-			curNode.Y <= Heightmap_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+		curNode.y += 2;
+		if (curNode.y < World.MaxY &&
+			curNode.y <= Heightmap_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
 			CanLightPass(thisBlock, FACE_YMIN) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_YMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, true) < curLight)
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMAX) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight)
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, true);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.Y--;
+		curNode.y--;
 
-		curNode.Z--;
-		if (curNode.Z > 0 &&
-			curNode.Y <= Heightmap_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+		curNode.z--;
+		if (curNode.z > 0 &&
+			curNode.y <= Heightmap_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
 			CanLightPass(thisBlock, FACE_ZMAX) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMIN) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, true) < curLight)
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMIN) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight)
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, true);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
-		curNode.Z += 2;
-		if (curNode.Z < World.MaxZ &&
-			curNode.Y <= Heightmap_GetLightHeight(curNode.X, curNode.Z) && //don't propagate into full sunlight
+		curNode.z += 2;
+		if (curNode.z < World.MaxZ &&
+			curNode.y <= Heightmap_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
 			CanLightPass(thisBlock, FACE_ZMIN) &&
-			CanLightPass(World_GetBlock(curNode.X, curNode.Y, curNode.Z), FACE_ZMAX) &&
-			GetBlocklight(curNode.X, curNode.Y, curNode.Z, true) < curLight) 
+			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMAX) &&
+			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) 
 		{
-			SetBlocklight(curLight, curNode.X, curNode.Y, curNode.Z, true);
+			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
 			LightQueue_Enqueue(&lightQueue, curNode);
 		}
 	}

@@ -222,7 +222,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct Ve
 	size.x = p->base.size * 0.015625f; size.y = size.x;
 	
 	if (!Blocks.Brightness[p->block]) {
-		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
+		x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
 		col = Lighting.Color_XSide(x, y, z);
 	}
 
