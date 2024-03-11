@@ -924,12 +924,13 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 *-----------------------------------------------------Switch backend------------------------------------------------------*
 *#########################################################################################################################*/
 #include <switch.h>
+#include <stdio.h>
+#include <stdlib.h>
 struct AudioContext {
 	int chanID, used;
 	AudioDriverWaveBuf bufs[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate;
 	void* _tmpData; int _tmpSize;
-	cc_bool stereo;
 };
 struct AudioMemPools {
 	void* chunk;
@@ -940,6 +941,62 @@ static int channelIDs;
 static struct AudioMemPools audioPools[64];
 AudioDriver drv;
 bool switchAudio = false;
+
+
+// implementations of malloc_aligned and free_aligned
+// https://stackoverflow.com/questions/6563120/what-does-posix-memalign-memalign-do
+static void *malloc_aligned(size_t alignment, size_t bytes)
+{
+    // we need to allocate enough storage for the requested bytes, some 
+    // book-keeping (to store the location returned by malloc) and some extra
+    // padding to allow us to find an aligned byte.  im not entirely sure if 
+    // 2 * alignment is enough here, its just a guess.
+    const size_t total_size = bytes + (2 * alignment) + sizeof(size_t);
+
+    char *data = malloc(sizeof(char) * total_size);
+
+    if (data)
+    {
+        // store the original start of the malloc'd data.
+        const void * const data_start = data;
+
+        // dedicate enough space to the book-keeping.
+        data += sizeof(size_t);
+
+        // find a memory location with correct alignment.  the alignment minus 
+        // the remainder of this mod operation is how many bytes forward we need 
+        // to move to find an aligned byte.
+        const size_t offset = alignment - (((size_t)data) % alignment);
+
+        // set data to the aligned memory.
+        data += offset;
+
+        // write the book-keeping.
+        size_t *book_keeping = (size_t*)(data - sizeof(size_t));
+        *book_keeping = (size_t)data_start;
+    }
+
+    return data;
+}
+
+static void free_aligned(void *raw_data)
+{
+    if (raw_data)
+    {
+        char *data = raw_data;
+
+        // we have to assume this memory was allocated with malloc_aligned.  
+        // this means the sizeof(size_t) bytes before data are the book-keeping 
+        // which points to the location we need to pass to free.
+        data -= sizeof(size_t);
+
+        // set data to the location stored in book-keeping.
+        data = (char*)(*((size_t*)data));
+
+        // free the memory.
+        free(data);
+    }
+}
 
 static cc_bool AudioBackend_Init(void) {
 	if (switchAudio) return true;
@@ -956,22 +1013,16 @@ static cc_bool AudioBackend_Init(void) {
         .num_mix_objs    = 1,
         .num_mix_buffers = 2,
     };
-	Result res;
 
-	res = audrenInitialize(&arConfig);
-	//Platform_Log1("audrenInitialize: %" PRIx32 "\n", &res);
-
-	res = audrvCreate(&drv, &arConfig, 2);
-	//Platform_Log1("audrvCreate: %" PRIx32 "\n", &res);
+	audrenInitialize(&arConfig);
+	audrvCreate(&drv, &arConfig, 2);
 
 	static const u8 sink_channels[] = { 0, 1 };
 	/*int sink =*/ audrvDeviceSinkAdd(&drv, AUDREN_DEFAULT_DEVICE_NAME, 2, sink_channels);
 
-	res = audrvUpdate(&drv);
-	//Platform_Log1("audrvUpdate: %" PRIx32 "\n", &res);
+	audrvUpdate(&drv);
 
-	res = audrenStartAudioRenderer();
-	//Platform_Log1("audrenStartAudioRenderer: %" PRIx32 "\n", &res);
+	Result res = audrenStartAudioRenderer();
 	
 	return R_SUCCEEDED(res); 
 }
@@ -1005,7 +1056,6 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->used) {
 		audrvVoiceStop(&drv, ctx->chanID);
-		ctx->channels &= ~(1 << ctx->chanID);
 		channelIDs &= ~(1 << ctx->chanID);
 	}
 	
@@ -1014,14 +1064,15 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	/*
-	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
-	
-	ndspChnSetFormat(ctx->chanID, fmt);
-	ndspChnSetRate(ctx->chanID, sampleRate);*/
-	ctx->stereo = (channels == 2);
 	ctx->channels = channels;
 	ctx->sampleRate = sampleRate;
+
+	audrvVoiceStop(&drv, ctx->chanID);
+	audrvVoiceInit(&drv, ctx->chanID, ctx->channels, PcmFormat_Int16, ctx->sampleRate);
+	audrvVoiceSetDestinationMix(&drv, ctx->chanID, AUDREN_FINAL_MIX_ID);
+	audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+	audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+
 	return 0;
 }
 
@@ -1048,40 +1099,14 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		buf->start_sample_offset = 0;
 		buf->end_sample_offset = dataSize/2;
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
-		armDCacheFlush(buf->data_pcm16, dataSize);
-		audrvVoiceStop(&drv, ctx->chanID);
-		audrvVoiceInit(&drv, ctx->chanID, ctx->channels, PcmFormat_Int16, ctx->sampleRate);
-		audrvVoiceSetDestinationMix(&drv, ctx->chanID, AUDREN_FINAL_MIX_ID);
-		//audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
-		//audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+
+		audrvVoiceSetPaused(&drv, ctx->chanID, true);
 		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
+		audrvVoiceSetPaused(&drv, ctx->chanID, false);
+
 		return 0;
 	}
 
-	/*ndspWaveBuf* buf;
-
-	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
-	if (((uintptr_t)chunk & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
-	}
-	if ((dataSize & 0x7F) != 0) {
-		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
-	}
-
-	for (int i = 0; i < ctx->count; i++) 
-	{
-		buf = &ctx->bufs[i];
-		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
-		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
-			continue;
-
-		buf->data_pcm16 = chunk;
-		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
-		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
-		DSP_FlushDataCache(buf->data_pcm16, dataSize);
-		ndspChnWaveBufAdd(ctx->chanID, buf);
-		return 0;
-	}*/
 	// tried to queue data without polling for free buffers first
 	return ERR_INVALID_ARGUMENT;
 }
@@ -1092,20 +1117,6 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	/*ndspWaveBuf* buf;
-	int count = 0;
-
-	for (int i = 0; i < ctx->count; i++) 
-	{
-		buf = &ctx->bufs[i];
-		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
-		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING) { 
-			count++; continue; 
-		}
-	}
-
-	*inUse = count; */
-
 	AudioDriverWaveBuf* buf;
 	int count = 0;
 
@@ -1128,17 +1139,6 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 }
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	/*float mix[12] = { 0 };
- 	mix[0] = data->volume / 100.0f;
- 	mix[1] = data->volume / 100.0f;
- 	
- 	ndspChnSetMix(ctx->chanID, mix);
-	data->sampleRate = Audio_AdjustSampleRate(data);
-	cc_result res;
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;*/
-
 	data->sampleRate = Audio_AdjustSampleRate(data);
 	cc_result res;
 
@@ -1153,20 +1153,15 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 }
 
 void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
-	/*size = (size + 0x7F) & ~0x7F;  // round up to nearest multiple of 0x80
-	cc_uint8* dst = linearAlloc(size * numChunks);
-	for (int i = 0; i < numChunks; i++) {
-		chunks[i] = dst ? (dst + size * i) : NULL;
-	}*/
 	size = (size + 0xFFF) & ~0xFFF;  // round up to nearest multiple of 0x1000
-	cc_uint8* dst = (cc_uint8*)memalign(0x1000, size * numChunks);
-	//armDCacheFlush(dst, size * numChunks);
+	void* dst = malloc_aligned(0x1000, size * numChunks);
+	armDCacheFlush(dst, size * numChunks);
 
 	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst + size * i;
+
 		int mpid = audrvMemPoolAdd(&drv, dst + size * i, size);
 		audrvMemPoolAttach(&drv, mpid);
-
-		chunks[i] = dst ? (dst + size * i) : NULL;
 
 		for (int j = 0; j < 64; j++) {
 			if (audioPools[j].chunk != NULL) continue;
@@ -1190,7 +1185,7 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 		}
 	}
 
-	Mem_Free(chunks[0]);
+	free_aligned(chunks[0]);
 }
 #elif defined CC_BUILD_DREAMCAST
 /*########################################################################################################################*
