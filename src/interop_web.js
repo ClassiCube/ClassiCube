@@ -26,7 +26,7 @@ mergeInto(LibraryManager.library, {
     // this by default as no syscalls are used by the C platform code anymore
     window.ERRNO_CODES={ENOENT:2,EBADF:9,EAGAIN:11,ENOMEM:12,EEXIST:17,EINVAL:22};
   },
-  interop_InitModule__deps: ['interop_SaveBlob'],
+  interop_InitModule__deps: ['interop_SaveBlob', 'interop_callVoidFunc', 'interop_callStringFunc'],
   interop_TakeScreenshot: function(path) {
     var name   = UTF8ToString(path);
     var canvas = Module['canvas'];
@@ -35,6 +35,22 @@ mergeInto(LibraryManager.library, {
     } else if (canvas.msToBlob) {
       _interop_SaveBlob(canvas.msToBlob(), name);
     }
+  },
+  interop_callVoidFunc: function(func) {
+    Module['_' + func]();
+  },
+  interop_callStringFunc: function(func, str) {
+    var arg = 0;
+    var stackTop = stackSave();
+
+    if (str !== null && str !== undefined) {
+      var len = (str.length * 4) + 1; // worst case, 4 bytes to encode a char
+      arg = stackAlloc(len);
+      stringToUTF8(str, arg, len);
+    }
+
+    Module['_' + func](arg);
+    stackRestore(stackTop);
   },
   
   
@@ -99,7 +115,7 @@ mergeInto(LibraryManager.library, {
       
       var name = UTF8ToString(filename);
       var path = 'Downloads/' + name;
-      ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+      _interop_callStringFunc('Window_OnFileUploaded', path);
       
       var data = CCFS.readFile(path);
       var blob = new Blob([data], { type: 'application/octet-stream' });
@@ -142,15 +158,15 @@ mergeInto(LibraryManager.library, {
         return fileHandle.createWritable();
       })
       .then(function(writable) {
-        ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+        _interop_callStringFunc('Window_OnFileUploaded', path);
       
         var data = CCFS.readFile(path);
         writable.write(data);
         return writable.close();
       })
       .catch(function(error) {
-        ccall('Platform_LogError', 'void', ['string'], ['&cError downloading file']);
-        ccall('Platform_LogError', 'void', ['string'], ['   &c' + error]);
+        _interop_callStringFunc('Platform_LogError', '&cError downloading file');
+        _interop_callStringFunc('Platform_LogError', '   &c' + error);
       })
       .finally(function(result) {
         if (path) CCFS.unlink(path);
@@ -178,18 +194,18 @@ mergeInto(LibraryManager.library, {
     xhr.send();
   },
   interop_AsyncDownloadTexturePack__deps: ['fetchTexturePackAsync'],
-  interop_AsyncDownloadTexturePack: function (rawPath, rawUrl) {
+  interop_AsyncDownloadTexturePack: function (rawPath) {
     var path = UTF8ToString(rawPath);
-    var url  = UTF8ToString(rawUrl);
+    var url  = '/static/default.zip';
     Module.setStatus('Downloading textures.. (1/2)');
     
     _fetchTexturePackAsync(url, 
       function(buffer) {
         CCFS.writeFile(path, new Uint8Array(buffer));
-        ccall('main_phase1', 'void');
+        _interop_callVoidFunc('main_phase1');
       },
       function() {
-        ccall('main_phase1', 'void');
+        _interop_callVoidFunc('main_phase1');
       }
     );
   },
@@ -200,7 +216,7 @@ mergeInto(LibraryManager.library, {
     _IDBFS_loadFS(function(err) { 
       if (err) window.cc_idbErr = err;
       Module.setStatus('');
-      ccall('main_phase2', 'void');
+      _interop_callVoidFunc('main_phase2');
     });
   },
 
@@ -246,7 +262,7 @@ mergeInto(LibraryManager.library, {
         if (path.indexOf(CCFS.currentPath) === 0) {
           path = path.substring(CCFS.currentPath.length + 1);
         }
-        ccall('Directory_IterCallback', 'void', ['string'], [path]);
+        _interop_callStringFunc('Directory_IterCallback', path);
       }
       return 0;
     } catch (e) {
@@ -328,7 +344,7 @@ mergeInto(LibraryManager.library, {
   interop_InitFilesystem: function(buffer) {
     if (!window.cc_idbErr) return;
     var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
-    ccall('Platform_LogError', 'void', ['string'], [msg]);
+    _interop_callStringFunc('Platform_LogError', msg);
   },
   interop_LoadIndexedDB: function() {
     // previously you were required to add interop_LoadIndexedDB to Module.preRun array
@@ -342,8 +358,8 @@ mergeInto(LibraryManager.library, {
     var callback = function(err) { 
       if (!err) return;
       console.log(err);
-      ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
-      ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+      _interop_callStringFunc('Platform_LogError', '&cError saving ' + path);
+      _interop_callStringFunc('Platform_LogError', '   &c' + err);
     }; 
     
     var stat, node, entry;
@@ -743,7 +759,7 @@ mergeInto(LibraryManager.library, {
     window.addEventListener('copy', 
     function(e) {
       if (window.getSelection && window.getSelection().toString()) return;
-      ccall('Window_RequestClipboardText', 'void');
+      _interop_callVoidFunc('Window_RequestClipboardText');
       if (!window.cc_copyText) return;
 
       if (e.clipboardData) {
@@ -758,7 +774,7 @@ mergeInto(LibraryManager.library, {
     function(e) {
       if (e.clipboardData) {
         var contents = e.clipboardData.getData('text/plain');
-        ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+        _interop_callStringFunc('Window_GotClipboardText', contents);
       }
     });
   },
@@ -766,7 +782,7 @@ mergeInto(LibraryManager.library, {
     // For IE11, use window.clipboardData to get the clipboard
     if (window.clipboardData) {
       var contents = window.clipboardData.getData('Text');
-      ccall('Window_StoreClipboardText', 'void', ['string'], [contents]);
+      _interop_callStringFunc('Window_StoreClipboardText', contents);
     } 
   },
   interop_TrySetClipboardText: function(text) {
@@ -848,7 +864,7 @@ mergeInto(LibraryManager.library, {
 
       elem.addEventListener('input', 
         function(ev) {
-          ccall('Window_OnTextChanged', 'void', ['string'], [ev.target.value]);
+          _interop_callStringFunc('Window_OnTextChanged', ev.target.value);
         }, false);
       window.cc_inputElem = elem;
 
@@ -900,7 +916,7 @@ mergeInto(LibraryManager.library, {
               var data = new Uint8Array(e.target.result);
               var path = root + '/' + name;
               CCFS.writeFile(path, data);
-              ccall('Window_OnFileUploaded', 'void', ['string'], [path]);
+              _interop_callStringFunc('Window_OnFileUploaded', path);
               
               if (action == 0) CCFS.unlink(path); // OFD_UPLOAD_DELETE
               if (action == 1) _interop_SaveNode(path); // OFD_UPLOAD_PERSIST

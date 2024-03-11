@@ -30,18 +30,18 @@
 #include <sys/thread.h>
 #include <sys/systime.h>
 #include <sys/tty.h>
+#include <sys/process.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = 0x80010006; // ENOENT;
-//const cc_result ReturnCode_SocketInProgess  = 0x80010032; // EINPROGRESS
-//const cc_result ReturnCode_SocketWouldBlock = 0x80010001; // EWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
-
 const cc_result ReturnCode_SocketInProgess  = NET_EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = NET_EWOULDBLOCK;
+const cc_result ReturnCode_DirectoryExists  = 0x80010014; // EEXIST
+
 const char* Platform_AppNameSuffix = " PS3";
 
+SYS_PROCESS_PARAM(1001, 256 * 1024); // 256kb stack size
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
@@ -339,91 +339,96 @@ union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in v4;
 };
-
-static int ParseHost(union SocketAddress* addr, const char* host) {
+static cc_result ParseHost(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct net_hostent* res = netGetHostByName(host);
+	struct sockaddr_in* addr4;
 	if (!res) return net_h_errno;
 	
 	// Must have at least one IPv4 address
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
-	if (!res->h_addr_list)       return ERR_INVALID_ARGUMENT;
-
-	// TODO probably wrong....
-	addr->v4.sin_addr = *(struct in_addr*)&res->h_addr_list;
-	return 0;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
+	
+	// each address pointer is only 4 bytes long
+	u32* addr_list = (u32*)res->h_addr_list;
+	char* src_addr;
+	int i;
+	
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = (char*)addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(struct sockaddr_in);
+		addr4 = (struct sockaddr_in*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		addr4->sin_addr   = *(struct in_addr*)src_addr;
+	}
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, address);
+	*numValidAddrs = 0;
 
-	if (inet_aton(str, &addr->v4.sin_addr) > 0) return 0;
-	return ParseHost(addr, str);
+	if (inet_aton(str, &addr4->sin_addr) > 0) {
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		
+		addrs[0].size  = sizeof(*addr4);
+		*numValidAddrs = 1;
+		return 0;
+	}
+	
+	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address) == 0;
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	int res;
 
-	*s  = -1;
-	res = ParseAddress(&addr, address);
-	if (res) return res;
-
-	res = sysNetSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (res < 0) return res;
+	res = netSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
+	if (res < 0) return net_errno;
 	*s  = res;
 
-	// TODO: RPCS3 makes sockets non blocking by default anyways ?
-	/*if (nonblocking) {
-		int blocking_raw = -1;
-		ioctl(*s, FIONBIO, &blocking_raw);
-	}*/
+	if (nonblocking) {
+		int on = 1;
+		netSetSockOpt(*s, SOL_SOCKET, SO_NBIO, &on, sizeof(int));
+	}
 
-	addr.v4.sin_family = AF_INET;
-	addr.v4.sin_port   = htons(port);
-
-	return sysNetConnect(*s, &addr.raw, sizeof(addr.v4));
+	res = netConnect(*s, raw, addr->size);
+	return res < 0 ? net_errno : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int res = sysNetRecvfrom(s, data, count, 0, NULL, NULL);
-	if (res < 0) return res;
+	int res = netRecv(s, data, count, 0);
+	if (res < 0) return net_errno;
 	
 	*modified = res; return 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int res = sysNetSendto(s, data, count, 0, NULL, 0);
-	if (res < 0) return res;
+	int res = netSend(s, data, count, 0);
+	if (res < 0) return net_errno;
 	
 	*modified = res; return 0;
 }
 
 void Socket_Close(cc_socket s) {
-	sysNetShutdown(s, SHUT_RDWR);
-	sysNetClose(s);
-}
-
-LV2_SYSCALL CC_sysNetPoll(struct pollfd* fds, s32 nfds, s32 ms)
-{
-	lv2syscall3(715, (u64)fds, nfds, ms);
-	return_to_user_prog(s32);
+	netShutdown(s, SHUT_RDWR);
+	netClose(s);
 }
 
 static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
-	int flags, res;
+	int flags;
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	
-	res = CC_sysNetPoll(&pfd, 1, 0);
-	if (res) return res;
+	if (netPoll(&pfd, 1, 0) < 0) return net_errno;
 	
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
@@ -440,7 +445,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	cc_result res = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
 	if (res || *writable) return res;
 
-	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	// https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation
 	netGetSockOpt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
 	return res;
 }

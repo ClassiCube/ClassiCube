@@ -394,6 +394,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = 1;
 }
 
+void Window_Free(void) { }
+
 static void DoCreateWindow(int width, int height) {
 	// https://www.haiku-os.org/docs/api/classBRect.html#details
 	// right/bottom coordinates are inclusive of the coordinates,
@@ -402,12 +404,12 @@ static void DoCreateWindow(int width, int height) {
 	BRect frame(x, y, x + width - 1, y + height - 1);
 	win_handle = new CC_BWindow(frame);
 	
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = win_handle;
 	
 	frame = win_handle->Bounds();
-	WindowInfo.Width  = frame.IntegerWidth()  + 1;
-	WindowInfo.Height = frame.IntegerHeight() + 1;
+	Window_Main.Width  = frame.IntegerWidth()  + 1;
+	Window_Main.Height = frame.IntegerHeight() + 1;
 }
 
 void Window_Create2D(int width, int height) {
@@ -512,7 +514,7 @@ void Window_SetSize(int width, int height) {
 	win_handle->Unlock();
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	BMessage* msg = new BMessage(B_QUIT_REQUESTED);
 	app_handle->PostMessage(msg);
 }
@@ -572,19 +574,19 @@ void Window_ProcessEvents(double delta) {
 			Event_RaiseInt(&InputEvents.Press, event.v1.i32);
 			break;
 		case CC_WIN_RESIZED:
-			WindowInfo.Width  = event.v1.i32;
-			WindowInfo.Height = event.v2.i32;
+			Window_Main.Width  = event.v1.i32;
+			Window_Main.Height = event.v2.i32;
 			Event_RaiseVoid(&WindowEvents.Resized);
 			break;
 		case CC_WIN_FOCUS:
-			WindowInfo.Focused = event.v1.i32;
+			Window_Main.Focused = event.v1.i32;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			break;
 		case CC_WIN_REDRAW:
 			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
 		case CC_WIN_QUIT:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			break;
 		}
@@ -703,9 +705,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)win_framebuffer->Bits();
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO rect should maybe subtract -1 too ????
-	BRect rect(r.X, r.Y, r.X + r.Width, r.Y + r.Height);
+	BRect rect(r.x, r.y, r.x + r.Width, r.y + r.Height);
 	win_handle->Lock();
 	view_handle->DrawBitmap(win_framebuffer, rect, rect);
 	win_handle->Unlock();

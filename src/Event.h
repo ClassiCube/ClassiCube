@@ -193,6 +193,10 @@ CC_VAR extern struct _PointerEventsList {
 	struct Event_RawMove RawMoved; /* Raw pointer position changed (Arg is delta) */
 } PointerEvents;
 
+CC_VAR extern struct _ControllerEventsList {
+	struct Event_RawMove RawMoved; /* Raw analog controller movement (Arg is delta) */
+} ControllerEvents;
+
 CC_VAR extern struct _NetEventsList {
 	struct Event_Void Connected;    /* Connection to a server was established */
 	struct Event_Void Disconnected; /* Connection to the server was lost */

@@ -13,13 +13,13 @@
 *----------------------------------------------------------AABB-----------------------------------------------------------*
 *#########################################################################################################################*/
 void AABB_Make(struct AABB* result, const Vec3* pos, const Vec3* size) {
-	result->Min.X = pos->X - size->X * 0.5f;
-	result->Min.Y = pos->Y;
-	result->Min.Z = pos->Z - size->Z * 0.5f;
+	result->Min.x = pos->x - size->x * 0.5f;
+	result->Min.y = pos->y;
+	result->Min.z = pos->z - size->z * 0.5f;
 
-	result->Max.X = pos->X + size->X * 0.5f;
-	result->Max.Y = pos->Y + size->Y;
-	result->Max.Z = pos->Z + size->Z * 0.5f;
+	result->Max.x = pos->x + size->x * 0.5f;
+	result->Max.y = pos->y + size->y;
+	result->Max.z = pos->z + size->z * 0.5f;
 }
 
 void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vec3* amount) {
@@ -29,21 +29,21 @@ void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vec3* amount)
 
 cc_bool AABB_Intersects(const struct AABB* bb, const struct AABB* other) {
 	return
-		bb->Max.X >= other->Min.X && bb->Min.X <= other->Max.X &&
-		bb->Max.Y >= other->Min.Y && bb->Min.Y <= other->Max.Y &&
-		bb->Max.Z >= other->Min.Z && bb->Min.Z <= other->Max.Z;
+		bb->Max.x >= other->Min.x && bb->Min.x <= other->Max.x &&
+		bb->Max.y >= other->Min.y && bb->Min.y <= other->Max.y &&
+		bb->Max.z >= other->Min.z && bb->Min.z <= other->Max.z;
 }
 
 cc_bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
 	return
-		child->Min.X >= parent->Min.X && child->Min.Y >= parent->Min.Y && child->Min.Z >= parent->Min.Z &&
-		child->Max.X <= parent->Max.X && child->Max.Y <= parent->Max.Y && child->Max.Z <= parent->Max.Z;
+		child->Min.x >= parent->Min.x && child->Min.y >= parent->Min.y && child->Min.z >= parent->Min.z &&
+		child->Max.x <= parent->Max.x && child->Max.y <= parent->Max.y && child->Max.z <= parent->Max.z;
 }
 
 cc_bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P) {
 	return
-		P->X >= parent->Min.X && P->Y >= parent->Min.Y && P->Z >= parent->Min.Z &&
-		P->X <= parent->Max.X && P->Y <= parent->Max.Y && P->Z <= parent->Max.Z;
+		P->x >= parent->Min.x && P->y >= parent->Min.y && P->z >= parent->Min.z &&
+		P->x <= parent->Max.x && P->y <= parent->Max.y && P->z <= parent->Max.z;
 }
 
 
@@ -58,7 +58,7 @@ static Vec3 Intersection_InverseRotate(Vec3 pos, struct Entity* target) {
 }
 
 cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax) {
-	Vec3 delta;
+	Vec3 delta, invDir;
 	struct AABB bb;
 
 	/* This is the rotated AABB of the model we want to test for intersection
@@ -75,43 +75,43 @@ cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entit
 
 	dir = Intersection_InverseRotate(dir, target);
 	Entity_GetPickingBounds(target, &bb);
-	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
+
+	invDir.x = 1.0f / dir.x;
+	invDir.y = 1.0f / dir.y;
+	invDir.z = 1.0f / dir.z;
+	return Intersection_RayIntersectsBox(origin, invDir, bb.Min, bb.Max, tMin, tMax);
 }
 
-cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1) {
+cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 invDir, Vec3 min, Vec3 max, float* t0, float* t1) {
 	float tmin, tmax, tymin, tymax, tzmin, tzmax;
-	float invDirX, invDirY, invDirZ;
 	*t0 = 0; *t1 = 0;
 	
-	invDirX = 1.0f / dir.X;
-	if (invDirX >= 0) {
-		tmin = (min.X - origin.X) * invDirX;
-		tmax = (max.X - origin.X) * invDirX;
+	if (invDir.x >= 0) {
+		tmin = (min.x - origin.x) * invDir.x;
+		tmax = (max.x - origin.x) * invDir.x;
 	} else {
-		tmin = (max.X - origin.X) * invDirX;
-		tmax = (min.X - origin.X) * invDirX;
+		tmin = (max.x - origin.x) * invDir.x;
+		tmax = (min.x - origin.x) * invDir.x;
 	}
 
-	invDirY = 1.0f / dir.Y;
-	if (invDirY >= 0) {
-		tymin = (min.Y - origin.Y) * invDirY;
-		tymax = (max.Y - origin.Y) * invDirY;
+	if (invDir.y >= 0) {
+		tymin = (min.y - origin.y) * invDir.y;
+		tymax = (max.y - origin.y) * invDir.y;
 	} else {
-		tymin = (max.Y - origin.Y) * invDirY;
-		tymax = (min.Y - origin.Y) * invDirY;
+		tymin = (max.y - origin.y) * invDir.y;
+		tymax = (min.y - origin.y) * invDir.y;
 	}
 
 	if (tmin > tymax || tymin > tmax) return false;
 	if (tymin > tmin) tmin = tymin;
 	if (tymax < tmax) tmax = tymax;
 
-	invDirZ = 1.0f / dir.Z;
-	if (invDirZ >= 0) {
-		tzmin = (min.Z - origin.Z) * invDirZ;
-		tzmax = (max.Z - origin.Z) * invDirZ;
+	if (invDir.z >= 0) {
+		tzmin = (min.z - origin.z) * invDir.z;
+		tzmax = (max.z - origin.z) * invDir.z;
 	} else {
-		tzmin = (max.Z - origin.Z) * invDirZ;
-		tzmax = (min.Z - origin.Z) * invDirZ;
+		tzmin = (max.z - origin.z) * invDir.z;
+		tzmax = (min.z - origin.z) * invDir.z;
 	}
 
 	if (tmin > tzmax || tzmin > tmax) return false;
@@ -163,17 +163,17 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 
 	Entity_GetBounds(entity, entityBB);
 	/* Exact maximum extent the entity can reach, and the equivalent map coordinates. */
-	entityExtentBB->Min.X = entityBB->Min.X + (vel.X < 0.0f ? vel.X : 0.0f);
-	entityExtentBB->Min.Y = entityBB->Min.Y + (vel.Y < 0.0f ? vel.Y : 0.0f);
-	entityExtentBB->Min.Z = entityBB->Min.Z + (vel.Z < 0.0f ? vel.Z : 0.0f);
+	entityExtentBB->Min.x = entityBB->Min.x + (vel.x < 0.0f ? vel.x : 0.0f);
+	entityExtentBB->Min.y = entityBB->Min.y + (vel.y < 0.0f ? vel.y : 0.0f);
+	entityExtentBB->Min.z = entityBB->Min.z + (vel.z < 0.0f ? vel.z : 0.0f);
 
-	entityExtentBB->Max.X = entityBB->Max.X + (vel.X > 0.0f ? vel.X : 0.0f);
-	entityExtentBB->Max.Y = entityBB->Max.Y + (vel.Y > 0.0f ? vel.Y : 0.0f);
-	entityExtentBB->Max.Z = entityBB->Max.Z + (vel.Z > 0.0f ? vel.Z : 0.0f);
+	entityExtentBB->Max.x = entityBB->Max.x + (vel.x > 0.0f ? vel.x : 0.0f);
+	entityExtentBB->Max.y = entityBB->Max.y + (vel.y > 0.0f ? vel.y : 0.0f);
+	entityExtentBB->Max.z = entityBB->Max.z + (vel.z > 0.0f ? vel.z : 0.0f);
 
 	IVec3_Floor(&min, &entityExtentBB->Min);
 	IVec3_Floor(&max, &entityExtentBB->Max);
-	elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
+	elements = (max.x - min.x + 1) * (max.y - min.y + 1) * (max.z - min.z + 1);
 
 	if (elements > searcherCapacity) {
 		Searcher_Free();
@@ -183,25 +183,25 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	curState = Searcher_States;
 
 	/* Order loops so that we minimise cache misses */
-	for (y = min.Y; y <= max.Y; y++) {
-		for (z = min.Z; z <= max.Z; z++) {
-			for (x = min.X; x <= max.X; x++) {
+	for (y = min.y; y <= max.y; y++) {
+		for (z = min.z; z <= max.z; z++) {
+			for (x = min.x; x <= max.x; x++) {
 				block = World_GetPhysicsBlock(x, y, z);
 				if (Blocks.Collide[block] != COLLIDE_SOLID) continue;
 
 				xx = (float)x; yy = (float)y; zz = (float)z;
 				blockBB.Min = Blocks.MinBB[block];
-				blockBB.Min.X += xx; blockBB.Min.Y += yy; blockBB.Min.Z += zz;
+				blockBB.Min.x += xx; blockBB.Min.y += yy; blockBB.Min.z += zz;
 				blockBB.Max = Blocks.MaxBB[block];
-				blockBB.Max.X += xx; blockBB.Max.Y += yy; blockBB.Max.Z += zz;
+				blockBB.Max.x += xx; blockBB.Max.y += yy; blockBB.Max.z += zz;
 
 				if (!AABB_Intersects(entityExtentBB, &blockBB)) continue; /* necessary for non whole blocks. (slabs) */
 				Searcher_CalcTime(&vel, entityBB, &blockBB, &tx, &ty, &tz);
 				if (tx > 1.0f || ty > 1.0f || tz > 1.0f) continue;
 
-				curState->X = (x << 3) | (block  & 0x007);
-				curState->Y = (y << 4) | ((block & 0x078) >> 3);
-				curState->Z = (z << 3) | ((block & 0x380) >> 7);
+				curState->x = (x << 3) | (block  & 0x007);
+				curState->y = (y << 4) | ((block & 0x078) >> 3);
+				curState->z = (z << 3) | ((block & 0x380) >> 7);
 				curState->tSquared = tx * tx + ty * ty + tz * tz;
 				curState++;
 			}
@@ -214,17 +214,27 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 }
 
 void Searcher_CalcTime(Vec3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz) {
-	float dx = vel->X > 0.0f ? blockBB->Min.X - entityBB->Max.X : entityBB->Min.X - blockBB->Max.X;
-	float dy = vel->Y > 0.0f ? blockBB->Min.Y - entityBB->Max.Y : entityBB->Min.Y - blockBB->Max.Y;
-	float dz = vel->Z > 0.0f ? blockBB->Min.Z - entityBB->Max.Z : entityBB->Min.Z - blockBB->Max.Z;
+	float dx = vel->x > 0.0f ? blockBB->Min.x - entityBB->Max.x : entityBB->Min.x - blockBB->Max.x;
+	float dy = vel->y > 0.0f ? blockBB->Min.y - entityBB->Max.y : entityBB->Min.y - blockBB->Max.y;
+	float dz = vel->z > 0.0f ? blockBB->Min.z - entityBB->Max.z : entityBB->Min.z - blockBB->Max.z;
 
-	*tx = vel->X == 0.0f ? MATH_POS_INF : Math_AbsF(dx / vel->X);
-	*ty = vel->Y == 0.0f ? MATH_POS_INF : Math_AbsF(dy / vel->Y);
-	*tz = vel->Z == 0.0f ? MATH_POS_INF : Math_AbsF(dz / vel->Z);
+	if (entityBB->Max.x >= blockBB->Min.x && entityBB->Min.x <= blockBB->Max.x) {
+		*tx = 0.0f; /* Inlined XIntersects test */
+	} else {
+		*tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
+	}
 
-	if (entityBB->Max.X >= blockBB->Min.X && entityBB->Min.X <= blockBB->Max.X) *tx = 0.0f; /* Inlined XIntersects */
-	if (entityBB->Max.Y >= blockBB->Min.Y && entityBB->Min.Y <= blockBB->Max.Y) *ty = 0.0f; /* Inlined YIntersects */
-	if (entityBB->Max.Z >= blockBB->Min.Z && entityBB->Min.Z <= blockBB->Max.Z) *tz = 0.0f; /* Inlined ZIntersects */
+	if (entityBB->Max.y >= blockBB->Min.y && entityBB->Min.y <= blockBB->Max.y) {
+		*ty = 0.0f; /* Inlined YIntersects test */
+	} else {
+		*ty = vel->y == 0.0f ? MATH_LARGENUM : Math_AbsF(dy / vel->y);
+	}
+
+	if (entityBB->Max.z >= blockBB->Min.z && entityBB->Min.z <= blockBB->Max.z) {
+		*tz = 0.0f; /* Inlined ZIntersects test */
+	} else {
+		*tz = vel->z == 0.0f ? MATH_LARGENUM : Math_AbsF(dz / vel->z);
+	}
 }
 
 void Searcher_Free(void) {

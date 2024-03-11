@@ -21,9 +21,10 @@ extern const u32 offset_shbin_size;
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
-
-// Current format and size of vertices
-static int gfx_stride, gfx_format = -1;
+	
+static void GPUBuffers_DeleteUnreferenced(void);
+static void GPUTextures_DeleteUnreferenced(void);
+static cc_uint32 frameCounter;
 	
 	
 /*########################################################################################################################*
@@ -36,7 +37,7 @@ static C3D_Mtx _mvp;
 static float texOffsetX, texOffsetY;
 static int texOffset;
 
-static struct CCShader {
+struct CCShader {
 	DVLB_s* dvlb;
 	shaderProgram_s program;
 	int uniforms;     // which associated uniforms need to be resent to GPU
@@ -105,7 +106,8 @@ static void SwitchProgram(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static C3D_RenderTarget* target;
+static C3D_RenderTarget* topTarget;
+static C3D_RenderTarget* bottomTarget;
 
 static void AllocShaders(void) {
 	Shader_Alloc(&shaders[0], coloured_shbin, coloured_shbin_size);
@@ -125,11 +127,19 @@ static void SetDefaultState(void) {
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(true);
 }
+
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
-	target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
+	topTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderTargetSetOutput(topTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+
+	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
+	// can be used for both screens. The output is clipped to the actual screen width, anyway.
+	bottomTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderTargetSetOutput(bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+
+	gfxSetDoubleBuffering(GFX_TOP, true);
 	SetDefaultState();
 	AllocShaders();
 }
@@ -170,6 +180,69 @@ void Gfx_FreeState(void) {
 	FreeDefaultResources(); 
 	Gfx_DeleteTexture(&white_square);
 }
+
+void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
+	C3D_FrameDrawOn(screen == TOP_SCREEN ? topTarget : bottomTarget);
+}
+
+/*########################################################################################################################*
+*--------------------------------------------------------GPU Textures-----------------------------------------------------*
+*#########################################################################################################################*/
+struct GPUTexture;
+struct GPUTexture {
+	cc_uint32* data;
+	C3D_Tex texture;
+	struct GPUTexture* next;
+	cc_uint32 lastFrame;
+};
+static struct GPUTexture* del_textures_head;
+static struct GPUTexture* del_textures_tail;
+struct GPUTexture* GPUTexture_Alloc(void) {
+	struct GPUTexture* tex = Mem_AllocCleared(1, sizeof(struct GPUTexture), "GPU texture");
+	return tex;
+}
+// can't delete textures until not used in any frames
+static void GPUTexture_Unref(GfxResourceID* resource) {
+	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
+	if (!tex) return;
+	*resource = NULL;
+	
+	LinkedList_Append(tex, del_textures_head, del_textures_tail);
+}
+static void GPUTexture_Free(struct GPUTexture* tex) {
+	C3D_TexDelete(&tex->texture);
+	Mem_Free(tex);
+}
+static void GPUTextures_DeleteUnreferenced(void) {
+	if (!del_textures_head) return;
+	
+	struct GPUTexture* tex;
+	struct GPUTexture* next;
+	struct GPUTexture* prev = NULL;
+	
+	for (tex = del_textures_head; tex != NULL; tex = next)
+	{
+		next = tex->next;
+		
+		if (tex->lastFrame + 4 > frameCounter) {
+			// texture was used within last 4 fames
+			prev = tex;
+		} else {
+			// advance the head of the linked list
+			if (del_textures_head == tex) 
+				del_textures_head = next;
+			// update end of linked list if necessary
+			if (del_textures_tail == tex)
+				del_textures_tail = prev;
+			
+			// unlink this texture from the linked list
+			if (prev) prev->next = next;
+			
+			GPUTexture_Free(tex);
+		}
+	}
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -225,46 +298,42 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 			dst[(mortonX | mortonY) + (tileX * 8) + (tileY * tex->width)] = pixel;
 		}
 	}
+	// TODO flush data cache GSPGPU_FlushDataCache
 }
 
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	C3D_Tex* tex = Mem_Alloc(1, sizeof(C3D_Tex), "GPU texture desc");
-	bool success = C3D_TexInit(tex, bmp->width, bmp->height, GPU_RGBA8);
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	struct GPUTexture* tex = GPUTexture_Alloc();
+	bool success = C3D_TexInit(&tex->texture, bmp->width, bmp->height, GPU_RGBA8);
 	//if (!success) Logger_Abort("Failed to create 3DS texture");
 	
-	ToMortonTexture(tex, 0, 0, bmp, bmp->width);
-    	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
-    	C3D_TexSetWrap(tex, GPU_REPEAT, GPU_REPEAT);
+	ToMortonTexture(&tex->texture,  0, 0, bmp, bmp->width);
+    	C3D_TexSetFilter(&tex->texture, GPU_NEAREST, GPU_NEAREST);
+    	C3D_TexSetWrap(&tex->texture,   GPU_REPEAT,  GPU_REPEAT);
     	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	C3D_Tex* tex = (C3D_Tex*)texId;
-	ToMortonTexture(tex, x, y, part, rowWidth);
+ 	struct GPUTexture* tex = (struct GPUTexture*)texId;
+	ToMortonTexture(&tex->texture, x, y, part, rowWidth);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	C3D_Tex* tex = *texId;
-	if (!tex) return;
-	
-	C3D_TexDelete(tex);
-	Mem_Free(tex);
-	*texId = NULL;
+	GPUTexture_Unref(texId);
 }
 
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	C3D_Tex* tex  = (C3D_Tex*)texId;
-	if (!tex) tex = white_square;
+	if (!texId) texId = white_square; 
+ 	struct GPUTexture* tex = (struct GPUTexture*)texId;
 	
-	C3D_TexBind(0, tex);
+	tex->lastFrame = frameCounter;
+	C3D_TexBind(0, &tex->texture);
 }
 
 
@@ -341,7 +410,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "-- Using 3DS --\n", NULL);
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -352,11 +421,12 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) {
 	int flags = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
 	C3D_FrameBegin(flags);
+	C3D_FrameDrawOn(topTarget);
 }
 
 void Gfx_Clear(void) {
-	C3D_RenderTargetClear(target, C3D_CLEAR_ALL, clear_color, 0);
-	C3D_FrameDrawOn(target);
+	C3D_RenderTargetClear(topTarget,    C3D_CLEAR_ALL, clear_color, 0);
+	C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL,           0, 0);
 }
 
 void Gfx_EndFrame(void) {
@@ -367,6 +437,10 @@ void Gfx_EndFrame(void) {
 	//Platform_LogConst("FRAME!");
 	//if (gfx_vsync) gspWaitForVBlank();
 	if (gfx_minFrameMs) LimitFPS();
+		
+	GPUBuffers_DeleteUnreferenced();
+	//GPUTextures_DeleteUnreferenced();
+	frameCounter++;
 }
 
 void Gfx_OnWindowResize(void) { }
@@ -375,76 +449,141 @@ void Gfx_OnWindowResize(void) { }
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint8* gfx_vertices;
+struct GPUBuffer {
+	cc_uint32 lastFrame;
+	struct GPUBuffer* next;
+	int pad1, pad2;
+	cc_uint8 data[]; // aligned to 16 bytes
+};
+static struct GPUBuffer* del_buffers_head;
+static struct GPUBuffer* del_buffers_tail;
+
+static struct GPUBuffer* GPUBuffer_Alloc(int count, int elemSize) {
+	void* ptr = linearAlloc(16 + count * elemSize);
+	return (struct GPUBuffer*)ptr;
+}
+
+// can't delete buffers until not used in any frames
+static void GPUBuffer_Unref(GfxResourceID* resource) {
+	struct GPUBuffer* buf = (struct GPUBuffer*)(*resource);
+	if (!buf) return;
+	*resource = NULL;
+	
+	LinkedList_Append(buf, del_buffers_head, del_buffers_tail);
+}
+
+static void GPUBuffer_Free(struct GPUBuffer* buf) {
+	linearFree(buf);
+}
+
+static void GPUBuffers_DeleteUnreferenced(void) {
+	if (!del_buffers_head) return;
+	
+	struct GPUBuffer* buf;
+	struct GPUBuffer* next;
+	struct GPUBuffer* prev = NULL;
+	
+	for (buf = del_buffers_head; buf != NULL; buf = next)
+	{
+		next = buf->next;
+		
+		if (buf->lastFrame + 4 > frameCounter) {
+			// texture was used within last 4 fames
+			prev = buf;
+		} else {
+			// advance the head of the linked list
+			if (del_buffers_head == buf) 
+				del_buffers_head = next;
+			// update end of linked list if necessary
+			if (del_buffers_tail == buf)
+				del_buffers_tail = prev;
+			
+			// unlink this texture from the linked list
+			if (prev) prev->next = next;
+			
+			GPUBuffer_Free(buf);
+		}
+	}
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Index buffers-----------------------------------------------------*
+*#########################################################################################################################*/
 static cc_uint16* gfx_indices;
 
-static void* AllocBuffer(int count, int elemSize) {
-	void* ptr = linearAlloc(count * elemSize);
-	//cc_uintptr addr = ptr;
-	//Platform_Log3("BUFFER CREATE: %i X %i = %x", &count, &elemSize, &addr);
-	
-	if (!ptr) Logger_Abort("Failed to allocate memory for buffer");
-	return ptr;
-}
-
-static void FreeBuffer(GfxResourceID* buffer) {
-	GfxResourceID ptr = *buffer;
-	if (!ptr) return;
-	linearFree(ptr);
-	*buffer = 0;
-}
-
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	void* ib = AllocBuffer(count, sizeof(cc_uint16));
-	fillFunc(ib, count, obj);
-	return ib;
+	struct GPUBuffer* buffer = GPUBuffer_Alloc(count, sizeof(cc_uint16));
+	if (!buffer) Logger_Abort("Failed to allocate memory for index buffer");
+
+	fillFunc((cc_uint16*)buffer->data, count, obj);
+	return buffer;
 }
 
-void Gfx_BindIb(GfxResourceID ib)    { gfx_indices = ib; }
-
-void Gfx_DeleteIb(GfxResourceID* ib) { FreeBuffer(ib); }
-
-
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return AllocBuffer(count, strideSizes[fmt]);
+void Gfx_BindIb(GfxResourceID ib) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)ib;
+	gfx_indices = (cc_uint16*)buffer->data;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { 
-	gfx_vertices = vb; // https://github.com/devkitPro/citro3d/issues/47
+void Gfx_DeleteIb(GfxResourceID* ib) { GPUBuffer_Unref(ib); }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Vertex buffers----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_uint8* gfx_vertices;
+
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
+	return GPUBuffer_Alloc(count, strideSizes[fmt]);
+}
+
+void Gfx_BindVb(GfxResourceID vb) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	buffer->lastFrame = frameCounter;
+	gfx_vertices = buffer->data;
+	
+	// https://github.com/devkitPro/citro3d/issues/47
 	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
   	BufInfo_Init(bufInfo);
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		BufInfo_Add(bufInfo, vb, SIZEOF_VERTEX_TEXTURED, 3, 0x210);
+		BufInfo_Add(bufInfo, buffer->data, SIZEOF_VERTEX_TEXTURED, 3, 0x210);
 	} else {
-		BufInfo_Add(bufInfo, vb, SIZEOF_VERTEX_COLOURED, 2,  0x10);
+		BufInfo_Add(bufInfo, buffer->data, SIZEOF_VERTEX_COLOURED, 2,  0x10);
 	}
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) { FreeBuffer(vb); }
+void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Unref(vb); }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb;
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	return buffer->data;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
-
-
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices)  {
-	return AllocBuffer(maxVertices, strideSizes[fmt]);
+void Gfx_UnlockVb(GfxResourceID vb) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	gfx_vertices = buffer->data;
 }
+
+
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return GPUBuffer_Alloc(maxVertices, strideSizes[fmt]);
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
-	return vb; 
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	return buffer->data;
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb) { gfx_vertices = vb; }
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
+	gfx_vertices = buffer->data;
 }
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -476,14 +615,14 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	// (it's mostly just a standard orthograph matrix rotated by 90 degrees) 
 	Mem_Set(matrix, 0, sizeof(struct Matrix));
 	
-	matrix->row2.X = -2.0f / height;
-	matrix->row4.X =  1.0f;
-	matrix->row1.Y = -2.0f / width;
-	matrix->row4.Y =  1.0f;
+	matrix->row2.x = -2.0f / height;
+	matrix->row4.x =  1.0f;
+	matrix->row1.y = -2.0f / width;
+	matrix->row4.y =  1.0f;
 	
-	matrix->row3.Z = 1.0f / (zNear - zFar);		
-	matrix->row4.Z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
-	matrix->row4.W = 1.0f;
+	matrix->row3.z = 1.0f / (zNear - zFar);		
+	matrix->row4.z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
+	matrix->row4.w = 1.0f;
 }
 
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
@@ -492,11 +631,11 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float zNear = 0.1f;
 	fov = tanf(fov / 2.0f);	 
 	Mem_Set(matrix, 0, sizeof(struct Matrix));
-	matrix->row2.X =  1.0f / fov;
-	matrix->row1.Y = -1.0f / (fov * aspect);
-	matrix->row4.Z = zFar * zNear  / (zNear - zFar);
-	matrix->row3.W = -1.0f;
-	matrix->row3.Z =  1.0f * zNear / (zNear - zFar);
+	matrix->row2.x =  1.0f / fov;
+	matrix->row1.y = -1.0f / (fov * aspect);
+	matrix->row4.z = zFar * zNear  / (zNear - zFar);
+	matrix->row3.w = -1.0f;
+	matrix->row3.z =  1.0f * zNear / (zNear - zFar);
 }
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
@@ -528,8 +667,8 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	// https://open.gl/transformations
 	if (type == MATRIX_PROJECTION) {
 		struct Matrix rot = Matrix_Identity;
-		rot.row1.X =  0; rot.row1.Y = 1;
-		rot.row2.X = -1; rot.row2.Y = 0;
+		rot.row1.x =  0; rot.row1.y = 1;
+		rot.row2.x = -1; rot.row2.y = 0;
 		//Matrix_RotateZ(&rot, 90 * MATH_DEG2RAD);
 		//Matrix_Mul(&_proj, &_proj, &rot); // TODO avoid Matrix_Mul ??
 		Matrix_Mul(&_proj, matrix, &rot); // TODO avoid Matrix_Mul ?
@@ -638,46 +777,46 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 // TODO: TEMP HACK !!
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured v1, v2, v3, v4;
-	v1.X = (float)x;           v1.Y = (float)y;
-	v2.X = (float)(x + width); v2.Y = (float)y;
-	v3.X = (float)(x + width); v3.Y = (float)(y + height);
-	v4.X = (float)x;           v4.Y = (float)(y + height);
+	v1.x = (float)x;           v1.y = (float)y;
+	v2.x = (float)(x + width); v2.y = (float)y;
+	v3.x = (float)(x + width); v3.y = (float)(y + height);
+	v4.x = (float)x;           v4.y = (float)(y + height);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	C3D_ImmDrawBegin(GPU_TRIANGLES);
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v2.X, v2.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v2.x, v2.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v4.X, v4.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v4.x, v4.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 	C3D_ImmDrawEnd();
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
 	struct VertexColoured v1, v2, v3, v4;
-	v1.X = (float)x;           v1.Y = (float)y;
-	v2.X = (float)(x + width); v2.Y = (float)y;
-	v3.X = (float)(x + width); v3.Y = (float)(y + height);
-	v4.X = (float)x;           v4.Y = (float)(y + height);
+	v1.x = (float)x;           v1.y = (float)y;
+	v2.x = (float)(x + width); v2.y = (float)y;
+	v3.x = (float)(x + width); v3.y = (float)(y + height);
+	v4.x = (float)x;           v4.y = (float)(y + height);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	C3D_ImmDrawBegin(GPU_TRIANGLES);
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
-		C3D_ImmSendAttrib(v2.X, v2.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v2.x, v2.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
-		C3D_ImmSendAttrib(v3.X, v3.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v3.x, v3.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
-		C3D_ImmSendAttrib(v4.X, v4.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v4.x, v4.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(bottom), PackedCol_G(bottom), PackedCol_B(bottom), PackedCol_A(bottom));
-		C3D_ImmSendAttrib(v1.X, v1.Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v1.x, v1.y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(top), PackedCol_G(top), PackedCol_B(top), PackedCol_A(top));
 	C3D_ImmDrawEnd();
 }
@@ -688,22 +827,22 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 	Gfx_Make2DQuad(tex, color, &ptr);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	C3D_ImmDrawBegin(GPU_TRIANGLES);
-		C3D_ImmSendAttrib(v[0].X, v[0].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[0].x, v[0].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[0].U, v[0].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[1].X, v[1].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[1].x, v[1].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[1].U, v[1].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[2].X, v[2].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[2].x, v[2].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[2].U, v[2].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[2].X, v[2].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[2].x, v[2].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[2].U, v[2].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[3].X, v[3].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[3].x, v[3].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[3].U, v[3].V, 0.0f, 0.0f);
-		C3D_ImmSendAttrib(v[0].X, v[0].Y, 0.0f, 1.0f);
+		C3D_ImmSendAttrib(v[0].x, v[0].y, 0.0f, 1.0f);
 		C3D_ImmSendAttrib(PackedCol_R(color), PackedCol_G(color), PackedCol_B(color), PackedCol_A(color));
 		C3D_ImmSendAttrib(v[0].U, v[0].V, 0.0f, 0.0f);
 	C3D_ImmDrawEnd();

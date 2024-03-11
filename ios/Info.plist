@@ -19,7 +19,7 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
-	<true/>
+	<false/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Saving screenshot</string>
 	<key>UILaunchStoryboardName</key>

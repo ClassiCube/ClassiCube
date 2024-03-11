@@ -7,11 +7,13 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "Options.h"
 
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <libdragon.h>
+#include <cop1.h>
 //#include <dragonfs.h>
 //#include <rtc.h>
 //#include <timer.h>
@@ -42,8 +44,8 @@ cc_uint64 Stopwatch_Measure(void) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	write(STDERR_FILENO, msg,  len);
+	write(STDERR_FILENO, "\n",   1);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
@@ -69,12 +71,17 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static const cc_string root_path = String_FromConst("");
+static const cc_string root_path = String_FromConst("/");
 
 static void GetNativePath(char* str, const cc_string* path) {
+	// TODO temp hack
+	cc_string path_ = *path;
+	int idx = String_IndexOf(path, '/');
+	if (idx >= 0) path_ = String_UNSAFE_SubstringAt(&path_, idx + 1);
+	
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;
-	String_EncodeUtf8(str, path);
+	String_EncodeUtf8(str, &path_);
 }
 
 cc_result Directory_Create(const cc_string* path) {
@@ -93,11 +100,12 @@ static cc_result File_Do(cc_file* file, const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 	
-	*file = -1;
-	return ReturnCode_FileNotFound;
+	//*file = -1;
+	//return ReturnCode_FileNotFound;
 	// TODO: Why does trying this code break everything
 	
 	int ret = dfs_open(str);
+	Platform_Log2("Opened %c = %i", str, &ret);
 	if (ret < 0) { *file = -1; return ret; }
 	
 	*file = ret;
@@ -108,10 +116,14 @@ cc_result File_Open(cc_file* file, const cc_string* path) {
 	return File_Do(file, path);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path);
+	*file = -1;
+	return ERR_NOT_SUPPORTED;
+	//return File_Do(file, path);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path);
+	*file = -1;
+	return ERR_NOT_SUPPORTED;
+	//return File_Do(file, path);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -166,7 +178,7 @@ void* Thread_Create(Thread_StartFunc func) {
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {
-	func(); // TODO: actual multithreading ???
+	// TODO: actual multithreading ???
 }
 
 void Thread_Detach(void* handle) {
@@ -208,11 +220,11 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-int Socket_ValidAddress(const cc_string* address) {
-	return false;
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -238,9 +250,25 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+// See src/n64sys.c
+static void DisableFpuExceptions(void) {
+    uint32_t fcr31 = C1_FCR31();
+    
+    fcr31 &= ~(C1_CAUSE_OVERFLOW | C1_CAUSE_UNDERFLOW | C1_CAUSE_NOT_IMPLEMENTED | C1_CAUSE_INEXACT_OP);
+    fcr31 |= C1_ENABLE_DIV_BY_0 | C1_ENABLE_INVALID_OP;
+    fcr31 |= C1_FCR31_FS;
+
+    C1_WRITE_FCR31(fcr31);	
+}
+
 void Platform_Init(void) {
 	debug_init_isviewer();
 	debug_init_usblog();
+	DisableFpuExceptions();
+	
+	Platform_ReadonlyFilesystem = true;
+	// TODO: Redesign Drawer2D to better handle this
+	Options_SetBool(OPT_USE_CHAT_FONT, true);
 	
     //console_init();
     //console_set_render_mode(RENDER_AUTOMATIC);

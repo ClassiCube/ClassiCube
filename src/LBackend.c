@@ -47,8 +47,14 @@ static int flagXOffset, flagYOffset;
 
 static void HookEvents(void);
 void LBackend_Init(void) {
-	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
-	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
+	xBorder = Display_ScaleX(1);
+	yBorder = Display_ScaleY(1);
+
+	if (xBorder < 1) { xBorder = 1; }
+	if (yBorder < 1) { yBorder = 1; }
+
+	xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
+	yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
 
 	xInputOffset = Display_ScaleX(5);
 	yInputOffset = Display_ScaleY(2);
@@ -114,11 +120,11 @@ static void LBackend_LayoutDimensions(struct LWidget* w) {
 		switch (l->type)
 		{
 		case LLAYOUT_WIDTH:
-			w->width  = WindowInfo.Width  - w->x - Display_ScaleX(l->offset);
+			w->width  = Window_Main.Width  - w->x - Display_ScaleX(l->offset);
 			w->width  = max(1, w->width);
 			break;
 		case LLAYOUT_HEIGHT:
-			w->height = WindowInfo.Height - w->y - Display_ScaleY(l->offset);
+			w->height = Window_Main.Height - w->y - Display_ScaleY(l->offset);
 			w->height = max(1, w->height);
 			break;
 		}
@@ -129,8 +135,8 @@ static void LBackend_LayoutDimensions(struct LWidget* w) {
 void LBackend_LayoutWidget(struct LWidget* w) {
 	const struct LLayout* l = w->layouts;
 
-	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  WindowInfo.Width);
-	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, WindowInfo.Height);
+	w->x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), w->width,  Window_Main.Width);
+	w->y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), w->height, Window_Main.Height);
 
 	/* e.g. Table widget needs adjusts width/height based on window */
 	if (l[1].type & LLAYOUT_EXTRA)
@@ -148,8 +154,8 @@ void LBackend_MarkDirty(void* widget) {
 
 /* Marks the entire window as needing to be redrawn. */
 static CC_NOINLINE void MarkAllDirty(void) {
-	dirty_rect.X = 0; dirty_rect.Width  = framebuffer.width;
-	dirty_rect.Y = 0; dirty_rect.Height = framebuffer.height;
+	dirty_rect.x = 0; dirty_rect.Width  = framebuffer.width;
+	dirty_rect.y = 0; dirty_rect.Height = framebuffer.height;
 }
 
 /* Marks the given area/region as needing to be redrawn. */
@@ -159,24 +165,24 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 
 	/* union with existing dirty area */
 	if (dirty_rect.Width) {
-		x1 = min(x, dirty_rect.X);
-		y1 = min(y, dirty_rect.Y);
+		x1 = min(x, dirty_rect.x);
+		y1 = min(y, dirty_rect.y);
 
-		x2 = max(x +  width, dirty_rect.X + dirty_rect.Width);
-		y2 = max(y + height, dirty_rect.Y + dirty_rect.Height);
+		x2 = max(x +  width, dirty_rect.x + dirty_rect.Width);
+		y2 = max(y + height, dirty_rect.y + dirty_rect.Height);
 
 		x = x1; width  = x2 - x1;
 		y = y1; height = y2 - y1;
 	}
 
-	dirty_rect.X = x; dirty_rect.Width  = width;
-	dirty_rect.Y = y; dirty_rect.Height = height;
+	dirty_rect.x = x; dirty_rect.Width  = width;
+	dirty_rect.y = y; dirty_rect.Height = height;
 }
 
 void LBackend_InitFramebuffer(void) {
 	struct Bitmap bmp;
-	bmp.width  = max(WindowInfo.Width,  1);
-	bmp.height = max(WindowInfo.Height, 1);
+	bmp.width  = max(Window_Main.Width,  1);
+	bmp.height = max(Window_Main.Height, 1);
 
 	Window_AllocFramebuffer(&bmp);
 	Context2D_Wrap(&framebuffer, &bmp);
@@ -206,8 +212,8 @@ static void DrawBoxBounds(BitmapCol color, int x, int y, int width, int height) 
 }
 
 static CC_NOINLINE void DrawWidget(struct LWidget* w) {
-	w->last.X = w->x; w->last.Width  = w->width;
-	w->last.Y = w->y; w->last.Height = w->height;
+	w->last.x = w->x; w->last.Width  = w->width;
+	w->last.y = w->y; w->last.Height = w->height;
 
 	w->dirty = false;
 	w->VTABLE->Draw(w);
@@ -237,8 +243,8 @@ static CC_NOINLINE void RedrawDirty(void) {
 		/* check if widget might need redrawing of background behind */
 		if (!w->opaque || w->last.Width > w->width || w->last.Height > w->height) {
 			s->ResetArea(&framebuffer,
-						  w->last.X, w->last.Y, w->last.Width, w->last.Height);
-			MarkAreaDirty(w->last.X, w->last.Y, w->last.Width, w->last.Height);
+						  w->last.x, w->last.y, w->last.Width, w->last.Height);
+			MarkAreaDirty(w->last.x, w->last.y, w->last.Width, w->last.Height);
 		}
 		DrawWidget(w);
 	}
@@ -264,9 +270,9 @@ void LBackend_Tick(void) {
 	DoRedraw();
 	if (!dirty_rect.Width) return;
 
-	Window_DrawFramebuffer(dirty_rect);
-	dirty_rect.X = 0; dirty_rect.Width   = 0;
-	dirty_rect.Y = 0; dirty_rect.Height  = 0;
+	Window_DrawFramebuffer(dirty_rect, &framebuffer.bmp);
+	dirty_rect.x = 0; dirty_rect.Width   = 0;
+	dirty_rect.y = 0; dirty_rect.Height  = 0;
 }
 
 
@@ -530,7 +536,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 *#########################################################################################################################*/
 static TimeMS caretStart;
 static Rect2D caretRect, lastCaretRect;
-#define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
+#define Rect2D_Equals(a, b) a.x == b.x && a.y == b.y && a.Width == b.Width && a.Height == b.Height
 
 void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
@@ -561,15 +567,15 @@ static Rect2D LInput_MeasureCaret(struct LInput* w, cc_string* text) {
 	Rect2D r;
 	DrawTextArgs_Make(&args, text, &textFont, true);
 
-	r.X = w->x + xInputOffset;
-	r.Y = w->y + w->height - caretOffset; r.Height = caretHeight;
+	r.x = w->x + xInputOffset;
+	r.y = w->y + w->height - caretOffset; r.Height = caretHeight;
 
 	if (w->caretPos == -1) {
-		r.X += Drawer2D_TextWidth(&args);
+		r.x += Drawer2D_TextWidth(&args);
 		r.Width = caretWidth;
 	} else {
 		args.text = String_UNSAFE_Substring(text, 0, w->caretPos);
-		r.X += Drawer2D_TextWidth(&args);
+		r.x += Drawer2D_TextWidth(&args);
 
 		args.text = String_UNSAFE_Substring(text, w->caretPos, 1);
 		r.Width   = Drawer2D_TextWidth(&args);
@@ -625,7 +631,7 @@ void LBackend_InputTick(struct LInput* w) {
 	
 	if (Rect2D_Equals(r, lastCaretRect)) {
 		/* Fast path, caret is blinking in same spot */
-		MarkAreaDirty(r.X, r.Y, r.Width, r.Height);
+		MarkAreaDirty(r.x, r.y, r.Width, r.Height);
 	} else {
 		/* Slow path (new widget, caret moved, etc) */
 		MarkAreaDirty(w->x, w->y, w->width, w->height);
@@ -747,7 +753,7 @@ void LBackend_InputDraw(struct LInput* w) {
 	caretRect = LInput_MeasureCaret(w, &text);
 	if (!w->caretShow) return;
 	Context2D_Clear(&framebuffer, BITMAPCOLOR_BLACK,
-					caretRect.X, caretRect.Y, caretRect.Width, caretRect.Height);
+					caretRect.x, caretRect.y, caretRect.Width, caretRect.Height);
 }
 
 
@@ -1082,7 +1088,7 @@ static void LTable_ScrollbarClick(struct LTable* w, int idx) {
 }
 
 void LBackend_TableMouseDown(struct LTable* w, int idx) {
-	if (Pointers[idx].x >= WindowInfo.Width - scrollbarWidth) {
+	if (Pointers[idx].x >= Window_Main.Width - scrollbarWidth) {
 		LTable_ScrollbarClick(w, idx);
 		w->_lastRow = -1;
 	} else if (Pointers[idx].y < w->rowsBegY) {

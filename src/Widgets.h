@@ -15,7 +15,7 @@ struct FontDesc;
 struct TextWidget {
 	Widget_Body
 	struct Texture tex;
-	PackedCol col;
+	PackedCol color;
 };
 #define TEXTWIDGET_MAX 4
 
@@ -33,7 +33,7 @@ typedef void (*Button_Set)(const cc_string* raw);
 struct ButtonWidget {
 	Widget_Body
 	struct Texture tex;
-	PackedCol col;
+	PackedCol color;
 	int minWidth, minHeight;
 	const char* optName;
 	Button_Get GetValue;
@@ -62,7 +62,7 @@ struct ScrollbarWidget {
 	int nubsWidth, offsets[3];
 };
 /* Resets state of the given scrollbar widget to default. */
-CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
+CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width);
 
 #define HOTBAR_CORE_VERTICES (INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES)
 /* A row of blocks with a background. */
@@ -111,7 +111,7 @@ struct TableWidget {
 	int verticesCount;
 };
 
-CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
+CC_NOINLINE void TableWidget_Create(struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
 CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
@@ -181,6 +181,9 @@ struct MenuInputVTABLE {
 	cc_bool (*IsValidValue)(struct MenuInputDesc*  d, const cc_string* s);
 	/* Gets the default value for this input. */
 	void (*GetDefault)(struct MenuInputDesc*       d, cc_string* value);
+	/* Whether the given input button was processed */
+	/* E.g. Int input accepts using lef/right to increment/decrement */
+	cc_bool (*ProcessInput)(struct MenuInputDesc*  d, cc_string* value, int btn);
 };
 
 struct MenuInputDesc {

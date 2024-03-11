@@ -184,7 +184,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 	req->success = !req->result && req->statusCode == 200 && req->data && req->size;
 
 	if (!req->success) {
-		const char* error = req->error; req->error = NULL;
+		char* error = req->error; req->error = NULL;
 		HttpRequest_Free(req);
 		req->error = error;
 		/* TODO don't HttpRequest_Free here? */

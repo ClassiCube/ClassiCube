@@ -31,7 +31,7 @@ CC_NOINLINE cc_string String_FromRaw(STRING_REF char* buffer, int capacity);
 CC_API cc_string String_FromReadonly(STRING_REF const char* buffer);
 
 /* Constructs a string from a compile time string constant */
-#define String_FromConst(text) { text, (sizeof(text) - 1), (sizeof(text) - 1)}
+#define String_FromConst(text) { (char*)(text), (sizeof(text) - 1), (sizeof(text) - 1)}
 /* Constructs a string from a compile time array */
 #define String_FromArray(buffer) { buffer, 0, sizeof(buffer)}
 /* Constructs a string from a compile time array, that may have arbitary actual length of data at runtime */

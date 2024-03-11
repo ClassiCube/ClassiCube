@@ -12,7 +12,7 @@ jobs:
     container:
       image: pspdev/pspdev:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile PSP build
         id: compile
         run: |
@@ -36,3 +36,9 @@ jobs:
         with:
           SOURCE_FILE: 'EBOOT.PBP'
           DEST_NAME: 'EBOOT.PBP'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-psp.elf'
+          DEST_NAME: 'ClassiCube-psp.elf'

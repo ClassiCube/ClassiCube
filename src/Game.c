@@ -15,6 +15,7 @@
 #include "Logger.h"
 #include "Entity.h"
 #include "Chat.h"
+#include "Commands.h"
 #include "Drawer2D.h"
 #include "Model.h"
 #include "Particle.h"
@@ -28,7 +29,7 @@
 #include "AxisLinesRenderer.h"
 #include "EnvRenderer.h"
 #include "HeldBlockRenderer.h"
-#include "PickedPosRenderer.h"
+#include "SelOutlineRenderer.h"
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
@@ -45,8 +46,9 @@ cc_uint64 Game_FrameStart;
 cc_bool Game_UseCPEBlocks;
 
 struct RayTracer Game_SelectedPos;
-int Game_ViewDistance = 512, Game_UserViewDistance = 512;
-int Game_MaxViewDistance = DEFAULT_MAX_VIEWDIST;
+int Game_ViewDistance     = DEFAULT_VIEWDIST;
+int Game_UserViewDistance = DEFAULT_VIEWDIST;
+int Game_MaxViewDistance  = DEFAULT_MAX_VIEWDIST;
 
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
@@ -133,16 +135,16 @@ static void CycleViewDistanceBackwards(const short* viewDists, int count) {
 	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
-static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-static const short classicDists[4] = { 8, 32, 128, 512 };
+static const short normalDists[]  = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+static const short classicDists[] = { 8, 32, 128, 512 };
 void Game_CycleViewDistance(void) {
-	const short* dists = Gui.ClassicMenu ? classicDists : normDists;
-	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
+	const short* dists = Gui.ClassicMenu ? classicDists : normalDists;
+	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normalDists);
 
 	if (Input_IsShiftPressed()) {
 		CycleViewDistanceBackwards(dists, count);
 	} else {
-		CycleViewDistanceForwards(dists, count);
+		CycleViewDistanceForwards(dists,  count);
 	}
 }
 
@@ -211,13 +213,18 @@ cc_bool Game_CanPick(BlockID block) {
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, cc_uint8* skinType) {
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
+							cc_uint8* skinType, int* heightDivisor) {
 	struct Bitmap bmp;
 	cc_bool success;
 	cc_result res;
 	
 	res = Png_Decode(&bmp, src);
 	if (res) { Logger_SysWarn2(res, "decoding", file); }
+	
+	/* E.g. gui.png only need top half of the texture loaded */
+	if (heightDivisor && bmp.height >= *heightDivisor) 
+		bmp.height /= *heightDivisor;
 
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
@@ -231,6 +238,8 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 
 cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
+	float texSize, maxSize;
+
 	if (!bmp->scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
@@ -240,7 +249,17 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
 		Chat_Add4("&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
-			&bmp->width, &bmp->height, &maxWidth, &maxHeight);
+				&bmp->width, &bmp->height, &maxWidth, &maxHeight);
+		return false;
+	}
+
+	if (Gfx.MaxTexSize && (bmp->width * bmp->height > Gfx.MaxTexSize)) {
+		Chat_Add1("&cUnable to use %s from the texture pack.", file);
+		texSize = (bmp->width * bmp->height) / (1024.0f * 1024.0f);
+		maxSize = Gfx.MaxTexSize             / (1024.0f * 1024.0f);
+
+		Chat_Add2("&c Its size is %f3 MB, your GPU supports %f3 MB at most.", 
+				&texSize, &maxSize);
 		return false;
 	}
 
@@ -259,8 +278,8 @@ cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 }
 
 void Game_UpdateDimensions(void) {
-	Game.Width  = max(WindowInfo.Width,  1);
-	Game.Height = max(WindowInfo.Height, 1);
+	Game.Width  = max(Window_Main.Width,  1);
+	Game.Height = max(Window_Main.Height, 1);
 }
 
 static void Game_OnResize(void* obj) {
@@ -284,7 +303,7 @@ static void HandleOnNewMapLoaded(void* obj) {
 }
 
 static void HandleInactiveChanged(void* obj) {
-	if (WindowInfo.Inactive) {
+	if (Window_Main.Inactive) {
 		Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 		Gfx_SetFpsLimit(false, 1000 / 1.0f);
 	} else {
@@ -314,7 +333,7 @@ static void LoadOptions(void) {
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
-	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, 512);
+	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, DEFAULT_VIEWDIST);
 	Game_UserViewDistance = Game_ViewDistance;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
 	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
@@ -398,6 +417,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&SystemFonts_Component);
 
 	Game_AddComponent(&Chat_Component);
+	Game_AddComponent(&Commands_Component);
 	Game_AddComponent(&Particles_Component);
 	Game_AddComponent(&TabList_Component);
 	Game_AddComponent(&Models_Component);
@@ -417,7 +437,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Selections_Component);
 	Game_AddComponent(&HeldBlockRenderer_Component);
 	/* Gfx_SetDepthWrite(true) */
-	Game_AddComponent(&PickedPosRenderer_Component);
+	Game_AddComponent(&SelOutlineRenderer_Component);
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
 	Game_AddComponent(&Formats_Component);
@@ -463,7 +483,7 @@ static void Game_Render3D(double delta, float t) {
 
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
-	Entities_RenderNames();
+	EntityNames_Render();
 
 	Particles_Render(t);
 	Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
@@ -476,12 +496,12 @@ static void Game_Render3D(double delta, float t) {
 
 	EntityShadows_Render();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
-		PickedPosRenderer_Render(&Game_SelectedPos, true);
+		SelOutlineRenderer_Render(&Game_SelectedPos, true);
 	}
 
 	/* Render water over translucent blocks when under the water outside the map for proper alpha blending */
 	pos = Camera.CurrentPos;
-	if (pos.Y < Env.EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
+	if (pos.y < Env.EdgeHeight && (pos.x < 0 || pos.z < 0 || pos.x > World.Width || pos.z > World.Length)) {
 		MapRenderer_RenderTranslucent(delta);
 		EnvRenderer_RenderMapEdges();
 	} else {
@@ -492,12 +512,12 @@ static void Game_Render3D(double delta, float t) {
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
 	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.block] == DRAW_TRANSLUCENT) {
-		PickedPosRenderer_Render(&Game_SelectedPos, false);
+		SelOutlineRenderer_Render(&Game_SelectedPos, false);
 	}
 
 	Selections_Render();
-	Entities_RenderHoveredNames();
-	Camera_KeyLookUpdate();
+	EntityNames_RenderHovered();
+	Camera_KeyLookUpdate(delta);
 	InputHandler_Tick();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
@@ -573,6 +593,7 @@ static void Game_RenderFrame(double delta) {
 			Gfx_RecreateContext();
 			/* all good, context is back */
 		} else {
+			Game.Time += delta; /* TODO: Not set in two places? */
 			Server.Tick(NULL);
 			Thread_Sleep(16);
 			return;
@@ -585,7 +606,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!WindowInfo.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
+	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
 	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);
@@ -602,7 +623,7 @@ static void Game_RenderFrame(double delta) {
 	UpdateViewMatrix();
 
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
-	if (WindowInfo.Inactive) return;
+	if (Window_Main.Inactive) return;
 	Gfx_Clear();
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
@@ -648,7 +669,7 @@ static void Game_Free(void* obj) {
 	Window_ProcessEvents(delta);\
 	if (!gameRunning) return;\
 	\
-	if (delta > 1.0) delta = 1.0; /* avoid large delta with suspended process */ \
+	if (delta > 5.0) delta = 5.0; /* avoid large delta with suspended process */ \
 	if (delta > 0.0) { Game_FrameStart = render; Game_RenderFrame(delta); }
 
 #ifdef CC_BUILD_WEB

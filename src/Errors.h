@@ -132,5 +132,8 @@ enum CC_ERRORS {
 	HTTP_ERR_RELATIVE    = 0xCCDED069UL, /* Unsupported relative URL format */
 	HTTP_ERR_INVALID_BODY= 0xCCDED06AUL, /* HTTP message doesn't have Content-Length or use Chunked transfer encoding */
 	HTTP_ERR_CHUNK_SIZE  = 0xCCDED06BUL, /* HTTP message chunk has negative size/length */
+	HTTP_ERR_TRUNCATED   = 0xCCDED06CUL, /* HTTP respone header was truncated due to being too long */
+
+	SSL_ERR_CONTEXT_DEAD = 0xCCDED070UL, /* Server shutdown the SSL context and it must be recreated */
 };
 #endif

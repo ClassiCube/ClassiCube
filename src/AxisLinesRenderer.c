@@ -20,7 +20,7 @@ void AxisLinesRenderer_Render(void) {
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
 	};
-	static const PackedCol colors[3] = {
+	static const PackedCol colors[] = {
 		PackedCol_Make(255,   0,   0, 255), /* Red   */
 		PackedCol_Make(  0,   0, 255, 255), /* Blue  */
 		PackedCol_Make(  0, 255,   0, 255), /* Green */
@@ -34,14 +34,14 @@ void AxisLinesRenderer_Render(void) {
 	if (!AxisLinesRenderer_Enabled) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
-		Gfx_RecreateDynamicVb(&axisLines_vb, VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
+		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	}
 	
 	if (Camera.Active->isThirdPerson) {
 		pos = LocalPlayer_Instance.Base.Position;
 		axisLengthScale = 1;
 		axisThicknessScale = 1;
-		pos.Y += 0.05f;
+		pos.y += 0.05f;
 	} else {
 		pos = Camera.CurrentPos;
 		dirVector = Vec3_GetDirVector(LocalPlayer_Instance.Base.Yaw * MATH_DEG2RAD, LocalPlayer_Instance.Base.Pitch * MATH_DEG2RAD);
@@ -60,10 +60,11 @@ void AxisLinesRenderer_Render(void) {
 
 	v = (struct VertexColoured*)Gfx_LockDynamicVb(axisLines_vb, 
 									VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
-	for (i = 0; i < count; i++, v++) {
-		v->X   = coords[indices[i*3 + 0]].X;
-		v->Y   = coords[indices[i*3 + 1]].Y;
-		v->Z   = coords[indices[i*3 + 2]].Z;
+	for (i = 0; i < count; i++, v++) 
+	{
+		v->x   = coords[indices[i*3 + 0]].x;
+		v->y   = coords[indices[i*3 + 1]].y;
+		v->z   = coords[indices[i*3 + 2]].z;
 		v->Col = colors[i >> 2];
 	}
 

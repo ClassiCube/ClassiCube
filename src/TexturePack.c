@@ -63,8 +63,16 @@ static void Atlas_Convert2DTo1D(void) {
 
 static void Atlas_Update1D(void) {
 	int maxAtlasHeight, maxTilesPerAtlas, maxTiles;
+	int maxTexHeight = Gfx.MaxTexHeight;
 
-	maxAtlasHeight   = min(4096, Gfx.MaxTexHeight);
+	/* E.g. a graphics backend may support textures up to 256 x 256 */
+	/*   dimension wise, but only have enough storage for 16 x 256 */
+	if (Gfx.MaxTexSize) {
+		int maxCurHeight = Gfx.MaxTexSize / Atlas2D.TileSize;
+		maxTexHeight     = min(maxTexHeight, maxCurHeight);
+	}
+
+	maxAtlasHeight   = min(4096, maxTexHeight);
 	maxTilesPerAtlas = maxAtlasHeight / Atlas2D.TileSize;
 	maxTiles         = Atlas2D.RowsCount * ATLAS2D_TILES_PER_ROW;
 
@@ -134,22 +142,28 @@ cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 	if (!Game_ValidateBitmapPow2(&terrain, atlas)) return false;
 	tileSize = atlas->width / ATLAS2D_TILES_PER_ROW;
 
-	if (atlas->height < atlas->width) {
-		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
-		Chat_AddRaw("&c Its height is less than its width.");
-		return false;
-	}
 	if (tileSize <= 0) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_AddRaw("&c It must be 16 or more pixels wide.");
 		return false;
 	}
+	if (atlas->height < tileSize) {
+		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
+		Chat_AddRaw("&c It must have at least one row in it.");
+		return false;
+	}
 
-	if (tileSize > Gfx.MaxTexWidth) {
+	if (!Gfx_CheckTextureSize(tileSize, tileSize, 0)) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_Add4("&c Tile size is (%i,%i), your GPU supports (%i,%i) at most.", 
 			&tileSize, &tileSize, &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 		return false;
+	}
+
+	if (atlas->height < atlas->width) {
+		/* Probably wouldn't want to use these, but you still can technically */
+		Chat_AddRaw("&cHeight of terrain.png is less than its width.");
+		Chat_AddRaw("&c Some tiles will therefore appear completely white.");
 	}
 	if (atlas->width > Gfx.MaxTexWidth) {
 		/* Super HD textures probably won't work great on this GPU */
@@ -466,7 +480,7 @@ static void ApplyDownloaded(struct HttpRequest* item) {
 	cc_string url;
 
 	url = String_FromRawArray(item->url);
-	UpdateCache(item);
+	if (!Platform_ReadonlyFilesystem) UpdateCache(item);
 	/* Took too long to download and is no longer active texture pack */
 	if (!String_Equals(&TexturePack_Url, &url)) return;
 

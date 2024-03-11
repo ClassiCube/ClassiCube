@@ -7,7 +7,7 @@ CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
 GLDC_LIB=third_party/gldc/libGLdc.a
 LDFLAGS=-g
-LIBS=-lm $(GLDC_LIB)
+LIBS=-lm $(GLDC_LIB) -lppp -lkosfat
 
 TARGET := ClassiCube-dc
 CC_TEXTURES = classicube.zip
@@ -48,8 +48,11 @@ $(TARGET)-scr.bin: $(TARGET).bin
 $(TARGET).iso: $(TARGET)-scr.bin
 	mkdir -p ISO_FILES
 	cp $(TARGET)-scr.bin ISO_FILES/1ST_READ.BIN
+	mkdir -p ISO_FILES/audio
+	mkdir -p ISO_FILES/maps
 	mkdir -p ISO_FILES/texpacks
-	cp $(CC_TEXTURES) ISO_FILES/texpacks/classicube.zip
+	mkdir -p ISO_FILES/texturecache
+	cp $(CC_TEXTURES) ISO_FILES/texpacks/default.zip
 	cp misc/dreamcast/IP.BIN IP.BIN
 	mkisofs -G IP.BIN -C 0,11702 -J -l -r -o $(TARGET).iso ISO_FILES
 	# genisoimage -V ClassiCube -G IP.BIN -joliet -rock -l -o $(TARGET).iso ISO_FILES

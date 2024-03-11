@@ -241,11 +241,11 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-int Socket_ValidAddress(const cc_string* address) {
-	return false;
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	return ERR_NOT_SUPPORTED;
 }
 
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -272,10 +272,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
-}
-
 void Platform_Init(void) {
 	xenos_init(VIDEO_MODE_AUTO);
 	console_init();

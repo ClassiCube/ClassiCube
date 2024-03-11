@@ -17,24 +17,20 @@ static struct RayTracer cameraClipPos;
 static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
 static float cam_deltaX, cam_deltaY;
-static double last_time;
 
 static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
 
-void Camera_KeyLookUpdate(void) {
-	float delta;
+void Camera_KeyLookUpdate(double delta) {
 	if (Gui.InputGrab) return;
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
-	delta = (Camera.Sensitivity / 25.0f) * (1000 * (Game.Time - last_time));
+	delta = (Camera.Sensitivity / 25.0f) * (1000 * delta);
 
 	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= delta;
 	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += delta;
 	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= delta;
 	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += delta;
-
-	last_time = Game.Time;
 }
 
 /*########################################################################################################################*
@@ -85,8 +81,8 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 		speedY = cam_deltaY;
 	}
 
-	v.X = speedX * sensitivity; v.Y = speedY * sensitivity;
-	if (Camera.Invert) v.Y = -v.Y;
+	v.x = speedX * sensitivity; v.y = speedY * sensitivity;
+	if (Camera.Invert) v.y = -v.y;
 	return v;
 }
 
@@ -96,13 +92,13 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
 	if (Input_IsAltPressed() && Camera.Active->isThirdPerson) {
-		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
+		cam_rotOffset.x += rot.x; cam_rotOffset.y += rot.y;
 		return;
 	}
 	
 	update.flags = LU_HAS_YAW | LU_HAS_PITCH;
-	update.yaw   = e->next.yaw   + rot.X;
-	update.pitch = e->next.pitch + rot.Y;
+	update.yaw   = e->next.yaw   + rot.x;
+	update.pitch = e->next.pitch + rot.y;
 	update.pitch = Math_ClampAngle(update.pitch);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
@@ -113,7 +109,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 }
 
 static void PerspectiveCamera_UpdateMouse(double delta) {
-	if (!Gui.InputGrab && WindowInfo.Focused) Window_UpdateRawMouse();
+	if (!Gui.InputGrab && Window_Main.Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(delta);
 	cam_deltaX = 0; cam_deltaY = 0;
@@ -138,9 +134,9 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	Camera.BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
 	Camera.BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
 
-	/* When standing on the ground, velocity.Y is -0.08 (-gravity) */
+	/* When standing on the ground, velocity.y is -0.08 (-gravity) */
 	/* So add 0.08 to counteract that, so that vel is 0 when standing on ground */
-	vel  = 0.08f + Math_Lerp(p->OldVelocity.Y, e->Velocity.Y, t);
+	vel  = 0.08f + Math_Lerp(p->OldVelocity.y, e->Velocity.y, t);
 	fall = -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale;
 
 	Matrix_RotateX(&velX, fall);
@@ -155,8 +151,8 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 static Vec2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->Yaw   * MATH_DEG2RAD; 
-	v.Y = p->Pitch * MATH_DEG2RAD;
+	v.x = p->Yaw   * MATH_DEG2RAD; 
+	v.y = p->Pitch * MATH_DEG2RAD;
 	return v;
 }
 
@@ -166,9 +162,9 @@ static Vec3 FirstPersonCamera_GetPosition(float t) {
 	float yaw     = p->Yaw * MATH_DEG2RAD;
 	PerspectiveCamera_CalcViewBobbing(t, 1);
 	
-	camPos.Y += Camera.BobbingVer;
-	camPos.X += Camera.BobbingHor * (float)Math_Cos(yaw);
-	camPos.Z += Camera.BobbingHor * (float)Math_Sin(yaw);
+	camPos.y += Camera.BobbingVer;
+	camPos.x += Camera.BobbingHor * (float)Math_Cos(yaw);
+	camPos.z += Camera.BobbingHor * (float)Math_Sin(yaw);
 	return camPos;
 }
 
@@ -192,12 +188,12 @@ static float dist_third = DEF_ZOOM, dist_forward = DEF_ZOOM;
 static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->Yaw   * MATH_DEG2RAD; 
-	v.Y = p->Pitch * MATH_DEG2RAD;
-	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
+	v.x = p->Yaw   * MATH_DEG2RAD; 
+	v.y = p->Pitch * MATH_DEG2RAD;
+	if (cam_isForwardThird) { v.x += MATH_PI; v.y = -v.y; }
 
-	v.X += cam_rotOffset.X * MATH_DEG2RAD; 
-	v.Y += cam_rotOffset.Y * MATH_DEG2RAD;
+	v.x += cam_rotOffset.x * MATH_DEG2RAD; 
+	v.y += cam_rotOffset.y * MATH_DEG2RAD;
 	return v;
 }
 
@@ -216,10 +212,10 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 
 	PerspectiveCamera_CalcViewBobbing(t, dist);
 	target = Entity_GetEyePosition(p);
-	target.Y += Camera.BobbingVer;
+	target.y += Camera.BobbingVer;
 
 	rot = Camera.Active->GetOrientation();
-	dir = Vec3_GetDirVector(rot.X, rot.Y);
+	dir = Vec3_GetDirVector(rot.x, rot.y);
 	Vec3_Negate(&dir, &dir);
 
 	Picking_ClipCameraPos(&target, &dir, dist, &cameraClipPos);
@@ -276,7 +272,7 @@ void Camera_CycleActive(void) {
 	cam_isForwardThird = Camera.Active == &cam_ForwardThird;
 
 	/* reset rotation offset when changing cameras */
-	cam_rotOffset.X = 0.0f; cam_rotOffset.Y = 0.0f;
+	cam_rotOffset.x = 0.0f; cam_rotOffset.y = 0.0f;
 	Camera_UpdateProjection();
 }
 
@@ -320,6 +316,7 @@ static void OnInit(void) {
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
+	Event_Register_(&ControllerEvents.RawMoved,   NULL, OnRawMovement);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN

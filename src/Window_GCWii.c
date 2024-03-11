@@ -22,15 +22,12 @@ static void* xfb;
 static GXRModeObj* rmode;
 void* Window_XFB;
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-// no DPI scaling on Wii/GameCube
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+struct _WindowData WindowInfo;
 
 
 static void OnPowerOff(void) {
-	WindowInfo.Exists = false;
-	Window_Close();
+	Window_Main.Exists = false;
+	Window_RequestClose();
 }
 static void InitVideo(void) {
 	// Initialise the video system
@@ -70,13 +67,14 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = rmode->fbWidth;
-	WindowInfo.Height  = rmode->xfbHeight;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = rmode->fbWidth;
+	Window_Main.Height  = rmode->xfbHeight;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	DisplayInfo.ContentOffset = 10;
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 10;
 
 	#if defined HW_RVL
 	WPAD_Init();
@@ -85,6 +83,8 @@ void Window_Init(void) {
 	#endif
 	PAD_Init();
 }
+
+void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) {
 	needsFBUpdate = true;
@@ -95,7 +95,7 @@ void Window_Create3D(int width, int height) {
 	launcherMode = false; 
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -127,7 +127,7 @@ static void ProcessPAD_RightJoystick(double delta) {
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);		
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, -dy * scale);		
 }
 
 static void ProcessPAD_Buttons(void) {
@@ -317,7 +317,7 @@ static void ProcessClassic_RightJoystick(struct joystick_t* js, double delta) {
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, -dy * scale);
 }
 
 static void ProcessClassicButtons(int mods) {
@@ -449,10 +449,8 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
 // TODO: Get rid of this complexity and use the 3D API instead..
@@ -475,7 +473,7 @@ static u32 CvtRGB (u8 r1, u8 g1, u8 b1, u8 r2, u8 g2, u8 b2)
   return (y1 << 24) | (cb << 16) | (y2 << 8) | cr;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// When coming back from the 3D game, framebuffer might have changed
 	if (needsFBUpdate) {
 		VIDEO_SetNextFramebuffer(xfb);
@@ -484,13 +482,13 @@ void Window_DrawFramebuffer(Rect2D r) {
 	}
 	
 	VIDEO_WaitVSync();
-	r.X &= ~0x01; // round down to nearest even horizontal index
+	r.x &= ~0x01; // round down to nearest even horizontal index
 	
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
-		cc_uint32* src = fb_bmp.scan0 + y * fb_bmp.width   + r.X;
-		u16* dst       = (u16*)xfb    + y * rmode->fbWidth + r.X;
+		cc_uint32* src = bmp->scan0 + y * bmp->width     + r.x;
+		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
 		
 		for (int x = 0; x < r.Width / 2; x++) {
 			cc_uint32 rgb0 = src[(x<<1) + 0];

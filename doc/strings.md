@@ -3,7 +3,7 @@
 ClassiCube uses a custom string type rather than the standard C `char*` string in most places
 
 ClassiCube strings (`cc_string`) are a struct with the following fields:
-- `buffer` -> Pointer to 8 bit characters (unsigned code page 437 indices)
+- `buffer` -> Pointer to 8 bit characters (unsigned [code page 437 indices](https://en.wikipedia.org/wiki/Code_page_437#Character_set))
 - `length` -> Number of characters currently used
 - `capacity` -> Maximum number of characters (i.e buffer size)
 
@@ -19,6 +19,29 @@ Some general guidelines to keep in mind when it comes to `cc_string` strings:
 (i.e. make sure you allocate a large enough buffer upfront)
 - Strings are not garbage collected or reference counted<br>
 (i.e. you are responsible for managing the lifetime of strings)
+
+## Usage examples
+
+Initialisating a string from readonly text:
+```C
+cc_string str = String_FromConst("ABC");
+```
+
+Initialising a string from temporary memory on the stack:
+```C
+// str will be able to store at most 200 characters in it
+char strBuffer[200];
+cc_string str = String_FromArray(strBuffer);
+```
+
+Initialising a string from persistent memory on the heap:
+```C
+// str will be able to store at most 200 characters in it
+char* str = Mem_Alloc(1, 200, "String buffer");
+cc_string str = String_Init(str, 0, 200);
+```
+
+# Converting to/from other string representations
 
 ## C String conversion
 
@@ -88,7 +111,7 @@ void SetWorkingDir(cc_string* title) {
     Platform_EncodeUtf16(&str, title);
     SetCurrentDirectoryW(str.uni);
 	
-	// it's recommended that you DON'T use the ansi format whenever possible
+    // it's recommended that you DON'T use the ansi format whenever possible
     //SetCurrentDirectoryA(str.ansi); 
 }
 ```
@@ -106,13 +129,15 @@ void SetWorkingDir(cc_string* title) {
 }
 ```
 
-## API
+# API
 
 I'm lazy so I will just link to [String.h](/src/String.h)
 
 If you'd rather I provided a more detailed reference here, please let me know.
 
-# Extra details
+TODO
+
+# Comparisons to other string implementations
 
 ## C comparison
 
@@ -202,10 +227,7 @@ string::compare -> String_Compare
 std::sprintf -> String_Format1/2/3/4
 ```
 
-
-
-
-## Lifetime examples
+# Detailed lifetime examples
 
 Managing the lifetime of strings is important, as not properly managing them can cause issues.
 

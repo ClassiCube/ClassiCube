@@ -190,10 +190,11 @@ static void ClearTouches(void) { }
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 #define Pad_Names \
-"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
+"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", "PAD_Z", \
 "PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
 "PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR", \
-"PAD_LSTICK", "PAD_RSTICK"
+"PAD_LSTICK", "PAD_RSTICK", \
+"PAD_CLEFT", "PAD_CRIGHT", "PAD_CUP", "PAD_CDOWN"
 
 /* Names for each input button when stored to disc */
 static const char* const storageNames[INPUT_COUNT] = {
@@ -661,24 +662,24 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 	/* Offset position by the closest face */
 	closestFace = Game_SelectedPos.Closest;
 	if (closestFace == FACE_XMAX) {
-		pos.X = blockBB->Max.X + 0.5f;
+		pos.x = blockBB->Max.x + 0.5f;
 	} else if (closestFace == FACE_ZMAX) {
-		pos.Z = blockBB->Max.Z + 0.5f;
+		pos.z = blockBB->Max.z + 0.5f;
 	} else if (closestFace == FACE_XMIN) {
-		pos.X = blockBB->Min.X - 0.5f;
+		pos.x = blockBB->Min.x - 0.5f;
 	} else if (closestFace == FACE_ZMIN) {
-		pos.Z = blockBB->Min.Z - 0.5f;
+		pos.z = blockBB->Min.z - 0.5f;
 	} else if (closestFace == FACE_YMAX) {
-		pos.Y = blockBB->Min.Y + 1 + ENTITY_ADJUSTMENT;
+		pos.y = blockBB->Min.y + 1 + ENTITY_ADJUSTMENT;
 	} else if (closestFace == FACE_YMIN) {
-		pos.Y = blockBB->Min.Y - p->Size.Y - ENTITY_ADJUSTMENT;
+		pos.y = blockBB->Min.y - p->Size.y - ENTITY_ADJUSTMENT;
 	}
 
 	/* Exclude exact map boundaries, otherwise player can get stuck outside map */
 	/* Being vertically above the map is acceptable though */
 	insideMap =
-		pos.X > 0.0f && pos.Y >= 0.0f && pos.Z > 0.0f &&
-		pos.X < World.Width && pos.Z < World.Length;
+		pos.x > 0.0f && pos.y >= 0.0f && pos.z > 0.0f &&
+		pos.x < World.Width && pos.z < World.Length;
 	if (!insideMap) return false;
 
 	AABB_Make(&playerBB, &pos, &p->Size);
@@ -706,7 +707,7 @@ static cc_bool IntersectsOthers(Vec3 pos, BlockID block) {
 		if (!e) continue;
 
 		Entity_GetBounds(e, &entityBB);
-		entityBB.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
+		entityBB.Min.y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
 		if (AABB_Intersects(&entityBB, &blockBB)) return true;
 	}
 	return false;
@@ -733,18 +734,18 @@ static cc_bool CheckIsFree(BlockID block) {
 	/* NOTE: Need to also test against next position here, otherwise player can */
 	/* fall through the block at feet as collision is performed against nextPos */
 	Entity_GetBounds(p, &playerBB);
-	playerBB.Min.Y = min(nextPos.Y, playerBB.Min.Y);
+	playerBB.Min.y = min(nextPos.y, playerBB.Min.y);
 
 	if (hacks->Noclip || !AABB_Intersects(&playerBB, &blockBB)) return true;
 	if (hacks->CanPushbackBlocks && hacks->PushbackPlacing && hacks->Enabled) {
 		return PushbackPlace(&blockBB);
 	}
 
-	playerBB.Min.Y += 0.25f + ENTITY_ADJUSTMENT;
+	playerBB.Min.y += 0.25f + ENTITY_ADJUSTMENT;
 	if (AABB_Intersects(&playerBB, &blockBB)) return false;
 
 	/* Push player upwards when they are jumping and trying to place a block underneath them */
-	nextPos.Y = pos.Y + Blocks.MaxBB[block].Y + ENTITY_ADJUSTMENT;
+	nextPos.y = pos.y + Blocks.MaxBB[block].y + ENTITY_ADJUSTMENT;
 
 	update.flags = LU_HAS_POS | LU_POS_ABSOLUTE_INSTANT;
 	update.pos   = nextPos;
@@ -759,12 +760,12 @@ void InputHandler_DeleteBlock(void) {
 	HeldBlockRenderer_ClickAnim(true);
 
 	pos = Game_SelectedPos.pos;
-	if (!Game_SelectedPos.Valid || !World_Contains(pos.X, pos.Y, pos.Z)) return;
+	if (!Game_SelectedPos.Valid || !World_Contains(pos.x, pos.y, pos.z)) return;
 
-	old = World_GetBlock(pos.X, pos.Y, pos.Z);
+	old = World_GetBlock(pos.x, pos.y, pos.z);
 	if (Blocks.Draw[old] == DRAW_GAS || !Blocks.CanDelete[old]) return;
 
-	Game_ChangeBlock(pos.X, pos.Y, pos.Z, BLOCK_AIR);
+	Game_ChangeBlock(pos.x, pos.y, pos.z, BLOCK_AIR);
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, BLOCK_AIR);
 }
 
@@ -772,9 +773,9 @@ void InputHandler_PlaceBlock(void) {
 	IVec3 pos;
 	BlockID old, block;
 	pos = Game_SelectedPos.TranslatedPos;
-	if (!Game_SelectedPos.Valid || !World_Contains(pos.X, pos.Y, pos.Z)) return;
+	if (!Game_SelectedPos.Valid || !World_Contains(pos.x, pos.y, pos.z)) return;
 
-	old   = World_GetBlock(pos.X, pos.Y, pos.Z);
+	old   = World_GetBlock(pos.x, pos.y, pos.z);
 	block = Inventory_SelectedBlock;
 	if (AutoRotate_Enabled) block = AutoRotate_RotateBlock(block);
 
@@ -787,7 +788,7 @@ void InputHandler_PlaceBlock(void) {
 
 	if (!CheckIsFree(block)) return;
 
-	Game_ChangeBlock(pos.X, pos.Y, pos.Z, block);
+	Game_ChangeBlock(pos.x, pos.y, pos.z, block);
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, block);
 }
 
@@ -795,9 +796,9 @@ void InputHandler_PickBlock(void) {
 	IVec3 pos;
 	BlockID cur;
 	pos = Game_SelectedPos.pos;
-	if (!World_Contains(pos.X, pos.Y, pos.Z)) return;
+	if (!World_Contains(pos.x, pos.y, pos.z)) return;
 
-	cur = World_GetBlock(pos.X, pos.Y, pos.Z);
+	cur = World_GetBlock(pos.x, pos.y, pos.z);
 	if (Blocks.Draw[cur] == DRAW_GAS) return;
 	if (!(Blocks.CanPlace[cur] || Blocks.CanDelete[cur])) return;
 	Inventory_PickBlock(cur);
@@ -1090,7 +1091,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
-		Window_Close(); return;
+		Window_RequestClose(); return;
 	} else if (KeyBind_Claims(KEYBIND_SCREENSHOT, key) && !was) {
 		Game_ScreenshotRequested = true; return;
 	}
@@ -1148,7 +1149,7 @@ static void OnInputUp(void* obj, int key) {
 	if (KeyBind_Claims(KEYBIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
 }
 
-static void OnFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }
+static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
 static void OnInit(void) {
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);

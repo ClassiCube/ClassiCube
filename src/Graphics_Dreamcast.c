@@ -9,9 +9,6 @@
 #include <kos.h>
 #include <dc/matrix.h>
 #include <dc/pvr.h>
-
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
 
 
@@ -20,10 +17,12 @@ static cc_bool renderingDisabled;
 *#########################################################################################################################*/
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
-	// NOTE: technically 1024 is supported by hardware
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512; // reasonable cap as Dreamcast only has 8MB VRAM
 	Gfx.Created      = true;
+	
 	Gfx_RestoreState();
 }
 
@@ -81,13 +80,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z = -2.0f / (zFar - zNear);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -101,12 +100,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.w =  0.0f;
 }
 
 
@@ -117,7 +116,7 @@ static void* gfx_vertices;
 static int vb_size;
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	return 1;
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
@@ -127,11 +126,8 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	void* data = memalign(16, count * strideSizes[fmt]);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;
-	//return Mem_Alloc(count, strideSizes[fmt], "gfx VB");
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
+	return memalign(16, count * strideSizes[fmt]);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
@@ -153,12 +149,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	void* data = memalign(16, maxVertices * strideSizes[fmt]);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;
-	//return Mem_Alloc(maxVertices, strideSizes[fmt], "gfx VB");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return memalign(16, maxVertices * strideSizes[fmt]);
 }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
@@ -170,11 +165,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	//dcache_flush_range(vb, vb_size);
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	//dcache_flush_range(vertices, vCount * gfx_stride);
-}
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -283,12 +274,9 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	}
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	GLuint texId = gldcGenTexture();
 	gldcBindTexture(texId);
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
 	
 	gldcAllocTexture(bmp->width, bmp->height, GL_RGBA,
 				GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS);
@@ -299,6 +287,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	ConvertTexture(pixels, bmp);
 	return texId;
 }
+
 // TODO: struct GPUTexture ??
 static void ConvertSubTexture(cc_uint16* dst, int texWidth, int texHeight,
 				int originX, int originY, 
@@ -453,7 +442,6 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	glAlphaFunc(GL_GREATER, 0.5f);
-	glDepthFunc(GL_LEQUAL);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
@@ -534,7 +522,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "GPU: PowerVR2 CLX2 100mHz\n");
 	String_AppendConst(info, "T&L: GLdc library (KallistiOS / Kazade)\n");
 	String_Format2(info,     "Texture memory: %f2 MB used, %f2 MB free\n", &usedMemMB, &freeMemMB);
-	String_Format2(info,     "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

@@ -12,12 +12,10 @@
 #include "ExtMath.h"
 #include <kos.h>
 static cc_bool launcherMode;
+cc_bool window_inited;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-// no DPI scaling on 3DS
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+struct _WindowData WindowInfo;
 
 void Window_Init(void) {
 	DisplayInfo.Width  = vid_mode->width;
@@ -26,26 +24,28 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = vid_mode->width;
-	WindowInfo.Height  = vid_mode->height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = vid_mode->width;
+	Window_Main.Height  = vid_mode->height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	DisplayInfo.ContentOffset = 10;
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 20;
+	
+	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
+	vid_flip(0);
+	// TODO: Why doesn't 32 bit work on real hardware for in-game?
+	window_inited = true;
 }
+
+void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { 
 	launcherMode = true;
-	vid_set_mode(DEFAULT_VID_MODE, PM_RGB888);
-	vid_flip(0);
 }
-
 void Window_Create3D(int width, int height) { 
 	launcherMode = false;
-	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
-	vid_flip(0);
-	// TODO: Why doesn't 32 bit work on real hardware?
 }
 
 void Window_SetTitle(const cc_string* title) { }
@@ -60,7 +60,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -71,6 +71,7 @@ void Window_Close(void) {
 // TODO: More intelligent diffing that uses less space
 static cc_bool has_prevState;
 static kbd_state_t prevState;
+
 static int MapKey(int k) {
 	if (k >= KBD_KEY_A  && k <= KBD_KEY_Z)   return 'A'      + (k - KBD_KEY_A);
 	if (k >= KBD_KEY_0  && k <= KBD_KEY_9)   return '0'      + (k - KBD_KEY_0);
@@ -200,13 +201,13 @@ static void HandleController(cont_state_t* state, double delta) {
 		if (Math_AbsI(dx) <= 8) dx = 0;
 		if (Math_AbsI(dy) <= 8) dy = 0;
 		
-		Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+		Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
 	}
 }
 
 static void ProcessControllerInput(double delta) {
 	maple_device_t* cont;
-	cont_state_t* state;
+	cont_state_t*  state;
 
 	cont  = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 	if (!cont)  return;
@@ -217,9 +218,30 @@ static void ProcessControllerInput(double delta) {
 	HandleController(state, delta);
 }
 
+static void ProcessMouseInput(double delta) {
+	maple_device_t* mouse;
+	mouse_state_t*  state;
+
+	mouse = maple_enum_type(0, MAPLE_FUNC_MOUSE);
+	if (!mouse) return;
+	state = (mouse_state_t*)maple_dev_status(mouse);
+	if (!state) return;
+	
+	int mods = state->buttons;
+	Input_SetNonRepeatable(CCMOUSE_L, mods & MOUSE_LEFTBUTTON);
+	Input_SetNonRepeatable(CCMOUSE_R, mods & MOUSE_RIGHTBUTTON);
+	Input_SetNonRepeatable(CCMOUSE_M, mods & MOUSE_SIDEBUTTON);
+	
+	if (!Input.RawMode) return;	
+	float scale = (delta * 60.0) / 2.0f;
+	Event_RaiseRawMove(&PointerEvents.RawMoved, 
+				state->dx * scale, state->dy * scale);
+}
+
 void Window_ProcessEvents(double delta) {
 	ProcessControllerInput(delta);
 	ProcessKeyboardInput();
+	ProcessMouseInput(delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
@@ -232,22 +254,28 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
-	// TODO probably bogus..
-	// TODO: Don't redraw everything
-	int size = fb_bmp.width * fb_bmp.height * 4;
-	
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO: double buffering ??
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
-	sq_cpy(vram_l, fb_bmp.scan0, size);
+	
+	for (int y = r.y; y < r.y + r.Height; y++)
+	{
+		BitmapCol* src = Bitmap_GetRow(bmp, y);
+		uint16_t*  dst = vram_s + vid_mode->width * y;
+		
+		for (int x = r.x; x < r.x + r.Width; x++)
+		{
+			BitmapCol color = src[x];
+			// 888 to 565 (discard least significant bits)
+			dst[x] = ((BitmapCol_R(color) & 0xF8) << 8) | ((BitmapCol_G(color) & 0xFC) << 3) | (BitmapCol_B(color) >> 3);
+		}
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {

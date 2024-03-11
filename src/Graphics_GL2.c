@@ -2,7 +2,6 @@
 #if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
 
@@ -87,8 +86,6 @@ static const struct DynamicLibSym core_funcs[] = {
 #endif
 
 #include "_GLShared.h"
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static GfxResourceID white_square;
 
 
@@ -125,16 +122,17 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return GL_GenAndBind(GL_ARRAY_BUFFER);
 }
 
-void Gfx_BindVb(GfxResourceID vb) { glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindVb(GfxResourceID vb) { 
+	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+}
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
-	if (!id) return;
-	glDeleteBuffers(1, &id);
+	if (id) glDeleteBuffers(1, &id);
 	*vb = 0;
 }
 
@@ -150,15 +148,22 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 /*########################################################################################################################*
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GLuint id;
-	cc_uint32 size;
-	if (Gfx.LostContext) return 0;
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	GLuint id      = GL_GenAndBind(GL_ARRAY_BUFFER);
+	cc_uint32 size = maxVertices * strideSizes[fmt];
 
-	id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	size = maxVertices * strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
+	GLuint id = (GLuint)(*vb);
+	if (id) glDeleteBuffers(1, &id);
+	*vb = 0;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {

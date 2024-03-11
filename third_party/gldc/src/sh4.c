@@ -1,7 +1,6 @@
 #include "platform.h"
 #include "sh4.h"
 
-
 #define CLIP_DEBUG 0
 
 #define PVR_VERTEX_BUF_SIZE 2560 * 256
@@ -40,13 +39,13 @@ GL_FORCE_INLINE float _glFastInvert(float x) {
     return MATH_fsrra(x * x);
 }
 
-GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex, const float h) {
+GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     TRACE();
 
     const float f = _glFastInvert(vertex->w);
 
     /* Convert to NDC and apply viewport */
-    vertex->xyz[0] = (vertex->xyz[0] * f * 320) + 320;
+    vertex->xyz[0] = (vertex->xyz[0] * f *  320) + 320;
     vertex->xyz[1] = (vertex->xyz[1] * f * -240) + 240;
 
     /* Orthographic projections need to use invZ otherwise we lose
@@ -115,18 +114,194 @@ static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, V
 
 #define SPAN_SORT_CFG 0x005F8030
 static volatile uint32_t* PVR_LMMODE0 = (uint32_t*) 0xA05F6884;
-static volatile uint32_t *PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
-static volatile uint32_t *QACR = (uint32_t*) 0xFF000038;
+static volatile uint32_t* PVR_LMMODE1 = (uint32_t*) 0xA05F6888;
+static volatile uint32_t* QACR = (uint32_t*) 0xFF000038;
 
-void SceneListSubmit(Vertex* v2, int n) {
-    TRACE();
+#define V0_VIS (1 << 0)
+#define V1_VIS (1 << 1)
+#define V2_VIS (1 << 2)
+#define V3_VIS (1 << 3)
 
-    /* You need at least a header, and 3 vertices to render anything */
-    if(n < 4) {
-        return;
+static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_mask) {
+    Vertex __attribute__((aligned(32))) scratch[4];
+
+    switch(visible_mask) {
+    case V0_VIS | V1_VIS | V2_VIS: // All vertices visible
+    {
+        _glPerspectiveDivideVertex(v0);
+        _glPushHeaderOrVertex(v0);
+
+        _glPerspectiveDivideVertex(v1);
+        _glPushHeaderOrVertex(v1);
+
+        _glPerspectiveDivideVertex(v2);
+        _glPushHeaderOrVertex(v2);
     }
+    break;
+    case V0_VIS: // First vertex was visible
+    {
+        Vertex* a = &scratch[0];
+        Vertex* b = &scratch[1];
 
-    const float h = vid_mode->height;
+        _glClipEdge(v0, v1, a);
+        a->flags = GPU_CMD_VERTEX;
+
+        _glClipEdge(v2, v0, b);
+        b->flags = GPU_CMD_VERTEX_EOL;
+
+        _glPerspectiveDivideVertex(v0);
+        _glPushHeaderOrVertex(v0);
+
+        _glPerspectiveDivideVertex(a);
+        _glPushHeaderOrVertex(a);
+
+        _glPerspectiveDivideVertex(b);
+        _glPushHeaderOrVertex(b);
+    }
+    break;
+    case V1_VIS: // Second vertex was visible
+    {
+        /* Second vertex was visible. In self case we need to create a triangle and produce
+            two new vertices: 1-2, and 2-3. */
+        Vertex* a = &scratch[0];
+        Vertex* b = &scratch[1];
+        Vertex* c = &scratch[2];
+
+        memcpy_vertex(c, v1);
+
+        _glClipEdge(v0, v1, a);
+        a->flags = GPU_CMD_VERTEX;
+
+        _glClipEdge(v1, v2, b);
+        b->flags = GPU_CMD_VERTEX_EOL;
+
+        _glPerspectiveDivideVertex(a);
+        _glPushHeaderOrVertex(a);
+
+        _glPerspectiveDivideVertex(c);
+        _glPushHeaderOrVertex(c);
+
+        _glPerspectiveDivideVertex(b);
+        _glPushHeaderOrVertex(b);
+    }
+    break;
+    case V0_VIS | V1_VIS: // First and second vertex were visible
+    {
+        Vertex* a = &scratch[0];
+        Vertex* b = &scratch[1];
+        Vertex* c = &scratch[2];
+
+        memcpy_vertex(c, v1);
+
+        _glClipEdge(v2, v0, b);
+        b->flags = GPU_CMD_VERTEX;
+
+        _glPerspectiveDivideVertex(v0);
+        _glPushHeaderOrVertex(v0);
+
+        _glClipEdge(v1, v2, a);
+        a->flags = GPU_CMD_VERTEX_EOL;
+
+        _glPerspectiveDivideVertex(c);
+        _glPushHeaderOrVertex(c);
+
+        _glPerspectiveDivideVertex(b);
+        _glPushHeaderOrVertex(b);
+
+        _glPerspectiveDivideVertex(a);
+        _glPushHeaderOrVertex(c);
+        _glPushHeaderOrVertex(a);
+    }
+    break;
+    case V2_VIS: // Third vertex was visible
+    {
+        Vertex* a = &scratch[0];
+        Vertex* b = &scratch[1];
+        Vertex* c = &scratch[2];
+
+        memcpy_vertex(c, v2);
+
+        _glClipEdge(v2, v0, a);
+        a->flags = GPU_CMD_VERTEX;
+
+        _glClipEdge(v1, v2, b);
+        b->flags = GPU_CMD_VERTEX;
+
+        _glPerspectiveDivideVertex(a);
+        _glPushHeaderOrVertex(a);
+
+        _glPerspectiveDivideVertex(b);
+        _glPushHeaderOrVertex(b);
+
+        _glPerspectiveDivideVertex(c);
+        _glPushHeaderOrVertex(c);
+    }
+    break;
+    case V0_VIS | V2_VIS: // First and third vertex were visible
+    {
+        Vertex* a = &scratch[0];
+        Vertex* b = &scratch[1];
+        Vertex* c = &scratch[2];
+
+        memcpy_vertex(c, v2);
+        c->flags = GPU_CMD_VERTEX;
+
+        _glClipEdge(v0, v1, a);
+        a->flags = GPU_CMD_VERTEX;
+
+        _glClipEdge(v1, v2, b);
+        b->flags = GPU_CMD_VERTEX;
+
+        _glPerspectiveDivideVertex(v0);
+        _glPushHeaderOrVertex(v0);
+
+        _glPerspectiveDivideVertex(a);
+        _glPushHeaderOrVertex(a);
+
+        _glPerspectiveDivideVertex(c);
+        _glPushHeaderOrVertex(c);
+        _glPerspectiveDivideVertex(b);
+        _glPushHeaderOrVertex(b);
+
+        c->flags = GPU_CMD_VERTEX_EOL;
+        _glPushHeaderOrVertex(c);
+    }
+    break;
+    case V1_VIS | V2_VIS: // Second and third vertex were visible
+    {
+        Vertex* a = &scratch[0];
+        Vertex* b = &scratch[1];
+        Vertex* c = &scratch[2];
+
+        memcpy_vertex(c, v1);
+
+        _glClipEdge(v0, v1, a);
+        a->flags = GPU_CMD_VERTEX;
+
+        _glClipEdge(v2, v0, b);
+        b->flags = GPU_CMD_VERTEX;
+
+        _glPerspectiveDivideVertex(a);
+        _glPushHeaderOrVertex(a);
+
+        _glPerspectiveDivideVertex(c);
+        _glPushHeaderOrVertex(c);
+
+        _glPerspectiveDivideVertex(b);
+        _glPushHeaderOrVertex(b);
+        _glPushHeaderOrVertex(c);
+
+        _glPerspectiveDivideVertex(v2);
+        _glPushHeaderOrVertex(v2);
+    }
+    break;
+    }	
+}
+
+void SceneListSubmit(Vertex* v3, int n) {
+    TRACE();
+    /* You need at least a header, and 3 vertices to render anything */
+    if(n < 4) return;
 
     PVR_SET(SPAN_SORT_CFG, 0x0);
 
@@ -146,290 +321,86 @@ void SceneListSubmit(Vertex* v2, int n) {
     fprintf(stderr, "----\n");
 #endif
     uint8_t visible_mask = 0;
-    uint8_t counter = 0;
 
     sq = SQ_BASE_ADDRESS;
 
-    for(int i = 0; i < n; ++i, ++v2) {
-        PREFETCH(v2 + 1);
-        switch(v2->flags) {
+    for(int i = 0; i < n; ++i, ++v3) {
+        PREFETCH(v3 + 1);
+        switch(v3->flags) {
         case GPU_CMD_VERTEX_EOL:
-            if(counter < 2) {
-                continue;
-            }
-            counter = 0;
             break;
         case GPU_CMD_VERTEX:
-            ++counter;
-            if(counter < 3) {
-                continue;
-            }
-            break;
+            continue;
         default:
-            _glPushHeaderOrVertex(v2);
-            counter = 0;
+            _glPushHeaderOrVertex(v3);
             continue;
         };
 
-        Vertex* const v0 = v2 - 2;
-        Vertex* const v1 = v2 - 1;
+	// Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
+        Vertex* const v0 = v3 - 3;
+        Vertex* const v1 = v3 - 2;
+        Vertex* const v2 = v3 - 1;
 
         visible_mask = (
             (v0->xyz[2] > -v0->w) << 0 |
             (v1->xyz[2] > -v1->w) << 1 |
-            (v2->xyz[2] > -v2->w) << 2 |
-            (counter == 0) << 3
+            (v2->xyz[2] > -v2->w) << 2 | 
+            (v3->xyz[2] > -v3->w) << 3
         );
+        
+        // Stats gathering found that when testing a 64x64x64 sized world, at most
+        //   ~400-500 triangles needed clipping
+        //   ~13% of the triangles in a frame needed clipping (percentage increased when less triangles overall)
+        // Based on this, the decision was made to optimise for rendering quads there 
+        //  were either entirely visible or entirely culled, at the expensive at making
+        //  partially visible quads a bit slower due to needing to be split into two triangles first
+        // Performance measuring indicated that overall FPS improved from this change
+        //  to switching to try to process 1 quad instead of 2 triangles though
 
         switch(visible_mask) {
-        case 15: /* All visible, but final vertex in strip */
+        case V0_VIS | V1_VIS | V2_VIS | V3_VIS: // All vertices visible
         {
-            _glPerspectiveDivideVertex(v0, h);
-            _glPushHeaderOrVertex(v0);
-
-            _glPerspectiveDivideVertex(v1, h);
+            // Triangle strip: {1,2,0} {2,0,3}
+            _glPerspectiveDivideVertex(v1);
             _glPushHeaderOrVertex(v1);
 
-            _glPerspectiveDivideVertex(v2, h);
+            _glPerspectiveDivideVertex(v2);
             _glPushHeaderOrVertex(v2);
-        }
-        break;
-        case 7:
-            /* All visible, push the first vertex and move on */
-            _glPerspectiveDivideVertex(v0, h);
-            _glPushHeaderOrVertex(v0);
-            break;
-        case 9:
-            /* First vertex was visible, last in strip */
-            {
-                Vertex __attribute__((aligned(32))) scratch[2];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-
-                _glClipEdge(v0, v1, a);
-                a->flags = GPU_CMD_VERTEX;
-
-                _glClipEdge(v2, v0, b);
-                b->flags = GPU_CMD_VERTEX_EOL;
-
-                _glPerspectiveDivideVertex(v0, h);
-                _glPushHeaderOrVertex(v0);
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-            }
-            break;
-        case 1:
-            /* First vertex was visible, but not last in strip */
-            {
-                Vertex __attribute__((aligned(32))) scratch[2];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-
-                _glClipEdge(v0, v1, a);
-                a->flags = GPU_CMD_VERTEX;
-
-                _glClipEdge(v2, v0, b);
-                b->flags = GPU_CMD_VERTEX;
-
-                _glPerspectiveDivideVertex(v0, h);
-                _glPushHeaderOrVertex(v0);
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-                _glPushHeaderOrVertex(b);
-            }
-            break;
-        case 10:
-        case 2:
-            /* Second vertex was visible. In self case we need to create a triangle and produce
-                two new vertices: 1-2, and 2-3. */
-            {
-                Vertex __attribute__((aligned(32))) scratch[3];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-                Vertex* c = &scratch[2];
-
-                memcpy_vertex(c, v1);
-
-                _glClipEdge(v0, v1, a);
-                a->flags = GPU_CMD_VERTEX;
-
-                _glClipEdge(v1, v2, b);
-                b->flags = v2->flags;
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                _glPerspectiveDivideVertex(c, h);
-                _glPushHeaderOrVertex(c);
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-            }
-            break;
-        case 11:
-        case 3:  /* First and second vertex were visible */
-        {
-            Vertex __attribute__((aligned(32))) scratch[3];
-            Vertex* a = &scratch[0];
-            Vertex* b = &scratch[1];
-            Vertex* c = &scratch[2];
-
-            memcpy_vertex(c, v1);
-
-            _glClipEdge(v2, v0, b);
-            b->flags = GPU_CMD_VERTEX;
-
-            _glPerspectiveDivideVertex(v0, h);
+            
+            _glPerspectiveDivideVertex(v0);
             _glPushHeaderOrVertex(v0);
 
-            _glClipEdge(v1, v2, a);
-            a->flags = v2->flags;
-
-            _glPerspectiveDivideVertex(c, h);
-            _glPushHeaderOrVertex(c);
-
-            _glPerspectiveDivideVertex(b, h);
-            _glPushHeaderOrVertex(b);
-
-            _glPerspectiveDivideVertex(a, h);
-            _glPushHeaderOrVertex(c);
-            _glPushHeaderOrVertex(a);
+            _glPerspectiveDivideVertex(v3);
+            _glPushHeaderOrVertex(v3);
         }
         break;
-        case 12:
-        case 4:
-            /* Third vertex was visible. */
-            {
-                Vertex __attribute__((aligned(32))) scratch[3];
-                Vertex* a = &scratch[0];
-                Vertex* b = &scratch[1];
-                Vertex* c = &scratch[2];
-
-                memcpy_vertex(c, v2);
-
-                _glClipEdge(v2, v0, a);
-                a->flags = GPU_CMD_VERTEX;
-
-                _glClipEdge(v1, v2, b);
-                b->flags = GPU_CMD_VERTEX;
-
-                _glPerspectiveDivideVertex(a, h);
-                _glPushHeaderOrVertex(a);
-
-                if(counter % 2 == 1) {
-                    _glPushHeaderOrVertex(a);
-                }
-
-                _glPerspectiveDivideVertex(b, h);
-                _glPushHeaderOrVertex(b);
-
-                _glPerspectiveDivideVertex(c, h);
-                _glPushHeaderOrVertex(c);
-            }
-            break;
-        case 13:
-        {
-            Vertex __attribute__((aligned(32))) scratch[3];
-            Vertex* a = &scratch[0];
-            Vertex* b = &scratch[1];
-            Vertex* c = &scratch[2];
-
-            memcpy_vertex(c, v2);
-            c->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v0, v1, a);
-            a->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v1, v2, b);
-            b->flags = GPU_CMD_VERTEX;
-
-            _glPerspectiveDivideVertex(v0, h);
-            _glPushHeaderOrVertex(v0);
-
-            _glPerspectiveDivideVertex(a, h);
-            _glPushHeaderOrVertex(a);
-
-            _glPerspectiveDivideVertex(c, h);
-            _glPushHeaderOrVertex(c);
-            _glPerspectiveDivideVertex(b, h);
-            _glPushHeaderOrVertex(b);
-
-            c->flags = GPU_CMD_VERTEX_EOL;
-            _glPushHeaderOrVertex(c);
-        }
+        
+        case 0: // No vertices visible
         break;
-        case 5:  /* First and third vertex were visible */
+        
+        default: // Some vertices visible
         {
-            Vertex __attribute__((aligned(32))) scratch[3];
-            Vertex* a = &scratch[0];
-            Vertex* b = &scratch[1];
-            Vertex* c = &scratch[2];
-
-            memcpy_vertex(c, v2);
-            c->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v0, v1, a);
-            a->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v1, v2, b);
-            b->flags = GPU_CMD_VERTEX;
-
-            _glPerspectiveDivideVertex(v0, h);
-            _glPushHeaderOrVertex(v0);
-
-            _glPerspectiveDivideVertex(a, h);
-            _glPushHeaderOrVertex(a);
-
-            _glPerspectiveDivideVertex(c, h);
-            _glPushHeaderOrVertex(c);
-            _glPerspectiveDivideVertex(b, h);
-            _glPushHeaderOrVertex(b);
-            _glPushHeaderOrVertex(c);
-        }
-        break;
-        case 14:
-        case 6:  /* Second and third vertex were visible */
-        {
+            // vertices are modified in SubmitTriangle, so need to copy them
             Vertex __attribute__((aligned(32))) scratch[4];
-            Vertex* a = &scratch[0];
-            Vertex* b = &scratch[1];
-            Vertex* c = &scratch[2];
-            Vertex* d = &scratch[3];
-
-            memcpy_vertex(c, v1);
-            memcpy_vertex(d, v2);
-
-            _glClipEdge(v0, v1, a);
-            a->flags = GPU_CMD_VERTEX;
-
-            _glClipEdge(v2, v0, b);
-            b->flags = GPU_CMD_VERTEX;
-
-            _glPerspectiveDivideVertex(a, h);
-            _glPushHeaderOrVertex(a);
-
-            _glPerspectiveDivideVertex(c, h);
-            _glPushHeaderOrVertex(c);
-
-            _glPerspectiveDivideVertex(b, h);
-            _glPushHeaderOrVertex(b);
-            _glPushHeaderOrVertex(c);
-
-            _glPerspectiveDivideVertex(d, h);
-            _glPushHeaderOrVertex(d);
+            Vertex* a0 = &scratch[0];
+            Vertex* a2 = &scratch[1];
+            memcpy_vertex(a0, v0);
+            memcpy_vertex(a2, v2);
+            
+            visible_mask &= (V0_VIS | V1_VIS | V2_VIS);       
+            v2->flags = GPU_CMD_VERTEX_EOL;
+            SubmitTriangle(v0, v1, v2, visible_mask);
+            
+            visible_mask = (
+                (a2->xyz[2] > -a2->w) << 0 |
+                (v3->xyz[2] > -v3->w) << 1 |
+                (a0->xyz[2] > -a0->w) << 2
+            );         
+            v3->flags = GPU_CMD_VERTEX;
+            a0->flags = GPU_CMD_VERTEX_EOL;
+            SubmitTriangle(a2, v3, a0, visible_mask);
         }
         break;
-        case 8:
-        default:
-            break;
         }
     }
 

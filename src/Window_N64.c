@@ -15,10 +15,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-// no DPI scaling on Wii/GameCube
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+struct _WindowData WindowInfo;
 
 void Window_Init(void) {
     display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
@@ -27,17 +24,33 @@ void Window_Init(void) {
 	DisplayInfo.Width  = display_get_width();
 	DisplayInfo.Height = display_get_height();
 	DisplayInfo.Depth  = 4; // 32 bit
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
 	
-	WindowInfo.Width   = DisplayInfo.Width;
-	WindowInfo.Height  = DisplayInfo.Height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-    joypad_init();
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 10;
+	joypad_init();
+
+	// change defaults to make more sense for N64
+	cc_uint8* binds = (cc_uint8*)KeyBind_GamepadDefaults;
+	binds[KEYBIND_INVENTORY]    = CCPAD_B;
+	binds[KEYBIND_PLACE_BLOCK]  = CCPAD_Z;
+	binds[KEYBIND_HOTBAR_RIGHT] = CCPAD_L;
+	binds[KEYBIND_DELETE_BLOCK] = CCPAD_R;
+
+	binds[KEYBIND_FORWARD]   = CCPAD_CUP;
+	binds[KEYBIND_BACK]      = CCPAD_CDOWN;
+	binds[KEYBIND_LEFT]      = CCPAD_CLEFT;
+	binds[KEYBIND_RIGHT]     = CCPAD_CRIGHT;
 }
+
+void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
@@ -54,7 +67,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -68,7 +81,7 @@ static void HandleButtons(joypad_buttons_t btns) {
 	
 	Input_SetNonRepeatable(CCPAD_A, btns.a);
 	Input_SetNonRepeatable(CCPAD_B, btns.b);
-	Input_SetNonRepeatable(CCPAD_X, btns.z); // TODO: Or Y?
+	Input_SetNonRepeatable(CCPAD_Z, btns.z);
 	
 	Input_SetNonRepeatable(CCPAD_START,  btns.start);
 	
@@ -76,19 +89,22 @@ static void HandleButtons(joypad_buttons_t btns) {
 	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.d_right);
 	Input_SetNonRepeatable(CCPAD_UP,     btns.d_up);
 	Input_SetNonRepeatable(CCPAD_DOWN,   btns.d_down);
-	
-	// TODO: How to map the right digital buttons (c_left/c_down etc
+
+	Input_SetNonRepeatable(CCPAD_CLEFT,  btns.c_left);
+	Input_SetNonRepeatable(CCPAD_CRIGHT, btns.c_right);
+	Input_SetNonRepeatable(CCPAD_CUP,    btns.c_up);
+	Input_SetNonRepeatable(CCPAD_CDOWN,  btns.c_down);
 }
 
 static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
-	float scale = (delta * 60.0) / 32.0f;
+	float scale = (delta * 60.0) / 8.0f;
 	int dx = inputs->stick_x;
 	int dy = inputs->stick_y;
 
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, -dy * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, -dy * scale);
 }
 
 void Window_ProcessEvents(double delta) {
@@ -109,22 +125,20 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	surface_t* fb  = display_get();
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0;
+	cc_uint32* src = (cc_uint32*)bmp->scan0;
 	cc_uint8*  dst = (cc_uint8*)fb->buffer;
 
-	for (int y = 0; y < fb_bmp.height; y++) 
+	for (int y = 0; y < bmp->height; y++) 
 	{
 		Mem_Copy(dst + y * fb->stride,
-				 src + y * fb_bmp.width, 
-				 fb_bmp.width * 4);
+				 src + y * bmp->width, 
+				 bmp->width * 4);
 	}
 	
     display_show(fb);

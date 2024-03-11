@@ -841,6 +841,7 @@ const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
 void SysFonts_GetNames(struct StringsBuffer* buffer) { }
 
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
+	size *= DisplayInfo.ScaleY;
 	/* Round upwards to nearest 8 */
 	size = (size + 7) & ~0x07;
 

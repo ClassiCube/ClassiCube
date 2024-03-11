@@ -1,0 +1,34 @@
+name: Build latest (PS2)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-ps2
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ps2dev/ps2sdk:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile PS2 build
+        id: compile
+        run: |
+          apk add make mpc1
+          make ps2
+          
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile PS2 build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-ps2.elf'
+          DEST_NAME: 'ClassiCube-ps2.elf'

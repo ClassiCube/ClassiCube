@@ -17,10 +17,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-// no DPI scaling on Xbox
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+struct _WindowData WindowInfo;
 
 // https://github.com/Free60Project/libxenon/blob/71a411cddfc26c9ccade08d054d87180c359797a/libxenon/drivers/console/console.c#L47
 struct ati_info {
@@ -40,12 +37,12 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = ai->width;
-	WindowInfo.Height  = ai->height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = ai->width;
+	Window_Main.Height  = ai->height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
-	Input.GamepadSource = true;
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	
 	usb_init();
 	usb_do_poll();
@@ -53,6 +50,8 @@ void Window_Init(void) {
 	//xenon_ata_init();
 	//xenon_atapi_init();
 }
+
+void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
@@ -69,7 +68,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	/* TODO implement */
 }
 
@@ -125,22 +124,21 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {return;
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	return;
 	//void* fb = XVideoGetFB();
 	//XVideoWaitForVBlank();
 
-	/*cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
+	/*cc_uint32* src = (cc_uint32*)bmp->scan0 + r.X;
 	cc_uint32* dst = (cc_uint32*)fb           + r.X;
 
 	for (int y = r.Y; y < r.Y + r.Height; y++) 
 	{
-		Mem_Copy(dst + y * fb_bmp.width, src + y * fb_bmp.width, r.Width * 4);
+		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.Width * 4);
 	}*/
 }
 

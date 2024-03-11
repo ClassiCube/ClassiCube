@@ -17,7 +17,6 @@
 #include "Block.h"
 #include "Input.h"
 
-#define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
 static int  Widget_Pointer(void* elem, int id, int x, int y) { return false; }
 static void Widget_InputUp(void* elem, int key)   { }
@@ -31,7 +30,7 @@ static int  Widget_MouseScroll(void* elem, float delta) { return false; }
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->col);
+	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->color);
 }
 
 static void TextWidget_Free(void* widget) {
@@ -42,12 +41,12 @@ static void TextWidget_Free(void* widget) {
 static void TextWidget_Reposition(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	Widget_CalcPosition(w);
-	w->tex.X = w->x; w->tex.Y = w->y;
+	w->tex.x = w->x; w->tex.y = w->y;
 }
 
 static void TextWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	Gfx_Make2DQuad(&w->tex, w->col, vertices);
+	Gfx_Make2DQuad(&w->tex, w->color, vertices);
 }
 
 static int TextWidget_Render2(void* widget, int offset) {
@@ -59,16 +58,18 @@ static int TextWidget_Render2(void* widget, int offset) {
 	return offset + 4;
 }
 
+static int TextWidget_MaxVertices(void* widget) { return TEXTWIDGET_MAX; }
+
 static const struct WidgetVTABLE TextWidget_VTABLE = {
 	TextWidget_Render, TextWidget_Free,  TextWidget_Reposition,
 	Widget_InputDown,  Widget_InputUp,   Widget_MouseScroll,
 	Widget_Pointer,    Widget_PointerUp, Widget_PointerMove,
-	TextWidget_BuildMesh, TextWidget_Render2
+	TextWidget_BuildMesh, TextWidget_Render2, TextWidget_MaxVertices
 };
 void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
-	w->col    = PACKEDCOL_WHITE;
+	w->color  = PACKEDCOL_WHITE;
 }
 
 void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font) {
@@ -96,10 +97,12 @@ void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
+/* Only top half of gui.png is used */
+#define Button_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/128.0f, u2/256.0f,v2/128.0f)
 
-static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
-static struct Texture btnSelectedTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
-static struct Texture btnDisabledTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
+static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Button_UV(0,66, 200,86)  };
+static struct Texture btnSelectedTex = { 0, Tex_Rect(0,0, 0,0), Button_UV(0,86, 200,106) };
+static struct Texture btnDisabledTex = { 0, Tex_Rect(0,0, 0,0), Button_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
@@ -112,8 +115,8 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->height = max(w->tex.Height, w->minHeight);
 
 	Widget_CalcPosition(w);
-	w->tex.X = w->x + (w->width  / 2 - w->tex.Width  / 2);
-	w->tex.Y = w->y + (w->height / 2 - w->tex.Height / 2);
+	w->tex.x = w->x + (w->width  / 2 - w->tex.Width  / 2);
+	w->tex.y = w->y + (w->height / 2 - w->tex.Height / 2);
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
@@ -130,8 +133,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
 	back.ID = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
-	back.X = w->x; back.Width  = w->width;
-	back.Y = w->y; back.Height = w->height;
+	back.x = w->x; back.Width  = w->width;
+	back.y = w->y; back.Height = w->height;
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
@@ -144,11 +147,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Draw2DTexture(&back, w->col);
+		Gfx_Draw2DTexture(&back, w->color);
 
-		back.X += (w->width / 2);
+		back.x += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Draw2DTexture(&back, w->col);
+		Gfx_Draw2DTexture(&back, w->color);
 	}
 
 	if (!w->tex.ID) return;
@@ -170,13 +173,13 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
-	back.X = w->x; back.Width  = w->width;
-	back.Y = w->y; back.Height = w->height;
+	back.x = w->x; back.Width  = w->width;
+	back.y = w->y; back.Height = w->height;
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
 		/* Button can be drawn normally */
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices);
 		*vertices += 4; /* always use up 8 vertices for body */
 	} else {
 		/* Split button down the middle */
@@ -184,11 +187,11 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices);
 
-		back.X += (w->width / 2);
+		back.x += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Make2DQuad(&back, w->col, vertices);
+		Gfx_Make2DQuad(&back, w->color, vertices);
 	}
 
 	color = (w->flags & WIDGET_FLAG_DISABLED) ? disabledColor 
@@ -209,11 +212,13 @@ static int ButtonWidget_Render2(void* widget, int offset) {
 	return offset + 12;
 }
 
+static int ButtonWidget_MaxVertices(void* widget) { return BUTTONWIDGET_MAX; }
+
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	ButtonWidget_Render, ButtonWidget_Free, ButtonWidget_Reposition,
 	Widget_InputDown,    Widget_InputUp,    Widget_MouseScroll,
 	Widget_Pointer,      Widget_PointerUp,  Widget_PointerMove,
-	ButtonWidget_BuildMesh, ButtonWidget_Render2
+	ButtonWidget_BuildMesh, ButtonWidget_Render2, ButtonWidget_MaxVertices
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	ButtonWidget_Init(w, minWidth, onClick);
@@ -223,7 +228,7 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
-	w->col       = PACKEDCOL_WHITE;
+	w->color     = PACKEDCOL_WHITE;
 	w->optName   = NULL;
 	w->flags     = WIDGET_FLAG_SELECTABLE;
 	w->minWidth  = Display_ScaleX(minWidth);
@@ -360,10 +365,10 @@ static const struct WidgetVTABLE ScrollbarWidget_VTABLE = {
 	Widget_InputDown,            Widget_InputUp,            ScrollbarWidget_MouseScroll,
 	ScrollbarWidget_PointerDown, ScrollbarWidget_PointerUp, ScrollbarWidget_PointerMove
 };
-void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
+void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width) {
 	Widget_Reset(w);
 	w->VTABLE    = &ScrollbarWidget_VTABLE;
-	w->width     = Display_ScaleX(22);
+	w->width     = Display_ScaleX(width);
 	w->borderX   = Display_ScaleX(2);
 	w->borderY   = Display_ScaleY(2);
 	w->nubsWidth = Display_ScaleX(3);
@@ -396,7 +401,7 @@ static void HotbarWidget_BuildOutlineMesh(struct HotbarWidget* w, struct VertexT
 	Gfx_Make2DQuad(&w->backTex, PACKEDCOL_WHITE, vertices);
 
 	x = HotbarWidget_TileX(w, Inventory.SelectedIndex);
-	w->selTex.X = (int)(x - w->selWidth / 2);
+	w->selTex.x = (int)(x - w->selWidth / 2);
 	Gfx_Make2DQuad(&w->selTex, PACKEDCOL_WHITE, vertices);
 }
 
@@ -443,18 +448,25 @@ static void HotbarWidget_RenderEntries(struct HotbarWidget* w, int offset) {
 }
 
 static int HotbarWidget_Render2(void* widget, int offset) {
+	Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
+
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderOutline(w, offset    );
 	HotbarWidget_RenderEntries(w, offset + 8);
 
 #ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return HOTBAR_MAX_VERTICES;
-	w->ellipsisTex.X = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
-	w->ellipsisTex.Y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
-	Texture_Render(&w->ellipsisTex);
+	if (Input_TouchMode) {
+		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
+		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
+		Texture_Render(&w->ellipsisTex);
+	}
 #endif
+
+	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 	return HOTBAR_MAX_VERTICES;
 }
+
+static int HotbarWidget_MaxVertices(void* w) { return HOTBAR_MAX_VERTICES; }
 
 void HotbarWidget_Update(struct HotbarWidget* w, double delta) {
 #ifdef CC_BUILD_TOUCH
@@ -501,11 +513,13 @@ static void HotbarWidget_Reposition(void* widget) {
 	w->slotWidth   = 20.0f * scaleX;
 
 	Tex_SetRect(w->backTex, w->x,w->y, w->width,w->height);
-	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/256.0f);
+	/* Only top half of gui png is used */
+	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/128.0f);
 
 	y = w->y + (w->height - (int)(23.0f * scaleY));
 	Tex_SetRect(w->selTex, 0,y, (int)w->selWidth,w->height);
-	Tex_SetUV(w->selTex,   0,22/256.0f, 24/256.0f,44/256.0f);
+	/* Only top half of gui png is used */
+	Tex_SetUV(w->selTex,   0,22/128.0f, 24/256.0f,44/128.0f);
 }
 
 static int HotbarWidget_MapKey(int key) {
@@ -559,7 +573,7 @@ static void HotbarWidget_InputUp(void* widget, int key) {
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
-	if (WindowInfo.Focused) Inventory_SwitchHotbar();
+	if (Window_Main.Focused) Inventory_SwitchHotbar();
 }
 
 static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
@@ -653,7 +667,7 @@ static const struct WidgetVTABLE HotbarWidget_VTABLE = {
 	NULL,                     HotbarWidget_Free,      HotbarWidget_Reposition,
 	HotbarWidget_KeyDown,     HotbarWidget_InputUp,   HotbarWidget_MouseScroll,
 	HotbarWidget_PointerDown, HotbarWidget_PointerUp, HotbarWidget_PointerMove,
-	HotbarWidget_BuildMesh,   HotbarWidget_Render2,
+	HotbarWidget_BuildMesh,   HotbarWidget_Render2,   HotbarWidget_MaxVertices
 };
 void HotbarWidget_Create(struct HotbarWidget* w) {
 	Widget_Reset(w);
@@ -823,6 +837,8 @@ static int TableWidget_Render2(void* widget, int offset) {
 	return offset + TABLE_MAX_VERTICES;
 }
 
+static int TableWidget_MaxVertices(void* w) { return TABLE_MAX_VERTICES; }
+
 static void TableWidget_Free(void* widget) { }
 
 void TableWidget_Recreate(struct TableWidget* w) {
@@ -970,14 +986,14 @@ static const struct WidgetVTABLE TableWidget_VTABLE = {
 	NULL,                    TableWidget_Free,      TableWidget_Reposition,
 	TableWidget_KeyDown,     Widget_InputUp,        TableWidget_MouseScroll,
 	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove,
-	TableWidget_BuildMesh,   TableWidget_Render2
+	TableWidget_BuildMesh,   TableWidget_Render2,   TableWidget_MaxVertices
 };
-void TableWidget_Create(struct TableWidget* w) {
+void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	cc_bool classic;
 	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
 	w->lastCreatedIndex = -1000;
-	ScrollbarWidget_Create(&w->scroll);
+	ScrollbarWidget_Create(&w->scroll, sbWidth);
 	
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_CENTRE;
@@ -1119,8 +1135,8 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 		}
 	}
 
-	w->caretTex.X = w->x + w->padding + lineWidth;
-	w->caretTex.Y = (w->inputTex.Y + w->caretOffset) + w->caretY * w->lineHeight;
+	w->caretTex.x = w->x + w->padding + lineWidth;
+	w->caretTex.y = (w->inputTex.y + w->caretOffset) + w->caretY * w->lineHeight;
 	colCode = InputWidget_GetLastCol(w, w->caretX, w->caretY);
 
 	if (colCode) {
@@ -1347,8 +1363,8 @@ static void InputWidget_Reposition(void* widget) {
 	int oldX = w->x, oldY = w->y;
 	Widget_CalcPosition(w);
 	
-	w->caretTex.X += w->x - oldX; w->caretTex.Y += w->y - oldY;
-	w->inputTex.X += w->x - oldX; w->inputTex.Y += w->y - oldY;
+	w->caretTex.x += w->x - oldX; w->caretTex.y += w->y - oldY;
+	w->inputTex.x += w->x - oldX; w->inputTex.y += w->y - oldY;
 }
 
 static int InputWidget_KeyDown(void* widget, int key) {
@@ -1378,7 +1394,7 @@ static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	int cx, cy, offset = 0;
 	int charX, charWidth, charHeight;
 
-	x -= w->inputTex.X; y -= w->inputTex.Y;
+	x -= w->inputTex.x; y -= w->inputTex.y;
 	DrawTextArgs_MakeEmpty(&args, w->font, true);
 	charHeight = w->lineHeight;
 	String_InitArray(line, lineBuffer);
@@ -1414,6 +1430,9 @@ static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 /*########################################################################################################################*
 *-----------------------------------------------------MenuInputDesc-------------------------------------------------------*
 *#########################################################################################################################*/
+static void    MenuInput_NoDefault(struct MenuInputDesc* d, cc_string* value) { }
+static cc_bool MenuInput_NoProcess(struct MenuInputDesc* d, cc_string* value, int btn) { return false; }
+
 static void Hex_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
@@ -1436,7 +1455,8 @@ static void Hex_Default(struct MenuInputDesc* d, cc_string* value) {
 }
 
 const struct MenuInputVTABLE HexInput_VTABLE = {
-	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, Hex_Default
+	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, 
+	Hex_Default, MenuInput_NoProcess
 };
 
 static void Int_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1463,16 +1483,17 @@ static void Int_Default(struct MenuInputDesc* d, cc_string* value) {
 }
 
 const struct MenuInputVTABLE IntInput_VTABLE = {
-	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Int_Default
+	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, 
+	Int_Default, MenuInput_NoProcess
 };
 
 static void Seed_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(an integer)");
 }
-static void Seed_NoDefault(struct MenuInputDesc* d, cc_string* value) { }
 
 const struct MenuInputVTABLE SeedInput_VTABLE = {
-	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Seed_NoDefault
+	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
+	MenuInput_NoDefault, MenuInput_NoProcess
 };
 
 static void Float_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1499,7 +1520,8 @@ static void Float_Default(struct MenuInputDesc* d, cc_string* value) {
 }
 
 const struct MenuInputVTABLE FloatInput_VTABLE = {
-	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, Float_Default
+	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, 
+	Float_Default, MenuInput_NoProcess
 };
 
 static void Path_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1513,7 +1535,8 @@ static cc_bool Path_ValidChar(struct MenuInputDesc* d, char c) {
 static cc_bool Path_ValidString(struct MenuInputDesc* d, const cc_string* s) { return true; }
 
 const struct MenuInputVTABLE PathInput_VTABLE = {
-	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, Seed_NoDefault
+	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, 
+	MenuInput_NoDefault, MenuInput_NoProcess
 };
 
 static void String_Range(struct MenuInputDesc* d, cc_string* range) {
@@ -1529,7 +1552,8 @@ static cc_bool String_ValidString(struct MenuInputDesc* d, const cc_string* s) {
 }
 
 const struct MenuInputVTABLE StringInput_VTABLE = {
-	String_Range, String_ValidChar, String_ValidString, String_ValidString, Seed_NoDefault
+	String_Range, String_ValidChar, String_ValidString, String_ValidString, 
+	MenuInput_NoDefault, MenuInput_NoProcess
 };
 
 
@@ -1560,6 +1584,8 @@ static int TextInputWidget_Render2(void* widget, int offset) {
 	}
 	return offset + 4;
 }
+
+static int TextInputWidget_MaxVertices(void* widget) { return MENUINPUTWIDGET_MAX; }
 
 static void TextInputWidget_RemakeTexture(void* widget) {
 	cc_string range; char rangeBuffer[STRING_SIZE];
@@ -1607,7 +1633,7 @@ static void TextInputWidget_RemakeTexture(void* widget) {
 	Context2D_Free(&ctx);
 
 	Widget_Layout(&w->base);
-	tex->X = w->base.x; tex->Y = w->base.y;
+	tex->x = w->base.x; tex->y = w->base.y;
 }
 
 static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
@@ -1647,7 +1673,7 @@ static const struct WidgetVTABLE TextInputWidget_VTABLE = {
 	TextInputWidget_Render,      InputWidget_Free, InputWidget_Reposition,
 	InputWidget_KeyDown,         Widget_InputUp,   Widget_MouseScroll,
 	TextInputWidget_PointerDown, Widget_PointerUp, Widget_PointerMove,
-	TextInputWidget_BuildMesh,   TextInputWidget_Render2
+	TextInputWidget_BuildMesh,   TextInputWidget_Render2, TextInputWidget_MaxVertices
 };
 void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
@@ -1744,8 +1770,8 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->width  = width;
 	w->height = height;
 	Widget_Layout(w);
-	w->inputTex.X = w->x + w->padding;
-	w->inputTex.Y = w->y;
+	w->inputTex.x = w->x + w->padding;
+	w->inputTex.y = w->y;
 }
 
 static void ChatInputWidget_Render(void* widget, double delta) {
@@ -1762,7 +1788,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match Minecraft behaviour */
-		width      = max(width, WindowInfo.Width - x * 4);
+		width      = max(width, Window_Main.Width - x * 4);
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backColor);
 		y += w->lineHeight;
@@ -1964,7 +1990,8 @@ void TextGroupWidget_ShiftUp(struct TextGroupWidget* w) {
 	Gfx_DeleteTexture(&w->textures[0].ID);
 	last = w->lines - 1;
 
-	for (i = 0; i < last; i++) {
+	for (i = 0; i < last; i++) 
+	{
 		w->textures[i] = w->textures[i + 1];
 	}
 	w->textures[last].ID = 0; /* Gfx_DeleteTexture() called by TextGroupWidget_Redraw otherwise */
@@ -1976,7 +2003,8 @@ void TextGroupWidget_ShiftDown(struct TextGroupWidget* w) {
 	last = w->lines - 1;
 	Gfx_DeleteTexture(&w->textures[last].ID);
 
-	for (i = last; i > 0; i--) {
+	for (i = last; i > 0; i--) 
+	{
 		w->textures[i] = w->textures[i - 1];
 	}
 	w->textures[0].ID = 0; /* Gfx_DeleteTexture() called by TextGroupWidget_Redraw otherwise */
@@ -1987,10 +2015,12 @@ int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 	struct Texture* textures = w->textures;
 	int i, height = 0;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		if (textures[i].ID) break;
 	}
-	for (; i < w->lines; i++) {
+	for (; i < w->lines; i++) 
+	{
 		height += textures[i].Height;
 	}
 	return height;
@@ -2002,7 +2032,8 @@ static void TextGroupWidget_Reposition(void* widget) {
 	int i, y, width = 0, height = 0;
 	
 	/* Work out how big the text group is now */
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		width = max(width, textures[i].Width);
 		height += textures[i].Height;
 	}
@@ -2010,9 +2041,10 @@ static void TextGroupWidget_Reposition(void* widget) {
 	w->width = width; w->height = height;
 	Widget_CalcPosition(w);
 
-	for (i = 0, y = w->y; i < w->lines; i++) {
-		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, WindowInfo.Width);
-		textures[i].Y = y;
+	for (i = 0, y = w->y; i < w->lines; i++) 
+	{
+		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Main.Width);
+		textures[i].y = y;
 		y += textures[i].Height;
 	}
 }
@@ -2025,7 +2057,8 @@ struct Portion { short Beg, Len, LineBeg, LineLen; };
 static int TextGroupWidget_NextUrl(char* chars, int charsLen, int i) {
 	int start, left;
 
-	for (; i < charsLen; i++) {
+	for (; i < charsLen; i++) 
+	{
 		if (!(chars[i] == 'h' || chars[i] == '&')) continue;
 		left = charsLen - i;
 		if (left < TEXTGROUPWIDGET_HTTP_LEN) return charsLen;
@@ -2051,7 +2084,8 @@ static int TextGroupWidget_UrlEnd(char* chars, int charsLen, int* begs, int begs
 	int next, left;
 	cc_bool isBeg;
 
-	for (; i < charsLen && chars[i] != ' '; i++) {
+	for (; i < charsLen && chars[i] != ' '; i++) 
+	{
 		/* Is this character the start of a line */
 		isBeg = false;
 		for (j = 0; j < begsLen; j++) {
@@ -2106,7 +2140,8 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	cc_string line;
 	int nextStart, i, total = 0, end;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		line = TextGroupWidget_UNSAFE_Get(w, i);
 		begs[i] = -1; ends[i] = -1;
 		if (!line.length) continue;
@@ -2117,7 +2152,8 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	}
 
 	end = 0;
-	for (;;) {
+	for (;;) 
+	{
 		nextStart = TextGroupWidget_NextUrl(chars, total, end);
 
 		/* add normal portion between urls */
@@ -2143,7 +2179,8 @@ static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 
 	/* Delete "> " multiline chars from URLs */
 	dst = text->buffer;
-	for (i = text->length - 2; i >= 0; i--) {
+	for (i = text->length - 2; i >= 0; i--) 
+	{
 		if (dst[i] != '>' || dst[i + 1] != ' ') continue;
 
 		String_DeleteAt(text, i + 1);
@@ -2160,14 +2197,15 @@ static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text
 	int portionsCount;
 	int i, x, width;
 
-	mouseX -= w->textures[index].X;
+	mouseX -= w->textures[index].x;
 	args.useShadow = true;
 	line = TextGroupWidget_UNSAFE_Get(w, index);
 
 	if (Game_ClassicMode) return false;
 	portionsCount = TextGroupWidget_Reduce(w, chars, index, portions);
 
-	for (i = 0, x = 0; i < portionsCount; i++) {
+	for (i = 0, x = 0; i < portionsCount; i++) 
+	{
 		bit = portions[i];
 		args.text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
 		args.font = w->font;
@@ -2190,10 +2228,11 @@ int TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int 
 	cc_string line;
 	int i;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		if (!w->textures[i].ID) continue;
 		tex = w->textures[i];
-		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+		if (!Gui_Contains(tex.x, tex.y, tex.Width, tex.Height, x, y)) continue;
 
 		if (!TextGroupWidget_GetUrl(w, text, i, x)) {
 			line = TextGroupWidget_UNSAFE_Get(w, i);
@@ -2208,7 +2247,8 @@ static cc_bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
 	cc_string line;
 	int i;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		line = TextGroupWidget_UNSAFE_Get(w, i);
 		if (String_IndexOf(&line, '/') >= 0) return true;
 	}
@@ -2281,7 +2321,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
-	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, WindowInfo.Width);
+	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Main.Width);
 	w->textures[index] = tex;
 	Widget_Layout(w);
 }
@@ -2290,11 +2330,13 @@ void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
 	cc_string line;
 	int i, j;
 
-	for (i = 0; i < group->lines; i++) {
+	for (i = 0; i < group->lines; i++) 
+	{
 		line = TextGroupWidget_UNSAFE_Get(group, i);
 		if (!line.length) continue;
 
-		for (j = 0; j < line.length - 1; j++) {
+		for (j = 0; j < line.length - 1; j++) 
+		{
 			if (line.buffer[j] == '&' && line.buffer[j + 1] == col) {
 				TextGroupWidget_Redraw(group, i);
 				break;
@@ -2311,7 +2353,8 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 	Drawer2D_ReducePadding_Height(&height, font->size, 3);
 	w->defaultHeight = height;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		w->textures[i].Height = w->collapsible[i] ? 0 : height;
 	}
 	w->font = font;
@@ -2323,7 +2366,8 @@ static void TextGroupWidget_Render(void* widget, double delta) {
 	struct Texture* textures  = w->textures;
 	int i;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		if (!textures[i].ID) continue;
 		Texture_Render(&textures[i]);
 	}
@@ -2333,15 +2377,47 @@ static void TextGroupWidget_Free(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	int i;
 
-	for (i = 0; i < w->lines; i++) {
+	for (i = 0; i < w->lines; i++) 
+	{
 		Gfx_DeleteTexture(&w->textures[i].ID);
 	}
+}
+
+static void TextGroupWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+	int i;
+
+	for (i = 0; i < w->lines; i++)
+	{
+		Gfx_Make2DQuad(&w->textures[i], PACKEDCOL_WHITE, vertices);
+	}
+}
+
+static int TextGroupWidget_Render2(void* widget, int offset) {
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+	struct Texture* textures  = w->textures;
+	int i;
+
+	for (i = 0; i < w->lines; i++, offset += 4)
+	{
+		if (!textures[i].ID) continue;
+
+		Gfx_BindTexture(textures[i].ID);
+		Gfx_DrawVb_IndexedTris_Range(4, offset);
+	}
+	return offset;
+}
+
+static int TextGroupWidget_MaxVertices(void* widget) { 
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+	return w->lines * 4;
 }
 
 static const struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	TextGroupWidget_Render, TextGroupWidget_Free, TextGroupWidget_Reposition,
 	Widget_InputDown,       Widget_InputUp,       Widget_MouseScroll,
-	Widget_Pointer,         Widget_PointerUp,     Widget_PointerMove
+	Widget_Pointer,         Widget_PointerUp,     Widget_PointerMove,
+	TextGroupWidget_BuildMesh, TextGroupWidget_Render2, TextGroupWidget_MaxVertices
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
 	Widget_Reset(w);
@@ -2555,7 +2631,7 @@ static void SpecialInputWidget_Reposition(void* widget) {
 	w->width  = w->tex.Width;
 	w->height = w->active ? w->tex.Height : 0;
 	Widget_CalcPosition(w);
-	w->tex.X = w->x; w->tex.Y = w->y;
+	w->tex.x = w->x; w->tex.y = w->y;
 }
 
 static int SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
@@ -2617,20 +2693,20 @@ static void ThumbstickWidget_Rotate(void* widget, struct VertexTextured** vertic
 
 	ptr = *vertices - 4;
 	for (i = 0; i < 4; i++) {
-		int x = ptr[i].X - w->x;
-		int y = ptr[i].Y - w->y;
-		ptr[i].X = -y + w->x + offset;
-		ptr[i].Y =  x + w->y;
+		int x = ptr[i].x - w->x;
+		int y = ptr[i].y - w->y;
+		ptr[i].x = -y + w->x + offset;
+		ptr[i].y =  x + w->y;
 	}
 }
 
 static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured** vertices) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	float tmp;
-	tex->Y = w->y + w->height / 2;
+	tex->y = w->y + w->height / 2;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
-	tex->Y = w->y;
+	tex->y = w->y;
 	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
@@ -2646,7 +2722,7 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	struct Texture tex;
 
-	tex.X     = w->x;
+	tex.x     = w->x;
 	tex.Width = w->width; tex.Height = w->height / 2;
 	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
 

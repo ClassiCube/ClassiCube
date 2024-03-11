@@ -12,21 +12,13 @@ ifndef $(PLAT)
 	else
 		PLAT=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 	endif
-	
-	ifeq ($(PLAT),darwin)
-		ifeq ($(shell uname -m), x86_64)
-			PLAT=mac_x64
-		else
-			PLAT=mac_x32
-		endif
-	endif
 endif
 
 ifeq ($(PLAT),web)
 CC=emcc
 OEXT=.html
 CFLAGS=-g
-LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1
+LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library src/interop_web.js
 endif
 
 ifeq ($(PLAT),mingw)
@@ -46,15 +38,9 @@ CFLAGS=-g -pipe -fno-math-errno
 LIBS=-lsocket -lX11 -lXi -lGL
 endif
 
-ifeq ($(PLAT),mac_x32)
-CFLAGS=-g -m32 -pipe -fno-math-errno
-LIBS=
-LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL -framework IOKit
-endif
-
-ifeq ($(PLAT),mac_x64)
+ifeq ($(PLAT),darwin)
 OBJECTS+=src/interop_cocoa.o
-CFLAGS=-g -m64 -pipe -fno-math-errno
+CFLAGS=-g -pipe -fno-math-errno
 LIBS=
 LDFLAGS=-rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 endif
@@ -120,10 +106,8 @@ mingw:
 	$(MAKE) $(ENAME) PLAT=mingw
 sunos:
 	$(MAKE) $(ENAME) PLAT=sunos
-mac_x32:
-	$(MAKE) $(ENAME) PLAT=mac_x32
-mac_x64:
-	$(MAKE) $(ENAME) PLAT=mac_x64
+darwin:
+	$(MAKE) $(ENAME) PLAT=darwin
 freebsd:
 	$(MAKE) $(ENAME) PLAT=freebsd
 openbsd:
@@ -149,6 +133,8 @@ vita:
 	$(MAKE) -f misc/vita/Makefile PLAT=vita
 ps3:
 	$(MAKE) -f misc/ps3/Makefile PLAT=ps3
+ps2:
+	$(MAKE) -f misc/ps2/Makefile PLAT=ps2
 3ds:
 	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
 wii:
@@ -160,7 +146,7 @@ dreamcast:
 xbox:
 	$(MAKE) -f misc/xbox/Makefile PLAT=xbox
 xbox360:
-	$(MAKE) -f src/xbox360/Makefile PLAT=xbox360
+	$(MAKE) -f misc/xbox360/Makefile PLAT=xbox360
 n64:
 	$(MAKE) -f misc/n64/Makefile PLAT=n64
 	

@@ -193,9 +193,9 @@ static void RegisterAtoms(void) {
 }
 
 static void RefreshWindowBounds(int width, int height) {
-	if (width != WindowInfo.Width || height != WindowInfo.Height) {
-		WindowInfo.Width  = width;
-		WindowInfo.Height = height;
+	if (width != Window_Main.Width || height != Window_Main.Height) {
+		Window_Main.Width  = width;
+		Window_Main.Height = height;
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
@@ -270,6 +270,8 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = 1;
 }
 
+void Window_Free(void) { }
+
 #ifdef CC_BUILD_ICON
 /* See misc/linux_icon_gen.cs for how to generate this file */
 #include "_CCIcon_X11.h"
@@ -302,7 +304,7 @@ static void DoCreateWindow(int width, int height) {
 
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
-		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
+		CWColormap | CWEventMask, &attributes);
 	if (!win_handle) Logger_Abort("XCreateWindow failed");
 
 #ifdef CC_BUILD_XIM
@@ -330,8 +332,8 @@ static void DoCreateWindow(int width, int height) {
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 
 	RefreshWindowBounds(width, height);
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = (void*)win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = (void*)win_handle;
 	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
@@ -343,7 +345,7 @@ static void DoCreateWindow(int width, int height) {
 
 	/* Check for focus initially, in case WM doesn't send a FocusIn event */
 	XGetInputFocus(win_display, &focus, &focusRevert);
-	if (focus == win_handle) WindowInfo.Focused = true;
+	if (focus == win_handle) Window_Main.Focused = true;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
@@ -390,25 +392,27 @@ int Window_GetWindowState(void) {
 	cc_bool fullscreen = false, minimised = false;
 	Atom prop_type;
 	unsigned long items, after;
+	unsigned char* data = NULL;
 	int i, prop_format;
-	Atom* data = NULL;
+	Atom* list;
 
 	XGetWindowProperty(win_display, win_handle,
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
 		&prop_format, &items, &after, &data);
 
-	if (data) {
-		for (i = 0; i < items; i++) {
-			Atom atom = data[i];
+	if (!data) return WINDOW_STATE_NORMAL;
+	list = (Atom*)data;
+		
+	for (i = 0; i < items; i++) {
+		Atom atom = list[i];
 
-			if (atom == net_wm_state_minimized) {
-				minimised  = true;
-			} else if (atom == net_wm_state_fullscreen) {
-				fullscreen = true;
-			}
+		if (atom == net_wm_state_minimized) {
+			minimised  = true;
+		} else if (atom == net_wm_state_fullscreen) {
+			fullscreen = true;
 		}
-		XFree(data);
 	}
+	XFree(data);
 
 	if (fullscreen) return WINDOW_STATE_FULLSCREEN;
 	if (minimised)  return WINDOW_STATE_MINIMISED;
@@ -447,7 +451,7 @@ void Window_SetSize(int width, int height) {
 	Window_ProcessEvents(0.0);
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	XEvent ev = { 0 };
 	ev.type = ClientMessage;
 	ev.xclient.format  = 32;
@@ -504,7 +508,7 @@ static void HandleWMDestroy(void) {
 	/* sync and discard all events queued */
 	XSync(win_display, true);
 	XDestroyWindow(win_display, win_handle);
-	WindowInfo.Exists = false;
+	Window_Main.Exists = false;
 }
 
 static void HandleWMPing(XEvent* e) {
@@ -520,7 +524,7 @@ void Window_ProcessEvents(double delta) {
 	int focusRevert;
 	int i, btn, key, status;
 
-	while (WindowInfo.Exists) {
+	while (Window_Main.Exists) {
 		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
 		if (XFilterEvent(&e, None) == True) continue;
 
@@ -537,7 +541,7 @@ void Window_ProcessEvents(double delta) {
 
 		case DestroyNotify:
 			Platform_LogConst("Window destroyed");
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			break;
 
 		case ConfigureNotify:
@@ -551,14 +555,14 @@ void Window_ProcessEvents(double delta) {
 		case LeaveNotify:
 			XGetInputFocus(win_display, &focus, &focusRevert);
 			if (focus == PointerRoot) {
-				WindowInfo.Focused = false; Event_RaiseVoid(&WindowEvents.FocusChanged);
+				Window_Main.Focused = false; Event_RaiseVoid(&WindowEvents.FocusChanged);
 			}
 			break;
 
 		case EnterNotify:
 			XGetInputFocus(win_display, &focus, &focusRevert);
 			if (focus == PointerRoot) {
-				WindowInfo.Focused = true; Event_RaiseVoid(&WindowEvents.FocusChanged);
+				Window_Main.Focused = true; Event_RaiseVoid(&WindowEvents.FocusChanged);
 			}
 			break;
 
@@ -617,15 +621,15 @@ void Window_ProcessEvents(double delta) {
 			/* Don't lose focus when another app grabs key or mouse */
 			if (e.xfocus.mode == NotifyGrab || e.xfocus.mode == NotifyUngrab) break;
 
-			WindowInfo.Focused = e.type == FocusIn;
+			Window_Main.Focused = e.type == FocusIn;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			/* TODO: Keep track of keyboard when focus is lost */
-			if (!WindowInfo.Focused) Input_Clear();
+			if (!Window_Main.Focused) Input_Clear();
 			break;
 
 		case MappingNotify:
 			if (e.xmapping.request == MappingModifier || e.xmapping.request == MappingKeyboard) {
-				Platform_LogConst("keybard mapping refreshed");
+				Platform_LogConst("keyboard mapping refreshed");
 				XRefreshKeyboardMapping(&e.xmapping);
 			}
 			break;
@@ -1049,7 +1053,6 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 static GC fb_gc;
 static XImage* fb_image;
-static struct Bitmap fb_bmp;
 static void* fb_data;
 static int fb_fast;
 
@@ -1063,13 +1066,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_fast = win_visual.depth == 24 || win_visual.depth == 32;
 	fb_data = fb_fast ? bmp->scan0 : Mem_Alloc(bmp->width * bmp->height, 4, "window blit");
 
-	fb_bmp   = *bmp;
 	fb_image = XCreateImage(win_display, win_visual.visual,
 		win_visual.depth, ZPixmap, 0, fb_data,
 		bmp->width, bmp->height, 32, 0);
 }
 
-static void BlitFramebuffer(int x1, int y1, int width, int height) {
+static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap* bmp) {
 	unsigned char* dst;
 	BitmapCol* row;
 	BitmapCol src;
@@ -1078,7 +1080,7 @@ static void BlitFramebuffer(int x1, int y1, int width, int height) {
 	int x, y;
 
 	for (y = y1; y < y1 + height; y++) {
-		row = Bitmap_GetRow(&fb_bmp, y);
+		row = Bitmap_GetRow(bmp, y);
 		dst = ((unsigned char*)fb_image->data) + y * fb_image->bytes_per_line;
 
 		for (x = x1; x < x1 + width; x++) {
@@ -1111,12 +1113,12 @@ static void BlitFramebuffer(int x1, int y1, int width, int height) {
 	}
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	/* Convert 32 bit depth to window depth when required */
-	if (!fb_fast) BlitFramebuffer(r.X, r.Y, r.Width, r.Height);
+	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.Width, r.Height, bmp);
 
 	XPutImage(win_display, win_handle, fb_gc, fb_image,
-		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
+		r.x, r.y, r.x, r.y, r.Width, r.Height);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {

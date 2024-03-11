@@ -257,7 +257,7 @@ static void Physics_HandleSapling(int index, BlockID block) {
 		count = TreeGen_Grow(x, y, z, height, coords, blocks);
 
 		for (i = 0; i < count; i++) {
-			Game_UpdateBlock(coords[i].X, coords[i].Y, coords[i].Z, blocks[i]);
+			Game_UpdateBlock(coords[i].x, coords[i].y, coords[i].z, blocks[i]);
 		}
 	} else {
 		Game_UpdateBlock(x, y, z, BLOCK_SAPLING);

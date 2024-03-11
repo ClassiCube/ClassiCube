@@ -6,18 +6,93 @@
 #include "World.h"
 #include "Utils.h"
 #include "Game.h"
+#include "Window.h"
+
+const struct MapGenerator* Gen_Active;
+BlockRaw* Gen_Blocks;
+int Gen_Seed;
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
-volatile cc_bool Gen_Done;
-int Gen_Seed;
-cc_bool Gen_Vanilla;
-BlockRaw* Gen_Blocks;
+volatile cc_bool gen_done;
 
-static void Gen_Init(void) {
+/* There are two main types of multitasking: */
+/*  - Pre-emptive multitasking (system automatically switches between threads) */
+/*  - Cooperative multitasking (threads must be manually switched by the app) */
+/*                                                                             */
+/* Systems only supporting cooperative multitasking can be problematic though: */
+/*   If the whole map generation was performed as a single function call, */
+/*     then the game thread would not get run at all until map generation */
+/*     completed - which is not a great user experience. */
+/*   To avoid that, on these systems, map generation may be divided into */
+/*     a series of steps so that ClassiCube can periodically switch back */
+/*     to the game thread to ensure that the game itself still (slowly) runs. */
+#ifdef CC_BUILD_COOPTHREADED
+static int gen_step;
+static cc_uint64 lastRender;
+
+#define GEN_COOP_BEGIN \
+	cc_uint64 curTime; \
+	switch (gen_step) {
+
+#define GEN_COOP_STEP(index, step) \
+	case index: \
+		step; \
+		gen_step++; \
+		curTime = Stopwatch_Measure(); \
+		if (Stopwatch_ElapsedMS(lastRender, curTime) > 100) { lastRender = curTime; return; }
+		/* Switch back to game thread if more than 100 milliseconds since it was last run */
+
+#define GEN_COOP_END \
+	}
+
+static void Gen_Run(void) {
+	gen_step = 0;
+	lastRender = Stopwatch_Measure();
+	Gen_Active->Generate();
+}
+
+cc_bool Gen_IsDone(void) {
+	/* Resume map generation if incomplete */
+	if (!gen_done) Gen_Active->Generate();
+	return gen_done;
+}
+#else
+/* For systems supporting preemptive threading, there's no point */
+/* bothering with all the cooperative tasking shenanigans */
+#define GEN_COOP_BEGIN
+#define GEN_COOP_STEP(index, step) step;
+#define GEN_COOP_END
+
+static void Gen_DoGen(void) {
+	Gen_Active->Generate();
+}
+
+static void Gen_Run(void) {
+	void* thread = Thread_Create(Gen_DoGen);
+	Thread_Start2(thread, Gen_DoGen);
+	Thread_Detach(thread);
+}
+
+cc_bool Gen_IsDone(void) { return gen_done; }
+#endif
+
+static void Gen_Reset(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState    = "";
-	Gen_Done   = false;
+	gen_done = false;
+}
+
+void Gen_Start(void) {
+	Gen_Reset();
+	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
+
+	if (!Gen_Blocks || !Gen_Active->Prepare()) {
+		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
+		gen_done = true;
+	} else {
+		Gen_Run();
+	}
 }
 
 
@@ -39,9 +114,11 @@ static void FlatgrassGen_MapSet(int yBeg, int yEnd, BlockRaw block) {
 	}
 }
 
-void FlatgrassGen_Generate(void) {
-	Gen_Init();
+static cc_bool FlatgrassGen_Prepare(void) {
+	return true;
+}
 
+static void FlatgrassGen_Generate(void) {
 	Gen_CurrentState = "Setting air blocks";
 	FlatgrassGen_MapSet(World.Height / 2, World.MaxY, BLOCK_AIR);
 
@@ -51,8 +128,13 @@ void FlatgrassGen_Generate(void) {
 	Gen_CurrentState = "Setting grass blocks";
 	FlatgrassGen_MapSet(World.Height / 2 - 1, World.Height / 2 - 1, BLOCK_GRASS);
 
-	Gen_Done = true;
+	gen_done = true;
 }
+
+const struct MapGenerator FlatgrassGen = {
+	FlatgrassGen_Prepare,
+	FlatgrassGen_Generate
+};
 
 
 /*########################################################################################################################*
@@ -153,7 +235,7 @@ static float CombinedNoise_Calc(const struct CombinedNoise* n, float x, float y)
 *----------------------------------------------------Notchy map gen-------------------------------------------------------*
 *#########################################################################################################################*/
 static int waterLevel, minHeight;
-static cc_int16* Heightmap;
+static cc_int16* heightmap;
 static RNGState rnd;
 
 static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, BlockRaw block) {
@@ -247,7 +329,7 @@ static void NotchyGen_CreateHeightmap(void) {
 
 			adjHeight = (int)(height + waterLevel);
 			minHeight = min(adjHeight, minHeight);
-			Heightmap[hIndex++] = adjHeight;
+			heightmap[hIndex++] = adjHeight;
 		}
 	}
 }
@@ -298,7 +380,7 @@ static void NotchyGen_CreateStrata(void) {
 
 		for (x = 0; x < World.Width; x++) {
 			dirtThickness = (int)(OctaveNoise_Calc(&n, (float)x, (float)z) / 24 - 4);
-			dirtHeight    = Heightmap[hIndex++];
+			dirtHeight    = heightmap[hIndex++];
 			stoneHeight   = dirtHeight + dirtThickness;
 
 			stoneHeight = min(stoneHeight, maxY);
@@ -472,7 +554,7 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 		Gen_CurrentProgress = (float)z / World.Length;
 
 		for (x = 0; x < World.Width; x++) {
-			y = Heightmap[hIndex++];
+			y = heightmap[hIndex++];
 			if (y < 0 || y >= World.Height) continue;
 
 			index = World_Pack(x, y, z);
@@ -513,7 +595,7 @@ static void NotchyGen_PlantFlowers(void) {
 				flowerZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
 				if (!World_ContainsXZ(flowerX, flowerZ)) continue;
-				flowerY = Heightmap[flowerZ * World.Width + flowerX] + 1;
+				flowerY = heightmap[flowerZ * World.Width + flowerX] + 1;
 				if (flowerY <= 0 || flowerY >= World.Height) continue;
 
 				index = World_Pack(flowerX, flowerY, flowerZ);
@@ -550,7 +632,7 @@ static void NotchyGen_PlantMushrooms(void) {
 				mushZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
 				if (!World_ContainsXZ(mushX, mushZ)) continue;
-				groundHeight = Heightmap[mushZ * World.Width + mushX];
+				groundHeight = heightmap[mushZ * World.Width + mushX];
 				if (mushY >= (groundHeight - 1)) continue;
 
 				index = World_Pack(mushX, mushY, mushZ);
@@ -590,7 +672,7 @@ static void NotchyGen_PlantTrees(void) {
 				treeZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
 				if (!World_ContainsXZ(treeX, treeZ) || Random_Float(&rnd) >= 0.25) continue;
-				treeY = Heightmap[treeZ * World.Width + treeX] + 1;
+				treeY = heightmap[treeZ * World.Width + treeX] + 1;
 				if (treeY >= World.Height) continue;
 				treeHeight = 5 + Random_Next(&rnd, 3);
 
@@ -601,7 +683,7 @@ static void NotchyGen_PlantTrees(void) {
 					count = TreeGen_Grow(treeX, treeY, treeZ, treeHeight, coords, blocks);
 
 					for (m = 0; m < count; m++) {
-						index = World_Pack(coords[m].X, coords[m].Y, coords[m].Z);
+						index = World_Pack(coords[m].x, coords[m].y, coords[m].z);
 						Gen_Blocks[index] = blocks[m];
 					}
 				}
@@ -610,34 +692,43 @@ static void NotchyGen_PlantTrees(void) {
 	}
 }
 
-void NotchyGen_Generate(void) {
-	Gen_Init();
-	Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
-
+static cc_bool NotchyGen_Prepare(void) {
 	Random_Seed(&rnd, Gen_Seed);
 	waterLevel = World.Height / 2;	
 	minHeight  = World.Height;
 
-	NotchyGen_CreateHeightmap();
-	NotchyGen_CreateStrata();
-	NotchyGen_CarveCaves();
-	NotchyGen_CarveOreVeins(0.9f, "Carving coal ore", BLOCK_COAL_ORE);
-	NotchyGen_CarveOreVeins(0.7f, "Carving iron ore", BLOCK_IRON_ORE);
-	NotchyGen_CarveOreVeins(0.5f, "Carving gold ore", BLOCK_GOLD_ORE);
-
-	NotchyGen_FloodFillWaterBorders();
-	NotchyGen_FloodFillWater();
-	NotchyGen_FloodFillLava();
-
-	NotchyGen_CreateSurfaceLayer();
-	NotchyGen_PlantFlowers();
-	NotchyGen_PlantMushrooms();
-	NotchyGen_PlantTrees();
-
-	Mem_Free(Heightmap);
-	Heightmap = NULL;
-	Gen_Done  = true;
+	heightmap  = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
+	return heightmap != NULL;
 }
+
+static void NotchyGen_Generate(void) {
+	GEN_COOP_BEGIN
+		GEN_COOP_STEP( 0, NotchyGen_CreateHeightmap() );
+		GEN_COOP_STEP( 1, NotchyGen_CreateStrata() );
+		GEN_COOP_STEP( 2, NotchyGen_CarveCaves() );
+		GEN_COOP_STEP( 3, NotchyGen_CarveOreVeins(0.9f, "Carving coal ore", BLOCK_COAL_ORE) );
+		GEN_COOP_STEP( 4, NotchyGen_CarveOreVeins(0.7f, "Carving iron ore", BLOCK_IRON_ORE) );
+		GEN_COOP_STEP( 5, NotchyGen_CarveOreVeins(0.5f, "Carving gold ore", BLOCK_GOLD_ORE) );
+
+		GEN_COOP_STEP( 6, NotchyGen_FloodFillWaterBorders() );
+		GEN_COOP_STEP( 7, NotchyGen_FloodFillWater() );
+		GEN_COOP_STEP( 8, NotchyGen_FloodFillLava() );
+
+		GEN_COOP_STEP( 9, NotchyGen_CreateSurfaceLayer() );
+		GEN_COOP_STEP(10, NotchyGen_PlantFlowers() );
+		GEN_COOP_STEP(11, NotchyGen_PlantMushrooms() );
+		GEN_COOP_STEP(12, NotchyGen_PlantTrees() );
+	GEN_COOP_END
+
+	Mem_Free(heightmap);
+	heightmap = NULL;
+	gen_done  = true;
+}
+
+const struct MapGenerator NotchyGen = {
+	NotchyGen_Prepare,
+	NotchyGen_Generate
+};
 
 
 /*########################################################################################################################*
@@ -677,8 +768,8 @@ cc_bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
 	return true;
 }
 
-#define TreeGen_Place(x, y, z, block)\
-coords[count].X = (x); coords[count].Y = (y); coords[count].Z = (z);\
+#define TreeGen_Place(xVal, yVal, zVal, block)\
+coords[count].x = (xVal); coords[count].y = (yVal); coords[count].z = (zVal);\
 blocks[count] = block; count++;
 
 int TreeGen_Grow(int treeX, int treeY, int treeZ, int height, IVec3* coords, BlockRaw* blocks) {

@@ -19,8 +19,8 @@ static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
 
-	DisplayInfo.X      = (int)bounds.origin.x;
-	DisplayInfo.Y      = (int)bounds.origin.y;
+	DisplayInfo.x      = (int)bounds.origin.x;
+	DisplayInfo.y      = (int)bounds.origin.y;
 	DisplayInfo.Width  = (int)bounds.size.width;
 	DisplayInfo.Height = (int)bounds.size.height;
 	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
@@ -29,7 +29,7 @@ static void Window_CommonInit(void) {
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
-	Window_Close();
+	Window_RequestClose();
 	return 0;
 }
 
@@ -163,8 +163,8 @@ static void RefreshWindowBounds(void) {
 	
 	/* TODO: kWindowContentRgn ??? */
 	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	windowX = r.left; WindowInfo.Width  = r.right  - r.left;
-	windowY = r.top;  WindowInfo.Height = r.bottom - r.top;
+	windowX = r.left; Window_Main.Width  = r.right  - r.left;
+	windowY = r.top;  Window_Main.Height = r.bottom - r.top;
 }
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
@@ -209,30 +209,30 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 	
 	switch (GetEventKind(inEvent)) {
 		case kEventWindowClose:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			return eventNotHandledErr;
 			
 		case kEventWindowClosed:
-			WindowInfo.Exists = false;
+			Window_Main.Exists = false;
 			return 0;
 			
 		case kEventWindowBoundsChanged:
-			oldWidth = WindowInfo.Width; oldHeight = WindowInfo.Height;
+			oldWidth = Window_Main.Width; oldHeight = Window_Main.Height;
 			RefreshWindowBounds();
 			
-			if (oldWidth != WindowInfo.Width || oldHeight != WindowInfo.Height) {
+			if (oldWidth != Window_Main.Width || oldHeight != Window_Main.Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 			return eventNotHandledErr;
 			
 		case kEventWindowActivated:
-			WindowInfo.Focused = true;
+			Window_Main.Focused = true;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 			
 		case kEventWindowDeactivated:
-			WindowInfo.Focused = false;
+			Window_Main.Focused = false;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 			
@@ -285,8 +285,8 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	if (!win_fullscreen) {
 		mouseX -= windowX; mouseY -= windowY;
 
-		if (mouseX < 0 || mouseX >= WindowInfo.Width)  return eventNotHandledErr;
-		if (mouseY < 0 || mouseY >= WindowInfo.Height) return eventNotHandledErr;
+		if (mouseX < 0 || mouseX >= Window_Main.Width)  return eventNotHandledErr;
+		if (mouseY < 0 || mouseY >= Window_Main.Height) return eventNotHandledErr;
 	}
 	
 	kind = GetEventKind(inEvent);
@@ -439,6 +439,8 @@ static void HookEvents(void) {
  *#########################################################################################################################*/
 void Window_Init(void) { Window_CommonInit(); }
 
+void Window_Free(void) { }
+
 /* Private CGS/CGL stuff */
 typedef int CGSConnectionID;
 typedef int CGSWindowID;
@@ -499,8 +501,8 @@ static void DoCreateWindow(int width, int height) {
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	HookEvents();
 	Window_CommonCreate();
-	WindowInfo.Exists = true;
-	WindowInfo.Handle = win_handle;
+	Window_Main.Exists = true;
+	Window_Main.Handle = win_handle;
 	/* CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor */
 
 	conn  = _CGSDefaultConnection();
@@ -544,11 +546,11 @@ void Window_SetSize(int width, int height) {
 	SizeWindow(win_handle, width, height, true);
 }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	/* DisposeWindow only sends a kEventWindowClosed */
 	Event_RaiseVoid(&WindowEvents.Closing);
-	if (WindowInfo.Exists) DisposeWindow(win_handle);
-	WindowInfo.Exists = false;
+	if (Window_Main.Exists) DisposeWindow(win_handle);
+	Window_Main.Exists = false;
 }
 
 void Window_ProcessEvents(double delta) {
@@ -600,7 +602,6 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 static CGrafPtr fb_port;
-static struct Bitmap fb_bmp;
 static CGColorSpaceRef colorSpace;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
@@ -608,10 +609,9 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 	bmp->scan0 = Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	colorSpace = CGColorSpaceCreateDeviceRGB();
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
 	CGImageRef image;
@@ -624,16 +624,16 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = WindowInfo.Width;
-	rect.size.height = WindowInfo.Height;
+	rect.size.width  = Window_Main.Width;
+	rect.size.height = Window_Main.Height;
 
 	err = QDBeginCGContext(fb_port, &context);
 	if (err) Logger_Abort2(err, "Begin draw");
 	/* TODO: REPLACE THIS AWFUL HACK */
 
-	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
-		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
-	image    = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
+	provider = CGDataProviderCreateWithData(NULL, bmp->scan0,
+		Bitmap_DataSize(bmp->width, bmp->height), NULL);
+	image    = CGImageCreate(bmp->width, bmp->height, 8, 32, bmp->width * 4, colorSpace,
 				kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
@@ -698,11 +698,11 @@ cc_result Window_EnterFullscreen(void) {
 	}
 
 	win_fullscreen   = true;
-	ctx_windowWidth  = WindowInfo.Width;
-	ctx_windowHeight = WindowInfo.Height;
+	ctx_windowWidth  = Window_Main.Width;
+	ctx_windowHeight = Window_Main.Height;
 
-	windowX = DisplayInfo.X; WindowInfo.Width  = DisplayInfo.Width;
-	windowY = DisplayInfo.Y; WindowInfo.Height = DisplayInfo.Height;	
+	windowX = DisplayInfo.x; Window_Main.Width  = DisplayInfo.Width;
+	windowY = DisplayInfo.y; Window_Main.Height = DisplayInfo.Height;	
 	
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;

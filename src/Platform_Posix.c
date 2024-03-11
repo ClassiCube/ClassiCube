@@ -528,58 +528,82 @@ union SocketAddress {
 	struct sockaddr_storage total;
 	#endif
 };
+/* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
+static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
-static int ParseHost(union SocketAddress* addr, const char* host) {
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char portRaw[32]; cc_string portStr;
 	struct addrinfo hints = { 0 };
 	struct addrinfo* result;
 	struct addrinfo* cur;
-	int family = 0, res;
+	int res, i = 0;
 
-	hints.ai_family   = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
+	
+	String_InitArray(portStr,  portRaw);
+	String_AppendInt(&portStr, port);
+	portRaw[portStr.length] = '\0';
 
-	res = getaddrinfo(host, NULL, &hints, &result);
-	if (res) return 0;
+	res = getaddrinfo(host, portRaw, &hints, &result);
+	if (res == EAI_AGAIN) return SOCK_ERR_UNKNOWN_HOST;
+	if (res) return res;
 
-	for (cur = result; cur; cur = cur->ai_next) {
+	/* Prefer IPv4 addresses first */
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
+	{
 		if (cur->ai_family != AF_INET) continue;
-		family = AF_INET;
-
-		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
-		break;
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen; i++;
+	}
+	
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
+	{
+		if (cur->ai_family == AF_INET) continue;
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen; i++;
 	}
 
 	freeaddrinfo(result);
-	return family;
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	union SocketAddress* addr = (union SocketAddress*)addrs[0].data;
 	char str[NATIVE_STR_LEN];
+
 	String_EncodeUtf8(str, address);
+	*numValidAddrs = 0;
 
-	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) {
+		addr->v4.sin_family = AF_INET;
+		addr->v4.sin_port   = htons(port);
+		
+		addrs[0].size  = sizeof(addr->v4);
+		*numValidAddrs = 1;
+		return 0;
+	}
+	
 	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) return AF_INET6;
+	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
+		addr->v6.sin6_family = AF_INET6;
+		addr->v6.sin6_port   = htons(port);
+		
+		addrs[0].size  = sizeof(addr->v6);
+		*numValidAddrs = 1;
+		return 0;
+	}
 	#endif
-	return ParseHost(addr, str);
+	
+	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address);
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	int family, addrSize = 0;
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	cc_result res;
 
-	*s = -1;
-	if (!(family = ParseAddress(&addr, address)))
-		return ERR_INVALID_ARGUMENT;
-
-	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
+	*s = socket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
@@ -587,20 +611,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 		ioctl(*s, FIONBIO, &blocking_raw);
 	}
 
-	#ifdef AF_INET6
-	if (family == AF_INET6) {
-		addr.v6.sin6_family = AF_INET6;
-		addr.v6.sin6_port   = htons(port);
-		addrSize = sizeof(addr.v6);
-	}
-	#endif
-	if (family == AF_INET) {
-		addr.v4.sin_family  = AF_INET;
-		addr.v4.sin_port    = htons(port);
-		addrSize = sizeof(addr.v4);
-	}
-
-	res = connect(*s, &addr.raw, addrSize);
+	res = connect(*s, raw, addr->size);
 	return res == -1 ? errno : 0;
 }
 
@@ -1195,19 +1206,28 @@ static cc_result GetMachineID(cc_uint32* key) {
 /* Read kIOPlatformUUIDKey from I/O registry for the key */
 static cc_result GetMachineID(cc_uint32* key) {
 	io_registry_entry_t registry;
-	CFStringRef uuid = NULL;
+	CFStringRef devID = NULL;
 	char tmp[256] = { 0 };
 
-	registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
-	if (!registry) return ERR_NOT_SUPPORTED;
-
 #ifdef kIOPlatformUUIDKey
-	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
-	if (uuid && CFStringGetCString(uuid, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
+    registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+    if (!registry) return ERR_NOT_SUPPORTED;
+    
+	devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
+	if (devID && CFStringGetCString(devID, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
 		DecodeMachineID(tmp, String_Length(tmp), key);	
 	}
+#else
+    registry = IOServiceGetMatchingService(kIOMasterPortDefault,
+                                           IOServiceMatching("IOPlatformExpertDevice"));
+    
+    devID = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
+    if (devID && CFStringGetCString(devID, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
+        Mem_Copy(key, tmp, MACHINEID_LEN / 2);
+    }
 #endif
-	if (uuid) CFRelease(uuid);
+    
+	if (devID) CFRelease(devID);
 	IOObjectRelease(registry);
 	return tmp[0] ? 0 : ERR_NOT_SUPPORTED;
 }

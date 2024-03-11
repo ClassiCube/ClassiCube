@@ -13,6 +13,7 @@
 #include <pspdisplay.h>
 #include <pspge.h>
 #include <pspctrl.h>
+#include <pspkernel.h>
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -20,10 +21,7 @@
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-// no DPI scaling on Wii/GameCube
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+struct _WindowData WindowInfo;
 
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
@@ -32,15 +30,19 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = SCREEN_WIDTH;
-	WindowInfo.Height  = SCREEN_HEIGHT;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = SCREEN_WIDTH;
+	Window_Main.Height  = SCREEN_HEIGHT;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+	
+	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
+
+void Window_Free(void) { }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
@@ -57,7 +59,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -91,7 +93,7 @@ static void ProcessCircleInput(SceCtrlData* pad, double delta) {
 	if (Math_AbsI(dx) <= 8) dx = 0;
 	if (Math_AbsI(dy) <= 8) dy = 0;
 
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx * scale, dy * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
 }
 
 void Window_ProcessEvents(double delta) {
@@ -115,48 +117,29 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp     = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
-	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
+	sceDisplaySetFrameBuf(fb, BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
 
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
-	cc_uint32* dst = (cc_uint32*)fb           + r.X;
+	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
+	cc_uint32* dst = (cc_uint32*)fb         + r.x;
 
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * fb_bmp.width, r.Width * 4);
+		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.Width * 4);
 	}
+	sceKernelDcacheWritebackAll();
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
-
-/*void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	void* fb = sceGeEdramGetAddr();
-	bmp->scan0  = fb;
-	bmp->width  = BUFFER_WIDTH;
-	bmp->height = SCREEN_HEIGHT;
-}
-
-void Window_DrawFramebuffer(Rect2D r) {
-	//sceDisplayWaitVblankStart();
-	//sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	//sceDisplaySetFrameBuf(sceGeEdramGetAddr(), BUFFER_WIDTH, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-
-}*/
 
 
 /*########################################################################################################################*

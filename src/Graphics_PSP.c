@@ -11,7 +11,6 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <pspgu.h>
-#include <pspgum.h>
 
 #define BUFFER_WIDTH  512
 #define SCREEN_WIDTH  480
@@ -34,7 +33,7 @@ static void guInit(void) {
 	void* framebuffer0 = (void*)0;
 	void* framebuffer1 = (void*)FB_SIZE;
 	void* depthbuffer  = (void*)(FB_SIZE + FB_SIZE);
-	gumLoadIdentity(&identity);
+	Mem_Copy(&identity, &Matrix_Identity, sizeof(ScePspFMatrix4));
 	
 	sceGuInit();
 	sceGuStart(GU_DIRECT, list);
@@ -114,7 +113,7 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[];
 } CCTexture;
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(16, 16 + size);
 	
@@ -201,13 +200,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	// NOTE: Shared with OpenGL. might be wrong to do that though?
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z = -2.0f / (zFar - zNear);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -221,12 +220,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	// Calculations are simplified because of left/right and top/bottom symmetry
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.w =  0.0f;
 	// TODO: should direct3d9 one be used insted with clip range from 0,1 ?
 }
 
@@ -239,8 +238,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	String_Format1(info, "-- Using PSP--\n", NULL);
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_AppendConst(info, "-- Using PSP--\n");
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -266,8 +265,7 @@ void Gfx_OnWindowResize(void) { }
 
 
 static cc_uint8* gfx_vertices;
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1, gfx_fields;
+static int gfx_fields;
 
 
 /*########################################################################################################################*
@@ -284,11 +282,8 @@ void Gfx_BindIb(GfxResourceID ib)    { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	void* data = memalign(16, count * strideSizes[fmt]);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;
-	//return Mem_Alloc(count, strideSizes[fmt], "gfx VB");
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
+	return memalign(16, count * strideSizes[fmt]);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
@@ -310,12 +305,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	void* data = memalign(16, maxVertices * strideSizes[fmt]);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;
-	//return Mem_Alloc(maxVertices, strideSizes[fmt], "gfx VB");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return memalign(16, maxVertices * strideSizes[fmt]);
 }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
@@ -327,11 +321,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	sceKernelDcacheWritebackInvalidateRange(vb, vb_size);
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	sceKernelDcacheWritebackInvalidateRange(vertices, vCount * gfx_stride);
-}
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -377,10 +367,10 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static int matrix_modes[] = { GU_PROJECTION, GU_VIEW };
-static ScePspFMatrix4 tmp_matrix;
+static ScePspFMatrix4 tmp_matrix; // 16 byte aligned
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	gumLoadMatrix(&tmp_matrix, matrix);
+	Mem_Copy(&tmp_matrix, matrix, sizeof(ScePspFMatrix4));
 	sceGuSetMatrix(matrix_modes[type], &tmp_matrix);
 }
 

@@ -12,7 +12,7 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 # configurable options
 #---------------------------------------------------------------------------------
-APP_ICON	:= $(TOPDIR)/misc/CC_48x48.png
+APP_ICON	:= $(TOPDIR)/misc/3ds/icon.png
 APP_TITLE 	:= ClassiCube
 APP_DESCRIPTION := Simple block building sandbox
 APP_AUTHOR 	:= UnknownShadow200

@@ -1,40 +1,39 @@
 ClassiCube is a custom Minecraft Classic compatible client written in C from scratch.<br>
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
-![screenshot_n](http://i.imgur.com/FCiwl27.png)
+# What ClassiCube is
 
-# Information
+ClassiCube aims to replicate the 2009 Minecraft Classic client while offering **optional** enhancements to improve gameplay. ClassiCube can run on [many systems](#supported-systems), including desktop, web, mobile, and even some consoles.
+<details>
+<summary><b>Features (click to expand)</b></summary>
 
-ClassiCube aims to replicate the 2009 Minecraft Classic client while also:
-* offering **optional** additions to improve gameplay
-* providing much better performance for a large range of hardware
-* running on many different systems (desktop, web, mobile, consoles)
+* Much better performance and minimal memory usage compared to original Minecraft Classic
+* Optional enhancements including custom blocks, models, and environment colors
+* Partially supports some features of Minecraft Classic versions before 0.30
+* Works with effectively all graphics cards that support OpenGL or Direct3D 9
+* Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
+* Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
+* Although in various stages of early development, also runs on various consoles
 
-ClassiCube is not trying to replicate modern Minecraft versions - and therefore it doesn't (and won't) support:
-* survival mode
-* logging in with Microsoft or Mojang accounts
-* connecting to Minecraft Java Edition or Bedrock Edition servers
-<br/>
+</details>
 
-You can download ClassiCube [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+ClassiCube is not trying to replicate modern Minecraft versions. It will never support survival, logging in with Minecraft accounts or connecting to Minecraft servers.
 
-### We need your help
+You can **download ClassiCube** [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+
+![classic](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/a233cb4c-296a-4d08-87fc-49874c230d4f)
+
+![enhanced](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/61a064bd-cfaa-4a91-bedf-a16c3dd7e8a2)
+
+
+# We need your help
 
 ClassiCube strives to replicate the original Minecraft Classic experience by **strictly following a [clean room](https://en.wikipedia.org/wiki/Clean_room_design) reverse engineering approach**.
 
 If you're interested in documenting or verifying the behaviour of the original Minecraft Classic, please get in contact with me. (`unknownshadow200` on Discord)
 
-### What ClassiCube is
-* A complete re-implementation of Minecraft Classic 0.30, with **optional** additions
-* Partially supports some features of Minecraft Classic versions before 0.30
-* Lightweight, minimal memory usage compared to original Minecraft Classic
-* Much better performance than original Minecraft Classic
-* Works with effectively all graphics cards that support OpenGL or Direct3D 9
-* Runs on Windows, macOS, Linux, Android, iOS, and in a web browser
-* Also runs on OpenBSD, FreeBSD, NetBSD, Solaris, Haiku, IRIX, SerenityOS
-* Although still work in progresses, also runs on various consoles
 
-### Instructions
+# How to play
 Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net and classicube.net.<br>
 Just click 'OK' to the dialog menu that appears when you start the launcher.
 
@@ -43,8 +42,6 @@ Run ClassiCube.exe, then click Singleplayer at the main menu.
 
 **Multiplayer**
 Run ClassiCube.exe. You can connect to LAN/locally hosted servers, and classicube.net servers if you have a [ClassiCube account](https://www.classicube.net/).
-
-<br/>
 
 **Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly
 
@@ -55,7 +52,7 @@ Otherwise:
 * On Windows, you can still run the OpenGL build of ClassiCube anyways. (You can try downloading and using the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance though)
 * On other operating systems, you will have to [compile the game yourself](#Compiling). Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
 
-## Supported systems
+# Supported systems
 
 ClassiCube runs on:
 * Windows - 95 and later
@@ -67,22 +64,24 @@ ClassiCube runs on:
 
 And also runs on:
 * Raspberry Pi - needs <code>libcurl</code> and <code>libopenal</code>
-* FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages
-* NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages
+* FreeBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_freebsd.yml))
+* NetBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal-soft</code> packages (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_netbsd.yml))
 * OpenBSD - needs <code>libexecinfo</code>, <code>curl</code> and <code>openal</code> packages
 * Solaris - needs <code>curl</code> and <code>openal</code> packages
-* Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_haiku.yml))
+* Haiku - needs <code>openal</code> package (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_haiku.yml))
 * BeOS - untested on actual hardware
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
-* 3DS - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_3ds.yml))
-* Wii - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml))
-* GameCube - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_wiigc.yml))
-* Dreamcast - unfinished, but renders (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_dreamcast.yml))
-* PSP - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_psp.yml))
-* PS Vita - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_vita.yml))
-* Xbox - unfinished, major rendering issues (if you have a GitHub account, can [download from here](https://github.com/UnknownShadow200/ClassiCube/actions/workflows/build_xbox.yml))
-* PS3 - unfinished, rendering issues
+* 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
+* Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
+* GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
+* Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
+* PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
+* PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
+* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
+* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
+* Nintendo 64 - unfinished, moderate rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_n64.yml))
+* PS2 - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ps2.yml))
 
 # Compiling 
 
@@ -233,7 +232,7 @@ Install SDL2 port if needed
 
 #### Web
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js```
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
@@ -293,6 +292,14 @@ Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/Kal
 
 The Dreamcast port needs assistance from someone experienced with Dreamcast homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
+#### Nintendo 64
+
+Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+
+The Nintendo 64 port needs assistance from someone experienced with Nintendo 64 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+You'll also need to stub out `WorkerLoop` function in `Http_Worker.c` for now
+
 ##### Other
 
 You'll have to write the necessary code. You should read portability.md in doc folder.
@@ -347,6 +354,11 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
 * [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
+* [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
+* [cen64](https://github.com/n64dev/cen64) - Emulator used to test Nintendo 64 port
+* [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
+* [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
+* [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
 
 
 ## Sound Credits

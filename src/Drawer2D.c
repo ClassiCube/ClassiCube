@@ -152,9 +152,11 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 	ctx->height = height;
 	ctx->meta   = NULL;
 
-	/* Allocates a power-of-2 sized bitmap equal to or greater than the given size, and clears it to 0 */
-	width  = Math_NextPowOf2(width);
-	height = Math_NextPowOf2(height);
+	if (!Gfx.SupportsNonPowTwoTextures) {
+		/* Allocate power-of-2 sized bitmap equal to or greater than the given size */
+		width  = Math_NextPowOf2(width);
+		height = Math_NextPowOf2(height);
+	}
 
 	ctx->bmp.width  = width; 
 	ctx->bmp.height = height;
@@ -299,13 +301,15 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 }
 
 void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
-	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, 0, false);
+	int flags = TEXTURE_FLAG_NONPOW2 | TEXTURE_FLAG_LOWRES;
+	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, flags, false);
+	
 	tex->Width  = ctx->width;
 	tex->Height = ctx->height;
-
-	tex->uv.U1 = 0.0f; tex->uv.V1 = 0.0f;
-	tex->uv.U2 = (float)ctx->width  / (float)ctx->bmp.width;
-	tex->uv.V2 = (float)ctx->height / (float)ctx->bmp.height;
+	
+	tex->uv.U1  = 0.0f; tex->uv.V1 = 0.0f;
+	tex->uv.U2  = (float)ctx->width  / (float)ctx->bmp.width;
+	tex->uv.V2  = (float)ctx->height / (float)ctx->bmp.height;
 }
 
 cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
@@ -633,26 +637,39 @@ static void DefaultPngProcess(struct Stream* stream, const cc_string* name) {
 static struct TextureEntry default_entry = { "default.png", DefaultPngProcess };
 
 
-static void InitHexEncodedColor(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
-	Drawer2D.Colors[i] = BitmapColor_RGB(
-		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
-		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
-		lo * ((hex >> 0) & 1) + hi * (hex >> 3));
-}
+/* The default 16 colours are the CGA 16 color palette (without special brown colour) */
+/*   See https://en.wikipedia.org/wiki/Color_Graphics_Adapter#With_an_RGBI_monitor for reference */
+/* The 16 hex colours below were produced from the following formula: */
+/*   R = 191 * ((hex >> 2) & 1) + 64 * (hex >> 3) */
+/*   G = 191 * ((hex >> 1) & 1) + 64 * (hex >> 3) */
+/*   B = 191 * ((hex >> 0) & 1) + 64 * (hex >> 3) */
+static const BitmapCol defaults_0_9[] = {
+	BitmapColor_RGB(  0,   0,   0), /* 0 */
+	BitmapColor_RGB(  0,   0, 191), /* 1 */
+	BitmapColor_RGB(  0, 191,   0), /* 2 */
+	BitmapColor_RGB(  0, 191, 191), /* 3 */
+	BitmapColor_RGB(191,   0,   0), /* 4 */
+	BitmapColor_RGB(191,   0, 191), /* 5 */
+	BitmapColor_RGB(191, 191,   0), /* 6 */
+	BitmapColor_RGB(191, 191, 191), /* 7 */
+	BitmapColor_RGB( 64,  64,  64), /* 8 */
+	BitmapColor_RGB( 64,  64, 255)  /* 9 */
+};
+static const BitmapCol defaults_a_f[] = {
+	BitmapColor_RGB( 64, 255,  64), /* A */
+	BitmapColor_RGB( 64, 255, 255), /* B */
+	BitmapColor_RGB(255,  64,  64), /* C */
+	BitmapColor_RGB(255,  64, 255), /* D */
+	BitmapColor_RGB(255, 255,  64), /* E */
+	BitmapColor_RGB(255, 255, 255), /* F */
+};
 
 static void OnReset(void) {
-	int i;	
-	for (i = 0; i < DRAWER2D_MAX_COLORS; i++) {
-		Drawer2D.Colors[i] = 0;
-	}
+	Mem_Set(Drawer2D.Colors, 0, sizeof(Drawer2D.Colors));
 
-	for (i = 0; i <= 9; i++) {
-		InitHexEncodedColor('0' + i, i, 191, 64);
-	}
-	for (i = 10; i <= 15; i++) {
-		InitHexEncodedColor('a' + (i - 10), i, 191, 64);
-		InitHexEncodedColor('A' + (i - 10), i, 191, 64);
-	}
+	Mem_Copy(&Drawer2D.Colors['0'], defaults_0_9, sizeof(defaults_0_9));
+	Mem_Copy(&Drawer2D.Colors['a'], defaults_a_f, sizeof(defaults_a_f));
+	Mem_Copy(&Drawer2D.Colors['A'], defaults_a_f, sizeof(defaults_a_f));
 }
 
 static void OnInit(void) {

@@ -96,7 +96,10 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
-	&customParticles_Ext, &customModels_Ext, &pluginMessages_Ext, &extTeleport_Ext,
+	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext,
+#ifdef CUSTOM_MODELS
+	&customModels_Ext,
+#endif
 #ifdef EXTENDED_TEXTURES
 	&extTextures_Ext,
 #endif
@@ -461,9 +464,9 @@ static cc_uint8* Classic_WritePosition(cc_uint8* data, Vec3 pos, float yaw, floa
 	{
 		payload = IsSupported(heldBlock_Ext) ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
 		WriteBlock(data, payload);
-		x = (int)(pos.X * 32);
-		y = (int)(pos.Y * 32) + 51;
-		z = (int)(pos.Z * 32);
+		x = (int)(pos.x * 32);
+		y = (int)(pos.y * 32) + 51;
+		z = (int)(pos.z * 32);
 
 		if (IsSupported(extEntityPos_Ext)) {
 			Stream_SetU32_BE(data, x); data += 4;
@@ -673,9 +676,9 @@ static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	EntityID id = data[0];
 
 	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
-	update.pos.X = (cc_int8)data[1] / 32.0f;
-	update.pos.Y = (cc_int8)data[2] / 32.0f;
-	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	update.pos.x = (cc_int8)data[1] / 32.0f;
+	update.pos.y = (cc_int8)data[2] / 32.0f;
+	update.pos.z = (cc_int8)data[3] / 32.0f;
 	update.yaw   = Math_Packed2Deg(data[4]);
 	update.pitch = Math_Packed2Deg(data[5]);
 	UpdateLocation(id, &update);
@@ -686,9 +689,9 @@ static void Classic_RelPositionUpdate(cc_uint8* data) {
 	EntityID id = data[0];
 
 	update.flags = LU_HAS_POS | LU_POS_RELATIVE_SMOOTH | LU_ORI_INTERPOLATE;
-	update.pos.X = (cc_int8)data[1] / 32.0f;
-	update.pos.Y = (cc_int8)data[2] / 32.0f;
-	update.pos.Z = (cc_int8)data[3] / 32.0f;
+	update.pos.x = (cc_int8)data[1] / 32.0f;
+	update.pos.y = (cc_int8)data[2] / 32.0f;
+	update.pos.z = (cc_int8)data[3] / 32.0f;
 	UpdateLocation(id, &update);
 }
 
@@ -771,9 +774,9 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 f
 	}
 
 	update.flags = flags;
-	update.pos.X = x/32.0f; 
-	update.pos.Y = y/32.0f; 
-	update.pos.Z = z/32.0f;
+	update.pos.x = x/32.0f; 
+	update.pos.y = y/32.0f; 
+	update.pos.z = z/32.0f;
 	update.yaw   = Math_Packed2Deg(*data++);
 	update.pitch = Math_Packed2Deg(*data++);
 
@@ -855,9 +858,9 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->Pitch));
 
 		data[7] = targetId;
-		Stream_SetU16_BE(&data[8],  t->pos.X);
-		Stream_SetU16_BE(&data[10], t->pos.Y);
-		Stream_SetU16_BE(&data[12], t->pos.Z);
+		Stream_SetU16_BE(&data[8],  t->pos.x);
+		Stream_SetU16_BE(&data[10], t->pos.y);
+		Stream_SetU16_BE(&data[12], t->pos.z);
 
 		data[14] = 255;
 		/* FACE enum values differ from CPE block face values */
@@ -1121,12 +1124,12 @@ static void CPE_MakeSelection(cc_uint8* data) {
 	PackedCol c;
 	/* data[0] is id, data[1..64] is label */
 
-	p1.X = (cc_int16)Stream_GetU16_BE(data + 65);
-	p1.Y = (cc_int16)Stream_GetU16_BE(data + 67);
-	p1.Z = (cc_int16)Stream_GetU16_BE(data + 69);
-	p2.X = (cc_int16)Stream_GetU16_BE(data + 71);
-	p2.Y = (cc_int16)Stream_GetU16_BE(data + 73);
-	p2.Z = (cc_int16)Stream_GetU16_BE(data + 75);
+	p1.x = (cc_int16)Stream_GetU16_BE(data + 65);
+	p1.y = (cc_int16)Stream_GetU16_BE(data + 67);
+	p1.z = (cc_int16)Stream_GetU16_BE(data + 69);
+	p2.x = (cc_int16)Stream_GetU16_BE(data + 71);
+	p2.y = (cc_int16)Stream_GetU16_BE(data + 73);
+	p2.z = (cc_int16)Stream_GetU16_BE(data + 75);
 
 	/* R,G,B,A are actually 16 bit unsigned integers */
 	c = PackedCol_Make(data[78], data[80], data[82], data[84]);
@@ -1368,13 +1371,13 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 	case 4:
 	case 5:
 		scale = value / 1000.0f;
-		if (e->ModelRestrictedScale) {
+		if (e->Flags & ENTITY_FLAG_MODEL_RESTRICTED_SCALE) {
 			Math_Clamp(scale, 0.01f, e->Model->maxScale);
 		}
 
-		if (type == 3) e->ModelScale.X = scale;
-		if (type == 4) e->ModelScale.Y = scale;
-		if (type == 5) e->ModelScale.Z = scale;
+		if (type == 3) e->ModelScale.x = scale;
+		if (type == 4) e->ModelScale.y = scale;
+		if (type == 5) e->ModelScale.z = scale;
 
 		Entity_UpdateModelBounds(e);
 		return;
@@ -1452,9 +1455,9 @@ static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
 
 static void CPE_VelocityControl(cc_uint8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	CalcVelocity(&p->Base.Velocity.X, data + 0, data[12]);
-	CalcVelocity(&p->Base.Velocity.Y, data + 4, data[13]);
-	CalcVelocity(&p->Base.Velocity.Z, data + 8, data[14]);
+	CalcVelocity(&p->Base.Velocity.x, data + 0, data[12]);
+	CalcVelocity(&p->Base.Velocity.y, data + 4, data[13]);
+	CalcVelocity(&p->Base.Velocity.z, data + 8, data[14]);
 }
 
 static void CPE_DefineEffect(cc_uint8* data) {
@@ -1493,124 +1496,6 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	originZ = (int)Stream_GetU32_BE(data + 21) / 32.0f;
 
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
-}
-
-static void CPE_DefineModel(cc_uint8* data) {
-	cc_uint8 id = data[0];
-	struct CustomModel* cm = &custom_models[id];
-	cc_string name;
-	cc_uint8 flags;
-	cc_uint8 numParts;
-
-	if (id >= MAX_CUSTOM_MODELS) return;
-	CustomModel_Undefine(cm);
-	Model_Init(&cm->model);
-
-	name = UNSAFE_GetString(data + 1);
-	String_CopyToRawArray(cm->name, &name);
-
-	flags = data[65];
-	cm->model.bobbing        = flags & 0x01;
-	cm->model.pushes         = flags & 0x02;
-	cm->model.usesHumanSkin  = flags & 0x04;
-	cm->model.calcHumanAnims = flags & 0x08;
-
-	cm->nameY = GetFloat(data + 66);
-	cm->eyeY  = GetFloat(data + 70);
-
-	cm->collisionBounds.X = GetFloat(data + 74);
-	cm->collisionBounds.Y = GetFloat(data + 78);
-	cm->collisionBounds.Z = GetFloat(data + 82);
-
-	cm->pickingBoundsAABB.Min.X = GetFloat(data + 86);
-	cm->pickingBoundsAABB.Min.Y = GetFloat(data + 90);
-	cm->pickingBoundsAABB.Min.Z = GetFloat(data + 94);
-
-	cm->pickingBoundsAABB.Max.X = GetFloat(data + 98);
-	cm->pickingBoundsAABB.Max.Y = GetFloat(data + 102);
-	cm->pickingBoundsAABB.Max.Z = GetFloat(data + 106);
-
-	cm->uScale = Stream_GetU16_BE(data + 110);
-	cm->vScale = Stream_GetU16_BE(data + 112);
-	numParts   = data[114];
-
-	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
-		int maxParts = MAX_CUSTOM_MODEL_PARTS;
-		Chat_Add2("&cCustom Model '%s' exceeds parts limit of %i", &name, &maxParts);
-		return;
-	}
-
-	cm->numParts = numParts;
-	cm->model.vertices = (struct ModelVertex*)Mem_AllocCleared(numParts * MODEL_BOX_VERTICES,
-												sizeof(struct ModelVertex), "CustomModel vertices");
-	cm->defined = true;
-}
-
-static void CPE_DefineModelPart(cc_uint8* data) {
-	cc_uint8 id = data[0];
-	struct CustomModel* m = &custom_models[id];
-	struct CustomModelPart* part;
-	struct CustomModelPartDef p;
-	int i;
-
-	if (id >= MAX_CUSTOM_MODELS || !m->defined || m->curPartIndex >= m->numParts) return;
-	part = &m->parts[m->curPartIndex];
-
-	p.min.X = GetFloat(data +  1);
-	p.min.Y = GetFloat(data +  5);
-	p.min.Z = GetFloat(data +  9);
-	p.max.X = GetFloat(data + 13);
-	p.max.Y = GetFloat(data + 17);
-	p.max.Z = GetFloat(data + 21);
-
-	/* read u, v coords for our 6 faces */
-	for (i = 0; i < 6; i++) {
-		p.u1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 0));
-		p.v1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 2));
-		p.u2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 4));
-		p.v2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 6));
-	}
-
-	p.rotationOrigin.X = GetFloat(data + 73);
-	p.rotationOrigin.Y = GetFloat(data + 77);
-	p.rotationOrigin.Z = GetFloat(data + 81);
-
-	part->rotation.X = GetFloat(data + 85);
-	part->rotation.Y = GetFloat(data + 89);
-	part->rotation.Z = GetFloat(data + 93);
-
-	if (customModels_Ext.serverVersion == 1) {
-		/* ignore animations */
-		p.flags = data[102];
-	} else {
-		p.flags = data[165];
-
-		data += 97;
-		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) {
-			cc_uint8 tmp = *data++;
-			part->anims[i].type = tmp & 0x3F;
-			part->anims[i].axis = tmp >> 6;
-
-			part->anims[i].a = GetFloat(data);
-			data += 4;
-			part->anims[i].b = GetFloat(data);
-			data += 4;
-			part->anims[i].c = GetFloat(data);
-			data += 4;
-			part->anims[i].d = GetFloat(data);
-			data += 4;
-		}
-	}
-
-	CustomModel_BuildPart(m, &p);
-	m->curPartIndex++;
-	if (m->curPartIndex == m->numParts) CustomModel_Register(m);
-}
-
-/* unregisters and frees the custom model */
-static void CPE_UndefineModel(cc_uint8* data) {
-	cc_uint8 id = data[0];
-	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
 }
 
 static void CPE_PluginMessage(cc_uint8* data) {
@@ -1678,9 +1563,6 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
-	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
-	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
-	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
 	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
 }
@@ -1693,6 +1575,139 @@ static cc_uint8* CPE_Tick(cc_uint8* data) {
 	}
 	return data;
 }
+
+#ifdef CUSTOM_MODELS
+/*########################################################################################################################*
+*------------------------------------------------------Custom models------------------------------------------------------*
+*#########################################################################################################################*/
+static void CPE_DefineModel(cc_uint8* data) {
+	cc_uint8 id = data[0];
+	struct CustomModel* cm = &custom_models[id];
+	cc_string name;
+	cc_uint8 flags;
+	cc_uint8 numParts;
+
+	if (id >= MAX_CUSTOM_MODELS) return;
+	CustomModel_Undefine(cm);
+	Model_Init(&cm->model);
+
+	name = UNSAFE_GetString(data + 1);
+	String_CopyToRawArray(cm->name, &name);
+
+	flags = data[65];
+	cm->model.bobbing        = flags & 0x01;
+	cm->model.pushes         = flags & 0x02;
+	cm->model.usesHumanSkin  = flags & 0x04;
+	cm->model.calcHumanAnims = flags & 0x08;
+
+	cm->nameY = GetFloat(data + 66);
+	cm->eyeY  = GetFloat(data + 70);
+
+	cm->collisionBounds.x = GetFloat(data + 74);
+	cm->collisionBounds.y = GetFloat(data + 78);
+	cm->collisionBounds.z = GetFloat(data + 82);
+
+	cm->pickingBoundsAABB.Min.x = GetFloat(data + 86);
+	cm->pickingBoundsAABB.Min.y = GetFloat(data + 90);
+	cm->pickingBoundsAABB.Min.z = GetFloat(data + 94);
+
+	cm->pickingBoundsAABB.Max.x = GetFloat(data + 98);
+	cm->pickingBoundsAABB.Max.y = GetFloat(data + 102);
+	cm->pickingBoundsAABB.Max.z = GetFloat(data + 106);
+
+	cm->uScale = Stream_GetU16_BE(data + 110);
+	cm->vScale = Stream_GetU16_BE(data + 112);
+	numParts   = data[114];
+
+	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
+		int maxParts = MAX_CUSTOM_MODEL_PARTS;
+		Chat_Add2("&cCustom Model '%s' exceeds parts limit of %i", &name, &maxParts);
+		return;
+	}
+
+	cm->numParts = numParts;
+	cm->model.vertices = (struct ModelVertex*)Mem_AllocCleared(numParts * MODEL_BOX_VERTICES,
+												sizeof(struct ModelVertex), "CustomModel vertices");
+	cm->defined = true;
+}
+
+static void CPE_DefineModelPart(cc_uint8* data) {
+	cc_uint8 id = data[0];
+	struct CustomModel* m = &custom_models[id];
+	struct CustomModelPart* part;
+	struct CustomModelPartDef p;
+	int i;
+
+	if (id >= MAX_CUSTOM_MODELS || !m->defined || m->curPartIndex >= m->numParts) return;
+	part = &m->parts[m->curPartIndex];
+
+	p.min.x = GetFloat(data +  1);
+	p.min.y = GetFloat(data +  5);
+	p.min.z = GetFloat(data +  9);
+	p.max.x = GetFloat(data + 13);
+	p.max.y = GetFloat(data + 17);
+	p.max.z = GetFloat(data + 21);
+
+	/* read u, v coords for our 6 faces */
+	for (i = 0; i < 6; i++) {
+		p.u1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 0));
+		p.v1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 2));
+		p.u2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 4));
+		p.v2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 6));
+	}
+
+	p.rotationOrigin.x = GetFloat(data + 73);
+	p.rotationOrigin.y = GetFloat(data + 77);
+	p.rotationOrigin.z = GetFloat(data + 81);
+
+	part->rotation.x = GetFloat(data + 85);
+	part->rotation.y = GetFloat(data + 89);
+	part->rotation.z = GetFloat(data + 93);
+
+	if (customModels_Ext.serverVersion == 1) {
+		/* ignore animations */
+		p.flags = data[102];
+	} else {
+		p.flags = data[165];
+
+		data += 97;
+		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) {
+			cc_uint8 tmp = *data++;
+			part->anims[i].type = tmp & 0x3F;
+			part->anims[i].axis = tmp >> 6;
+
+			part->anims[i].a = GetFloat(data);
+			data += 4;
+			part->anims[i].b = GetFloat(data);
+			data += 4;
+			part->anims[i].c = GetFloat(data);
+			data += 4;
+			part->anims[i].d = GetFloat(data);
+			data += 4;
+		}
+	}
+
+	CustomModel_BuildPart(m, &p);
+	m->curPartIndex++;
+	if (m->curPartIndex == m->numParts) CustomModel_Register(m);
+}
+
+/* unregisters and frees the custom model */
+static void CPE_UndefineModel(cc_uint8* data) {
+	cc_uint8 id = data[0];
+	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
+}
+
+static void CustomModels_Reset(void) {
+	if (!Game_Version.HasCPE) return;
+
+	Net_Set(OPCODE_DEFINE_MODEL,      CPE_DefineModel, 116);
+	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
+	Net_Set(OPCODE_UNDEFINE_MODEL,    CPE_UndefineModel, 2);
+}
+#else
+static void CustomModels_Reset(void) { }
+#endif
 
 
 /*########################################################################################################################*
@@ -1777,7 +1792,7 @@ static void BlockDefs_DefineBlock(cc_uint8* data) {
 
 	cc_uint8 shape = *data++;
 	if (shape > 0 && shape <= 16) {
-		Blocks.MaxBB[block].Y = shape / 16.0f;
+		Blocks.MaxBB[block].y = shape / 16.0f;
 	}
 
 	BlockDefs_DefineBlockCommonEnd(data, shape, block);
@@ -1800,13 +1815,13 @@ static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 	BlockID block = BlockDefs_DefineBlockCommonStart(&data, 
 						blockDefsExt_Ext.serverVersion >= 2);
 
-	minBB.X = (cc_int8)(*data++) / 16.0f;
-	minBB.Y = (cc_int8)(*data++) / 16.0f;
-	minBB.Z = (cc_int8)(*data++) / 16.0f;
+	minBB.x = (cc_int8)(*data++) / 16.0f;
+	minBB.y = (cc_int8)(*data++) / 16.0f;
+	minBB.z = (cc_int8)(*data++) / 16.0f;
 
-	maxBB.X = (cc_int8)(*data++) / 16.0f;
-	maxBB.Y = (cc_int8)(*data++) / 16.0f;
-	maxBB.Z = (cc_int8)(*data++) / 16.0f;
+	maxBB.x = (cc_int8)(*data++) / 16.0f;
+	maxBB.y = (cc_int8)(*data++) / 16.0f;
+	maxBB.z = (cc_int8)(*data++) / 16.0f;
 
 	Blocks.MinBB[block] = minBB;
 	Blocks.MaxBB[block] = maxBB;
@@ -1829,6 +1844,7 @@ static void Protocol_Reset(void) {
 	Classic_Reset();
 	CPE_Reset();
 	BlockDefs_Reset();
+	CustomModels_Reset();
 	WoM_Reset();
 }
 

@@ -270,7 +270,7 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
+	static cc_uint8 modes[] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
@@ -395,6 +395,9 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+/* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
+static char sockaddr_size_check[sizeof(SOCKADDR_STORAGE) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
+
 static int (WSAAPI *_WSAStartup)(WORD versionRequested, LPWSADATA wsaData);
 static int (WSAAPI *_WSACleanup)(void);
 static int (WSAAPI *_WSAGetLastError)(void);
@@ -413,6 +416,9 @@ static int (WSAAPI *_select)(int nfds, fd_set* readfds, fd_set* writefds, fd_set
 
 static struct hostent* (WSAAPI *_gethostbyname)(const char* name);
 static unsigned short  (WSAAPI *_htons)(u_short hostshort);
+static int  (WSAAPI *_getaddrinfo )(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, PADDRINFOA* result);
+static void (WSAAPI* _freeaddrinfo)(PADDRINFOA addrInfo);
+
 
 
 static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
@@ -442,6 +448,7 @@ static void LoadWinsockFuncs(void) {
 		DynamicLib_Sym(connect),         DynamicLib_Sym(shutdown),
 		DynamicLib_Sym(ioctlsocket),     DynamicLib_Sym(getsockopt),
 		DynamicLib_Sym(gethostbyname),   DynamicLib_Sym(htons),
+		DynamicLib_Sym(getaddrinfo),     DynamicLib_Sym(freeaddrinfo),
 		DynamicLib_Sym(recv), DynamicLib_Sym(send), DynamicLib_Sym(select)
 	};
 	static const cc_string winsock1 = String_FromConst("wsock32.DLL");
@@ -456,12 +463,15 @@ static void LoadWinsockFuncs(void) {
 	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
-static int ParseHost(void* dst, char* host, int port) {
-	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
+static cc_result ParseHostOld(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	struct hostent* res;
 	cc_result wsa_res;
+	SOCKADDR_IN* addr4;
+	char* src_addr;
+	int i;
 
 	res = _gethostbyname(host);
+
 	if (!res) {
 		wsa_res = _WSAGetLastError();
 
@@ -471,54 +481,102 @@ static int ParseHost(void* dst, char* host, int port) {
 		
 	/* per MSDN, should only be getting AF_INET returned from this */
 	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
 
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = res->h_addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(SOCKADDR_IN);
+
+		addr4 = (SOCKADDR_IN*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = _htons(port);
+		addr4->sin_addr   = *(IN_ADDR*)src_addr;
+	}
+
+	*numValidAddrs = i;
 	/* Must have at least one IPv4 address */
-	if (!res->h_addr_list[0]) return ERR_INVALID_ARGUMENT;
-
-	addr4->sin_family = AF_INET;
-	addr4->sin_port   = _htons(port);
-	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
-	return 0;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
 }
 
-static int Socket_ParseAddress(void* dst, INT* size, const cc_string* address, int port) {
-	SOCKADDR_IN*  addr4 =  (SOCKADDR_IN*)dst;
-	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)dst;
-	cc_winstring addr;
-	Platform_EncodeString(&addr, address);
+static cc_result ParseHostNew(char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	char portRaw[32]; cc_string portStr;
+	struct addrinfo hints = { 0 };
+	struct addrinfo* result;
+	struct addrinfo* cur;
+	int res, i = 0;
 
-	*size = sizeof(*addr4);
-	if (!_WSAStringToAddressW(addr.uni, AF_INET,  NULL, addr4, size)) {
-		addr4->sin_port  = _htons(port);
-		return 0;
-	}
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	
+	String_InitArray(portStr,  portRaw);
+	String_AppendInt(&portStr, port);
+	portRaw[portStr.length] = '\0';
 
-	*size = sizeof(*addr6);
-	if (!_WSAStringToAddressW(addr.uni, AF_INET6, NULL, addr6, size)) {
-		addr6->sin6_port = _htons(port);
-		return 0;
-	}
-
-	*size = sizeof(*addr4);
-	return ParseHost(dst, addr.ansi, port);
-}
-
-int Socket_ValidAddress(const cc_string* address) {
-	SOCKADDR_STORAGE addr;
-	INT addrSize;
-	return Socket_ParseAddress(&addr, &addrSize, address, 0) == 0;
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	SOCKADDR_STORAGE addr;
-	cc_result res;
-	INT addrSize;
-
-	*s  = -1;
-	res = Socket_ParseAddress(&addr, &addrSize, address, port);
+	res = _getaddrinfo(host, portRaw, &hints, &result);
+	if (res == EAI_NONAME) return SOCK_ERR_UNKNOWN_HOST;
 	if (res) return res;
 
-	*s = _socket(addr.ss_family, SOCK_STREAM, IPPROTO_TCP);
+	/* Prefer IPv4 addresses first */
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
+	{
+		if (cur->ai_family != AF_INET) continue;
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen; i++;
+	}
+	
+	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
+	{
+		if (cur->ai_family == AF_INET) continue;
+		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
+		addrs[i].size = cur->ai_addrlen; i++;
+	}
+
+	_freeaddrinfo(result);
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	SOCKADDR_IN*  addr4 = (SOCKADDR_IN* )addrs[0].data;
+	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)addrs[0].data;
+	cc_winstring str;
+	INT size;
+
+	*numValidAddrs = 0;
+	Platform_EncodeString(&str, address);
+
+	size = sizeof(*addr4);
+	if (!_WSAStringToAddressW(str.uni, AF_INET,  NULL, addr4, &size)) {
+		addr4->sin_port  = _htons(port);
+
+		addrs[0].size  = size;
+		*numValidAddrs = 1;
+		return 0;
+	}
+
+	size = sizeof(*addr6);
+	if (!_WSAStringToAddressW(str.uni, AF_INET6, NULL, addr6, &size)) {
+		addr6->sin6_port = _htons(port);
+
+		addrs[0].size  = size;
+		*numValidAddrs = 1;
+		return 0;
+	}
+
+	if (_getaddrinfo) {
+		return ParseHostNew(str.ansi, port, addrs, numValidAddrs);
+	} else {
+		return ParseHostOld(str.ansi, port, addrs, numValidAddrs);
+	}
+}
+
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	SOCKADDR* raw_addr = (SOCKADDR*)addr->data;
+	cc_result res;
+
+	*s = _socket(raw_addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return _WSAGetLastError();
 
 	if (nonblocking) {
@@ -526,7 +584,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bo
 		_ioctlsocket(*s, FIONBIO, &blockingMode);
 	}
 
-	res = _connect(*s, (SOCKADDR*)&addr, addrSize);
+	res = _connect(*s, raw_addr, addr->size);
 	return res == -1 ? _WSAGetLastError() : 0;
 }
 
@@ -605,16 +663,20 @@ static cc_result Process_RawGetExePath(cc_winstring* path, int* len) {
 }
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	union STARTUPINFO_union {
+		STARTUPINFOW wide;
+		STARTUPINFOA ansi;
+	} si = { 0 }; // less compiler warnings this way
+	
 	cc_winstring path;
 	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	STARTUPINFOW si        = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	cc_winstring raw;
 	cc_result res;
 	int len, i;
 
 	if ((res = Process_RawGetExePath(&path, &len))) return res;
-	si.cb = sizeof(STARTUPINFOW);
+	si.wide.cb = sizeof(STARTUPINFOW);
 	
 	String_InitArray(argv, argvBuffer);
 	/* Game doesn't actually care about argv[0] */
@@ -631,11 +693,11 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 
 	if (path.uni[0]) {
 		if (!CreateProcessW(path.uni, raw.uni, NULL, NULL,
-				false, 0, NULL, NULL, &si, &pi)) return GetLastError();
+				false, 0, NULL, NULL, &si.wide, &pi)) return GetLastError();
 	} else {
 		/* Windows 9x does not support W API functions */
 		if (!CreateProcessA(path.ansi, raw.ansi, NULL, NULL,
-				false, 0, NULL, NULL, &si, &pi)) return GetLastError();
+				false, 0, NULL, NULL, &si.ansi, &pi)) return GetLastError();
 	}
 
 	/* Don't leak memory for process return code */

@@ -13,8 +13,12 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <pspkernel.h>
+#include <psputility.h>
+#include <pspsdk.h>
+#include <pspnet.h>
 #include <pspnet_inet.h>
 #include <pspnet_resolver.h>
+#include <pspnet_apctl.h>
 #include <psprtc.h>
 #include "_PlatformConsole.h"
 
@@ -58,15 +62,15 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	pspTime curTime;
+	ScePspDateTime curTime;
 	sceRtcGetCurrentClockLocalTime(&curTime);
 
 	t->year   = curTime.year;
 	t->month  = curTime.month;
 	t->day    = curTime.day;
 	t->hour   = curTime.hour;
-	t->minute = curTime.minutes;
-	t->second = curTime.seconds;
+	t->minute = curTime.minute;
+	t->second = curTime.second;
 }
 
 #define US_PER_SEC 1000000ULL
@@ -173,7 +177,7 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	int result = sceIoDclose(file);
+	int result = sceIoClose(file);
 	return GetSCEResult(result);
 }
 
@@ -292,60 +296,51 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-union SocketAddress {
-	struct sockaddr raw;
-	struct sockaddr_in v4;
-};
-
-static int ParseHost(union SocketAddress* addr, const char* host) {
+cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	char str[NATIVE_STR_LEN];
 	char buf[1024];
 	int rid, ret;
-
-	if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) return 0;
-
-	ret = sceNetResolverStartNtoA(rid, host, &addr->v4.sin_addr, 1 /* timeout */, 5 /* retries */);
-	sceNetResolverDelete(rid);
-	return ret >= 0;
-}
-
-static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
-	char str[NATIVE_STR_LEN];
+	
 	String_EncodeUtf8(str, address);
+	*numValidAddrs = 1;
 
-	if (sceNetInetInetPton(AF_INET,str, &addr->v4.sin_addr) > 0) return true;
-	return ParseHost(addr, str);
+	if (sceNetInetInetPton(AF_INET, str, &addr4->sin_addr) <= 0) {
+		/* Fallback to resolving as DNS name */
+		if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) 
+			return ERR_INVALID_ARGUMENT;
+
+		ret = sceNetResolverStartNtoA(rid, str, &addr4->sin_addr, 1 /* timeout */, 5 /* retries */);
+		sceNetResolverDelete(rid);
+		if (ret < 0) return ret;
+	}
+	
+	addr4->sin_family = AF_INET;
+	addr4->sin_port   = htons(port);
+		
+	addrs[0].size = sizeof(*addr4);
+	return 0;
 }
 
-int Socket_ValidAddress(const cc_string* address) {
-	union SocketAddress addr;
-	return ParseAddress(&addr, address);
-}
-
-cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port, cc_bool nonblocking) {
-	union SocketAddress addr;
+cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
 	int res;
 
-	*s = -1;
-	if (!ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
-
-	*s = sceNetInetSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	*s = sceNetInetSocket(raw->sa_family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s < 0) return sceNetInetGetErrno();
 	
 	if (nonblocking) {
 		int on = 1;
 		sceNetInetSetsockopt(*s, SOL_SOCKET, SO_NONBLOCK, &on, sizeof(int));
 	}
-	
-	addr.v4.sin_family = AF_INET;
-	addr.v4.sin_port   = htons(port);
 
-	res = sceNetInetConnect(*s, &addr.raw, sizeof(addr.v4));
+	res = sceNetInetConnect(*s, raw, addr->size);
 	return res < 0 ? sceNetInetGetErrno() : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int recvCount = sceNetInetRecv(s, data, count, 0);
-	if (recvCount < 0) { *modified = recvCount; return 0; }
+	if (recvCount >= 0) { *modified = recvCount; return 0; }
 	
 	*modified = 0; 
 	return sceNetInetGetErrno();
@@ -353,7 +348,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = sceNetInetSend(s, data, count, 0);
-	if (sentCount < 0) { *modified = sentCount; return 0; }
+	if (sentCount >= 0) { *modified = sentCount; return 0; }
 	
 	*modified = 0; 
 	return sceNetInetGetErrno();
@@ -405,8 +400,46 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitNetworking(void) {
+    sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
+    sceUtilityLoadNetModule(PSP_NET_MODULE_INET);    
+    int res;
+
+    res = sceNetInit(128 * 1024, 0x20, 4096, 0x20, 4096);
+    if (res < 0) { Platform_Log1("sceNetInit failed: %i", &res); return; }
+
+    res = sceNetInetInit();
+    if (res < 0) { Platform_Log1("sceNetInetInit failed: %i", &res); return; }
+
+    res = sceNetResolverInit();
+    if (res < 0) { Platform_Log1("sceNetResolverInit failed: %i", &res); return; }
+
+    res = sceNetApctlInit(10 * 1024, 0x30);
+    if (res < 0) { Platform_Log1("sceNetApctlInit failed: %i", &res); return; }
+    
+    res = sceNetApctlConnect(1); // 1 = first profile
+    if (res) { Platform_Log1("sceNetApctlConnect failed: %i", &res); return; }
+
+    for (int try = 0; try < 20; try++) {
+        int state;
+        res = sceNetApctlGetState(&state);
+        if (res) { Platform_Log1("sceNetApctlGetState failed: %i", &res); return; }
+        
+        if (state == PSP_NET_APCTL_STATE_GOT_IP) break;
+
+        // not successful yet? try polling again in 50 ms
+        sceKernelDelayThread(50 * 1000);
+    }
+}
+
 void Platform_Init(void) {
+	InitNetworking();
 	/*pspDebugSioInit();*/ 
+	
+	// Disabling FPU exceptions avoids sometimes crashing with this line in Physics.c
+	//  *tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
+	// TODO: work out why this error is actually happening (inexact or underflow?) and properly fix it
+	pspSdkDisableFPUExceptions();
 }
 void Platform_Free(void) { }
 

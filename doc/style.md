@@ -15,7 +15,7 @@ Note: The explicit integer size typedefs may not have been defined if you aren't
 
 ### Strings
 
-A custom string type (`cc_string`) is used rather than `char*` strings in most places (see [strings](doc/strings.md) page for more details)
+A custom string type (`cc_string`) is used rather than `char*` strings in most places (see [strings](strings.md) page for more details)
 
 *Note: Several functions will take raw `char*` for performance, but this is not encouraged*
 

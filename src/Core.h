@@ -119,30 +119,37 @@ typedef cc_uint8  cc_bool;
 
 
 #define CC_BUILD_FREETYPE
+#ifndef CC_BUILD_FLATPAK
+#define CC_BUILD_RESOURCES
+#endif
 /*#define CC_BUILD_GL11*/
+
 #ifndef CC_BUILD_MANUAL
 #if defined NXDK
 	/* XBox also defines _WIN32 */
 	#define CC_BUILD_XBOX
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
 #elif defined XENON
 	/* libxenon also defines __linux__ (yes, really) */
 	#define CC_BUILD_XBOX360
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_HTTPCLIENT
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
 #elif defined _WIN32
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9
 	#define CC_BUILD_WINGUI
-	#define CC_BUILD_WININET
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_SCHANNEL
 	#define CC_BUILD_WINMM
 #elif defined __ANDROID__
 	#define CC_BUILD_ANDROID
@@ -262,61 +269,95 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_WEBAUDIO
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_MINFILES
+	#define CC_BUILD_COOPTHREADED
 	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
 #elif defined __psp__
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_PSP
-	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_BEARSSL
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
 #elif defined __3DS__
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_3DS
-	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_TOUCH
+	#define CC_BUILD_DUALSCREEN
+	#undef  CC_BUILD_FREETYPE
 #elif defined GEKKO
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_GCWII
-	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
 #elif defined __vita__
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_PSVITA
-	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
 #elif defined _arch_dreamcast
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_DREAMCAST
-	#define CC_BUILD_LOWMEM
-	#undef CC_BUILD_FREETYPE
-#elif defined PLAT_PS3
-	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_BEARSSL
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
+#elif defined PLAT_PS3
 	#define CC_BUILD_PS3
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_BEARSSL
-	#undef CC_BUILD_FREETYPE
-#elif defined NINTENDO64
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_N64
-	#define CC_BUILD_LOWMEM
-	#undef CC_BUILD_FREETYPE
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
+#elif defined N64
 	#define CC_BIG_ENDIAN
+	#define CC_BUILD_N64
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
+#elif defined PLAT_PS2
+	#define CC_BUILD_PS2
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
+#elif defined PLAT_NDS
+	#define CC_BUILD_NDS
+	#define CC_BUILD_OPENAL
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_CONSOLE
+	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
 #endif
 #endif
 
 
 #ifndef CC_BUILD_LOWMEM
 #define EXTENDED_BLOCKS
+#define CUSTOM_MODELS
 #endif
 #define EXTENDED_TEXTURES
 
@@ -338,7 +379,7 @@ typedef cc_uint8 Face;
 typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
 
-typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
+typedef struct Rect2D_  { int x, y, Width, Height; } Rect2D;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 
 typedef struct cc_string_ {
@@ -361,7 +402,7 @@ typedef void* GfxResourceID;
 /* Contains the information to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	short X, Y; cc_uint16 Width, Height;
+	short x, y; cc_uint16 Width, Height;
 	TextureRec uv;
 };
 #endif

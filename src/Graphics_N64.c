@@ -7,10 +7,7 @@
 #include <libdragon.h>
 #include <GL/gl.h>
 #include <GL/gl_integration.h>
-#include <GL/gl.h>
 
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format;
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
@@ -26,16 +23,22 @@ static void GL_UpdateVsync(void) {
 static surface_t zbuffer;
 
 void Gfx_Create(void) {
-//Platform_LogConst("GFX CREATE");
     gl_init();
     //rdpq_debug_start(); // TODO debug
     //rdpq_debug_log(true);
     zbuffer = surface_alloc(FMT_RGBA16, display_get_width(), display_get_height());
     
-	Gfx.MaxTexWidth  = 32;
-	Gfx.MaxTexHeight = 32;
+	Gfx.MaxTexWidth  = 256;
+	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
+	
+	// TMEM only has 4 KB in it, which can be interpreted as
+	// - 1024 32bpp pixels
+	// - 2048 16bpp pixels 
+	Gfx.MaxTexSize       = 1024;
+	Gfx.MaxLowResTexSize = 2048;
 
+	Gfx.SupportsNonPowTwoTextures = true;
 	Gfx_RestoreState();
 	GL_UpdateVsync();
 }
@@ -55,13 +58,17 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-//static color_t gfx_clearColor;
+static color_t gfx_clearColor;
 
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return ERR_NOT_SUPPORTED;
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
+	String_AppendConst(info, "-- Using Nintendo 64 --\n");
+	String_AppendConst(info, "GPU: Nintendo 64 RDP (LibDragon OpenGL)\n");
+	String_AppendConst(info, "T&L: Nintendo 64 RSP (LibDragon OpenGL)\n");
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -74,81 +81,103 @@ void Gfx_OnWindowResize(void) { }
 
 
 void Gfx_BeginFrame(void) {
-Platform_LogConst("GFX BEG");
 	surface_t* disp = display_get();
     rdpq_attach(disp, &zbuffer);
     
-    //rdpq_set_mode_fill(RGBA32(0, 255, 0, 255));
-    //rdpq_fill_rectangle(0, 0, 320, 120);
-    
-    //rdpq_clear(gfx_clearColor);
-    //rdpq_clear_z(0xFFFC);
-    
 	gl_context_begin();
-Platform_LogConst("GFX ctx beg");
+	Platform_LogConst("GFX ctx beg");
 }
 
-static PackedCol clearColor;
+extern void __rdpq_autosync_change(int mode);
+static color_t gfx_clearColor;
 void Gfx_Clear(void) {
-	glClearColor(PackedCol_R(clearColor) / 255.0f, PackedCol_G(clearColor) / 255.0f,
-				 PackedCol_B(clearColor) / 255.0f, PackedCol_A(clearColor) / 255.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	__rdpq_autosync_change(AUTOSYNC_PIPE);
+	rdpq_clear(gfx_clearColor);
+    rdpq_clear_z(0xFFFC);
 } 
 
 void Gfx_ClearCol(PackedCol color) {
-	clearColor = color;
-	//color = PackedCol_Make(200, 150, 100, 255);
+	gfx_clearColor.r = PackedCol_R(color);
+	gfx_clearColor.g = PackedCol_G(color);
+	gfx_clearColor.b = PackedCol_B(color);
+	gfx_clearColor.a = PackedCol_A(color);
 	//memcpy(&gfx_clearColor, &color, sizeof(color_t)); // TODO maybe use proper conversion from graphics.h ??
 }
 
 void Gfx_EndFrame(void) {
-Platform_LogConst("GFX ctx end");
+	Platform_LogConst("GFX ctx end");
 	gl_context_end();
     rdpq_detach_show();
     
 	if (gfx_minFrameMs) LimitFPS();
-Platform_LogConst("GFX END");
+//Platform_LogConst("GFX END");
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-
 typedef struct CCTexture {
 	surface_t surface;
 	GLuint textureID;
 } CCTexture;
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	Platform_Log2("make texture %i x %i", &bmp->width, &bmp->height);
-	if (bmp->width > 32 || bmp->height > 32) return NULL;
+#define ALIGNUP8(size) (((size) + 7) & ~0x07)
 
+// A8 B8 G8 R8 > A1 B5 G5 B5
+#define To16BitPixel(src) \
+	((src & 0x80) >> 7) | ((src & 0xF800) >> 10) | ((src & 0xF80000) >> 13) | ((src & 0xF8000000) >> 16);	
+
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	cc_bool bit16  = flags & TEXTURE_FLAG_LOWRES;
+	// rows are actually 8 byte aligned in TMEM https://github.com/DragonMinded/libdragon/blob/f360fa1bb1fb3ff3d98f4ab58692d40c828636c9/src/rdpq/rdpq_tex.c#L132
+	// so even though width * height * pixel size may fit within 4096 bytes, after adjusting for 8 byte alignment, row pitch * height may exceed 4096 bytes
+	int pitch = bit16 ? ALIGNUP8(bmp->width * 2) : ALIGNUP8(bmp->width * 4);
+	if (pitch * bmp->height > 4096) return 0;
+	
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "texture");
 	
 	glGenTextures(1, &tex->textureID);
 	glBindTexture(GL_TEXTURE_2D, tex->textureID);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// NOTE: Enabling these fixes textures, but seems to break on cen64
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR : GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mipmaps ? GL_LINEAR : GL_NEAREST);
 	
-	tex->surface = surface_alloc(FMT_RGBA32, bmp->width, bmp->height);
-	
+	tex->surface   = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
 	surface_t* fb  = &tex->surface;
 	cc_uint32* src = (cc_uint32*)bmp->scan0;
 	cc_uint8*  dst = (cc_uint8*)fb->buffer;
-
-	for (int y = 0; y < bmp->height; y++) 
-	{
-		Mem_Copy(dst + y * fb->stride,
-				 src + y * bmp->width, 
-				 bmp->width * 4);
+		
+	if (bit16) {
+		// 16 bpp requires reducing A8R8G8B8 to A1R5G5B5
+		for (int y = 0; y < bmp->height; y++) 
+		{	
+			cc_uint32* src_row = src + y * bmp->width;
+			cc_uint16* dst_row = (cc_uint16*)(dst + y * fb->stride);
+			
+			for (int x = 0; x < bmp->width; x++) 
+			{
+				dst_row[x] = To16BitPixel(src_row[x]);
+			}
+		}
+	} else {
+		// 32 bpp can just be copied straight across
+		for (int y = 0; y < bmp->height; y++) 
+		{
+			Mem_Copy(dst + y * fb->stride,
+				 	src + y * bmp->width,
+				 	bmp->width * 4);
+		}
 	}
 	
-	rdpq_texparms_t params = (rdpq_texparms_t){
-        .s.repeats = REPEAT_INFINITE,
-        .t.repeats = REPEAT_INFINITE,
+	
+	rdpq_texparms_t params =
+	{
+        .s.repeats = (flags & TEXTURE_FLAG_NONPOW2) ? 1 : REPEAT_INFINITE,
+        .t.repeats = (flags & TEXTURE_FLAG_NONPOW2) ? 1 : REPEAT_INFINITE,
     };
 
+	// rdpq_tex_upload(TILE0, &tex->surface, &params);
 	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
 	return tex;
 }
@@ -164,6 +193,29 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	// TODO: Just memcpying doesn't actually work. maybe due to glSurfaceTexImageN64 caching the RSQ upload block?
+	// TODO: Is there a more optimised approach than just calling glSurfaceTexImageN64
+	CCTexture* tex = (CCTexture*)texId;
+	
+	surface_t* fb  = &tex->surface;
+	cc_uint32* src = (cc_uint32*)part->scan0 + x;
+	cc_uint8*  dst = (cc_uint8*)fb->buffer  + (x * 4) + (y * fb->stride);
+
+	for (int srcY = 0; srcY < part->height; srcY++) 
+	{
+		Mem_Copy(dst + srcY * fb->stride,
+				 src + srcY * rowWidth,
+				 part->width * 4);
+	}
+	
+	
+	glBindTexture(GL_TEXTURE_2D, tex->textureID);
+	rdpq_texparms_t params = (rdpq_texparms_t){
+        .s.repeats = REPEAT_INFINITE,
+        .t.repeats = REPEAT_INFINITE,
+    };
+	// rdpq_tex_upload(TILE0, &tex->surface, &params);
+	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
@@ -194,8 +246,8 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//glColorMask(r, g, b, a); TODO
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { }
-void Gfx_SetDepthTest(cc_bool enabled) { }
+void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
+void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
@@ -208,6 +260,7 @@ static void Gfx_RestoreState(void) {
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
+	//glEnable(GL_RDPQ_TEXTURING_N64);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
@@ -221,13 +274,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z = -2.0f / (zFar - zNear);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z = -2.0f / (zFar - zNear);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -241,12 +294,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.w =  0.0f;
 }
 
 
@@ -266,8 +319,8 @@ void Gfx_BindIb(GfxResourceID ib)    { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return Mem_Alloc(count, strideSizes[fmt], "GFX VB");
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
+	return Mem_TryAlloc(count, strideSizes[fmt]);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { gfx_vertices = vb; }
@@ -288,9 +341,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	return Mem_Alloc(maxVertices, strideSizes[fmt], "GFX VB");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return Mem_TryAlloc(maxVertices, strideSizes[fmt]);
 }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
@@ -301,15 +356,14 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	gfx_vertices = vb;
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_vertices = vb;
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-}
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool depthOnlyRendering;
+
 void Gfx_SetFog(cc_bool enabled) {
 }
 
@@ -332,7 +386,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
+	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?
+	cc_bool enabled    = !depthOnly;
 	//Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
 	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
@@ -356,7 +411,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 static struct Matrix texMatrix = Matrix_IdentityValue;
 void Gfx_EnableTextureOffset(float x, float y) {
-	texMatrix.row4.X = x; texMatrix.row4.Y = y;
+	texMatrix.row4.x = x; texMatrix.row4.y = y;
 	Gfx_LoadMatrix(2, &texMatrix);
 }
 
@@ -430,6 +485,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	if (depthOnlyRendering) return;
 	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));

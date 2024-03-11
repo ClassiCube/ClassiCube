@@ -20,6 +20,12 @@ For simplicitly,
 
 The play.html page is the trickiest part, because how to implement this is website-specific. (depends on how the website is styled, what webserver is used, what programming language is used to generate the html, etc)
 
+#### Changing where the game downloads the texture pack from
+
+There should be this piece of code somewhere in the .JS file: `function _interop_AsyncDownloadTexturePack(rawPath) {`
+
+A bit below that, there should be `var url = '/static/default.zip';` - change that to the desired URL.
+
 #### Embedding the game in play.html
 
 The following HTML code is required to be somewhere in the webpage:

@@ -6,7 +6,6 @@
 
 GLboolean STATE_DIRTY = GL_TRUE;
 
-GLenum DEPTH_FUNC            = GL_LESS;
 GLboolean DEPTH_TEST_ENABLED = GL_FALSE;
 GLboolean DEPTH_MASK_ENABLED = GL_FALSE;
 
@@ -23,6 +22,8 @@ GLboolean BLEND_ENABLED = GL_FALSE;
 
 GLboolean TEXTURES_ENABLED = GL_FALSE;
 
+extern GLboolean AUTOSORT_ENABLED;
+
 
 static struct {
     GLint x;
@@ -32,44 +33,6 @@ static struct {
     GLboolean applied;
 } scissor_rect = {0, 0, 640, 480, false};
 
-
-void _glUpdatePVRTextureContext(PolyContext *context, GLshort textureUnit) {
-    const TextureObject *tx1 = TEXTURE_ACTIVE;
-
-    /* Disable all texturing to start with */
-    context->txr.enable = GPU_TEXTURE_DISABLE;
-    context->txr2.enable = GPU_TEXTURE_DISABLE;
-    context->txr2.alpha = GPU_TXRALPHA_DISABLE;
-
-    if(!TEXTURES_ENABLED || !tx1 || !tx1->data) {
-        context->txr.base = NULL;
-        return;
-    }
-
-    context->txr.alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_TXRALPHA_ENABLE : GPU_TXRALPHA_DISABLE;
-
-    GLuint filter = GPU_FILTER_NEAREST;
-
-    if(tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) {
-        filter = GPU_FILTER_BILINEAR;
-    }
-
-    if(tx1->data) {
-        context->txr.enable = GPU_TEXTURE_ENABLE;
-        context->txr.filter = filter;
-        context->txr.width = tx1->width;
-        context->txr.height = tx1->height;
-        context->txr.mipmap = GL_FALSE;
-        context->txr.mipmap_bias = tx1->mipmap_bias;
-        
-	context->txr.base = tx1->data;
-        context->txr.format = tx1->color;
-        context->txr.env = tx1->env;
-        context->txr.uv_flip = GPU_UVFLIP_NONE;
-        context->txr.uv_clamp = GPU_UVCLAMP_NONE;
-    }
-}
-
 void _glInitContext() {
     scissor_rect.x = 0;
     scissor_rect.y = 0;
@@ -77,7 +40,6 @@ void _glInitContext() {
     scissor_rect.height = vid_mode->height;
 
     glClearDepth(1.0f);
-    glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
     glShadeModel(GL_SMOOTH);
 
@@ -202,11 +164,6 @@ GLAPI void APIENTRY glDepthMask(GLboolean flag) {
         DEPTH_MASK_ENABLED = flag;
         STATE_DIRTY = GL_TRUE;
     }
-}
-
-GLAPI void APIENTRY glDepthFunc(GLenum func) {
-    DEPTH_FUNC = func;
-    STATE_DIRTY = GL_TRUE;
 }
 
 /* Shading - Flat or Goraud */
@@ -338,4 +295,115 @@ void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
     VIEWPORT.hheight = ((GLfloat) VIEWPORT.height) * 0.5f;
     VIEWPORT.x_plus_hwidth  = VIEWPORT.x + VIEWPORT.hwidth;
     VIEWPORT.y_plus_hheight = VIEWPORT.y + VIEWPORT.hheight;
+}
+
+
+GL_FORCE_INLINE void _updatePVRTextureContext(PolyContext *context, GLshort textureUnit) {
+    const TextureObject *tx1 = TEXTURE_ACTIVE;
+
+    /* Disable all texturing to start with */
+    context->txr.enable = GPU_TEXTURE_DISABLE;
+    context->txr2.enable = GPU_TEXTURE_DISABLE;
+    context->txr2.alpha = GPU_TXRALPHA_DISABLE;
+
+    if(!TEXTURES_ENABLED || !tx1 || !tx1->data) {
+        context->txr.base = NULL;
+        return;
+    }
+
+    context->txr.alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_TXRALPHA_ENABLE : GPU_TXRALPHA_DISABLE;
+
+    GLuint filter = GPU_FILTER_NEAREST;
+
+    if(tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) {
+        filter = GPU_FILTER_BILINEAR;
+    }
+
+    if(tx1->data) {
+        context->txr.enable = GPU_TEXTURE_ENABLE;
+        context->txr.filter = filter;
+        context->txr.width = tx1->width;
+        context->txr.height = tx1->height;
+        context->txr.mipmap = GL_FALSE;
+        context->txr.mipmap_bias = tx1->mipmap_bias;
+        
+	context->txr.base = tx1->data;
+        context->txr.format = tx1->color;
+        context->txr.env = tx1->env;
+        context->txr.uv_flip = GPU_UVFLIP_NONE;
+        context->txr.uv_clamp = GPU_UVCLAMP_NONE;
+    }
+}
+
+GL_FORCE_INLINE int _calc_pvr_face_culling() {
+    if(!CULLING_ENABLED) {
+        return GPU_CULLING_SMALL;
+    } else {
+        return GPU_CULLING_CW;
+    }
+}
+
+GL_FORCE_INLINE void _updatePVRBlend(PolyContext* context) {
+    if(BLEND_ENABLED || ALPHA_TEST_ENABLED) {
+        context->gen.alpha = GPU_ALPHA_ENABLE;
+    } else {
+        context->gen.alpha = GPU_ALPHA_DISABLE;
+    }
+
+    context->blend.src = PVR_BLEND_SRCALPHA;
+    context->blend.dst = PVR_BLEND_INVSRCALPHA;
+}
+
+void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
+    TRACE();
+
+    // Compile the header
+    PolyContext ctx;
+    memset(&ctx, 0, sizeof(PolyContext));
+
+    ctx.list_type = activePolyList->list_type;
+    ctx.fmt.color = GPU_CLRFMT_ARGBPACKED;
+    ctx.fmt.uv = GPU_UVFMT_32BIT;
+    ctx.gen.color_clamp = GPU_CLRCLAMP_DISABLE;
+
+    ctx.gen.culling = _calc_pvr_face_culling();
+    ctx.depth.comparison = DEPTH_TEST_ENABLED ? GPU_DEPTHCMP_GEQUAL : GPU_DEPTHCMP_ALWAYS;
+    ctx.depth.write = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
+
+    ctx.gen.shading = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
+
+    if(SCISSOR_TEST_ENABLED) {
+        ctx.gen.clip_mode = GPU_USERCLIP_INSIDE;
+    } else {
+        ctx.gen.clip_mode = GPU_USERCLIP_DISABLE;
+    }
+
+    if(FOG_ENABLED) {
+        ctx.gen.fog_type = GPU_FOG_TABLE;
+    } else {
+        ctx.gen.fog_type = GPU_FOG_DISABLE;
+    }
+
+    _updatePVRBlend(&ctx);
+
+    if(ctx.list_type == GPU_LIST_OP_POLY) {
+        /* Opaque polys are always one/zero */
+        ctx.blend.src = PVR_BLEND_ONE;
+        ctx.blend.dst = PVR_BLEND_ZERO;
+    } else if(ctx.list_type == GPU_LIST_PT_POLY) {
+        /* Punch-through polys require fixed blending and depth modes */
+        ctx.blend.src = PVR_BLEND_SRCALPHA;
+        ctx.blend.dst = PVR_BLEND_INVSRCALPHA;
+        ctx.depth.comparison = GPU_DEPTHCMP_LEQUAL;
+    } else if(ctx.list_type == GPU_LIST_TR_POLY && AUTOSORT_ENABLED) {
+        /* Autosort mode requires this mode for transparent polys */
+        ctx.depth.comparison = GPU_DEPTHCMP_GEQUAL;
+    }
+
+    _updatePVRTextureContext(&ctx, 0);
+
+    CompilePolyHeader(header, &ctx);
+
+    /* Force bits 18 and 19 on to switch to 6 triangle strips */
+    header->cmd |= 0xC0000;
 }

@@ -6,6 +6,7 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#define NOMINMAX
 #include <windows.h>
 #define SECURITY_WIN32
 #include <sspi.h>
@@ -152,7 +153,7 @@ static SECURITY_STATUS SSL_Connect(struct SSLContext* ctx, const char* hostname)
 	out_desc.cBuffers  = Array_Elems(out_buffers);
 	out_desc.pBuffers  = out_buffers;
 
-	res = FP_InitializeSecurityContextA(&ctx->handle, NULL, hostname, flags, 0, 0,
+	res = FP_InitializeSecurityContextA(&ctx->handle, NULL, (char*)hostname, flags, 0, 0,
 						NULL, 0, &ctx->context, &out_desc, &flags, NULL);
 	if (res != SEC_I_CONTINUE_NEEDED) return res;
 	res = 0;
@@ -347,6 +348,9 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 
 				return SSL_ReadDecrypted(ctx, data, count, read);
 			}
+
+			/* TODO properly close the connection with TLS shutdown when this happens */
+			if (sec == SEC_I_CONTEXT_EXPIRED) return SSL_ERR_CONTEXT_DEAD;
 			
 			if (sec != SEC_E_INCOMPLETE_MESSAGE) return sec;
 			/* SEC_E_INCOMPLETE_MESSAGE case - still need to read more data from the server first */
@@ -537,10 +541,16 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_read(&ctx->ioc, data, count);
+	int err;
 	
 	if (res < 0) {
 		if (ctx->readError) return ctx->readError;
-		return SSL_ERROR_SHIFT + br_ssl_engine_last_error(&ctx->sc.eng);
+		
+		// TODO session resumption, proper connection closing ??
+		err = br_ssl_engine_last_error(&ctx->sc.eng);
+		if (err == 0 && br_ssl_engine_current_state(&ctx->sc.eng) == BR_SSL_CLOSED)
+			return SSL_ERR_CONTEXT_DEAD;
+		return SSL_ERROR_SHIFT + err;
 	}
 	
 	br_sslio_flush(&ctx->ioc);

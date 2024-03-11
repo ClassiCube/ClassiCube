@@ -18,7 +18,7 @@ http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20travers
 */
 struct RayTracer {
 	IVec3 pos;    /* Coordinates of block within world */
-	Vec3 origin, dir;
+	Vec3 origin, dir, invDir;
 	Vec3 Min, Max; /* Min/max coords of block's bounding box. */
 	BlockID block;
 	IVec3 step;

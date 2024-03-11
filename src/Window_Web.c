@@ -23,10 +23,10 @@ static int GetScreenHeight(void) { return RawDpiScale(interop_ScreenHeight()); }
 static void UpdateWindowBounds(void) {
 	int width  = interop_CanvasWidth();
 	int height = interop_CanvasHeight();
-	if (width == WindowInfo.Width && height == WindowInfo.Height) return;
+	if (width == Window_Main.Width && height == Window_Main.Height) return;
 
-	WindowInfo.Width  = width;
-	WindowInfo.Height = height;
+	Window_Main.Width  = width;
+	Window_Main.Height = height;
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
@@ -74,8 +74,8 @@ static void RescaleXY(int* x, int* y) {
 	emscripten_get_element_css_size("#canvas", &css_width, &css_height);
 
 	if (css_width && css_height) {
-		*x = (int)(*x * WindowInfo.Width  / css_width );
-		*y = (int)(*y * WindowInfo.Height / css_height);
+		*x = (int)(*x * Window_Main.Width  / css_width );
+		*y = (int)(*y * Window_Main.Height / css_height);
 	} else {
 		/* If css width or height is 0, something is bogus    */
 		/* Better to avoid divsision by 0 in that case though */
@@ -105,8 +105,8 @@ static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data
 	/* Because we return true to cancel default browser behaviour, sometimes we also */
 	/*   end up preventing the default 'focus gained' behaviour from occurring */
 	/* So manually activate focus as a workaround */
-	if (!WindowInfo.Focused) {
-		WindowInfo.Focused = true;
+	if (!Window_Main.Focused) {
+		Window_Main.Focused = true;
 		Event_RaiseVoid(&WindowEvents.FocusChanged);
 	}
 
@@ -157,7 +157,7 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 }
 
 static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
-	WindowInfo.Focused = type == EMSCRIPTEN_EVENT_FOCUS;
+	Window_Main.Focused = type == EMSCRIPTEN_EVENT_FOCUS;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 	return true;
 }
@@ -183,15 +183,15 @@ static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 		emscripten_exit_pointerlock();
 		return "You have unsaved changes. Are you sure you want to quit?";
 	}
-	Window_Close();
+	Window_RequestClose();
 	return NULL;
 }
 
 static EM_BOOL OnVisibilityChanged(int eventType, const EmscriptenVisibilityChangeEvent* ev, void* data) {
 	cc_bool inactive = ev->visibilityState == EMSCRIPTEN_VISIBILITY_HIDDEN;
-	if (WindowInfo.Inactive == inactive) return false;
+	if (Window_Main.Inactive == inactive) return false;
 
-	WindowInfo.Inactive = inactive;
+	Window_Main.Inactive = inactive;
 	Event_RaiseVoid(&WindowEvents.InactiveChanged);
 	return false;
 }
@@ -387,21 +387,23 @@ void Window_Init(void) {
 	/*  as the chat/send butons are positioned at the top of the canvas - they */
 	/*  get pushed offscreen and can't be used at all anymore. So handle this */
 	/*  case specially by positioning them at the bottom instead for iOS. */
-	WindowInfo.SoftKeyboard = is_ios ? SOFT_KEYBOARD_SHIFT : SOFT_KEYBOARD_RESIZE;
+	Window_Main.SoftKeyboard = is_ios ? SOFT_KEYBOARD_SHIFT : SOFT_KEYBOARD_RESIZE;
 
 	/* Let the webpage know it needs to force a mobile layout */
 	if (!Input_TouchMode) return;
 	interop_ForceTouchPageLayout();
 }
 
+void Window_Free(void) { }
+
 extern void interop_InitContainer(void);
 static void DoCreateWindow(void) {
-	WindowInfo.Exists  = true;
-	WindowInfo.Focused = true;
+	Window_Main.Exists  = true;
+	Window_Main.Focused = true;
 	HookEvents();
 	/* Let the webpage decide on initial bounds */
-	WindowInfo.Width  = interop_CanvasWidth();
-	WindowInfo.Height = interop_CanvasHeight();
+	Window_Main.Width  = interop_CanvasWidth();
+	Window_Main.Height = interop_CanvasHeight();
 	interop_InitContainer();
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
@@ -498,8 +500,8 @@ void Window_SetSize(int width, int height) {
 	UpdateWindowBounds();
 }
 
-void Window_Close(void) {
-	WindowInfo.Exists = false;
+void Window_RequestClose(void) {
+	Window_Main.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 	/* If the game is closed while in fullscreen, the last rendered frame stays */
 	/*  shown in fullscreen, but the game can't be interacted with anymore */
@@ -514,7 +516,7 @@ void Window_Close(void) {
 
 extern void interop_RequestCanvasResize(void);
 static void ProcessPendingResize(void) {
-	if (!WindowInfo.Exists) return;
+	if (!Window_Main.Exists) return;
 
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
 		SetFullscreenBounds();
@@ -535,10 +537,10 @@ static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
 	Input_SetNonRepeatable(CCPAD_X, GetGamepadButton(2));
 	Input_SetNonRepeatable(CCPAD_Y, GetGamepadButton(3));
 
-	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(4));
-	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(5));
-	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(6));
-	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(7));
+	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(4));
+	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(5));
+	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(6));
+	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(7));
 
 	Input_SetNonRepeatable(CCPAD_SELECT, GetGamepadButton( 8));
 	Input_SetNonRepeatable(CCPAD_START,  GetGamepadButton( 9));
@@ -559,7 +561,7 @@ static void ProcessGamepadCamera(float x, float y, double delta) {
 	if (y >= -0.1 && y <= 0.1) y = 0;
 	if (x == 0 && y == 0) return;
 
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, y * scale);
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
 }
 
 static void ProcessGamepadMovement(float x, float y) {
@@ -667,7 +669,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
-void Window_DrawFramebuffer(Rect2D r)     { }
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 extern void interop_OpenKeyboard(const char* text, int type, const char* placeholder);
@@ -742,7 +744,10 @@ void GLContext_Create(void) {
 	attribs.antialias = false;
 
 	ctx_handle = emscripten_webgl_create_context("#canvas", &attribs);
-	if (!ctx_handle) Window_ShowDialog("WebGL unsupported", "WebGL is required to run ClassiCube");
+	if (!ctx_handle) {
+		Window_ShowDialog("WebGL unsupported", "WebGL is required to run ClassiCube");
+		Process_Exit(0x57474C20);
+	}
 
 	emscripten_webgl_make_context_current(ctx_handle);
 	emscripten_set_webglcontextlost_callback("#canvas", NULL, 0, GLContext_OnLost);

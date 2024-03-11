@@ -6,11 +6,15 @@
 #include "Errors.h"
 #include "Utils.h"
 #include "Logger.h"
+#include "PackedCol.h"
 
 struct StringsBuffer Options;
 static struct StringsBuffer changedOpts;
 cc_result Options_LoadResult;
 static cc_bool savingPaused;
+#if defined CC_BUILD_WEB || defined CC_BUILD_MOBILE || defined CC_BUILD_CONSOLE
+	#define OPTIONS_SAVE_IMMEDIATELY
+#endif
 
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options);
@@ -63,7 +67,6 @@ static void SaveOptions(void) {
 }
 
 void Options_SaveIfChanged(void) {
-	savingPaused = false;
 	if (!changedOpts.count) return;
 	
 	Options_Reload();
@@ -71,6 +74,13 @@ void Options_SaveIfChanged(void) {
 }
 
 void Options_PauseSaving(void) { savingPaused = true; }
+
+void Options_ResumeSaving(void) { 
+	savingPaused = false;
+#if defined OPTIONS_SAVE_IMMEDIATELY
+	SaveOptions();
+#endif
+}
 
 
 cc_bool Options_UNSAFE_Get(const char* keyRaw, cc_string* value) {
@@ -137,6 +147,19 @@ int Options_GetEnum(const char* key, int defValue, const char* const* names, int
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 
+cc_bool Options_GetColor(const char* key, cc_uint8* rgb) {
+	cc_string value, parts[3];
+	if (!Options_UNSAFE_Get(key, &value))   return false;
+	if (PackedCol_TryParseHex(&value, rgb)) return true;
+
+	/* Try parsing as R,G,B instead */
+	return String_UNSAFE_Split(&value, ',', parts, 3)
+		&& Convert_ParseUInt8(&parts[0], &rgb[0])
+		&& Convert_ParseUInt8(&parts[1], &rgb[1])
+		&& Convert_ParseUInt8(&parts[2], &rgb[2]);
+}
+
+
 void Options_SetBool(const char* keyRaw, cc_bool value) {
 	static const cc_string str_true  = String_FromConst("True");
 	static const cc_string str_false = String_FromConst("False");
@@ -162,7 +185,7 @@ void Options_SetString(const cc_string* key, const cc_string* value) {
 		EntryList_Set(&Options, key, value, '=');
 	}
 
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID || defined CC_BUILD_IOS
+#if defined OPTIONS_SAVE_IMMEDIATELY
 	if (!savingPaused) SaveOptions();
 #endif
 

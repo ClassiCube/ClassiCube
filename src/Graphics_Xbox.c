@@ -18,10 +18,6 @@
 // A lot of figuring out which GPU registers to use came from:
 // - comparing against pbgl and pbkit
 
-// Current format and size of vertices
-static int gfx_stride, gfx_format = -1;
-
-
 static void LoadVertexShader(uint32_t* program, int programSize) {
 	uint32_t* p;
 	
@@ -198,9 +194,9 @@ static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
 	}
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = 16 + bmp->width * bmp->height * 4;
-	CCTexture* tex = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, 0x404);
+	CCTexture* tex = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 16, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
@@ -349,7 +345,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_AppendConst(info, "-- Using XBox --\n");
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -394,10 +391,7 @@ static cc_uint8* gfx_vertices;
 static cc_uint16* gfx_indices;
 
 static void* AllocBuffer(int count, int elemSize) {
-	void* ptr = MmAllocateContiguousMemoryEx(count * elemSize, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
-	
-	if (!ptr) Logger_Abort("Failed to allocate memory for buffer");
-	return ptr;
+	return MmAllocateContiguousMemoryEx(count * elemSize, 0, MAX_RAM_ADDR, 16, PAGE_WRITECOMBINE | PAGE_READWRITE);
 }
 
 static void FreeBuffer(GfxResourceID* buffer) {
@@ -409,6 +403,8 @@ static void FreeBuffer(GfxResourceID* buffer) {
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	void* ib = AllocBuffer(count, sizeof(cc_uint16));
+	if (!ib) Logger_Abort("Failed to allocate memory for index buffer");
+
 	fillFunc(ib, count, obj);
 	return ib;
 }
@@ -418,7 +414,7 @@ void Gfx_BindIb(GfxResourceID ib)    { gfx_indices = ib; }
 void Gfx_DeleteIb(GfxResourceID* ib) { FreeBuffer(ib); }
 
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { 
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return AllocBuffer(count, strideSizes[fmt]);
 }
 
@@ -450,9 +446,11 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 void Gfx_UnlockVb(GfxResourceID vb) { }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices)  {
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return AllocBuffer(maxVertices, strideSizes[fmt]);
 }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { 
 	return vb;
@@ -460,10 +458,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	Gfx_BindVb(vb);
-}
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -495,13 +490,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z =  1.0f / (zNear - zFar);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = zNear / (zNear - zFar);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 // https://github.com/XboxDev/nxdk/blob/master/samples/mesh/math3d.c#L292
@@ -513,22 +508,22 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -(zFar + zNear) / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.w =  0.0f;
 	// TODO: The above matrix breaks the held block
 	// Below works but breaks map rendering
 	
 /*
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = -zFar / (zFar - zNear);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = (zNear * zFar) / (zFar - zNear);
-	matrix->row4.W =  0.0f;*/
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = -zFar / (zFar - zNear);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = (zNear * zFar) / (zFar - zNear);
+	matrix->row4.w =  0.0f;*/
 }
 
 void Gfx_OnWindowResize(void) { }

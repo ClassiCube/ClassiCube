@@ -10,7 +10,7 @@ then
   echo "CCicon.png exists already. Skipping download."
 else
   echo "CCicon.png doesn't exist. Attempting to download it.."
-  wget "https://raw.githubusercontent.com/UnknownShadow200/classicube/master/misc/CCicon.png"
+  wget "https://raw.githubusercontent.com/ClassiCube/classicube/master/misc/CCicon.png"
 fi
 
 # create ClassiCube desktop entry

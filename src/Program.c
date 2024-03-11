@@ -138,12 +138,14 @@ void android_main(void) {
 	SetupProgram(0, NULL);
 	for (;;) { RunProgram(0, NULL); }
 }
-#elif defined CC_BUILD_3DS || defined CC_BUILD_PSP || defined CC_BUILD_GCWII || defined CC_BUILD_DREAMCAST || defined CC_BUILD_XBOX || defined CC_BUILD_PSVITA || defined CC_BUILD_PS3 || defined CC_BUILD_N64
+#elif defined CC_BUILD_CONSOLE
 int main(int argc, char** argv) {
 	SetupProgram(argc, argv);
-	while (WindowInfo.Exists) { 
+	while (Window_Main.Exists) { 
 		RunProgram(argc, argv); 
 	}
+	
+	Window_Free();
 	return 0;
 }
 #else

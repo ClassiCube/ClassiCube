@@ -200,7 +200,7 @@ CC_API void Env_SetShadowCol(PackedCol color);
 
 #define RESPAWN_NOT_FOUND -100000.0f
 /* Finds the highest Y coordinate of any solid block that intersects the given bounding box */
-/* So essentially, means max(Y + Block_MaxBB[block].Y) over all solid blocks the AABB touches */
+/* So essentially, means max(Y + Block_MaxBB[block].y) over all solid blocks the AABB touches */
 /* Returns RESPAWN_NOT_FOUND when no intersecting solid blocks are found. */
 float Respawn_HighestSolidY(struct AABB* bb);
 /* Finds a suitable initial spawn position for the entity. */

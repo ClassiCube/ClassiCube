@@ -27,7 +27,7 @@ enum HttpProgress {
 struct HttpRequest {
 	char url[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
 	int id;                 /* Unique identifier for this request. */
-	int progress;           /* Progress with downloading this request */
+	volatile int progress;  /* Progress with downloading this request */
 	TimeMS timeDownloaded;  /* Time response contents were completely downloaded. */
 	int statusCode;         /* HTTP status code returned in the response. */
 	cc_uint32 contentLength; /* HTTP content length returned in the response. */
@@ -37,7 +37,7 @@ struct HttpRequest {
 	cc_uint32   size; /* Size of the contents. */
 	cc_uint32 _capacity; /* (private) Maximum size of data buffer */
 	void* meta;          /* Pointer to backend specific data */
-	const char* error;
+	char* error;         /* Pointer to dynamically allocated error message */
 
 	char lastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char etag[STRING_SIZE];         /* ETag of cached item (if any) */

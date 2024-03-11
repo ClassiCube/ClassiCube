@@ -12,7 +12,7 @@ jobs:
     container:
       image: akusiroyo/ps3sdk:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile PS3 build
         id: compile
         run: |
@@ -20,6 +20,7 @@ jobs:
           export PSL1GHT=/usr/local/ps3dev
           export PS3DEV=/usr/local/ps3dev
           make ps3
+          
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -27,8 +28,15 @@ jobs:
           NOTIFY_MESSAGE: 'Failed to compile PS3 build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
+          
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube-ps3.self'
-          DEST_NAME: 'ClassiCube-ps3.self'
+          SOURCE_FILE: 'ClassiCube-ps3.pkg'
+          DEST_NAME: 'ClassiCube-ps3.pkg'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-ps3.elf'
+          DEST_NAME: 'ClassiCube-ps3.elf'

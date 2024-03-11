@@ -21,6 +21,16 @@
 #include <OpenGLES/ES2/glext.h>
 #include <CoreText/CoreText.h>
 
+#ifdef TARGET_OS_TV
+	// NSFontAttributeName etc - iOS 6.0
+	#define TEXT_ATTRIBUTE_FONT  NSFontAttributeName
+	#define TEXT_ATTRIBUTE_COLOR NSForegroundColorAttributeName
+#else
+	// UITextAttributeFont etc - iOS 5.0
+	#define TEXT_ATTRIBUTE_FONT  UITextAttributeFont
+	#define TEXT_ATTRIBUTE_COLOR UITextAttributeTextColor
+#endif
+
 @interface CCWindow : UIWindow
 @end
 
@@ -71,22 +81,22 @@ static CGRect GetViewFrame(void) {
 
 @implementation CCWindow
 
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
 }
 
-- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesMoved:withEvent - iOS 2.0
     for (UITouch* t in touches) UpdateTouch(t);
 }
 
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesEnded:withEvent - iOS 2.0
     for (UITouch* t in touches) RemoveTouch(t);
 }
 
-- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesCancelled:withEvent - iOS 2.0
     for (UITouch* t in touches) RemoveTouch(t);
 }
@@ -108,8 +118,8 @@ static CGRect GetViewFrame(void) {
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
     // viewWillTransitionToSize:withTransitionCoordinator - iOS 8.0
-    WindowInfo.Width  = size.width;
-    WindowInfo.Height = size.height;
+    Window_Main.Width  = size.width;
+    Window_Main.Height = size.height;
     
     Event_RaiseVoid(&WindowEvents.Resized);
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
@@ -229,7 +239,7 @@ static UITextField* kb_widget;
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
     Platform_LogConst("INACTIVE");
-    WindowInfo.Focused = false;
+    Window_Main.Focused = false;
     Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
@@ -250,7 +260,7 @@ static UITextField* kb_widget;
     // applicationDidBecomeActive - iOS 2.0
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     Platform_LogConst("ACTIVE");
-    WindowInfo.Focused = true;
+    Window_Main.Focused = true;
     Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
@@ -296,7 +306,6 @@ static NSString* ToNSString(const cc_string* text) {
 
 static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
     // NSMutableAttributedString - iOS 3.2
-    // NSForegroundColorAttributeName - iOS 6.0
     cc_string left = *text, part;
     char colorCode = 'f';
     NSMutableAttributedString* str = [[NSMutableAttributedString alloc] init];
@@ -307,8 +316,8 @@ static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
         NSString* bit   = ToNSString(&part);
         NSDictionary* attrs =
         @{
-          //NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
+          //TEXT_ATTRIBUTE_FONT : font,
+          TEXT_ATTRIBUTE_COLOR  : ToUIColor(color, 1.0f)
         };
         NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
         [str appendAttributedString:attr_bit];
@@ -362,9 +371,9 @@ void Window_SetTitle(const cc_string* title) {
 }
 
 void Window_Init(void) {
-    //WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+    //Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
     // keyboard now shifts up
-    WindowInfo.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
+    Window_Main.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
     Input.Sources = INPUT_SOURCE_NORMAL;
     
@@ -372,6 +381,8 @@ void Window_Init(void) {
     DisplayInfo.ScaleX = 1; // TODO dpi scale
     DisplayInfo.ScaleY = 1; // TODO dpi scale
 }
+
+void Window_Free(void) { }
 
 static UIColor* CalcBackgroundColor(void) {
     // default to purple if no themed background color yet
@@ -388,9 +399,9 @@ static CGRect DoCreateWindow(void) {
     
     win_handle.rootViewController = cc_controller;
     win_handle.backgroundColor = CalcBackgroundColor();
-    WindowInfo.Exists = true;
-    WindowInfo.Width  = bounds.size.width;
-    WindowInfo.Height = bounds.size.height;
+    Window_Main.Exists = true;
+    Window_Main.Width  = bounds.size.width;
+    Window_Main.Height = bounds.size.height;
     
     NSNotificationCenter* notifications = NSNotificationCenter.defaultCenter;
     [notifications addObserver:cc_controller selector:@selector(keyboardDidShow:) name:UIKeyboardWillShowNotification object:nil];
@@ -403,8 +414,8 @@ void Window_Show(void) {
     [win_handle makeKeyAndVisible];
 }
 
-void Window_Close(void) {
-    WindowInfo.Exists = false;
+void Window_RequestClose(void) {
+    Window_Main.Exists = false;
     Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -536,7 +547,7 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     // UIDocumentPickerViewController - iOS 8.0
     // see the custom UTITypes declared in Info.plist 
-    NSDictionary<NSString*, NSString*>* fileExt_map =
+    NSDictionary* fileExt_map =
     @{
       @".cw"  : @"com.classicube.client.ios-cw",
       @".dat" : @"com.classicube.client.ios-dat",
@@ -544,10 +555,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
       @".fcm" : @"com.classicube.client.ios-fcm",
       @".zip" : @"public.zip-archive"
     };
-    NSMutableArray<NSString*>* types = [NSMutableArray array];
+    NSMutableArray* types = [NSMutableArray array];
     const char* const* filters = args->filters;
 
-    for (int i = 0; filters[i]; i++) {
+    for (int i = 0; filters[i]; i++) 
+    {
         NSString* fileExt = [NSString stringWithUTF8String:filters[i]];
         NSString* utType  = [fileExt_map objectForKey:fileExt];
         if (utType) [types addObject:utType];
@@ -658,15 +670,15 @@ static void CreateFramebuffer(void) {
     
     glGenRenderbuffers(1, &depth_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, WindowInfo.Width, WindowInfo.Height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
         Logger_Abort2(status, "Failed to create renderbuffer");
     
-    fb_width  = WindowInfo.Width;
-    fb_height = WindowInfo.Height;
+    fb_width  = Window_Main.Width;
+    fb_height = Window_Main.Height;
 }
 
 void GLContext_Create(void) {
@@ -686,15 +698,15 @@ static void GLContext_OnLayout(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
     
     // only resize buffers when absolutely have to
-    if (fb_width == WindowInfo.Width && fb_height == WindowInfo.Height) return;
-    fb_width  = WindowInfo.Width;
-    fb_height = WindowInfo.Height;
+    if (fb_width == Window_Main.Width && fb_height == Window_Main.Height) return;
+    fb_width  = Window_Main.Width;
+    fb_height = Window_Main.Height;
     
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
     
     glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, WindowInfo.Width, WindowInfo.Height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
 }
 
 void GLContext_Free(void) {
@@ -838,7 +850,7 @@ void Directory_GetCachePath(cc_string* path) {
  *#########################################################################################################################*/
 #ifndef CC_BUILD_FREETYPE
 void interop_GetFontNames(struct StringsBuffer* buffer) {
-    NSArray<NSString*>* families = UIFont.familyNames;
+    NSArray* families = UIFont.familyNames;
     NSLog(@"Families: %@", families);
     char tmpBuffer[NATIVE_STR_LEN];
     cc_string tmp = String_FromArray(tmpBuffer);
@@ -863,7 +875,7 @@ void interop_GetFontNames(struct StringsBuffer* buffer) {
 }
  
 static CTFontRef TryCreateBoldFont(NSString* name, CGFloat uiSize) {
-    NSArray<NSString*>* fontNames = [UIFont fontNamesForFamilyName:name];
+    NSArray* fontNames = [UIFont fontNamesForFamilyName:name];
     for (NSString* fontName in fontNames)
     {
         if ([fontName rangeOfString:@"Bold" options:NSCaseInsensitiveSearch].location != NSNotFound)
@@ -947,9 +959,9 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
         NSString* bit = ToNSString(&part);
         NSDictionary* attrs =
         @{
-          NSFontAttributeName : font,
-          NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
-          };
+          TEXT_ATTRIBUTE_FONT  : font,
+          TEXT_ATTRIBUTE_COLOR : ToUIColor(color, 1.0f)
+        };
         
         if (args->font->flags & FONT_FLAGS_UNDERLINE) {
             NSNumber* value = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
@@ -978,7 +990,7 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
 }
 
 static UIFont* TryCreateBoldFont(NSString* name, CGFloat uiSize) {
-    NSArray<NSString*>* fontNames = [UIFont fontNamesForFamilyName:name];
+    NSArray* fontNames = [UIFont fontNamesForFamilyName:name];
     for (NSString* fontName in fontNames)
     {
         if ([fontName rangeOfString:@"Bold" options:NSCaseInsensitiveSearch].location != NSNotFound)
@@ -1030,8 +1042,8 @@ static NSMutableAttributedString* GetAttributedString(struct DrawTextArgs* args,
         NSRange range = NSMakeRange(str.length, bit.length);
         [str.mutableString appendString:bit];
         
-        [str addAttribute:NSFontAttributeName            value:font                   range:range];
-        [str addAttribute:NSForegroundColorAttributeName value:ToUIColor(color, 1.0f) range:range];
+        [str addAttribute:TEXT_ATTRIBUTE_FONT  value:font                   range:range];
+        [str addAttribute:TEXT_ATTRIBUTE_COLOR value:ToUIColor(color, 1.0f) range:range];
         
         if (args->font->flags & FONT_FLAGS_UNDERLINE) {
             NSNumber* style = [NSNumber numberWithInt:kCTUnderlineStyleSingle];
@@ -1088,7 +1100,7 @@ void interop_SysTextDraw(struct DrawTextArgs* args, struct Context2D* ctx, int x
         NSString* bit = ToNSString(&part);
         NSDictionary* attrs =
         @{
-          NSFontAttributeName : font,
+          TEXT_ATTRIBUTE_FONT : font,
           NSForegroundColorAttributeName : ToUIColor(color, 1.0f)
           };
         NSAttributedString* attr_bit = [[NSAttributedString alloc] initWithString:bit attributes:attrs];
@@ -1134,7 +1146,7 @@ static NSString* cellID = @"CC_Cell";
 
 - (void)handleButtonPress:(id)sender {
     struct LWidget* w = FindWidgetForView(sender);
-    if (w == NULL) return;
+    if (!w) return;
         
     struct LButton* btn = (struct LButton*)w;
     btn->OnClick(btn);
@@ -1142,7 +1154,7 @@ static NSString* cellID = @"CC_Cell";
 
 - (void)handleTextChanged:(id)sender {
     struct LWidget* w = FindWidgetForView(sender);
-    if (w == NULL) return;
+    if (!w) return;
     
     UITextField* src   = (UITextField*)sender;
     const char* str    = src.text.UTF8String;
@@ -1157,7 +1169,7 @@ static NSString* cellID = @"CC_Cell";
     UISwitch* swt     = (UISwitch*)sender;
     UIView* parent    = swt.superview;
     struct LWidget* w = FindWidgetForView(parent);
-    if (w == NULL) return;
+    if (!w) return;
 
     struct LCheckbox* cb = (struct LCheckbox*)w;
     cb->value = [swt isOn];
@@ -1166,7 +1178,7 @@ static NSString* cellID = @"CC_Cell";
 }
 
 // === UITableViewDataSource ===
-- (nonnull UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // cellForRowAtIndexPath - iOS 2.0
     //UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID forIndexPath:indexPath];
     UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellID];
@@ -1178,7 +1190,7 @@ static NSString* cellID = @"CC_Cell";
     return cell;
 }
 
-- (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // numberOfRowsInSection - iOS 2.0
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
     return w ? w->rowsCount : 0;
@@ -1192,7 +1204,7 @@ static NSString* cellID = @"CC_Cell";
     LTable_UpdateCellColor([tableView cellForRowAtIndexPath:indexPath], server, row, true);
     
     struct LTable* w = (struct LTable*)FindWidgetForView(tableView);
-    if (w == NULL) return;
+    if (!w) return;
     LTable_RowClick(w, row);
 }
 
@@ -1207,7 +1219,7 @@ static NSString* cellID = @"CC_Cell";
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     // textFieldShouldReturn - iOS 2.0
     struct LWidget* w   = FindWidgetForView(textField);
-    if (w == NULL) return YES;
+    if (!w) return YES;
     struct LWidget* sel = Launcher_Active->onEnterWidget;
     
     if (sel && !w->skipsEnter) {
@@ -1248,7 +1260,6 @@ static void DrawText(NSAttributedString* str, struct Context2D* ctx, int x, int 
 }
 
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
-    // NSFontAttributeName - iOS 6.0
     if (Launcher_BitmappedText()) {
         struct FontDesc font;
         Launcher_MakeTitleFont(&font);
@@ -1256,21 +1267,23 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
         // bitmapped fonts don't need to be freed
         return;
     }
-    UIFont* font   = [UIFont systemFontOfSize:42 weight:0.2f]; //UIFontWeightSemibold
+    
+    // systemFontOfSize: - iOS 2.0
+    UIFont* font   = [UIFont systemFontOfSize:42];
     NSString* text = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
         
     NSDictionary* attrs_bg =
     @{
-      NSFontAttributeName : font,
-      NSForegroundColorAttributeName : UIColor.blackColor
+      TEXT_ATTRIBUTE_FONT  : font,
+      TEXT_ATTRIBUTE_COLOR : UIColor.blackColor
     };
     NSAttributedString* str_bg = [[NSAttributedString alloc] initWithString:text attributes:attrs_bg];
     DrawText(str_bg, ctx, 4, 42);
         
     NSDictionary* attrs_fg =
     @{
-      NSFontAttributeName : font,
-      NSForegroundColorAttributeName : UIColor.whiteColor
+      TEXT_ATTRIBUTE_FONT  : font,
+      TEXT_ATTRIBUTE_COLOR : UIColor.whiteColor
     };
     NSAttributedString* str_fg = [[NSAttributedString alloc] initWithString:text attributes:attrs_fg];
     DrawText(str_fg, ctx, 0, 38);
@@ -1282,8 +1295,8 @@ void LBackend_FreeFramebuffer(void) { }
 void LBackend_Redraw(void) {
     struct Context2D ctx;
     struct Bitmap bmp;
-    bmp.width  = max(WindowInfo.Width,  1);
-    bmp.height = max(WindowInfo.Height, 1);
+    bmp.width  = max(Window_Main.Width,  1);
+    bmp.height = max(Window_Main.Height, 1);
     bmp.scan0  = (BitmapCol*)Mem_Alloc(bmp.width * bmp.height, 4, "window pixels");
     
     Context2D_Wrap(&ctx, &bmp);
@@ -1627,10 +1640,10 @@ static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
         switch (l->type)
         {
             case LLAYOUT_WIDTH:
-                r->size.width  = WindowInfo.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
+                r->size.width  = Window_Main.Width  - (int)r->origin.x - Display_ScaleX(l->offset);
                 break;
             case LLAYOUT_HEIGHT:
-                r->size.height = WindowInfo.Height - (int)r->origin.y - Display_ScaleY(l->offset);
+                r->size.height = Window_Main.Height - (int)r->origin.y - Display_ScaleY(l->offset);
                 break;
         }
         l++;
@@ -1644,8 +1657,8 @@ void LBackend_LayoutWidget(struct LWidget* w) {
     int width    = (int)r.size.width;
     int height   = (int)r.size.height;
     
-    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  WindowInfo.Width);
-    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, WindowInfo.Height);
+    r.origin.x = Gui_CalcPos(l[0].type & 0xFF, Display_ScaleX(l[0].offset), width,  Window_Main.Width);
+    r.origin.y = Gui_CalcPos(l[1].type & 0xFF, Display_ScaleY(l[1].offset), height, Window_Main.Height);
     
     // e.g. Table widget needs adjusts width/height based on window
     if (l[1].type & LLAYOUT_EXTRA)
@@ -1696,7 +1709,7 @@ void LBackend_CloseScreen(struct LScreen* s) {
     }
     
     // remove all widgets from previous screen
-    NSArray<UIView*>* elems = [view_handle subviews];
+    NSArray* elems = [view_handle subviews];
     for (UIView* view in elems)
     {
         [view removeFromSuperview];

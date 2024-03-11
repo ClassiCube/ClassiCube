@@ -1,0 +1,207 @@
+# https://github.com/msikma/3ds-tpl
+# https://gist.github.com/jakcron/9f9f02ffd94d98a72632
+
+BasicInfo:
+  Title                   : ClassiCube
+  CompanyCode             : "00"
+  ProductCode             : CCBE
+  ContentType             : Application
+  Logo                    : Nintendo
+
+TitleInfo:
+  UniqueId                : 0x00CCBE
+  Category                : Application
+  
+CardInfo:
+  MediaSize               : 128MB # 128MB / 256MB / 512MB / 1GB / 2GB / 4GB
+  MediaType               : Card1 # Card1 / Card2
+  CardDevice              : NorFlash # NorFlash(Pick this if you use savedata) / None
+  
+
+Option:
+  UseOnSD                 : true # true if App is to be installed to SD
+  FreeProductCode         : true # Removes limitations on ProductCode
+  MediaFootPadding        : false # If true CCI files are created with padding
+  EnableCrypt             : false # Enables encryption for NCCH and CIA
+  EnableCompress          : true # Compresses exefs code
+  
+AccessControlInfo:
+  #UseExtSaveData : true
+  #ExtSaveDataId: 0xff3ff
+  #UseExtendedSaveDataAccessControl: true
+  #AccessibleSaveDataIds: [0x101, 0x202, 0x303, 0x404, 0x505, 0x606]
+
+SystemControlInfo:
+  SaveDataSize: 128KB
+  RemasterVersion: 0
+  StackSize: 0x40000
+
+AccessControlInfo:
+  FileSystemAccess:
+   - Debug
+   - DirectSdmc
+   - DirectSdmcWrite
+   
+  IdealProcessor                : 0
+  AffinityMask                  : 1
+  
+  Priority                      : 16
+   
+  MaxCpu                        : 0x9E # Default
+  DisableDebug                  : false
+  EnableForceDebug              : false
+  CanWriteSharedPage            : false
+  CanUsePrivilegedPriority      : false
+  CanUseNonAlphabetAndNumber    : false
+  PermitMainFunctionArgument    : false
+  CanShareDeviceMemory          : false
+  RunnableOnSleep               : false
+  SpecialMemoryArrange          : false
+  CoreVersion                   : 2
+  DescVersion                   : 2
+  
+  ReleaseKernelMajor            : "02"
+  ReleaseKernelMinor            : "33" 
+  MemoryType                    : Application
+  HandleTableSize: 512
+  
+  # New3DS Exclusive Process Settings
+  SystemModeExt                 : 124MB  # Legacy(Default)/124MB/178MB  Legacy:Use Old3DS SystemMode
+  CpuSpeed                      : 804MHz # 268MHz(Default)/804MHz
+  EnableL2Cache                 : true   # false(default)/true
+  CanAccessCore2                : true 
+  
+  # Virtual Address Mappings
+  IORegisterMapping: 
+   - 1ff50000-1ff57fff   # DSP memory
+   - 1ff70000-1ff77fff
+  MemoryMapping: 
+   - 1f000000-1f5fffff:r # VRAM
+   
+  SystemCallAccess: 
+    ArbitrateAddress: 34
+    Break: 60
+    CancelTimer: 28
+    ClearEvent: 25
+    ClearTimer: 29
+    CloseHandle: 35
+    ConnectToPort: 45
+    ControlMemory: 1
+    CreateAddressArbiter: 33
+    CreateEvent: 23
+    CreateMemoryBlock: 30
+    CreateMutex: 19
+    CreateSemaphore: 21
+    CreateThread: 8
+    CreateTimer: 26
+    DuplicateHandle: 39
+    ExitProcess: 3
+    ExitThread: 9
+    GetCurrentProcessorNumber: 17
+    GetHandleInfo: 41
+    GetProcessId: 53
+    GetProcessIdOfThread: 54
+    GetProcessIdealProcessor: 6
+    GetProcessInfo: 43
+    GetResourceLimit: 56
+    GetResourceLimitCurrentValues: 58
+    GetResourceLimitLimitValues: 57
+    GetSystemInfo: 42
+    GetSystemTick: 40
+    GetThreadContext: 59
+    GetThreadId: 55
+    GetThreadIdealProcessor: 15
+    GetThreadInfo: 44
+    GetThreadPriority: 11
+    MapMemoryBlock: 31
+    OutputDebugString: 61
+    QueryMemory: 2
+    ReleaseMutex: 20
+    ReleaseSemaphore: 22
+    SendSyncRequest1: 46
+    SendSyncRequest2: 47
+    SendSyncRequest3: 48
+    SendSyncRequest4: 49
+    SendSyncRequest: 50
+    SetThreadPriority: 12
+    SetTimer: 27
+    SignalEvent: 24
+    SleepThread: 10
+    UnmapMemoryBlock: 32
+    WaitSynchronization1: 36
+    WaitSynchronizationN: 37
+  InterruptNumbers:
+  
+  # Service List
+  # Maximum 34 services (32 if firmware is prior to 9.3.0)
+  ServiceAccessControl: 
+   - APT:U
+   - $hioFIO
+   - $hostio0
+   - $hostio1
+   - ac:u
+   - boss:U
+   - cam:u
+   - cecd:u
+   - cfg:u
+   - dlp:FKCL
+   - dlp:SRVR
+   - dsp::DSP
+   - frd:u
+   #- http:C
+   - fs:USER
+   - gsp::Gpu
+   - hid:USER
+   - mic:u
+   - ndm:u
+   - news:s
+   - nwm::UDS
+   - ptm:u
+   - pxi:dev
+   - soc:U
+   #- ssl:C
+   - gsp::Lcd
+   - y2r:u
+   - ldr:ro
+   - ir:USER
+   - ir:u
+   - csnd:SND
+   - am:u
+   - ns:s
+   
+SystemControlInfo:
+  # Modules that run services listed above should be included below
+  # Maximum 48 dependencies
+  # If a module is listed that isn't present on the 3DS, the title will get stuck at the logo (3ds waves)
+  # So act, nfc and qtm are commented for 4.x support. Uncomment if you need these.
+  # <module name>:<module titleid>
+  Dependency: 
+    ac: 0x0004013000002402L
+    am: 0x0004013000001502L
+    boss: 0x0004013000003402L
+    camera: 0x0004013000001602L
+    cecd: 0x0004013000002602L
+    cfg: 0x0004013000001702L
+    codec: 0x0004013000001802L
+    csnd: 0x0004013000002702L
+    dlp: 0x0004013000002802L
+    dsp: 0x0004013000001a02L
+    friends: 0x0004013000003202L
+    gpio: 0x0004013000001b02L
+    gsp: 0x0004013000001c02L
+    hid: 0x0004013000001d02L
+    i2c: 0x0004013000001e02L
+    ir: 0x0004013000003302L
+    mcu: 0x0004013000001f02L
+    mic: 0x0004013000002002L
+    ndm: 0x0004013000002b02L
+    news: 0x0004013000003502L
+    nim: 0x0004013000002c02L
+    nwm: 0x0004013000002d02L
+    pdn: 0x0004013000002102L
+    ps: 0x0004013000003102L
+    ptm: 0x0004013000002202L
+    ro: 0x0004013000003702L
+    socket: 0x0004013000002e02L
+    spi: 0x0004013000002302L
+    #ssl: 0x0004013000002f02

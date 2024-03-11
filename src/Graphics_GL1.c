@@ -2,7 +2,6 @@
 #if defined CC_BUILD_GL && !defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 /* The OpenGL backend is a bit of a mess, since it's really 2 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
@@ -31,6 +30,14 @@ typedef unsigned char GLubyte;
 typedef unsigned int GLuint;
 typedef float GLfloat;
 typedef void GLvoid;
+
+/* NOTE: With the OpenGL 1.1 backend "pointer" arguments are actual pointers, */
+/* but with VBOs they are just offsets instead */
+#ifdef CC_BUILD_GL11
+typedef const void* GLpointer;
+#else
+typedef cc_uintptr GLpointer;
+#endif
 
 #define GL_LEQUAL                0x0203
 #define GL_GREATER               0x0204
@@ -104,7 +111,7 @@ GLAPI void APIENTRY glCallList(GLuint list);
 GLAPI void APIENTRY glClear(GLuint mask);
 GLAPI void APIENTRY glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 GLAPI void APIENTRY glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glColorPointer(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
 GLAPI void APIENTRY glDeleteLists(GLuint list, GLsizei range);
 GLAPI void APIENTRY glDeleteTextures(GLsizei n, const GLuint* textures);
 GLAPI void APIENTRY glDepthFunc(GLenum func);
@@ -132,11 +139,11 @@ GLAPI void APIENTRY glLoadMatrixf(const GLfloat* m);
 GLAPI void APIENTRY glMatrixMode(GLenum mode);
 GLAPI void APIENTRY glNewList(GLuint list, GLenum mode);
 GLAPI void APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
-GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glTexCoordPointer(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
 GLAPI void APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
 GLAPI void APIENTRY glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
-GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+GLAPI void APIENTRY glVertexPointer(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
 GLAPI void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 /* === END OPENGL HEADERS === */
 
@@ -160,8 +167,6 @@ typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 
 #if defined CC_BUILD_WIN && !defined CC_BUILD_GL11
 /* Note the following about calling OpenGL functions on Windows */
@@ -174,10 +179,10 @@ static int gfx_stride, gfx_format = -1;
 /*    call [glDrawElements]  --> opengl32.dll thunk--> GL driver thunk --> GL driver implementation */
 /*    call [_glDrawElements] --> GL driver thunk --> GL driver implementation */
 
-static void (APIENTRY *_glColorPointer)(GLint size,    GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *_glColorPointer)(GLint size,    GLenum type, GLsizei stride, GLpointer pointer);
 static void (APIENTRY *_glDrawElements)(GLenum mode, GLsizei count,    GLenum type, const GLvoid* indices);
-static void (APIENTRY *_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
-static void (APIENTRY *_glVertexPointer)(GLint size,   GLenum type, GLsizei stride, const GLvoid* pointer);
+static void (APIENTRY *_glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, GLpointer pointer);
+static void (APIENTRY *_glVertexPointer)(GLint size,   GLenum type, GLsizei stride, GLpointer pointer);
 
 static const struct DynamicLibSym coreFuncs[] = {
 	DynamicLib_Sym2("glColorPointer",    glColorPointer),
@@ -243,18 +248,19 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	GfxResourceID id = _genBuffer();
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	return id;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, vb); }
+void Gfx_BindVb(GfxResourceID vb) { 
+	_glBindBuffer(GL_ARRAY_BUFFER, vb); 
+}
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GfxResourceID id = *vb;
-	if (!id) return;
-	_delBuffer(id);
+	if (id) _delBuffer(id);
 	*vb = 0;
 }
 
@@ -266,7 +272,9 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) { 
+	return glGenLists(1); 
+}
 void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
@@ -317,17 +325,23 @@ GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GfxResourceID id;
-	cc_uint32 size;
-	if (Gfx.LostContext) return 0;
-
-	id   = _genBuffer();
-	size = maxVertices * strideSizes[fmt];
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	GfxResourceID id = _genBuffer();
+	cc_uint32 size   = maxVertices * strideSizes[fmt];
 
 	_glBindBuffer(GL_ARRAY_BUFFER, id);
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	_glBindBuffer(GL_ARRAY_BUFFER, vb); 
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
+	GfxResourceID id = *vb;
+	if (id) _delBuffer(id);
+	*vb = 0;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
@@ -345,8 +359,8 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
-	return (GfxResourceID)Mem_Alloc(maxVertices, strideSizes[fmt], "creating dynamic vb");
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return (GfxResourceID)Mem_TryAlloc(maxVertices, strideSizes[fmt]);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
@@ -368,6 +382,97 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Mem_Copy((void*)vb, vertices, vCount * gfx_stride);
 }
 #endif
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Drawing--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_GL11
+	/* point to client side dynamic array */
+	#define VB_PTR ((cc_uint8*)dynamicListData)
+	#define IB_PTR gl_indices
+#else
+	/* no client side array, use vertex buffer object */
+	#define VB_PTR 0
+	#define IB_PTR NULL
+#endif
+
+static void GL_SetupVbColoured(void) {
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, VB_PTR +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, VB_PTR + 12);
+}
+
+static void GL_SetupVbTextured(void) {
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, VB_PTR + 12);
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + 16);
+}
+
+static void GL_SetupVbColoured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
+	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, VB_PTR + offset +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, VB_PTR + offset + 12);
+}
+
+static void GL_SetupVbTextured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 12);
+	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
+
+		gfx_setupVBFunc      = GL_SetupVbTextured;
+		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
+	} else {
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
+
+		gfx_setupVBFunc      = GL_SetupVbColoured;
+		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
+	}
+}
+
+void Gfx_DrawVb_Lines(int verticesCount) {
+	gfx_setupVBFunc();
+	glDrawArrays(GL_LINES, 0, verticesCount);
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+#ifdef CC_BUILD_GL11
+	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
+#endif
+	gfx_setupVBRangeFunc(startVertex);
+	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+}
+
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
+#ifdef CC_BUILD_GL11
+	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
+#endif
+	gfx_setupVBFunc();
+	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
+}
+
+#ifdef CC_BUILD_GL11
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList(activeList); }
+#else
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, VB_PTR + offset +  0);
+	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 12);
+	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, VB_PTR + offset + 16);
+	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),  GL_UNSIGNED_SHORT, IB_PTR);
+}
+#endif /* !CC_BUILD_GL11 */
 
 
 /*########################################################################################################################*
@@ -460,7 +565,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 static struct Matrix texMatrix = Matrix_IdentityValue;
 void Gfx_EnableTextureOffset(float x, float y) {
-	texMatrix.row4.X = x; texMatrix.row4.Y = y;
+	texMatrix.row4.x = x; texMatrix.row4.y = y;
 	Gfx_LoadMatrix(2, &texMatrix);
 }
 
@@ -548,14 +653,14 @@ static void APIENTRY fake_bufferSubData(GLenum target, cc_uintptr offset, cc_uin
 static void APIENTRY fake_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
 	glDrawElements(mode, count, type, (cc_uintptr)indices + cur_ib->data);
 }
-static void APIENTRY fake_colorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	glColorPointer(size,    type, stride, (cc_uintptr)pointer + cur_vb->data);
+static void APIENTRY fake_colorPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	glColorPointer(size,    type, stride, (cc_uintptr)cur_vb->data + offset);
 }
-static void APIENTRY fake_texCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	glTexCoordPointer(size, type, stride, (cc_uintptr)pointer + cur_vb->data);
+static void APIENTRY fake_texCoordPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	glTexCoordPointer(size, type, stride, (cc_uintptr)cur_vb->data + offset);
 }
-static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-	glVertexPointer(size,   type, stride, (cc_uintptr)pointer + cur_vb->data);
+static void APIENTRY fake_vertexPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	glVertexPointer(size,   type, stride, (cc_uintptr)cur_vb->data + offset);
 }
 
 static void OpenGL11Fallback(void) {
@@ -612,95 +717,4 @@ static void GLBackend_Init(void) {
 	}
 }
 #endif
-
-
-/*########################################################################################################################*
-*----------------------------------------------------------Drawing--------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_GL11
-/* point to client side dynamic array */
-#define VB_PTR ((cc_uint8*)dynamicListData)
-#define IB_PTR gl_indices
-#else
-/* no client side array, use vertex buffer object */
-#define VB_PTR 0
-#define IB_PTR NULL
-#endif
-
-static void GL_SetupVbColoured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
-}
-
-static void GL_SetupVbTextured(void) {
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
-}
-
-static void GL_SetupVbColoured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	_glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
-}
-
-static void GL_SetupVbTextured_Range(int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-}
-
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_format) return;
-	gfx_format = fmt;
-	gfx_stride = strideSizes[fmt];
-
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-
-		gfx_setupVBFunc      = GL_SetupVbTextured;
-		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
-	} else {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisable(GL_TEXTURE_2D);
-
-		gfx_setupVBFunc      = GL_SetupVbColoured;
-		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
-	}
-}
-
-void Gfx_DrawVb_Lines(int verticesCount) {
-	gfx_setupVBFunc();
-	glDrawArrays(GL_LINES, 0, verticesCount);
-}
-
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-#ifdef CC_BUILD_GL11
-	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
-#endif
-	gfx_setupVBRangeFunc(startVertex);
-	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
-}
-
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-#ifdef CC_BUILD_GL11
-	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
-#endif
-	gfx_setupVBFunc();
-	_glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
-}
-
-#ifdef CC_BUILD_GL11
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList(activeList); }
-#else
-void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	_glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	_glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
-	_glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
-	_glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
-}
-#endif /* !CC_BUILD_GL11 */
 #endif

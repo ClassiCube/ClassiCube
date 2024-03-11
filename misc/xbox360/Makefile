@@ -28,7 +28,7 @@ export AR       := xenon-ar
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-xbox360
-BUILD		:=	build
+BUILD		:=	build-360
 SOURCES		:=	src
 
 #---------------------------------------------------------------------------------

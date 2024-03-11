@@ -19,10 +19,7 @@ static xid_dev_t* xid_ctrl;
 static xid_gamepad_in gp_state;
 
 struct _DisplayData DisplayInfo;
-struct _WinData WindowInfo;
-// no DPI scaling on Xbox
-int Display_ScaleX(int x) { return x; }
-int Display_ScaleY(int y) { return y; }
+struct _WindowData WindowInfo;
 
 // TODO No idea if this even works
 static void OnDataReceived(UTR_T* utr) {
@@ -69,19 +66,23 @@ void Window_Init(void) {
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	WindowInfo.Width   = mode.width;
-	WindowInfo.Height  = mode.height;
-	WindowInfo.Focused = true;
-	WindowInfo.Exists  = true;
+	Window_Main.Width   = mode.width;
+	Window_Main.Height  = mode.height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	DisplayInfo.ContentOffset = 10;
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 10;
+
 	usbh_core_init();
 	usbh_xid_init();
 	
 	usbh_install_xid_conn_callback(OnDeviceChanged, OnDeviceChanged);
 	OnDeviceChanged(NULL, 0); // TODO useless call?
 }
+
+void Window_Free(void) { usbh_core_deinit(); }
 
 void Window_Create2D(int width, int height) { launcherMode = true;  }
 void Window_Create3D(int width, int height) { launcherMode = false; }
@@ -98,7 +99,7 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) {
+void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
@@ -155,7 +156,7 @@ static void HandleJoystick_Right(int x, int y, double delta) {
 	if (Math_AbsI(x) <= 256) x = 0;
 	if (Math_AbsI(y) <= 256) y = 0;
 	
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x * scale, -y * scale);	
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, -y * scale);	
 }
 
 void Window_ProcessEvents(double delta) {
@@ -178,25 +179,23 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = XVideoGetFB();
 	//XVideoWaitForVBlank();
 	// XVideoWaitForVBlank installs an interrupt handler for VBlank - 
 	//  however this will cause pbkit's attempt to install an interrupt
 	//  handler fail - so instead just accept tearing in the launcher
 
-	cc_uint32* src = (cc_uint32*)fb_bmp.scan0 + r.X;
-	cc_uint32* dst = (cc_uint32*)fb           + r.X;
+	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
+	cc_uint32* dst = (cc_uint32*)fb         + r.x;
 
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.Height; y++) 
 	{
-		Mem_Copy(dst + y * fb_bmp.width, src + y * fb_bmp.width, r.Width * 4);
+		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.Width * 4);
 	}
 }
 

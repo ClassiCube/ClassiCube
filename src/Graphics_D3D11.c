@@ -2,7 +2,6 @@
 #ifdef CC_BUILD_D3D11
 #include "_GraphicsBase.h"
 #include "Errors.h"
-#include "Logger.h"
 #include "Window.h"
 #include "_D3D11Shaders.h"
 
@@ -24,8 +23,7 @@ static const GUID guid_IXDGIDevice     = { 0x54ec77fa, 0x1377, 0x44e6, { 0x8c, 0
 // Some generally useful background links
 //   https://gist.github.com/d7samurai/261c69490cce0620d0bfc93003cd1052
 
-static int gfx_format = -1, depthBits; // TODO implement depthBits?? for ZNear calc
-static UINT gfx_stride;
+static int depthBits; // TODO implement depthBits?? for ZNear calc
 static GfxResourceID white_square;
 
 #ifdef _MSC_VER
@@ -76,7 +74,7 @@ static void CreateDeviceAndSwapChain(void) {
 	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	// RefreshRate intentionally left at 0 so display's refresh rate is used
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.OutputWindow = WindowInfo.Handle;
+	desc.OutputWindow = Window_Main.Handle;
 	desc.SampleDesc.Count   = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Windowed           = TRUE;
@@ -174,7 +172,8 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
 	int lvl, width = bmp->width, height = bmp->height;
 
-	for (lvl = 1; lvl <= lvls; lvl++) {
+	for (lvl = 1; lvl <= lvls; lvl++) 
+	{
 		x /= 2; y /= 2;
 		if (width > 1)  width  /= 2;
 		if (height > 1) height /= 2;
@@ -202,15 +201,10 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;
-
-	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
-		Logger_Abort("Textures must have power of two dimensions");
-	}
-	if (Gfx.LostContext) return 0;
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
 	desc.Width     = bmp->width;
@@ -343,11 +337,11 @@ static ID3D11Buffer* CreateVertexBuffer(VertexFormat fmt, int count, cc_bool dyn
 	/* TODO set data initially */
 
 	HRESULT hr = ID3D11Device_CreateBuffer(device, &desc, NULL, &buffer);
-	if (hr) Logger_Abort2(hr, "Failed to create index buffer");
+	if (hr) Logger_Abort2(hr, "Failed to create vertex buffer");
 	return buffer;
 }
 
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	/* TODO immutable? */
 	return CreateVertexBuffer(fmt, count, false);
 }
@@ -371,6 +365,40 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	tmp = NULL;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
+*#########################################################################################################################*/
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return CreateVertexBuffer(fmt, maxVertices, true);
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { 
+	ID3D11Buffer* buffer = (ID3D11Buffer*)(*vb);
+	if (buffer) ID3D11Buffer_Release(buffer);
+	*vb = NULL;
+}
+
+static D3D11_MAPPED_SUBRESOURCE mapDesc;
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	mapDesc.pData = NULL;
+
+	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
+	if (hr) Logger_Abort2(hr, "Failed to lock dynamic VB");
+	return mapDesc.pData;
+}
+
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
+	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
+	ID3D11DeviceContext_Unmap(context, buffer, 0);
+	Gfx_BindDynamicVb(vb);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Vertex rendering----------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
@@ -401,37 +429,6 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
-*#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	// TODO pass true instead
-	return CreateVertexBuffer(fmt, maxVertices, true);
-}
-
-static D3D11_MAPPED_SUBRESOURCE mapDesc;
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	mapDesc.pData = NULL;
-
-	HRESULT hr = ID3D11DeviceContext_Map(context, buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapDesc);
-	if (hr) Logger_Abort2(hr, "Failed to lock dynamic VB");
-	return mapDesc.pData;
-}
-
-void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	ID3D11Buffer* buffer = (ID3D11Buffer*)vb;
-	ID3D11DeviceContext_Unmap(context, buffer, 0);
-	Gfx_BindVb(vb);
-}
-
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	void* data = Gfx_LockDynamicVb(vb, gfx_format, vCount);
-	Mem_Copy(data, vertices, vCount * gfx_stride);
-	Gfx_UnlockDynamicVb(vb);
-}
-
-
-/*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
@@ -440,13 +437,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	// NOTE: This calculation is shared with Direct3D 9 backend
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z =  1.0f / (zNear - zFar);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = zNear / (zNear - zFar);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -462,12 +459,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	float c = (float)Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = zFar_ / (zNear_ - zFar_);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = (zNear_ * zFar_) / (zNear_ - zFar_);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = zFar_ / (zNear_ - zFar_);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = (zNear_ * zFar_) / (zNear_ - zFar_);
+	matrix->row4.w =  0.0f;
 }
 
 //#####################z###################################################################################################
@@ -517,6 +514,12 @@ void Gfx_BindVb(GfxResourceID vb) {
 	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);
 }
 
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	ID3D11Buffer* buffer   = (ID3D11Buffer*)vb;
+	static UINT32 offset[] = { 0 };
+	ID3D11DeviceContext_IASetVertexBuffers(context, 0, 1, &buffer, &gfx_stride, offset);
+}
+
 
 //########################################################################################################################
 //--------------------------------------------------------Vertex shader---------------------------------------------------
@@ -536,7 +539,8 @@ static const struct ShaderDesc vs_descs[] = {
 };
 
 static void VS_CreateShaders(void) {
-	for (int i = 0; i < Array_Elems(vs_shaders); i++) {
+	for (int i = 0; i < Array_Elems(vs_shaders); i++)
+	{
 		HRESULT hr = ID3D11Device_CreateVertexShader(device, vs_descs[i].data, vs_descs[i].len, NULL, &vs_shaders[i]);
 		if (hr) Logger_Abort2(hr, "Failed to compile vertex shader");
 	}
@@ -576,7 +580,8 @@ static void VS_UpdateShader(void) {
 }
 
 static void VS_FreeShaders(void) {
-	for (int i = 0; i < Array_Elems(vs_shaders); i++) {
+	for (int i = 0; i < Array_Elems(vs_shaders); i++) 
+	{
 		ID3D11VertexShader_Release(vs_shaders[i]);
 	}
 }
@@ -651,8 +656,8 @@ static void RS_UpdateViewport(void) {
 	D3D11_VIEWPORT viewport;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width    = WindowInfo.Width;
-	viewport.Height   = WindowInfo.Height;
+	viewport.Width    = Window_Main.Width;
+	viewport.Height   = Window_Main.Height;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
@@ -663,7 +668,8 @@ static void RS_UpdateRasterState(void) {
 }
 
 static void RS_FreeRasterStates(void) {
-	for (int i = 0; i < Array_Elems(rs_states); i++) {
+	for (int i = 0; i < Array_Elems(rs_states); i++) 
+	{
 		ID3D11RasterizerState_Release(rs_states[i]);
 	}
 }
@@ -716,7 +722,8 @@ static const struct ShaderDesc ps_descs[] = {
 };
 
 static void PS_CreateShaders(void) {
-	for (int i = 0; i < Array_Elems(ps_shaders); i++) {
+	for (int i = 0; i < Array_Elems(ps_shaders); i++) 
+	{
 		HRESULT hr = ID3D11Device_CreatePixelShader(device, ps_descs[i].data, ps_descs[i].len, NULL, &ps_shaders[i]);
 		if (hr) Logger_Abort2(hr, "Failed to compile pixel shader");
 	}
@@ -740,7 +747,8 @@ static void PS_UpdateShader(void) {
 }
 
 static void PS_FreeShaders(void) {
-	for (int i = 0; i < Array_Elems(ps_shaders); i++) {
+	for (int i = 0; i < Array_Elems(ps_shaders); i++) 
+	{
 		ID3D11PixelShader_Release(ps_shaders[i]);
 	}
 }
@@ -771,7 +779,8 @@ static void PS_UpdateSampler(void) {
 }
 
 static void PS_FreeSamplers(void) {
-	for (int i = 0; i < Array_Elems(ps_samplers); i++) {
+	for (int i = 0; i < Array_Elems(ps_samplers); i++) 
+	{
 		ID3D11SamplerState_Release(ps_samplers[i]);
 	}
 }
@@ -895,6 +904,10 @@ static void OM_Clear(void) {
 	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
 }
 
+static void OM_UpdateTarget(void) {
+	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, depthbufferView);
+}
+
 static void OM_InitTargets(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-depth-stencil
 	D3D11_TEXTURE2D_DESC desc;
@@ -917,8 +930,8 @@ static void OM_InitTargets(void) {
 	hr = ID3D11Device_CreateDepthStencilView(device, depthbuffer, NULL, &depthbufferView);
 	if (hr) Logger_Abort2(hr, "Failed to create depthbuffer view");
 
-	ID3D11DeviceContext_OMSetRenderTargets(context, 1, &backbuffer, depthbufferView);
 	ID3D11Texture2D_Release(pBackBuffer);
+	OM_UpdateTarget();
 }
 
 static void OM_CreateDepthStates(void) {
@@ -926,7 +939,8 @@ static void OM_CreateDepthStates(void) {
 	HRESULT hr;
 	desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
 
-	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
+	for (int i = 0; i < Array_Elems(om_depthStates); i++) 
+	{
 		desc.DepthEnable    = (i & 1) != 0;
 		desc.DepthWriteMask = (i & 2) != 0;
 
@@ -941,7 +955,8 @@ static void OM_UpdateDepthState(void) {
 }
 
 static void OM_FreeDepthStates(void) {
-	for (int i = 0; i < Array_Elems(om_depthStates); i++) {
+	for (int i = 0; i < Array_Elems(om_depthStates); i++) 
+	{
 		ID3D11DepthStencilState_Release(om_depthStates[i]);
 	}
 }
@@ -957,7 +972,8 @@ static void OM_CreateBlendStates(void) {
 	desc.RenderTarget[0].DestBlend      = D3D11_BLEND_INV_SRC_ALPHA;
 	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 
-	for (int i = 0; i < Array_Elems(om_blendStates); i++) {
+	for (int i = 0; i < Array_Elems(om_blendStates); i++) 
+	{
 		desc.RenderTarget[0].RenderTargetWriteMask = (i & 1) ? D3D11_COLOR_WRITE_ENABLE_ALL : 0;
 		desc.RenderTarget[0].BlendEnable           = (i & 2) != 0;
 
@@ -972,7 +988,8 @@ static void OM_UpdateBlendState(void) {
 }
 
 static void OM_FreeBlendStates(void) {
-	for (int i = 0; i < Array_Elems(om_blendStates); i++) {
+	for (int i = 0; i < Array_Elems(om_blendStates); i++) 
+	{
 		ID3D11BlendState_Release(om_blendStates[i]);
 	}
 }
@@ -1054,11 +1071,11 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	D3D11_RENDER_TARGET_VIEW_DESC backbuffer_desc;
 	D3D11_MAPPED_SUBRESOURCE buffer;
 	ID3D11RenderTargetView_GetResource(backbuffer, &backbuffer_res);
-	ID3D11RenderTargetView_GetDesc(backbuffer, &backbuffer_desc);
+	ID3D11RenderTargetView_GetDesc(backbuffer,     &backbuffer_desc);
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
-	desc.Width     = WindowInfo.Width;
-	desc.Height    = WindowInfo.Height;
+	desc.Width     = Window_Main.Width;
+	desc.Height    = Window_Main.Height;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
 	desc.Format    = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -1088,7 +1105,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync      = vsync;
 }
-void Gfx_BeginFrame(void) { }
+void Gfx_BeginFrame(void) { OM_UpdateTarget(); }
 void Gfx_Clear(void)      { OM_Clear(); }
 
 void Gfx_EndFrame(void) {
@@ -1143,7 +1160,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 	String_Format1(info, "Adapter: %c\n", adapter);
 	String_Format2(info, "Graphics memory: %f2 MB total (%f2 MB VRAM)\n", &tram_, &vram_);
-	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 
 release_adapter:
 	IDXGIAdapter_Release(dxgi_adapter);

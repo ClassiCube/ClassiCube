@@ -112,6 +112,7 @@ void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
 int Screen_Index(void* screen, void* w);
+int Screen_CalcDefaultMaxVertices(void* screen);
 
 /* Default mesh building implementation for a screen */
 /*  (Locks vb, calls Widget_BuildMesh on each widget, then unlocks vb) */
@@ -156,7 +157,10 @@ struct WidgetVTABLE {
 	void (*BuildMesh)(void* elem, struct VertexTextured** vertices);
 	/* Draws this widget on-screen. */
 	int  (*Render2)(void* elem, int offset);
+	/* Returns the maximum number of vertices this widget may use */
+	int  (*GetMaxVertices)(void* elem);
 };
+
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
 	cc_bool active;                /* Whether this widget is currently being moused over */ \
@@ -169,6 +173,14 @@ struct WidgetVTABLE {
 #define WIDGET_FLAG_DISABLED   0x01
 /* Whether a widget can be selected via up/down */
 #define WIDGET_FLAG_SELECTABLE 0x02
+/* Whether for dual screen builds, this widget still appears on */
+/*  the main game screen instead of the dedicated UI screen */
+#define WIDGET_FLAG_MAINSCREEN 0x04
+#ifdef CC_BUILD_DUALSCREEN
+	#define Window_UI Window_Alt
+#else
+	#define Window_UI Window_Main
+#endif
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Body };

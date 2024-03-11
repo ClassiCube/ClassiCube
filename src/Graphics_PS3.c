@@ -7,9 +7,6 @@
 #include <malloc.h>
 #include <rsx/rsx.h>
 #include <sysutil/video.h>
-
-/* Current format and size of vertices */
-static int gfx_stride, gfx_format = -1;
 static cc_bool renderingDisabled;
 
 static gcmContextData* context;
@@ -349,13 +346,13 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	// TODO: should it be like OpenGL? ???
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  2.0f / width;
-	matrix->row2.Y = -2.0f / height;
-	matrix->row3.Z =  1.0f / (zNear - zFar);
+	matrix->row1.x =  2.0f / width;
+	matrix->row2.y = -2.0f / height;
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
-	matrix->row4.X = -1.0f;
-	matrix->row4.Y =  1.0f;
-	matrix->row4.Z = zNear / (zNear - zFar);
+	matrix->row4.x = -1.0f;
+	matrix->row4.y =  1.0f;
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
@@ -367,12 +364,12 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 	// TODO: should it be like OpenGL? ???
 	*matrix = Matrix_Identity;
 
-	matrix->row1.X =  c / aspect;
-	matrix->row2.Y =  c;
-	matrix->row3.Z = zFar / (zNear - zFar);
-	matrix->row3.W = -1.0f;
-	matrix->row4.Z = (zNear * zFar) / (zNear - zFar);
-	matrix->row4.W =  0.0f;
+	matrix->row1.x =  c / aspect;
+	matrix->row2.y =  c;
+	matrix->row3.z = zFar / (zNear - zFar);
+	matrix->row3.w = -1.0f;
+	matrix->row4.z = (zNear * zFar) / (zNear - zFar);
+	matrix->row4.w =  0.0f;
 }
 
 
@@ -387,7 +384,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;
 
 	String_Format1(info, "-- Using PS3 (%i bit) --\n", &pointerSize);
-	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	PrintMaxTextureInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
@@ -494,10 +491,8 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	void* data = rsxMemalign(128, count * strideSizes[fmt]);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;
+static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
+	return rsxMemalign(128, count * strideSizes[fmt]);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { 
@@ -536,11 +531,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	void* data = rsxMemalign(128, maxVertices * strideSizes[fmt]);
-	if (!data) Logger_Abort("Failed to allocate memory for GFX VB");
-	return data;
+static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
+	return rsxMemalign(128, maxVertices * strideSizes[fmt]);
 }
+
+void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	vb_size = count * strideSizes[fmt];
@@ -552,11 +547,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	rsxInvalidateVertexCache(context); // TODO needed?
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	Mem_Copy(vb, vertices, vCount * gfx_stride);
-	Gfx_BindVb(vb);
-	rsxInvalidateVertexCache(context); // TODO needed?
-}
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 
 
 /*########################################################################################################################*
@@ -568,7 +559,7 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[];
 } CCTexture;
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
 	

@@ -50,6 +50,9 @@ static void AudioWarn(cc_result res, const char* action) {
 }
 static void AudioBase_Clear(struct AudioContext* ctx);
 static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data);
+static void AudioBase_AllocChunks(int size, void** chunks, int numChunks);
+static void AudioBase_FreeChunks(void** chunks, int numChunks);
+
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(data) ((data->sampleRate * data->rate) / 100)
 
@@ -216,7 +219,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->source) {
 		Audio_Stop(ctx);
 		Audio_Reset(ctx);
-		_alGetError();
+		_alGetError(); /* Reset error state */
 	}
 	ClearFree(ctx);
 	AudioBase_Clear(ctx);
@@ -225,6 +228,7 @@ void Audio_Close(struct AudioContext* ctx) {
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	ALenum i, err;
 	if (!ctx->source) {
+		_alGetError(); /* Reset error state */
 		_alGenSources(1, &ctx->source);
 		if ((err = _alGetError())) return err;
 
@@ -248,14 +252,15 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
 	ALuint buffer;
 	ALenum err;
 	
 	if (!ctx->free) return ERR_INVALID_ARGUMENT;
 	buffer = ctx->freeIDs[--ctx->free];
+	_alGetError(); /* Reset error state */
 
-	_alBufferData(buffer, ctx->channels, data, size, ctx->sampleRate);
+	_alBufferData(buffer, ctx->channels, chunk, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
@@ -275,6 +280,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = 0;
 	if (!ctx->source) return 0;
 
+	_alGetError(); /* Reset error state */
 	_alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
 	if ((err = _alGetError())) return err;
 
@@ -299,7 +305,7 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	data->sampleRate = Audio_AdjustSampleRate(data);
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,     data->size)))       return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,     data->size)))      return res;
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }
@@ -321,6 +327,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	const char* err = GetError(res);
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
 }
 #elif defined CC_BUILD_WINMM
 /*########################################################################################################################*
@@ -448,7 +462,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return res;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	cc_result res = 0;
 	WAVEHDR* hdr;
 	int i;
@@ -458,7 +472,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 		if (!(hdr->dwFlags & WHDR_DONE)) continue;
 
 		Mem_Set(hdr, 0, sizeof(WAVEHDR));
-		hdr->lpData         = (LPSTR)data;
+		hdr->lpData         = (LPSTR)chunk;
 		hdr->dwBufferLength = dataSize;
 		hdr->dwLoops        = 1;
 		
@@ -504,7 +518,7 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	data->sampleRate = Audio_AdjustSampleRate(data);
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
 	return 0;
 }
 
@@ -515,6 +529,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (!buffer[0]) return false;
 	String_AppendConst(dst, buffer);
 	return true;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
 }
 #elif defined CC_BUILD_OPENSLES
 /*########################################################################################################################*
@@ -676,8 +698,8 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
-	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, data, size);
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk, size);
 }
 
 static cc_result Audio_Pause(struct AudioContext* ctx) {
@@ -712,7 +734,7 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	/* rate is in milli, so 1000 = normal rate */
 	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, data->rate * 10))) return res;
 
-	if ((res = Audio_QueueData(ctx, data->data, data->size))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data, data->size))) return res;
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }
@@ -744,6 +766,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
 }
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
+}
 #elif defined CC_BUILD_3DS
 /*########################################################################################################################*
 *-------------------------------------------------------3DS backend-------------------------------------------------------*
@@ -754,6 +784,7 @@ struct AudioContext {
 	ndspWaveBuf bufs[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate;
 	void* _tmpData; int _tmpSize;
+	cc_bool stereo;
 };
 static int channelIDs;
 
@@ -782,7 +813,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
 	ctx->used   = true;
-	
+
 	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
 }
 
@@ -790,6 +821,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->used) {
 		ndspChnWaveBufClear(ctx->chanID);
 		ctx->channels &= ~(1 << ctx->chanID);
+		channelIDs &= ~(1 << ctx->chanID);
 	}
 	
 	ctx->used = false;
@@ -797,15 +829,24 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	int fmt = channels == 1 ? NDSP_FORMAT_MONO_PCM16 : NDSP_FORMAT_STEREO_PCM16;
+	ctx->stereo = (channels == 2);
+	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
 	
 	ndspChnSetFormat(ctx->chanID, fmt);
 	ndspChnSetRate(ctx->chanID, sampleRate);
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSize) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	ndspWaveBuf* buf;
+
+	// DSP audio buffers must be aligned to a multiple of 0x80, according to the example code I could find.
+	if (((uintptr_t)chunk & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	}
+	if ((dataSize & 0x7F) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	}
 
 	for (int i = 0; i < ctx->count; i++) 
 	{
@@ -813,10 +854,11 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
-			
-		buf->data_pcm16 = data;
-		buf->nsamples   = dataSize / 2; // 16 bit samples
+
+		buf->data_pcm16 = chunk;
+		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
+		DSP_FlushDataCache(buf->data_pcm16, dataSize);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
 		return 0;
 	}
@@ -858,13 +900,170 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	cc_result res;
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
 	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	size = (size + 0x7F) & ~0x7F;  // round up to nearest multiple of 0x80
+	cc_uint8* dst = linearAlloc(size * numChunks);
+	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst ? (dst + size * i) : NULL;
+	}
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	linearFree(chunks[0]);
+}
+#elif defined CC_BUILD_DREAMCAST
+/*########################################################################################################################*
+*----------------------------------------------------Dreamcast backend----------------------------------------------------*
+*#########################################################################################################################*/
+#include <kos.h>
+/* TODO needs way more testing, especially with sounds */
+
+struct AudioBuffer {
+	int available;
+	int bytesLeft;
+	void* samples;
+};
+
+struct AudioContext {
+	int used, bufHead, channels;
+	snd_stream_hnd_t hnd;
+	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
+	int count, sampleRate;
+	void* _tmpData; int _tmpSize;
+};
+
+static cc_bool AudioBackend_Init(void) {
+	return snd_stream_init() == 0;
+}
+
+static void AudioBackend_Free(void) { 
+	snd_stream_shutdown();
+}
+#define AUDIO_HAS_BACKEND
+
+static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
+	struct AudioContext* ctx = snd_stream_get_userdata(hnd);
+	struct AudioBuffer* buf  = &ctx->bufs[ctx->bufHead]; 
+	
+	int samples = min(buf->bytesLeft, smp_req);
+	*smp_recv   = samples;
+	void* ptr   = buf->samples;
+	
+	buf->samples   += samples;
+	buf->bytesLeft -= samples;
+	
+	if (buf->bytesLeft == 0) {
+		ctx->bufHead   = (ctx->bufHead + 1) % ctx->count;
+		buf->samples   = NULL;
+		buf->available = true;
+	}
+	return ptr;
+}
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	ctx->hnd = snd_stream_alloc(AudioCallback, SND_STREAM_BUFFER_MAX);
+	if (ctx->hnd == SND_STREAM_INVALID) return;
+	snd_stream_set_userdata(ctx->hnd, ctx);
+	
+	Mem_Set(ctx->bufs, 0, sizeof(ctx->bufs));
+	for (int i = 0; i < buffers; i++) {
+		ctx->bufs[i].available = true;
+	}
+	
+	ctx->count   = buffers;
+	ctx->used    = true;
+	ctx->bufHead = 0;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->used) {
+		snd_stream_stop(ctx->hnd);
+		snd_stream_destroy(ctx->hnd);
+	}
+	
+	ctx->used = false;
+	ctx->hnd  = SND_STREAM_INVALID;
+	AudioBase_Clear(ctx);
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+	return 0;
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+	struct AudioBuffer* buf;
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) continue;
+
+		buf->samples   = chunk;
+		buf->bytesLeft = dataSize;
+		buf->available = false;
+		return 0;
+	}
+	// tried to queue data without polling for free buffers first
+	return ERR_INVALID_ARGUMENT;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+	snd_stream_start(ctx->hnd, ctx->sampleRate, ctx->channels == 2);
+	return 0; 
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	struct AudioBuffer* buf;
+	snd_stream_poll(ctx->hnd);
+	int count = 0;
+
+	for (int i = 0; i < ctx->count; i++)
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) count++;
+	}
+
+	*inUse = count;
+	return 0;
+}
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	return true;
+}
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	snd_stream_volume(ctx->hnd, data->volume);
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	cc_result res;
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
+}
+
 #elif defined CC_BUILD_WEBAUDIO
 /*########################################################################################################################*
 *-----------------------------------------------------WebAudio backend----------------------------------------------------*
@@ -892,7 +1091,7 @@ void Audio_Close(struct AudioContext* ctx) {
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	return ERR_NOT_SUPPORTED;
 }
-cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
 	return ERR_NOT_SUPPORTED;
 }
 cc_result Audio_Play(struct AudioContext* ctx) { return ERR_NOT_SUPPORTED; }
@@ -921,6 +1120,14 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 	String_AppendUtf8(dst, buffer, len);
 	return len > 0;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
 }
 #endif
 
@@ -963,6 +1170,20 @@ static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData*
 	ApplyVolume((cc_int16*)audio, data->size / 2, data->volume);
 	data->data = audio;
 	return true;
+}
+
+static void AudioBase_AllocChunks(int size, void** chunks, int numChunks) {
+	cc_uint8* dst = (cc_uint8*)Mem_TryAlloc(numChunks, size);
+	int i;
+	
+	for (i = 0; i < numChunks; i++) 
+	{
+		chunks[i] = dst ? (dst + size * i) : NULL;
+	}
+}
+
+static void AudioBase_FreeChunks(void** chunks, int numChunks) {
+	Mem_Free(chunks[0]);
 }
 #endif
 
@@ -1032,7 +1253,7 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->data = Mem_TryAlloc(size, 1);
+			Audio_AllocChunks(size, &snd->data, 1);
 			snd->size = size;
 
 			if (!snd->data) return ERR_OUT_OF_MEMORY;
@@ -1097,7 +1318,7 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 
 	if (res) {
 		Logger_SysWarn2(res, "decoding", file);
-		Mem_Free(snd->data);
+		Audio_FreeChunks(&snd->data, 1);
 		snd->data = NULL;
 		snd->size = 0;
 	} else { group->count++; }
@@ -1310,7 +1531,7 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 	}
 	if (Audio_MusicVolume < 100) { ApplyVolume(data, samples, Audio_MusicVolume); }
 
-	res2 = Audio_QueueData(&music_ctx, data, samples * 2);
+	res2 = Audio_QueueChunk(&music_ctx, data, samples * 2);
 	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
@@ -1321,7 +1542,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	int channels, sampleRate;
 
 	int chunkSize, samplesPerSecond;
-	cc_int16* data = NULL;
+	void* chunks[AUDIO_MAX_BUFFERS] = { 0 };
 	int inUse, i, cur;
 	cc_result res;
 
@@ -1338,27 +1559,33 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = channels * sampleRate;
 
-	cur  = 0;
-	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
-	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+	Audio_AllocChunks(chunkSize * 2, chunks, AUDIO_MAX_BUFFERS);
+	for (i = 0; i < AUDIO_MAX_BUFFERS; i++) 
+	{
+		if (chunks[i]) continue;
+		
+		res = ERR_OUT_OF_MEMORY; goto cleanup;
+	}
+	
 
 	/* fill up with some samples before playing */
-	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {
-		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
-		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
+	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
+	{
+		res = Music_Buffer((cc_int16*)chunks[i], samplesPerSecond, &vorbis);
 	}
 	if (music_stopping) goto cleanup;
 
 	res  = Audio_Play(&music_ctx);
 	if (res) goto cleanup;
+	cur  = 0;
 
 	while (!music_stopping) {
 #ifdef CC_BUILD_ANDROID
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
-    	if (!WindowInfo.Handle) {
+    	if (!Window_Main.Handle) {
     		Audio_Pause(&music_ctx);
-    		while (!WindowInfo.Handle && !music_stopping) {
+    		while (!Window_Main.Handle && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
     		Audio_Play(&music_ctx);
@@ -1372,7 +1599,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 			Thread_Sleep(10); continue;
 		}
 
-		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
+		res = Music_Buffer((cc_int16*)chunks[cur], samplesPerSecond, &vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */
@@ -1393,7 +1620,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	}
 
 cleanup:
-	Mem_Free(data);
+	Audio_FreeChunks(chunks, AUDIO_MAX_BUFFERS);
 	Vorbis_Free(&vorbis);
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }

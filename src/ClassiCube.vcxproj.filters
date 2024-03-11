@@ -186,7 +186,7 @@
     <ClInclude Include="AxisLinesRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
-    <ClInclude Include="PickedPosRenderer.h">
+    <ClInclude Include="SelOutlineRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
     <ClInclude Include="IsometricDrawer.h">
@@ -345,6 +345,9 @@
     <ClInclude Include="EntityRenderers.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="Commands.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -383,7 +386,7 @@
     <ClCompile Include="AxisLinesRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
-    <ClCompile Include="PickedPosRenderer.c">
+    <ClCompile Include="SelOutlineRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
     <ClCompile Include="IsometricDrawer.c">
@@ -676,6 +679,39 @@
     </ClCompile>
     <ClCompile Include="EntityRenderers.c">
       <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_N64.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_N64.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_N64.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_SoftGPU.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_PS2.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_PS2.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_PS2.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Commands.c">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Xbox360.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Xbox360.c">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_Xbox360.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
