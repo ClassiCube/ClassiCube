@@ -59,7 +59,7 @@ ClassiCube runs on:
 * macOS - 10.5 or later (but can be compiled to work with 10.3/10.4 though)
 * Linux - needs `libcurl` and `libopenal`
 * Android - 2.3 or later
-* iOS - 10.3 or later
+* iOS - 8.0 or later
 * Most web browsers (even runs on IE11)
 
 And also runs on:

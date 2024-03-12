@@ -34,12 +34,6 @@ GL_FORCE_INLINE Vertex* _glSubmissionTargetStart(SubmissionTarget* target) {
     return aligned_vector_at(&target->output->vector, target->start_offset);
 }
 
-typedef struct {
-    float u, v;
-} Float2;
-
-static const Float2 F2ZERO = {0.0f, 0.0f};
-
 static void generateQuads(SubmissionTarget* target, const GLsizei first, const GLuint count) {
     /* Read from the client buffers and generate an array of ClipVertices */
     TRACE();
@@ -55,24 +49,25 @@ static void generateQuads(SubmissionTarget* target, const GLsizei first, const G
 
     Vertex* dst = start;
     const float w = 1.0f;
+    PREFETCH(src);
 
     // TODO: optimise
     ITERATE(numQuads) {
         // 4 vertices per quad
         Vertex* it = dst;
-        PREFETCH(it); // TODO: more prefetching?
-        PREFETCH(src);
         
         for(GLuint j = 0; j < 4; ++j) {
             PREFETCH(src + stride);
             TransformVertex((const float*)src, &w, it->xyz, &it->w);
             
-            *((uint32_t*)it->bgra) = *((uint32_t*)(src + 12));
+            *((uint32_t*)&it->bgra) = *((uint32_t*)(src + 12));
 
             if(has_uv) {
-                MEMCPY4(it->uv, src + 16, sizeof(float) * 2);
+                *((uint32_t*)&it->uv[0]) = *((uint32_t*)(src + 16));
+                *((uint32_t*)&it->uv[1]) = *((uint32_t*)(src + 20));
             } else {
-                *((Float2*)it->uv) = F2ZERO;
+                it->uv[0] = 0.0f; 
+                it->uv[1] = 0.0f;
             }
 
             src += stride;
