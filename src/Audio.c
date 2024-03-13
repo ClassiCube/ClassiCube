@@ -1014,8 +1014,19 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	audrvVoiceStop(&drv, ctx->chanID);
 	audrvVoiceInit(&drv, ctx->chanID, ctx->channels, PcmFormat_Int16, ctx->sampleRate);
 	audrvVoiceSetDestinationMix(&drv, ctx->chanID, AUDREN_FINAL_MIX_ID);
-	audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
-	audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+
+	if (channels == 1) {
+		// mono
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+	}
+	else {
+		// stereo
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 0, 1);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 1, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 1, 1);
+	}
 
 	return 0;
 }
@@ -1031,6 +1042,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
 	}
 
+
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
@@ -1041,12 +1053,11 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		buf->data_pcm16 = chunk;
 		buf->size       = dataSize;
 		buf->start_sample_offset = 0;
-		buf->end_sample_offset = dataSize/2;
+		buf->end_sample_offset = dataSize / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));;
 		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
 
-		audrvVoiceSetPaused(&drv, ctx->chanID, true);
 		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
-		audrvVoiceSetPaused(&drv, ctx->chanID, false);
+		audrvVoiceStart(&drv, ctx->chanID);
 
 		return 0;
 	}
@@ -1068,7 +1079,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	{
 		buf = &ctx->bufs[i];
 		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
-		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing) {
+		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting) {
 			count++; continue;
 		}
 	}
@@ -1098,8 +1109,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 	size = (size + 0xFFF) & ~0xFFF;  // round up to nearest multiple of 0x1000
-	void* dst = aligned_alloc(0x1000, size * numChunks);
-	armDCacheFlush(dst, size * numChunks);
+	void* dst = aligned_alloc(0x1000, size*numChunks);
 
 	for (int i = 0; i < numChunks; i++) {
 		chunks[i] = dst + size * i;
