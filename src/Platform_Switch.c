@@ -84,14 +84,7 @@ cc_uint64 Stopwatch_Measure(void) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	char buffer[256];
-	cc_string str;
-	String_InitArray(str, buffer);
-	
-	String_AppendAll(&str, msg, len);
-	buffer[str.length] = '\0';
-	
-	printf("%s\n", buffer);
+	svcOutputDebugString(msg, len);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
