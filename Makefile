@@ -127,6 +127,8 @@ irix:
 	
 # consoles builds require special handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
+dreamcast:
+	$(MAKE) -f misc/dreamcast/Makefile PLAT=dreamcast
 psp:
 	$(MAKE) -f misc/psp/Makefile PLAT=psp
 vita:
@@ -135,20 +137,20 @@ ps3:
 	$(MAKE) -f misc/ps3/Makefile PLAT=ps3
 ps2:
 	$(MAKE) -f misc/ps2/Makefile PLAT=ps2
-3ds:
-	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
-wii:
-	$(MAKE) -f misc/wii/Makefile PLAT=wii
-gamecube:
-	$(MAKE) -f misc/gc/Makefile PLAT=gamecube
-dreamcast:
-	$(MAKE) -f misc/dreamcast/Makefile PLAT=dreamcast
 xbox:
 	$(MAKE) -f misc/xbox/Makefile PLAT=xbox
 xbox360:
 	$(MAKE) -f misc/xbox360/Makefile PLAT=xbox360
 n64:
 	$(MAKE) -f misc/n64/Makefile PLAT=n64
+3ds:
+	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
+wii:
+	$(MAKE) -f misc/wii/Makefile PLAT=wii
+gamecube:
+	$(MAKE) -f misc/gc/Makefile PLAT=gamecube
+wiiu:
+	$(MAKE) -f misc/wiiu/Makefile PLAT=wiiu
 	
 clean:
 	$(DEL) $(OBJECTS)
