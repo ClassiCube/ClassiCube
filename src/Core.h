@@ -370,6 +370,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_GLES
 	#undef  CC_BUILD_FREETYPE
 #endif
+#endif
 
 
 #ifndef CC_BUILD_LOWMEM
