@@ -362,7 +362,6 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 #endif
 #endif
-#endif
 
 
 #ifndef CC_BUILD_LOWMEM
