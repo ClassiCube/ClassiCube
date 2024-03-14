@@ -30,11 +30,13 @@
 #include <stdio.h>
 #include <poll.h>
 #include <netdb.h>
+#include <coreinit/debug.h>
 #include <coreinit/event.h>
 #include <coreinit/fastmutex.h>
 #include <coreinit/thread.h>
 #include <coreinit/systeminfo.h>
 #include <coreinit/time.h>
+#include <whb/proc.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -56,21 +58,22 @@ void Platform_Log(const char* msg, int len) {
 	
 	OSReport("%s\n", tmp);
 }
+#define WIIU_EPOCH_ADJUST 946684800000ULL // Wii U time epoch is year 2000, not 1970
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
 TimeMS DateTime_CurrentUTC_MS(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+	OSTime time = OSGetTime();
+	// avoid overflow in time calculation
+	cc_int64 secs = (time_t)OSTicksToSeconds(time);
+	time -= OSSecondsToTicks(secs);
+	cc_uint64 msecs = OSTicksToMilliseconds(time);
+      	return (secs * 1000 + msecs) + UNIX_EPOCH + WIIU_EPOCH_ADJUST;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
-	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	struct OSCalendarTime loc_time;
+	OSTicksToCalendarTime(OSGetTime(), &loc_time);
 
-	t->year   = loc_time.tm_year + 1900;
+	t->year   = loc_time.tm_year;
 	t->month  = loc_time.tm_mon  + 1;
 	t->day    = loc_time.tm_mday;
 	t->hour   = loc_time.tm_hour;
@@ -83,7 +86,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
 cc_uint64 Stopwatch_Measure(void) {
-	return OSGetSystemTime(); // TODO OSGetTick ??
+	return OSGetSystemTime(); // TODO OSGetSystemTick ??
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
@@ -304,14 +307,9 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 *#########################################################################################################################*/
 union SocketAddress {
 	struct sockaddr raw;
-	struct sockaddr_in  v4;
-	#ifdef AF_INET6
-	struct sockaddr_in6 v6;
+	struct sockaddr_in v4;
 	struct sockaddr_storage total;
-	#endif
 };
-/* Sanity check to ensure cc_sockaddr struct is large enough to contain all socket addresses supported by this platform */
-static char sockaddr_size_check[sizeof(union SocketAddress) < CC_SOCKETADDR_MAXSIZE ? 1 : -1];
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
 	char portRaw[32]; cc_string portStr;
@@ -332,6 +330,7 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	if (res) return res;
 
 	/* Prefer IPv4 addresses first */
+	// TODO: Wii U has no ipv6 support anyways?
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family != AF_INET) continue;
@@ -366,18 +365,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		*numValidAddrs = 1;
 		return 0;
 	}
-	
-	#ifdef AF_INET6
-	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
-		addr->v6.sin6_family = AF_INET6;
-		addr->v6.sin6_port   = htons(port);
-		
-		addrs[0].size  = sizeof(addr->v6);
-		*numValidAddrs = 1;
-		return 0;
-	}
-	#endif
-	
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
