@@ -1047,7 +1047,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 	{
 		buf = &ctx->bufs[i];
 		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
-		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing)
+		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting)
 			continue;
 
 		buf->data_pcm16 = chunk;
