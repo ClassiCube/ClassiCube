@@ -41,6 +41,8 @@ void Audio_PlayDigSound(cc_uint8 type);
 void Audio_PlayStepSound(cc_uint8 type);
 #define AUDIO_MAX_BUFFERS 4
 
+void AudioBackend_Tick(void);
+
 /* Initialises an audio context. */
 void Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
