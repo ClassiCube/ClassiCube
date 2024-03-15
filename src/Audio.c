@@ -1052,7 +1052,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		cc_uint32 endOffset = dataSize / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
 
 		//Platform_Log3("QUEUE_CHUNK %i: %i = %i", &ctx->chanID, &i, &state);
-		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting)
+		if (state == AudioDriverWaveBufState_Queued || state == AudioDriverWaveBufState_Playing || state == AudioDriverWaveBufState_Waiting)
 			continue;
 
 		buf->data_pcm16 = chunk;
@@ -1113,7 +1113,10 @@ cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
 	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
+
+	audrvVoiceSetVolume(&drv, ctx->chanID, data->volume/100.f);
 	if ((res = Audio_Play(ctx))) return res;
+
 	return 0;
 }
 
