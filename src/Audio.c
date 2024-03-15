@@ -178,6 +178,8 @@ static cc_bool AudioBackend_Init(void) {
 	return true;
 }
 
+void AudioBackend_Tick(void) { }
+
 static void AudioBackend_Free(void) {
 	if (!audio_device) return;
 	_alcMakeContextCurrent(NULL);
@@ -399,7 +401,9 @@ struct AudioContext {
 	int count, channels, sampleRate;
 	cc_uint32 _tmpSize; void* _tmpData;
 };
+
 static cc_bool AudioBackend_Init(void) { return true; }
+void AudioBackend_Tick(void) { }
 static void AudioBackend_Free(void) { }
 #define AUDIO_HAS_BACKEND
 
@@ -609,6 +613,8 @@ static cc_bool AudioBackend_Init(void) {
 	return true;
 }
 
+void AudioBackend_Tick(void) { }
+
 static void AudioBackend_Free(void) {
 	if (slOutputObject) {
 		(*slOutputObject)->Destroy(slOutputObject);
@@ -794,6 +800,9 @@ static cc_bool AudioBackend_Init(void) {
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	return result == 0; 
 }
+
+void AudioBackend_Tick(void) { }
+
 static void AudioBackend_Free(void) { }
 #define AUDIO_HAS_BACKEND
 
@@ -1183,6 +1192,8 @@ static cc_bool AudioBackend_Init(void) {
 	return snd_stream_init() == 0;
 }
 
+void AudioBackend_Tick(void) { }
+
 static void AudioBackend_Free(void) { 
 	snd_stream_shutdown();
 }
@@ -1321,6 +1332,10 @@ static cc_bool AudioBackend_Init(void) {
 	return true;
 }
 
+void AudioBackend_Tick(void) { }
+
+static void AudioBackend_Free(void) { }
+
 void Audio_Init(struct AudioContext* ctx, int buffers) { }
 void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->contextID) interop_AudioClose(ctx->contextID);
@@ -1368,13 +1383,19 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
+#else
+/*########################################################################################################################*
+*----------------------------------------------------Null/Empty backend---------------------------------------------------*
+*#########################################################################################################################*/
+void AudioBackend_Tick(void) { }
+static void AudioBackend_Free(void) { }
 #endif
 
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef AUDIO_HAS_BACKEND
-static void AudioBackend_Free(void) { }
+
 #else
 static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->count      = 0;

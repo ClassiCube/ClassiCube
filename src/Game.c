@@ -621,6 +621,7 @@ static void Game_RenderFrame(double delta) {
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
 	UpdateViewMatrix();
+	AudioBackend_Tick();
 
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
