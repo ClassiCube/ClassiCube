@@ -950,11 +950,13 @@ static int channelIDs;
 static struct AudioMemPools audioPools[64];
 AudioDriver drv;
 bool switchAudio = false;
-extern void* audrv_mutex;
+void* audrv_mutex;
 
 static cc_bool AudioBackend_Init(void) {
 	if (switchAudio) return true;
 	switchAudio = true;
+
+	audrv_mutex = Mutex_Create();
 
 	Mem_Set(audioPools, 0, sizeof(audioPools));
 
@@ -980,9 +982,17 @@ static cc_bool AudioBackend_Init(void) {
 	
 	return R_SUCCEEDED(res); 
 }
+
+void AudioBackend_Tick(void) {
+	Mutex_Lock(audrv_mutex);
+	if (switchAudio) audrvUpdate(&drv);
+	Mutex_Unlock(audrv_mutex);
+}
+
 static void AudioBackend_Free(void) {
 	if (!switchAudio) return;
 	switchAudio = false;
+	Mutex_Free(audrv_mutex);
 
 	audrvClose(&drv);
 	audrenExit();
