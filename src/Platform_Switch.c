@@ -37,6 +37,8 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const char* Platform_AppNameSuffix = " Switch";
 
+void* audrv_mutex;
+
 
 alignas(16) u8 __nx_exception_stack[0x1000];
 u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
@@ -519,9 +521,12 @@ void Platform_Init(void) {
 	// Configure our supported input layout: a single player with standard controller styles
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 	hidInitializeTouchScreen();
+
+	audrv_mutex = Mutex_Create();
 }
 void Platform_Free(void) {
 	socketExit();
+	Mutex_Free(audrv_mutex);
 }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {

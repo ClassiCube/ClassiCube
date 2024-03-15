@@ -22,8 +22,9 @@
 static EGLDisplay s_display;
 static EGLContext s_context;
 static EGLSurface s_surface;
-extern AudioDriver drv; // temporary
-extern bool switchAudio; // temporary
+extern AudioDriver drv;
+extern bool switchAudio;
+extern void* audrv_mutex;
 
 static cc_bool launcherMode;
 static Framebuffer fb;
@@ -138,8 +139,10 @@ void Window_ProcessEvents(double delta) {
 	// Scan the gamepad. This should be done once for each frame
 	padUpdate(&pad);
 
+	Mutex_Lock(audrv_mutex);
 	if (switchAudio)
 		audrvUpdate(&drv);
+	Mutex_Unlock(audrv_mutex);
 
 	if (!appletMainLoop()) {
 		Window_Main.Exists = false;

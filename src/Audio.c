@@ -941,6 +941,7 @@ static int channelIDs;
 static struct AudioMemPools audioPools[64];
 AudioDriver drv;
 bool switchAudio = false;
+extern void* audrv_mutex;
 
 static cc_bool AudioBackend_Init(void) {
 	if (switchAudio) return true;
@@ -1046,18 +1047,23 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
-		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
+		int state = buf->state;
+		cc_uint32 size = dataSize;
+		cc_uint32 endOffset = dataSize / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
+
+		//Platform_Log3("QUEUE_CHUNK %i: %i = %i", &ctx->chanID, &i, &state);
 		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting)
 			continue;
 
 		buf->data_pcm16 = chunk;
-		buf->size       = dataSize;
+		buf->size       = size;
 		buf->start_sample_offset = 0;
-		buf->end_sample_offset = dataSize / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));;
-		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
+		buf->end_sample_offset = endOffset;
+		//Platform_Log3("PLAY %i: %i = %i", &ctx->chanID, &i, &state);
 
+		Mutex_Lock(audrv_mutex);
 		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
-		audrvVoiceStart(&drv, ctx->chanID);
+		Mutex_Unlock(audrv_mutex);
 
 		return 0;
 	}
@@ -1075,9 +1081,11 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	AudioDriverWaveBuf* buf;
 	int count = 0;
 
+	//int states[4];
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
+		//states[i] = buf->state;
 		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting) {
 			count++; continue;
@@ -1085,6 +1093,12 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	}
 
 	*inUse = count;
+
+	/*
+	char abuf[64];
+	sprintf(abuf, "%d %d %d %d", states[0], states[1], states[2], states[3]);
+	Platform_Log2("%i inUse, %c", inUse, abuf);
+	*/
 	return 0;
 }
 
