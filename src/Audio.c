@@ -993,6 +993,7 @@ static void AudioBackend_Free(void) {
 	for (int i = 0; i < 24; i++) {
 		audrvVoiceStop(&drv, i);
 	}
+	audrvUpdate(&drv);
 }
 #define AUDIO_HAS_BACKEND
 
