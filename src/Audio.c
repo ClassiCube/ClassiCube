@@ -956,7 +956,7 @@ static cc_bool AudioBackend_Init(void) {
 	if (switchAudio) return true;
 	switchAudio = true;
 
-	audrv_mutex = Mutex_Create();
+	if (!audrv_mutex) audrv_mutex = Mutex_Create();
 
 	Mem_Set(audioPools, 0, sizeof(audioPools));
 
@@ -990,12 +990,9 @@ void AudioBackend_Tick(void) {
 }
 
 static void AudioBackend_Free(void) {
-	if (!switchAudio) return;
-	switchAudio = false;
-	Mutex_Free(audrv_mutex);
-
-	audrvClose(&drv);
-	audrenExit();
+	for (int i = 0; i < 24; i++) {
+		audrvVoiceStop(&drv, i);
+	}
 }
 #define AUDIO_HAS_BACKEND
 
@@ -1155,7 +1152,7 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 
 		for (int j = 0; j < 64; j++) {
 			if (audioPools[j].chunk != NULL) continue;
-			audioPools[j].chunk = chunks[i];
+			audioPools[j].chunk = dst;
 			audioPools[j].mpid = mpid;
 			break;
 		}
@@ -1166,7 +1163,7 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 	// remove memory pool from audren
 	for (int i=0; i<numChunks; i++) {
 		for (int j=0; j<64; j++) {
-			if (audioPools[j].chunk == chunks[i]) {
+			if (audioPools[j].chunk == chunks[0]) {
 				audrvMemPoolDetach(&drv, audioPools[j].mpid);
 				audrvMemPoolRemove(&drv, audioPools[j].mpid);
 				Mem_Set(&audioPools[j], 0, sizeof(struct AudioMemPools));
