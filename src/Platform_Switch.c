@@ -321,7 +321,7 @@ void Waitable_Wait(void* handle) {
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	struct WaitData* ptr = (struct WaitData*)handle;
 
-	cc_uint64 timeout_ns = milliseconds * (1000 * 1000); // to nanoseconds
+	cc_uint64 timeout_ns = (cc_uint64)milliseconds * (1000 * 1000); // to nanoseconds
 
 	Mutex_Lock(&ptr->mutex);
 	if (!ptr->signalled) {
