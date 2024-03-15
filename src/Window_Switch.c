@@ -26,22 +26,54 @@ static EGLSurface s_surface;
 static cc_bool launcherMode;
 static Framebuffer fb;
 static PadState pad;
+static AppletHookCookie cookie;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
+
+static void Set_Resolution(void) {
+	// check whether the Switch is docked
+	// use 720p for handheld, 1080p for docked
+	AppletOperationMode opMode = appletGetOperationMode();
+	int w = 1280;
+	int h = 720;
+	if (opMode == AppletOperationMode_Console) {
+		w = 1920;
+		h = 1080;
+	}
+
+	DisplayInfo.Width  = w;
+	DisplayInfo.Height = h;
+
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
+}
+
+static void Applet_Event(AppletHookType type, void* param) {
+	if (type == AppletHookType_OnOperationMode) {
+		Set_Resolution();
+
+		if (launcherMode) {
+			framebufferClose(&fb);
+			framebufferCreate(&fb, nwindowGetDefault(), DisplayInfo.Width, DisplayInfo.Height, PIXEL_FORMAT_BGRA_8888, 2);
+			framebufferMakeLinear(&fb);
+		}
+
+		Event_RaiseVoid(&WindowEvents.Resized);
+	}
+}
 
 void Window_Init(void) {
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
 
-	DisplayInfo.Width  = 1280;
-	DisplayInfo.Height = 720;
+	appletHook(&cookie, Applet_Event, NULL);
+	Set_Resolution();
+
 	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
-	
-	Window_Main.Width   = DisplayInfo.Width;
-	Window_Main.Height  = DisplayInfo.Height;
+
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
@@ -52,11 +84,12 @@ void Window_Init(void) {
 void Window_Free(void) {
 	if (launcherMode)
 		framebufferClose(&fb);
+	appletUnhook(&cookie);
 }
 
 void Window_Create2D(int width, int height) {
-	framebufferCreate(&fb, nwindowGetDefault(), 1280, 720, PIXEL_FORMAT_BGRA_8888, 2);
-    framebufferMakeLinear(&fb);
+	framebufferCreate(&fb, nwindowGetDefault(), DisplayInfo.Width, DisplayInfo.Height, PIXEL_FORMAT_BGRA_8888, 2);
+	framebufferMakeLinear(&fb);
 	launcherMode = true;
 }
 void Window_Create3D(int width, int height) {
