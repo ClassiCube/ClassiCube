@@ -225,8 +225,6 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-#define STACK_SIZE (128 * 1024)
-
 void Thread_Sleep(cc_uint32 milliseconds) {
 	DelayThread(milliseconds * 1000);
 }
@@ -243,23 +241,19 @@ static int ExecThread(void* param) {
 	return 0; // TODO detach ?
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	ee_thread_t thread = { 0 };
 	thread.func        = ExecThread;
-	thread.stack       = Mem_Alloc(STACK_SIZE, 1, "Thread stack");
-	thread.stack_size  = STACK_SIZE;
+	thread.stack       = Mem_Alloc(stackSize, 1, "Thread stack");
+	thread.stack_size  = stackSize;
 	thread.gp_reg      = &_gp;
 	thread.initial_priority = 18;
 	
 	int thdID = CreateThread(&thread);
 	if (thdID < 0) Logger_Abort2(thdID, "Creating thread");
-	return (void*)thdID;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	int thdID = (int)handle;
-	int res   = StartThread(thdID, (void*)func);
+	*handle = thdID;
 	
+	int res = StartThread(thdID, (void*)func);
 	if (res < 0) Logger_Abort2(res, "Running thread");
 }
 

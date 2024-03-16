@@ -65,13 +65,10 @@ static int32 ExecThread(void* param) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
-	thread_id thread = spawn_thread(ExecThread, "CC thread", B_NORMAL_PRIORITY, func);
-	return (void*)thread;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	thread_id thread = (thread_id)handle;
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	thread_id thread = spawn_thread(ExecThread, name, B_NORMAL_PRIORITY, func);
+	*handle = (void*)thread;
+	
 	resume_thread(thread);
 }
 
@@ -366,8 +363,8 @@ static void AppThread(void) {
 }
 
 static void RunApp(void) {
-	void* thread = Thread_Create(AppThread);
-	Thread_Start2(thread, AppThread);
+	void* thread;
+	Thread_Run(&thread, AppThread, 128 * 1024, "App thread");
 	Thread_Detach(thread);
 	
 	// wait for BApplication to be started in other thread

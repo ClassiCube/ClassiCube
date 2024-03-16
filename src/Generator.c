@@ -69,8 +69,8 @@ static void Gen_DoGen(void) {
 }
 
 static void Gen_Run(void) {
-	void* thread = Thread_Create(Gen_DoGen);
-	Thread_Start2(thread, Gen_DoGen);
+	void* thread;
+	Thread_Run(&thread, Gen_DoGen, 128 * 1024, "Map gen");
 	Thread_Detach(thread);
 }
 

@@ -252,8 +252,7 @@ static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
 	Platform_LogConst("Running game async!");
 	/* The game must be run on a separate thread, as blocking the */
 	/* main UI thread will cause a 'App not responding..' messagebox */
-	thread = Thread_Create(android_main);
-	Thread_Start2(thread, android_main);
+	Thread_Run(&thread, android_main, 1024 * 1024, "Game"); // TODO check stack size needed
 	Thread_Detach(thread);
 }
 static const JNINativeMethod methods[] = {

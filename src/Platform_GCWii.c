@@ -234,13 +234,11 @@ static void* ExecThread(void* param) {
 	return NULL;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
-	return Mem_Alloc(1, sizeof(lwp_t), "thread");
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	lwp_t* ptr = (lwp_t*)handle;
-	int res = LWP_CreateThread(ptr, ExecThread, (void*)func, NULL, 256 * 1024, 80);
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	lwp_t* thread = (lwp_t*)Mem_Alloc(1, sizeof(lwp_t), "thread");
+	*handle = thread;
+	
+	int res = LWP_CreateThread(thread, ExecThread, (void*)func, NULL, stackSize, 80);
 	if (res) Logger_Abort2(res, "Creating thread");
 }
 

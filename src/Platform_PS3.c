@@ -236,16 +236,13 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 static void ExecThread(void* param) {
 	((Thread_StartFunc)param)(); 
 }
-#define STACK_SIZE (128 * 1024)
 
-void* Thread_Create(Thread_StartFunc func) {
-	return Mem_Alloc(1, sizeof(sys_ppu_thread_t), "thread");
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)handle;
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)Mem_Alloc(1, sizeof(sys_ppu_thread_t), "thread");
+	*handle = thread;
+	
 	int res = sysThreadCreate(thread, ExecThread, (void*)func,
-			0, STACK_SIZE, THREAD_JOINABLE, "CC thread");
+			0, stackSize, THREAD_JOINABLE, name);
 	if (res) Logger_Abort2(res, "Creating thread");
 }
 

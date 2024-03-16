@@ -155,8 +155,8 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	swiDelay(8378 * milliseconds); // TODO probably wrong
 }
 
-void* Thread_Create(Thread_StartFunc func) {
-	return NULL;
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	*handle = NULL;
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {

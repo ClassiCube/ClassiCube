@@ -223,13 +223,9 @@ static void Exec3DSThread(void* param) {
 	((Thread_StartFunc)param)(); 
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	//TODO: Not quite correct, but eh
-	return threadCreate(Exec3DSThread, (void*)func, 256 * 1024, 0x3f, -2, false);
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	
+	*handle = threadCreate(Exec3DSThread, (void*)func, stackSize, 0x3f, -2, false);
 }
 
 void Thread_Detach(void* handle) {

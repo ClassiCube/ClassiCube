@@ -1334,8 +1334,7 @@ static void Http_Init(void) {
 	pendingMutex    = Mutex_Create();
 	processedMutex  = Mutex_Create();
 	curRequestMutex = Mutex_Create();
-	workerThread    = Thread_Create(WorkerLoop);
-
-	Thread_Start2(workerThread, WorkerLoop);
+	
+	Thread_Run(&workerThread, WorkerLoop, 128 * 1024, "HTTP");
 }
 #endif
