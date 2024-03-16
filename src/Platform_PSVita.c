@@ -205,17 +205,13 @@ static int ExecThread(unsigned int argc, void *argv) {
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	#define CC_THREAD_PRIORITY 0x10000100
 	#define CC_THREAD_ATTRS 0 // TODO PSP_THREAD_ATTR_VFPU?
+	Thread_StartFunc func_ = func;
 	
 	int threadID = sceKernelCreateThread(name, ExecThread, CC_THREAD_PRIORITY, 
 										stackSize, CC_THREAD_ATTRS, 0, NULL);
 																				
 	*handle = (int)threadID;
 	sceKernelStartThread(threadID, sizeof(func_), (void*)&func_);
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	Thread_StartFunc func_ = func;
-	sceKernelStartThread((int)handle, sizeof(func_), (void*)&func_);
 }
 
 void Thread_Detach(void* handle) {

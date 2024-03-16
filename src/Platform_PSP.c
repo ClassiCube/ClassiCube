@@ -221,6 +221,7 @@ static int ExecThread(unsigned int argc, void *argv) {
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	#define CC_THREAD_PRIORITY 17 // TODO: 18?
 	#define CC_THREAD_ATTRS 0 // TODO PSP_THREAD_ATTR_VFPU?
+	Thread_StartFunc func_ = func;
 	
 	int threadID = sceKernelCreateThread(name, ExecThread, CC_THREAD_PRIORITY, 
 										stackSize, CC_THREAD_ATTRS, NULL);
