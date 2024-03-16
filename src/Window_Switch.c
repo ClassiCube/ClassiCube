@@ -22,7 +22,7 @@ static AppletHookCookie cookie;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-static void Set_Resolution(void) {
+static void SetResolution(void) {
 	// check whether the Switch is docked
 	// use 720p for handheld, 1080p for docked
 	AppletOperationMode opMode = appletGetOperationMode();
@@ -42,19 +42,15 @@ static void Set_Resolution(void) {
 
 static void Applet_Event(AppletHookType type, void* param) {
 	if (type == AppletHookType_OnOperationMode) {
-		Set_Resolution();
-
-		if (launcherMode) {
-			framebufferClose(&fb);
-			framebufferCreate(&fb, nwindowGetDefault(), DisplayInfo.Width, DisplayInfo.Height, PIXEL_FORMAT_BGRA_8888, 2);
-			framebufferMakeLinear(&fb);
-		}
-
+		SetResolution();
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
 
 void Window_Init(void) {
+	// Configure our supported input layout: a single player with standard controller styles
+	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+	hidInitializeTouchScreen();
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
 
@@ -72,22 +68,17 @@ void Window_Init(void) {
 	nwindowSetDimensions(Window_Main.Handle, 1920, 1080);
 
 	appletHook(&cookie, Applet_Event, NULL);
-	Set_Resolution();
+	SetResolution();
 }
 
 void Window_Free(void) {
-	if (launcherMode)
-		framebufferClose(&fb);
 	appletUnhook(&cookie);
 }
 
 void Window_Create2D(int width, int height) {
-	framebufferCreate(&fb, nwindowGetDefault(), DisplayInfo.Width, DisplayInfo.Height, PIXEL_FORMAT_BGRA_8888, 2);
-	framebufferMakeLinear(&fb);
 	launcherMode = true;
 }
 void Window_Create3D(int width, int height) {
-	framebufferClose(&fb);
 	launcherMode = false;
 }
 
@@ -192,6 +183,8 @@ void Window_UpdateRawMouse(void)  { }
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
+	framebufferCreate(&fb, nwindowGetDefault(), DisplayInfo.Width, DisplayInfo.Height, PIXEL_FORMAT_BGRA_8888, 2);
+	framebufferMakeLinear(&fb);
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
@@ -201,9 +194,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cc_uint32* framebuf = (cc_uint32*) framebufferBegin(&fb, &stride);
 
 	// flip upside down
-	for (cc_uint32 y=r.y; y<r.y + r.Height; y++)
+	for (cc_uint32 y = r.y; y < r.y + r.Height; y++)
 	{
-		for (cc_uint32 x=r.x; x<r.x + r.Width; x++)
+		for (cc_uint32 x = r.x; x < r.x + r.Width; x++)
 		{
 			cc_uint32 pos = y * stride / sizeof(cc_uint32) + x;
 			framebuf[pos] = bmp->scan0[pos];
@@ -215,6 +208,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
+	framebufferClose(&fb);
 	Mem_Free(bmp->scan0);
 }
 
@@ -232,11 +226,10 @@ static void GLContext_InitSurface(void) {
 	window->height = Window_Main.Height;
 
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
-	if (!ctx_surface) return;
-
 	window->width  = real_w;
 	window->height = real_h;
-
+	
+	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
 

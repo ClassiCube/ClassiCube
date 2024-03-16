@@ -511,13 +511,9 @@ void Platform_Init(void) {
 	//Options_SetBool(OPT_USE_CHAT_FONT, true);
 
 	CreateRootDirectory();
-
 	socketInitializeDefault();
-
-	// Configure our supported input layout: a single player with standard controller styles
-    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-	hidInitializeTouchScreen();
 }
+
 void Platform_Free(void) {
 	socketExit();
 }

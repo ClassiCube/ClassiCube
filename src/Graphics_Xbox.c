@@ -195,7 +195,7 @@ static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
-	CCTexture* tex = Mem_Alloc(1, sizeof(struct CCTexture), "GPU texture");
+	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "GPU texture");
 	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
 	tex->width  = bmp->width;
