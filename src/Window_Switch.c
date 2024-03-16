@@ -38,10 +38,6 @@ static void Set_Resolution(void) {
 
 	Window_Main.Width   = w;
 	Window_Main.Height  = h;
-
-	nwindowSetDimensions(Window_Main.Handle, w, h);
-	nwindowSetCrop(Window_Main.Handle, 0, 0, w, h);
-	glViewport(0, 0, w, h);
 }
 
 static void Applet_Event(AppletHookType type, void* param) {
@@ -54,7 +50,14 @@ static void Applet_Event(AppletHookType type, void* param) {
 			framebufferMakeLinear(&fb);
 		}
 
+		NWindow* win = (NWindow*)Window_Main.Handle;
+		int real_width = win->width; win->width = Window_Main.Width;
+		int real_height = win->height; win->height = Window_Main.Height;
+
 		Event_RaiseVoid(&WindowEvents.Resized);
+
+		win->width = real_width;
+		win->height = real_height;
 	}
 }
 
@@ -72,6 +75,8 @@ void Window_Init(void) {
 
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+
+	nwindowSetDimensions(Window_Main.Handle, 1920, 1080);
 
 	appletHook(&cookie, Applet_Event, NULL);
 	Set_Resolution();
@@ -218,6 +223,28 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+}
+
+/*########################################################################################################################*
+*-----------------------------------------------------OpenGL context------------------------------------------------------*
+*#########################################################################################################################*/
+static void GLContext_InitSurface(void) {
+	NWindow* window = (NWindow*)Window_Main.Handle;
+	if (!window) return; /* window not created or lost */
+
+	// terrible, but fixes 720p/1080p resolution change on handheld/docked modes
+	int real_w     = window->width;
+	int real_h     = window->height;
+	window->width  = Window_Main.Width;
+	window->height = Window_Main.Height;
+
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
+	if (!ctx_surface) return;
+
+	window->width  = real_w;
+	window->height = real_h;
+
+	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
 
 /*########################################################################################################################*
