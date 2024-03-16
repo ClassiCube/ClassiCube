@@ -36,8 +36,12 @@ static void Set_Resolution(void) {
 	DisplayInfo.Width  = w;
 	DisplayInfo.Height = h;
 
-	Window_Main.Width   = DisplayInfo.Width;
-	Window_Main.Height  = DisplayInfo.Height;
+	Window_Main.Width   = w;
+	Window_Main.Height  = h;
+
+	nwindowSetDimensions(Window_Main.Handle, w, h);
+	nwindowSetCrop(Window_Main.Handle, 0, 0, w, h);
+	glViewport(0, 0, w, h);
 }
 
 static void Applet_Event(AppletHookType type, void* param) {
@@ -58,9 +62,6 @@ void Window_Init(void) {
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
 
-	appletHook(&cookie, Applet_Event, NULL);
-	Set_Resolution();
-
 	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
@@ -71,6 +72,9 @@ void Window_Init(void) {
 
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+
+	appletHook(&cookie, Applet_Event, NULL);
+	Set_Resolution();
 }
 
 void Window_Free(void) {
