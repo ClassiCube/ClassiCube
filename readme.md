@@ -82,6 +82,7 @@ And also runs on:
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
 * Nintendo 64 - unfinished, moderate rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_n64.yml))
 * PS2 - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ps2.yml))
+* Switch - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
 
 # Compiling 
 
@@ -260,6 +261,14 @@ Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
 
 The GC port needs assistance from someone experienced with GameCube homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
+#### Switch
+
+Run `make switch`. You'll need [libnx](https://github.com/switchbrew/libnx) and [mesa](https://github.com/devkitPro/mesa)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `switch-dev` group and the `switch-mesa switch-glad switch-glm` packages)**
+
+The Switch port needs assistance from someone experienced with Switch homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
 #### PlayStation Portable
 
 Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
@@ -359,6 +368,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
 * [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
 * [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
+* [libnx](https://github.com/switchbrew/libnx) - Backend for Switch
+* [Ryujinx](https://github.com/Ryujinx/Ryujinx) - Emulator used to test Switch port
 
 
 ## Sound Credits
