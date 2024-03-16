@@ -82,7 +82,6 @@ And also runs on:
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
 * Nintendo 64 - unfinished, moderate rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_n64.yml))
 * PS2 - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ps2.yml))
-* Switch (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
 
 # Compiling 
 
@@ -360,8 +359,6 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
 * [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
 * [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
-* [libnx](https://github.com/switchbrew/libnx) - Backend for Nintendo Switch
-* [Ryujinx](https://github.com/Ryujinx/Ryujinx) - Emulator used to test Nintendo Switch port
 
 
 ## Sound Credits
