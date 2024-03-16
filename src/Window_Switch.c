@@ -129,7 +129,17 @@ static void HandleButtons(u64 mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & HidNpadButton_Down);
 }
 
-static void ProcessJoystickInput(HidAnalogStickState* pos) {
+static void ProcessJoystickInput_L(HidAnalogStickState* pos) {
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
+	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
+	
+	Input.JoystickMovement = (pos->x != 0 || pos->y != 0);
+	if (!Input.JoystickMovement) return;
+	Input.JoystickAngle    = Math_Atan2(pos->x, -pos->y);
+}
+
+static void ProcessJoystickInput_R(HidAnalogStickState* pos) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
 	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
@@ -175,8 +185,8 @@ void Window_ProcessEvents(double delta) {
 	// Read the sticks' position
 	HidAnalogStickState analog_stick_l = padGetStickPos(&pad, 0);
 	HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
-	ProcessJoystickInput(&analog_stick_l);
-	ProcessJoystickInput(&analog_stick_r);
+	ProcessJoystickInput_L(&analog_stick_l);
+	ProcessJoystickInput_R(&analog_stick_r);
 
 	ProcessTouchInput();
 }
