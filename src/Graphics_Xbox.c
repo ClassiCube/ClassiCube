@@ -141,8 +141,7 @@ void Gfx_FreeState(void) { }
 *#########################################################################################################################*/
 typedef struct CCTexture_ {
 	cc_uint32 width, height;
-	cc_uint32 pitch, pad;
-	cc_uint32 pixels[];
+	cc_uint32* pixels;
 } CCTexture;
 
 // See Graphics_Dreamcast.c for twiddling explanation
@@ -195,12 +194,12 @@ static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
 }
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	int size = 16 + bmp->width * bmp->height * 4;
-	CCTexture* tex = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 16, PAGE_WRITECOMBINE | PAGE_READWRITE);
+	int size = bmp->width * bmp->height * 4;
+	CCTexture* tex = Mem_Alloc(1, sizeof(struct CCTexture), "GPU texture");
+	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	tex->pitch  = bmp->width * 4;
 	ConvertTexture(tex->pixels, bmp);
 	return tex;
 }

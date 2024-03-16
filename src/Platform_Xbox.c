@@ -234,7 +234,7 @@ static DWORD WINAPI ExecThread(void* param) {
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
-	HANDLE thread = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
+	HANDLE thread = CreateThread(NULL, stackSize, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
 	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
 
 	*handle = thread;
