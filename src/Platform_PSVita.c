@@ -202,13 +202,15 @@ static int ExecThread(unsigned int argc, void *argv) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	#define CC_THREAD_PRIORITY 0x10000100
-	#define CC_THREAD_STACKSIZE 128 * 1024
 	#define CC_THREAD_ATTRS 0 // TODO PSP_THREAD_ATTR_VFPU?
 	
-	return (void*)sceKernelCreateThread("CC thread", ExecThread, CC_THREAD_PRIORITY, 
-						CC_THREAD_STACKSIZE, CC_THREAD_ATTRS, 0, NULL);
+	int threadID = sceKernelCreateThread(name, ExecThread, CC_THREAD_PRIORITY, 
+										stackSize, CC_THREAD_ATTRS, 0, NULL);
+																				
+	*handle = (int)threadID;
+	sceKernelStartThread(threadID, sizeof(func_), (void*)&func_);
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {

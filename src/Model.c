@@ -479,24 +479,13 @@ void Model_Register(struct Model* model) {
 }
 
 void Model_Unregister(struct Model* model) {
+	struct Model* cur;
 	int i;
-	
-	/* remove the model from the list */
-	struct Model* item = models_head;
-	if (models_head == model) {
-		models_head = model->next;
-	}
-	while (item) {
-		if (item->next == model) {
-			item->next = model->next;
-		}
-
-		models_tail = item;
-		item = item->next;
-	}
+	LinkedList_Remove(model, cur, models_head, models_tail); 
 
 	/* unset this model from all entities, replacing with default fallback */
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		struct Entity* e = Entities.List[i];
 		if (e && e->Model == model) {
 			cc_string humanModelName = String_FromReadonly(Models.Human->name);

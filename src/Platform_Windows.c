@@ -296,17 +296,13 @@ static DWORD WINAPI ExecThread(void* param) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating thread");
-	}
-	return handle;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	ResumeThread((HANDLE)handle);
+	HANDLE thread = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
+	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
+	
+	*handle = thread;
+	ResumeThread(thread);
 }
 
 void Thread_Detach(void* handle) {

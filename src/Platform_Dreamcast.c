@@ -256,14 +256,11 @@ static void* ExecThread(void* param) {
 	return NULL;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	kthread_attr_t attrs = { 0 };
-	attrs.stack_size     = 96 * 1024;
-	attrs.label          = "CC thread";
-	return thd_create_ex(&attrs, ExecThread, func);
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
+	attrs.stack_size     = stackSize;
+	attrs.label          = name;
+	*handle = thd_create_ex(&attrs, ExecThread, func);
 }
 
 void Thread_Detach(void* handle) {

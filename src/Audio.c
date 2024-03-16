@@ -1711,8 +1711,7 @@ static void Music_Start(void) {
 	music_joining  = false;
 	music_stopping = false;
 
-	music_thread = Thread_Create(Music_RunLoop);
-	Thread_Start2(music_thread, Music_RunLoop);
+	Thread_Run(&music_thread, Music_RunLoop, 256 * 1024, "Music");
 }
 
 static void Music_Stop(void) {

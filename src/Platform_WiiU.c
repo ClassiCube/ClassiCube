@@ -229,23 +229,19 @@ static int ExecThread(int argc, const char **argv) {
 	return 0;
 }
 
-#define STACK_SIZE 128 * 1024
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	OSThread* thread = (OSThread*)Mem_Alloc(1, sizeof(OSThread), "thread");
-	void* stack = memalign(16, STACK_SIZE);
+	void* stack = memalign(16, stackSize);
 	
 	OSCreateThread(thread, ExecThread,
                        1, (Thread_StartFunc)func,
-                       stack + STACK_SIZE, STACK_SIZE,
+                       stack + stackSize, stackSize,
                        16, OS_THREAD_ATTRIB_AFFINITY_ANY);
 
+	*handle = thread;
 	// TODO revisit this
 	OSSetThreadRunQuantum(thread, 1000); // force yield after 1 millisecond
-	return thread;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	OSResumeThread((OSThread*)handle);
+	OSResumeThread(thread);
 }
 
 void Thread_Detach(void* handle) {

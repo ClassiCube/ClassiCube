@@ -197,8 +197,8 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#############################################################################################################p############*/
 void Thread_Sleep(cc_uint32 milliseconds) { mdelay(milliseconds); }
 
-void* Thread_Create(Thread_StartFunc func) {
-	return NULL; // TODO
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	*handle = NULL; // TODO
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {// TODO
