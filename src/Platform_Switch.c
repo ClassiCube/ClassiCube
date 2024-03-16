@@ -236,14 +236,12 @@ static void ExecSwitchThread(void* param) {
 	((Thread_StartFunc)param)(); 
 }
 
-void* Thread_Create(Thread_StartFunc func) {
-	Thread* thread = (Thread*)Mem_Alloc(1, sizeof(Thread), "thread");
-	threadCreate(thread, ExecSwitchThread, (void*)func, NULL, 0x100000, 0x2C, -2);
-	return thread;
-}
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	Thread* thread = (Thread*)Mem_Alloc(1, sizeof(Thread), name);
+	*handle = thread;
 
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	threadStart((Thread*)handle);
+	threadCreate(thread, ExecSwitchThread, (void*)func, NULL, stackSize, 0x2C, -2);
+	threadStart(thread);
 }
 
 void Thread_Detach(void* handle) { }
