@@ -368,6 +368,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_GL
 	#define CC_BUILD_GLMODERN
 	#define CC_BUILD_GLES
+	#define CC_BUILD_EGL
 	#undef  CC_BUILD_FREETYPE
 #endif
 #endif

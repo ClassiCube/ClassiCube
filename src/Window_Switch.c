@@ -14,15 +14,6 @@
 #include "Input.h"
 #include <switch.h>
 
-#include <EGL/egl.h>    // EGL library
-#include <EGL/eglext.h> // EGL extensions
-#include <glad/glad.h>  // glad library (OpenGL loader)
-
-
-static EGLDisplay s_display;
-static EGLContext s_context;
-static EGLSurface s_surface;
-
 static cc_bool launcherMode;
 static Framebuffer fb;
 static PadState pad;
@@ -76,6 +67,7 @@ void Window_Init(void) {
 
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
+	Window_Main.Handle = nwindowGetDefault();
 
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
@@ -223,130 +215,6 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
-
-/*########################################################################################################################*
-*-----------------------------------------------------OpenGL context------------------------------------------------------*
-*#########################################################################################################################*/
-void GLContext_Create(void) {
-	EGLint err;
-
-	// Retrieve the default window
-	NWindow* win = nwindowGetDefault();
-
-	// Connect to the EGL default display
-    s_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (!s_display)
-    {
-		err = eglGetError();
-        Platform_Log1("Could not connect to display! error: %d", &err);
-        return;
-    }
-
-    // Initialize the EGL display connection
-    eglInitialize(s_display, NULL, NULL);
-
-    // Select OpenGL ES as the desired graphics API
-    if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE)
-    {
-		err = eglGetError();
-        Platform_Log1("Could not set API! error: %d", &err);
-        eglTerminate(s_display);
-		s_display = NULL;
-		return;
-    }
-
-    // Get an appropriate EGL framebuffer configuration
-    EGLConfig config;
-    EGLint numConfigs;
-    static const EGLint framebufferAttributeList[] =
-    {
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_RED_SIZE,     0,
-        EGL_GREEN_SIZE,   0,
-        EGL_BLUE_SIZE,    0,
-        EGL_ALPHA_SIZE,   0,
-        EGL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH,
-        EGL_STENCIL_SIZE, 0,
-		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
-        EGL_NONE
-    };
-    eglChooseConfig(s_display, framebufferAttributeList, &config, 1, &numConfigs);
-    if (numConfigs == 0)
-    {
-		err = eglGetError();
-        Platform_Log1("No config found! error: %d", &err);
-        eglTerminate(s_display);
-		s_display = NULL;
-		return;
-    }
-
-    // Create an EGL window surface
-    s_surface = eglCreateWindowSurface(s_display, config, win, NULL);
-    if (!s_surface)
-    {
-		err = eglGetError();
-        Platform_Log1("Surface creation failed! error: %d", &err);
-        eglTerminate(s_display);
-		s_display = NULL;
-		return;
-    }
-
-    // Create an EGL rendering context
-    static const EGLint contextAttributeList[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-    s_context = eglCreateContext(s_display, config, EGL_NO_CONTEXT, contextAttributeList);
-    if (!s_context)
-    {
-		err = eglGetError();
-        Platform_Log1("Context creation failed! error: %d", &err);
-        eglDestroySurface(s_display, s_surface);
-		s_surface = NULL;
-    }
-
-    // Connect the context to the surface
-    eglMakeCurrent(s_display, s_surface, s_surface, s_context);
-
-	gladLoadGL();
-}
-
-void GLContext_Update(void) { }
-
-cc_bool GLContext_TryRestore(void) {
-	return true;
-}
-
-void GLContext_Free(void) {
-	if (s_display)
-	{
-		eglMakeCurrent(s_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-		if (s_context)
-		{
-			eglDestroyContext(s_display, s_context);
-			s_context = NULL;
-		}
-		if (s_surface)
-		{
-			eglDestroySurface(s_display, s_surface);
-			s_surface = NULL;
-		}
-		eglTerminate(s_display);
-		s_display = NULL;
-	}
-}
-
-void* GLContext_GetAddress(const char* function) {
-	return (void*)eglGetProcAddress(function);
-}
-
-cc_bool GLContext_SwapBuffers(void) {
-	eglSwapBuffers(s_display, s_surface);
-	return true;
-}
-
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) { }
-
-void GLContext_GetApiInfo(cc_string* info) { }
-
 
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
