@@ -336,9 +336,19 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
 	int res;
 	*handle = ptr;
+
+	pthread_attr_t attrs;
+	pthread_attr_init(&attrs);
+	pthread_attr_setstacksize(&attrs, stackSize);
 	
-	res = pthread_create(ptr, NULL, ExecThread, (void*)func);
+	res = pthread_create(ptr, &attrs, ExecThread, (void*)func);
 	if (res) Logger_Abort2(res, "Creating thread");
+	pthread_attr_destroy(&attrs);
+	
+	#ifdef CC_BUILD_LINUX
+	extern int pthread_setname_np(pthread_t thread, const char *name);
+	pthread_setname_np(*ptr, name);
+	#endif
 }
 
 void Thread_Detach(void* handle) {

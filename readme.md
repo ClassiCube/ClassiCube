@@ -80,8 +80,8 @@ And also runs on:
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
 * Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
-* Nintendo 64 - unfinished, moderate rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_n64.yml))
-* PS2 - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ps2.yml))
+* Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
+* PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
 * Switch - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
 
 # Compiling 
