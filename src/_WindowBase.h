@@ -146,7 +146,7 @@ void GLContext_Create(void) {
 #elif defined CC_BUILD_GLES
 		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES_BIT,
 #else
-		#error "Can't determine appropriate EGL_RENDERABLE_TYPE"
+		EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
 #endif
 		EGL_NONE
 	};

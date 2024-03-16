@@ -44,6 +44,9 @@ static void Applet_Event(AppletHookType type, void* param) {
 	if (type == AppletHookType_OnOperationMode) {
 		SetResolution();
 		Event_RaiseVoid(&WindowEvents.Resized);
+	} else if (type == AppletHookType_OnExitRequest) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
 	}
 }
 
@@ -141,19 +144,17 @@ static void ProcessJoystickInput_R(HidAnalogStickState* pos) {
 static void ProcessTouchInput(void) {
 	static int currX, currY, prev_touchcount=0;
 	HidTouchScreenState state={0};
-    hidGetTouchScreenStates(&state, 1);
+	hidGetTouchScreenStates(&state, 1);
 
 	if (state.count && !prev_touchcount) {  // stylus went down
 		currX = state.touches[0].x;
 		currY = state.touches[0].y;
 		Input_AddTouch(0, currX, currY);
-	}
-	else if (state.count) {  // stylus is down
+	} else if (state.count) {  // stylus is down
 		currX = state.touches[0].x;
 		currY = state.touches[0].y;
 		Input_UpdateTouch(0, currX, currY);
-	}
-	else if (!state.count && prev_touchcount) {  // stylus was lifted
+	} else if (!state.count && prev_touchcount) {  // stylus was lifted
 		Input_RemoveTouch(0, currX, currY);
 	}
 
@@ -201,15 +202,17 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// Retrieve the framebuffer
 	cc_uint32 stride;
-	cc_uint32* framebuf = (cc_uint32*) framebufferBegin(&fb, &stride);
+	cc_uint32* framebuf = (cc_uint32*)framebufferBegin(&fb, &stride);
 
 	// flip upside down
 	for (cc_uint32 y = r.y; y < r.y + r.Height; y++)
 	{
+		BitmapCol* src = Bitmap_GetRow(bmp, y);
+		cc_uint32* dst = framebuf + y * stride / sizeof(cc_uint32);
+
 		for (cc_uint32 x = r.x; x < r.x + r.Width; x++)
 		{
-			cc_uint32 pos = y * stride / sizeof(cc_uint32) + x;
-			framebuf[pos] = bmp->scan0[pos];
+			dst[x] = src[x];
 		}
 	}
 
