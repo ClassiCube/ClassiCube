@@ -107,6 +107,9 @@ static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
 
+#ifdef CC_BUILD_SWITCH
+static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
+#else
 static void GLContext_InitSurface(void) {
 	void* window = Window_Main.Handle;
 	if (!window) return; /* window not created or lost */
@@ -115,6 +118,7 @@ static void GLContext_InitSurface(void) {
 	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
+#endif
 
 static void GLContext_FreeSurface(void) {
 	if (!ctx_surface) return;

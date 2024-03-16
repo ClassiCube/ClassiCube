@@ -928,6 +928,253 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	linearFree(chunks[0]);
 }
+#elif defined CC_BUILD_SWITCH
+/*########################################################################################################################*
+*-----------------------------------------------------Switch backend------------------------------------------------------*
+*#########################################################################################################################*/
+#include <switch.h>
+#include <stdio.h>
+#include <stdlib.h>
+struct AudioContext {
+	int chanID, used;
+	AudioDriverWaveBuf bufs[AUDIO_MAX_BUFFERS];
+	int count, channels, sampleRate;
+	void* _tmpData; int _tmpSize;
+};
+struct AudioMemPools {
+	void* chunk;
+	int mpid;
+};
+
+static int channelIDs;
+static struct AudioMemPools audioPools[64];
+AudioDriver drv;
+bool switchAudio = false;
+void* audrv_mutex;
+
+static cc_bool AudioBackend_Init(void) {
+	if (switchAudio) return true;
+	switchAudio = true;
+
+	if (!audrv_mutex) audrv_mutex = Mutex_Create();
+
+	Mem_Set(audioPools, 0, sizeof(audioPools));
+
+	static const AudioRendererConfig arConfig =
+    {
+        .output_rate     = AudioRendererOutputRate_48kHz,
+        .num_voices      = 24,
+        .num_effects     = 0,
+        .num_sinks       = 1,
+        .num_mix_objs    = 1,
+        .num_mix_buffers = 2,
+    };
+
+	audrenInitialize(&arConfig);
+	audrvCreate(&drv, &arConfig, 2);
+
+	static const u8 sink_channels[] = { 0, 1 };
+	/*int sink =*/ audrvDeviceSinkAdd(&drv, AUDREN_DEFAULT_DEVICE_NAME, 2, sink_channels);
+
+	audrvUpdate(&drv);
+
+	Result res = audrenStartAudioRenderer();
+	
+	return R_SUCCEEDED(res); 
+}
+
+void AudioBackend_Tick(void) {
+	Mutex_Lock(audrv_mutex);
+	if (switchAudio) audrvUpdate(&drv);
+	Mutex_Unlock(audrv_mutex);
+}
+
+static void AudioBackend_Free(void) {
+	for (int i = 0; i < 24; i++) {
+		audrvVoiceStop(&drv, i);
+	}
+	audrvUpdate(&drv);
+}
+#define AUDIO_HAS_BACKEND
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	int chanID = -1;
+	
+	for (int i = 0; i < 24; i++)
+	{
+		// channel in use
+		if (channelIDs & (1 << i)) continue;
+		
+		chanID = i; break;
+	}
+	if (chanID == -1) return;
+	
+	channelIDs |= (1 << chanID);
+	ctx->count  = buffers;
+	ctx->chanID = chanID;
+	ctx->used   = true;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->used) {
+		audrvVoiceStop(&drv, ctx->chanID);
+		channelIDs &= ~(1 << ctx->chanID);
+	}
+	
+	ctx->used = false;
+	AudioBase_Clear(ctx);
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	ctx->channels = channels;
+	ctx->sampleRate = sampleRate;
+
+	audrvVoiceStop(&drv, ctx->chanID);
+	audrvVoiceInit(&drv, ctx->chanID, ctx->channels, PcmFormat_Int16, ctx->sampleRate);
+	audrvVoiceSetDestinationMix(&drv, ctx->chanID, AUDREN_FINAL_MIX_ID);
+
+	if (channels == 1) {
+		// mono
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
+	}
+	else {
+		// stereo
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 0, 1);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 1, 0);
+		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 1, 1);
+	}
+
+	return 0;
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+	AudioDriverWaveBuf* buf;
+
+	// Audio buffers must be aligned to a multiple of 0x1000, according to libnx example code
+	if (((uintptr_t)chunk & 0xFFF) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	}
+	if ((dataSize & 0xFFF) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	}
+
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		int state = buf->state;
+		cc_uint32 size = dataSize;
+		cc_uint32 endOffset = dataSize / (sizeof(cc_int16) * ((ctx->channels == 2) ? 2 : 1));
+
+		//Platform_Log3("QUEUE_CHUNK %i: %i = %i", &ctx->chanID, &i, &state);
+		if (state == AudioDriverWaveBufState_Queued || state == AudioDriverWaveBufState_Playing || state == AudioDriverWaveBufState_Waiting)
+			continue;
+
+		buf->data_pcm16 = chunk;
+		buf->size       = size;
+		buf->start_sample_offset = 0;
+		buf->end_sample_offset = endOffset;
+		//Platform_Log3("PLAY %i: %i = %i", &ctx->chanID, &i, &state);
+
+		Mutex_Lock(audrv_mutex);
+		audrvVoiceAddWaveBuf(&drv, ctx->chanID, buf);
+		Mutex_Unlock(audrv_mutex);
+
+		return 0;
+	}
+
+	// tried to queue data without polling for free buffers first
+	return ERR_INVALID_ARGUMENT;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+	audrvVoiceStart(&drv, ctx->chanID);
+	return 0;
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	AudioDriverWaveBuf* buf;
+	int count = 0;
+
+	//int states[4];
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		//states[i] = buf->state;
+		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
+		if (buf->state == AudioDriverWaveBufState_Queued || buf->state == AudioDriverWaveBufState_Playing || buf->state == AudioDriverWaveBufState_Waiting) {
+			count++; continue;
+		}
+	}
+
+	*inUse = count;
+
+	/*
+	char abuf[64];
+	sprintf(abuf, "%d %d %d %d", states[0], states[1], states[2], states[3]);
+	Platform_Log2("%i inUse, %c", inUse, abuf);
+	*/
+	return 0;
+}
+
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	return true;
+}
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	cc_result res;
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
+
+	audrvVoiceSetVolume(&drv, ctx->chanID, data->volume/100.f);
+	if ((res = Audio_Play(ctx))) return res;
+
+	return 0;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	size = (size + 0xFFF) & ~0xFFF;  // round up to nearest multiple of 0x1000
+	void* dst = aligned_alloc(0x1000, size*numChunks);
+
+	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst + size * i;
+
+		int mpid = audrvMemPoolAdd(&drv, dst + size * i, size);
+		audrvMemPoolAttach(&drv, mpid);
+
+		for (int j = 0; j < 64; j++) {
+			if (audioPools[j].chunk != NULL) continue;
+			audioPools[j].chunk = dst;
+			audioPools[j].mpid = mpid;
+			break;
+		}
+	}
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	// remove memory pool from audren
+	for (int i=0; i<numChunks; i++) {
+		for (int j=0; j<64; j++) {
+			if (audioPools[j].chunk == chunks[0]) {
+				audrvMemPoolDetach(&drv, audioPools[j].mpid);
+				audrvMemPoolRemove(&drv, audioPools[j].mpid);
+				Mem_Set(&audioPools[j], 0, sizeof(struct AudioMemPools));
+				break;
+			}
+		}
+	}
+
+	free(chunks[0]);
+}
 #elif defined CC_BUILD_DREAMCAST
 /*########################################################################################################################*
 *----------------------------------------------------Dreamcast backend----------------------------------------------------*

@@ -1055,9 +1055,7 @@ static const struct AssetSet* const asset_sets[] = {
 	&ccTexsAssetSet,
 	&mccTexsAssetSet,
 	&mccMusicAssetSet,
-#ifndef CC_BUILD_CONSOLE
 	&mccSoundAssetSet
-#endif /* TODO: Vorbis decoding */
 };
 
 void Resources_CheckExistence(void) {

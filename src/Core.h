@@ -359,6 +359,16 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_CONSOLE
+#elif defined __SWITCH__
+	#define CC_BUILD_SWITCH
+	#define CC_BUILD_HTTPCLIENT
+	#define CC_BUILD_BEARSSL
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_TOUCH
+	#define CC_BUILD_GL
+	#define CC_BUILD_GLMODERN
+	#define CC_BUILD_GLES
+	#define CC_BUILD_EGL
 	#undef  CC_BUILD_FREETYPE
 #endif
 #endif

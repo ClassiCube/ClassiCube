@@ -30,6 +30,7 @@ build-ps2/
 build-ps3/
 build-vita/
 build-wii/
+build-switch/
 
 # Build results
 [Dd]ebug/

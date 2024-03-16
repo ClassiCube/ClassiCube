@@ -151,6 +151,8 @@ gamecube:
 	$(MAKE) -f misc/gc/Makefile PLAT=gamecube
 wiiu:
 	$(MAKE) -f misc/wiiu/Makefile PLAT=wiiu
+switch:
+	$(MAKE) -f misc/switch/Makefile PLAT=switch
 	
 clean:
 	$(DEL) $(OBJECTS)
