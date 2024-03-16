@@ -50,14 +50,7 @@ static void Applet_Event(AppletHookType type, void* param) {
 			framebufferMakeLinear(&fb);
 		}
 
-		NWindow* win = (NWindow*)Window_Main.Handle;
-		int real_width = win->width; win->width = Window_Main.Width;
-		int real_height = win->height; win->height = Window_Main.Height;
-
 		Event_RaiseVoid(&WindowEvents.Resized);
-
-		win->width = real_width;
-		win->height = real_height;
 	}
 }
 
