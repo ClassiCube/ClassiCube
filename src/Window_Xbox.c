@@ -142,8 +142,8 @@ static void HandleButtons(xid_gamepad_in* gp) {
 }
 
 static void HandleJoystick_Left(int x, int y) {
-	if (Math_AbsI(x) <= 256) x = 0;
-	if (Math_AbsI(y) <= 256) y = 0;	
+	if (Math_AbsI(x) <= 512) x = 0;
+	if (Math_AbsI(y) <= 512) y = 0;	
 	
 	if (x == 0 && y == 0) return;
 	Input.JoystickMovement = true;
@@ -153,8 +153,8 @@ static void HandleJoystick_Left(int x, int y) {
 static void HandleJoystick_Right(int x, int y, double delta) {
 	float scale = (delta * 60.0) / 8192.0f;
 	
-	if (Math_AbsI(x) <= 256) x = 0;
-	if (Math_AbsI(y) <= 256) y = 0;
+	if (Math_AbsI(x) <= 512) x = 0;
+	if (Math_AbsI(y) <= 512) y = 0;
 	
 	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, -y * scale);	
 }

@@ -236,7 +236,12 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	// TODO
+	CCTexture* tex = (CCTexture*)(*texId);
+	if (!tex) return;
+
+	MmFreeContiguousMemory(tex->pixels);
+	Mem_Free(tex);
+	*texId = NULL;
 }
 
 void Gfx_EnableMipmaps(void) { }
