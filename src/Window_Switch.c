@@ -36,8 +36,8 @@ static void SetResolution(void) {
 	DisplayInfo.Width  = w;
 	DisplayInfo.Height = h;
 
-	Window_Main.Width   = w;
-	Window_Main.Height  = h;
+	Window_Main.Width  = w;
+	Window_Main.Height = h;
 }
 
 static void Applet_Event(AppletHookType type, void* param) {

@@ -265,7 +265,7 @@ The GC port needs assistance from someone experienced with GameCube homebrew dev
 
 Run `make switch`. You'll need [libnx](https://github.com/switchbrew/libnx) and [mesa](https://github.com/devkitPro/mesa)
 
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `switch-dev` group and the `switch-mesa switch-glad switch-glm` packages)**
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `switch-dev` group and the `switch-mesa switch-glm` packages)**
 
 The Switch port needs assistance from someone experienced with Switch homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 

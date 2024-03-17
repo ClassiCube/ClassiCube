@@ -546,7 +546,17 @@ static void GLBackend_Init(void) {
 #endif
 
 #ifdef CC_BUILD_GLES
-	// OpenGL ES 2.0 doesn't support custom mipmaps levels
+	// OpenGL ES 2.0 doesn't support custom mipmaps levels, but 3.2 does
+	// Note that GL_MAJOR_VERSION and GL_MINOR_VERSION were not actually
+	//  implemented until 3.0.. but hopefully older GPU drivers out there
+	//  don't try and set a value even when it's unsupported
+	#define _GL_MAJOR_VERSION 33307
+	#define _GL_MINOR_VERSION 33308
+	
+	GLint major = 0, minor = 0;
+	glGetIntegerv(_GL_MAJOR_VERSION, &major);
+	glGetIntegerv(_GL_MINOR_VERSION, &minor);
+	customMipmapsLevels = major >= 3 && minor >= 2;
 #else
     customMipmapsLevels = true;
     const GLubyte* ver  = glGetString(GL_VERSION);

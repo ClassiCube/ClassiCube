@@ -20,17 +20,22 @@ android/app/.externalNativeBuild/
 android/local.properties
 *.iml
 
-# Console build results
-build-360/
+# Nintendo Console build results
 build-3ds/
-build-dc/
 build-gc/
 build-n64/
+build-wii/
+build-wiiu/
+build-switch/
+# SEGA console build results
+build-dc/
+# Microsoft console build results
+build-360/
+# Sony console build results
 build-ps2/
 build-ps3/
+build-psp/
 build-vita/
-build-wii/
-build-switch/
 
 # Build results
 [Dd]ebug/
