@@ -622,7 +622,7 @@ void Window_ProcessEvents(double delta) {
 			Event_RaiseVoid(&WindowEvents.Closing);
 			break;
 		case CC_RAW_MOUSE:
-			Event_RaiseRawMove(&PointerEvents.RawMoved, event.v1.i32, event.v2.i32);
+			if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, event.v1.i32, event.v2.i32);
 			break;
 		}
 	}
