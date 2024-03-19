@@ -345,7 +345,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	if (res) Logger_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
 	
-	#ifdef CC_BUILD_LINUX
+	#if defined CC_BUILD_LINUX || defined CC_BUILD_HAIKU
 	extern int pthread_setname_np(pthread_t thread, const char *name);
 	pthread_setname_np(*ptr, name);
 	#endif
@@ -939,6 +939,12 @@ cc_bool Updater_Clean(void) { return true; }
 		}
 		#endif
 	};
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
+#elif defined CC_BUILD_HAIKU
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-haiku-64" } } };
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 	#endif

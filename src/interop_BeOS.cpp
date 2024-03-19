@@ -284,7 +284,6 @@ static void UpdateMouseButtons(int buttons) {
 }
 
 static void HandleMouseMovement(BMessage* msg) {
-	msg->PrintToStream();
 	int dx, dy;
 	float prs;
 	
