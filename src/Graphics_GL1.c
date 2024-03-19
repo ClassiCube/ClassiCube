@@ -591,6 +591,9 @@ static void Gfx_RestoreState(void) {
 cc_bool Gfx_WarnIfNecessary(void) {
 	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
 
+	if (String_ContainsConst(&renderer, "llvmpipe")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+	}
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
 	Chat_AddRaw("&cAs such you may experience poor performance.");

@@ -141,7 +141,8 @@ enum CCEventType {
 	CC_NONE,
 	CC_MOUSE_SCROLL, CC_MOUSE_DOWN, CC_MOUSE_UP, CC_MOUSE_MOVE,
 	CC_KEY_DOWN, CC_KEY_UP, CC_KEY_INPUT,
-	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT
+	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT,
+	CC_RAW_MOUSE
 };
 union CCEventValue { float f32; int i32; void* ptr; };
 struct CCEvent {
@@ -149,7 +150,7 @@ struct CCEvent {
 	CCEventValue v1, v2;
 };
 
-#define EVENTS_DEFAULT_MAX 20
+#define EVENTS_DEFAULT_MAX 30
 static void* events_mutex;
 static int events_count, events_capacity;
 static CCEvent* events_list, events_default[EVENTS_DEFAULT_MAX];
@@ -258,6 +259,8 @@ static void ProcessKeyInput(BMessage* msg) {
 }
 
 static int last_buttons;
+static int mouse_raw_delta, mouse_is_tablet;
+
 static void UpdateMouseButton(int btn, int pressed) {
 	CCEvent event;
 	event.type   = pressed ? CC_MOUSE_DOWN : CC_MOUSE_UP;
@@ -278,6 +281,26 @@ static void UpdateMouseButtons(int buttons) {
 	if (changed & B_TERTIARY_MOUSE_BUTTON) 
 		UpdateMouseButton(CCMOUSE_M, buttons & B_TERTIARY_MOUSE_BUTTON);
 	last_buttons = buttons;
+}
+
+static void HandleMouseMovement(BMessage* msg) {
+	msg->PrintToStream();
+	int dx, dy;
+	float prs;
+	
+	if (msg->FindInt32("be:delta_x", &dx) == B_OK &&
+		msg->FindInt32("be:delta_y", &dy) == B_OK) {
+	
+		CCEvent event = { 0 };
+		event.type   = CC_RAW_MOUSE;
+		event.v1.i32 =  dx;
+		event.v2.i32 = -dy;
+		Events_Push(&event);
+			
+		mouse_raw_delta = true;
+	} else if (msg->FindFloat("be:tablet_pressure", &prs) == B_OK) {
+		mouse_is_tablet = true;
+	}
 }
 
 void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
@@ -305,12 +328,14 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 	case B_MOUSE_UP:
 		if (msg->FindInt32("buttons", &value) == B_OK) {
 			UpdateMouseButtons(value);
+			HandleMouseMovement(msg);
 		} break;
 	case B_MOUSE_MOVED:
 		if (msg->FindPoint("where", &where) == B_OK) {
 			event.type   = CC_MOUSE_MOVE;
 			event.v1.i32 = where.x;
 			event.v2.i32 = where.y;
+			HandleMouseMovement(msg);
 		} break;
 	case B_MOUSE_WHEEL_CHANGED:
 		if (msg->FindFloat("be:wheel_delta_y", &delta) == B_OK) {
@@ -586,6 +611,9 @@ void Window_ProcessEvents(double delta) {
 			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			break;
+		case CC_RAW_MOUSE:
+			Event_RaiseRawMove(&PointerEvents.RawMoved, event.v1.i32, event.v2.i32);
+			break;
 		}
 	}
 }
@@ -602,6 +630,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	*x = (int)where.x;
 	*y = (int)where.y;
 }
+
 void Cursor_SetPosition(int x, int y) {
 	// https://discourse.libsdl.org/t/sdl-mouse-bug/597/11
 	BRect frame = win_handle->Frame();
@@ -719,9 +748,24 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) {  }
 
-void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
-void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse(); }
-void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+void Window_EnableRawMouse(void) {
+	DefaultEnableRawMouse(); 
+}
+
+void Window_UpdateRawMouse(void) {
+	if (mouse_raw_delta) { // handled by events instead
+		CentreMousePosition();
+	} else if (mouse_is_tablet) {
+		MoveRawUsingCursorDelta();
+		Cursor_GetRawPos(&cursorPrevX, &cursorPrevY);
+	} else {
+		DefaultUpdateRawMouse();
+	}
+}
+
+void Window_DisableRawMouse(void) { 
+	DefaultDisableRawMouse(); 
+}
 
 
 /*########################################################################################################################*

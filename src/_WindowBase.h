@@ -26,6 +26,12 @@ static void Cursor_SetVisible(cc_bool visible) {
 	Cursor_DoSetVisible(visible);
 }
 
+static void MoveRawUsingCursorDelta(void) {
+	int x, y;
+	Cursor_GetRawPos(&x, &y);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
+}
+
 static void CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Main.Width / 2, Window_Main.Height / 2);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
@@ -44,9 +50,7 @@ static void DefaultEnableRawMouse(void) {
 }
 
 static void DefaultUpdateRawMouse(void) {
-	int x, y;
-	Cursor_GetRawPos(&x, &y);
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
+	MoveRawUsingCursorDelta();
 	CentreMousePosition();
 }
 
