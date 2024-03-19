@@ -243,6 +243,17 @@ class CC_BWindow : public BWindow
 	public:
 		CC_BWindow(BRect frame) : BWindow(frame, "", B_TITLED_WINDOW, 0) { }
 		void DispatchMessage(BMessage* msg, BHandler* handler);
+		
+		virtual ~CC_BWindow() {
+			if (!view_3D) return;
+			
+			// Fixes OpenGL related crashes on exit since Mesa 21
+			//  Calling RemoveChild seems to fix the crash as per https://dev.haiku-os.org/ticket/16840
+			//  "Some OpenGL applications like GLInfo crash on exit under Mesa 21"
+			this->Lock();
+			this->RemoveChild(view_3D);
+			this->Unlock();
+		}
 };
 
 static void ProcessKeyInput(BMessage* msg) {

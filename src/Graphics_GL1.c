@@ -590,23 +590,27 @@ static void Gfx_RestoreState(void) {
 
 cc_bool Gfx_WarnIfNecessary(void) {
 	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
-
-	if (String_ContainsConst(&renderer, "llvmpipe")) {
-		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
-	}
+	
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
 	Chat_AddRaw("&cAs such you may experience poor performance.");
 	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
 #endif
-	if (!String_ContainsConst(&renderer, "Intel")) return false;
 
-	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
-	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
-#ifdef CC_BUILD_WIN
-	Chat_AddRaw("&cTry downloading the Direct3D 9 build instead.");
-#endif
-	return true;
+	if (String_ContainsConst(&renderer, "llvmpipe")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+		Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+		return true;
+	}
+	if (String_ContainsConst(&renderer, "Intel")) {
+		Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
+		Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+		#ifdef CC_BUILD_WIN
+		Chat_AddRaw("&cTry downloading the Direct3D 9 build instead.");
+		#endif
+		return true;
+	}
+	return false;
 }
 
 
