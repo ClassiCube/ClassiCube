@@ -540,7 +540,6 @@
     <ClCompile Include="Logger.c" />
     <ClCompile Include="Window_3DS.c" />
     <ClCompile Include="Window_Android.c" />
-    <ClCompile Include="Window_Carbon.c" />
     <ClCompile Include="Window_Dreamcast.c" />
     <ClCompile Include="Window_GCWii.c" />
     <ClCompile Include="Window_N64.c" />

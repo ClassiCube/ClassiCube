@@ -304,27 +304,24 @@ static void MakeContentView(void) {
 #include "_CCIcon_mac.h"
 
 static void ApplyIcon(void) {
-	CGColorSpaceRef colSpace;
-	CGDataProviderRef provider;
-	CGImageRef image;
-	CGSize size;
 	NSImage* img;
+	const unsigned int* pixels = CCIcon_Data;
+	unsigned char** planes     = (unsigned char**)&pixels;
+    
+	NSBitmapImageRep* rep = [NSBitmapImageRep alloc];
+	rep = [rep initWithBitmapDataPlanes:planes
+						pixelsWide:CCIcon_Width pixelsHigh:CCIcon_Height
+						bitsPerSample:8 samplesPerPixel:4
+						hasAlpha:YES isPlanar:NO
+						colorSpaceName:NSDeviceRGBColorSpace
+						bytesPerRow:CCIcon_Width * 4
+						bitsPerPixel:32];
 
-	colSpace = CGColorSpaceCreateDeviceRGB();
-	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
-					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
-	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
-					kCGBitmapByteOrder32Host | kCGImageAlphaLast, provider, NULL, 0, 0);
-
-	size.width = 0; size.height = 0;
 	img = [NSImage alloc];
-	[img initWithCGImage:image size:size];
+	img = [img initWithSize:NSMakeSize(CCIcon_Width, CCIcon_Height)];
+	[img addRepresentation:rep];
 	[appHandle setApplicationIconImage:img];
-
-	// TODO need to release NSImage here
-	CGImageRelease(image);
-	CGDataProviderRelease(provider);
-	CGColorSpaceRelease(colSpace);
+	//[img release];
 }
 #else
 static void ApplyIcon(void) { }
