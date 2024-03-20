@@ -1383,6 +1383,8 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { retur
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	return ERR_NOT_SUPPORTED;
 }
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
 #endif
 
 

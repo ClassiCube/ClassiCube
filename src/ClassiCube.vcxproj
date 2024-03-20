@@ -458,6 +458,7 @@
     <ClCompile Include="Graphics_GCWii.c" />
     <ClCompile Include="Graphics_GL1.c" />
     <ClCompile Include="Audio.c" />
+    <ClCompile Include="AudioBackend.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
