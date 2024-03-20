@@ -100,12 +100,12 @@ struct AudioContext {
 	ALuint buffers[AUDIO_MAX_BUFFERS];
 	ALuint freeIDs[AUDIO_MAX_BUFFERS];
 	int count, free, sampleRate;
-	ALenum channels;
-	cc_uint32 _tmpSize; void* _tmpData;
+	ALenum format;
 };
+#define AUDIO_COMMON_ALLOC
+
 static void* audio_device;
 static void* audio_context;
-#define AUDIO_HAS_BACKEND
 
 #if defined CC_BUILD_WIN
 static const cc_string alLib = String_FromConst("openal32.dll");
@@ -223,16 +223,16 @@ void Audio_Close(struct AudioContext* ctx) {
 		_alGetError(); /* Reset error state */
 	}
 	ClearFree(ctx);
-	AudioBase_Clear(ctx);
+	ctx->count = 0;
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	ctx->sampleRate = sampleRate;
 
 	if (channels == 1) {
-		ctx->channels = AL_FORMAT_MONO16;
+		ctx->format = AL_FORMAT_MONO16;
 	} else if (channels == 2) {
-		ctx->channels = AL_FORMAT_STEREO16;
+		ctx->format = AL_FORMAT_STEREO16;
 	} else {
 		return ERR_INVALID_ARGUMENT;
 	}
@@ -247,7 +247,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 	buffer = ctx->freeIDs[--ctx->free];
 	_alGetError(); /* Reset error state */
 
-	_alBufferData(buffer, ctx->channels, chunk, size, ctx->sampleRate);
+	_alBufferData(buffer, ctx->format, chunk, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
@@ -387,11 +387,12 @@ struct AudioContext {
 	int count, channels, sampleRate;
 	cc_uint32 _tmpSize; void* _tmpData;
 };
+#define AUDIO_COMMON_VOLUME
+#define AUDIO_COMMON_ALLOC
 
 cc_bool AudioBackend_Init(void) { return true; }
 void AudioBackend_Tick(void) { }
 void AudioBackend_Free(void) { }
-#define AUDIO_HAS_BACKEND
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
@@ -538,7 +539,6 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
-#define AUDIO_HAS_BACKEND
 
 struct AudioContext {
 	int count, channels, sampleRate;
@@ -548,6 +548,8 @@ struct AudioContext {
 	SLPlaybackRateItf playerRate;
 	cc_uint32 _tmpSize; void* _tmpData;
 };
+#define AUDIO_COMMON_VOLUME
+#define AUDIO_COMMON_ALLOC
 
 static SLresult (SLAPIENTRY *_slCreateEngine)(SLObjectItf* engine, SLuint32 numOptions, const SLEngineOption* engineOptions,
 							SLuint32 numInterfaces, const SLInterfaceID* interfaceIds, const SLboolean* interfaceRequired);
@@ -774,10 +776,9 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 *#########################################################################################################################*/
 #include <3ds.h>
 struct AudioContext {
-	int chanID, used;
+	int chanID, count;
 	ndspWaveBuf bufs[AUDIO_MAX_BUFFERS];
-	int count, channels, sampleRate;
-	void* _tmpData; int _tmpSize;
+	int sampleRate;
 	cc_bool stereo;
 };
 static int channelIDs;
@@ -792,7 +793,6 @@ cc_bool AudioBackend_Init(void) {
 void AudioBackend_Tick(void) { }
 
 void AudioBackend_Free(void) { }
-#define AUDIO_HAS_BACKEND
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
@@ -809,21 +809,17 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	channelIDs |= (1 << chanID);
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
-	ctx->used   = true;
 
 	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
 	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
-	if (ctx->used) {
+	if (ctx->count) {
 		ndspChnWaveBufClear(ctx->chanID);
-		ctx->channels &= ~(1 << ctx->chanID);
 		channelIDs &= ~(1 << ctx->chanID);
 	}
-	
-	ctx->used = false;
-	AudioBase_Clear(ctx);
+	ctx->count = 0;
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -926,10 +922,9 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 #include <stdlib.h>
 
 struct AudioContext {
-	int chanID, used;
+	int chanID, count;
 	AudioDriverWaveBuf bufs[AUDIO_MAX_BUFFERS];
-	int count, channels, sampleRate;
-	void* _tmpData; int _tmpSize;
+	int channels, sampleRate;
 };
 struct AudioMemPools {
 	void* chunk;
@@ -985,7 +980,6 @@ void AudioBackend_Free(void) {
 	}
 	audrvUpdate(&drv);
 }
-#define AUDIO_HAS_BACKEND
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
@@ -1002,22 +996,19 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	channelIDs |= (1 << chanID);
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
-	ctx->used   = true;
 	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
-	if (ctx->used) {
+	if (ctx->count) {
 		audrvVoiceStop(&drv, ctx->chanID);
 		channelIDs &= ~(1 << ctx->chanID);
 	}
-	
-	ctx->used = false;
-	AudioBase_Clear(ctx);
+	ctx->count = 0;
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	ctx->channels = channels;
+	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 
 	audrvVoiceStop(&drv, ctx->chanID);
@@ -1169,12 +1160,12 @@ struct AudioBuffer {
 };
 
 struct AudioContext {
-	int used, bufHead, channels;
+	int bufHead, channels;
 	snd_stream_hnd_t hnd;
 	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
 	int count, sampleRate;
-	void* _tmpData; int _tmpSize;
 };
+#define AUDIO_COMMON_ALLOC
 
 cc_bool AudioBackend_Init(void) {
 	return snd_stream_init() == 0;
@@ -1185,7 +1176,6 @@ void AudioBackend_Tick(void) { }
 void AudioBackend_Free(void) { 
 	snd_stream_shutdown();
 }
-#define AUDIO_HAS_BACKEND
 
 static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
 	struct AudioContext* ctx = snd_stream_get_userdata(hnd);
@@ -1217,20 +1207,18 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	}
 	
 	ctx->count   = buffers;
-	ctx->used    = true;
 	ctx->bufHead = 0;
 	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
-	if (ctx->used) {
+	if (ctx->count) {
 		snd_stream_stop(ctx->hnd);
 		snd_stream_destroy(ctx->hnd);
 	}
 	
-	ctx->used = false;
-	ctx->hnd  = SND_STREAM_INVALID;
-	AudioBase_Clear(ctx);
+	ctx->hnd   = SND_STREAM_INVALID;
+	ctx->count = 0;
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -1308,6 +1296,8 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 *-----------------------------------------------------WebAudio backend----------------------------------------------------*
 *#########################################################################################################################*/
 struct AudioContext { int contextID, count; };
+#define AUDIO_COMMON_ALLOC
+
 extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
 extern void interop_AudioClose(int contextID);
@@ -1322,7 +1312,6 @@ cc_bool AudioBackend_Init(void) {
 }
 
 void AudioBackend_Tick(void) { }
-
 void AudioBackend_Free(void) { }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
@@ -1377,25 +1366,35 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 /*########################################################################################################################*
 *----------------------------------------------------Null/Empty backend---------------------------------------------------*
 *#########################################################################################################################*/
-struct AudioContext { int count; }
+struct AudioContext { int count; };
 
 cc_bool AudioBackend_Init(void) { return false; }
 void    AudioBackend_Tick(void) { }
 void    AudioBackend_Free(void) { }
+
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
+	return ERR_NOT_SUPPORTED;
+}
+
+void Audio_Close(struct AudioContext* ctx) { }
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return true; }
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	return ERR_NOT_SUPPORTED;
+}
 #endif
 
 
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
-#ifndef AUDIO_HAS_BACKEND
 
-#else
+#ifdef AUDIO_COMMON_VOLUME
 static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->count      = 0;
 	ctx->channels   = 0;
 	ctx->sampleRate = 0;
-
 	Mem_Free(ctx->_tmpData);
 	ctx->_tmpData = NULL;
 	ctx->_tmpSize = 0;
@@ -1425,7 +1424,9 @@ static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData*
 	data->data = audio;
 	return true;
 }
+#endif
 
+#ifdef AUDIO_COMMON_ALLOC
 static void AudioBase_AllocChunks(int size, void** chunks, int numChunks) {
 	cc_uint8* dst = (cc_uint8*)Mem_TryAlloc(numChunks, size);
 	int i;
