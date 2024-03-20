@@ -52,6 +52,7 @@ static void AudioBase_FreeChunks(void** chunks, int numChunks);
 #define APIENTRY
 #endif
 #define AL_NONE              0
+#define AL_GAIN              0x100A
 #define AL_SOURCE_STATE      0x1010
 #define AL_PLAYING           0x1012
 #define AL_BUFFERS_QUEUED    0x1015
@@ -76,6 +77,7 @@ static ALenum (APIENTRY *_alGetError)(void);
 static void   (APIENTRY *_alGenSources)(ALsizei n, ALuint* sources);
 static void   (APIENTRY *_alDeleteSources)(ALsizei n, const ALuint* sources);
 static void   (APIENTRY *_alGetSourcei)(ALuint source, ALenum param, ALint* value);
+static void   (APIENTRY *_alSourcef)(ALuint source, ALenum param, float value);
 static void   (APIENTRY *_alSourcePlay)(ALuint source); 
 static void   (APIENTRY *_alSourceStop)(ALuint source);
 static void   (APIENTRY *_alSourceQueueBuffers)(ALuint source, ALsizei nb, const ALuint* buffers);
@@ -125,8 +127,9 @@ static cc_bool LoadALFuncs(void) {
 		DynamicLib_Sym(alcDestroyContext), DynamicLib_Sym(alcOpenDevice),
 		DynamicLib_Sym(alcCloseDevice),    DynamicLib_Sym(alcGetError),
 
-		DynamicLib_Sym(alGetError),        DynamicLib_Sym(alGenSources),
-		DynamicLib_Sym(alDeleteSources),   DynamicLib_Sym(alGetSourcei),
+		DynamicLib_Sym(alGetError),        
+		DynamicLib_Sym(alGenSources),      DynamicLib_Sym(alDeleteSources),
+		DynamicLib_Sym(alGetSourcei),      DynamicLib_Sym(alSourcef),
 		DynamicLib_Sym(alSourcePlay),      DynamicLib_Sym(alSourceStop),
 		DynamicLib_Sym(alSourceQueueBuffers), DynamicLib_Sym(alSourceUnqueueBuffers),
 		DynamicLib_Sym(alGenBuffers),      DynamicLib_Sym(alDeleteBuffers),
@@ -175,20 +178,24 @@ void AudioBackend_Free(void) {
 	audio_device  = NULL;
 }
 
-static void ClearFree(struct AudioContext* ctx) {
-	int i;
-	for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
-		ctx->freeIDs[i] = 0;
-	}
-	ctx->free = 0;
-}
-
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
+	ALenum i, err;
 	_alDistanceModel(AL_NONE);
-	ClearFree(ctx);
-
 	ctx->source = 0;
 	ctx->count  = buffers;
+	
+	_alGetError(); /* Reset error state */
+	_alGenSources(1, &ctx->source);
+	if ((err = _alGetError())) return err;
+
+	_alGenBuffers(buffers, ctx->buffers);
+	if ((err = _alGetError())) return err;
+
+	for (i = 0; i < buffers; i++) {
+		ctx->freeIDs[i] = ctx->buffers[i];
+	}
+	ctx->free = buffers;
+	return 0;
 }
 
 static void Audio_Stop(struct AudioContext* ctx) {
@@ -199,6 +206,14 @@ static void Audio_Reset(struct AudioContext* ctx) {
 	_alDeleteSources(1,          &ctx->source);
 	_alDeleteBuffers(ctx->count, ctx->buffers);
 	ctx->source = 0;
+}
+
+static void ClearFree(struct AudioContext* ctx) {
+	int i;
+	for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
+		ctx->freeIDs[i] = 0;
+	}
+	ctx->free = 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -212,20 +227,6 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	ALenum i, err;
-	if (!ctx->source) {
-		_alGetError(); /* Reset error state */
-		_alGenSources(1, &ctx->source);
-		if ((err = _alGetError())) return err;
-
-		_alGenBuffers(ctx->count, ctx->buffers);
-		if ((err = _alGetError())) return err;
-
-		for (i = 0; i < ctx->count; i++) {
-			ctx->freeIDs[i] = ctx->buffers[i];
-		}
-		ctx->free = ctx->count;
-	}
 	ctx->sampleRate = sampleRate;
 
 	if (channels == 1) {
@@ -285,10 +286,11 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 }
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	cc_bool ok = AudioBase_AdjustSound(ctx, data);
 	cc_result res;
-	if (!ok) return ERR_OUT_OF_MEMORY;	
+	
 	data->sampleRate = Audio_AdjustSampleRate(data);
+	_alSourcef(ctx->source, AL_GAIN, data->volume / 100.0f);
+	_alGetError(); /* Reset error state */
 
 	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
 	if ((res = Audio_QueueChunk(ctx, data->data,     data->size)))      return res;
@@ -391,12 +393,13 @@ void AudioBackend_Tick(void) { }
 void AudioBackend_Free(void) { }
 #define AUDIO_HAS_BACKEND
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
 	for (i = 0; i < buffers; i++) {
 		ctx->headers[i].dwFlags = WHDR_DONE;
 	}
 	ctx->count = buffers;
+	return 0;
 }
 
 static void Audio_Stop(struct AudioContext* ctx) {
@@ -611,8 +614,9 @@ void AudioBackend_Free(void) {
 	}
 }
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count = buffers;
+	return 0;
 }
 
 static void Audio_Stop(struct AudioContext* ctx) {
@@ -790,7 +794,7 @@ void AudioBackend_Tick(void) { }
 void AudioBackend_Free(void) { }
 #define AUDIO_HAS_BACKEND
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
 	
 	for (int i = 0; i < 24; i++)
@@ -800,7 +804,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 		
 		chanID = i; break;
 	}
-	if (chanID == -1) return;
+	if (chanID == -1) return ERR_INVALID_ARGUMENT;
 	
 	channelIDs |= (1 << chanID);
 	ctx->count  = buffers;
@@ -808,6 +812,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->used   = true;
 
 	ndspChnSetInterp(ctx->chanID, NDSP_INTERP_LINEAR);
+	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -982,7 +987,7 @@ void AudioBackend_Free(void) {
 }
 #define AUDIO_HAS_BACKEND
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int chanID = -1;
 	
 	for (int i = 0; i < 24; i++)
@@ -992,12 +997,13 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 		
 		chanID = i; break;
 	}
-	if (chanID == -1) return;
+	if (chanID == -1) return ERR_INVALID_ARGUMENT;
 	
 	channelIDs |= (1 << chanID);
 	ctx->count  = buffers;
 	ctx->chanID = chanID;
 	ctx->used   = true;
+	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -1200,9 +1206,9 @@ static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
 	return ptr;
 }
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->hnd = snd_stream_alloc(AudioCallback, SND_STREAM_BUFFER_MAX);
-	if (ctx->hnd == SND_STREAM_INVALID) return;
+	if (ctx->hnd == SND_STREAM_INVALID) return ERR_NOT_SUPPORTED;
 	snd_stream_set_userdata(ctx->hnd, ctx);
 	
 	Mem_Set(ctx->bufs, 0, sizeof(ctx->bufs));
@@ -1213,6 +1219,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count   = buffers;
 	ctx->used    = true;
 	ctx->bufHead = 0;
+	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -1318,8 +1325,10 @@ void AudioBackend_Tick(void) { }
 
 void AudioBackend_Free(void) { }
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->count = buffers;
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
+	ctx->count     = buffers;
+	ctx->contextID = interop_AudioCreate();
+	return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -1337,10 +1346,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 cc_result Audio_Play(struct AudioContext* ctx) { return ERR_NOT_SUPPORTED; }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	if (ctx->contextID)
-		return interop_AudioPoll(ctx->contextID, inUse);
-
-	*inUse = 0; return 0;
+	return interop_AudioPoll(ctx->contextID, inUse);
 }
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
@@ -1349,8 +1355,6 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 }
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	if (!ctx->contextID) 
-		ctx->contextID = interop_AudioCreate();
 	return interop_AudioPlay(ctx->contextID, data->data, data->volume, data->rate);
 }
 
@@ -1454,13 +1458,12 @@ cc_result AudioPool_Play(struct AudioData* data) {
 	/* Try to play on a context that doesn't need to be recreated */
 	for (i = 0; i < POOL_MAX_CONTEXTS; i++) {
 		ctx = &context_pool[i];
-		if (!ctx->count) Audio_Init(ctx, 1);
-		res = Audio_Poll(ctx, &inUse);
+		if (!ctx->count && (res = Audio_Init(ctx, 1))) return res;
 
-		if (res) return res;
+		if ((res = Audio_Poll(ctx, &inUse))) return res;
 		if (inUse > 0) continue;
+		
 		if (!Audio_FastPlay(ctx, data)) continue;
-
 		return Audio_PlayData(ctx, data);
 	}
 

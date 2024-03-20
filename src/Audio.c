@@ -175,16 +175,14 @@ static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_ui
 
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
-	AudioWarn(res, "playing sounds");
+	Audio_Warn(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
-	struct AudioData data;
 	const struct Sound* snd;
-	struct AudioContext* ctx;
-	int inUse, i;
+	struct AudioData data;
 	cc_result res;
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
@@ -448,7 +446,8 @@ static void Music_RunLoop(void) {
 	Directory_Enum(&audio_dir, &files, Music_AddFile);
 
 	Random_SeedFromCurrentTime(&rnd);
-	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
+	res = Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
+	if (res) music_stopping = true;
 
 	while (!music_stopping && files.count) {
 		idx  = Random_Next(&rnd, files.count);

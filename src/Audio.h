@@ -46,7 +46,7 @@ void    AudioBackend_Tick(void);
 void    AudioBackend_Free(void);
 
 /* Initialises an audio context. */
-void Audio_Init(struct AudioContext* ctx, int buffers);
+cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
 void Audio_Close(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
