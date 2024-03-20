@@ -15,37 +15,8 @@ static cc_bool canCheckOcclusion;
 static cc_bool legacy_fullscreen;
 static cc_bool scroll_debugging;
 
-/*########################################################################################################################*
-*---------------------------------------------------Shared with Carbon----------------------------------------------------*
-*#########################################################################################################################*/
 extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
 // TODO: Try replacing with NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
-
-// NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c
-static void Window_CommonInit(void) {
-	CGDirectDisplayID display = CGMainDisplayID();
-	CGRect bounds = CGDisplayBounds(display);
-
-	DisplayInfo.x      = (int)bounds.origin.x;
-	DisplayInfo.y      = (int)bounds.origin.y;
-	DisplayInfo.Width  = (int)bounds.size.width;
-	DisplayInfo.Height = (int)bounds.size.height;
-	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
-}
-
-static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
-	Window_RequestClose();
-	return 0;
-}
-
-static void Window_CommonCreate(void) {
-	scroll_debugging = Options_GetBool("scroll-debug", false);
-	// for quit buttons in dock and menubar
-	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
-}
 
 // Sourced from https://www.meandmark.com/keycodes.html
 static const cc_uint8 key_map[8 * 16] = {
@@ -199,7 +170,17 @@ void Window_Init(void) {
 	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];
-	Window_CommonInit();
+
+	CGDirectDisplayID display = CGMainDisplayID();
+	CGRect bounds = CGDisplayBounds(display);
+
+	DisplayInfo.x      = (int)bounds.origin.x;
+	DisplayInfo.y      = (int)bounds.origin.y;
+	DisplayInfo.Width  = (int)bounds.size.width;
+	DisplayInfo.Height = (int)bounds.size.height;
+	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
 
 	// NSApplication sometimes replaces the uncaught exception handler, so set it again
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
@@ -349,6 +330,11 @@ static void ApplyIcon(void) {
 static void ApplyIcon(void) { }
 #endif
 
+static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
+	Window_RequestClose();
+	return 0;
+}
+
 #define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 static void DoCreateWindow(int width, int height) {
 	CCWindowDelegate* del;
@@ -365,7 +351,12 @@ static void DoCreateWindow(int width, int height) {
 	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:NSBackingStoreBuffered defer:false];
 	[winHandle setAcceptsMouseMovedEvents:YES];
 	
-	Window_CommonCreate();
+
+	scroll_debugging = Options_GetBool("scroll-debug", false);
+	// for quit buttons in dock and menubar
+	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
+	
 	Window_Main.Exists = true;
 	Window_Main.Handle = winHandle;
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor
