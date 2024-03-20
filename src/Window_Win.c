@@ -322,7 +322,7 @@ static ATOM DoRegisterClass(void) {
 			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
 	wc.hIconSm = (HICON)LoadImageA(win_instance, MAKEINTRESOURCEA(1), IMAGE_ICON,
 			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
-	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
+	wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
 
 	if ((atom = RegisterClassExW(&wc))) return atom;
 	/* Windows 9x does not support W API functions */

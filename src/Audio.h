@@ -41,7 +41,9 @@ void Audio_PlayDigSound(cc_uint8 type);
 void Audio_PlayStepSound(cc_uint8 type);
 #define AUDIO_MAX_BUFFERS 4
 
-void AudioBackend_Tick(void);
+cc_bool AudioBackend_Init(void);
+void    AudioBackend_Tick(void);
+void    AudioBackend_Free(void);
 
 /* Initialises an audio context. */
 void Audio_Init(struct AudioContext* ctx, int buffers);
@@ -72,4 +74,11 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
 void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
 /* Frees a previously allocated group of chunks of data */
 void Audio_FreeChunks(void** chunks, int numChunks);
+
+extern struct AudioContext music_ctx;
+void Audio_ApplyVolume(cc_int16* samples, int count, int volume);
+void Audio_Warn(cc_result res, const char* action);
+
+cc_result AudioPool_Play(struct AudioData* data);
+void AudioPool_Close(void);
 #endif
