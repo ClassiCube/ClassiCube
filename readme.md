@@ -147,13 +147,9 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - macOS
 
-##### Using gcc/clang (32 bit)
-
-```cc -fno-math-errno *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
-
-##### Using gcc/clang (64 bit)
-
 ```cc -fno-math-errno *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+
+Note: You may need to install Xcode before you can compile ClassiCube
 
 ## Compiling - for Android
 

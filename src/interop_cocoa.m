@@ -15,37 +15,8 @@ static cc_bool canCheckOcclusion;
 static cc_bool legacy_fullscreen;
 static cc_bool scroll_debugging;
 
-/*########################################################################################################################*
-*---------------------------------------------------Shared with Carbon----------------------------------------------------*
-*#########################################################################################################################*/
 extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
 // TODO: Try replacing with NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
-
-// NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c
-static void Window_CommonInit(void) {
-	CGDirectDisplayID display = CGMainDisplayID();
-	CGRect bounds = CGDisplayBounds(display);
-
-	DisplayInfo.x      = (int)bounds.origin.x;
-	DisplayInfo.y      = (int)bounds.origin.y;
-	DisplayInfo.Width  = (int)bounds.size.width;
-	DisplayInfo.Height = (int)bounds.size.height;
-	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
-}
-
-static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
-	Window_RequestClose();
-	return 0;
-}
-
-static void Window_CommonCreate(void) {
-	scroll_debugging = Options_GetBool("scroll-debug", false);
-	// for quit buttons in dock and menubar
-	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
-}
 
 // Sourced from https://www.meandmark.com/keycodes.html
 static const cc_uint8 key_map[8 * 16] = {
@@ -199,7 +170,17 @@ void Window_Init(void) {
 	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];
-	Window_CommonInit();
+
+	CGDirectDisplayID display = CGMainDisplayID();
+	CGRect bounds = CGDisplayBounds(display);
+
+	DisplayInfo.x      = (int)bounds.origin.x;
+	DisplayInfo.y      = (int)bounds.origin.y;
+	DisplayInfo.Width  = (int)bounds.size.width;
+	DisplayInfo.Height = (int)bounds.size.height;
+	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
 
 	// NSApplication sometimes replaces the uncaught exception handler, so set it again
 	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
@@ -323,31 +304,33 @@ static void MakeContentView(void) {
 #include "_CCIcon_mac.h"
 
 static void ApplyIcon(void) {
-	CGColorSpaceRef colSpace;
-	CGDataProviderRef provider;
-	CGImageRef image;
-	CGSize size;
 	NSImage* img;
+	const unsigned int* pixels = CCIcon_Data;
+	unsigned char** planes     = (unsigned char**)&pixels;
+    
+	NSBitmapImageRep* rep = [NSBitmapImageRep alloc];
+	rep = [rep initWithBitmapDataPlanes:planes
+						pixelsWide:CCIcon_Width pixelsHigh:CCIcon_Height
+						bitsPerSample:8 samplesPerPixel:4
+						hasAlpha:YES isPlanar:NO
+						colorSpaceName:NSDeviceRGBColorSpace
+						bytesPerRow:CCIcon_Width * 4
+						bitsPerPixel:32];
 
-	colSpace = CGColorSpaceCreateDeviceRGB();
-	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
-					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
-	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
-					kCGBitmapByteOrder32Host | kCGImageAlphaLast, provider, NULL, 0, 0);
-
-	size.width = 0; size.height = 0;
 	img = [NSImage alloc];
-	[img initWithCGImage:image size:size];
+	img = [img initWithSize:NSMakeSize(CCIcon_Width, CCIcon_Height)];
+	[img addRepresentation:rep];
 	[appHandle setApplicationIconImage:img];
-
-	// TODO need to release NSImage here
-	CGImageRelease(image);
-	CGDataProviderRelease(provider);
-	CGColorSpaceRelease(colSpace);
+	//[img release];
 }
 #else
 static void ApplyIcon(void) { }
 #endif
+
+static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
+	Window_RequestClose();
+	return 0;
+}
 
 #define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 static void DoCreateWindow(int width, int height) {
@@ -365,7 +348,12 @@ static void DoCreateWindow(int width, int height) {
 	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:NSBackingStoreBuffered defer:false];
 	[winHandle setAcceptsMouseMovedEvents:YES];
 	
-	Window_CommonCreate();
+
+	scroll_debugging = Options_GetBool("scroll-debug", false);
+	// for quit buttons in dock and menubar
+	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
+	
 	Window_Main.Exists = true;
 	Window_Main.Handle = winHandle;
 	// CGAssociateMouseAndMouseCursorPosition implicitly grabs cursor

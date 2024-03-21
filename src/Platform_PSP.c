@@ -85,11 +85,12 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-extern int __path_absolute(const char *in, char *out, int len);
+static const cc_string root_path = String_FromConst("ms0:/PSP/GAME/ClassiCube/");
+
 static void GetNativePath(char* str, const cc_string* path) {
-	char tmp[NATIVE_STR_LEN + 1];
-	String_EncodeUtf8(tmp, path);
-	__path_absolute(tmp, str, NATIVE_STR_LEN);
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
+	String_EncodeUtf8(str, path);
 }
 
 #define GetSCEResult(result) (result >= 0 ? 0 : result & 0xFFFF)
@@ -438,6 +439,9 @@ void Platform_Init(void) {
 	//  *tx = vel->x == 0.0f ? MATH_LARGENUM : Math_AbsF(dx / vel->x);
 	// TODO: work out why this error is actually happening (inexact or underflow?) and properly fix it
 	pspSdkDisableFPUExceptions();
+	
+	// Create root directory
+	Directory_Create(&String_Empty);
 }
 void Platform_Free(void) { }
 

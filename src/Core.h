@@ -192,12 +192,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_IOS
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_CFNETWORK
-	#elif defined __x86_64__ || defined __arm64__
-	#define CC_BUILD_COCOA
-	#define CC_BUILD_MACOS
-	#define CC_BUILD_CURL
 	#else
-	#define CC_BUILD_CARBON
+	#define CC_BUILD_COCOA
 	#define CC_BUILD_MACOS
 	#define CC_BUILD_CURL
 	#endif
