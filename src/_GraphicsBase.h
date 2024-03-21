@@ -24,12 +24,28 @@ static int gfx_stride, gfx_format = -1;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
+
+
+/*########################################################################################################################*
+*------------------------------------------------------State changes------------------------------------------------------*
+*#########################################################################################################################*/
+static cc_bool gfx_colorMask[4] = { true, true, true, true };
 cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
 /* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);
 /* Destroys render state, but can be restored later */
 CC_NOINLINE static void Gfx_FreeState(void);
+
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
+void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	gfx_colorMask[0] = r;
+	gfx_colorMask[1] = g;
+	gfx_colorMask[2] = b;
+	gfx_colorMask[3] = a;
+	SetColorWrite(r, g, b, a);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*

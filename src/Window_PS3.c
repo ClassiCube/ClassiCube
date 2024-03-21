@@ -327,7 +327,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	u32* pixels = Gfx_AllocImage(&fb_offset, bmp->width, bmp->height);
 	bmp->scan0  = pixels;
 	
-	Gfx_ClearCol(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
+	Gfx_ClearColor(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {

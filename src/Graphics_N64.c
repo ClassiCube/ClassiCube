@@ -96,7 +96,7 @@ void Gfx_Clear(void) {
     rdpq_clear_z(0xFFFC);
 } 
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor.r = PackedCol_R(color);
 	gfx_clearColor.g = PackedCol_G(color);
 	gfx_clearColor.b = PackedCol_B(color);
@@ -242,7 +242,7 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//glColorMask(r, g, b, a); TODO
 }
 
@@ -388,7 +388,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?
 	cc_bool enabled    = !depthOnly;
-	//Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	//SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+	//			  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
 

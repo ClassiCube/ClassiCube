@@ -289,7 +289,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *#########################################################################################################################*/
 static PackedCol clearColor;
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	clearColor = color;
 }
 
@@ -326,12 +326,7 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 }
 
 
-void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	unsigned mask = 0;
 	if (r) mask |= NV097_SET_COLOR_MASK_RED_WRITE_ENABLE;
 	if (g) mask |= NV097_SET_COLOR_MASK_GREEN_WRITE_ENABLE;
@@ -341,6 +336,12 @@ void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	uint32_t* p = pb_begin();
 	p = pb_push1(p, NV097_SET_COLOR_MASK, mask);
 	pb_end(p);
+}
+
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 

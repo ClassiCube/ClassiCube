@@ -45,7 +45,7 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
 	gfx_clearColor = color;
 	
@@ -55,7 +55,7 @@ void Gfx_ClearCol(PackedCol color) {
 	pvr_set_bg_color(r, g, b); // TODO: not working ?
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO: Doesn't work
 }
 

@@ -138,7 +138,7 @@ void Gfx_Clear(void) {
 	for (i = 0; i < size; i++) depthBuffer[i] = 1.0f;
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	int R = PackedCol_R(color);
 	int G = PackedCol_G(color);
 	int B = PackedCol_B(color);
@@ -155,7 +155,9 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	depthWrite = enabled;
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) { }
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	// TODO
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	colWrite = !depthOnly;

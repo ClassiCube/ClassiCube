@@ -485,8 +485,9 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 }
 
-void Gfx_ClearCol(PackedCol color) { gfx_clearColor = color; }
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+void Gfx_ClearColor(PackedCol color) { gfx_clearColor = color; }
+
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORWRITEENABLE, channels);
@@ -506,7 +507,8 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	if (depthOnly) IDirect3DDevice9_SetTexture(device, 0, NULL);
 
 	/* For when Direct3D9 device doesn't support D3DRS_COLORWRITEENABLE */

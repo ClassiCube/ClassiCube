@@ -178,13 +178,13 @@ static void GL_ClearColor(PackedCol color) {
 	glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
 				 PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
 }
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
 	GL_ClearColor(color);
 	gfx_clearColor = color;
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	glColorMask(r, g, b, a);
 }
 

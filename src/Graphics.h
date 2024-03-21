@@ -135,15 +135,15 @@ CC_API void Gfx_SetAlphaArgBlend(cc_bool enabled);
 /* Clears the colour and depth buffer to default */
 CC_API void Gfx_Clear(void);
 /* Sets the colour that the colour buffer is cleared to */
-CC_API void Gfx_ClearCol(PackedCol col);
+CC_API void Gfx_ClearColor(PackedCol color);
 /* Sets whether pixels may be discard based on z/depth */
 CC_API void Gfx_SetDepthTest(cc_bool enabled);
-/* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels */
-CC_API void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer */
 CC_API void Gfx_SetDepthWrite(cc_bool enabled);
+/* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels */
+CC_API void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether the game should only write output to depth buffer */
-/*  NOTE: Implicitly calls Gfx_SetColWriteMask */
+/*  NOTE: Implicitly calls Gfx_SetColorWrite */
 CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
 
 /* Callback function to initialise/fill out the contents of an index buffer */

@@ -360,11 +360,12 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 static PackedCol clear_color;
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	// TODO find better way?
 	clear_color = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
 }
@@ -384,12 +385,13 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	depthWrite = enabled;
 	UpdateWriteState();
 }
+
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	depthTest = enabled;
 	UpdateWriteState();
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	int mask = 0;
 	if (r) mask |= GPU_WRITE_RED;
 	if (g) mask |= GPU_WRITE_GREEN;

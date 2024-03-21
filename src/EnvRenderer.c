@@ -114,7 +114,7 @@ void EnvRenderer_UpdateFog(void) {
 	if (!World.Loaded) return;
 
 	CalcFog(&fogDensity, &fogColor);
-	Gfx_ClearCol(fogColor);
+	Gfx_ClearColor(fogColor);
 
 	if (EnvRenderer_Minimal) {
 		UpdateFogMinimal(fogDensity);
