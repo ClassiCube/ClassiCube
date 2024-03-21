@@ -297,7 +297,9 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) { }
-void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void Gfx_Clear(void) { 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+}
 
 void Gfx_EndFrame(void) {
 #ifndef CC_BUILD_GLMODERN

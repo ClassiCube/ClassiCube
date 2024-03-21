@@ -1165,13 +1165,16 @@ struct AudioContext {
 	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
 	int count, sampleRate;
 };
-#define AUDIO_COMMON_ALLOC
 
 cc_bool AudioBackend_Init(void) {
 	return snd_stream_init() == 0;
 }
 
-void AudioBackend_Tick(void) { }
+void AudioBackend_Tick(void) {
+    // TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
+    for (int i = 0; i < SND_STREAM_MAX; i++)
+        snd_stream_poll(i);
+}
 
 void AudioBackend_Free(void) { 
 	snd_stream_shutdown();
@@ -1192,6 +1195,9 @@ static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
 		ctx->bufHead   = (ctx->bufHead + 1) % ctx->count;
 		buf->samples   = NULL;
 		buf->available = true;
+
+        // special case to fix sounds looping
+        if (samples == 0 && ptr == NULL) *smp_recv = smp_req;
 	}
 	return ptr;
 }
@@ -1251,7 +1257,6 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	struct AudioBuffer* buf;
-	snd_stream_poll(ctx->hnd);
 	int count = 0;
 
 	for (int i = 0; i < ctx->count; i++)
@@ -1284,11 +1289,16 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 }
 
 void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
-	AudioBase_AllocChunks(size, chunks, numChunks);
+	size = (size + 0x1F) & ~0x1F;  // round up to nearest multiple of 32
+	void* dst = memalign(32, size * numChunks);
+
+	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst + size * i;
+	}
 }
 
 void Audio_FreeChunks(void** chunks, int numChunks) {
-	AudioBase_FreeChunks(chunks, numChunks);
+	free(chunks[0]);
 }
 
 #elif defined CC_BUILD_WEBAUDIO

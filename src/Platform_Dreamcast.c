@@ -21,6 +21,7 @@
 #include <kos.h>
 #include <dc/sd.h>
 #include <fat/fs_fat.h>
+#include <kos/dbgio.h>
 #include "_PlatformConsole.h"
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
@@ -65,8 +66,8 @@ static void LogOnscreen(const char* msg, int len) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	fs_write(STDOUT_FILENO, msg,  len);
-	fs_write(STDOUT_FILENO, "\n",   1);
+	dbgio_write_buffer_xlat(msg,  len);
+	dbgio_write_buffer_xlat("\n",   1);
 	
 	if (window_inited) return;
 	// Log details on-screen for initial model initing etc
