@@ -527,7 +527,6 @@ void Physics_Init(void) {
 	Physics.OnRandomTick[BLOCK_SAND]   = Physics_DoFalling;
 	Physics.OnRandomTick[BLOCK_GRAVEL] = Physics_DoFalling;
 
-	Physics.OnPlace[BLOCK_SAPLING]      = Physics_HandleSapling;
 	Physics.OnRandomTick[BLOCK_SAPLING] = Physics_HandleSapling;
 	Physics.OnRandomTick[BLOCK_DIRT]    = Physics_HandleDirt;
 	Physics.OnRandomTick[BLOCK_GRASS]   = Physics_HandleGrass;

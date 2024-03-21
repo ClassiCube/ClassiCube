@@ -698,7 +698,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, chunk, size);
 }
 
-static cc_result Audio_Pause(struct AudioContext* ctx) {
+cc_result Audio_Pause(struct AudioContext* ctx) {
 	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PAUSED);
 }
 

@@ -62,6 +62,7 @@ cc_result Audio_Play(struct AudioContext* ctx);
 /* Returns the number of buffers being played or queued */
 /* (e.g. if inUse is 0, no audio buffers are being played or queued) */
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
+cc_result Audio_Pause(struct AudioContext* ctx); /* Only implemented with OpenSL ES backend */
 
 /* Plays the given audio data */
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data);
