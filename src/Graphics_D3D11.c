@@ -899,9 +899,13 @@ static float gfx_clearColor[4];
 static cc_bool gfx_alphaBlending, gfx_colorEnabled = true;
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
-static void OM_Clear(void) {
-	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
-	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
+static void OM_Clear(GfxBuffers buffers) {
+	if (buffers & GFX_BUFFER_COLOR) {
+		ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
+	}
+	if (buffers & GFX_BUFFER_DEPTH) {
+		ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
+	}
 }
 
 static void OM_UpdateTarget(void) {
@@ -1108,7 +1112,10 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_vsync      = vsync;
 }
 void Gfx_BeginFrame(void) { OM_UpdateTarget(); }
-void Gfx_Clear(void)      { OM_Clear(); }
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	OM_Clear(buffers); 
+}
 
 void Gfx_EndFrame(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present

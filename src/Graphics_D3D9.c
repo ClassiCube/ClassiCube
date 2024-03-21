@@ -844,9 +844,12 @@ void Gfx_BeginFrame(void) {
 	IDirect3DDevice9_BeginScene(device);
 }
 
-void Gfx_Clear(void) {
-	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearColor, 0.0f, 0);
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	DWORD targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= D3DCLEAR_TARGET;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= D3DCLEAR_ZBUFFER;
+	
+	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, targets, gfx_clearColor, 0.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 

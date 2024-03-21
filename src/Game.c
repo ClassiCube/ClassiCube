@@ -625,7 +625,7 @@ static void Game_RenderFrame(double delta) {
 
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
-	Gfx_Clear();
+	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);

@@ -426,9 +426,13 @@ void Gfx_BeginFrame(void) {
 	C3D_FrameDrawOn(topTarget);
 }
 
-void Gfx_Clear(void) {
-	C3D_RenderTargetClear(topTarget,    C3D_CLEAR_ALL, clear_color, 0);
-	C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL,           0, 0);
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= C3D_CLEAR_COLOR;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= C3D_CLEAR_DEPTH;
+	
+	C3D_RenderTargetClear(topTarget,    targets, clear_color, 0);
+	C3D_RenderTargetClear(bottomTarget, targets,           0, 0);
 }
 
 void Gfx_EndFrame(void) {

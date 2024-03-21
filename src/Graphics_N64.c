@@ -90,10 +90,14 @@ void Gfx_BeginFrame(void) {
 
 extern void __rdpq_autosync_change(int mode);
 static color_t gfx_clearColor;
-void Gfx_Clear(void) {
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
 	__rdpq_autosync_change(AUTOSYNC_PIPE);
-	rdpq_clear(gfx_clearColor);
-    rdpq_clear_z(0xFFFC);
+	
+	if (buffers & GFX_BUFFER_COLOR)
+		rdpq_clear(gfx_clearColor);
+	if (buffers & GFX_BUFFER_DEPTH)
+		rdpq_clear_z(0xFFFC);
 } 
 
 void Gfx_ClearColor(PackedCol color) {

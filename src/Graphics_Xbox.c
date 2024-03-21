@@ -368,15 +368,17 @@ void Gfx_BeginFrame(void) {
 	pb_target_back_buffer();
 }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
 	int width  = pb_back_buffer_width();
 	int height = pb_back_buffer_height();
 	
 	// TODO do ourselves
-	pb_erase_depth_stencil_buffer(0, 0, width, height);
-	pb_fill(0, 0, width, height, clearColor);
-	//pb_erase_text_screen();
+	if (buffers & GFX_BUFFER_DEPTH)
+		pb_erase_depth_stencil_buffer(0, 0, width, height);
+	if (buffers & GFX_BUFFER_COLOR)
+		pb_fill(0, 0, width, height, clearColor);
 	
+	//pb_erase_text_screen();
 	while (pb_busy()) { } // Wait for completion TODO: necessary??
 }
 

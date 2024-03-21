@@ -61,7 +61,8 @@ void Gfx_BeginFrame(void) {
 	Platform_LogConst("FRAME");
 }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO
 } 
 
 void Gfx_ClearColor(PackedCol color) {

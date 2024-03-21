@@ -70,6 +70,11 @@ extern const cc_string Gfx_LowPerfMessage;
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
+typedef enum GfxBuffers_ {
+	GFX_BUFFER_COLOR = 1,
+	GFX_BUFFER_DEPTH = 2
+} GfxBuffers;
+
 /* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
 #define TEXTURE_FLAG_MANAGED 0x01
 /* Texture should allow updating via Gfx_UpdateTexture */
@@ -132,8 +137,9 @@ CC_API void Gfx_SetAlphaBlending(cc_bool enabled);
 /* Sets whether blending between the alpha components of texture and vertex colour is performed */
 CC_API void Gfx_SetAlphaArgBlend(cc_bool enabled);
 
-/* Clears the colour and depth buffer to default */
-CC_API void Gfx_Clear(void);
+/* Clears the given rendering buffer(s) to default. */
+/* buffers can be either GFX_BUFFER_COLOR or GFX_BUFFER_DEPTH, or both */
+CC_API void Gfx_ClearBuffers(GfxBuffers buffers);
 /* Sets the colour that the colour buffer is cleared to */
 CC_API void Gfx_ClearColor(PackedCol color);
 /* Sets whether pixels may be discard based on z/depth */

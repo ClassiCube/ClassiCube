@@ -1117,7 +1117,8 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 }
 
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	static struct GPUBuffer* clearVB;
 	if (!clearVB) {
 		clearVB = GPUBuffer_Alloc(4 * sizeof(struct VertexColoured));

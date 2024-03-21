@@ -432,9 +432,12 @@ void Gfx_BeginFrame(void) {
 	gcmResetFlipStatus();
 }
 
-void Gfx_Clear(void) {
-	rsxClearSurface(context, GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A 
-		| GCM_CLEAR_S | GCM_CLEAR_Z);
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= (GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A);
+	if (buffers & GFX_BUFFER_DEPTH) targets |= (GCM_CLEAR_S | GCM_CLEAR_Z);
+	
+	rsxClearSurface(context, targets); 
 }
 
 void Gfx_EndFrame(void) {

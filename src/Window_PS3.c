@@ -333,7 +333,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO test
 	Gfx_BeginFrame();
-	Gfx_Clear();
+	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 	// TODO: Only transfer dirty region instead of the entire bitmap
 	Gfx_TransferImage(fb_offset, bmp->width, bmp->height);
 	Gfx_EndFrame();

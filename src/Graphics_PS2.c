@@ -298,7 +298,8 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	q = draw_disable_tests(q, 0, &fb_depth);
 	q = draw_clear(q, 0, 2048.0f - fb_color.width / 2.0f, 2048.0f - fb_color.height / 2.0f,
 					fb_color.width, fb_color.height, clearR, clearG, clearB);
