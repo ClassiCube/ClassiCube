@@ -2995,6 +2995,12 @@ static void ChatOptionsScreen_SetScale(const cc_string* v, float* target, const 
 	Gui_LayoutAll();
 }
 
+static void ChatOptionsScreen_GetAutoScaleChat(cc_string* v) { Menu_GetBool(v, Gui.AutoScaleChat); }
+static void ChatOptionsScreen_SetAutoScaleChat(const cc_string* v) {
+	Gui.AutoScaleChat = Menu_SetBool(v, OPT_CHAT_AUTO_SCALE);
+	Gui_LayoutAll();
+}
+
 static void ChatOptionsScreen_GetChatScale(cc_string* v) { String_AppendFloat(v, Gui.RawChatScale, 1); }
 static void ChatOptionsScreen_SetChatScale(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawChatScale, OPT_CHAT_SCALE); }
 
@@ -3024,16 +3030,19 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{  1,  0, "Log to disk",        MenuOptionsScreen_Bool,
 			ChatOptionsScreen_GetLogging,   ChatOptionsScreen_SetLogging },
 		{  1, 50, "Clickable chat",     MenuOptionsScreen_Bool,
-			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable }
+			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable },
+
+		{ -1,-50, "Scale with window",         MenuOptionsScreen_Bool,
+			ChatOptionsScreen_GetAutoScaleChat, ChatOptionsScreen_SetAutoScaleChat }
 	};
 
-	s->numCore      = 4;
-	s->maxVertices += 4 * BUTTONWIDGET_MAX;
+	s->numCore      = 5;
+	s->maxVertices += 5 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void ChatOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[5];
+	static struct MenuInputDesc descs[6];
 	MenuInput_Float(descs[0], 0.25f, 4.00f, 1);
 	MenuInput_Int(descs[1],       0,    30, Gui.DefaultLines);
 	MenuOptionsScreen_Show(descs, ChatOptionsScreen_InitWidgets);

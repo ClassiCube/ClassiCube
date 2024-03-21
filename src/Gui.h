@@ -50,6 +50,8 @@ CC_VAR extern struct _GuiData {
 	float RawTouchScale;
 	/* The highest priority screen that has grabbed input. */
 	struct Screen* InputGrab;
+	/* Whether chat automatically scales based on window size. */
+	cc_bool AutoScaleChat;
 } Gui;
 
 float Gui_Scale(float value);
