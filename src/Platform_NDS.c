@@ -19,6 +19,10 @@
 #include <nds/bios.h>
 #include <nds/timers.h>
 #include <fat.h>
+#include <dswifi9.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -202,30 +206,116 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
+	struct hostent* res = gethostbyname(host);
+	struct sockaddr_in* addr4;
+	char* src_addr;
+	int i;
+	
+	// avoid confusion with SSL error codes
+	// e.g. FFFF FFF7 > FF00 FFF7
+	if (!res) return -0xFF0000 + errno;
+	
+	// Must have at least one IPv4 address
+	if (res->h_addrtype != AF_INET) return ERR_INVALID_ARGUMENT;
+	if (!res->h_addr_list)          return ERR_INVALID_ARGUMENT;
+
+	for (i = 0; i < SOCKET_MAX_ADDRS; i++) 
+	{
+		src_addr = res->h_addr_list[i];
+		if (!src_addr) break;
+		addrs[i].size = sizeof(struct sockaddr_in);
+
+		addr4 = (struct sockaddr_in*)addrs[i].data;
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		addr4->sin_addr   = *(struct in_addr*)src_addr;
+	}
+
+	*numValidAddrs = i;
+	return i == 0 ? ERR_INVALID_ARGUMENT : 0;
+}
+
 cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* addrs, int* numValidAddrs) {
-	return ERR_NOT_SUPPORTED;
+	struct sockaddr_in* addr4 = (struct sockaddr_in*)addrs[0].data;
+	char str[NATIVE_STR_LEN];
+	String_EncodeUtf8(str, address);
+	*numValidAddrs = 1;
+
+	if (inet_aton(str, &addr4->sin_addr) > 0) {
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		
+		addrs[0].size = sizeof(*addr4);
+		return 0;
+	}
+	
+	return ParseHost(str, port, addrs, numValidAddrs);
 }
 
 cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
-	return ERR_NOT_SUPPORTED;
+	struct sockaddr* raw = (struct sockaddr*)addr->data;
+	int res;
+
+	*s = socket(raw->sa_family, SOCK_STREAM, 0);
+	if (*s < 0) return errno;
+
+	if (nonblocking) {
+		int blocking_raw = 1; /* non-blocking mode */
+		ioctl(*s, FIONBIO, &blocking_raw);
+	}
+
+	res = connect(*s, raw, addr->size);
+	return res < 0 ? errno : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
+	int res = recv(s, data, count, 0);
+	if (res < 0) { *modified = 0; return errno; }
+	
+	*modified = res; return 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return ERR_NOT_SUPPORTED;
+	int res = send(s, data, count, 0);
+	if (res < 0) { *modified = 0; return errno; }
+	
+	*modified = res; return 0;
 }
 
-void Socket_Close(cc_socket s) { }
+void Socket_Close(cc_socket s) {
+	shutdown(s, 2); // SHUT_RDWR = 2
+	closesocket(s);
+}
+
+// libogc only implements net_select for gamecube currently
+static cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
+	fd_set set;
+	struct timeval time = { 0 };
+	int res; // number of 'ready' sockets
+	FD_ZERO(&set);
+	FD_SET(s, &set);
+	if (mode == SOCKET_POLL_READ) {
+		res = select(s + 1, &set, NULL, NULL, &time);
+	} else {
+		res = select(s + 1, NULL, &set, NULL, &time);
+	}
+	if (res < 0) { *success = false; return errno; }
+	*success = FD_ISSET(s, &set) != 0; return 0;
+}
 
 cc_result Socket_CheckReadable(cc_socket s, cc_bool* readable) {
-	return ERR_NOT_SUPPORTED;
+	return Socket_Poll(s, SOCKET_POLL_READ, readable);
 }
 
 cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
-	return ERR_NOT_SUPPORTED;
+	int resultSize = sizeof(int);
+	cc_result res  = Socket_Poll(s, SOCKET_POLL_WRITE, writable);
+	if (res || *writable) return res;
+	
+	/* https://stackoverflow.com/questions/29479953/so-error-value-after-successful-socket-operation */
+	getsockopt(s, SOL_SOCKET, SO_ERROR, &res, &resultSize);
+	return res;
 }
 
 
@@ -236,8 +326,11 @@ void Platform_Init(void) {
 	fat_available = fatInitDefault();
 	Platform_ReadonlyFilesystem = !fat_available;
 
-	cpuStartTiming(1);
-	
+    if (!Wifi_InitDefault(WFC_CONNECT)) {
+        Platform_LogConst("Can't connect to WIFI");
+    }
+
+	cpuStartTiming(1);	
 	// TODO: Redesign Drawer2D to better handle this
 	Options_SetBool(OPT_USE_CHAT_FONT, true);
 }
