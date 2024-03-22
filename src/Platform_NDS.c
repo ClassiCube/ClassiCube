@@ -18,6 +18,7 @@
 #include <sys/time.h>
 #include <nds/bios.h>
 #include <nds/timers.h>
+#include <nds/debug.h>
 #include <fat.h>
 #include <dswifi9.h>
 #include <netdb.h>
@@ -36,27 +37,46 @@ const char* Platform_AppNameSuffix = " NDS";
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+static u32 last_raw;
+static u64 base_time;
+
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 
-	return end - beg;
+	return timerTicks2usec(end - beg);
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	u32 raw   = cpuGetTiming();
-	u32 usecs = timerTicks2usec(raw);
-	return usecs;
+	u32 raw = cpuGetTiming();
+	// Since counter is only a 32 bit integer, it overflows after a minute or two
+	if (raw < 0x00100000 && last_raw > 0xFFF00000) {
+		base_time += 0x100000000ULL;
+	}
+
+	last_raw = raw;
+	return base_time + raw;
+}
+
+static void DebugNocash(const char* msg, int len) {
+    // Can only be up to 120 bytes total
+	char buffer[120];
+	len = min(len, 119);
+	
+	Mem_Copy(buffer, msg, len);
+	buffer[len] = '\n';
+	nocashWrite(buffer, len + 1);
 }
 
 void Platform_Log(const char* msg, int len) {
-	char buffer[256];
-	cc_string str;
-	String_InitArray(str, buffer);
+	char buffer[256 + 2];
+	len = min(len, 256);
 	
-	String_AppendAll(&str, msg, len);
-	buffer[str.length] = '\0';
+	Mem_Copy(buffer, msg, len);
+    buffer[len + 0] = '\n';
+	buffer[len + 1] = '\0';
 	
-	printf("%s\n", buffer);
+	fwrite(buffer, 1, len + 1, stdout);
+    DebugNocash(msg, len);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH)
