@@ -12,9 +12,11 @@
 #include "ExtMath.h"
 #include <nds/arm9/background.h>
 #include <nds/arm9/input.h>
+#include <nds/arm9/console.h>
+#include <nds/arm9/keyboard.h>
 
 static int touchActive, touchBegX, touchBegY;
-static cc_bool launcherMode;
+static cc_bool launcherMode, keyboardOpen;
 static int bg_id;
 static u16* bg_ptr;
 
@@ -37,6 +39,8 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	
 	consoleDemoInit();
+	consoleDebugInit(DebugDevice_NOCASH);
+
 	videoSetMode(MODE_5_2D);
 	vramSetBankA(VRAM_A_MAIN_BG);
 	
@@ -104,13 +108,16 @@ static void ProcessTouchInput(int mods) {
 }
 
 void Window_ProcessEvents(double delta) {
-	scanKeys();
-	
+	scanKeys();	
 	int keys = keysDown() | keysHeld();
 	HandleButtons(keys);
 	
-	Input_SetNonRepeatable(CCMOUSE_L, keys & KEY_TOUCH);
-	ProcessTouchInput(keys);
+    if (keyboardOpen) {
+        keyboardUpdate();
+    } else {
+	    Input_SetNonRepeatable(CCMOUSE_L, keys & KEY_TOUCH);
+	    ProcessTouchInput(keys);
+    }
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
@@ -166,9 +173,36 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
+static char kbBuffer[NATIVE_STR_LEN + 1];
+static cc_string kbText;
+
+static void OnKeyPressed(int key) {
+    if (key == 0 || key == DVK_ENTER) {
+        Window_CloseKeyboard();
+    } else if (key == DVK_BACKSPACE) {
+        if (kbText.length) kbText.length--;
+        Event_RaiseString(&InputEvents.TextChanged, &kbText);     
+    } else if (key > 0) {
+        String_Append(&kbText, key);
+        Event_RaiseString(&InputEvents.TextChanged, &kbText);
+    }
+}
+
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
+    Keyboard* kbd = keyboardDemoInit();
+    kbd->OnKeyPressed = OnKeyPressed;
+    keyboardShow();
+
+    String_InitArray(kbText, kbBuffer);
+    keyboardOpen = true;
+}
+
 void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+
+void Window_CloseKeyboard(void) {
+    keyboardHide();
+    keyboardOpen = false;
+}
 
 
 /*########################################################################################################################*
