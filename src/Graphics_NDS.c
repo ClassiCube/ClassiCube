@@ -11,6 +11,10 @@
 *#########################################################################################################################*/
 void Gfx_Create(void) {
 	Gfx_RestoreState();
+
+	Gfx.MaxTexWidth  = 128;
+	Gfx.MaxTexHeight = 128;
+	Gfx.Created      = true;
 	
 	videoSetMode(MODE_0_3D);
     glInit();
@@ -57,8 +61,16 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_OnWindowResize(void) { 
 }
 
+#include "Entity.h"
+static int frame;
+
 void Gfx_BeginFrame(void) {
-	Platform_LogConst("FRAME");
+    int x = LocalPlayer_Instance.Base.Position.x;
+    int y = LocalPlayer_Instance.Base.Position.y;
+    int z = LocalPlayer_Instance.Base.Position.z;
+
+	//Platform_Log4("FRAME %i (%i,%i,%i)", &frame, &x, &y, &z);
+    frame++;
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -84,12 +96,40 @@ void Gfx_EndFrame(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+// B8 G8 R8 A8 > R5 G5 B5 A1
+#define BGRA8_to_DS(src) \
+	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8);	
+
+static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
+	cc_uint8* src = (cc_uint8*)bmp->scan0;	
+	for (int y = 0; y < bmp->height; y++)
+	{
+		for (int x = 0; x < bmp->width; x++, src += 4)
+		{
+			*dst++ = BGRA8_to_DS(src);
+		}
+	}
+}
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	return NULL;
+    cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
+    if (!tmp) return 0;
+    ConvertTexture(tmp, bmp);
+
+    int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(0, textureID);
+    glTexImage2D(0, 0, GL_RGBA, bmp->width, bmp->height, 0, TEXGEN_TEXCOORD, tmp);
+    //glTexParameter(0, GL_TEXTURE_WRAP_S);
+    //glTexParameter(0, GL_TEXTURE_WRAP_T);
+
+    Platform_Log3("ALLOC %i = %i x %i", &textureID, &bmp->width, &bmp->height);
+    Mem_Free(tmp);
+	return textureID;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	
+    glBindTexture(0, (int)texId);	
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -99,6 +139,9 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
+    int texture = (int)(*texId);
+    if (texture) glDeleteTextures(1, &texture);
+    *texId = 0;
 }
 
 void Gfx_EnableMipmaps(void) { }
@@ -134,6 +177,8 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
+
+width *= 0.05f; height *= 0.05f;
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
@@ -279,6 +324,12 @@ void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
+    
+    if (fmt == VERTEX_FORMAT_TEXTURED) {
+        glEnable(GL_TEXTURE_2D);
+    } else {
+        glDisable(GL_TEXTURE_2D);
+    }
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -304,8 +355,8 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		glColor3b(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col));
+        glTexCoord2f(v->U, v->V);
 		glVertex3f(v->x, v->y, v->z);
-		//GX_TexCoord2f32(v->U, v->V);
 	}
 	glEnd();
 }

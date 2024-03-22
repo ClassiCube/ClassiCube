@@ -12,11 +12,13 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <nds/bios.h>
 #include <nds/timers.h>
+#include <fat.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -78,17 +80,13 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static const cc_string root_path = String_FromConst("/");
+static cc_string root_path = String_FromConst("fat:/");
+static bool fat_available;
 
 static void GetNativePath(char* str, const cc_string* path) {
-	// TODO temp hack
-	cc_string path_ = *path;
-	int idx = String_IndexOf(path, '/');
-	if (idx >= 0) path_ = String_UNSAFE_SubstringAt(&path_, idx + 1);
-	
 	Mem_Copy(str, root_path.buffer, root_path.length);
-	str += root_path.length;
-	String_EncodeUtf8(str, &path_);
+	str   += root_path.length;
+	String_EncodeUtf8(str, path);
 }
 
 cc_result Directory_Create(const cc_string* path) {
@@ -103,44 +101,53 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
+static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
+	if (!fat_available) return ENOSYS;
+	
+	char str[NATIVE_STR_LEN];
+	GetNativePath(str, path);
+	*file = open(str, mode, 0);
+	return *file == -1 ? errno : 0;
+}
+
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	*file = -1;
-	return ERR_NOT_SUPPORTED;
+	return File_Do(file, path, O_RDONLY);
 }
-
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	*file = -1;
-	return ERR_NOT_SUPPORTED;
+	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	*file = -1;
-	return ERR_NOT_SUPPORTED;
+	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	return ERR_NOT_SUPPORTED;
+	*bytesRead = read(file, data, count);
+	return *bytesRead == -1 ? errno : 0;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	return ERR_NOT_SUPPORTED;
+	*bytesWrote = write(file, data, count);
+	return *bytesWrote == -1 ? errno : 0;
 }
 
 cc_result File_Close(cc_file file) {
-	if (file < 0) return 0;
-	return ERR_NOT_SUPPORTED;
+	return close(file) == -1 ? errno : 0;
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	return ERR_NOT_SUPPORTED;
+	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	return ERR_NOT_SUPPORTED;
+	*pos = lseek(file, 0, SEEK_CUR);
+	return *pos == -1 ? errno : 0;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	return ERR_NOT_SUPPORTED;
+	struct stat st;
+	if (fstat(file, &st) == -1) { *len = -1; return errno; }
+	*len = st.st_size; return 0;
 }
 
 
@@ -226,6 +233,9 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
+	fat_available = fatInitDefault();
+	Platform_ReadonlyFilesystem = !fat_available;
+
 	cpuStartTiming(1);
 	
 	// TODO: Redesign Drawer2D to better handle this
