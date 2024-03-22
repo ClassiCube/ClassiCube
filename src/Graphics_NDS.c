@@ -12,8 +12,8 @@
 void Gfx_Create(void) {
 	Gfx_RestoreState();
 
-	Gfx.MaxTexWidth  = 128;
-	Gfx.MaxTexHeight = 128;
+    Gfx.MaxTexWidth  = 256;
+	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
 	
 	videoSetMode(MODE_0_3D);
@@ -61,16 +61,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_OnWindowResize(void) { 
 }
 
-#include "Entity.h"
-static int frame;
-
 void Gfx_BeginFrame(void) {
-    int x = LocalPlayer_Instance.Base.Position.x;
-    int y = LocalPlayer_Instance.Base.Position.y;
-    int z = LocalPlayer_Instance.Base.Position.z;
-
-	//Platform_Log4("FRAME %i (%i,%i,%i)", &frame, &x, &y, &z);
-    frame++;
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -112,6 +103,8 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 }
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+    vramSetBankA(VRAM_A_TEXTURE);
+
     cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
     if (!tmp) return 0;
     ConvertTexture(tmp, bmp);
@@ -120,10 +113,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
     glGenTextures(1, &textureID);
     glBindTexture(0, textureID);
     glTexImage2D(0, 0, GL_RGBA, bmp->width, bmp->height, 0, TEXGEN_TEXCOORD, tmp);
-    //glTexParameter(0, GL_TEXTURE_WRAP_S);
-    //glTexParameter(0, GL_TEXTURE_WRAP_T);
 
-    Platform_Log3("ALLOC %i = %i x %i", &textureID, &bmp->width, &bmp->height);
+    //Platform_Log3("ALLOC %i = %i x %i", &textureID, &bmp->width, &bmp->height);
     Mem_Free(tmp);
 	return textureID;
 }
@@ -178,8 +169,6 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
 
-width *= 0.05f; height *= 0.05f;
-
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
 	matrix->row3.z = -2.0f / (zFar - zNear);
@@ -212,7 +201,55 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
+// Preprocess vertex buffers into optimised layout for DS
+static VertexFormat buf_fmt;
+static int buf_count;
+
 static void* gfx_vertices;
+
+struct DSTexturedVertex {
+    short x, y, z;
+    cc_uint8 r, g, b;
+    float u, v;
+};
+struct DSColouredVertex {
+    short x, y, z;
+    cc_uint8 r, g, b;
+};
+
+static void PreprocessTexturedVertices(void) {
+    struct   VertexTextured* src = gfx_vertices;
+    struct DSTexturedVertex* dst = gfx_vertices;
+
+    for (int i = 0; i < buf_count; i++, src++, dst++)
+    {
+        struct VertexTextured v = *src;
+        dst->x = floattov16(v.x / 16.0f);
+        dst->y = floattov16(v.y / 16.0f);
+        dst->z = floattov16(v.z / 16.0f);
+        dst->u = v.U;
+        dst->v = v.V;
+        dst->r = PackedCol_R(v.Col);
+        dst->g = PackedCol_G(v.Col);
+        dst->b = PackedCol_B(v.Col);
+    }
+}
+
+static void PreprocessColouredVertices(void) {
+    struct   VertexColoured* src = gfx_vertices;
+    struct DSColouredVertex* dst = gfx_vertices;
+
+    for (int i = 0; i < buf_count; i++, src++, dst++)
+    {
+        struct VertexColoured v = *src;
+        dst->x = floattov16(v.x / 16.0f);
+        dst->y = floattov16(v.y / 16.0f);
+        dst->z = floattov16(v.z / 16.0f);
+        dst->r = PackedCol_R(v.Col);
+        dst->g = PackedCol_G(v.Col);
+        dst->b = PackedCol_B(v.Col);
+    }
+}
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	return (void*)1;
@@ -235,10 +272,20 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+    buf_fmt   = fmt;
+    buf_count = count;
 	return vb;
 }
 
-void Gfx_UnlockVb(GfxResourceID vb) { gfx_vertices = vb; }
+void Gfx_UnlockVb(GfxResourceID vb) { 
+    gfx_vertices = vb;
+
+    if (buf_fmt == VERTEX_FORMAT_TEXTURED) {
+        PreprocessTexturedVertices();
+    } else {
+        PreprocessColouredVertices();
+    }
+}
 
 
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
@@ -248,7 +295,7 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 void Gfx_BindDynamicVb(GfxResourceID vb) { Gfx_BindVb(vb); }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return vb;
+	return Gfx_LockVb(vb, fmt, count);
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_UnlockVb(vb); }
@@ -302,6 +349,13 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 		m.m[i] = floattof32(src[i]);
 	}
 	glLoadMatrix4x4(&m);
+
+    // Vertex commands are signed 16 bit values, with 12 bits fractional
+    //  aka only from -8.0 to 8.0
+    // That's way too small to be useful, so counteract that by scaling down
+    //  vertices and then scaling up the matrix multiplication
+    if (type == MATRIX_VIEW)
+        glScalef32(floattof32(16.0f), floattof32(16.0f), floattof32(16.0f));
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -340,10 +394,10 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	glBegin(GL_QUADS);
 	for (int i = 0; i < verticesCount; i++) 
 	{
-		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
+		struct DSColouredVertex* v = (struct DSColouredVertex*)gfx_vertices + startVertex + i;
 		
-		glColor3b(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col));
-		glVertex3f(v->x, v->y, v->z);
+		glColor3b(v->r, v->g, v->b);
+		glVertex3v16(v->x, v->y, v->z);
 	}
 	glEnd();
 }
@@ -352,11 +406,11 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	glBegin(GL_QUADS);
 	for (int i = 0; i < verticesCount; i++) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct DSTexturedVertex* v = (struct DSTexturedVertex*)gfx_vertices + startVertex + i;
 		
-		glColor3b(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col));
-        glTexCoord2f(v->U, v->V);
-		glVertex3f(v->x, v->y, v->z);
+		glColor3b(v->r, v->g, v->b);
+        glTexCoord2f(v->u, v->v);
+		glVertex3v16(v->x, v->y, v->z);
 	}
 	glEnd();
 }

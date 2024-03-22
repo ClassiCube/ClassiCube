@@ -153,6 +153,8 @@ wiiu:
 	$(MAKE) -f misc/wiiu/Makefile PLAT=wiiu
 switch:
 	$(MAKE) -f misc/switch/Makefile PLAT=switch
+ds:
+	$(MAKE) -f misc/ds/Makefile PLAT=ds
 	
 clean:
 	$(DEL) $(OBJECTS)
