@@ -27,6 +27,8 @@ void Gfx_Create(void) {
     glViewport(0, 0, 255, 191);
     
     vramSetBankA(VRAM_A_TEXTURE);
+    vramSetBankB(VRAM_B_TEXTURE);
+    vramSetBankC(VRAM_C_TEXTURE);
     // setup memory for textures
     
     glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
@@ -168,6 +170,8 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
+	width  /= 32.0f; 
+	height /= 32.0f; 
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
@@ -224,9 +228,9 @@ static void PreprocessTexturedVertices(void) {
     for (int i = 0; i < buf_count; i++, src++, dst++)
     {
         struct VertexTextured v = *src;
-        dst->x = floattov16(v.x / 16.0f);
-        dst->y = floattov16(v.y / 16.0f);
-        dst->z = floattov16(v.z / 16.0f);
+        dst->x = floattov16(v.x / 32.0f);
+        dst->y = floattov16(v.y / 32.0f);
+        dst->z = floattov16(v.z / 32.0f);
         dst->u = v.U;
         dst->v = v.V;
         dst->r = PackedCol_R(v.Col);
@@ -242,9 +246,9 @@ static void PreprocessColouredVertices(void) {
     for (int i = 0; i < buf_count; i++, src++, dst++)
     {
         struct VertexColoured v = *src;
-        dst->x = floattov16(v.x / 16.0f);
-        dst->y = floattov16(v.y / 16.0f);
-        dst->z = floattov16(v.z / 16.0f);
+        dst->x = floattov16(v.x / 32.0f);
+        dst->y = floattov16(v.y / 32.0f);
+        dst->z = floattov16(v.z / 32.0f);
         dst->r = PackedCol_R(v.Col);
         dst->g = PackedCol_G(v.Col);
         dst->b = PackedCol_B(v.Col);
@@ -355,7 +359,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
     // That's way too small to be useful, so counteract that by scaling down
     //  vertices and then scaling up the matrix multiplication
     if (type == MATRIX_VIEW)
-        glScalef32(floattof32(16.0f), floattof32(16.0f), floattof32(16.0f));
+        glScalef32(floattof32(32.0f), floattof32(32.0f), floattof32(32.0f));
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {

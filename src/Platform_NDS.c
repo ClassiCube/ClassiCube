@@ -94,11 +94,20 @@ static void GetNativePath(char* str, const cc_string* path) {
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+	if (!fat_available) return ENOSYS;
+	
+	char str[NATIVE_STR_LEN];
+	GetNativePath(str, path);
+	return mkdir(str, 0) == -1 ? errno : 0;
 }
 
 int File_Exists(const cc_string* path) {
-	return false;
+	if (!fat_available) return false;
+	
+	char str[NATIVE_STR_LEN];
+	struct stat sb;
+	GetNativePath(str, path);
+	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
