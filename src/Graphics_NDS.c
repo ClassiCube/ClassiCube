@@ -28,7 +28,7 @@ void Gfx_Create(void) {
     
     vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
-    vramSetBankC(VRAM_C_TEXTURE);
+    vramSetBankD(VRAM_D_TEXTURE);
     // setup memory for textures
     
     glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
@@ -115,8 +115,9 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
     glGenTextures(1, &textureID);
     glBindTexture(0, textureID);
     glTexImage2D(0, 0, GL_RGBA, bmp->width, bmp->height, 0, TEXGEN_TEXCOORD, tmp);
+    glTexParameter(0, GL_TEXTURE_WRAP_S);
+    glTexParameter(0, GL_TEXTURE_WRAP_T);
 
-    //Platform_Log3("ALLOC %i = %i x %i", &textureID, &bmp->width, &bmp->height);
     Mem_Free(tmp);
 	return textureID;
 }
@@ -408,12 +409,17 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	glBegin(GL_QUADS);
+    int width = 0, height = 0;
+    glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
+    glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+    
+
 	for (int i = 0; i < verticesCount; i++) 
 	{
 		struct DSTexturedVertex* v = (struct DSTexturedVertex*)gfx_vertices + startVertex + i;
 		
 		glColor3b(v->r, v->g, v->b);
-        glTexCoord2f(v->u, v->v);
+        glTexCoord2t16(floattot16(v->u * width), floattot16(v->v * height));
 		glVertex3v16(v->x, v->y, v->z);
 	}
 	glEnd();

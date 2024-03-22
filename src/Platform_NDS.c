@@ -91,6 +91,7 @@ static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str   += root_path.length;
 	String_EncodeUtf8(str, path);
+    Platform_Log1("Open %c", str - root_path.length);
 }
 
 cc_result Directory_Create(const cc_string* path) {
