@@ -30,19 +30,16 @@ const char* Platform_AppNameSuffix = " NDS";
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-static u32 rtcSecs;
-static void syncRTC(void) { rtcSecs++; }
-
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	
+
 	return end - beg;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	u16 raw   = timerTick(1);
+	u32 raw   = cpuGetTiming();
 	u32 usecs = timerTicks2usec(raw);
-	return rtcSecs * 1000000ULL + usecs;
+	return usecs;
 }
 
 void Platform_Log(const char* msg, int len) {
@@ -56,11 +53,11 @@ void Platform_Log(const char* msg, int len) {
 	printf("%s\n", buffer);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
+#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH)
 TimeMS DateTime_CurrentUTC_MS(void) {
 	struct timeval cur;
 	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+	return UnixTime_TotalMS(cur); // no usec on the DS
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -159,10 +156,6 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	*handle = NULL;
 }
 
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	// TODO: actual multithreading ???
-}
-
 void Thread_Detach(void* handle) {
 }
 
@@ -233,8 +226,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
-	// Setup a timer that triggers an interrupt once per second
-    timerStart(1, ClockDivider_1024, TIMER_FREQ_1024(1), syncRTC);
+	cpuStartTiming(1);
 	
 	// TODO: Redesign Drawer2D to better handle this
 	Options_SetBool(OPT_USE_CHAT_FONT, true);
