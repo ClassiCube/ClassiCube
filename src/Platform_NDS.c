@@ -84,7 +84,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_string root_path = String_FromConst("fat:/");
+static cc_string root_path = String_FromConst("fat:/"); // may be overriden in InitFilesystem
 static bool fat_available;
 
 static void GetNativePath(char* str, const cc_string* path) {
@@ -161,6 +161,18 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	struct stat st;
 	if (fstat(file, &st) == -1) { *len = -1; return errno; }
 	*len = st.st_size; return 0;
+}
+
+static void InitFilesystem(void) {
+    fat_available = fatInitDefault();
+	Platform_ReadonlyFilesystem = !fat_available;
+    if (!fat_available) return;
+
+    char* dir = fatGetDefaultCwd();
+    if (dir && dir[0]) {
+        root_path.buffer = dir;
+        root_path.length = String_Length(dir);
+    }
 }
 
 
@@ -332,9 +344,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
-	fat_available = fatInitDefault();
-	Platform_ReadonlyFilesystem = !fat_available;
-
+	InitFilesystem();
     if (!Wifi_InitDefault(WFC_CONNECT)) {
         Platform_LogConst("Can't connect to WIFI");
     }
