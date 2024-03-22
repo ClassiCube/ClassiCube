@@ -15,7 +15,6 @@
 #include <nds/arm9/console.h>
 #include <nds/arm9/keyboard.h>
 
-static int touchActive, touchBegX, touchBegY;
 static cc_bool launcherMode, keyboardOpen;
 static int bg_id;
 static u16* bg_ptr;
@@ -23,10 +22,9 @@ static u16* bg_ptr;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-void Window_Init(void) {
-    
-	DisplayInfo.Width  = 256;
-	DisplayInfo.Height = 192;
+void Window_Init(void) {  
+	DisplayInfo.Width  = SCREEN_WIDTH;
+	DisplayInfo.Height = SCREEN_HEIGHT;
 	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
@@ -36,11 +34,10 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	//Input_SetTouchMode(true); TODO not UI
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	
 	consoleDemoInit();
-	consoleDebugInit(DebugDevice_NOCASH);
-
 	videoSetMode(MODE_5_2D);
 	vramSetBankA(VRAM_A_MAIN_BG);
 	
@@ -91,19 +88,22 @@ static void HandleButtons(int mods) {
 	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
+// Copied from Window_3DS.c
 static void ProcessTouchInput(int mods) {
-	touchPosition pos;
-	touchRead(&pos);
+	static int curX, curY;  // current touch position
+	touchPosition touch;
+	touchRead(&touch);
 	
-	// Set starting position for camera movement
-	if (!touchActive && (mods & KEY_TOUCH)) {
-		touchBegX = pos.px;
-		touchBegY = pos.py;
-	}
-	
-	touchActive = mods & KEY_TOUCH;
-	if (touchActive) {
-		Pointer_SetPosition(0, pos.px, pos.py);
+	if (keysDown() & KEY_TOUCH) {  // stylus went down
+		curX = touch.px;
+		curY = touch.py;
+		Input_AddTouch(0, curX, curY);
+	} else if (mods & KEY_TOUCH) {  // stylus is down
+		curX = touch.px;
+		curY = touch.py;
+		Input_UpdateTouch(0, curX, curY);
+	} else if (keysUp() & KEY_TOUCH) {  // stylus was lifted
+		Input_RemoveTouch(0, curX, curY);
 	}
 }
 
@@ -115,7 +115,6 @@ void Window_ProcessEvents(double delta) {
     if (keyboardOpen) {
         keyboardUpdate();
     } else {
-	    Input_SetNonRepeatable(CCMOUSE_L, keys & KEY_TOUCH);
 	    ProcessTouchInput(keys);
     }
 }
@@ -124,17 +123,7 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
-void Window_UpdateRawMouse(void)  {
-	if (!touchActive) return;
-	
-	touchPosition touch;
-	touchRead(&touch);
-
-	Event_RaiseRawMove(&PointerEvents.RawMoved, 
-				touch.px - touchBegX, touch.py - touchBegY);	
-	touchBegX = touch.px;
-	touchBegY = touch.py;
-}
+void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

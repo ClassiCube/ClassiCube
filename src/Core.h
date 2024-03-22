@@ -346,6 +346,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_TOUCH
 	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
 #elif defined __WIIU__
