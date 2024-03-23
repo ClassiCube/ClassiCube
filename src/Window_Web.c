@@ -7,6 +7,7 @@
 #include "ExtMath.h"
 #include "Bitmap.h"
 #include "Errors.h"
+#include "Gui.h"
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
@@ -382,6 +383,7 @@ void Window_Init(void) {
 	droid  = interop_IsAndroid();
 	is_ios = interop_IsIOS();
 	Input_SetTouchMode(is_ios || droid);
+	Gui_SetTouchUI(is_ios || droid);
 
 	/* iOS shifts the whole webpage up when opening chat, which causes problems */
 	/*  as the chat/send butons are positioned at the top of the canvas - they */

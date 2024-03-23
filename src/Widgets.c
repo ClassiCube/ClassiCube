@@ -386,7 +386,7 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width) {
 
 	/* It's easy to accidentally touch a bit to the right of the */
 	/* scrollbar with your finger, so just add some padding */
-	if (!Input_TouchMode) return;
+	if (!Gui.TouchUI) return;
 	w->padding = Display_ScaleX(15);
 }
 
@@ -417,7 +417,7 @@ static void HotbarWidget_BuildEntriesMesh(struct HotbarWidget* w, struct VertexT
 		y = w->y + (w->height / 2);
 
 #ifdef CC_BUILD_TOUCH
-		if (i == HOTBAR_MAX_INDEX && Input_TouchMode) continue;
+		if (i == HOTBAR_MAX_INDEX && Gui.TouchUI) continue;
 #endif
 		IsometricDrawer_AddBatch(Inventory_Get(i), scale, x, y);
 	}
@@ -455,7 +455,7 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 	HotbarWidget_RenderEntries(w, offset + 8);
 
 #ifdef CC_BUILD_TOUCH
-	if (Input_TouchMode) {
+	if (Gui.TouchUI) {
 		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
 		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
 		Texture_Render(&w->ellipsisTex);
@@ -471,7 +471,7 @@ static int HotbarWidget_MaxVertices(void* w) { return HOTBAR_MAX_VERTICES; }
 void HotbarWidget_Update(struct HotbarWidget* w, double delta) {
 #ifdef CC_BUILD_TOUCH
 	int i;
-	if (!Input_TouchMode) return;
+	if (!Gui.TouchUI) return;
 
 	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
 		if(w->touchId[i] != -1) {
@@ -591,7 +591,7 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 		if (!Gui_Contains(cellX, cellY, width, height, x, y)) continue;
 
 #ifdef CC_BUILD_TOUCH
-		if(Input_TouchMode) {
+		if(Gui.TouchUI) {
 			if (i == HOTBAR_MAX_INDEX) {
 				InventoryScreen_Show(); return TOUCH_TYPE_GUI;
 			} else {
@@ -657,7 +657,7 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 static void HotbarWidget_Free(void* widget) {
 #ifdef CC_BUILD_TOUCH
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	if (!Input_TouchMode) return;
+	if (!Gui.TouchUI) return;
 
 	Gfx_DeleteTexture(&w->ellipsisTex.ID);
 #endif
@@ -689,7 +689,7 @@ void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
 #ifdef CC_BUILD_TOUCH
 	static const cc_string dots = String_FromConst("...");
 	struct DrawTextArgs args;
-	if (!Input_TouchMode) return;
+	if (!Gui.TouchUI) return;
 
 	DrawTextArgs_Make(&args, &dots, font, true);
 	Drawer2D_MakeTextTexture(&w->ellipsisTex, &args);
@@ -1685,7 +1685,7 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
-	w->base.showCaret       = !Input_TouchMode;
+	w->base.showCaret       = !Gui.TouchUI;
 	w->base.flags           = WIDGET_FLAG_SELECTABLE;
 
 	w->base.GetMaxLines    = TextInputWidget_GetMaxLines;

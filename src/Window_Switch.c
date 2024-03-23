@@ -12,6 +12,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Input.h"
+#include "Gui.h"
 #include <switch.h>
 
 static cc_bool launcherMode;
@@ -66,6 +67,7 @@ void Window_Init(void) {
 	Window_Main.Handle = nwindowGetDefault();
 
 	Input_SetTouchMode(true);
+	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
 	nwindowSetDimensions(Window_Main.Handle, 1920, 1080);

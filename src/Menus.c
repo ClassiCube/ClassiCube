@@ -2589,7 +2589,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 	desc = &s->descs[s->activeI];
-	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone, Input_TouchMode);
+	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone, Gui.TouchUI);
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {
