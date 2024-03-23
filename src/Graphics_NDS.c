@@ -21,6 +21,7 @@ void Gfx_Create(void) {
     
     glClearColor(0, 15, 10, 31);
     glClearPolyID(63);
+    glAlphaFunc(7);
 
     glClearDepth(0x7FFF);
 
@@ -40,6 +41,9 @@ cc_bool Gfx_TryRestoreContext(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
+	vramSetBankA(VRAM_A_MAIN_BG);
+    vramSetBankB(VRAM_B_LCD);
+    vramSetBankD(VRAM_D_LCD);
 }
 
 
@@ -115,11 +119,10 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
     glGenTextures(1, &textureID);
     glBindTexture(0, textureID);
     glTexImage2D(0, 0, GL_RGBA, bmp->width, bmp->height, 0, TEXGEN_TEXCOORD, tmp);
-    glTexParameter(0, GL_TEXTURE_WRAP_S);
-    glTexParameter(0, GL_TEXTURE_WRAP_T);
+    glTexParameter(0, GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T);
 
     Mem_Free(tmp);
-	return textureID;
+	return (void*)textureID;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -127,9 +130,30 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+    int texture = (int)texId;
+    glBindTexture(0, texture);
+    
+    int width = 0;
+    glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
+    cc_uint16* vram_ptr = glGetTexturePointer(texture);
+    return;
+    // TODO doesn't work without VRAM bank changing to LCD and back maybe??
+    // (see what glTeximage2D does ??)
+
+    for (int yy = 0; yy < part->height; yy++)
+	{
+		cc_uint16* dst = vram_ptr + width * (y + yy) + x;
+		cc_uint8* src  = (cc_uint8*)(part->scan0 + rowWidth * yy);
+		
+		for (int xx = 0; xx < part->width; xx++, src += 4, dst++)
+		{
+			*dst = BGRA8_to_DS(src);
+		}
+	}
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+    Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -328,7 +352,13 @@ void Gfx_SetFogMode(FogFunc func) {
 
 void Gfx_SetTexturing(cc_bool enabled) { }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { }
+void Gfx_SetAlphaTest(cc_bool enabled) {
+    if (enabled) {
+        //glEnable(GL_ALPHA_TEST);
+    } else {
+        //glDisable(GL_ALPHA_TEST);
+    }
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
@@ -368,13 +398,19 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	glLoadIdentity();
 }
 
-static struct Matrix texMatrix = Matrix_IdentityValue;
+static struct Matrix texMatrix;
 void Gfx_EnableTextureOffset(float x, float y) {
-	texMatrix.row4.x = x; texMatrix.row4.y = y;
+	texMatrix.row1.x = x; texMatrix.row2.y = y;
 	Gfx_LoadMatrix(2, &texMatrix);
+    //glTexParameter(0, TEXGEN_NORMAL | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T);
+
 }
 
-void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
+void Gfx_DisableTextureOffset(void) {
+	texMatrix.row1.x = 0; texMatrix.row1.y = 0;
+	Gfx_LoadMatrix(2, &texMatrix);
+    //glTexParameter(0, TEXGEN_TEXCOORD | GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T);
+}
 
 
 /*########################################################################################################################*
@@ -414,7 +450,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
     glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
     
 
-	for (int i = 0; i < verticesCount; i++) 
+	for (int i = 0; i < verticesCount; i++)
 	{
 		struct DSTexturedVertex* v = (struct DSTexturedVertex*)gfx_vertices + startVertex + i;
 		
