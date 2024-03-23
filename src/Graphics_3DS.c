@@ -360,11 +360,12 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 static PackedCol clear_color;
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	// TODO find better way?
 	clear_color = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
 }
@@ -384,12 +385,13 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	depthWrite = enabled;
 	UpdateWriteState();
 }
+
 void Gfx_SetDepthTest(cc_bool enabled) { 
 	depthTest = enabled;
 	UpdateWriteState();
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	int mask = 0;
 	if (r) mask |= GPU_WRITE_RED;
 	if (g) mask |= GPU_WRITE_GREEN;
@@ -424,9 +426,13 @@ void Gfx_BeginFrame(void) {
 	C3D_FrameDrawOn(topTarget);
 }
 
-void Gfx_Clear(void) {
-	C3D_RenderTargetClear(topTarget,    C3D_CLEAR_ALL, clear_color, 0);
-	C3D_RenderTargetClear(bottomTarget, C3D_CLEAR_ALL,           0, 0);
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= C3D_CLEAR_COLOR;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= C3D_CLEAR_DEPTH;
+	
+	C3D_RenderTargetClear(topTarget,    targets, clear_color, 0);
+	C3D_RenderTargetClear(bottomTarget, targets,           0, 0);
 }
 
 void Gfx_EndFrame(void) {

@@ -340,11 +340,13 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
-	#define CC_BUILD_OPENAL
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_TOUCH
 	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
 #elif defined __WIIU__

@@ -146,12 +146,8 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_ClearCol(PackedCol color) { 
+void Gfx_ClearColor(PackedCol color) { 
 	Xe_SetClearColor(xe, color);
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
@@ -162,8 +158,14 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	Xe_SetZWrite(xe, enabled);
 }
 
-void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO
+}
+
+void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
+	cc_bool enabled = !depthOnly;
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -343,7 +345,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) { 
 }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	// Xe_Clear is just a Resolve anyways
 }
 

@@ -327,13 +327,13 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	u32* pixels = Gfx_AllocImage(&fb_offset, bmp->width, bmp->height);
 	bmp->scan0  = pixels;
 	
-	Gfx_ClearCol(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
+	Gfx_ClearColor(PackedCol_Make(0x40, 0x60, 0x80, 0xFF));
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO test
 	Gfx_BeginFrame();
-	Gfx_Clear();
+	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 	// TODO: Only transfer dirty region instead of the entire bitmap
 	Gfx_TransferImage(fb_offset, bmp->width, bmp->height);
 	Gfx_EndFrame();

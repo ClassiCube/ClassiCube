@@ -291,22 +291,12 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
         cc_uint32 R = PackedCol_R(color);
         cc_uint32 G = PackedCol_G(color);
         cc_uint32 B = PackedCol_B(color);
         
         clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	unsigned mask = 0;
-	if (r) mask |= GCM_COLOR_MASK_R;
-	if (g) mask |= GCM_COLOR_MASK_G;
-	if (b) mask |= GCM_COLOR_MASK_B;
-	if (a) mask |= GCM_COLOR_MASK_A;
-
-	rsxSetColorMask(context, mask);
 }
 
 static cc_bool depth_write = true, depth_test = true;
@@ -332,9 +322,20 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 	rsxSetAlphaTestEnable(context, enabled);
 }
 
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	unsigned mask = 0;
+	if (r) mask |= GCM_COLOR_MASK_R;
+	if (g) mask |= GCM_COLOR_MASK_G;
+	if (b) mask |= GCM_COLOR_MASK_B;
+	if (a) mask |= GCM_COLOR_MASK_A;
+
+	rsxSetColorMask(context, mask);
+}
+
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -431,9 +432,12 @@ void Gfx_BeginFrame(void) {
 	gcmResetFlipStatus();
 }
 
-void Gfx_Clear(void) {
-	rsxClearSurface(context, GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A 
-		| GCM_CLEAR_S | GCM_CLEAR_Z);
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= (GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A);
+	if (buffers & GFX_BUFFER_DEPTH) targets |= (GCM_CLEAR_S | GCM_CLEAR_Z);
+	
+	rsxClearSurface(context, targets); 
 }
 
 void Gfx_EndFrame(void) {

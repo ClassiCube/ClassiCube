@@ -899,9 +899,13 @@ static float gfx_clearColor[4];
 static cc_bool gfx_alphaBlending, gfx_colorEnabled = true;
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
-static void OM_Clear(void) {
-	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
-	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
+static void OM_Clear(GfxBuffers buffers) {
+	if (buffers & GFX_BUFFER_COLOR) {
+		ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
+	}
+	if (buffers & GFX_BUFFER_DEPTH) {
+		ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
+	}
 }
 
 static void OM_UpdateTarget(void) {
@@ -1015,7 +1019,7 @@ static void OM_Free(void) {
 	OM_FreeBlendStates();
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor[0] = PackedCol_R(color) / 255.0f;
 	gfx_clearColor[1] = PackedCol_G(color) / 255.0f;
 	gfx_clearColor[2] = PackedCol_B(color) / 255.0f;
@@ -1037,14 +1041,16 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	OM_UpdateBlendState();
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	gfx_colorEnabled = r;
 	OM_UpdateBlendState();
+	// TODO all channels
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -1106,7 +1112,10 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_vsync      = vsync;
 }
 void Gfx_BeginFrame(void) { OM_UpdateTarget(); }
-void Gfx_Clear(void)      { OM_Clear(); }
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	OM_Clear(buffers); 
+}
 
 void Gfx_EndFrame(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present

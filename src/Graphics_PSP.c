@@ -170,13 +170,13 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { /*GU_Toggle(GU_CULL_FACE); */ } // 
 void Gfx_SetAlphaBlending(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
 	sceGuClearColor(color);
 	gfx_clearColor = color;
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	unsigned int mask = 0xffffffff;
 	if (r) mask &= 0xffffff00;
 	if (g) mask &= 0xffff00ff;
@@ -250,7 +250,14 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) {
 	sceGuStart(GU_DIRECT, list);
 }
-void Gfx_Clear(void) { sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT); }
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= GU_COLOR_BUFFER_BIT;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= GU_DEPTH_BUFFER_BIT;
+	
+	sceGuClear(targets);
+}
 
 void Gfx_EndFrame(void) {
 	sceGuFinish();
@@ -359,7 +366,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 

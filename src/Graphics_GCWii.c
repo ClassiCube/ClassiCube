@@ -203,7 +203,7 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { 
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor.r = PackedCol_R(color);
 	gfx_clearColor.g = PackedCol_G(color);
 	gfx_clearColor.b = PackedCol_B(color);
@@ -211,7 +211,8 @@ void Gfx_ClearCol(PackedCol color) {
 	GX_SetCopyClear(gfx_clearColor, 0x00ffffff); // TODO: use GX_MAX_Z24 
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	// TODO
 }
 
 static cc_bool depth_write = true, depth_test = true;
@@ -252,7 +253,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) {
 }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 }
 
 void Gfx_EndFrame(void) {

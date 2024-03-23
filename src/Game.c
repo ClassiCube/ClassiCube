@@ -53,6 +53,7 @@ int Game_MaxViewDistance  = DEFAULT_MAX_VIEWDIST;
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
 static cc_bool gameRunning;
+static cc_bool anaglyph3D;
 
 cc_bool Game_ClassicMode, Game_ClassicHacks;
 cc_bool Game_AllowCustomBlocks;
@@ -343,6 +344,7 @@ static void LoadOptions(void) {
 		ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 		Options.Set("skip-ssl-check", false);
 	}*/
+	anaglyph3D = Options_GetBool("anaglyph3D", false);
 }
 
 #ifdef CC_BUILD_MINFILES
@@ -477,8 +479,10 @@ static void UpdateViewMatrix(void) {
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
-static void Game_Render3D(double delta, float t) {
+static void Render3DFrame(double delta, float t) {
 	Vec3 pos;
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
 
 	AxisLinesRenderer_Render();
@@ -486,7 +490,6 @@ static void Game_Render3D(double delta, float t) {
 	EntityNames_Render();
 
 	Particles_Render(t);
-	Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 	EnvRenderer_RenderSky();
 	EnvRenderer_RenderClouds();
 
@@ -517,9 +520,38 @@ static void Game_Render3D(double delta, float t) {
 
 	Selections_Render();
 	EntityNames_RenderHovered();
-	Camera_KeyLookUpdate(delta);
-	InputHandler_Tick();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
+}
+
+static void Render3D_Anaglyph(double delta, float t) {
+	struct Matrix proj = Gfx.Projection;
+	struct Matrix view = Gfx.View;
+	struct Matrix proj_left, proj_right;
+	struct Matrix view_left, view_right;
+
+	/* Translation values according to values captured by */
+	/*  analysing the OpenGL calls made by classic using gDEbugger */
+	/* TODO move calculation to Camera??? */
+	/* TODO these still aren't quite right, ghosting occurs */
+	Matrix_Translate(&proj_left,   0.07f, 0, 0);
+	Matrix_Mul(&Gfx.Projection, &proj, &proj_left);
+	Matrix_Translate(&view_left,  -0.10f, 0, 0);
+	Matrix_Mul(&Gfx.View, &view, &view_left);
+
+	Gfx_SetColorWrite(false, true, true, false);
+	Render3DFrame(delta, t);
+
+	Matrix_Translate(&proj_right, -0.07f, 0, 0);
+	Matrix_Mul(&Gfx.Projection, &proj, &proj_right);
+	Matrix_Translate(&view_right,  0.10f, 0, 0);
+	Matrix_Mul(&Gfx.View, &view, &view_right);
+
+	Gfx_ClearBuffers(GFX_BUFFER_DEPTH);
+	Gfx_SetColorWrite(true, false, false, false);
+	Render3DFrame(delta, t);
+
+	Gfx.Projection = proj;
+	Gfx_SetColorWrite(true, true, true, true);
 }
 
 static void PerformScheduledTasks(double time) {
@@ -625,13 +657,18 @@ static void Game_RenderFrame(double delta) {
 
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
-	Gfx_Clear();
-
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
+	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 
 	if (!Gui_GetBlocksWorld()) {
-		Game_Render3D(delta, t);
+		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
+		Camera_KeyLookUpdate(delta);
+		InputHandler_Tick();
+
+		if (anaglyph3D) {
+			Render3D_Anaglyph(delta, t);
+		} else {
+			Render3DFrame(delta, t);
+		}
 	} else {
 		RayTracer_SetInvalid(&Game_SelectedPos);
 	}

@@ -128,13 +128,15 @@ static void SPConnection_BeginConnect(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
 
-#if defined CC_BUILD_LOWMEM
+#if defined CC_BUILD_NDS
+	World_SetDimensions(16, 16, 16);
+#elif defined CC_BUILD_LOWMEM
 	World_SetDimensions(64, 64, 64);
 #else
 	World_SetDimensions(128, 64, 128);
 #endif
 
-#ifdef CC_BUILD_N64
+#if defined CC_BUILD_N64 || defined CC_BUILD_NDS
 	Gen_Active = &FlatgrassGen;
 #else
 	Gen_Active = &NotchyGen;

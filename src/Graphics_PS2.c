@@ -298,14 +298,15 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	q = draw_disable_tests(q, 0, &fb_depth);
 	q = draw_clear(q, 0, 2048.0f - fb_color.width / 2.0f, 2048.0f - fb_color.height / 2.0f,
 					fb_color.width, fb_color.height, clearR, clearG, clearB);
 	UpdateState(0);
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	clearR = PackedCol_R(color);
 	clearG = PackedCol_G(color);
 	clearB = PackedCol_B(color);
@@ -320,10 +321,14 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) { }
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	// TODO
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	// TODO
+	cc_bool enabled = !depthOnly;
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
