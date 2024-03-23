@@ -119,6 +119,9 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
     glTexImage2D(0, 0, GL_RGBA, bmp->width, bmp->height, 0, TEXGEN_TEXCOORD, tmp);
     glTexParameter(0, GL_TEXTURE_WRAP_S | GL_TEXTURE_WRAP_T);
 
+    cc_uint16* vram_ptr = glGetTexturePointer(textureID);
+    if (!vram_ptr) Platform_Log2("No VRAM for %i x %i texture", &bmp->width, &bmp->height);
+
     Mem_Free(tmp);
 	return (void*)textureID;
 }
@@ -235,15 +238,17 @@ static int buf_count;
 static void* gfx_vertices;
 
 struct DSTexturedVertex {
-    short x, y, z;
-    cc_uint8 r, g, b;
+    vu32 xy; v16 z;
+    vu32 rgb;
     int u, v;
 };
 struct DSColouredVertex {
-    short x, y, z;
-    cc_uint8 r, g, b;
+    vu32 xy; v16 z;
+    vu32 rgb;
 };
 
+// Precalculate all the expensive vertex data conversion,
+//  so that actual drawing of them is as fast as possible
 static void PreprocessTexturedVertices(void) {
     struct   VertexTextured* src = gfx_vertices;
     struct DSTexturedVertex* dst = gfx_vertices;
@@ -251,14 +256,19 @@ static void PreprocessTexturedVertices(void) {
     for (int i = 0; i < buf_count; i++, src++, dst++)
     {
         struct VertexTextured v = *src;
-        dst->x = floattov16(v.x / 32.0f);
-        dst->y = floattov16(v.y / 32.0f);
-        dst->z = floattov16(v.z / 32.0f);
+        v16 x = floattov16(v.x / 32.0f);
+        v16 y = floattov16(v.y / 32.0f);
+        v16 z = floattov16(v.z / 32.0f);
+        dst->xy = (y << 16) | (x & 0xFFFF);
+        dst->z  = z;
+    
         dst->u = floattof32(v.U);
         dst->v = floattof32(v.V);
-        dst->r = PackedCol_R(v.Col);
-        dst->g = PackedCol_G(v.Col);
-        dst->b = PackedCol_B(v.Col);
+
+        int r = PackedCol_R(v.Col);
+        int g = PackedCol_G(v.Col);
+        int b = PackedCol_B(v.Col);
+        dst->rgb = RGB15(r >> 3, g >> 3, b >> 3);
     }
 }
 
@@ -269,12 +279,16 @@ static void PreprocessColouredVertices(void) {
     for (int i = 0; i < buf_count; i++, src++, dst++)
     {
         struct VertexColoured v = *src;
-        dst->x = floattov16(v.x / 32.0f);
-        dst->y = floattov16(v.y / 32.0f);
-        dst->z = floattov16(v.z / 32.0f);
-        dst->r = PackedCol_R(v.Col);
-        dst->g = PackedCol_G(v.Col);
-        dst->b = PackedCol_B(v.Col);
+        v16 x = floattov16(v.x / 32.0f);
+        v16 y = floattov16(v.y / 32.0f);
+        v16 z = floattov16(v.z / 32.0f);
+        dst->xy = (y << 16) | (x & 0xFFFF);
+        dst->z  = z;
+
+        int r = PackedCol_R(v.Col);
+        int g = PackedCol_G(v.Col);
+        int b = PackedCol_B(v.Col);
+        dst->rgb = RGB15(r >> 3, g >> 3, b >> 3);
     }
 }
 
@@ -435,8 +449,9 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 	{
 		struct DSColouredVertex* v = (struct DSColouredVertex*)gfx_vertices + startVertex + i;
 		
-		glColor3b(v->r, v->g, v->b);
-		glVertex3v16(v->x, v->y, v->z);
+		GFX_COLOR    = v->rgb;
+		GFX_VERTEX16 = v->xy;
+        GFX_VERTEX16 = v->z;
 	}
 	glEnd();
 }
@@ -452,9 +467,10 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	{
 		struct DSTexturedVertex* v = (struct DSTexturedVertex*)gfx_vertices + startVertex + i;
 		
-		glColor3b(v->r, v->g, v->b);
+		GFX_COLOR    = v->rgb;
         glTexCoord2t16(f32tot16(mulf32(v->u, width)), f32tot16(mulf32(v->v, height)));
-		glVertex3v16(v->x, v->y, v->z);
+		GFX_VERTEX16 = v->xy;
+        GFX_VERTEX16 = v->z;
 	}
 	glEnd();
 }
