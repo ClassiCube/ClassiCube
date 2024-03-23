@@ -32,6 +32,7 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const char* Platform_AppNameSuffix = " NDS";
+extern cc_bool keyboardOpen;
 
 
 /*########################################################################################################################*
@@ -57,7 +58,18 @@ cc_uint64 Stopwatch_Measure(void) {
 	return base_time + raw;
 }
 
-static void DebugNocash(const char* msg, int len) {
+static void LogConsole(const char* msg, int len) {
+	char buffer[256 + 2];
+	len = min(len, 256);
+	
+	Mem_Copy(buffer, msg, len);
+    buffer[len + 0] = '\n';
+	buffer[len + 1] = '\0';
+	
+	fwrite(buffer, 1, len + 1, stdout);
+}
+
+static void LogNocash(const char* msg, int len) {
     // Can only be up to 120 bytes total
 	char buffer[120];
 	len = min(len, 119);
@@ -68,15 +80,8 @@ static void DebugNocash(const char* msg, int len) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	char buffer[256 + 2];
-	len = min(len, 256);
-	
-	Mem_Copy(buffer, msg, len);
-    buffer[len + 0] = '\n';
-	buffer[len + 1] = '\0';
-	
-	fwrite(buffer, 1, len + 1, stdout);
-    DebugNocash(msg, len);
+	if (!keyboardOpen) LogConsole(msg, len);
+    LogNocash(msg, len);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH)

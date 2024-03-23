@@ -17,19 +17,27 @@
 #include <nds/arm9/keyboard.h>
 #include <nds/interrupts.h>
 
-static cc_bool launcherMode, keyboardOpen;
+static cc_bool launcherMode;
+cc_bool keyboardOpen;
 static int bg_id;
 static u16* bg_ptr;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-static void InitConsoleWindow(void) {
-    videoSetModeSub(MODE_0_2D);
+// Console and Keyboard combined need more than 32 kb of H VRAM bank
+// The simple solution is to allocate the C VRAM bank, but ClassiCube
+// needs as much VRAM as it can get for textures
+// So the solution is to share the H VRAM bank between console and keyboard
+static void ResetHBank(void) {
+    // Map all VRAM banks to LCDC mode so that the CPU can access it
+    vramSetBankH(VRAM_H_LCD);
+    dmaFillWords(0, VRAM_H, 32 * 1024);
     vramSetBankH(VRAM_H_SUB_BG);
-    setBrightness(2, 0);
+}
 
-    consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, false, true);
+static void InitConsoleWindow(void) {
+    consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 14, 0, false, true);
 }
 
 void Window_Init(void) {  
@@ -46,6 +54,10 @@ void Window_Init(void) {
 
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+
+    videoSetModeSub(MODE_0_2D);
+    vramSetBankH(VRAM_H_SUB_BG);
+    setBrightness(2, 0);
 	InitConsoleWindow();
 }
 
@@ -195,13 +207,14 @@ static void OnKeyPressed(int key) {
 
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
-    keyboardInit(kbd, 3, BgType_Text4bpp, BgSize_T_256x512,
-                       20, 0, false, true);
     videoBgDisableSub(0); // hide console
 
-    kbd->OnKeyPressed = OnKeyPressed;
+    ResetHBank(); // reset shared VRAM
+    keyboardInit(kbd, 3, BgType_Text4bpp, BgSize_T_256x512,
+                       14, 0, false, true);
     keyboardShow();
 
+    kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
     keyboardOpen = true;
 }
@@ -211,7 +224,10 @@ void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) {
     keyboardHide();
     keyboardOpen = false;
+    ResetHBank(); // reset shared VRAM
+
     videoBgEnableSub(0); // show console
+    InitConsoleWindow();
 }
 
 

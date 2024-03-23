@@ -14,6 +14,7 @@ void Gfx_Create(void) {
 
     Gfx.MaxTexWidth  = 256;
 	Gfx.MaxTexHeight = 256;
+    //Gfx.MaxTexSize   = 256 * 256;
 	Gfx.Created      = true;
     glInit();
     
@@ -26,7 +27,7 @@ void Gfx_Create(void) {
     
     vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
-    vramSetBankB(VRAM_C_TEXTURE);
+    vramSetBankC(VRAM_C_TEXTURE);
     vramSetBankD(VRAM_D_TEXTURE);
     
     glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
@@ -40,7 +41,7 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 	vramSetBankA(VRAM_A_LCD);
     vramSetBankB(VRAM_B_LCD);
-    vramSetBankD(VRAM_C_LCD);
+    vramSetBankC(VRAM_C_LCD);
     vramSetBankD(VRAM_D_LCD);
 }
 
@@ -196,8 +197,8 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
 	*matrix = Matrix_Identity;
-	width  /= 32.0f; 
-	height /= 32.0f; 
+	width  /= 64.0f; 
+	height /= 64.0f; 
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
@@ -256,9 +257,9 @@ static void PreprocessTexturedVertices(void) {
     for (int i = 0; i < buf_count; i++, src++, dst++)
     {
         struct VertexTextured v = *src;
-        v16 x = floattov16(v.x / 32.0f);
-        v16 y = floattov16(v.y / 32.0f);
-        v16 z = floattov16(v.z / 32.0f);
+        v16 x = floattov16(v.x / 64.0f);
+        v16 y = floattov16(v.y / 64.0f);
+        v16 z = floattov16(v.z / 64.0f);
         dst->xy = (y << 16) | (x & 0xFFFF);
         dst->z  = z;
     
@@ -279,9 +280,9 @@ static void PreprocessColouredVertices(void) {
     for (int i = 0; i < buf_count; i++, src++, dst++)
     {
         struct VertexColoured v = *src;
-        v16 x = floattov16(v.x / 32.0f);
-        v16 y = floattov16(v.y / 32.0f);
-        v16 z = floattov16(v.z / 32.0f);
+        v16 x = floattov16(v.x / 64.0f);
+        v16 y = floattov16(v.y / 64.0f);
+        v16 z = floattov16(v.z / 64.0f);
         dst->xy = (y << 16) | (x & 0xFFFF);
         dst->z  = z;
 
@@ -402,7 +403,7 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
     // That's way too small to be useful, so counteract that by scaling down
     //  vertices and then scaling up the matrix multiplication
     if (type == MATRIX_VIEW)
-        glScalef32(floattof32(32.0f), floattof32(32.0f), floattof32(32.0f));
+        glScalef32(floattof32(64.0f), floattof32(64.0f), floattof32(64.0f));
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
