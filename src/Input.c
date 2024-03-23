@@ -46,7 +46,7 @@ static struct TouchPointer {
 	long id;
 	cc_uint8 type;
 	int begX, begY;
-	TimeMS start;
+	double start;
 } touches[INPUT_MAX_POINTERS];
 
 int Pointers_Count;
