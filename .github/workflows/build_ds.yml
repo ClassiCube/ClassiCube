@@ -1,0 +1,38 @@
+name: Build latest (DS)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-ds
+  cancel-in-progress: true
+
+jobs:
+  build-DS:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: skylyrac/blocksds:dev-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile DS build
+        id: compile
+        run: |
+          export BLOCKSDS=/opt/blocksds/core
+          export BLOCKSDSEXT=/opt/blocksds/external
+          make ds
+
+      # otherwise notify_failure doesn't work
+      - name: Install curl when necessary
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        run: apt install curl
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile DS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'classicube.nds'
+          DEST_NAME: 'classicube.nds'
