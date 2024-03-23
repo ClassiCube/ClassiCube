@@ -365,15 +365,32 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 	return res;
 }
 
+static void InitNetworking(void) {
+    if (!Wifi_InitDefault(INIT_ONLY)) {
+        Platform_LogConst("Initing WIFI failed"); return;
+    }
+    Wifi_AutoConnect();
+
+    for (int i = 0; i < 300; i++)
+    {
+        int status = Wifi_AssocStatus();
+        if (status == ASSOCSTATUS_ASSOCIATED) return;
+
+        if (status == ASSOCSTATUS_CANNOTCONNECT) {
+            Platform_LogConst("Can't connect to WIFI"); return;
+        }
+        swiWaitForVBlank();
+    }
+    Platform_LogConst("Gave up after 300 tries");
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
 	InitFilesystem();
-    if (!Wifi_InitDefault(WFC_CONNECT)) {
-        Platform_LogConst("Can't connect to WIFI");
-    }
+    InitNetworking();
 
 	cpuStartTiming(1);	
 	// TODO: Redesign Drawer2D to better handle this

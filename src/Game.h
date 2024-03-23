@@ -24,10 +24,12 @@ extern cc_bool Game_UseCPEBlocks;
 extern cc_string Game_Username;
 extern cc_string Game_Mppass;
 
-#ifdef CC_BUILD_N64
-#define DEFAULT_VIEWDIST 20
+#if defined CC_BUILD_N64
+    #define DEFAULT_VIEWDIST 20
+#elif defined CC_BUILD_NDS
+    #define DEFAULT_VIEWDIST 192
 #else
-#define DEFAULT_VIEWDIST 512
+    #define DEFAULT_VIEWDIST 512
 #endif
 #define DEFAULT_MAX_VIEWDIST 32768
 

@@ -187,7 +187,7 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 }
 
-cc_bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_WarnIfNecessary(void) { return true; }
 
 
 /*########################################################################################################################*
