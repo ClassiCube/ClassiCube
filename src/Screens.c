@@ -943,7 +943,7 @@ static void ChatScreen_FreeChatFonts(struct ChatScreen* s) {
 
 static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	int size = (int)(8  * Gui_GetChatScale());
-	Math_Clamp(size, 8, 60);
+	Math_Clamp(size, 8, 64);
 
 	/* don't recreate font if possible */
 	/* TODO: Add function for this, don't use Display_ScaleY (Drawer2D_SameFontSize ??) */
@@ -952,10 +952,14 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	Font_Make(&s->chatFont, size, FONT_FLAGS_PADDING);
 
 	size = (int)(16 * Gui_GetChatScale());
-	Math_Clamp(size, 8, 60);
+	Math_Clamp(size, 8, 64);
 	Font_Make(&s->announcementFont, size, FONT_FLAGS_NONE);
-	Font_Make(&s->bigAnnouncementFont, size * 1.33, FONT_FLAGS_NONE);
-	Font_Make(&s->smallAnnouncementFont, size * 0.67, FONT_FLAGS_NONE);
+	size = (int)(24 * Gui_GetChatScale());
+	Math_Clamp(size, 8, 64);
+	Font_Make(&s->bigAnnouncementFont, size, FONT_FLAGS_NONE);
+	size = (int)(8 * Gui_GetChatScale());
+	Math_Clamp(size, 8, 64);
+	Font_Make(&s->smallAnnouncementFont, size, FONT_FLAGS_NONE);
 
 	ChatInputWidget_SetFont(&s->input,        &s->chatFont);
 	TextGroupWidget_SetFont(&s->status,       &s->chatFont);

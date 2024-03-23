@@ -58,7 +58,8 @@ float Gui_GetInventoryScale(void) {
 }
 
 float Gui_GetChatScale(void) {
-	return Gui_Scale(GetWindowScale() * Gui.RawChatScale);
+	if (Gui.AutoScaleChat) return Gui_Scale(GetWindowScale() * Gui.RawChatScale);
+	return Gui.RawChatScale;
 }
 
 void Gui_MakeTitleFont(struct FontDesc* font) { Font_Make(font, 16, FONT_FLAGS_BOLD); }
@@ -119,6 +120,8 @@ static void LoadOptions(void) {
 	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
 	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
+
+	Gui.AutoScaleChat     = Options_GetBool(OPT_CHAT_AUTO_SCALE, true);
 }
 
 static void LoseAllScreens(void) {
