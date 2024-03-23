@@ -120,7 +120,7 @@ void Input_AddTouch(long id, int x, int y) {
 		touches[i].begX = x;
 		touches[i].begY = y;
 
-		touches[i].start = DateTime_CurrentUTC_MS();
+		touches[i].start = Game.Time;
 		/* Also set last click time, otherwise quickly tapping */
 		/* sometimes triggers a 'delete' in InputHandler_Tick, */
 		/* and then another 'delete' in CheckBlockTap. */
@@ -137,8 +137,8 @@ void Input_UpdateTouch(long id, int x, int y) { TryUpdateTouch(id, x, y); }
 /* Quickly tapping should trigger a block place/delete */
 static void CheckBlockTap(int i) {
 	int btn, pressed;
-	if (DateTime_CurrentUTC_MS() > touches[i].start + 250) return;
-	if (touches[i].type != TOUCH_TYPE_ALL) return;
+	if (Game.Time > touches[i].start + 0.25) return;
+	if (touches[i].type != TOUCH_TYPE_ALL)   return;
 
 	if (Input_TapMode == INPUT_MODE_PLACE) {
 		btn = MOUSE_RIGHT;
