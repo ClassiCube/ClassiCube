@@ -35,7 +35,7 @@ static CC_NOINLINE int GetWindowScale(void) {
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
 #ifndef CC_BUILD_DUALSCREEN
-	if (!Input_TouchMode) {
+	if (!Gui.TouchUI) {
 #endif
 		widthScale  /= DisplayInfo.ScaleX;
 		heightScale /= DisplayInfo.ScaleY;
@@ -95,6 +95,12 @@ void Gui_ShowDefault(void) {
 	TouchScreen_Show();
 #endif
 }
+
+#ifdef CC_BUILD_TOUCH
+void Gui_SetTouchUI(cc_bool enabled) {
+	Gui.TouchUI = enabled; /* TODO toggle or not */
+}
+#endif
 
 static void LoadOptions(void) {
 	Gui.DefaultLines    = Game_ClassicMode ? 10 : 12;

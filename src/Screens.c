@@ -255,7 +255,7 @@ static void HUDScreen_InputUp(void* screen, int key) {
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if (Input_TouchMode || Gui.InputGrab) {
+	if (Gui.TouchUI || Gui.InputGrab) {
 		return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
 	}
 	return false;
@@ -263,13 +263,13 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 
 static void HUDScreen_PointerUp(void *screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if(!Input_TouchMode) return;
+	if(!Gui.TouchUI) return;
 	Elem_OnPointerUp(&s->hotbar, id, x, y);
 }
 
 static int HUDScreen_PointerMove(void *screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if(!Input_TouchMode) return false;
+	if(!Gui.TouchUI) return false;
 	return Elem_HandlesPointerMove(&s->hotbar, id, x, y);
 }
 
@@ -1171,7 +1171,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 		}
 
 #ifdef CC_BUILD_TOUCH
-		if (!Input_TouchMode) return;
+		if (!Gui.TouchUI) return;
 		Gfx_3DS_SetRenderScreen(BOTTOM_SCREEN);
 		Elem_Render(&s->more,   delta);
 		Elem_Render(&s->send,   delta);
@@ -1211,7 +1211,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	Screen_UpdateVb(s);
 
 #ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return;
+	if (!Gui.TouchUI) return;
 	Gui_MakeTitleFont(&font);
 	ButtonWidget_SetConst(&s->more,   "More",   &font);
 	ButtonWidget_SetConst(&s->send,   "Send",   &font);
@@ -1387,7 +1387,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	if (Game_HideGui) return false;
 
 	if (!s->grabsInput) {
-		if (!Input_TouchMode) return false;
+		if (!Gui.TouchUI) return false;
 		String_InitArray(text, textBuffer);
 
 		/* Should be able to click on links with touch */
@@ -1399,7 +1399,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	}
 
 #ifdef CC_BUILD_TOUCH
-	if (Input_TouchMode) {
+	if (Gui.TouchUI) {
 		if (Widget_Contains(&s->send, x, y)) {
 			ChatScreen_EnterChatInput(s, false); return TOUCH_TYPE_GUI;
 		}
@@ -2467,7 +2467,7 @@ void TouchScreen_Show(void) {
 	struct TouchScreen* s = &TouchScreen;
 	s->VTABLE = &TouchScreen_VTABLE;
 
-	if (!Input_TouchMode) return;
+	if (!Gui.TouchUI) return;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TOUCH);
 }
 #endif

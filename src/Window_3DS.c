@@ -10,6 +10,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "Gui.h"
 #include <3ds.h>
 
 static cc_bool launcherMode;
@@ -45,6 +46,7 @@ void Window_Init(void) {
 	Window_Main.Exists  = true;
 
 	Input_SetTouchMode(true);
+	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	irrst_result  = irrstInit();
 	

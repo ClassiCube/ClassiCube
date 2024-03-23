@@ -34,7 +34,7 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
-	//Input_SetTouchMode(true); TODO not UI
+	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	
 	consoleDemoInit();

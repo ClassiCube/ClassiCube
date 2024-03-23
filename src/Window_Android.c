@@ -6,6 +6,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "Graphics.h"
+#include "Gui.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
@@ -282,6 +283,7 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
+	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	DisplayInfo.Depth  = 32;
