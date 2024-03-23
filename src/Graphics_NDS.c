@@ -15,8 +15,6 @@ void Gfx_Create(void) {
     Gfx.MaxTexWidth  = 256;
 	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
-	
-	videoSetMode(MODE_0_3D);
     glInit();
     
     glClearColor(0, 15, 10, 31);
@@ -24,13 +22,12 @@ void Gfx_Create(void) {
     glAlphaFunc(7);
 
     glClearDepth(0x7FFF);
-
     glViewport(0, 0, 255, 191);
     
     vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
+    vramSetBankB(VRAM_C_TEXTURE);
     vramSetBankD(VRAM_D_TEXTURE);
-    // setup memory for textures
     
     glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
 }
@@ -41,8 +38,9 @@ cc_bool Gfx_TryRestoreContext(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
-	vramSetBankA(VRAM_A_MAIN_BG);
+	vramSetBankA(VRAM_A_LCD);
     vramSetBankB(VRAM_B_LCD);
+    vramSetBankD(VRAM_C_LCD);
     vramSetBankD(VRAM_D_LCD);
 }
 
@@ -239,7 +237,7 @@ static void* gfx_vertices;
 struct DSTexturedVertex {
     short x, y, z;
     cc_uint8 r, g, b;
-    float u, v;
+    int u, v;
 };
 struct DSColouredVertex {
     short x, y, z;
@@ -256,8 +254,8 @@ static void PreprocessTexturedVertices(void) {
         dst->x = floattov16(v.x / 32.0f);
         dst->y = floattov16(v.y / 32.0f);
         dst->z = floattov16(v.z / 32.0f);
-        dst->u = v.U;
-        dst->v = v.V;
+        dst->u = floattof32(v.U);
+        dst->v = floattof32(v.V);
         dst->r = PackedCol_R(v.Col);
         dst->g = PackedCol_G(v.Col);
         dst->b = PackedCol_B(v.Col);
@@ -446,8 +444,8 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	glBegin(GL_QUADS);
     int width = 0, height = 0;
-    glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
-    glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+    glGetInt(GL_GET_TEXTURE_WIDTH,  &width);  width  = inttof32(width);
+    glGetInt(GL_GET_TEXTURE_HEIGHT, &height); height = inttof32(height);
     
 
 	for (int i = 0; i < verticesCount; i++)
@@ -455,7 +453,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		struct DSTexturedVertex* v = (struct DSTexturedVertex*)gfx_vertices + startVertex + i;
 		
 		glColor3b(v->r, v->g, v->b);
-        glTexCoord2t16(floattot16(v->u * width), floattot16(v->v * height));
+        glTexCoord2t16(f32tot16(mulf32(v->u, width)), f32tot16(mulf32(v->v, height)));
 		glVertex3v16(v->x, v->y, v->z);
 	}
 	glEnd();

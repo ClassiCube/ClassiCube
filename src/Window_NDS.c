@@ -10,10 +10,12 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "Camera.h"
 #include <nds/arm9/background.h>
 #include <nds/arm9/input.h>
 #include <nds/arm9/console.h>
 #include <nds/arm9/keyboard.h>
+#include <nds/interrupts.h>
 
 static cc_bool launcherMode, keyboardOpen;
 static int bg_id;
@@ -21,6 +23,14 @@ static u16* bg_ptr;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
+
+static void InitConsoleWindow(void) {
+    videoSetModeSub(MODE_0_2D);
+    vramSetBankH(VRAM_H_SUB_BG);
+    setBrightness(2, 0);
+
+    consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 22, 3, false, true);
+}
 
 void Window_Init(void) {  
 	DisplayInfo.Width  = SCREEN_WIDTH;
@@ -36,8 +46,13 @@ void Window_Init(void) {
 
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	
-	consoleDemoInit();
+	InitConsoleWindow();
+}
+
+void Window_Free(void) { }
+
+void Window_Create2D(int width, int height) { 
+    launcherMode = true;
 	videoSetMode(MODE_5_2D);
 	vramSetBankA(VRAM_A_MAIN_BG);
 	
@@ -45,10 +60,10 @@ void Window_Init(void) {
 	bg_ptr = bgGetGfxPtr(bg_id);
 }
 
-void Window_Free(void) { }
-
-void Window_Create2D(int width, int height) { launcherMode = true;  }
-void Window_Create3D(int width, int height) { launcherMode = false; }
+void Window_Create3D(int width, int height) { 
+    launcherMode = false;
+	videoSetMode(MODE_0_3D);
+}
 
 void Window_SetTitle(const cc_string* title) { }
 void Clipboard_GetText(cc_string* value) { }
@@ -93,6 +108,7 @@ static void ProcessTouchInput(int mods) {
 	static int curX, curY;  // current touch position
 	touchPosition touch;
 	touchRead(&touch);
+    Camera.Sensitivity = 100; // TODO not hardcode this
 	
 	if (keysDown() & KEY_TOUCH) {  // stylus went down
 		curX = touch.px;
@@ -178,7 +194,11 @@ static void OnKeyPressed(int key) {
 }
 
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
-    Keyboard* kbd = keyboardDemoInit();
+    Keyboard* kbd = keyboardGetDefault();
+    keyboardInit(kbd, 3, BgType_Text4bpp, BgSize_T_256x512,
+                       20, 0, false, true);
+    videoBgDisableSub(0); // hide console
+
     kbd->OnKeyPressed = OnKeyPressed;
     keyboardShow();
 
@@ -191,6 +211,7 @@ void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) {
     keyboardHide();
     keyboardOpen = false;
+    videoBgEnableSub(0); // show console
 }
 
 
