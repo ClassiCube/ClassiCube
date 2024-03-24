@@ -120,9 +120,7 @@ typedef cc_uint8  cc_bool;
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
-#ifndef CC_BUILD_FLATPAK
 #define CC_BUILD_RESOURCES
-#endif
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
