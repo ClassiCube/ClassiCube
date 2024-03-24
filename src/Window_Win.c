@@ -344,7 +344,7 @@ static void CreateWindowHandle(ATOM atom, int width, int height) {
 	/* Windows 9x does not support W API functions */
 	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
 		is_ansiWindow   = true;
-		if ((win_handle = CreateWindowExA(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+		if ((win_handle = CreateWindowExA(0, (LPCSTR)MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
 			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
 		res = GetLastError();
 	}

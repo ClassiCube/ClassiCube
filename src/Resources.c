@@ -638,7 +638,7 @@ static struct ResourceZipEntry defaultZipEntries[] = {
 	/* other files */
 	{ "snow.png", RESOURCE_TYPE_DATA }, { "chicken.png",    RESOURCE_TYPE_DATA },
 	{ "gui.png",  RESOURCE_TYPE_DATA }, { "animations.png", RESOURCE_TYPE_PNG  }, 
-	{ "animations.txt", RESOURCE_TYPE_CONST, sizeof(ANIMS_TXT) - 1, (const cc_uint8*)ANIMS_TXT },
+	{ "animations.txt", RESOURCE_TYPE_CONST, sizeof(ANIMS_TXT) - 1, (cc_uint8*)ANIMS_TXT },
 #ifdef CC_BUILD_MOBILE
 	{ "touch.png", RESOURCE_TYPE_DATA }
 #endif

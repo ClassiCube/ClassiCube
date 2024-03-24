@@ -30,14 +30,13 @@ static float totalMem;
 static cc_bool fallbackRendering;
 
 static void D3D9_RestoreRenderStates(void);
-static void D3D9_FreeResource(GfxResourceID* resource) {
+static void D3D9_FreeResource(GfxResourceID resource) {
 	cc_uintptr addr;
 	ULONG refCount;
 	IUnknown* unk;
 	
-	unk = (IUnknown*)(*resource);
+	unk = (IUnknown*)resource;
 	if (!unk) return;
-	*resource = 0;
 
 #ifdef __cplusplus
 	refCount = unk->Release();
@@ -214,8 +213,8 @@ cc_bool Gfx_TryRestoreContext(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
-	D3D9_FreeResource(&device);
-	D3D9_FreeResource(&d3d);
+	D3D9_FreeResource(device); device = NULL;
+	D3D9_FreeResource(d3d);    d3d    = NULL;
 }
 
 static void Gfx_FreeState(void) { 
@@ -364,7 +363,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
 	if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
 
-	D3D9_FreeResource(&sys);
+	D3D9_FreeResource(sys);
 	return tex;
 }
 
@@ -383,7 +382,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	if (res) Logger_Abort2(res, "D3D9_BindTexture");
 }
 
-void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
+void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(*texId); *texId = NULL; }
 
 void Gfx_EnableMipmaps(void) {
 	if (!Gfx.Mipmaps) return;
@@ -580,7 +579,7 @@ void Gfx_BindIb(GfxResourceID ib) {
 	if (res) Logger_Abort2(res, "D3D9_BindIb");
 }
 
-void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
+void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(*ib); *ib = NULL; }
 
 
 /*########################################################################################################################*
@@ -625,7 +624,7 @@ static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
 	return D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(*vb); *vb = NULL; }
 
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
@@ -651,7 +650,7 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
 }
 
-void Gfx_DeleteDynamicVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) { D3D9_FreeResource(*vb); *vb = NULL; }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
@@ -820,8 +819,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	if (res) goto finished;
 
 finished:
-	D3D9_FreeResource(&backbuffer);
-	D3D9_FreeResource(&temp);
+	D3D9_FreeResource(backbuffer);
+	D3D9_FreeResource(temp);
 	return res;
 }
 

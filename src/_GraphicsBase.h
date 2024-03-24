@@ -229,7 +229,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
-    // intentionally biased more towards positive Z to reduce 2D clipping issues on the DS
+	/* intentionally biased more towards positive Z to reduce 2D clipping issues on the DS */
 	Gfx_CalcOrthoMatrix(&ortho, (float)width, (float)height, -100.0f, 1000.0f);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
