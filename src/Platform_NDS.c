@@ -50,7 +50,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 cc_uint64 Stopwatch_Measure(void) {
 	u32 raw = cpuGetTiming();
 	// Since counter is only a 32 bit integer, it overflows after a minute or two
-	if (raw < 0x00100000 && last_raw > 0xFFF00000) {
+	if (last_raw > 0xF0000000 && raw < 0x10000000) {
 		base_time += 0x100000000ULL;
 	}
 
