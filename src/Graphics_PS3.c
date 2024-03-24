@@ -316,8 +316,6 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) {
 	rsxSetAlphaTestEnable(context, enabled);
 }

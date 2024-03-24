@@ -383,8 +383,6 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) { 
 	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }

@@ -50,8 +50,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_EnableMipmaps(void) { }  // TODO
 
 void Gfx_DisableMipmaps(void) { } // TODO

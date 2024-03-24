@@ -534,8 +534,6 @@ void Gfx_SetFogMode(FogFunc func) {
 	gfx_fogMode = func;
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) { 
 	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }

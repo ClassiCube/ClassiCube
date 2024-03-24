@@ -62,8 +62,6 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
 void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {

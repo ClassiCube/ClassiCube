@@ -246,7 +246,6 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 	// TODO
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 

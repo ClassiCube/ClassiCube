@@ -194,11 +194,15 @@ static char kbBuffer[NATIVE_STR_LEN + 1];
 static cc_string kbText;
 
 static void OnKeyPressed(int key) {
-    if (key == 0 || key == DVK_ENTER) {
+    if (key == 0) {
         Window_CloseKeyboard();
+    } else if (key == DVK_ENTER) {
+        Window_CloseKeyboard();
+        Input_SetPressed(CCKEY_ENTER);
+        Input_SetReleased(CCKEY_ENTER);
     } else if (key == DVK_BACKSPACE) {
         if (kbText.length) kbText.length--;
-        Event_RaiseString(&InputEvents.TextChanged, &kbText);     
+        Event_RaiseString(&InputEvents.TextChanged, &kbText);
     } else if (key > 0) {
         String_Append(&kbText, key);
         Event_RaiseString(&InputEvents.TextChanged, &kbText);
@@ -216,6 +220,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 
     kbd->OnKeyPressed = OnKeyPressed;
     String_InitArray(kbText, kbBuffer);
+	String_AppendString(&kbText, args->text);
     keyboardOpen = true;
 }
 

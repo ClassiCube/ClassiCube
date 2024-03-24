@@ -385,8 +385,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_EnableMipmaps(void) {
 	if (!Gfx.Mipmaps) return;
 	IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);

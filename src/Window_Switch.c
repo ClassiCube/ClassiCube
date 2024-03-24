@@ -271,10 +271,9 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	SwkbdConfig kbd;
 	swkbdCreate(&kbd, 0);
 
-	if (mode == KEYBOARD_TYPE_PASSWORD)
+	if (mode == KEYBOARD_TYPE_PASSWORD) {
 		swkbdConfigMakePresetPassword(&kbd);
-	else
-	{
+	} else {
 		swkbdConfigMakePresetDefault(&kbd);
 		swkbdConfigSetType(&kbd, type);
 	}
