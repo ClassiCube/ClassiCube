@@ -52,6 +52,8 @@ void Audio_Close(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
+/* Sets the volume audio data is played at */
+void Audio_SetVolume(struct AudioContext* ctx, int volume);
 /* Queues the given audio chunk for playing. */
 /* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
 /* NOTE: Some backends directly read from the data - therefore you MUST NOT modify it */
@@ -77,7 +79,6 @@ void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
 void Audio_FreeChunks(void** chunks, int numChunks);
 
 extern struct AudioContext music_ctx;
-void Audio_ApplyVolume(cc_int16* samples, int count, int volume);
 void Audio_Warn(cc_result res, const char* action);
 
 cc_result AudioPool_Play(struct AudioData* data);

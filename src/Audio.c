@@ -329,7 +329,6 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 		cur = &data[samples];
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
-	if (Audio_MusicVolume < 100) { Audio_ApplyVolume(data, samples, Audio_MusicVolume); }
 
 	res2 = Audio_QueueChunk(&music_ctx, data, samples * 2);
 	if (res2) { music_stopping = true; return res2; }
@@ -339,7 +338,7 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 static cc_result Music_PlayOgg(struct Stream* source) {
 	struct OggState ogg;
 	struct VorbisState vorbis = { 0 };
-	int channels, sampleRate;
+	int channels, sampleRate, volume;
 
 	int chunkSize, samplesPerSecond;
 	void* chunks[AUDIO_MAX_BUFFERS] = { 0 };
@@ -366,7 +365,9 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		
 		res = ERR_OUT_OF_MEMORY; goto cleanup;
 	}
-	
+
+    volume = Audio_MusicVolume;
+    Audio_SetVolume(&music_ctx, volume);	
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) 
@@ -391,6 +392,10 @@ static cc_result Music_PlayOgg(struct Stream* source) {
     		Audio_Play(&music_ctx);
     	}
 #endif
+        if (volume != Audio_MusicVolume) {
+            volume = Audio_MusicVolume;
+            Audio_SetVolume(&music_ctx, volume);
+        }
 
 		res = Audio_Poll(&music_ctx, &inUse);
 		if (res) { music_stopping = true; break; }
