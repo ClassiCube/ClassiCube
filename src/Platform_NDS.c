@@ -394,6 +394,7 @@ void Platform_Init(void) {
 
 	cpuStartTiming(1);
 	// TODO: Redesign Drawer2D to better handle this
+	Options_Load();
 	Options_SetBool(OPT_USE_CHAT_FONT, true);
 }
 void Platform_Free(void) { }
