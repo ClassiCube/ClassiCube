@@ -10,6 +10,9 @@ void Audio_Warn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
 
+/* Whether the given audio data can be played without recreating the underlying audio device */
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
+
 /* Common/Base methods */
 static void AudioBase_Clear(struct AudioContext* ctx);
 static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size);
@@ -264,7 +267,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = ctx->count - ctx->free; return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
@@ -430,7 +433,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 void Audio_SetVolume(struct AudioContext* ctx, int volume) { ctx->volume = volume; }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
-	cc_result res = 0;
+	cc_result res;
 	WAVEHDR* hdr;
 	int i;
 
@@ -442,8 +445,8 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 		if (!(hdr->dwFlags & WHDR_DONE)) continue;
 
 		Mem_Set(hdr, 0, sizeof(WAVEHDR));
-		hdr->lpData         = (LPSTR)ctx->_tmpData;
-		hdr->dwBufferLength = ctx->_tmpSize;
+		hdr->lpData         = (LPSTR)chunk;
+		hdr->dwBufferLength = dataSize;
 		hdr->dwLoops        = 1;
 		
 		if ((res = waveOutPrepareHeader(ctx->handle, hdr, sizeof(WAVEHDR)))) return res;
@@ -475,7 +478,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 }
 
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	int channels   = data->channels;
 	int sampleRate = Audio_AdjustSampleRate(data->sampleRate, data->rate);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
@@ -703,7 +706,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return res;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return !ctx->channels || (ctx->channels == data->channels && ctx->sampleRate == data->sampleRate);
 }
 
@@ -826,13 +829,11 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
-		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
 
 		buf->data_pcm16 = chunk;
 		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
-		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
 		DSP_FlushDataCache(buf->data_pcm16, dataSize);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
 		return 0;
@@ -850,7 +851,6 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
-		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING) { 
 			count++; continue; 
 		}
@@ -861,7 +861,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 }
 
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
 }
 
@@ -1061,7 +1061,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
 }
 
@@ -1231,7 +1231,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
 }
 
@@ -1310,7 +1310,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return interop_AudioPoll(ctx->contextID, inUse);
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
@@ -1364,7 +1364,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
 #endif

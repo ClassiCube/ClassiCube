@@ -66,11 +66,8 @@ cc_result Audio_Play(struct AudioContext* ctx);
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 cc_result Audio_Pause(struct AudioContext* ctx); /* Only implemented with OpenSL ES backend */
 
-/* Whether the given audio data can be played without recreating the underlying audio device */
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
-
 /* Allocates a group of chunks of data to store audio samples */
 void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
 /* Frees a previously allocated group of chunks of data */
