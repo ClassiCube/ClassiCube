@@ -12,7 +12,7 @@ void Audio_Warn(cc_result res, const char* action) {
 
 /* Common/Base methods */
 static void AudioBase_Clear(struct AudioContext* ctx);
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void* data, cc_uint32 size);
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size);
 static void AudioBase_AllocChunks(int size, void** chunks, int numChunks);
 static void AudioBase_FreeChunks(void** chunks, int numChunks);
 
@@ -371,7 +371,7 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 		ctx->headers[i].dwFlags = WHDR_DONE;
 	}
 	ctx->count  = buffers;
-    ctx->volume = 100;
+	ctx->volume = 100;
 	return 0;
 }
 
@@ -403,7 +403,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	cc_result res;
 	int sampleSize;
 
-    sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
@@ -434,7 +434,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 	WAVEHDR* hdr;
 	int i;
 
-    cc_bool ok = AudioBase_AdjustSound(ctx, chunk, dataSize);
+	cc_bool ok = AudioBase_AdjustSound(ctx, &chunk, &dataSize);
 	if (!ok) return ERR_OUT_OF_MEMORY;
 
 	for (i = 0; i < ctx->count; i++) {
@@ -533,7 +533,7 @@ static cc_bool LoadSLFuncs(void) {
 		DynamicLib_Sym(slCreateEngine),     DynamicLib_Sym(SL_IID_NULL),
 		DynamicLib_Sym(SL_IID_PLAY),        DynamicLib_Sym(SL_IID_ENGINE),
 		DynamicLib_Sym(SL_IID_BUFFERQUEUE), DynamicLib_Sym(SL_IID_PLAYBACKRATE),
-        DynamicLib_Sym(SL_IID_VOLUME)
+		DynamicLib_Sym(SL_IID_VOLUME)
 	};
 	void* lib;
 	
@@ -628,7 +628,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	SLDataSink dst;
 	cc_result res;
 
-    /* rate is in milli, so 1000 = normal rate */
+	/* rate is in milli, so 1000 = normal rate */
 	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, playbackRate * 10))) return res;
 
 	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
@@ -674,10 +674,10 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 static float Log10(float volume) { return Math_Log(volume) / Math_Log(10); }
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) {
-    // log of 0 is undefined
-    SLmillibel attenuation = volume == 0 ? SL_MILLIBEL_MIN : (2000 * Log10(volume / 100.0f));
+	// log of 0 is undefined
+	SLmillibel attenuation = volume == 0 ? SL_MILLIBEL_MIN : (2000 * Log10(volume / 100.0f));
 
-    (*ctx->playerVolume)->SetVolumeLevel(ctx->playerVolume, attenuation);
+	(*ctx->playerVolume)->SetVolumeLevel(ctx->playerVolume, attenuation);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
@@ -975,7 +975,7 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-    sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 
@@ -999,7 +999,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 }
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) {
-    audrvVoiceSetVolume(&drv, ctx->chanID, volume / 100.0f);
+	audrvVoiceSetVolume(&drv, ctx->chanID, volume / 100.0f);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
@@ -1128,9 +1128,9 @@ cc_bool AudioBackend_Init(void) {
 }
 
 void AudioBackend_Tick(void) {
-    // TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
-    for (int i = 0; i < SND_STREAM_MAX; i++)
-        snd_stream_poll(i);
+	// TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
+	for (int i = 0; i < SND_STREAM_MAX; i++)
+		snd_stream_poll(i);
 }
 
 void AudioBackend_Free(void) { 
@@ -1153,8 +1153,8 @@ static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
 		buf->samples   = NULL;
 		buf->available = true;
 
-        // special case to fix sounds looping
-        if (samples == 0 && ptr == NULL) *smp_recv = smp_req;
+		// special case to fix sounds looping
+		if (samples == 0 && ptr == NULL) *smp_recv = smp_req;
 	}
 	return ptr;
 }
@@ -1185,7 +1185,7 @@ void Audio_Close(struct AudioContext* ctx) {
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
-    sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 	return 0;
@@ -1279,8 +1279,8 @@ void AudioBackend_Free(void) { }
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count     = buffers;
 	ctx->contextID = interop_AudioCreate();
-    ctx->data      = NULL;
-    ctx->rate      = 100;
+	ctx->data      = NULL;
+	ctx->rate      = 100;
 	return 0;
 }
 
@@ -1303,7 +1303,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) { 
-    return interop_AudioPlay(ctx->contextID, ctx->data, ctx->rate);
+	return interop_AudioPlay(ctx->contextID, ctx->data, ctx->rate);
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
@@ -1357,7 +1357,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) { 
-    return ERR_NOT_SUPPORTED;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
@@ -1404,32 +1404,31 @@ static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->_tmpSize = 0;
 }
 
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void* data, cc_uint32 size) {
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size) {
 	void* audio;
-	if (ctx->volume >= 100) {
-        ctx->_tmpData = data;
-        ctx->_tmpSize = size;
-        return true;
-    }
+	cc_uint32 src_size = *size;
+	if (ctx->volume >= 100) return true;
 
 	/* copy to temp buffer to apply volume */
-	if (ctx->_tmpSize < data->size) {
+	if (ctx->_tmpSize < src_size) {
 		/* TODO: check if we can realloc NULL without a problem */
 		if (ctx->_tmpData) {
-			audio = Mem_TryRealloc(ctx->_tmpData, data->size, 1);
+			audio = Mem_TryRealloc(ctx->_tmpData, src_size, 1);
 		} else {
-			audio = Mem_TryAlloc(data->size, 1);
+			audio = Mem_TryAlloc(src_size, 1);
 		}
 
 		if (!data) return false;
 		ctx->_tmpData = audio;
-		ctx->_tmpSize = data->size;
+		ctx->_tmpSize = src_size;
 	}
 
 	audio = ctx->_tmpData;
-	Mem_Copy(audio, data->data, data->size);
-	ApplyVolume((cc_int16*)audio, data->size / 2, ctx->volume);
-	data->data = audio;
+	Mem_Copy(audio, *data, src_size);
+	ApplyVolume((cc_int16*)audio, src_size / 2, ctx->volume);
+
+	*data = audio;
+	*size = src_size;
 	return true;
 }
 #endif
