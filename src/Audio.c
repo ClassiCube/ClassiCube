@@ -351,7 +351,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	
 	channels   = vorbis.channels;
 	sampleRate = vorbis.sampleRate;
-	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate))) goto cleanup;
+	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate, 100))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */

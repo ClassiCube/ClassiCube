@@ -51,7 +51,7 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 void Audio_Close(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
 /* Sets the volume audio data is played at */
 void Audio_SetVolume(struct AudioContext* ctx, int volume);
 /* Queues the given audio chunk for playing. */
@@ -66,8 +66,6 @@ cc_result Audio_Play(struct AudioContext* ctx);
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 cc_result Audio_Pause(struct AudioContext* ctx); /* Only implemented with OpenSL ES backend */
 
-/* Plays the given audio data */
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data);
 /* Whether the given audio data can be played without recreating the underlying audio device */
 cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 /* Outputs more detailed information about errors with audio. */
