@@ -1172,7 +1172,7 @@ void MusicCallback(s32 voice) {
 }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->chanID  = ASND_GetFirstUnusedVoice();;
+	ctx->chanID  = -1;
 	ctx->count   = buffers;
 	ctx->volume  = 255;
 	ctx->bufHead = 0;
@@ -1195,6 +1195,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
+	ctx->chanID     = ASND_GetFirstUnusedVoice();
 
 	return 0;
 }
