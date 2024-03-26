@@ -1067,12 +1067,11 @@ static void ChatScreen_ColCodeChanged(void* screen, int code) {
 static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (Gfx.LostContext) return;
+	s->dirty = true;
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->chatIndex++;
 		if (!Gui.Chatlines) return;
-
-		s->dirty = true;
 		TextGroupWidget_ShiftUp(&s->chat);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */

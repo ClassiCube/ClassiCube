@@ -88,10 +88,9 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			Audio_AllocChunks(size, &snd->data, 1);
-			snd->size = size;
+			if ((res = Audio_AllocChunks(size, &snd->data, 1))) return res;
 
-			if (!snd->data) return ERR_OUT_OF_MEMORY;
+			snd->size = size;
 			return Stream_Read(stream, (cc_uint8*)snd->data, size);
 		}
 
@@ -358,14 +357,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = channels * sampleRate;
 
-	Audio_AllocChunks(chunkSize * 2, chunks, AUDIO_MAX_BUFFERS);
-	for (i = 0; i < AUDIO_MAX_BUFFERS; i++) 
-	{
-		if (chunks[i]) continue;
-		
-		res = ERR_OUT_OF_MEMORY; goto cleanup;
-	}
-
+	if ((res = Audio_AllocChunks(chunkSize * 2, chunks, AUDIO_MAX_BUFFERS))) goto cleanup;
     volume = Audio_MusicVolume;
     Audio_SetVolume(&music_ctx, volume);	
 
