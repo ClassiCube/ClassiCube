@@ -512,7 +512,8 @@ static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
 
 struct AudioContext {
-	int count, channels, sampleRate;
+	int count, volume;
+	int channels, sampleRate;
 	SLObjectItf       playerObject;
 	SLPlayItf         playerPlayer;
 	SLBufferQueueItf  playerQueue;
@@ -588,7 +589,8 @@ void AudioBackend_Free(void) {
 }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->count = buffers;
+	ctx->count  = buffers;
+	ctx->volume = 100;
 	return 0;
 }
 
@@ -620,7 +622,18 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->sampleRate = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+static float Log10(float volume) { return Math_Log(volume) / Math_Log(10); }
+
+static void UpdateVolume(struct AudioContext* ctx) {
+	/* Object doesn't exist until Audio_SetFormat is called */
+	if (!ctx->playerVolume) return;
+	
+	/* log of 0 is undefined */
+	SLmillibel attenuation = ctx->volume == 0 ? SL_MILLIBEL_MIN : (2000 * Log10(ctx->volume / 100.0f));
+	(*ctx->playerVolume)->SetVolumeLevel(ctx->playerVolume, attenuation);
+}
+
+static cc_result RecreatePlayer(struct AudioContext* ctx, int channels, int sampleRate) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
 	SLObjectItf playerObject;
@@ -631,10 +644,6 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	SLDataSink dst;
 	cc_result res;
 
-	/* rate is in milli, so 1000 = normal rate */
-	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, playbackRate * 10))) return res;
-
-	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 	Audio_Reset(ctx);
@@ -671,16 +680,25 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_BUFFERQUEUE,  &ctx->playerQueue)))  return res;
 	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_PLAYBACKRATE, &ctx->playerRate)))   return res;
 	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_VOLUME,       &ctx->playerVolume))) return res;
+
+	UpdateVolume(ctx);
 	return 0;
 }
 
-static float Log10(float volume) { return Math_Log(volume) / Math_Log(10); }
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	cc_result res;
+
+	if (ctx->channels != channels || ctx->sampleRate != sampleRate) {
+		if ((res = RecreatePlayer(ctx, channels, sampleRate))) return res;
+	}
+
+	/* rate is in milli, so 1000 = normal rate */
+	return (*ctx->playerRate)->SetRate(ctx->playerRate, playbackRate * 10);
+}
 
 void Audio_SetVolume(struct AudioContext* ctx, int volume) {
-	// log of 0 is undefined
-	SLmillibel attenuation = volume == 0 ? SL_MILLIBEL_MIN : (2000 * Log10(volume / 100.0f));
-
-	(*ctx->playerVolume)->SetVolumeLevel(ctx->playerVolume, attenuation);
+	ctx->volume = volume;
+	UpdateVolume(ctx);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
