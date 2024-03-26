@@ -3,13 +3,26 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#include <gx2/clear.h>
+#include <gx2/context.h>
+#include <gx2/display.h>
+#include <gx2/event.h>
+#include <gx2/mem.h>
+#include <gx2/registers.h>
+#include <gx2/shaders.h>
+#include <gx2/state.h>
+#include <gx2/surface.h>
+#include <gx2/swap.h>
+#include <gx2/temp.h>
+#include <gx2r/mem.h>
 #include <gx2r/buffer.h>
+#include <whb/gfx.h>
 
 void Gfx_Create(void) {
-
 	Gfx.Created      = true;
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512;
+	WHBGfxInit();
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -50,6 +63,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
+void Gfx_SetTexturing(cc_bool enabled) { }
+
 void Gfx_EnableMipmaps(void) { }  // TODO
 
 void Gfx_DisableMipmaps(void) { } // TODO
@@ -58,6 +73,8 @@ void Gfx_DisableMipmaps(void) { } // TODO
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static float clearR, clearG, clearB;
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 }
 
@@ -91,7 +108,10 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_ClearColor(PackedCol color) { 
+void Gfx_ClearColor(PackedCol color) {
+	clearR = PackedCol_R(color) / 255.0f;
+	clearG = PackedCol_G(color) / 255.0f;
+	clearB = PackedCol_B(color) / 255.0f;
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
@@ -180,7 +200,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); }
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 
 /*########################################################################################################################*
@@ -263,14 +283,26 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) { 
+	WHBGfxBeginRender();
+	WHBGfxBeginRenderTV();
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	// TODO
+	GX2ColorBuffer* buf = WHBGfxGetTVColourBuffer();
+	GX2DepthBuffer* dph = WHBGfxGetTVDepthBuffer();
+
+	if (buffers & GFX_BUFFER_COLOR) {
+		GX2ClearColor(buf, clearR, clearG, clearB, 1.0f);
+	}
+	if (buffers & GFX_BUFFER_DEPTH) {
+		GX2ClearDepthStencilEx(dph, 1.0f, 0, GX2_CLEAR_FLAGS_DEPTH | GX2_CLEAR_FLAGS_STENCIL);
+	}
 }
 
 void Gfx_EndFrame(void) {
-	
+	WHBGfxFinishRenderTV();
+	WHBGfxFinishRender();
+
 	if (gfx_minFrameMs) LimitFPS();
 }
 

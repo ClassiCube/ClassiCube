@@ -72,17 +72,18 @@ And also runs on:
 * BeOS - untested on actual hardware
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
-* 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
-* Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
-* GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
+* Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
+* DS/DSi - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ds.yml))
+* GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
+* Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
+* 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
+* Switch - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
-* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
-* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
-* Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
 * PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
-* Switch - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
+* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
+* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
 
 # Compiling 
 
@@ -303,7 +304,11 @@ Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/
 
 The Nintendo 64 port needs assistance from someone experienced with Nintendo 64 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
-You'll also need to stub out `WorkerLoop` function in `Http_Worker.c` for now
+#### Nintendo DS/DSi
+
+Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
+
+The Nintendo DS port needs assistance from someone experienced with Nintendo DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
 ##### Other
 
