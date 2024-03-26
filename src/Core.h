@@ -288,7 +288,6 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 #elif defined GEKKO
 	#define CC_BUILD_GCWII
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_COOPTHREADED

@@ -1146,6 +1146,117 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 
 	free(chunks[0]);
 }
+#elif defined CC_BUILD_GCWII
+/*########################################################################################################################*
+*-----------------------------------------------------GC/Wii backend------------------------------------------------------*
+*#########################################################################################################################*/
+#include <asndlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct AudioContext {
+	int chanID, count;
+	int channels, sampleRate, volume;
+};
+
+cc_bool AudioBackend_Init(void) {
+	ASND_Init();
+	ASND_Pause(0);
+	return true;
+}
+
+void AudioBackend_Tick(void) { }
+
+void AudioBackend_Free(void) {
+	ASND_Pause(1);
+	ASND_End();
+}
+
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
+	ctx->chanID = -1;
+	ctx->count  = buffers;
+	ctx->volume = 0;
+	return 0;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->chanID != -1) ASND_StopVoice(ctx->chanID);
+	ctx->chanID = -1;
+	ctx->count = 0;
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+	ctx->chanID     = ASND_GetFirstUnusedVoice();
+
+	return 0;
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
+	// Audio buffers must be aligned and padded to a multiple of 32 bytes
+	if (((uintptr_t)chunk & 0x20) != 0) {
+		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
+	}
+	if ((dataSize & 0x20) != 0) {
+		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+	}
+
+	int format = (ctx->channels == 2) ? VOICE_STEREO_16BIT : VOICE_MONO_16BIT;
+	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, chunk, dataSize, ctx->volume, ctx->volume, NULL);
+
+	return 0;
+
+	// tried to queue data without polling for free buffers first
+	return ERR_INVALID_ARGUMENT;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+	return 0;
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	int status = ASND_StatusVoice(ctx->chanID);
+	*inUse = (status <= 0) ? 0 : ctx->count;
+
+	return 0;
+}
+
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	return true;
+}
+
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	cc_result res;
+
+	ctx->volume = data->volume/100.f*255;
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
+	if ((res = Audio_Play(ctx))) return res;
+
+	return 0;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	size = (size + 0x1F) & ~0x1F;  // round up to nearest multiple of 0x20
+	cc_uint32 alignedSize = ((size*numChunks) + 0x1F) & ~0x1F;  // round up to nearest multiple of 0x20
+	void* dst = aligned_alloc(0x20, alignedSize);
+
+	for (int i = 0; i < numChunks; i++) {
+		chunks[i] = dst + size * i;
+	}
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	free(chunks[0]);
+}
 #elif defined CC_BUILD_DREAMCAST
 /*########################################################################################################################*
 *----------------------------------------------------Dreamcast backend----------------------------------------------------*
