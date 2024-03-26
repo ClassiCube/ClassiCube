@@ -1230,6 +1230,7 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 cc_result Audio_Play(struct AudioContext* ctx) {
 	int format = (ctx->channels == 2) ? VOICE_STEREO_16BIT : VOICE_MONO_16BIT;
 	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, ctx->bufs[0].samples, ctx->bufs[0].size, ctx->volume, ctx->volume, (ctx->count > 1) ? MusicCallback : NULL);
+	if (ctx->count == 1) ctx->bufs[0].available = true;
 
 	return 0;
 }
@@ -1250,18 +1251,6 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	cc_result res;
-
-	ctx->volume = data->volume/100.f*255;
-
-	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
-	if ((res = Audio_Play(ctx))) return res;
-
-	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
