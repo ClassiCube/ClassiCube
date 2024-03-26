@@ -6,39 +6,21 @@
 #include "Utils.h"
 #include "Platform.h"
 
-void Audio_ApplyVolume(cc_int16* samples, int count, int volume) {
-	int i;
-
-	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
-		samples[0] = (samples[0] * volume / 100);
-		samples[1] = (samples[1] * volume / 100);
-		samples[2] = (samples[2] * volume / 100);
-		samples[3] = (samples[3] * volume / 100);
-
-		samples[4] = (samples[4] * volume / 100);
-		samples[5] = (samples[5] * volume / 100);
-		samples[6] = (samples[6] * volume / 100);
-		samples[7] = (samples[7] * volume / 100);
-	}
-
-	for (; i < count; i++, samples++) {
-		samples[0] = (samples[0] * volume / 100);
-	}
-}
-
-
 void Audio_Warn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
 
+/* Whether the given audio data can be played without recreating the underlying audio device */
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
+
 /* Common/Base methods */
 static void AudioBase_Clear(struct AudioContext* ctx);
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data);
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size);
 static void AudioBase_AllocChunks(int size, void** chunks, int numChunks);
 static void AudioBase_FreeChunks(void** chunks, int numChunks);
 
 /* achieve higher speed by playing samples at higher sample rate */
-#define Audio_AdjustSampleRate(data) ((data->sampleRate * data->rate) / 100)
+#define Audio_AdjustSampleRate(sampleRate, playbackRate) ((sampleRate * playbackRate) / 100)
 
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
@@ -226,8 +208,8 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->count = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	ctx->sampleRate = sampleRate;
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	ctx->sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 
 	if (channels == 1) {
 		ctx->format = AL_FORMAT_MONO16;
@@ -237,6 +219,11 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 		return ERR_INVALID_ARGUMENT;
 	}
 	return 0;
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	_alSourcef(ctx->source, AL_GAIN, volume / 100.0f);
+	_alGetError(); /* Reset error state */
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
@@ -280,22 +267,9 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = ctx->count - ctx->free; return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	cc_result res;
-	
-	data->sampleRate = Audio_AdjustSampleRate(data);
-	_alSourcef(ctx->source, AL_GAIN, data->volume / 100.0f);
-	_alGetError(); /* Reset error state */
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,     data->size)))      return res;
-	if ((res = Audio_Play(ctx))) return res;
-	return 0;
 }
 
 static const char* GetError(cc_result res) {
@@ -384,7 +358,7 @@ WINMMAPI UINT     WINAPI waveOutGetNumDevs(void);
 struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
-	int count, channels, sampleRate;
+	int count, channels, sampleRate, volume;
 	cc_uint32 _tmpSize; void* _tmpData;
 };
 #define AUDIO_COMMON_VOLUME
@@ -399,7 +373,8 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	for (i = 0; i < buffers; i++) {
 		ctx->headers[i].dwFlags = WHDR_DONE;
 	}
-	ctx->count = buffers;
+	ctx->count  = buffers;
+	ctx->volume = 100;
 	return 0;
 }
 
@@ -426,11 +401,12 @@ void Audio_Close(struct AudioContext* ctx) {
 	AudioBase_Clear(ctx);
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
 	WAVEFORMATEX fmt;
 	cc_result res;
 	int sampleSize;
 
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
@@ -454,10 +430,15 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	return res;
 }
 
+void Audio_SetVolume(struct AudioContext* ctx, int volume) { ctx->volume = volume; }
+
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
-	cc_result res = 0;
+	cc_result res;
 	WAVEHDR* hdr;
 	int i;
+
+	cc_bool ok = AudioBase_AdjustSound(ctx, &chunk, &dataSize);
+	if (!ok) return ERR_OUT_OF_MEMORY;
 
 	for (i = 0; i < ctx->count; i++) {
 		hdr = &ctx->headers[i];
@@ -497,21 +478,10 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 }
 
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	int channels   = data->channels;
-	int sampleRate = Audio_AdjustSampleRate(data);
+	int sampleRate = Audio_AdjustSampleRate(data->sampleRate, data->rate);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	cc_bool ok = AudioBase_AdjustSound(ctx, data);
-	cc_result res;
-	if (!ok) return ERR_OUT_OF_MEMORY; 
-	data->sampleRate = Audio_AdjustSampleRate(data);
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
-	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -536,19 +506,20 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 *#########################################################################################################################*/
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include "ExtMath.h"
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
 
 struct AudioContext {
-	int count, channels, sampleRate;
-	SLObjectItf playerObject;
-	SLPlayItf   playerPlayer;
-	SLBufferQueueItf playerQueue;
+	int count, volume;
+	int channels, sampleRate;
+	SLObjectItf       playerObject;
+	SLPlayItf         playerPlayer;
+	SLBufferQueueItf  playerQueue;
 	SLPlaybackRateItf playerRate;
-	cc_uint32 _tmpSize; void* _tmpData;
+	SLVolumeItf       playerVolume;
 };
-#define AUDIO_COMMON_VOLUME
 #define AUDIO_COMMON_ALLOC
 
 static SLresult (SLAPIENTRY *_slCreateEngine)(SLObjectItf* engine, SLuint32 numOptions, const SLEngineOption* engineOptions,
@@ -558,13 +529,15 @@ static SLInterfaceID* _SL_IID_PLAY;
 static SLInterfaceID* _SL_IID_ENGINE;
 static SLInterfaceID* _SL_IID_BUFFERQUEUE;
 static SLInterfaceID* _SL_IID_PLAYBACKRATE;
+static SLInterfaceID* _SL_IID_VOLUME;
 static const cc_string slLib = String_FromConst("libOpenSLES.so");
 
 static cc_bool LoadSLFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(slCreateEngine),     DynamicLib_Sym(SL_IID_NULL),
 		DynamicLib_Sym(SL_IID_PLAY),        DynamicLib_Sym(SL_IID_ENGINE),
-		DynamicLib_Sym(SL_IID_BUFFERQUEUE), DynamicLib_Sym(SL_IID_PLAYBACKRATE)
+		DynamicLib_Sym(SL_IID_BUFFERQUEUE), DynamicLib_Sym(SL_IID_PLAYBACKRATE),
+		DynamicLib_Sym(SL_IID_VOLUME)
 	};
 	void* lib;
 	
@@ -581,8 +554,7 @@ cc_bool AudioBackend_Init(void) {
 	if (!LoadSLFuncs()) { Logger_WarnFunc(&msg); return false; }
 	
 	/* mixer doesn't use any effects */
-	ids[0] = *_SL_IID_NULL; 
-	req[0] = SL_BOOLEAN_FALSE;
+	ids[0] = *_SL_IID_NULL; req[0] = SL_BOOLEAN_FALSE;
 	
 	res = _slCreateEngine(&slEngineObject, 0, NULL, 0, NULL, NULL);
 	if (res) { Audio_Warn(res, "creating OpenSL ES engine"); return false; }
@@ -617,7 +589,8 @@ void AudioBackend_Free(void) {
 }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->count = buffers;
+	ctx->count  = buffers;
+	ctx->volume = 100;
 	return 0;
 }
 
@@ -637,26 +610,40 @@ static void Audio_Reset(struct AudioContext* ctx) {
 	ctx->playerPlayer = NULL;
 	ctx->playerQueue  = NULL;
 	ctx->playerRate   = NULL;
+	ctx->playerVolume = NULL;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
 	Audio_Stop(ctx);
 	Audio_Reset(ctx);
-	AudioBase_Clear(ctx);
+
+	ctx->count      = 0;
+	ctx->channels   = 0;
+	ctx->sampleRate = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+static float Log10(float volume) { return Math_Log(volume) / Math_Log(10); }
+
+static void UpdateVolume(struct AudioContext* ctx) {
+	/* Object doesn't exist until Audio_SetFormat is called */
+	if (!ctx->playerVolume) return;
+	
+	/* log of 0 is undefined */
+	SLmillibel attenuation = ctx->volume == 0 ? SL_MILLIBEL_MIN : (2000 * Log10(ctx->volume / 100.0f));
+	(*ctx->playerVolume)->SetVolumeLevel(ctx->playerVolume, attenuation);
+}
+
+static cc_result RecreatePlayer(struct AudioContext* ctx, int channels, int sampleRate) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
 	SLObjectItf playerObject;
 	SLDataFormat_PCM fmt;
-	SLInterfaceID ids[3];
-	SLboolean req[3];
+	SLInterfaceID ids[4];
+	SLboolean req[4];
 	SLDataSource src;
 	SLDataSink dst;
 	cc_result res;
 
-	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 	Audio_Reset(ctx);
@@ -682,8 +669,9 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	ids[0] = *_SL_IID_BUFFERQUEUE;  req[0] = SL_BOOLEAN_TRUE;
 	ids[1] = *_SL_IID_PLAY;         req[1] = SL_BOOLEAN_TRUE;
 	ids[2] = *_SL_IID_PLAYBACKRATE; req[2] = SL_BOOLEAN_TRUE;
+	ids[3] = *_SL_IID_VOLUME;       req[3] = SL_BOOLEAN_TRUE;
 
-	res = (*slEngineEngine)->CreateAudioPlayer(slEngineEngine, &playerObject, &src, &dst, 3, ids, req);
+	res = (*slEngineEngine)->CreateAudioPlayer(slEngineEngine, &playerObject, &src, &dst, 4, ids, req);
 	ctx->playerObject = playerObject;
 	if (res) return res;
 
@@ -691,7 +679,26 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_PLAY,         &ctx->playerPlayer))) return res;
 	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_BUFFERQUEUE,  &ctx->playerQueue)))  return res;
 	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_PLAYBACKRATE, &ctx->playerRate)))   return res;
+	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_VOLUME,       &ctx->playerVolume))) return res;
+
+	UpdateVolume(ctx);
 	return 0;
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	cc_result res;
+
+	if (ctx->channels != channels || ctx->sampleRate != sampleRate) {
+		if ((res = RecreatePlayer(ctx, channels, sampleRate))) return res;
+	}
+
+	/* rate is in milli, so 1000 = normal rate */
+	return (*ctx->playerRate)->SetRate(ctx->playerRate, playbackRate * 10);
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	ctx->volume = volume;
+	UpdateVolume(ctx);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
@@ -717,22 +724,8 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return res;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return !ctx->channels || (ctx->channels == data->channels && ctx->sampleRate == data->sampleRate);
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	cc_bool ok = AudioBase_AdjustSound(ctx, data);
-	cc_result res;
-	if (!ok) return ERR_OUT_OF_MEMORY; 
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	/* rate is in milli, so 1000 = normal rate */
-	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, data->rate * 10))) return res;
-
-	if ((res = Audio_QueueChunk(ctx, data->data, data->size))) return res;
-	if ((res = Audio_Play(ctx))) return res;
-	return 0;
 }
 
 static const char* GetError(cc_result res) {
@@ -822,13 +815,22 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->count = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
 	ctx->stereo = (channels == 2);
 	int fmt = ctx->stereo ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16;
-	
+    
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	ndspChnSetFormat(ctx->chanID, fmt);
 	ndspChnSetRate(ctx->chanID, sampleRate);
 	return 0;
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	float mix[12] = { 0 };
+ 	mix[0] = volume / 100.0f;
+ 	mix[1] = volume / 100.0f;
+ 	
+ 	ndspChnSetMix(ctx->chanID, mix);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
@@ -845,13 +847,11 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 data
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
-		//Platform_Log2("QUEUE_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING)
 			continue;
 
 		buf->data_pcm16 = chunk;
 		buf->nsamples   = dataSize / (sizeof(cc_int16) * (ctx->stereo ? 2 : 1));
-		//Platform_Log1("PLAYING ON: %i", &ctx->chanID);
 		DSP_FlushDataCache(buf->data_pcm16, dataSize);
 		ndspChnWaveBufAdd(ctx->chanID, buf);
 		return 0;
@@ -869,7 +869,6 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	for (int i = 0; i < ctx->count; i++) 
 	{
 		buf = &ctx->bufs[i];
-		//Platform_Log2("CHECK_CHUNK: %i = %i", &ctx->chanID, &buf->status);
 		if (buf->status == NDSP_WBUF_QUEUED || buf->status == NDSP_WBUF_PLAYING) { 
 			count++; continue; 
 		}
@@ -880,22 +879,8 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 }
 
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	float mix[12] = { 0 };
- 	mix[0] = data->volume / 100.0f;
- 	mix[1] = data->volume / 100.0f;
- 	
- 	ndspChnSetMix(ctx->chanID, mix);
-	data->sampleRate = Audio_AdjustSampleRate(data);
-	cc_result res;
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
-	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -1007,7 +992,8 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->count = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 
@@ -1019,8 +1005,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 		// mono
 		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
 		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 1);
-	}
-	else {
+	} else {
 		// stereo
 		audrvVoiceSetMixFactor(&drv, ctx->chanID, 1.0f, 0, 0);
 		audrvVoiceSetMixFactor(&drv, ctx->chanID, 0.0f, 0, 1);
@@ -1029,6 +1014,10 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	}
 
 	return 0;
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	audrvVoiceSetVolume(&drv, ctx->chanID, volume / 100.0f);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
@@ -1090,22 +1079,8 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return 0;
 }
 
-
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	data->sampleRate = Audio_AdjustSampleRate(data);
-	cc_result res;
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
-
-	audrvVoiceSetVolume(&drv, ctx->chanID, data->volume/100.f);
-	if ((res = Audio_Play(ctx))) return res;
-
-	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -1282,9 +1257,9 @@ cc_bool AudioBackend_Init(void) {
 }
 
 void AudioBackend_Tick(void) {
-    // TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
-    for (int i = 0; i < SND_STREAM_MAX; i++)
-        snd_stream_poll(i);
+	// TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
+	for (int i = 0; i < SND_STREAM_MAX; i++)
+		snd_stream_poll(i);
 }
 
 void AudioBackend_Free(void) { 
@@ -1307,8 +1282,8 @@ static void* AudioCallback(snd_stream_hnd_t hnd, int smp_req, int *smp_recv) {
 		buf->samples   = NULL;
 		buf->available = true;
 
-        // special case to fix sounds looping
-        if (samples == 0 && ptr == NULL) *smp_recv = smp_req;
+		// special case to fix sounds looping
+		if (samples == 0 && ptr == NULL) *smp_recv = smp_req;
 	}
 	return ptr;
 }
@@ -1338,10 +1313,15 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->count = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	sampleRate = Audio_AdjustSampleRate(sampleRate, playbackRate);
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 	return 0;
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	snd_stream_volume(ctx->hnd, volume);
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
@@ -1380,19 +1360,8 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	snd_stream_volume(ctx->hnd, data->volume);
-	data->sampleRate = Audio_AdjustSampleRate(data);
-	cc_result res;
-
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueChunk(ctx, data->data,    data->size)))       return res;
-	if ((res = Audio_Play(ctx))) return res;
-	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -1416,14 +1385,15 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 /*########################################################################################################################*
 *-----------------------------------------------------WebAudio backend----------------------------------------------------*
 *#########################################################################################################################*/
-struct AudioContext { int contextID, count; };
+struct AudioContext { int contextID, count, rate; void* data; };
 #define AUDIO_COMMON_ALLOC
 
 extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
 extern void interop_AudioClose(int contextID);
-extern int  interop_AudioPlay(int contextID, const void* name, int volume, int rate);
-extern int  interop_AudioPoll(int contetID, int* inUse);
+extern int  interop_AudioPlay(int contextID, const void* name, int rate);
+extern int  interop_AudioPoll(int contextID, int* inUse);
+extern int  interop_AudioVolume(int contextID, int volume);
 extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
 
 cc_bool AudioBackend_Init(void) {
@@ -1438,6 +1408,8 @@ void AudioBackend_Free(void) { }
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count     = buffers;
 	ctx->contextID = interop_AudioCreate();
+	ctx->data      = NULL;
+	ctx->rate      = 100;
 	return 0;
 }
 
@@ -1447,25 +1419,29 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->count     = 0;
 }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	return ERR_NOT_SUPPORTED;
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	ctx->rate = playbackRate; return 0;
 }
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	interop_AudioVolume(ctx->contextID, volume);
+}
+
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
-	return ERR_NOT_SUPPORTED;
+	ctx->data = chunk; return 0;
 }
-cc_result Audio_Play(struct AudioContext* ctx) { return ERR_NOT_SUPPORTED; }
+
+cc_result Audio_Play(struct AudioContext* ctx) { 
+	return interop_AudioPlay(ctx->contextID, ctx->data, ctx->rate);
+}
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return interop_AudioPoll(ctx->contextID, inUse);
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
-}
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	return interop_AudioPlay(ctx->contextID, data->data, data->volume, data->rate);
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -1499,11 +1475,25 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 
 void Audio_Close(struct AudioContext* ctx) { }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return true; }
-
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
 	return ERR_NOT_SUPPORTED;
 }
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) { }
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) { 
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	return ERR_NOT_SUPPORTED;
+}
+
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
 #endif
@@ -1514,6 +1504,26 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
 *#########################################################################################################################*/
 
 #ifdef AUDIO_COMMON_VOLUME
+static void ApplyVolume(cc_int16* samples, int count, int volume) {
+	int i;
+
+	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
+		samples[0] = (samples[0] * volume / 100);
+		samples[1] = (samples[1] * volume / 100);
+		samples[2] = (samples[2] * volume / 100);
+		samples[3] = (samples[3] * volume / 100);
+
+		samples[4] = (samples[4] * volume / 100);
+		samples[5] = (samples[5] * volume / 100);
+		samples[6] = (samples[6] * volume / 100);
+		samples[7] = (samples[7] * volume / 100);
+	}
+
+	for (; i < count; i++, samples++) {
+		samples[0] = (samples[0] * volume / 100);
+	}
+}
+
 static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->count      = 0;
 	ctx->channels   = 0;
@@ -1523,28 +1533,31 @@ static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->_tmpSize = 0;
 }
 
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data) {
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size) {
 	void* audio;
-	if (data->volume >= 100) return true;
+	cc_uint32 src_size = *size;
+	if (ctx->volume >= 100) return true;
 
 	/* copy to temp buffer to apply volume */
-	if (ctx->_tmpSize < data->size) {
+	if (ctx->_tmpSize < src_size) {
 		/* TODO: check if we can realloc NULL without a problem */
 		if (ctx->_tmpData) {
-			audio = Mem_TryRealloc(ctx->_tmpData, data->size, 1);
+			audio = Mem_TryRealloc(ctx->_tmpData, src_size, 1);
 		} else {
-			audio = Mem_TryAlloc(data->size, 1);
+			audio = Mem_TryAlloc(src_size, 1);
 		}
 
 		if (!data) return false;
 		ctx->_tmpData = audio;
-		ctx->_tmpSize = data->size;
+		ctx->_tmpSize = src_size;
 	}
 
 	audio = ctx->_tmpData;
-	Mem_Copy(audio, data->data, data->size);
-	Audio_ApplyVolume((cc_int16*)audio, data->size / 2, data->volume);
-	data->data = audio;
+	Mem_Copy(audio, *data, src_size);
+	ApplyVolume((cc_int16*)audio, src_size / 2, ctx->volume);
+
+	*data = audio;
+	*size = src_size;
 	return true;
 }
 #endif
@@ -1574,6 +1587,16 @@ struct AudioContext music_ctx;
 static struct AudioContext context_pool[POOL_MAX_CONTEXTS];
 
 #ifndef CC_BUILD_NOSOUNDS
+static cc_result PlayAudio(struct AudioContext* ctx, struct AudioData* data) {
+    cc_result res;
+    Audio_SetVolume(ctx, data->volume);
+
+	if ((res = Audio_SetFormat(ctx,  data->channels, data->sampleRate, data->rate))) return res;
+	if ((res = Audio_QueueChunk(ctx, data->data,     data->size))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
+}
+
 cc_result AudioPool_Play(struct AudioData* data) {
 	struct AudioContext* ctx;
 	int inUse, i;
@@ -1588,7 +1611,7 @@ cc_result AudioPool_Play(struct AudioData* data) {
 		if (inUse > 0) continue;
 		
 		if (!Audio_FastPlay(ctx, data)) continue;
-		return Audio_PlayData(ctx, data);
+		return PlayAudio(ctx, data);
 	}
 
 	/* Try again with all contexts, even if need to recreate one (expensive) */
@@ -1599,7 +1622,7 @@ cc_result AudioPool_Play(struct AudioData* data) {
 		if (res) return res;
 		if (inUse > 0) continue;
 
-		return Audio_PlayData(ctx, data);
+		return PlayAudio(ctx, data);
 	}
 	return 0;
 }
