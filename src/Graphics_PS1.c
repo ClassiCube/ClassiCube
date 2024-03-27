@@ -7,6 +7,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <psxgpu.h>
+#include <psxgte.h>
+#include <psxpad.h>
+#include <psxapi.h>
+#include <psxetc.h>
+#include <inline_c.h>
 // Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
 
 
@@ -97,9 +102,9 @@ void Gfx_Create(void) {
 	SetDispMask(1);
 
 	InitGeom();
-	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
+	//gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
 	// Set screen depth (basically FOV control, W/2 works best)
-	gte_SetGeomScreen(Window_Main.Width / 2);
+	//gte_SetGeomScreen(Window_Main.Width / 2);
 }
 
 void Gfx_Free(void) { 
@@ -244,18 +249,86 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
 static struct Matrix _view, _proj, mvp;
+#define ToFixed(v) (int)(v * (1 << 12))
+
+static void LoadTransformMatrix(struct Matrix* src) {
+	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+	MATRIX mtx;
+
+	mtx.t[0] = 0;
+	mtx.t[1] = 0;
+	mtx.t[2] = 0;
+
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row1.x, &src->row1.y, &src->row1.z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row2.x, &src->row2.y, &src->row2.z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row3.x, &src->row3.y, &src->row3.z);
+	//Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
+	//Platform_LogConst("====");
+
+	float len1 = Math_SqrtF(src->row1.x + src->row1.y + src->row1.z);
+	float len2 = Math_SqrtF(src->row2.x + src->row2.y + src->row2.z);
+	float len3 = Math_SqrtF(src->row3.x + src->row3.y + src->row3.z);
+
+	mtx.m[0][0] = ToFixed(1);
+	mtx.m[0][1] = 0;
+	mtx.m[0][2] = 0;
+
+	mtx.m[1][0] = 0;
+	mtx.m[1][1] = ToFixed(1);
+	mtx.m[1][2] = 0;
+
+	mtx.m[2][0] = 0;
+	mtx.m[2][1] = ToFixed(1);
+	mtx.m[2][2] = 1;
+	
+	gte_SetRotMatrix(&mtx);
+	gte_SetTransMatrix(&mtx);
+}
+
+/*static void LoadTransformMatrix(struct Matrix* src) {
+	// https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+	MATRIX mtx;
+
+	mtx.t[0] = ToFixed(src->row4.x);
+	mtx.t[1] = ToFixed(src->row4.y);
+	mtx.t[2] = ToFixed(src->row4.z);
+
+	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row1.x, &src->row1.y, &src->row1.z);
+	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row2.x, &src->row2.y, &src->row2.z);
+	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row3.x, &src->row3.y, &src->row3.z);
+	Platform_Log3("X: %f3, Y: %f3, Z: %f3", &src->row4.x, &src->row4.y, &src->row4.z);
+	Platform_LogConst("====");
+
+	float len1 = Math_SqrtF(src->row1.x + src->row1.y + src->row1.z);
+	float len2 = Math_SqrtF(src->row2.x + src->row2.y + src->row2.z);
+	float len3 = Math_SqrtF(src->row3.x + src->row3.y + src->row3.z);
+
+	mtx.m[0][0] = ToFixed(src->row1.x / len1);
+	mtx.m[0][1] = ToFixed(src->row1.y / len1);
+	mtx.m[0][2] = ToFixed(src->row1.z / len1);
+
+	mtx.m[1][0] = ToFixed(src->row2.x / len2);
+	mtx.m[1][1] = ToFixed(src->row2.y / len2);
+	mtx.m[1][2] = ToFixed(src->row2.z / len2);
+
+	mtx.m[2][0] = ToFixed(src->row3.x / len3);
+	mtx.m[2][1] = ToFixed(src->row3.y / len3);
+	mtx.m[2][2] = ToFixed(src->row3.z / len3);
+	
+	gte_SetRotMatrix(&mtx);
+	gte_SetTransMatrix(&mtx);
+}*/
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
 
 	Matrix_Mul(&mvp, &_view, &_proj);
-	// TODO
+	LoadTransformMatrix(&mvp);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
 	Gfx_LoadMatrix(type, &Matrix_Identity);
-	// TODO
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
@@ -267,37 +340,32 @@ void Gfx_DisableTextureOffset(void) {
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
-	matrix->row3.z = -2.0f / (zFar - zNear);
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
 	matrix->row4.x = -1.0f;
 	matrix->row4.y =  1.0f;
-	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
-	float zNear_ = zFar;
-	float zFar_  = 0.1f;
+	float zNear = 0.01f;
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	float c = (float)Cotangent(0.5f * fov);
-
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
-	/* For pos FOV based perspective matrix, left/right/top/bottom are calculated as: */
-	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
-	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*matrix = Matrix_Identity;
-	// TODO: Check is Frustum culling needs changing for this
 
 	matrix->row1.x =  c / aspect;
 	matrix->row2.y =  c;
-	matrix->row3.z = -(zFar_ + zNear_) / (zFar_ - zNear_);
+	matrix->row3.z = zFar / (zNear - zFar);
 	matrix->row3.w = -1.0f;
-	matrix->row4.z = -(2.0f * zFar_ * zNear_) / (zFar_ - zNear_);
+	matrix->row4.z = (zNear * zFar) / (zNear - zFar);
 	matrix->row4.w =  0.0f;
 }
 
@@ -314,7 +382,100 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
+static void Transform(Vec3* result, struct VertexTextured* a, const struct Matrix* mat) {
+	/* a could be pointing to result - therefore can't directly assign X/Y/Z */
+	float x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
+	float y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
+	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
+	
+	result->x = x *  (320/2) + (320/2); 
+	result->y = y * -(240/2) + (240/2);
+	result->z = z * OT_LENGTH;
+}
+
+cc_bool VERTEX_LOGGING;
 static void DrawQuads(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+		setPolyF4(poly);
+
+		Vec3 coords[4];
+		Transform(&coords[0], &v[0], &mvp);
+		Transform(&coords[1], &v[1], &mvp);
+		Transform(&coords[2], &v[2], &mvp);
+		Transform(&coords[3], &v[3], &mvp);
+
+		poly->x0 = coords[1].x; poly->y0 = coords[1].y;
+		poly->x1 = coords[0].x; poly->y1 = coords[0].y;
+		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
+		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
+
+		int X = v[0].x, Y = v[0].y, Z = v[0].z;
+		if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
+		X = poly->x1; Y = poly->y1, Z = coords[0].z;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+
+		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+		if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
+
+		if (p < 0 || p >= OT_LENGTH) continue;
+		addPrim(&buffer->ot[p >> 2], poly);
+	}
+}
+
+/*static void DrawQuads(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+		setPolyF4(poly);
+
+		SVECTOR coords[4];
+		coords[0].vx = v[0].x; coords[0].vy = v[0].y; coords[0].vz = v[0].z;
+		coords[1].vx = v[1].x; coords[1].vy = v[1].y; coords[1].vz = v[1].z;
+		coords[2].vx = v[2].x; coords[2].vy = v[2].y; coords[2].vz = v[1].z;
+		coords[3].vx = v[3].x; coords[3].vy = v[3].y; coords[3].vz = v[3].z;
+
+		int X = coords[0].vx, Y = coords[0].vy, Z = coords[0].vz;
+		//Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
+		gte_ldv3(&coords[0], &coords[1], &coords[2]);
+		gte_rtpt();
+		gte_stsxy0(&poly->x0);
+
+		int p;
+		gte_avsz3();
+		gte_stotz( &p );
+
+		X = poly->x0; Y = poly->y0, Z = p;
+		//Platform_Log3("OUT: %i, %i, %i", &X, &Y, &Z);
+		if (((p >> 2) >= OT_LENGTH) || ((p >> 2) < 0))
+			continue;
+
+		gte_ldv0(&coords[3]);
+		gte_rtps();
+		gte_stsxy3(&poly->x1, &poly->x2, &poly->x3);
+
+		//poly->x0 = v[1].x; poly->y0 = v[1].y;
+		//poly->x1 = v[0].x; poly->y1 = v[0].y;
+		//poly->x2 = v[2].x; poly->y2 = v[2].y;
+		//poly->x3 = v[3].x; poly->y3 = v[3].y;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+
+		addPrim(&buffer->ot[p >> 2], poly);
+	}
+}*/
+
+/*static void DrawQuads(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
@@ -334,7 +495,7 @@ static void DrawQuads(int verticesCount, int startVertex) {
 		int p = 0;
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
-}
+}*/
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_COLOURED) return;

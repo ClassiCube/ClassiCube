@@ -14,8 +14,9 @@
 #include <stdio.h>
 #include <psxetc.h>
 #include <psxapi.h>
-#include <psxpad.h>
+#include <psxgpu.h>
 #include <hwregs_c.h>
+void exit(int code) { } // TODO how to fix
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -25,7 +26,6 @@ const cc_result ReturnCode_DirectoryExists    = 99999;
 const cc_result ReturnCode_SocketInProgess  = -1;
 const cc_result ReturnCode_SocketWouldBlock = -1;
 const char* Platform_AppNameSuffix = " PS1";
-void exit(int code) { } // TODO how to fix
 
 
 /*########################################################################################################################*
@@ -54,22 +54,20 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 *#########################################################################################################################*/
 static volatile cc_uint32 irq_count;
 
-cc_uint64 Stopwatch_Measure(void) { 
-	//Platform_Log1("IRQ: %i", &irq_count);
+cc_uint64 Stopwatch_Measure(void) {
 	return irq_count;
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg); // TODO calculate ???
+	return (end - beg) * 1000;
 }
 
-static void timer2_handler(void) {
-	irq_count++;
-}
+static void timer2_handler(void) { irq_count++; }
 
 static void Stopwatch_Init(void) {
-	TIMER_CTRL(2) = 0x0260; // CLK/8 input, repeated IRQ on overflow
+	TIMER_CTRL(2)	= 0x0258;				// CLK/8 input, IRQ on reload
+	TIMER_RELOAD(2)	= (F_CPU / 8) / 1000;	// 1000 Hz
 
 	EnterCriticalSection();
 	InterruptCallback(IRQ_TIMER2, &timer2_handler);

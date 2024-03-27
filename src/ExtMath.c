@@ -5,9 +5,14 @@
 #include <stdlib.h>
 
 #if defined PLAT_PS1
+#include <psxgte.h>
 float Math_AbsF(float x)  { return __builtin_fabsf(x); }
-float Math_SqrtF(float x) { return 0; } /* TODO broken */
 
+float Math_SqrtF(float x) { 
+	int fp_x = (int)(x * (1 << 12));
+	fp_x = SquareRoot12(fp_x);
+	return (float)fp_x / (1 << 12);
+}
 #elif defined __GNUC__
 /* Defined in .h using builtins */
 #else
