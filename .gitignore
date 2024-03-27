@@ -72,6 +72,10 @@ ClassiCube*
 screenshots
 fontscache.txt
 
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+
 #GCC object files
 *.o
 

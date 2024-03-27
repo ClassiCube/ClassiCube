@@ -138,6 +138,9 @@ vita:
 	$(MAKE) -f misc/vita/Makefile PLAT=vita
 ps3:
 	$(MAKE) -f misc/ps3/Makefile PLAT=ps3
+ps1:
+	cmake --preset default misc/ps1
+	cmake --build misc/ps1/build
 ps2:
 	$(MAKE) -f misc/ps2/Makefile PLAT=ps2
 xbox:

@@ -4,8 +4,15 @@
 /* For abs(x) function */
 #include <stdlib.h>
 
-#ifndef __GNUC__
+#if defined PLAT_PS1
+float Math_AbsF(float x)  { return __builtin_fabsf(x); }
+float Math_SqrtF(float x) { return 0; } /* TODO broken */
+
+#elif defined __GNUC__
+/* Defined in .h using builtins */
+#else
 #include <math.h>
+
 float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
 float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
 #endif

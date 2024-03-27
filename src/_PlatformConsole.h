@@ -70,6 +70,11 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	// Consoles *sometimes* doesn't use argv[0] for program name and so argc will be 0
 	//  (e.g. when running via some emulators)
 	if (!argc) return 0;
+
+#ifdef CC_BUILD_PS1
+	// When running in DuckStation at least, argv was a five element array of empty strings ???
+	return 0;
+#endif
 	
 	argc--; argv++; // skip executable path argument
 
