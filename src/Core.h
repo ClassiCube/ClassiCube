@@ -118,6 +118,7 @@ typedef cc_uint8  cc_bool;
 #endif
 
 
+#define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
 #ifndef CC_BUILD_FLATPAK
 #define CC_BUILD_RESOURCES
@@ -329,6 +330,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_NETWORKING
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
 	#define CC_BUILD_OPENAL
@@ -370,12 +372,15 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 #elif defined PLAT_PS1
 	#define CC_BUILD_PS1
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
 	#undef  CC_BUILD_FREETYPE
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_NETWORKING
 #endif
 #endif
 

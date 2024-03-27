@@ -1,9 +1,10 @@
 #include "Protocol.h"
+#include "Game.h"
+#ifdef CC_BUILD_NETWORKING
 #include "String.h"
 #include "Deflate.h"
 #include "Server.h"
 #include "Stream.h"
-#include "Game.h"
 #include "Entity.h"
 #include "Platform.h"
 #include "Screens.h"
@@ -1872,6 +1873,13 @@ static void OnReset(void) {
 	Protocol_Reset();
 	FreeMapStates();
 }
+#else
+void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) { }
+
+static void OnInit(void) { }
+
+static void OnReset(void) { }
+#endif
 
 struct IGameComponent Protocol_Component = {
 	OnInit,  /* Init  */

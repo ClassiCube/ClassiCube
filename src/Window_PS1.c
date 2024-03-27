@@ -33,8 +33,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_XRES;
 	DisplayInfo.Height = SCREEN_YRES;
 	DisplayInfo.Depth  = 4; // 32 bit
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
 	
 	Window_Main.Width   = DisplayInfo.Width;
 	Window_Main.Height  = DisplayInfo.Height;
@@ -150,26 +150,18 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	rect.w = SCREEN_XRES;
 	rect.h = SCREEN_YRES;
 
-	HeapUsage usage;
-	GetHeapUsage(&usage);
-
-	Platform_Log4("%i / %i / %i / %i", &usage.total, &usage.heap, &usage.stack, &usage.alloc);
-
-
-	for (int y = 0; y < bmp->height; y++)
+	for (int y = r.y; y < r.y + r.Height; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		cc_uint16* dst = fb         + y * bmp->width;
 		
-		for (int x = 0; x < bmp->width; x++) {
+		for (int x = r.x; x < r.x + r.Width; x++) {
 			cc_uint8* color = (cc_uint8*)&src[x];
-			dst[x] = BGRA8_to_PS1(0);
+			dst[x] = BGRA8_to_PS1(color);
 		}
 	}
 
-	Platform_Log4("%i / %i / %i / %i", &usage.total, &usage.heap, &usage.stack, &usage.alloc);
-
-	LoadImage(&rect, bmp->scan0);
+	LoadImage(&rect, fb);
 	DrawSync(0);
 }
 

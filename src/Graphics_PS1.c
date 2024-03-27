@@ -3,6 +3,75 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <psxgpu.h>
+// Based off https://github.com/Lameguy64/PSn00bSDK/blob/master/examples/beginner/hello/main.c
+
+
+// Length of the ordering table, i.e. the range Z coordinates can have, 0-15 in
+// this case. Larger values will allow for more granularity with depth (useful
+// when drawing a complex 3D scene) at the expense of RAM usage and performance.
+#define OT_LENGTH 64
+
+// Size of the buffer GPU commands and primitives are written to. If the program
+// crashes due to too many primitives being drawn, increase this value.
+#define BUFFER_LENGTH 8192
+
+typedef struct {
+	DISPENV disp_env;
+	DRAWENV draw_env;
+
+	cc_uint32 ot[OT_LENGTH];
+	cc_uint8  buffer[BUFFER_LENGTH];
+} RenderBuffer;
+
+static RenderBuffer buffers[2];
+static cc_uint8*    next_packet;
+static int          active_buffer;
+
+static void SetupContexts(int w, int h, int r, int g, int b) {
+	SetDefDrawEnv(&buffers[0].draw_env, 0, 0, w, h);
+	SetDefDispEnv(&buffers[0].disp_env, 0, 0, w, h);
+	SetDefDrawEnv(&buffers[1].draw_env, 0, h, w, h);
+	SetDefDispEnv(&buffers[1].disp_env, 0, h, w, h);
+
+	setRGB0(&buffers[0].draw_env, r, g, b);
+	setRGB0(&buffers[1].draw_env, r, g, b);
+	buffers[0].draw_env.isbg = 1;
+	buffers[1].draw_env.isbg = 1;
+
+	active_buffer = 0;
+	next_packet   = buffers[0].buffer;
+	ClearOTagR(buffers[0].ot, OT_LENGTH);
+}
+
+static void FlipBuffers(void) {
+	DrawSync(0);
+	VSync(0);
+
+	RenderBuffer* draw_buffer = &buffers[active_buffer];
+	RenderBuffer* disp_buffer = &buffers[active_buffer ^ 1];
+
+	PutDispEnv(&disp_buffer->disp_env);
+	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
+
+	active_buffer ^= 1;
+	next_packet    = disp_buffer->buffer;
+	ClearOTagR(disp_buffer->ot, OT_LENGTH);
+}
+
+static void* new_primitive(int z, int size) {
+	RenderBuffer* buffer = &buffers[active_buffer];
+	uint8_t* prim        = next_packet;
+
+	addPrim(&buffer->ot[z], prim);
+	next_packet += size;
+
+	assert(next_packet <= &buffer->buffer[BUFFER_LENGTH]);
+	return (void*)prim;
+}
 
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
@@ -18,6 +87,10 @@ void Gfx_Create(void) {
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
+	ResetGraph(0);
+
+	SetupContexts(Window_Main.Width, Window_Main.Height, 63, 0, 127);
+	SetDispMask(1);
 }
 
 void Gfx_Free(void) { 
@@ -78,6 +151,12 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_ClearColor(PackedCol color) {
+	int r = PackedCol_R(color);
+	int g = PackedCol_G(color);
+	int b = PackedCol_B(color);
+
+	setRGB0(&buffers[0].draw_env, r, g, b);
+	setRGB0(&buffers[1].draw_env, r, g, b);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
@@ -248,9 +327,18 @@ cc_bool Gfx_WarnIfNecessary(void) {
 }
 
 void Gfx_BeginFrame(void) { 
+	// Draw the square by allocating a TILE (i.e. untextured solid color
+	// rectangle) primitive at Z = 1.
+	TILE *tile = (TILE *)new_primitive(1, sizeof(TILE));
+
+	setTile(tile);
+	setXY0 (tile, 40, 40);
+	setWH  (tile, 64, 64);
+	setRGB0(tile, 255, 255, 0);
 }
 
 void Gfx_EndFrame(void) {
+	FlipBuffers();
 	if (gfx_minFrameMs) LimitFPS();
 }
 

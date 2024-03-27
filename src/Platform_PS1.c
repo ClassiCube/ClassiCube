@@ -55,6 +55,7 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 static volatile cc_uint32 irq_count;
 
 cc_uint64 Stopwatch_Measure(void) { 
+	//Platform_Log1("IRQ: %i", &irq_count);
 	return irq_count;
 }
 

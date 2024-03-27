@@ -128,7 +128,7 @@ static void SPConnection_BeginConnect(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	World_NewMap();
 
-#if defined CC_BUILD_NDS
+#if defined CC_BUILD_NDS || defined CC_BUILD_PS1
 	World_SetDimensions(16, 16, 16);
 #elif defined CC_BUILD_LOWMEM
 	World_SetDimensions(64, 64, 64);
@@ -136,7 +136,7 @@ static void SPConnection_BeginConnect(void) {
 	World_SetDimensions(128, 64, 128);
 #endif
 
-#if defined CC_BUILD_N64 || defined CC_BUILD_NDS
+#if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1
 	Gen_Active = &FlatgrassGen;
 #else
 	Gen_Active = &NotchyGen;
@@ -223,10 +223,12 @@ static void SPConnection_Init(void) {
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
 static cc_socket net_socket = -1;
+static cc_result net_writeFailure;
+static void OnClose(void);
+
+#ifdef CC_BUILD_NETWORKING
 static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8* net_readCurrent;
-
-static cc_result net_writeFailure;
 static double net_lastPacket;
 static cc_uint8 lastOpcode;
 
@@ -234,7 +236,6 @@ static cc_bool net_connecting;
 static double net_connectTimeout;
 #define NET_TIMEOUT_SECS 15
 
-static void OnClose(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
 	Event_RaiseVoid(&NetEvents.Connected);
@@ -475,8 +476,14 @@ static void MPConnection_Init(void) {
 	Server.SendData     = MPConnection_SendData;
 	net_readCurrent     = net_readBuffer;
 }
+#else
+static void MPConnection_Init(void) { SPConnection_Init(); }
+#endif
 
 
+/*########################################################################################################################*
+*---------------------------------------------------Component interface---------------------------------------------------*
+*#########################################################################################################################*/
 static void OnNewMap(void) {
 	int i;
 	if (Server.IsSinglePlayer) return;
