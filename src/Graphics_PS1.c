@@ -13,7 +13,7 @@
 // Length of the ordering table, i.e. the range Z coordinates can have, 0-15 in
 // this case. Larger values will allow for more granularity with depth (useful
 // when drawing a complex 3D scene) at the expense of RAM usage and performance.
-#define OT_LENGTH 64
+#define OT_LENGTH 1024
 
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
@@ -30,6 +30,13 @@ typedef struct {
 static RenderBuffer buffers[2];
 static cc_uint8*    next_packet;
 static int          active_buffer;
+static RenderBuffer* buffer;
+
+static void OnBufferUpdated(void) {
+	buffer      = &buffers[active_buffer];
+	next_packet = buffer->buffer;
+	ClearOTagR(buffer->ot, OT_LENGTH);
+}
 
 static void SetupContexts(int w, int h, int r, int g, int b) {
 	SetDefDrawEnv(&buffers[0].draw_env, 0, 0, w, h);
@@ -43,8 +50,7 @@ static void SetupContexts(int w, int h, int r, int g, int b) {
 	buffers[1].draw_env.isbg = 1;
 
 	active_buffer = 0;
-	next_packet   = buffers[0].buffer;
-	ClearOTagR(buffers[0].ot, OT_LENGTH);
+	OnBufferUpdated();
 }
 
 static void FlipBuffers(void) {
@@ -58,15 +64,13 @@ static void FlipBuffers(void) {
 	DrawOTagEnv(&draw_buffer->ot[OT_LENGTH - 1], &draw_buffer->draw_env);
 
 	active_buffer ^= 1;
-	next_packet    = disp_buffer->buffer;
-	ClearOTagR(disp_buffer->ot, OT_LENGTH);
+	OnBufferUpdated();
 }
 
-static void* new_primitive(int z, int size) {
+static void* new_primitive(int size) {
 	RenderBuffer* buffer = &buffers[active_buffer];
 	uint8_t* prim        = next_packet;
 
-	addPrim(&buffer->ot[z], prim);
 	next_packet += size;
 
 	assert(next_packet <= &buffer->buffer[BUFFER_LENGTH]);
@@ -91,6 +95,11 @@ void Gfx_Create(void) {
 
 	SetupContexts(Window_Main.Width, Window_Main.Height, 63, 0, 127);
 	SetDispMask(1);
+
+	InitGeom();
+	gte_SetGeomOffset(Window_Main.Width / 2, Window_Main.Height / 2);
+	// Set screen depth (basically FOV control, W/2 works best)
+	gte_SetGeomScreen(Window_Main.Width / 2);
 }
 
 void Gfx_Free(void) { 
@@ -305,13 +314,40 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
+static void DrawQuads(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+		setPolyF4(poly);
+
+		poly->x0 = v[1].x; poly->y0 = v[1].y;
+		poly->x1 = v[0].x; poly->y1 = v[0].y;
+		poly->x2 = v[2].x; poly->y2 = v[2].y;
+		poly->x3 = v[3].x; poly->y3 = v[3].y;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+
+		int p = 0;
+		addPrim(&buffer->ot[p >> 2], poly);
+	}
+}
+
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
+	DrawQuads(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
+	DrawQuads(verticesCount, 0);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	DrawQuads(verticesCount, startVertex);
 }
 
 
@@ -329,12 +365,13 @@ cc_bool Gfx_WarnIfNecessary(void) {
 void Gfx_BeginFrame(void) { 
 	// Draw the square by allocating a TILE (i.e. untextured solid color
 	// rectangle) primitive at Z = 1.
-	TILE *tile = (TILE *)new_primitive(1, sizeof(TILE));
+	TILE *tile = (TILE *)new_primitive(sizeof(TILE));
 
 	setTile(tile);
 	setXY0 (tile, 40, 40);
 	setWH  (tile, 64, 64);
 	setRGB0(tile, 255, 255, 0);
+	addPrim(&buffer->ot[1 >> 2], tile);
 }
 
 void Gfx_EndFrame(void) {
