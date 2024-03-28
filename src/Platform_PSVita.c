@@ -37,11 +37,10 @@ void Platform_Log(const char* msg, int len) {
 	sceIoWrite(stdout_fd, msg, len);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.sec * 1000 + UNIX_EPOCH + (time.usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	struct SceKernelTimeval cur;
 	sceKernelLibcGettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+	return (cc_uint64)cur.sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

@@ -67,7 +67,7 @@ int Ping_NextPingId(void) {
 
 	head = (head + 1) % Array_Elems(ping_entries);
 	ping_entries[head].id   = next;
-	ping_entries[head].sent = DateTime_CurrentUTC_MS();
+	ping_entries[head].sent = Stopwatch_Measure();
 	ping_entries[head].recv = 0;
 	
 	ping_head = head;
@@ -79,25 +79,27 @@ void Ping_Update(int id) {
 	for (i = 0; i < Array_Elems(ping_entries); i++) {
 		if (ping_entries[i].id != id) continue;
 
-		ping_entries[i].recv = DateTime_CurrentUTC_MS();
+		ping_entries[i].recv = Stopwatch_Measure();
 		return;
 	}
 }
 
 int Ping_AveragePingMS(void) {
-	int i, measures = 0, totalMs = 0;
+	int i, measures = 0, totalMs;
+	cc_int64 total = 0;
 
 	for (i = 0; i < Array_Elems(ping_entries); i++) {
 		struct PingEntry entry = ping_entries[i];
 		if (!entry.sent || !entry.recv) continue;
 	
-		totalMs += (int)(entry.recv - entry.sent);
+		total += entry.recv - entry.sent;
 		measures++;
 	}
-
 	if (!measures) return 0;
-	/* (recv - send) is time for packet to be sent to server and then sent back. */
-	/* However for ping, only want time to send data to server, so half the total. */
+
+	totalMs = Stopwatch_ElapsedMS(0, total);
+	/* (recv - send) is average time for packet to be sent to server and then sent back. */
+	/* However for ping, only want average time to send data to server, so half the total. */
 	totalMs /= 2;
 	return totalMs / measures;
 }

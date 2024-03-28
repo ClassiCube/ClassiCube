@@ -476,7 +476,7 @@ static void InjectEntropy(SSLContext* ctx) {
 #endif
 
 static void SetCurrentTime(SSLContext* ctx) {
-	cc_uint64 cur = DateTime_CurrentUTC_MS() / 1000;
+	cc_uint64 cur = DateTime_CurrentUTC();
 	uint32_t days = (uint32_t)(cur / 86400) + 366;
 	uint32_t secs = (uint32_t)(cur % 86400);
 		

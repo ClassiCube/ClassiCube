@@ -58,15 +58,12 @@ void Platform_Log(const char* msg, int len) {
 	
 	OSReport("%s\n", tmp);
 }
-#define WIIU_EPOCH_ADJUST 946684800000ULL // Wii U time epoch is year 2000, not 1970
+#define WIIU_EPOCH_ADJUST 946684800ULL // Wii U time epoch is year 2000, not 1970
 
-TimeMS DateTime_CurrentUTC_MS(void) {
-	OSTime time = OSGetTime();
-	// avoid overflow in time calculation
+TimeMS DateTime_CurrentUTC(void) {
+	OSTime time   = OSGetTime();
 	cc_int64 secs = (time_t)OSTicksToSeconds(time);
-	time -= OSSecondsToTicks(secs);
-	cc_uint64 msecs = OSTicksToMilliseconds(time);
-      	return (secs * 1000 + msecs) + UNIX_EPOCH + WIIU_EPOCH_ADJUST;
+	return secs + UNIX_EPOCH_SECONDS + WIIU_EPOCH_ADJUST;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

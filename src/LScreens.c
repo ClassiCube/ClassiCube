@@ -1600,9 +1600,9 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint
 	if (!timestamp) {
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
-		now   = DateTime_CurrentUTC_MS() - UNIX_EPOCH;
+		now   = DateTime_CurrentUTC() - UNIX_EPOCH_SECONDS;
 		/* must divide as cc_uint64, int delta overflows after 26 days */
-		delta = (int)((now / 1000) - timestamp);
+		delta = (int)(now - timestamp);
 		UpdatesScreen_FormatTime(&str, delta);
 	}
 	LLabel_SetText(lbl, &str);
