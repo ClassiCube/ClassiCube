@@ -406,8 +406,34 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol* _3DS_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	u8* fb    = (u8*)ctx;
+	// Framebuffer is rotated 90 degrees	
+	int width = bmp->width, height = bmp->height;
+
+	for (int x = 0; x < width; x++)
+	{
+		int addr = (height - 1 - y + x * height) * 3; // TODO -1 or not
+		int b = fb[addr + 0];
+		int g = fb[addr + 1];
+		int r = fb[addr + 2];
+		bmp->scan0[x] = BitmapColor_RGB(r, g, b);
+	}
+	return bmp->scan0;
+}
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
+	BitmapCol tmp[512];
+	u16 width, height;
+	u8* fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, &width, &height);
+
+	// Framebuffer is rotated 90 degrees
+	struct Bitmap bmp;
+	bmp.scan0  = tmp;
+	bmp.width  = height; 
+	bmp.height = width;
+
+	return Png_Encode(&bmp, output, _3DS_GetRow, false, fb);
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
