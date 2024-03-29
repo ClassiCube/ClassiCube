@@ -39,16 +39,16 @@ void Platform_Log(const char* msg, int len) {
 	OutputDebugStringA(tmp);
 }
 
-#define FILETIME_EPOCH 50491123200000ULL
-#define FILETIME_UNIX_EPOCH 11644473600LL
-#define FileTime_TotalMS(time)  ((time / 10000)    + FILETIME_EPOCH)
-#define FileTime_UnixTime(time) ((time / 10000000) - FILETIME_UNIX_EPOCH)
-TimeMS DateTime_CurrentUTC_MS(void) {
+#define FILETIME_EPOCH      50491123200ULL
+#define FILETIME_UNIX_EPOCH 11644473600ULL
+#define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
+#define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
+TimeMS DateTime_CurrentUTC(void) {
 	LARGE_INTEGER ft;
 	
 	KeQuerySystemTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
-	return FileTime_TotalMS(ft.QuadPart);
+	return FileTime_TotalSecs(ft.QuadPart);
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

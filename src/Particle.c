@@ -187,6 +187,30 @@ static void Rain_Tick(double delta) {
 	}
 }
 
+void Particles_RainSnowEffect(float x, float y, float z) {
+	struct Particle* p;
+	int i, type;
+
+	for (i = 0; i < 2; i++) {
+		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
+		p = &rain_Particles[rain_count++];
+
+		p->velocity.x = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
+		p->velocity.z = Random_Float(&rnd) * 0.8f - 0.4f;
+		p->velocity.y = Random_Float(&rnd) + 0.4f;
+
+		p->lastPos.x = x + Random_Float(&rnd); /* [0.0, 1.0] */
+		p->lastPos.y = y + Random_Float(&rnd) * 0.1f + 0.01f;
+		p->lastPos.z = z + Random_Float(&rnd);
+
+		p->nextPos  = p->lastPos;
+		p->lifetime = 40.0f;
+
+		type = Random_Next(&rnd, 30);
+		p->size = type >= 28 ? 2 : (type >= 25 ? 4 : 3);
+	}
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Terrain particle---------------------------------------------------*
@@ -291,9 +315,92 @@ static void Terrain_Tick(double delta) {
 	}
 }
 
+void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
+	struct TerrainParticle* p;
+	TextureLoc loc;
+	int texIndex;
+	TextureRec baseRec, rec;
+	Vec3 origin, minBB, maxBB;
+
+	/* texture UV variables */
+	float uScale, vScale, maxU2, maxV2;
+	int minX, minZ, maxX, maxZ;
+	int minU, minV, maxU, maxV;
+	int maxUsedU, maxUsedV;
+	
+	/* per-particle variables */
+	float cellX, cellY, cellZ;
+	Vec3 cell;
+	int x, y, z, type;
+
+	if (now != BLOCK_AIR || Blocks.Draw[old] == DRAW_GAS) return;
+	IVec3_ToVec3(&origin, &coords);
+	loc = Block_Tex(old, FACE_XMIN);
+	
+	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
+	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D.InvTileSize;
+
+	minBB = Blocks.MinBB[old];    maxBB = Blocks.MaxBB[old];
+	minX  = (int)(minBB.x * 16); maxX  = (int)(maxBB.x * 16);
+	minZ  = (int)(minBB.z * 16); maxZ  = (int)(maxBB.z * 16);
+
+	minU = min(minX, minZ); minV = (int)(16 - maxBB.y * 16);
+	maxU = min(maxX, maxZ); maxV = (int)(16 - minBB.y * 16);
+	/* This way we can avoid creating particles which outside the bounds and need to be clamped */
+	maxUsedU = maxU; maxUsedV = maxV;
+	if (minU < 12 && maxU > 12) maxUsedU = 12;
+	if (minV < 12 && maxV > 12) maxUsedV = 12;
+
+	#define GRID_SIZE 4
+	/* gridOffset gives the centre of the cell on a grid */
+	#define CELL_CENTRE ((1.0f / GRID_SIZE) * 0.5f)
+
+	maxU2 = baseRec.U1 + maxU * uScale;
+	maxV2 = baseRec.V1 + maxV * vScale;
+	for (x = 0; x < GRID_SIZE; x++) {
+		for (y = 0; y < GRID_SIZE; y++) {
+			for (z = 0; z < GRID_SIZE; z++) {
+
+				cellX = (float)x / GRID_SIZE; cellY = (float)y / GRID_SIZE; cellZ = (float)z / GRID_SIZE;
+				cell  = Vec3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
+				if (cell.x < minBB.x || cell.x > maxBB.x || cell.y < minBB.y
+					|| cell.y > maxBB.y || cell.z < minBB.z || cell.z > maxBB.z) continue;
+
+				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
+				p = &terrain_particles[terrain_count++];
+
+				/* centre random offset around [-0.2, 0.2] */
+				p->base.velocity.x = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+
+				rec = baseRec;
+				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
+				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
+				rec.U2 = rec.U1 + 4 * uScale;
+				rec.V2 = rec.V1 + 4 * vScale;
+				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
+				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
+		
+				Vec3_Add(&p->base.lastPos, &origin, &cell);
+				p->base.nextPos  = p->base.lastPos;
+				p->base.lifetime = 0.3f + Random_Float(&rnd) * 1.2f;
+
+				p->rec    = rec;
+				p->texLoc = loc;
+				p->block  = old;
+				type = Random_Next(&rnd, 30);
+				p->base.size = type >= 28 ? 12 : (type >= 25 ? 10 : 8);
+			}
+		}
+	}
+}
+
+
 /*########################################################################################################################*
 *-------------------------------------------------------Custom particle---------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
 struct CustomParticle {
 	struct Particle base;
 	int effectId;
@@ -388,139 +495,6 @@ static void Custom_Tick(double delta) {
 	}
 }
 
-
-/*########################################################################################################################*
-*--------------------------------------------------------Particles--------------------------------------------------------*
-*#########################################################################################################################*/
-void Particles_Render(float t) {
-	if (!terrain_count && !rain_count && !custom_count) return;
-
-	if (Gfx.LostContext) return;
-	if (!particles_VB)
-		particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
-
-	Gfx_SetAlphaTest(true);
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Terrain_Render(t);
-	Rain_Render(t);
-	Custom_Render(t);
-
-	Gfx_SetAlphaTest(false);
-}
-
-static void Particles_Tick(struct ScheduledTask* task) {
-	double delta = task->interval;
-	Terrain_Tick(delta);
-	Rain_Tick(delta);
-	Custom_Tick(delta);
-}
-
-void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
-	struct TerrainParticle* p;
-	TextureLoc loc;
-	int texIndex;
-	TextureRec baseRec, rec;
-	Vec3 origin, minBB, maxBB;
-
-	/* texture UV variables */
-	float uScale, vScale, maxU2, maxV2;
-	int minX, minZ, maxX, maxZ;
-	int minU, minV, maxU, maxV;
-	int maxUsedU, maxUsedV;
-	
-	/* per-particle variables */
-	float cellX, cellY, cellZ;
-	Vec3 cell;
-	int x, y, z, type;
-
-	if (now != BLOCK_AIR || Blocks.Draw[old] == DRAW_GAS) return;
-	IVec3_ToVec3(&origin, &coords);
-	loc = Block_Tex(old, FACE_XMIN);
-	
-	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
-	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D.InvTileSize;
-
-	minBB = Blocks.MinBB[old];    maxBB = Blocks.MaxBB[old];
-	minX  = (int)(minBB.x * 16); maxX  = (int)(maxBB.x * 16);
-	minZ  = (int)(minBB.z * 16); maxZ  = (int)(maxBB.z * 16);
-
-	minU = min(minX, minZ); minV = (int)(16 - maxBB.y * 16);
-	maxU = min(maxX, maxZ); maxV = (int)(16 - minBB.y * 16);
-	/* This way we can avoid creating particles which outside the bounds and need to be clamped */
-	maxUsedU = maxU; maxUsedV = maxV;
-	if (minU < 12 && maxU > 12) maxUsedU = 12;
-	if (minV < 12 && maxV > 12) maxUsedV = 12;
-
-	#define GRID_SIZE 4
-	/* gridOffset gives the centre of the cell on a grid */
-	#define CELL_CENTRE ((1.0f / GRID_SIZE) * 0.5f)
-
-	maxU2 = baseRec.U1 + maxU * uScale;
-	maxV2 = baseRec.V1 + maxV * vScale;
-	for (x = 0; x < GRID_SIZE; x++) {
-		for (y = 0; y < GRID_SIZE; y++) {
-			for (z = 0; z < GRID_SIZE; z++) {
-
-				cellX = (float)x / GRID_SIZE; cellY = (float)y / GRID_SIZE; cellZ = (float)z / GRID_SIZE;
-				cell  = Vec3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
-				if (cell.x < minBB.x || cell.x > maxBB.x || cell.y < minBB.y
-					|| cell.y > maxBB.y || cell.z < minBB.z || cell.z > maxBB.z) continue;
-
-				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
-				p = &terrain_particles[terrain_count++];
-
-				/* centre random offset around [-0.2, 0.2] */
-				p->base.velocity.x = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-				p->base.velocity.y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-				p->base.velocity.z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-
-				rec = baseRec;
-				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
-				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
-				rec.U2 = rec.U1 + 4 * uScale;
-				rec.V2 = rec.V1 + 4 * vScale;
-				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
-				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
-		
-				Vec3_Add(&p->base.lastPos, &origin, &cell);
-				p->base.nextPos  = p->base.lastPos;
-				p->base.lifetime = 0.3f + Random_Float(&rnd) * 1.2f;
-
-				p->rec    = rec;
-				p->texLoc = loc;
-				p->block  = old;
-				type = Random_Next(&rnd, 30);
-				p->base.size = type >= 28 ? 12 : (type >= 25 ? 10 : 8);
-			}
-		}
-	}
-}
-
-void Particles_RainSnowEffect(float x, float y, float z) {
-	struct Particle* p;
-	int i, type;
-
-	for (i = 0; i < 2; i++) {
-		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
-		p = &rain_Particles[rain_count++];
-
-		p->velocity.x = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
-		p->velocity.z = Random_Float(&rnd) * 0.8f - 0.4f;
-		p->velocity.y = Random_Float(&rnd) + 0.4f;
-
-		p->lastPos.x = x + Random_Float(&rnd); /* [0.0, 1.0] */
-		p->lastPos.y = y + Random_Float(&rnd) * 0.1f + 0.01f;
-		p->lastPos.z = z + Random_Float(&rnd);
-
-		p->nextPos  = p->lastPos;
-		p->lifetime = 40.0f;
-
-		type = Random_Next(&rnd, 30);
-		p->size = type >= 28 ? 2 : (type >= 25 ? 4 : 3);
-	}
-}
-
 void Particles_CustomEffect(int effectID, float x, float y, float z, float originX, float originY, float originZ) {
 	struct CustomParticle* p;
 	struct CustomParticleEffect* e = &Particles_CustomEffects[effectID];
@@ -567,6 +541,40 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		collideFlags = e->collideFlags;
 		if (IntersectsBlock(&p->base, CustomParticle_CanPass)) custom_count--;
 	}
+}
+#else
+static int custom_count;
+
+static void Custom_Render(float t) { }
+static void Custom_Tick(double delta) { }
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Particles--------------------------------------------------------*
+*#########################################################################################################################*/
+void Particles_Render(float t) {
+	if (!terrain_count && !rain_count && !custom_count) return;
+
+	if (Gfx.LostContext) return;
+	if (!particles_VB)
+		particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
+
+	Gfx_SetAlphaTest(true);
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Terrain_Render(t);
+	Rain_Render(t);
+	Custom_Render(t);
+
+	Gfx_SetAlphaTest(false);
+}
+
+static void Particles_Tick(struct ScheduledTask* task) {
+	double delta = task->interval;
+	Terrain_Tick(delta);
+	Rain_Tick(delta);
+	Custom_Tick(delta);
 }
 
 

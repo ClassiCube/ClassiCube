@@ -75,7 +75,7 @@ void Platform_Log(const char* msg, int len) {
 	LogOnscreen(msg, len);
 }
 
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
@@ -86,7 +86,7 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	if (boot_time < boot_time_2000) boot_time = boot_time_2024;
 	
 	cc_uint64 curSecs = boot_time + secs;
-	return (curSecs * 1000 + ms) + UNIX_EPOCH;
+	return curSecs + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

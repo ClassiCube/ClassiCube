@@ -94,7 +94,7 @@ cc_bool Math_IsPowOf2(int value) {
 #define RND_MASK ((1ULL << 48) - 1)
 
 void Random_SeedFromCurrentTime(RNGState* rnd) {
-	TimeMS now = DateTime_CurrentUTC_MS();
+	cc_uint64 now = Stopwatch_Measure();
 	Random_Seed(rnd, (int)now);
 }
 

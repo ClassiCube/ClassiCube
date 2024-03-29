@@ -39,8 +39,7 @@ void Platform_Log(const char* msg, int len) {
 	printf("%s\n", tmp);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	return 0;
 }
 

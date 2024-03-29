@@ -73,7 +73,7 @@ static void UpdateFogMinimal(float fogDensity) {
 		/* Exp fog mode: f = e^(-density*coord) */
 		/* Solve coord for f = 0.05 (good approx for fog end) */
 		/*   i.e. log(0.05) = -density * coord */
-		#define LOG_005 -2.99573227355399
+		#define LOG_005 -2.99573227355399f
 
 		dist = (int)(LOG_005 / -fogDensity);
 		Game_SetViewDistance(min(dist, Game_UserViewDistance));
@@ -83,7 +83,7 @@ static void UpdateFogMinimal(float fogDensity) {
 }
 
 static void UpdateFogNormal(float fogDensity, PackedCol fogColor) {
-	double density;
+	float density;
 
 	if (fogDensity != 0.0f) {
 		Gfx_SetFogMode(FOG_EXP);
@@ -96,10 +96,10 @@ static void UpdateFogNormal(float fogDensity, PackedCol fogColor) {
 		   0.99=z/end   --> z=end*0.99
 		     therefore
 		  d = -ln(0.01)/(end*0.99) */
-		#define LOG_001 -4.60517018598809
+		#define LOG_001 -4.60517018598809f
 
-		density = -(LOG_001) / (Game_ViewDistance * 0.99);
-		Gfx_SetFogDensity((float)density);
+		density = -LOG_001 / (Game_ViewDistance * 0.99f);
+		Gfx_SetFogDensity(density);
 	} else {
 		Gfx_SetFogMode(FOG_LINEAR);
 		Gfx_SetFogEnd((float)Game_ViewDistance);
