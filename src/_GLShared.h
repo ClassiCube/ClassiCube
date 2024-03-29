@@ -232,7 +232,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-static BitmapCol* GL_GetRow(struct Bitmap* bmp, int y) { 
+static BitmapCol* GL_GetRow(struct Bitmap* bmp, int y, void* ctx) { 
 	/* OpenGL stores bitmap in bottom-up order, so flip order when saving */
 	return Bitmap_GetRow(bmp, (bmp->height - 1) - y); 
 }
@@ -249,7 +249,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
 	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
-	res = Png_Encode(&bmp, output, GL_GetRow, false);
+	res = Png_Encode(&bmp, output, GL_GetRow, false, NULL);
 	Mem_Free(bmp.scan0);
 	return res;
 }

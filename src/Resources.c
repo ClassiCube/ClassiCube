@@ -592,8 +592,8 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 	struct Bitmap* src = &e->value.bmp;
 	cc_result res;
 
-	if ((res = ZipWriter_LocalFile(dst, e)))      return res;
-	if ((res = Png_Encode(src, dst, NULL, true))) return res;
+	if ((res = ZipWriter_LocalFile(dst, e)))            return res;
+	if ((res = Png_Encode(src, dst, NULL, true, NULL))) return res;
 	return ZipWriter_FixupLocalFile(dst, e);
 }
 

@@ -65,24 +65,21 @@ static void LogOverEXI(char* msg, int len) {
 	EXI_Unlock(  EXI_CHANNEL_0);
 }
 
-// dolphin recognises this function name (if loaded as .elf), and will patch it
-//  to also log the message to dolphin's console at OSREPORT-HLE log level
-void CC_NOINLINE __write_console(int fd, const char* msg, const u32* size) {
-	write(STDOUT_FILENO, msg, *size); // this can be intercepted by libogc debug console
-}
 void Platform_Log(const char* msg, int len) {
 	char tmp[256 + 1];
 	len = min(len, 256);
-	// See EXI_DeviceIPL.cpp, \r is what triggers message to be logged
+	// See EXI_DeviceIPL.cpp in Dolphin, \r is what triggers buffered message to be logged
 	Mem_Copy(tmp, msg, len); tmp[len] = '\r';
 
-	LogOverEXI(buffer, size);
+	LogOverEXI(tmp, len + 1);
 }
 
+#define GCWII_EPOCH_ADJUST 946684800ULL // GameCube/Wii time epoch is year 2000, not 1970
+
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	u64 raw  = gettime();
+	u64 secs = ticks_to_secs(raw);
+	return secs + UNIX_EPOCH_SECONDS + GCWII_EPOCH_ADJUST;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

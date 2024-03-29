@@ -445,7 +445,7 @@ void Gfx_EndFrame(void) {
 	if (gfx_minFrameMs) LimitFPS();
 		
 	GPUBuffers_DeleteUnreferenced();
-	//GPUTextures_DeleteUnreferenced();
+	GPUTextures_DeleteUnreferenced();
 	frameCounter++;
 }
 
