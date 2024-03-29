@@ -89,7 +89,7 @@ CC_API void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src,
 
 /* Whether data starts with PNG format signature/identifier. */
 cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len);
-typedef BitmapCol* (*Png_RowGetter)(struct Bitmap* bmp, int row);
+typedef BitmapCol* (*Png_RowGetter)(struct Bitmap* bmp, int row, void* ctx);
 /*
   Decodes a bitmap in PNG format. Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
@@ -100,5 +100,5 @@ CC_API cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream);
 /* getRow is optional. Can be used to modify how rows are encoded. (e.g. flip image) */
 /* if alpha is non-zero, RGBA channels are saved, otherwise only RGB channels are. */
 cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
-						Png_RowGetter getRow, cc_bool alpha);
+						Png_RowGetter getRow, cc_bool alpha, void* ctx);
 #endif

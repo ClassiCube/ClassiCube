@@ -22,6 +22,7 @@
 #include <ogc/cond.h>
 #include <ogc/lwp_watchdog.h>
 #include <fat.h>
+#include <ogc/exi.h>
 #ifdef HW_RVL
 #include <ogc/wiilaunch.h>
 #endif
@@ -42,29 +43,43 @@ const char* Platform_AppNameSuffix = " GameCube";
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-// dolphin recognises this function name (if loaded as .elf), and will patch it
-//  to also log the message to dolphin's console at OSREPORT-HLE log level
-void CC_NOINLINE __write_console(int fd, const char* msg, const u32* size) {
-	write(STDOUT_FILENO, msg, *size); // this can be intercepted by libogc debug console
-}
-void Platform_Log(const char* msg, int len) {
-	char buffer[256];
-	cc_string str = String_Init(buffer, 0, 254); // 2 characters (\n and \0)
-	u32 size;
-	
-	String_AppendAll(&str, msg, len);
-	buffer[str.length + 0] = '\n';
-	buffer[str.length + 1] = '\0'; // needed to make Dolphin logger happy
-	
-	size = str.length + 1; // +1 for '\n'
-	__write_console(0, buffer, &size); 
-	// TODO: Just use printf("%s", somehow ???
+// To see these log messages:
+//   1) In the UI, make sure 'Show log configuration' checkbox is checked in View menu
+//   2) Make sure "OSReport EXI (OSREPORT)" log type is enabled
+//   3) In the UI, make sure 'Show log' checkbox is checked in View menu
+static void LogOverEXI(char* msg, int len) {
+	u32 cmd = 0x80000000 | (0x800400 << 6); // write flag, UART base address
+
+	// https://hitmen.c02.at/files/yagcd/yagcd/chap10.html
+	// Try to acquire "MASK ROM"/"IPL" link
+	// Writing to the IPL is used for debug message logging
+	if (EXI_Lock(EXI_CHANNEL_0,   EXI_DEVICE_1, NULL) == 0) return;
+	if (EXI_Select(EXI_CHANNEL_0, EXI_DEVICE_1, EXI_SPEED8MHZ) == 0) {
+		EXI_Unlock(EXI_CHANNEL_0); return;
+	}
+
+	EXI_Imm(     EXI_CHANNEL_0, &cmd, 4, EXI_WRITE, NULL);
+	EXI_Sync(    EXI_CHANNEL_0);
+	EXI_ImmEx(   EXI_CHANNEL_0, msg, len, EXI_WRITE);
+	EXI_Deselect(EXI_CHANNEL_0);
+	EXI_Unlock(  EXI_CHANNEL_0);
 }
 
+void Platform_Log(const char* msg, int len) {
+	char tmp[256 + 1];
+	len = min(len, 256);
+	// See EXI_DeviceIPL.cpp in Dolphin, \r is what triggers buffered message to be logged
+	Mem_Copy(tmp, msg, len); tmp[len] = '\r';
+
+	LogOverEXI(tmp, len + 1);
+}
+
+#define GCWII_EPOCH_ADJUST 946684800ULL // GameCube/Wii time epoch is year 2000, not 1970
+
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	u64 raw  = gettime();
+	u64 secs = ticks_to_secs(raw);
+	return secs + UNIX_EPOCH_SECONDS + GCWII_EPOCH_ADJUST;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {

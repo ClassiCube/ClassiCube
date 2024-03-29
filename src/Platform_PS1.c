@@ -16,7 +16,7 @@
 #include <psxapi.h>
 #include <psxgpu.h>
 #include <hwregs_c.h>
-void exit(int code) { } // TODO how to fix
+void exit(int code) { _boot(); }
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used

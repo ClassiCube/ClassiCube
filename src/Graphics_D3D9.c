@@ -812,7 +812,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	if (res) goto finished;
 	{
 		Bitmap_Init(bmp, desc.Width, desc.Height, (BitmapCol*)rect.pBits);
-		res = Png_Encode(&bmp, output, NULL, false);
+		res = Png_Encode(&bmp, output, NULL, false, NULL);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
 	res = IDirect3DSurface9_UnlockRect(temp);
