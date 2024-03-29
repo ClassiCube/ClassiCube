@@ -22,7 +22,7 @@
 
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
-#define BUFFER_LENGTH 8192
+#define BUFFER_LENGTH 32768
 
 typedef struct {
 	DISPENV disp_env;
@@ -387,10 +387,11 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 	float x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
 	float y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
 	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
+	float w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
 	
-	result->x = x *  (320/2) + (320/2); 
-	result->y = y * -(240/2) + (240/2);
-	result->z = z * OT_LENGTH;
+	result->x = (x/w) *  (320/2) + (320/2); 
+	result->y = (y/w) * -(240/2) + (240/2);
+	result->z = (z/w) * OT_LENGTH;
 }
 
 cc_bool VERTEX_LOGGING;
@@ -413,18 +414,18 @@ static void DrawQuads(int verticesCount, int startVertex) {
 		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
 		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
 
+		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+		if (p < 0 || p >= OT_LENGTH) continue;
+
 		int X = v[0].x, Y = v[0].y, Z = v[0].z;
-		if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
+		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
 		X = poly->x1; Y = poly->y1, Z = coords[0].z;
 
 		poly->r0 = PackedCol_R(v->Col);
 		poly->g0 = PackedCol_G(v->Col);
 		poly->b0 = PackedCol_B(v->Col);
+		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
-		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
-		if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
-
-		if (p < 0 || p >= OT_LENGTH) continue;
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
