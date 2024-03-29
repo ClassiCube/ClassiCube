@@ -20,6 +20,7 @@ jobs:
           export BLOCKSDSEXT=/opt/blocksds/external
           make ds
 
+
       # otherwise notify_failure doesn't work
       - name: Install curl when necessary
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -30,7 +31,8 @@ jobs:
         with:
           NOTIFY_MESSAGE: 'Failed to compile DS build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-          
+ 
+         
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:

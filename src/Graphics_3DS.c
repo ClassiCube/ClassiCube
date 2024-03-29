@@ -148,8 +148,9 @@ static GfxResourceID white_square;
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitCitro3D();
 	
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	

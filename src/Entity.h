@@ -87,7 +87,7 @@ struct EntityVTABLE {
 /* And therefore trying to access the ModelVB Field in entity struct instances created by the CEF plugin */
 /*   results in attempting to read or write data from potentially invalid memory */
 #define ENTITY_FLAG_HAS_MODELVB 0x02
-/* Whether in classic mode, to slightly adjust this entity downwards when rendering it *
+/* Whether in classic mode, to slightly adjust this entity downwards when rendering it */
 /*  to replicate the behaviour of the original vanilla classic client */
 #define ENTITY_FLAG_CLASSIC_ADJUST 0x04
 

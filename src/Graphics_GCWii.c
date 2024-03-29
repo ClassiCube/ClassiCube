@@ -50,8 +50,9 @@ static void InitGX(void) {
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitGX();
 	
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -282,7 +283,7 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	//fillFunc(gfx_indices, count, obj);
 	// not used since render using GX_QUADS anyways
-	return 1;
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
