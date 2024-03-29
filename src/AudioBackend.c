@@ -1144,6 +1144,7 @@ struct AudioContext {
 	int chanID, count, bufHead;
 	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
 	int channels, sampleRate, volume;
+	cc_bool makeAvailable;
 };
 
 cc_bool AudioBackend_Init(void) {
@@ -1161,21 +1162,34 @@ void AudioBackend_Free(void) {
 
 void MusicCallback(s32 voice) {
 	struct AudioContext* ctx = &music_ctx;
-	struct AudioBuffer* buf  = &ctx->bufs[ctx->bufHead];
 	struct AudioBuffer* nextBuf  = &ctx->bufs[(ctx->bufHead + 1) % ctx->count];
 
-	if (ASND_AddVoice(voice, buf->samples, buf->size) == SND_OK) {
+	if (ASND_StatusVoice(voice) != SND_WORKING) return;
+
+	if (ASND_AddVoice(voice, nextBuf->samples, nextBuf->size) == SND_OK) {
 		ctx->bufHead   = (ctx->bufHead + 1) % ctx->count;
-		buf->samples   = NULL;
-		buf->available = true;
+		if (ctx->bufHead == 2) ctx->makeAvailable = true;
+		if (ctx->makeAvailable) {
+			int prev = ctx->bufHead - 2;
+			if (prev < 0) prev += 4;
+			ctx->bufs[prev].available = true;
+		}
+	}
+
+	int inUse;
+	Audio_Poll(ctx, &inUse);
+	if (!inUse) {
+		// music has finished, stop the voice so this function isn't called anymore
+		ASND_StopVoice(ctx->chanID);
 	}
 }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->chanID  = -1;
-	ctx->count   = buffers;
-	ctx->volume  = 255;
-	ctx->bufHead = 0;
+	ctx->chanID        = -1;
+	ctx->count         = buffers;
+	ctx->volume        = 255;
+	ctx->bufHead       = 0;
+	ctx->makeAvailable = false;
 
 	Mem_Set(ctx->bufs, 0, sizeof(ctx->bufs));
 	for (int i = 0; i < buffers; i++) {
