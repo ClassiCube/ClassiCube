@@ -98,7 +98,8 @@ void Model_Render(struct Model* model, struct Entity* e) {
 	Vec3 pos = e->Position;
 	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 	/* Original classic offsets models slightly into ground */
-	if (Game_ClassicMode) pos.y -= 1.5f / 16.0f;
+	if (Game_ClassicMode && (e->Flags & ENTITY_FLAG_CLASSIC_ADJUST))
+		pos.y -= 1.5f / 16.0f;
 
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
