@@ -233,8 +233,25 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol* PSP_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	cc_uint8* fb = (cc_uint8*)ctx;
+	return (BitmapCol*)(fb + y * BUFFER_WIDTH * 4);
+}
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
+	int fbWidth, fbFormat;
+	void* fb;
+
+	int res = sceDisplayGetFrameBuf(&fb, &fbWidth, &fbFormat, PSP_DISPLAY_SETBUF_NEXTFRAME);
+	if (res < 0) return res;
+	if (!fb)     return ERR_NOT_SUPPORTED;
+
+	struct Bitmap bmp;
+	bmp.scan0  = NULL;
+	bmp.width  = SCREEN_WIDTH; 
+	bmp.height = SCREEN_HEIGHT;
+
+	return Png_Encode(&bmp, output, PSP_GetRow, false, fb);
 }
 
 void Gfx_GetApiInfo(cc_string* info) {

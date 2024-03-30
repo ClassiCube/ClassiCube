@@ -1133,6 +1133,7 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 #include <asndlib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
 
 struct AudioBuffer {
 	int available;
@@ -1220,7 +1221,7 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	// Audio buffers must be aligned and padded to a multiple of 32 bytes
-	if (((uintptr_t)chunk & 0x20) != 0) {
+	if (((uintptr_t)chunk & 0x1F) != 0) {
 		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
 	}
 
@@ -1273,9 +1274,8 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 }
 
 cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
-	size = (size + 0x1F) & ~0x1F;  // round up to nearest multiple of 0x20
-	cc_uint32 alignedSize = ((size*numChunks) + 0x1F) & ~0x1F;  // round up to nearest multiple of 0x20
-	void* dst = aligned_alloc(0x20, alignedSize);
+	size = (size + 0x1F) & ~0x1F; // round up to nearest multiple of 0x20
+	void* dst = memalign(0x20, size);
 	if (!dst) return ERR_OUT_OF_MEMORY;
 
 	for (int i = 0; i < numChunks; i++) {
