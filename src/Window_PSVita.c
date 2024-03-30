@@ -42,7 +42,9 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);
@@ -125,19 +127,16 @@ static void ProcessRCircleInput(SceCtrlData* pad, double delta) {
 	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
 }
 
-static void ProcessTouchPress(int x, int y) {
-	if (!frontPanel.maxDispX || !frontPanel.maxDispY) {
-		// TODO: Shouldn't ever happen? need to check
-		Pointer_SetPosition(0, x, y);
-		return;
-	}
+static void AdjustTouchPress(int* x, int* y) {
+	if (!frontPanel.maxDispX || !frontPanel.maxDispY) return;
+	// TODO: Shouldn't ever happen? need to check
 	
 	// rescale from touch range to screen range
-	x = (x - frontPanel.minDispX) * DISPLAY_WIDTH  / frontPanel.maxDispX;
-	y = (y - frontPanel.minDispY) * DISPLAY_HEIGHT / frontPanel.maxDispY;
-	Pointer_SetPosition(0, x, y);
+	*x = (*x - frontPanel.minDispX) * DISPLAY_WIDTH  / frontPanel.maxDispX;
+	*y = (*y - frontPanel.minDispY) * DISPLAY_HEIGHT / frontPanel.maxDispY;
 }
 
+static cc_bool touch_pressed;
 static void ProcessTouchInput(void) {
 	SceTouchData touch;
 	
@@ -146,12 +145,19 @@ static void ProcessTouchInput(void) {
 	if (res == 0) return; // no data available yet
 	if (res < 0)  return; // error occurred
 	
-	if (touch.reportNum > 0) {
+	cc_bool isPressed = touch.reportNum > 0;
+	if (isPressed) {
 		int x = touch.report[0].x;
 		int y = touch.report[0].y;
-		ProcessTouchPress(x, y);
+		AdjustTouchPress(&x, &y);
+
+		Input_AddTouch(0, x, y);
+		touch_pressed = true;
+	} else if (touch_pressed) {
+		// touch.report[0].xy will be 0 when touch.reportNum is 0
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
+		touch_pressed = false;
 	}
-	Input_SetNonRepeatable(CCMOUSE_L, touch.reportNum > 0);
 }
 
 static void ProcessPadInput(double delta) {
