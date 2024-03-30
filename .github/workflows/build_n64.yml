@@ -29,7 +29,7 @@ jobs:
       # otherwise notify_failure doesn't work
       - name: Install curl when necessary
         if: ${{ always() && steps.compile.outcome == 'failure' }}
-        run: apt install curl
+        run: apt-get -y install curl
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}

@@ -49,9 +49,7 @@ void Platform_Log(const char* msg, int len) {
 }
 
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	return 0;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -176,10 +174,6 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	*handle = NULL;
 }
 
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	// TODO: actual multithreading ???
-}
-
 void Thread_Detach(void* handle) {
 }
 
@@ -268,10 +262,6 @@ void Platform_Init(void) {
 	Platform_ReadonlyFilesystem = true;
 	// TODO: Redesign Drawer2D to better handle this
 	Options_SetBool(OPT_USE_CHAT_FONT, true);
-	
-    //console_init();
-    //console_set_render_mode(RENDER_AUTOMATIC);
-    //console_set_debug(true);
 	
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
