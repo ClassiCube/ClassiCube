@@ -69,6 +69,9 @@
 			-->
 			<!--<file name="TEMPLATE.MAP"	type="data" source="template.map" />-->
 
+			<dir name="texpacks">
+				<file name="default.zip" type="data" source="../classicube.zip" />
+			</dir>
 			<dummy sectors="1024"/>
 		</directory_tree>
 	</track>

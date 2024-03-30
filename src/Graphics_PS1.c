@@ -115,16 +115,141 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+// VRAM can be divided into texture pages
+//   32 texture pages total - each page is 64 x 256
+//   10 texture pages are occupied by the doublebuffered display
+//   22 texture packs are usable, and are then divided into
+//     - 4 pages for 256 wide textures, 8 for 128 wide, 10 for 64
+#define TPAGE_START_HOR 5
+#define TPAGES_PER_HALF 16
+
+#define TPAGE_WIDTH   64
+#define TPAGE_HEIGHT 256
+#define MAX_TEX_PAGES 22
+static cc_uint8 vram_used[(MAX_TEX_PAGES * TPAGE_HEIGHT) / 8];
+
+#define VRAM_SetUsed(line) (vram_used[(line) / 8] |=  (1 << ((line) % 8)))
+#define VRAM_UnUsed(line)  (vram_used[(line) / 8] &= ~(1 << ((line) % 8)))
+#define VRAM_IsUsed(line)  (vram_used[(line) / 8] &   (1 << ((line) % 8)))
+
+static void VRAM_GetBlockRange(int width, int* beg, int* end) {
+	if (width >= 256) {
+		*beg =  0;
+		*end =  4 * TPAGE_HEIGHT;
+	} else if (width >= 128) {
+		*beg =  4 * TPAGE_HEIGHT;
+		*end = 12 * TPAGE_HEIGHT;
+	} else {
+		*beg = 12 * TPAGE_HEIGHT;
+		*end = 22 * TPAGE_HEIGHT;
+	}
+}
+
+static cc_bool VRAM_IsRangeFree(int beg, int end) {
+	for (int i = beg; i < end; i++) 
+	{
+		if (VRAM_IsUsed(i)) return false;
+	}
+	return true;
+}
+
+static int VRAM_FindFreeBlock(int width, int height) {
+	int beg, end;
+	VRAM_GetBlockRange(width, &beg, &end);
+	
+	// TODO kinda inefficient
+	for (int i = beg; i < end - height; i++) 
+	{
+		if (VRAM_IsUsed(i)) continue;
+		
+		if (VRAM_IsRangeFree(i, i + height)) return i;
+	}
+	return -1;
+}
+
+#define TEXTURES_MAX_COUNT 64
+typedef struct GPUTexture {
+	cc_uint16 width, height;
+	cc_uint16 line, tpage;
+} GPUTexture;
+static GPUTexture textures[TEXTURES_MAX_COUNT];
+
+#define BGRA8_to_PS1(src) \
+	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | 0x8000
+
+static void* AllocTextureAt(int i, struct Bitmap* bmp) {
+	cc_uint16* tmp = Mem_TryAlloc(2, bmp->width * bmp->height);
+	if (!tmp) return NULL;
+
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		cc_uint16* dst = tmp        + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) {
+			cc_uint8* color = (cc_uint8*)&src[x];
+			dst[x] = BGRA8_to_PS1(color);
+		}
+	}
+
+	GPUTexture* tex = &textures[i];
+	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
+	if (line == -1) { Mem_Free(tmp); return NULL; }
+	
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	tex->line   = line;
+	
+	int page = TPAGE_START_HOR + (line / TPAGE_HEIGHT);
+	// In bottom half of VRAM? Need to offset horizontally again
+	if (page >= TPAGES_PER_HALF) page += TPAGE_START_HOR;	
+
+	for (int i = tex->line; i < tex->line + tex->height; i++) 
+	{
+		VRAM_SetUsed(i);
+	}
+	tex->tpage = page;
+	Platform_Log4("%i x %i  = %i,%i", &bmp->width, &bmp->height, &line, &page);
+		
+	RECT rect;
+	rect.x = ((page % TPAGES_PER_HALF)) * TPAGE_WIDTH;
+	rect.y = ((page / TPAGES_PER_HALF)) * TPAGE_HEIGHT + (line % TPAGE_HEIGHT);
+	rect.w = bmp->width;
+	rect.h = bmp->height;
+
+	int RX = rect.x, RY = rect.y;
+	Platform_Log2("LOAD AT: %i, %i", &RX, &RY);
+	LoadImage2(&rect, tmp);
+	
+	Mem_Free(tmp);
+	return tex;
+}
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	for (int i = 0; i < TEXTURES_MAX_COUNT; i++)
+	{
+		if (textures[i].width) continue;
+		return AllocTextureAt(i, bmp);
+	}
+
+	Platform_LogConst("No room for more textures");
 	return NULL;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	// TODO
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GfxResourceID data = *texId;
-	if (data) Mem_Free(data);
+	if (!data) return;
+	GPUTexture* tex = (GPUTexture*)data;
+
+	for (int i = tex->line; i < tex->line + tex->height; i++) 
+	{
+		VRAM_UnUsed(i);
+	}
+	tex->width = 0; tex->height = 0;
 	*texId = NULL;
 }
 
@@ -133,7 +258,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	// TODO
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -521,7 +646,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
-	return false;
+	return true;
 }
 
 void Gfx_BeginFrame(void) { 
