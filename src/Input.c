@@ -451,7 +451,6 @@ void Gamepad_SetAxis(int axis, float x, float y, double delta) {
 
 void Gamepad_Tick(double delta) {
 	int btn;
-	Platform_LogConst("GAMEPAD TICK");
 
 	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
 	{
@@ -459,7 +458,7 @@ void Gamepad_Tick(double delta) {
 		pad_holdtime[btn - GAMEPAD_BEG_BTN] += delta;
 		if (pad_holdtime[btn - GAMEPAD_BEG_BTN] < 1.0) continue;
 
-		/* Held for a second, trigger a fake press */
+		/* Held for over a second, trigger a fake press */
 		pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
 		Input_SetPressed(btn);
 	}

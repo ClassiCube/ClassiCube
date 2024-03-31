@@ -370,6 +370,9 @@ void GLContext_Create(void) {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
+#ifdef CC_BUILD_GLES
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif
 
 	win_ctx = SDL_GL_CreateContext(win_handle);
 	if (!win_ctx) Window_SDLFail("creating OpenGL context");

@@ -20,7 +20,6 @@ struct _WindowData WindowInfo;
 void Window_Init(void) {
 	DisplayInfo.Width  = vid_mode->width;
 	DisplayInfo.Height = vid_mode->height;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	

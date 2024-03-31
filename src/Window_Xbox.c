@@ -62,7 +62,6 @@ void Window_Init(void) {
 	
 	DisplayInfo.Width  = mode.width;
 	DisplayInfo.Height = mode.height;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	

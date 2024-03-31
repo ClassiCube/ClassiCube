@@ -32,7 +32,6 @@ struct _WindowData WindowInfo;
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_XRES;
 	DisplayInfo.Height = SCREEN_YRES;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	

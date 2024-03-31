@@ -33,7 +33,6 @@ static void DQ_OnNextFrame2D(void* fb);
 void Window_Init(void) {
 	DisplayInfo.Width  = DISPLAY_WIDTH;
 	DisplayInfo.Height = DISPLAY_HEIGHT;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	

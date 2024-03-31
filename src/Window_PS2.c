@@ -30,7 +30,6 @@ struct _WindowData WindowInfo;
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	

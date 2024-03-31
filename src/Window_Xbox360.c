@@ -33,7 +33,6 @@ void Window_Init(void) {
 	
 	DisplayInfo.Width  = ai->width;
 	DisplayInfo.Height = ai->height;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	

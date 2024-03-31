@@ -58,7 +58,7 @@ void Window_Init(void) {
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
 
-	DisplayInfo.Depth  = 4; // 32 bit
+	DisplayInfo.Depth  = 4; // 32 bit TODO wrong, this is actually 4 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 
