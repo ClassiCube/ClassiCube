@@ -68,32 +68,32 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(int mods) {
-	Input_SetNonRepeatable(CCPAD_L, mods & PSP_CTRL_LTRIGGER);
-	Input_SetNonRepeatable(CCPAD_R, mods & PSP_CTRL_RTRIGGER);
+	Gamepad_SetButton(CCPAD_L, mods & PSP_CTRL_LTRIGGER);
+	Gamepad_SetButton(CCPAD_R, mods & PSP_CTRL_RTRIGGER);
 	
-	Input_SetNonRepeatable(CCPAD_A, mods & PSP_CTRL_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_B, mods & PSP_CTRL_SQUARE);
-	Input_SetNonRepeatable(CCPAD_X, mods & PSP_CTRL_CROSS);
-	Input_SetNonRepeatable(CCPAD_Y, mods & PSP_CTRL_CIRCLE);
+	Gamepad_SetButton(CCPAD_A, mods & PSP_CTRL_TRIANGLE);
+	Gamepad_SetButton(CCPAD_B, mods & PSP_CTRL_SQUARE);
+	Gamepad_SetButton(CCPAD_X, mods & PSP_CTRL_CROSS);
+	Gamepad_SetButton(CCPAD_Y, mods & PSP_CTRL_CIRCLE);
 	
-	Input_SetNonRepeatable(CCPAD_START,  mods & PSP_CTRL_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & PSP_CTRL_SELECT);
+	Gamepad_SetButton(CCPAD_START,  mods & PSP_CTRL_START);
+	Gamepad_SetButton(CCPAD_SELECT, mods & PSP_CTRL_SELECT);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & PSP_CTRL_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
+	Gamepad_SetButton(CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
+	Gamepad_SetButton(CCPAD_UP,     mods & PSP_CTRL_UP);
+	Gamepad_SetButton(CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
 }
 
+#define AXIS_SCALE 16.0f
 static void ProcessCircleInput(SceCtrlData* pad, double delta) {
-	float scale = (delta * 60.0) / 16.0f;
-	int dx = pad->Lx - 127;
-	int dy = pad->Ly - 127;
+	int x = pad->Lx - 127;
+	int y = pad->Ly - 127;
 
-	if (Math_AbsI(dx) <= 8) dx = 0;
-	if (Math_AbsI(dy) <= 8) dy = 0;
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
 
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
+	Gamepad_SetAxis(PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
 void Window_ProcessEvents(double delta) {
@@ -104,8 +104,7 @@ void Window_ProcessEvents(double delta) {
 	// TODO: need to use cached version still? like GameCube/Wii
 
 	HandleButtons(pad.Buttons);
-	if (Input.RawMode) 
-		ProcessCircleInput(&pad, delta);
+	ProcessCircleInput(&pad, delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP

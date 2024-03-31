@@ -90,49 +90,37 @@ static void HandleButtons(int buttons) {
 	buttons = buttons ^ 0xFFFF;
 	//Platform_Log1("BUTTONS: %h", &buttons);
 	
-	Input_SetNonRepeatable(CCPAD_A, buttons & PAD_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_B, buttons & PAD_SQUARE);
-	Input_SetNonRepeatable(CCPAD_X, buttons & PAD_CROSS);
-	Input_SetNonRepeatable(CCPAD_Y, buttons & PAD_CIRCLE);
+	Gamepad_SetButton(CCPAD_A, buttons & PAD_TRIANGLE);
+	Gamepad_SetButton(CCPAD_B, buttons & PAD_SQUARE);
+	Gamepad_SetButton(CCPAD_X, buttons & PAD_CROSS);
+	Gamepad_SetButton(CCPAD_Y, buttons & PAD_CIRCLE);
       
-	Input_SetNonRepeatable(CCPAD_START,  buttons & PAD_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, buttons & PAD_SELECT);
+	Gamepad_SetButton(CCPAD_START,  buttons & PAD_START);
+	Gamepad_SetButton(CCPAD_SELECT, buttons & PAD_SELECT);
 
-	Input_SetNonRepeatable(CCPAD_LEFT,   buttons & PAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  buttons & PAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     buttons & PAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   buttons & PAD_DOWN);
+	Gamepad_SetButton(CCPAD_LEFT,   buttons & PAD_LEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  buttons & PAD_RIGHT);
+	Gamepad_SetButton(CCPAD_UP,     buttons & PAD_UP);
+	Gamepad_SetButton(CCPAD_DOWN,   buttons & PAD_DOWN);
 	
-	Input_SetNonRepeatable(CCPAD_L,  buttons & PAD_L1);
-	Input_SetNonRepeatable(CCPAD_R,  buttons & PAD_R1);
-	Input_SetNonRepeatable(CCPAD_ZL, buttons & PAD_L2);
-	Input_SetNonRepeatable(CCPAD_ZR, buttons & PAD_R2);
+	Gamepad_SetButton(CCPAD_L,  buttons & PAD_L1);
+	Gamepad_SetButton(CCPAD_R,  buttons & PAD_R1);
+	Gamepad_SetButton(CCPAD_ZL, buttons & PAD_L2);
+	Gamepad_SetButton(CCPAD_ZR, buttons & PAD_R2);
 }
 
-static void HandleJoystick_Left(int x, int y) {
-	//Platform_Log2("LEFT: %i, %i", &x, &y);
+#define AXIS_SCALE 16.0f
+static void HandleJoystick(int axis, int x, int y, double delta) {
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;
 	
-	if (x == 0 && y == 0) return;
-	Input.JoystickMovement = true;
-	Input.JoystickAngle    = Math_Atan2(x, -y);
-}
-
-static void HandleJoystick_Right(int x, int y, double delta) {
-	//Platform_Log2("Right: %i, %i", &x, &y);
-	float scale = (delta * 60.0) / 16.0f;
-	
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);	
+	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
 static void ProcessPadInput(double delta, struct padButtonStatus* pad) {
 	HandleButtons(pad->btns);
-	HandleJoystick_Left( pad->ljoy_h - 0x80, pad->ljoy_v - 0x80);
-	HandleJoystick_Right(pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
+	HandleJoystick(PAD_AXIS_LEFT,  pad->ljoy_h - 0x80, pad->ljoy_v - 0x80, delta);
+	HandleJoystick(PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
 }
 
 static cc_bool setMode;

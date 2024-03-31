@@ -415,6 +415,36 @@ static void KeyBind_Init(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Gamepad---------------------------------------------------------*
+*#########################################################################################################################*/
+void Gamepad_SetButton(int btn, int pressed) {
+	Input_SetNonRepeatable(btn, pressed);
+}
+
+static void Gamepad_SetLAxis(float x, float y, double delta) {
+	if (x == 0 && y == 0) return;
+
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(x, -y);
+}
+
+static void Gamepad_SetRAxis(float x, float y, double delta) {
+	float scale = delta * 60.0;
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
+}
+
+void Gamepad_SetAxis(int axis, float x, float y, double delta) {
+	if (!Input.RawMode) return;
+
+	if (axis == PAD_AXIS_LEFT) {
+		Gamepad_SetLAxis(x, y, delta);
+	} else {
+		Gamepad_SetRAxis(x, y, delta);	
+	}
+}
+
+
+/*########################################################################################################################*
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
 const cc_uint8 Hotkeys_LWJGL[256] = {

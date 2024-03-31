@@ -102,14 +102,15 @@ void Input_Clear(void);
 #define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
 
 #if defined CC_BUILD_HAIKU
-/* Haiku uses ALT instead of CTRL for clipboard and stuff */
-#define Input_IsActionPressed() Input_IsAltPressed()
+	/* Haiku uses ALT instead of CTRL for clipboard and stuff */
+	#define Input_IsActionPressed() Input_IsAltPressed()
 #elif defined CC_BUILD_DARWIN
-/* macOS uses CMD instead of CTRL for clipboard and stuff */
-#define Input_IsActionPressed() Input_IsWinPressed()
+	/* macOS uses CMD instead of CTRL for clipboard and stuff */
+	#define Input_IsActionPressed() Input_IsWinPressed()
 #else
-#define Input_IsActionPressed() Input_IsCtrlPressed()
+	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
+
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
@@ -184,6 +185,17 @@ CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
 void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
 
+
+/* Gamepad axes. Default behaviour is: */
+/*  - left axis: player movement  */
+/*  - right axis: camera movement */
+enum PAD_AXIS { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
+/* Sets value of the given gamepad button */
+void Gamepad_SetButton(int btn, int pressed);
+/* Sets value of the given axis */
+void Gamepad_SetAxis(int axis, float x, float y, double delta);
+
+
 /* whether to leave text input open for user to enter further input */
 #define HOTKEY_FLAG_STAYS_OPEN   0x01
 /* Whether the hotkey was auto defined (e.g. by server) */
@@ -218,6 +230,7 @@ void StoredHotkeys_Load(int trigger, cc_uint8 modifiers);
 void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Adds the given hotkey from options. */
 void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text);
+
 
 cc_bool InputHandler_SetFOV(int fov);
 cc_bool Input_HandleMouseWheel(float delta);

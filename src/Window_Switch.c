@@ -108,39 +108,30 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(u64 mods) {
-	Input_SetNonRepeatable(CCPAD_L, mods & HidNpadButton_L);
-	Input_SetNonRepeatable(CCPAD_R, mods & HidNpadButton_R);
+	Gamepad_SetButton(CCPAD_L, mods & HidNpadButton_L);
+	Gamepad_SetButton(CCPAD_R, mods & HidNpadButton_R);
 	
-	Input_SetNonRepeatable(CCPAD_A, mods & HidNpadButton_A);
-	Input_SetNonRepeatable(CCPAD_B, mods & HidNpadButton_B);
-	Input_SetNonRepeatable(CCPAD_X, mods & HidNpadButton_X);
-	Input_SetNonRepeatable(CCPAD_Y, mods & HidNpadButton_Y);
+	Gamepad_SetButton(CCPAD_A, mods & HidNpadButton_A);
+	Gamepad_SetButton(CCPAD_B, mods & HidNpadButton_B);
+	Gamepad_SetButton(CCPAD_X, mods & HidNpadButton_X);
+	Gamepad_SetButton(CCPAD_Y, mods & HidNpadButton_Y);
 	
-	Input_SetNonRepeatable(CCPAD_START,  mods & HidNpadButton_Plus);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & HidNpadButton_Minus);
+	Gamepad_SetButton(CCPAD_START,  mods & HidNpadButton_Plus);
+	Gamepad_SetButton(CCPAD_SELECT, mods & HidNpadButton_Minus);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & HidNpadButton_Left);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & HidNpadButton_Right);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & HidNpadButton_Up);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & HidNpadButton_Down);
+	Gamepad_SetButton(CCPAD_LEFT,   mods & HidNpadButton_Left);
+	Gamepad_SetButton(CCPAD_RIGHT,  mods & HidNpadButton_Right);
+	Gamepad_SetButton(CCPAD_UP,     mods & HidNpadButton_Up);
+	Gamepad_SetButton(CCPAD_DOWN,   mods & HidNpadButton_Down);
 }
 
-static void ProcessJoystickInput_L(HidAnalogStickState* pos) {
+#define AXIS_SCALE 512.0f
+static void ProcessJoystickInput(int axis, HidAnalogStickState* pos, double delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
 	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
 	
-	Input.JoystickMovement = (pos->x != 0 || pos->y != 0);
-	if (!Input.JoystickMovement) return;
-	Input.JoystickAngle    = Math_Atan2(pos->x, -pos->y);
-}
-
-static void ProcessJoystickInput_R(HidAnalogStickState* pos) {
-	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
-	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
-		
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, pos->x / 512.f, -pos->y / 512.f);
+	Gamepad_SetAxis(axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
 static void ProcessTouchInput(void) {
@@ -179,8 +170,8 @@ void Window_ProcessEvents(double delta) {
 	// Read the sticks' position
 	HidAnalogStickState analog_stick_l = padGetStickPos(&pad, 0);
 	HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
-	ProcessJoystickInput_L(&analog_stick_l);
-	ProcessJoystickInput_R(&analog_stick_r);
+	ProcessJoystickInput(PAD_AXIS_LEFT,  &analog_stick_l, delta);
+	ProcessJoystickInput(PAD_AXIS_RIGHT, &analog_stick_r, delta);
 
 	ProcessTouchInput();
 }

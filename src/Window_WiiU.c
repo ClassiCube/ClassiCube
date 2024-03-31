@@ -78,23 +78,23 @@ void Window_RequestClose(void) {
 }
    
 static void ProcessVpadButtons(int mods) {
-	Input_SetNonRepeatable(CCPAD_L,  mods & VPAD_BUTTON_L);
-	Input_SetNonRepeatable(CCPAD_R,  mods & VPAD_BUTTON_R);
-	Input_SetNonRepeatable(CCPAD_ZL, mods & VPAD_BUTTON_ZL);
-	Input_SetNonRepeatable(CCPAD_ZR, mods & VPAD_BUTTON_ZR);
+	Gamepad_SetButton(CCPAD_L,  mods & VPAD_BUTTON_L);
+	Gamepad_SetButton(CCPAD_R,  mods & VPAD_BUTTON_R);
+	Gamepad_SetButton(CCPAD_ZL, mods & VPAD_BUTTON_ZL);
+	Gamepad_SetButton(CCPAD_ZR, mods & VPAD_BUTTON_ZR);
       
-	Input_SetNonRepeatable(CCPAD_A, mods & VPAD_BUTTON_A);
-	Input_SetNonRepeatable(CCPAD_B, mods & VPAD_BUTTON_B);
-	Input_SetNonRepeatable(CCPAD_X, mods & VPAD_BUTTON_X);
-	Input_SetNonRepeatable(CCPAD_Y, mods & VPAD_BUTTON_Y);
+	Gamepad_SetButton(CCPAD_A, mods & VPAD_BUTTON_A);
+	Gamepad_SetButton(CCPAD_B, mods & VPAD_BUTTON_B);
+	Gamepad_SetButton(CCPAD_X, mods & VPAD_BUTTON_X);
+	Gamepad_SetButton(CCPAD_Y, mods & VPAD_BUTTON_Y);
       
-	Input_SetNonRepeatable(CCPAD_START,  mods & VPAD_BUTTON_PLUS);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & VPAD_BUTTON_MINUS);
+	Gamepad_SetButton(CCPAD_START,  mods & VPAD_BUTTON_PLUS);
+	Gamepad_SetButton(CCPAD_SELECT, mods & VPAD_BUTTON_MINUS);
 
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & VPAD_BUTTON_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & VPAD_BUTTON_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & VPAD_BUTTON_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & VPAD_BUTTON_DOWN);
+	Gamepad_SetButton(CCPAD_LEFT,   mods & VPAD_BUTTON_LEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  mods & VPAD_BUTTON_RIGHT);
+	Gamepad_SetButton(CCPAD_UP,     mods & VPAD_BUTTON_UP);
+	Gamepad_SetButton(CCPAD_DOWN,   mods & VPAD_BUTTON_DOWN);
 	
 }
 

@@ -98,21 +98,21 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(int mods) {
-	Input_SetNonRepeatable(CCPAD_L, mods & KEY_L);
-	Input_SetNonRepeatable(CCPAD_R, mods & KEY_R);
+	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
 	
-	Input_SetNonRepeatable(CCPAD_A, mods & KEY_A);
-	Input_SetNonRepeatable(CCPAD_B, mods & KEY_B);
-	Input_SetNonRepeatable(CCPAD_X, mods & KEY_X);
-	Input_SetNonRepeatable(CCPAD_Y, mods & KEY_Y);
+	Gamepad_SetButton(CCPAD_A, mods & KEY_A);
+	Gamepad_SetButton(CCPAD_B, mods & KEY_B);
+	Gamepad_SetButton(CCPAD_X, mods & KEY_X);
+	Gamepad_SetButton(CCPAD_Y, mods & KEY_Y);
 	
-	Input_SetNonRepeatable(CCPAD_START,  mods & KEY_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & KEY_SELECT);
+	Gamepad_SetButton(CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & KEY_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DOWN);
+	Gamepad_SetButton(CCPAD_LEFT,   mods & KEY_LEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Gamepad_SetButton(CCPAD_UP,     mods & KEY_UP);
+	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
 // Copied from Window_3DS.c

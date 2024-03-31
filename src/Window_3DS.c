@@ -90,51 +90,49 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(u32 mods) {
-	Input_SetNonRepeatable(CCPAD_L, mods & KEY_L);
-	Input_SetNonRepeatable(CCPAD_R, mods & KEY_R);
+	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
 	
-	Input_SetNonRepeatable(CCPAD_A, mods & KEY_A);
-	Input_SetNonRepeatable(CCPAD_B, mods & KEY_B);
-	Input_SetNonRepeatable(CCPAD_X, mods & KEY_X);
-	Input_SetNonRepeatable(CCPAD_Y, mods & KEY_Y);
+	Gamepad_SetButton(CCPAD_A, mods & KEY_A);
+	Gamepad_SetButton(CCPAD_B, mods & KEY_B);
+	Gamepad_SetButton(CCPAD_X, mods & KEY_X);
+	Gamepad_SetButton(CCPAD_Y, mods & KEY_Y);
 	
-	Input_SetNonRepeatable(CCPAD_START,  mods & KEY_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & KEY_SELECT);
+	Gamepad_SetButton(CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & KEY_DLEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & KEY_DRIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & KEY_DUP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & KEY_DDOWN);
+	Gamepad_SetButton(CCPAD_LEFT,   mods & KEY_DLEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  mods & KEY_DRIGHT);
+	Gamepad_SetButton(CCPAD_UP,     mods & KEY_DUP);
+	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DDOWN);
 	
-	Input_SetNonRepeatable(CCPAD_ZL, mods & KEY_ZL);
-	Input_SetNonRepeatable(CCPAD_ZR, mods & KEY_ZR);
+	Gamepad_SetButton(CCPAD_ZL, mods & KEY_ZL);
+	Gamepad_SetButton(CCPAD_ZR, mods & KEY_ZR);
 }
 
+#define AXIS_SCALE 8.0f
 static void ProcessJoystickInput(circlePosition* pos, double delta) {
-	float scale = (delta * 60.0) / 8.0f;
-
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->dx) <= 16) pos->dx = 0;
 	if (Math_AbsI(pos->dy) <= 16) pos->dy = 0;
 		
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, pos->dx * scale, -pos->dy * scale);
+	Gamepad_SetAxis(PAD_AXIS_RIGHT, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
 
 static void ProcessTouchInput(int mods) {
 	static int currX, currY;  // current touch position
 	touchPosition touch;
 	hidTouchRead(&touch);
+
 	if (hidKeysDown() & KEY_TOUCH) {  // stylus went down
 		currX = touch.px;
 		currY = touch.py;
 		Input_AddTouch(0, currX, currY);
-	}
-	else if (mods & KEY_TOUCH) {  // stylus is down
+	} else if (mods & KEY_TOUCH) {  // stylus is down
 		currX = touch.px;
 		currY = touch.py;
 		Input_UpdateTouch(0, currX, currY);
-	}
-	else if (hidKeysUp() & KEY_TOUCH) {  // stylus was lifted
+	} else if (hidKeysUp() & KEY_TOUCH) {  // stylus was lifted
 		Input_RemoveTouch(0, currX, currY);
 	}
 }
