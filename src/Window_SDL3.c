@@ -1,15 +1,15 @@
 #include "Core.h"
-#if defined CC_BUILD_SDL
+#if defined CC_BUILD_SDL3
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 static SDL_Window* win_handle;
 
-#warning "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+#warning "Some features are missing from the SDL3 backend. If possible, it is recommended that you use a native windowing backend instead"
 
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
@@ -26,14 +26,14 @@ static void Window_SDLFail(const char* place) {
 }
 
 void Window_Init(void) {
-	SDL_DisplayMode mode = { 0 };
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_GetDesktopDisplayMode(0, &mode);
+	int displayID = SDL_GetPrimaryDisplay();
+	const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(displayID);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
-	DisplayInfo.Width  = mode.w;
-	DisplayInfo.Height = mode.h;
-	DisplayInfo.Depth  = SDL_BITSPERPIXEL(mode.format);
+	DisplayInfo.Width  = mode->w;
+	DisplayInfo.Height = mode->h;
+	DisplayInfo.Depth  = SDL_BITSPERPIXEL(mode->format);
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 }
@@ -41,10 +41,7 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height, int flags) {
-	int x = Display_CentreX(width);
-	int y = Display_CentreY(height);
-
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, 
+	win_handle = SDL_CreateWindow(NULL, width, height, 
 					flags | SDL_WINDOW_RESIZABLE);
 	if (!win_handle) Window_SDLFail("creating window");
 
@@ -80,17 +77,22 @@ void Clipboard_SetText(const cc_string* value) {
 int Window_GetWindowState(void) {
 	Uint32 flags = SDL_GetWindowFlags(win_handle);
 
-	if (flags & SDL_WINDOW_MINIMIZED)          return WINDOW_STATE_MINIMISED;
-	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) return WINDOW_STATE_FULLSCREEN;
+	if (flags & SDL_WINDOW_MINIMIZED)  return WINDOW_STATE_MINIMISED;
+	if (flags & SDL_WINDOW_FULLSCREEN) return WINDOW_STATE_FULLSCREEN;
 	return WINDOW_STATE_NORMAL;
 }
 
 cc_result Window_EnterFullscreen(void) {
-	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	return SDL_SetWindowFullscreen(win_handle, true);
 }
-cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
+cc_result Window_ExitFullscreen(void) { 
+	return SDL_SetWindowFullscreen(win_handle, false);
+}
 
-int Window_IsObscured(void) { return 0; }
+int Window_IsObscured(void) {
+	Uint32 flags = SDL_GetWindowFlags(win_handle);
+	return flags & SDL_WINDOW_OCCLUDED;
+}
 
 void Window_Show(void) { SDL_ShowWindow(win_handle); }
 
@@ -100,7 +102,7 @@ void Window_SetSize(int width, int height) {
 
 void Window_RequestClose(void) {
 	SDL_Event e;
-	e.type = SDL_QUIT;
+	e.type = SDL_EVENT_QUIT;
 	SDL_PushEvent(&e);
 }
 
@@ -202,92 +204,148 @@ static void OnTextEvent(const SDL_Event* e) {
 	}
 }
 
-static void OnWindowEvent(const SDL_Event* e) {
-	switch (e->window.event) {
-		case SDL_WINDOWEVENT_EXPOSED:
-			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
-			break;
-		case SDL_WINDOWEVENT_SIZE_CHANGED:
-			RefreshWindowBounds();
-			Event_RaiseVoid(&WindowEvents.Resized);
-			break;
-		case SDL_WINDOWEVENT_MINIMIZED:
-		case SDL_WINDOWEVENT_MAXIMIZED:
-		case SDL_WINDOWEVENT_RESTORED:
-			Event_RaiseVoid(&WindowEvents.StateChanged);
-			break;
-		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			Window_Main.Focused = true;
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
-			break;
-		case SDL_WINDOWEVENT_FOCUS_LOST:
-			Window_Main.Focused = false;
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
-			break;
-		case SDL_WINDOWEVENT_CLOSE:
-			Window_RequestClose();
-			break;
-		}
-}
-
 void Window_ProcessEvents(double delta) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {
 
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
+		case SDL_EVENT_KEY_DOWN:
+		case SDL_EVENT_KEY_UP:
 			OnKeyEvent(&e); break;
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		case SDL_EVENT_MOUSE_BUTTON_UP:
 			OnMouseEvent(&e); break;
-		case SDL_MOUSEWHEEL:
+		case SDL_EVENT_MOUSE_WHEEL:
 			Mouse_ScrollWheel(e.wheel.y);
 			break;
-		case SDL_MOUSEMOTION:
+		case SDL_EVENT_MOUSE_MOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);
 			if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, e.motion.xrel, e.motion.yrel);
 			break;
-		case SDL_TEXTINPUT:
+		case SDL_EVENT_TEXT_INPUT:
 			OnTextEvent(&e); break;
-		case SDL_WINDOWEVENT:
-			OnWindowEvent(&e); break;
 
-		case SDL_QUIT:
+		case SDL_EVENT_QUIT:
 			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			SDL_DestroyWindow(win_handle);
 			break;
 
-		case SDL_RENDER_DEVICE_RESET:
+		case SDL_EVENT_RENDER_DEVICE_RESET:
 			Gfx_LoseContext("SDL device reset event");
 			Gfx_RecreateContext();
+			break;
+			
+			
+		case SDL_EVENT_WINDOW_EXPOSED:
+			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
+			break;
+		case SDL_EVENT_WINDOW_RESIZED: // TODO SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED 
+			RefreshWindowBounds();
+			Event_RaiseVoid(&WindowEvents.Resized);
+			break;
+		case SDL_EVENT_WINDOW_MINIMIZED:
+		case SDL_EVENT_WINDOW_MAXIMIZED:
+		case SDL_EVENT_WINDOW_RESTORED:
+			Event_RaiseVoid(&WindowEvents.StateChanged);
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			Window_Main.Focused = true;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
+			break;
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+			Window_Main.Focused = false;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
+			break;
+		case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+			Window_RequestClose();
 			break;
 		}
 	}
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
-	SDL_GetMouseState(x, y);
+	float xPos, yPos;
+	SDL_GetMouseState(&xPos, &yPos);
+	*x = xPos; *y = yPos;
 }
 void Cursor_SetPosition(int x, int y) {
 	SDL_WarpMouseInWindow(win_handle, x, y);
 }
 
 static void Cursor_DoSetVisible(cc_bool visible) {
-	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
+	if (visible) {
+		SDL_ShowCursor();
+	} else {
+		SDL_HideCursor();
+	}
 }
 
 static void ShowDialogCore(const char* title, const char* msg) {
 	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
+}	
+
+static FileDialogCallback dlgCallback;
+static void DialogCallback(void *userdata, const char* const* filelist, int filter) {
+	if (!filelist) return; /* Error occurred */
+	const char* result = filelist[0];
+	if (!result) return; /* No file provided */
+	
+	cc_string path; char pathBuffer[1024];
+	String_InitArray(path, pathBuffer);
+	String_AppendUtf8(&path, result, String_Length(result));
+	
+	// TODO: Because this isn't run from the main thread, it stuffs things up
+	//dlgCallback(&path);
+	dlgCallback = NULL;
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
+	// TODO free memory
+	char* pattern = Mem_Alloc(301, 1, "OpenDialog pattern");
+	SDL_DialogFileFilter* filters = Mem_Alloc(2, sizeof(SDL_DialogFileFilter), "OpenDialog filters");
+	int i;
+	
+	cc_string str = String_Init(pattern, 0, 300);
+	for (i = 0; ; i++)
+	{
+		if (!args->filters[i]) break;
+		if (i) String_Append(&str, ';');
+		String_AppendConst(&str, args->filters[i] + 1);
+	}
+	
+	pattern[str.length] = '\0';
+	filters[0].name     = args->description;
+	filters[0].pattern  = pattern;
+	filters[1].name     = NULL;
+	filters[1].pattern  = NULL;
+	Platform_Log1("PATTERN: %c", pattern);
+	dlgCallback = args->Callback;
+	SDL_ShowOpenFileDialog(DialogCallback, NULL, win_handle, filters, NULL, false);
+	return 0;
 }
 
+#define SDL_MAX_DIALOG_FILTERS 10
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
-	return ERR_NOT_SUPPORTED;
+	// TODO free memory
+	char* defName = Mem_Alloc(NATIVE_STR_LEN, 1, "SaveDialog default");
+	SDL_DialogFileFilter* filters = Mem_Alloc(SDL_MAX_DIALOG_FILTERS + 1, sizeof(SDL_DialogFileFilter), "SaveDialog filters");
+	int i;
+	String_EncodeUtf8(defName, &args->defaultName);
+	
+	for (i = 0; i < SDL_MAX_DIALOG_FILTERS; i++)
+	{
+		if (!args->filters[i]) break;
+		filters[i].name    = args->titles[i];
+		filters[i].pattern = args->filters[i] + 1; // skip .
+	}
+	
+	filters[i].name    = NULL;
+	filters[i].pattern = NULL;
+	
+	dlgCallback = args->Callback;
+	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, defName);
+	return 0;
 }
 
 static SDL_Surface* win_surface;
@@ -299,10 +357,10 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!win_surface) Window_SDLFail("getting window surface");
 
 	fmt = win_surface->format;
-	if (fmt->BitsPerPixel != 32) {
+	if (fmt->bits_per_pixel != 32) {
 		/* Slow path: e.g. 15 or 16 bit pixels */
-		Platform_Log1("Slow color depth: %b bpp", &fmt->BitsPerPixel);
-		blit_surface = SDL_CreateRGBSurface(0, win_surface->w, win_surface->h, 32, 0, 0, 0, 0);
+		Platform_Log1("Slow color depth: %b bpp", &fmt->bits_per_pixel);
+		blit_surface = SDL_CreateSurface(win_surface->w, win_surface->h, SDL_PIXELFORMAT_RGBA32);
 		if (!blit_surface) Window_SDLFail("creating blit surface");
 
 		SDL_SetSurfaceBlendMode(blit_surface, SDL_BLENDMODE_NONE);
@@ -327,7 +385,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	if (blit_surface) SDL_FreeSurface(blit_surface);
+	if (blit_surface) SDL_DestroySurface(blit_surface);
 	blit_surface = NULL;
 
 	/* SDL docs explicitly say to NOT free window surface */
