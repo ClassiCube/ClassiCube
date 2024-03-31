@@ -82,12 +82,20 @@ static void* new_primitive(int size) {
 	return (void*)prim;
 }
 
+static GfxResourceID white_square;
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
+	
+	// 2x2 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[4] = { BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 2, 2, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 void Gfx_FreeState(void) {
-	FreeDefaultResources();
+	FreeDefaultResources(); 
+	Gfx_DeleteTexture(&white_square);
 }
 
 void Gfx_Create(void) {
@@ -173,12 +181,13 @@ typedef struct GPUTexture {
 	cc_uint16 line, tpage;
 } GPUTexture;
 static GPUTexture textures[TEXTURES_MAX_COUNT];
+static GPUTexture* active_tex;
 
 #define BGRA8_to_PS1(src) \
 	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | 0x8000
 
 static void* AllocTextureAt(int i, struct Bitmap* bmp) {
-	cc_uint16* tmp = Mem_TryAlloc(2, bmp->width * bmp->height);
+	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
 	if (!tmp) return NULL;
 
 	for (int y = 0; y < bmp->height; y++)
@@ -237,7 +246,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	// TODO
+	if (!texId) texId = white_square;
+	active_tex = (GPUTexture*)texId;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -520,10 +530,11 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 }
 
 cc_bool VERTEX_LOGGING;
-static void DrawQuads(int verticesCount, int startVertex) {
+static void DrawColouredQuads(int verticesCount, int startVertex) {
+	return;
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
 		setPolyF4(poly);
@@ -538,6 +549,43 @@ static void DrawQuads(int verticesCount, int startVertex) {
 		poly->x1 = coords[0].x; poly->y1 = coords[0].y;
 		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
 		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
+
+		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+		if (p < 0 || p >= OT_LENGTH) continue;
+
+		int X = v[0].x, Y = v[0].y, Z = v[0].z;
+		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
+		X = poly->x1; Y = poly->y1, Z = coords[0].z;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
+
+		addPrim(&buffer->ot[p >> 2], poly);
+	}
+}
+
+static void DrawTexturedQuads(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
+		setPolyFT4(poly);
+		poly->tpage = active_tex->tpage;
+		poly->clut  = 0;
+
+		Vec3 coords[4];
+		Transform(&coords[0], &v[0], &mvp);
+		Transform(&coords[1], &v[1], &mvp);
+		Transform(&coords[2], &v[2], &mvp);
+		Transform(&coords[3], &v[3], &mvp);
+
+		poly->x0 = coords[1].x; poly->y0 = coords[1].y; poly->u0 = (int)(v[1].U * active_tex->width) % active_tex->width; poly->v0 = (int)(v[1].V * active_tex->height) % active_tex->height + active_tex->line;
+		poly->x1 = coords[0].x; poly->y1 = coords[0].y; poly->u1 = (int)(v[0].U * active_tex->width) % active_tex->width; poly->v1 = (int)(v[0].V * active_tex->height) % active_tex->height + active_tex->line;
+		poly->x2 = coords[2].x; poly->y2 = coords[2].y; poly->u2 = (int)(v[2].U * active_tex->width) % active_tex->width; poly->v2 = (int)(v[2].V * active_tex->height) % active_tex->height + active_tex->line;
+		poly->x3 = coords[3].x; poly->y3 = coords[3].y; poly->u3 = (int)(v[3].U * active_tex->width) % active_tex->width; poly->v3 = (int)(v[3].V * active_tex->height) % active_tex->height + active_tex->line;
 
 		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
 		if (p < 0 || p >= OT_LENGTH) continue;
@@ -624,17 +672,23 @@ static void DrawQuads(int verticesCount, int startVertex) {
 }*/
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
-	DrawQuads(verticesCount, startVertex);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads(verticesCount, startVertex);
+	} else {
+		DrawColouredQuads(verticesCount, startVertex);
+	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
-	DrawQuads(verticesCount, 0);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads(verticesCount, 0);
+	} else {
+		DrawColouredQuads(verticesCount, 0);
+	}
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawQuads(verticesCount, startVertex);
+	DrawTexturedQuads(verticesCount, startVertex);
 }
 
 
@@ -646,7 +700,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
-	return true;
+	return false;
 }
 
 void Gfx_BeginFrame(void) { 

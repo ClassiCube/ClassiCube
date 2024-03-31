@@ -118,6 +118,7 @@ static void HandleJoystick_Left(int x, int y) {
 	Input.JoystickMovement = true;
 	Input.JoystickAngle    = Math_Atan2(x, -y);
 }
+
 static void HandleJoystick_Right(int x, int y, double delta) {
 	//Platform_Log2("Right: %i, %i", &x, &y);
 	float scale = (delta * 60.0) / 16.0f;
