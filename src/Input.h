@@ -194,6 +194,7 @@ enum PAD_AXIS { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
 void Gamepad_SetButton(int btn, int pressed);
 /* Sets value of the given axis */
 void Gamepad_SetAxis(int axis, float x, float y, double delta);
+void Gamepad_Tick(double delta);
 
 
 /* whether to leave text input open for user to enter further input */

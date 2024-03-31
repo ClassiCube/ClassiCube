@@ -120,20 +120,13 @@ static void ProcessJoystickInput(circlePosition* pos, double delta) {
 }
 
 static void ProcessTouchInput(int mods) {
-	static int currX, currY;  // current touch position
 	touchPosition touch;
 	hidTouchRead(&touch);
 
-	if (hidKeysDown() & KEY_TOUCH) {  // stylus went down
-		currX = touch.px;
-		currY = touch.py;
-		Input_AddTouch(0, currX, currY);
-	} else if (mods & KEY_TOUCH) {  // stylus is down
-		currX = touch.px;
-		currY = touch.py;
-		Input_UpdateTouch(0, currX, currY);
-	} else if (hidKeysUp() & KEY_TOUCH) {  // stylus was lifted
-		Input_RemoveTouch(0, currX, currY);
+	if (mods & KEY_TOUCH) {
+		Input_AddTouch(0,    touch.px,      touch.py);
+	} else if (hidKeysUp() & KEY_TOUCH) {
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
 	}
 }
 

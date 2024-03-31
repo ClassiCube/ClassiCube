@@ -417,7 +417,13 @@ static void KeyBind_Init(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
+#define GAMEPAD_BEG_BTN CCPAD_A
+static float pad_holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
+
 void Gamepad_SetButton(int btn, int pressed) {
+	/* Reset hold tracking time */
+	if (pressed && !Input.Pressed[btn]) pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
+
 	Input_SetNonRepeatable(btn, pressed);
 }
 
@@ -440,6 +446,22 @@ void Gamepad_SetAxis(int axis, float x, float y, double delta) {
 		Gamepad_SetLAxis(x, y, delta);
 	} else {
 		Gamepad_SetRAxis(x, y, delta);	
+	}
+}
+
+void Gamepad_Tick(double delta) {
+	int btn;
+	Platform_LogConst("GAMEPAD TICK");
+
+	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
+	{
+		if (!Input.Pressed[btn]) continue;
+		pad_holdtime[btn - GAMEPAD_BEG_BTN] += delta;
+		if (pad_holdtime[btn - GAMEPAD_BEG_BTN] < 1.0) continue;
+
+		/* Held for a second, trigger a fake press */
+		pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
+		Input_SetPressed(btn);
 	}
 }
 

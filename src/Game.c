@@ -637,7 +637,9 @@ static void Game_RenderFrame(double delta) {
 	Game.Time += delta;
 	Game_Vertices = 0;
 
+	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
 	Camera.Active->UpdateMouse(delta);
+
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
 	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui.InputGrab) {

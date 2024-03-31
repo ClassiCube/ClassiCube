@@ -115,23 +115,15 @@ static void HandleButtons(int mods) {
 	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
-// Copied from Window_3DS.c
 static void ProcessTouchInput(int mods) {
-	static int curX, curY;  // current touch position
 	touchPosition touch;
 	touchRead(&touch);
     Camera.Sensitivity = 100; // TODO not hardcode this
 	
-	if (keysDown() & KEY_TOUCH) {  // stylus went down
-		curX = touch.px;
-		curY = touch.py;
-		Input_AddTouch(0, curX, curY);
-	} else if (mods & KEY_TOUCH) {  // stylus is down
-		curX = touch.px;
-		curY = touch.py;
-		Input_UpdateTouch(0, curX, curY);
-	} else if (keysUp() & KEY_TOUCH) {  // stylus was lifted
-		Input_RemoveTouch(0, curX, curY);
+	if (mods & KEY_TOUCH) {
+		Input_AddTouch(0,    touch.px,      touch.py);
+	} else if (keysUp() & KEY_TOUCH) {
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
 	}
 }
 

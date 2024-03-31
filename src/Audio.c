@@ -269,7 +269,6 @@ static void InitWebSounds(void) {
 
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
-	int i;
 	if (!AudioBackend_Init()) { 
 		AudioBackend_Free(); 
 		Audio_SoundsVolume = 0; 

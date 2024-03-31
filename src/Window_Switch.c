@@ -131,26 +131,19 @@ static void ProcessJoystickInput(int axis, HidAnalogStickState* pos, double delt
 	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
 	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
 	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(axis, pos->x / AXIS_SCALE, -pos->y / AXIS_SCALE, delta);
 }
 
 static void ProcessTouchInput(void) {
-	static int currX, currY, prev_touchcount=0;
-	HidTouchScreenState state={0};
+	static int prev_touchcount = 0;
+	HidTouchScreenState state = {0};
 	hidGetTouchScreenStates(&state, 1);
 
-	if (state.count && !prev_touchcount) {  // stylus went down
-		currX = state.touches[0].x;
-		currY = state.touches[0].y;
-		Input_AddTouch(0, currX, currY);
-	} else if (state.count) {  // stylus is down
-		currX = state.touches[0].x;
-		currY = state.touches[0].y;
-		Input_UpdateTouch(0, currX, currY);
-	} else if (!state.count && prev_touchcount) {  // stylus was lifted
-		Input_RemoveTouch(0, currX, currY);
+	if (state.count) {
+		Input_AddTouch(0,    state.touches[0].x, state.touches[0].y);
+	} else if (prev_touchcount) {
+		Input_RemoveTouch(0, Pointers[0].x,      Pointers[0].y);
 	}
-
 	prev_touchcount = state.count;
 }
 

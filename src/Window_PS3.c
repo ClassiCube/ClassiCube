@@ -272,8 +272,8 @@ static void HandleJoystick(int axis, int x, int y, double delta) {
 
 static void ProcessPadInput(double delta, padData* pad) {
 	HandleButtons(pad);
-	HandleJoystick(AXIS_PAD_LEFT,  pad->ANA_L_H - 0x80, pad->ANA_L_V - 0x80, delta);
-	HandleJoystick(AXIS_PAD_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
+	HandleJoystick(PAD_AXIS_LEFT,  pad->ANA_L_H - 0x80, pad->ANA_L_V - 0x80, delta);
+	HandleJoystick(PAD_AXIS_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
 }
 
 void Window_ProcessEvents(double delta) {

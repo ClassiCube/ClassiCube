@@ -202,7 +202,7 @@ static void HandleController(cont_state_t* state, double delta) {
 	Gamepad_SetButton(CCPAD_R, state->rtrig > 10);
 	// TODO CONT_Z, joysticks
 	// TODO: verify values are right     
-	HandleJoystick(GAMEPAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+	HandleJoystick(PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
 }
 
 static void ProcessControllerInput(double delta) {
