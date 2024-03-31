@@ -8,6 +8,7 @@
 #include "Errors.h"
 #include <SDL3/SDL.h>
 static SDL_Window* win_handle;
+static Uint32 dlg_event;
 
 #warning "Some features are missing from the SDL3 backend. If possible, it is recommended that you use a native windowing backend instead"
 
@@ -28,8 +29,10 @@ static void Window_SDLFail(const char* place) {
 void Window_Init(void) {
 	SDL_Init(SDL_INIT_VIDEO);
 	int displayID = SDL_GetPrimaryDisplay();
-	const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(displayID);
 	Input.Sources = INPUT_SOURCE_NORMAL;
+	
+	const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(displayID);
+	dlg_event = SDL_RegisterEvents(1);
 
 	DisplayInfo.Width  = mode->w;
 	DisplayInfo.Height = mode->h;
@@ -107,8 +110,8 @@ void Window_RequestClose(void) {
 }
 
 static int MapNativeKey(SDL_Keycode k) {
-	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'     + (k - SDLK_0); }
-	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'     + (k - SDLK_a); }
+	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'       + (k - SDLK_0); }
+	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'       + (k - SDLK_a); }
 	if (k >= SDLK_F1  && k <= SDLK_F12) { return CCKEY_F1  + (k - SDLK_F1); }
 	if (k >= SDLK_F13 && k <= SDLK_F24) { return CCKEY_F13 + (k - SDLK_F13); }
 	/* SDLK_KP_0 isn't before SDLK_KP_1 */
@@ -203,6 +206,7 @@ static void OnTextEvent(const SDL_Event* e) {
 		src += i; len -= i;
 	}
 }
+static void ProcessDialogEvent(SDL_Event* e);
 
 void Window_ProcessEvents(double delta) {
 	SDL_Event e;
@@ -260,6 +264,9 @@ void Window_ProcessEvents(double delta) {
 		case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 			Window_RequestClose();
 			break;
+		default:
+			if (e.type == dlg_event) ProcessDialogEvent(&e);
+			break;
 		}
 	}
 }
@@ -286,18 +293,41 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }	
 
 static FileDialogCallback dlgCallback;
+static SDL_DialogFileFilter* save_filters;
+
+static void ProcessDialogEvent(SDL_Event* e) {
+	char* result = e->user.data1;
+	int length   = e->user.code;
+	
+	cc_string path; char pathBuffer[1024];
+	String_InitArray(path, pathBuffer);
+	String_AppendUtf8(&path, result, length);
+	
+	dlgCallback(&path);
+	dlgCallback = NULL;
+	Mem_Free(result);
+}
+
 static void DialogCallback(void *userdata, const char* const* filelist, int filter) {
 	if (!filelist) return; /* Error occurred */
 	const char* result = filelist[0];
 	if (!result) return; /* No file provided */
 	
-	cc_string path; char pathBuffer[1024];
-	String_InitArray(path, pathBuffer);
-	String_AppendUtf8(&path, result, String_Length(result));
+	char* path    = Mem_Alloc(NATIVE_STR_LEN, 1, "Dialog path");
+	cc_string str = String_Init(path, 0, NATIVE_STR_LEN);
+	String_AppendUtf8(&str, result, String_Length(result));
 	
-	// TODO: Because this isn't run from the main thread, it stuffs things up
-	//dlgCallback(&path);
-	dlgCallback = NULL;
+	// May need to add file extension when saving, e.g. on Windows
+	if (save_filters && filter >= 0 && save_filters[filter].pattern)
+		String_Format1(&str, ".%c", save_filters[filter].pattern);
+	
+	// Dialog callback may not be called from the main thread
+	//  (E.g. on windows it is called from a background thread)
+	SDL_Event e = { 0 };
+	e.type = SDL_EVENT_USER;
+	e.user.code  = str.length;
+	e.user.data1 = path;
+	SDL_PushEvent(&e);
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
@@ -319,21 +349,22 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	filters[0].pattern  = pattern;
 	filters[1].name     = NULL;
 	filters[1].pattern  = NULL;
-	Platform_Log1("PATTERN: %c", pattern);
-	dlgCallback = args->Callback;
+	
+	dlgCallback  = args->Callback;
+	save_filters = NULL;
 	SDL_ShowOpenFileDialog(DialogCallback, NULL, win_handle, filters, NULL, false);
 	return 0;
 }
 
-#define SDL_MAX_DIALOG_FILTERS 10
+#define MAX_SAVE_DIALOG_FILTERS 10
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	// TODO free memory
 	char* defName = Mem_Alloc(NATIVE_STR_LEN, 1, "SaveDialog default");
-	SDL_DialogFileFilter* filters = Mem_Alloc(SDL_MAX_DIALOG_FILTERS + 1, sizeof(SDL_DialogFileFilter), "SaveDialog filters");
+	SDL_DialogFileFilter* filters = Mem_Alloc(MAX_SAVE_DIALOG_FILTERS + 1, sizeof(SDL_DialogFileFilter), "SaveDialog filters");
 	int i;
 	String_EncodeUtf8(defName, &args->defaultName);
 	
-	for (i = 0; i < SDL_MAX_DIALOG_FILTERS; i++)
+	for (i = 0; i < MAX_SAVE_DIALOG_FILTERS; i++)
 	{
 		if (!args->filters[i]) break;
 		filters[i].name    = args->titles[i];
@@ -343,7 +374,8 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	filters[i].name    = NULL;
 	filters[i].pattern = NULL;
 	
-	dlgCallback = args->Callback;
+	dlgCallback  = args->Callback;
+	save_filters = filters;
 	SDL_ShowSaveFileDialog(DialogCallback, NULL, win_handle, filters, defName);
 	return 0;
 }
