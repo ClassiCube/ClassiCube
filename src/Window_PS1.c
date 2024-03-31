@@ -103,8 +103,33 @@ static void HandleButtons(int buttons) {
 	Input_SetNonRepeatable(CCPAD_ZR, buttons & PAD_R2);
 }
 
+static void HandleJoystick_Left(int x, int y) {
+	//Platform_Log2("LEFT: %i, %i", &x, &y);
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	if (x == 0 && y == 0) return;
+	Input.JoystickMovement = true;
+	Input.JoystickAngle    = Math_Atan2(x, -y);
+}
+
+static void HandleJoystick_Right(int x, int y, double delta) {
+	//Platform_Log2("Right: %i, %i", &x, &y);
+	float scale = (delta * 60.0) / 16.0f;
+	
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);	
+}
+
 static void ProcessPadInput(PADTYPE* pad, double delta) {
 	HandleButtons(pad->btn);
+
+	if (pad->type == PAD_ID_ANALOG_STICK || pad->type == PAD_ID_ANALOG) {
+		HandleJoystick_Left( pad->ls_x - 0x80, pad->ls_y - 0x80);
+		HandleJoystick_Right(pad->rs_x - 0x80, pad->rs_y - 0x80, delta);
+	}
 }
 
 void Window_ProcessEvents(double delta) {
