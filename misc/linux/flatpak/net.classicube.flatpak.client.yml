@@ -1,0 +1,29 @@
+id: net.classicube.flatpak.client
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: ClassiCubeLauncher
+finish-args:
+  - --socket=x11
+  - --device=dri
+  - --share=network
+  - --share=ipc
+  - --socket=pulseaudio
+modules:
+  - name: ClassiCube
+    buildsystem: simple
+    build-commands:
+      - gcc -fno-math-errno src/*.c -o src/ClassiCube -O1 -DCC_BUILD_FLATPAK -DCC_BUILD_GLMODERN -rdynamic -lm -lpthread -lX11 -lXi -lGL -ldl
+      - install -Dm755 src/ClassiCube -t ${FLATPAK_DEST}/bin
+      - install -Dm755 ClassiCubeLauncher -t ${FLATPAK_DEST}/bin
+      - install -Dm644 misc/linux/flatpak/net.classicube.flatpak.client.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/net.classicube.flatpak.client.svg
+      - install -Dm644 misc/linux/flatpak/net.classicube.flatpak.client.desktop ${FLATPAK_DEST}/share/applications/net.classicube.flatpak.client.desktop
+      - install -Dm644 misc/linux/flatpak/net.classicube.flatpak.client.metainfo.xml ${FLATPAK_DEST}/share/metainfo/net.classicube.flatpak.client.metainfo.xml
+    sources:
+      - type: dir
+        path: ../../../
+      - type: script
+        dest-filename: ClassiCubeLauncher
+        commands:
+         - mkdir -p ${XDG_DATA_HOME}/ClassiCube
+         - cd ${XDG_DATA_HOME}/ClassiCube && exec /app/bin/ClassiCube "$@"
