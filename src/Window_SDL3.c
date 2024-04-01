@@ -10,8 +10,6 @@
 static SDL_Window* win_handle;
 static Uint32 dlg_event;
 
-#warning "Some features are missing from the SDL3 backend. If possible, it is recommended that you use a native windowing backend instead"
-
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
 }
@@ -29,7 +27,7 @@ static void Window_SDLFail(const char* place) {
 void Window_Init(void) {
 	SDL_Init(SDL_INIT_VIDEO);
 	#ifdef CC_BUILD_FLATPAK
-	 SDL_SetHint(SDL_HINT_APP_ID, "net.classicube.flatpak.client");
+	SDL_SetHint(SDL_HINT_APP_ID, "net.classicube.flatpak.client");
 	#endif
 	int displayID = SDL_GetPrimaryDisplay();
 	Input.Sources = INPUT_SOURCE_NORMAL;
@@ -47,9 +45,16 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height, int flags) {
-	win_handle = SDL_CreateWindow(NULL, width, height, 
-					flags | SDL_WINDOW_RESIZABLE);
+	SDL_PropertiesID props = SDL_CreateProperties();
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER,  width);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
+	SDL_SetNumberProperty(props, "flags", flags | SDL_WINDOW_RESIZABLE);
+
+	win_handle = SDL_CreateWindowWithProperties(props);
 	if (!win_handle) Window_SDLFail("creating window");
+	SDL_DestroyProperties(props);
 
 	RefreshWindowBounds();
 	Window_Main.Exists = true;
@@ -100,7 +105,9 @@ int Window_IsObscured(void) {
 	return flags & SDL_WINDOW_OCCLUDED;
 }
 
-void Window_Show(void) { SDL_ShowWindow(win_handle); }
+void Window_Show(void) {
+	 SDL_ShowWindow(win_handle); 
+}
 
 void Window_SetSize(int width, int height) {
 	SDL_SetWindowSize(win_handle, width, height);
@@ -199,7 +206,7 @@ static void OnTextEvent(const SDL_Event* e) {
 	int i, len;
 
 	src = e->text.text;
-	len = String_CalcLen(src, SDL_TEXTINPUTEVENT_TEXT_SIZE);
+	len = String_Length(src);
 
 	while (len > 0) {
 		i = Convert_Utf8ToCodepoint(&cp, src, len);

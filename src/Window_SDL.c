@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_SDL
+#if defined CC_BUILD_SDL2
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
@@ -9,7 +9,7 @@
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
 
-#warning "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+#warning "Some features are missing from the SDL2 backend. If possible, it is recommended that you use a native windowing backend instead"
 
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
@@ -41,10 +41,7 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height, int flags) {
-	int x = Display_CentreX(width);
-	int y = Display_CentreY(height);
-
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, 
+	win_handle = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 
 					flags | SDL_WINDOW_RESIZABLE);
 	if (!win_handle) Window_SDLFail("creating window");
 
