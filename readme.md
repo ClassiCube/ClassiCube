@@ -21,9 +21,9 @@ ClassiCube is not trying to replicate modern Minecraft versions. It will never s
 
 You can **download ClassiCube** [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
-![classic](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/a233cb4c-296a-4d08-87fc-49874c230d4f)
+![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
 
-![enhanced](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/61a064bd-cfaa-4a91-bedf-a16c3dd7e8a2)
+![enhanced](https://github.com/ClassiCube/ClassiCube/assets/6509348/b2fe0e2b-5d76-41ab-909f-048d0ad15f37)
 
 
 # We need your help
