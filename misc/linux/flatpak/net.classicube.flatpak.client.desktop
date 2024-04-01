@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ClassiCube
+Exec=ClassiCubeLauncher
+Comment=Sandbox building-block game
+Type=Application
+Icon=net.classicube.flatpak.client
+Categories=Game;ActionGame;
+Terminal=false
+MimeType=x-scheme-handler/mc;
+StartupWMClass=net.classicube.flatpak.client
