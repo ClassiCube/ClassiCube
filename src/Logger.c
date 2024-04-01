@@ -23,6 +23,9 @@ static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #include <signal.h>
 /* These operating systems don't provide sys/ucontext.h */
 /*  But register constants be found from includes in <signal.h> */
+#elif defined CC_BUILD_OS2
+#include <signal.h>
+#include <386/ucontext.h>
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* Need to define this to get REG_ constants */
 #define _GNU_SOURCE
@@ -244,7 +247,7 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	cc_uintptr addr_ = (cc_uintptr)addr;
 	String_Format1(trace, "%x", &addr_);
 }
-#elif defined CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
 #define __USE_GNU
@@ -379,7 +382,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 }
 #elif defined CC_BACKTRACE_BUILTIN
 /* Implemented later at end of the file */
-#elif defined CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
 #include <execinfo.h>
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[MAX_BACKTRACE_FRAMES];

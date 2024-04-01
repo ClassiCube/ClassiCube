@@ -179,6 +179,9 @@ static const cc_string curlAlt = String_FromConst("libcurl.so");
 #elif defined CC_BUILD_SERENITY
 static const cc_string curlLib = String_FromConst("/usr/local/lib/libcurl.so");
 static const cc_string curlAlt = String_FromConst("/usr/local/lib/libcurl.so");
+#elif defined CC_BUILD_OS2
+static const cc_string curlLib = String_FromConst("/@unixroot/usr/lib/curl7.dll");
+static const cc_string curlAlt = String_FromConst("/@unixroot/usr/local/lib/curl7.dll");
 #else
 static const cc_string curlLib = String_FromConst("libcurl.so.4");
 static const cc_string curlAlt = String_FromConst("libcurl.so.3");
@@ -186,10 +189,17 @@ static const cc_string curlAlt = String_FromConst("libcurl.so.3");
 
 static cc_bool LoadCurlFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
+#if !defined CC_BUILD_OS2
 		DynamicLib_Sym(curl_global_init),    DynamicLib_Sym(curl_global_cleanup),
 		DynamicLib_Sym(curl_easy_init),      DynamicLib_Sym(curl_easy_perform),
 		DynamicLib_Sym(curl_easy_setopt),    DynamicLib_Sym(curl_easy_cleanup),
 		DynamicLib_Sym(curl_slist_free_all), DynamicLib_Sym(curl_slist_append)
+#else
+		DynamicLib_SymC(curl_global_init),    DynamicLib_SymC(curl_global_cleanup),
+		DynamicLib_SymC(curl_easy_init),      DynamicLib_SymC(curl_easy_perform),
+		DynamicLib_SymC(curl_easy_setopt),    DynamicLib_SymC(curl_easy_cleanup),
+		DynamicLib_SymC(curl_slist_free_all), DynamicLib_SymC(curl_slist_append)
+#endif
 	};
 	cc_bool success;
 	void* lib;
@@ -225,7 +235,6 @@ static void HttpBackend_Init(void) {
 	if (!LoadCurlFuncs()) { Logger_WarnFunc(&msg); return; }
 	res = _curl_global_init(CURL_GLOBAL_DEFAULT);
 	if (res) { Logger_SimpleWarn(res, "initing curl"); return; }
-
 	curl = _curl_easy_init();
 	if (!curl) { Logger_SimpleWarn(res, "initing curl_easy"); return; }
 

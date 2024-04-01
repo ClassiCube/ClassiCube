@@ -127,7 +127,7 @@ serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
-	
+
 # consoles builds require special handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
 dreamcast:
@@ -161,6 +161,8 @@ switch:
 	$(MAKE) -f misc/switch/Makefile PLAT=switch
 ds:
 	$(MAKE) -f misc/ds/Makefile PLAT=ds
+os/2:
+	$(MAKE) -f misc/os2/Makefile PLAT=os2
 	
 clean:
 	$(DEL) $(OBJECTS)

@@ -61,6 +61,10 @@ cc_bool Platform_SingleProcess;
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
+#elif defined CC_BUILD_OS2
+#include <libcx/net.h>
+#define INCL_DOSPROCESS
+#include <os2.h>
 #endif
 
 
@@ -514,6 +518,11 @@ void Platform_LoadSysFonts(void) {
 	static const cc_string dirs[] = {
 		String_FromConst("/res/fonts")
 	};
+#elif defined CC_BUILD_OS2
+	static const cc_string dirs[] = {
+		String_FromConst("/@unixroot/usr/share/fonts"),
+		String_FromConst("/@unixroot/usr/local/share/fonts")
+	};
 #else
 	static const cc_string dirs[] = {
 		String_FromConst("/usr/share/fonts"),
@@ -529,6 +538,10 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+#if defined CC_BUILD_OS2
+#undef AF_INET6
+#endif
+
 union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in  v4;
@@ -861,6 +874,16 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = file.length;
 	return 0;
 }
+#elif defined CC_BUILD_OS2
+static cc_result Process_RawGetExePath(char* path, int* len) {
+	PPIB pib;
+	DosGetInfoBlocks(NULL, &pib);
+	if (pib && pib->pib_pchcmd) {
+		Mem_Copy(path, pib->pib_pchcmd, strlen(pib->pib_pchcmd));
+		*len = strlen(pib->pib_pchcmd);
+	}
+	return 0;
+}
 #endif
 
 
@@ -1060,7 +1083,8 @@ void* DynamicLib_Load2(const cc_string* path) {
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
-	return dlsym(lib, name);
+	void *result = dlsym(lib, name);
+	return result;
 }
 
 cc_bool DynamicLib_DescribeError(cc_string* dst) {

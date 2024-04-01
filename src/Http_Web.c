@@ -70,7 +70,7 @@ static void Http_StartNextDownload(void) {
 
 	String_EncodeUtf8(urlStr, &url);
 	res = interop_DownloadAsync(urlStr, req->requestType, req->id);
-	
+
 	if (res) {
 		/* interop error code -> ClassiCube error code */
 		if (res == 1) res = ERR_INVALID_DATA_URL;

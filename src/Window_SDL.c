@@ -9,7 +9,9 @@
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
 
+#ifndef CC_BUILD_OS2
 #error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+#endif
 
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
@@ -54,7 +56,11 @@ static void DoCreateWindow(int width, int height, int flags) {
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
+#if !defined CC_BUILD_PORTABLEGL 
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
+#else
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
+#endif
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
@@ -395,5 +401,60 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	SDL_GL_SetSwapInterval(vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
+
+#elif defined CC_BUILD_PORTABLEGL
+#define PORTABLEGL_IMPLEMENTATION
+#include <portablegl.h>
+
+glContext pglContext;
+u32 *bbufpix;
+
+typedef struct My_Uniforms
+{
+	mat4 mvp_mat;
+	vec4 v_color;
+} My_Uniforms;
+
+void normal_vs(float* vs_output, void* vertex_attribs, Shader_Builtins* builtins, void* uniforms)
+{
+	builtins->gl_Position = mult_mat4_vec4(*((mat4*)uniforms), ((vec4*)vertex_attribs)[0]);
+}
+
+void normal_fs(float* fs_input, Shader_Builtins* builtins, void* uniforms)
+{
+	builtins->gl_FragColor = ((My_Uniforms*)uniforms)->v_color;
+}
+
+void GLContext_Create(void) {
+	int width, height;
+	
+	SDL_GetWindowSize(win_handle, &width, &height);
+	if (!init_glContext(&pglContext, &bbufpix, width, height, 32,
+		0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000)) {
+		Logger_Abort("Failed to initialize portableglContext");
+	}
+	set_glContext(&pglContext);
+	
+	//GLuint shader = pglCreateProgram(normal_vs, normal_fs, 0, NULL, GL_FALSE);
+	//glUseProgram(shader);
+}
+
+void GLContext_Update(void) { }
+cc_bool GLContext_TryRestore(void) { return true; }
+void GLContext_Free(void) {
+	free_glContext(&pglContext);
+	// TODO Free whatever
+}
+
+void* GLContext_GetAddress(const char* function) {
+}
+
+cc_bool GLContext_SwapBuffers(void) {
+}
+
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+}
+void GLContext_GetApiInfo(cc_string* info) { }
+
 #endif
 #endif
