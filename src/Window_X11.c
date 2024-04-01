@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL
+#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL2 && !defined CC_BUILD_SDL3
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
