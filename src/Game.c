@@ -53,11 +53,11 @@ int Game_MaxViewDistance  = DEFAULT_MAX_VIEWDIST;
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
 static cc_bool gameRunning;
-static cc_bool anaglyph3D;
 
 cc_bool Game_ClassicMode, Game_ClassicHacks;
 cc_bool Game_AllowCustomBlocks;
 cc_bool Game_AllowServerTextures;
+cc_bool Game_Anaglyph3D;
 
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
@@ -344,7 +344,7 @@ static void LoadOptions(void) {
 		ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 		Options.Set("skip-ssl-check", false);
 	}*/
-	anaglyph3D = Options_GetBool("anaglyph3D", false);
+	Game_Anaglyph3D = Options_GetBool(OPT_ANAGLYPH3D, false);
 }
 
 #ifdef CC_BUILD_MINFILES
@@ -666,7 +666,7 @@ static void Game_RenderFrame(double delta) {
 		Camera_KeyLookUpdate(delta);
 		InputHandler_Tick();
 
-		if (anaglyph3D) {
+		if (Game_Anaglyph3D) {
 			Render3D_Anaglyph(delta, t);
 		} else {
 			Render3DFrame(delta, t);

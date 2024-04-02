@@ -79,6 +79,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 #define OPT_DPI_SCALING "win-dpi-scaling"
 #define OPT_GAME_VERSION "game-version"
 #define OPT_INV_SCROLLBAR_SCALE "inv-scrollbar-scale"
+#define OPT_ANAGLYPH3D "anaglyph-3d"
 
 #define OPT_SELECTED_BLOCK_OUTLINE_COLOR "selected-block-outline-color"
 #define OPT_SELECTED_BLOCK_OUTLINE_OPACITY "selected-block-outline-opacity"

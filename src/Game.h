@@ -48,6 +48,7 @@ extern cc_bool Game_ClassicHacks;
 extern cc_bool Game_AllowCustomBlocks;
 extern cc_bool Game_AllowServerTextures;
 
+extern cc_bool Game_Anaglyph3D;
 extern cc_bool Game_ViewBobbing;
 extern cc_bool Game_BreakableLiquids;
 /* Whether a screenshot should be taken at the end of this frame */

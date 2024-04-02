@@ -2728,9 +2728,9 @@ static void ClassicOptionsScreen_SetViewDist(const cc_string* v) {
 	Game_UserSetViewDistance(dist);
 }
 
-static void ClassicOptionsScreen_GetPhysics(cc_string* v) { Menu_GetBool(v, Physics.Enabled); }
-static void ClassicOptionsScreen_SetPhysics(const cc_string* v) {
-	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
+static void ClassicOptionsScreen_GetAnaglyph(cc_string* v) { Menu_GetBool(v, Game_Anaglyph3D); }
+static void ClassicOptionsScreen_SetAnaglyph(const cc_string* v) {
+	Game_Anaglyph3D = Menu_SetBool(v, OPT_ANAGLYPH3D);
 }
 
 static void ClassicOptionsScreen_GetSounds(cc_string* v) { Menu_GetBool(v, Audio_SoundsVolume > 0); }
@@ -2763,8 +2763,8 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClassicOptionsScreen_GetInvert,   ClassicOptionsScreen_SetInvert },
 		{ -1,  -50, "Render distance", MenuOptionsScreen_Enum,
 			ClassicOptionsScreen_GetViewDist, ClassicOptionsScreen_SetViewDist },
-		{ -1,    0, "Block physics",   MenuOptionsScreen_Bool,
-			ClassicOptionsScreen_GetPhysics,  ClassicOptionsScreen_SetPhysics },
+		{ -1,    0, "3D anaglyph",     MenuOptionsScreen_Bool,
+			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph },
 
 		{ 1, -150, "Sound",         MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetSounds,  ClassicOptionsScreen_SetSounds },
