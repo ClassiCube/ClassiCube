@@ -28,6 +28,8 @@ struct AssetSet {
 	const char* (*GetRequestName)(int reqID);
 	/* Checks if any assets have been downloaded, and processes them if so */
 	void (*CheckStatus)(void);
+	/* Resets state and frees and allocated memory */
+	void (*ResetState)(void);
 };
 
 int Resources_Count, Resources_Size;
@@ -47,10 +49,194 @@ struct ResourceZipEntry {
 #define RESOURCE_TYPE_DATA  1
 #define RESOURCE_TYPE_PNG   2
 #define RESOURCE_TYPE_CONST 3
+#define RESOURCE_TYPE_SOUND 4
 
 static CC_NOINLINE cc_bool Fetcher_Get(int reqID, struct HttpRequest* item);
 CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* name);
 static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source);
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Zip entry writer---------------------------------------------------*
+*#########################################################################################################################*/
+static void GetCurrentZipDate(int* modTime, int* modDate) {
+	struct DateTime now;
+	DateTime_CurrentLocal(&now);
+
+	*modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
+	*modDate = (now.day) | (now.month << 5) | ((now.year - 1980) << 9);
+}
+
+static cc_result ZipWriter_LocalFile(struct Stream* s, struct ResourceZipEntry* e) {
+	int filenameLen = String_Length(e->filename);
+	cc_uint8 header[30 + STRING_SIZE];
+	cc_result res;
+	int modTime, modDate;
+
+	GetCurrentZipDate(&modTime, &modDate);
+	if ((res = s->Position(s, &e->offset))) return res;
+
+	Stream_SetU32_LE(header + 0,  0x04034b50);  /* signature */
+	Stream_SetU16_LE(header + 4,  20);          /* version needed */
+	Stream_SetU16_LE(header + 6,  0);           /* bitflags */
+	Stream_SetU16_LE(header + 8,  0);           /* compression method */
+	Stream_SetU16_LE(header + 10, modTime);     /* last modified */
+	Stream_SetU16_LE(header + 12, modDate);     /* last modified */
+	
+	Stream_SetU32_LE(header + 14, e->crc32);    /* CRC32 */
+	Stream_SetU32_LE(header + 18, e->size);     /* Compressed size */
+	Stream_SetU32_LE(header + 22, e->size);     /* Uncompressed size */
+	 
+	Stream_SetU16_LE(header + 26, filenameLen); /* name length */
+	Stream_SetU16_LE(header + 28, 0);           /* extra field length */
+
+	Mem_Copy(header + 30, e->filename, filenameLen);
+	return Stream_Write(s, header, 30 + filenameLen);
+}
+
+static cc_result ZipWriter_CentralDir(struct Stream* s, struct ResourceZipEntry* e) {
+	int filenameLen = String_Length(e->filename);
+	cc_uint8 header[46 + STRING_SIZE];
+	int modTime, modDate;
+	GetCurrentZipDate(&modTime, &modDate);
+
+	Stream_SetU32_LE(header + 0,  0x02014b50);  /* signature */
+	Stream_SetU16_LE(header + 4,  20);          /* version */
+	Stream_SetU16_LE(header + 6,  20);          /* version needed */
+	Stream_SetU16_LE(header + 8,  0);           /* bitflags */
+	Stream_SetU16_LE(header + 10, 0);           /* compression method */
+	Stream_SetU16_LE(header + 12, modTime);     /* last modified */
+	Stream_SetU16_LE(header + 14, modDate);     /* last modified */
+
+	Stream_SetU32_LE(header + 16, e->crc32);    /* CRC32 */
+	Stream_SetU32_LE(header + 20, e->size);     /* compressed size */
+	Stream_SetU32_LE(header + 24, e->size);     /* uncompressed size */
+
+	Stream_SetU16_LE(header + 28, filenameLen); /* name length */
+	Stream_SetU16_LE(header + 30, 0);           /* extra field length */
+	Stream_SetU16_LE(header + 32, 0);           /* file comment length */
+	Stream_SetU16_LE(header + 34, 0);           /* disk number */
+	Stream_SetU16_LE(header + 36, 0);           /* internal attributes */
+	Stream_SetU32_LE(header + 38, 0);           /* external attributes */
+	Stream_SetU32_LE(header + 42, e->offset);   /* local header offset */
+
+	Mem_Copy(header + 46, e->filename, filenameLen);
+	return Stream_Write(s, header, 46 + filenameLen);
+}
+
+static cc_result ZipWriter_EndOfCentralDir(struct Stream* s, int numEntries,
+											cc_uint32 centralDirBeg, cc_uint32 centralDirEnd) {
+	cc_uint8 header[22];
+
+	Stream_SetU32_LE(header + 0,  0x06054b50); /* signature */
+	Stream_SetU16_LE(header + 4,  0);          /* disk number */
+	Stream_SetU16_LE(header + 6,  0);          /* disk number of start */
+	Stream_SetU16_LE(header + 8,  numEntries); /* disk entries */
+	Stream_SetU16_LE(header + 10, numEntries); /* total entries */
+	Stream_SetU32_LE(header + 12, centralDirEnd - centralDirBeg);  /* central dir size */
+	Stream_SetU32_LE(header + 16, centralDirBeg);                  /* central dir start */
+	Stream_SetU16_LE(header + 20, 0);         /* comment length */
+	return Stream_Write(s, header, 22);
+}
+
+static cc_result ZipWriter_FixupLocalFile(struct Stream* s, struct ResourceZipEntry* e) {
+	int filenameLen = String_Length(e->filename);
+	cc_uint8 tmp[2048];
+	cc_uint32 dataBeg, dataEnd;
+	cc_uint32 i, crc, toRead, read;
+	cc_result res;
+
+	dataBeg = e->offset + 30 + filenameLen;
+	if ((res = s->Position(s, &dataEnd))) return res;
+	e->size = dataEnd - dataBeg;
+
+	/* work out the CRC 32 */
+	crc = 0xffffffffUL;
+	if ((res = s->Seek(s, dataBeg))) return res;
+
+	for (; dataBeg < dataEnd; dataBeg += read) {
+		toRead = dataEnd - dataBeg;
+		toRead = min(toRead, sizeof(tmp));
+
+		if ((res = s->Read(s, tmp, toRead, &read))) return res;
+		if (!read) return ERR_END_OF_STREAM;
+
+		for (i = 0; i < read; i++) {
+			crc = Utils_Crc32Table[(crc ^ tmp[i]) & 0xFF] ^ (crc >> 8);
+		}
+	}
+	e->crc32 = crc ^ 0xffffffffUL;
+
+	/* then fixup the header */
+	if ((res = s->Seek(s, e->offset)))      return res;
+	if ((res = ZipWriter_LocalFile(s, e))) return res;
+	return s->Seek(s, dataEnd);
+}
+
+static cc_result ZipWriter_WriteData(struct Stream* dst, struct ResourceZipEntry* e) {
+	cc_uint8* data = e->value.data;
+	cc_result res;
+	e->crc32 = Utils_CRC32(data, e->size);
+
+	if ((res = ZipWriter_LocalFile(dst, e))) return res;
+	return Stream_Write(dst, data, e->size);
+}
+
+static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry* e) {
+	struct Bitmap* src = &e->value.bmp;
+	cc_result res;
+
+	if ((res = ZipWriter_LocalFile(dst, e)))            return res;
+	if ((res = Png_Encode(src, dst, NULL, true, NULL))) return res;
+	return ZipWriter_FixupLocalFile(dst, e);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Zip file writer----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry* entries, int numEntries) {
+	struct ResourceZipEntry* e;
+	cc_uint32 beg, end;
+	int i;
+	cc_result res;
+
+	for (i = 0; i < numEntries; i++)
+	{
+		e = &entries[i];
+
+		if (e->type == RESOURCE_TYPE_PNG) {
+			if ((res = ZipWriter_WritePng(s,  e))) return res;
+		} else {
+			if ((res = ZipWriter_WriteData(s, e))) return res;
+		}
+	}
+	
+	if ((res = s->Position(s, &beg))) return res;
+	for (i = 0; i < numEntries; i++)
+	{
+		if ((res = ZipWriter_CentralDir(s, &entries[i]))) return res;
+	}
+
+	if ((res = s->Position(s, &end))) return res;
+	return ZipWriter_EndOfCentralDir(s, numEntries, beg, end);
+}
+
+static void ZipFile_Create(cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
+	struct Stream s;
+	cc_result res;
+
+	res = Stream_CreateFile(&s, path);
+	if (res) {
+		Logger_SysWarn2(res, "creating", path); return;
+	}
+		
+	res = ZipFile_WriteEntries(&s, entries, numEntries);
+	if (res) Logger_SysWarn2(res, "making", path);
+
+	res = s.Close(&s);
+	if (res) Logger_SysWarn2(res, "closing", path);
+}
 
 
 /*########################################################################################################################*
@@ -161,12 +347,16 @@ static void MusicAssets_CheckStatus(void) {
 	}
 }
 
+static void MusicAssets_ResetState(void) {
+}
+
 static const struct AssetSet mccMusicAssetSet = {
 	MusicAssets_CheckExistence,
 	MusicAssets_CountMissing,
 	MusicAssets_DownloadAssets,
 	MusicAssets_GetRequestName,
-	MusicAssets_CheckStatus
+	MusicAssets_CheckStatus,
+	MusicAssets_ResetState
 };
 
 
@@ -176,7 +366,8 @@ static const struct AssetSet mccMusicAssetSet = {
 static struct SoundAsset {
 	const char* name;
 	const char* hash;
-	int reqID;
+	int reqID, size;
+	void* data;
 } soundAssets[] = {
 	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
 	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
@@ -361,11 +552,15 @@ cleanup:
 }
 
 
-static void SoundAsset_Check(const struct SoundAsset* sound) {
+static void SoundAsset_Check(struct SoundAsset* sound) {
 	struct HttpRequest item;
 	if (!Fetcher_Get(sound->reqID, &item)) return;
 
 	SoundPatcher_Save(sound->name, &item);
+
+	sound->data = item.data;
+	sound->size = item.size;
+	item.data   = NULL;
 	HttpRequest_Free(&item);
 }
 
@@ -377,12 +572,24 @@ static void SoundAssets_CheckStatus(void) {
 	}
 }
 
+static void SoundAssets_ResetState(void) {
+	int i;
+	allSoundsExist = false;
+
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		Mem_Free(soundAssets[i].data);
+		soundAssets[i].data = NULL;
+	}
+}
+
 static const struct AssetSet mccSoundAssetSet = {
 	SoundAssets_CheckExistence,
 	SoundAssets_CountMissing,
 	SoundAssets_DownloadAssets,
 	SoundAssets_GetRequestName,
-	SoundAssets_CheckStatus
+	SoundAssets_CheckStatus,
+	SoundAssets_ResetState
 };
 
 
@@ -462,196 +669,19 @@ static void CCTextures_CheckStatus(void) {
 	HttpRequest_Free(&item);
 }
 
+static void CCTextures_ResetState(void) {
+	ccTexturesExist      = false;
+	ccTexturesDownloaded = false;
+}
+
 static const struct AssetSet ccTexsAssetSet = {
 	CCTextures_CheckExistence,
 	CCTextures_CountMissing,
 	CCTextures_DownloadAssets,
 	CCTextures_GetRequestName,
-	CCTextures_CheckStatus
+	CCTextures_CheckStatus,
+	CCTextures_ResetState
 };
-
-
-/*########################################################################################################################*
-*------------------------------------------------------Zip entry writer---------------------------------------------------*
-*#########################################################################################################################*/
-static void GetCurrentZipDate(int* modTime, int* modDate) {
-	struct DateTime now;
-	DateTime_CurrentLocal(&now);
-
-	*modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
-	*modDate = (now.day) | (now.month << 5) | ((now.year - 1980) << 9);
-}
-
-static cc_result ZipWriter_LocalFile(struct Stream* s, struct ResourceZipEntry* e) {
-	int filenameLen = String_Length(e->filename);
-	cc_uint8 header[30 + STRING_SIZE];
-	cc_result res;
-	int modTime, modDate;
-
-	GetCurrentZipDate(&modTime, &modDate);
-	if ((res = s->Position(s, &e->offset))) return res;
-
-	Stream_SetU32_LE(header + 0,  0x04034b50);  /* signature */
-	Stream_SetU16_LE(header + 4,  20);          /* version needed */
-	Stream_SetU16_LE(header + 6,  0);           /* bitflags */
-	Stream_SetU16_LE(header + 8,  0);           /* compression method */
-	Stream_SetU16_LE(header + 10, modTime);     /* last modified */
-	Stream_SetU16_LE(header + 12, modDate);     /* last modified */
-	
-	Stream_SetU32_LE(header + 14, e->crc32);    /* CRC32 */
-	Stream_SetU32_LE(header + 18, e->size);     /* Compressed size */
-	Stream_SetU32_LE(header + 22, e->size);     /* Uncompressed size */
-	 
-	Stream_SetU16_LE(header + 26, filenameLen); /* name length */
-	Stream_SetU16_LE(header + 28, 0);           /* extra field length */
-
-	Mem_Copy(header + 30, e->filename, filenameLen);
-	return Stream_Write(s, header, 30 + filenameLen);
-}
-
-static cc_result ZipWriter_CentralDir(struct Stream* s, struct ResourceZipEntry* e) {
-	int filenameLen = String_Length(e->filename);
-	cc_uint8 header[46 + STRING_SIZE];
-	int modTime, modDate;
-	GetCurrentZipDate(&modTime, &modDate);
-
-	Stream_SetU32_LE(header + 0,  0x02014b50);  /* signature */
-	Stream_SetU16_LE(header + 4,  20);          /* version */
-	Stream_SetU16_LE(header + 6,  20);          /* version needed */
-	Stream_SetU16_LE(header + 8,  0);           /* bitflags */
-	Stream_SetU16_LE(header + 10, 0);           /* compression method */
-	Stream_SetU16_LE(header + 12, modTime);     /* last modified */
-	Stream_SetU16_LE(header + 14, modDate);     /* last modified */
-
-	Stream_SetU32_LE(header + 16, e->crc32);    /* CRC32 */
-	Stream_SetU32_LE(header + 20, e->size);     /* compressed size */
-	Stream_SetU32_LE(header + 24, e->size);     /* uncompressed size */
-
-	Stream_SetU16_LE(header + 28, filenameLen); /* name length */
-	Stream_SetU16_LE(header + 30, 0);           /* extra field length */
-	Stream_SetU16_LE(header + 32, 0);           /* file comment length */
-	Stream_SetU16_LE(header + 34, 0);           /* disk number */
-	Stream_SetU16_LE(header + 36, 0);           /* internal attributes */
-	Stream_SetU32_LE(header + 38, 0);           /* external attributes */
-	Stream_SetU32_LE(header + 42, e->offset);   /* local header offset */
-
-	Mem_Copy(header + 46, e->filename, filenameLen);
-	return Stream_Write(s, header, 46 + filenameLen);
-}
-
-static cc_result ZipWriter_EndOfCentralDir(struct Stream* s, int numEntries,
-											cc_uint32 centralDirBeg, cc_uint32 centralDirEnd) {
-	cc_uint8 header[22];
-
-	Stream_SetU32_LE(header + 0,  0x06054b50); /* signature */
-	Stream_SetU16_LE(header + 4,  0);          /* disk number */
-	Stream_SetU16_LE(header + 6,  0);          /* disk number of start */
-	Stream_SetU16_LE(header + 8,  numEntries); /* disk entries */
-	Stream_SetU16_LE(header + 10, numEntries); /* total entries */
-	Stream_SetU32_LE(header + 12, centralDirEnd - centralDirBeg);  /* central dir size */
-	Stream_SetU32_LE(header + 16, centralDirBeg);                  /* central dir start */
-	Stream_SetU16_LE(header + 20, 0);         /* comment length */
-	return Stream_Write(s, header, 22);
-}
-
-static cc_result ZipWriter_FixupLocalFile(struct Stream* s, struct ResourceZipEntry* e) {
-	int filenameLen = String_Length(e->filename);
-	cc_uint8 tmp[2048];
-	cc_uint32 dataBeg, dataEnd;
-	cc_uint32 i, crc, toRead, read;
-	cc_result res;
-
-	dataBeg = e->offset + 30 + filenameLen;
-	if ((res = s->Position(s, &dataEnd))) return res;
-	e->size = dataEnd - dataBeg;
-
-	/* work out the CRC 32 */
-	crc = 0xffffffffUL;
-	if ((res = s->Seek(s, dataBeg))) return res;
-
-	for (; dataBeg < dataEnd; dataBeg += read) {
-		toRead = dataEnd - dataBeg;
-		toRead = min(toRead, sizeof(tmp));
-
-		if ((res = s->Read(s, tmp, toRead, &read))) return res;
-		if (!read) return ERR_END_OF_STREAM;
-
-		for (i = 0; i < read; i++) {
-			crc = Utils_Crc32Table[(crc ^ tmp[i]) & 0xFF] ^ (crc >> 8);
-		}
-	}
-	e->crc32 = crc ^ 0xffffffffUL;
-
-	/* then fixup the header */
-	if ((res = s->Seek(s, e->offset)))      return res;
-	if ((res = ZipWriter_LocalFile(s, e))) return res;
-	return s->Seek(s, dataEnd);
-}
-
-static cc_result ZipWriter_WriteData(struct Stream* dst, struct ResourceZipEntry* e) {
-	cc_uint8* data = e->value.data;
-	cc_result res;
-	e->crc32 = Utils_CRC32(data, e->size);
-
-	if ((res = ZipWriter_LocalFile(dst, e))) return res;
-	return Stream_Write(dst, data, e->size);
-}
-
-static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry* e) {
-	struct Bitmap* src = &e->value.bmp;
-	cc_result res;
-
-	if ((res = ZipWriter_LocalFile(dst, e)))            return res;
-	if ((res = Png_Encode(src, dst, NULL, true, NULL))) return res;
-	return ZipWriter_FixupLocalFile(dst, e);
-}
-
-
-/*########################################################################################################################*
-*------------------------------------------------------Zip file writer----------------------------------------------------*
-*#########################################################################################################################*/
-static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry* entries, int numEntries) {
-	struct ResourceZipEntry* e;
-	cc_uint32 beg, end;
-	int i;
-	cc_result res;
-
-	for (i = 0; i < numEntries; i++)
-	{
-		e = &entries[i];
-
-		if (e->type == RESOURCE_TYPE_PNG) {
-			if ((res = ZipWriter_WritePng(s,  e))) return res;
-		} else {
-			if ((res = ZipWriter_WriteData(s, e))) return res;
-		}
-	}
-	
-	if ((res = s->Position(s, &beg))) return res;
-	for (i = 0; i < numEntries; i++)
-	{
-		if ((res = ZipWriter_CentralDir(s, &entries[i]))) return res;
-	}
-
-	if ((res = s->Position(s, &end))) return res;
-	return ZipWriter_EndOfCentralDir(s, numEntries, beg, end);
-}
-
-static void ZipFile_Create(cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
-	struct Stream s;
-	cc_result res;
-
-	res = Stream_CreateFile(&s, path);
-	if (res) {
-		Logger_SysWarn2(res, "creating", path); return;
-	}
-		
-	res = ZipFile_WriteEntries(&s, entries, numEntries);
-	if (res) Logger_SysWarn2(res, "making", path);
-
-	res = s.Close(&s);
-	if (res) Logger_SysWarn2(res, "closing", path);
-}
 
 
 /*########################################################################################################################*
@@ -998,6 +1028,7 @@ static void MCCTextures_DownloadAssets(void) {
 	{
 		url = String_FromReadonly(defaultZipSources[i].url);
 		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
+		defaultZipSources[i].downloaded = false;
 	}
 }
 
@@ -1046,12 +1077,29 @@ static void MCCTextures_CheckStatus(void) {
 	}
 }
 
+static void MCCTextures_ResetState(void) {
+	int i;
+	allZipEntriesExist = false;
+	zipEntriesFound    = 0;
+
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) 
+	{
+		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
+
+		/* can reuse value.data for value.bmp case too */
+		Mem_Free(defaultZipEntries[i].value.data);
+		defaultZipEntries[i].value.data = NULL;
+		defaultZipEntries[i].size       = 0;
+	}
+}
+
 static const struct AssetSet mccTexsAssetSet = {
 	MCCTextures_CheckExistence,
 	MCCTextures_CountMissing,
 	MCCTextures_DownloadAssets,
 	MCCTextures_GetRequestName,
-	MCCTextures_CheckStatus
+	MCCTextures_CheckStatus,
+	MCCTextures_ResetState
 };
 
 
@@ -1069,10 +1117,20 @@ static const struct AssetSet* const asset_sets[] = {
 	&mccSoundAssetSet
 };
 
-void Resources_CheckExistence(void) {
+static void ResetState() {
 	int i;
 	Resources_Count = 0;
 	Resources_Size  = 0;
+
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		asset_sets[i]->ResetState();
+	}
+}
+
+void Resources_CheckExistence(void) {
+	int i;
+	ResetState();
 
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
@@ -1111,18 +1169,9 @@ void Fetcher_Run(void) {
 }
 
 static void Fetcher_Finish(void) {
-	int i;
 	Fetcher_Completed = true;
 	Fetcher_Working   = false;
-
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
-		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
-
-		/* can reuse value.data for value.bmp case too */
-		Mem_Free(defaultZipEntries[i].value.data);
-		defaultZipEntries[i].value.data = NULL;
-		defaultZipEntries[i].size       = 0;
-	}
+	ResetState();
 }
 
 static void Fetcher_Fail(struct HttpRequest* item) {
