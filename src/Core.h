@@ -6,74 +6,74 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #if _MSC_VER
-typedef signed __int8  cc_int8;
-typedef signed __int16 cc_int16;
-typedef signed __int32 cc_int32;
-typedef signed __int64 cc_int64;
-
-typedef unsigned __int8  cc_uint8;
-typedef unsigned __int16 cc_uint16;
-typedef unsigned __int32 cc_uint32;
-typedef unsigned __int64 cc_uint64;
-#ifdef _WIN64
-typedef unsigned __int64 cc_uintptr;
-#else
-typedef unsigned __int32 cc_uintptr;
-#endif
-
-#define CC_INLINE inline
-#define CC_NOINLINE __declspec(noinline)
-#ifndef CC_API
-#define CC_API __declspec(dllexport, noinline)
-#define CC_VAR __declspec(dllexport)
-#endif
-
-#define CC_HAS_TYPES
-#define CC_HAS_MISC
+	typedef signed __int8  cc_int8;
+	typedef signed __int16 cc_int16;
+	typedef signed __int32 cc_int32;
+	typedef signed __int64 cc_int64;
+	
+	typedef unsigned __int8  cc_uint8;
+	typedef unsigned __int16 cc_uint16;
+	typedef unsigned __int32 cc_uint32;
+	typedef unsigned __int64 cc_uint64;
+	#ifdef _WIN64
+	typedef unsigned __int64 cc_uintptr;
+	#else
+	typedef unsigned __int32 cc_uintptr;
+	#endif
+	
+	#define CC_INLINE inline
+	#define CC_NOINLINE __declspec(noinline)
+	#ifndef CC_API
+	#define CC_API __declspec(dllexport, noinline)
+	#define CC_VAR __declspec(dllexport)
+	#endif
+	
+	#define CC_HAS_TYPES
+	#define CC_HAS_MISC
 #elif __GNUC__
-/* really old GCC/clang might not have these defined */
-#ifdef __INT8_TYPE__
-/* avoid including <stdint.h> because it breaks defining UNICODE in Platform.c with MinGW */
-typedef __INT8_TYPE__  cc_int8;
-typedef __INT16_TYPE__ cc_int16;
-typedef __INT32_TYPE__ cc_int32;
-typedef __INT64_TYPE__ cc_int64;
-
-#ifdef __UINT8_TYPE__
-typedef __UINT8_TYPE__   cc_uint8;
-typedef __UINT16_TYPE__  cc_uint16;
-typedef __UINT32_TYPE__  cc_uint32;
-typedef __UINT64_TYPE__  cc_uint64;
-typedef __UINTPTR_TYPE__ cc_uintptr;
-#else
-/* clang doesn't define the __UINT8_TYPE__ */
-typedef unsigned __INT8_TYPE__   cc_uint8;
-typedef unsigned __INT16_TYPE__  cc_uint16;
-typedef unsigned __INT32_TYPE__  cc_uint32;
-typedef unsigned __INT64_TYPE__  cc_uint64;
-typedef unsigned __INTPTR_TYPE__ cc_uintptr;
-#endif
-#define CC_HAS_TYPES
-#endif
-
-#define CC_INLINE inline
-#define CC_NOINLINE __attribute__((noinline))
-#ifndef CC_API
-#ifdef _WIN32
-#define CC_API __attribute__((dllexport, noinline))
-#define CC_VAR __attribute__((dllexport))
-#else
-#define CC_API __attribute__((visibility("default"), noinline))
-#define CC_VAR __attribute__((visibility("default")))
-#endif
-#endif
-#define CC_HAS_MISC
-#ifdef __BIG_ENDIAN__
-#define CC_BIG_ENDIAN
-#endif
+	/* really old GCC/clang might not have these defined */
+	#ifdef __INT8_TYPE__
+	/* avoid including <stdint.h> because it breaks defining UNICODE in Platform.c with MinGW */
+	typedef __INT8_TYPE__  cc_int8;
+	typedef __INT16_TYPE__ cc_int16;
+	typedef __INT32_TYPE__ cc_int32;
+	typedef __INT64_TYPE__ cc_int64;
+	
+	#ifdef __UINT8_TYPE__
+	typedef __UINT8_TYPE__   cc_uint8;
+	typedef __UINT16_TYPE__  cc_uint16;
+	typedef __UINT32_TYPE__  cc_uint32;
+	typedef __UINT64_TYPE__  cc_uint64;
+	typedef __UINTPTR_TYPE__ cc_uintptr;
+	#else
+	/* clang doesn't define the __UINT8_TYPE__ */
+	typedef unsigned __INT8_TYPE__   cc_uint8;
+	typedef unsigned __INT16_TYPE__  cc_uint16;
+	typedef unsigned __INT32_TYPE__  cc_uint32;
+	typedef unsigned __INT64_TYPE__  cc_uint64;
+	typedef unsigned __INTPTR_TYPE__ cc_uintptr;
+	#endif
+	#define CC_HAS_TYPES
+	#endif
+	
+	#define CC_INLINE inline
+	#define CC_NOINLINE __attribute__((noinline))
+	#ifndef CC_API
+	#ifdef _WIN32
+	#define CC_API __attribute__((dllexport, noinline))
+	#define CC_VAR __attribute__((dllexport))
+	#else
+	#define CC_API __attribute__((visibility("default"), noinline))
+	#define CC_VAR __attribute__((visibility("default")))
+	#endif
+	#endif
+	#define CC_HAS_MISC
+	#ifdef __BIG_ENDIAN__
+	#define CC_BIG_ENDIAN
+	#endif
 #elif __MWERKS__
-/* TODO: Is there actual attribute support for CC_API etc somewhere? */
-#define CC_BIG_ENDIAN
+	/* TODO: Is there actual attribute support for CC_API etc somewhere? */
+	#define CC_BIG_ENDIAN
 #endif
 
 /* Unrecognised compiler, so just go with some sensible default typdefs */
@@ -146,6 +146,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9
 	#define CC_BUILD_WINGUI
+	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_SCHANNEL
 	#define CC_BUILD_WINMM
 #elif defined __ANDROID__

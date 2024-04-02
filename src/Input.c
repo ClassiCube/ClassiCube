@@ -420,6 +420,10 @@ static void KeyBind_Init(void) {
 #define GAMEPAD_BEG_BTN CCPAD_A
 static float pad_holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
 
+int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
+int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
+static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
+
 void Gamepad_SetButton(int btn, int pressed) {
 	/* Reset hold tracking time */
 	if (pressed && !Input.Pressed[btn]) pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
@@ -427,25 +431,18 @@ void Gamepad_SetButton(int btn, int pressed) {
 	Input_SetNonRepeatable(btn, pressed);
 }
 
-static void Gamepad_SetLAxis(float x, float y, double delta) {
-	if (x == 0 && y == 0) return;
-
-	Input.JoystickMovement = true;
-	Input.JoystickAngle    = Math_Atan2(x, -y);
-}
-
-static void Gamepad_SetRAxis(float x, float y, double delta) {
-	float scale = delta * 60.0;
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
-}
-
 void Gamepad_SetAxis(int axis, float x, float y, double delta) {
 	if (!Input.RawMode) return;
 
-	if (axis == PAD_AXIS_LEFT) {
-		Gamepad_SetLAxis(x, y, delta);
+	if (Gamepad_AxisBehaviour[axis] == AXIS_BEHAVIOUR_MOVEMENT) {
+		if (x == 0 && y == 0) return;
+
+		Input.JoystickMovement = true;
+		Input.JoystickAngle    = Math_Atan2(x, -y);
 	} else {
-		Gamepad_SetRAxis(x, y, delta);	
+		int sensi   = Gamepad_AxisSensitivity[axis];
+		float scale = delta * 60.0 * axis_sensiFactor[sensi];
+		Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
 	}
 }
 

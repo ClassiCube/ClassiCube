@@ -187,9 +187,14 @@ void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
 
 
 /* Gamepad axes. Default behaviour is: */
-/*  - left axis: player movement  */
+/*  - left axis:  player movement  */
 /*  - right axis: camera movement */
-enum PAD_AXIS { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
+enum PAD_AXIS         { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
+enum AXIS_SENSITIVITY { AXIS_SENSI_LOWER, AXIS_SENSI_LOW, AXIS_SENSI_NORMAL, AXIS_SENSI_HIGH, AXIS_SENSI_HIGHER };
+enum AXIS_BEHAVIOUR   { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
+extern int Gamepad_AxisBehaviour[2];
+extern int Gamepad_AxisSensitivity[2];
+
 /* Sets value of the given gamepad button */
 void Gamepad_SetButton(int btn, int pressed);
 /* Sets value of the given axis */
