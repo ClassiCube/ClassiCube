@@ -1155,6 +1155,24 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     CFRelease(request);
     return result;
 }
+#elif !defined CC_BUILD_NETWORKING
+/*########################################################################################################################*
+*------------------------------------------------------Null backend-------------------------------------------------------*
+*#########################################################################################################################*/
+#include "Errors.h"
+
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+static void HttpBackend_Init(void) { }
+
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) { }
+
+static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
+	req->progress = 100;
+	return ERR_NOT_SUPPORTED;
+}
 #endif
 
 

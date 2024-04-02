@@ -347,9 +347,7 @@ static void LoadOptions(void) {
 	Game_Anaglyph3D = Options_GetBool(OPT_ANAGLYPH3D, false);
 }
 
-#ifdef CC_BUILD_MINFILES
-static void LoadPlugins(void) { }
-#else
+#ifdef CC_BUILD_PLUGINS
 static void LoadPlugin(const cc_string* path, void* obj) {
 	void* lib;
 	void* verSym;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
@@ -390,6 +388,8 @@ static void LoadPlugins(void) {
 	res = Directory_Enum(&dir, NULL, LoadPlugin);
 	if (res) Logger_SysWarn(res, "enumerating plugins directory");
 }
+#else
+static void LoadPlugins(void) { }
 #endif
 
 static void Game_Free(void* obj);
