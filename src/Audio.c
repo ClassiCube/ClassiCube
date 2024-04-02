@@ -335,7 +335,7 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 
 static cc_result Music_PlayOgg(struct Stream* source) {
 	struct OggState ogg;
-	struct VorbisState vorbis = { 0 };
+	struct VorbisState vorbis;
 	int channels, sampleRate, volume;
 
 	int chunkSize, samplesPerSecond;
@@ -344,6 +344,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	cc_result res;
 
 	Ogg_Init(&ogg, source);
+	Vorbis_Init(&vorbis);
 	vorbis.source = &ogg;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	

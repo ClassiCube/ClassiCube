@@ -56,7 +56,9 @@ struct VorbisState {
 	struct imdct_state imdct[2];
 };
 
-/* Frees all dynamic memory allocated to decode the given vorbis audio. */
+/* Initialises the given context to defaults */
+void Vorbis_Init(struct VorbisState* ctx);
+/* Frees all memory dynamically allocated by the given context */
 void Vorbis_Free(struct VorbisState* ctx);
 /* Reads and decodes the initial vorbis headers and setup data. */
 cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx);

@@ -44,6 +44,9 @@ struct ResourceZipEntry {
 	union ResourceValue value;
 	cc_uint32 offset, crc32;
 };
+#define RESOURCE_TYPE_DATA  1
+#define RESOURCE_TYPE_PNG   2
+#define RESOURCE_TYPE_CONST 3
 
 static CC_NOINLINE cc_bool Fetcher_Get(int reqID, struct HttpRequest* item);
 CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* name);
@@ -325,30 +328,36 @@ static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 /* Converts an OGG sound to a WAV sound for faster decoding later */
 static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	cc_string path; char pathBuffer[STRING_SIZE];
-	struct OggState ogg;
+	struct OggState* ogg    = NULL;
+	struct VorbisState* ctx = NULL;
 	struct Stream src, dst;
-	struct VorbisState* ctx;
 	cc_result res;
 
-	ctx = (struct VorbisState*)Mem_TryAllocCleared(1, sizeof(struct VorbisState));
-	if (!ctx) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); return; }
+	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
+	if (!ogg) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); goto cleanup; }
+
+	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
+	if (!ctx) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); goto cleanup; }
 
 	Stream_ReadonlyMemory(&src, req->data, req->size);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "audio/%c.wav", name);
 
 	res = Stream_CreateFile(&dst, &path);
-	if (res) { Logger_SysWarn(res, "creating .wav file"); return; }
+	if (res) { Logger_SysWarn(res, "creating .wav file"); goto cleanup; }
 
-	Ogg_Init(&ogg, &src);
-	ctx->source = &ogg;
+	Ogg_Init(ogg, &src);
+	Vorbis_Init(ctx);
+	ctx->source = ogg;
 	SoundPatcher_WriteWav(&dst, ctx);
 
 	res = dst.Close(&dst);
 	if (res) Logger_SysWarn(res, "closing .wav file");
 
-	Vorbis_Free(ctx);
+cleanup:
+	if (ctx) Vorbis_Free(ctx);
 	Mem_Free(ctx);
+	Mem_Free(ogg);
 }
 
 
@@ -463,7 +472,7 @@ static const struct AssetSet ccTexsAssetSet = {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Zip writer------------------------------------------------------*
+*------------------------------------------------------Zip entry writer---------------------------------------------------*
 *#########################################################################################################################*/
 static void GetCurrentZipDate(int* modTime, int* modDate) {
 	struct DateTime now;
@@ -599,12 +608,55 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Zip file writer----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry* entries, int numEntries) {
+	struct ResourceZipEntry* e;
+	cc_uint32 beg, end;
+	int i;
+	cc_result res;
+
+	for (i = 0; i < numEntries; i++)
+	{
+		e = &entries[i];
+
+		if (e->type == RESOURCE_TYPE_PNG) {
+			if ((res = ZipWriter_WritePng(s,  e))) return res;
+		} else {
+			if ((res = ZipWriter_WriteData(s, e))) return res;
+		}
+	}
+	
+	if ((res = s->Position(s, &beg))) return res;
+	for (i = 0; i < numEntries; i++)
+	{
+		if ((res = ZipWriter_CentralDir(s, &entries[i]))) return res;
+	}
+
+	if ((res = s->Position(s, &end))) return res;
+	return ZipWriter_EndOfCentralDir(s, numEntries, beg, end);
+}
+
+static void ZipFile_Create(cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
+	struct Stream s;
+	cc_result res;
+
+	res = Stream_CreateFile(&s, path);
+	if (res) {
+		Logger_SysWarn2(res, "creating", path); return;
+	}
+		
+	res = ZipFile_WriteEntries(&s, entries, numEntries);
+	if (res) Logger_SysWarn2(res, "making", path);
+
+	res = s.Close(&s);
+	if (res) Logger_SysWarn2(res, "closing", path);
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------default.zip resources------------------------------------------------*
 *#########################################################################################################################*/
-#define RESOURCE_TYPE_DATA  1
-#define RESOURCE_TYPE_PNG   2
-#define RESOURCE_TYPE_CONST 3
-
 #define ANIMS_TXT \
 "# This file defines the animations used in a texture pack for ClassiCube.\r\n" \
 "# Each line is in the format : <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>\r\n" \
@@ -884,52 +936,6 @@ static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------default.zip writer-------------------------------------------------*
-*#########################################################################################################################*/
-static cc_result DefaultZip_WriteEntries(struct Stream* s) {
-	struct ResourceZipEntry* e;
-	cc_uint32 beg, end;
-	int i;
-	cc_result res;
-
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
-		e = &defaultZipEntries[i];
-
-		if (e->type == RESOURCE_TYPE_PNG) {
-			if ((res = ZipWriter_WritePng(s,  e))) return res;
-		} else {
-			if ((res = ZipWriter_WriteData(s, e))) return res;
-		}
-	}
-	
-	if ((res = s->Position(s, &beg))) return res;
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
-		if ((res = ZipWriter_CentralDir(s, &defaultZipEntries[i]))) return res;
-	}
-
-	if ((res = s->Position(s, &end))) return res;
-	return ZipWriter_EndOfCentralDir(s, Array_Elems(defaultZipEntries), beg, end);
-}
-
-static void DefaultZip_Create(void) {
-	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
-	struct Stream s;
-	cc_result res;
-
-	res = Stream_CreateFile(&s, &path);
-	if (res) {
-		Logger_SysWarn2(res, "creating", &path); return;
-	}
-		
-	res = DefaultZip_WriteEntries(&s);
-	if (res) Logger_SysWarn2(res, "making", &path);
-
-	res = s.Close(&s);
-	if (res) Logger_SysWarn2(res, "closing", &path);
-}
-
-
-/*########################################################################################################################*
 *-----------------------------------------------Minecraft Classic texture assets------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool allZipEntriesExist;
@@ -1008,6 +1014,11 @@ static const char* MCCTextures_GetRequestName(int reqID) {
 /*########################################################################################################################*
 *------------------------------------------Minecraft Classic texture assets processing -----------------------------------*
 *#########################################################################################################################*/
+static void MCCTextures_CreateDefaultZip(void) {
+	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
+	ZipFile_Create(&path, defaultZipEntries, Array_Elems(defaultZipEntries));
+}
+
 static void MCCTextures_CheckSource(struct ZipfileSource* source) {
 	struct HttpRequest item;
 	cc_result res;
@@ -1023,7 +1034,7 @@ static void MCCTextures_CheckSource(struct ZipfileSource* source) {
 	HttpRequest_Free(&item);
 
 	if (++numDefaultZipProcessed < numDefaultZipSources) return;
-	DefaultZip_Create();
+	MCCTextures_CreateDefaultZip();
 }
 
 static void MCCTextures_CheckStatus(void) {
