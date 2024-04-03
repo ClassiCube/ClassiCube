@@ -260,7 +260,7 @@ void Launcher_Run(void) {
 #ifdef CC_BUILD_RESOURCES
 	Resources_CheckExistence();
 
-	if (Resources_Count) {
+	if (Resources_MissingCount) {
 		CheckResourcesScreen_SetActive();
 	} else {
 		MainScreen_SetActive();

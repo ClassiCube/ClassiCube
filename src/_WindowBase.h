@@ -43,18 +43,18 @@ static void RegrabMouse(void) {
 	CentreMousePosition();
 }
 
-static void DefaultEnableRawMouse(void) {
+static CC_INLINE void DefaultEnableRawMouse(void) {
 	Input.RawMode = true;
 	RegrabMouse();
 	Cursor_SetVisible(false);
 }
 
-static void DefaultUpdateRawMouse(void) {
+static CC_INLINE void DefaultUpdateRawMouse(void) {
 	MoveRawUsingCursorDelta();
 	CentreMousePosition();
 }
 
-static void DefaultDisableRawMouse(void) {
+static CC_INLINE void DefaultDisableRawMouse(void) {
 	Input.RawMode = false;
 	RegrabMouse();
 	Cursor_SetVisible(true);

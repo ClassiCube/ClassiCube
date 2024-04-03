@@ -6,74 +6,74 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 
 #if _MSC_VER
-typedef signed __int8  cc_int8;
-typedef signed __int16 cc_int16;
-typedef signed __int32 cc_int32;
-typedef signed __int64 cc_int64;
-
-typedef unsigned __int8  cc_uint8;
-typedef unsigned __int16 cc_uint16;
-typedef unsigned __int32 cc_uint32;
-typedef unsigned __int64 cc_uint64;
-#ifdef _WIN64
-typedef unsigned __int64 cc_uintptr;
-#else
-typedef unsigned __int32 cc_uintptr;
-#endif
-
-#define CC_INLINE inline
-#define CC_NOINLINE __declspec(noinline)
-#ifndef CC_API
-#define CC_API __declspec(dllexport, noinline)
-#define CC_VAR __declspec(dllexport)
-#endif
-
-#define CC_HAS_TYPES
-#define CC_HAS_MISC
+	typedef signed __int8  cc_int8;
+	typedef signed __int16 cc_int16;
+	typedef signed __int32 cc_int32;
+	typedef signed __int64 cc_int64;
+	
+	typedef unsigned __int8  cc_uint8;
+	typedef unsigned __int16 cc_uint16;
+	typedef unsigned __int32 cc_uint32;
+	typedef unsigned __int64 cc_uint64;
+	#ifdef _WIN64
+	typedef unsigned __int64 cc_uintptr;
+	#else
+	typedef unsigned __int32 cc_uintptr;
+	#endif
+	
+	#define CC_INLINE inline
+	#define CC_NOINLINE __declspec(noinline)
+	#ifndef CC_API
+	#define CC_API __declspec(dllexport, noinline)
+	#define CC_VAR __declspec(dllexport)
+	#endif
+	
+	#define CC_HAS_TYPES
+	#define CC_HAS_MISC
 #elif __GNUC__
-/* really old GCC/clang might not have these defined */
-#ifdef __INT8_TYPE__
-/* avoid including <stdint.h> because it breaks defining UNICODE in Platform.c with MinGW */
-typedef __INT8_TYPE__  cc_int8;
-typedef __INT16_TYPE__ cc_int16;
-typedef __INT32_TYPE__ cc_int32;
-typedef __INT64_TYPE__ cc_int64;
-
-#ifdef __UINT8_TYPE__
-typedef __UINT8_TYPE__   cc_uint8;
-typedef __UINT16_TYPE__  cc_uint16;
-typedef __UINT32_TYPE__  cc_uint32;
-typedef __UINT64_TYPE__  cc_uint64;
-typedef __UINTPTR_TYPE__ cc_uintptr;
-#else
-/* clang doesn't define the __UINT8_TYPE__ */
-typedef unsigned __INT8_TYPE__   cc_uint8;
-typedef unsigned __INT16_TYPE__  cc_uint16;
-typedef unsigned __INT32_TYPE__  cc_uint32;
-typedef unsigned __INT64_TYPE__  cc_uint64;
-typedef unsigned __INTPTR_TYPE__ cc_uintptr;
-#endif
-#define CC_HAS_TYPES
-#endif
-
-#define CC_INLINE inline
-#define CC_NOINLINE __attribute__((noinline))
-#ifndef CC_API
-#ifdef _WIN32
-#define CC_API __attribute__((dllexport, noinline))
-#define CC_VAR __attribute__((dllexport))
-#else
-#define CC_API __attribute__((visibility("default"), noinline))
-#define CC_VAR __attribute__((visibility("default")))
-#endif
-#endif
-#define CC_HAS_MISC
-#ifdef __BIG_ENDIAN__
-#define CC_BIG_ENDIAN
-#endif
+	/* really old GCC/clang might not have these defined */
+	#ifdef __INT8_TYPE__
+	/* avoid including <stdint.h> because it breaks defining UNICODE in Platform.c with MinGW */
+	typedef __INT8_TYPE__  cc_int8;
+	typedef __INT16_TYPE__ cc_int16;
+	typedef __INT32_TYPE__ cc_int32;
+	typedef __INT64_TYPE__ cc_int64;
+	
+	#ifdef __UINT8_TYPE__
+	typedef __UINT8_TYPE__   cc_uint8;
+	typedef __UINT16_TYPE__  cc_uint16;
+	typedef __UINT32_TYPE__  cc_uint32;
+	typedef __UINT64_TYPE__  cc_uint64;
+	typedef __UINTPTR_TYPE__ cc_uintptr;
+	#else
+	/* clang doesn't define the __UINT8_TYPE__ */
+	typedef unsigned __INT8_TYPE__   cc_uint8;
+	typedef unsigned __INT16_TYPE__  cc_uint16;
+	typedef unsigned __INT32_TYPE__  cc_uint32;
+	typedef unsigned __INT64_TYPE__  cc_uint64;
+	typedef unsigned __INTPTR_TYPE__ cc_uintptr;
+	#endif
+	#define CC_HAS_TYPES
+	#endif
+	
+	#define CC_INLINE inline
+	#define CC_NOINLINE __attribute__((noinline))
+	#ifndef CC_API
+	#ifdef _WIN32
+	#define CC_API __attribute__((dllexport, noinline))
+	#define CC_VAR __attribute__((dllexport))
+	#else
+	#define CC_API __attribute__((visibility("default"), noinline))
+	#define CC_VAR __attribute__((visibility("default")))
+	#endif
+	#endif
+	#define CC_HAS_MISC
+	#ifdef __BIG_ENDIAN__
+	#define CC_BIG_ENDIAN
+	#endif
 #elif __MWERKS__
-/* TODO: Is there actual attribute support for CC_API etc somewhere? */
-#define CC_BIG_ENDIAN
+	/* TODO: Is there actual attribute support for CC_API etc somewhere? */
+	#define CC_BIG_ENDIAN
 #endif
 
 /* Unrecognised compiler, so just go with some sensible default typdefs */
@@ -120,31 +120,28 @@ typedef cc_uint8  cc_bool;
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
-#ifndef CC_BUILD_FLATPAK
 #define CC_BUILD_RESOURCES
-#endif
+#define CC_BUILD_PLUGINS
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
 #if defined NXDK
 	/* XBox also defines _WIN32 */
 	#define CC_BUILD_XBOX
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
 #elif defined XENON
 	/* libxenon also defines __linux__ (yes, really) */
 	#define CC_BUILD_XBOX360
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
 #elif defined _WIN32
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9
@@ -269,128 +266,120 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_COOPTHREADED
 	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_PLUGINS
 #elif defined __psp__
 	#define CC_BUILD_PSP
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
 #elif defined __3DS__
 	#define CC_BUILD_3DS
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_DUALSCREEN
-	#undef  CC_BUILD_FREETYPE
 #elif defined GEKKO
 	#define CC_BUILD_GCWII
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
 #elif defined __vita__
 	#define CC_BUILD_PSVITA
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
+	#define CC_BUILD_TOUCH
 #elif defined _arch_dreamcast
 	#define CC_BUILD_DREAMCAST
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_BEARSSL
-	#undef  CC_BUILD_FREETYPE
 #elif defined N64
 	#define CC_BIG_ENDIAN
 	#define CC_BUILD_N64
-	#define CC_BUILD_OPENAL
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_OPENAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
-	#undef  CC_BUILD_FREETYPE
 #elif defined PLAT_NDS
 	#define CC_BUILD_NDS
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
-	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_BEARSSL
-	#undef  CC_BUILD_FREETYPE
 #elif defined __SWITCH__
 	#define CC_BUILD_SWITCH
+	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
-	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_GL
 	#define CC_BUILD_GLMODERN
 	#define CC_BUILD_GLES
 	#define CC_BUILD_EGL
-	#undef  CC_BUILD_FREETYPE
 #elif defined PLAT_PS1
 	#define CC_BUILD_PS1
-	#define CC_BUILD_HTTPCLIENT
-	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_NOMUSIC
 	#define CC_BUILD_NOSOUNDS
-	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 #elif defined OS2
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_SOFTGPU
-	#define CC_BUILD_SDL
+	#define CC_BUILD_SDL2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE
 #endif
 #endif
 
+#ifdef CC_BUILD_CONSOLE
+#undef CC_BUILD_FREETYPE
+#undef CC_BUILD_PLUGINS
+#endif
 
 #ifndef CC_BUILD_LOWMEM
 #define EXTENDED_BLOCKS

@@ -23,7 +23,6 @@ void Window_Init(void) {
     
 	DisplayInfo.Width  = display_get_width();
 	DisplayInfo.Height = display_get_height();
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	
@@ -76,35 +75,35 @@ void Window_RequestClose(void) {
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(joypad_buttons_t btns) {
-	Input_SetNonRepeatable(CCPAD_L, btns.l);
-	Input_SetNonRepeatable(CCPAD_R, btns.r);
+	Gamepad_SetButton(CCPAD_L, btns.l);
+	Gamepad_SetButton(CCPAD_R, btns.r);
 	
-	Input_SetNonRepeatable(CCPAD_A, btns.a);
-	Input_SetNonRepeatable(CCPAD_B, btns.b);
-	Input_SetNonRepeatable(CCPAD_Z, btns.z);
+	Gamepad_SetButton(CCPAD_A, btns.a);
+	Gamepad_SetButton(CCPAD_B, btns.b);
+	Gamepad_SetButton(CCPAD_Z, btns.z);
 	
-	Input_SetNonRepeatable(CCPAD_START,  btns.start);
+	Gamepad_SetButton(CCPAD_START,  btns.start);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   btns.d_left);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.d_right);
-	Input_SetNonRepeatable(CCPAD_UP,     btns.d_up);
-	Input_SetNonRepeatable(CCPAD_DOWN,   btns.d_down);
+	Gamepad_SetButton(CCPAD_LEFT,   btns.d_left);
+	Gamepad_SetButton(CCPAD_RIGHT,  btns.d_right);
+	Gamepad_SetButton(CCPAD_UP,     btns.d_up);
+	Gamepad_SetButton(CCPAD_DOWN,   btns.d_down);
 
-	Input_SetNonRepeatable(CCPAD_CLEFT,  btns.c_left);
-	Input_SetNonRepeatable(CCPAD_CRIGHT, btns.c_right);
-	Input_SetNonRepeatable(CCPAD_CUP,    btns.c_up);
-	Input_SetNonRepeatable(CCPAD_CDOWN,  btns.c_down);
+	Gamepad_SetButton(CCPAD_CLEFT,  btns.c_left);
+	Gamepad_SetButton(CCPAD_CRIGHT, btns.c_right);
+	Gamepad_SetButton(CCPAD_CUP,    btns.c_up);
+	Gamepad_SetButton(CCPAD_CDOWN,  btns.c_down);
 }
 
+#define AXIS_SCALE 8.0f
 static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
-	float scale = (delta * 60.0) / 8.0f;
-	int dx = inputs->stick_x;
-	int dy = inputs->stick_y;
+	int x = inputs->stick_x;
+	int y = inputs->stick_y;
 
-	if (Math_AbsI(dx) <= 8) dx = 0;
-	if (Math_AbsI(dy) <= 8) dy = 0;
-
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, -dy * scale);
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;	
+	
+	Gamepad_SetAxis(PAD_AXIS_RIGHT, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
 void Window_ProcessEvents(double delta) {
@@ -112,8 +111,7 @@ void Window_ProcessEvents(double delta) {
 	
 	joypad_inputs_t inputs = joypad_get_inputs(JOYPAD_PORT_1);
 	HandleButtons(inputs.btn);
-	
-	if (Input.RawMode) ProcessAnalogInput(&inputs, delta);
+	ProcessAnalogInput(&inputs, delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP

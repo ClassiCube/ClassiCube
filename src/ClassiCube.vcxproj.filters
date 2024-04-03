@@ -620,9 +620,6 @@
     <ClCompile Include="Platform_Dreamcast.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Window_Carbon.c">
-      <Filter>Source Files\Window</Filter>
-    </ClCompile>
     <ClCompile Include="Window_Android.c">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
@@ -712,6 +709,9 @@
     </ClCompile>
     <ClCompile Include="Graphics_Xbox360.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioBackend.c">
+      <Filter>Source Files\Audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

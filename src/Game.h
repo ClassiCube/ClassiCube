@@ -26,7 +26,7 @@ extern cc_string Game_Mppass;
 
 #if defined CC_BUILD_N64
     #define DEFAULT_VIEWDIST 20
-#elif defined CC_BUILD_NDS
+#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1
     #define DEFAULT_VIEWDIST 192
 #else
     #define DEFAULT_VIEWDIST 512
@@ -48,6 +48,7 @@ extern cc_bool Game_ClassicHacks;
 extern cc_bool Game_AllowCustomBlocks;
 extern cc_bool Game_AllowServerTextures;
 
+extern cc_bool Game_Anaglyph3D;
 extern cc_bool Game_ViewBobbing;
 extern cc_bool Game_BreakableLiquids;
 /* Whether a screenshot should be taken at the end of this frame */

@@ -139,7 +139,7 @@ static void Http_Init(void) {
 	Http_InitCommon();
 	/* If this webpage is https://, browsers deny any http:// downloading */
 	httpsOnly = interop_IsHttpsOnly();
-	startTime = DateTime_CurrentUTC_MS();
+	startTime = DateTime_CurrentUTC();
 
 	RequestList_Init(&queuedReqs);
 	RequestList_Init(&workingReqs);

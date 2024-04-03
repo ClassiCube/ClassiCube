@@ -534,7 +534,7 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static TimeMS caretStart;
+static cc_uint64 caretStart;
 static Rect2D caretRect, lastCaretRect;
 #define Rect2D_Equals(a, b) a.x == b.x && a.y == b.y && a.Width == b.Width && a.Height == b.Height
 
@@ -620,7 +620,7 @@ void LBackend_InputTick(struct LInput* w) {
 	Rect2D r;
 
 	if (!caretStart) return;
-	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
+	elapsed = Stopwatch_ElapsedMS(caretStart, Stopwatch_Measure());
 
 	caretShow = (elapsed % 1000) < 500;
 	if (caretShow == w->caretShow) return;
@@ -641,7 +641,7 @@ void LBackend_InputTick(struct LInput* w) {
 
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 	struct OpenKeyboardArgs args;
-	caretStart   = DateTime_CurrentUTC_MS();
+	caretStart   = Stopwatch_Measure();
 	w->caretShow = true;
 	LInput_MoveCaretToCursor(w, idx);
 	LBackend_MarkDirty(w);

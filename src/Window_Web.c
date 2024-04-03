@@ -534,46 +534,34 @@ static void ProcessPendingResize(void) {
 static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
 	int numButtons = ev->numButtons;
 
-	Input_SetNonRepeatable(CCPAD_A, GetGamepadButton(0));
-	Input_SetNonRepeatable(CCPAD_B, GetGamepadButton(1));
-	Input_SetNonRepeatable(CCPAD_X, GetGamepadButton(2));
-	Input_SetNonRepeatable(CCPAD_Y, GetGamepadButton(3));
+	Gamepad_SetButton(CCPAD_A, GetGamepadButton(0));
+	Gamepad_SetButton(CCPAD_B, GetGamepadButton(1));
+	Gamepad_SetButton(CCPAD_X, GetGamepadButton(2));
+	Gamepad_SetButton(CCPAD_Y, GetGamepadButton(3));
 
-	Input_SetNonRepeatable(CCPAD_ZL, GetGamepadButton(4));
-	Input_SetNonRepeatable(CCPAD_ZR, GetGamepadButton(5));
-	Input_SetNonRepeatable(CCPAD_L,  GetGamepadButton(6));
-	Input_SetNonRepeatable(CCPAD_R,  GetGamepadButton(7));
+	Gamepad_SetButton(CCPAD_ZL, GetGamepadButton(4));
+	Gamepad_SetButton(CCPAD_ZR, GetGamepadButton(5));
+	Gamepad_SetButton(CCPAD_L,  GetGamepadButton(6));
+	Gamepad_SetButton(CCPAD_R,  GetGamepadButton(7));
 
-	Input_SetNonRepeatable(CCPAD_SELECT, GetGamepadButton( 8));
-	Input_SetNonRepeatable(CCPAD_START,  GetGamepadButton( 9));
-	Input_SetNonRepeatable(CCPAD_LSTICK, GetGamepadButton(10));
-	Input_SetNonRepeatable(CCPAD_RSTICK, GetGamepadButton(11));
+	Gamepad_SetButton(CCPAD_SELECT, GetGamepadButton( 8));
+	Gamepad_SetButton(CCPAD_START,  GetGamepadButton( 9));
+	Gamepad_SetButton(CCPAD_LSTICK, GetGamepadButton(10));
+	Gamepad_SetButton(CCPAD_RSTICK, GetGamepadButton(11));
 	
-	Input_SetNonRepeatable(CCPAD_UP,    GetGamepadButton(12));
-	Input_SetNonRepeatable(CCPAD_DOWN,  GetGamepadButton(13));
-	Input_SetNonRepeatable(CCPAD_LEFT,  GetGamepadButton(14));
-	Input_SetNonRepeatable(CCPAD_RIGHT, GetGamepadButton(15));
+	Gamepad_SetButton(CCPAD_UP,    GetGamepadButton(12));
+	Gamepad_SetButton(CCPAD_DOWN,  GetGamepadButton(13));
+	Gamepad_SetButton(CCPAD_LEFT,  GetGamepadButton(14));
+	Gamepad_SetButton(CCPAD_RIGHT, GetGamepadButton(15));
 }
 
-static void ProcessGamepadCamera(float x, float y, double delta) {
-	float scale = (delta * 60.0) * 8.0f;
-
+#define AXIS_SCALE 8.0f
+static void ProcessGamepadAxis(int axis, float x, float y, double delta) {
 	/* Deadzone adjustment */
 	if (x >= -0.1 && x <= 0.1) x = 0;
 	if (y >= -0.1 && y <= 0.1) y = 0;
-	if (x == 0 && y == 0) return;
 
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
-}
-
-static void ProcessGamepadMovement(float x, float y) {
-	/* Deadzone adjustment */
-	if (x >= -0.1 && x <= 0.1) x = 0;
-	if (y >= -0.1 && y <= 0.1) y = 0;
-	if (x == 0 && y == 0) return;
-
-	Input.JoystickMovement = true;
-	Input.JoystickAngle    = Math_Atan2(x, y);
+	Gamepad_SetAxis(axis, x * AXIS_SCALE, y * AXIS_SCALE, delta);
 }
 
 static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
@@ -582,10 +570,10 @@ static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
 	ProcessGamepadButtons(ev);
 
 	if (ev->numAxes >= 4) {
-		ProcessGamepadMovement(ev->axis[0], ev->axis[1]);
-		ProcessGamepadCamera(  ev->axis[2], ev->axis[3], delta);
+		ProcessGamepadAxis(PAD_AXIS_LEFT,  ev->axis[0], ev->axis[1], delta);
+		ProcessGamepadAxis(PAD_AXIS_RIGHT, ev->axis[2], ev->axis[3], delta);
 	} else if (ev->numAxes >= 2) {
-		ProcessGamepadCamera(ev->axis[0], ev->axis[1], delta);
+		ProcessGamepadAxis(PAD_AXIS_RIGHT, ev->axis[0], ev->axis[1], delta);
 	}
 }
 

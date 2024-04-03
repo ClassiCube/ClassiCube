@@ -136,7 +136,7 @@ void Gfx_RecreateContext(void) {
 }
 
 cc_bool reducedPerformance;
-static void TickReducedPerformance(void) {
+static CC_INLINE void TickReducedPerformance(void) {
 	Thread_Sleep(100); /* 10 FPS */
 
 	if (reducedPerformance) return;
@@ -144,7 +144,7 @@ static void TickReducedPerformance(void) {
 	Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 }
 
-static void EndReducedPerformance(void) {
+static CC_INLINE void EndReducedPerformance(void) {
 	if (!reducedPerformance) return;
 	reducedPerformance = false;
 	Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);

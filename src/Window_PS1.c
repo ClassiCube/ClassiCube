@@ -32,7 +32,6 @@ struct _WindowData WindowInfo;
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_XRES;
 	DisplayInfo.Height = SCREEN_YRES;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	
@@ -84,27 +83,40 @@ static void HandleButtons(int buttons) {
 	// So just flip the bits to make more sense
 	buttons = ~buttons;
 	
-	Input_SetNonRepeatable(CCPAD_A, buttons & PAD_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_B, buttons & PAD_SQUARE);
-	Input_SetNonRepeatable(CCPAD_X, buttons & PAD_CROSS);
-	Input_SetNonRepeatable(CCPAD_Y, buttons & PAD_CIRCLE);
+	Gamepad_SetButton(CCPAD_A, buttons & PAD_TRIANGLE);
+	Gamepad_SetButton(CCPAD_B, buttons & PAD_SQUARE);
+	Gamepad_SetButton(CCPAD_X, buttons & PAD_CROSS);
+	Gamepad_SetButton(CCPAD_Y, buttons & PAD_CIRCLE);
       
-	Input_SetNonRepeatable(CCPAD_START,  buttons & PAD_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, buttons & PAD_SELECT);
+	Gamepad_SetButton(CCPAD_START,  buttons & PAD_START);
+	Gamepad_SetButton(CCPAD_SELECT, buttons & PAD_SELECT);
 
-	Input_SetNonRepeatable(CCPAD_LEFT,   buttons & PAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  buttons & PAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     buttons & PAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   buttons & PAD_DOWN);
+	Gamepad_SetButton(CCPAD_LEFT,   buttons & PAD_LEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  buttons & PAD_RIGHT);
+	Gamepad_SetButton(CCPAD_UP,     buttons & PAD_UP);
+	Gamepad_SetButton(CCPAD_DOWN,   buttons & PAD_DOWN);
 	
-	Input_SetNonRepeatable(CCPAD_L,  buttons & PAD_L1);
-	Input_SetNonRepeatable(CCPAD_R,  buttons & PAD_R1);
-	Input_SetNonRepeatable(CCPAD_ZL, buttons & PAD_L2);
-	Input_SetNonRepeatable(CCPAD_ZR, buttons & PAD_R2);
+	Gamepad_SetButton(CCPAD_L,  buttons & PAD_L1);
+	Gamepad_SetButton(CCPAD_R,  buttons & PAD_R1);
+	Gamepad_SetButton(CCPAD_ZL, buttons & PAD_L2);
+	Gamepad_SetButton(CCPAD_ZR, buttons & PAD_R2);
+}
+
+#define AXIS_SCALE 16.0f
+static void HandleJoystick(int axis, int x, int y, double delta) {
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
 static void ProcessPadInput(PADTYPE* pad, double delta) {
 	HandleButtons(pad->btn);
+
+	if (pad->type == PAD_ID_ANALOG_STICK || pad->type == PAD_ID_ANALOG) {
+		HandleJoystick(PAD_AXIS_LEFT,  pad->ls_x - 0x80, pad->ls_y - 0x80, delta);
+		HandleJoystick(PAD_AXIS_RIGHT, pad->rs_x - 0x80, pad->rs_y - 0x80, delta);
+	}
 }
 
 void Window_ProcessEvents(double delta) {

@@ -10,33 +10,38 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
-      image: akusiroyo/ps3sdk:latest
+      image: ghcr.io/classicube/minimal-psl1ght:latest
     steps:
       - uses: actions/checkout@v4
       - name: Compile PS3 build
         id: compile
         run: |
-          pacman -S make --noconfirm
-          export PSL1GHT=/usr/local/ps3dev
           export PS3DEV=/usr/local/ps3dev
+          export PSL1GHT=/usr/local/ps3dev
+          export PATH=$PATH:$PS3DEV/bin
+          export PATH=$PATH:$PS3DEV/ppu/bin
           make ps3
-          
 
+
+      # otherwise notify_failure doesn't work
+      - name: Install curl when necessary
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        run: apt-get install -y curl
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:
           NOTIFY_MESSAGE: 'Failed to compile PS3 build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
-          
+
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-PS3.self'
+          DEST_NAME: 'ClassiCube-PS3.self'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube-ps3.pkg'
-          DEST_NAME: 'ClassiCube-ps3.pkg'
-          
-      - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
-        with:
-          SOURCE_FILE: 'ClassiCube-ps3.elf'
-          DEST_NAME: 'ClassiCube-ps3.elf'
+          SOURCE_FILE: 'ClassiCube-PS3.pkg'
+          DEST_NAME: 'ClassiCube-PS3.pkg'

@@ -232,9 +232,9 @@ static void EntityShadows_MakeTexture(void) {
 		BitmapCol* row = Bitmap_GetRow(&bmp, y);
 
 		for (x = 0; x < sh_size; x++) {
-			double dist =
-				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +
-				(sh_half - (y + 0.5)) * (sh_half - (y + 0.5));
+			float dist =
+				(sh_half - (x + 0.5f)) * (sh_half - (x + 0.5f)) +
+				(sh_half - (y + 0.5f)) * (sh_half - (y + 0.5f));
 			row[x] = dist < sh_half * sh_half ? color : 0;
 		}
 	}

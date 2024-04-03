@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL
+#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL2 && !defined CC_BUILD_SDL3
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -338,8 +338,13 @@ static void DoCreateWindow(int width, int height) {
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
 	XClassHint hint = { 0 };
-	hint.res_name   = GAME_APP_TITLE;
-	hint.res_class  = GAME_APP_TITLE;
+	#ifdef CC_BUILD_FLATPAK
+          hint.res_name   = "net.classicube.flatpak.client";
+          hint.res_class  = "net.classicube.flatpak.client";
+        #else
+	  hint.res_name   = GAME_APP_TITLE;
+          hint.res_class  = GAME_APP_TITLE;
+        #endif
 	XSetClassHint(win_display, win_handle, &hint);
 	ApplyIcon();
 

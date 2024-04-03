@@ -563,8 +563,9 @@ void Gfx_Create(void) {
 	if (!Gfx.Created) InitGPU();
 	in_scene = false;
 	
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -624,15 +625,11 @@ static void GPUTexture_Unref(GfxResourceID* resource) {
 	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
 	if (!tex) return;
 	*resource = NULL;
-	
-	cc_uintptr addr = tex;
-	Platform_Log1("TEX UNREF %h", &addr);
+
 	LinkedList_Append(tex, del_textures_head, del_textures_tail);
 }
 
 static void GPUTexture_Free(struct GPUTexture* tex) {
-	cc_uintptr addr = tex;
-	Platform_Log1("TEX DELETE %h", &addr);
 	FreeGPUMemory(tex->uid);
 	Mem_Free(tex);
 }
@@ -838,9 +835,6 @@ struct GPUBuffer* GPUBuffer_Alloc(int size) {
 	buffer->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, SCE_GXM_MEMORY_ATTRIB_READ,
 		&buffer->uid);
-		
-	cc_uintptr addr = buffer->data;
-	Platform_Log2("VB ALLOC %h = %i bytes", &addr, &size);
 	return buffer;
 }
 
@@ -851,14 +845,10 @@ static void GPUBuffer_Unref(GfxResourceID* resource) {
 	if (!buf) return;
 	*resource = NULL;
 	
-	cc_uintptr addr = buf;
-	Platform_Log1("VB UNREF %h", &addr);
 	LinkedList_Append(buf, del_buffers_head, del_buffers_tail);
 }
 
 static void GPUBuffer_Free(struct GPUBuffer* buf) {
-	cc_uintptr addr = buf;
-	Platform_Log1("VB DELETE %h", &addr);
 	FreeGPUMemory(buf->uid);
 	Mem_Free(buf);
 }

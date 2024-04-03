@@ -23,12 +23,9 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <netdb.h>
 #include "_PlatformConsole.h"
-
-
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -36,7 +33,6 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 const char* Platform_AppNameSuffix = " Switch";
-
 
 alignas(16) u8 __nx_exception_stack[0x1000];
 u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
@@ -74,38 +70,37 @@ void __libnx_exception_handler(ThreadExceptionDump *ctx)
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	
-	return (end - beg) / 1000;
+	// See include/switch/arm/counter.h
+	//   static inline u64 armTicksToNs(u64 tick) { return (tick * 625) / 12; }
+	return ((end - beg) * 625) / 12000;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
-	struct timespec t;
-	clock_gettime(CLOCK_MONOTONIC, &t);
-	return (cc_uint64)t.tv_sec * 1e9 + t.tv_nsec;
+	return armGetSystemTick();
 }
 
 void Platform_Log(const char* msg, int len) {
 	svcOutputDebugString(msg, len);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+TimeMS DateTime_CurrentUTC(void) {
+	u64 timestamp = 0;
+	timeGetCurrentTime(TimeType_Default, &timestamp);
+	return timestamp + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
-	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
+	u64 timestamp = 0;
+	TimeCalendarTime calTime = { 0 };
+	timeGetCurrentTime(TimeType_Default, &timestamp);
+	timeToCalendarTimeWithMyRule(timestamp, &calTime, NULL);
 
-	t->year   = loc_time.tm_year + 1900;
-	t->month  = loc_time.tm_mon  + 1;
-	t->day    = loc_time.tm_mday;
-	t->hour   = loc_time.tm_hour;
-	t->minute = loc_time.tm_min;
-	t->second = loc_time.tm_sec;
+	t->year   = calTime.year;
+	t->month  = calTime.month;
+	t->day    = calTime.day;
+	t->hour   = calTime.hour;
+	t->minute = calTime.minute;
+	t->second = calTime.second;
 }
 
 
@@ -228,7 +223,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) {
-	cc_uint64 timeout_ns = milliseconds * (1000 * 1000); // to nanoseconds
+	cc_uint64 timeout_ns = (cc_uint64)milliseconds * (1000 * 1000); // to nanoseconds
 	svcSleepThread(timeout_ns);
 }
 
@@ -244,7 +239,11 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	threadStart(thread);
 }
 
-void Thread_Detach(void* handle) { }
+void Thread_Detach(void* handle) {
+	// threadClose frees up resources, **including the stack of the thread**
+	//  Which obviously completely breaks the thread - so instead just accept
+	//  that there will be a small memory leak when non-joined threads exit
+}
 
 void Thread_Join(void* handle) {
 	Thread* thread = (Thread*)handle;
@@ -316,7 +315,6 @@ void Waitable_Wait(void* handle) {
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	struct WaitData* ptr = (struct WaitData*)handle;
-
 	cc_uint64 timeout_ns = (cc_uint64)milliseconds * (1000 * 1000); // to nanoseconds
 
 	Mutex_Lock(&ptr->mutex);
@@ -360,10 +358,8 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 union SocketAddress {
 	struct sockaddr raw;
 	struct sockaddr_in  v4;
-	#ifdef AF_INET6
 	struct sockaddr_in6 v6;
 	struct sockaddr_storage total;
-	#endif
 };
 
 static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* numValidAddrs) {
@@ -420,7 +416,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		return 0;
 	}
 	
-	#ifdef AF_INET6
 	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) {
 		addr->v6.sin6_family = AF_INET6;
 		addr->v6.sin6_port   = htons(port);
@@ -429,7 +424,6 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		*numValidAddrs = 1;
 		return 0;
 	}
-	#endif
 	
 	return ParseHost(str, port, addrs, numValidAddrs);
 }
@@ -442,8 +436,7 @@ cc_result Socket_Connect(cc_socket* s, cc_sockaddr* addr, cc_bool nonblocking) {
 	if (*s == -1) return errno;
 
 	if (nonblocking) {
-		int blocking_raw = -1; /* non-blocking mode */
-		ioctl(*s, FIONBIO, &blocking_raw);
+		fcntl(*s, F_SETFL, O_NONBLOCK);
 	}
 
 	res = connect(*s, raw, addr->size);

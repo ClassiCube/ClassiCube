@@ -21,9 +21,9 @@ ClassiCube is not trying to replicate modern Minecraft versions. It will never s
 
 You can **download ClassiCube** [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
-![classic](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/a233cb4c-296a-4d08-87fc-49874c230d4f)
+![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
 
-![enhanced](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/61a064bd-cfaa-4a91-bedf-a16c3dd7e8a2)
+![enhanced](https://github.com/ClassiCube/ClassiCube/assets/6509348/b2fe0e2b-5d76-41ab-909f-048d0ad15f37)
 
 
 # We need your help
@@ -117,13 +117,17 @@ I am assuming you used the installer from https://osdn.net/projects/mingw/
 4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using TCC (Tiny C Compiler)
-I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
-1. Extract the .zip file
+Setting up TCC:
+1. Download and extract `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 2. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext` at line 554 (In between `RtlAddFunctionTable` and `RtlDeleteFunctionTable`)
-3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
-4. Navigate to the directory with ClassiCube's source code
-5. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
-6. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`
+3. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
+4. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+
+Compiling with TCC:
+1. Navigate to the directory with ClassiCube's source code
+2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
+3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+(Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
 

@@ -33,7 +33,6 @@ void Window_Init(void) {
 	
 	DisplayInfo.Width  = ai->width;
 	DisplayInfo.Height = ai->height;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -87,21 +86,21 @@ struct controller_data_s
 */
 
 static void HandleButtons(struct controller_data_s* pad) {
-	Input_SetNonRepeatable(CCPAD_L, pad->lb);
-	Input_SetNonRepeatable(CCPAD_R, pad->rb);
+	Gamepad_SetButton(CCPAD_L, pad->lb);
+	Gamepad_SetButton(CCPAD_R, pad->rb);
 	
-	Input_SetNonRepeatable(CCPAD_A, pad->a);
-	Input_SetNonRepeatable(CCPAD_B, pad->b);
-	Input_SetNonRepeatable(CCPAD_X, pad->x);
-	Input_SetNonRepeatable(CCPAD_Y, pad->y);
+	Gamepad_SetButton(CCPAD_A, pad->a);
+	Gamepad_SetButton(CCPAD_B, pad->b);
+	Gamepad_SetButton(CCPAD_X, pad->x);
+	Gamepad_SetButton(CCPAD_Y, pad->y);
 	
-	Input_SetNonRepeatable(CCPAD_START,  pad->start);
-	Input_SetNonRepeatable(CCPAD_SELECT, pad->back);
+	Gamepad_SetButton(CCPAD_START,  pad->start);
+	Gamepad_SetButton(CCPAD_SELECT, pad->back);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   pad->left);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  pad->right);
-	Input_SetNonRepeatable(CCPAD_UP,     pad->up);
-	Input_SetNonRepeatable(CCPAD_DOWN,   pad->down);
+	Gamepad_SetButton(CCPAD_LEFT,   pad->left);
+	Gamepad_SetButton(CCPAD_RIGHT,  pad->right);
+	Gamepad_SetButton(CCPAD_UP,     pad->up);
+	Gamepad_SetButton(CCPAD_DOWN,   pad->down);
 }
 
 void Window_ProcessEvents(double delta) {

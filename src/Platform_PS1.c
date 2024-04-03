@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "Options.h"
 #include "PackedCol.h"
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +17,7 @@
 #include <psxapi.h>
 #include <psxgpu.h>
 #include <hwregs_c.h>
-void exit(int code) { } // TODO how to fix
+void exit(int code) { _boot(); }
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -39,8 +40,7 @@ void Platform_Log(const char* msg, int len) {
 	printf("%s\n", tmp);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	return 0;
 }
 
@@ -78,12 +78,20 @@ static void Stopwatch_Init(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+static const cc_string root_path = String_FromConst("cdrom:/");
+
+static void GetNativePath(char* str, const cc_string* path) {
+	Mem_Copy(str, root_path.buffer, root_path.length);
+	str += root_path.length;
+	String_EncodeUtf8(str, path);
+}
+
 cc_result Directory_Create(const cc_string* path) {
 	return ERR_NOT_SUPPORTED;
 }
 
 int File_Exists(const cc_string* path) {
-	return 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -93,9 +101,11 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 cc_result File_Open(cc_file* file, const cc_string* path) {
 	return ERR_NOT_SUPPORTED;
 }
+
 cc_result File_Create(cc_file* file, const cc_string* path) {
 	return ERR_NOT_SUPPORTED;
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return ERR_NOT_SUPPORTED;
 }
@@ -109,10 +119,10 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return 0;
+	return ERR_NOT_SUPPORTED;
 }
 
-cc_result File_Seek(cc_file file, int offset, int seekType) {
+cc_result File_Seek(cc_file file, int offset, int seekType) {	
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -208,8 +218,10 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
-	ResetGraph( 0 );
+	ResetGraph(0);
 	Stopwatch_Init();
+
+	Options_SetBool(OPT_USE_CHAT_FONT, true);
 }
 
 void Platform_Free(void) { }

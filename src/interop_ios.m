@@ -34,7 +34,7 @@
 @interface CCWindow : UIWindow
 @end
 
-@interface CCViewController : UIViewController<UIDocumentPickerDelegate>
+@interface CCViewController : UIViewController<UIDocumentPickerDelegate, UIAlertViewDelegate>
 @end
 
 @interface CCAppDelegate : UIResponder<UIApplicationDelegate>
@@ -216,6 +216,12 @@ static UITextField* kb_widget;
     // overriding this forces the user to swipe up twice, which should
     //  significantly the chance of accidentally triggering this gesture
     return UIRectEdgeBottom;
+}
+
+// == UIAlertViewDelegate ==
+static int alert_completed;
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
+    alert_completed = true;
 }
 @end
 
@@ -430,20 +436,27 @@ void Window_ProcessEvents(double delta) {
 void ShowDialogCore(const char* title, const char* msg) {
     // UIAlertController - iOS 8.0
     // UIAlertAction - iOS 8.0
+    // UIAlertView - iOS 2.0
     Platform_LogConst(title);
     Platform_LogConst(msg);
     NSString* _title = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
     NSString* _msg   = [NSString stringWithCString:msg encoding:NSASCIIStringEncoding];
-    __block int completed = false;
+    alert_completed  = false;
     
+#ifdef TARGET_OS_TV
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { completed = true; }];
+    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
     [alert addAction:okBtn];
     [cc_controller presentViewController:alert animated:YES completion: Nil];
+#else
+    UIAlertView* alert = [UIAlertView alloc];
+    alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [alert show];
+#endif
     
     // TODO clicking outside message box crashes launcher
     // loop until alert is closed TODO avoid sleeping
-    while (!completed) {
+    while (!alert_completed) {
         Window_ProcessEvents(0.0);
         Thread_Sleep(16);
     }

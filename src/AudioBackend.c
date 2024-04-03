@@ -1133,10 +1133,19 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 #include <asndlib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
+
+struct AudioBuffer {
+	int available;
+	int size;
+	void* samples;
+};
 
 struct AudioContext {
-	int chanID, count;
+	int chanID, count, bufHead;
+	struct AudioBuffer bufs[AUDIO_MAX_BUFFERS];
 	int channels, sampleRate, volume;
+	cc_bool makeAvailable;
 };
 
 cc_bool AudioBackend_Init(void) {
@@ -1152,10 +1161,42 @@ void AudioBackend_Free(void) {
 	ASND_End();
 }
 
+void MusicCallback(s32 voice) {
+	struct AudioContext* ctx = &music_ctx;
+	struct AudioBuffer* nextBuf  = &ctx->bufs[(ctx->bufHead + 1) % ctx->count];
+
+	if (ASND_StatusVoice(voice) != SND_WORKING) return;
+
+	if (ASND_AddVoice(voice, nextBuf->samples, nextBuf->size) == SND_OK) {
+		ctx->bufHead   = (ctx->bufHead + 1) % ctx->count;
+		if (ctx->bufHead == 2) ctx->makeAvailable = true;
+		if (ctx->makeAvailable) {
+			int prev = ctx->bufHead - 2;
+			if (prev < 0) prev += 4;
+			ctx->bufs[prev].available = true;
+		}
+	}
+
+	int inUse;
+	Audio_Poll(ctx, &inUse);
+	if (!inUse) {
+		// music has finished, stop the voice so this function isn't called anymore
+		ASND_StopVoice(ctx->chanID);
+	}
+}
+
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
-	ctx->chanID = -1;
-	ctx->count  = buffers;
-	ctx->volume = 255;
+	ctx->chanID        = -1;
+	ctx->count         = buffers;
+	ctx->volume        = 255;
+	ctx->bufHead       = 0;
+	ctx->makeAvailable = false;
+
+	Mem_Set(ctx->bufs, 0, sizeof(ctx->bufs));
+	for (int i = 0; i < buffers; i++) {
+		ctx->bufs[i].available = true;
+	}
+
 	return 0;
 }
 
@@ -1170,6 +1211,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
 	ctx->chanID     = ASND_GetFirstUnusedVoice();
+
 	return 0;
 }
 
@@ -1179,34 +1221,51 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	// Audio buffers must be aligned and padded to a multiple of 32 bytes
-	if (((uintptr_t)chunk & 0x20) != 0) {
+	if (((uintptr_t)chunk & 0x1F) != 0) {
 		Platform_Log1("Audio_QueueData: tried to queue buffer with non-aligned audio buffer 0x%x\n", &chunk);
 	}
-	if ((dataSize & 0x20) != 0) {
-		Platform_Log1("Audio_QueueData: unaligned audio data size 0x%x\n", &dataSize);
+
+	struct AudioBuffer* buf;
+
+	for (int i = 0; i < ctx->count; i++) 
+	{
+		buf = &ctx->bufs[i];
+		if (!buf->available) continue;
+
+		buf->samples   = chunk;
+		buf->size      = dataSize;
+		buf->available = false;
+
+		return 0;
 	}
-
-	int format = (ctx->channels == 2) ? VOICE_STEREO_16BIT : VOICE_MONO_16BIT;
-	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, chunk, dataSize, ctx->volume, ctx->volume, NULL);
-
-	return 0;
 
 	// tried to queue data without polling for free buffers first
 	return ERR_INVALID_ARGUMENT;
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) {
+	int format = (ctx->channels == 2) ? VOICE_STEREO_16BIT : VOICE_MONO_16BIT;
+	ASND_SetVoice(ctx->chanID, format, ctx->sampleRate, 0, ctx->bufs[0].samples, ctx->bufs[0].size, ctx->volume, ctx->volume, (ctx->count > 1) ? MusicCallback : NULL);
+	if (ctx->count == 1) ctx->bufs[0].available = true;
+
 	return 0;
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	int status = ASND_StatusVoice(ctx->chanID);
-	*inUse = (status <= 0) ? 0 : ctx->count;
+	struct AudioBuffer* buf;
+	int count = 0;
 
+	for (int i = 0; i < ctx->count; i++) {
+		buf = &ctx->bufs[i];
+		if (!buf->available) count++;
+	}
+
+	*inUse = count;
 	return 0;
 }
 
-static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
 }
 
@@ -1216,7 +1275,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 	size = (size + 0x1F) & ~0x1F; // round up to nearest multiple of 0x20
-	void* dst = aligned_alloc(0x20, size * numChunks);
+	void* dst = memalign(0x20, size);
 	if (!dst) return ERR_OUT_OF_MEMORY;
 
 	for (int i = 0; i < numChunks; i++) {

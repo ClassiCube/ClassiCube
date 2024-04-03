@@ -1025,6 +1025,7 @@ static const struct EntityVTABLE netPlayer_VTABLE = {
 void NetPlayer_Init(struct NetPlayer* p) {
 	Mem_Set(p, 0, sizeof(struct NetPlayer));
 	Entity_Init(&p->Base);
+	p->Base.Flags |= ENTITY_FLAG_CLASSIC_ADJUST;
 	p->Base.VTABLE = &netPlayer_VTABLE;
 }
 

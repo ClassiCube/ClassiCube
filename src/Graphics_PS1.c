@@ -22,7 +22,7 @@
 
 // Size of the buffer GPU commands and primitives are written to. If the program
 // crashes due to too many primitives being drawn, increase this value.
-#define BUFFER_LENGTH 8192
+#define BUFFER_LENGTH 32768
 
 typedef struct {
 	DISPENV disp_env;
@@ -82,12 +82,20 @@ static void* new_primitive(int size) {
 	return (void*)prim;
 }
 
+static GfxResourceID white_square;
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
+	
+	// 2x2 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[4] = { BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 2, 2, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 void Gfx_FreeState(void) {
-	FreeDefaultResources();
+	FreeDefaultResources(); 
+	Gfx_DeleteTexture(&white_square);
 }
 
 void Gfx_Create(void) {
@@ -115,16 +123,143 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+// VRAM can be divided into texture pages
+//   32 texture pages total - each page is 64 x 256
+//   10 texture pages are occupied by the doublebuffered display
+//   22 texture packs are usable, and are then divided into
+//     - 4 pages for 256 wide textures, 8 for 128 wide, 10 for 64
+#define TPAGE_START_HOR 5
+#define TPAGES_PER_HALF 16
+
+#define TPAGE_WIDTH   64
+#define TPAGE_HEIGHT 256
+#define MAX_TEX_PAGES 22
+static cc_uint8 vram_used[(MAX_TEX_PAGES * TPAGE_HEIGHT) / 8];
+
+#define VRAM_SetUsed(line) (vram_used[(line) / 8] |=  (1 << ((line) % 8)))
+#define VRAM_UnUsed(line)  (vram_used[(line) / 8] &= ~(1 << ((line) % 8)))
+#define VRAM_IsUsed(line)  (vram_used[(line) / 8] &   (1 << ((line) % 8)))
+
+static void VRAM_GetBlockRange(int width, int* beg, int* end) {
+	if (width >= 256) {
+		*beg =  0;
+		*end =  4 * TPAGE_HEIGHT;
+	} else if (width >= 128) {
+		*beg =  4 * TPAGE_HEIGHT;
+		*end = 12 * TPAGE_HEIGHT;
+	} else {
+		*beg = 12 * TPAGE_HEIGHT;
+		*end = 22 * TPAGE_HEIGHT;
+	}
+}
+
+static cc_bool VRAM_IsRangeFree(int beg, int end) {
+	for (int i = beg; i < end; i++) 
+	{
+		if (VRAM_IsUsed(i)) return false;
+	}
+	return true;
+}
+
+static int VRAM_FindFreeBlock(int width, int height) {
+	int beg, end;
+	VRAM_GetBlockRange(width, &beg, &end);
+	
+	// TODO kinda inefficient
+	for (int i = beg; i < end - height; i++) 
+	{
+		if (VRAM_IsUsed(i)) continue;
+		
+		if (VRAM_IsRangeFree(i, i + height)) return i;
+	}
+	return -1;
+}
+
+#define TEXTURES_MAX_COUNT 64
+typedef struct GPUTexture {
+	cc_uint16 width, height;
+	cc_uint16 line, tpage;
+} GPUTexture;
+static GPUTexture textures[TEXTURES_MAX_COUNT];
+static GPUTexture* active_tex;
+
+#define BGRA8_to_PS1(src) \
+	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | 0x8000
+
+static void* AllocTextureAt(int i, struct Bitmap* bmp) {
+	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
+	if (!tmp) return NULL;
+
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		cc_uint16* dst = tmp        + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) {
+			cc_uint8* color = (cc_uint8*)&src[x];
+			dst[x] = BGRA8_to_PS1(color);
+		}
+	}
+
+	GPUTexture* tex = &textures[i];
+	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
+	if (line == -1) { Mem_Free(tmp); return NULL; }
+	
+	tex->width  = bmp->width;
+	tex->height = bmp->height;
+	tex->line   = line;
+	
+	int page = TPAGE_START_HOR + (line / TPAGE_HEIGHT);
+	// In bottom half of VRAM? Need to offset horizontally again
+	if (page >= TPAGES_PER_HALF) page += TPAGE_START_HOR;	
+
+	for (int i = tex->line; i < tex->line + tex->height; i++) 
+	{
+		VRAM_SetUsed(i);
+	}
+	tex->tpage = page;
+	Platform_Log4("%i x %i  = %i,%i", &bmp->width, &bmp->height, &line, &page);
+		
+	RECT rect;
+	rect.x = ((page % TPAGES_PER_HALF)) * TPAGE_WIDTH;
+	rect.y = ((page / TPAGES_PER_HALF)) * TPAGE_HEIGHT + (line % TPAGE_HEIGHT);
+	rect.w = bmp->width;
+	rect.h = bmp->height;
+
+	int RX = rect.x, RY = rect.y;
+	Platform_Log2("LOAD AT: %i, %i", &RX, &RY);
+	LoadImage2(&rect, tmp);
+	
+	Mem_Free(tmp);
+	return tex;
+}
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	for (int i = 0; i < TEXTURES_MAX_COUNT; i++)
+	{
+		if (textures[i].width) continue;
+		return AllocTextureAt(i, bmp);
+	}
+
+	Platform_LogConst("No room for more textures");
 	return NULL;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	if (!texId) texId = white_square;
+	active_tex = (GPUTexture*)texId;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GfxResourceID data = *texId;
-	if (data) Mem_Free(data);
+	if (!data) return;
+	GPUTexture* tex = (GPUTexture*)data;
+
+	for (int i = tex->line; i < tex->line + tex->height; i++) 
+	{
+		VRAM_UnUsed(i);
+	}
+	tex->width = 0; tex->height = 0;
 	*texId = NULL;
 }
 
@@ -133,7 +268,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	// TODO
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -387,17 +522,19 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 	float x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
 	float y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
 	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
+	float w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
 	
-	result->x = x *  (320/2) + (320/2); 
-	result->y = y * -(240/2) + (240/2);
-	result->z = z * OT_LENGTH;
+	result->x = (x/w) *  (320/2) + (320/2); 
+	result->y = (y/w) * -(240/2) + (240/2);
+	result->z = (z/w) * OT_LENGTH;
 }
 
 cc_bool VERTEX_LOGGING;
-static void DrawQuads(int verticesCount, int startVertex) {
+static void DrawColouredQuads(int verticesCount, int startVertex) {
+	return;
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
-		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
 		setPolyF4(poly);
@@ -413,18 +550,55 @@ static void DrawQuads(int verticesCount, int startVertex) {
 		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
 		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
 
+		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
+		if (p < 0 || p >= OT_LENGTH) continue;
+
 		int X = v[0].x, Y = v[0].y, Z = v[0].z;
-		if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
+		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
 		X = poly->x1; Y = poly->y1, Z = coords[0].z;
 
 		poly->r0 = PackedCol_R(v->Col);
 		poly->g0 = PackedCol_G(v->Col);
 		poly->b0 = PackedCol_B(v->Col);
+		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
+
+		addPrim(&buffer->ot[p >> 2], poly);
+	}
+}
+
+static void DrawTexturedQuads(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
+		setPolyFT4(poly);
+		poly->tpage = active_tex->tpage;
+		poly->clut  = 0;
+
+		Vec3 coords[4];
+		Transform(&coords[0], &v[0], &mvp);
+		Transform(&coords[1], &v[1], &mvp);
+		Transform(&coords[2], &v[2], &mvp);
+		Transform(&coords[3], &v[3], &mvp);
+
+		poly->x0 = coords[1].x; poly->y0 = coords[1].y; poly->u0 = (int)(v[1].U * active_tex->width) % active_tex->width; poly->v0 = (int)(v[1].V * active_tex->height) % active_tex->height + active_tex->line;
+		poly->x1 = coords[0].x; poly->y1 = coords[0].y; poly->u1 = (int)(v[0].U * active_tex->width) % active_tex->width; poly->v1 = (int)(v[0].V * active_tex->height) % active_tex->height + active_tex->line;
+		poly->x2 = coords[2].x; poly->y2 = coords[2].y; poly->u2 = (int)(v[2].U * active_tex->width) % active_tex->width; poly->v2 = (int)(v[2].V * active_tex->height) % active_tex->height + active_tex->line;
+		poly->x3 = coords[3].x; poly->y3 = coords[3].y; poly->u3 = (int)(v[3].U * active_tex->width) % active_tex->width; poly->v3 = (int)(v[3].V * active_tex->height) % active_tex->height + active_tex->line;
 
 		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
-		if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
-
 		if (p < 0 || p >= OT_LENGTH) continue;
+
+		int X = v[0].x, Y = v[0].y, Z = v[0].z;
+		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
+		X = poly->x1; Y = poly->y1, Z = coords[0].z;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
+
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
@@ -498,17 +672,23 @@ static void DrawQuads(int verticesCount, int startVertex) {
 }*/
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
-	DrawQuads(verticesCount, startVertex);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads(verticesCount, startVertex);
+	} else {
+		DrawColouredQuads(verticesCount, startVertex);
+	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gfx_format == VERTEX_FORMAT_COLOURED) return;
-	DrawQuads(verticesCount, 0);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads(verticesCount, 0);
+	} else {
+		DrawColouredQuads(verticesCount, 0);
+	}
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawQuads(verticesCount, startVertex);
+	DrawTexturedQuads(verticesCount, startVertex);
 }
 
 

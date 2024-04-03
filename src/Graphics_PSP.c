@@ -44,7 +44,7 @@ static void guInit(void) {
 	sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
 	sceGuViewport(2048, 2048, SCREEN_WIDTH, SCREEN_HEIGHT);
 	sceGuDepthRange(65535,0);
-	sceGuFrontFace(GU_CW);
+	sceGuFrontFace(GU_CCW);
 	sceGuShadeModel(GU_SMOOTH);
 	sceGuDisable(GU_TEXTURE_2D);
 	
@@ -166,7 +166,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { /*GU_Toggle(GU_CULL_FACE); */ } // TODO: Fix? GU_CCW instead??
+void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
@@ -233,8 +233,25 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol* PSP_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	cc_uint8* fb = (cc_uint8*)ctx;
+	return (BitmapCol*)(fb + y * BUFFER_WIDTH * 4);
+}
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
+	int fbWidth, fbFormat;
+	void* fb;
+
+	int res = sceDisplayGetFrameBuf(&fb, &fbWidth, &fbFormat, PSP_DISPLAY_SETBUF_NEXTFRAME);
+	if (res < 0) return res;
+	if (!fb)     return ERR_NOT_SUPPORTED;
+
+	struct Bitmap bmp;
+	bmp.scan0  = NULL;
+	bmp.width  = SCREEN_WIDTH; 
+	bmp.height = SCREEN_HEIGHT;
+
+	return Png_Encode(&bmp, output, PSP_GetRow, false, fb);
 }
 
 void Gfx_GetApiInfo(cc_string* info) {

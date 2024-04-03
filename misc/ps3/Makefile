@@ -35,7 +35,7 @@ ICON0		:=	../misc/ps3/ICON0.png
 CFLAGS		=	-O2 -DPLAT_PS3 -Wall -mcpu=cell -fno-math-errno $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	$(CFLAGS)
 
-LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map
+LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map -fno-use-linker-plugin
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project

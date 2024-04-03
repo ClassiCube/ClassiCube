@@ -24,8 +24,8 @@ typedef int cc_file;
 /* Origin points for when seeking in a file. */
 /*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
-/* Number of milliseconds since 01/01/0001 to start of unix time. */
-#define UNIX_EPOCH 62135596800000ULL
+/* Number of seconds since 01/01/0001 to start of unix time. */
+#define UNIX_EPOCH_SECONDS 62135596800ULL
 
 extern const cc_result ReturnCode_FileShareViolation;
 extern const cc_result ReturnCode_FileNotFound;
@@ -166,8 +166,8 @@ void Platform_Log2(const char* format, const void* a1, const void* a2);
 void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3);
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
-/* Returns the current UTC time, as number of milliseconds since 1/1/0001 */
-CC_API TimeMS DateTime_CurrentUTC_MS(void);
+/* Returns the current UTC time, as number of seconds since 1/1/0001 */
+CC_API TimeMS DateTime_CurrentUTC(void);
 /* Returns the current local Time. */
 CC_API void DateTime_CurrentLocal(struct DateTime* t);
 /* Takes a platform-specific stopwatch measurement. */
