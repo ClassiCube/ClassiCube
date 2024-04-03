@@ -704,30 +704,28 @@ static const char* CCTextures_GetRequestName(int reqID) {
 /*########################################################################################################################*
 *-------------------------------------------------CC texture assets processing -------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_MOBILE
 /* Android needs the touch.png */
 /* TODO: Unify both android and desktop platforms to both just extract from default.zip */
 static cc_bool CCTextures_SelectEntry(const cc_string* path) {
 	return String_CaselessEqualsConst(path, "touch.png");
 }
+
 static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
 	struct ResourceZipEntry* e = ZipEntries_Find(path);
+	if (!e) return 0; /* TODO exteact on PC too */
+
 	return ZipEntry_ExtractData(e, data, source);
 }
 
 static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
 	struct Stream src;
-	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
-	Stream_ReadonlyMemory(&src,   req->data, req->size);
+	cc_result res;
 
-	return Zip_Extract(&src, 
-			CCTextures_SelectEntry, CCTextures_ProcessEntry);
-}
-#else
-static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
+	Stream_ReadonlyMemory(&src, req->data, req->size);
+	if ((res = Zip_Extract(&src, CCTextures_SelectEntry, CCTextures_ProcessEntry))) return res;
+
 	return Stream_WriteAllTo(&ccTexPack, req->data, req->size);
 }
-#endif
 
 static void CCTextures_CheckStatus(void) {
 	struct HttpRequest item;
