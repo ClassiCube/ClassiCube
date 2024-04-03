@@ -95,7 +95,12 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if ((res = Audio_AllocChunks(size, &snd->data, 1))) return res;
 
 			snd->size = size;
-			return Stream_Read(stream, (cc_uint8*)snd->data, size);
+			res = Stream_Read(stream, (cc_uint8*)snd->data, size);
+
+			#ifdef CC_BUILD_BIGENDIAN
+			Utils_SwapEndian16((cc_int16*)snd->data, size / 2);
+			#endif
+			return res;
 		}
 
 		/* Skip over unhandled data */

@@ -138,6 +138,19 @@ void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapac
 	}
 }
 
+void Utils_SwapEndian16(cc_int16* values, int numValues) {
+	cc_uint8* data = (cc_uint8*)values;
+	int i;
+
+	for (i = 0; i < numValues * 2; i += 2)
+	{
+		cc_uint8 tmp = data[i + 0];
+		data[i + 0]  = data[i + 1];
+		data[i + 1]  = tmp;
+	}
+}
+
+
 static const char base64_table[64] = {
 	'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
 	'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f',

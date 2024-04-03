@@ -45,6 +45,7 @@ cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length);
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
 extern const cc_uint32 Utils_Crc32Table[256];
 CC_NOINLINE void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems);
+void Utils_SwapEndian16(cc_int16* values, int numValues);
 
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
 /* Returns the number of ASCII characters written. */

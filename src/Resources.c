@@ -144,8 +144,11 @@ static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx
 
 		count = Vorbis_OutputFrame(ctx, samples);
 		len  += count * 2;
-		/* TODO: Do we need to account for big endian */
-		res = Stream_Write(s, samples, count * 2);
+
+#ifdef CC_BUILD_BIGENDIAN
+		Utils_SwapEndian16(samples, count);
+#endif
+		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
 		if (res) break;
 	}
 
