@@ -34,6 +34,7 @@ extern int Audio_SoundsVolume;
 /* Volume music is played at, from 0-100. */
 /* NOTE: Use Audio_SetMusic, don't change this directly. */
 extern int Audio_MusicVolume;
+extern const cc_string Sounds_DefaultZipPath;
 
 void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);

@@ -14,6 +14,7 @@
 #include "LWeb.h"
 #include "Http.h"
 #include "Game.h"
+#include "Audio.h"
 
 /* Represents a set of assets/resources */
 /* E.g. music set, sounds set, textures set */
@@ -54,6 +55,130 @@ struct ResourceZipEntry {
 static CC_NOINLINE cc_bool Fetcher_Get(int reqID, struct HttpRequest* item);
 CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* name);
 static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source);
+
+
+/*########################################################################################################################*
+*------------------------------------------------=-----Utility functions ------------------------=------------------------*
+*#########################################################################################################################*/
+static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry selector) {
+	struct Stream stream;
+	cc_result res;
+
+	res = Stream_OpenFile(&stream, path);
+	if (res == ReturnCode_FileNotFound) return;
+	if (res) { Logger_SysWarn2(res, "opening", path); return; }
+
+	res = Zip_Extract(&stream, selector, NULL);
+	if (res) Logger_SysWarn2(res, "inspecting", path);
+
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
+}
+
+static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
+	cc_uint32 size = source->UncompressedSize;
+	e->value.data  = Mem_TryAlloc(size, 1);
+	e->size        = size;
+
+	if (!e->value.data) return ERR_OUT_OF_MEMORY;
+	return Stream_Read(data, e->value.data, size);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset writing ------------------------------------------------*
+*#########################################################################################################################*/
+#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
+#define WAV_HDR_SIZE 44
+
+/* Fixes up the .WAV header after having written all samples */
+static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 offset, cc_uint32 len) {
+	cc_uint8 header[WAV_HDR_SIZE];
+	cc_result res = s->Seek(s, offset);
+	if (res) return res;
+
+	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(header +  4, len - 8);
+	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
+	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
+	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
+	Stream_SetU16_LE(header + 22, ctx->channels);
+	Stream_SetU32_LE(header + 24, ctx->sampleRate);
+
+	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
+	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
+	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
+	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
+
+	return Stream_Write(s, header, WAV_HDR_SIZE);
+}
+
+/* Decodes all samples, then produces a .WAV file from them */
+static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
+	cc_int16* samples;
+	cc_uint32 begOffset;
+	cc_uint32 len = WAV_HDR_SIZE;
+	cc_result res;
+	int count;
+
+	if ((res = s->Position(s, &begOffset))) return res;
+
+	/* reuse context here for a temp garbage header */
+	if ((res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE))) return res;
+	if ((res = Vorbis_DecodeHeaders(ctx))) return res;
+
+	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
+	if (!samples) return ERR_OUT_OF_MEMORY;
+
+	for (;;) {
+		res = Vorbis_DecodeFrame(ctx);
+		if (res == ERR_END_OF_STREAM) {
+			/* reached end of samples, so done */
+			res = SoundPatcher_FixupHeader(s, ctx, begOffset, len);
+			break;
+		}
+		if (res) break;
+
+		count = Vorbis_OutputFrame(ctx, samples);
+		len  += count * 2;
+		/* TODO: Do we need to account for big endian */
+		res = Stream_Write(s, samples, count * 2);
+		if (res) break;
+	}
+
+	Mem_Free(samples);
+	if (!res) res = s->Seek(s, begOffset + len);
+	return res;
+}
+
+/* Converts an OGG sound to a WAV sound for faster decoding later */
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) {
+	struct OggState* ogg    = NULL;
+	struct VorbisState* ctx = NULL;
+	struct Stream src;
+	cc_result res;
+
+	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
+	if (!ogg) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
+	if (!ctx) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
+
+	Stream_ReadonlyMemory(&src, e->value.data, e->size);
+
+	Ogg_Init(ogg, &src);
+	Vorbis_Init(ctx);
+	ctx->source = ogg;
+	res = SoundPatcher_WriteWav(s, ctx);
+
+cleanup:
+	if (ctx) Vorbis_Free(ctx);
+	Mem_Free(ctx);
+	Mem_Free(ogg);
+	return res;
+}
 
 
 /*########################################################################################################################*
@@ -191,6 +316,14 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 	return ZipWriter_FixupLocalFile(dst, e);
 }
 
+static cc_result ZipWriter_WriteWav(struct Stream* dst, struct ResourceZipEntry* e) {
+	cc_result res;
+	
+	if ((res = ZipWriter_LocalFile(dst, e))) return res;
+	if ((res = SoundPatcher_Save(dst,   e))) return res;
+	return ZipWriter_FixupLocalFile(dst, e);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Zip file writer----------------------------------------------------*
@@ -207,9 +340,11 @@ static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry*
 
 		if (e->type == RESOURCE_TYPE_PNG) {
 			if ((res = ZipWriter_WritePng(s,  e))) return res;
+		} else if (e->type == RESOURCE_TYPE_SOUND) {
+			if ((res = ZipWriter_WriteWav(s,  e))) return res;
 		} else {
 			if ((res = ZipWriter_WriteData(s, e))) return res;
-		}
+		} 
 	}
 	
 	if ((res = s->Position(s, &beg))) return res;
@@ -222,7 +357,7 @@ static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry*
 	return ZipWriter_EndOfCentralDir(s, numEntries, beg, end);
 }
 
-static void ZipFile_Create(cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
+static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
 	struct Stream s;
 	cc_result res;
 
@@ -364,60 +499,89 @@ static const struct AssetSet mccMusicAssetSet = {
 *---------------------------------------------------------Sound assets----------------------------------------------------*
 *#########################################################################################################################*/
 static struct SoundAsset {
-	const char* name;
+	const char* filename;
 	const char* hash;
 	int reqID, size;
 	void* data;
 } soundAssets[] = {
-	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
-	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
-	{ "dig_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
-	{ "dig_grass3",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "dig_grass4",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
-	{ "dig_gravel1", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "dig_gravel2", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
-	{ "dig_gravel3", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "dig_gravel4", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
-	{ "dig_sand1",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "dig_sand2",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
-	{ "dig_sand3",   "c75589cc0087069f387de127dd1499580498738e" }, { "dig_sand4",   "37afa06f97d58767a1cd1382386db878be1532dd" },
-	{ "dig_snow1",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "dig_snow2",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
-	{ "dig_snow3",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "dig_snow4",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
-	{ "dig_stone1",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "dig_stone2",  "9c92f697142ae320584bf64c0d54381d59703528" },
-	{ "dig_stone3",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "dig_stone4",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
-	{ "dig_wood1",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "dig_wood2",   "98102533e6085617a2962157b4f3658f59aea018" },
-	{ "dig_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "dig_wood4",   "dc66978374a46ab2b87db6472804185824868095" },
-	{ "dig_glass1",  "7274a2231ed4544a37e599b7b014e589e5377094" }, { "dig_glass2",  "87c47bda3645c68f18a49e83cbf06e5302d087ff" },
-	{ "dig_glass3",  "ad7d770b7fff3b64121f75bd60cecfc4866d1cd6" },
+	{ "dig_cloth1.wav",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2.wav",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
+	{ "dig_cloth3.wav",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4.wav",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
+	{ "dig_grass1.wav",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2.wav",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
+	{ "dig_grass3.wav",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "dig_grass4.wav",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
+	{ "dig_gravel1.wav", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "dig_gravel2.wav", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
+	{ "dig_gravel3.wav", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "dig_gravel4.wav", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
+	{ "dig_sand1.wav",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "dig_sand2.wav",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
+	{ "dig_sand3.wav",   "c75589cc0087069f387de127dd1499580498738e" }, { "dig_sand4.wav",   "37afa06f97d58767a1cd1382386db878be1532dd" },
+	{ "dig_snow1.wav",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "dig_snow2.wav",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
+	{ "dig_snow3.wav",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "dig_snow4.wav",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
+	{ "dig_stone1.wav",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "dig_stone2.wav",  "9c92f697142ae320584bf64c0d54381d59703528" },
+	{ "dig_stone3.wav",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "dig_stone4.wav",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
+	{ "dig_wood1.wav",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "dig_wood2.wav",   "98102533e6085617a2962157b4f3658f59aea018" },
+	{ "dig_wood3.wav",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "dig_wood4.wav",   "dc66978374a46ab2b87db6472804185824868095" },
+	{ "dig_glass1.wav",  "7274a2231ed4544a37e599b7b014e589e5377094" }, { "dig_glass2.wav",  "87c47bda3645c68f18a49e83cbf06e5302d087ff" },
+	{ "dig_glass3.wav",  "ad7d770b7fff3b64121f75bd60cecfc4866d1cd6" },
 
-	{ "step_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "step_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
-	{ "step_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "step_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
-	{ "step_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "step_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
-	{ "step_grass3",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "step_grass4",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
-	{ "step_gravel1", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "step_gravel2", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
-	{ "step_gravel3", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "step_gravel4", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
-	{ "step_sand1",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "step_sand2",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
-	{ "step_sand3",   "c75589cc0087069f387de127dd1499580498738e" }, { "step_sand4",   "37afa06f97d58767a1cd1382386db878be1532dd" },
-	{ "step_snow1",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "step_snow2",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
-	{ "step_snow3",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "step_snow4",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
-	{ "step_stone1",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "step_stone2",  "9c92f697142ae320584bf64c0d54381d59703528" },
-	{ "step_stone3",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "step_stone4",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
-	{ "step_wood1",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "step_wood2",   "98102533e6085617a2962157b4f3658f59aea018" },
-	{ "step_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4",   "dc66978374a46ab2b87db6472804185824868095" }
+	{ "step_cloth1.wav",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "step_cloth2.wav",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
+	{ "step_cloth3.wav",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "step_cloth4.wav",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
+	{ "step_grass1.wav",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "step_grass2.wav",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
+	{ "step_grass3.wav",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "step_grass4.wav",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
+	{ "step_gravel1.wav", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "step_gravel2.wav", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
+	{ "step_gravel3.wav", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "step_gravel4.wav", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
+	{ "step_sand1.wav",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "step_sand2.wav",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
+	{ "step_sand3.wav",   "c75589cc0087069f387de127dd1499580498738e" }, { "step_sand4.wav",   "37afa06f97d58767a1cd1382386db878be1532dd" },
+	{ "step_snow1.wav",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "step_snow2.wav",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
+	{ "step_snow3.wav",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "step_snow4.wav",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
+	{ "step_stone1.wav",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "step_stone2.wav",  "9c92f697142ae320584bf64c0d54381d59703528" },
+	{ "step_stone3.wav",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "step_stone4.wav",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
+	{ "step_wood1.wav",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "step_wood2.wav",   "98102533e6085617a2962157b4f3658f59aea018" },
+	{ "step_wood3.wav",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4.wav",   "dc66978374a46ab2b87db6472804185824868095" }
 };
 static cc_bool allSoundsExist;
 
-static void SoundAssets_CheckExistence(void) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
+static void SoundAssets_ResetState(void) {
 	int i;
-	String_InitArray(path, pathBuffer);
+	allSoundsExist = false;
+
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		Mem_Free(soundAssets[i].data);
+		soundAssets[i].data = NULL;
+		soundAssets[i].size = 0;
+	}
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset checking -----------------------------------------------*
+*#########################################################################################################################*/
+static int soundEntriesFound;
+
+static struct SoundAsset* SoundAssest_Find(const cc_string* name) {
+	struct SoundAsset* a;
+	int i;
 
 	for (i = 0; i < Array_Elems(soundAssets); i++) 
 	{
-		path.length = 0;
-		String_Format1(&path, "audio/%c.wav", soundAssets[i].name);
-
-		if (File_Exists(&path)) continue;
-		allSoundsExist = false;
-		return;
+		a = &soundAssets[i];
+		if (String_CaselessEqualsConst(name, a->filename)) return a;
 	}
-	allSoundsExist = true;
+	return NULL;
+}
+
+static cc_bool SoundAssets_CheckEntry(const cc_string* path) {
+	cc_string name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+
+	if (SoundAssest_Find(&name)) soundEntriesFound++;
+	return false;
+}
+
+static void SoundAssets_CheckExistence(void) {
+	soundEntriesFound = 0;
+	ZipFile_InspectEntries(&Sounds_DefaultZipPath, SoundAssets_CheckEntry);
+
+	/* >= in case somehow have say "gui.png", "GUI.png" */
+	allSoundsExist = soundEntriesFound >= Array_Elems(soundAssets);
 }
 
 static void SoundAssets_CountMissing(void) {
@@ -426,6 +590,28 @@ static void SoundAssets_CountMissing(void) {
 	Resources_Count += Array_Elems(soundAssets);
 	Resources_Size  += 417;
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Sound asset generation ----------------------------------------------*
+*#########################################################################################################################*/
+static void SoundAsset_CreateZip(void) {
+	struct ResourceZipEntry entries[Array_Elems(soundAssets)];
+	int i;
+
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		entries[i].filename = soundAssets[i].filename;
+		entries[i].type     = RESOURCE_TYPE_SOUND;
+
+		entries[i].value.data = soundAssets[i].data;
+		entries[i].size       = soundAssets[i].size;
+	}
+
+	ZipFile_Create(&Sounds_DefaultZipPath, entries, Array_Elems(soundAssets));
+	SoundAssets_ResetState();
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Sound asset fetching -----------------------------------------------*
@@ -445,141 +631,29 @@ static const char* SoundAssets_GetRequestName(int reqID) {
 	int i;
 	for (i = 0; i < Array_Elems(soundAssets); i++) 
 	{
-		if (reqID == soundAssets[i].reqID) return soundAssets[i].name;
+		if (reqID == soundAssets[i].reqID) return soundAssets[i].filename;
 	}
 	return NULL;
 }
 
-
-/*########################################################################################################################*
-*----------------------------------------------------Sound asset processing ----------------------------------------------*
-*#########################################################################################################################*/
-#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
-#define WAV_HDR_SIZE 44
-
-/* Fixes up the .WAV header after having written all samples */
-static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 len) {
-	cc_uint8 header[WAV_HDR_SIZE];
-	cc_result res = s->Seek(s, 0);
-	if (res) { Logger_SysWarn(res, "seeking to .wav start"); return; }
-
-	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(header +  4, len - 8);
-	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
-	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
-	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
-	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
-	Stream_SetU16_LE(header + 22, ctx->channels);
-	Stream_SetU32_LE(header + 24, ctx->sampleRate);
-
-	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
-	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
-	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
-	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
-
-	res = Stream_Write(s, header, WAV_HDR_SIZE);
-	if (res) Logger_SysWarn(res, "fixing .wav header");
-}
-
-/* Decodes all samples, then produces a .WAV file from them */
-static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
-	cc_int16* samples;
-	cc_uint32 len = WAV_HDR_SIZE;
-	cc_result res;
-	int count;
-
-	/* ctx is all 0, so reuse here for empty header */
-	res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE);
-	if (res) { Logger_SysWarn(res, "writing .wav header"); return; }
-
-	res = Vorbis_DecodeHeaders(ctx);
-	if (res) { Logger_SysWarn(res, "decoding .ogg header"); return; }
-
-	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
-	if (!samples) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
-
-	for (;;) {
-		res = Vorbis_DecodeFrame(ctx);
-		if (res == ERR_END_OF_STREAM) {
-			/* reached end of samples, so done */
-			SoundPatcher_FixupHeader(s, ctx, len); break;
-		}
-		if (res) { Logger_SysWarn(res, "decoding .ogg"); break; }
-
-		count = Vorbis_OutputFrame(ctx, samples);
-		len  += count * 2;
-		/* TODO: Do we need to account for big endian */
-		res = Stream_Write(s, samples, count * 2);
-		if (res) { Logger_SysWarn(res, "writing samples"); break; }
-	}
-	Mem_Free(samples);
-}
-
-/* Converts an OGG sound to a WAV sound for faster decoding later */
-static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
-	cc_string path; char pathBuffer[STRING_SIZE];
-	struct OggState* ogg    = NULL;
-	struct VorbisState* ctx = NULL;
-	struct Stream src, dst;
-	cc_result res;
-
-	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
-	if (!ogg) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); goto cleanup; }
-
-	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
-	if (!ctx) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); goto cleanup; }
-
-	Stream_ReadonlyMemory(&src, req->data, req->size);
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c.wav", name);
-
-	res = Stream_CreateFile(&dst, &path);
-	if (res) { Logger_SysWarn(res, "creating .wav file"); goto cleanup; }
-
-	Ogg_Init(ogg, &src);
-	Vorbis_Init(ctx);
-	ctx->source = ogg;
-	SoundPatcher_WriteWav(&dst, ctx);
-
-	res = dst.Close(&dst);
-	if (res) Logger_SysWarn(res, "closing .wav file");
-
-cleanup:
-	if (ctx) Vorbis_Free(ctx);
-	Mem_Free(ctx);
-	Mem_Free(ogg);
-}
-
-
-static void SoundAsset_Check(struct SoundAsset* sound) {
+static void SoundAsset_Check(struct SoundAsset* sound, int i) {
 	struct HttpRequest item;
 	if (!Fetcher_Get(sound->reqID, &item)) return;
-
-	SoundPatcher_Save(sound->name, &item);
 
 	sound->data = item.data;
 	sound->size = item.size;
 	item.data   = NULL;
 	HttpRequest_Free(&item);
+
+	if (i == Array_Elems(soundAssets) - 1)
+		SoundAsset_CreateZip();
 }
 
 static void SoundAssets_CheckStatus(void) {
 	int i;
 	for (i = 0; i < Array_Elems(soundAssets); i++)
 	{
-		SoundAsset_Check(&soundAssets[i]);
-	}
-}
-
-static void SoundAssets_ResetState(void) {
-	int i;
-	allSoundsExist = false;
-
-	for (i = 0; i < Array_Elems(soundAssets); i++)
-	{
-		Mem_Free(soundAssets[i].data);
-		soundAssets[i].data = NULL;
+		SoundAsset_Check(&soundAssets[i], i);
 	}
 }
 
@@ -738,15 +812,6 @@ CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* nam
 	return NULL;
 }
 
-static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
-	cc_uint32 size = source->UncompressedSize;
-	e->value.data  = Mem_TryAlloc(size, 1);
-	e->size        = size;
-
-	if (!e->value.data) return ERR_OUT_OF_MEMORY;
-	return Stream_Read(data, e->value.data, size);
-}
-
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
@@ -770,6 +835,19 @@ static struct ZipfileSource {
 	{ "classic gold", "https://classic.minecraft.net/assets/textures/gold.png", Classic0023Patcher_OldGold, 1 }, /* NOTE: this must be the last entry */
 };
 static int numDefaultZipSources, numDefaultZipProcessed;
+
+static void MCCTextures_ResetState(void) {
+	int i;
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) 
+	{
+		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
+
+		/* can reuse value.data for value.bmp case too */
+		Mem_Free(defaultZipEntries[i].value.data);
+		defaultZipEntries[i].value.data = NULL;
+		defaultZipEntries[i].size       = 0;
+	}
+}
 
 
 /*########################################################################################################################*
@@ -980,19 +1058,10 @@ static cc_bool DefaultZip_SelectEntry(const cc_string* path) {
 }
 
 static void MCCTextures_CheckExistence(void) {
-	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
-	struct Stream stream;
-	cc_result res;
+	cc_string path  = String_FromReadonly(Game_Version.DefaultTexpack);
+	zipEntriesFound = 0;
 
-	res = Stream_OpenFile(&stream, &path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
-
-	res = Zip_Extract(&stream, DefaultZip_SelectEntry, NULL);
-	if (res) Logger_SysWarn2(res, "inspecting", &path);
-
-	/* No point logging error for closing readonly file */
-	(void)stream.Close(&stream);
+	ZipFile_InspectEntries(&path, DefaultZip_SelectEntry);
 	/* >= in case somehow have say "gui.png", "GUI.png" */
 	allZipEntriesExist = zipEntriesFound >= Array_Elems(defaultZipEntries);
 
@@ -1048,6 +1117,7 @@ static const char* MCCTextures_GetRequestName(int reqID) {
 static void MCCTextures_CreateDefaultZip(void) {
 	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
 	ZipFile_Create(&path, defaultZipEntries, Array_Elems(defaultZipEntries));
+	MCCTextures_ResetState();
 }
 
 static void MCCTextures_CheckSource(struct ZipfileSource* source) {
@@ -1074,22 +1144,6 @@ static void MCCTextures_CheckStatus(void) {
 	{
 		if (defaultZipSources[i].downloaded) continue;
 		MCCTextures_CheckSource(&defaultZipSources[i]);
-	}
-}
-
-static void MCCTextures_ResetState(void) {
-	int i;
-	allZipEntriesExist = false;
-	zipEntriesFound    = 0;
-
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) 
-	{
-		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
-
-		/* can reuse value.data for value.bmp case too */
-		Mem_Free(defaultZipEntries[i].value.data);
-		defaultZipEntries[i].value.data = NULL;
-		defaultZipEntries[i].size       = 0;
 	}
 }
 

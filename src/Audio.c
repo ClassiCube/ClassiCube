@@ -17,6 +17,7 @@
 #include "Window.h"
 #endif
 int Audio_SoundsVolume, Audio_MusicVolume;
+const cc_string Sounds_DefaultZipPath = String_FromConst("audio/default.zip");
 static const cc_string audio_dir = String_FromConst("audio");
 
 struct Sound {
