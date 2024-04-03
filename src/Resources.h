@@ -8,9 +8,11 @@ struct HttpRequest;
 typedef void (*FetcherErrorCallback)(struct HttpRequest* req);
 
 /* Number of resources that need to be downloaded */
-extern int Resources_Count;
+extern int Resources_MissingCount;
 /* Total size of resources that need to be downloaded */
-extern int Resources_Size;
+extern int Resources_MissingSize;
+/* Whether required resources need to be downloaded */
+extern cc_bool Resources_MissingRequired;
 /* Checks existence of all assets */
 void Resources_CheckExistence(void);
 

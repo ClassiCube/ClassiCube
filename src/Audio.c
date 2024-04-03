@@ -12,11 +12,15 @@
 #include "Stream.h"
 #include "Utils.h"
 #include "Options.h"
+#include "Deflate.h"
 #ifdef CC_BUILD_ANDROID
 /* TODO: Refactor maybe to not rely on checking WinInfo.Handle != NULL */
 #include "Window.h"
 #endif
+
 int Audio_SoundsVolume, Audio_MusicVolume;
+const cc_string Sounds_ZipPathMC  = String_FromConst("audio/default.zip");
+const cc_string Sounds_ZipPathCC = String_FromConst("audio/classicube.zip");
 static const cc_string audio_dir = String_FromConst("audio");
 
 struct Sound {
@@ -91,7 +95,12 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if ((res = Audio_AllocChunks(size, &snd->data, 1))) return res;
 
 			snd->size = size;
-			return Stream_Read(stream, (cc_uint8*)snd->data, size);
+			res = Stream_Read(stream, (cc_uint8*)snd->data, size);
+
+			#ifdef CC_BUILD_BIGENDIAN
+			Utils_SwapEndian16((cc_int16*)snd->data, size / 2);
+			#endif
+			return res;
 		}
 
 		/* Skip over unhandled data */
@@ -99,30 +108,18 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	}
 }
 
-static cc_result Sound_ReadWave(const cc_string* path, struct Sound* snd) {
-	struct Stream stream;
-	cc_result res;
-
-	res = Stream_OpenFile(&stream, path);
-	if (res) return res;
-	res = Sound_ReadWaveData(&stream, snd);
-
-	/* No point logging error for closing readonly file */
-	(void)stream.Close(&stream);
-	return res;
-}
-
-static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const cc_string* name) {
+static struct SoundGroup* Soundboard_FindGroup(struct Soundboard* board, const cc_string* name) {
 	struct SoundGroup* groups = board->groups;
 	int i;
 
-	for (i = 0; i < SOUND_COUNT; i++) {
+	for (i = 0; i < SOUND_COUNT; i++) 
+	{
 		if (String_CaselessEqualsConst(name, Sound_Names[i])) return &groups[i];
 	}
 	return NULL;
 }
 
-static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName, const cc_string* file) {
+static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName, const cc_string* file, struct Stream* stream) {
 	struct SoundGroup* group;
 	struct Sound* snd;
 	cc_string name = *file;
@@ -139,7 +136,7 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 	name = String_UNSAFE_SubstringAt(&name, boardName->length);
 	name = String_UNSAFE_Substring(&name, 0, name.length - 1);
 
-	group = Soundboard_Find(board, &name);
+	group = Soundboard_FindGroup(board, &name);
 	if (!group) {
 		Chat_Add1("&cUnknown sound group '%s'", &name); return;
 	}
@@ -148,7 +145,7 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 	}
 
 	snd = &group->sounds[group->count];
-	res = Sound_ReadWave(file, snd);
+	res = Sound_ReadWaveData(stream, snd);
 
 	if (res) {
 		Logger_SysWarn2(res, "decoding", file);
@@ -219,12 +216,29 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 	}
 }
 
-static void Sounds_LoadFile(const cc_string* path, void* obj) {
+static cc_bool SelectZipEntry(const cc_string* path) { return true; }
+static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, struct ZipEntry* source) {
 	static const cc_string dig  = String_FromConst("dig_");
 	static const cc_string step = String_FromConst("step_");
 	
-	Soundboard_Load(&digBoard,  &dig,  path);
-	Soundboard_Load(&stepBoard, &step, path);
+	Soundboard_Load(&digBoard,  &dig,  path, stream);
+	Soundboard_Load(&stepBoard, &step, path, stream);
+	return 0;
+}
+
+static cc_result Sounds_ExtractZip(const cc_string* path) {
+	struct Stream stream;
+	cc_result res;
+
+	res = Stream_OpenFile(&stream, path);
+	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
+
+	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry);
+	if (res) Logger_SysWarn2(res, "extracting", path);
+
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
+	return res;
 }
 
 /* TODO this is a pretty terrible solution */
@@ -269,6 +283,7 @@ static void InitWebSounds(void) {
 
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
+	cc_result res;
 	if (!AudioBackend_Init()) { 
 		AudioBackend_Free(); 
 		Audio_SoundsVolume = 0; 
@@ -280,7 +295,9 @@ static void Sounds_Start(void) {
 #ifdef CC_BUILD_WEBAUDIO
 	InitWebSounds();
 #else
-	Directory_Enum(&audio_dir, NULL, Sounds_LoadFile);
+	res = Sounds_ExtractZip(&Sounds_ZipPathMC);
+	if (res == ReturnCode_FileNotFound)
+		Sounds_ExtractZip(&Sounds_ZipPathCC);
 #endif
 }
 
@@ -335,7 +352,7 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 
 static cc_result Music_PlayOgg(struct Stream* source) {
 	struct OggState ogg;
-	struct VorbisState vorbis = { 0 };
+	struct VorbisState vorbis;
 	int channels, sampleRate, volume;
 
 	int chunkSize, samplesPerSecond;
@@ -344,6 +361,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	cc_result res;
 
 	Ogg_Init(&ogg, source);
+	Vorbis_Init(&vorbis);
 	vorbis.source = &ogg;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	

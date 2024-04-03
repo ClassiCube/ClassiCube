@@ -14,6 +14,7 @@
 #include "LWeb.h"
 #include "Http.h"
 #include "Game.h"
+#include "Audio.h"
 
 /* Represents a set of assets/resources */
 /* E.g. music set, sounds set, textures set */
@@ -28,9 +29,12 @@ struct AssetSet {
 	const char* (*GetRequestName)(int reqID);
 	/* Checks if any assets have been downloaded, and processes them if so */
 	void (*CheckStatus)(void);
+	/* Resets state and frees and allocated memory */
+	void (*ResetState)(void);
 };
 
-int Resources_Count, Resources_Size;
+int Resources_MissingCount, Resources_MissingSize;
+cc_bool Resources_MissingRequired;
 
 union ResourceValue {
 	cc_uint8* data;
@@ -44,6 +48,10 @@ struct ResourceZipEntry {
 	union ResourceValue value;
 	cc_uint32 offset, crc32;
 };
+#define RESOURCE_TYPE_DATA  1
+#define RESOURCE_TYPE_PNG   2
+#define RESOURCE_TYPE_CONST 3
+#define RESOURCE_TYPE_SOUND 4
 
 static CC_NOINLINE cc_bool Fetcher_Get(int reqID, struct HttpRequest* item);
 CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* name);
@@ -51,223 +59,44 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Music assets----------------------------------------------------*
+*------------------------------------------------------Utility functions -------------------------------------------------*
 *#########################################################################################################################*/
-static struct MusicAsset {
-	const char* name;
-	const char* hash;
-	short size;
-	cc_bool downloaded;
-	int reqID;
-} musicAssets[] = {
-	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
-	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
-	{ "calm3.ogg", "14ae57a6bce3d4254daa8be2b098c2d99743cc3f", 2181 },
-	{ "hal1.ogg",  "df1ff11b79757432c5c3f279e5ecde7b63ceda64", 1926 },
-	{ "hal2.ogg",  "ceaaaa1d57dfdfbb0bd4da5ea39628b42897a687", 1714 },
-	{ "hal3.ogg",  "dd85fb564e96ee2dbd4754f711ae9deb08a169f9", 1879 },
-	{ "hal4.ogg",  "5e7d63e75c6e042f452bc5e151276911ef92fed8", 2499 }
-};
-
-static void MusicAssets_CheckExistence(void) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	String_InitArray(path, pathBuffer);
-
-	for (i = 0; i < Array_Elems(musicAssets); i++) 
-	{
-		path.length = 0;
-		String_Format1(&path, "audio/%c", musicAssets[i].name);
-
-		musicAssets[i].downloaded = File_Exists(&path);
-	}
-}
-
-static void MusicAssets_CountMissing(void) {
-	int i;
-	for (i = 0; i < Array_Elems(musicAssets); i++) 
-	{
-		if (musicAssets[i].downloaded) continue;
-
-		Resources_Size += musicAssets[i].size;
-		Resources_Count++;
-	}
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Music asset fetching -----------------------------------------------*
-*#########################################################################################################################*/
-CC_NOINLINE static int MusicAsset_Download(const char* hash) {
-	cc_string url; char urlBuffer[URL_MAX_SIZE];
-
-	String_InitArray(url, urlBuffer);
-	String_Format3(&url, "https://resources.download.minecraft.net/%r%r/%c", 
-					&hash[0], &hash[1], hash);
-	return Http_AsyncGetData(&url, 0);
-}
-
-static void MusicAssets_DownloadAssets(void) {
-	int i;
-	for (i = 0; i < Array_Elems(musicAssets); i++) 
-	{
-		if (musicAssets[i].downloaded) continue;
-		musicAssets[i].reqID = MusicAsset_Download(musicAssets[i].hash);
-	}
-}
-
-static const char* MusicAssets_GetRequestName(int reqID) {
-	int i;
-	for (i = 0; i < Array_Elems(musicAssets); i++) 
-	{
-		if (reqID == musicAssets[i].reqID) return musicAssets[i].name;
-	}
-	return NULL;
-}
-
-
-/*########################################################################################################################*
-*----------------------------------------------------Music asset processing ----------------------------------------------*
-*#########################################################################################################################*/
-static void MusicAsset_Save(const char* name, struct HttpRequest* req) {
-	cc_string path; char pathBuffer[STRING_SIZE];
+static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry selector) {
+	struct Stream stream;
 	cc_result res;
 
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c", name);
+	res = Stream_OpenFile(&stream, path);
+	if (res == ReturnCode_FileNotFound) return;
+	if (res) { Logger_SysWarn2(res, "opening", path); return; }
 
-	res = Stream_WriteAllTo(&path, req->data, req->size);
-	if (res) Logger_SysWarn(res, "saving music file");
+	res = Zip_Extract(&stream, selector, NULL);
+	if (res) Logger_SysWarn2(res, "inspecting", path);
+
+	/* No point logging error for closing readonly file */
+	(void)stream.Close(&stream);
 }
 
-static void MusicAsset_Check(struct MusicAsset* music) {
-	struct HttpRequest item;
-	if (!Fetcher_Get(music->reqID, &item)) return;
+static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
+	cc_uint32 size = source->UncompressedSize;
+	e->value.data  = Mem_TryAlloc(size, 1);
+	e->size        = size;
 
-	music->downloaded = true;
-	MusicAsset_Save(music->name, &item);
-	HttpRequest_Free(&item);
-}
-
-static void MusicAssets_CheckStatus(void) {
-	int i;
-	for (i = 0; i < Array_Elems(musicAssets); i++) 
-	{
-		if (musicAssets[i].downloaded) continue;
-		MusicAsset_Check(&musicAssets[i]);
-	}
-}
-
-static const struct AssetSet mccMusicAssetSet = {
-	MusicAssets_CheckExistence,
-	MusicAssets_CountMissing,
-	MusicAssets_DownloadAssets,
-	MusicAssets_GetRequestName,
-	MusicAssets_CheckStatus
-};
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Sound assets----------------------------------------------------*
-*#########################################################################################################################*/
-static struct SoundAsset {
-	const char* name;
-	const char* hash;
-	int reqID;
-} soundAssets[] = {
-	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
-	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
-	{ "dig_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
-	{ "dig_grass3",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "dig_grass4",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
-	{ "dig_gravel1", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "dig_gravel2", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
-	{ "dig_gravel3", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "dig_gravel4", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
-	{ "dig_sand1",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "dig_sand2",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
-	{ "dig_sand3",   "c75589cc0087069f387de127dd1499580498738e" }, { "dig_sand4",   "37afa06f97d58767a1cd1382386db878be1532dd" },
-	{ "dig_snow1",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "dig_snow2",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
-	{ "dig_snow3",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "dig_snow4",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
-	{ "dig_stone1",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "dig_stone2",  "9c92f697142ae320584bf64c0d54381d59703528" },
-	{ "dig_stone3",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "dig_stone4",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
-	{ "dig_wood1",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "dig_wood2",   "98102533e6085617a2962157b4f3658f59aea018" },
-	{ "dig_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "dig_wood4",   "dc66978374a46ab2b87db6472804185824868095" },
-	{ "dig_glass1",  "7274a2231ed4544a37e599b7b014e589e5377094" }, { "dig_glass2",  "87c47bda3645c68f18a49e83cbf06e5302d087ff" },
-	{ "dig_glass3",  "ad7d770b7fff3b64121f75bd60cecfc4866d1cd6" },
-
-	{ "step_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "step_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
-	{ "step_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "step_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
-	{ "step_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "step_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
-	{ "step_grass3",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "step_grass4",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
-	{ "step_gravel1", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "step_gravel2", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
-	{ "step_gravel3", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "step_gravel4", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
-	{ "step_sand1",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "step_sand2",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
-	{ "step_sand3",   "c75589cc0087069f387de127dd1499580498738e" }, { "step_sand4",   "37afa06f97d58767a1cd1382386db878be1532dd" },
-	{ "step_snow1",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "step_snow2",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
-	{ "step_snow3",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "step_snow4",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
-	{ "step_stone1",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "step_stone2",  "9c92f697142ae320584bf64c0d54381d59703528" },
-	{ "step_stone3",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "step_stone4",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
-	{ "step_wood1",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "step_wood2",   "98102533e6085617a2962157b4f3658f59aea018" },
-	{ "step_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4",   "dc66978374a46ab2b87db6472804185824868095" }
-};
-static cc_bool allSoundsExist;
-
-static void SoundAssets_CheckExistence(void) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	String_InitArray(path, pathBuffer);
-
-	for (i = 0; i < Array_Elems(soundAssets); i++) 
-	{
-		path.length = 0;
-		String_Format1(&path, "audio/%c.wav", soundAssets[i].name);
-
-		if (File_Exists(&path)) continue;
-		allSoundsExist = false;
-		return;
-	}
-	allSoundsExist = true;
-}
-
-static void SoundAssets_CountMissing(void) {
-	if (allSoundsExist) return;
-
-	Resources_Count += Array_Elems(soundAssets);
-	Resources_Size  += 417;
-}
-
-/*########################################################################################################################*
-*-----------------------------------------------------Sound asset fetching -----------------------------------------------*
-*#########################################################################################################################*/
-#define SoundAsset_Download(hash) MusicAsset_Download(hash)
-
-static void SoundAssets_DownloadAssets(void) {
-	int i;
-	for (i = 0; i < Array_Elems(soundAssets); i++)
-	{
-		if (allSoundsExist) continue;
-		soundAssets[i].reqID = SoundAsset_Download(soundAssets[i].hash);
-	}
-}
-
-static const char* SoundAssets_GetRequestName(int reqID) {
-	int i;
-	for (i = 0; i < Array_Elems(soundAssets); i++) 
-	{
-		if (reqID == soundAssets[i].reqID) return soundAssets[i].name;
-	}
-	return NULL;
+	if (!e->value.data) return ERR_OUT_OF_MEMORY;
+	return Stream_Read(data, e->value.data, size);
 }
 
 
 /*########################################################################################################################*
-*----------------------------------------------------Sound asset processing ----------------------------------------------*
+*-----------------------------------------------------Sound asset writing ------------------------------------------------*
 *#########################################################################################################################*/
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_HDR_SIZE 44
 
 /* Fixes up the .WAV header after having written all samples */
-static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 len) {
+static cc_result SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 offset, cc_uint32 len) {
 	cc_uint8 header[WAV_HDR_SIZE];
-	cc_result res = s->Seek(s, 0);
-	if (res) { Logger_SysWarn(res, "seeking to .wav start"); return; }
+	cc_result res = s->Seek(s, offset);
+	if (res) return res;
 
 	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
 	Stream_SetU32_LE(header +  4, len - 8);
@@ -284,186 +113,80 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, 
 	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
 	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
 
-	res = Stream_Write(s, header, WAV_HDR_SIZE);
-	if (res) Logger_SysWarn(res, "fixing .wav header");
+	return Stream_Write(s, header, WAV_HDR_SIZE);
 }
 
 /* Decodes all samples, then produces a .WAV file from them */
-static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
+static cc_result SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 	cc_int16* samples;
+	cc_uint32 begOffset;
 	cc_uint32 len = WAV_HDR_SIZE;
 	cc_result res;
 	int count;
 
-	/* ctx is all 0, so reuse here for empty header */
-	res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE);
-	if (res) { Logger_SysWarn(res, "writing .wav header"); return; }
+	if ((res = s->Position(s, &begOffset))) return res;
 
-	res = Vorbis_DecodeHeaders(ctx);
-	if (res) { Logger_SysWarn(res, "decoding .ogg header"); return; }
+	/* reuse context here for a temp garbage header */
+	if ((res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE))) return res;
+	if ((res = Vorbis_DecodeHeaders(ctx))) return res;
 
 	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
-	if (!samples) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
+	if (!samples) return ERR_OUT_OF_MEMORY;
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
 		if (res == ERR_END_OF_STREAM) {
 			/* reached end of samples, so done */
-			SoundPatcher_FixupHeader(s, ctx, len); break;
+			res = SoundPatcher_FixupHeader(s, ctx, begOffset, len);
+			break;
 		}
-		if (res) { Logger_SysWarn(res, "decoding .ogg"); break; }
+		if (res) break;
 
 		count = Vorbis_OutputFrame(ctx, samples);
 		len  += count * 2;
-		/* TODO: Do we need to account for big endian */
-		res = Stream_Write(s, samples, count * 2);
-		if (res) { Logger_SysWarn(res, "writing samples"); break; }
+
+#ifdef CC_BUILD_BIGENDIAN
+		Utils_SwapEndian16(samples, count);
+#endif
+		res = Stream_Write(s, (cc_uint8*)samples, count * 2);
+		if (res) break;
 	}
+
 	Mem_Free(samples);
+	if (!res) res = s->Seek(s, begOffset + len);
+	return res;
 }
 
 /* Converts an OGG sound to a WAV sound for faster decoding later */
-static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
-	cc_string path; char pathBuffer[STRING_SIZE];
-	struct OggState ogg;
-	struct Stream src, dst;
-	struct VorbisState* ctx;
-	cc_result res;
-
-	ctx = (struct VorbisState*)Mem_TryAllocCleared(1, sizeof(struct VorbisState));
-	if (!ctx) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating memory"); return; }
-
-	Stream_ReadonlyMemory(&src, req->data, req->size);
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c.wav", name);
-
-	res = Stream_CreateFile(&dst, &path);
-	if (res) { Logger_SysWarn(res, "creating .wav file"); return; }
-
-	Ogg_Init(&ogg, &src);
-	ctx->source = &ogg;
-	SoundPatcher_WriteWav(&dst, ctx);
-
-	res = dst.Close(&dst);
-	if (res) Logger_SysWarn(res, "closing .wav file");
-
-	Vorbis_Free(ctx);
-	Mem_Free(ctx);
-}
-
-
-static void SoundAsset_Check(const struct SoundAsset* sound) {
-	struct HttpRequest item;
-	if (!Fetcher_Get(sound->reqID, &item)) return;
-
-	SoundPatcher_Save(sound->name, &item);
-	HttpRequest_Free(&item);
-}
-
-static void SoundAssets_CheckStatus(void) {
-	int i;
-	for (i = 0; i < Array_Elems(soundAssets); i++)
-	{
-		SoundAsset_Check(&soundAssets[i]);
-	}
-}
-
-static const struct AssetSet mccSoundAssetSet = {
-	SoundAssets_CheckExistence,
-	SoundAssets_CountMissing,
-	SoundAssets_DownloadAssets,
-	SoundAssets_GetRequestName,
-	SoundAssets_CheckStatus
-};
-
-
-/*########################################################################################################################*
-*------------------------------------------------------CC texture assets--------------------------------------------------*
-*#########################################################################################################################*/
-static const cc_string ccTexPack = String_FromConst("texpacks/classicube.zip");
-static cc_bool ccTexturesExist, ccTexturesDownloaded;
-static int ccTexturesReqID;
-
-static void CCTextures_CheckExistence(void) {
-	ccTexturesExist = File_Exists(&ccTexPack);
-}
-
-static void CCTextures_CountMissing(void) {
-	if (ccTexturesExist) return;
-
-	Resources_Count++;
-	Resources_Size += 83;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------CC texture assets fetching --------------------------------------------*
-*#########################################################################################################################*/
-static void CCTextures_DownloadAssets(void) {
-	static cc_string url = String_FromConst(RESOURCE_SERVER "/default.zip");
-	if (ccTexturesExist) return;
-
-	ccTexturesReqID = Http_AsyncGetData(&url, 0);
-}
-
-static const char* CCTextures_GetRequestName(int reqID) {
-	return reqID == ccTexturesReqID ? "ClassiCube textures" : NULL;
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------CC texture assets processing -------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_MOBILE
-/* Android needs the touch.png */
-/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
-static cc_bool CCTextures_SelectEntry(const cc_string* path) {
-	return String_CaselessEqualsConst(path, "touch.png");
-}
-static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
-	struct ResourceZipEntry* e = ZipEntries_Find(path);
-	return ZipEntry_ExtractData(e, data, source);
-}
-
-static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
+static cc_result SoundPatcher_Save(struct Stream* s, struct ResourceZipEntry* e) {
+	struct OggState* ogg    = NULL;
+	struct VorbisState* ctx = NULL;
 	struct Stream src;
-	Stream_WriteAllTo(&ccTexPack, req->data, req->size);
-	Stream_ReadonlyMemory(&src,   req->data, req->size);
-
-	return Zip_Extract(&src, 
-			CCTextures_SelectEntry, CCTextures_ProcessEntry);
-}
-#else
-static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
-	return Stream_WriteAllTo(&ccTexPack, req->data, req->size);
-}
-#endif
-
-static void CCTextures_CheckStatus(void) {
-	struct HttpRequest item;
 	cc_result res;
 
-	if (ccTexturesDownloaded) return;
-	if (!Fetcher_Get(ccTexturesReqID, &item)) return;
+	ogg = (struct OggState*)Mem_TryAlloc(1,    sizeof(struct OggState));
+	if (!ogg) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
-	ccTexturesDownloaded = true;
-	res = CCTextures_ExtractZip(&item);
-	if (res) Logger_SysWarn(res, "saving ClassiCube textures");
+	ctx = (struct VorbisState*)Mem_TryAlloc(1, sizeof(struct VorbisState));
+	if (!ctx) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
-	HttpRequest_Free(&item);
+	Stream_ReadonlyMemory(&src, e->value.data, e->size);
+
+	Ogg_Init(ogg, &src);
+	Vorbis_Init(ctx);
+	ctx->source = ogg;
+	res = SoundPatcher_WriteWav(s, ctx);
+
+cleanup:
+	if (ctx) Vorbis_Free(ctx);
+	Mem_Free(ctx);
+	Mem_Free(ogg);
+	return res;
 }
-
-static const struct AssetSet ccTexsAssetSet = {
-	CCTextures_CheckExistence,
-	CCTextures_CountMissing,
-	CCTextures_DownloadAssets,
-	CCTextures_GetRequestName,
-	CCTextures_CheckStatus
-};
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------Zip writer------------------------------------------------------*
+*------------------------------------------------------Zip entry writer---------------------------------------------------*
 *#########################################################################################################################*/
 static void GetCurrentZipDate(int* modTime, int* modDate) {
 	struct DateTime now;
@@ -597,14 +320,450 @@ static cc_result ZipWriter_WritePng(struct Stream* dst, struct ResourceZipEntry*
 	return ZipWriter_FixupLocalFile(dst, e);
 }
 
+static cc_result ZipWriter_WriteWav(struct Stream* dst, struct ResourceZipEntry* e) {
+	cc_result res;
+	
+	if ((res = ZipWriter_LocalFile(dst, e))) return res;
+	if ((res = SoundPatcher_Save(dst,   e))) return res;
+	return ZipWriter_FixupLocalFile(dst, e);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Zip file writer----------------------------------------------------*
+*#########################################################################################################################*/
+static cc_result ZipFile_WriteEntries(struct Stream* s, struct ResourceZipEntry* entries, int numEntries) {
+	struct ResourceZipEntry* e;
+	cc_uint32 beg, end;
+	int i;
+	cc_result res;
+
+	for (i = 0; i < numEntries; i++)
+	{
+		e = &entries[i];
+
+		if (e->type == RESOURCE_TYPE_PNG) {
+			if ((res = ZipWriter_WritePng(s,  e))) return res;
+		} else if (e->type == RESOURCE_TYPE_SOUND) {
+			if ((res = ZipWriter_WriteWav(s,  e))) return res;
+		} else {
+			if ((res = ZipWriter_WriteData(s, e))) return res;
+		} 
+	}
+	
+	if ((res = s->Position(s, &beg))) return res;
+	for (i = 0; i < numEntries; i++)
+	{
+		if ((res = ZipWriter_CentralDir(s, &entries[i]))) return res;
+	}
+
+	if ((res = s->Position(s, &end))) return res;
+	return ZipWriter_EndOfCentralDir(s, numEntries, beg, end);
+}
+
+static void ZipFile_Create(const cc_string* path, struct ResourceZipEntry* entries, int numEntries) {
+	struct Stream s;
+	cc_result res;
+
+	res = Stream_CreateFile(&s, path);
+	if (res) {
+		Logger_SysWarn2(res, "creating", path); return;
+	}
+		
+	res = ZipFile_WriteEntries(&s, entries, numEntries);
+	if (res) Logger_SysWarn2(res, "making", path);
+
+	res = s.Close(&s);
+	if (res) Logger_SysWarn2(res, "closing", path);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Music assets----------------------------------------------------*
+*#########################################################################################################################*/
+static struct MusicAsset {
+	const char* name;
+	const char* hash;
+	short size;
+	cc_bool downloaded;
+	int reqID;
+} musicAssets[] = {
+	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
+	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
+	{ "calm3.ogg", "14ae57a6bce3d4254daa8be2b098c2d99743cc3f", 2181 },
+	{ "hal1.ogg",  "df1ff11b79757432c5c3f279e5ecde7b63ceda64", 1926 },
+	{ "hal2.ogg",  "ceaaaa1d57dfdfbb0bd4da5ea39628b42897a687", 1714 },
+	{ "hal3.ogg",  "dd85fb564e96ee2dbd4754f711ae9deb08a169f9", 1879 },
+	{ "hal4.ogg",  "5e7d63e75c6e042f452bc5e151276911ef92fed8", 2499 }
+};
+
+static void MusicAssets_CheckExistence(void) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	int i;
+	String_InitArray(path, pathBuffer);
+
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		path.length = 0;
+		String_Format1(&path, "audio/%c", musicAssets[i].name);
+
+		musicAssets[i].downloaded = File_Exists(&path);
+	}
+}
+
+static void MusicAssets_CountMissing(void) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (musicAssets[i].downloaded) continue;
+
+		Resources_MissingSize += musicAssets[i].size;
+		Resources_MissingCount++;
+	}
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Music asset fetching -----------------------------------------------*
+*#########################################################################################################################*/
+CC_NOINLINE static int MusicAsset_Download(const char* hash) {
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
+
+	String_InitArray(url, urlBuffer);
+	String_Format3(&url, "https://resources.download.minecraft.net/%r%r/%c", 
+					&hash[0], &hash[1], hash);
+	return Http_AsyncGetData(&url, 0);
+}
+
+static void MusicAssets_DownloadAssets(void) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (musicAssets[i].downloaded) continue;
+		musicAssets[i].reqID = MusicAsset_Download(musicAssets[i].hash);
+	}
+}
+
+static const char* MusicAssets_GetRequestName(int reqID) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (reqID == musicAssets[i].reqID) return musicAssets[i].name;
+	}
+	return NULL;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Music asset processing ----------------------------------------------*
+*#########################################################################################################################*/
+static void MusicAsset_Save(const char* name, struct HttpRequest* req) {
+	cc_string path; char pathBuffer[STRING_SIZE];
+	cc_result res;
+
+	String_InitArray(path, pathBuffer);
+	String_Format1(&path, "audio/%c", name);
+
+	res = Stream_WriteAllTo(&path, req->data, req->size);
+	if (res) Logger_SysWarn(res, "saving music file");
+}
+
+static void MusicAsset_Check(struct MusicAsset* music) {
+	struct HttpRequest item;
+	if (!Fetcher_Get(music->reqID, &item)) return;
+
+	music->downloaded = true;
+	MusicAsset_Save(music->name, &item);
+	HttpRequest_Free(&item);
+}
+
+static void MusicAssets_CheckStatus(void) {
+	int i;
+	for (i = 0; i < Array_Elems(musicAssets); i++) 
+	{
+		if (musicAssets[i].downloaded) continue;
+		MusicAsset_Check(&musicAssets[i]);
+	}
+}
+
+static void MusicAssets_ResetState(void) {
+}
+
+static const struct AssetSet mccMusicAssetSet = {
+	MusicAssets_CheckExistence,
+	MusicAssets_CountMissing,
+	MusicAssets_DownloadAssets,
+	MusicAssets_GetRequestName,
+	MusicAssets_CheckStatus,
+	MusicAssets_ResetState
+};
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Sound assets----------------------------------------------------*
+*#########################################################################################################################*/
+static struct SoundAsset {
+	const char* filename;
+	const char* hash;
+	int reqID, size;
+	void* data;
+} soundAssets[] = {
+	{ "dig_cloth1.wav",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2.wav",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
+	{ "dig_cloth3.wav",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4.wav",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
+	{ "dig_grass1.wav",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2.wav",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
+	{ "dig_grass3.wav",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "dig_grass4.wav",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
+	{ "dig_gravel1.wav", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "dig_gravel2.wav", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
+	{ "dig_gravel3.wav", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "dig_gravel4.wav", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
+	{ "dig_sand1.wav",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "dig_sand2.wav",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
+	{ "dig_sand3.wav",   "c75589cc0087069f387de127dd1499580498738e" }, { "dig_sand4.wav",   "37afa06f97d58767a1cd1382386db878be1532dd" },
+	{ "dig_snow1.wav",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "dig_snow2.wav",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
+	{ "dig_snow3.wav",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "dig_snow4.wav",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
+	{ "dig_stone1.wav",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "dig_stone2.wav",  "9c92f697142ae320584bf64c0d54381d59703528" },
+	{ "dig_stone3.wav",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "dig_stone4.wav",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
+	{ "dig_wood1.wav",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "dig_wood2.wav",   "98102533e6085617a2962157b4f3658f59aea018" },
+	{ "dig_wood3.wav",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "dig_wood4.wav",   "dc66978374a46ab2b87db6472804185824868095" },
+	{ "dig_glass1.wav",  "7274a2231ed4544a37e599b7b014e589e5377094" }, { "dig_glass2.wav",  "87c47bda3645c68f18a49e83cbf06e5302d087ff" },
+	{ "dig_glass3.wav",  "ad7d770b7fff3b64121f75bd60cecfc4866d1cd6" },
+
+	{ "step_cloth1.wav",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "step_cloth2.wav",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
+	{ "step_cloth3.wav",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "step_cloth4.wav",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
+	{ "step_grass1.wav",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "step_grass2.wav",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
+	{ "step_grass3.wav",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "step_grass4.wav",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
+	{ "step_gravel1.wav", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "step_gravel2.wav", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
+	{ "step_gravel3.wav", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "step_gravel4.wav", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
+	{ "step_sand1.wav",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "step_sand2.wav",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
+	{ "step_sand3.wav",   "c75589cc0087069f387de127dd1499580498738e" }, { "step_sand4.wav",   "37afa06f97d58767a1cd1382386db878be1532dd" },
+	{ "step_snow1.wav",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "step_snow2.wav",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
+	{ "step_snow3.wav",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "step_snow4.wav",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
+	{ "step_stone1.wav",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "step_stone2.wav",  "9c92f697142ae320584bf64c0d54381d59703528" },
+	{ "step_stone3.wav",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "step_stone4.wav",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
+	{ "step_wood1.wav",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "step_wood2.wav",   "98102533e6085617a2962157b4f3658f59aea018" },
+	{ "step_wood3.wav",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4.wav",   "dc66978374a46ab2b87db6472804185824868095" }
+};
+static cc_bool allSoundsExist;
+
+static void SoundAssets_ResetState(void) {
+	int i;
+	allSoundsExist = false;
+
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		Mem_Free(soundAssets[i].data);
+		soundAssets[i].data = NULL;
+		soundAssets[i].size = 0;
+	}
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset checking -----------------------------------------------*
+*#########################################################################################################################*/
+static int soundEntriesFound;
+
+static struct SoundAsset* SoundAssest_Find(const cc_string* name) {
+	struct SoundAsset* a;
+	int i;
+
+	for (i = 0; i < Array_Elems(soundAssets); i++) 
+	{
+		a = &soundAssets[i];
+		if (String_CaselessEqualsConst(name, a->filename)) return a;
+	}
+	return NULL;
+}
+
+static cc_bool SoundAssets_CheckEntry(const cc_string* path) {
+	cc_string name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+
+	if (SoundAssest_Find(&name)) soundEntriesFound++;
+	return false;
+}
+
+static void SoundAssets_CheckExistence(void) {
+	soundEntriesFound = 0;
+	ZipFile_InspectEntries(&Sounds_ZipPathMC, SoundAssets_CheckEntry);
+
+	/* >= in case somehow have say "gui.png", "GUI.png" */
+	allSoundsExist = soundEntriesFound >= Array_Elems(soundAssets);
+}
+
+static void SoundAssets_CountMissing(void) {
+	if (allSoundsExist) return;
+
+	Resources_MissingCount += Array_Elems(soundAssets);
+	Resources_MissingSize  += 417;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Sound asset generation ----------------------------------------------*
+*#########################################################################################################################*/
+static void SoundAsset_CreateZip(void) {
+	struct ResourceZipEntry entries[Array_Elems(soundAssets)];
+	int i;
+
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		entries[i].filename = soundAssets[i].filename;
+		entries[i].type     = RESOURCE_TYPE_SOUND;
+
+		entries[i].value.data = soundAssets[i].data;
+		entries[i].size       = soundAssets[i].size;
+	}
+
+	ZipFile_Create(&Sounds_ZipPathMC, entries, Array_Elems(soundAssets));
+	SoundAssets_ResetState();
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Sound asset fetching -----------------------------------------------*
+*#########################################################################################################################*/
+#define SoundAsset_Download(hash) MusicAsset_Download(hash)
+
+static void SoundAssets_DownloadAssets(void) {
+	int i;
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		if (allSoundsExist) continue;
+		soundAssets[i].reqID = SoundAsset_Download(soundAssets[i].hash);
+	}
+}
+
+static const char* SoundAssets_GetRequestName(int reqID) {
+	int i;
+	for (i = 0; i < Array_Elems(soundAssets); i++) 
+	{
+		if (reqID == soundAssets[i].reqID) return soundAssets[i].filename;
+	}
+	return NULL;
+}
+
+static void SoundAsset_Check(struct SoundAsset* sound, int i) {
+	struct HttpRequest item;
+	if (!Fetcher_Get(sound->reqID, &item)) return;
+
+	sound->data = item.data;
+	sound->size = item.size;
+	item.data   = NULL;
+	HttpRequest_Free(&item);
+
+	if (i == Array_Elems(soundAssets) - 1)
+		SoundAsset_CreateZip();
+}
+
+static void SoundAssets_CheckStatus(void) {
+	int i;
+	for (i = 0; i < Array_Elems(soundAssets); i++)
+	{
+		SoundAsset_Check(&soundAssets[i], i);
+	}
+}
+
+static const struct AssetSet mccSoundAssetSet = {
+	SoundAssets_CheckExistence,
+	SoundAssets_CountMissing,
+	SoundAssets_DownloadAssets,
+	SoundAssets_GetRequestName,
+	SoundAssets_CheckStatus,
+	SoundAssets_ResetState
+};
+
+
+/*########################################################################################################################*
+*------------------------------------------------------CC texture assets--------------------------------------------------*
+*#########################################################################################################################*/
+static const cc_string ccTexPack = String_FromConst("texpacks/classicube.zip");
+static cc_bool ccTexturesExist, ccTexturesDownloaded;
+static int ccTexturesReqID;
+
+static void CCTextures_CheckExistence(void) {
+	ccTexturesExist = File_Exists(&ccTexPack);
+}
+
+static void CCTextures_CountMissing(void) {
+	if (ccTexturesExist) return;
+
+	Resources_MissingCount++;
+	Resources_MissingSize += 83;
+	Resources_MissingRequired = true;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------CC texture assets fetching --------------------------------------------*
+*#########################################################################################################################*/
+static void CCTextures_DownloadAssets(void) {
+	static cc_string url = String_FromConst(RESOURCE_SERVER "/default.zip");
+	if (ccTexturesExist) return;
+
+	ccTexturesReqID = Http_AsyncGetData(&url, 0);
+}
+
+static const char* CCTextures_GetRequestName(int reqID) {
+	return reqID == ccTexturesReqID ? "ClassiCube textures" : NULL;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------CC texture assets processing -------------------------------------------*
+*#########################################################################################################################*/
+/* Android needs the touch.png */
+/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
+static cc_bool CCTextures_SelectEntry(const cc_string* path) {
+	return String_CaselessEqualsConst(path, "touch.png");
+}
+
+static cc_result CCTextures_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipEntry* source) {
+	struct ResourceZipEntry* e = ZipEntries_Find(path);
+	if (!e) return 0; /* TODO exteact on PC too */
+
+	return ZipEntry_ExtractData(e, data, source);
+}
+
+static cc_result CCTextures_ExtractZip(struct HttpRequest* req) {
+	struct Stream src;
+	cc_result res;
+
+	Stream_ReadonlyMemory(&src, req->data, req->size);
+	if ((res = Zip_Extract(&src, CCTextures_SelectEntry, CCTextures_ProcessEntry))) return res;
+
+	return Stream_WriteAllTo(&ccTexPack, req->data, req->size);
+}
+
+static void CCTextures_CheckStatus(void) {
+	struct HttpRequest item;
+	cc_result res;
+
+	if (ccTexturesDownloaded) return;
+	if (!Fetcher_Get(ccTexturesReqID, &item)) return;
+
+	ccTexturesDownloaded = true;
+	res = CCTextures_ExtractZip(&item);
+	if (res) Logger_SysWarn(res, "saving ClassiCube textures");
+
+	HttpRequest_Free(&item);
+}
+
+static void CCTextures_ResetState(void) {
+	ccTexturesExist      = false;
+	ccTexturesDownloaded = false;
+}
+
+static const struct AssetSet ccTexsAssetSet = {
+	CCTextures_CheckExistence,
+	CCTextures_CountMissing,
+	CCTextures_DownloadAssets,
+	CCTextures_GetRequestName,
+	CCTextures_CheckStatus,
+	CCTextures_ResetState
+};
+
 
 /*########################################################################################################################*
 *----------------------------------------------------default.zip resources------------------------------------------------*
 *#########################################################################################################################*/
-#define RESOURCE_TYPE_DATA  1
-#define RESOURCE_TYPE_PNG   2
-#define RESOURCE_TYPE_CONST 3
-
 #define ANIMS_TXT \
 "# This file defines the animations used in a texture pack for ClassiCube.\r\n" \
 "# Each line is in the format : <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>\r\n" \
@@ -656,15 +815,6 @@ CC_NOINLINE static struct ResourceZipEntry* ZipEntries_Find(const cc_string* nam
 	return NULL;
 }
 
-static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream* data, struct ZipEntry* source) {
-	cc_uint32 size = source->UncompressedSize;
-	e->value.data  = Mem_TryAlloc(size, 1);
-	e->size        = size;
-
-	if (!e->value.data) return ERR_OUT_OF_MEMORY;
-	return Stream_Read(data, e->value.data, size);
-}
-
 
 static cc_result ClassicPatcher_ExtractFiles(struct HttpRequest* req);
 static cc_result ModernPatcher_ExtractFiles(struct HttpRequest* req);
@@ -688,6 +838,19 @@ static struct ZipfileSource {
 	{ "classic gold", "https://classic.minecraft.net/assets/textures/gold.png", Classic0023Patcher_OldGold, 1 }, /* NOTE: this must be the last entry */
 };
 static int numDefaultZipSources, numDefaultZipProcessed;
+
+static void MCCTextures_ResetState(void) {
+	int i;
+	for (i = 0; i < Array_Elems(defaultZipEntries); i++) 
+	{
+		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
+
+		/* can reuse value.data for value.bmp case too */
+		Mem_Free(defaultZipEntries[i].value.data);
+		defaultZipEntries[i].value.data = NULL;
+		defaultZipEntries[i].size       = 0;
+	}
+}
 
 
 /*########################################################################################################################*
@@ -884,52 +1047,6 @@ static cc_result Classic0023Patcher_OldGold(struct HttpRequest* req) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------default.zip writer-------------------------------------------------*
-*#########################################################################################################################*/
-static cc_result DefaultZip_WriteEntries(struct Stream* s) {
-	struct ResourceZipEntry* e;
-	cc_uint32 beg, end;
-	int i;
-	cc_result res;
-
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
-		e = &defaultZipEntries[i];
-
-		if (e->type == RESOURCE_TYPE_PNG) {
-			if ((res = ZipWriter_WritePng(s,  e))) return res;
-		} else {
-			if ((res = ZipWriter_WriteData(s, e))) return res;
-		}
-	}
-	
-	if ((res = s->Position(s, &beg))) return res;
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
-		if ((res = ZipWriter_CentralDir(s, &defaultZipEntries[i]))) return res;
-	}
-
-	if ((res = s->Position(s, &end))) return res;
-	return ZipWriter_EndOfCentralDir(s, Array_Elems(defaultZipEntries), beg, end);
-}
-
-static void DefaultZip_Create(void) {
-	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
-	struct Stream s;
-	cc_result res;
-
-	res = Stream_CreateFile(&s, &path);
-	if (res) {
-		Logger_SysWarn2(res, "creating", &path); return;
-	}
-		
-	res = DefaultZip_WriteEntries(&s);
-	if (res) Logger_SysWarn2(res, "making", &path);
-
-	res = s.Close(&s);
-	if (res) Logger_SysWarn2(res, "closing", &path);
-}
-
-
-/*########################################################################################################################*
 *-----------------------------------------------Minecraft Classic texture assets------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool allZipEntriesExist;
@@ -944,19 +1061,10 @@ static cc_bool DefaultZip_SelectEntry(const cc_string* path) {
 }
 
 static void MCCTextures_CheckExistence(void) {
-	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
-	struct Stream stream;
-	cc_result res;
+	cc_string path  = String_FromReadonly(Game_Version.DefaultTexpack);
+	zipEntriesFound = 0;
 
-	res = Stream_OpenFile(&stream, &path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
-
-	res = Zip_Extract(&stream, DefaultZip_SelectEntry, NULL);
-	if (res) Logger_SysWarn2(res, "inspecting", &path);
-
-	/* No point logging error for closing readonly file */
-	(void)stream.Close(&stream);
+	ZipFile_InspectEntries(&path, DefaultZip_SelectEntry);
 	/* >= in case somehow have say "gui.png", "GUI.png" */
 	allZipEntriesExist = zipEntriesFound >= Array_Elems(defaultZipEntries);
 
@@ -973,8 +1081,8 @@ static void MCCTextures_CountMissing(void) {
 	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
 
 	for (i = 0; i < numDefaultZipSources; i++) {
-		Resources_Count++;
-		Resources_Size += defaultZipSources[i].size;
+		Resources_MissingCount++;
+		Resources_MissingSize += defaultZipSources[i].size;
 	}
 }
 
@@ -992,6 +1100,7 @@ static void MCCTextures_DownloadAssets(void) {
 	{
 		url = String_FromReadonly(defaultZipSources[i].url);
 		defaultZipSources[i].reqID = Http_AsyncGetData(&url, 0);
+		defaultZipSources[i].downloaded = false;
 	}
 }
 
@@ -1008,6 +1117,12 @@ static const char* MCCTextures_GetRequestName(int reqID) {
 /*########################################################################################################################*
 *------------------------------------------Minecraft Classic texture assets processing -----------------------------------*
 *#########################################################################################################################*/
+static void MCCTextures_CreateDefaultZip(void) {
+	cc_string path = String_FromReadonly(Game_Version.DefaultTexpack);
+	ZipFile_Create(&path, defaultZipEntries, Array_Elems(defaultZipEntries));
+	MCCTextures_ResetState();
+}
+
 static void MCCTextures_CheckSource(struct ZipfileSource* source) {
 	struct HttpRequest item;
 	cc_result res;
@@ -1023,7 +1138,7 @@ static void MCCTextures_CheckSource(struct ZipfileSource* source) {
 	HttpRequest_Free(&item);
 
 	if (++numDefaultZipProcessed < numDefaultZipSources) return;
-	DefaultZip_Create();
+	MCCTextures_CreateDefaultZip();
 }
 
 static void MCCTextures_CheckStatus(void) {
@@ -1040,7 +1155,8 @@ static const struct AssetSet mccTexsAssetSet = {
 	MCCTextures_CountMissing,
 	MCCTextures_DownloadAssets,
 	MCCTextures_GetRequestName,
-	MCCTextures_CheckStatus
+	MCCTextures_CheckStatus,
+	MCCTextures_ResetState
 };
 
 
@@ -1058,10 +1174,20 @@ static const struct AssetSet* const asset_sets[] = {
 	&mccSoundAssetSet
 };
 
+static void ResetState() {
+	int i;
+	Resources_MissingCount = 0;
+	Resources_MissingSize  = 0;
+
+	for (i = 0; i < Array_Elems(asset_sets); i++)
+	{
+		asset_sets[i]->ResetState();
+	}
+}
+
 void Resources_CheckExistence(void) {
 	int i;
-	Resources_Count = 0;
-	Resources_Size  = 0;
+	ResetState();
 
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
@@ -1100,18 +1226,9 @@ void Fetcher_Run(void) {
 }
 
 static void Fetcher_Finish(void) {
-	int i;
 	Fetcher_Completed = true;
 	Fetcher_Working   = false;
-
-	for (i = 0; i < Array_Elems(defaultZipEntries); i++) {
-		if (defaultZipEntries[i].type == RESOURCE_TYPE_CONST) continue;
-
-		/* can reuse value.data for value.bmp case too */
-		Mem_Free(defaultZipEntries[i].value.data);
-		defaultZipEntries[i].value.data = NULL;
-		defaultZipEntries[i].size       = 0;
-	}
+	ResetState();
 }
 
 static void Fetcher_Fail(struct HttpRequest* item) {
@@ -1146,7 +1263,7 @@ void Fetcher_Update(void) {
 		asset_sets[i]->CheckStatus();
 	}
 
-	if (Fetcher_Downloaded != Resources_Count) return; 
+	if (Fetcher_Downloaded != Resources_MissingCount) return; 
 	Fetcher_Finish();
 }
 #endif
