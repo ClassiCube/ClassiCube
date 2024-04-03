@@ -33,7 +33,8 @@ struct AssetSet {
 	void (*ResetState)(void);
 };
 
-int Resources_Count, Resources_Size;
+int Resources_MissingCount, Resources_MissingSize;
+cc_bool Resources_MissingRequired;
 
 union ResourceValue {
 	cc_uint8* data;
@@ -58,7 +59,7 @@ static cc_result ZipEntry_ExtractData(struct ResourceZipEntry* e, struct Stream*
 
 
 /*########################################################################################################################*
-*------------------------------------------------=-----Utility functions ------------------------=------------------------*
+*------------------------------------------------------Utility functions -------------------------------------------------*
 *#########################################################################################################################*/
 static void ZipFile_InspectEntries(const cc_string* path, Zip_SelectEntry selector) {
 	struct Stream stream;
@@ -413,8 +414,8 @@ static void MusicAssets_CountMissing(void) {
 	{
 		if (musicAssets[i].downloaded) continue;
 
-		Resources_Size += musicAssets[i].size;
-		Resources_Count++;
+		Resources_MissingSize += musicAssets[i].size;
+		Resources_MissingCount++;
 	}
 }
 
@@ -578,7 +579,7 @@ static cc_bool SoundAssets_CheckEntry(const cc_string* path) {
 
 static void SoundAssets_CheckExistence(void) {
 	soundEntriesFound = 0;
-	ZipFile_InspectEntries(&Sounds_DefaultZipPath, SoundAssets_CheckEntry);
+	ZipFile_InspectEntries(&Sounds_ZipPathMC, SoundAssets_CheckEntry);
 
 	/* >= in case somehow have say "gui.png", "GUI.png" */
 	allSoundsExist = soundEntriesFound >= Array_Elems(soundAssets);
@@ -587,8 +588,8 @@ static void SoundAssets_CheckExistence(void) {
 static void SoundAssets_CountMissing(void) {
 	if (allSoundsExist) return;
 
-	Resources_Count += Array_Elems(soundAssets);
-	Resources_Size  += 417;
+	Resources_MissingCount += Array_Elems(soundAssets);
+	Resources_MissingSize  += 417;
 }
 
 
@@ -608,7 +609,7 @@ static void SoundAsset_CreateZip(void) {
 		entries[i].size       = soundAssets[i].size;
 	}
 
-	ZipFile_Create(&Sounds_DefaultZipPath, entries, Array_Elems(soundAssets));
+	ZipFile_Create(&Sounds_ZipPathMC, entries, Array_Elems(soundAssets));
 	SoundAssets_ResetState();
 }
 
@@ -681,8 +682,9 @@ static void CCTextures_CheckExistence(void) {
 static void CCTextures_CountMissing(void) {
 	if (ccTexturesExist) return;
 
-	Resources_Count++;
-	Resources_Size += 83;
+	Resources_MissingCount++;
+	Resources_MissingSize += 83;
+	Resources_MissingRequired = true;
 }
 
 
@@ -1076,8 +1078,8 @@ static void MCCTextures_CountMissing(void) {
 	if (Game_Version.Version > VERSION_0023) numDefaultZipSources--;
 
 	for (i = 0; i < numDefaultZipSources; i++) {
-		Resources_Count++;
-		Resources_Size += defaultZipSources[i].size;
+		Resources_MissingCount++;
+		Resources_MissingSize += defaultZipSources[i].size;
 	}
 }
 
@@ -1171,8 +1173,8 @@ static const struct AssetSet* const asset_sets[] = {
 
 static void ResetState() {
 	int i;
-	Resources_Count = 0;
-	Resources_Size  = 0;
+	Resources_MissingCount = 0;
+	Resources_MissingSize  = 0;
 
 	for (i = 0; i < Array_Elems(asset_sets); i++)
 	{
@@ -1258,7 +1260,7 @@ void Fetcher_Update(void) {
 		asset_sets[i]->CheckStatus();
 	}
 
-	if (Fetcher_Downloaded != Resources_Count) return; 
+	if (Fetcher_Downloaded != Resources_MissingCount) return; 
 	Fetcher_Finish();
 }
 #endif

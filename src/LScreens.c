@@ -1012,9 +1012,11 @@ static void CheckResourcesScreen_Next(void* w) {
 }
 
 static void CheckResourcesScreen_AddWidgets(struct CheckResourcesScreen* s) {
+	const char* line1_msg = Resources_MissingRequired ? "Some required resources weren't found" 
+														: "Some optional resources weren't found";
 	s->lblStatus.small = true;
 
-	LLabel_Add(s,  &s->lblLine1,  "Some required resources weren't found", cres_lblLine1);
+	LLabel_Add(s,  &s->lblLine1,  line1_msg,           cres_lblLine1);
 	LLabel_Add(s,  &s->lblLine2,  "Okay to download?", cres_lblLine2);
 	LLabel_Add(s,  &s->lblStatus, "",                  cres_lblStatus);
 
@@ -1030,7 +1032,7 @@ static void CheckResourcesScreen_Activated(struct LScreen* s_) {
 	float size;
 	CheckResourcesScreen_AddWidgets(s);
 		
-	size = Resources_Size / 1024.0f;
+	size = Resources_MissingSize / 1024.0f;
 	String_InitArray(str, buffer);
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
 	LLabel_SetText(&s->lblStatus, &str);
@@ -1121,7 +1123,7 @@ static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, in
 
 	String_InitArray(str, strBuffer);
 	count = Fetcher_Downloaded + 1;
-	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
+	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_MissingCount);
 
 	if (String_Equals(&str, &s->lblStatus.text)) return;
 	LLabel_SetText(&s->lblStatus, &str);

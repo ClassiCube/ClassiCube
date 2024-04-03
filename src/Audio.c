@@ -17,8 +17,10 @@
 /* TODO: Refactor maybe to not rely on checking WinInfo.Handle != NULL */
 #include "Window.h"
 #endif
+
 int Audio_SoundsVolume, Audio_MusicVolume;
-const cc_string Sounds_DefaultZipPath = String_FromConst("audio/default.zip");
+const cc_string Sounds_ZipPathMC  = String_FromConst("audio/default.zip");
+const cc_string Sounds_ZipPathCC = String_FromConst("audio/classicube.zip");
 static const cc_string audio_dir = String_FromConst("audio");
 
 struct Sound {
@@ -219,18 +221,19 @@ static cc_result ProcessZipEntry(const cc_string* path, struct Stream* stream, s
 	return 0;
 }
 
-static void Sounds_ExtractZip(const cc_string* path) {
+static cc_result Sounds_ExtractZip(const cc_string* path) {
 	struct Stream stream;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
-	if (res) { Logger_SysWarn2(res, "opening", path);    return res; }
+	if (res) { Logger_SysWarn2(res, "opening", path); return res; }
 
 	res = Zip_Extract(&stream, SelectZipEntry, ProcessZipEntry);
-	if (res) { Logger_SysWarn2(res, "extracting", path); return res; }
+	if (res) Logger_SysWarn2(res, "extracting", path);
 
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);
+	return res;
 }
 
 /* TODO this is a pretty terrible solution */
@@ -275,6 +278,7 @@ static void InitWebSounds(void) {
 
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
+	cc_result res;
 	if (!AudioBackend_Init()) { 
 		AudioBackend_Free(); 
 		Audio_SoundsVolume = 0; 
@@ -286,7 +290,9 @@ static void Sounds_Start(void) {
 #ifdef CC_BUILD_WEBAUDIO
 	InitWebSounds();
 #else
-	Sounds_ExtractZip(&Sounds_DefaultZipPath);
+	res = Sounds_ExtractZip(&Sounds_ZipPathMC);
+	if (res == ReturnCode_FileNotFound)
+		Sounds_ExtractZip(&Sounds_ZipPathCC);
 #endif
 }
 
