@@ -385,7 +385,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_SOFTGPU
-	#define CC_BUILD_PORTABLEGL
 	#define CC_BUILD_SDL
 	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE

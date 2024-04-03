@@ -268,18 +268,31 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	String_EncodeUtf8(str, path);
+
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
+#if !defined CC_BUILD_OS2
 	return File_Do(file, path, O_RDONLY);
+#else
+	return File_Do(file, path, O_RDONLY | O_BINARY);
+#endif
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
+#if !defined CC_BUILD_OS2
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+#else
+	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
+#endif
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+#if !defined CC_BUILD_OS2
+	return File_Do(file, path, O_RDWR | O_CREAT | O_BINARY);
+#else
+	return File_Do(file, path, O_RDWR | O_CREAT | O_BINARY);
+#endif
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {

@@ -180,8 +180,8 @@ static const cc_string curlAlt = String_FromConst("libcurl.so");
 static const cc_string curlLib = String_FromConst("/usr/local/lib/libcurl.so");
 static const cc_string curlAlt = String_FromConst("/usr/local/lib/libcurl.so");
 #elif defined CC_BUILD_OS2
-static const cc_string curlLib = String_FromConst("/@unixroot/usr/lib/curl7.dll");
-static const cc_string curlAlt = String_FromConst("/@unixroot/usr/local/lib/curl7.dll");
+static const cc_string curlLib = String_FromConst("/@unixroot/usr/lib/curl4.dll");
+static const cc_string curlAlt = String_FromConst("/@unixroot/usr/local/lib/curl4.dll");
 #else
 static const cc_string curlLib = String_FromConst("libcurl.so.4");
 static const cc_string curlAlt = String_FromConst("libcurl.so.3");

@@ -34,18 +34,16 @@ C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 OBJECTS := $(C_OBJECTS) $(BUILD_DIR)/$(TARGET).res misc/os2/classicube.def
 ENAME   = ClassiCube
 DEL     = rm -f
-CFLAGS  = -g -pipe -fno-math-errno
-LDFLAGS = -g -rdynamic
 APP_TITLE 	:= ClassiCube
 APP_AUTHOR 	:= UnknownShadow200
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-CC      = gcc
-CFLAGS	:=	-O3 -g -march=pentium4 -idirafter /@unixroot/usr/include/os2tk45 -DOS2
-LDFLAGS	=	-Zhigh-mem -Zomf -Zargs-wild -Zargs-resp -Zlinker DISABLE -Zlinker 1121
-LIBS	:= -lcx -lmmpm2 -lpthread -lSDL2
+CC      := gcc
+CFLAGS	:= -pipe -fno-math-errno -O3 -g -mtune=pentium4 -msse2 -march=i686 -idirafter /@unixroot/usr/include/os2tk45 -DOS2
+LDFLAGS	:=	-Zhigh-mem -Zomf -Zargs-wild -Zargs-resp -Zlinker DISABLE -Zlinker 1121
+LIBS	  := -lcx -lmmpm2 -lpthread -lSDL2
 
 $(TARGET).exe: $(BUILD_DIR) $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
