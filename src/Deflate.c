@@ -1126,7 +1126,7 @@ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stre
 /*########################################################################################################################*
 *--------------------------------------------------------ZipReader--------------------------------------------------------*
 *#########################################################################################################################*/
-#define ZIP_MAXNAMELEN 512
+#define ZIP_MAXNAMELEN  512
 #define ZIP_MAX_ENTRIES 1024
 
 /* Stores state for reading and processing entries in a .zip archive */
@@ -1216,7 +1216,6 @@ static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
 	if (state->usedEntries >= ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 	entry = &state->entries[state->usedEntries++];
 
-	entry->CRC32             = Stream_GetU32_LE(&header[12]);
 	entry->CompressedSize    = Stream_GetU32_LE(&header[16]);
 	entry->UncompressedSize  = Stream_GetU32_LE(&header[20]);
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&header[38]);

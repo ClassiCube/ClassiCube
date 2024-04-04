@@ -110,12 +110,12 @@ static void HandleButtons(u32 mods) {
 }
 
 #define AXIS_SCALE 8.0f
-static void ProcessJoystickInput(circlePosition* pos, double delta) {
+static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->dx) <= 16) pos->dx = 0;
 	if (Math_AbsI(pos->dy) <= 16) pos->dy = 0;
 		
-	Gamepad_SetAxis(PAD_AXIS_RIGHT, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
+	Gamepad_SetAxis(axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
 
 static void ProcessTouchInput(int mods) {
@@ -143,16 +143,15 @@ void Window_ProcessEvents(double delta) {
 
 	ProcessTouchInput(mods);
 	
-	if (Input.RawMode) {
-		circlePosition pos;
-		hidCircleRead(&pos);
-		ProcessJoystickInput(&pos, delta);
-	}
-	if (Input.RawMode && irrst_result == 0) {
-		circlePosition pos;
+	circlePosition hid_pos;
+	hidCircleRead(&hid_pos);
+	ProcessCircleInput(PAD_AXIS_RIGHT, &hid_pos, delta);
+
+	if (irrst_result == 0) {
+		circlePosition stk_pos;
 		irrstScanInput();
-		irrstCstickRead(&pos);
-		ProcessJoystickInput(&pos, delta);
+		irrstCstickRead(&stk_pos);
+		ProcessCircleInput(PAD_AXIS_LEFT, &stk_pos, delta);
 	}
 }
 

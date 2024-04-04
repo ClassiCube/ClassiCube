@@ -120,7 +120,7 @@ CC_API  void ZLib_MakeStream(      struct Stream* stream, struct ZLibState* stat
 typedef void (*FP_ZLib_MakeStream)(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
 /* Minimal data needed to describe an entry in a .zip archive */
-struct ZipEntry { cc_uint32 CompressedSize, UncompressedSize, LocalHeaderOffset, CRC32; };
+struct ZipEntry { cc_uint32 CompressedSize, UncompressedSize, LocalHeaderOffset; };
 /* Callback function to process the data in a .zip archive entry */
 /* Return non-zero to indicate an error and stop further processing */
 /* NOTE: data stream MAY NOT be seekable (i.e. entry data might be compressed) */

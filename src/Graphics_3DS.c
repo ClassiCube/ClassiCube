@@ -129,7 +129,7 @@ static void SetDefaultState(void) {
 }
 
 static void InitCitro3D(void) {	
-	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 2);
 
 	topTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(topTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
