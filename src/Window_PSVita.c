@@ -41,6 +41,7 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
