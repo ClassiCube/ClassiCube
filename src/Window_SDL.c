@@ -9,7 +9,34 @@
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
 
-#warning "Some features are missing from the SDL2 backend. If possible, it is recommended that you use a native windowing backend instead"
+#ifndef CC_BUILD_OS2
+#error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+#else
+#define INCL_PM
+#include <os2.h>
+// Internal OS/2 driver data
+typedef struct _WINDATA {
+    SDL_Window     *window;
+    void					 *pOutput; /* Video output routines */
+    HWND            hwndFrame;
+    HWND            hwnd;
+    PFNWP           fnUserWndProc;
+    PFNWP           fnWndFrameProc;
+
+    void         		*pVOData; /* Video output data */
+
+    HRGN            hrgnShape;
+    HPOINTER        hptrIcon;
+    RECTL           rectlBeforeFS;
+
+    LONG            lSkipWMSize;
+    LONG            lSkipWMMove;
+    LONG            lSkipWMMouseMove;
+    LONG            lSkipWMVRNEnabled;
+    LONG            lSkipWMAdjustFramePos;
+} WINDATA;
+#endif
+
 
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
@@ -51,7 +78,11 @@ static void DoCreateWindow(int width, int height, int flags) {
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
+#if !defined CC_BUILD_SOFTGPU
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
+#else
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
+#endif
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
@@ -280,11 +311,53 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+#if defined CC_BUILD_OS2
+	FILEDLG fileDialog;
+	HWND hDialog;
+
+	memset(&fileDialog, 0, sizeof(FILEDLG));
+	fileDialog.cbSize = sizeof(FILEDLG);
+	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_OPEN_DIALOG;
+	fileDialog.pszTitle = args->description;
+	fileDialog.pszOKButton = NULL;
+	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+
+	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	hDialog = WinFileDlg(HWND_DESKTOP, 0, &fileDialog);
+	if (fileDialog.lReturn == DID_OK) {
+		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH); 
+		args->Callback(&temp);
+	}
+	
+	return 0;
+#else
 	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+#if defined CC_BUILD_OS2
+	FILEDLG fileDialog;
+	HWND hDialog;
+
+	memset(&fileDialog, 0, sizeof(FILEDLG));
+	fileDialog.cbSize = sizeof(FILEDLG);
+	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_SAVEAS_DIALOG;
+	fileDialog.pszTitle = args->titles;
+	fileDialog.pszOKButton = NULL;
+	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+
+	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	hDialog = WinFileDlg(HWND_DESKTOP, 0, &fileDialog);
+	if (fileDialog.lReturn == DID_OK) {
+		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
+		args->Callback(&temp);
+	}
+	
+	return 0;
+#else
 	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 static SDL_Surface* win_surface;
@@ -395,5 +468,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	SDL_GL_SetSwapInterval(vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
+
 #endif
 #endif

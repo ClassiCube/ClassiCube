@@ -283,9 +283,9 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct Vector4 { float X, Y, Z, W; } Vector4;
-typedef struct Vector3 { float X, Y, Z; } Vector3;
-typedef struct Vector2 { float X, Y; } Vector2;
+typedef struct Vector4 { float x, y, z, w; } Vector4;
+typedef struct Vector3 { float x, y, z; } Vector3;
+typedef struct Vector2 { float x, y; } Vector2;
 
 static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* color) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
@@ -301,7 +301,7 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	frag->x = vp_hwidth  * (1 + coord.x / coord.w);
 	frag->y = vp_hheight * (1 - coord.y / coord.w);
 	frag->z = coord.z / coord.w;
-	frag.w = 1.0f    / coord.w;
+	frag->w = 1.0f    / coord.w;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;

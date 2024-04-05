@@ -1553,6 +1553,12 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { return false; }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) { return false; }
+
+cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	return ERR_NOT_SUPPORTED;
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) { }
 #endif
 
 

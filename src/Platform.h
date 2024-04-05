@@ -121,6 +121,9 @@ extern const cc_string DynamicLib_Ext;
 #define DYNAMICLIB_QUOTE(x) #x
 #define DynamicLib_Sym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&_ ## sym }
 #define DynamicLib_Sym2(name, sym) { name,           (void**)&_ ## sym }
+#if defined CC_BUILD_OS2
+#define DynamicLib_SymC(sym) { DYNAMICLIB_QUOTE(_ ## sym), (void**)&_ ## sym }
+#endif
 
 CC_API cc_result DynamicLib_Load(const cc_string* path, void** lib); /* OBSOLETE */
 CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */

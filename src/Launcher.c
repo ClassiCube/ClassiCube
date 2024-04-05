@@ -419,6 +419,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 	struct Bitmap bmp;
 	cc_result res;
 
+
 	if (String_CaselessEqualsConst(path, "default.png")) {
 		if (hasBitmappedFont) return 0;
 		hasBitmappedFont = false;
@@ -455,7 +456,6 @@ static cc_result ExtractTexturePack(const cc_string* path) {
 
 	res = Zip_Extract(&stream, 
 			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
-
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);

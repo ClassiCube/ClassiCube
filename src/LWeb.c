@@ -219,6 +219,7 @@ static void LWebTask_Reset(struct LWebTask* task) {
 
 void LWebTask_Tick(struct LWebTask* task, LWebTask_ErrorCallback errorCallback) {
 	struct HttpRequest item;
+
 	if (task->completed) return;
 	if (!Http_GetResult(task->reqID, &item)) return;
 
