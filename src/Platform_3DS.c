@@ -48,18 +48,8 @@ unsigned int __stacksize__ = 256 * 1024;
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	//cc_file fd = -1;
-	// CITRA LOGGING
-	//cc_string path = String_Init(msg, len, len);
-	//File_Open(&fd, &path);
-	//if (fd > 0) File_Close(fd);
-	
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
-
 	// output to debug service (visible in Citra with log level set to "Debug.Emulated:Debug", or on console via remote gdb)
 	svcOutputDebugString(msg, len);
-	svcOutputDebugString("\n", 1);
 }
 
 TimeMS DateTime_CurrentUTC(void) {

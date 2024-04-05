@@ -112,8 +112,8 @@ static void HandleButtons(u32 mods) {
 #define AXIS_SCALE 8.0f
 static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
 	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(pos->dx) <= 32) pos->dx = 0;
-	if (Math_AbsI(pos->dy) <= 32) pos->dy = 0;
+	if (Math_AbsI(pos->dx) <= 24) pos->dx = 0;
+	if (Math_AbsI(pos->dy) <= 24) pos->dy = 0;
 		
 	Gamepad_SetAxis(axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
@@ -131,6 +131,7 @@ static void ProcessTouchInput(int mods) {
 
 void Window_ProcessEvents(double delta) {
 	hidScanInput();
+	Input.JoystickMovement = false;
 
 	if (!aptMainLoop()) {
 		Window_Main.Exists = false;

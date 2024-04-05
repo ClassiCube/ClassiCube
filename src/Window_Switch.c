@@ -150,6 +150,7 @@ static void ProcessTouchInput(void) {
 void Window_ProcessEvents(double delta) {
 	// Scan the gamepad. This should be done once for each frame
 	padUpdate(&pad);
+	Input.JoystickMovement = false;
 
 	if (!appletMainLoop()) {
 		Window_Main.Exists = false;

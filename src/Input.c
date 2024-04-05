@@ -438,7 +438,7 @@ void Gamepad_SetAxis(int axis, float x, float y, double delta) {
 		if (x == 0 && y == 0) return;
 
 		Input.JoystickMovement = true;
-		Input.JoystickAngle    = Math_Atan2(x, -y);
+		Input.JoystickAngle    = Math_Atan2(x, y);
 	} else {
 		int sensi   = Gamepad_AxisSensitivity[axis];
 		float scale = delta * 60.0 * axis_sensiFactor[sensi];

@@ -151,6 +151,9 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512;
+	
+	Gfx.MinTexWidth  = 8;
+	Gfx.MinTexHeight = 8;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -306,12 +309,12 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	struct GPUTexture* tex = GPUTexture_Alloc();
 	bool success = C3D_TexInit(&tex->texture, bmp->width, bmp->height, GPU_RGBA8);
-	//if (!success) Logger_Abort("Failed to create 3DS texture");
+	if (!success) return NULL;
 	
 	ToMortonTexture(&tex->texture,  0, 0, bmp, bmp->width);
-    	C3D_TexSetFilter(&tex->texture, GPU_NEAREST, GPU_NEAREST);
-    	C3D_TexSetWrap(&tex->texture,   GPU_REPEAT,  GPU_REPEAT);
-    	return tex;
+    C3D_TexSetFilter(&tex->texture, GPU_NEAREST, GPU_NEAREST);
+    C3D_TexSetWrap(&tex->texture,   GPU_REPEAT,  GPU_REPEAT);
+    return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {

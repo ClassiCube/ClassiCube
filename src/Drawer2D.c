@@ -157,6 +157,9 @@ void Context2D_Alloc(struct Context2D* ctx, int width, int height) {
 		width  = Math_NextPowOf2(width);
 		height = Math_NextPowOf2(height);
 	}
+	
+	if (Gfx.MinTexWidth)  { width  = max(width,  Gfx.MinTexWidth);  }
+	if (Gfx.MinTexHeight) { height = max(height, Gfx.MinTexHeight); }
 
 	ctx->bmp.width  = width; 
 	ctx->bmp.height = height;

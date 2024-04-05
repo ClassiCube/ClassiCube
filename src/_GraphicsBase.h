@@ -374,6 +374,9 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags) {
 	if (width  > Gfx.MaxTexWidth)  return false;
 	if (height > Gfx.MaxTexHeight) return false;
 	
+	if (Gfx.MinTexWidth  && width  < Gfx.MinTexWidth)  return false;
+	if (Gfx.MinTexHeight && height < Gfx.MinTexHeight) return false;
+	
 	maxSize = Gfx.MaxTexSize;
 	// low resolution textures may support higher sizes (e.g. Nintendo 64)
 	if ((flags & TEXTURE_FLAG_LOWRES) && Gfx.MaxLowResTexSize)

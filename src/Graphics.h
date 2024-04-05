@@ -61,6 +61,9 @@ CC_VAR extern struct _GfxData {
 	/* Maximum total size in pixels a low resolution texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxLowResTexSize;
+	/* Minimum dimensions in pixels that a texture must be */
+	/* NOTE: Most graphics backends do not use this */
+	int MinTexWidth, MinTexHeight;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
