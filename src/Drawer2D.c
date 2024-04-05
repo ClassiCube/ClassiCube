@@ -307,12 +307,12 @@ void Context2D_MakeTexture(struct Texture* tex, struct Context2D* ctx) {
 	int flags = TEXTURE_FLAG_NONPOW2 | TEXTURE_FLAG_LOWRES;
 	Gfx_RecreateTexture(&tex->ID, &ctx->bmp, flags, false);
 	
-	tex->Width  = ctx->width;
-	tex->Height = ctx->height;
+	tex->width  = ctx->width;
+	tex->height = ctx->height;
 	
-	tex->uv.U1  = 0.0f; tex->uv.V1 = 0.0f;
-	tex->uv.U2  = (float)ctx->width  / (float)ctx->bmp.width;
-	tex->uv.V2  = (float)ctx->height / (float)ctx->bmp.height;
+	tex->uv.u1  = 0.0f; tex->uv.v1 = 0.0f;
+	tex->uv.u2  = (float)ctx->width  / (float)ctx->bmp.width;
+	tex->uv.v2  = (float)ctx->height / (float)ctx->bmp.height;
 }
 
 cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
@@ -398,10 +398,10 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 	float vAdj;
 	if (!Drawer2D.BitmappedText) return;
 
-	padding = (tex->Height - point) / scale;
-	vAdj    = (float)padding / Math_NextPowOf2(tex->Height);
-	tex->uv.V1 += vAdj; tex->uv.V2 -= vAdj;
-	tex->Height -= (cc_uint16)(padding * 2);
+	padding = (tex->height - point) / scale;
+	vAdj    = (float)padding / Math_NextPowOf2(tex->height);
+	tex->uv.v1 += vAdj; tex->uv.v2 -= vAdj;
+	tex->height -= (cc_uint16)(padding * 2);
 }
 
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {

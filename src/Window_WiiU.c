@@ -134,11 +134,11 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//OSScreenClearBufferEx(SCREEN_TV, 0x665544FF);
    
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		
-		for (int x = r.x; x < r.x + r.Width; x++) {
+		for (int x = r.x; x < r.x + r.width; x++) {
 			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
 		}
 	}

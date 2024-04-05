@@ -730,7 +730,7 @@ static cc_result Inflate_StreamRead(struct Stream* stream, cc_uint8* data, cc_ui
 	cc_result res;
 
 	*modified = 0;
-	state = (struct InflateState*)stream->Meta.Inflate;
+	state = (struct InflateState*)stream->meta.inflate;
 	state->Output   = data;
 	state->AvailOut = count;
 
@@ -764,7 +764,7 @@ static cc_result Inflate_StreamRead(struct Stream* stream, cc_uint8* data, cc_ui
 void Inflate_MakeStream2(struct Stream* stream, struct InflateState* state, struct Stream* underlying) {
 	Stream_Init(stream);
 	Inflate_Init2(state, underlying);
-	stream->Meta.Inflate = state;
+	stream->meta.inflate = state;
 	stream->Read = Inflate_StreamRead;
 }
 
@@ -941,7 +941,7 @@ static cc_result Deflate_StreamWrite(struct Stream* stream, const cc_uint8* data
 	struct DeflateState* state;
 	cc_result res;
 
-	state = (struct DeflateState*)stream->Meta.Inflate;
+	state = (struct DeflateState*)stream->meta.inflate;
 	*modified = 0;
 
 	while (total > 0) {
@@ -970,7 +970,7 @@ static cc_result Deflate_StreamClose(struct Stream* stream) {
 	struct DeflateState* state;
 	cc_result res;
 
-	state = (struct DeflateState*)stream->Meta.Inflate;
+	state = (struct DeflateState*)stream->meta.inflate;
 	res   = Deflate_FlushBlock(state, state->InputPosition - DEFLATE_BLOCK_SIZE);
 	if (res) return res;
 
@@ -1009,7 +1009,7 @@ static void Deflate_BuildTable(const cc_uint8* lens, int count, cc_uint16* codew
 
 void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying) {
 	Stream_Init(stream);
-	stream->Meta.Inflate = state;
+	stream->meta.inflate = state;
 	stream->Write = Deflate_StreamWrite;
 	stream->Close = Deflate_StreamClose;
 
@@ -1033,7 +1033,7 @@ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struc
 *-----------------------------------------------------GZip (compress)-----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result GZip_StreamClose(struct Stream* stream) {
-	struct GZipState* state = (struct GZipState*)stream->Meta.Inflate;
+	struct GZipState* state = (struct GZipState*)stream->meta.inflate;
 	cc_uint8 data[8];
 	cc_result res;
 
@@ -1044,7 +1044,7 @@ static cc_result GZip_StreamClose(struct Stream* stream) {
 }
 
 static cc_result GZip_StreamWrite(struct Stream* stream, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	struct GZipState* state = (struct GZipState*)stream->Meta.Inflate;
+	struct GZipState* state = (struct GZipState*)stream->meta.inflate;
 	cc_uint32 i, crc32 = state->Crc32;
 	state->Size += count;
 
@@ -1059,7 +1059,7 @@ static cc_result GZip_StreamWrite(struct Stream* stream, const cc_uint8* data, c
 
 static cc_result GZip_StreamWriteFirst(struct Stream* stream, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	static cc_uint8 header[10] = { 0x1F, 0x8B, 0x08 }; /* GZip header */
-	struct GZipState* state = (struct GZipState*)stream->Meta.Inflate;
+	struct GZipState* state = (struct GZipState*)stream->meta.inflate;
 	cc_result res;
 
 	if ((res = Stream_Write(state->Base.Dest, header, sizeof(header)))) return res;
@@ -1080,7 +1080,7 @@ void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stre
 *-----------------------------------------------------ZLib (compress)-----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result ZLib_StreamClose(struct Stream* stream) {
-	struct ZLibState* state = (struct ZLibState*)stream->Meta.Inflate;
+	struct ZLibState* state = (struct ZLibState*)stream->meta.inflate;
 	cc_uint8 data[4];
 	cc_result res;
 
@@ -1090,7 +1090,7 @@ static cc_result ZLib_StreamClose(struct Stream* stream) {
 }
 
 static cc_result ZLib_StreamWrite(struct Stream* stream, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	struct ZLibState* state = (struct ZLibState*)stream->Meta.Inflate;
+	struct ZLibState* state = (struct ZLibState*)stream->meta.inflate;
 	cc_uint32 i, adler32 = state->Adler32;
 	cc_uint32 s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
 
@@ -1107,7 +1107,7 @@ static cc_result ZLib_StreamWrite(struct Stream* stream, const cc_uint8* data, c
 
 static cc_result ZLib_StreamWriteFirst(struct Stream* stream, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	static cc_uint8 header[2] = { 0x78, 0x9C }; /* ZLib header */
-	struct ZLibState* state = (struct ZLibState*)stream->Meta.Inflate;
+	struct ZLibState* state = (struct ZLibState*)stream->meta.inflate;
 	cc_result res;
 
 	if ((res = Stream_Write(state->Base.Dest, header, sizeof(header)))) return res;

@@ -219,7 +219,7 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	Vec3_Negate(&dir, &dir);
 
 	Picking_ClipCameraPos(&target, &dir, dist, &cameraClipPos);
-	return cameraClipPos.Intersect;
+	return cameraClipPos.intersect;
 }
 
 static cc_bool ThirdPersonCamera_Zoom(float amount) {

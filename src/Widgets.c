@@ -79,11 +79,11 @@ void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc
 	Drawer2D_MakeTextTexture(&w->tex, &args);
 
 	/* Give text widget default height when text is empty */
-	if (!w->tex.Height) {
-		w->tex.Height = Font_CalcHeight(font, true);
+	if (!w->tex.height) {
+		w->tex.height = Font_CalcHeight(font, true);
 	}
 
-	w->width = w->tex.Width; w->height = w->tex.Height;
+	w->width = w->tex.width; w->height = w->tex.height;
 	Widget_Layout(w);
 }
 
@@ -111,12 +111,12 @@ static void ButtonWidget_Free(void* widget) {
 
 static void ButtonWidget_Reposition(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
-	w->width  = max(w->tex.Width,  w->minWidth);
-	w->height = max(w->tex.Height, w->minHeight);
+	w->width  = max(w->tex.width,  w->minWidth);
+	w->height = max(w->tex.height, w->minHeight);
 
 	Widget_CalcPosition(w);
-	w->tex.x = w->x + (w->width  / 2 - w->tex.Width  / 2);
-	w->tex.y = w->y + (w->height / 2 - w->tex.Height / 2);
+	w->tex.x = w->x + (w->width  / 2 - w->tex.width  / 2);
+	w->tex.y = w->y + (w->height / 2 - w->tex.height / 2);
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
@@ -133,8 +133,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
 	back.ID = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
-	back.x = w->x; back.Width  = w->width;
-	back.y = w->y; back.Height = w->height;
+	back.x = w->x; back.width  = w->width;
+	back.y = w->y; back.height = w->height;
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
@@ -145,12 +145,12 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		scale = (w->width / 400.0f) / (2 * DisplayInfo.ScaleX);
 		Gfx_BindTexture(back.ID); /* avoid bind twice */
 
-		back.Width = (w->width / 2);
-		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
+		back.width = (w->width / 2);
+		back.uv.u1 = 0.0f; back.uv.u2 = BUTTON_uWIDTH * scale;
 		Gfx_Draw2DTexture(&back, w->color);
 
 		back.x += (w->width / 2);
-		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
+		back.uv.u1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.u2 = BUTTON_uWIDTH;
 		Gfx_Draw2DTexture(&back, w->color);
 	}
 
@@ -173,8 +173,8 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->flags & WIDGET_FLAG_DISABLED) back = btnDisabledTex;
 
-	back.x = w->x; back.Width  = w->width;
-	back.y = w->y; back.Height = w->height;
+	back.x = w->x; back.width  = w->width;
+	back.y = w->y; back.height = w->height;
 
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
@@ -185,12 +185,12 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 		/* Split button down the middle */
 		scale = (w->width / 400.0f) / (2 * DisplayInfo.ScaleX);
 
-		back.Width = (w->width / 2);
-		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
+		back.width = (w->width / 2);
+		back.uv.u1 = 0.0f; back.uv.u2 = BUTTON_uWIDTH * scale;
 		Gfx_Make2DQuad(&back, w->color, vertices);
 
 		back.x += (w->width / 2);
-		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
+		back.uv.u1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.u2 = BUTTON_uWIDTH;
 		Gfx_Make2DQuad(&back, w->color, vertices);
 	}
 
@@ -243,8 +243,8 @@ void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct Font
 	Drawer2D_MakeTextTexture(&w->tex, &args);
 
 	/* Give button default height when text is empty */
-	if (!w->tex.Height) {
-		w->tex.Height = Font_CalcHeight(font, true);
+	if (!w->tex.height) {
+		w->tex.height = Font_CalcHeight(font, true);
 	}
 	Widget_Layout(w);
 }
@@ -1106,7 +1106,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	if (!w->caretTex.ID) {
 		DrawTextArgs_Make(&args, &caret, w->font, true);
 		Drawer2D_MakeTextTexture(&w->caretTex, &args);
-		w->caretWidth = (cc_uint16)((w->caretTex.Width * 3) / 4);
+		w->caretWidth = (cc_uint16)((w->caretTex.width * 3) / 4);
 	}
 	
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
@@ -1115,7 +1115,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	DrawTextArgs_MakeEmpty(&args, w->font, false);
 	w->caretAccumulator = 0;
-	w->caretTex.Width   = w->caretWidth;
+	w->caretTex.width   = w->caretWidth;
 
 	/* Caret is at last character on line */
 	if (w->caretX == INPUTWIDGET_LEN) {
@@ -1131,7 +1131,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 		if (w->caretX < line.length) {
 			args.text = String_UNSAFE_Substring(&line, w->caretX, 1);
 			args.useShadow = true;
-			w->caretTex.Width = Drawer2D_TextWidth(&args);
+			w->caretTex.width = Drawer2D_TextWidth(&args);
 		}
 	}
 
@@ -1786,7 +1786,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		if (i > 0 && !w->lines[i].length) break;
 
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
-		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
+		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.width : 0);
 		/* Cover whole window width to match Minecraft behaviour */
 		width      = max(width, Window_Main.Width - x * 4);
 	
@@ -2021,7 +2021,7 @@ int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 	}
 	for (; i < w->lines; i++) 
 	{
-		height += textures[i].Height;
+		height += textures[i].height;
 	}
 	return height;
 }
@@ -2034,8 +2034,8 @@ static void TextGroupWidget_Reposition(void* widget) {
 	/* Work out how big the text group is now */
 	for (i = 0; i < w->lines; i++) 
 	{
-		width = max(width, textures[i].Width);
-		height += textures[i].Height;
+		width = max(width, textures[i].width);
+		height += textures[i].height;
 	}
 
 	w->width = width; w->height = height;
@@ -2043,9 +2043,9 @@ static void TextGroupWidget_Reposition(void* widget) {
 
 	for (i = 0, y = w->y; i < w->lines; i++) 
 	{
-		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Main.Width);
+		textures[i].x = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].width, Window_Main.Width);
 		textures[i].y = y;
-		y += textures[i].Height;
+		y += textures[i].height;
 	}
 }
 
@@ -2232,7 +2232,7 @@ int TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int 
 	{
 		if (!w->textures[i].ID) continue;
 		tex = w->textures[i];
-		if (!Gui_Contains(tex.x, tex.y, tex.Width, tex.Height, x, y)) continue;
+		if (!Gui_Contains(tex.x, tex.y, tex.width, tex.height, x, y)) continue;
 
 		if (!TextGroupWidget_GetUrl(w, text, i, x)) {
 			line = TextGroupWidget_UNSAFE_Get(w, i);
@@ -2318,10 +2318,10 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		}
 		Drawer2D_ReducePadding_Tex(&tex, w->font->size, 3);
 	} else {
-		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
+		tex.height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
-	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Main.Width);
+	tex.x = Gui_CalcPos(w->horAnchor, w->xOffset, tex.width, Window_Main.Width);
 	w->textures[index] = tex;
 	Widget_Layout(w);
 }
@@ -2355,7 +2355,7 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 
 	for (i = 0; i < w->lines; i++) 
 	{
-		w->textures[i].Height = w->collapsible[i] ? 0 : height;
+		w->textures[i].height = w->collapsible[i] ? 0 : height;
 	}
 	w->font = font;
 	Widget_Layout(w);
@@ -2628,8 +2628,8 @@ static void SpecialInputWidget_Free(void* widget) {
 
 static void SpecialInputWidget_Reposition(void* widget) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
-	w->width  = w->tex.Width;
-	w->height = w->active ? w->tex.Height : 0;
+	w->width  = w->tex.width;
+	w->height = w->active ? w->tex.height : 0;
 	Widget_CalcPosition(w);
 	w->tex.x = w->x; w->tex.y = w->y;
 }

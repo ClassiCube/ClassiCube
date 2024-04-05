@@ -162,12 +162,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	rect.w = SCREEN_XRES;
 	rect.h = SCREEN_YRES;
 
-	for (int y = r.y; y < r.y + r.Height; y++)
+	for (int y = r.y; y < r.y + r.height; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		cc_uint16* dst = fb         + y * bmp->width;
 		
-		for (int x = r.x; x < r.x + r.Width; x++) {
+		for (int x = r.x; x < r.x + r.width; x++) {
 			cc_uint8* color = (cc_uint8*)&src[x];
 			dst[x] = BGRA8_to_PS1(color);
 		}

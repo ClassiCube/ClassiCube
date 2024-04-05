@@ -129,11 +129,11 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 	/* Make "Position: " prefix */
 	tex = atlas->tex; 
 	tex.x     = 2 + DisplayInfo.ContentOffsetX;
-	tex.Width = atlas->offset;
+	tex.width = atlas->offset;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &cur);
 
 	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
-	atlas->curX = tex.x + tex.Width;
+	atlas->curX = tex.x + tex.width;
 
 	/* Make (X, Y, Z) suffix */
 	TextAtlas_Add(atlas,       13, &cur);
@@ -235,7 +235,7 @@ static void HUDScreen_Layout(void* screen) {
 		Widget_Layout(line1);
 	} else {
 		/* We can't use y in TextWidget_Make because that DPI scales it */
-		line2->yOffset = posY + s->posAtlas.tex.Height;
+		line2->yOffset = posY + s->posAtlas.tex.height;
 	}
 
 	HUDScreen_LayoutHotbar();
@@ -352,8 +352,8 @@ static void HUDScreen_BuildCrosshairsMesh(struct VertexTextured** ptr) {
 	tex.x  = (Window_Main.Width  / 2) - extent;
 	tex.y  = (Window_Main.Height / 2) - extent;
 
-	tex.Width  = extent * 2;
-	tex.Height = extent * 2;
+	tex.width  = extent * 2;
+	tex.height = extent * 2;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
 }
 
@@ -467,7 +467,7 @@ static int TabListOverlay_GetColumnWidth(struct TabListOverlay* s, int column) {
 
 	for (; i < end; i++) 
 	{
-		maxWidth = max(maxWidth, s->textures[i].Width);
+		maxWidth = max(maxWidth, s->textures[i].width);
 	}
 	return maxWidth + LIST_COLUMN_PADDING + s->elementOffset;
 }
@@ -479,7 +479,7 @@ static int TabListOverlay_GetColumnHeight(struct TabListOverlay* s, int column) 
 
 	for (; i < end; i++) 
 	{
-		height += s->textures[i].Height + 1;
+		height += s->textures[i].height + 1;
 	}
 	return height;
 }
@@ -494,7 +494,7 @@ static void TabListOverlay_SetColumnPos(struct TabListOverlay* s, int column, in
 		tex = s->textures[i];
 		tex.x = x; tex.y = y - 10;
 
-		y += tex.Height + 1;
+		y += tex.height + 1;
 		/* offset player names a bit, compared to group name */
 		if (!s->classic && s->ids[i] != GROUP_NAME_ID) {
 			tex.x += s->elementOffset;
@@ -738,7 +738,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 	{
 		if (!s->textures[i].ID || s->ids[i] == GROUP_NAME_ID) continue;
 		tex = s->textures[i];
-		if (!Gui_Contains(tex.x, tex.y, tex.Width, tex.Height, x, y)) continue;
+		if (!Gui_Contains(tex.x, tex.y, tex.width, tex.height, x, y)) continue;
 
 		player = TabList_UNSAFE_GetPlayer(s->ids[i]);
 		String_Format1(&text, "%s ", &player);
@@ -805,7 +805,7 @@ static void TabListOverlay_BuildMesh(void* screen) {
 		tex = s->textures[i];
 
 		if (grabbed && s->ids[i] != GROUP_NAME_ID) {
-			if (Gui_ContainsPointers(tex.x, tex.y, tex.Width, tex.Height)) tex.x += 4;
+			if (Gui_ContainsPointers(tex.x, tex.y, tex.width, tex.height)) tex.x += 4;
 		}
 		Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &v);
 	}
@@ -1865,7 +1865,7 @@ static void LoadingScreen_BuildMesh(void* screen) {
 	loc       = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	Tex_SetRect(tex, 0,0, Window_UI.Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
-	tex.uv.U2 = (float)Window_UI.Width / LOADING_TILE_SIZE;
+	tex.uv.u2 = (float)Window_UI.Width / LOADING_TILE_SIZE;
 	
 	for (i = 0; i < s->rows; i++) {
 		tex.y = i * LOADING_TILE_SIZE;

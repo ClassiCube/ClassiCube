@@ -498,7 +498,7 @@ static void Render3DFrame(double delta, float t) {
 	EnvRenderer_RenderMapSides();
 
 	EntityShadows_Render();
-	if (Game_SelectedPos.Valid && !Game_HideGui) {
+	if (Game_SelectedPos.valid && !Game_HideGui) {
 		SelOutlineRenderer_Render(&Game_SelectedPos, true);
 	}
 
@@ -514,7 +514,7 @@ static void Render3DFrame(double delta, float t) {
 
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
-	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.block] == DRAW_TRANSLUCENT) {
+	if (Game_SelectedPos.valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.block] == DRAW_TRANSLUCENT) {
 		SelOutlineRenderer_Render(&Game_SelectedPos, false);
 	}
 

@@ -708,7 +708,7 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 	struct LocationUpdate update;
 
 	/* Offset position by the closest face */
-	closestFace = Game_SelectedPos.Closest;
+	closestFace = Game_SelectedPos.closest;
 	if (closestFace == FACE_XMAX) {
 		pos.x = blockBB->Max.x + 0.5f;
 	} else if (closestFace == FACE_ZMAX) {
@@ -772,7 +772,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	/* Non solid blocks (e.g. water/flowers) can always be placed on players */
 	if (Blocks.Collide[block] != COLLIDE_SOLID) return true;
 
-	IVec3_ToVec3(&pos, &Game_SelectedPos.TranslatedPos);
+	IVec3_ToVec3(&pos, &Game_SelectedPos.translatedPos);
 	if (IntersectsOthers(pos, block)) return false;
 	
 	nextPos = LocalPlayer_Instance.Base.next.pos;
@@ -808,7 +808,7 @@ void InputHandler_DeleteBlock(void) {
 	HeldBlockRenderer_ClickAnim(true);
 
 	pos = Game_SelectedPos.pos;
-	if (!Game_SelectedPos.Valid || !World_Contains(pos.x, pos.y, pos.z)) return;
+	if (!Game_SelectedPos.valid || !World_Contains(pos.x, pos.y, pos.z)) return;
 
 	old = World_GetBlock(pos.x, pos.y, pos.z);
 	if (Blocks.Draw[old] == DRAW_GAS || !Blocks.CanDelete[old]) return;
@@ -820,8 +820,8 @@ void InputHandler_DeleteBlock(void) {
 void InputHandler_PlaceBlock(void) {
 	IVec3 pos;
 	BlockID old, block;
-	pos = Game_SelectedPos.TranslatedPos;
-	if (!Game_SelectedPos.Valid || !World_Contains(pos.x, pos.y, pos.z)) return;
+	pos = Game_SelectedPos.translatedPos;
+	if (!Game_SelectedPos.valid || !World_Contains(pos.x, pos.y, pos.z)) return;
 
 	old   = World_GetBlock(pos.x, pos.y, pos.z);
 	block = Inventory_SelectedBlock;

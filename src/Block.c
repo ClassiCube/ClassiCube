@@ -569,8 +569,8 @@ static int GetRotated(cc_string* name, int offset) {
 }
 
 static int RotateCorner(cc_string* name, int offset) {
-	float x = Game_SelectedPos.Intersect.x - (float)Game_SelectedPos.TranslatedPos.x;
-	float z = Game_SelectedPos.Intersect.z - (float)Game_SelectedPos.TranslatedPos.z;
+	float x = Game_SelectedPos.intersect.x - (float)Game_SelectedPos.translatedPos.x;
+	float z = Game_SelectedPos.intersect.z - (float)Game_SelectedPos.translatedPos.z;
 
 	if (x < 0.5f && z < 0.5f) {
 		AutoRotate_Insert(name, offset, "-NW");
@@ -585,7 +585,7 @@ static int RotateCorner(cc_string* name, int offset) {
 }
 
 static int RotateVertical(cc_string* name, int offset) {
-	float y = Game_SelectedPos.Intersect.y - (float)Game_SelectedPos.TranslatedPos.y;
+	float y = Game_SelectedPos.intersect.y - (float)Game_SelectedPos.translatedPos.y;
 
 	if (y >= 0.5f) {
 		AutoRotate_Insert(name, offset, "-U");
@@ -609,7 +609,7 @@ static int RotateFence(cc_string* name, int offset) {
 
 static int RotatePillar(cc_string* name, int offset) {
 	/* Thin pillar type blocks */
-	Face face = Game_SelectedPos.Closest;
+	Face face = Game_SelectedPos.closest;
 
 	if (face == FACE_YMAX || face == FACE_YMIN) {
 		AutoRotate_Insert(name, offset, "-UD");

@@ -1213,7 +1213,7 @@ void Logger_Log(const cc_string* msg) {
 		Stream_AppendFile(&logStream, &path);
 	}
 
-	if (!logStream.Meta.File) return;
+	if (!logStream.meta.file) return;
 	Stream_Write(&logStream, (const cc_uint8*)msg->buffer, msg->length);
 }
 
@@ -1233,7 +1233,7 @@ static void LogCrashHeader(void) {
 }
 
 static void CloseLogFile(void) { 
-	if (logStream.Meta.File) logStream.Close(&logStream);
+	if (logStream.meta.file) logStream.Close(&logStream);
 }
 #endif
 

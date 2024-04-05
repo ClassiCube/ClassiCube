@@ -24,10 +24,10 @@ struct RayTracer {
 	IVec3 step;
 	Vec3 tMax, tDelta;
 	/* Result only data */
-	Vec3 Intersect;      /* Coords at which the ray exactly intersected this block. */
-	IVec3 TranslatedPos; /* Coords of the neighbouring block that is closest to the player */
-	cc_bool Valid;       /* Whether the ray tracer actually intersected with a block */
-	Face Closest;        /* Face of the intersected block that is closet to the player */
+	Vec3 intersect;      /* Coords at which the ray exactly intersected this block. */
+	IVec3 translatedPos; /* Coords of the neighbouring block that is closest to the player */
+	cc_bool valid;       /* Whether the ray tracer actually intersected with a block */
+	Face closest;        /* Face of the intersected block that is closet to the player */
 };
 
 /* Marks the given ray tracer as having no result. */

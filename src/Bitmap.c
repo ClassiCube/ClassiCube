@@ -702,7 +702,7 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 		if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;
 	}
 	if ((res = zlStream.Close(&zlStream))) return res;
-	Stream_SetU32_BE(&tmp[0], chunk.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
+	Stream_SetU32_BE(&tmp[0], chunk.meta.crc32.crc32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
 	Stream_SetU32_BE(&tmp[4],  0);

@@ -405,8 +405,8 @@ typedef cc_uint8 Face;
 typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
 
-typedef struct Rect2D_  { int x, y, Width, Height; } Rect2D;
-typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
+typedef struct Rect2D_  { int x, y, width, height; } Rect2D;
+typedef struct TextureRec_ { float u1, v1, u2, v2; } TextureRec;
 
 typedef struct cc_string_ {
 	char* buffer;       /* Pointer to characters, NOT NULL TERMINATED */
@@ -428,7 +428,7 @@ typedef void* GfxResourceID;
 /* Contains the information to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	short x, y; cc_uint16 Width, Height;
+	short x, y; cc_uint16 width, height;
 	TextureRec uv;
 };
 #endif

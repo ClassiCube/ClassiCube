@@ -263,12 +263,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
 	
-	for (int y = r.y; y < r.y + r.Height; y++)
+	for (int y = r.y; y < r.y + r.height; y++)
 	{
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		uint16_t*  dst = vram_s + vid_mode->width * y;
 		
-		for (int x = r.x; x < r.x + r.Width; x++)
+		for (int x = r.x; x < r.x + r.width; x++)
 		{
 			BitmapCol color = src[x];
 			// 888 to 565 (discard least significant bits)

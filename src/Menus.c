@@ -3606,8 +3606,8 @@ static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTex
 	baseLoc = 0;
 	xOffset = s->xOffset;
 
-	tex.uv.U1 = 0.0f; tex.uv.U2 = UV2_Scale;
-	tex.Width = size; tex.Height = size;
+	tex.uv.u1 = 0.0f; tex.uv.u2 = UV2_Scale;
+	tex.width = size; tex.height = size;
 
 	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
 		for (i = 0; i < TEXIDS_MAX_PER_PAGE; i++) {
@@ -3615,8 +3615,8 @@ static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTex
 			tex.x = xOffset    + Atlas2D_TileX(i) * size;
 			tex.y = s->yOffset + Atlas2D_TileY(i) * size;
 
-			tex.uv.V1 = Atlas1D_RowId(i + baseLoc) * Atlas1D.InvTileSize;
-			tex.uv.V2 = tex.uv.V1      + UV2_Scale * Atlas1D.InvTileSize;
+			tex.uv.v1 = Atlas1D_RowId(i + baseLoc) * Atlas1D.InvTileSize;
+			tex.uv.v2 = tex.uv.v1      + UV2_Scale * Atlas1D.InvTileSize;
 			
 			Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, ptr);
 		}
@@ -3638,7 +3638,7 @@ static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextur
 	beg     = *ptr;
 	
 	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
-		idAtlas->tex.y = s->yOffset + (size - idAtlas->tex.Height);
+		idAtlas->tex.y = s->yOffset + (size - idAtlas->tex.height);
 
 		for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 			for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {

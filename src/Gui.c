@@ -358,8 +358,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	Context2D_Free(&ctx);
 
 	atlas->uScale = 1.0f / (float)ctx.bmp.width;
-	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
-	atlas->tex.Width = atlas->offset;	
+	atlas->tex.uv.u2 = atlas->offset * atlas->uScale;
+	atlas->tex.width = atlas->offset;	
 }
 
 void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->tex.ID); }
@@ -368,9 +368,9 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** v
 	struct Texture part = atlas->tex;
 	int width = atlas->widths[charI];
 
-	part.x  = atlas->curX; part.Width = width;
-	part.uv.U1 = atlas->offsets[charI] * atlas->uScale;
-	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
+	part.x  = atlas->curX; part.width = width;
+	part.uv.u1 = atlas->offsets[charI] * atlas->uScale;
+	part.uv.u2 = part.uv.u1 + width    * atlas->uScale;
 
 	atlas->curX += width;	
 	Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);

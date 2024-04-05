@@ -289,10 +289,10 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Statically initialises the texture coordinate corners of this texture */
 #define Tex_UV(u1,v1, u2,v2)        { u1,v1,u2,v2 }
 /* Sets the position and dimensions of this texture */
-#define Tex_SetRect(tex, xVal,yVal, width, height) tex.x = xVal; tex.y = yVal; tex.Width = width; tex.Height = height;
+#define Tex_SetRect(tex, xVal,yVal, wVal, hVal) tex.x = xVal; tex.y = yVal; tex.width = wVal; tex.height = hVal;
 /* Sets texture coordinate corners of this texture */
 /* Useful to only draw a sub-region of the texture's pixels */
-#define Tex_SetUV(tex, u1,v1, u2,v2) tex.uv.U1 = u1; tex.uv.V1 = v1; tex.uv.U2 = u2; tex.uv.V2 = v2;
+#define Tex_SetUV(tex, U1,V1, U2,V2) tex.uv.u1 = U1; tex.uv.v1 = V1; tex.uv.u2 = U2; tex.uv.v2 = V2;
 
 /* Binds then renders the given texture */
 void Texture_Render(const struct Texture* tex);

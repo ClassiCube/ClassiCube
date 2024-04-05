@@ -451,12 +451,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	r.x &= ~0x01; // round down to nearest even horizontal index
 	
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width     + r.x;
 		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
 		
-		for (int x = 0; x < r.Width / 2; x++) {
+		for (int x = 0; x < r.width / 2; x++) {
 			cc_uint32 rgb0 = src[(x<<1) + 0];
 			cc_uint32 rgb1 = src[(x<<1) + 1];
 			

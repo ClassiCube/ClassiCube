@@ -128,9 +128,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
 	cc_uint32* dst = (cc_uint32*)fb         + r.x;
 
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.Width * 4);
+		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.width * 4);
 	}
 	sceKernelDcacheWritebackAll();
 }

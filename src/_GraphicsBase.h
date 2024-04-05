@@ -208,8 +208,8 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 #endif
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
-	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->Width);
-	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->Height);
+	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->width);
+	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->height);
 	struct VertexTextured* v = *vertices;
 
 #ifdef CC_BUILD_D3D9
@@ -219,10 +219,10 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	y1 -= 0.5f; y2 -= 0.5f;
 #endif
 
-	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V1; v++;
-	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V1; v++;
-	v->x = x2; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
-	v->x = x1; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
+	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u1; v->V = tex->uv.v1; v++;
+	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v1; v++;
+	v->x = x2; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v2; v++;
+	v->x = x1; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.u1; v->V = tex->uv.v2; v++;
 	*vertices = v;
 }
 

@@ -185,8 +185,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// DST X = 0 to 240
 	// DST Y = 0 to 400
 
-	for (int y = r.y; y < r.y + r.Height; y++)
-		for (int x = r.x; x < r.x + r.Width; x++)
+	for (int y = r.y; y < r.y + r.height; y++)
+		for (int x = r.x; x < r.x + r.width; x++)
 	{
 		BitmapCol color = Bitmap_GetPixel(bmp, x, y);
 		int addr   = (width - 1 - y + x * width) * 3; // TODO -1 or not
