@@ -106,11 +106,11 @@ else
 # main targets
 #---------------------------------------------------------------------------------
 $(OUTPUT).cia	: $(OUTPUT).3dsx makerom
-	$(BUILD)/makerom -f cia -o "$(OUTPUT).cia" -elf "$(OUTPUT).elf" -rsf "$(CIA_SPEC_RSF)" -icon "$(CIA_ICON_BIN)" -banner "$(CIA_BANNER_BIN)" -exefslogo -target t
+	./makerom -f cia -o "$(OUTPUT).cia" -elf "$(OUTPUT).elf" -rsf "$(CIA_SPEC_RSF)" -icon "$(CIA_ICON_BIN)" -banner "$(CIA_BANNER_BIN)" -exefslogo -target t
 	
 makerom:
-	wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.4/makerom-v0.18.4-ubuntu_x86_64.zip
-	unzip makerom-v0.18.4-ubuntu_x86_64.zip
+	wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.3/makerom-v0.18.3-ubuntu_x86_64.zip
+	unzip makerom-v0.18.3-ubuntu_x86_64.zip
 	chmod +x makerom
 
 $(OUTPUT).3dsx	:	$(OUTPUT).elf $(OUTPUT).smdh
