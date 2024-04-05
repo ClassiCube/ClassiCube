@@ -112,8 +112,8 @@ static void HandleButtons(u32 mods) {
 #define AXIS_SCALE 8.0f
 static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
 	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(pos->dx) <= 16) pos->dx = 0;
-	if (Math_AbsI(pos->dy) <= 16) pos->dy = 0;
+	if (Math_AbsI(pos->dx) <= 32) pos->dx = 0;
+	if (Math_AbsI(pos->dy) <= 32) pos->dy = 0;
 		
 	Gamepad_SetAxis(axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
@@ -145,13 +145,16 @@ void Window_ProcessEvents(double delta) {
 	
 	circlePosition hid_pos;
 	hidCircleRead(&hid_pos);
-	ProcessCircleInput(PAD_AXIS_RIGHT, &hid_pos, delta);
 
 	if (irrst_result == 0) {
 		circlePosition stk_pos;
 		irrstScanInput();
 		irrstCstickRead(&stk_pos);
-		ProcessCircleInput(PAD_AXIS_LEFT, &stk_pos, delta);
+		
+		ProcessCircleInput(PAD_AXIS_RIGHT, &stk_pos, delta);
+		ProcessCircleInput(PAD_AXIS_LEFT,  &hid_pos, delta);
+	} else {
+		ProcessCircleInput(PAD_AXIS_RIGHT, &hid_pos, delta);
 	}
 }
 

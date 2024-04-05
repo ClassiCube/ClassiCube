@@ -279,7 +279,9 @@ void Window_Free(void) { }
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
 	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
-	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
+	
+	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
+					(unsigned char*)CCIcon_Data, CCIcon_Size);
 }
 #else
 static void ApplyIcon(void) { }
