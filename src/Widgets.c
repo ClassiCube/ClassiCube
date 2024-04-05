@@ -456,8 +456,8 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 
 #ifdef CC_BUILD_TOUCH
 	if (Gui.TouchUI) {
-		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
-		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
+		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.width / 2;
+		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.height / 2;
 		Texture_Render(&w->ellipsisTex);
 	}
 #endif
@@ -2707,13 +2707,13 @@ static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struc
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
 	tex->y = w->y;
-	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	tmp    = tex->uv.v1; tex->uv.v1 = tex->uv.v2; tex->uv.v2 = tmp;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 	ThumbstickWidget_Rotate(widget, vertices, w->width);
 
-	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	tmp    = tex->uv.v1; tex->uv.v1 = tex->uv.v2; tex->uv.v2 = tmp;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 	ThumbstickWidget_Rotate(widget, vertices, w->width / 2);
 }
@@ -2723,12 +2723,12 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 	struct Texture tex;
 
 	tex.x     = w->x;
-	tex.Width = w->width; tex.Height = w->height / 2;
-	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
+	tex.width = w->width; tex.height = w->height / 2;
+	tex.uv.u1 = 0.0f;     tex.uv.u2  = 1.0f;
 
-	tex.uv.V1 = 0.0f; tex.uv.V2 = 0.5f;
+	tex.uv.v1 = 0.0f; tex.uv.v2 = 0.5f;
 	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
-	tex.uv.V1 = 0.5f; tex.uv.V2 = 1.0f;
+	tex.uv.v1 = 0.5f; tex.uv.v2 = 1.0f;
 	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
 }
 

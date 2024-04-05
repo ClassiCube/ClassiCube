@@ -182,9 +182,9 @@ static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLe
 	int i, j;
 
 	/* Initialise 'zero bit length' codewords */
-	table->FirstCodewords[0] = 0;
-	table->FirstOffsets[0]   = 0;
-	table->EndCodewords[0]   = 0;
+	table->firstCodewords[0] = 0;
+	table->firstOffsets[0]   = 0;
+	table->endCodewords[0]   = 0;
 
 	/* Count number of codewords assigned to each bit length */
 	for (i = 0; i < INFLATE_MAX_BITS; i++) bl_count[i] = 0;
@@ -209,8 +209,8 @@ static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLe
 		code = (code + bl_count[i - 1]) << 1;
 		bl_offsets[i] = offset;
 
-		table->FirstCodewords[i] = code;
-		table->FirstOffsets[i]   = offset;
+		table->firstCodewords[i] = code;
+		table->firstOffsets[i]   = offset;
 		offset += bl_count[i];
 
 		/* Last codeword is actually: code + (bl_count[i] - 1)
@@ -218,9 +218,9 @@ static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLe
 		*  This way, don't need to special case bit lengths with 0 codewords when decoding.
 		*/
 		if (bl_count[i]) {
-			table->EndCodewords[i] = code + bl_count[i];
+			table->endCodewords[i] = code + bl_count[i];
 		} else {
-			table->EndCodewords[i] = 0;
+			table->endCodewords[i] = 0;
 		}
 	}
 
@@ -229,11 +229,11 @@ static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLe
 	*  Some values may also not be assigned to any codeword.
 	*/
 	value = 0;
-	Mem_Set(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
+	Mem_Set(table->fast, UInt8_MaxValue, sizeof(table->fast));
 	for (i = 0; i < count; i++, value++) {
 		int len = bitLens[i];
 		if (!len) continue;
-		table->Values[bl_offsets[len]] = value;
+		table->values[bl_offsets[len]] = value;
 
 		/* Compute the accelerated lookup table values for this codeword.
 		* For example, assume len = 4 and codeword = 0100
@@ -244,12 +244,12 @@ static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLe
 		*/
 		if (len <= INFLATE_FAST_BITS) {
 			cc_int16 packed = (cc_int16)((len << INFLATE_FAST_BITS) | value);
-			int codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
+			int codeword = table->firstCodewords[len] + (bl_offsets[len] - table->firstOffsets[len]);
 			codeword <<= (INFLATE_FAST_BITS - len);
 
 			for (j = 0; j < 1 << (INFLATE_FAST_BITS - len); j++, codeword++) {
 				int index = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
-				table->Fast[index] = packed;
+				table->fast[index] = packed;
 			}
 		}
 		bl_offsets[len]++;
@@ -271,7 +271,7 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 
 	/* Try fast accelerated table lookup */
 	if (state->NumBits >= INFLATE_FAST_BITS) {
-		packed = table->Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
+		packed = table->fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
 		if (packed >= 0) {
 			bits = packed >> INFLATE_FAST_BITS;
 			Inflate_ConsumeBits(state, bits);
@@ -285,10 +285,10 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 		if (state->NumBits < i) return -1;
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
-		if (codeword < table->EndCodewords[i]) {
-			offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+		if (codeword < table->endCodewords[i]) {
+			offset = table->firstOffsets[i] + (codeword - table->firstCodewords[i]);
 			Inflate_ConsumeBits(state, i);
-			return table->Values[offset];
+			return table->values[offset];
 		}
 	}
 
@@ -300,7 +300,7 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 #define Huffman_UNSAFE_Decode(state, table, result) \
 {\
 	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);\
-	packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
+	packed = table.fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
 	if (packed >= 0) {\
 		consumedBits = packed >> INFLATE_FAST_BITS;\
 		Inflate_ConsumeBits(state, consumedBits);\
@@ -321,10 +321,10 @@ static int Huffman_UNSAFE_Decode_Slow(struct InflateState* state, struct Huffman
 	for (i = INFLATE_FAST_BITS + 1, j = INFLATE_FAST_BITS; i < INFLATE_MAX_BITS; i++, j++) {
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
-		if (codeword < table->EndCodewords[i]) {
-			offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+		if (codeword < table->endCodewords[i]) {
+			offset = table->firstOffsets[i] + (codeword - table->firstCodewords[i]);
 			Inflate_ConsumeBits(state, i);
-			return table->Values[offset];
+			return table->values[offset];
 		}
 	}
 
@@ -995,12 +995,12 @@ static void Deflate_BuildTable(const cc_uint8* lens, int count, cc_uint16* codew
 	/* NOTE: Can ignore since lens table is not user controlled */
 	(void)Huffman_Build(&table, lens, count);
 	for (i = 0; i < INFLATE_MAX_BITS; i++) {
-		if (!table.EndCodewords[i]) continue;
-		count = table.EndCodewords[i] - table.FirstCodewords[i];
+		if (!table.endCodewords[i]) continue;
+		count = table.endCodewords[i] - table.firstCodewords[i];
 
 		for (j = 0; j < count; j++) {
-			offset   = table.Values[table.FirstOffsets[i] + j];
-			codeword = table.FirstCodewords[i] + j;
+			offset   = table.values[table.firstOffsets[i] + j];
+			codeword = table.firstCodewords[i] + j;
 			bitlens[offset]   = i;
 			codewords[offset] = Huffman_ReverseBits(codeword, i);
 		}

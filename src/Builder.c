@@ -101,39 +101,39 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 		count = info->Counts[i];
 
 		if (count) {
-			info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
+			info->vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
 			offset += count;
 		} else {
-			info->Vbs[i] = 0;
+			info->vbs[i] = 0;
 		}
 	}
 
 	count  = info->SpriteCount;
 	offset = info->Offset;
 	if (count) {
-		info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
+		info->vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
 	} else {
-		info->Vbs[i] = 0;
+		info->vbs[i] = 0;
 	}
 }
 #endif
 
 static void SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
 	int vCount = Builder1DPart_VerticesCount(part);
-	info->Offset = -1;
+	info->offset = -1;
 	if (!vCount) return;
 
-	info->Offset = *offset;
+	info->offset = *offset;
 	*offset += vCount;
 	*hasParts = true;
 
-	info->Counts[FACE_XMIN] = part->fCount[FACE_XMIN];
-	info->Counts[FACE_XMAX] = part->fCount[FACE_XMAX];
-	info->Counts[FACE_ZMIN] = part->fCount[FACE_ZMIN];
-	info->Counts[FACE_ZMAX] = part->fCount[FACE_ZMAX];
-	info->Counts[FACE_YMIN] = part->fCount[FACE_YMIN];
-	info->Counts[FACE_YMAX] = part->fCount[FACE_YMAX];
-	info->SpriteCount       = part->sCount;
+	info->counts[FACE_XMIN] = part->fCount[FACE_XMIN];
+	info->counts[FACE_XMAX] = part->fCount[FACE_XMAX];
+	info->counts[FACE_ZMIN] = part->fCount[FACE_ZMIN];
+	info->counts[FACE_ZMAX] = part->fCount[FACE_ZMAX];
+	info->counts[FACE_YMIN] = part->fCount[FACE_YMIN];
+	info->counts[FACE_YMAX] = part->fCount[FACE_YMAX];
+	info->spriteCount       = part->sCount;
 
 #ifdef CC_BUILD_GL11
 	BuildPartVbs(info);
@@ -355,7 +355,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 		allSolid = ReadChunkData(x1, y1, z1, &allAir);
 	}
 
-	info->AllAir = allAir;
+	info->allAir = allAir;
 	if (allAir || allSolid) return false;
 	Lighting.LightHint(x1 - 1, z1 - 1);
 
@@ -372,7 +372,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	Builder_Vertices = (struct VertexTextured*)Gfx_RecreateAndLockVb(&info->Vb,
+	Builder_Vertices = (struct VertexTextured*)Gfx_RecreateAndLockVb(&info->vb,
 													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #else
 	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */
@@ -398,13 +398,13 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	}
 
 #ifndef CC_BUILD_GL11
-	Gfx_UnlockVb(info->Vb);
+	Gfx_UnlockVb(info->vb);
 #endif
 	return true;
 }
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
-	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
+	int x = info->centreX - 8, y = info->centreY - 8, z = info->centreZ - 8;
 	cc_bool hasMesh, hasNorm, hasTran;
 	int partsIndex;
 	int i, j, curIdx, offset;
@@ -426,10 +426,10 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	}
 
 	if (hasNorm) {
-		info->NormalParts      = &MapRenderer_PartsNormal[partsIndex];
+		info->normalParts      = &MapRenderer_PartsNormal[partsIndex];
 	}
 	if (hasTran) {
-		info->TranslucentParts = &MapRenderer_PartsTranslucent[partsIndex];
+		info->translucentParts = &MapRenderer_PartsTranslucent[partsIndex];
 	}
 
 #ifdef OCCLUSION
