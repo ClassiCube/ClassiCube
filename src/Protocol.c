@@ -612,11 +612,13 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	length = Stream_GetU16_BE(data + 4);
 	volume = width * height * length;
 
-	if (!map1.blocks) {
+	if (map1.allocFailed) {
+		Chat_AddRaw("&cFailed to load map, try joining a different map");
+		Chat_AddRaw("   &cNot enough free memory to load the map");
+	} else if (!map1.blocks) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_AddRaw("   &cAttempted to load map without a Blocks array");
-	}
-	if (map_volume != volume) {
+	} else if (map_volume != volume) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_Add2(  "   &cBlocks array size (%i) does not match volume of map (%i)", &map_volume, &volume);
 		FreeMapStates();

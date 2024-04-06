@@ -652,8 +652,8 @@ static void OnInit(void) {
 	// Tile the texture to fill the entire screen
 	int tilesX = (320 + ctx.width - 1) / ctx.width;
 	int tilesY = (240 + ctx.height - 1) / ctx.height;
-	touchBgTex.Width *= tilesX; touchBgTex.Height *= tilesY;
-	touchBgTex.uv.U2 *= tilesX; touchBgTex.uv.V2  *= tilesY;
+	touchBgTex.width *= tilesX; touchBgTex.height *= tilesY;
+	touchBgTex.uv.u2 *= tilesX; touchBgTex.uv.v2  *= tilesY;
 #endif
 
 	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);
