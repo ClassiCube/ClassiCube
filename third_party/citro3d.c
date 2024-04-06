@@ -72,16 +72,6 @@ typedef struct
 	C3D_BufCfg buffers[12];
 } C3D_BufInfo;
 
-static void BufInfo_Init(C3D_BufInfo* info);
-static int  BufInfo_Add(C3D_BufInfo* info, const void* data, ptrdiff_t stride, int attribCount, u64 permutation);
-
-static C3D_BufInfo* C3D_GetBufInfo(void);
-
-
-
-
-
-
 
 typedef struct
 {
@@ -248,7 +238,7 @@ static void C3D_BindProgram(shaderProgram_s* program);
 static void C3D_SetViewport(u32 x, u32 y, u32 w, u32 h);
 static void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u32 bottom);
 
-static void C3D_DrawElements(GPU_Primitive_t primitive, int count, int type, const void* indices);
+static void C3D_DrawElements(GPU_Primitive_t primitive, int count);
 
 // Immediate-mode vertex submission
 static void C3D_ImmDrawBegin(GPU_Primitive_t primitive);
@@ -664,33 +654,6 @@ static void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 
 #define BUFFER_BASE_PADDR 0x18000000
 
-static void BufInfo_Init(C3D_BufInfo* info)
-{
-	memset(info, 0, sizeof(*info));
-}
-
-static int BufInfo_Add(C3D_BufInfo* info, const void* data, ptrdiff_t stride, int attribCount, u64 permutation)
-{
-	if (info->bufCount == 12) return -1;
-	int id = info->bufCount++;
-
-	u32 pa = osConvertVirtToPhys(data);
-	if (pa < BUFFER_BASE_PADDR) return -2;
-
-	C3D_BufCfg* buf = &info->buffers[id];
-	buf->offset = pa - BUFFER_BASE_PADDR;
-	buf->flags[0] = permutation & 0xFFFFFFFF;
-	buf->flags[1] = (permutation >> 32) | (stride << 16) | (attribCount << 28);
-	return id;
-}
-
-static C3D_BufInfo* C3D_GetBufInfo(void)
-{
-	C3D_Context* ctx = C3Di_GetContext();
-
-	ctx->flags |= C3DiF_BufInfo;
-	return &ctx->bufInfo;
-}
 
 static void C3Di_BufInfoBind(C3D_BufInfo* info)
 {
@@ -706,19 +669,14 @@ static void C3Di_BufInfoBind(C3D_BufInfo* info)
 
 
 
-static void C3D_DrawElements(GPU_Primitive_t primitive, int count, int type, const void* indices)
+static void C3D_DrawElements(GPU_Primitive_t primitive, int count)
 {
-	u32 pa = osConvertVirtToPhys(indices);
-	if (pa < BUFFER_BASE_PADDR) return;
-
 	C3Di_UpdateContext();
 
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive != GPU_TRIANGLES ? primitive : GPU_GEOMETRY_PRIM);
 	// Start a new primitive (breaks off a triangle strip/fan)
 	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
-	// Configure the index buffer
-	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, (pa - BUFFER_BASE_PADDR) | (type << 31));
 	// Number of vertices
 	GPUCMD_AddWrite(GPUREG_NUMVERTICES, count);
 	// First vertex
@@ -1047,8 +1005,6 @@ static void C3D_ImmDrawBegin(GPU_Primitive_t primitive)
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive);
 	// Start a new primitive (breaks off a triangle strip/fan)
 	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
-	// Not sure if this command is necessary
-	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, 0x80000000);
 	// Enable vertex submission mode
 	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG2, 1, 1);
 	// Enable drawing mode

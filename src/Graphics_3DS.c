@@ -605,7 +605,8 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	// No need to bind again
+	u32 pa = osConvertVirtToPhys(ib);
+	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, (pa - BUFFER_BASE_PADDR) | (C3D_UNSIGNED_SHORT << 31));
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) { }
@@ -624,18 +625,6 @@ void Gfx_BindVb(GfxResourceID vb) {
 	struct GPUBuffer* buffer = (struct GPUBuffer*)vb;
 	buffer->lastFrame = frameCounter1;
 	gfx_vertices = buffer->data;
-	
-	// https://github.com/devkitPro/citro3d/issues/47
-	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
-	/*C3D_BufInfo* bufInfo = C3D_GetBufInfo();
-  	BufInfo_Init(bufInfo);
-
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		BufInfo_Add(bufInfo, buffer->data, SIZEOF_VERTEX_TEXTURED, 3, 0x210);
-	} else {
-		BufInfo_Add(bufInfo, buffer->data, SIZEOF_VERTEX_COLOURED, 2,  0x10);
-	}*/
-	// TODO use vertex buffer offset instead
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) { GPUBuffer_Unref(vb); }
@@ -835,32 +824,48 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	/* TODO */
 }
 
-static void SetVertexBuffer(int startVertex) {
-	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
-  	BufInfo_Init(bufInfo);
+static void SetVertexSource(int startVertex) {
+	// https://github.com/devkitPro/citro3d/issues/47
+	// "Fyi the permutation specifies the order in which the attributes are stored in the buffer, LSB first. So 0x210 indicates attributes 0, 1 & 2."
+	const void* data;
+	int stride, attribs, permutation;
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		BufInfo_Add(bufInfo, (struct VertexTextured*)gfx_vertices + startVertex, SIZEOF_VERTEX_TEXTURED, 3, 0x210);
+		data    = (struct VertexTextured*)gfx_vertices + startVertex;
+		stride  = SIZEOF_VERTEX_TEXTURED;
+		attribs = 3;
+		permutation = 0x210;
 	} else {
-		BufInfo_Add(bufInfo, (struct VertexColoured*)gfx_vertices + startVertex, SIZEOF_VERTEX_COLOURED, 2,  0x10);
+		data    = (struct VertexColoured*)gfx_vertices + startVertex;
+		stride  = SIZEOF_VERTEX_COLOURED;
+		attribs = 2;
+		permutation = 0x10;
 	}
+
+	u32 pa = osConvertVirtToPhys(data);
+	u32 args[3]; // GPUREG_ATTRIBBUFFER0_OFFSET, GPUREG_ATTRIBBUFFER0_CONFIG1, GPUREG_ATTRIBBUFFER0_CONFIG2
+
+	args[0] = pa - BUFFER_BASE_PADDR;
+	args[1] = permutation;
+	args[2] = (stride << 16) | (attribs << 28);
+
+	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, args, 3);
+	// NOTE: Can't use GPUREG_VERTEX_OFFSET, it only works when drawing non-indexed arrays
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	SetVertexBuffer(startVertex);
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
-	// this doesn't work properly, because (index buffer + offset) must be aligned to 16 bytes
-	// C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices + startVertex);
+	SetVertexSource(startVertex);
+	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount));
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	SetVertexBuffer(0);
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
+	SetVertexSource(0);
+	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount));
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	SetVertexBuffer(startVertex);
-	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount), C3D_UNSIGNED_SHORT, gfx_indices);
+	SetVertexSource(startVertex);
+	C3D_DrawElements(GPU_TRIANGLES, ICOUNT(verticesCount));
 }
 
 // TODO: TEMP HACK !!
