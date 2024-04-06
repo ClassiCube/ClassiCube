@@ -251,13 +251,7 @@ static struct ListScreen {
 	struct StringsBuffer entries;
 } ListScreen;
 
-static struct Widget* list_widgets[] = {
-	(struct Widget*)&ListScreen.btns[0], (struct Widget*)&ListScreen.btns[1],
-	(struct Widget*)&ListScreen.btns[2], (struct Widget*)&ListScreen.btns[3],
-	(struct Widget*)&ListScreen.btns[4], (struct Widget*)&ListScreen.left,
-	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
-	(struct Widget*)&ListScreen.done,    NULL
-};
+static struct Widget* list_widgets[10];
 #define LISTSCREEN_EMPTY "-"
 
 static void ListScreen_Layout(void* screen) {
@@ -396,27 +390,26 @@ static void ListScreen_Init(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i, width;
 	s->widgets    = list_widgets;
-	s->numWidgets = Array_Elems(list_widgets);
+	s->numWidgets = 0;
+	s->maxWidgets = Array_Elems(list_widgets);
+
 	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
 
-	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
-		ButtonWidget_Init(&s->btns[i], 300, s->EntryClick);
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) 
+	{
+		ButtonWidget_Add(s, &s->btns[i], 300, s->EntryClick);
 	}
-
 	width = s->UploadClick && Input_TouchMode ? 140 : 400;
-	ButtonWidget_Init(&s->upload, width, s->UploadClick);
-	ButtonWidget_Init(&s->done,   width, s->DoneClick);
 
 	if (s->UploadClick) {
-		s->widgets[9] = (struct Widget*)&s->upload;
-	} else {
-		s->widgets[9] = NULL;
+		ButtonWidget_Add(s, &s->upload, width, s->UploadClick);
 	}
 
-	ButtonWidget_Init(&s->left,  40, ListScreen_MoveBackwards);
-	ButtonWidget_Init(&s->right, 40, ListScreen_MoveForwards);
-	TextWidget_Init(&s->title);
+	ButtonWidget_Add(s, &s->left,  40, ListScreen_MoveBackwards);
+	ButtonWidget_Add(s, &s->right, 40, ListScreen_MoveForwards);
+	TextWidget_Add(s, &s->title);
+	ButtonWidget_Add(s, &s->done,  width, s->DoneClick);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(screen);
 	s->LoadEntries(s);

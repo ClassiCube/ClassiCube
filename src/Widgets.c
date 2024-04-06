@@ -25,6 +25,13 @@ static void Widget_PointerUp(void* elem, int id, int x, int y) { }
 static int  Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
 static int  Widget_MouseScroll(void* elem, float delta) { return false; }
 
+static void AddWidget(void* screen, void* w) {
+	struct Screen* s = (struct Screen*)screen;
+
+	if (s->numWidgets >= s->maxWidgets) Logger_Abort("Tried to add too many widgets to screen");
+	s->widgets[s->numWidgets++] = (struct Widget*)w;
+}
+
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -70,6 +77,11 @@ void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
 	w->color  = PACKEDCOL_WHITE;
+}
+
+void TextWidget_Add(void* screen, struct TextWidget* w) {
+	TextWidget_Init(w);
+	AddWidget(screen, w);
 }
 
 void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font) {
@@ -234,6 +246,11 @@ void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	w->minWidth  = Display_ScaleX(minWidth);
 	w->minHeight = Display_ScaleY(40);
 	w->MenuClick = onClick;
+}
+
+void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
+	ButtonWidget_Init(w, minWidth, onClick);
+	AddWidget(screen, w);
 }
 
 void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font) {
@@ -982,11 +999,26 @@ static int TableWidget_KeyDown(void* widget, int key) {
 	return true;
 }
 
+static int TableWidget_PadAxis(void* widget, int axis, float x, float y) {
+	struct TableWidget* w = (struct TableWidget*)widget;
+	int xSteps, ySteps;
+	if (w->selectedIndex == -1) return false;
+
+	xSteps = Utils_AccumulateWheelDelta(&w->padXAcc, x / 100.0f);
+	if (xSteps) TableWidget_ScrollRelative(w, xSteps > 0 ? 1 : -1);
+
+	ySteps = Utils_AccumulateWheelDelta(&w->padYAcc, y / 100.0f);
+	if (ySteps) TableWidget_ScrollRelative(w, ySteps > 0 ? w->blocksPerRow : -w->blocksPerRow);
+
+	return true;
+}
+
 static const struct WidgetVTABLE TableWidget_VTABLE = {
 	NULL,                    TableWidget_Free,      TableWidget_Reposition,
 	TableWidget_KeyDown,     Widget_InputUp,        TableWidget_MouseScroll,
 	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove,
-	TableWidget_BuildMesh,   TableWidget_Render2,   TableWidget_MaxVertices
+	TableWidget_BuildMesh,   TableWidget_Render2,   TableWidget_MaxVertices,
+	TableWidget_PadAxis
 };
 void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	cc_bool classic;
@@ -999,6 +1031,7 @@ void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = -20; w->lastY = -20;
 	w->scale = 1;
+	w->padXAcc = 0; w->padYAcc = 0;
 
 	classic     = Gui.ClassicInventory;
 	w->paddingL = Display_ScaleX(classic ? 20 : 15);

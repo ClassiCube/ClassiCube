@@ -255,6 +255,13 @@ static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY);
 }
 
+static void OnAxisUpdate(int axis, float x, float y) {
+	if (!Input.RawMode) return;
+	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
+
+	Camera.Active->OnRawMovement(x, y);
+}
+
 static void OnHacksChanged(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	/* Leave third person if not allowed anymore */
@@ -316,7 +323,7 @@ static void OnInit(void) {
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
-	Event_Register_(&ControllerEvents.RawMoved,   NULL, OnRawMovement);
+	Event_Register_(&ControllerEvents.AxisUpdate, NULL, OnAxisUpdate);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN

@@ -432,17 +432,17 @@ void Gamepad_SetButton(int btn, int pressed) {
 }
 
 void Gamepad_SetAxis(int axis, float x, float y, double delta) {
-	if (!Input.RawMode) return;
+	if (x == 0 && y == 0) return;
+
+	int sensi   = Gamepad_AxisSensitivity[axis];
+	float scale = delta * 60.0 * axis_sensiFactor[sensi];
+	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, axis, x * scale, y * scale);
 
 	if (Gamepad_AxisBehaviour[axis] == AXIS_BEHAVIOUR_MOVEMENT) {
-		if (x == 0 && y == 0) return;
+		if (!Input.RawMode) return;
 
 		Input.JoystickMovement = true;
 		Input.JoystickAngle    = Math_Atan2(x, y);
-	} else {
-		int sensi   = Gamepad_AxisSensitivity[axis];
-		float scale = delta * 60.0 * axis_sensiFactor[sensi];
-		Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
 	}
 }
 
@@ -1056,28 +1056,6 @@ static cc_bool HandleLocalPlayerKey(int key) {
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
 *#########################################################################################################################*/
-static void OnMouseWheel(void* obj, float delta) {
-	struct Screen* s;
-	int i;
-	
-	for (i = 0; i < Gui.ScreensCount; i++) {
-		s = Gui_Screens[i];
-		s->dirty = true;
-		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
-	}
-}
-
-static void OnPointerMove(void* obj, int idx) {
-	struct Screen* s;
-	int i, x = Pointers[idx].x, y = Pointers[idx].y;
-
-	for (i = 0; i < Gui.ScreensCount; i++) {
-		s = Gui_Screens[i];
-		s->dirty = true;
-		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
-	}
-}
-
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
@@ -1199,12 +1177,10 @@ static void OnInputUp(void* obj, int key) {
 
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
 static void OnInit(void) {
-	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);
 	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
-	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
 
 	Event_Register_(&WindowEvents.FocusChanged,   NULL, OnFocusChanged);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);

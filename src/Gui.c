@@ -573,6 +573,45 @@ int  Screen_InputDown(void* screen, int key) { return key < CCKEY_F1 || key > CC
 void Screen_InputUp(void*   screen, int key) { }
 void Screen_PointerUp(void* s, int id, int x, int y) { }
 
+/*########################################################################################################################*
+*------------------------------------------------------Input handling-----------------------------------------------------*
+*#########################################################################################################################*/
+static void OnMouseWheel(void* obj, float delta) {
+	struct Screen* s;
+	int i;
+	
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->dirty = true;
+		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
+	}
+}
+
+static void OnPointerMove(void* obj, int idx) {
+	struct Screen* s;
+	int i, x = Pointers[idx].x, y = Pointers[idx].y;
+
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->dirty = true;
+		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
+	}
+}
+
+static void OnAxisUpdate(void* obj, int axis, float x, float y) {
+	struct Screen* s;
+	int i;
+	
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (!s->VTABLE->HandlesPadAxis) continue;
+
+		s->dirty = true;
+		if (s->VTABLE->HandlesPadAxis(s, axis, x, y)) return;
+	}
+}
+
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Gui component------------------------------------------------------*
@@ -642,6 +681,10 @@ static void OnInit(void) {
 	TextureEntry_Register(&guiClassic_entry);
 	TextureEntry_Register(&icons_entry);
 	TextureEntry_Register(&touch_entry);
+
+	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
+	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
+	Event_Register_(&ControllerEvents.AxisUpdate, NULL, OnAxisUpdate);
 
 #ifdef CC_BUILD_DUALSCREEN
 	struct Context2D ctx;

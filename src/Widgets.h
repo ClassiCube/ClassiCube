@@ -21,6 +21,8 @@ struct TextWidget {
 
 /* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
+/* Initialises then adds a text widget. */
+CC_NOINLINE void TextWidget_Add(void* screen, struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
@@ -46,6 +48,8 @@ CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+/* Initialises then adds a button widget. */
+CC_NOINLINE void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
@@ -100,6 +104,7 @@ struct TableWidget {
 	GfxResourceID vb;
 	cc_bool pendingClose;
 	float scale;
+	float padXAcc, padYAcc;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;

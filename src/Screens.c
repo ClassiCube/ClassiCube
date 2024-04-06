@@ -1765,12 +1765,19 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 	return Elem_HandlesMouseScroll(&s->table, delta);
 }
 
+static int InventoryScreen_PadAxis(void* screen, int axis, float x, float y) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+
+	return Elem_HandlesPadAxis(&s->table, axis, x, y);
+}
+
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_Init,        InventoryScreen_Update,    InventoryScreen_Free,
 	InventoryScreen_Render,      Screen_BuildMesh,
 	InventoryScreen_KeyDown,     InventoryScreen_KeyUp,     Screen_TKeyPress,            Screen_TText,
 	InventoryScreen_PointerDown, InventoryScreen_PointerUp, InventoryScreen_PointerMove, InventoryScreen_MouseScroll,
-	InventoryScreen_Layout,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated
+	InventoryScreen_Layout,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated,
+	InventoryScreen_PadAxis
 };
 void InventoryScreen_Show(void) {
 	struct InventoryScreen* s = &InventoryScreen;
@@ -1799,11 +1806,9 @@ static struct LoadingScreen {
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
 } LoadingScreen;
-#define LOADING_TILE_SIZE 64
 
-static struct Widget* loading_widgets[] = {
-	(struct Widget*)&LoadingScreen.title, (struct Widget*)&LoadingScreen.message
-};
+static struct Widget* loading_widgets[2];
+#define LOADING_TILE_SIZE 64
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	TextWidget_Set(&s->title, &s->titleStr, &s->font);
@@ -1887,10 +1892,12 @@ static void LoadingScreen_MapLoaded(void* screen) {
 
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	TextWidget_Init(&s->title);
-	TextWidget_Init(&s->message);
 	s->widgets     = loading_widgets;
-	s->numWidgets  = Array_Elems(loading_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(loading_widgets);
+
+	TextWidget_Add(s, &s->title);
+	TextWidget_Add(s, &s->message);
 
 	LoadingScreen_CalcMaxVertices(s);
 	Gfx_SetFog(false);
@@ -2038,12 +2045,7 @@ static struct DisconnectScreen {
 	cc_string titleStr, messageStr;
 } DisconnectScreen;
 
-static struct Widget* disconnect_widgets[] = {
-	(struct Widget*)&DisconnectScreen.title, 
-	(struct Widget*)&DisconnectScreen.message,
-	(struct Widget*)&DisconnectScreen.reconnect,
-	(struct Widget*)&DisconnectScreen.quit
-};
+static struct Widget* disconnect_widgets[4];
 #define DISCONNECT_DELAY_SECS 5
 
 static void DisconnectScreen_Layout(void* screen) {
@@ -2102,11 +2104,15 @@ static void DisconnectScreen_OnQuit(void* s, void* w) { Window_RequestClose(); }
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	TextWidget_Init(&s->title);
-	TextWidget_Init(&s->message);
+	s->widgets      = disconnect_widgets;
+	s->numWidgets   = 0;
+	s->maxWidgets   = Array_Elems(disconnect_widgets);
 
-	ButtonWidget_Init(&s->reconnect, 300, DisconnectScreen_OnReconnect);
-	ButtonWidget_Init(&s->quit,      300, DisconnectScreen_OnQuit);
+	TextWidget_Add(s, &s->title);
+	TextWidget_Add(s, &s->message);
+
+	ButtonWidget_Add(s, &s->reconnect, 300, DisconnectScreen_OnReconnect);
+	ButtonWidget_Add(s, &s->quit,      300, DisconnectScreen_OnQuit);
 	if (!s->canReconnect) s->reconnect.flags = WIDGET_FLAG_DISABLED;
 
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
@@ -2114,8 +2120,6 @@ static void DisconnectScreen_Init(void* screen) {
 
 	s->initTime     = Game.Time;
 	s->lastSecsLeft = DISCONNECT_DELAY_SECS;
-	s->widgets      = disconnect_widgets;
-	s->numWidgets   = Array_Elems(disconnect_widgets);
 	s->maxVertices  = Screen_CalcDefaultMaxVertices(s);
 }
 

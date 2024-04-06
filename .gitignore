@@ -36,6 +36,7 @@ build-ps2/
 build-ps3/
 build-psp/
 build-vita/
+eboot.pbp
 
 # Build results
 [Dd]ebug/
