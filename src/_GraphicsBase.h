@@ -49,16 +49,35 @@ void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
 #ifndef CC_BUILD_3DS
-void Gfx_Set3DLeft(void) {
+void Gfx_Set3DLeft(struct Matrix* proj, struct Matrix* view) {
+	struct Matrix proj_left, view_left;
+
+	/* Translation values according to values captured by */
+	/*  analysing the OpenGL calls made by classic using gDEbugger */
+	/* TODO these still aren't quite right, ghosting occurs */
+	Matrix_Translate(&proj_left,   0.07f, 0, 0);
+	Matrix_Mul(&Gfx.Projection, proj, &proj_left);
+	Matrix_Translate(&view_left,  -0.10f, 0, 0);
+	Matrix_Mul(&Gfx.View,       view, &view_left);
+
 	Gfx_SetColorWrite(false, true, true, false);
 }
 
-void Gfx_Set3DRight(void) {
+void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view) {
+	struct Matrix proj_right, view_right;
+
+	Matrix_Translate(&proj_right, -0.07f, 0, 0);
+	Matrix_Mul(&Gfx.Projection, proj, &proj_right);
+	Matrix_Translate(&view_right,  0.10f, 0, 0);
+	Matrix_Mul(&Gfx.View,       view, &view_right);
+
 	Gfx_ClearBuffers(GFX_BUFFER_DEPTH);
 	Gfx_SetColorWrite(true, false, false, false);
 }
 
-void Gfx_End3D(void) {
+void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
+	Gfx.Projection = *proj;
+
 	Gfx_SetColorWrite(true, true, true, true);
 }
 #endif
