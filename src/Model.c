@@ -182,7 +182,7 @@ static struct VertexTextured* real_vertices;
 static GfxResourceID modelVB;
 
 void Model_LockVB(struct Entity* entity, int verticesCount) {
-#ifdef CC_BUILD_LOWMEM
+#ifdef CC_BUILD_CONSOLE
 	if (!entity->ModelVB) {
 		entity->ModelVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.Active->maxVertices);
 	}

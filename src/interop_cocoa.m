@@ -701,7 +701,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	NSRect rect;
 	rect.origin.x    = r.x; 
 	rect.origin.y    = Window_Main.Height - r.y - r.height;
-	rect.size.width  = r.ridth;
+	rect.size.width  = r.width;
 	rect.size.height = r.height;
 	
 	[viewHandle setNeedsDisplayInRect:rect];

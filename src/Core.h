@@ -293,7 +293,6 @@ typedef cc_uint8  cc_bool;
 #elif defined __vita__
 	#define CC_BUILD_PSVITA
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
@@ -309,7 +308,6 @@ typedef cc_uint8  cc_bool;
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
@@ -342,7 +340,6 @@ typedef cc_uint8  cc_bool;
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
