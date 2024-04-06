@@ -155,6 +155,11 @@ CC_API void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /*  NOTE: Implicitly calls Gfx_SetColorWrite */
 CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
 
+/* Anaglyph 3D rendering support */
+void Gfx_Set3DLeft(void);
+void Gfx_Set3DRight(void);
+void Gfx_End3D(void);
+
 /* Callback function to initialise/fill out the contents of an index buffer */
 typedef void (*Gfx_FillIBFunc)(cc_uint16* indices, int count, void* obj);
 /* Creates a new index buffer and fills out its contents */

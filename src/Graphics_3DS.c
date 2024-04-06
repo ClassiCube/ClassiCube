@@ -25,6 +25,8 @@ extern const u32 offset_shbin_size;
 static void GPUBuffers_DeleteUnreferenced(void);
 static void GPUTextures_DeleteUnreferenced(void);
 static cc_uint32 frameCounter;
+static PackedCol clear_color;
+static cc_bool rendering3D;
 	
 	
 /*########################################################################################################################*
@@ -106,7 +108,8 @@ static void SwitchProgram(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static C3D_RenderTarget* topTarget;
+static C3D_RenderTarget* topTargetLeft;
+static C3D_RenderTarget* topTargetRight;
 static C3D_RenderTarget* bottomTarget;
 
 static void AllocShaders(void) {
@@ -131,8 +134,8 @@ static void SetDefaultState(void) {
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
 
-	topTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTargetSetOutput(topTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+	topTargetLeft = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderTargetSetOutput(topTargetLeft, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
 	// can be used for both screens. The output is clipped to the actual screen width, anyway.
@@ -186,8 +189,30 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
-	C3D_FrameDrawOn(screen == TOP_SCREEN ? topTarget : bottomTarget);
+	C3D_FrameDrawOn(screen == TOP_SCREEN ? topTargetLeft : bottomTarget);
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Stereoscopic support-------------------------------------------------*
+*#########################################################################################################################*/
+void Gfx_Set3DLeft(void) {
+	rendering3D = true;
+}
+
+void Gfx_Set3DRight(void) {
+	if (!topTargetRight) {
+		topTargetRight = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+		C3D_RenderTargetSetOutput(topTargetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+	}
+
+	C3D_RenderTargetClear(topTargetRight, C3D_CLEAR_ALL, clear_color, 0);
+	C3D_FrameDrawOn(topTargetRight);
+}
+
+void Gfx_End3D(void) {
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------GPU Textures-----------------------------------------------------*
@@ -368,7 +393,6 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
-static PackedCol clear_color;
 void Gfx_ClearColor(PackedCol color) {
 	// TODO find better way?
 	clear_color = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
@@ -451,9 +475,10 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) {
-	int flags = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
+	rendering3D = false;
+	int flags   = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
 	C3D_FrameBegin(flags);
-	C3D_FrameDrawOn(topTarget);
+	C3D_FrameDrawOn(topTargetLeft);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -461,11 +486,12 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_COLOR) targets |= C3D_CLEAR_COLOR;
 	if (buffers & GFX_BUFFER_DEPTH) targets |= C3D_CLEAR_DEPTH;
 	
-	C3D_RenderTargetClear(topTarget,    targets, clear_color, 0);
-	C3D_RenderTargetClear(bottomTarget, targets,           0, 0);
+	C3D_RenderTargetClear(topTargetLeft, targets, clear_color, 0);
+	C3D_RenderTargetClear(bottomTarget,  targets,           0, 0);
 }
 
 void Gfx_EndFrame(void) {
+	gfxSet3D(rendering3D);
 	C3D_FrameEnd(0);
 	//gfxFlushBuffers();
 	//gfxSwapBuffers();

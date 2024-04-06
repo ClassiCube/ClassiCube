@@ -48,6 +48,21 @@ void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
+#ifndef CC_BUILD_3DS
+void Gfx_Set3DLeft(void) {
+	Gfx_SetColorWrite(false, true, true, false);
+}
+
+void Gfx_Set3DRight(void) {
+	Gfx_ClearBuffers(GFX_BUFFER_DEPTH);
+	Gfx_SetColorWrite(true, false, false, false);
+}
+
+void Gfx_End3D(void) {
+	Gfx_SetColorWrite(true, true, true, true);
+}
+#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
@@ -87,6 +102,10 @@ static void FreeDefaultResources(void) {
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------FPS and context----------------------------------------------------*
+*#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 static void LimitFPS(void) {
 	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
@@ -152,17 +171,9 @@ static CC_INLINE void EndReducedPerformance(void) {
 }
 
 
-void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	Gfx_DeleteTexture(tex);
-	*tex = Gfx_CreateTexture(bmp, flags, mipmaps);
-}
-
-void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
-	Gfx_DeleteVb(vb);
-	*vb = Gfx_CreateVb(fmt, count);
-	return Gfx_LockVb(*vb, fmt, count);
-}
-
+/*########################################################################################################################*
+*--------------------------------------------------------2D drawing-------------------------------------------------------*
+*#########################################################################################################################*/
 #ifndef CC_BUILD_3DS
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured* v;
@@ -246,6 +257,10 @@ void Gfx_End2D(void) {
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Misc/Utils-------------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_SetupAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(true);
 	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(true);
@@ -259,7 +274,6 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
 	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(false);
 }
-
 
 static CC_INLINE float Reversed_CalcZNear(float fov, int depthbufferBits) {
 	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
@@ -286,6 +300,11 @@ static void PrintMaxTextureInfo(cc_string* info) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	Gfx_DeleteTexture(tex);
+	*tex = Gfx_CreateTexture(bmp, flags, mipmaps);
+}
+
 static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
 	cc_uint8* src_ = (cc_uint8*)src->scan0;
@@ -415,6 +434,12 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
+void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
+	Gfx_DeleteVb(vb);
+	*vb = Gfx_CreateVb(fmt, count);
+	return Gfx_LockVb(*vb, fmt, count);
+}
+
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
 

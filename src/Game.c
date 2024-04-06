@@ -538,7 +538,7 @@ static void Render3D_Anaglyph(double delta, float t) {
 	Matrix_Translate(&view_left,  -0.10f, 0, 0);
 	Matrix_Mul(&Gfx.View, &view, &view_left);
 
-	Gfx_SetColorWrite(false, true, true, false);
+	Gfx_Set3DLeft();
 	Render3DFrame(delta, t);
 
 	Matrix_Translate(&proj_right, -0.07f, 0, 0);
@@ -546,12 +546,11 @@ static void Render3D_Anaglyph(double delta, float t) {
 	Matrix_Translate(&view_right,  0.10f, 0, 0);
 	Matrix_Mul(&Gfx.View, &view, &view_right);
 
-	Gfx_ClearBuffers(GFX_BUFFER_DEPTH);
-	Gfx_SetColorWrite(true, false, false, false);
+	Gfx_Set3DRight();
 	Render3DFrame(delta, t);
 
 	Gfx.Projection = proj;
-	Gfx_SetColorWrite(true, true, true, true);
+	Gfx_End3D();
 }
 
 static void PerformScheduledTasks(double time) {
