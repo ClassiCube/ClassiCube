@@ -776,9 +776,19 @@ struct AudioContext {
 };
 static int channelIDs;
 
+// See https://github.com/devkitPro/3ds-examples/blob/master/audio/README.md
+// To get audio to work in Citra, just create a 0 byte file in sdmc/3ds named dspfirm.cdca
 cc_bool AudioBackend_Init(void) {
 	int result = ndspInit();
-	Platform_Log1("NDSP_INIT: %i", &result);
+	Platform_Log2("NDSP_INIT: %i, %h", &result, &result);
+
+	if (result == MAKERESULT(RL_PERMANENT, RS_NOTFOUND, RM_DSP, RD_NOT_FOUND)) {
+		static const cc_string msg = String_FromConst("/3ds/dspfirm.cdc not found on SD card, therefore no audio will play");
+		Logger_WarnFunc(&msg);
+	} else if (result) {
+		Audio_Warn(result, "initing DSP for playing audio");
+	}
+
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	return result == 0; 
 }
