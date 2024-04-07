@@ -232,8 +232,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	String_EncodeUtf8(input, args->text);
 	
 	int mode = args->type & 0xFF;
-	// Numpad mode doesn't display . symbol, so can't be used for KEYBOARD_TYPE_NUMBER unfortunately
-	int type = mode == KEYBOARD_TYPE_INTEGER ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
+	int type = (mode == KEYBOARD_TYPE_INTEGER || mode == KEYBOARD_TYPE_NUMBER) ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
 	
 	swkbdInit(&swkbd, type, 3, -1);
 	swkbdSetInitialText(&swkbd, input);
@@ -241,6 +240,12 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	//swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
 	//swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, btnText, true);
 	swkbdSetButton(&swkbd, SWKBD_BUTTON_CONFIRM, btnText, true);
+	
+	if (mode == KEYBOARD_TYPE_INTEGER) {
+		swkbdSetNumpadKeys(&swkbd, '-', 0);
+	} else if (mode == KEYBOARD_TYPE_NUMBER) {
+		swkbdSetNumpadKeys(&swkbd, '-', '.');
+	}
 	
 	if (type == KEYBOARD_TYPE_PASSWORD)
 		swkbdSetPasswordMode(&swkbd, SWKBD_PASSWORD_HIDE_DELAY);

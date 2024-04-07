@@ -66,6 +66,7 @@ void Window_Init(void) {
 	Window_Main.Exists  = true;
 	Window_Main.Handle = nwindowGetDefault();
 
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
