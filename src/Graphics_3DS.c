@@ -113,6 +113,7 @@ static C3D_RenderTarget topTargetLeft;
 static C3D_RenderTarget topTargetRight;
 static C3D_RenderTarget bottomTarget;
 static cc_bool createdTopTargetRight;
+static C3D_RenderTarget* topTarget;
 
 static void AllocShaders(void) {
 	Shader_Alloc(&shaders[0], coloured_shbin, coloured_shbin_size);
@@ -169,6 +170,7 @@ void Gfx_Create(void) {
 void Gfx_Free(void) {
 	Gfx_FreeState();
 	C3Di_RenderQueueExit();
+	gfxSet3D(false);
 
 	// FreeShaders()
 	// C3D_Fini()
@@ -194,7 +196,7 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
-	C3D_FrameDrawOn(screen == TOP_SCREEN ? &topTargetLeft : &bottomTarget);
+	C3D_FrameDrawOn(screen == TOP_SCREEN ? topTarget : &bottomTarget);
 }
 
 
@@ -228,11 +230,20 @@ void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view) {
 	}
 
 	C3D_RenderTargetClear(&topTargetRight, C3D_CLEAR_ALL, clear_color, 0);
-	C3D_FrameDrawOn(&topTargetRight);
+	topTarget = &topTargetRight;
+	C3D_FrameDrawOn(topTarget);
 }
 
 void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
 	Gfx.Projection = *proj;
+
+	topTarget = &topTargetLeft;
+	C3D_FrameDrawOn(topTarget);
+}
+
+void Gfx_SetTopRight(void) {
+	topTarget = &topTargetRight;
+	C3D_FrameDrawOn(topTarget);
 }
 
 
@@ -537,7 +548,8 @@ void Gfx_BeginFrame(void) {
 	if (gfx_vsync) C3D_FrameSync();
 
 	C3D_FrameBegin(0);
-	C3D_FrameDrawOn(&topTargetLeft);
+	topTarget = &topTargetLeft;
+	C3D_FrameDrawOn(topTarget);
 
 	extern void C3Di_UpdateContext(void);
 	C3Di_UpdateContext();

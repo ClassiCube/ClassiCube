@@ -659,6 +659,14 @@ static void Game_RenderFrame(double delta) {
 
 	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
+/* TODO find a better solution than this */
+#ifdef CC_BUILD_3DS
+	if (Game_Anaglyph3D) {
+		extern void Gfx_SetTopRight(void);
+		Gfx_SetTopRight();
+		Gui_RenderGui(delta);
+	}
+#endif
 	Gfx_End2D();
 
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
