@@ -311,13 +311,9 @@ typedef struct C3D_RenderTarget_tag C3D_RenderTarget;
 
 struct C3D_RenderTarget_tag
 {
-	C3D_RenderTarget *next, *prev;
 	C3D_FrameBuf frameBuf;
 
-	bool used;
-	bool ownsColor, ownsDepth;
-
-	bool linked;
+	bool used, linked;
 	gfxScreen_t screen;
 	gfx3dSide_t side;
 	u32 transferFlags;
@@ -337,7 +333,7 @@ static bool C3D_FrameDrawOn(C3D_RenderTarget* target);
 static void C3D_FrameSplit(u8 flags);
 static void C3D_FrameEnd(u8 flags);
 
-static C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt);
+static void C3D_RenderTargetCreate(C3D_RenderTarget* target, int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt);
 static void C3D_RenderTargetDelete(C3D_RenderTarget* target);
 static void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 
@@ -977,7 +973,6 @@ static void C3D_ImmDrawEnd(void)
 
 
 
-static C3D_RenderTarget *firstTarget, *lastTarget;
 static C3D_RenderTarget *linkedTarget[3];
 
 static bool inFrame, inSafeTransfer;
@@ -1069,23 +1064,11 @@ static void C3Di_RenderQueueInit(void)
 
 static void C3Di_RenderQueueExit(void)
 {
-	int i;
-	C3D_RenderTarget *a, *next;
-
 	C3Di_WaitAndClearQueue(-1);
 	gxCmdQueueSetCallback(&C3Di_GetContext()->gxQueue, NULL, NULL);
 	GX_BindQueue(NULL);
 
 	C3Di_RenderQueueDisableVBlank();
-
-	for (i = 0; i < 3; i ++)
-		linkedTarget[i] = NULL;
-
-	for (a = firstTarget; a; a = next)
-	{
-		next = a->next;
-		C3Di_RenderTargetDestroy(a);
-	}
 }
 
 static void C3Di_RenderQueueWaitDone(void)
@@ -1161,70 +1144,36 @@ static void C3D_FrameEnd(u8 flags)
 	gxCmdQueueRun(&ctx->gxQueue);
 }
 
-static C3D_RenderTarget* C3Di_RenderTargetNew(void)
+void C3D_RenderTargetCreate(C3D_RenderTarget* target, int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt)
 {
-	C3D_RenderTarget* target = (C3D_RenderTarget*)malloc(sizeof(C3D_RenderTarget));
-	if (!target) return NULL;
-	memset(target, 0, sizeof(C3D_RenderTarget));
-	return target;
-}
-
-static void C3Di_RenderTargetFinishInit(C3D_RenderTarget* target)
-{
-	target->prev = lastTarget;
-	target->next = NULL;
-	if (lastTarget)
-		lastTarget->next = target;
-	if (!firstTarget)
-		firstTarget = target;
-	lastTarget = target;
-}
-
-C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt)
-{
-	void* depthBuf = NULL;
-	void* colorBuf = vramAlloc(C3D_CalcColorBufSize(width,height,colorFmt));
-	if (!colorBuf) goto _fail0;
-
+	size_t colorSize = C3D_CalcColorBufSize(width,height,colorFmt);
 	size_t depthSize = C3D_CalcDepthBufSize(width,height,depthFmt);
+	memset(target, 0, sizeof(C3D_RenderTarget));
+
+	void* depthBuf = NULL;
+	void* colorBuf = vramAlloc(colorSize);
+	if (!colorBuf) goto _fail;
+
 	vramAllocPos vramBank = addrGetVRAMBank(colorBuf);
 	depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
 	if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
-	if (!depthBuf) goto _fail1;
-
-	C3D_RenderTarget* target = C3Di_RenderTargetNew();
-	if (!target) goto _fail2;
+	if (!depthBuf) goto _fail;
 
 	C3D_FrameBuf* fb = &target->frameBuf;
 	C3D_FrameBufAttrib(fb, width, height, false);
 	C3D_FrameBufColor(fb, colorBuf, colorFmt);
 	C3D_FrameBufDepth(fb, depthBuf, depthFmt);
-	target->ownsDepth = true;
-	target->ownsColor = true;
+	return;
 
-	C3Di_RenderTargetFinishInit(target);
-	return target;
-
-_fail2:
+_fail:
 	if (depthBuf) vramFree(depthBuf);
-_fail1:
-	vramFree(colorBuf);
-_fail0:
-	return NULL;
+	if (colorBuf) vramFree(colorBuf);
 }
 
 static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target)
 {
-	if (target->ownsColor)
-		vramFree(target->frameBuf.colorBuf);
-	if (target->ownsDepth)
-		vramFree(target->frameBuf.depthBuf);
-
-	C3D_RenderTarget** prevNext = target->prev ? &target->prev->next : &firstTarget;
-	C3D_RenderTarget** nextPrev = target->next ? &target->next->prev : &lastTarget;
-	*prevNext = target->next;
-	*nextPrev = target->prev;
-	free(target);
+	vramFree(target->frameBuf.colorBuf);
+	vramFree(target->frameBuf.depthBuf);
 }
 
 static void C3D_RenderTargetDelete(C3D_RenderTarget* target)

@@ -109,9 +109,10 @@ static void SwitchProgram(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static C3D_RenderTarget* topTargetLeft;
-static C3D_RenderTarget* topTargetRight;
-static C3D_RenderTarget* bottomTarget;
+static C3D_RenderTarget topTargetLeft;
+static C3D_RenderTarget topTargetRight;
+static C3D_RenderTarget bottomTarget;
+static cc_bool createdTopTargetRight;
 
 static void AllocShaders(void) {
 	Shader_Alloc(&shaders[0], coloured_shbin, coloured_shbin_size);
@@ -135,13 +136,13 @@ static void SetDefaultState(void) {
 static void InitCitro3D(void) {	
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 4);
 
-	topTargetLeft = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
-	C3D_RenderTargetSetOutput(topTargetLeft, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+	C3D_RenderTargetCreate(&topTargetLeft, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
+	C3D_RenderTargetSetOutput(&topTargetLeft, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	// Even though the bottom screen is 320 pixels wide, we use 400 here so that the same ortho matrix
 	// can be used for both screens. The output is clipped to the actual screen width, anyway.
-	bottomTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
-	C3D_RenderTargetSetOutput(bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+	C3D_RenderTargetCreate(&bottomTarget, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
+	C3D_RenderTargetSetOutput(&bottomTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
 	gfxSetDoubleBuffering(GFX_TOP, true);
 	SetDefaultState();
@@ -151,6 +152,7 @@ static void InitCitro3D(void) {
 static GfxResourceID white_square;
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitCitro3D();
+	else C3Di_RenderQueueInit();
 	
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
@@ -166,6 +168,8 @@ void Gfx_Create(void) {
 
 void Gfx_Free(void) {
 	Gfx_FreeState();
+	C3Di_RenderQueueExit();
+
 	// FreeShaders()
 	// C3D_Fini()
 }
@@ -190,7 +194,7 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
-	C3D_FrameDrawOn(screen == TOP_SCREEN ? topTargetLeft : bottomTarget);
+	C3D_FrameDrawOn(screen == TOP_SCREEN ? &topTargetLeft : &bottomTarget);
 }
 
 
@@ -217,13 +221,14 @@ void Gfx_Set3DLeft(struct Matrix* proj, struct Matrix* view) {
 void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view) {
 	Calc3DProjection(+1, proj);
 
-	if (!topTargetRight) {
-		topTargetRight = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-		C3D_RenderTargetSetOutput(topTargetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+	if (!createdTopTargetRight) {
+		C3D_RenderTargetCreate(&topTargetRight, 240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24);
+		C3D_RenderTargetSetOutput(&topTargetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+		createdTopTargetRight = true;
 	}
 
-	C3D_RenderTargetClear(topTargetRight, C3D_CLEAR_ALL, clear_color, 0);
-	C3D_FrameDrawOn(topTargetRight);
+	C3D_RenderTargetClear(&topTargetRight, C3D_CLEAR_ALL, clear_color, 0);
+	C3D_FrameDrawOn(&topTargetRight);
 }
 
 void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
@@ -532,7 +537,7 @@ void Gfx_BeginFrame(void) {
 	if (gfx_vsync) C3D_FrameSync();
 
 	C3D_FrameBegin(0);
-	C3D_FrameDrawOn(topTargetLeft);
+	C3D_FrameDrawOn(&topTargetLeft);
 
 	extern void C3Di_UpdateContext(void);
 	C3Di_UpdateContext();
@@ -543,8 +548,8 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 	if (buffers & GFX_BUFFER_COLOR) targets |= C3D_CLEAR_COLOR;
 	if (buffers & GFX_BUFFER_DEPTH) targets |= C3D_CLEAR_DEPTH;
 	
-	C3D_RenderTargetClear(topTargetLeft, targets, clear_color, 0);
-	C3D_RenderTargetClear(bottomTarget,  targets,           0, 0);
+	C3D_RenderTargetClear(&topTargetLeft, targets, clear_color, 0);
+	C3D_RenderTargetClear(&bottomTarget,  targets,           0, 0);
 }
 
 void Gfx_EndFrame(void) {
