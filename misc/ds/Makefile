@@ -4,7 +4,7 @@
 export BLOCKSDS			?= /opt/blocksds/core
 export BLOCKSDSEXT		?= /opt/blocksds/external
 
-NAME			:= classicube
+NAME			:= ClassiCube
 GAME_TITLE		:= ClassiCube
 GAME_SUBTITLE	:= Built with BlocksDS
 GAME_AUTHOR		:= UnknownShadow200

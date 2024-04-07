@@ -17,16 +17,17 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <nds/bios.h>
+#include <nds/interrupts.h>
 #include <nds/timers.h>
 #include <nds/debug.h>
+#include <nds/system.h>
+#include <nds/arm9/dldi.h>
+#include <nds/arm9/sdmmc.h>
 #include <fat.h>
 #include <dswifi9.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <nds/arm9/cache.h>
-#include <nds/arm9/dldi.h>
-#include <nds/arm9/sdmmc.h>
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
@@ -195,8 +196,10 @@ static void InitFilesystem(void) {
 	// I don't know why I have to call this function, but if I don't,
 	//  then when running in DSi mode AND an SD card is readable,
 	//  fatInitDefault gets stuck somewhere (in disk_initialize it seems)
- 	const DISC_INTERFACE* sd_io = get_io_dsisd();
-	if (sd_io) sd_io->startup();
+	if (isDSiMode()) {
+ 		const DISC_INTERFACE* sd_io = get_io_dsisd();
+		if (sd_io) sd_io->startup();
+	}
 
     fat_available = fatInitDefault();
 	Platform_ReadonlyFilesystem = !fat_available;
