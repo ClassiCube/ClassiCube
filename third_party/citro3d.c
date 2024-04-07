@@ -97,16 +97,6 @@ typedef struct
 	};
 } C3D_Tex;
 
-typedef struct CTR_ALIGN(8)
-{
-	u16 width;
-	u16 height;
-	u8 maxLevel                 : 4;
-	GPU_TEXCOLOR format         : 4;
-	bool onVram                 : 1;
-} C3D_TexInitParams;
-
-static bool C3D_TexInitWithParams(C3D_Tex* tex, void* cube, C3D_TexInitParams p);
 static void C3D_TexLoadImage(C3D_Tex* tex, const void* data, GPU_TEXFACE face, int level);
 static void C3D_TexGenerateMipmap(C3D_Tex* tex, GPU_TEXFACE face);
 static void C3D_TexBind(int unitId, C3D_Tex* tex);
@@ -144,23 +134,6 @@ static inline u32 C3D_TexCalcTotalSize(u32 size, int maxLevel)
 	return (size - C3D_TexCalcLevelSize(size,maxLevel+1)) * 4 / 3;
 }
 
-static inline bool C3D_TexInit(C3D_Tex* tex, u16 width, u16 height, GPU_TEXCOLOR format)
-{
-	return C3D_TexInitWithParams(tex, NULL,
-		(C3D_TexInitParams){ width, height, 0, format, false });
-}
-
-static inline bool C3D_TexInitVRAM(C3D_Tex* tex, u16 width, u16 height, GPU_TEXCOLOR format)
-{
-	return C3D_TexInitWithParams(tex, NULL,
-		(C3D_TexInitParams){ width, height, 0, format, true });
-}
-
-static inline GPU_TEXTURE_MODE_PARAM C3D_TexGetType(C3D_Tex* tex)
-{
-	return (GPU_TEXTURE_MODE_PARAM)((tex->param>>28)&0x7);
-}
-
 static inline void* C3D_TexGetImagePtr(C3D_Tex* tex, void* data, int level, u32* size)
 {
 	if (size) *size = level >= 0 ? C3D_TexCalcLevelSize(tex->size, level) : C3D_TexCalcTotalSize(tex->size, tex->maxLevel);
@@ -177,19 +150,6 @@ static inline void C3D_TexUpload(C3D_Tex* tex, const void* data)
 {
 	C3D_TexLoadImage(tex, data, GPU_TEXFACE_2D, 0);
 }
-
-static inline void C3D_TexSetFilter(C3D_Tex* tex, GPU_TEXTURE_FILTER_PARAM magFilter, GPU_TEXTURE_FILTER_PARAM minFilter)
-{
-	tex->param &= ~(GPU_TEXTURE_MAG_FILTER(GPU_LINEAR) | GPU_TEXTURE_MIN_FILTER(GPU_LINEAR));
-	tex->param |= GPU_TEXTURE_MAG_FILTER(magFilter) | GPU_TEXTURE_MIN_FILTER(minFilter);
-}
-
-static inline void C3D_TexSetWrap(C3D_Tex* tex, GPU_TEXTURE_WRAP_PARAM wrapS, GPU_TEXTURE_WRAP_PARAM wrapT)
-{
-	tex->param &= ~(GPU_TEXTURE_WRAP_S(3) | GPU_TEXTURE_WRAP_T(3));
-	tex->param |= GPU_TEXTURE_WRAP_S(wrapS) | GPU_TEXTURE_WRAP_T(wrapT);
-}
-
 
 
 
@@ -925,7 +885,7 @@ static void C3D_FrameBufClear(C3D_FrameBuf* frameBuf, C3D_ClearBits clearBits, u
 	if (clearBits & C3D_CLEAR_COLOR)
 	{
 		if (clearBits & C3D_CLEAR_DEPTH)
-			GX_MemoryFill(
+			GX_gMemoryFill(
 				(u32*)frameBuf->colorBuf, clearColor, (u32*)colorBufEnd, BIT(0) | (cfs << 8),
 				(u32*)frameBuf->depthBuf, clearDepth, (u32*)depthBufEnd, BIT(0) | (dfs << 8));
 		else
@@ -1022,33 +982,18 @@ static C3D_RenderTarget *linkedTarget[3];
 
 static bool inFrame, inSafeTransfer;
 static bool needSwapTop, needSwapBot, isTopStereo;
-static float framerate = 60.0f;
-static float framerateCounter[2] = { 60.0f, 60.0f };
-static u32 frameCounter[2];
+static u32 vblankCounter[2];
 
 static void C3Di_RenderTargetDestroy(C3D_RenderTarget* target);
 
-static bool framerateLimit(int id)
-{
-	framerateCounter[id] -= framerate;
-	if (framerateCounter[id] <= 0.0f)
-	{
-		framerateCounter[id] += 60.0f;
-		return true;
-	}
-	return false;
-}
-
 static void onVBlank0(void* unused)
 {
-	if (framerateLimit(0))
-		frameCounter[0]++;
+	vblankCounter[0]++;
 }
 
 static void onVBlank1(void* unused)
 {
-	if (framerateLimit(1))
-		frameCounter[1]++;
+	vblankCounter[1]++;
 }
 
 static void onQueueFinish(gxCmdQueue_s* queue)
@@ -1080,12 +1025,12 @@ static void onQueueFinish(gxCmdQueue_s* queue)
 static void C3D_FrameSync(void)
 {
 	u32 cur[2];
-	u32 start[2] = { frameCounter[0], frameCounter[1] };
+	u32 start[2] = { vblankCounter[0], vblankCounter[1] };
 	do
 	{
 		gspWaitForAnyEvent();
-		cur[0] = frameCounter[0];
-		cur[1] = frameCounter[1];
+		cur[0] = vblankCounter[0];
+		cur[1] = vblankCounter[1];
 	} while (cur[0]==start[0] || cur[1]==start[1]);
 }
 
@@ -1153,8 +1098,6 @@ static bool C3D_FrameBegin(u8 flags)
 	C3D_Context* ctx = C3Di_GetContext();
 	if (inFrame) return false;
 
-	if (flags & C3D_FRAME_SYNCDRAW)
-		C3D_FrameSync();
 	if (!C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? 0 : -1))
 		return false;
 
@@ -1198,24 +1141,21 @@ static void C3D_FrameEnd(u8 flags)
 		GSPGPU_FlushDataCache((void*)__ctru_linear_heap, __ctru_linear_heap_size);
 	}
 
-	int i;
 	C3D_RenderTarget* target;
 	isTopStereo = false;
-	for (i = 2; i >= 0; i --)
+	needSwapTop = true;
+	needSwapBot = true;
+
+	for (int i = 2; i >= 0; i --)
 	{
 		target = linkedTarget[i];
 		if (!target || !target->used)
 			continue;
+
 		target->used = false;
 		C3D_FrameBufTransfer(&target->frameBuf, target->screen, target->side, target->transferFlags);
-		if (target->screen == GFX_TOP)
-		{
-			needSwapTop = true;
-			if (target->side == GFX_RIGHT)
-				isTopStereo = true;
-		}
-		else if (target->screen == GFX_BOTTOM)
-			needSwapBot = true;
+
+		if (target->screen == GFX_TOP && target->side == GFX_RIGHT) isTopStereo = true;
 	}
 
 	gxCmdQueueRun(&ctx->gxQueue);
@@ -1355,47 +1295,6 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env)
 
 
 
-
-// Return bits per pixel
-static inline size_t fmtSize(GPU_TEXCOLOR fmt)
-{
-	switch (fmt)
-	{
-		case GPU_RGBA8:
-			return 32;
-		case GPU_RGB8:
-			return 24;
-		case GPU_RGBA5551:
-		case GPU_RGB565:
-		case GPU_RGBA4:
-			return 16;
-		default:
-			return 0;
-	}
-}
-
-static bool C3D_TexInitWithParams(C3D_Tex* tex, void* cube, C3D_TexInitParams p)
-{
-	u32 size = fmtSize(p.format);
-	if (!size) return false;
-	size *= (u32)p.width * p.height / 8;
-	u32 total_size = C3D_TexCalcTotalSize(size, p.maxLevel);
-
-	tex->data = p.onVram ? vramAlloc(total_size) : linearAlloc(total_size);
-	if (!tex->data) return false;
-
-	tex->width  = p.width;
-	tex->height = p.height;
-	tex->param  = GPU_TEXTURE_MODE(GPU_TEX_2D);
-	tex->fmt    = p.format;
-	tex->size   = size;
-
-	tex->border   = 0;
-	tex->lodBias  = 0;
-	tex->maxLevel = p.maxLevel;
-	tex->minLevel = 0;
-	return true;
-}
 
 static void C3D_TexLoadImage(C3D_Tex* tex, const void* data, GPU_TEXFACE face, int level)
 {

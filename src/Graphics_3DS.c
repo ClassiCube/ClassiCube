@@ -293,6 +293,27 @@ static void GPUTextures_DeleteUnreferenced(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height) {
+	u32 size = width * height * 4;
+	//tex->data = p.onVram ? vramAlloc(total_size) : linearAlloc(total_size);
+	tex->data = linearAlloc(size);
+	if (!tex->data) return false;
+
+	tex->width  = width;
+	tex->height = height;
+	tex->param  = GPU_TEXTURE_MODE(GPU_TEX_2D) |
+					GPU_TEXTURE_MAG_FILTER(GPU_NEAREST) | GPU_TEXTURE_MIN_FILTER(GPU_NEAREST) |
+					GPU_TEXTURE_WRAP_S(GPU_REPEAT)      | GPU_TEXTURE_WRAP_T(GPU_REPEAT);
+	tex->fmt    = GPU_RGBA8;
+	tex->size   = size;
+
+	tex->border   = 0;
+	tex->lodBias  = 0;
+	tex->maxLevel = 0;
+	tex->minLevel = 0;
+	return true;
+}
+
 /*static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
 	// Simplified "Interleave bits by Binary Magic Numbers" from
 	// http://graphics.stanford.edu/~seander/bithacks.html#InterleaveTableObvious
@@ -350,12 +371,10 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	struct GPUTexture* tex = GPUTexture_Alloc();
-	bool success = C3D_TexInit(&tex->texture, bmp->width, bmp->height, GPU_RGBA8);
+	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height);
 	if (!success) return NULL;
 	
-	ToMortonTexture(&tex->texture,  0, 0, bmp, bmp->width);
-    C3D_TexSetFilter(&tex->texture, GPU_NEAREST, GPU_NEAREST);
-    C3D_TexSetWrap(&tex->texture,   GPU_REPEAT,  GPU_REPEAT);
+	ToMortonTexture(&tex->texture, 0, 0, bmp, bmp->width);
     return tex;
 }
 
@@ -493,8 +512,10 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 
 void Gfx_BeginFrame(void) {
 	rendering3D = false;
-	int flags   = gfx_vsync ? C3D_FRAME_SYNCDRAW : 0;
-	C3D_FrameBegin(flags);
+	// wait for vblank for both screens TODO move to end?
+	if (gfx_vsync) C3D_FrameSync();
+
+	C3D_FrameBegin(0);
 	C3D_FrameDrawOn(topTargetLeft);
 
 	extern void C3Di_UpdateContext(void);
@@ -516,7 +537,6 @@ void Gfx_EndFrame(void) {
 	//gfxFlushBuffers();
 	//gfxSwapBuffers();
 
-	//if (gfx_vsync) gspWaitForVBlank();
 	if (gfx_minFrameMs) LimitFPS();
 		
 	GPUBuffers_DeleteUnreferenced();
