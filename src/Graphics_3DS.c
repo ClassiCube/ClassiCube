@@ -77,12 +77,12 @@ static void ReloadUniforms(void) {
 	if (!s) return; // NULL if context is lost
 
 	if (s->uniforms & UNI_MVP_MATRIX) {
-		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, s->locations[0], &_mvp);
+		C3D_FVUnifMtx4x4(s->locations[0], &_mvp);
 		s->uniforms &= ~UNI_MVP_MATRIX;
 	}
 	
 	if (s->uniforms & UNI_TEX_OFFSETS) {
-		C3D_FVUnifSet(GPU_VERTEX_SHADER, s->locations[1],
+		C3D_FVUnifSet(s->locations[1],
 				texOffsetX, texOffsetY, 0.0f, 0.0f);
 		s->uniforms &= ~UNI_TEX_OFFSETS;
 	}
@@ -662,19 +662,77 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static u32 fogColor;
+static C3D_FogLut fog_lut;
+static int fogMode = FOG_LINEAR;
+static float fogDensity = 1.0f;
+static float fogEnd = 32.0f;
+
 void Gfx_SetFog(cc_bool enabled) {
+	//C3D_FogGasMode(enabled ? GPU_FOG : GPU_NO_FOG, GPU_DEPTH_DENSITY, false);
+	// TODO doesn't work quite right
 }
 
 void Gfx_SetFogCol(PackedCol color) {
+	// TODO find better way?
+	u32 c = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
+	if (c == fogColor) return;
+
+	fogColor = c;
+	C3D_FogColor(c);
+}
+
+static void ApplyFog(float* values) {
+	float data[256];
+
+	for (int i = 0; i <= 128; i ++)
+	{
+		float val = values[i];
+		if (i < 128) data[i]       = val;
+		if (i > 0)   data[i + 127] = val-data[i-1];
+	}
+
+	FogLut_FromArray(&fog_lut, data);
+	C3D_FogLutBind(&fog_lut);
+}
+
+static void UpdateFog(void) {
+	float near = 0.01f;
+	float far  = Game_ViewDistance;
+	float values[129];
+
+	for (int i = 0; i <= 128; i ++)
+	{
+		float c = FogLut_CalcZ(i / 128.0f, near, far);
+
+		if (fogMode == FOG_LINEAR) {
+			values[i] = (fogEnd - c) / fogEnd;
+		} else if (fogMode == FOG_EXP) {
+			values[i] = expf(-fogDensity * c);
+		} else {
+			values[i] = expf(-fogDensity * c * c);
+		}
+	}
+	ApplyFog(values);
 }
 
 void Gfx_SetFogDensity(float value) {
+	if (fogDensity == value) return;
+
+	fogDensity = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogEnd(float value) {
+	if (fogEnd == value) return;
+
+	fogEnd = value;
+	UpdateFog();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
+	fogMode = func;
+	UpdateFog();
 }
 
 

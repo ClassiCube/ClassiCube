@@ -68,7 +68,6 @@ typedef struct
 
 typedef struct
 {
-	int bufCount;
 	C3D_BufCfg buffers[12];
 } C3D_BufInfo;
 
@@ -443,45 +442,40 @@ void Mtx_Multiply(C3D_Mtx* out, const C3D_Mtx* a, const C3D_Mtx* b)
 #define C3D_FVUNIF_COUNT 96
 #define C3D_IVUNIF_COUNT 4
 
-static C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
-static C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
-static u16      C3D_BoolUnifs[2];
+static C3D_FVec C3D_FVUnif[C3D_FVUNIF_COUNT];
+static C3D_IVec C3D_IVUnif[C3D_IVUNIF_COUNT];
+static u16      C3D_BoolUnifs;
 
-static bool C3D_FVUnifDirty[2][C3D_FVUNIF_COUNT];
-static bool C3D_IVUnifDirty[2][C3D_IVUNIF_COUNT];
-static bool C3D_BoolUnifsDirty[2];
+static bool C3D_FVUnifDirty[C3D_FVUNIF_COUNT];
+static bool C3D_IVUnifDirty[C3D_IVUNIF_COUNT];
+static bool C3D_BoolUnifsDirty;
 
-static inline C3D_FVec* C3D_FVUnifWritePtr(GPU_SHADER_TYPE type, int id, int size)
+static inline C3D_FVec* C3D_FVUnifWritePtr(int id, int size)
 {
 	int i;
 	for (i = 0; i < size; i ++)
-		C3D_FVUnifDirty[type][id+i] = true;
-	return &C3D_FVUnif[type][id];
+		C3D_FVUnifDirty[id+i] = true;
+	return &C3D_FVUnif[id];
 }
 
-static inline void C3D_FVUnifMtxNx4(GPU_SHADER_TYPE type, int id, const C3D_Mtx* mtx, int num)
+static inline void C3D_FVUnifMtx4x4(int id, const C3D_Mtx* mtx)
 {
 	int i;
-	C3D_FVec* ptr = C3D_FVUnifWritePtr(type, id, num);
-	for (i = 0; i < num; i ++)
+	C3D_FVec* ptr = C3D_FVUnifWritePtr(id, 4);
+	for (i = 0; i < 4; i ++)
 		ptr[i] = mtx->r[i]; // Struct copy.
 }
 
-static inline void C3D_FVUnifMtx4x4(GPU_SHADER_TYPE type, int id, const C3D_Mtx* mtx)
+static inline void C3D_FVUnifSet(int id, float x, float y, float z, float w)
 {
-	C3D_FVUnifMtxNx4(type, id, mtx, 4);
-}
-
-static inline void C3D_FVUnifSet(GPU_SHADER_TYPE type, int id, float x, float y, float z, float w)
-{
-	C3D_FVec* ptr = C3D_FVUnifWritePtr(type, id, 1);
+	C3D_FVec* ptr = C3D_FVUnifWritePtr(id, 1);
 	ptr->x = x;
 	ptr->y = y;
 	ptr->z = z;
 	ptr->w = w;
 }
 
-static void C3D_UpdateUniforms(GPU_SHADER_TYPE type);
+static void C3D_UpdateUniforms(void);
 
 
 
@@ -585,7 +579,7 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
 static void C3Di_SetTex(int unit, C3D_Tex* tex);
 static void C3Di_EffectBind(C3D_Effect* effect);
 
-static void C3Di_DirtyUniforms(GPU_SHADER_TYPE type);
+static void C3Di_DirtyUniforms(void);
 static void C3Di_LoadShaderUniforms(shaderInstance_s* si);
 static void C3Di_ClearShaderUniforms(GPU_SHADER_TYPE type);
 
@@ -838,22 +832,6 @@ static void FogLut_FromArray(C3D_FogLut* lut, const float data[256])
 
 		lut->data[i] = val2 | (val << 13);
 	}
-}
-
-static void FogLut_Exp(C3D_FogLut* lut, float density, float gradient, float near, float far)
-{
-	int i;
-	float data[256];
-	for (i = 0; i <= 128; i ++)
-	{
-		float x = FogLut_CalcZ(i/128.0f, near, far);
-		float val = expf(-powf(density*x, gradient));
-		if (i < 128)
-			data[i] = val;
-		if (i > 0)
-			data[i+127] = val-data[i-1];
-	}
-	FogLut_FromArray(lut, data);
 }
 
 static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip)
@@ -1511,46 +1489,39 @@ static void C3Di_SetTex(int unit, C3D_Tex* tex)
 
 
 
-static C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
-static C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
-static u16      C3D_BoolUnifs[2];
 
-static bool C3D_FVUnifDirty[2][C3D_FVUNIF_COUNT];
-static bool C3D_IVUnifDirty[2][C3D_IVUNIF_COUNT];
-static bool C3D_BoolUnifsDirty[2];
 
 static struct
 {
 	bool dirty;
 	int count;
 	float24Uniform_s* data;
-} C3Di_ShaderFVecData[2];
+} C3Di_ShaderFVecData;
 
-static bool C3Di_FVUnifEverDirty[2][C3D_FVUNIF_COUNT];
-static bool C3Di_IVUnifEverDirty[2][C3D_IVUNIF_COUNT];
+static bool C3Di_FVUnifEverDirty[C3D_FVUNIF_COUNT];
+static bool C3Di_IVUnifEverDirty[C3D_IVUNIF_COUNT];
 
-static void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
+static void C3D_UpdateUniforms(void)
 {
-	int offset = type == GPU_GEOMETRY_SHADER ? (GPUREG_GSH_BOOLUNIFORM-GPUREG_VSH_BOOLUNIFORM) : 0;
 	int i = 0;
 
 	// Update FVec uniforms that come from shader constants
-	if (C3Di_ShaderFVecData[type].dirty)
+	if (C3Di_ShaderFVecData.dirty)
 	{
-		while (i < C3Di_ShaderFVecData[type].count)
+		while (i < C3Di_ShaderFVecData.count)
 		{
-			float24Uniform_s* u = &C3Di_ShaderFVecData[type].data[i++];
-			GPUCMD_AddIncrementalWrites(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, (u32*)u, 4);
-			C3D_FVUnifDirty[type][u->id] = false;
+			float24Uniform_s* u = &C3Di_ShaderFVecData.data[i++];
+			GPUCMD_AddIncrementalWrites(GPUREG_VSH_FLOATUNIFORM_CONFIG, (u32*)u, 4);
+			C3D_FVUnifDirty[u->id] = false;
 		}
-		C3Di_ShaderFVecData[type].dirty = false;
+		C3Di_ShaderFVecData.dirty = false;
 		i = 0;
 	}
 
 	// Update FVec uniforms
 	while (i < C3D_FVUNIF_COUNT)
 	{
-		if (!C3D_FVUnifDirty[type][i])
+		if (!C3D_FVUnifDirty[i])
 		{
 			i ++;
 			continue;
@@ -1558,18 +1529,18 @@ static void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 
 		// Find the number of consecutive dirty uniforms
 		int j;
-		for (j = i; j < C3D_FVUNIF_COUNT && C3D_FVUnifDirty[type][j]; j ++);
+		for (j = i; j < C3D_FVUNIF_COUNT && C3D_FVUnifDirty[j]; j ++);
 
 		// Upload the uniforms
-		GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000|i);
-		GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*)&C3D_FVUnif[type][i], (j-i)*4);
+		GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG, 0x80000000|i);
+		GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA, (u32*)&C3D_FVUnif[i], (j-i)*4);
 
 		// Clear the dirty flag
 		int k;
 		for (k = i; k < j; k ++)
 		{
-			C3D_FVUnifDirty[type][k] = false;
-			C3Di_FVUnifEverDirty[type][k] = true;
+			C3D_FVUnifDirty[k] = false;
+			C3Di_FVUnifEverDirty[k] = true;
 		}
 
 		// Advance
@@ -1579,45 +1550,42 @@ static void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	// Update IVec uniforms
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
 	{
-		if (!C3D_IVUnifDirty[type][i]) continue;
+		if (!C3D_IVUnifDirty[i]) continue;
 
-		GPUCMD_AddWrite(GPUREG_VSH_INTUNIFORM_I0+offset+i, C3D_IVUnif[type][i]);
-		C3D_IVUnifDirty[type][i] = false;
-		C3Di_IVUnifEverDirty[type][i] = false;
+		GPUCMD_AddWrite(GPUREG_VSH_INTUNIFORM_I0+i, C3D_IVUnif[i]);
+		C3D_IVUnifDirty[i] = false;
+		C3Di_IVUnifEverDirty[i] = false;
 	}
 
 	// Update bool uniforms
-	if (C3D_BoolUnifsDirty[type])
+	if (C3D_BoolUnifsDirty)
 	{
-		GPUCMD_AddWrite(GPUREG_VSH_BOOLUNIFORM+offset, 0x7FFF0000 | C3D_BoolUnifs[type]);
-		C3D_BoolUnifsDirty[type] = false;
+		GPUCMD_AddWrite(GPUREG_VSH_BOOLUNIFORM, 0x7FFF0000 | C3D_BoolUnifs);
+		C3D_BoolUnifsDirty = false;
 	}
 }
 
-static void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
+static void C3Di_DirtyUniforms(void)
 {
 	int i;
-	C3D_BoolUnifsDirty[type] = true;
-	if (C3Di_ShaderFVecData[type].count)
-		C3Di_ShaderFVecData[type].dirty = true;
+	C3D_BoolUnifsDirty = true;
+	if (C3Di_ShaderFVecData.count)
+		C3Di_ShaderFVecData.dirty = true;
 	for (i = 0; i < C3D_FVUNIF_COUNT; i ++)
-		C3D_FVUnifDirty[type][i] = C3D_FVUnifDirty[type][i] || C3Di_FVUnifEverDirty[type][i];
+		C3D_FVUnifDirty[i] = C3D_FVUnifDirty[i] || C3Di_FVUnifEverDirty[i];
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
-		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
+		C3D_IVUnifDirty[i] = C3D_IVUnifDirty[i] || C3Di_IVUnifEverDirty[i];
 }
 
 static void C3Di_LoadShaderUniforms(shaderInstance_s* si)
 {
-	GPU_SHADER_TYPE type = si->dvle->type;
 	if (si->boolUniformMask)
 	{
-		C3D_BoolUnifs[type] &= ~si->boolUniformMask;
-		C3D_BoolUnifs[type] |= si->boolUniforms;
+		C3D_BoolUnifs &= ~si->boolUniformMask;
+		C3D_BoolUnifs |= si->boolUniforms;
 	}
 
-	if (type == GPU_GEOMETRY_SHADER)
-		C3D_BoolUnifs[type] &= ~BIT(15);
-	C3D_BoolUnifsDirty[type] = true;
+	C3D_BoolUnifsDirty = true;
 
 	if (si->intUniformMask)
 	{
@@ -1626,29 +1594,15 @@ static void C3Di_LoadShaderUniforms(shaderInstance_s* si)
 		{
 			if (si->intUniformMask & BIT(i))
 			{
-				C3D_IVUnif[type][i] = si->intUniforms[i];
-				C3D_IVUnifDirty[type][i] = true;
+				C3D_IVUnif[i] = si->intUniforms[i];
+				C3D_IVUnifDirty[i] = true;
 			}
 		}
 	}
-	C3Di_ShaderFVecData[type].dirty = true;
-	C3Di_ShaderFVecData[type].count = si->numFloat24Uniforms;
-	C3Di_ShaderFVecData[type].data = si->float24Uniforms;
+	C3Di_ShaderFVecData.dirty = true;
+	C3Di_ShaderFVecData.count = si->numFloat24Uniforms;
+	C3Di_ShaderFVecData.data  = si->float24Uniforms;
 }
-
-static void C3Di_ClearShaderUniforms(GPU_SHADER_TYPE type)
-{
-	C3Di_ShaderFVecData[type].dirty = false;
-	C3Di_ShaderFVecData[type].count = 0;
-	C3Di_ShaderFVecData[type].data = NULL;
-}
-
-
-
-
-
-
-
 
 
 
@@ -1678,8 +1632,7 @@ static void C3Di_AptEventHook(APT_HookType hookType, void* param)
 				| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
 				| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_TexEnvAll | C3DiF_LightEnv | C3DiF_Gas;
 
-			C3Di_DirtyUniforms(GPU_VERTEX_SHADER);
-			C3Di_DirtyUniforms(GPU_GEOMETRY_SHADER);
+			C3Di_DirtyUniforms();
 
 			if (ctx->fogLut)
 				ctx->flags |= C3DiF_FogLut;
@@ -1890,8 +1843,7 @@ static void C3Di_UpdateContext(void)
 		ctx->flags &= ~C3DiF_LightEnv;
 	}
 
-	C3D_UpdateUniforms(GPU_VERTEX_SHADER);
-	C3D_UpdateUniforms(GPU_GEOMETRY_SHADER);
+	C3D_UpdateUniforms();
 }
 
 static bool C3Di_SplitFrame(u32** pBuf, u32* pSize)
@@ -1931,11 +1883,7 @@ static void C3D_BindProgram(shaderProgram_s* program)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 
-	if (!(ctx->flags & C3DiF_Active))
-		return;
-
 	shaderProgram_s* oldProg = ctx->program;
-	shaderInstance_s* newGsh = program->geometryShader;
 	if (oldProg != program)
 	{
 		ctx->program = program;
@@ -1945,24 +1893,13 @@ static void C3D_BindProgram(shaderProgram_s* program)
 			ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
 		else
 		{
-			shaderInstance_s* oldGsh = oldProg->geometryShader;
-
 			DVLP_s* oldProgV = oldProg->vertexShader->dvle->dvlp;
-			DVLP_s* oldProgG = oldGsh ? oldGsh->dvle->dvlp : oldProgV;
-
 			DVLP_s* newProgV = program->vertexShader->dvle->dvlp;
-			DVLP_s* newProgG = newGsh ? newGsh->dvle->dvlp : newProgV;
 
-			if (oldProgV != newProgV || (!newGsh && oldProgG != newProgG))
-				ctx->flags |= C3DiF_VshCode;
-			if (oldProgG != newProgG || (newProgG==oldProgV && newProgG->codeSize >= 512))
-				ctx->flags |= C3DiF_GshCode;
+			if (oldProgV != newProgV)
+				ctx->flags |= C3DiF_VshCode | C3DiF_GshCode;
 		}
 	}
 
 	C3Di_LoadShaderUniforms(program->vertexShader);
-	if (newGsh)
-		C3Di_LoadShaderUniforms(newGsh);
-	else
-		C3Di_ClearShaderUniforms(GPU_GEOMETRY_SHADER);
 }
