@@ -1644,7 +1644,7 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	s->deferredSelect = false;
 
 	if (Game_ClassicMode) {
-		/* Original classic preserves selected block across inventory menu opens */
+		/* Accuracy: Original classic preserves selected block across inventory menu opens */
 		TableWidget_SetToIndex(table, table->selectedIndex);
 	} else {
 		TableWidget_SetToBlock(table, Inventory_SelectedBlock);
@@ -1709,7 +1709,8 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 
-	if (KeyBind_Claims(KEYBIND_INVENTORY, key) && s->releasedInv) {
+	/* Accuracy: Original classic doesn't close inventory menu when B is pressed */
+	if (KeyBind_Claims(KEYBIND_INVENTORY, key) && s->releasedInv && !Game_ClassicMode) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);

@@ -33,6 +33,7 @@ LIBS    = -mwindows -lwinmm -limagehlp
 endif
 
 ifeq ($(PLAT),linux)
+CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
 LIBS    = -lX11 -lXi -lpthread -lGL -ldl
 endif
 
@@ -43,31 +44,31 @@ endif
 
 ifeq ($(PLAT),darwin)
 OBJECTS += $(BUILD_DIR)/interop_cocoa.o
-CFLAGS  = -g -pipe -fno-math-errno
+CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
 LIBS    =
 LDFLAGS = -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 endif
 
 ifeq ($(PLAT),freebsd)
-CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno
+CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
 LDFLAGS = -L /usr/local/lib -rdynamic
 LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
-CFLAGS  = -g -pipe -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
+CFLAGS  = -g -pipe -I /usr/X11R6/include -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
 LDFLAGS = -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),netbsd)
-CFLAGS  = -g -pipe -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
+CFLAGS  = -g -pipe -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno -DCC_BUILD_ICON
 LDFLAGS = -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
 LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),dragonfly)
-CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno
+CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
 LDFLAGS = -L /usr/local/lib -rdynamic
 LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
