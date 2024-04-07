@@ -243,10 +243,12 @@ struct GPUTexture {
 };
 static struct GPUTexture* del_textures_head;
 static struct GPUTexture* del_textures_tail;
+
 struct GPUTexture* GPUTexture_Alloc(void) {
 	struct GPUTexture* tex = Mem_AllocCleared(1, sizeof(struct GPUTexture), "GPU texture");
 	return tex;
 }
+
 // can't delete textures until not used in any frames
 static void GPUTexture_Unref(GfxResourceID* resource) {
 	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
@@ -255,10 +257,12 @@ static void GPUTexture_Unref(GfxResourceID* resource) {
 	
 	LinkedList_Append(tex, del_textures_head, del_textures_tail);
 }
+
 static void GPUTexture_Free(struct GPUTexture* tex) {
 	C3D_TexDelete(&tex->texture);
 	Mem_Free(tex);
 }
+
 static void GPUTextures_DeleteUnreferenced(void) {
 	if (!del_textures_head) return;
 	
@@ -312,6 +316,15 @@ static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height) {
 	tex->maxLevel = 0;
 	tex->minLevel = 0;
 	return true;
+}
+
+static void TryTransferToVRAM(C3D_Tex* tex) {
+	void* vram = vramAlloc(tex->size);
+	if (!vram) return;
+
+	C3D_SyncTextureCopy((u32*)tex->data, 0, (u32*)vram, 0, tex->size, 8);
+	linearFree(tex->data);
+	tex->data = vram;
 }
 
 /*static inline cc_uint32 CalcZOrder(cc_uint32 x, cc_uint32 y) {
@@ -375,6 +388,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	if (!success) return NULL;
 	
 	ToMortonTexture(&tex->texture, 0, 0, bmp, bmp->width);
+	if (!(flags & TEXTURE_FLAG_DYNAMIC)) TryTransferToVRAM(&tex->texture);
     return tex;
 }
 
