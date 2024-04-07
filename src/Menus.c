@@ -2919,32 +2919,34 @@ static void GraphicsOptionsScreen_SetCameraMass(const cc_string* c) {
 
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
-		{ -1, -100, "Camera Mass",       MenuOptionsScreen_Input,
+		{ -1, -150, "Camera Mass",       MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass },
-		{ -1, -50,  "FPS mode",          MenuOptionsScreen_Enum,
+		{ -1, -100, "FPS mode",          MenuOptionsScreen_Enum,
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
-		{ -1,   0,  "View distance",     MenuOptionsScreen_Input,
+		{ -1,  -50, "View distance",     MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
-		{ -1,  50,  "Advanced lighting", MenuOptionsScreen_Bool,
+		{ -1,    0, "Advanced lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
 
-		{ 1, -100, "Smooth camera", MenuOptionsScreen_Bool,
+		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
-		{ 1, -50,  "Names",   MenuOptionsScreen_Enum,
+		{ 1, -100, "Names",   MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetNames,   GraphicsOptionsScreen_SetNames },
-		{ 1,   0,  "Shadows", MenuOptionsScreen_Enum,
+		{ 1,  -50, "Shadows", MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows },
 #ifdef CC_BUILD_N64
-		{ 1,  50,  "Filtering", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
+		{ 1,    0,  "Filtering", MenuOptionsScreen_Bool,
+			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps },
 #else
-		{ 1,  50,  "Mipmaps", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
+		{ 1,    0,  "Mipmaps", MenuOptionsScreen_Bool,
+			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps },
 #endif
+		{ 1,   50,  "Anaglyph 3D", MenuOptionsScreen_Bool,
+			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
 
-	s->numCore      = 8;
-	s->maxVertices += 8 * BUTTONWIDGET_MAX;
+	s->numCore      = 9;
+	s->maxVertices += 9 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";

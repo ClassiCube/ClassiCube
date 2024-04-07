@@ -721,13 +721,13 @@ static float fogDensity = 1.0f;
 static float fogEnd = 32.0f;
 
 void Gfx_SetFog(cc_bool enabled) {
-	//C3D_FogGasMode(enabled ? GPU_FOG : GPU_NO_FOG, GPU_DEPTH_DENSITY, false);
+	C3D_FogGasMode(enabled ? GPU_FOG : GPU_NO_FOG, GPU_PLAIN_DENSITY, false);
 	// TODO doesn't work quite right
 }
 
 void Gfx_SetFogCol(PackedCol color) {
 	// TODO find better way?
-	u32 c = (PackedCol_R(color) << 24) | (PackedCol_G(color) << 16) | (PackedCol_B(color) << 8) | 0xFF;
+	u32 c = (0xFFu << 24) | (PackedCol_B(color) << 16) | (PackedCol_G(color) << 8) | PackedCol_R(color);
 	if (c == fogColor) return;
 
 	fogColor = c;
@@ -741,7 +741,7 @@ static void ApplyFog(float* values) {
 	{
 		float val = values[i];
 		if (i < 128) data[i]       = val;
-		if (i > 0)   data[i + 127] = val-data[i-1];
+		if (i > 0)   data[i + 127] = val - data[i-1];
 	}
 
 	FogLut_FromArray(&fog_lut, data);
@@ -753,6 +753,7 @@ static void UpdateFog(void) {
 	float far  = Game_ViewDistance;
 	float values[129];
 
+	// TODO: Exp calculation isn't right for lava ???
 	for (int i = 0; i <= 128; i ++)
 	{
 		float c = FogLut_CalcZ(i / 128.0f, near, far);
