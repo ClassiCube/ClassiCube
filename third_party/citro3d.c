@@ -1299,9 +1299,7 @@ static void C3Di_TexEnvBind(int id, C3D_TexEnv* env)
 static void C3D_TexLoadImage(C3D_Tex* tex, const void* data, GPU_TEXFACE face, int level)
 {
 	u32 size = 0;
-	void* out = C3D_TexGetImagePtr(tex,
-		tex->data,
-		level, &size);
+	void* out = C3D_TexGetImagePtr(tex, tex->data, level, &size);
 
 	if (!addrIsVRAM(out))
 		memcpy(out, data, size);

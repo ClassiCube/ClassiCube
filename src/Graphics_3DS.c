@@ -319,6 +319,8 @@ static bool CreateNativeTexture(C3D_Tex* tex, u32 width, u32 height) {
 }
 
 static void TryTransferToVRAM(C3D_Tex* tex) {
+	return;
+	// NOTE: the linearFree below results in broken texture. maybe no DMA?
 	void* vram = vramAlloc(tex->size);
 	if (!vram) return;
 

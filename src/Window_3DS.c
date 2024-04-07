@@ -220,6 +220,8 @@ static void OnscreenTextChanged(const char* text) {
 	String_AppendUtf8(&tmp, text, String_Length(text));
     
 	Event_RaiseString(&InputEvents.TextChanged, &tmp);
+	Input_SetPressed(CCKEY_ENTER);
+	Input_SetReleased(CCKEY_ENTER);
 }
 
 void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
@@ -230,7 +232,8 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	String_EncodeUtf8(input, args->text);
 	
 	int mode = args->type & 0xFF;
-	int type = (mode == KEYBOARD_TYPE_NUMBER || mode == KEYBOARD_TYPE_INTEGER) ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
+	// Numpad mode doesn't display . symbol, so can't be used for KEYBOARD_TYPE_NUMBER unfortunately
+	int type = mode == KEYBOARD_TYPE_INTEGER ? SWKBD_TYPE_NUMPAD : SWKBD_TYPE_WESTERN;
 	
 	swkbdInit(&swkbd, type, 3, -1);
 	swkbdSetInitialText(&swkbd, input);
