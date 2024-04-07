@@ -66,11 +66,6 @@ typedef struct
 	u32 flags[2];
 } C3D_BufCfg;
 
-typedef struct
-{
-	C3D_BufCfg buffers[12];
-} C3D_BufInfo;
-
 
 typedef struct
 {
@@ -510,13 +505,10 @@ typedef struct
 	shaderProgram_s* program;
 
 	C3D_AttrInfo attrInfo;
-	C3D_BufInfo bufInfo;
 	C3D_Effect effect;
 
 	u32 texConfig;
-	u32 texShadow;
 	C3D_Tex* tex[3];
-	C3D_TexEnv texEnv[6];
 
 	u32 texEnvBuf, texEnvBufClr;
 	u32 fogClr;
@@ -532,24 +524,22 @@ enum
 	C3DiF_Active = BIT(0),
 	C3DiF_DrawUsed = BIT(1),
 	C3DiF_AttrInfo = BIT(2),
-	C3DiF_BufInfo = BIT(3),
 	C3DiF_Effect = BIT(4),
 	C3DiF_FrameBuf = BIT(5),
 	C3DiF_Viewport = BIT(6),
 	C3DiF_Scissor = BIT(7),
 	C3DiF_Program = BIT(8),
 	C3DiF_TexEnvBuf = BIT(9),
-	C3DiF_LightEnv = BIT(10),
 	C3DiF_VshCode = BIT(11),
 	C3DiF_GshCode = BIT(12),
 	C3DiF_TexStatus = BIT(14),
 	C3DiF_FogLut = BIT(17),
 	C3DiF_Gas = BIT(18),
 
+	C3DiF_Reset = BIT(19),
+
 #define C3DiF_Tex(n) BIT(23+(n))
 	C3DiF_TexAll = 7 << 23,
-#define C3DiF_TexEnv(n) BIT(26+(n))
-	C3DiF_TexEnvAll = 0x3F << 26,
 };
 
 static C3D_Context __C3D_Context;
@@ -573,7 +563,6 @@ static inline vramAllocPos addrGetVRAMBank(const void* addr)
 
 static void C3Di_UpdateContext(void);
 static void C3Di_AttrInfoBind(C3D_AttrInfo* info);
-static void C3Di_BufInfoBind(C3D_BufInfo* info);
 static void C3Di_FrameBufBind(C3D_FrameBuf* fb);
 static void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
 static void C3Di_SetTex(int unit, C3D_Tex* tex);
@@ -647,19 +636,6 @@ static void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 
 
 #define BUFFER_BASE_PADDR 0x18000000
-
-
-static void C3Di_BufInfoBind(C3D_BufInfo* info)
-{
-	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
-	GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)info->buffers, sizeof(info->buffers)/sizeof(u32));
-}
-
-
-
-
-
-
 
 
 
@@ -1628,9 +1604,9 @@ static void C3Di_AptEventHook(APT_HookType hookType, void* param)
 		case APTHOOK_ONRESTORE:
 		{
 			C3Di_RenderQueueEnableVBlank();
-			ctx->flags |= C3DiF_AttrInfo | C3DiF_BufInfo | C3DiF_Effect | C3DiF_FrameBuf
+			ctx->flags |= C3DiF_AttrInfo | C3DiF_Effect | C3DiF_FrameBuf
 				| C3DiF_Viewport | C3DiF_Scissor | C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode
-				| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_TexEnvAll | C3DiF_LightEnv | C3DiF_Gas;
+				| C3DiF_TexAll | C3DiF_TexEnvBuf | C3DiF_Gas | C3DiF_Reset;
 
 			C3Di_DirtyUniforms();
 
@@ -1665,7 +1641,7 @@ static bool C3D_Init(size_t cmdBufSize)
 		return false;
 	}
 
-	ctx->flags = C3DiF_Active | C3DiF_TexEnvBuf | C3DiF_TexEnvAll | C3DiF_Effect | C3DiF_TexStatus | C3DiF_TexAll;
+	ctx->flags = C3DiF_Active | C3DiF_TexEnvBuf | C3DiF_Effect | C3DiF_TexStatus | C3DiF_TexAll | C3DiF_Reset;
 
 	// TODO: replace with direct struct access
 	C3D_DepthMap(true, -1.0f, 0.0f);
@@ -1680,7 +1656,6 @@ static bool C3D_Init(size_t cmdBufSize)
 	C3D_FragOpShadow(0.0, 1.0);
 
 	ctx->texConfig = BIT(12);
-	ctx->texShadow = BIT(0);
 	ctx->texEnvBuf = 0;
 	ctx->texEnvBufClr = 0xFFFFFFFF;
 	ctx->fogClr = 0;
@@ -1688,9 +1663,6 @@ static bool C3D_Init(size_t cmdBufSize)
 
 	for (i = 0; i < 3; i ++)
 		ctx->tex[i] = NULL;
-
-	for (i = 0; i < 6; i ++)
-		C3D_TexEnvInit(&ctx->texEnv[i]);
 
 	C3Di_RenderQueueInit();
 	aptHook(&hookCookie, C3Di_AptEventHook, NULL);
@@ -1762,12 +1734,6 @@ static void C3Di_UpdateContext(void)
 		C3Di_AttrInfoBind(&ctx->attrInfo);
 	}
 
-	if (ctx->flags & C3DiF_BufInfo)
-	{
-		ctx->flags &= ~C3DiF_BufInfo;
-		C3Di_BufInfoBind(&ctx->bufInfo);
-	}
-
 	if (ctx->flags & C3DiF_Effect)
 	{
 		ctx->flags &= ~C3DiF_Effect;
@@ -1804,7 +1770,7 @@ static void C3Di_UpdateContext(void)
 			ctx->texConfig &= ~BIT(16);
 			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0x4, BIT(16));
 		}
-		GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
+		GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, BIT(0));
 	}
 
 	if (ctx->flags & C3DiF_TexEnvBuf)
@@ -1825,22 +1791,26 @@ static void C3Di_UpdateContext(void)
 		}
 	}
 
-	if (ctx->flags & C3DiF_TexEnvAll)
+	if (ctx->flags & C3DiF_Reset)
 	{
-		for (i = 0; i < 6; i ++)
+		// Reset texture environment
+		C3D_TexEnv texEnv;
+		C3D_TexEnvInit(&texEnv);
+		for (i = 0; i < 6; i++)
 		{
-			if (!(ctx->flags & C3DiF_TexEnv(i))) continue;
-			C3Di_TexEnvBind(i, &ctx->texEnv[i]);
+			C3Di_TexEnvBind(i, &texEnv);
 		}
-		ctx->flags &= ~C3DiF_TexEnvAll;
-	}
 
-	if (ctx->flags & C3DiF_LightEnv)
-	{
-		u32 enable = false;
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, enable);
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1, !enable);
-		ctx->flags &= ~C3DiF_LightEnv;
+		// Reset lighting
+		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, false);
+		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1,  true);
+
+		// Reset attirubte buffer info
+		C3D_BufCfg buffers[12] = { 0 };
+		GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
+		GPUCMD_AddIncrementalWrites(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)buffers, 12 * 3);
+
+		ctx->flags &= ~C3DiF_Reset;
 	}
 
 	C3D_UpdateUniforms();

@@ -499,7 +499,6 @@ void Gfx_BeginFrame(void) {
 
 	extern void C3Di_UpdateContext(void);
 	C3Di_UpdateContext();
-	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, BUFFER_BASE_PADDR >> 3);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
