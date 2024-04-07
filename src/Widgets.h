@@ -102,7 +102,7 @@ struct TableWidget {
 	int selectedIndex, cellSizeX, cellSizeY;
 	float normBlockSize, selBlockSize;
 	GfxResourceID vb;
-	cc_bool pendingClose;
+	cc_bool pendingClose, everCreated;
 	float scale;
 	float padXAcc, padYAcc;
 
@@ -119,10 +119,11 @@ struct TableWidget {
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
+CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
 
 
 #define INPUTWIDGET_MAX_LINES 3

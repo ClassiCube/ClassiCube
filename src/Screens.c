@@ -1636,19 +1636,20 @@ static void InventoryScreen_ContextRecreated(void* screen) {
 	s->table.vb = s->vb;
 
 	Gui_MakeBodyFont(&s->font);
-	TableWidget_Recreate(&s->table);
+	TableWidget_RecreateTitle(&s->table, true);
 }
 
 static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	struct TableWidget* table = &s->table;
-	TableWidget_SetBlockTo(table, Inventory_SelectedBlock);
-	TableWidget_Recreate(table);
-
 	s->deferredSelect = false;
-	/* User is holding invalid block */
-	if (table->selectedIndex == -1) {
-		InventoryScreen_UpdateTitle(s, Inventory_SelectedBlock);
+
+	if (Game_ClassicMode) {
+		/* Original classic preserves selected block across inventory menu opens */
+		TableWidget_SetToIndex(table, table->selectedIndex);
+	} else {
+		TableWidget_SetToBlock(table, Inventory_SelectedBlock);
 	}
+	TableWidget_RecreateTitle(table, true);
 }
 
 static void InventoryScreen_Init(void* screen) {

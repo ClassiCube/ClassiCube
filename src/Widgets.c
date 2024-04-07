@@ -743,9 +743,9 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-static void TableWidget_RecreateTitle(struct TableWidget* w) {
+void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force) {
 	BlockID block;
-	if (w->selectedIndex == w->lastCreatedIndex) return;
+	if (!force && w->selectedIndex == w->lastCreatedIndex) return;
 	if (w->blocksCount == 0) return;
 	w->lastCreatedIndex = w->selectedIndex;
 
@@ -858,11 +858,6 @@ static int TableWidget_MaxVertices(void* w) { return TABLE_MAX_VERTICES; }
 
 static void TableWidget_Free(void* widget) { }
 
-void TableWidget_Recreate(struct TableWidget* w) {
-	w->lastCreatedIndex = -1000;
-	TableWidget_RecreateTitle(w);
-}
-
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	cc_bool classic = Gui.ClassicInventory;
@@ -907,7 +902,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	w->scroll.topRow += (index / w->blocksPerRow) - (start / w->blocksPerRow);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 
-	TableWidget_RecreateTitle(w);
+	TableWidget_RecreateTitle(w, false);
 	TableWidget_MoveCursorToSelected(w);
 }
 
@@ -949,7 +944,7 @@ static int TableWidget_MouseScroll(void* widget, float delta) {
 	if (index >= w->blocksCount) index = -1;
 
 	w->selectedIndex = index;
-	TableWidget_RecreateTitle(w);
+	TableWidget_RecreateTitle(w, false);
 	return true;
 }
 
@@ -977,7 +972,7 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 			}
 		}
 	}
-	TableWidget_RecreateTitle(w);
+	TableWidget_RecreateTitle(w, false);
 	return true;
 }
 
@@ -1033,6 +1028,11 @@ void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	w->scale = 1;
 	w->padXAcc = 0; w->padYAcc = 0;
 
+	if (!w->everCreated) {
+		w->everCreated   = true;
+		w->selectedIndex = -1;
+	}
+
 	classic     = Gui.ClassicInventory;
 	w->paddingL = Display_ScaleX(classic ? 20 : 15);
 	w->paddingR = Display_ScaleX(classic ? 28 : 15);
@@ -1040,21 +1040,27 @@ void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 	w->paddingB = Display_ScaleY(classic ? 14 : 15);
 }
 
-void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
-	int i;
-	w->selectedIndex = -1;
+void TableWidget_SetToBlock(struct TableWidget* w, BlockID block) {
+	int i, index = -1;
 	
-	for (i = 0; i < w->blocksCount; i++) {
-		if (w->blocks[i] == block) w->selectedIndex = i;
+	for (i = 0; i < w->blocksCount; i++) 
+	{
+		if (w->blocks[i] == block) index = i;
 	}
 	/* When holding air, inventory should open at middle */
-	if (block == BLOCK_AIR) w->selectedIndex = -1;
+	if (block == BLOCK_AIR) index = -1;
+
+	TableWidget_SetToIndex(w, index);
+}
+
+void TableWidget_SetToIndex(struct TableWidget* w, int index) {
+	w->selectedIndex = index;
 
 	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
 	w->scroll.topRow -= (w->rowsVisible - 1);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 	TableWidget_MoveCursorToSelected(w);
-	TableWidget_RecreateTitle(w);
+	TableWidget_RecreateTitle(w, true);
 }
 
 void TableWidget_OnInventoryChanged(struct TableWidget* w) {
@@ -1066,7 +1072,7 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 
 	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
 	ScrollbarWidget_ClampTopRow(&w->scroll);
-	TableWidget_RecreateTitle(w);
+	TableWidget_RecreateTitle(w, true);
 }
 
 
