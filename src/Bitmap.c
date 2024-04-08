@@ -6,6 +6,7 @@
 #include "Stream.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "Funcs.h"
 
 BitmapCol BitmapColor_Offset(BitmapCol color, int rBy, int gBy, int bBy) {
 	int r, g, b;
@@ -162,108 +163,103 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 
 /* 7.2 Scanlines */
 #define PNG_Do_Grayscale(dstI, src, scale)  rgb = (src) * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
-#define PNG_Do_Grayscale_8(dstI, srcI)      rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
-#define PNG_Do_Grayscale_A__8(dstI, srcI)   rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, src[srcI + 1]);
-#define PNG_Do_RGB__8(dstI, srcI)           Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], 255);
-#define PNG_Do_RGB_A__8(dstI, srcI)         Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
+#define PNG_Do_Grayscale_8()      rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb,    255); dst--; src -= 2;
+#define PNG_Do_Grayscale_A__8()   rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb, src[1]); dst--; src -= 1;
+#define PNG_Do_RGB__8()           Bitmap_Set(*dst, src[0], src[1], src[2],    255); dst--; src -= 3;
+#define PNG_Do_RGB_A__8()         Bitmap_Set(*dst, src[0], src[1], src[2], src[3]); dst++; src += 4;
+#define PNG_Do_Palette__8()       *dst-- = palette[*src--];
 
-#define PNG_Mask_1(i) (7 - (i & 7))
+#define PNG_Mask_1(i) (7  - (i & 7))
 #define PNG_Mask_2(i) ((3 - (i & 3)) * 2)
 #define PNG_Mask_4(i) ((1 - (i & 1)) * 4)
 #define PNG_Get__1(i) ((src[i >> 3] >> PNG_Mask_1(i)) & 1)
 #define PNG_Get__2(i) ((src[i >> 2] >> PNG_Mask_2(i)) & 3)
+#define PNG_Get__4(i) ((src[i >> 1] >> PNG_Mask_4(i)) & 7)
 
 static void Png_Expand_GRAYSCALE_1(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i; cc_uint8 rgb; /* NOTE: not optimised*/
-	for (i = 0; i < width; i++) { PNG_Do_Grayscale(i, PNG_Get__1(i), 255); }
+	for (i = width - 1; i >= 0; i--) { PNG_Do_Grayscale(i, PNG_Get__1(i), 255); }
 }
 
 static void Png_Expand_GRAYSCALE_2(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i; cc_uint8 rgb; /* NOTE: not optimised */
-	for (i = 0; i < width; i++) { PNG_Do_Grayscale(i, PNG_Get__2(i), 85); }
+	for (i = width - 1; i >= 0; i--) { PNG_Do_Grayscale(i, PNG_Get__2(i), 85); }
 }
 
 static void Png_Expand_GRAYSCALE_4(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i, j; cc_uint8 rgb;
-
-	for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
-		PNG_Do_Grayscale(i, src[j] >> 4, 17); PNG_Do_Grayscale(i + 1, src[j] & 0x0F, 17);
-	}
-	for (; i < width; i++) {
-		PNG_Do_Grayscale(i, (src[j] >> PNG_Mask_4(i)) & 15, 17);
-	}
+	int i; cc_uint8 rgb;
+	for (i = width - 1; i >= 0; i--) { PNG_Do_Grayscale(i, PNG_Get__4(i), 17); }
 }
 
 static void Png_Expand_GRAYSCALE_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i; cc_uint8 rgb;
+	cc_uint8 rgb;
+	src += (width - 1) * 2;
+	dst += (width - 1);
 
-	for (i = 0; i < (width & ~0x3); i += 4) {
-		PNG_Do_Grayscale_8(i    , i    ); PNG_Do_Grayscale_8(i + 1, i + 1);
-		PNG_Do_Grayscale_8(i + 2, i + 2); PNG_Do_Grayscale_8(i + 3, i + 3);
+	for (; width >= 4; width -= 4) {
+		PNG_Do_Grayscale_8(); PNG_Do_Grayscale_8();
+		PNG_Do_Grayscale_8(); PNG_Do_Grayscale_8();
 	}
-	for (; i < width; i++) { PNG_Do_Grayscale_8(i, i); }
+	for (; width > 0; width--) { PNG_Do_Grayscale_8(); }
 }
 
 static void Png_Expand_RGB_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i, j;
+	src += (width - 1) * 3;
+	dst += (width - 1);
 
-	for (i = 0, j = 0; i < (width & ~0x03); i += 4, j += 12) {
-		PNG_Do_RGB__8(i    , j    ); PNG_Do_RGB__8(i + 1, j + 3);
-		PNG_Do_RGB__8(i + 2, j + 6); PNG_Do_RGB__8(i + 3, j + 9);
+	for (; width >= 4; width -= 4) {
+		PNG_Do_RGB__8(); PNG_Do_RGB__8(); 
+		PNG_Do_RGB__8(); PNG_Do_RGB__8();
 	}
-	for (; i < width; i++, j += 3) { PNG_Do_RGB__8(i, j); }
+	for (; width > 0; width--) { PNG_Do_RGB__8(); }
 }
 
 static void Png_Expand_INDEXED_1(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i; /* NOTE: not optimised */
-	for (i = 0; i < width; i++) { dst[i] = palette[PNG_Get__1(i)]; }
+	for (i = width - 1; i >= 0; i--) { dst[i] = palette[PNG_Get__1(i)]; }
 }
 
 static void Png_Expand_INDEXED_2(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i; /* NOTE: not optimised */
-	for (i = 0; i < width; i++) { dst[i] = palette[PNG_Get__2(i)]; }
+	for (i = width - 1; i >= 0; i--) { dst[i] = palette[PNG_Get__2(i)]; }
 }
 
 static void Png_Expand_INDEXED_4(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i, j; cc_uint8 cur;
-
-	for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
-		cur = src[j];
-		dst[i] = palette[cur >> 4]; dst[i + 1] = palette[cur & 0x0F];
-	}
-	for (; i < width; i++) {
-		dst[i] = palette[(src[j] >> PNG_Mask_4(i)) & 15];
-	}
+	int i; /* NOTE: not optimised */
+	for (i = width - 1; i >= 0; i--) { dst[i] = palette[PNG_Get__4(i)]; }
 }
 
 static void Png_Expand_INDEXED_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i;
+	src += (width - 1) * 1;
+	dst += (width - 1);
 
-	for (i = 0; i < (width & ~0x3); i += 4) {
-		dst[i]     = palette[src[i]];     dst[i + 1] = palette[src[i + 1]];
-		dst[i + 2] = palette[src[i + 2]]; dst[i + 3] = palette[src[i + 3]];
+	for (; width >= 4; width -= 4) {
+		PNG_Do_Palette__8(); PNG_Do_Palette__8();
+		PNG_Do_Palette__8(); PNG_Do_Palette__8();
 	}
-	for (; i < width; i++) { dst[i] = palette[src[i]]; }
+	for (; width > 0; width--) { PNG_Do_Palette__8(); }
 }
 
 static void Png_Expand_GRAYSCALE_A_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i, j; cc_uint8 rgb;
+	cc_uint8 rgb;
+	src += (width - 1) * 2;
+	dst += (width - 1);
 
-	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 8) {
-		PNG_Do_Grayscale_A__8(i    , j    ); PNG_Do_Grayscale_A__8(i + 1, j + 2);
-		PNG_Do_Grayscale_A__8(i + 2, j + 4); PNG_Do_Grayscale_A__8(i + 3, j + 6);
+	for (; width >= 4; width -= 4) {
+		PNG_Do_Grayscale_A__8(); PNG_Do_Grayscale_A__8();
+		PNG_Do_Grayscale_A__8(); PNG_Do_Grayscale_A__8();
 	}
-	for (; i < width; i++, j += 2) { PNG_Do_Grayscale_A__8(i, j); }
+	for (; width > 0; width--) { PNG_Do_Grayscale_A__8(); }
 }
 
 static void Png_Expand_RGB_A_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
-	int i, j;
+	/* Processed in forward order */
 
-	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 16) {
-		PNG_Do_RGB_A__8(i    , j    ); PNG_Do_RGB_A__8(i + 1, j + 4 );
-		PNG_Do_RGB_A__8(i + 2, j + 8); PNG_Do_RGB_A__8(i + 3, j + 12);
+	for (; width >= 4; width -= 4) {
+		PNG_Do_RGB_A__8(); PNG_Do_RGB_A__8();
+		PNG_Do_RGB_A__8(); PNG_Do_RGB_A__8();
 	}
-	for (; i < width; i++, j += 4) { PNG_Do_RGB_A__8(i, j); }
+	for (; width > 0; width--) { PNG_Do_RGB_A__8(); }
 }
 
 static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
@@ -321,11 +317,6 @@ static void ComputeTransparency(struct Bitmap* bmp, BitmapCol col) {
 	}
 }
 
-/* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
-/* Need to store both current and prior row, per PNG specification. */
-#define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
-
-/* TODO: Test a lot of .png files and ensure output is right */
 cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[64];
 	cc_uint32 dataSize, fourCC;
@@ -343,16 +334,17 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint32 i;
 
 	/* idat state */
-	cc_uint32 curY = 0, begY, rowY, endY;
-	cc_uint8 buffer[PNG_BUFFER_SIZE];
-	cc_uint32 bufferRows, bufferLen;
-	cc_uint32 bufferIdx, read, left;
-	cc_bool initedBuffer = false;
+	cc_uint32 begY, rowY = 0, endY;
+	cc_uint8 buffer[PNG_PALETTE * 3];
+	cc_uint32 bufferIdx, bufferLen;
+	cc_uint32 read, left;
+	int curY;
 
 	/* idat decompressor */
 	struct InflateState inflate;
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
+	cc_uint8* data;
 
 	bmp->width = 0; bmp->height = 0;
 	bmp->scan0 = NULL;
@@ -386,9 +378,6 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bmp->scan0 = (BitmapCol*)Mem_TryAlloc(bmp->width * bmp->height, 4);
-			if (!bmp->scan0) return ERR_OUT_OF_MEMORY;
-
 			bitsPerSample = tmp[8]; col = tmp[9];
 			if (bitsPerSample == 16) return PNG_ERR_16BITSAMPLES;
 
@@ -402,6 +391,13 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
 			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
+
+			data = Mem_TryAlloc(bmp->height, max(scanlineBytes, bmp->width * 4));
+			bmp->scan0 = (BitmapCol*)data;
+			if (!bmp->scan0) return ERR_OUT_OF_MEMORY;
+
+			bufferIdx = 0;
+			bufferLen = bmp->height * scanlineBytes;
 		} break;
 
 		/* 11.2.3 PLTE Palette */
@@ -463,63 +459,61 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			while (!zlibHeader.done) {
 				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
-			if (!bmp->scan0) return PNG_ERR_NO_DATA;
 
-			/* Initialise buffer for decoding */
-			if (!initedBuffer) {
-				bufferIdx    = 0;
-				bufferRows   = PNG_BUFFER_SIZE / scanlineBytes;
-				bufferLen    = bufferRows * scanlineBytes;
-				initedBuffer = true;
+			if (!bmp->scan0) return PNG_ERR_NO_DATA;
+			if (rowY >= bmp->height) break;
+
+			begY = bufferIdx / scanlineBytes;
+			left = bufferLen - bufferIdx;
+
+			res = compStream.Read(&compStream, &data[bufferIdx], left, &read);
+			if (res) return res;
+			if (!read) break;
+
+			bufferIdx += read;
+			endY = bufferIdx / scanlineBytes;
+
+			/* NOTE: Need to check height too, in case IDAT is corrupted and has extra data */
+			for (rowY = begY; rowY < endY && rowY < bmp->height; rowY++) {
+				cc_uint8* scanline = &data[rowY * scanlineBytes];
+				if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
+
+				if (rowY == 0) {
+					/* First row, prior is assumed as 0 */
+					Png_ReconstructFirst(scanline[0], bytesPerPixel, &scanline[1], scanlineSize);
+				} else {
+					cc_uint8* prior = &data[(rowY - 1) * scanlineBytes];
+					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
+					
+					/* With the RGBA colourspace, each scanline is (1 + width*4) bytes wide */
+					/* Therefore once a row has been reconstructed, the prior row can be converted */
+					/* immediately into the destination colour format */
+					if (col == PNG_COLOR_RGB_A) {
+						/* Prior line is no longer needed and can be overwritten now */
+						rowExpander(bmp->width,     palette, &prior[1],    Bitmap_GetRow(bmp, rowY - 1));
+						/* Current line is also no longer needed and can be overwritten now */
+						if (rowY == bmp->height - 1)
+							rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, rowY));
+					}
+				}
 			}
 
-			while (curY < bmp->height) {
-				/* Need to leave one row in buffer untouched for storing prior scanline. Illustrated example of process:
-				*          |=====|        #-----|        |-----|        #-----|        |-----|
-				* initial  #-----| read 3 |-----| read 3 |-----| read 1 |-----| read 3 |-----| etc
-				*  state   |-----| -----> |-----| -----> |=====| -----> |-----| -----> |=====|
-				*          |-----|        |=====|        #-----|        |=====|        #-----|
-				*
-				* (==== is prior scanline, # is current index in buffer)
-				* Having initial state this way allows doing two 'read 3' first time (assuming large idat chunks)
-				*/
+			/* Check if image fully decoded or not */
+			if (bufferIdx != bufferLen) break;
 
-				begY = bufferIdx / scanlineBytes;
-				left = bufferLen - bufferIdx;
-				/* if start row is at 0, last row in buffer is 'prior' row */
-				/* - hence subtract a row for max read size, as don't want to overwrite that */
-				/* (unless at first row of image, where 'prior' row is an array of 0) */
-				if (begY == 0 && curY > 0) left -= scanlineBytes;
-
-				res = compStream.Read(&compStream, &buffer[bufferIdx], left, &read);
-				if (res) return res;
-				if (!read) break;
-
-				bufferIdx += read;
-				endY = bufferIdx / scanlineBytes;
-				/* reached end of buffer, cycle back to start */
-				if (bufferIdx == bufferLen) bufferIdx = 0;
-
-				/* NOTE: Need to check curY too, in case IDAT is corrupted and has extra data */
-				for (rowY = begY; rowY < endY && curY < bmp->height; rowY++, curY++) {
-					cc_uint32 priorY = rowY == 0 ? bufferRows : rowY;
-					cc_uint8* prior    = &buffer[(priorY - 1) * scanlineBytes];
-					cc_uint8* scanline = &buffer[rowY         * scanlineBytes];
-					if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
-
-					if (curY == 0) {
-						Png_ReconstructFirst(scanline[0], bytesPerPixel, &scanline[1], scanlineSize);
-					} else {
-						Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
-					}
+			/* With other colourspaces, the length of a scanline might be less than the width of a 8bpp image row */
+			/* Therefore image expansion can only be done after all the rows have been reconstructed, and must */
+			/*  be done backwards to avoid overwriting any source data that has yet to be processed */
+			/* This is slightly slower, but the majority of images ClassiCube encounters are RGBA anyways */
+			if (col != PNG_COLOR_RGB_A) {
+				for (curY = bmp->height - 1; curY >= 0; curY--) {
+					cc_uint8* scanline = &data[curY * scanlineBytes];
 					rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 				}
 			}
 
-			if (curY == bmp->height) {
-				if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
-				return 0;
-			}
+			if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
+			return 0;
 		} break;
 
 		/* 11.2.5 IEND Image trailer */

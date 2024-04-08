@@ -39,6 +39,7 @@ static void (*Builder_PostPrepareChunk)(void);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
+	/* Union to save on memory, since chunk building is divided into counting then building phases */
 	union FaceData {
 		struct VertexTextured* vertices[FACE_COUNT];
 		int count[FACE_COUNT];
