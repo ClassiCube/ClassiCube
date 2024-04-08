@@ -87,6 +87,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case PNG_ERR_REACHED_IEND:     return "Incomplete PNG image data";
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
+	case PNG_ERR_16BITSAMPLES:     return "16 bpp PNGs unsupported";
 
 	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
 	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
