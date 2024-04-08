@@ -466,9 +466,10 @@ static void DefaultPostStretchChunk(void) {
 static RNGState spriteRng;
 static void Builder_DrawSprite(int x, int y, int z) {
 	struct Builder1DPart* part;
-	struct VertexTextured v;
+	struct VertexTextured* v;
 	cc_uint8 offsetType;
 	cc_bool bright;
+	PackedCol color;
 	TextureLoc loc;
 	float v1, v2;
 	int index;
@@ -501,36 +502,36 @@ static void Builder_DrawSprite(int x, int y, int z) {
 	
 	bright = Blocks.FullBright[Builder_Block];
 	part   = &Builder_Parts[Atlas1D_Index(loc)];
-	v.Col  = bright ? PACKEDCOL_WHITE : Lighting.Color_Sprite_Fast(x, y, z);
-	Block_Tint(v.Col, Builder_Block);
+	color  = bright ? PACKEDCOL_WHITE : Lighting.Color_Sprite_Fast(x, y, z);
+	Block_Tint(color, Builder_Block);
 
 	/* Draw Z axis */
-	index = part->sOffset;
-	v.x = x1; v.y = y1; v.z = z1; v.U = s_u2; v.V = v2; Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x2;           v.z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	index = part->sOffset; v = &Builder_Vertices[index];
+	v->x = x1; v->y = y1; v->z = z1; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x1; v->y = y2; v->z = z1; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x2; v->y = y2; v->z = z2; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x2; v->y = y1; v->z = z2; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	/* Draw Z axis mirrored */
-	index += part->sAdvance;
-	v.x = x2; v.y = y1; v.z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x1;           v.z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	index += part->sAdvance; v = &Builder_Vertices[index];
+	v->x = x2; v->y = y1; v->z = z2; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x2; v->y = y2; v->z = z2; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x1; v->y = y2; v->z = z1; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x1; v->y = y1; v->z = z1; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	/* Draw X axis */
-	index += part->sAdvance;
-	v.x = x1; v.y = y1; v.z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x2;           v.z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	index += part->sAdvance; v = &Builder_Vertices[index];
+	v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x1; v->y = y2; v->z = z2; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x2; v->y = y2; v->z = z1; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x2; v->y = y1; v->z = z1; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	/* Draw X axis mirrored */
-	index += part->sAdvance;
-	v.x = x2; v.y = y1; v.z = z1; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x1;           v.z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	index += part->sAdvance; v = &Builder_Vertices[index];
+	v->x = x2; v->y = y1; v->z = z1; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x2; v->y = y2; v->z = z1; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x1; v->y = y2; v->z = z2; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	part->sOffset += 4;
 }
