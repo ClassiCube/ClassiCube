@@ -635,12 +635,12 @@ static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* 
 }
 
 static BitmapCol* DefaultGetRow(struct Bitmap* bmp, int y, void* ctx) { return Bitmap_GetRow(bmp, y); }
-cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
+static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_uint8* buffer,
 					Png_RowGetter getRow, cc_bool alpha, void* ctx) {
 	cc_uint8 tmp[32];
-	/* TODO: This should be * 4 for alpha (should switch to mem_alloc though) */
-	cc_uint8 prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];
-	cc_uint8 bestLine[PNG_MAX_DIMS * 3 + 1];
+	cc_uint8* prevLine = buffer;
+	cc_uint8*  curLine = buffer + (bmp->width * 4) * 1;
+	cc_uint8* bestLine = buffer + (bmp->width * 4) * 2;
 
 	struct ZLibState zlState;
 	struct Stream chunk, zlStream;
@@ -708,3 +708,16 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 	if ((res = Stream_Write(stream, tmp, 4))) return res;
 	return stream->Seek(stream, stream_end);
 }
+
+cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
+					Png_RowGetter getRow, cc_bool alpha, void* ctx) {
+	cc_result res;
+	/* Add 1 for scanline filter type byter */
+	cc_uint8* buffer = Mem_TryAlloc(3, bmp->width * 4 + 1);
+	if (!buffer) return ERR_NOT_SUPPORTED;
+
+	res = Png_EncodeCore(bmp, stream, buffer, getRow, alpha, ctx);
+	Mem_Free(buffer);
+	return res;
+}
+

@@ -127,14 +127,13 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 }
 #endif
 
-static void SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
+static cc_bool SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info) {
 	int vCount = Builder1DPart_VerticesCount(part);
 	info->offset = -1;
-	if (!vCount) return;
+	if (!vCount) return false;
 
 	info->offset = *offset;
 	*offset += vCount;
-	*hasParts = true;
 
 	info->counts[FACE_XMIN] = part->faces.count[FACE_XMIN];
 	info->counts[FACE_XMAX] = part->faces.count[FACE_XMAX];
@@ -143,6 +142,7 @@ static void SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPar
 	info->counts[FACE_YMIN] = part->faces.count[FACE_YMIN];
 	info->counts[FACE_YMAX] = part->faces.count[FACE_YMAX];
 	info->spriteCount       = part->sCount;
+	return true;
 }
 
 
@@ -347,8 +347,8 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 		j = i + ATLAS1D_MAX_ATLASES;
 		curIdx = partsIndex + i * World.ChunksCount;
 
-		SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
-		SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTran);
+		hasNorm |= SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx]);
+		hasTran |= SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx]);
 	}
 
 	if (hasNorm) {
