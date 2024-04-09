@@ -76,6 +76,15 @@ void Window_Create3D(int width, int height) {
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
+#define AXIS_SCALE 1.0f
+static void ProcessVpadStick(int axis, float x, float y, double delta) {
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsF(x) <= 0.1f) x = 0;
+	if (Math_AbsF(y) <= 0.1f) y = 0;
+	
+	Gamepad_SetAxis(axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
+}
+
    
 static void ProcessVpadButtons(int mods) {
 	Gamepad_SetButton(CCPAD_L,  mods & VPAD_BUTTON_L);
@@ -114,6 +123,10 @@ void Window_ProcessEvents(double delta) {
 	
 	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
 	ProcessVpadButtons(vpadStatus.hold);
+	
+	ProcessVpadStick(PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
+	ProcessVpadStick(PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
+	
 }
 
 void Window_UpdateRawMouse(void) { }

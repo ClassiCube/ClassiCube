@@ -29,7 +29,7 @@ static void InitGfx(void) {
 	WHBGfxInit();
 	
 	WHBGfxLoadGFDShaderGroup(&colorShader, 0, coloured_gsh);
-	WHBGfxInitShaderAttribute(&colorShader, "in_pos", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
+	WHBGfxInitShaderAttribute(&colorShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
 	WHBGfxInitShaderAttribute(&colorShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
 	WHBGfxInitFetchShader(&colorShader);
 	

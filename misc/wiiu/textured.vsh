@@ -35,21 +35,21 @@
          z: MUL         ____,  C3.w,  1.0f      
          w: MUL         ____,  C3.z,  1.0f      
          t: MOV         R0.x,  R3.x      
-      1  x: MULADD      R127.x,  R2.z,  C2.y,  PV0.x      
-         y: MULADD      R127.y,  R2.z,  C2.x,  PV0.y      
-         z: MULADD      R127.z,  R2.z,  C2.w,  PV0.z      
-         w: MULADD      R127.w,  R2.z,  C2.z,  PV0.w
+      1  x: MULADD      R127.x,  R1.z,  C2.y,  PV0.x      
+         y: MULADD      R127.y,  R1.z,  C2.x,  PV0.y      
+         z: MULADD      R127.z,  R1.z,  C2.w,  PV0.z      
+         w: MULADD      R127.w,  R1.z,  C2.z,  PV0.w
          t: MOV         R0.y,  R3.y      
-      2  x: MULADD      R127.x,  R2.y,  C1.y,  PV1.x      
-         y: MULADD      R127.y,  R2.y,  C1.x,  PV1.y      
-         z: MULADD      R127.z,  R2.y,  C1.w,  PV1.z      
-         w: MULADD      R127.w,  R2.y,  C1.z,  PV1.w      
-      3  x: MULADD      R2.x,  R2.x,  C0.x,  PV2.y      
-         y: MULADD      R2.y,  R2.x,  C0.y,  PV2.x      
-         z: MULADD      R2.z,  R2.x,  C0.z,  PV2.w      
-         w: MULADD      R2.w,  R2.x,  C0.w,  PV2.z      
-02 EXP_DONE: POS0, R2
-03 EXP: PARAM0, R1  NO_BARRIER 
+      2  x: MULADD      R127.x,  R1.y,  C1.y,  PV1.x      
+         y: MULADD      R127.y,  R1.y,  C1.x,  PV1.y      
+         z: MULADD      R127.z,  R1.y,  C1.w,  PV1.z      
+         w: MULADD      R127.w,  R1.y,  C1.z,  PV1.w      
+      3  x: MULADD      R1.x,  R1.x,  C0.x,  PV2.y      
+         y: MULADD      R1.y,  R1.x,  C0.y,  PV2.x      
+         z: MULADD      R1.z,  R1.x,  C0.z,  PV2.w      
+         w: MULADD      R1.w,  R1.x,  C0.w,  PV2.z      
+02 EXP_DONE: POS0, R1
+03 EXP: PARAM0, R2  NO_BARRIER 
 04 EXP_DONE: PARAM1, R0.xyzz  NO_BARRIER 
 END_OF_PROGRAM
 
