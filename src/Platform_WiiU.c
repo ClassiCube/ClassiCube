@@ -102,6 +102,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	//str   += sd_length;
 	
 static const cc_string root_path = String_FromConst("ClassiCube/");
+
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
 	str += root_path.length;

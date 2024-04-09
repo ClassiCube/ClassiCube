@@ -18,6 +18,7 @@
 #include <proc_ui/procui.h>
 #include <gx2/display.h>
 #include <vpad/input.h>
+#include <whb/proc.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
@@ -76,13 +77,14 @@ void Window_Create3D(int width, int height) {
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
-#define AXIS_SCALE 1.0f
+
+#define AXIS_SCALE 4.0f
 static void ProcessVpadStick(int axis, float x, float y, double delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsF(x) <= 0.1f) x = 0;
 	if (Math_AbsF(y) <= 0.1f) y = 0;
 	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(axis, x * AXIS_SCALE, -y * AXIS_SCALE, delta);
 }
 
    
@@ -147,11 +149,19 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//OSScreenClearBufferEx(SCREEN_TV, 0x665544FF);
    
-	for (int y = r.y; y < r.y + r.height; y++) 
+	/*for (int y = r.y; y < r.y + r.height; y++) 
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		
 		for (int x = r.x; x < r.x + r.width; x++) {
+			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
+		}
+	}*/
+	for (int y = 0; y < bmp->height; y++) 
+	{
+		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) {
 			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
 		}
 	}

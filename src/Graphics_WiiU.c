@@ -43,6 +43,11 @@ static void InitGfx(void) {
 	WHBGfxInitShaderAttribute(&textureShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
 	WHBGfxInitShaderAttribute(&textureShader, "in_uv",  0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
 	WHBGfxInitFetchShader(&textureShader);
+	
+	GX2SetBlendControl(GX2_RENDER_TARGET_0,
+		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
+		true,
+		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
 }
 
 void Gfx_Create(void) {
@@ -82,6 +87,8 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+static GX2Texture* pendingTex;
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	GX2Texture* tex = Mem_AllocCleared(1, sizeof(GX2Texture), "GX2 texture");
 	// TODO handle out of memory better
@@ -112,21 +119,42 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
+	GX2Texture* tex = (GX2Texture*)texId;	
+	uint32_t* dst   = (uint32_t*)tex->surface.image + (y * tex->surface.pitch) + x;
+	uint32_t* src   = (uint32_t*)part->scan0;
+	
+	for (int i = 0; i < part->height; i++)
+	{
+		Mem_Copy(dst, src, part->width * sizeof(uint32_t));
+		dst += tex->surface.pitch;
+		src += rowWidth;
+	}
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
-	GX2Texture* tex = (GX2Texture*)texId;
+	pendingTex = (GX2Texture*)texId;
+	// Texture is bound to active shader, so might need to defer it in
+	//  case a call to Gfx_BindTexture was called even though vertex format wasn't textured
+	// TODO: Track as dirty uniform flag instead?
+}
+
+static void BindPendingTexture(void) {
+	if (!pendingTex || group != &textureShader) return;
 	
-	if (group != &textureShader) return; // TODO
-	GX2SetPixelTexture(tex,      group->pixelShader->samplerVars[0].location);
-      	GX2SetPixelSampler(&sampler, group->pixelShader->samplerVars[0].location);
+	GX2SetPixelTexture(pendingTex, group->pixelShader->samplerVars[0].location);
+      	GX2SetPixelSampler(&sampler,   group->pixelShader->samplerVars[0].location);
+      	pendingTex = NULL;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
+	if (*texId == pendingTex) pendingTex = NULL;
+	// TODO free memory ???
 }
 
 void Gfx_EnableMipmaps(void) { }  // TODO
@@ -138,8 +166,14 @@ void Gfx_DisableMipmaps(void) { } // TODO
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static float clearR, clearG, clearB;
+static cc_bool depthWrite = true, depthTest = true;
+
+static void UpdateDepthState(void) {
+	GX2SetDepthOnlyControl(depthTest, depthWrite, GX2_COMPARE_FUNC_LEQUAL);
+}
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
+	GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, false, enabled);
 }
 
 void Gfx_SetFog(cc_bool enabled) {
@@ -163,9 +197,12 @@ void Gfx_SetFogMode(FogFunc func) {
 }
 
 void Gfx_SetAlphaTest(cc_bool enabled) {
+	GX2SetAlphaTest(enabled, GX2_COMPARE_FUNC_GEQUAL, 0.5f);
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
+        //GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
+        // TODO why does this cause problems
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
@@ -179,13 +216,24 @@ void Gfx_ClearColor(PackedCol color) {
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
+	depthTest = enabled;
+	UpdateDepthState();
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
+	depthWrite = enabled;
+	UpdateDepthState();
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	// TODO
+	GX2ChannelMask mask = 0;
+	if (r) mask |= GX2_CHANNEL_MASK_R;
+	if (g) mask |= GX2_CHANNEL_MASK_G;
+	if (b) mask |= GX2_CHANNEL_MASK_B;
+	if (a) mask |= GX2_CHANNEL_MASK_A;
+	
+	// TODO: use GX2SetColorControl to disable all writing ???
+	GX2SetTargetChannelMasks(mask, 0,0,0, 0,0,0,0);
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
@@ -285,17 +333,22 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
+	BindPendingTexture();
+	GX2DrawEx(GX2_PRIMITIVE_MODE_LINES, verticesCount, 0, 1);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	BindPendingTexture();
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, 0, 1);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	BindPendingTexture();
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	BindPendingTexture();
 	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
 
@@ -307,29 +360,16 @@ static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	
+	// TODO dirty uniform
 	struct Matrix mvp __attribute__((aligned(64)));	
 	Matrix_Mul(&mvp, &_view, &_proj);
 	if (!group) return;
-	
-	
-static float transposed_mvp[4*4] __attribute__((aligned(64)));
-float* m = &mvp;
-	
-	// Transpose matrix
-	for (int i = 0; i < 4; i++)
-	{
-		transposed_mvp[i * 4 + 0] = m[0  + i];
-		transposed_mvp[i * 4 + 1] = m[4  + i];
-		transposed_mvp[i * 4 + 2] = m[8  + i];
-		transposed_mvp[i * 4 + 3] = m[12 + i];
-	}
-	
-	//Platform_LogConst("MVP");
-        GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &mvp);
+	GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &mvp);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	// TODO
+	Gfx_LoadMatrix(type, &Matrix_Identity);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {

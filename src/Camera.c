@@ -255,7 +255,7 @@ static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY);
 }
 
-static void OnAxisUpdate(int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, int axis, float x, float y) {
 	if (!Input.RawMode) return;
 	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
 

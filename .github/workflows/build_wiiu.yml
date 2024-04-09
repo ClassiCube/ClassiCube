@@ -1,0 +1,45 @@
+name: Build latest (WiiU)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-wiiu
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Wii U build
+        id: compile
+        run: |
+          make wiiu
+
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile WiiU build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-wiiu.wuhb'
+          DEST_NAME: 'ClassiCube-wiiu.wuhb'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-wiiu.rpx'
+          DEST_NAME: 'ClassiCube-wiiu.rpx'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-wii.elf'
+          DEST_NAME: 'ClassiCube-wii.elf'
