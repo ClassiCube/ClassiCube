@@ -19,14 +19,19 @@
 #include <gx2r/mem.h>
 #include <gx2r/buffer.h>
 #include <whb/gfx.h>
+#include <coreinit/memdefaultheap.h>
 #include "../build-wiiu/coloured_gsh.h"
 #include "../build-wiiu/textured_gsh.h"
 
 static WHBGfxShaderGroup colorShader;
 static WHBGfxShaderGroup textureShader;
+static GX2Sampler sampler;
+static GfxResourceID white_square;
+static WHBGfxShaderGroup* group;
 
 static void InitGfx(void) {
 	WHBGfxInit();
+   	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
 	
 	WHBGfxLoadGFDShaderGroup(&colorShader, 0, coloured_gsh);
 	WHBGfxInitShaderAttribute(&colorShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
@@ -36,7 +41,7 @@ static void InitGfx(void) {
 	WHBGfxLoadGFDShaderGroup(&textureShader, 0, textured_gsh);
 	WHBGfxInitShaderAttribute(&textureShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
 	WHBGfxInitShaderAttribute(&textureShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
-	WHBGfxInitShaderAttribute(&textureShader, "in_pos", 0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+	WHBGfxInitShaderAttribute(&textureShader, "in_uv",  0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
 	WHBGfxInitFetchShader(&textureShader);
 }
 
@@ -58,12 +63,19 @@ void Gfx_Free(void) {
 
 static void Gfx_FreeState(void) { 
 	FreeDefaultResources();
+	Gfx_DeleteTexture(&white_square);
 }
 
 static void Gfx_RestoreState(void) {
 	Gfx_SetFaceCulling(false);
 	InitDefaultResources();
 	gfx_format = -1;
+	
+	// 1x1 dummy white texture
+	struct Bitmap bmp;
+	BitmapCol pixels[1] = { BITMAPCOLOR_WHITE };
+	Bitmap_Init(bmp, 1, 1, pixels);
+	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
 
 
@@ -71,7 +83,32 @@ static void Gfx_RestoreState(void) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	return (void*)1;
+	GX2Texture* tex = Mem_AllocCleared(1, sizeof(GX2Texture), "GX2 texture");
+	// TODO handle out of memory better
+	int width = bmp->width, height = bmp->height;
+	tex->surface.width    = width;
+	tex->surface.height   = height;
+	tex->surface.depth    = 1;
+	tex->surface.dim      = GX2_SURFACE_DIM_TEXTURE_2D;
+	tex->surface.format   = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
+	tex->surface.tileMode = GX2_TILE_MODE_LINEAR_ALIGNED;
+	tex->viewNumSlices    = 1;
+	tex->compMap          = 0x00010203;
+	GX2CalcSurfaceSizeAndAlignment(&tex->surface);
+	GX2InitTextureRegs(tex);
+	tex->surface.image = MEMAllocFromDefaultHeapEx(tex->surface.imageSize, tex->surface.alignment);
+	// TODO check result
+  
+	uint32_t* dst = (uint32_t*)tex->surface.image;
+	uint32_t* src = (uint32_t*)bmp->scan0;
+	for (int i = 0; i < tex->surface.height; i++)
+	{
+		Mem_Copy(dst, src, width * sizeof(uint32_t));
+		dst += tex->surface.pitch;
+		src += width;
+	}
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
+	return tex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
@@ -81,6 +118,12 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
+	if (!texId) texId = white_square;
+	GX2Texture* tex = (GX2Texture*)texId;
+	
+	if (group != &textureShader) return; // TODO
+	GX2SetPixelTexture(tex,      group->pixelShader->samplerVars[0].location);
+      	GX2SetPixelSampler(&sampler, group->pixelShader->samplerVars[0].location);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -230,8 +273,6 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
-static WHBGfxShaderGroup* group;
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
