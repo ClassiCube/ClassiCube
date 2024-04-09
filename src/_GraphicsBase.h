@@ -173,20 +173,20 @@ void Gfx_RecreateContext(void) {
 	Event_RaiseVoid(&GfxEvents.ContextRecreated);
 }
 
-cc_bool reducedPerformance;
 static CC_INLINE void TickReducedPerformance(void) {
 	Thread_Sleep(100); /* 10 FPS */
 
-	if (reducedPerformance) return;
-	reducedPerformance = true;
+	if (Gfx.ReducedPerfMode) return;
+	Gfx.ReducedPerfMode = true;
 	Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 }
 
 static CC_INLINE void EndReducedPerformance(void) {
-	if (!reducedPerformance) return;
-	reducedPerformance = false;
-	Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
-	Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
+	if (!Gfx.ReducedPerfMode) return;
+
+	Gfx.ReducedPerfModeCooldown = 2;
+	Gfx.ReducedPerfMode         = false;
+	Chat_AddOf(&String_Empty, MSG_TYPE_EXTRASTATUS_2);
 }
 
 

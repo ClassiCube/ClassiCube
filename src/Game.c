@@ -307,10 +307,13 @@ static void HandleInactiveChanged(void* obj) {
 	if (Window_Main.Inactive) {
 		Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 		Gfx_SetFpsLimit(false, 1000 / 1.0f);
+		Gfx.ReducedPerfMode = true;
 	} else {
 		Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
 		Game_SetFpsLimit(Game_FpsLimit);
-		Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
+
+		Gfx.ReducedPerfMode         = false;
+		Gfx.ReducedPerfModeCooldown = 2;
 	}
 
 #ifdef CC_BUILD_WEB

@@ -95,7 +95,10 @@ static void HUDScreen_RemakeLine1(struct HUDScreen* s) {
 	if (!Gui.ShowFPS && s->line1.tex.ID) return;
 	fps = s->accumulator == 0 ? 1 : (int)(s->frames / s->accumulator);
 
-	if (fps == 0) {
+	if (Gfx.ReducedPerfMode || (Gfx.ReducedPerfModeCooldown > 0)) {
+		String_AppendConst(&status, "(low perf mode), ");
+		Gfx.ReducedPerfModeCooldown--;
+	} else if (fps == 0) {
 		/* Running at less than 1 FPS.. */
 		real_fps = s->frames / s->accumulator;
 		String_Format1(&status, "%f1 fps, ", &real_fps);

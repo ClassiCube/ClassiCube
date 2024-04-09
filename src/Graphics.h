@@ -64,6 +64,8 @@ CC_VAR extern struct _GfxData {
 	/* Minimum dimensions in pixels that a texture must be */
 	/* NOTE: Most graphics backends do not use this */
 	int MinTexWidth, MinTexHeight;
+	cc_bool  ReducedPerfMode;
+	cc_uint8 ReducedPerfModeCooldown;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
@@ -86,8 +88,6 @@ typedef enum GfxBuffers_ {
 #define TEXTURE_FLAG_NONPOW2 0x04
 /* Texture can fallback to 16 bpp when necessary (most backends don't do this) */
 #define TEXTURE_FLAG_LOWRES  0x08
-
-#define LOWPERF_EXIT_MESSAGE "&eExited reduced performance mode"
 
 void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
