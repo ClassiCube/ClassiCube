@@ -23,7 +23,7 @@
 
 ; --------  Disassembly --------------------
 00 CALL_FS NO_BARRIER 
-01 ALU: ADDR(32) CNT(16)
+01 ALU: ADDR(32) CNT(18)
       0  x: MUL         ____,  C3.w,  1.0f      
          y: MUL         ____,  C3.z,  1.0f      
          z: MUL         ____,  C3.y,  1.0f      
@@ -42,8 +42,5 @@
          w: MULADD      R2.w,  R2.x,  C0.w,  PV2.x      
 02 EXP_DONE: POS0, R2
 03 EXP_DONE: PARAM0, R1  NO_BARRIER 
-04 ALU: ADDR(48) CNT(1) 
-      4  x: NOP         ____      
-05 NOP NO_BARRIER 
 END_OF_PROGRAM
 

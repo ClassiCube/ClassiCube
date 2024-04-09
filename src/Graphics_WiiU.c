@@ -6,6 +6,7 @@
 #include <gx2/clear.h>
 #include <gx2/context.h>
 #include <gx2/display.h>
+#include <gx2/draw.h>
 #include <gx2/event.h>
 #include <gx2/mem.h>
 #include <gx2/registers.h>
@@ -14,15 +15,37 @@
 #include <gx2/surface.h>
 #include <gx2/swap.h>
 #include <gx2/temp.h>
+#include <gx2r/draw.h>
 #include <gx2r/mem.h>
 #include <gx2r/buffer.h>
 #include <whb/gfx.h>
+#include "../build-wiiu/coloured_gsh.h"
+#include "../build-wiiu/textured_gsh.h"
+
+static WHBGfxShaderGroup colorShader;
+static WHBGfxShaderGroup textureShader;
+
+static void InitGfx(void) {
+	WHBGfxInit();
+	
+	WHBGfxLoadGFDShaderGroup(&colorShader, 0, coloured_gsh);
+	WHBGfxInitShaderAttribute(&colorShader, "in_pos", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
+	WHBGfxInitShaderAttribute(&colorShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
+	WHBGfxInitFetchShader(&colorShader);
+	
+	WHBGfxLoadGFDShaderGroup(&textureShader, 0, textured_gsh);
+	WHBGfxInitShaderAttribute(&textureShader, "in_pos", 0,  0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32);
+	WHBGfxInitShaderAttribute(&textureShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
+	WHBGfxInitShaderAttribute(&textureShader, "in_pos", 0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+	WHBGfxInitFetchShader(&textureShader);
+}
 
 void Gfx_Create(void) {
+	if (!Gfx.Created) InitGfx();
+	
 	Gfx.Created      = true;
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
-	WHBGfxInit();
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -62,8 +85,6 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
-
-void Gfx_SetTexturing(cc_bool enabled) { }
 
 void Gfx_EnableMipmaps(void) { }  // TODO
 
@@ -172,6 +193,9 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
+	GX2RBuffer* buf = (GX2RBuffer*)vb;
+	GX2RSetAttributeBuffer(buf, 0, buf->elemSize, 0);
+	//GX2SetAttribBuffer(0, 
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
@@ -206,27 +230,61 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); 
 /*########################################################################################################################*
 *-----------------------------------------------------Vertex rendering----------------------------------------------------*
 *#########################################################################################################################*/
+static WHBGfxShaderGroup* group;
+
 void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
+	
+	group = fmt == VERTEX_FORMAT_TEXTURED ? &textureShader : &colorShader;
+	GX2SetFetchShader(&group->fetchShader);
+	GX2SetVertexShader(group->vertexShader);
+	GX2SetPixelShader(group->pixelShader);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, 0, 1);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	GX2DrawEx(GX2_PRIMITIVE_MODE_QUADS, verticesCount, startVertex, 1);
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
+static struct Matrix _view, _proj;
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	// TODO
+	if (type == MATRIX_VIEW)       _view = *matrix;
+	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	struct Matrix mvp __attribute__((aligned(64)));	
+	Matrix_Mul(&mvp, &_view, &_proj);
+	if (!group) return;
+	
+	
+static float transposed_mvp[4*4] __attribute__((aligned(64)));
+float* m = &mvp;
+	
+	// Transpose matrix
+	for (int i = 0; i < 4; i++)
+	{
+		transposed_mvp[i * 4 + 0] = m[0  + i];
+		transposed_mvp[i * 4 + 1] = m[4  + i];
+		transposed_mvp[i * 4 + 2] = m[8  + i];
+		transposed_mvp[i * 4 + 3] = m[12 + i];
+	}
+	
+	//Platform_LogConst("MVP");
+        GX2SetVertexUniformReg(group->vertexShader->uniformVars[0].offset, 16, &mvp);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
