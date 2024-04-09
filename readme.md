@@ -78,6 +78,7 @@ And also runs on:
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
+* Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml))
 * Switch - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
@@ -182,7 +183,13 @@ Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
 
 `xcodebuild -sdk iphoneos -configuration Debug` (TODO explain more detailed)
 
-## Compiling - other desktop OSes
+## Compiling - other platforms
+
+#### Web
+
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
+
+The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
 #### FreeBSD
 
@@ -230,37 +237,15 @@ Install SDL2 port if needed
 
 ```cc *.c -o ClassiCube -lgl -lSDL2```
 
-## Compiling - other
+#### Other systems
 
-#### Web
+You'll have to write the necessary code. You should read `portability.md` in doc folder.
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
+## Compiling - consoles
 
-The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
+All console ports needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
 
-#### 3DS
-
-Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
-
-The 3DS port needs assistance from someone experienced with 3DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Wii
-
-Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
-
-The Wii port needs assistance from someone experienced with Wii homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### GameCube
-
-Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
-
-The GC port needs assistance from someone experienced with GameCube homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+### Nintendo consoles
 
 #### Switch
 
@@ -268,7 +253,43 @@ Run `make switch`. You'll need [libnx](https://github.com/switchbrew/libnx) and 
 
 **NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `switch-dev` group and the `switch-mesa switch-glm` packages)**
 
-The Switch port needs assistance from someone experienced with Switch homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+#### Wii U
+
+Run `make wiiu`. You'll need [wut](https://github.com/devkitPro/wut/)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wiiu-dev` group)**
+
+#### 3DS
+
+Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
+
+#### Wii
+
+Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
+
+#### GameCube
+
+Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
+
+#### Nintendo 64
+
+Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+
+#### Nintendo DS/DSi
+
+Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
+
+### Sony consoles
+
+#### PlayStation Vita
+
+Run `make vita`. You'll need [vitasdk](https://vitasdk.org/)
 
 #### PlayStation Portable
 
@@ -276,47 +297,25 @@ Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
 
 **NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
 
-The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### PlayStation Vita
-
-Run `make vita`. You'll need [vitasdk](https://vitasdk.org/)
-
-The Vita port needs assistance from someone experienced with Vita homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
 #### PlayStation 3
 
 Run `make ps3`. You'll need [PSL1GHT](https://github.com/ps3dev/PSL1GHT)
 
-The PS3 port needs assistance from someone experienced with PS3 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+#### PlayStation 2
+
+Run `make ps2`. You'll need [ps2sdk](https://github.com/ps2dev/ps2sdk)
+
+### Microsoft consoles
 
 #### Xbox
 
 Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
 
-The Xbox port needs assistance from someone experienced with Xbox homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+### SEGA consoles
 
 #### Dreamcast
 
 Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
-
-The Dreamcast port needs assistance from someone experienced with Dreamcast homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Nintendo 64
-
-Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
-
-The Nintendo 64 port needs assistance from someone experienced with Nintendo 64 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Nintendo DS/DSi
-
-Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
-
-The Nintendo DS port needs assistance from someone experienced with Nintendo DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-##### Other
-
-You'll have to write the necessary code. You should read portability.md in doc folder.
 
 ## Documentation
 
@@ -375,6 +374,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
 * [libnx](https://github.com/switchbrew/libnx) - Backend for Switch
 * [Ryujinx](https://github.com/Ryujinx/Ryujinx) - Emulator used to test Switch port
+* [wut](https://github.com/devkitPro/wut/) - Backend for Wii U
+* [Cemu](https://github.com/cemu-project/Cemu) - Emulator used to test Wii U port
 
 
 ## Sound Credits

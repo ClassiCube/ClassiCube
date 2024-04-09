@@ -10,6 +10,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Graphics.h"
+#include "Launcher.h"
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -55,7 +56,10 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
-	
+
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+	Input_SetTouchMode(true);
+		
 	VPADInit();
 }
 
@@ -108,6 +112,18 @@ static void ProcessVpadButtons(int mods) {
 	Gamepad_SetButton(CCPAD_DOWN,   mods & VPAD_BUTTON_DOWN);
 	
 }
+static void ProcessVpadTouch(VPADTouchData* data) {
+	static int was_touched;
+	// TODO rescale to main screen size
+	if (data->touched) {
+		int x = data->x, y = data->y;
+		Platform_Log2("TOUCH: %i, %i", &x, &y);
+		Input_AddTouch(0,    data->x,       data->y);
+	} else if (was_touched) {
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
+	}
+	was_touched = data->touched;
+}
 
 void Window_ProcessEvents(double delta) {
 	Input.JoystickMovement = false;
@@ -125,6 +141,7 @@ void Window_ProcessEvents(double delta) {
 	
 	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
 	ProcessVpadButtons(vpadStatus.hold);
+	ProcessVpadTouch(&vpadStatus.tpNormal);
 	
 	ProcessVpadStick(PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
 	ProcessVpadStick(PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
@@ -147,7 +164,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	//OSScreenClearBufferEx(SCREEN_TV, 0x665544FF);
+	//
    
 	/*for (int y = r.y; y < r.y + r.height; y++) 
 	{
@@ -168,6 +185,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 	//DCFlushRange(sBufferTV, sBufferSizeTV);
 	OSScreenFlipBuffersEx(SCREEN_TV);
+	
+	OSScreenClearBufferEx(SCREEN_DRC, Launcher_Theme.BackgroundColor);
+	OSScreenFlipBuffersEx(SCREEN_DRC);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
