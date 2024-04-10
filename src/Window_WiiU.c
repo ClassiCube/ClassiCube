@@ -20,10 +20,13 @@
 #include <gx2/display.h>
 #include <vpad/input.h>
 #include <whb/proc.h>
+#include <padscore/kpad.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
+struct _WindowData Window_Alt;
+cc_bool launcherTop;
 
 void Window_Init(void) {
 	switch(GX2GetSystemTVScanMode())
@@ -59,7 +62,11 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
+	
+	Window_Alt.Width  = 854;
+	Window_Alt.Height = 480;
 		
+	KPADInit();
 	VPADInit();
 }
 
@@ -82,6 +89,19 @@ void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
+
+static void ProcessKPAD(double delta) {
+	KPADStatus kpad = { 0 };
+	int res = KPADRead(0, &kpad, 1);
+	if (res != KPAD_ERROR_OK) return;
+	
+	switch (kpad.extensionType)
+	{
+	
+	}
+}
+
+
 #define AXIS_SCALE 4.0f
 static void ProcessVpadStick(int axis, float x, float y, double delta) {
 	// May not be exactly 0 on actual hardware
@@ -90,7 +110,6 @@ static void ProcessVpadStick(int axis, float x, float y, double delta) {
 	
 	Gamepad_SetAxis(axis, x * AXIS_SCALE, -y * AXIS_SCALE, delta);
 }
-
    
 static void ProcessVpadButtons(int mods) {
 	Gamepad_SetButton(CCPAD_L,  mods & VPAD_BUTTON_L);
@@ -112,8 +131,10 @@ static void ProcessVpadButtons(int mods) {
 	Gamepad_SetButton(CCPAD_DOWN,   mods & VPAD_BUTTON_DOWN);
 	
 }
+
 static void ProcessVpadTouch(VPADTouchData* data) {
 	static int was_touched;
+
 	// TODO rescale to main screen size
 	if (data->touched) {
 		int x = data->x, y = data->y;
@@ -125,15 +146,7 @@ static void ProcessVpadTouch(VPADTouchData* data) {
 	was_touched = data->touched;
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
-	if (!WHBProcIsRunning()) {
-		Window_Main.Exists = false;
-		Window_RequestClose();
-		return;
-	}
-	
+static void ProcessVPAD(double delta) {
 	VPADStatus vpadStatus;
 	VPADReadError error = VPAD_READ_SUCCESS;
 	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
@@ -145,7 +158,20 @@ void Window_ProcessEvents(double delta) {
 	
 	ProcessVpadStick(PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
 	ProcessVpadStick(PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
+}
+
+
+void Window_ProcessEvents(double delta) {
+	Input.JoystickMovement = false;
 	
+	if (!WHBProcIsRunning()) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
+		return;
+	}
+	
+	ProcessVPAD(delta);
+	ProcessKPAD(delta);
 }
 
 void Window_UpdateRawMouse(void) { }
@@ -164,7 +190,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	//
+	if (launcherTop) return; // TODO: Draw on DRC properly
    
 	/*for (int y = r.y; y < r.y + r.height; y++) 
 	{

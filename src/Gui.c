@@ -692,9 +692,10 @@ static void OnInit(void) {
 	Gradient_Noise(&ctx, BitmapColor_RGB(0x40, 0x30, 0x20), 6, 0, 0, ctx.width, ctx.height);
 	Context2D_MakeTexture(&touchBgTex, &ctx);
 	Context2D_Free(&ctx);
+	
 	// Tile the texture to fill the entire screen
-	int tilesX = (320 + ctx.width - 1) / ctx.width;
-	int tilesY = (240 + ctx.height - 1) / ctx.height;
+	int tilesX = Math_CeilDiv(Window_Alt.Width,  ctx.width);
+	int tilesY = Math_CeilDiv(Window_Alt.Height, ctx.height);
 	touchBgTex.width *= tilesX; touchBgTex.height *= tilesY;
 	touchBgTex.uv.u2 *= tilesX; touchBgTex.uv.v2  *= tilesY;
 #endif
