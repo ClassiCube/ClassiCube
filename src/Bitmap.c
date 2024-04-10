@@ -700,8 +700,7 @@ static cc_result Png_EncodeCore(struct Bitmap* bmp, struct Stream* stream, cc_ui
 	if ((res = Stream_Write(stream, tmp, 16))) return res;
 
 	/* Come back to fixup size of data in data chunk */
-	/* TODO: Position instead of Length */
-	if ((res = stream->Length(stream, &stream_end)))   return res;
+	if ((res = stream->Position(stream, &stream_end))) return res;
 	if ((res = stream->Seek(stream, stream_beg + 33))) return res;
 
 	Stream_SetU32_BE(&tmp[0], (stream_end - stream_beg) - 57);

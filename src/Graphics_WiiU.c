@@ -43,11 +43,6 @@ static void InitGfx(void) {
 	WHBGfxInitShaderAttribute(&textureShader, "in_col", 0, 12, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
 	WHBGfxInitShaderAttribute(&textureShader, "in_uv",  0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32);
 	WHBGfxInitFetchShader(&textureShader);
-	
-	GX2SetBlendControl(GX2_RENDER_TARGET_0,
-		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
-		true,
-		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
 }
 
 void Gfx_Create(void) {
@@ -100,7 +95,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	tex->surface.format   = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
 	tex->surface.tileMode = GX2_TILE_MODE_LINEAR_ALIGNED;
 	tex->viewNumSlices    = 1;
-	tex->compMap          = 0x00010203;
+	tex->compMap          = GX2_COMP_MAP(GX2_SQ_SEL_R, GX2_SQ_SEL_G, GX2_SQ_SEL_B, GX2_SQ_SEL_A);
 	GX2CalcSurfaceSizeAndAlignment(&tex->surface);
 	GX2InitTextureRegs(tex);
 	tex->surface.image = MEMAllocFromDefaultHeapEx(tex->surface.imageSize, tex->surface.alignment);
@@ -201,12 +196,14 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
-        //GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
-        // TODO why does this cause problems
+	GX2SetBlendControl(GX2_RENDER_TARGET_0,
+		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
+		true,
+		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
+        GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
-	// TODO
 }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -419,11 +416,22 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync      = vsync;
+	
+	// TODO GX2SetSwapInterval(1);
 }
 
 void Gfx_BeginFrame(void) { 
-	WHBGfxBeginRender();
-	WHBGfxBeginRenderTV();
+	uint32_t swapCount, flipCount;
+	OSTime lastFlip, lastVsync;
+	for (int try = 0; try < 10; try++)
+	{
+		GX2GetSwapStatus(&swapCount, &flipCount, &lastFlip, &lastVsync);
+		if (flipCount >= swapCount) break;
+		GX2WaitForVsync(); // TODO vsync
+	}
+	
+	GX2ContextState* state = WHBGfxGetTVContextState();
+	GX2SetContextState(state);
 }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
@@ -439,8 +447,18 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
-	WHBGfxFinishRenderTV();
-	WHBGfxFinishRender();
+	GX2ColorBuffer* buf;
+	
+	buf = WHBGfxGetTVColourBuffer();
+	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_TV);	
+	buf = WHBGfxGetDRCColourBuffer();
+	GX2CopyColorBufferToScanBuffer(buf, GX2_SCAN_TARGET_DRC);	
+	
+	GX2SwapScanBuffers();
+	GX2Flush();
+	GX2DrawDone();
+	GX2SetTVEnable(TRUE);
+	GX2SetDRCEnable(TRUE);
 
 	if (gfx_minFrameMs) LimitFPS();
 }
@@ -454,5 +472,11 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 void Gfx_OnWindowResize(void) {
 
+}
+void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
+	GX2ContextState* tv_state  = WHBGfxGetTVContextState();
+	GX2ContextState* drc_state = WHBGfxGetDRCContextState();
+	
+	GX2SetContextState(screen == TOP_SCREEN ? tv_state : drc_state);
 }
 #endif

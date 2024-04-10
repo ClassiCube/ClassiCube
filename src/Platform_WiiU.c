@@ -452,6 +452,7 @@ void Platform_Init(void) {
 	mkdir("ClassiCube", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
+cc_bool Process_OpenSupported = false;
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }

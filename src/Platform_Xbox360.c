@@ -284,6 +284,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
 }
 
+cc_bool Process_OpenSupported = false;
 cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
