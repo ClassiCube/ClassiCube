@@ -662,6 +662,7 @@ static void Game_RenderFrame(double delta) {
 
 	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
+	OnscreenKeyboard_Draw3D();
 /* TODO find a better solution than this */
 #ifdef CC_BUILD_3DS
 	if (Game_Anaglyph3D) {

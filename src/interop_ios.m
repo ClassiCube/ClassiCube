@@ -515,6 +515,7 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 }
 
 void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) {
     [text_input resignFirstResponder];

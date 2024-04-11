@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "LBackend.h"
 #include "Window.h"
+#include "Graphics.h"
 
 static cc_bool kb_inited, kb_showing, kb_shift, kb_needsHook;
 static struct FontDesc kb_font;
@@ -66,9 +67,9 @@ static void VirtualKeyboard_Close(void);
 static void VirtualKeyboard_Hook(void);
 
 
-#define KB_NORMAL_COLOR     BitmapCol_Make(0x7F, 0x7F, 0x7F, 0x90)
-#define KB_SELECTED_COLOR   BitmapCol_Make(0xAF, 0xAF, 0xAF, 0x90)
-#define KB_BACKGROUND_COLOR BitmapCol_Make(0xFF, 0xFF, 0xFF, 0x90)
+#define KB_NORMAL_COLOR     BitmapCol_Make(0x7F, 0x7F, 0x7F, 0x40)
+#define KB_SELECTED_COLOR   BitmapCol_Make(0xAF, 0xAF, 0xAF, 0x40)
+#define KB_BACKGROUND_COLOR BitmapCol_Make(0xFF, 0xFF, 0xFF, 0x40)
 
 static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 	struct DrawTextArgs args;
@@ -104,7 +105,18 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 	
 	Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
 }
+static void VirtualKeyboard_CalcPosition(int* x, int* y, int width, int height) {
+	/* Draw virtual keyboard at centre of window bottom */
+	*y = height - 1 - VirtualKeyboard_Height();
+	if (*y < 0) *y = 0;
 
+	*x = (width - VirtualKeyboard_Width()) / 2;
+	if (*x < 0) *x = 0;
+}
+
+/*########################################################################################################################*
+*-----------------------------------------------------Input handling------------------------------------------------------*
+*#########################################################################################################################*/
 static void VirtualKeyboard_Scroll(int delta) {
 	if (kb_selected < 0) kb_selected = 0;
 
@@ -187,15 +199,93 @@ static void VirtualKeyboard_PadAxis(void* obj, int axis, float x, float y) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------2D mode----------------------------------------------------------*
+*#########################################################################################################################*/
 extern Rect2D dirty_rect;
+
 static void VirtualKeyboard_MarkDirty2D(void) {
 	if (!dirty_rect.width) dirty_rect.width = 2;
 }
 
-static void VirtualKeyboard_MarkDirty3D(void) {
-	/* TODO */
+static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
+	struct Context2D ctx;
+	struct Bitmap copy = *bmp;
+	int x, y;
+	if (!kb_showing) return;
+
+	/* Mark entire framebuffer as needing to be redrawn */
+	r->x = 0; r->width  = bmp->width;
+	r->y = 0; r->height = bmp->height;
+
+	VirtualKeyboard_CalcPosition(&x, &y, bmp->width, bmp->height);
+	copy.scan0 = Bitmap_GetRow(bmp, y);
+	copy.scan0 += x;
+
+	Context2D_Wrap(&ctx, &copy);
+	VirtualKeyboard_Draw(&ctx);
 }
 
+static void VirtualKeyboard_Close2D(void) {
+	LBackend_Redraw();
+}
+
+/*########################################################################################################################*
+*--------------------------------------------------------3D mode----------------------------------------------------------*
+*#########################################################################################################################*/
+static struct Texture kb_texture;
+static GfxResourceID kb_vb;
+
+static void VirtualKeyboard_MarkDirty3D(void) {
+	Gfx_DeleteTexture(&kb_texture.ID);
+}
+
+static void VirtualKeyboard_Close3D(void) {
+	Gfx_DeleteTexture(&kb_texture.ID);
+}
+static void VirtualKeyboard_MakeTexture(void) {
+	struct Context2D ctx;
+	int width  = VirtualKeyboard_Width();
+	int height = VirtualKeyboard_Height();
+	Context2D_Alloc(&ctx, width, height);
+	{
+		VirtualKeyboard_Draw(&ctx);
+		Context2D_MakeTexture(&kb_texture, &ctx);
+	}
+	Context2D_Free(&ctx);
+	
+	int x, y;
+	VirtualKeyboard_CalcPosition(&x, &y, Window_Main.Width, Window_Main.Height);
+	kb_texture.x = x; kb_texture.y = y;
+}
+
+/* TODO hook into context lost etc */
+static void VirtualKeyboard_Display3D(void) {
+	if (!kb_showing) return;
+	
+	if (!kb_vb) {
+		kb_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+		if (!kb_vb) return;
+	}	
+	
+	if (!kb_texture.ID) {
+		VirtualKeyboard_MakeTexture();
+		if (!kb_texture.ID) return;
+	}
+	
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindTexture(kb_texture.ID);
+	
+	struct VertexTextured* data = Gfx_LockDynamicVb(kb_vb, VERTEX_FORMAT_TEXTURED, 4);
+	struct VertexTextured** ptr = &data;
+	Gfx_Make2DQuad(&kb_texture, PACKEDCOL_WHITE, ptr);
+	Gfx_UnlockDynamicVb(kb_vb);
+	Gfx_DrawVb_IndexedTris(4);
+}
+
+/*########################################################################################################################*
+*--------------------------------------------------------General----------------------------------------------------------*
+*#########################################################################################################################*/
 static void VirtualKeyboard_Hook(void) {
 	/* Don't hook immediately into events, otherwise the initial up/down press that opened */
 	/*  the virtual keyboard in the first place gets mistakenly processed */
@@ -235,7 +325,12 @@ static void VirtualKeyboard_SetText(const cc_string* text) {
 }
 
 static void VirtualKeyboard_Close(void) {
-	if (KB_MarkDirty) KB_MarkDirty();
+	/* TODO find a better way */
+	if (KB_MarkDirty == VirtualKeyboard_MarkDirty2D)
+		VirtualKeyboard_Close2D();
+	if (KB_MarkDirty == VirtualKeyboard_MarkDirty3D)
+		VirtualKeyboard_Close3D();
+		
 	Event_Unregister_(&InputEvents.Down,            NULL, VirtualKeyboard_ProcessDown);
 	Event_Unregister_(&ControllerEvents.AxisUpdate, NULL, VirtualKeyboard_PadAxis);
 	Window_Main.SoftKeyboardFocus = false;
@@ -243,26 +338,4 @@ static void VirtualKeyboard_Close(void) {
 	KB_MarkDirty = NULL;
 	kb_showing   = false;
 	kb_needsHook = false;
-}
-
-static void VirtualKeyboard_Display2D(Rect2D* r, struct Bitmap* bmp) {
-	struct Context2D ctx;
-	struct Bitmap copy = *bmp;
-	int x, y;
-
-	/* Mark entire framebuffer as needing to be redrawn */
-	r->x = 0; r->width  = bmp->width;
-	r->y = 0; r->height = bmp->height;
-
-	/* Draw virtual keyboard at centre of window bottom */
-	y = bmp->height - 1 - VirtualKeyboard_Height();
-	y = max(y, 0);
-	copy.scan0 = Bitmap_GetRow(bmp, y);
-
-	x = (bmp->width - VirtualKeyboard_Width()) / 2;
-	x = max(x, 0);
-	copy.scan0 += x;
-
-	Context2D_Wrap(&ctx, &copy);
-	VirtualKeyboard_Draw(&ctx);
 }

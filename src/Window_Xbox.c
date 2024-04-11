@@ -207,7 +207,11 @@ void OnscreenKeyboard_SetText(const cc_string* text) {
 }
 
 void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
-	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
 }
 
 void OnscreenKeyboard_Close(void) {

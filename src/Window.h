@@ -195,6 +195,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args);
 /*  whatever text input widget is actually being displayed on screen. */
 void OnscreenKeyboard_SetText(const cc_string* text);
 void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp);
+void OnscreenKeyboard_Draw3D(void);
 /* Hides/Removes the previously displayed on-screen keyboard. */
 void OnscreenKeyboard_Close(void);
 /* Locks/Unlocks the landscape orientation. */
