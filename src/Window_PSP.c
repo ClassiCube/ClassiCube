@@ -10,6 +10,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "VirtualKeyboard.h"
 #include <pspdisplay.h>
 #include <pspge.h>
 #include <pspctrl.h>
@@ -120,6 +121,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
 	void* fb = sceGeEdramGetAddr();
 	
 	sceDisplayWaitVblankStart();
@@ -143,9 +145,18 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void Window_SetKeyboardText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void Window_CloseKeyboard(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

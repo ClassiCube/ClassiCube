@@ -260,11 +260,11 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
 	// TODO: double buffering ??
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
-	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
 	
 	for (int y = r.y; y < r.y + r.height; y++)
 	{
@@ -294,12 +294,10 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 }
 
 void Window_SetKeyboardText(const cc_string* text) {
-	if (!kb_showing) return;
 	VirtualKeyboard_SetText(text);
 }
 
 void Window_CloseKeyboard(void) {
-	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
 	VirtualKeyboard_Close();
 }
 

@@ -10,6 +10,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Graphics.h"
+#include "VirtualKeyboard.h"
 #include <gccore.h>
 #if defined HW_RVL
 #include <wiiuse/wpad.h>
@@ -446,6 +447,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		VIDEO_Flush();
 		needsFBUpdate = false;
 	}
+	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
 	
 	VIDEO_WaitVSync();
 	r.x &= ~0x01; // round down to nearest even horizontal index
@@ -472,6 +474,23 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Soft keyboard------------------------------------------------------*
+*#########################################################################################################################*/
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void Window_SetKeyboardText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void Window_CloseKeyboard(void) {
+	VirtualKeyboard_Close();
+}
+
+
+/*########################################################################################################################*
 *-------------------------------------------------------Misc/Other--------------------------------------------------------*
 *#########################################################################################################################*/
 void Window_SetTitle(const cc_string* title)   { }
@@ -486,10 +505,6 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
 
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */

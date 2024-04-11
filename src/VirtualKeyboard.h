@@ -229,6 +229,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 }
 
 static void VirtualKeyboard_SetText(const cc_string* text) {
+	if (!kb_showing) return;
 	String_Copy(&kb_str, text);
 }
 
