@@ -41,7 +41,7 @@ APP_AUTHOR 	:= UnknownShadow200
 # options for code generation
 #---------------------------------------------------------------------------------
 CC      := gcc
-CFLAGS	:= -pipe -fno-math-errno -O0 -g -mtune=pentium4 -msse2 -march=i686 -idirafter /@unixroot/usr/include/os2tk45 -DOS2
+CFLAGS	:= -pipe -fno-math-errno -O3 -g -mtune=pentium4 -msse2 -march=i686 -idirafter /@unixroot/usr/include/os2tk45 -DOS2
 LDFLAGS	:=	-Zhigh-mem -Zomf -Zargs-wild -Zargs-resp -Zlinker DISABLE -Zlinker 1121
 LIBS	  := -lcx -lmmpm2 -lpthread -lSDL2
 

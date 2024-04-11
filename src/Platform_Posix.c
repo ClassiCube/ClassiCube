@@ -63,7 +63,9 @@ cc_bool Platform_SingleProcess;
 #include <kernel/image.h>
 #elif defined CC_BUILD_OS2
 #include <libcx/net.h>
-#define INCL_DOSPROCESS
+#define INCL_DOS
+#define INCL_DOSERRORS
+#define INCL_PM
 #include <os2.h>
 #endif
 
@@ -408,7 +410,7 @@ struct WaitData {
 	pthread_cond_t  cond;
 	pthread_mutex_t mutex;
 	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
-};
+};        
 
 void* Waitable_Create(void) {
 	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
@@ -786,6 +788,69 @@ cc_result Process_StartOpen(const cc_string* args) {
 }
 #elif defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS
 /* Implemented in interop_BeOS.cpp */
+#elif defined CC_BUILD_OS2
+inline static void ShowErrorMessage(const char *url) {
+	static char errorMsg[] = "Could not open browser. Please go to: ";
+	cc_string message = String_Init(errorMsg, strlen(errorMsg), 500);
+	String_AppendConst(&message, url);
+	Logger_DialogWarn(&message);
+}
+
+cc_result Process_StartOpen(const cc_string* args) {
+	char str[NATIVE_STR_LEN];
+	APIRET rc;
+	UCHAR path[CCHMAXPATH], parameter[NATIVE_STR_LEN];
+	UCHAR userPath[CCHMAXPATH], sysPath[CCHMAXPATH];
+	PRFPROFILE profile = { sizeof(userPath), userPath, sizeof(sysPath), sysPath };
+	HINI os2Ini;
+	HAB hAnchor = WinQueryAnchorBlock(WinQueryActiveWindow(HWND_DESKTOP));
+	RESULTCODES result = { 0 };
+	
+	// We get URL
+	String_EncodeUtf8(str, args);
+	
+	// Initialize buffers
+	Mem_Set(path, 0, sizeof(path));
+	Mem_Set(parameter, 0, sizeof(parameter));
+
+	// We have to look in the OS/2 configuration for the default browser.
+	// First step: Find the configuration files
+ 	if (!PrfQueryProfile(hAnchor, &profile)) {
+		ShowErrorMessage(str);
+		return 0;
+	}
+	
+	// Second step: Open the configuration files and read exe path and parameters
+	os2Ini = PrfOpenProfile(hAnchor, userPath);
+	if (os2Ini == NULLHANDLE) {
+		ShowErrorMessage(str);
+		return 0;
+	}
+	if (!PrfQueryProfileString(os2Ini, "WPURLDEFAULTSETTINGS", "DefaultBrowserExe", 
+		  NULL, path, sizeof(path))) {
+		PrfCloseProfile(os2Ini);
+		ShowErrorMessage(str);
+		return 0;
+	}
+
+	PrfQueryProfileString(os2Ini, "WPURLDEFAULTSETTINGS", "DefaultBrowserParameters", 
+		NULL, parameter, sizeof(parameter));
+	PrfCloseProfile(os2Ini);
+
+	// concat arguments
+	strncat(parameter, " ", 20);
+	strncat(parameter, str, sizeof(str));
+
+	// Last step: Execute detached browser
+	rc = DosExecPgm(userPath, sizeof(userPath), EXEC_ASYNC, 
+		parameter, NULL, &result, path);
+	if (rc != NO_ERROR) {
+		ShowErrorMessage(str);
+		return 0;
+	}
+	
+	return 0;
+}
 #else
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
