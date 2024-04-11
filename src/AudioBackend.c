@@ -1285,7 +1285,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 	size = (size + 0x1F) & ~0x1F; // round up to nearest multiple of 0x20
-	void* dst = memalign(0x20, size);
+	void* dst = memalign(0x20, size * numChunks);
 	if (!dst) return ERR_OUT_OF_MEMORY;
 
 	for (int i = 0; i < numChunks; i++) {

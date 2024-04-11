@@ -15,6 +15,7 @@
 #include <gx2/surface.h>
 #include <gx2/swap.h>
 #include <gx2/temp.h>
+#include <gx2/utils.h>
 #include <gx2r/draw.h>
 #include <gx2r/mem.h>
 #include <gx2r/buffer.h>
@@ -473,9 +474,9 @@ void Gfx_GetApiInfo(cc_string* info) {
 void Gfx_OnWindowResize(void) {
 
 }
-void Gfx_3DS_SetRenderScreen(enum Screen3DS screen) {
+void Gfx_3DS_SetRenderScreen1(enum Screen3DS screen) {
 	GX2ContextState* tv_state  = WHBGfxGetTVContextState();
-	GX2ContextState* drc_state = WHBGfxGetDRCContextState();
+	GX2ContextState* drc_state = WHBGfxGetDRCContextState(); // TODO
 	
 	GX2SetContextState(screen == TOP_SCREEN ? tv_state : drc_state);
 }
