@@ -290,7 +290,7 @@ cc_result File_Create(cc_file* file, const cc_string* path) {
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 #if !defined CC_BUILD_OS2
-	return File_Do(file, path, O_RDWR | O_CREAT | O_BINARY);
+	return File_Do(file, path, O_RDWR | O_CREAT);
 #else
 	return File_Do(file, path, O_RDWR | O_CREAT | O_BINARY);
 #endif
