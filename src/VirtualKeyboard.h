@@ -24,8 +24,9 @@ static void (*KB_MarkDirty)(void);
 #define KB_TOTAL_ROWS     5
 #define KB_LAST_ROW      (KB_TOTAL_ROWS - 1)
 
-#define KB_TOTAL_CHARS (KB_CELLS_PER_ROW * 4) + 3
+#define KB_TOTAL_CHARS (KB_CELLS_PER_ROW * 4) + 4
 #define KB_INDEX(x, y) ((y) * KB_CELLS_PER_ROW + (x))
+#define KB_TOTAL_SIZE  KB_CELLS_PER_ROW * KB_TOTAL_ROWS
 
 #define KB_TILE_SIZE     32
 
@@ -35,7 +36,7 @@ static const char* kb_table_lower[] =
 	"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "(", ")", "&    ",
 	"a", "s", "d", "f", "g", "h", "j", "k", "l", "?", ";", "'", "Enter",
 	"z", "x", "c", "v", "b", "n", "m", ".", ",","\\", "!", "@", "/    ",
-	"Caps", "Shift", "Space"
+	"Caps", "Shift", "Space", "Close"
 };
 static const char* kb_table_upper[] =
 {
@@ -43,7 +44,7 @@ static const char* kb_table_upper[] =
 	"Q", "W", "E", "R", "T", "Y", "U", "I", "o", "p", "(", ")", "&   ",
 	"A", "S", "D", "F", "G", "H", "J", "K", "L", "?", ";", "'", "Enter",
 	"Z", "X", "C", "V", "B", "N", "M", ".", ",","\\", "!", "@", "/    ",
-	"Caps", "Shift", "Space"
+	"Caps", "Shift", "Space", "Close"
 };
 
 extern void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
@@ -62,6 +63,17 @@ static int VirtualKeyboard_Width(void) {
 static int VirtualKeyboard_Height(void) {
 	return KB_TOTAL_ROWS * KB_TILE_SIZE;
 }
+static int VirtualKeyboard_GetSelected(void) {
+	// Last row needs special handling since it uses 4 cells per item
+	int selected = kb_selected;
+	if (selected < 0) return -1;
+	
+	int row  = selected / KB_CELLS_PER_ROW;
+	int cell = selected % KB_CELLS_PER_ROW;
+	if (row != KB_LAST_ROW) return selected;
+	cell /= 4;
+	return row * KB_CELLS_PER_ROW + cell;
+}
 
 static void VirtualKeyboard_Close(void);
 static void VirtualKeyboard_Hook(void);
@@ -76,6 +88,8 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 	cc_string str;
 	int row, cell;
 	int i, x, y, w, h, dx, dy;
+	int selected = VirtualKeyboard_GetSelected();
+	
 	Drawer2D.Colors['f'] = Drawer2D.Colors['0'];
 	if (kb_needsHook) VirtualKeyboard_Hook();
 
@@ -91,7 +105,7 @@ static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 			w = KB_TILE_SIZE * (str.length > 1 ? 4 : 1);
 			h = KB_TILE_SIZE;
 
-			Gradient_Noise(ctx, i == kb_selected ? KB_SELECTED_COLOR : KB_NORMAL_COLOR, 4, x, y, w, h);
+			Gradient_Noise(ctx, i == selected ? KB_SELECTED_COLOR : KB_NORMAL_COLOR, 4, x, y, w, h);
 			LWidget_DrawBorder(ctx, KB_BACKGROUND_COLOR, 1, 1, x, y, w, h);
 
 			dx = (w - Drawer2D_TextWidth (&args)) / 2;
@@ -121,8 +135,10 @@ static void VirtualKeyboard_Scroll(int delta) {
 	if (kb_selected < 0) kb_selected = 0;
 
 	kb_selected += delta;
-	if (kb_selected < 0) kb_selected += KB_TOTAL_CHARS;
-	Math_Clamp(kb_selected, 0, KB_TOTAL_CHARS - 1);
+	if (kb_selected < 0) kb_selected += KB_TOTAL_SIZE;
+	if (kb_selected >= KB_TOTAL_SIZE) kb_selected -= KB_TOTAL_SIZE;
+	
+	Math_Clamp(kb_selected, 0, KB_TOTAL_SIZE - 1);
 	KB_MarkDirty();
 }
 
@@ -139,17 +155,17 @@ static void VirtualKeyboard_AppendChar(char c) {
 }
 
 static void VirtualKeyboard_ClickSelected(void) {
-	if (kb_selected < 0) return;
+	int selected = VirtualKeyboard_GetSelected();
+	if (selected < 0) return;
 
 	/* TODO kinda hacky, redo this */
-	switch (kb_selected) {
+	switch (selected) {
 	case KB_INDEX(KB_LAST_CELL, 0):
 		if (kb_str.length) kb_str.length--;
 		Event_RaiseString(&InputEvents.TextChanged, &kb_str);
 		KB_MarkDirty();
 		break;
 	case KB_INDEX(KB_LAST_CELL, 2):
-		KB_MarkDirty();
 		OnscreenKeyboard_Close();
 		Input_SetPressed(CCKEY_ENTER);
 		Input_SetReleased(CCKEY_ENTER);
@@ -165,9 +181,12 @@ static void VirtualKeyboard_ClickSelected(void) {
 	case KB_INDEX(2, KB_LAST_ROW):
 		VirtualKeyboard_AppendChar(' ');
 		break;
+	case KB_INDEX(3, KB_LAST_ROW):
+		OnscreenKeyboard_Close();
+		break;
 
 	default:
-		VirtualKeyboard_AppendChar(kb_table[kb_selected][0]);
+		VirtualKeyboard_AppendChar(kb_table[selected][0]);
 		break;
 	}
 }

@@ -20,6 +20,11 @@ jobs:
           make ps2
           
 
+      # otherwise notify_failure doesn't work
+      - name: Install curl when necessary
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        run: apk add curl
+
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:

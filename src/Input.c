@@ -1106,6 +1106,7 @@ static void OnPointerUp(void* obj, int idx) {
 static void OnInputDown(void* obj, int key, cc_bool was) {
 	struct Screen* s;
 	int i;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 #ifndef CC_BUILD_WEB
 	if (Input_IsEscapeButton(key) && (s = Gui_GetClosable())) {
