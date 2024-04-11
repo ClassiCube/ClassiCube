@@ -435,6 +435,7 @@
     <ClInclude Include="String.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="Vectors.h" />
+    <ClInclude Include="VirtualKeyboard.h" />
     <ClInclude Include="Vorbis.h" />
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
@@ -530,7 +531,7 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="Program.c" />
+    <ClCompile Include="main.c" />
     <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />

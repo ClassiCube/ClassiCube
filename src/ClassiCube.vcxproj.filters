@@ -348,6 +348,9 @@
     <ClInclude Include="Commands.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="VirtualKeyboard.h">
+      <Filter>Source Files\Window</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -395,7 +398,7 @@
     <ClCompile Include="Builder.c">
       <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
-    <ClCompile Include="Program.c">
+    <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Entity.c">

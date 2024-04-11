@@ -1842,10 +1842,7 @@ static struct BindsSourceScreen {
 } BindsSourceScreen;
 static int binds_gamepad; /* Default to Normal (Keyboard/Mouse) */
 
-static struct Widget* bindsSource_widgets[] = {
-	(struct Widget*)&BindsSourceScreen.btns[0], (struct Widget*)&BindsSourceScreen.btns[1],
-	(struct Widget*)&BindsSourceScreen.cancel
-};
+static struct Widget* bindsSource_widgets[3];
 
 static void BindsSourceScreen_ModeNormal(void* screen, void* b) {
 	binds_gamepad = false;
@@ -1880,12 +1877,13 @@ static void BindsSourceScreen_Init(void* screen) {
 	struct BindsSourceScreen* s = (struct BindsSourceScreen*)screen;
 
 	s->widgets     = bindsSource_widgets;
-	s->numWidgets  = Array_Elems(bindsSource_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(bindsSource_widgets);
 	s->selectedI   = -1;
 
-	ButtonWidget_Init(&s->btns[0], 300, BindsSourceScreen_ModeNormal);
-	ButtonWidget_Init(&s->btns[1], 300, BindsSourceScreen_ModeGamepad);
-	ButtonWidget_Init(&s->cancel,  400, Menu_SwitchPause);
+	ButtonWidget_Add(s, &s->btns[0], 300, BindsSourceScreen_ModeNormal);
+	ButtonWidget_Add(s, &s->btns[1], 300, BindsSourceScreen_ModeGamepad);
+	ButtonWidget_Add(s, &s->cancel,  400, Menu_SwitchPause);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -3357,12 +3355,13 @@ static void NostalgiaMenuScreen_Init(void* screen) {
 	struct NostalgiaMenuScreen* s = (struct NostalgiaMenuScreen*)screen;
 
 	s->widgets     = nostalgiaMenu_widgets;
-	s->numWidgets  = Array_Elems(nostalgiaMenu_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(nostalgiaMenu_widgets);
 
-	TextWidget_Init(&s->title);
-	ButtonWidget_Init(&s->btnA, 400, NostalgiaMenuScreen_Appearance);
-	ButtonWidget_Init(&s->btnF, 400, NostalgiaMenuScreen_Functionality);
-	ButtonWidget_Init(&s->done, 400, NostalgiaMenuScreen_SwitchBack);
+	ButtonWidget_Add(s, &s->btnA, 400, NostalgiaMenuScreen_Appearance);
+	ButtonWidget_Add(s, &s->btnF, 400, NostalgiaMenuScreen_Functionality);
+	ButtonWidget_Add(s, &s->done, 400, NostalgiaMenuScreen_SwitchBack);
+	TextWidget_Add(s,   &s->title);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }

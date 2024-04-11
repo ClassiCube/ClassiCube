@@ -32,6 +32,22 @@ void LWidget_CalcOffsets(void) {
 	flagYOffset  = Display_ScaleY(6);
 }
 
+void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
+						int x, int y, int width, int height) {
+	Context2D_Clear(ctx, color,
+					x + insetX,         y,
+					width - 2 * insetX, insetY);
+	Context2D_Clear(ctx, color,
+					x + insetX,         y + height - insetY,
+					width - 2 * insetX, insetY);
+	Context2D_Clear(ctx, color,
+					x,                  y + insetY,
+					insetX,             height - 2 * insetY);
+	Context2D_Clear(ctx, color,
+					x + width - insetX, y + insetY,
+					insetX,             height - 2 * insetY);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -58,19 +74,7 @@ static void LButton_DrawBorder(struct Context2D* ctx, int x, int y, int width, i
 #else
 	int xoff = oneX;
 #endif
-
-	Context2D_Clear(ctx, backColor, 
-					x + xoff,         y,
-					width - 2 * xoff, oneY);
-	Context2D_Clear(ctx, backColor,
-					x + xoff,         y + height - oneY,
-					width - 2 * xoff, oneY);
-	Context2D_Clear(ctx, backColor,
-					x,                y + oneY,
-					oneX,             height - twoY);
-	Context2D_Clear(ctx, backColor,
-					x + width - oneX, y + oneY,
-					oneX,             height - twoY);
+	LWidget_DrawBorder(ctx, backColor, xoff, oneY, x, y, width, height);
 }
 
 static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active) {
