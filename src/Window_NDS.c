@@ -187,9 +187,9 @@ static cc_string kbText;
 
 static void OnKeyPressed(int key) {
     if (key == 0) {
-        Window_CloseKeyboard();
+        OnscreenKeyboard_Close();
     } else if (key == DVK_ENTER) {
-        Window_CloseKeyboard();
+        OnscreenKeyboard_Close();
         Input_SetPressed(CCKEY_ENTER);
         Input_SetReleased(CCKEY_ENTER);
     } else if (key == DVK_BACKSPACE) {
@@ -201,7 +201,7 @@ static void OnKeyPressed(int key) {
     }
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
     videoBgDisableSub(0); // hide console
 
@@ -216,9 +216,11 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     keyboardOpen = true;
 }
 
-void Window_SetKeyboardText(const cc_string* text) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+
+void OnscreenKeyboard_Close(void) {
     keyboardHide();
     keyboardOpen = false;
     ResetHBank(); // reset shared VRAM

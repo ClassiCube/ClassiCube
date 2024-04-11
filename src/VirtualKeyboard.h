@@ -138,7 +138,7 @@ static void VirtualKeyboard_ClickSelected(void) {
 		break;
 	case KB_INDEX(KB_LAST_CELL, 2):
 		KB_MarkDirty();
-		Window_CloseKeyboard();
+		OnscreenKeyboard_Close();
 		Input_SetPressed(CCKEY_ENTER);
 		Input_SetReleased(CCKEY_ENTER);
 		break;
@@ -187,8 +187,9 @@ static void VirtualKeyboard_PadAxis(void* obj, int axis, float x, float y) {
 }
 
 
+extern Rect2D dirty_rect;
 static void VirtualKeyboard_MarkDirty2D(void) {
-	LBackend_Redraw();
+	if (!dirty_rect.width) dirty_rect.width = 2;
 }
 
 static void VirtualKeyboard_MarkDirty3D(void) {

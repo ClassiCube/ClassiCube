@@ -36,7 +36,7 @@ static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48
 
 static void CloseActiveScreen(void) {
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 	if (!Launcher_Active) return;
 	
 	Launcher_Active->Deactivated(Launcher_Active);

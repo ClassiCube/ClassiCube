@@ -1015,7 +1015,7 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 
 	s->grabsInput = false;
 	Gui_UpdateInputGrab();
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 	if (close) InputWidget_Clear(&s->input.base);
 
 	input = &s->input.base;
@@ -1546,7 +1546,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT | KEYBOARD_FLAG_SEND);
 	args.placeholder = "Enter chat";
 	args.multiline   = true;
-	Window_OpenKeyboard(&args);
+	OnscreenKeyboard_Open(&args);
 
 	Widget_SetDisabled(&s->input.base, args.opaque);
 	InputWidget_UpdateText(&s->input.base);

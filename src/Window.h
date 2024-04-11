@@ -187,15 +187,16 @@ static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRIN
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args);
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args);
 /* Sets the text used for keyboard input. */
-/* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
+/* NOTE: This is e.g. used for mobile on-screen keyboard input with the web client, */
 /*  because it is backed by a HTML input, rather than true keyboard input events. */
 /* As such, this is necessary to ensure the HTML input is consistent with */
 /*  whatever text input widget is actually being displayed on screen. */
-void Window_SetKeyboardText(const cc_string* text);
+void OnscreenKeyboard_SetText(const cc_string* text);
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp);
 /* Hides/Removes the previously displayed on-screen keyboard. */
-void Window_CloseKeyboard(void);
+void OnscreenKeyboard_Close(void);
 /* Locks/Unlocks the landscape orientation. */
 void Window_LockLandscapeOrientation(cc_bool lock);
 

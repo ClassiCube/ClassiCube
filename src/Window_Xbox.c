@@ -175,7 +175,6 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	void* fb = XVideoGetFB();
-	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
 	//XVideoWaitForVBlank();
 	// XVideoWaitForVBlank installs an interrupt handler for VBlank - 
 	//  however this will cause pbkit's attempt to install an interrupt
@@ -198,16 +197,20 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
 	VirtualKeyboard_Open(args, launcherMode);
 }
 
-void Window_SetKeyboardText(const cc_string* text) {
+void OnscreenKeyboard_SetText(const cc_string* text) {
 	VirtualKeyboard_SetText(text);
 }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
+}
+
+void OnscreenKeyboard_Close(void) {
 	VirtualKeyboard_Close();
 }
 

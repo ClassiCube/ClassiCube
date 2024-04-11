@@ -435,9 +435,10 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Close(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();

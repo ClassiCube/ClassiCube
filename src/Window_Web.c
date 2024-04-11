@@ -674,7 +674,7 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	char str[NATIVE_STR_LEN];
 	keyboardOpen = true;
 	if (!Input_TouchMode) return;
@@ -685,7 +685,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	args->opaque = true;
 }
 
-void Window_SetKeyboardText(const cc_string* text) {
+void OnscreenKeyboard_SetText(const cc_string* text) {
 	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
 
@@ -693,7 +693,9 @@ void Window_SetKeyboardText(const cc_string* text) {
 	interop_SetKeyboardText(str);
 }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+
+void OnscreenKeyboard_Close(void) {
 	keyboardOpen = false;
 	if (!Input_TouchMode) return;
 	interop_CloseKeyboard();

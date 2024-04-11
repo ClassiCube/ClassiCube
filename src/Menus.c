@@ -71,7 +71,7 @@ static void Menu_SetButtons(struct ButtonWidget* btns, struct FontDesc* font, co
 static void Menu_LayoutBack(struct ButtonWidget* btn) {
 	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
-static void Menu_CloseKeyboard(void* s) { Window_CloseKeyboard(); }
+static void Menu_CloseKeyboard(void* s) { OnscreenKeyboard_Close(); }
 
 static void Menu_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
@@ -1178,7 +1178,7 @@ static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	s->selectedI = Screen_DoPointerDown(screen, id, x, y);
 
 	selected = GenLevelScreen_SelectedInput(s);
-	if (selected) Window_SetKeyboardText(&selected->base.text);
+	if (selected) OnscreenKeyboard_SetText(&selected->base.text);
 	return TOUCH_TYPE_GUI;
 }
 
@@ -2316,7 +2316,7 @@ static void MenuInputOverlay_Free(void* screen) {
 	Elem_Free(&s->input.base);
 	Elem_Free(&s->ok);
 	Elem_Free(&s->Default);
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 }
 
 static void MenuInputOverlay_Layout(void* screen) {

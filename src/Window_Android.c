@@ -498,7 +498,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* kArgs) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
@@ -509,7 +509,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* kArgs) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-void Window_SetKeyboardText(const cc_string* text) {
+void OnscreenKeyboard_SetText(const cc_string* text) {
 	JNIEnv* env;
 	jvalue args[1];
 	JavaGetCurrentEnv(env);
@@ -519,7 +519,9 @@ void Window_SetKeyboardText(const cc_string* text) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+
+void OnscreenKeyboard_Close(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaICall_Void(env, JAVA_closeKeyboard, NULL);

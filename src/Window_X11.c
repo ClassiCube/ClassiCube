@@ -1134,9 +1134,10 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	if (bmp->scan0 != fb_data) Mem_Free(fb_data);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Close(void) { }
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;

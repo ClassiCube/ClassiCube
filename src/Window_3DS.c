@@ -224,7 +224,7 @@ static void OnscreenTextChanged(const char* text) {
 	Input_SetReleased(CCKEY_ENTER);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	const char* btnText = args->type & KEYBOARD_FLAG_SEND ? "Send" : "Enter";
 	char input[NATIVE_STR_LEN]  = { 0 };
 	char output[NATIVE_STR_LEN] = { 0 };
@@ -252,13 +252,14 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	if (args->multiline)
 		swkbdSetFeatures(&swkbd, SWKBD_MULTILINE);
 		
-	// TODO filter callbacks and Window_Setkeyboardtext ??
+	// TODO filter callbacks and OnscreenKeyboard_SetText ??
 	int btn = swkbdInputText(&swkbd, output, sizeof(output));
 	if (btn != SWKBD_BUTTON_CONFIRM) return;
 	OnscreenTextChanged(output);
 }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 /*########################################################################################################################*

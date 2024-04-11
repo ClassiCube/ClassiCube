@@ -30,7 +30,7 @@ struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 static struct Context2D framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
-static Rect2D dirty_rect;
+Rect2D dirty_rect;
 
 static cc_uint8 pendingRedraw;
 #define REDRAW_ALL  0x02
@@ -270,7 +270,9 @@ void LBackend_Tick(void) {
 	DoRedraw();
 	if (!dirty_rect.width) return;
 
-	Window_DrawFramebuffer(dirty_rect, &framebuffer.bmp);
+	OnscreenKeyboard_Draw2D(&dirty_rect, &framebuffer.bmp);
+	Window_DrawFramebuffer(dirty_rect,   &framebuffer.bmp);
+
 	dirty_rect.x = 0; dirty_rect.width   = 0;
 	dirty_rect.y = 0; dirty_rect.height  = 0;
 }
@@ -648,14 +650,14 @@ void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 
 	if (wasSelected) return;
 	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
-	Window_OpenKeyboard(&args);
+	OnscreenKeyboard_Open(&args);
 }
 
 void LBackend_InputUnselect(struct LInput* w) {
 	caretStart   = 0;
 	w->caretShow = false;
 	LBackend_MarkDirty(w);
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 }
 
 

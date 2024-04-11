@@ -163,12 +163,12 @@ CC_NOINLINE void InputWidget_AppendText(struct InputWidget* w, const cc_string* 
 /* Tries appending the given character, then updates the input texture. */
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 /* Redraws text and recalculates associated state. */
-/* Also calls Window_SetKeyboardText with the text in the input widget. */
+/* Also calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 /* Shorthand for InputWidget_Clear followed by InputWidget_AppendText, */
-/* then calls Window_SetKeyboardText with the text in the input widget. */
+/* then calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_SetText(struct InputWidget* w, const cc_string* str);

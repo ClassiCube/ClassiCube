@@ -1381,7 +1381,7 @@ void InputWidget_UpdateText(struct InputWidget* w) {
 	InputWidget_CalculateLineSizes(w);
 	w->RemakeTexture(w);
 	InputWidget_UpdateCaret(w);
-	Window_SetKeyboardText(&w->text);
+	OnscreenKeyboard_SetText(&w->text);
 	if (w->OnTextChanged) w->OnTextChanged(w);
 }
 
@@ -1701,7 +1701,7 @@ static int TextInputWidget_PointerDown(void* widget, int id, int x, int y) {
 
 	OpenKeyboardArgs_Init(&args, &w->base.text, w->onscreenType);
 	args.placeholder = w->onscreenPlaceholder;
-	Window_OpenKeyboard(&args);
+	OnscreenKeyboard_Open(&args);
 
 	w->base.showCaret = true;
 	return InputWidget_PointerDown(widget, id, x, y);
