@@ -303,7 +303,7 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 	return NULL;
 }
 
-/* Sets alpha to 0 for any pixels in the bitmap whose RGB is same as col */
+/* Sets alpha to 0 for any pixels in the bitmap whose RGB is same as colorspace */
 static void ComputeTransparency(struct Bitmap* bmp, BitmapCol col) {
 	BitmapCol trnsRGB = col & BITMAPCOLOR_RGB_MASK;
 	int x, y, width = bmp->width, height = bmp->height;
@@ -324,27 +324,27 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 	/* header variables */
 	static const cc_uint8 samplesPerPixel[] = { 1, 0, 3, 1, 2, 0, 4 };
-	cc_uint8 col, bitsPerSample, bytesPerPixel = 0;
+	cc_uint8 colorspace, bitsPerSample, bytesPerPixel = 0;
 	Png_RowExpander rowExpander = NULL;
 	cc_uint32 scanlineSize = 0, scanlineBytes = 0;
 
 	/* palette data */
-	BitmapCol trnsCol;
+	BitmapCol trnsColor;
 	BitmapCol palette[PNG_PALETTE];
 	cc_uint32 i;
 
 	/* idat state */
 	cc_uint32 begY, rowY = 0, endY;
 	cc_uint8 buffer[PNG_PALETTE * 3];
-	cc_uint32 bufferIdx, bufferLen;
-	cc_uint32 read, left;
+	cc_uint32 read, bufferIdx = 0;
+	cc_uint32 left, bufferLen = 0;
 	int curY;
 
 	/* idat decompressor */
 	struct InflateState inflate;
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
-	cc_uint8* data;
+	cc_uint8* data = NULL;
 
 	bmp->width = 0; bmp->height = 0;
 	bmp->scan0 = NULL;
@@ -353,8 +353,8 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
-	col     = 0xFF; /* Unknown colour space */
-	trnsCol = BITMAPCOLOR_BLACK;
+	colorspace = 0xFF; /* Unknown colour space */
+	trnsColor  = BITMAPCOLOR_BLACK;
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOLOR_BLACK; }
 
 	Inflate_MakeStream2(&compStream, &inflate, stream);
@@ -378,25 +378,24 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bitsPerSample = tmp[8]; col = tmp[9];
+			bitsPerSample = tmp[8]; colorspace = tmp[9];
 			if (bitsPerSample == 16) return PNG_ERR_16BITSAMPLES;
 
-			rowExpander = Png_GetExpander(col, bitsPerSample);
+			rowExpander = Png_GetExpander(colorspace, bitsPerSample);
 			if (!rowExpander) return PNG_ERR_INVALID_COL_BPP;
 
 			if (tmp[10] != 0) return PNG_ERR_COMP_METHOD;
 			if (tmp[11] != 0) return PNG_ERR_FILTER;
 			if (tmp[12] != 0) return PNG_ERR_INTERLACED;
 
-			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
-			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->width) + 7) >> 3;
+			bytesPerPixel = ((samplesPerPixel[colorspace] * bitsPerSample) + 7) >> 3;
+			scanlineSize  = ((samplesPerPixel[colorspace] * bitsPerSample * bmp->width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
 			data = Mem_TryAlloc(bmp->height, max(scanlineBytes, bmp->width * 4));
 			bmp->scan0 = (BitmapCol*)data;
 			if (!bmp->scan0) return ERR_OUT_OF_MEMORY;
 
-			bufferIdx = 0;
 			bufferLen = bmp->height * scanlineBytes;
 		} break;
 
@@ -418,15 +417,15 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 		/* 11.3.2.1 tRNS Transparency */
 		case PNG_FourCC('t','R','N','S'): {
-			if (col == PNG_COLOR_GRAYSCALE) {
+			if (colorspace == PNG_COLOR_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
 
 				res = Stream_Read(stream, buffer, dataSize);
 				if (res) return res;
 
 				/* RGB is always two bytes */
-				trnsCol = BitmapCol_Make(buffer[1], buffer[1], buffer[1], 0);
-			} else if (col == PNG_COLOR_INDEXED) {
+				trnsColor = BitmapCol_Make(buffer[1], buffer[1], buffer[1], 0);
+			} else if (colorspace == PNG_COLOR_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 
 				res = Stream_Read(stream, buffer, dataSize);
@@ -437,14 +436,14 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 					palette[i] &= BITMAPCOLOR_RGB_MASK; /* set A to 0 */
 					palette[i] |= buffer[i] << BITMAPCOLOR_A_SHIFT;
 				}
-			} else if (col == PNG_COLOR_RGB) {
+			} else if (colorspace == PNG_COLOR_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
 
 				res = Stream_Read(stream, buffer, dataSize);
 				if (res) return res;
 
 				/* R,G,B are always two bytes */
-				trnsCol = BitmapCol_Make(buffer[1], buffer[3], buffer[5], 0);
+				trnsColor = BitmapCol_Make(buffer[1], buffer[3], buffer[5], 0);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}
@@ -488,7 +487,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 					/* With the RGBA colourspace, each scanline is (1 + width*4) bytes wide */
 					/* Therefore once a row has been reconstructed, the prior row can be converted */
 					/* immediately into the destination colour format */
-					if (col == PNG_COLOR_RGB_A) {
+					if (colorspace == PNG_COLOR_RGB_A) {
 						/* Prior line is no longer needed and can be overwritten now */
 						rowExpander(bmp->width,     palette, &prior[1],    Bitmap_GetRow(bmp, rowY - 1));
 						/* Current line is also no longer needed and can be overwritten now */
@@ -505,14 +504,14 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 			/* Therefore image expansion can only be done after all the rows have been reconstructed, and must */
 			/*  be done backwards to avoid overwriting any source data that has yet to be processed */
 			/* This is slightly slower, but the majority of images ClassiCube encounters are RGBA anyways */
-			if (col != PNG_COLOR_RGB_A) {
+			if (colorspace != PNG_COLOR_RGB_A) {
 				for (curY = bmp->height - 1; curY >= 0; curY--) {
 					cc_uint8* scanline = &data[curY * scanlineBytes];
 					rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 				}
 			}
 
-			if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
+			if (!BitmapCol_A(trnsColor)) ComputeTransparency(bmp, trnsColor);
 			return 0;
 		} break;
 

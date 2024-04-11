@@ -84,6 +84,8 @@ struct _WindowData {
 	/* Whether this window is backgrounded / inactivated */
 	/* (rendering is not performed when window is inactive) */
 	cc_bool Inactive;
+	/* Whether input should be ignored due to soft keyboard being open */
+	cc_bool SoftKeyboardFocus;
 };
 
 /* Data for the game/launcher window */

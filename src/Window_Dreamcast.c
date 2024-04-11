@@ -10,6 +10,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "VirtualKeyboard.h"
 #include <kos.h>
 static cc_bool launcherMode;
 cc_bool window_inited;
@@ -31,6 +32,7 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 20;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	
 	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 	vid_flip(0);
@@ -262,6 +264,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=99999
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
+	if (kb_showing) VirtualKeyboard_Display2D(&r, bmp);
 	
 	for (int y = r.y; y < r.y + r.height; y++)
 	{
@@ -285,9 +288,20 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void Window_SetKeyboardText(const cc_string* text) {
+	if (!kb_showing) return;
+	VirtualKeyboard_SetText(text);
+}
+
+void Window_CloseKeyboard(void) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*
