@@ -429,6 +429,7 @@ void Widget_Reset(void* widget) {
 	w->verAnchor = ANCHOR_MIN;
 	w->xOffset = 0; w->yOffset = 0;
 	w->MenuClick = NULL;
+	w->meta.ptr  = NULL;
 }
 
 int Widget_Contains(void* widget, int x, int y) {

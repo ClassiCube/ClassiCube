@@ -177,13 +177,17 @@ void Context2D_Free(struct Context2D* ctx) {
 	Mem_Free(ctx->bmp.scan0);
 }
 
+#define BitmapColor_Raw(r, g, b) (BitmapColor_R_Bits(r) | BitmapColor_G_Bits(g) | BitmapColor_B_Bits(b))
 void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 					int x, int y, int width, int height) {
 	struct Bitmap* bmp = (struct Bitmap*)ctx;
 	BitmapCol* dst;
 	int R, G, B, xx, yy, n;
-	float noise;
+	int noise, delta;
+	cc_uint32 alpha;
+
 	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
+	alpha = BitmapColor_A_Bits(color);
 
 	for (yy = 0; yy < height; yy++) {
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
@@ -191,13 +195,20 @@ void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 		for (xx = 0; xx < width; xx++, dst++) {
 			n = (x + xx) + (y + yy) * 57;
 			n = (n << 13) ^ n;
-			noise = 1.0f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f;
 
-			R = BitmapCol_R(color) + (int)(noise * variation); Drawer2D_ClampPixel(R);
-			G = BitmapCol_G(color) + (int)(noise * variation); Drawer2D_ClampPixel(G);
-			B = BitmapCol_B(color) + (int)(noise * variation); Drawer2D_ClampPixel(B);
+			/*
+				float noise = 1.0f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f;
+				int delta = (int)(noise * variation);
+			*/
+			/* Fixed point equivalent to the above expression */
+			noise = ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff);
+			delta = (((1024 - noise / 0x100000)) * variation) >> 10;
 
-			*dst = BitmapColor_RGB(R, G, B);
+			R = BitmapCol_R(color) + delta; Drawer2D_ClampPixel(R);
+			G = BitmapCol_G(color) + delta; Drawer2D_ClampPixel(G);
+			B = BitmapCol_B(color) + delta; Drawer2D_ClampPixel(B);
+
+			*dst = BitmapColor_Raw(R, G, B) | alpha;
 		}
 	}
 }

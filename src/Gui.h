@@ -139,7 +139,10 @@ void Screen_InputUp(void*   screen, int key);
 /*  (does nothing) */
 void Screen_PointerUp(void* s, int id, int x, int y);
 
+
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
+union WidgetMeta { int val; void* ptr; };
+
 struct WidgetVTABLE {
 	/* Draws this widget on-screen. */
 	void (*Render)(void* elem, double delta);
@@ -175,7 +178,8 @@ struct WidgetVTABLE {
 	cc_uint8 flags;                /* Flags controlling the widget's interactability */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
-	Widget_LeftClick MenuClick;
+	Widget_LeftClick MenuClick; \
+	union WidgetMeta meta;
 
 /* Whether a widget is prevented from being interacted with */
 #define WIDGET_FLAG_DISABLED   0x01

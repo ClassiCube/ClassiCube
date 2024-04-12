@@ -40,10 +40,10 @@ static const char* kb_table_lower[] =
 };
 static const char* kb_table_upper[] =
 {
-	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace",
-	"Q", "W", "E", "R", "T", "Y", "U", "I", "o", "p", "(", ")", "&   ",
-	"A", "S", "D", "F", "G", "H", "J", "K", "L", "?", ";", "'", "Enter",
-	"Z", "X", "C", "V", "B", "N", "M", ".", ",","\\", "!", "@", "/    ",
+	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "_", "+", "Backspace",
+	"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "&   ",
+	"A", "S", "D", "F", "G", "H", "J", "K", "L", "?", ":", "\"", "Enter",
+	"Z", "X", "C", "V", "B", "N", "M", "<", ">","*", "%", "#", "/    ",
 	"Caps", "Shift", "Space", "Close"
 };
 
@@ -79,9 +79,9 @@ static void VirtualKeyboard_Close(void);
 static void VirtualKeyboard_Hook(void);
 
 
-#define KB_NORMAL_COLOR     BitmapCol_Make(0x7F, 0x7F, 0x7F, 0x40)
-#define KB_SELECTED_COLOR   BitmapCol_Make(0xAF, 0xAF, 0xAF, 0x40)
-#define KB_BACKGROUND_COLOR BitmapCol_Make(0xFF, 0xFF, 0xFF, 0x40)
+#define KB_NORMAL_COLOR     BitmapCol_Make(0x7F, 0x7F, 0x7F, 0x90)
+#define KB_SELECTED_COLOR   BitmapCol_Make(0xAF, 0xAF, 0xAF, 0x90)
+#define KB_BACKGROUND_COLOR BitmapCol_Make(0xFF, 0xFF, 0xFF, 0x90)
 
 static void VirtualKeyboard_Draw(struct Context2D* ctx) {
 	struct DrawTextArgs args;
