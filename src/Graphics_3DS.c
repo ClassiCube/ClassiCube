@@ -748,6 +748,16 @@ static void ApplyFog(float* values) {
 	C3D_FogLutBind(&fog_lut);
 }
 
+static float GetFogValue(float c) {
+	if (fogMode == FOG_LINEAR) {
+		return (fogEnd - c) / fogEnd;
+	} else if (fogMode == FOG_EXP) {
+		return expf(-(fogDensity * c));
+	} else {
+		return expf(-(fogDensity * c) * (fogDensity * c));
+	}
+}
+
 static void UpdateFog(void) {
 	float near = 0.01f;
 	float far  = Game_ViewDistance;
@@ -756,15 +766,8 @@ static void UpdateFog(void) {
 	// TODO: Exp calculation isn't right for lava ???
 	for (int i = 0; i <= 128; i ++)
 	{
-		float c = FogLut_CalcZ(i / 128.0f, near, far);
-
-		if (fogMode == FOG_LINEAR) {
-			values[i] = (fogEnd - c) / fogEnd;
-		} else if (fogMode == FOG_EXP) {
-			values[i] = expf(-fogDensity * c);
-		} else {
-			values[i] = expf(-fogDensity * c * c);
-		}
+		float c   = FogLut_CalcZ(i / 128.0f, near, far);
+		values[i] = GetFogValue(c);
 	}
 	ApplyFog(values);
 }

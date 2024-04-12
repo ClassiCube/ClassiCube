@@ -20,13 +20,12 @@
 	#include <imagehlp.h>
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
-#include <signal.h>
-/* These operating systems don't provide sys/ucontext.h */
-/*  But register constants be found from includes in <signal.h> */
-#elif defined CC_BUILD_OS2
-#include <signal.h>
-#include <386/ucontext.h>
-
+	#include <signal.h>
+	/* These operating systems don't provide sys/ucontext.h */
+	/*  But register constants be found from includes in <signal.h> */
+	#elif defined CC_BUILD_OS2
+	#include <signal.h>
+	#include <386/ucontext.h>
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 	/* Need to define this to get REG_ constants */
 	#define _GNU_SOURCE

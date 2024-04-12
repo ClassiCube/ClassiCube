@@ -219,7 +219,6 @@ static inline float FogLut_CalcZ(float depth, float near, float far)
 }
 
 static void FogLut_FromArray(C3D_FogLut* lut, const float data[256]);
-static void FogLut_Exp(C3D_FogLut* lut, float density, float gradient, float near, float far);
 
 static void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip);
 static void C3D_FogColor(u32 color);
