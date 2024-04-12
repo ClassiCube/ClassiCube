@@ -298,10 +298,11 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
 	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
 
-	frag->x = vp_hwidth  * (1 + coord.x / coord.w);
-	frag->y = vp_hheight * (1 - coord.y / coord.w);
-	frag->z = coord.z / coord.w;
-	frag->w = 1.0f    / coord.w;
+	float invW = 1.0f / coord.w;
+	frag->x = vp_hwidth  * (1 + coord.x * invW);
+	frag->y = vp_hheight * (1 - coord.y * invW);
+	frag->z = coord.z * invW;
+	frag->w = invW;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
@@ -309,8 +310,8 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
 		*color = v->Col;
-		uv->x  = v->U + texOffsetX;
-		uv->y  = v->V + texOffsetY;
+		uv->x  = (v->U + texOffsetX) * invW;
+		uv->y  = (v->V + texOffsetY) * invW;
 	}
 }
 	
@@ -337,6 +338,11 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	int maxY = max(y1, max(y2, y3));
 
 	// TODO backface culling
+	if (faceCulling) {
+		// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
+		int sign = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
+		if (sign < 0) return;
+	}
 
 	// Reject triangles completely outside
 	if (minX < 0 && maxX < 0 || minX >= width  && maxX >= width ) return;
@@ -363,17 +369,18 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 
 			int index = y * width + x;
 			float w = 1 / (ic0 * frag1.w + ic1 * frag2.w + ic2 * frag3.w);
+			float z = (ic0 * frag1.z + ic1 * frag2.z + ic2 * frag3.z) * w;
 
-			if (depthTest && w <= depthBuffer[index]) continue;
-			if (depthWrite) depthBuffer[index] = w;
+			if (depthTest && (z < 0 || z <= depthBuffer[index])) continue;
+			if (depthWrite) depthBuffer[index] = z;
 			if (!colWrite)  continue;
 
 			PackedCol fragColor = color;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-				float u = (ic0 * uv1.x * frag1.w + ic1 * uv2.x * frag2.w + ic2 * uv3.x * frag3.w) * w;
-				float v = (ic0 * uv1.y * frag1.w + ic1 * uv2.y * frag2.w + ic2 * uv3.y * frag3.w) * w;
-				int texX = (int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth);
-				int texY = (int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight);
+				float u = (ic0 * uv1.x + ic1 * uv2.x + ic2 * uv3.x) * w;
+				float v = (ic0 * uv1.y + ic1 * uv2.y + ic2 * uv3.y) * w;
+				int texX = ((int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth )) % curTexWidth; // TODO avoid slow %
+				int texY = ((int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight)) % curTexHeight;
 				int texIndex = texY * curTexWidth + texX;
 
 				fragColor = MultiplyColours(fragColor, curTexPixels[texIndex]);
