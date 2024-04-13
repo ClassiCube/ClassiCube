@@ -1963,8 +1963,10 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 
 static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
+	
 	int old     = s->curI;
-	s->curI     = Screen_Index(s, widget);
+	s->curI     = btn->meta.val;
 	s->closable = false;
 
 	KeyBindsScreen_Update(s, s->curI);
@@ -2053,6 +2055,7 @@ static void KeyBindsScreen_Init(void* screen) {
 	for (i = 0; i < s->bindsCount; i++) {
 		ButtonWidget_Init(&s->buttons[i], s->btnWidth, KeyBindsScreen_OnBindingClick);
 		s->widgets[i] = (struct Widget*)&s->buttons[i];
+		s->buttons[i].meta.val = i;
 	}
 	for (; i < KEYBINDS_MAX_BTNS; i++) { s->widgets[i] = NULL; }
 
@@ -2494,7 +2497,7 @@ static void MenuOptionsScreen_OnDone(const cc_string* value, cc_bool valid) {
 		s->dirty = true;
 	}
 
-	MenuOptionsScreen_SelectExtHelp(s, Screen_Index(s, s->activeBtn));
+	if (s->selectedI >= 0) MenuOptionsScreen_SelectExtHelp(s, s->selectedI);
 	s->activeBtn = NULL;
 }
 
@@ -3837,7 +3840,10 @@ static struct Widget* texpack_widgets[] = {
 	(struct Widget*)&TexPackOverlay.btns[2], (struct Widget*)&TexPackOverlay.btns[3]
 };
 
-static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { return Screen_Index(screen, w) >= 6; }
+static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { 
+	struct ButtonWidget* btn = (struct ButtonWidget*)w;
+	return btn->meta.val != 0;
+}
 
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
@@ -3944,6 +3950,8 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 		ButtonWidget_SetConst(&s->btns[3], "Always no",  &titleFont);
 		s->btns[2].MenuClick = TexPackOverlay_YesClick;
 		s->btns[3].MenuClick = TexPackOverlay_NoClick;
+		s->btns[2].meta.val  = 1;
+		s->btns[3].meta.val  = 1;
 	}
 
 	s->numWidgets = s->deny ? 6 : 8;
@@ -4005,7 +4013,6 @@ void TexPackOverlay_Show(const cc_string* url) {
 #define ONSCREEN_PAGE_BTNS 8
 static struct TouchOnscreenScreen {
 	Screen_Body
-	int offset;
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget btns[ONSCREEN_PAGE_BTNS];
 	const struct SimpleButtonDesc* btnDescs;
@@ -4023,17 +4030,20 @@ static struct Widget* touchOnscreen_widgets[3 + ONSCREEN_PAGE_BTNS] = {
 
 static void TouchOnscreen_UpdateColors(struct TouchOnscreenScreen* s) {
 	PackedCol grey = PackedCol_Make(0x7F, 0x7F, 0x7F, 0xFF);
-	int i, j;
+	int i, bit;
 
-	for (i = 0, j = s->offset; i < ONSCREEN_PAGE_BTNS; i++, j++) 
+	for (i = 0; i < ONSCREEN_PAGE_BTNS; i++) 
 	{
-		s->btns[i].color = (Gui._onscreenButtons & (1 << j)) ? PACKEDCOL_WHITE : grey;
+		bit = s->btns[i].meta.val;
+		s->btns[i].color = (Gui._onscreenButtons & bit) ? PACKEDCOL_WHITE : grey;
 	}
 }
 
 static void TouchOnscreen_Any(void* screen, void* w) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	int bit = 1 << (Screen_Index(s, w) - 3 + s->offset);
+	struct ButtonWidget* btn      = (struct ButtonWidget*)w;
+	int bit = btn->meta.val;
+	
 	if (Gui._onscreenButtons & bit) {
 		Gui._onscreenButtons &= ~bit;
 	} else {
@@ -4060,12 +4070,18 @@ static const struct SimpleButtonDesc touchOnscreen_page2[ONSCREEN_PAGE_BTNS] = {
 };
 
 static void TouchOnscreen_SetPage(struct TouchOnscreenScreen* s, cc_bool page1) {
-	s->offset   = page1 ? 0 : ONSCREEN_PAGE_BTNS;
+	int i;
+	int offset  = page1 ? 0 : ONSCREEN_PAGE_BTNS;
 	s->btnDescs = page1 ? touchOnscreen_page1 : touchOnscreen_page2;
 	Menu_InitButtons(s->btns, 200, s->btnDescs, ONSCREEN_PAGE_BTNS);
 
 	Widget_SetDisabled(&s->left,   page1);
 	Widget_SetDisabled(&s->right, !page1);
+	
+	for (i = 0; i < ONSCREEN_PAGE_BTNS; i++) 
+	{
+		s->btns[i].meta.val = 1 << (i + offset);
+	}
 }
 
 static void TouchOnscreen_Left(void* screen, void* b) {

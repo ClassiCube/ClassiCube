@@ -500,19 +500,6 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	return i;
 }
 
-int Screen_Index(void* screen, void* widget) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-
-	struct Widget* w = (struct Widget*)widget;
-	for (i = 0; i < s->numWidgets; i++) 
-	{
-		if (widgets[i] == w) return i;
-	}
-	return -1;
-}
-
 int Screen_CalcDefaultMaxVertices(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;

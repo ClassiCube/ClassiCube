@@ -2254,8 +2254,10 @@ static void TouchScreen_HalfClick(void* s, void* w) {
 }
 
 static void TouchScreen_BindClick(void* screen, void* widget) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i   = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
+	struct TouchScreen* s    = (struct TouchScreen*)screen;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
+	
+	int i = btn->meta.val;
 	Input_Set(KeyBinds_Normal[s->descs[i].bind], true);
 }
 
@@ -2316,6 +2318,7 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
 		ButtonWidget_Init(&s->btns[i], 60, s->descs[i].OnClick);
 		s->btns[i].color = TOUCHSCREEN_BTN_COLOR;
+		s->btns[i].meta.val = i;
 	}
 }
 

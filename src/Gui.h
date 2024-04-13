@@ -117,7 +117,6 @@ void Screen_Render2Widgets(void* screen, double delta);
 void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
-int Screen_Index(void* screen, void* w);
 int Screen_CalcDefaultMaxVertices(void* screen);
 
 /* Default mesh building implementation for a screen */
