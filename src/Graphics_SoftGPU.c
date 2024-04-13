@@ -349,17 +349,15 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	if (minY < 0 && maxY < 0 || minY >= height && maxY >= height) return;
 
 	// Perform scissoring
-	//minX = max(minX, 0); maxX = min(maxX, sc_maxX);
-	//minY = max(minY, 0); maxY = min(maxY, sc_maxY);
+	minX = max(minX, 0); maxX = min(maxX, sc_maxX);
+	minY = max(minY, 0); maxY = min(maxY, sc_maxY);
 	// TODO why doesn't this work 
 
 	// NOTE: W in frag variables below is actually 1/W 
-
 	float factor = 1.0f / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+	
 	for (int y = minY; y <= maxY; y++) {
 		for (int x = minX; x <= maxX; x++) {
-			if (x < 0 || y < 0 || x >= width || y >= height) return;
-
 			float ic0 = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) * factor;
 			if (ic0 < 0 || ic0 > 1) continue;
 			float ic1 = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) * factor;
