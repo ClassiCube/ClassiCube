@@ -18,6 +18,13 @@
 #include <psxgpu.h>
 #include <hwregs_c.h>
 void exit(int code) { _boot(); }
+
+// The SDK calloc doesn't zero memory, so need to override it
+void* calloc(size_t num, size_t size) {
+	void* ptr = malloc(num * size);
+	if (ptr) memset(ptr, 0, num * size);
+	return ptr;
+}
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used

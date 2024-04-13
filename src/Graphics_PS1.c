@@ -88,7 +88,7 @@ void Gfx_RestoreState(void) {
 	
 	// 2x2 dummy white texture
 	struct Bitmap bmp;
-	BitmapCol pixels[4] = { BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE };
+	BitmapCol pixels[4] = { BitmapColor_RGB(255, 0, 0), BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE, BITMAPCOLOR_WHITE };
 	Bitmap_Init(bmp, 2, 2, pixels);
 	white_square = Gfx_CreateTexture(&bmp, 0, false);
 }
@@ -211,18 +211,21 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp) {
 	
 	int page = TPAGE_START_HOR + (line / TPAGE_HEIGHT);
 	// In bottom half of VRAM? Need to offset horizontally again
-	if (page >= TPAGES_PER_HALF) page += TPAGE_START_HOR;	
+	if (page >= TPAGES_PER_HALF) page += TPAGE_START_HOR;
+
+	int pageX = page % TPAGES_PER_HALF;
+	int pageY = page / TPAGES_PER_HALF;
 
 	for (int i = tex->line; i < tex->line + tex->height; i++) 
 	{
 		VRAM_SetUsed(i);
 	}
-	tex->tpage = page;
+	tex->tpage = (2 << 7) | (pageY << 4) | pageX;
 	Platform_Log4("%i x %i  = %i,%i", &bmp->width, &bmp->height, &line, &page);
 		
 	RECT rect;
-	rect.x = ((page % TPAGES_PER_HALF)) * TPAGE_WIDTH;
-	rect.y = ((page / TPAGES_PER_HALF)) * TPAGE_HEIGHT + (line % TPAGE_HEIGHT);
+	rect.x = pageX * TPAGE_WIDTH;
+	rect.y = pageY * TPAGE_HEIGHT + (line % TPAGE_HEIGHT);
 	rect.w = bmp->width;
 	rect.h = bmp->height;
 
