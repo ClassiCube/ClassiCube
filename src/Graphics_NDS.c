@@ -348,6 +348,8 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) { Gfx_DeleteVb(vb); }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static cc_bool skipRendering;
+
 void Gfx_SetFog(cc_bool enabled) {
 }
 
@@ -372,9 +374,7 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	cc_bool enabled = !depthOnly;
-	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
-				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
+	skipRendering = depthOnly;
 }
 
 
@@ -491,6 +491,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	if (skipRendering) return;
 	Draw_TexturedTriangles(verticesCount, startVertex);
 }
 #endif

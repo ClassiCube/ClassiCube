@@ -422,6 +422,16 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	return res;
 }
 
+#ifdef CC_BUILD_PS1
+#include "../misc/ps1/classicubezip.h"
+
+static cc_result ExtractFromFile(const cc_string* path) {
+	struct Stream stream;
+	Stream_ReadonlyMemory(&stream, ccTextures, ccTextures_length);
+
+	return ExtractFrom(&stream, path);
+}
+#else
 static cc_result ExtractFromFile(const cc_string* path) {
 	struct Stream stream;
 	cc_result res;
@@ -434,6 +444,7 @@ static cc_result ExtractFromFile(const cc_string* path) {
 	(void)stream.Close(&stream);
 	return res;
 }
+#endif
 
 static cc_result ExtractUserTextures(void) {
 	cc_string path;

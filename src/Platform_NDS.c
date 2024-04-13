@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "Options.h"
+#include "Animations.h"
 
 #include <errno.h>
 #include <stdio.h>

@@ -12,6 +12,9 @@
 #include "Options.h"
 #include "Logger.h"
 
+#ifdef CC_BUILD_ANIMATIONS
+static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
+
 #ifdef CC_BUILD_LOWMEM
 	#define LIQUID_ANIM_MAX 16
 #else
@@ -20,7 +23,6 @@
 
 #define WATER_TEX_LOC 14
 #define LAVA_TEX_LOC  30
-static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
 
 #ifndef CC_BUILD_WEB
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
@@ -396,6 +398,10 @@ static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
 }
+#else
+static void Animations_Clear(void) { }
+static void OnInit(void) { }
+#endif
 
 struct IGameComponent Animations_Component = {
 	OnInit,            /* Init  */
