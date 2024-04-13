@@ -345,7 +345,13 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 	cc_bool occludedX, occludedY, occludedZ, bothLiquid;
 	int f;
 
-	/* Some blocks may not cull 'other' block, in which case just skip per-face check */
+	/* Fast path: Full opaque neighbouring blocks will always have all shared faces hidden */
+	if (Blocks.FullOpaque[block] && Blocks.FullOpaque[other]) {
+		Blocks.Hidden[(block * BLOCK_COUNT) + other] = 0x3F;
+		return;
+	}
+
+	/* Some blocks may not cull 'other' block, in which case just skip detailed check */
 	/* e.g. sprite blocks, default leaves, will not cull any other blocks */
 	if (!Block_MightCull(block, other)) {	
 		Blocks.Hidden[(block * BLOCK_COUNT) + other] = 0;
@@ -380,6 +386,7 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 /* Updates culling data of all blocks */
 static void Block_UpdateAllCulling(void) {
 	int block, neighbour;
+
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_CalcStretch((BlockID)block);
 		for (neighbour = BLOCK_AIR; neighbour < BLOCK_COUNT; neighbour++) {
