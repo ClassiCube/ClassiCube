@@ -184,7 +184,7 @@ static GPUTexture textures[TEXTURES_MAX_COUNT];
 static GPUTexture* active_tex;
 
 #define BGRA8_to_PS1(src) \
-	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | 0x8000
+	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
 
 static void* AllocTextureAt(int i, struct Bitmap* bmp) {
 	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
@@ -213,15 +213,16 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp) {
 	// In bottom half of VRAM? Need to offset horizontally again
 	if (page >= TPAGES_PER_HALF) page += TPAGE_START_HOR;
 
-	int pageX = page % TPAGES_PER_HALF;
-	int pageY = page / TPAGES_PER_HALF;
+	int pageX = (page % TPAGES_PER_HALF);
+	int pageY = (page / TPAGES_PER_HALF);
 
 	for (int i = tex->line; i < tex->line + tex->height; i++) 
 	{
 		VRAM_SetUsed(i);
 	}
 	tex->tpage = (2 << 7) | (pageY << 4) | pageX;
-	Platform_Log4("%i x %i  = %i,%i", &bmp->width, &bmp->height, &line, &page);
+	Platform_Log3("%i x %i  = %i", &bmp->width, &bmp->height, &line);
+	Platform_Log3("  at %i (%i, %i)", &page, &pageX, &pageY);
 		
 	RECT rect;
 	rect.x = pageX * TPAGE_WIDTH;
@@ -230,7 +231,7 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp) {
 	rect.h = bmp->height;
 
 	int RX = rect.x, RY = rect.y;
-	Platform_Log2("LOAD AT: %i, %i", &RX, &RY);
+	Platform_Log2("  LOAD AT: %i, %i", &RX, &RY);
 	LoadImage2(&rect, tmp);
 	
 	Mem_Free(tmp);
@@ -565,11 +566,14 @@ static void DrawColouredQuads(int verticesCount, int startVertex) {
 		poly->b0 = PackedCol_B(v->Col);
 		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
+		// TODO: 2D shouldn't use AddPrim, draws in the wrong way
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
 
 static void DrawTexturedQuads(int verticesCount, int startVertex) {
+	int pageOffset = active_tex->line % TPAGE_HEIGHT;
+
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
@@ -585,11 +589,14 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 		Transform(&coords[2], &v[2], &mvp);
 		Transform(&coords[3], &v[3], &mvp);
 
-		poly->x0 = coords[1].x; poly->y0 = coords[1].y; poly->u0 = (int)(v[1].U * active_tex->width) % active_tex->width; poly->v0 = (int)(v[1].V * active_tex->height) % active_tex->height + active_tex->line;
-		poly->x1 = coords[0].x; poly->y1 = coords[0].y; poly->u1 = (int)(v[0].U * active_tex->width) % active_tex->width; poly->v1 = (int)(v[0].V * active_tex->height) % active_tex->height + active_tex->line;
-		poly->x2 = coords[2].x; poly->y2 = coords[2].y; poly->u2 = (int)(v[2].U * active_tex->width) % active_tex->width; poly->v2 = (int)(v[2].V * active_tex->height) % active_tex->height + active_tex->line;
-		poly->x3 = coords[3].x; poly->y3 = coords[3].y; poly->u3 = (int)(v[3].U * active_tex->width) % active_tex->width; poly->v3 = (int)(v[3].V * active_tex->height) % active_tex->height + active_tex->line;
+		// TODO & instead of % 
+		poly->x0 = coords[1].x; poly->y0 = coords[1].y; poly->u0 = (int)(v[1].U * active_tex->width) % active_tex->width; poly->v0 = ((int)(v[1].V * active_tex->height) % active_tex->height) + pageOffset;
+		poly->x1 = coords[0].x; poly->y1 = coords[0].y; poly->u1 = (int)(v[0].U * active_tex->width) % active_tex->width; poly->v1 = ((int)(v[0].V * active_tex->height) % active_tex->height) + pageOffset;
+		poly->x2 = coords[2].x; poly->y2 = coords[2].y; poly->u2 = (int)(v[2].U * active_tex->width) % active_tex->width; poly->v2 = ((int)(v[2].V * active_tex->height) % active_tex->height) + pageOffset;
+		poly->x3 = coords[3].x; poly->y3 = coords[3].y; poly->u3 = (int)(v[3].U * active_tex->width) % active_tex->width; poly->v3 = ((int)(v[3].V * active_tex->height) % active_tex->height) + pageOffset;
 
+		//int P = active_tex->height, page = poly->tpage & 0xFF, ll = active_tex->line % TPAGE_HEIGHT;
+		//Platform_Log4("XYZ: %f3 x %i, %i, %i", &v[0].V, &P, &page, &ll);
 		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
 		if (p < 0 || p >= OT_LENGTH) continue;
 
@@ -602,6 +609,7 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 		poly->b0 = PackedCol_B(v->Col);
 		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
+		// TODO: 2D shouldn't use AddPrim, draws in the wrong way
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
@@ -706,16 +714,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	return false;
 }
 
-void Gfx_BeginFrame(void) { 
-	// Draw the square by allocating a TILE (i.e. untextured solid color
-	// rectangle) primitive at Z = 1.
-	TILE *tile = (TILE *)new_primitive(sizeof(TILE));
-
-	setTile(tile);
-	setXY0 (tile, 40, 40);
-	setWH  (tile, 64, 64);
-	setRGB0(tile, 255, 255, 0);
-	addPrim(&buffer->ot[1 >> 2], tile);
+void Gfx_BeginFrame(void) {
 }
 
 void Gfx_EndFrame(void) {
