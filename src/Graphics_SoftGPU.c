@@ -137,7 +137,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
 	}
 	if (buffers & GFX_BUFFER_DEPTH) {
-		for (i = 0; i < size; i++) depthBuffer[i] = 1.0f;
+		for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
 	}
 }
 
@@ -341,7 +341,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	if (faceCulling) {
 		// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
 		int sign = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
-		if (sign < 0) return;
+		if (sign > 0) return;
 	}
 
 	// Reject triangles completely outside
@@ -351,14 +351,17 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	// Perform scissoring
 	minX = max(minX, 0); maxX = min(maxX, sc_maxX);
 	minY = max(minY, 0); maxY = min(maxY, sc_maxY);
-	// TODO why doesn't this work 
 
 	// NOTE: W in frag variables below is actually 1/W 
 	float factor = 1.0f / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
 	
+	// TODO proper clipping
+	if (frag1.w <= 0 || frag2.w <= 0 || frag3.w <= 0) return;
+	
 	for (int y = minY; y <= maxY; y++) {
 		for (int x = minX; x <= maxX; x++) {
 			float ic0 = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) * factor;
+			
 			if (ic0 < 0 || ic0 > 1) continue;
 			float ic1 = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) * factor;
 			if (ic1 < 0 || ic1 > 1) continue;
@@ -369,7 +372,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			float w = 1 / (ic0 * frag1.w + ic1 * frag2.w + ic2 * frag3.w);
 			float z = (ic0 * frag1.z + ic1 * frag2.z + ic2 * frag3.z) * w;
 
-			if (depthTest && (z < 0 || z <= depthBuffer[index])) continue;
+			if (depthTest && (z < 0 || z > depthBuffer[index])) continue;
 			if (depthWrite) depthBuffer[index] = z;
 			if (!colWrite)  continue;
 
