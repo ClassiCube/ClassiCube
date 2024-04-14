@@ -247,7 +247,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 		swkbdSetNumpadKeys(&swkbd, '-', '.');
 	}
 	
-	if (type == KEYBOARD_TYPE_PASSWORD)
+	if (mode == KEYBOARD_TYPE_PASSWORD)
 		swkbdSetPasswordMode(&swkbd, SWKBD_PASSWORD_HIDE_DELAY);
 	if (args->multiline)
 		swkbdSetFeatures(&swkbd, SWKBD_MULTILINE);
