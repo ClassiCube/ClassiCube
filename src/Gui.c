@@ -358,8 +358,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct Font
 	Context2D_Free(&ctx);
 
 	atlas->uScale = 1.0f / (float)ctx.bmp.width;
-	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
-	atlas->tex.Width = atlas->offset;	
+	atlas->tex.uv.u2 = atlas->offset * atlas->uScale;
+	atlas->tex.width = atlas->offset;	
 }
 
 void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->tex.ID); }
@@ -368,9 +368,9 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** v
 	struct Texture part = atlas->tex;
 	int width = atlas->widths[charI];
 
-	part.x  = atlas->curX; part.Width = width;
-	part.uv.U1 = atlas->offsets[charI] * atlas->uScale;
-	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
+	part.x  = atlas->curX; part.width = width;
+	part.uv.u1 = atlas->offsets[charI] * atlas->uScale;
+	part.uv.u2 = part.uv.u1 + width    * atlas->uScale;
 
 	atlas->curX += width;	
 	Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);
@@ -429,6 +429,7 @@ void Widget_Reset(void* widget) {
 	w->verAnchor = ANCHOR_MIN;
 	w->xOffset = 0; w->yOffset = 0;
 	w->MenuClick = NULL;
+	w->meta.ptr  = NULL;
 }
 
 int Widget_Contains(void* widget, int x, int y) {
@@ -499,19 +500,6 @@ int Screen_DoPointerDown(void* screen, int id, int x, int y) {
 	return i;
 }
 
-int Screen_Index(void* screen, void* widget) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-
-	struct Widget* w = (struct Widget*)widget;
-	for (i = 0; i < s->numWidgets; i++) 
-	{
-		if (widgets[i] == w) return i;
-	}
-	return -1;
-}
-
 int Screen_CalcDefaultMaxVertices(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
@@ -572,6 +560,45 @@ void Screen_ContextLost(void* screen) {
 int  Screen_InputDown(void* screen, int key) { return key < CCKEY_F1 || key > CCKEY_F24; }
 void Screen_InputUp(void*   screen, int key) { }
 void Screen_PointerUp(void* s, int id, int x, int y) { }
+
+/*########################################################################################################################*
+*------------------------------------------------------Input handling-----------------------------------------------------*
+*#########################################################################################################################*/
+static void OnMouseWheel(void* obj, float delta) {
+	struct Screen* s;
+	int i;
+	
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->dirty = true;
+		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
+	}
+}
+
+static void OnPointerMove(void* obj, int idx) {
+	struct Screen* s;
+	int i, x = Pointers[idx].x, y = Pointers[idx].y;
+
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->dirty = true;
+		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
+	}
+}
+
+static void OnAxisUpdate(void* obj, int axis, float x, float y) {
+	struct Screen* s;
+	int i;
+	
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (!s->VTABLE->HandlesPadAxis) continue;
+
+		s->dirty = true;
+		if (s->VTABLE->HandlesPadAxis(s, axis, x, y)) return;
+	}
+}
+
 
 
 /*########################################################################################################################*
@@ -643,17 +670,22 @@ static void OnInit(void) {
 	TextureEntry_Register(&icons_entry);
 	TextureEntry_Register(&touch_entry);
 
+	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
+	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
+	Event_Register_(&ControllerEvents.AxisUpdate, NULL, OnAxisUpdate);
+
 #ifdef CC_BUILD_DUALSCREEN
 	struct Context2D ctx;
 	Context2D_Alloc(&ctx, 32, 32);
 	Gradient_Noise(&ctx, BitmapColor_RGB(0x40, 0x30, 0x20), 6, 0, 0, ctx.width, ctx.height);
 	Context2D_MakeTexture(&touchBgTex, &ctx);
 	Context2D_Free(&ctx);
+	
 	// Tile the texture to fill the entire screen
-	int tilesX = (320 + ctx.width - 1) / ctx.width;
-	int tilesY = (240 + ctx.height - 1) / ctx.height;
-	touchBgTex.Width *= tilesX; touchBgTex.Height *= tilesY;
-	touchBgTex.uv.U2 *= tilesX; touchBgTex.uv.V2  *= tilesY;
+	int tilesX = Math_CeilDiv(Window_Alt.Width,  ctx.width);
+	int tilesY = Math_CeilDiv(Window_Alt.Height, ctx.height);
+	touchBgTex.width *= tilesX; touchBgTex.height *= tilesY;
+	touchBgTex.uv.u2 *= tilesX; touchBgTex.uv.v2  *= tilesY;
 #endif
 
 	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);

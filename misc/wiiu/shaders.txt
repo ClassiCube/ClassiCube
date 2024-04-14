@@ -1,0 +1,14 @@
+Shader samples
+https://github.com/decaf-emu/wiiu-tests/blob/master/content/shaders/pos_colour.vsh
+https://github.com/GaryOderNichts/wiiu-shaders/blob/master/shaders.md
+https://github.com/luRaichu/recsbr/blob/163fa441712f6b25e780e914617941c2385b330e/src/Backends/Rendering/WiiUShaders/shader%20sources/plain.vsh#L6
+https://github.com/GaryOderNichts/MultiDRCSpaceDemo/blob/30a6337a47dabafd6d601ce0555b326866f63247/shaders/textureShader.vsh#L6
+https://github.com/luRaichu/recsbr/blob/163fa441712f6b25e780e914617941c2385b330e/src/Backends/Rendering/WiiUShaders/shader%20sources/texture.vsh#L9
+https://github.com/rw-r-r-0644/gx2-texture/blob/83d7707e8d4b33ec7ba63d5c7dfe62c359b2b50a/shaders/texture_shader.vsh#L9
+https://github.com/yawut/ntrview-wiiu/blob/45b1c7f05cfd9917b8b171f3db08dc63293fc5c5/gfx/gx2_shaders/main.psh
+https://github.com/Hydr8gon/NooDS/blob/b41cb3b9b889481c998e7e83db1ab3ef9d97b838/src/console/shaders/shader_wiiu.vsh
+https://github.com/luRaichu/recsbr/blob/163fa441712f6b25e780e914617941c2385b330e/src/Backends/Rendering/WiiUShaders/shader%20sources/wtf%20is%20this.txt
+
+To generate shader assembly
+1) Get AMD ShaderAnalyzer
+2) Select Radeon HD 4670 (RV370) Assembly as the output format

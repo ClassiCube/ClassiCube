@@ -9,6 +9,11 @@ DEL     = rm -f
 CFLAGS  = -g -pipe -fno-math-errno
 LDFLAGS = -g -rdynamic
 
+# Enables dependency tracking (https://make.mad-scientist.net/papers/advanced-auto-dependency-generation/)
+# This ensures that changing a .h file automatically results in the .c files using it being auto recompiled when next running make
+# On older systems the required GCC options may not be supported - in which case just change TRACK_DEPENDENCIES to 0
+TRACK_DEPENDENCIES=1
+
 ifndef $(PLAT)
 	ifeq ($(OS),Windows_NT)
 		PLAT = mingw
@@ -18,85 +23,86 @@ ifndef $(PLAT)
 endif
 
 ifeq ($(PLAT),web)
-CC      = emcc
-OEXT    = .html
-CFLAGS  = -g
-LDFLAGS = -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library $(SOURCE_DIR)/interop_web.js
+	CC      = emcc
+	OEXT    = .html
+	CFLAGS  = -g
+	LDFLAGS = -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library $(SOURCE_DIR)/interop_web.js
 endif
 
 ifeq ($(PLAT),mingw)
-CC      = gcc
-OEXT    = .exe
-CFLAGS  = -g -pipe -DUNICODE -fno-math-errno
-LDFLAGS = -g
-LIBS    = -mwindows -lwinmm -limagehlp
+	CC      = gcc
+	OEXT    = .exe
+	CFLAGS  = -g -pipe -DUNICODE -fno-math-errno
+	LDFLAGS = -g
+	LIBS    = -mwindows -lwinmm -limagehlp
 endif
 
 ifeq ($(PLAT),linux)
-LIBS    = -lX11 -lXi -lpthread -lGL -ldl
+	CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
+	LIBS    = -lX11 -lXi -lpthread -lGL -ldl
 endif
 
 ifeq ($(PLAT),sunos)
-CFLAGS  = -g -pipe -fno-math-errno
-LIBS    = -lsocket -lX11 -lXi -lGL
+	CFLAGS  = -g -pipe -fno-math-errno
+	LIBS    = -lsocket -lX11 -lXi -lGL
 endif
 
 ifeq ($(PLAT),darwin)
-OBJECTS += $(BUILD_DIR)/interop_cocoa.o
-CFLAGS  = -g -pipe -fno-math-errno
-LIBS    =
-LDFLAGS = -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+	OBJECTS += $(BUILD_DIR)/interop_cocoa.o
+	CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
+	LIBS    =
+	LDFLAGS = -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 endif
 
 ifeq ($(PLAT),freebsd)
-CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno
-LDFLAGS = -L /usr/local/lib -rdynamic
-LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
+	LDFLAGS = -L /usr/local/lib -rdynamic
+	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
-CFLAGS  = -g -pipe -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
-LDFLAGS = -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
-LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  = -g -pipe -I /usr/X11R6/include -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
+	LDFLAGS = -L /usr/X11R6/lib -L /usr/local/lib -rdynamic
+	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),netbsd)
-CFLAGS  = -g -pipe -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
-LDFLAGS = -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
-LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  = -g -pipe -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno -DCC_BUILD_ICON
+	LDFLAGS = -L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
+	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),dragonfly)
-CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno
-LDFLAGS = -L /usr/local/lib -rdynamic
-LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
+	CFLAGS  = -g -pipe -I /usr/local/include -fno-math-errno -DCC_BUILD_ICON
+	LDFLAGS = -L /usr/local/lib -rdynamic
+	LIBS    = -lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),haiku)
-OBJECTS += $(BUILD_DIR)/interop_BeOS.o
-CFLAGS  = -g -pipe -fno-math-errno
-LDFLAGS = -g
-LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	OBJECTS += $(BUILD_DIR)/interop_BeOS.o
+	CFLAGS  = -g -pipe -fno-math-errno
+	LDFLAGS = -g
+	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),beos)
-OBJECTS += $(BUILD_DIR)/interop_BeOS.o
-CFLAGS  = -g -pipe
-LDFLAGS = -g
-LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	OBJECTS += $(BUILD_DIR)/interop_BeOS.o
+	CFLAGS  = -g -pipe
+	LDFLAGS = -g
+	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),serenityos)
-LIBS    = -lgl -lSDL2
+	LIBS    = -lgl -lSDL2
 endif
 
 ifeq ($(PLAT),irix)
-CC      = gcc
-LIBS    = -lGL -lX11 -lXi -lpthread -ldl
+	CC      = gcc
+	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
 endif
 
 ifeq ($(OS),Windows_NT)
-DEL     = del
+	DEL     = del
 endif
 
 default: $(PLAT)
@@ -167,14 +173,31 @@ os/2:
 clean:
 	$(DEL) $(OBJECTS)
 
+
 $(ENAME): $(BUILD_DIR) $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(LIBS)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+
+# NOTE: Tracking dependencies might not work on older systems - disable if so
+ifeq ($(TRACK_DEPENDENCIES), 1)
+# Compiling with dependency tracking
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
+DEPFILES := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.d, $(C_SOURCES))
+$(DEPFILES):
+
+$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c $(BUILD_DIR)/%.d
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+include $(wildcard $(DEPFILES))
+# Compiling WITHOUT dependency tracking
+else
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+endif
 	
+# Platform specific file compiling
 $(BUILD_DIR)/interop_cocoa.o: $(SOURCE_DIR)/interop_cocoa.m
 	$(CC) $(CFLAGS) -c $< -o $@
 	

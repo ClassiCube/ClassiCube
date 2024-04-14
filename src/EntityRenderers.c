@@ -346,7 +346,7 @@ static void DrawName(struct Entity* e) {
 
 	scale  = e->ModelScale.y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
-	size.x = e->NameTex.Width * scale; size.y = e->NameTex.Height * scale;
+	size.x = e->NameTex.width * scale; size.y = e->NameTex.height * scale;
 
 	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
 		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */

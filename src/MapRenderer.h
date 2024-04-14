@@ -23,39 +23,39 @@ struct ChunkPartInfo {
 #ifdef CC_BUILD_GL11
 	/* 1 VB per face, another VB for sprites */
 	#define CHUNKPART_MAX_VBS (FACE_COUNT + 1)
-	GfxResourceID Vbs[CHUNKPART_MAX_VBS];
+	GfxResourceID vbs[CHUNKPART_MAX_VBS];
 #endif
-	int Offset;      /* -1 if no vertices at all */
-	int SpriteCount; /* Sprite vertices count */
-	cc_uint16 Counts[FACE_COUNT]; /* Counts per face */
+	int offset;      /* -1 if no vertices at all */
+	int spriteCount; /* Sprite vertices count */
+	cc_uint16 counts[FACE_COUNT]; /* Counts per face */
 };
 
 /* Describes data necessary for rendering a chunk. */
 struct ChunkInfo {	
-	cc_uint16 CentreX, CentreY, CentreZ; /* Centre coordinates of the chunk */
+	cc_uint16 centreX, centreY, centreZ; /* Centre coordinates of the chunk */
 
-	cc_uint8 Visible : 1;       /* Whether chunk is visible to the player */
-	cc_uint8 Empty : 1;         /* Whether the chunk is empty of data */
-	cc_uint8 PendingDelete : 1; /* Whether chunk is pending deletion */
-	cc_uint8 AllAir : 1;        /* Whether chunk is completely air */
+	cc_uint8 visible : 1;       /* Whether chunk is visible to the player */
+	cc_uint8 empty : 1;         /* Whether the chunk is empty of data */
+	cc_uint8 pendingDelete : 1; /* Whether chunk is pending deletion */
+	cc_uint8 allAir : 1;        /* Whether chunk is completely air */
 	cc_uint8 : 0;               /* pad to next byte*/
 
-	cc_uint8 DrawXMin : 1;
-	cc_uint8 DrawXMax : 1;
-	cc_uint8 DrawZMin : 1;
-	cc_uint8 DrawZMax : 1;
-	cc_uint8 DrawYMin : 1;
-	cc_uint8 DrawYMax : 1;
+	cc_uint8 drawXMin : 1;
+	cc_uint8 drawXMax : 1;
+	cc_uint8 drawZMin : 1;
+	cc_uint8 drawZMax : 1;
+	cc_uint8 drawYMin : 1;
+	cc_uint8 drawYMax : 1;
 	cc_uint8 : 0;          /* pad to next byte */
 #ifdef OCCLUSION
 	public cc_bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 #endif
 #ifndef CC_BUILD_GL11
-	GfxResourceID Vb;
+	GfxResourceID vb;
 #endif
-	struct ChunkPartInfo* NormalParts;
-	struct ChunkPartInfo* TranslucentParts;
+	struct ChunkPartInfo* normalParts;
+	struct ChunkPartInfo* translucentParts;
 };
 
 /* Renders the meshes of non-translucent blocks in visible chunks. */

@@ -743,7 +743,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO rect should maybe subtract -1 too ????
-	BRect rect(r.x, r.y, r.x + r.Width, r.y + r.Height);
+	BRect rect(r.x, r.y, r.x + r.width, r.y + r.height);
 	win_handle->Lock();
 	view_handle->DrawBitmap(win_framebuffer, rect, rect);
 	win_handle->Unlock();
@@ -754,9 +754,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = NULL;
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) {  }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) {  }
 
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse(); 

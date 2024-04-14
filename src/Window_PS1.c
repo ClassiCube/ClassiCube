@@ -162,12 +162,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	rect.w = SCREEN_XRES;
 	rect.h = SCREEN_YRES;
 
-	for (int y = r.y; y < r.y + r.Height; y++)
+	for (int y = r.y; y < r.y + r.height; y++)
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		cc_uint16* dst = fb         + y * bmp->width;
 		
-		for (int x = r.x; x < r.x + r.Width; x++) {
+		for (int x = r.x; x < r.x + r.width; x++) {
 			cc_uint8* color = (cc_uint8*)&src[x];
 			dst[x] = BGRA8_to_PS1(color);
 		}
@@ -186,9 +186,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 /*########################################################################################################################*

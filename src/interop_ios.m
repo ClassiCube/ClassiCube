@@ -492,7 +492,7 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 static UITextField* text_input;
 static CCKBController* kb_controller;
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     if (!kb_controller) {
         kb_controller = [[CCKBController alloc] init];
         CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
@@ -510,11 +510,14 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     [text_input becomeFirstResponder];
 }
 
-void Window_SetKeyboardText(const cc_string* text) {
+void OnscreenKeyboard_SetText(const cc_string* text) {
     text_input.text = ToNSString(text);
 }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+
+void OnscreenKeyboard_Close(void) {
     [text_input resignFirstResponder];
 }
 

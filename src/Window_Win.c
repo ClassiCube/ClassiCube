@@ -685,7 +685,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BitBlt(win_DC, r.x, r.y, r.Width, r.Height, draw_DC, r.x, r.y, SRCCOPY);
+	BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);
 }
 
@@ -711,9 +711,11 @@ static void InitRawMouse(void) {
 	rawMouseSupported = false;
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();

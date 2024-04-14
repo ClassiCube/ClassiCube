@@ -135,9 +135,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	/*cc_uint32* src = (cc_uint32*)bmp->scan0 + r.X;
 	cc_uint32* dst = (cc_uint32*)fb           + r.X;
 
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.Y; y < r.Y + r.height; y++) 
 	{
-		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.Width * 4);
+		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.width * 4);
 	}*/
 }
 
@@ -149,9 +149,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 /*########################################################################################################################*

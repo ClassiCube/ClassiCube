@@ -1,0 +1,21 @@
+; $MODE = "UniformRegister"
+; $SAMPLER_VARS[0].name= "texImage"
+; $SAMPLER_VARS[0].type= "sampler2D"
+; $SAMPLER_VARS[0].location = 0
+
+; $NUM_SPI_PS_INPUT_CNTL = 2
+; $SPI_PS_INPUT_CNTL[0].semantic = 0
+; $SPI_PS_INPUT_CNTL[0].default_val = 1
+; $SPI_PS_INPUT_CNTL[1].semantic = 1
+; $SPI_PS_INPUT_CNTL[1].default_val = 1
+
+; --------  Disassembly --------------------
+00 TEX: ADDR(48) CNT(1) VALID_PIX 
+      0  SAMPLE R1, R1.xy0x, t0, s0
+01 ALU: ADDR(32) CNT(4) 
+      1  x: MUL         R0.x,  R0.x,  R1.x      
+         y: MUL         R0.y,  R0.y,  R1.y      
+         z: MUL         R0.z,  R0.z,  R1.z      
+         w: MUL         R0.w,  R0.w,  R1.w      
+02 EXP_DONE: PIX0, R0
+END_OF_PROGRAM

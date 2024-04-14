@@ -562,10 +562,10 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	if (!map_begunLoading) Classic_StartLoading();
 	usedLength = Stream_GetU16_BE(data);
 
-	map_part.Meta.Mem.Cur    = data + 2;
-	map_part.Meta.Mem.Base   = data + 2;
-	map_part.Meta.Mem.Left   = usedLength;
-	map_part.Meta.Mem.Length = usedLength;
+	map_part.meta.mem.cur    = data + 2;
+	map_part.meta.mem.base   = data + 2;
+	map_part.meta.mem.left   = usedLength;
+	map_part.meta.mem.length = usedLength;
 
 #ifndef EXTENDED_BLOCKS
 	m = &map1;
@@ -612,11 +612,13 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	length = Stream_GetU16_BE(data + 4);
 	volume = width * height * length;
 
-	if (!map1.blocks) {
+	if (map1.allocFailed) {
+		Chat_AddRaw("&cFailed to load map, try joining a different map");
+		Chat_AddRaw("   &cNot enough free memory to load the map");
+	} else if (!map1.blocks) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_AddRaw("   &cAttempted to load map without a Blocks array");
-	}
-	if (map_volume != volume) {
+	} else if (map_volume != volume) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_Add2(  "   &cBlocks array size (%i) does not match volume of map (%i)", &map_volume, &volume);
 		FreeMapStates();
@@ -865,7 +867,7 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 
 		data[14] = 255;
 		/* FACE enum values differ from CPE block face values */
-		switch (t->Closest) {
+		switch (t->closest) {
 		case FACE_XMAX: data[14] = 0; break;
 		case FACE_XMIN: data[14] = 1; break;
 		case FACE_YMAX: data[14] = 2; break;
@@ -1465,10 +1467,10 @@ static void CPE_DefineEffect(cc_uint8* data) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[data[0]];
 
 	/* e.g. bounds of 0,0, 15,15 gives an 8x8 icon in the default 128x128 particles.png */
-	e->rec.U1 = data[1]       / 256.0f;
-	e->rec.V1 = data[2]       / 256.0f;
-	e->rec.U2 = (data[3] + 1) / 256.0f;
-	e->rec.V2 = (data[4] + 1) / 256.0f;
+	e->rec.u1 = data[1]       / 256.0f;
+	e->rec.v1 = data[2]       / 256.0f;
+	e->rec.u2 = (data[3] + 1) / 256.0f;
+	e->rec.v2 = (data[4] + 1) / 256.0f;
 
 	e->tintCol       = PackedCol_Make(data[5], data[6], data[7], 255);
 	e->frameCount    = data[8];

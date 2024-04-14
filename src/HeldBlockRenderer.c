@@ -20,6 +20,17 @@ static float held_swingY;
 static double held_time, held_period = 0.25;
 static BlockID held_lastBlock;
 
+/* Since not using Entity_SetModel, which normally automatically does this */
+static void SetHeldModel(struct Model* model) {
+#ifdef CC_BUILD_CONSOLE
+	static int maxVertices;
+	if (model->maxVertices <= maxVertices) return;
+
+	maxVertices = model->maxVertices;
+	Gfx_DeleteDynamicVb(&held_entity.ModelVB);
+#endif
+}
+
 static void HeldBlockRenderer_RenderModel(void) {
 	static const cc_string block = String_FromConst("block");
 	struct Model* model;
@@ -30,6 +41,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
+		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
 
 		Gfx_SetAlphaTest(true);
@@ -37,6 +49,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 		Gfx_SetAlphaTest(false);
 	} else {	
 		model = Model_Get(&block);
+		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);

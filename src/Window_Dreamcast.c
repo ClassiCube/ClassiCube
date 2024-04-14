@@ -10,6 +10,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "VirtualKeyboard.h"
 #include <kos.h>
 static cc_bool launcherMode;
 cc_bool window_inited;
@@ -31,6 +32,7 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 20;
+	Window_Main.SoftKeyboard   = SOFT_KEYBOARD_VIRTUAL;
 	
 	vid_set_mode(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 	vid_flip(0);
@@ -263,12 +265,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//	https://dcemulation.org/phpBB/viewtopic.php?t=43214
 	vid_waitvbl();
 	
-	for (int y = r.y; y < r.y + r.Height; y++)
+	for (int y = r.y; y < r.y + r.height; y++)
 	{
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		uint16_t*  dst = vram_s + vid_mode->width * y;
 		
-		for (int x = r.x; x < r.x + r.Width; x++)
+		for (int x = r.x; x < r.x + r.width; x++)
 		{
 			BitmapCol color = src[x];
 			// 888 to 565 (discard least significant bits)
@@ -285,9 +287,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

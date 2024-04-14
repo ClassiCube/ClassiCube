@@ -36,7 +36,7 @@ static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48
 
 static void CloseActiveScreen(void) {
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 	if (!Launcher_Active) return;
 	
 	Launcher_Active->Deactivated(Launcher_Active);
@@ -187,6 +187,8 @@ static cc_bool IsShutdown(int key) {
 }
 
 static void OnInputDown(void* obj, int key, cc_bool was) {
+	if (Window_Main.SoftKeyboardFocus) return;
+
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Active->KeyDown(Launcher_Active, key, was);
 }

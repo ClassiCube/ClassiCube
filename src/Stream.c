@@ -89,27 +89,27 @@ void Stream_Init(struct Stream* s) {
 *-------------------------------------------------------FileStream--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result Stream_FileRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return File_Read(s->Meta.File, data, count, modified);
+	return File_Read(s->meta.file, data, count, modified);
 }
 static cc_result Stream_FileWrite(struct Stream* s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	return File_Write(s->Meta.File, data, count, modified);
+	return File_Write(s->meta.file, data, count, modified);
 }
 static cc_result Stream_FileClose(struct Stream* s) {
-	cc_result res = File_Close(s->Meta.File);
-	s->Meta.File = 0;
+	cc_result res = File_Close(s->meta.file);
+	s->meta.file = 0;
 	return res;
 }
 static cc_result Stream_FileSkip(struct Stream* s, cc_uint32 count) {
-	return File_Seek(s->Meta.File, count, FILE_SEEKFROM_CURRENT);
+	return File_Seek(s->meta.file, count, FILE_SEEKFROM_CURRENT);
 }
 static cc_result Stream_FileSeek(struct Stream* s, cc_uint32 position) {
-	return File_Seek(s->Meta.File, position, FILE_SEEKFROM_BEGIN);
+	return File_Seek(s->meta.file, position, FILE_SEEKFROM_BEGIN);
 }
 static cc_result Stream_FilePosition(struct Stream* s, cc_uint32* position) {
-	return File_Position(s->Meta.File, position);
+	return File_Position(s->meta.file, position);
 }
 static cc_result Stream_FileLength(struct Stream* s, cc_uint32* length) {
-	return File_Length(s->Meta.File, length);
+	return File_Length(s->meta.file, length);
 }
 
 cc_result Stream_OpenFile(struct Stream* s, const cc_string* path) {
@@ -150,7 +150,7 @@ cc_result Stream_WriteAllTo(const cc_string* path, const cc_uint8* data, cc_uint
 
 void Stream_FromFile(struct Stream* s, cc_file file) {
 	Stream_Init(s);
-	s->Meta.File = file;
+	s->meta.file = file;
 
 	s->Read  = Stream_FileRead;
 	s->Write = Stream_FileWrite;
@@ -169,20 +169,20 @@ static cc_result Stream_PortionRead(struct Stream* s, cc_uint8* data, cc_uint32 
 	struct Stream* source;
 	cc_result res;
 
-	count  = min(count, s->Meta.Portion.Left);
-	source = s->Meta.Portion.Source;
+	count  = min(count, s->meta.portion.left);
+	source = s->meta.portion.source;
 
 	res = source->Read(source, data, count, modified);
-	s->Meta.Portion.Left -= *modified;
+	s->meta.portion.left -= *modified;
 	return res;
 }
 
 static cc_result Stream_PortionReadU8(struct Stream* s, cc_uint8* data) {
 	struct Stream* source;
-	if (!s->Meta.Portion.Left) return ERR_END_OF_STREAM;
-	source = s->Meta.Portion.Source;
+	if (!s->meta.portion.left) return ERR_END_OF_STREAM;
+	source = s->meta.portion.source;
 
-	s->Meta.Portion.Left--;
+	s->meta.portion.left--;
 	return source->ReadU8(source, data);
 }
 
@@ -190,19 +190,19 @@ static cc_result Stream_PortionSkip(struct Stream* s, cc_uint32 count) {
 	struct Stream* source;
 	cc_result res;
 
-	if (count > s->Meta.Portion.Left) return ERR_INVALID_ARGUMENT;
-	source = s->Meta.Portion.Source;
+	if (count > s->meta.portion.left) return ERR_INVALID_ARGUMENT;
+	source = s->meta.portion.source;
 
 	res = source->Skip(source, count);
-	if (!res) s->Meta.Portion.Left -= count;
+	if (!res) s->meta.portion.left -= count;
 	return res;
 }
 
 static cc_result Stream_PortionPosition(struct Stream* s, cc_uint32* position) {
-	*position = s->Meta.Portion.Length - s->Meta.Portion.Left; return 0;
+	*position = s->meta.portion.length - s->meta.portion.left; return 0;
 }
 static cc_result Stream_PortionLength(struct Stream* s, cc_uint32* length) {
-	*length = s->Meta.Portion.Length; return 0;
+	*length = s->meta.portion.length; return 0;
 }
 
 void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, cc_uint32 len) {
@@ -213,9 +213,9 @@ void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, cc_uint32 l
 	s->Position = Stream_PortionPosition;
 	s->Length   = Stream_PortionLength;
 
-	s->Meta.Portion.Source = source;
-	s->Meta.Portion.Left   = len;
-	s->Meta.Portion.Length = len;
+	s->meta.portion.source = source;
+	s->meta.portion.left   = len;
+	s->meta.portion.length = len;
 }
 
 
@@ -223,45 +223,45 @@ void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, cc_uint32 l
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result Stream_MemoryRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	count = min(count, s->Meta.Mem.Left);
-	Mem_Copy(data, s->Meta.Mem.Cur, count);
+	count = min(count, s->meta.mem.left);
+	Mem_Copy(data, s->meta.mem.cur, count);
 	
-	s->Meta.Mem.Cur  += count; 
-	s->Meta.Mem.Left -= count;
+	s->meta.mem.cur  += count; 
+	s->meta.mem.left -= count;
 	*modified = count;
 	return 0;
 }
 
 static cc_result Stream_MemoryReadU8(struct Stream* s, cc_uint8* data) {
-	if (!s->Meta.Mem.Left) return ERR_END_OF_STREAM;
+	if (!s->meta.mem.left) return ERR_END_OF_STREAM;
 
-	*data = *s->Meta.Mem.Cur;
-	s->Meta.Mem.Cur++; 
-	s->Meta.Mem.Left--;
+	*data = *s->meta.mem.cur;
+	s->meta.mem.cur++; 
+	s->meta.mem.left--;
 	return 0;
 }
 
 static cc_result Stream_MemorySkip(struct Stream* s, cc_uint32 count) {
-	if (count > s->Meta.Mem.Left) return ERR_INVALID_ARGUMENT;
+	if (count > s->meta.mem.left) return ERR_INVALID_ARGUMENT;
 
-	s->Meta.Mem.Cur  += count; 
-	s->Meta.Mem.Left -= count;
+	s->meta.mem.cur  += count; 
+	s->meta.mem.left -= count;
 	return 0;
 }
 
 static cc_result Stream_MemorySeek(struct Stream* s, cc_uint32 position) {
-	if (position >= s->Meta.Mem.Length) return ERR_INVALID_ARGUMENT;
+	if (position >= s->meta.mem.length) return ERR_INVALID_ARGUMENT;
 
-	s->Meta.Mem.Cur  = s->Meta.Mem.Base   + position;
-	s->Meta.Mem.Left = s->Meta.Mem.Length - position;
+	s->meta.mem.cur  = s->meta.mem.base   + position;
+	s->meta.mem.left = s->meta.mem.length - position;
 	return 0;
 }
 
 static cc_result Stream_MemoryPosition(struct Stream* s, cc_uint32* position) {
-	*position = s->Meta.Mem.Length - s->Meta.Mem.Left; return 0;
+	*position = s->meta.mem.length - s->meta.mem.left; return 0;
 }
 static cc_result Stream_MemoryLength(struct Stream* s, cc_uint32* length) {
-	*length = s->Meta.Mem.Length; return 0;
+	*length = s->meta.mem.length; return 0;
 }
 
 void Stream_ReadonlyMemory(struct Stream* s, void* data, cc_uint32 len) {
@@ -273,10 +273,10 @@ void Stream_ReadonlyMemory(struct Stream* s, void* data, cc_uint32 len) {
 	s->Position = Stream_MemoryPosition;
 	s->Length   = Stream_MemoryLength;
 
-	s->Meta.Mem.Cur    = (cc_uint8*)data;
-	s->Meta.Mem.Left   = len;
-	s->Meta.Mem.Length = len;
-	s->Meta.Mem.Base   = (cc_uint8*)data;
+	s->meta.mem.cur    = (cc_uint8*)data;
+	s->meta.mem.left   = len;
+	s->meta.mem.length = len;
+	s->meta.mem.base   = (cc_uint8*)data;
 }
 
 
@@ -289,31 +289,31 @@ static cc_result Stream_BufferedRead(struct Stream* s, cc_uint8* data, cc_uint32
 	cc_result res;
 
 	/* Refill buffer */
-	if (!s->Meta.Buffered.Left) {
-		source               = s->Meta.Buffered.Source; 
-		s->Meta.Buffered.Cur = s->Meta.Buffered.Base;
+	if (!s->meta.buffered.left) {
+		source               = s->meta.buffered.source; 
+		s->meta.buffered.cur = s->meta.buffered.base;
 
-		res = source->Read(source, s->Meta.Buffered.Cur, s->Meta.Buffered.Length, &read);
+		res = source->Read(source, s->meta.buffered.cur, s->meta.buffered.length, &read);
 		if (res) return res;
-		s->Meta.Buffered.Left  = read;
-		s->Meta.Buffered.End  += read;
+		s->meta.buffered.left  = read;
+		s->meta.buffered.end  += read;
 	}
 	
-	count = min(count, s->Meta.Buffered.Left);
-	Mem_Copy(data, s->Meta.Buffered.Cur, count);
+	count = min(count, s->meta.buffered.left);
+	Mem_Copy(data, s->meta.buffered.cur, count);
 
-	s->Meta.Buffered.Cur  += count; 
-	s->Meta.Buffered.Left -= count;
+	s->meta.buffered.cur  += count; 
+	s->meta.buffered.left -= count;
 	*modified = count;
 	return 0;
 }
 
 static cc_result Stream_BufferedReadU8(struct Stream* s, cc_uint8* data) {
-	if (!s->Meta.Buffered.Left) return Stream_DefaultReadU8(s, data);
+	if (!s->meta.buffered.left) return Stream_DefaultReadU8(s, data);
 
-	*data = *s->Meta.Buffered.Cur;
-	s->Meta.Buffered.Cur++; 
-	s->Meta.Buffered.Left--;
+	*data = *s->meta.buffered.cur;
+	s->meta.buffered.cur++; 
+	s->meta.buffered.left--;
 	return 0;
 }
 
@@ -323,23 +323,23 @@ static cc_result Stream_BufferedSeek(struct Stream* s, cc_uint32 position) {
 	cc_result res;
 
 	/* Check if seek position is within cached buffer */
-	len = s->Meta.Buffered.Left + (cc_uint32)(s->Meta.Buffered.Cur - s->Meta.Buffered.Base);
-	beg = s->Meta.Buffered.End  - len;
+	len = s->meta.buffered.left + (cc_uint32)(s->meta.buffered.cur - s->meta.buffered.base);
+	beg = s->meta.buffered.end  - len;
 
 	if (position >= beg && position < beg + len) {
 		offset = position - beg;
-		s->Meta.Buffered.Cur  = s->Meta.Buffered.Base + offset;
-		s->Meta.Buffered.Left = len - offset;
+		s->meta.buffered.cur  = s->meta.buffered.base + offset;
+		s->meta.buffered.left = len - offset;
 		return 0;
 	}
 
-	source = s->Meta.Buffered.Source;
+	source = s->meta.buffered.source;
 	res    = source->Seek(source, position);
 	if (res) return res;
 
-	s->Meta.Buffered.Cur  = s->Meta.Buffered.Base;
-	s->Meta.Buffered.Left = 0;
-	s->Meta.Buffered.End  = position;	
+	s->meta.buffered.cur  = s->meta.buffered.base;
+	s->meta.buffered.left = 0;
+	s->meta.buffered.end  = position;	
 	return res;
 }
 
@@ -349,12 +349,12 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 	s->ReadU8 = Stream_BufferedReadU8;
 	s->Seek   = Stream_BufferedSeek;
 
-	s->Meta.Buffered.Left   = 0;
-	s->Meta.Buffered.End    = 0;	
-	s->Meta.Buffered.Cur    = (cc_uint8*)data;
-	s->Meta.Buffered.Base   = (cc_uint8*)data;
-	s->Meta.Buffered.Length = size;
-	s->Meta.Buffered.Source = source;
+	s->meta.buffered.left   = 0;
+	s->meta.buffered.end    = 0;	
+	s->meta.buffered.cur    = (cc_uint8*)data;
+	s->meta.buffered.base   = (cc_uint8*)data;
+	s->meta.buffered.length = size;
+	s->meta.buffered.source = source;
 }
 
 
@@ -363,15 +363,15 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 *#########################################################################################################################*/
 static cc_result Stream_Crc32Write(struct Stream* stream, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	struct Stream* source;
-	cc_uint32 i, crc32 = stream->Meta.CRC32.CRC32;
+	cc_uint32 i, crc32 = stream->meta.crc32.crc32;
 
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
 		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
 	}
-	stream->Meta.CRC32.CRC32 = crc32;
+	stream->meta.crc32.crc32 = crc32;
 
-	source = stream->Meta.CRC32.Source;
+	source = stream->meta.crc32.source;
 	return source->Write(source, data, count, modified);
 }
 
@@ -379,8 +379,8 @@ void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source) {
 	Stream_Init(s);
 	s->Write = Stream_Crc32Write;
 
-	s->Meta.CRC32.Source = source;
-	s->Meta.CRC32.CRC32  = 0xFFFFFFFFUL;
+	s->meta.crc32.source = source;
+	s->meta.crc32.crc32  = 0xFFFFFFFFUL;
 }
 
 

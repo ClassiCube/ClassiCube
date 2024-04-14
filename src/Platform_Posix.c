@@ -363,10 +363,15 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	if (res) Logger_Abort2(res, "Creating thread");
 	pthread_attr_destroy(&attrs);
 	
-	#if defined CC_BUILD_LINUX || defined CC_BUILD_HAIKU
-	extern int pthread_setname_np(pthread_t thread, const char *name);
+#if defined CC_BUILD_LINUX || defined CC_BUILD_HAIKU
+	extern int pthread_setname_np(pthread_t thread, const char* name);
 	pthread_setname_np(*ptr, name);
-	#endif
+#elif defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
+	extern int pthread_set_name_np(pthread_t thread, const char* name);
+	pthread_set_name_np(*ptr, name);
+#elif defined CC_BUILD_NETBSD
+	pthread_setname_np(*ptr, "%s", name);
+#endif
 }
 
 void Thread_Detach(void* handle) {

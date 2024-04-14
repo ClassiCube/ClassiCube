@@ -108,7 +108,7 @@ void Event_UnregisterAll(void) {
 	PointerEvents.Up.Count    = 0;
 	PointerEvents.RawMoved.Count = 0;
 	
-	ControllerEvents.RawMoved.Count = 0;
+	ControllerEvents.AxisUpdate.Count = 0;
 
 	NetEvents.Connected.Count    = 0;
 	NetEvents.Disconnected.Count = 0;
@@ -175,6 +175,13 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
+	}
+}
+
+void Event_RaisePadAxis(struct Event_PadAxis* handlers, int axis, float x, float y) {
+	int i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](handlers->Objs[i], axis, x, y);
 	}
 }
 

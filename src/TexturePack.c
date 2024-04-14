@@ -30,10 +30,10 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
 	*index = Atlas1D_Index(texLoc);
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards */	
-	rec.U1 = 0.0f; 
-	rec.V1 = y * Atlas1D.InvTileSize;
-	rec.U2 = (uCount - 1) + UV2_Scale;
-	rec.V2 = rec.V1       + UV2_Scale * Atlas1D.InvTileSize;
+	rec.u1 = 0.0f; 
+	rec.v1 = y * Atlas1D.InvTileSize;
+	rec.u2 = (uCount - 1) + UV2_Scale;
+	rec.v2 = rec.v1       + UV2_Scale * Atlas1D.InvTileSize;
 	return rec;
 }
 
@@ -422,6 +422,16 @@ static cc_result ExtractFrom(struct Stream* stream, const cc_string* path) {
 	return res;
 }
 
+#ifdef CC_BUILD_PS1
+#include "../misc/ps1/classicubezip.h"
+
+static cc_result ExtractFromFile(const cc_string* path) {
+	struct Stream stream;
+	Stream_ReadonlyMemory(&stream, ccTextures, ccTextures_length);
+
+	return ExtractFrom(&stream, path);
+}
+#else
 static cc_result ExtractFromFile(const cc_string* path) {
 	struct Stream stream;
 	cc_result res;
@@ -434,6 +444,7 @@ static cc_result ExtractFromFile(const cc_string* path) {
 	(void)stream.Close(&stream);
 	return res;
 }
+#endif
 
 static cc_result ExtractUserTextures(void) {
 	cc_string path;

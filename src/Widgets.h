@@ -21,6 +21,8 @@ struct TextWidget {
 
 /* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
+/* Initialises then adds a text widget. */
+CC_NOINLINE void TextWidget_Add(void* screen, struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
@@ -46,6 +48,8 @@ CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+/* Initialises then adds a button widget. */
+CC_NOINLINE void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
@@ -98,8 +102,9 @@ struct TableWidget {
 	int selectedIndex, cellSizeX, cellSizeY;
 	float normBlockSize, selBlockSize;
 	GfxResourceID vb;
-	cc_bool pendingClose;
+	cc_bool pendingClose, everCreated;
 	float scale;
+	float padXAcc, padYAcc;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
@@ -114,10 +119,11 @@ struct TableWidget {
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
+CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -157,12 +163,12 @@ CC_NOINLINE void InputWidget_AppendText(struct InputWidget* w, const cc_string* 
 /* Tries appending the given character, then updates the input texture. */
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 /* Redraws text and recalculates associated state. */
-/* Also calls Window_SetKeyboardText with the text in the input widget. */
+/* Also calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 /* Shorthand for InputWidget_Clear followed by InputWidget_AppendText, */
-/* then calls Window_SetKeyboardText with the text in the input widget. */
+/* then calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_SetText(struct InputWidget* w, const cc_string* str);

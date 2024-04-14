@@ -64,10 +64,10 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 }
 
 /* TODO: check this is actually accurate */
-static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
+static cc_uint64 sw_freqDiv = 1;
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
+	return ((end - beg) * 1000000ULL) / sw_freqDiv;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
@@ -76,9 +76,7 @@ cc_uint64 Stopwatch_Measure(void) {
 
 static void Stopwatch_Init(void) {
 	ULONGLONG freq = KeQueryPerformanceFrequency();
-
-	sw_freqMul = 1000 * 1000;
-	sw_freqDiv = freq;
+	sw_freqDiv     = freq;
 }
 
 
@@ -415,6 +413,11 @@ void Platform_Free(void) {
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

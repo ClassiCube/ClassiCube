@@ -98,6 +98,8 @@ struct ScreenVTABLE {
 	void (*ContextLost)(void* elem);
 	/* Allocates graphics resources. (textures, vertex buffers, etc) */
 	void (*ContextRecreated)(void* elem);
+	/* Returns non-zero if a pad axis update is handled. */
+	int (*HandlesPadAxis)(void* elem, int axis, float x, float y);
 };
 #define Screen_Body const struct ScreenVTABLE* VTABLE; \
 	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
@@ -106,7 +108,7 @@ struct ScreenVTABLE {
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
 	int maxVertices; GfxResourceID vb; /* Vertex buffer storing the contents of the screen */ \
 	struct Widget** widgets; int numWidgets; /* The widgets/individual elements in the screen */ \
-	int selectedI;
+	int selectedI, maxWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
@@ -115,7 +117,6 @@ void Screen_Render2Widgets(void* screen, double delta);
 void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
-int Screen_Index(void* screen, void* w);
 int Screen_CalcDefaultMaxVertices(void* screen);
 
 /* Default mesh building implementation for a screen */
@@ -137,7 +138,10 @@ void Screen_InputUp(void*   screen, int key);
 /*  (does nothing) */
 void Screen_PointerUp(void* s, int id, int x, int y);
 
+
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
+union WidgetMeta { int val; void* ptr; };
+
 struct WidgetVTABLE {
 	/* Draws this widget on-screen. */
 	void (*Render)(void* elem, double delta);
@@ -163,6 +167,8 @@ struct WidgetVTABLE {
 	int  (*Render2)(void* elem, int offset);
 	/* Returns the maximum number of vertices this widget may use */
 	int  (*GetMaxVertices)(void* elem);
+	/* Returns non-zero if a pad axis update is handled. */
+	int (*HandlesPadAxis)(void* elem, int axis, float x, float y);
 };
 
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
@@ -171,7 +177,8 @@ struct WidgetVTABLE {
 	cc_uint8 flags;                /* Flags controlling the widget's interactability */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
-	Widget_LeftClick MenuClick;
+	Widget_LeftClick MenuClick; \
+	union WidgetMeta meta;
 
 /* Whether a widget is prevented from being interacted with */
 #define WIDGET_FLAG_DISABLED   0x01
@@ -282,6 +289,8 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_HandlesPointerDown(elem, id, x, y) (elem)->VTABLE->HandlesPointerDown(elem, id, x, y)
 #define Elem_OnPointerUp(elem,        id, x, y) (elem)->VTABLE->OnPointerUp(elem,        id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
+
+#define Elem_HandlesPadAxis(elem, axis, x, y) (elem)->VTABLE->HandlesPadAxis(elem, axis, x, y)
 
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
 #define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)

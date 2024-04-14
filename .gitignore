@@ -23,10 +23,12 @@ android/local.properties
 # Nintendo Console build results
 build-3ds/
 build-gc/
+build-nds/
 build-n64/
 build-wii/
 build-wiiu/
 build-switch/
+classicube.nds
 # SEGA console build results
 build-dc/
 # Microsoft console build results
@@ -36,6 +38,9 @@ build-ps2/
 build-ps3/
 build-psp/
 build-vita/
+eboot.pbp
+eboot.bin
+param.sfo
 
 # Build results
 [Dd]ebug/

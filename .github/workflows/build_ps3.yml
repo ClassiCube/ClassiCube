@@ -37,6 +37,12 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
+          SOURCE_FILE: 'ClassiCube-PS3.elf'
+          DEST_NAME: 'ClassiCube-PS3.elf'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
           SOURCE_FILE: 'ClassiCube-PS3.self'
           DEST_NAME: 'ClassiCube-PS3.self'
           

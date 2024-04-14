@@ -41,6 +41,7 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
@@ -281,7 +282,7 @@ static void SendIMEResult(void) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
 	SetIMEString(imeText,   args->text);
 	SetIMEString(imeBuffer, &String_Empty);
 	
@@ -327,8 +328,10 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	SendIMEResult();
 /* TODO implement */ 
 }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 #endif

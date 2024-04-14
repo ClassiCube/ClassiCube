@@ -11,6 +11,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
+#include "VirtualKeyboard.h"
 #include <libpad.h>
 #include <packet.h>
 #include <dma_tags.h>
@@ -195,9 +196,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

@@ -48,6 +48,40 @@ void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 
 void Gfx_SetTexturing(cc_bool enabled) { } /* useless */
 
+#ifndef CC_BUILD_3DS
+void Gfx_Set3DLeft(struct Matrix* proj, struct Matrix* view) {
+	struct Matrix proj_left, view_left;
+
+	/* Translation values according to values captured by */
+	/*  analysing the OpenGL calls made by classic using gDEbugger */
+	/* TODO these still aren't quite right, ghosting occurs */
+	Matrix_Translate(&proj_left,   0.07f, 0, 0);
+	Matrix_Mul(&Gfx.Projection, proj, &proj_left);
+	Matrix_Translate(&view_left,  -0.10f, 0, 0);
+	Matrix_Mul(&Gfx.View,       view, &view_left);
+
+	Gfx_SetColorWrite(false, true, true, false);
+}
+
+void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view) {
+	struct Matrix proj_right, view_right;
+
+	Matrix_Translate(&proj_right, -0.07f, 0, 0);
+	Matrix_Mul(&Gfx.Projection, proj, &proj_right);
+	Matrix_Translate(&view_right,  0.10f, 0, 0);
+	Matrix_Mul(&Gfx.View,       view, &view_right);
+
+	Gfx_ClearBuffers(GFX_BUFFER_DEPTH);
+	Gfx_SetColorWrite(true, false, false, false);
+}
+
+void Gfx_End3D(struct Matrix* proj, struct Matrix* view) {
+	Gfx.Projection = *proj;
+
+	Gfx_SetColorWrite(true, true, true, true);
+}
+#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
@@ -87,6 +121,10 @@ static void FreeDefaultResources(void) {
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------FPS and context----------------------------------------------------*
+*#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 static void LimitFPS(void) {
 	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
@@ -135,34 +173,26 @@ void Gfx_RecreateContext(void) {
 	Event_RaiseVoid(&GfxEvents.ContextRecreated);
 }
 
-cc_bool reducedPerformance;
 static CC_INLINE void TickReducedPerformance(void) {
 	Thread_Sleep(100); /* 10 FPS */
 
-	if (reducedPerformance) return;
-	reducedPerformance = true;
+	if (Gfx.ReducedPerfMode) return;
+	Gfx.ReducedPerfMode = true;
 	Chat_AddOf(&Gfx_LowPerfMessage, MSG_TYPE_EXTRASTATUS_2);
 }
 
 static CC_INLINE void EndReducedPerformance(void) {
-	if (!reducedPerformance) return;
-	reducedPerformance = false;
-	Chat_AddOf(&String_Empty,       MSG_TYPE_EXTRASTATUS_2);
-	Chat_AddRaw(LOWPERF_EXIT_MESSAGE);
+	if (!Gfx.ReducedPerfMode) return;
+
+	Gfx.ReducedPerfModeCooldown = 2;
+	Gfx.ReducedPerfMode         = false;
+	Chat_AddOf(&String_Empty, MSG_TYPE_EXTRASTATUS_2);
 }
 
 
-void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	Gfx_DeleteTexture(tex);
-	*tex = Gfx_CreateTexture(bmp, flags, mipmaps);
-}
-
-void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
-	Gfx_DeleteVb(vb);
-	*vb = Gfx_CreateVb(fmt, count);
-	return Gfx_LockVb(*vb, fmt, count);
-}
-
+/*########################################################################################################################*
+*--------------------------------------------------------2D drawing-------------------------------------------------------*
+*#########################################################################################################################*/
 #ifndef CC_BUILD_3DS
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color) {
 	struct VertexColoured* v;
@@ -208,8 +238,8 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color) {
 #endif
 
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices) {
-	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->Width);
-	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->Height);
+	float x1 = (float)tex->x, x2 = (float)(tex->x + tex->width);
+	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->height);
 	struct VertexTextured* v = *vertices;
 
 #ifdef CC_BUILD_D3D9
@@ -219,10 +249,10 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	y1 -= 0.5f; y2 -= 0.5f;
 #endif
 
-	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V1; v++;
-	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V1; v++;
-	v->x = x2; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
-	v->x = x1; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
+	v->x = x1; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u1; v->V = tex->uv.v1; v++;
+	v->x = x2; v->y = y1; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v1; v++;
+	v->x = x2; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.u2; v->V = tex->uv.v2; v++;
+	v->x = x1; v->y = y2; v->z = 0; v->Col = color; v->U = tex->uv.u1; v->V = tex->uv.v2; v++;
 	*vertices = v;
 }
 
@@ -246,6 +276,10 @@ void Gfx_End2D(void) {
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Misc/Utils-------------------------------------------------------*
+*#########################################################################################################################*/
 void Gfx_SetupAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(true);
 	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(true);
@@ -259,7 +293,6 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
 	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(false);
 }
-
 
 static CC_INLINE float Reversed_CalcZNear(float fov, int depthbufferBits) {
 	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
@@ -286,6 +319,11 @@ static void PrintMaxTextureInfo(cc_string* info) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	Gfx_DeleteTexture(tex);
+	*tex = Gfx_CreateTexture(bmp, flags, mipmaps);
+}
+
 static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
 	cc_uint8* src_ = (cc_uint8*)src->scan0;
@@ -374,6 +412,9 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags) {
 	if (width  > Gfx.MaxTexWidth)  return false;
 	if (height > Gfx.MaxTexHeight) return false;
 	
+	if (Gfx.MinTexWidth  && width  < Gfx.MinTexWidth)  return false;
+	if (Gfx.MinTexHeight && height < Gfx.MinTexHeight) return false;
+	
 	maxSize = Gfx.MaxTexSize;
 	// low resolution textures may support higher sizes (e.g. Nintendo 64)
 	if ((flags & TEXTURE_FLAG_LOWRES) && Gfx.MaxLowResTexSize)
@@ -412,6 +453,12 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
+void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
+	Gfx_DeleteVb(vb);
+	*vb = Gfx_CreateVb(fmt, count);
+	return Gfx_LockVb(*vb, fmt, count);
+}
+
 static GfxResourceID Gfx_AllocStaticVb( VertexFormat fmt, int count);
 static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices);
 

@@ -10,6 +10,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Graphics.h"
+#include "Launcher.h"
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -18,10 +19,14 @@
 #include <proc_ui/procui.h>
 #include <gx2/display.h>
 #include <vpad/input.h>
+#include <whb/proc.h>
+#include <padscore/kpad.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
+struct _WindowData Window_Alt;
+cc_bool launcherTop;
 
 void Window_Init(void) {
 	switch(GX2GetSystemTVScanMode())
@@ -54,7 +59,14 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
+
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+	Input_SetTouchMode(true);
 	
+	Window_Alt.Width  = 854;
+	Window_Alt.Height = 480;
+		
+	KPADInit();
 	VPADInit();
 }
 
@@ -75,6 +87,28 @@ void Window_Create3D(int width, int height) {
 
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
+}
+
+
+static void ProcessKPAD(double delta) {
+	KPADStatus kpad = { 0 };
+	int res = KPADRead(0, &kpad, 1);
+	if (res != KPAD_ERROR_OK) return;
+	
+	switch (kpad.extensionType)
+	{
+	
+	}
+}
+
+
+#define AXIS_SCALE 4.0f
+static void ProcessVpadStick(int axis, float x, float y, double delta) {
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsF(x) <= 0.1f) x = 0;
+	if (Math_AbsF(y) <= 0.1f) y = 0;
+	
+	Gamepad_SetAxis(axis, x * AXIS_SCALE, -y * AXIS_SCALE, delta);
 }
    
 static void ProcessVpadButtons(int mods) {
@@ -98,6 +132,35 @@ static void ProcessVpadButtons(int mods) {
 	
 }
 
+static void ProcessVpadTouch(VPADTouchData* data) {
+	static int was_touched;
+
+	// TODO rescale to main screen size
+	if (data->touched) {
+		int x = data->x, y = data->y;
+		Platform_Log2("TOUCH: %i, %i", &x, &y);
+		Input_AddTouch(0,    data->x,       data->y);
+	} else if (was_touched) {
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
+	}
+	was_touched = data->touched;
+}
+
+static void ProcessVPAD(double delta) {
+	VPADStatus vpadStatus;
+	VPADReadError error = VPAD_READ_SUCCESS;
+	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
+	if (error != VPAD_READ_SUCCESS) return;
+	
+	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
+	ProcessVpadButtons(vpadStatus.hold);
+	ProcessVpadTouch(&vpadStatus.tpNormal);
+	
+	ProcessVpadStick(PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
+	ProcessVpadStick(PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
+}
+
+
 void Window_ProcessEvents(double delta) {
 	Input.JoystickMovement = false;
 	
@@ -107,13 +170,8 @@ void Window_ProcessEvents(double delta) {
 		return;
 	}
 	
-	VPADStatus vpadStatus;
-	VPADReadError error = VPAD_READ_SUCCESS;
-	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
-	if (error != VPAD_READ_SUCCESS) return;
-	
-	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
-	ProcessVpadButtons(vpadStatus.hold);
+	ProcessVPAD(delta);
+	ProcessKPAD(delta);
 }
 
 void Window_UpdateRawMouse(void) { }
@@ -132,19 +190,30 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	//OSScreenClearBufferEx(SCREEN_TV, 0x665544FF);
+	if (launcherTop) return; // TODO: Draw on DRC properly
    
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	/*for (int y = r.y; y < r.y + r.height; y++) 
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		
-		for (int x = r.x; x < r.x + r.Width; x++) {
+		for (int x = r.x; x < r.x + r.width; x++) {
+			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
+		}
+	}*/
+	for (int y = 0; y < bmp->height; y++) 
+	{
+		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) {
 			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
 		}
 	}
 
 	//DCFlushRange(sBufferTV, sBufferSizeTV);
 	OSScreenFlipBuffersEx(SCREEN_TV);
+	
+	OSScreenClearBufferEx(SCREEN_DRC, Launcher_Theme.BackgroundColor);
+	OSScreenFlipBuffersEx(SCREEN_DRC);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
@@ -169,9 +238,11 @@ void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */

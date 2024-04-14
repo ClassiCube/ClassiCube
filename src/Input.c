@@ -432,17 +432,17 @@ void Gamepad_SetButton(int btn, int pressed) {
 }
 
 void Gamepad_SetAxis(int axis, float x, float y, double delta) {
-	if (!Input.RawMode) return;
+	if (x == 0 && y == 0) return;
+
+	int sensi   = Gamepad_AxisSensitivity[axis];
+	float scale = delta * 60.0 * axis_sensiFactor[sensi];
+	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, axis, x * scale, y * scale);
 
 	if (Gamepad_AxisBehaviour[axis] == AXIS_BEHAVIOUR_MOVEMENT) {
-		if (x == 0 && y == 0) return;
+		if (!Input.RawMode) return;
 
 		Input.JoystickMovement = true;
-		Input.JoystickAngle    = Math_Atan2(x, -y);
-	} else {
-		int sensi   = Gamepad_AxisSensitivity[axis];
-		float scale = delta * 60.0 * axis_sensiFactor[sensi];
-		Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);
+		Input.JoystickAngle    = Math_Atan2(x, y);
 	}
 }
 
@@ -708,7 +708,7 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 	struct LocationUpdate update;
 
 	/* Offset position by the closest face */
-	closestFace = Game_SelectedPos.Closest;
+	closestFace = Game_SelectedPos.closest;
 	if (closestFace == FACE_XMAX) {
 		pos.x = blockBB->Max.x + 0.5f;
 	} else if (closestFace == FACE_ZMAX) {
@@ -772,7 +772,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	/* Non solid blocks (e.g. water/flowers) can always be placed on players */
 	if (Blocks.Collide[block] != COLLIDE_SOLID) return true;
 
-	IVec3_ToVec3(&pos, &Game_SelectedPos.TranslatedPos);
+	IVec3_ToVec3(&pos, &Game_SelectedPos.translatedPos);
 	if (IntersectsOthers(pos, block)) return false;
 	
 	nextPos = LocalPlayer_Instance.Base.next.pos;
@@ -808,7 +808,7 @@ void InputHandler_DeleteBlock(void) {
 	HeldBlockRenderer_ClickAnim(true);
 
 	pos = Game_SelectedPos.pos;
-	if (!Game_SelectedPos.Valid || !World_Contains(pos.x, pos.y, pos.z)) return;
+	if (!Game_SelectedPos.valid || !World_Contains(pos.x, pos.y, pos.z)) return;
 
 	old = World_GetBlock(pos.x, pos.y, pos.z);
 	if (Blocks.Draw[old] == DRAW_GAS || !Blocks.CanDelete[old]) return;
@@ -820,8 +820,8 @@ void InputHandler_DeleteBlock(void) {
 void InputHandler_PlaceBlock(void) {
 	IVec3 pos;
 	BlockID old, block;
-	pos = Game_SelectedPos.TranslatedPos;
-	if (!Game_SelectedPos.Valid || !World_Contains(pos.x, pos.y, pos.z)) return;
+	pos = Game_SelectedPos.translatedPos;
+	if (!Game_SelectedPos.valid || !World_Contains(pos.x, pos.y, pos.z)) return;
 
 	old   = World_GetBlock(pos.x, pos.y, pos.z);
 	block = Inventory_SelectedBlock;
@@ -1056,28 +1056,6 @@ static cc_bool HandleLocalPlayerKey(int key) {
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
 *#########################################################################################################################*/
-static void OnMouseWheel(void* obj, float delta) {
-	struct Screen* s;
-	int i;
-	
-	for (i = 0; i < Gui.ScreensCount; i++) {
-		s = Gui_Screens[i];
-		s->dirty = true;
-		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
-	}
-}
-
-static void OnPointerMove(void* obj, int idx) {
-	struct Screen* s;
-	int i, x = Pointers[idx].x, y = Pointers[idx].y;
-
-	for (i = 0; i < Gui.ScreensCount; i++) {
-		s = Gui_Screens[i];
-		s->dirty = true;
-		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
-	}
-}
-
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x, y, mask;
@@ -1128,6 +1106,7 @@ static void OnPointerUp(void* obj, int idx) {
 static void OnInputDown(void* obj, int key, cc_bool was) {
 	struct Screen* s;
 	int i;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 #ifndef CC_BUILD_WEB
 	if (Input_IsEscapeButton(key) && (s = Gui_GetClosable())) {
@@ -1199,12 +1178,10 @@ static void OnInputUp(void* obj, int key) {
 
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
 static void OnInit(void) {
-	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);
 	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
-	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
 
 	Event_Register_(&WindowEvents.FocusChanged,   NULL, OnFocusChanged);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);
