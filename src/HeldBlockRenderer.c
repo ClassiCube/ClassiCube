@@ -32,7 +32,6 @@ static void SetHeldModel(struct Model* model) {
 }
 
 static void HeldBlockRenderer_RenderModel(void) {
-	static const cc_string block = String_FromConst("block");
 	struct Model* model;
 
 	Gfx_SetFaceCulling(true);
@@ -48,7 +47,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {	
-		model = Model_Get(&block);
+		model = Models.Block;
 		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
 

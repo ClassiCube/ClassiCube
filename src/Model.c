@@ -2218,6 +2218,7 @@ static void BlockModel_Register(void) {
 	block_model.pushes      = false;
 	block_model.maxVertices = BLOCKMODEL_MAX_VERTICES;
 	Model_Register(&block_model);
+	Models.Block = &block_model;
 }
 
 

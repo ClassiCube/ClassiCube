@@ -112,8 +112,10 @@ CC_VAR extern struct _ModelsData {
 	/* Maximum number of vertices that can be stored in Vertices. */
 	/* NOTE: If you change this, you MUST also destroy and recreate the dynamic VB. */
 	int MaxVertices;
-	/* Pointer to humanoid/human model.*/
+	/* Pointer to humanoid/human model */
 	struct Model* Human;
+	/* Pointer to block model */
+	struct Model* Block;
 } Models;
 
 /* Initialises fields of a model to default. */

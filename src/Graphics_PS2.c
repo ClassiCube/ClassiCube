@@ -198,10 +198,6 @@ static int BINDS;
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
-	Platform_Log2("BIND: %i x %i", &tex->width, &tex->height);
-	// TODO
-	if (BINDS) return;
-	BINDS = 1;
 	
 	texbuffer_t texbuf;
 	texbuf.width   = max(256, tex->width);
@@ -209,9 +205,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	
 	// TODO terrible perf
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	//
+	dma_wait_fast();
 	
 	packet_t *packet = packet_init(200, PACKET_NORMAL);
 
@@ -223,13 +218,11 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	dma_channel_send_chain(DMA_CHANNEL_GIF,packet->data, Q - packet->data, 0,0);
 	dma_wait_fast();
 
-	//packet_free(packet);
+	packet_free(packet);
 	
 	// TODO terrible perf
 	q = dma_tag + 1;
 	UpdateTextureBuffer(0, &texbuf, tex);
-	
-	Platform_LogConst("=====");
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
