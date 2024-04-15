@@ -381,6 +381,7 @@ void Window_Init(void) {
     // keyboard now shifts up
     Window_Main.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
+    Gui_SetTouchUI(true);
     Input.Sources = INPUT_SOURCE_NORMAL;
     
     DisplayInfo.Depth  = 32;
