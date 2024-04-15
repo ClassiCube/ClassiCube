@@ -1516,6 +1516,380 @@ cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
+#elif defined CC_BUILD_SDL2
+/*########################################################################################################################*
+*----------------------------------------------------OS/2 backend---------------------------------------------------*
+*#########################################################################################################################*/
+#define INCL_BASE
+#define INCL_MCIOS2
+#define INCL_OS2MM
+#define INCL_DOSSEMAPHORES
+#include <os2.h>
+#include <os2me.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define NUM_BUFFERS  4
+#define SIZE_BUFFERS 4096
+#define AUDIO_COMMON_ALLOC
+
+struct AudioContext { 
+	int 								count;
+	int									volume;
+};
+
+typedef struct DeviceContext {
+	CHAR 								productInfo[MAX_PRODINFO];
+	USHORT              usDeviceId;
+	BYTE                _pad[2];
+	HEV                 hevBuf;
+	ULONG               ulState;
+	cc_bool							initRun;
+	PMCI_MIX_BUFFER     pFillBuffer;
+  PMCI_MIX_BUFFER     pDrainBuffer;
+  ULONG               cMixBuffers;
+  MCI_MIX_BUFFER      aMixBuffers[NUM_BUFFERS];	
+  MCI_MIXSETUP_PARMS  stMCIMixSetup;
+} DeviceContext;
+
+DeviceContext devicecontext;
+
+// get next buffer
+static PMCI_MIX_BUFFER _getNextBuffer(PMCI_MIX_BUFFER pBuffer)
+{
+    PMCI_MIX_BUFFER pFirstBuffer = &devicecontext.aMixBuffers[0];
+    PMCI_MIX_BUFFER pLastBuffer = &devicecontext.aMixBuffers[devicecontext.cMixBuffers - 1];
+    return (pBuffer == pLastBuffer ? pFirstBuffer : pBuffer + 1);
+}
+
+/* Playback callback function */
+static LONG APIENTRY cbAudioWriteEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer, ULONG ulFlags)
+{
+    ULONG   ulRC;
+
+    //debug(SDL_LOG_CATEGORY_AUDIO,"cbAudioWriteEvent: ulStatus = %lu, pBuffer = %p, ulFlags = %#lX",ulStatus,pBuffer,ulFlags);
+
+    if (devicecontext.ulState == 2) return 0;
+
+    if (ulFlags != MIX_WRITE_COMPLETE) return 0;
+
+    devicecontext.pDrainBuffer = pBuffer;
+    ulRC = devicecontext.stMCIMixSetup.pmixWrite(
+    	devicecontext.stMCIMixSetup.ulMixHandle,
+    	devicecontext.pDrainBuffer, 1
+		);
+    if (ulRC != MCIERR_SUCCESS) {
+        Logger_SimpleWarn(ulRC, "Write to audio mixer failed");
+        return 0;
+    }
+
+    ulRC = DosPostEventSem(devicecontext.hevBuf);
+    if (ulRC != NO_ERROR && ulRC != ERROR_ALREADY_POSTED) {
+    	Logger_SimpleWarn(ulRC, "Semaphore: post event failed");
+    }
+
+    return 1; /* return value doesn't seem to matter. */
+}
+
+cc_bool AudioBackend_Init(void) { 
+	MCI_SYSINFO_PARMS       stMCISysInfo;
+	CHAR                    acBuf[256];
+	ULONG                   ulDevicesNum;
+	MCI_SYSINFO_LOGDEVICE   stLogDevice;
+	MCI_SYSINFO_PARMS       stSysInfoParams;
+	ULONG                   ulRC;
+	ULONG                   ulNumber;
+	MCI_GENERIC_PARMS       stMCIGenericParms;
+	MCI_AMP_OPEN_PARMS      stMCIAmpOpen;
+	MCI_BUFFER_PARMS        stMCIBuffer;
+	MCI_SET_PARMS      			msp;
+
+	if (devicecontext.initRun && devicecontext.usDeviceId != (USHORT)~0) { /* Device is already open. */
+		return true;
+	}
+	
+	devicecontext.usDeviceId = (USHORT)~0;
+	devicecontext.initRun = true;
+	Mem_Set(&stMCISysInfo, 0, sizeof(stMCISysInfo));
+	Mem_Set(&stLogDevice, 0, sizeof(MCI_SYSINFO_LOGDEVICE));
+	
+	acBuf[0] = '\0';
+	stMCISysInfo.pszReturn    = acBuf;
+	stMCISysInfo.ulRetSize    = sizeof(acBuf);
+	stMCISysInfo.usDeviceType = MCI_DEVTYPE_AUDIO_AMPMIX;
+	ulRC = mciSendCommand(0, MCI_SYSINFO, MCI_WAIT | MCI_SYSINFO_QUANTITY, &stMCISysInfo, 0);
+	if (LOUSHORT(ulRC) != MCIERR_SUCCESS) return ulRC;
+
+	ulDevicesNum = strtoul(stMCISysInfo.pszReturn, NULL, 10);
+
+	for (ulNumber = 1; ulNumber <= ulDevicesNum; ulNumber++) {
+		/* Get device install name. */
+		stSysInfoParams.ulNumber     = ulNumber;
+		stSysInfoParams.pszReturn    = acBuf;
+		stSysInfoParams.ulRetSize    = sizeof(acBuf);
+		stSysInfoParams.usDeviceType = MCI_DEVTYPE_AUDIO_AMPMIX;
+		ulRC = mciSendCommand(0, MCI_SYSINFO, MCI_WAIT | MCI_SYSINFO_INSTALLNAME, &stSysInfoParams, 0);
+		if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			Logger_SimpleWarn(LOUSHORT(ulRC), "Querying device type failed");
+			continue;
+		}
+	
+		/* Get textual product description. */
+		stSysInfoParams.ulItem = MCI_SYSINFO_QUERY_DRIVER;
+		stSysInfoParams.pSysInfoParm = &stLogDevice;
+		Mem_Copy(stLogDevice.szInstallName, stSysInfoParams.pszReturn, MAX_DEVICE_NAME);
+		ulRC = mciSendCommand(0, MCI_SYSINFO, MCI_WAIT | MCI_SYSINFO_ITEM, &stSysInfoParams, 0);
+		if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			Logger_SimpleWarn(LOUSHORT(ulRC), "Querying device info failed");
+			continue;
+		}
+        
+    ulRC = DosCreateEventSem(NULL, &devicecontext.hevBuf, DCE_AUTORESET, TRUE);
+    if (ulRC != NO_ERROR) {
+      Logger_SimpleWarn(ulRC, "Creating semaphore failed");
+			continue;
+    }
+    
+    /* Open audio device */
+    stMCIAmpOpen.usDeviceID = 0;
+    stMCIAmpOpen.pszDeviceType = (PSZ)MAKEULONG(MCI_DEVTYPE_AUDIO_AMPMIX, 0);
+    ulRC = mciSendCommand(0, MCI_OPEN,
+      MCI_WAIT | MCI_OPEN_TYPE_ID | MCI_OPEN_SHAREABLE,
+      &stMCIAmpOpen,  0);
+    if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+        devicecontext.usDeviceId = (USHORT)~0;
+        Logger_SimpleWarn(LOUSHORT(ulRC), "Open audio device failed");
+        return false;
+    }
+    devicecontext.usDeviceId = stMCIAmpOpen.usDeviceID;
+
+    Mem_Set(&stMCIGenericParms, 0, sizeof(stMCIGenericParms));
+    ulRC = mciSendCommand(stMCIAmpOpen.usDeviceID, MCI_ACQUIREDEVICE,
+    	MCI_WAIT,&stMCIGenericParms,0);
+    if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+        devicecontext.usDeviceId = (USHORT)~0;
+        Logger_SimpleWarn(LOUSHORT(ulRC), "Acquiring audio device failed");
+        return false;
+    }
+
+    /* Setup mixer */
+    devicecontext.stMCIMixSetup.ulFormatTag     = MCI_WAVE_FORMAT_PCM;
+    devicecontext.stMCIMixSetup.ulBitsPerSample = 16;
+    devicecontext.stMCIMixSetup.ulSamplesPerSec = 48000;
+    devicecontext.stMCIMixSetup.ulChannels      = 2;
+    devicecontext.stMCIMixSetup.ulDeviceType    = MCI_DEVTYPE_WAVEFORM_AUDIO;
+    devicecontext.stMCIMixSetup.ulFormatMode		= MCI_PLAY;
+    devicecontext.stMCIMixSetup.pmixEvent   		= cbAudioWriteEvent;
+    ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_MIXSETUP,
+    	MCI_WAIT | MCI_MIXSETUP_INIT, &devicecontext.stMCIMixSetup, 0);
+    if (LOUSHORT(ulRC) != MCIERR_SUCCESS && devicecontext.stMCIMixSetup.ulSamplesPerSec > 44100) {
+        devicecontext.stMCIMixSetup.ulSamplesPerSec = 44100;
+        ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_MIXSETUP,
+        	MCI_WAIT | MCI_MIXSETUP_INIT, &devicecontext.stMCIMixSetup, 0);
+    }
+    if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+        devicecontext.stMCIMixSetup.ulBitsPerSample = 0;
+        Logger_SimpleWarn(LOUSHORT(ulRC), "Setting up mixer failed");
+        continue;
+    }
+
+    /* Allocate memory buffers */
+    stMCIBuffer.ulBufferSize = SIZE_BUFFERS;
+    stMCIBuffer.ulNumBuffers = NUM_BUFFERS;
+    stMCIBuffer.pBufList     = devicecontext.aMixBuffers;
+    ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_BUFFER,
+    	MCI_WAIT | MCI_ALLOCATE_MEMORY, &stMCIBuffer, 0);
+    if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+    	printf("buffer fail %d %x\n", LOUSHORT(ulRC),LOUSHORT(ulRC));
+    	Logger_SimpleWarn(LOUSHORT(ulRC), "Failed to allocate device buffers");
+    	continue;
+    }
+    devicecontext.cMixBuffers = stMCIBuffer.ulNumBuffers;
+
+    /* Fill all device buffers with data */
+    for (ulNumber = 0; ulNumber < stMCIBuffer.ulNumBuffers; ulNumber++) {
+        devicecontext.aMixBuffers[ulNumber].ulFlags        = 0;
+        devicecontext.aMixBuffers[ulNumber].ulBufferLength = stMCIBuffer.ulBufferSize;
+        //devicecontext.aMixBuffers[ulNumber].ulUserParm     = (ULONG)_this;
+
+        Mem_Set(((PMCI_MIX_BUFFER)stMCIBuffer.pBufList)[ulNumber].pBuffer,
+                   0, stMCIBuffer.ulBufferSize);
+    }
+    devicecontext.pFillBuffer  = devicecontext.aMixBuffers;
+    devicecontext.pDrainBuffer = devicecontext.aMixBuffers;  
+    
+    msp.ulLevel = 100;
+    msp.ulAudio = MCI_SET_AUDIO_ALL;
+    mciSendCommand(devicecontext.usDeviceId, MCI_SET,
+    	MCI_WAIT | MCI_SET_AUDIO | MCI_SET_VOLUME,
+    	(PVOID) &msp, 0);
+
+    return true;
+	}
+	
+	Logger_SimpleWarn(ERROR_BASE, "No audiodevice");
+	return false;
+}
+
+void AudioBackend_Free(void) {
+	MCI_GENERIC_PARMS     stMCIGenericParms;
+  ULONG                 ulRC;
+
+	devicecontext.ulState = 2;
+
+	/* Close up audio */
+	if (devicecontext.usDeviceId != (USHORT)~0) { /* Device is open. */
+		Mem_Set(&stMCIGenericParms, 0, sizeof(MCI_GENERIC_PARMS));
+
+		ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_STOP,
+			MCI_WAIT, &stMCIGenericParms, 0);
+		if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			Logger_SimpleWarn(ulRC, "Stopping playback failed");
+		}
+
+		Mem_Set(&stMCIGenericParms, 0, sizeof(MCI_GENERIC_PARMS));
+		ulRC = mciSendCommand(devicecontext.usDeviceId,MCI_RELEASEDEVICE,
+			MCI_WAIT, &stMCIGenericParms, 0);
+		if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			Logger_SimpleWarn(ulRC, "Releasing audio device failed");
+		}
+		
+		if (devicecontext.stMCIMixSetup.ulBitsPerSample != 0) { 
+			/* Mixer was initialized. */
+			ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_MIXSETUP,
+				MCI_WAIT | MCI_MIXSETUP_DEINIT, &devicecontext.stMCIMixSetup, 0);
+			if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+				Logger_SimpleWarn(ulRC, "Closing mixer failed");
+			}
+		}
+
+		if (devicecontext.cMixBuffers != 0) { /* Buffers was allocated. */
+			MCI_BUFFER_PARMS    stMCIBuffer;
+
+			stMCIBuffer.ulBufferSize = devicecontext.aMixBuffers[0].ulBufferLength;
+			stMCIBuffer.ulNumBuffers = devicecontext.cMixBuffers;
+			stMCIBuffer.pBufList = devicecontext.aMixBuffers;
+
+			ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_BUFFER,
+				MCI_WAIT | MCI_DEALLOCATE_MEMORY, &stMCIBuffer, 0);
+			if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+				Logger_SimpleWarn(ulRC, "Deallocating buffers failed");
+			}
+		}
+		ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_CLOSE, MCI_WAIT,
+			&stMCIGenericParms, 0);
+		if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			Logger_SimpleWarn(ulRC, "Closing audio device failed");
+		}
+	}
+
+	if (devicecontext.hevBuf != NULLHANDLE)
+			DosCloseEventSem(devicecontext.hevBuf);
+
+	Mem_Set(&devicecontext, 0, sizeof(DeviceContext));
+	devicecontext.usDeviceId = (USHORT)~0;
+	devicecontext.initRun = false;
+}
+
+void AudioBackend_Tick(void) { }
+
+cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
+
+    printf("audio_init %p\n", ctx);
+    return 0;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+
+	printf("Audio_Close %p\n", ctx);
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate) {
+	ULONG ulRC;
+	MCI_BUFFER_PARMS stMCIBuffer;
+	int newsamplerate = Audio_AdjustSampleRate(sampleRate, playbackRate);
+	
+	printf("Audio_SetFormat %d %d %d %d\n",channels,sampleRate,playbackRate, newsamplerate);
+	// Checking whether to change anything at all.
+	if (devicecontext.stMCIMixSetup.ulSamplesPerSec == newsamplerate &&
+		devicecontext.stMCIMixSetup.ulChannels == channels) return 0;	
+	
+	// Deinit mixer and buffers first
+	if (devicecontext.stMCIMixSetup.ulBitsPerSample != 0) { 
+		/* Mixer was initialized. */
+		ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_MIXSETUP,
+			MCI_WAIT | MCI_MIXSETUP_DEINIT,	&devicecontext.stMCIMixSetup, 0);
+		if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			return ulRC;
+		}
+	}
+	
+	// Then set the new format.
+	Mem_Set(&devicecontext.stMCIMixSetup, 0, sizeof(MCI_MIXSETUP_PARMS));
+	devicecontext.stMCIMixSetup.ulSamplesPerSec = newsamplerate;
+	devicecontext.stMCIMixSetup.ulChannels      = channels;
+	devicecontext.stMCIMixSetup.ulFormatTag     = MCI_WAVE_FORMAT_PCM;
+	devicecontext.stMCIMixSetup.ulBitsPerSample = 16;
+	devicecontext.stMCIMixSetup.ulSamplesPerSec = newsamplerate;
+	devicecontext.stMCIMixSetup.ulChannels      = channels;
+	devicecontext.stMCIMixSetup.ulDeviceType    = MCI_DEVTYPE_WAVEFORM_AUDIO;
+	devicecontext.stMCIMixSetup.ulFormatMode		= MCI_PLAY;
+	devicecontext.stMCIMixSetup.pmixEvent   		= cbAudioWriteEvent;
+	ulRC = mciSendCommand(devicecontext.usDeviceId, MCI_MIXSETUP,
+		MCI_WAIT | MCI_MIXSETUP_INIT, &devicecontext.stMCIMixSetup, 0);
+	if (LOUSHORT(ulRC) != MCIERR_SUCCESS) {
+			devicecontext.stMCIMixSetup.ulBitsPerSample = 0;
+			printf("setup mixer %u\n", LOUSHORT(ulRC));
+			return ulRC;
+	}
+	printf("set format %p\n", ctx);
+	return 0;
+}
+
+void Audio_SetVolume(struct AudioContext* ctx, int volume) {
+	ctx->volume = volume;
+printf("Audio_SetVolume %p\n",ctx);
+}
+
+cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+printf("Audio_QueueChunk %p\n",ctx);
+	return 0;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+printf("Audio_Play%p\n", ctx);
+	return 0;
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+printf("Audio_Poll %p\n",ctx);
+	return 0;
+}
+
+static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) { 
+printf("Audio_FastPlay %p\n",ctx);
+	return false; 
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	CHAR buffer[128];
+	if (mciGetErrorString(res, buffer, 128) == MCIERR_SUCCESS) {
+		String_DecodeCP1252(dst, buffer, strlen(buffer));
+	}
+	else
+		// TODO Query more error messages.
+		*dst = String_FromReadonly("Unknown Error");
+	return true; 
+}
+
+cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
+	return AudioBase_AllocChunks(size, chunks, numChunks);
+}
+
+void Audio_FreeChunks(void** chunks, int numChunks) {
+	AudioBase_FreeChunks(chunks, numChunks);
+}
 #else
 /*########################################################################################################################*
 *----------------------------------------------------Null/Empty backend---------------------------------------------------*
