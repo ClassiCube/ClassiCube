@@ -339,6 +339,7 @@ void LInput_Add(void* screen, struct LInput* w, int width, const char* hintText,
 	w->opaque  = true;
 	w->layouts = layouts;
 
+	/* Preserve existing input across Add calls */
 	if (!w->text.buffer) {
 		String_InitArray(w->text, w->_textBuffer);
 	}

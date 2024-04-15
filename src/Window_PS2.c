@@ -175,7 +175,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
 	FlushCache(0);
 	
-	packet_t* packet = packet_init(50,PACKET_NORMAL);
+	packet_t* packet = packet_init(50, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
 	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 

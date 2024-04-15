@@ -239,11 +239,12 @@ struct ListScreen;
 static struct ListScreen {
 	Screen_Body
 	struct ButtonWidget btns[LIST_SCREEN_ITEMS];
-	struct ButtonWidget left, right, done, upload;
+	struct ButtonWidget left, right, done, action;
 	struct FontDesc font;
 	float wheelAcc;
 	int currentIndex;
-	Widget_LeftClick EntryClick, DoneClick, UploadClick;
+	Widget_LeftClick EntryClick, DoneClick, ActionClick;
+	const char* actionText;
 	void (*LoadEntries)(struct ListScreen* s);
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const cc_string* text);
 	const char* titleText;
@@ -263,12 +264,12 @@ static void ListScreen_Layout(void* screen) {
 			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	}
 
-	if (s->UploadClick && Input_TouchMode) {
+	if (s->ActionClick && Input_TouchMode) {
 		Widget_SetLocation(&s->done,   ANCHOR_CENTRE_MIN, ANCHOR_MAX, -150, 25);
-		Widget_SetLocation(&s->upload, ANCHOR_CENTRE_MAX, ANCHOR_MAX, -150, 25);
+		Widget_SetLocation(&s->action, ANCHOR_CENTRE_MAX, ANCHOR_MAX, -150, 25);
 	} else {
 		Widget_SetLocation(&s->done,   ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
-		Widget_SetLocation(&s->upload, ANCHOR_CENTRE, ANCHOR_MAX, 0, 70);
+		Widget_SetLocation(&s->action, ANCHOR_CENTRE, ANCHOR_MAX, 0, 70);
 	}
 
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
@@ -402,10 +403,12 @@ static void ListScreen_Init(void* screen) {
 		ButtonWidget_Add(s, &s->btns[i], 300, s->EntryClick);
 		s->btns[i].meta.val = i;
 	}
-	width = s->UploadClick && Input_TouchMode ? 140 : 400;
+	width = s->ActionClick && Input_TouchMode ? 140 : 400;
 
-	if (s->UploadClick) {
-		ButtonWidget_Add(s, &s->upload, width, s->UploadClick);
+	if (s->ActionClick) {
+		ButtonWidget_Add(s, &s->action, width, s->ActionClick);
+	} else {
+		ButtonWidget_Init(  &s->action, width, s->ActionClick);
 	}
 
 	ButtonWidget_Add(s, &s->left,  40, ListScreen_MoveBackwards);
@@ -444,12 +447,8 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->done, "Done", &s->font);
 	ListScreen_UpdatePage(s);
 
-	if (!s->UploadClick) return;
-#ifdef CC_BUILD_WEB
-	ButtonWidget_SetConst(&s->upload, "Upload", &s->font);
-#else
-	ButtonWidget_SetConst(&s->upload, "Load file...", &s->font);
-#endif
+	if (!s->ActionClick) return;
+	ButtonWidget_SetConst(&s->action, s->actionText, &s->font);
 }
 
 static void ListScreen_Reload(struct ListScreen* s) {
@@ -1369,11 +1368,7 @@ static struct SaveLevelScreen {
 	struct TextWidget desc;
 } SaveLevelScreen;
 
-static struct Widget* save_widgets[] = {
-	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.file,
-	(struct Widget*)&SaveLevelScreen.cancel,
-	(struct Widget*)&SaveLevelScreen.input,  (struct Widget*)&SaveLevelScreen.desc,
-};
+static struct Widget* save_widgets[5];
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
@@ -1547,15 +1542,16 @@ static void SaveLevelScreen_Init(void* screen) {
 	struct MenuInputDesc desc;
 	
 	s->widgets     = save_widgets;
-	s->numWidgets  = Array_Elems(save_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(save_widgets);
 	MenuInput_Path(desc);
 	
-	ButtonWidget_Init(&s->save, 400, SaveLevelScreen_Save);
-	ButtonWidget_Init(&s->file, 400, SaveLevelScreen_File);
+	ButtonWidget_Add(s, &s->save, 400, SaveLevelScreen_Save);
+	ButtonWidget_Add(s, &s->file, 400, SaveLevelScreen_File);
 
-	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchPause);
-	TextInputWidget_Create(&s->input, 400, &World.Name, &desc);
-	TextWidget_Init(&s->desc);
+	ButtonWidget_Add(s, &s->cancel, 400, Menu_SwitchPause);
+	TextInputWidget_Add(s, &s->input, 400, &World.Name, &desc);
+	TextWidget_Add(s, &s->desc);
 	s->input.onscreenPlaceholder = "Map name";
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
@@ -1623,7 +1619,7 @@ static void TexturePackScreen_UploadCallback(const cc_string* path) {
 	TexturePack_ExtractCurrent(true);
 }
 
-static void TexturePackScreen_UploadFunc(void* s, void* w) {
+static void TexturePackScreen_ActionFunc(void* s, void* w) {
 	static const char* const filters[] = { 
 		".zip", NULL 
 	};
@@ -1640,7 +1636,13 @@ static void TexturePackScreen_UploadFunc(void* s, void* w) {
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a texture pack";
-	s->UploadClick = TexturePackScreen_UploadFunc;
+#ifdef CC_BUILD_WEB
+	s->actionText = "Upload";
+#else
+	s->actionText = "Load file...";
+#endif
+
+	s->ActionClick = TexturePackScreen_ActionFunc;
 	s->LoadEntries = TexturePackScreen_LoadEntries;
 	s->EntryClick  = TexturePackScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1686,7 +1688,7 @@ static void FontListScreen_LoadEntries(struct ListScreen* s) {
 void FontListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a font";
-	s->UploadClick = NULL;
+	s->ActionClick = NULL;
 	s->LoadEntries = FontListScreen_LoadEntries;
 	s->EntryClick  = FontListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchGui;
@@ -1707,9 +1709,6 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	int i, mods = 0;
 
 	text = ListScreen_UNSAFE_GetCur(s, widget);
-	if (!text.length) {
-		EditHotkeyScreen_Show(original); return;
-	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
 	if (String_ContainsConst(&value, "Ctrl"))  mods |= HOTKEY_MOD_CTRL;
@@ -1748,24 +1747,24 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 		}
 		StringsBuffer_Add(&s->entries, &text);
 	}
-
-	/* Placeholder for 'add new hotkey' */
-	StringsBuffer_Add(&s->entries, &String_Empty);
 	StringsBuffer_Sort(&s->entries);
 }
 
 static void HotkeyListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {
-	if (text->length) {
-		ButtonWidget_Set(button, text, &s->font);
-	} else {
-		ButtonWidget_SetConst(button, "New hotkey...", &s->font);
-	}
+	if (text->length) ButtonWidget_Set(button, text, &s->font);
+}
+
+static void HotkeyListScreen_ActionFunc(void* s, void* w) {
+	struct HotkeyData original = { 0 };
+	EditHotkeyScreen_Show(original);
 }
 
 void HotkeyListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Modify hotkeys";
-	s->UploadClick = NULL;
+	s->actionText  = "New hotkey...";
+	
+	s->ActionClick = HotkeyListScreen_ActionFunc;
 	s->LoadEntries = HotkeyListScreen_LoadEntries;
 	s->EntryClick  = HotkeyListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1809,7 +1808,7 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 }
 
 static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom(path); }
-static void LoadLevelScreen_UploadFunc(void* s, void* w) {
+static void LoadLevelScreen_ActionFunc(void* s, void* w) {
 	static const char* const filters[] = { 
 		".cw", ".dat", ".lvl", ".mine", ".fcm", ".mclevel", NULL 
 	}; /* TODO not hardcode list */
@@ -1826,7 +1825,13 @@ static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Load level";
-	s->UploadClick = LoadLevelScreen_UploadFunc;
+#ifdef CC_BUILD_WEB
+	s->actionText = "Upload";
+#else
+	s->actionText = "Load file...";
+#endif
+	
+	s->ActionClick = LoadLevelScreen_ActionFunc;
 	s->LoadEntries = LoadLevelScreen_LoadEntries;
 	s->EntryClick  = LoadLevelScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -2225,10 +2230,7 @@ static struct MenuInputOverlay {
 	cc_string value; char valueBuffer[STRING_SIZE];
 } MenuInputOverlay;
 
-static struct Widget* menuInput_widgets[] = {
-	(struct Widget*)&MenuInputOverlay.ok,   (struct Widget*)&MenuInputOverlay.Default, 
-	(struct Widget*)&MenuInputOverlay.input
-};
+static struct Widget* menuInput_widgets[3];
 
 static void MenuInputOverlay_Close(struct MenuInputOverlay* s, cc_bool valid) {
 	Gui_Remove((struct Screen*)&MenuInputOverlay);
@@ -2289,11 +2291,12 @@ static void MenuInputOverlay_Default(void* screen, void* widget) {
 static void MenuInputOverlay_Init(void* screen) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	s->widgets     = menuInput_widgets;
-	s->numWidgets  = Array_Elems(menuInput_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(menuInput_widgets);
 
-	TextInputWidget_Create(&s->input,           400, &s->value, s->desc);
-	ButtonWidget_Init(&s->Default,              200, MenuInputOverlay_Default);
-	ButtonWidget_Init(&s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
+	ButtonWidget_Add(s,    &s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
+	ButtonWidget_Add(s,    &s->Default,              200, MenuInputOverlay_Default);
+	TextInputWidget_Add(s, &s->input,                400, &s->value, s->desc);
 
 	if (s->desc->VTABLE == &IntInput_VTABLE) {
 		s->input.onscreenType = KEYBOARD_TYPE_INTEGER;

@@ -1738,6 +1738,11 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 	w->onscreenType        = KEYBOARD_TYPE_TEXT;
 }
 
+void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d) {
+	TextInputWidget_Create(w, width, text, d);
+	AddWidget(screen, w);
+}
+
 void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font) {
 	w->base.font       = font;
 	w->base.lineHeight = Font_CalcHeight(font, false);

@@ -13,6 +13,7 @@
 #include <xenos/edram.h>
 #include <console/console.h>
 #include <network/network.h>
+#include <ppc/timebase.h>
 #include <time/time.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -63,16 +64,11 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg);
+	return tb_diff_usec(end, beg);
 }
 
-#define US_PER_SEC 1000000ULL
 cc_uint64 Stopwatch_Measure(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return cur.tv_sec * US_PER_SEC + cur.tv_usec;
-	// TODO: <ppc/timebase.h>
-	// mftb()-beg)/PPC_TIMEBASE_FREQ));
+	return mftb();
 }
 
 
