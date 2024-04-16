@@ -17,6 +17,33 @@
 #include "Chat.h" /* TODO avoid this include */
 #include "Errors.h"
 
+/* Simple fallback terrain for when no texture packs are available at all */
+static BitmapCol fallback_terrain[16 * 8] = {
+	BitmapColor_RGB( 96, 144,  85), BitmapColor_RGB(129, 128, 127), BitmapColor_RGB(123,  87,  66), BitmapColor_RGB(174, 124,  74), BitmapColor_RGB(184, 151, 105), BitmapColor_RGB(200, 200, 197), BitmapColor_RGB(175, 173, 173), BitmapColor_RGB(153, 101,  75), 
+	BitmapColor_RGB(118, 111, 101), BitmapColor_RGB( 61,  20,  11), BitmapColor_RGB(179,  67,  23), BitmapColor_RGB(154, 128,  89), BitmapColor_RGB(163,   2,  29), BitmapColor_RGB(203, 206,   2), BitmapCol_Make(86,144,216,128), BitmapColor_RGB( 38,  88,  41),
+	/* 16*/
+	BitmapColor_RGB(165, 163, 159), BitmapColor_RGB( 37,  48,  61), BitmapColor_RGB(227, 223, 151), BitmapColor_RGB(160, 152, 147), BitmapColor_RGB( 90,  71,  58), BitmapColor_RGB(173, 135,  87), BitmapColor_RGB( 38,  98,  37), BitmapColor_RGB(225, 229, 235), 
+	BitmapColor_RGB(246, 231,  23), BitmapColor_RGB(225, 218, 157), BitmapColor_RGB(247, 243, 234), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB(226,  18,  18), BitmapColor_RGB(172, 131, 101), BitmapColor_RGB(255, 122,  31), BitmapColor_RGB( 79, 120,  79),
+	/* 32 */
+	BitmapColor_RGB(129, 128, 127), BitmapColor_RGB(189, 151, 134), BitmapColor_RGB( 53,  44,  61), BitmapColor_RGB(180, 151, 102), BitmapColor_RGB(165, 163, 159), BitmapColor_RGB( 20,  20,  33), BitmapColor_RGB(243, 139,  28), BitmapColor_RGB(193, 197, 202), 
+	BitmapColor_RGB(235, 188,  32), BitmapColor_RGB(203, 193, 135), BitmapColor_RGB(224, 220, 212), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB(174, 124,  74),
+	/* 48 */
+	BitmapColor_RGB(175, 148,  43), BitmapColor_RGB(188, 225, 231), BitmapColor_RGB(238, 245, 245), BitmapCol_Make(205,232,252,128),BitmapColor_RGB(153, 150, 149), BitmapColor_RGB(105,  80,  54), BitmapColor_RGB(236, 236, 240), BitmapColor_RGB(161, 165, 170),
+	BitmapColor_RGB(225, 146,  30), BitmapColor_RGB(203, 193, 135), BitmapColor_RGB(247, 243, 234), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158),
+	/* 64 */
+	BitmapColor_RGB(217,  35,  35), BitmapColor_RGB(219, 137,  13), BitmapColor_RGB(224, 224,   0), BitmapColor_RGB(128, 221,   2), BitmapColor_RGB( 13, 217,  13), BitmapColor_RGB(  8, 218, 133), BitmapColor_RGB(  4, 219, 219), BitmapColor_RGB( 89, 175, 219),
+	BitmapColor_RGB(122, 122, 217), BitmapColor_RGB(131,  39, 225), BitmapColor_RGB(178,  69, 230), BitmapColor_RGB(227,  52, 227), BitmapColor_RGB(227,  41, 133), BitmapColor_RGB( 73,  73,  73), BitmapColor_RGB(151, 151, 151), BitmapColor_RGB(227, 227, 227),
+	/* 80 */
+	BitmapColor_RGB(220, 127, 162), BitmapColor_RGB( 42,  66,   8), BitmapColor_RGB( 75,  37,  11), BitmapColor_RGB( 24,  37, 149), BitmapColor_RGB( 29, 113, 149), BitmapColor_RGB(155, 161, 174), BitmapColor_RGB(167,  41,  13), BitmapColor_RGB( 57, 115, 158), 
+	BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158),
+	/* 96 */
+	BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), 
+	BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134),
+	/* 112 */
+	BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), 
+	BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158), BitmapColor_RGB( 52,  90, 134), BitmapColor_RGB( 57, 115, 158),
+};
+
 /*########################################################################################################################*
 *------------------------------------------------------TerrainAtlas-------------------------------------------------------*
 *#########################################################################################################################*/
@@ -123,7 +150,9 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 }
 
 static void Atlas2D_Free(void) {
-	Mem_Free(Atlas2D.Bmp.scan0);
+	if (Atlas2D.Bmp.scan0 != fallback_terrain)
+		Mem_Free(Atlas2D.Bmp.scan0);
+
 	Atlas2D.Bmp.scan0 = NULL;
 	Atlas2D.RowsCount = 0;
 }
@@ -481,6 +510,15 @@ cc_result TexturePack_ExtractCurrent(cc_bool forceReload) {
 
 		/* No point logging error for closing readonly file */
 		(void)stream.Close(&stream);
+	}
+
+	/* Use fallback terrain texture with 1 pixel per tile */
+	if (!Atlas2D.Bmp.scan0) {
+		struct Bitmap tmp;
+		tmp.width  = 16;
+		tmp.height = 8;
+		tmp.scan0  = fallback_terrain;
+		Atlas_TryChange(&tmp);
 	}
 	return res;
 }

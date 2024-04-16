@@ -3550,7 +3550,8 @@ static struct TexIdsOverlay {
 } TexIdsOverlay;
 static struct Widget* texids_widgets[1] = { (struct Widget*)&TexIdsOverlay.title };
 
-#define TEXIDS_MAX_PER_PAGE (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW)
+#define TEXIDS_MAX_ROWS_PER_PAGE 16
+#define TEXIDS_MAX_PER_PAGE      (TEXIDS_MAX_ROWS_PER_PAGE * ATLAS2D_TILES_PER_ROW)
 #define TEXIDS_TEXT_VERTICES (10 * 4 + 90 * 8 + 412 * 12) /* '0'-'9' + '10'-'99' + '100'-'511' */
 #define TEXIDS_MAX_VERTICES (TEXTWIDGET_MAX + 4 * ATLAS1D_MAX_ATLASES + TEXIDS_TEXT_VERTICES)
 
@@ -3607,7 +3608,7 @@ static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTex
 	tex.uv.u1 = 0.0f; tex.uv.u2 = UV2_Scale;
 	tex.width = size; tex.height = size;
 
-	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
+	for (row = 0; row < Atlas2D.RowsCount; row += TEXIDS_MAX_ROWS_PER_PAGE) {
 		for (i = 0; i < TEXIDS_MAX_PER_PAGE; i++) {
 
 			tex.x = xOffset    + Atlas2D_TileX(i) * size;
@@ -3635,7 +3636,7 @@ static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextur
 	idAtlas = &s->idAtlas;
 	beg     = *ptr;
 	
-	for (row = 0; row < Atlas2D.RowsCount; row += ATLAS2D_TILES_PER_ROW) {
+	for (row = 0; row < Atlas2D.RowsCount; row += TEXIDS_MAX_ROWS_PER_PAGE) {
 		idAtlas->tex.y = s->yOffset + (size - idAtlas->tex.height);
 
 		for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
