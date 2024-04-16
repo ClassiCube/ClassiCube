@@ -90,6 +90,7 @@ ifeq ($(PLAT),beos)
 	CFLAGS  = -g -pipe
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+	TRACK_DEPENDENCIES=0
 endif
 
 ifeq ($(PLAT),serenityos)
@@ -137,38 +138,38 @@ irix:
 # consoles builds require special handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
 dreamcast:
-	$(MAKE) -f misc/dreamcast/Makefile PLAT=dreamcast
+	$(MAKE) -f misc/dreamcast/Makefile
 psp:
-	$(MAKE) -f misc/psp/Makefile PLAT=psp
+	$(MAKE) -f misc/psp/Makefile
 vita:
-	$(MAKE) -f misc/vita/Makefile PLAT=vita
-ps3:
-	$(MAKE) -f misc/ps3/Makefile PLAT=ps3
+	$(MAKE) -f misc/vita/Makefile
 ps1:
 	cmake --preset default misc/ps1
 	cmake --build misc/ps1/build
 ps2:
-	$(MAKE) -f misc/ps2/Makefile PLAT=ps2
+	$(MAKE) -f misc/ps2/Makefile
+ps3:
+	$(MAKE) -f misc/ps3/Makefile
 xbox:
-	$(MAKE) -f misc/xbox/Makefile PLAT=xbox
+	$(MAKE) -f misc/xbox/Makefile
 xbox360:
-	$(MAKE) -f misc/xbox360/Makefile PLAT=xbox360
+	$(MAKE) -f misc/xbox360/Makefile
 n64:
-	$(MAKE) -f misc/n64/Makefile PLAT=n64
-3ds:
-	$(MAKE) -f misc/3ds/Makefile PLAT=3ds
-wii:
-	$(MAKE) -f misc/wii/Makefile PLAT=wii
-gamecube:
-	$(MAKE) -f misc/gc/Makefile PLAT=gamecube
-wiiu:
-	$(MAKE) -f misc/wiiu/Makefile PLAT=wiiu
-switch:
-	$(MAKE) -f misc/switch/Makefile PLAT=switch
+	$(MAKE) -f misc/n64/Makefile
 ds:
-	$(MAKE) -f misc/ds/Makefile PLAT=ds
+	$(MAKE) -f misc/ds/Makefile
+3ds:
+	$(MAKE) -f misc/3ds/Makefile
+gamecube:
+	$(MAKE) -f misc/gc/Makefile
+wii:
+	$(MAKE) -f misc/wii/Makefile
+wiiu:
+	$(MAKE) -f misc/wiiu/Makefile
+switch:
+	$(MAKE) -f misc/switch/Makefile
 os/2:
-	$(MAKE) -f misc/os2/Makefile PLAT=os2
+	$(MAKE) -f misc/os2/Makefile
 	
 clean:
 	$(DEL) $(OBJECTS)
@@ -180,9 +181,9 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 
-# NOTE: Tracking dependencies might not work on older systems - disable if so
+# === Compiling with dependency tracking ===
+# NOTE: Tracking dependencies might not work on older systems - disable this if so
 ifeq ($(TRACK_DEPENDENCIES), 1)
-# Compiling with dependency tracking
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 DEPFILES := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.d, $(C_SOURCES))
 $(DEPFILES):
@@ -191,13 +192,13 @@ $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c $(BUILD_DIR)/%.d
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 include $(wildcard $(DEPFILES))
-# Compiling WITHOUT dependency tracking
+# === Compiling WITHOUT dependency tracking ===
 else
 $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 endif
 	
-# Platform specific file compiling
+# === Platform specific file compiling ===
 $(BUILD_DIR)/interop_cocoa.o: $(SOURCE_DIR)/interop_cocoa.m
 	$(CC) $(CFLAGS) -c $< -o $@
 	
