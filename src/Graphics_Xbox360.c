@@ -4,20 +4,67 @@
 #include "Errors.h"
 #include "Window.h"
 #include <xenos/xe.h>
+#include <xenos/edram.h>
+
+#include "../misc/xbox360/ps_coloured.h"
+#include "../misc/xbox360/vs_coloured.h"
+#include "../misc/xbox360/ps_textured.h"
+#include "../misc/xbox360/vs_textured.h"
+static struct XenosShader* shdr_tex_vs;
+static struct XenosShader* shdr_tex_ps;
+static struct XenosShader* shdr_col_vs;
+static struct XenosShader* shdr_col_ps;
 
 static struct XenosDevice device;
 static struct XenosDevice* xe;
 
-void Gfx_Create(void) {
+static const struct XenosVBFFormat textured_vbf = {
+3, {
+	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
+	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 },
+	{ XE_USAGE_TEXCOORD, 0, XE_TYPE_FLOAT2 }
+} };
+
+static const struct XenosVBFFormat coloured_vbf = {
+2, {
+	{ XE_USAGE_POSITION, 0, XE_TYPE_FLOAT4 },
+	{ XE_USAGE_COLOR,    0, XE_TYPE_UBYTE4 }
+} };
+
+static void CreateState(void) {
 	xe = &device;
 	Xe_Init(xe);
+	edram_init(xe);
 	
-	struct XenosSurface *fb = Xe_GetFramebufferSurface(xe);
+	struct XenosSurface* fb = Xe_GetFramebufferSurface(xe);
 	Xe_SetRenderTarget(xe, fb);
+}
 
-	Gfx.Created      = true;
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+static void CreateShaders(void) {
+	shdr_tex_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_textured);
+	Xe_InstantiateShader(xe, shdr_tex_vs, 0);	 
+	Xe_ShaderApplyVFetchPatches(xe, shdr_tex_vs, 0, &textured_vbf);
+	shdr_tex_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_textured);
+	Xe_InstantiateShader(xe, shdr_tex_ps, 0);
+    	
+	shdr_col_vs = Xe_LoadShaderFromMemory(xe, (void*)vs_coloured);
+	Xe_InstantiateShader(xe, shdr_col_vs, 0);	 
+	Xe_ShaderApplyVFetchPatches(xe, shdr_col_vs, 0, &coloured_vbf);
+	shdr_col_ps = Xe_LoadShaderFromMemory(xe, (void*)ps_coloured);
+	Xe_InstantiateShader(xe, shdr_col_ps, 0);
+}
+
+void Gfx_Create(void) {
+	if (!Gfx.Created) {
+		CreateState();
+		CreateShaders();	
+	}
+	Gfx.Created = true;
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -33,14 +80,12 @@ static void Gfx_FreeState(void) {
 }
 
 static void Gfx_RestoreState(void) {
-	Gfx_SetFaceCulling(false);
 	InitDefaultResources();
-	gfx_format = -1;
+	Gfx_SetFaceCulling(false);
+	Gfx_SetAlphaBlending(false);
 
 	Xe_SetAlphaFunc(xe, XE_CMP_GREATER);
 	Xe_SetAlphaRef(xe,  0.5f);
-	Xe_SetDestBlend(xe, XE_BLEND_SRCALPHA);
-	Xe_SetSrcBlend(xe,  XE_BLEND_INVSRCALPHA);
 	Xe_SetZFunc(xe,     XE_CMP_LESSEQUAL);
 }
 
@@ -99,8 +144,6 @@ void Gfx_DisableMipmaps(void) { } // TODO
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool gfx_alphaTesting, gfx_alphaBlending;
-
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	Xe_SetCullMode(xe, enabled ? XE_CULL_CW : XE_CULL_NONE);
 }
@@ -126,18 +169,19 @@ void Gfx_SetFogMode(FogFunc func) {
 }
 
 void Gfx_SetAlphaTest(cc_bool enabled) {
-	if (gfx_alphaTesting == enabled) return;
-	gfx_alphaTesting = enabled;
 	Xe_SetAlphaTestEnable(xe, enabled);
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
-	if (gfx_alphaBlending == enabled) return;
-	gfx_alphaBlending = enabled;
-
-	if (Gfx.LostContext) return;
-	//IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, enabled);
-	// TODO
+	if (enabled) {
+		Xe_SetBlendControl(xe,
+			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA,
+			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA);
+	} else {
+		Xe_SetBlendControl(xe,
+			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO,
+			XE_BLEND_ONE, XE_BLENDOP_ADD, XE_BLEND_ZERO);
+	}
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
@@ -177,6 +221,7 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	void* dst = Xe_IB_Lock(xe, xib, 0, size, XE_LOCK_WRITE);
 	fillFunc((cc_uint16*)dst, count, obj);
 	Xe_IB_Unlock(xe, xib);
+	return xib;
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
@@ -237,7 +282,7 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	return Gfx_LockVb(vb, fmt, count);
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); }
+void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); Gfx_BindVb(vb); }
 
 
 /*########################################################################################################################*
@@ -246,6 +291,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb)  { Gfx_UnlockVb(vb); }
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_COLOURED) {
 		/* it's necessary to unbind the texture, otherwise the alpha from the last bound texture */
@@ -255,17 +301,22 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		/*  IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, fmt == VERTEX_FORMAT_COLOURED ? D3DTOP_DISABLE : D3DTOP_SELECTARG1); */
 		/* SetTexture(NULL) seems to be enough, not really required to call SetTextureStageState */
 	}
-
-	// TODO
+	
+	if (fmt == VERTEX_FORMAT_COLOURED) {
+		Xe_SetShader(xe, SHADER_TYPE_PIXEL,  shdr_col_ps, 0);
+		Xe_SetShader(xe, SHADER_TYPE_VERTEX, shdr_col_vs, 0);
+	} else {
+		Xe_SetShader(xe, SHADER_TYPE_PIXEL,  shdr_tex_ps, 0);
+		Xe_SetShader(xe, SHADER_TYPE_VERTEX, shdr_tex_vs, 0);
+	}
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	/* NOTE: Skip checking return result for Gfx_DrawXYZ for performance */
 	Xe_DrawPrimitive(xe, XE_PRIMTYPE_LINELIST, 0, verticesCount >> 1);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST,
+	Xe_DrawIndexedPrimitive(xe, XE_PRIMTYPE_TRIANGLELIST, // TODO QUADLIST instead?
 		0, 0, verticesCount, 0, verticesCount >> 1);
 }
 
@@ -283,12 +334,19 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
+static struct Matrix _view, _proj, _mvp;
+
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	// TODO
+	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	*dst = *matrix;
+	
+	Matrix_Mul(&_mvp, &_view, &_proj);
+	// TODO: Is this a global uniform, or does it need to be reloaded on shader change?
+	Xe_SetVertexShaderConstantF(xe, 0, (float*)&_mvp, 4);
 }
 
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	// TODO
+void Gfx_LoadIdentityMatrix(MatrixType type) {	
+	Gfx_LoadMatrix(type, &Matrix_Identity);
 }
 
 void Gfx_EnableTextureOffset(float x, float y) {
