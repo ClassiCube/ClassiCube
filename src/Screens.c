@@ -1649,10 +1649,17 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	if (Game_ClassicMode) {
 		/* Accuracy: Original classic preserves selected block across inventory menu opens */
 		TableWidget_SetToIndex(table, table->selectedIndex);
+		TableWidget_RecreateTitle(table, true);
 	} else {
 		TableWidget_SetToBlock(table, Inventory_SelectedBlock);
+
+		if (table->selectedIndex == -1) {
+			/* Hidden block in inventory - display title for it still */
+			InventoryScreen_OnUpdateTitle(Inventory_SelectedBlock);
+		} else {
+			TableWidget_RecreateTitle(table, true);
+		}
 	}
-	TableWidget_RecreateTitle(table, true);
 }
 
 static void InventoryScreen_Init(void* screen) {

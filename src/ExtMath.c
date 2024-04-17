@@ -417,10 +417,11 @@ double Math_Atan2(double x, double y) {
 			return Atan(y / x) + PI;
 		return Atan(y / x) - PI;
 	}
-	if (y > 0)
-		return PI / 2.0;
-	if (y < 0)
-		return -PI / 2.0;
+
+	/* x = 0 case */
+	if (y > 0) return  PI / 2.0;
+	if (y < 0) return -PI / 2.0;
+
 	return DBL_NAN;
 }
 
