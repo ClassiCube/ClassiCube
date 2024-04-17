@@ -282,7 +282,28 @@ static int alert_completed;
 }
 @end
 
+
+static void LogUnhandled(NSString* str) {
+    if (!str) return;
+    const char* src = [str UTF8String];
+    if (!src) return;
+    
+    cc_string msg = String_FromReadonly(src);
+    Platform_Log(msg.buffer, msg.length);
+    Logger_Log(&msg);
+}
+
+// TODO: Should really be handled elsewhere, in Logger or ErrorHandler
+static void LogUnhandledNSErrors(NSException* ex) {
+    // last chance to log exception details before process dies
+    LogUnhandled(@"About to die from unhandled NSException..");
+    LogUnhandled([ex name]);
+    LogUnhandled([ex reason]);
+}
+
 int main(int argc, char * argv[]) {
+    NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+    
     @autoreleasepool {
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([CCAppDelegate class]));
     }
@@ -381,12 +402,13 @@ void Window_Init(void) {
     // keyboard now shifts up
     Window_Main.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
-    Gui_SetTouchUI(true);
     Input.Sources = INPUT_SOURCE_NORMAL;
+    Gui_SetTouchUI(true);
     
     DisplayInfo.Depth  = 32;
     DisplayInfo.ScaleX = 1; // TODO dpi scale
     DisplayInfo.ScaleY = 1; // TODO dpi scale
+    NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
 }
 
 void Window_Free(void) { }

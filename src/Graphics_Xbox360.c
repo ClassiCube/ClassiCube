@@ -292,22 +292,14 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
-
-	if (fmt == VERTEX_FORMAT_COLOURED) {
-		/* it's necessary to unbind the texture, otherwise the alpha from the last bound texture */
-		/*  gets used - because D3DTSS_ALPHAOP texture stage state is still set to D3DTOP_SELECTARG1 */
-		Xe_SetTexture(xe, 0, NULL);
-		/*  IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_COLOROP, fmt == VERTEX_FORMAT_COLOURED ? D3DTOP_DISABLE : D3DTOP_MODULATE); */
-		/*  IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, fmt == VERTEX_FORMAT_COLOURED ? D3DTOP_DISABLE : D3DTOP_SELECTARG1); */
-		/* SetTexture(NULL) seems to be enough, not really required to call SetTextureStageState */
-	}
 	
 	if (fmt == VERTEX_FORMAT_COLOURED) {
-		Xe_SetShader(xe, SHADER_TYPE_PIXEL,  shdr_col_ps, 0);
-		Xe_SetShader(xe, SHADER_TYPE_VERTEX, shdr_col_vs, 0);
+		Xe_SetTexture(xe, 0, NULL);
+		Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_col_ps, 0);
+		Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_col_vs, 0);
 	} else {
-		Xe_SetShader(xe, SHADER_TYPE_PIXEL,  shdr_tex_ps, 0);
-		Xe_SetShader(xe, SHADER_TYPE_VERTEX, shdr_tex_vs, 0);
+		Xe_SetShader(xe,  SHADER_TYPE_PIXEL,  shdr_tex_ps, 0);
+		Xe_SetShader(xe,  SHADER_TYPE_VERTEX, shdr_tex_vs, 0);
 	}
 }
 
