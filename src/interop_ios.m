@@ -1457,45 +1457,30 @@ void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
 static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     UIView* root  = [[UIView alloc] init];
+    CGRect frame;
+    
     UISwitch* swt = [[UISwitch alloc] init];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     UILabel* lbl  = [[UILabel alloc] init];
     lbl.textColor = UIColor.whiteColor;
     lbl.text      = ToNSString(&w->text);
-    
-    // translatesAutoresizingMaskIntoConstraints - iOS 6.0
-    if ([lbl respondsToSelector:@selector(translatesAutoresizingMaskIntoConstraints)]) {
-        // TODO avoid needing to call this if possible
-        lbl.translatesAutoresizingMaskIntoConstraints = false;
-    }
     [lbl sizeToFit]; // adjust label to fit text
                      
     [root addSubview:swt];
     [root addSubview:lbl];
     
-    // label should be slightly to right of switch
-    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
-                                            attribute: NSLayoutAttributeLeft
-                                            relatedBy: NSLayoutRelationEqual
-                                            toItem:swt
-                                            attribute:NSLayoutAttributeRight
-                                            multiplier:1.0f
-                                            constant:10.0f]];
-    // label should be vertically aligned
-    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
-                                            attribute: NSLayoutAttributeCenterY
-                                            relatedBy: NSLayoutRelationEqual
-                                            toItem:root
-                                            attribute:NSLayoutAttributeCenterY
-                                            multiplier:1.0f
-                                            constant:0.0f]];
+    // label should be slightly to right of switch and vertically centred
+    frame = lbl.frame;
+    frame.origin.x = swt.frame.size.width + 10.0f;
+    frame.origin.y = swt.frame.size.height / 2 - frame.size.height / 2;
+    lbl.frame = frame;
     
     // adjust root view height to enclose children
-    CGRect frame = root.frame;
+    frame = root.frame;
     frame.size.width  = lbl.frame.origin.x + lbl.frame.size.width;
-    frame.size.height = swt.frame.size.height;
-    root.frame   = frame;
+    frame.size.height = max(swt.frame.size.height, lbl.frame.size.height);
+    root.frame = frame;
     
     //root.userInteractionEnabled = YES;
     w->meta = (__bridge void*)root;
