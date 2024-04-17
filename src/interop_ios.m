@@ -716,20 +716,41 @@ static GLuint framebuffer;
 static GLuint color_renderbuffer, depth_renderbuffer;
 static int fb_width, fb_height;
 
-static void CreateFramebuffer(void) {
+static void UpdateColorbuffer(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    
+    if (![ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer])
+        Logger_Abort("Failed to link renderbuffer to window");
+}
+
+static void UpdateDepthbuffer(void) {
+    int backingW = 0, backingH = 0;
+    
+    // In case layer dimensions are different
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &backingW);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &backingH);
+    
+    // Shouldn't happen but just in case
+    if (backingW <= 0) backingW = Window_Main.Width;
+    if (backingH <= 0) backingH = Window_Main.Height;
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, backingW, backingH);
+}
+
+static void CreateFramebuffer(void) {
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     
     glGenRenderbuffers(1, &color_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
-    [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
+    UpdateColorbuffer();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_renderbuffer);
-    
+
     glGenRenderbuffers(1, &depth_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
+    UpdateDepthbuffer();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_RENDERBUFFER, depth_renderbuffer);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -753,18 +774,13 @@ void GLContext_Update(void) {
 }
 
 static void GLContext_OnLayout(void) {
-    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
-    
     // only resize buffers when absolutely have to
     if (fb_width == Window_Main.Width && fb_height == Window_Main.Height) return;
     fb_width  = Window_Main.Width;
     fb_height = Window_Main.Height;
     
-    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
-    [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
-    
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
+    UpdateColorbuffer();
+    UpdateDepthbuffer();
 }
 
 void GLContext_Free(void) {
@@ -882,11 +898,14 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 void GetDeviceUUID(cc_string* str) {
     // identifierForVendor - iOS 6.0
     UIDevice* device = UIDevice.currentDevice;
-    NSString* string = [[device identifierForVendor] UUIDString];
     
-    // TODO avoid code duplication
-    const char* src = string.UTF8String;
-    String_AppendUtf8(str, src, String_Length(src));
+    if ([device respondsToSelector:@selector(identifierForVendor)]) {
+        NSString* string = [[device identifierForVendor] UUIDString];
+        // TODO avoid code duplication
+        const char* src = string.UTF8String;
+        String_AppendUtf8(str, src, String_Length(src));
+    }
+    // TODO find a pre iOS 6 solution
 }
 
 void Directory_GetCachePath(cc_string* path) {
@@ -1444,7 +1463,12 @@ static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     lbl.textColor = UIColor.whiteColor;
     lbl.text      = ToNSString(&w->text);
-    lbl.translatesAutoresizingMaskIntoConstraints = false;
+    
+    // translatesAutoresizingMaskIntoConstraints - iOS 6.0
+    if ([lbl respondsToSelector:@selector(translatesAutoresizingMaskIntoConstraints)]) {
+        // TODO avoid needing to call this if possible
+        lbl.translatesAutoresizingMaskIntoConstraints = false;
+    }
     [lbl sizeToFit]; // adjust label to fit text
                      
     [root addSubview:swt];
