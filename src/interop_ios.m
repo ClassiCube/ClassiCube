@@ -352,6 +352,25 @@ static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
     return str;
 }
 
+
+static UIColor* GetStringColor(const cc_string* text) {
+    cc_string left = *text, part;
+    char colorCode = 'f';
+    Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode);
+    
+    BitmapCol color = Drawer2D_GetColor(colorCode);
+    return ToUIColor(color, 1.0f);
+}
+
+static NSString* GetColorlessString(const cc_string* text) {
+    char buffer[128];
+    cc_string tmp = String_FromArray(buffer);
+
+    String_AppendColorless(&tmp, text);
+    return ToNSString(&tmp);
+}
+
+
 static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
 // TODO probably a better way..
 static UIImage* ToUIImage(struct Bitmap* bmp) {
@@ -1403,7 +1422,10 @@ static UIView* LBackend_ButtonShow(struct LButton* w) {
 void LBackend_ButtonUpdate(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
     
-    NSString* str = ToNSString(&w->text);
+    UIColor* color = GetStringColor(&w->text);
+    [btn setTitleColor:color forState:UIControlStateNormal];
+    
+    NSString* str = GetColorlessString(&w->text);
     [btn setTitle:str forState:UIControlStateNormal];
 }
 void LBackend_ButtonDraw(struct LButton* w) { }
@@ -1541,7 +1563,14 @@ void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
     if (!lbl) return;
     
-    lbl.attributedText = ToAttributedString(&w->text);
+    if ([lbl respondsToSelector:@selector(attributedText)]) {
+        // attributedText - iOS 6.0
+        lbl.attributedText = ToAttributedString(&w->text);
+    } else {
+        lbl.textColor = GetStringColor(&w->text);
+        lbl.text      = GetColorlessString(&w->text);
+    }
+    
     [lbl sizeToFit]; // adjust label to fit text
 }
 void LBackend_LabelDraw(struct LLabel* w) { }
