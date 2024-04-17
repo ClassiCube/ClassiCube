@@ -3065,6 +3065,9 @@ static void GuiOptionsScreen_SetHotbar(const cc_string* v) { ChatOptionsScreen_S
 static void GuiOptionsScreen_GetInventory(cc_string* v) { String_AppendFloat(v, Gui.RawInventoryScale, 1); }
 static void GuiOptionsScreen_SetInventory(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawInventoryScale, OPT_INVENTORY_SCALE); }
 
+static void GuiOptionsScreen_GetCrosshair(cc_string* v) { String_AppendFloat(v, Gui.RawCrosshairScale, 1); }
+static void GuiOptionsScreen_SetCrosshair(const cc_string* v) { ChatOptionsScreen_SetScale(v, &Gui.RawCrosshairScale, OPT_CROSSHAIR_SCALE); }
+
 static void GuiOptionsScreen_GetTabAuto(cc_string* v) { Menu_GetBool(v, Gui.TabAutocomplete); }
 static void GuiOptionsScreen_SetTabAuto(const cc_string* v) { Gui.TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
@@ -3076,15 +3079,18 @@ static void GuiOptionsScreen_SetUseFont(const cc_string* v) {
 
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[] = {
-		{ -1, -100, "Black text shadows", MenuOptionsScreen_Bool,
-			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
-		{ -1,  -50, "Show FPS",           MenuOptionsScreen_Bool,
+		
+		{ -1,  -100, "Show FPS",           MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShowFPS,   GuiOptionsScreen_SetShowFPS },
-		{ -1,    0, "Hotbar scale",       MenuOptionsScreen_Input,
+		{ -1,  -50, "Hotbar scale",       MenuOptionsScreen_Input,
 			GuiOptionsScreen_GetHotbar,    GuiOptionsScreen_SetHotbar },
-		{ -1,   50, "Inventory scale",    MenuOptionsScreen_Input,
+		{ -1,    0, "Inventory scale",    MenuOptionsScreen_Input,
 			GuiOptionsScreen_GetInventory, GuiOptionsScreen_SetInventory },
+		{ -1,   50, "Crosshair scale",    MenuOptionsScreen_Input,
+			GuiOptionsScreen_GetCrosshair, GuiOptionsScreen_SetCrosshair },
 
+		{ 1, -100, "Black text shadows", MenuOptionsScreen_Bool,
+			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
 		{ 1,  -50, "Tab auto-complete",  MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetTabAuto,   GuiOptionsScreen_SetTabAuto },
 		{ 1,    0, "Use system font",    MenuOptionsScreen_Bool,
@@ -3093,12 +3099,13 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			NULL,                          NULL }
 	};
 
-	s->numCore      = 7;
-	s->maxVertices += 7 * BUTTONWIDGET_MAX;
+	s->numCore      = 8;
+	s->maxVertices += 8 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void GuiOptionsScreen_Show(void) {
+	MenuInput_Float(menuOpts_descs[1], 0.25f, 4.00f, 1);
 	MenuInput_Float(menuOpts_descs[2], 0.25f, 4.00f, 1);
 	MenuInput_Float(menuOpts_descs[3], 0.25f, 4.00f, 1);
 

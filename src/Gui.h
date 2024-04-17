@@ -42,7 +42,7 @@ CC_VAR extern struct _GuiData {
 	cc_bool ShowFPS;
 	/* Whether classic-style inventory is used */
 	cc_bool ClassicInventory;
-	float RawHotbarScale, RawChatScale, RawInventoryScale;
+	float RawHotbarScale, RawChatScale, RawInventoryScale, RawCrosshairScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
 	/* (internal) Bitmask of on-screen buttons, see Input.h */
@@ -60,6 +60,7 @@ float Gui_Scale(float value);
 float Gui_GetHotbarScale(void);
 float Gui_GetInventoryScale(void);
 float Gui_GetChatScale(void);
+float Gui_GetCrosshairScale(void);
 
 CC_NOINLINE void Gui_MakeTitleFont(struct FontDesc* font);
 CC_NOINLINE void Gui_MakeBodyFont(struct FontDesc* font);

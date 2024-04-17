@@ -62,6 +62,11 @@ float Gui_GetChatScale(void) {
 	return Gui.RawChatScale;
 }
 
+float Gui_GetCrosshairScale(void) {
+	return Gui_Scale((Window_Main.Height / 480.0f)) * Gui.RawCrosshairScale;
+}
+
+
 void Gui_MakeTitleFont(struct FontDesc* font) { Font_Make(font, 16, FONT_FLAGS_BOLD); }
 void Gui_MakeBodyFont(struct FontDesc* font)  { Font_Make(font, 16, FONT_FLAGS_NONE); }
 
@@ -119,6 +124,7 @@ static void LoadOptions(void) {
 	Gui.RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
+	Gui.RawCrosshairScale = Options_GetFloat(OPT_CROSSHAIR_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
 
 	Gui.AutoScaleChat     = Options_GetBool(OPT_CHAT_AUTO_SCALE, true);
