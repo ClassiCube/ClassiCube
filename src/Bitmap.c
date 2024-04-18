@@ -534,6 +534,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_FILESYSTEM
 static void Png_Filter(cc_uint8 filter, const cc_uint8* cur, const cc_uint8* prior, cc_uint8* best, int lineLen, int bpp) {
 	/* 3 bytes per pixel constant */
 	cc_uint8 a, b, c;
@@ -718,4 +719,11 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 	Mem_Free(buffer);
 	return res;
 }
+#else
+/* No point including encoding code when can't save screenshots anyways */
+cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
+					Png_RowGetter getRow, cc_bool alpha, void* ctx) {
+	return ERR_NOT_SUPPORTED;
+}
+#endif
 

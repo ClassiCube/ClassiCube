@@ -123,6 +123,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_RESOURCES
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_ANIMATIONS
+#define CC_BUILD_FILESYSTEM
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
@@ -322,6 +323,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_OPENAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_FILESYSTEM
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
 	#define CC_BUILD_CONSOLE
@@ -368,6 +370,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
@@ -385,6 +388,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_FILESYSTEM
 #endif
 #endif
 

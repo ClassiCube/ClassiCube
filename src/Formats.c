@@ -16,6 +16,8 @@
 #include "Chat.h"
 #include "TexturePack.h"
 #include "Utils.h"
+
+#ifdef CC_BUILD_FILESYSTEM
 static cc_bool calcDefaultSpawn;
 static struct MapImporter* imp_head;
 static struct MapImporter* imp_tail;
@@ -1873,6 +1875,18 @@ static void OnInit(void) {
 static void OnFree(void) {
 	imp_head = NULL;
 }
+#else
+/* No point including map format code when can't save/load maps anyways */
+struct MapImporter* MapImporter_Find(const cc_string* path) { return NULL; }
+cc_result Map_LoadFrom(const cc_string* path) { return ERR_NOT_SUPPORTED; }
+
+cc_result Cw_Save(struct Stream* stream)  { return ERR_NOT_SUPPORTED; }
+cc_result Dat_Save(struct Stream* stream) { return ERR_NOT_SUPPORTED; }
+cc_result Schematic_Save(struct Stream* stream) { return ERR_NOT_SUPPORTED; }
+
+static void OnInit(void) { }
+static void OnFree(void) { }
+#endif
 
 struct IGameComponent Formats_Component = {
 	OnInit, /* Init  */

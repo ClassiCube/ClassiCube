@@ -8,6 +8,128 @@
 #include <stdint.h>
 #include <yaul.h>
 
+
+#define SCREEN_WIDTH  320
+#define SCREEN_HEIGHT 224
+
+#define PRIMITIVE_DRAW_MODE_NORMAL             (0)
+#define PRIMITIVE_DRAW_MODE_MESH               (1)
+#define PRIMITIVE_DRAW_MODE_SHADOW             (2)
+#define PRIMITIVE_DRAW_MODE_HALF_LUMINANCE     (3)
+#define PRIMITIVE_DRAW_MODE_HALF_TRANSPARENT   (4)
+#define PRIMITIVE_DRAW_MODE_GOURAUD_SHADING    (5)
+#define PRIMITIVE_DRAW_MODE_GOURAUD_HALF_LUM   (6)
+#define PRIMITIVE_DRAW_MODE_GOURAUD_HALF_TRANS (7)
+#define PRIMITIVE_DRAW_MODE_COUNT              (8)
+
+#define PRIMITIVE_WIDTH       32
+#define PRIMITIVE_HEIGHT      32
+#define PRIMITIVE_HALF_WIDTH  (PRIMITIVE_WIDTH / 2)
+#define PRIMITIVE_HALF_HEIGHT (PRIMITIVE_HEIGHT / 2)
+
+#define PRIMITIVE_COLOR       RGB1555(1, 31, 0, 31)
+
+#define ORDER_SYSTEM_CLIP_COORDS_INDEX 0
+#define ORDER_LOCAL_COORDS_INDEX       1
+#define ORDER_POLYGON_INDEX            2
+#define ORDER_DRAW_END_INDEX           3
+#define ORDER_COUNT                    4
+
+static PackedCol clear_color;
+static vdp1_cmdt_list_t *_cmdt_list = NULL;
+static vdp1_vram_partitions_t _vdp1_vram_partitions;
+
+static vdp1_cmdt_draw_mode_t _primitive_draw_mode = {
+	.raw = 0x0000
+};
+
+static struct {
+        int8_t type;
+        rgb1555_t color;
+        int16_vec2_t points[4];
+} _primitive;
+
+
+static void UpdateVDP1Env(void) {
+	vdp1_env_t env;
+	vdp1_env_default_init(&env);
+
+	int R = PackedCol_R(clear_color);
+	int G = PackedCol_G(clear_color);
+	int B = PackedCol_B(clear_color);
+	env.erase_color = RGB1555(1, R >> 3, G >> 3, B >> 3);
+
+	vdp1_env_set(&env);
+}
+
+static void
+_cmdt_list_init(void)
+{
+        static const int16_vec2_t system_clip_coord =
+            INT16_VEC2_INITIALIZER(SCREEN_WIDTH - 1,
+                                   SCREEN_HEIGHT - 1);
+
+        _cmdt_list = vdp1_cmdt_list_alloc(ORDER_COUNT);
+
+        (void)memset(&_cmdt_list->cmdts[0], 0x00,
+            sizeof(vdp1_cmdt_t) * ORDER_COUNT);
+
+        _cmdt_list->count = ORDER_COUNT;
+
+        vdp1_cmdt_t *cmdts;
+        cmdts = &_cmdt_list->cmdts[0];
+
+        vdp1_cmdt_system_clip_coord_set(&cmdts[ORDER_SYSTEM_CLIP_COORDS_INDEX]);
+        vdp1_cmdt_vtx_system_clip_coord_set(&cmdts[ORDER_SYSTEM_CLIP_COORDS_INDEX],
+            system_clip_coord);
+
+        vdp1_cmdt_end_set(&cmdts[ORDER_DRAW_END_INDEX]);
+}
+
+static void
+_primitive_init(void)
+{
+        static const int16_vec2_t local_coord_center =
+            INT16_VEC2_INITIALIZER((SCREEN_WIDTH / 2)  - PRIMITIVE_HALF_WIDTH - 1,
+                                   (SCREEN_HEIGHT / 2) - PRIMITIVE_HALF_HEIGHT - 1);
+
+        _primitive.points[0].x = 0;
+        _primitive.points[0].y = PRIMITIVE_HEIGHT - 1;
+
+        _primitive.points[1].x = PRIMITIVE_WIDTH - 1;
+        _primitive.points[1].y = PRIMITIVE_HEIGHT - 1;
+
+        _primitive.points[2].x = PRIMITIVE_WIDTH - 1;
+        _primitive.points[2].y = 0;
+
+        _primitive.points[3].x = 0;
+        _primitive.points[3].y = 0;
+
+        vdp1_cmdt_t *cmdt_local_coords;
+        cmdt_local_coords = &_cmdt_list->cmdts[ORDER_LOCAL_COORDS_INDEX];
+
+        vdp1_cmdt_local_coord_set(cmdt_local_coords);
+        vdp1_cmdt_vtx_local_coord_set(cmdt_local_coords, local_coord_center);
+
+        vdp1_cmdt_t *cmdt_polygon;
+        cmdt_polygon = &_cmdt_list->cmdts[ORDER_POLYGON_INDEX];
+
+        vdp1_gouraud_table_t *gouraud_base;
+        gouraud_base = _vdp1_vram_partitions.gouraud_base;
+
+        gouraud_base->colors[0] = RGB1555(1, 31,  0,  0);
+        gouraud_base->colors[1] = RGB1555(1,  0, 31,  0);
+        gouraud_base->colors[2] = RGB1555(1,  0,  0, 31);
+        gouraud_base->colors[3] = RGB1555(1, 31, 31, 31);
+
+        vdp1_cmdt_polyline_set(cmdt_polygon);
+        vdp1_cmdt_color_set(cmdt_polygon,     PRIMITIVE_COLOR);
+        vdp1_cmdt_draw_mode_set(cmdt_polygon, _primitive_draw_mode);
+        vdp1_cmdt_vtx_set(cmdt_polygon, &_primitive.points[0]);
+
+        vdp1_cmdt_gouraud_base_set(cmdt_polygon, (uint32_t)gouraud_base);
+}
+
 static GfxResourceID white_square;
 void Gfx_RestoreState(void) {
 	InitDefaultResources();
@@ -25,9 +147,21 @@ void Gfx_FreeState(void) {
 }
 
 void Gfx_Create(void) {
+	if (!Gfx.Created) {
+        vdp1_vram_partitions_get(&_vdp1_vram_partitions);
+        vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(3, 0x01FFFE),
+            RGB1555(1, 0, 3, 15));
+        vdp2_sprite_priority_set(0, 6);
+
+		UpdateVDP1Env();
+		_cmdt_list_init();
+		_primitive_init();
+	}
+
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 128;
 	Gfx.Created      = true;
+Platform_LogConst("GFX SETUP");
 }
 
 void Gfx_Free(void) { 
@@ -85,7 +219,10 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_ClearColor(PackedCol color) {
-	// TODO
+	if (color == clear_color) return;
+
+	clear_color = color;
+	UpdateVDP1Env();
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
@@ -139,7 +276,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) { 
-	gfx_vertices = vb; 
+	gfx_vertices = vb;
 }
 
 
@@ -252,9 +389,25 @@ cc_bool Gfx_WarnIfNecessary(void) {
 }
 
 void Gfx_BeginFrame(void) {
+Platform_LogConst("FRAME BEG");
 }
 
 void Gfx_EndFrame(void) {
+Platform_LogConst("FRAME END");
+                vdp1_cmdt_t *cmdt_polygon;
+                cmdt_polygon = &_cmdt_list->cmdts[ORDER_POLYGON_INDEX];
+
+                vdp1_cmdt_polygon_set(cmdt_polygon);
+
+                vdp1_cmdt_draw_mode_set(cmdt_polygon, _primitive_draw_mode);
+                vdp1_cmdt_vtx_set(cmdt_polygon, &_primitive.points[0]);
+
+                vdp1_sync_cmdt_list_put(_cmdt_list, 0);
+                vdp1_sync_render();
+                vdp1_sync();
+                vdp2_sync();
+                vdp2_sync_wait();
+
 	if (gfx_minFrameMs) LimitFPS();
 }
 

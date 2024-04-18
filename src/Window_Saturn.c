@@ -116,16 +116,16 @@ void Window_Create2D(int width, int height) {
 	launcherMode = true;
 
 	const vdp2_scrn_bitmap_format_t format = {
-                .scroll_screen = VDP2_SCRN_NBG0,
-                .ccc           = VDP2_SCRN_CCC_RGB_32768,
-                .bitmap_size   = VDP2_SCRN_BITMAP_SIZE_512X256,
-                .palette_base  = 0x00000000,
-                .bitmap_base   = VDP2_VRAM_ADDR(0, 0x00000)
-        };
+		.scroll_screen = VDP2_SCRN_NBG0,
+		.ccc           = VDP2_SCRN_CCC_RGB_32768,
+		.bitmap_size   = VDP2_SCRN_BITMAP_SIZE_512X256,
+		.palette_base  = 0x00000000,
+		.bitmap_base   = VDP2_VRAM_ADDR(0, 0x00000)
+	};
 
-        vdp2_scrn_bitmap_format_set(&format);
-        vdp2_scrn_priority_set(VDP2_SCRN_NBG0, 7);
-        vdp2_scrn_display_set(VDP2_SCRN_DISP_NBG0);
+	vdp2_scrn_bitmap_format_set(&format);
+	vdp2_scrn_priority_set(VDP2_SCRN_NBG0, 7);
+	vdp2_scrn_display_set(VDP2_SCRN_DISP_NBG0);
 
         const vdp2_vram_cycp_t vram_cycp = {
                 .pt[0].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
@@ -166,10 +166,6 @@ void Window_Create2D(int width, int height) {
         };
 
         vdp2_vram_cycp_set(&vram_cycp);
-
-        vdp2_tvmd_display_res_set(VDP2_TVMD_INTERLACE_NONE, VDP2_TVMD_HORZ_NORMAL_A,
-            VDP2_TVMD_VERT_240);
-        vdp2_tvmd_display_set();
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
@@ -202,7 +198,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
+	bmp->scan0 = NULL;
 }
 
 
