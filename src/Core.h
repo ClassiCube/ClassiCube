@@ -375,6 +375,16 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SDL2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE
+#elif defined PLAT_SATURN
+	#define CC_BUILD_SATURN
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
 #endif
 #endif
 

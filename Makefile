@@ -139,6 +139,8 @@ irix:
 #  separate makefiles to avoid having one giant messy makefile
 dreamcast:
 	$(MAKE) -f misc/dreamcast/Makefile
+saturn:
+	$(MAKE) -f misc/saturn/Makefile
 psp:
 	$(MAKE) -f misc/psp/Makefile
 vita:

@@ -31,6 +31,8 @@ build-switch/
 classicube.nds
 # SEGA console build results
 build-dc/
+build-saturn/
+cd/
 # Microsoft console build results
 build-360/
 # Sony console build results
