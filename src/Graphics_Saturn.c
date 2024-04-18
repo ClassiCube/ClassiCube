@@ -22,23 +22,19 @@
 #define PRIMITIVE_DRAW_MODE_GOURAUD_HALF_TRANS (7)
 #define PRIMITIVE_DRAW_MODE_COUNT              (8)
 
-#define PRIMITIVE_WIDTH       32
-#define PRIMITIVE_HEIGHT      32
-#define PRIMITIVE_HALF_WIDTH  (PRIMITIVE_WIDTH / 2)
-#define PRIMITIVE_HALF_HEIGHT (PRIMITIVE_HEIGHT / 2)
-
 #define PRIMITIVE_COLOR       RGB1555(1, 31, 0, 31)
 
-#define ORDER_SYSTEM_CLIP_COORDS_INDEX 0
-#define ORDER_LOCAL_COORDS_INDEX       1
-#define ORDER_POLYGON_INDEX            2
-#define ORDER_DRAW_END_INDEX           3
-#define ORDER_COUNT                    4
+#define CMDS_COUNT                     400
 
 static PackedCol clear_color;
-static vdp1_cmdt_list_t cmdt_list;
-static vdp1_cmdt_t cmdts_all[ORDER_COUNT];
+static vdp1_cmdt_t cmdts_all[CMDS_COUNT];
+static int cmdts_count;
 static vdp1_vram_partitions_t _vdp1_vram_partitions;
+
+static vdp1_cmdt_t* NextPrimitive(void) {
+	if (cmdts_count >= CMDS_COUNT) Logger_Abort("Too many VDP1 commands");
+	return &cmdts_all[cmdts_count++];
+}
 
 static vdp1_cmdt_draw_mode_t _primitive_draw_mode = {
 	.raw = 0x0000
@@ -61,42 +57,18 @@ static void UpdateVDP1Env(void) {
 	vdp1_env_set(&env);
 }
 
-static void _cmdt_list_init(void)
-{
-        static const int16_vec2_t system_clip_coord = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
-		
-		memset(cmdts_all, 0x00, sizeof(vdp1_cmdt_t) * ORDER_COUNT);
-		cmdt_list.cmdts = cmdts_all;
-        cmdt_list.count = ORDER_COUNT;
-
-		vdp1_cmdt_t* cmd = &cmdts_all[ORDER_SYSTEM_CLIP_COORDS_INDEX];
-        vdp1_cmdt_system_clip_coord_set(cmd);
-        vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
-
-        vdp1_cmdt_end_set(&cmdts_all[ORDER_DRAW_END_INDEX]);
-}
-
-static void _primitive_init(void)
-{
-        static const int16_vec2_t local_coord_center =
-            INT16_VEC2_INITIALIZER((SCREEN_WIDTH / 2)  - PRIMITIVE_HALF_WIDTH - 1,
-                                   (SCREEN_HEIGHT / 2) - PRIMITIVE_HALF_HEIGHT - 1);
-
+static void _primitive_init(void) {
         _primitive.points[0].x = 0;
-        _primitive.points[0].y = PRIMITIVE_HEIGHT - 1;
+        _primitive.points[0].y = SCREEN_WIDTH - 1;
 
-        _primitive.points[1].x = PRIMITIVE_WIDTH  - 1;
-        _primitive.points[1].y = PRIMITIVE_HEIGHT - 1;
+        _primitive.points[1].x = SCREEN_WIDTH  - 1;
+        _primitive.points[1].y = SCREEN_HEIGHT - 1;
 
-        _primitive.points[2].x = PRIMITIVE_WIDTH  - 1;
+        _primitive.points[2].x = SCREEN_HEIGHT  - 1;
         _primitive.points[2].y = 0;
 
         _primitive.points[3].x = 0;
         _primitive.points[3].y = 0;
-
-        vdp1_cmdt_t* cmd = &cmdts_all[ORDER_LOCAL_COORDS_INDEX];
-        vdp1_cmdt_local_coord_set(cmd);
-        vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
 }
 
 static GfxResourceID white_square;
@@ -124,7 +96,6 @@ void Gfx_Create(void) {
         vdp2_sprite_priority_set(0, 6);
 
 		UpdateVDP1Env();
-		_cmdt_list_init();
 		_primitive_init();
 	}
 
@@ -333,16 +304,70 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 }
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+static void Transform(Vec3* result, struct VertexTextured* a, const struct Matrix* mat) {
+	/* a could be pointing to result - therefore can't directly assign X/Y/Z */
+	float x = a->x * mat->row1.x + a->y * mat->row2.x + a->z * mat->row3.x + mat->row4.x;
+	float y = a->x * mat->row1.y + a->y * mat->row2.y + a->z * mat->row3.y + mat->row4.y;
+	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
+	float w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
 	
+	result->x = (x/w) *  (320/2); 
+	result->y = (y/w) * -(224/2);
+	result->z = (z/w) * 1024;
+}
+
+#define IsPointCulled(vec) vec.x < -10000 || vec.x > 10000 || vec.y < -10000 || vec.y > 10000 || vec.z < 0 || vec.z > 1024
+
+static void DrawTexturedQuads(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+
+		Vec3 coords[4];
+		Transform(&coords[0], &v[0], &mvp);
+		Transform(&coords[1], &v[1], &mvp);
+		Transform(&coords[2], &v[2], &mvp);
+		Transform(&coords[3], &v[3], &mvp);
+
+		int16_vec2_t points[4];
+		points[0].x = coords[0].x; points[0].y = coords[0].y;
+		points[1].x = coords[1].x; points[1].y = coords[1].y;
+		points[2].x = coords[2].x; points[2].y = coords[2].y;
+		points[3].x = coords[3].x; points[3].y = coords[3].y;
+
+		if (IsPointCulled(coords[0])) continue;
+		if (IsPointCulled(coords[1])) continue;
+		if (IsPointCulled(coords[2])) continue;
+		if (IsPointCulled(coords[3])) continue;
+
+		int R = PackedCol_R(v->Col);
+		int G = PackedCol_G(v->Col);
+		int B = PackedCol_B(v->Col);
+
+		vdp1_cmdt_t* cmd;
+
+		cmd = NextPrimitive();
+		vdp1_cmdt_polygon_set(cmd);
+		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
+		vdp1_cmdt_draw_mode_set(cmd, _primitive_draw_mode);
+		vdp1_cmdt_vtx_set(cmd, 		 points);
+	}
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads(verticesCount, startVertex);
+	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads(verticesCount, 0);
+	}
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-
+	DrawTexturedQuads(verticesCount, startVertex);
 }
 
 
@@ -359,19 +384,44 @@ cc_bool Gfx_WarnIfNecessary(void) {
 
 void Gfx_BeginFrame(void) {
 	Platform_LogConst("FRAME BEG");
+	cmdts_count = 0;
+
+	static const int16_vec2_t system_clip_coord  = { SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 };
+	static const int16_vec2_t local_coord_center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+
+	vdp1_cmdt_t* cmd;
+
+	cmd = NextPrimitive();
+	vdp1_cmdt_system_clip_coord_set(cmd);
+	vdp1_cmdt_vtx_system_clip_coord_set(cmd, system_clip_coord);
+
+	cmd = NextPrimitive();
+	vdp1_cmdt_local_coord_set(cmd);
+	vdp1_cmdt_vtx_local_coord_set(cmd, local_coord_center);
+
+	int R = PackedCol_R(clear_color);
+	int G = PackedCol_G(clear_color);
+	int B = PackedCol_B(clear_color);
+
+	cmd = NextPrimitive();
+	vdp1_cmdt_polygon_set(cmd);
+	vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3)); // TODO VDP1 erase
+	vdp1_cmdt_draw_mode_set(cmd, _primitive_draw_mode);
+	vdp1_cmdt_vtx_set(cmd, &_primitive.points[0]);
 }
 
 void Gfx_EndFrame(void) {
 	Platform_LogConst("FRAME END");
 	vdp1_cmdt_t* cmd;
-	cmd = &cmdts_all[ORDER_POLYGON_INDEX];
 
-	vdp1_cmdt_polygon_set(cmd);
-	vdp1_cmdt_color_set(cmd,     PRIMITIVE_COLOR);
-	vdp1_cmdt_draw_mode_set(cmd, _primitive_draw_mode);
-	vdp1_cmdt_vtx_set(cmd, &_primitive.points[0]);
+	cmd = NextPrimitive();
+	vdp1_cmdt_end_set(cmd);
 
+	vdp1_cmdt_list_t cmdt_list;
+	cmdt_list.cmdts = cmdts_all;
+    cmdt_list.count = cmdts_count;
 	vdp1_sync_cmdt_list_put(&cmdt_list, 0);
+
 	vdp1_sync_render();
 	vdp1_sync();
 	vdp2_sync();
