@@ -34,13 +34,14 @@ const char* Platform_AppNameSuffix = " Saturn";
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+#define WRITE_ADDRESS CS0(0x00100001)
+// in Medafen, patch DummyWrite in src/ss/Cart.cpp to instead log the value
+
 void Platform_Log(const char* msg, int len) {
-	char tmp[2048 + 1];
-	len = min(len, 2048);
-	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
-	
-	dbgio_printf("%s\n", tmp);
-	dbgio_flush();
+	for (int i = 0; i < len; i++) {
+		MEMORY_WRITE(8, WRITE_ADDRESS, msg[i]);
+	}
+	MEMORY_WRITE(8, WRITE_ADDRESS, '\n');
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -211,9 +212,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
-	dbgio_init();
-	dbgio_dev_default_init(DBGIO_DEV_VDP2_ASYNC);
-	dbgio_dev_font_load();
 	Stopwatch_Init();
 
 	Options_SetBool(OPT_USE_CHAT_FONT, true);
