@@ -125,6 +125,13 @@ static CGRect GetViewFrame(void) {
     return YES;
 }
 
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)ori {
+    // shouldAutorotateToInterfaceOrientation - iOS 2.0
+    if (landscape_locked && !(ori == UIInterfaceOrientationLandscapeLeft || ori == UIInterfaceOrientationLandscapeRight))
+        return NO;
+    return YES;
+}
+
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id)coordinator {
     // viewWillTransitionToSize:withTransitionCoordinator - iOS 8.0
     Window_Main.Width  = size.width;

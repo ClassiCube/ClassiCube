@@ -110,14 +110,8 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	GX2Texture* tex = (GX2Texture*)texId;	
 	uint32_t* dst   = (uint32_t*)tex->surface.image + (y * tex->surface.pitch) + x;
-	uint32_t* src   = (uint32_t*)part->scan0;
 	
-	for (int i = 0; i < part->height; i++)
-	{
-		Mem_Copy(dst, src, part->width * sizeof(uint32_t));
-		dst += tex->surface.pitch;
-		src += rowWidth;
-	}
+	CopyTextureData(dst, tex->surface.pitch << 2, part, rowWidth << 2);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 }
 
@@ -133,8 +127,8 @@ static void BindPendingTexture(void) {
 	if (!pendingTex || group != &textureShader) return;
 	
 	GX2SetPixelTexture(pendingTex, group->pixelShader->samplerVars[0].location);
-      	GX2SetPixelSampler(&sampler,   group->pixelShader->samplerVars[0].location);
-      	pendingTex = NULL;
+	GX2SetPixelSampler(&sampler,   group->pixelShader->samplerVars[0].location);
+ 	pendingTex = NULL;
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -190,7 +184,7 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
 		true,
 		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
-        GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
+    GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
@@ -413,6 +407,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) { 
 	uint32_t swapCount, flipCount;
 	OSTime lastFlip, lastVsync;
+	
 	for (int try = 0; try < 10; try++)
 	{
 		GX2GetSwapStatus(&swapCount, &flipCount, &lastFlip, &lastVsync);
