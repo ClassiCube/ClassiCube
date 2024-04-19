@@ -15,7 +15,7 @@ static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 
 /* Common/Base methods */
 static void AudioBase_Clear(struct AudioContext* ctx);
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size);
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** data, cc_uint32* size);
 static cc_result AudioBase_AllocChunks(int size, void** chunks, int numChunks);
 static void AudioBase_FreeChunks(void** chunks, int numChunks);
 
@@ -359,7 +359,8 @@ struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate, volume;
-	cc_uint32 _tmpSize; void* _tmpData;
+	cc_uint32 _tmpSize[AUDIO_MAX_BUFFERS];
+	void* _tmpData[AUDIO_MAX_BUFFERS];
 };
 #define AUDIO_COMMON_VOLUME
 #define AUDIO_COMMON_ALLOC
@@ -435,14 +436,15 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) { ctx->volume = volum
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	cc_result res;
 	WAVEHDR* hdr;
+	cc_bool ok;
 	int i;
-
-	cc_bool ok = AudioBase_AdjustSound(ctx, &chunk, &dataSize);
-	if (!ok) return ERR_OUT_OF_MEMORY;
 
 	for (i = 0; i < ctx->count; i++) {
 		hdr = &ctx->headers[i];
 		if (!(hdr->dwFlags & WHDR_DONE)) continue;
+		
+		ok = AudioBase_AdjustSound(ctx, i, &chunk, &dataSize);
+		if (!ok) return ERR_OUT_OF_MEMORY;
 
 		Mem_Set(hdr, 0, sizeof(WAVEHDR));
 		hdr->lpData         = (LPSTR)chunk;
@@ -1598,34 +1600,39 @@ static void ApplyVolume(cc_int16* samples, int count, int volume) {
 }
 
 static void AudioBase_Clear(struct AudioContext* ctx) {
+	int i;
 	ctx->count      = 0;
 	ctx->channels   = 0;
 	ctx->sampleRate = 0;
-	Mem_Free(ctx->_tmpData);
-	ctx->_tmpData = NULL;
-	ctx->_tmpSize = 0;
+	
+	for (i = 0; i < AUDIO_MAX_BUFFERS; i++)
+	{
+		Mem_Free(ctx->_tmpData[i]);
+		ctx->_tmpData[i] = NULL;
+		ctx->_tmpSize[i] = 0;
+	}
 }
 
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size) {
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** data, cc_uint32* size) {
 	void* audio;
 	cc_uint32 src_size = *size;
 	if (ctx->volume >= 100) return true;
 
 	/* copy to temp buffer to apply volume */
-	if (ctx->_tmpSize < src_size) {
+	if (ctx->_tmpSize[i] < src_size) {
 		/* TODO: check if we can realloc NULL without a problem */
-		if (ctx->_tmpData) {
-			audio = Mem_TryRealloc(ctx->_tmpData, src_size, 1);
+		if (ctx->_tmpData[i]) {
+			audio = Mem_TryRealloc(ctx->_tmpData[i], src_size, 1);
 		} else {
 			audio = Mem_TryAlloc(src_size, 1);
 		}
 
 		if (!data) return false;
-		ctx->_tmpData = audio;
-		ctx->_tmpSize = src_size;
+		ctx->_tmpData[i] = audio;
+		ctx->_tmpSize[i] = src_size;
 	}
 
-	audio = ctx->_tmpData;
+	audio = ctx->_tmpData[i];
 	Mem_Copy(audio, *data, src_size);
 	ApplyVolume((cc_int16*)audio, src_size / 2, ctx->volume);
 

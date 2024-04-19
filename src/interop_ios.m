@@ -554,7 +554,12 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 }
 
 void OnscreenKeyboard_SetText(const cc_string* text) {
-    text_input.text = ToNSString(text);
+    NSString* str = ToNSString(text);
+    NSString* cur = text_input.text;
+    
+    // otherwise on iOS 5, this causes an infinite loop
+    if (cur && [str isEqualToString:cur]) return;
+    text_input.text = str;
 }
 
 void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
