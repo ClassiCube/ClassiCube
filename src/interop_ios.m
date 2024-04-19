@@ -1,4 +1,5 @@
 #define GLES_SILENCE_DEPRECATION
+#define GL_SILENCE_DEPRECATION
 #include "_WindowBase.h"
 #include "Bitmap.h"
 #include "Input.h"

@@ -1685,10 +1685,30 @@ static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	ListScreen_Select(s, SysFonts_UNSAFE_GetDefault());
 }
 
+static void FontListScreen_UploadCallback(const cc_string* path) { 
+	SysFonts_Register(path);
+}
+
+static void FontListScreen_ActionFunc(void* s, void* w) {
+	static const char* const filters[] = {
+		".ttf", ".otf", NULL
+	};
+	static struct OpenFileDialogArgs args = {
+		"Font files", filters,
+		FontListScreen_UploadCallback,
+		OFD_UPLOAD_DELETE, "tmp"
+	};
+
+	cc_result res = Window_OpenFileDialog(&args);
+	if (res) Logger_SimpleWarn(res, "showing open file dialog");
+}
+
 void FontListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a font";
-	s->ActionClick = NULL;
+	s->actionText  = "Load font...";
+	s->ActionClick = FontListScreen_ActionFunc;
+
 	s->LoadEntries = FontListScreen_LoadEntries;
 	s->EntryClick  = FontListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchGui;

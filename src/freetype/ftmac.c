@@ -108,10 +108,6 @@
 
 #include FT_MAC_H
 
-#ifndef kATSOptionFlagsUnRestrictedScope /* since Mac OS X 10.1 */
-#define kATSOptionFlagsUnRestrictedScope kATSOptionFlagsDefault
-#endif
-
 
   /* Set PREFER_LWFN to 1 if LWFN (Type 1) is preferred over
      TrueType in case *both* are available (this is not common,
@@ -142,25 +138,6 @@
     err  = ResError();
 
     return err;
-  }
-
-
-  /* Return the file type for given pathname */
-  static OSType
-  get_file_type_from_path( const UInt8*  pathname )
-  {
-    FSRef          ref;
-    FSCatalogInfo  info;
-
-
-    if ( noErr != FSPathMakeRef( pathname, &ref, FALSE ) )
-      return ( OSType ) 0;
-
-    if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoFinderInfo, &info,
-                                    NULL, NULL, NULL ) )
-      return ( OSType ) 0;
-
-    return ((FInfo *)(info.finderInfo))->fdType;
   }
 
 
@@ -541,38 +518,6 @@
   }
 
 
-  /* Create a new FT_Face from a file path to an LWFN file. */
-  static FT_Error
-  FT_New_Face_From_LWFN( FT_Library    library,
-                         const UInt8*  pathname,
-                         FT_Long       face_index,
-                         FT_Face*      aface )
-  {
-    FT_Byte*       pfb_data;
-    FT_ULong       pfb_size;
-    FT_Error       error;
-    ResFileRefNum  res;
-
-
-    if ( noErr != FT_FSPathMakeRes( pathname, &res ) )
-      return FT_THROW( Cannot_Open_Resource );
-
-    pfb_data = NULL;
-    pfb_size = 0;
-    error = read_lwfn( library->memory, res, &pfb_data, &pfb_size );
-    CloseResFile( res ); /* PFB is already loaded, useless anymore */
-    if ( error )
-      return error;
-
-    return open_face_from_buffer( library,
-                                  pfb_data,
-                                  pfb_size,
-                                  face_index,
-                                  "type1",
-                                  aface );
-  }
-
-
   /* Create a new FT_Face from an SFNT resource, specified by res ID. */
   static FT_Error
   FT_New_Face_From_SFNT( FT_Library  library,
@@ -740,21 +685,10 @@
         err = FSRefMakePath( &ref, path_fond, sizeof ( path_fond ) );
         if ( noErr != err )
           goto found_no_lwfn_file;
-
-        error = lookup_lwfn_by_fond( path_fond, lwfn_file_name,
-                                     path_lwfn, sizeof ( path_lwfn ) );
-        if ( !error )
-          have_lwfn = 1;
       }
     }
 
-    if ( have_lwfn && ( !have_sfnt || PREFER_LWFN ) )
-      error = FT_New_Face_From_LWFN( library,
-                                     path_lwfn,
-                                     face_index,
-                                     aface );
-    else
-      error = FT_THROW( Unknown_File_Format );
+    error = FT_THROW( Unknown_File_Format );
 
   found_no_lwfn_file:
     if ( have_sfnt && error )
@@ -764,38 +698,6 @@
                                      aface );
 
     return error;
-  }
-
-
-  /* Common function to load a new FT_Face from a resource file. */
-  static FT_Error
-  FT_New_Face_From_Resource( FT_Library    library,
-                             const UInt8*  pathname,
-                             FT_Long       face_index,
-                             FT_Face*      aface )
-  {
-    OSType    file_type;
-    FT_Error  error;
-
-
-    /* LWFN is a (very) specific file format, check for it explicitly */
-    file_type = get_file_type_from_path( pathname );
-    if ( file_type == TTAG_LWFN )
-      return FT_New_Face_From_LWFN( library, pathname, face_index, aface );
-
-    /* Otherwise the file type doesn't matter (there are more than  */
-    /* `FFIL' and `tfil').  Just try opening it as a font suitcase; */
-    /* if it works, fine.                                           */
-
-    error = FT_New_Face_From_Suitcase( library, pathname, face_index, aface );
-    if ( error )
-    {
-      /* let it fall through to normal loader (.ttf, .otf, etc.); */
-      /* we signal this by returning no error and no FT_Face      */
-      *aface = NULL;
-    }
-
-    return FT_Err_Ok;
   }
 
 
@@ -825,11 +727,9 @@
 
     *aface = NULL;
 
-    /* try resourcefork based font: LWFN, FFIL */
-    error = FT_New_Face_From_Resource( library, (UInt8 *)args->pathname,
-                                       face_index, aface );
-    if ( error || *aface )
-      return error;
+    error = FT_New_Face_From_Suitcase( library, args->pathname, face_index, aface );
+    if ( *aface )
+      return FT_Err_Ok;
 
     /* let it fall through to normal loader (.ttf, .otf, etc.) */
     return FT_Open_Face( library, args, face_index, aface );

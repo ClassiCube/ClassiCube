@@ -1,3 +1,4 @@
+#define GL_SILENCE_DEPRECATION
 #include "_WindowBase.h"
 #include "ExtMath.h"
 #include "Funcs.h"
