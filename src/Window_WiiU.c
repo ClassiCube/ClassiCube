@@ -21,6 +21,7 @@
 #include <vpad/input.h>
 #include <whb/proc.h>
 #include <padscore/kpad.h>
+#include <avm/drc.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
@@ -28,7 +29,7 @@ struct _WindowData WindowInfo;
 struct _WindowData Window_Alt;
 cc_bool launcherTop;
 
-void Window_Init(void) {
+static void LoadTVDimensions(void) {
 	switch(GX2GetSystemTVScanMode())
 	{
 	case GX2_TV_SCAN_MODE_480I:
@@ -47,7 +48,10 @@ void Window_Init(void) {
 		DisplayInfo.Height =  720;
 	break;
 	}
-	
+}
+
+void Window_Init(void) {
+	LoadTVDimensions();
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -72,10 +76,15 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+// OSScreen is always this buffer size, regardless of the current TV resolution
+#define OSSCREEN_TV_WIDTH  1280
+#define OSSCREEN_TV_HEIGHT  720
+#define OSSCREEN_DRC_WIDTH  854
+#define OSSCREEN_DRC_HEIGHT 480
+
 void Window_Create2D(int width, int height) {
-	// well this works in CEMU at least
-	Window_Main.Width   = 1280;
-	Window_Main.Height  =  720;
+	Window_Main.Width  = OSSCREEN_DRC_WIDTH;
+	Window_Main.Height = OSSCREEN_DRC_HEIGHT;
 	launcherMode  = true;  
 }
 
@@ -137,9 +146,14 @@ static void ProcessVpadTouch(VPADTouchData* data) {
 
 	// TODO rescale to main screen size
 	if (data->touched) {
-		int x = data->x, y = data->y;
+		int x = data->x;
+		int y = data->y;
 		Platform_Log2("TOUCH: %i, %i", &x, &y);
-		Input_AddTouch(0,    data->x,       data->y);
+
+		x = x * Window_Main.Width  / 1280;
+		y = y * Window_Main.Height /  720;
+
+		Input_AddTouch(0, x, y);
 	} else if (was_touched) {
 		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
 	}
@@ -189,31 +203,43 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	if (launcherTop) return; // TODO: Draw on DRC properly
-   
-	/*for (int y = r.y; y < r.y + r.height; y++) 
-	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width;
-		
-		for (int x = r.x; x < r.x + r.width; x++) {
-			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
-		}
-	}*/
+#define TV_OFFSET_X (OSSCREEN_TV_WIDTH  - OSSCREEN_DRC_WIDTH ) / 2
+#define TV_OFFSET_Y (OSSCREEN_TV_HEIGHT - OSSCREEN_DRC_HEIGHT) / 2
+
+static void DrawTVOutput(struct Bitmap* bmp) {
+	OSScreenClearBufferEx(SCREEN_TV, 0);
+
 	for (int y = 0; y < bmp->height; y++) 
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width;
 		
 		for (int x = 0; x < bmp->width; x++) {
-			OSScreenPutPixelEx(SCREEN_TV, x, y, src[x]);
+			OSScreenPutPixelEx(SCREEN_TV, x + TV_OFFSET_X, y + TV_OFFSET_Y, src[x]);
 		}
 	}
-
-	//DCFlushRange(sBufferTV, sBufferSizeTV);
 	OSScreenFlipBuffersEx(SCREEN_TV);
-	
-	OSScreenClearBufferEx(SCREEN_DRC, Launcher_Theme.BackgroundColor);
+}
+
+static void DrawDRCOutput(struct Bitmap* bmp) {
+	for (int y = 0; y < bmp->height; y++) 
+	{
+		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) {
+			OSScreenPutPixelEx(SCREEN_DRC, x, y, src[x]);
+		}
+	}
 	OSScreenFlipBuffersEx(SCREEN_DRC);
+
+}
+
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	if (launcherTop) return;
+
+	// Draw launcher output on both DRC and TV
+	// NOTE: Partial redraws produce bogus output, so always have to redraw all
+	DrawTVOutput(bmp);
+	DrawDRCOutput(bmp);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {

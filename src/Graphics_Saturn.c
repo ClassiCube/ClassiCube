@@ -40,11 +40,10 @@ static vdp1_cmdt_draw_mode_t _primitive_draw_mode = {
 	.raw = 0x0000
 };
 
-static struct {
-        int16_vec2_t points[4];
-} _primitive;
+static int16_vec2_t clear_points[4];
 
 
+// TODO: how to use VDP1 erase ??
 static void UpdateVDP1Env(void) {
 	vdp1_env_t env;
 	vdp1_env_default_init(&env);
@@ -57,18 +56,19 @@ static void UpdateVDP1Env(void) {
 	vdp1_env_set(&env);
 }
 
+// TODO: should be SCREEN_WIDTH/2 instead ?
 static void _primitive_init(void) {
-        _primitive.points[0].x = 0;
-        _primitive.points[0].y = SCREEN_WIDTH - 1;
+	clear_points[0].x = 0;
+	clear_points[0].y = SCREEN_WIDTH - 1;
 
-        _primitive.points[1].x = SCREEN_WIDTH  - 1;
-        _primitive.points[1].y = SCREEN_HEIGHT - 1;
+	clear_points[1].x = SCREEN_WIDTH  - 1;
+	clear_points[1].y = SCREEN_HEIGHT - 1;
 
-        _primitive.points[2].x = SCREEN_HEIGHT  - 1;
-        _primitive.points[2].y = 0;
+	clear_points[2].x = SCREEN_HEIGHT  - 1;
+	clear_points[2].y = 0;
 
-        _primitive.points[3].x = 0;
-        _primitive.points[3].y = 0;
+	clear_points[3].x = 0;
+	clear_points[3].y = 0;
 }
 
 static GfxResourceID white_square;
@@ -403,7 +403,7 @@ void Gfx_BeginFrame(void) {
 	vdp1_cmdt_polygon_set(cmd);
 	vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3)); // TODO VDP1 erase
 	vdp1_cmdt_draw_mode_set(cmd, _primitive_draw_mode);
-	vdp1_cmdt_vtx_set(cmd, &_primitive.points[0]);
+	vdp1_cmdt_vtx_set(cmd, clear_points);
 }
 
 void Gfx_EndFrame(void) {
