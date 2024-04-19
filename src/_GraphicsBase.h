@@ -324,6 +324,10 @@ void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags,
 	*tex = Gfx_CreateTexture(bmp, flags, mipmaps);
 }
 
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+}
+
 static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
 	cc_uint8* src_ = (cc_uint8*)src->scan0;

@@ -121,10 +121,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	SetTexturePartData(xtex, x, y, part, rowWidth, 0);
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 void Gfx_BindTexture(GfxResourceID texId) {
 	struct XenosSurface* xtex = (struct XenosSurface*)texId;
 	Xe_SetTexture(xe, 0, xtex);

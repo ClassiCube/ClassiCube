@@ -222,10 +222,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = (CCTexture*)(*texId);
 	if (!tex) return;

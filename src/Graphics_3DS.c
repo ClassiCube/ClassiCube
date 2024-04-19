@@ -414,10 +414,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
  	struct GPUTexture* tex = (struct GPUTexture*)texId;
 	ToMortonTexture(&tex->texture, x, y, part, rowWidth);
 }
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GPUTexture_Unref(texId);
 }

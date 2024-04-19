@@ -331,23 +331,24 @@ static void Game_WarnFunc(const cc_string* msg) {
 }
 
 static void LoadOptions(void) {
-	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
-	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
-	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
-	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
-	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
+	Game_ClassicMode  = Options_GetBool(OPT_CLASSIC_MODE,  false);
+	Game_ClassicHacks = Options_GetBool(OPT_CLASSIC_HACKS, false);
+	Game_Anaglyph3D   = Options_GetBool(OPT_ANAGLYPH3D,    false);
+	Game_ViewBobbing  = Options_GetBool(OPT_VIEW_BOBBING,  true);
+	
+	Game_AllowCustomBlocks   = !Game_ClassicMode && Options_GetBool(OPT_CUSTOM_BLOCKS,      true);
+	Game_SimpleArmsAnim      = !Game_ClassicMode && Options_GetBool(OPT_SIMPLE_ARMS_ANIM,   false);
+	Game_BreakableLiquids    = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
+	Game_AllowServerTextures = !Game_ClassicMode && Options_GetBool(OPT_SERVER_TEXTURES,    true);
 
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, DEFAULT_VIEWDIST);
 	Game_UserViewDistance = Game_ViewDistance;
-	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
-	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
 	/* TODO: Do we need to support option to skip SSL */
 	/*cc_bool skipSsl = Options_GetBool("skip-ssl-check", false);
 	if (skipSsl) {
 		ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 		Options.Set("skip-ssl-check", false);
 	}*/
-	Game_Anaglyph3D = Options_GetBool(OPT_ANAGLYPH3D, false);
 }
 
 #ifdef CC_BUILD_PLUGINS

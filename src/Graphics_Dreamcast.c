@@ -324,10 +324,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// TODO: Do we need to flush VRAM?
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*

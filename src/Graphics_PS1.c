@@ -271,10 +271,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// TODO
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 
