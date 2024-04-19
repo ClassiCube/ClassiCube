@@ -329,15 +329,19 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* par
 }
 
 static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
-	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
 	cc_uint8* src_ = (cc_uint8*)src->scan0;
 	cc_uint8* dst_ = (cc_uint8*)dst;
 	int y;
 
-	for (y = 0; y < src->height; y++) {
-		Mem_Copy(dst_, src_, src->width << 2);
-		src_ += srcStride;
-		dst_ += dstStride;
+	if (srcStride == dstStride) {
+		Mem_Copy(dst_, src_, Bitmap_DataSize(src->width, src->height));
+	} else {
+		/* Have to copy scanline by scanline */
+		for (y = 0; y < src->height; y++) {
+			Mem_Copy(dst_, src_, src->width << 2);
+			src_ += srcStride;
+			dst_ += dstStride;
+		}
 	}
 }
 
@@ -427,9 +431,13 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags) {
 	return maxSize == 0 || (width * height <= maxSize);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+	return Gfx_CreateTexture2(bmp, bmp->width, flags, mipmaps);
+}
+
+GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	if (Gfx.SupportsNonPowTwoTextures && (flags & TEXTURE_FLAG_NONPOW2)) {
 		/* Texture is being deliberately created and can be successfully created */
 		/* with non power of two dimensions. Typically used for UI textures */
@@ -440,7 +448,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	if (Gfx.LostContext) return 0;
 	if (!Gfx_CheckTextureSize(bmp->width, bmp->height, flags)) return 0;
 
-	return Gfx_AllocTexture(bmp, flags, mipmaps);
+	return Gfx_AllocTexture(bmp, rowWidth, flags, mipmaps);
 }
 
 void Texture_Render(const struct Texture* tex) {

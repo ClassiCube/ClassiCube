@@ -171,7 +171,7 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(16, 64 + size);
 	
@@ -180,7 +180,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
 	
-	Mem_Copy(tex->pixels, bmp->scan0, size);
+	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
 }
 

@@ -186,13 +186,13 @@ static GPUTexture* active_tex;
 #define BGRA8_to_PS1(src) \
 	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
 
-static void* AllocTextureAt(int i, struct Bitmap* bmp) {
+static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
 	if (!tmp) return NULL;
 
 	for (int y = 0; y < bmp->height; y++)
 	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
 		cc_uint16* dst = tmp        + y * bmp->width;
 		
 		for (int x = 0; x < bmp->width; x++) {
@@ -238,11 +238,11 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp) {
 	return tex;
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	for (int i = 0; i < TEXTURES_MAX_COUNT; i++)
 	{
 		if (textures[i].width) continue;
-		return AllocTextureAt(i, bmp);
+		return AllocTextureAt(i, bmp, rowWidth);
 	}
 
 	Platform_LogConst("No room for more textures");

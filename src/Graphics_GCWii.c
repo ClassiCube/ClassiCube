@@ -140,7 +140,7 @@ static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp,
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
 	if (!tex) return NULL;
@@ -149,7 +149,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 			GX_TF_RGBA8, GX_REPEAT, GX_REPEAT, GX_FALSE);
 	GX_InitTexObjFilterMode(&tex->obj, GX_NEAR, GX_NEAR);
 			
-	ReorderPixels(tex, bmp, 0, 0, bmp->width);
+	ReorderPixels(tex, bmp, 0, 0, rowWidth);
 	DCFlushRange(tex->pixels, size);
 	return tex;
 }

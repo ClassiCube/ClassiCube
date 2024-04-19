@@ -173,7 +173,7 @@ static unsigned Interleave(unsigned x) {
 	hi_X  = (x & shifted_mask) << shift_bits; \
 	X     = lo_X | hi_X;
 
-static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
+static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp, int rowWidth) {
 	unsigned min_dimension;
 	unsigned interleave_mask, interleaved_bits;
 	unsigned shifted_mask, shift_bits;
@@ -181,10 +181,11 @@ static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
 	unsigned lo_X, hi_X, X;	
 	Twiddle_CalcFactors(bmp->width, bmp->height);
 	
-	cc_uint32* src = bmp->scan0;	
 	for (int y = 0; y < bmp->height; y++)
 	{
 		Twiddle_CalcY(y);
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		
 		for (int x = 0; x < bmp->width; x++, src++)
 		{
 			Twiddle_CalcX(x);
@@ -193,14 +194,14 @@ static void ConvertTexture(cc_uint32* dst, struct Bitmap* bmp) {
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = Mem_Alloc(1, sizeof(CCTexture), "GPU texture");
 	tex->pixels    = MmAllocateContiguousMemoryEx(size, 0, MAX_RAM_ADDR, 0, PAGE_WRITECOMBINE | PAGE_READWRITE);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	ConvertTexture(tex->pixels, bmp);
+	ConvertTexture(tex->pixels, bmp, rowWidth);
 	return tex;
 }
 

@@ -252,7 +252,7 @@ static unsigned Interleave(unsigned x) {
 #define BGRA8_to_BGRA4(src) \
 	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
 
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
+static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 	unsigned min_dimension;
 	unsigned interleave_mask, interleaved_bits;
 	unsigned shifted_mask, shift_bits;
@@ -260,10 +260,11 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	unsigned lo_X, hi_X, X;	
 	Twiddle_CalcFactors(bmp->width, bmp->height);
 	
-	cc_uint8* src = (cc_uint8*)bmp->scan0;	
 	for (int y = 0; y < bmp->height; y++)
 	{
 		Twiddle_CalcY(y);
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
+		
 		for (int x = 0; x < bmp->width; x++, src += 4)
 		{
 			Twiddle_CalcX(x);
@@ -272,7 +273,7 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GLuint texId = gldcGenTexture();
 	gldcBindTexture(texId);
 	
@@ -282,7 +283,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	void* pixels;
 	GLsizei width, height;
 	gldcGetTexture(&pixels, &width, &height);
-	ConvertTexture(pixels, bmp);
+	ConvertTexture(pixels, bmp, rowWidth);
 	return texId;
 }
 

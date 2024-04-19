@@ -98,6 +98,7 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags);
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend */
 CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
 CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */

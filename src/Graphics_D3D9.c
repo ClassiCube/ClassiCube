@@ -247,13 +247,12 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, int lvl) {
+static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, int rowWidth, int lvl) {
 	D3DLOCKED_RECT rect;
 	cc_result res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockTextureData");
 
-	cc_uint32 size = Bitmap_DataSize(bmp->width, bmp->height);
-	Mem_Copy(rect.pBits, bmp->scan0, size);
+	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth << 2);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
 	if (res) Logger_Abort2(res, "D3D9_UnlockTextureData");
@@ -263,7 +262,6 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, co
 	D3DLOCKED_RECT rect;
 	cc_result res;
 	RECT part;
-
 	part.left = x; part.right  = x + bmp->width;
 	part.top  = y; part.bottom = y + bmp->height;
 
@@ -271,6 +269,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, co
 	if (res) Logger_Abort2(res, "D3D9_LockTexturePartData");
 
 	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth << 2);
+
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
 	if (res) Logger_Abort2(res, "D3D9_UnlockTexturePartData");
 }
@@ -295,7 +294,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 		if (partial) {
 			D3D9_SetTexturePartData(texture, x, y, &mipmap, width, lvl);
 		} else {
-			D3D9_SetTextureData(texture, &mipmap, lvl);
+			D3D9_SetTextureData(texture, &mipmap, width, lvl);
 		}
 
 		if (prev != bmp->scan0) Mem_Free(prev);
@@ -328,7 +327,7 @@ static IDirect3DTexture9* DoCreateTexture(struct Bitmap* bmp, int levels, int po
 	return tex;
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
 	cc_result res;
@@ -350,14 +349,14 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 			}
 		}
 
-		D3D9_SetTextureData(tex, bmp, 0);
-		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
+		D3D9_SetTextureData(tex, bmp, rowWidth, 0);
+		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, rowWidth, false);
 		return tex;
 	}
 
 	sys = DoCreateTexture(bmp, levels, D3DPOOL_SYSTEMMEM);
-	D3D9_SetTextureData(sys, bmp, 0);
-	if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
+	D3D9_SetTextureData(sys, bmp, rowWidth, 0);
+	if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, rowWidth, false);
 		
 	tex = DoCreateTexture(bmp, levels, D3DPOOL_DEFAULT);
 	res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);

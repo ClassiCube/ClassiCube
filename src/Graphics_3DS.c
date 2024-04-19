@@ -400,12 +400,12 @@ static void ToMortonTexture(C3D_Tex* tex, int originX, int originY,
 }
 
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	struct GPUTexture* tex = GPUTexture_Alloc();
 	bool success = CreateNativeTexture(&tex->texture, bmp->width, bmp->height);
 	if (!success) return NULL;
 	
-	ToMortonTexture(&tex->texture, 0, 0, bmp, bmp->width);
+	ToMortonTexture(&tex->texture, 0, 0, bmp, rowWidth);
 	if (!(flags & TEXTURE_FLAG_DYNAMIC)) TryTransferToVRAM(&tex->texture);
     return tex;
 }

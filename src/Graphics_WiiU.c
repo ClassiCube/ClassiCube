@@ -85,7 +85,7 @@ static void Gfx_RestoreState(void) {
 *#########################################################################################################################*/
 static GX2Texture* pendingTex;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GX2Texture* tex = Mem_AllocCleared(1, sizeof(GX2Texture), "GX2 texture");
 	// TODO handle out of memory better
 	int width = bmp->width, height = bmp->height;
@@ -102,14 +102,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	tex->surface.image = MEMAllocFromDefaultHeapEx(tex->surface.imageSize, tex->surface.alignment);
 	// TODO check result
   
-	uint32_t* dst = (uint32_t*)tex->surface.image;
-	uint32_t* src = (uint32_t*)bmp->scan0;
-	for (int i = 0; i < tex->surface.height; i++)
-	{
-		Mem_Copy(dst, src, width * sizeof(uint32_t));
-		dst += tex->surface.pitch;
-		src += width;
-	}
+	CopyTextureData(tex->surface.image, tex->surface.pitch, bmp, rowWidth << 2);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 	return tex;
 }

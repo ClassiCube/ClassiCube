@@ -122,31 +122,17 @@ static void Atlas_Update(struct Bitmap* bmp) {
 	Atlas_Convert2DTo1D();
 }
 
-static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, struct Bitmap* element) {
+GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	int size = Atlas2D.TileSize;
+	struct Bitmap tile;
+
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	if (y >= Atlas2D.RowsCount) return 0;
 
-	Bitmap_UNSAFE_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bmp, element, size);
-	return Gfx_CreateTexture(element, 0, Gfx.Mipmaps);
-}
-
-GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
-	BitmapCol pixels[64 * 64];
-	int size = Atlas2D.TileSize;
-	struct Bitmap tile;
-	GfxResourceID texId;
-
-	/* Try to allocate bitmap on stack if possible */
-	if (size > 64) {
-		Bitmap_Allocate(&tile, size, size);
-		texId = Atlas_LoadTile_Raw(texLoc, &tile);
-		Mem_Free(tile.scan0);
-		return texId;
-	} else {	
-		Bitmap_Init(tile, size, size, pixels);
-		return Atlas_LoadTile_Raw(texLoc, &tile);
-	}
+	tile.scan0  = Bitmap_GetRow(&Atlas2D.Bmp, y * size) + (x * size);
+	tile.width  = size;
+	tile.height = size;
+	return Gfx_CreateTexture2(&tile, Atlas2D.Bmp.width, 0, Gfx.Mipmaps);
 }
 
 static void Atlas2D_Free(void) {

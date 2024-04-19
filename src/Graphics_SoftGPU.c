@@ -83,13 +83,12 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 		
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)Mem_Alloc(2 + bmp->width * bmp->height, 4, "Texture");
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	Mem_Copy(tex->pixels, bmp->scan0, size);
+	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
 }
 

@@ -93,16 +93,7 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void SetTextureData(struct XenosSurface* xtex, struct Bitmap* bmp) {
-	void* dst = Xe_Surface_LockRect(xe, xtex, 0, 0, bmp->width, bmp->height, XE_LOCK_WRITE);
-	cc_uint32 size = Bitmap_DataSize(bmp->width, bmp->height);
-	
-	Mem_Copy(dst, bmp->scan0, size);
-	
-	Xe_Surface_Unlock(xe, xtex);
-}
-
-static void SetTexturePartData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
+static void SetTextureData(struct XenosSurface* xtex, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
 	void* dst = Xe_Surface_LockRect(xe, xtex, x, y, bmp->width, bmp->height, XE_LOCK_WRITE);
 
 	CopyTextureData(dst, bmp->width * 4, bmp, rowWidth << 2);
@@ -110,15 +101,15 @@ static void SetTexturePartData(struct XenosSurface* xtex, int x, int y, const st
 	Xe_Surface_Unlock(xe, xtex);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	struct XenosSurface* xtex = Xe_CreateTexture(xe, bmp->width, bmp->height, 1, XE_FMT_8888, 0);
-	SetTextureData(xtex, bmp);
+	SetTextureData(xtex, 0, 0, bmp, rowWidth, 0);
 	return xtex;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	struct XenosSurface* xtex = (struct XenosSurface*)texId;
-	SetTexturePartData(xtex, x, y, part, rowWidth, 0);
+	SetTextureData(xtex, x, y, part, rowWidth, 0);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {

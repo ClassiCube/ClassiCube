@@ -96,10 +96,11 @@ void Gfx_EndFrame(void) {
 #define BGRA8_to_DS(src) \
 	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8);	
 
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
-	cc_uint8* src = (cc_uint8*)bmp->scan0;	
+static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 	for (int y = 0; y < bmp->height; y++)
 	{
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
+		
 		for (int x = 0; x < bmp->width; x++, src += 4)
 		{
 			*dst++ = BGRA8_to_DS(src);
@@ -107,12 +108,12 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
     vramSetBankA(VRAM_A_TEXTURE);
 
     cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
     if (!tmp) return 0;
-    ConvertTexture(tmp, bmp);
+    ConvertTexture(tmp, bmp, rowWidth);
 
     int textureID;
     glGenTextures(1, &textureID);
