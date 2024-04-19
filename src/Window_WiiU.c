@@ -50,6 +50,18 @@ static void LoadTVDimensions(void) {
 	}
 }
 
+static uint32_t OnAcquired(void* context) {
+	Window_Main.Inactive = false;
+	Event_RaiseVoid(&WindowEvents.InactiveChanged);
+	return 0;
+}
+
+static uint32_t OnReleased(void* context) {
+	Window_Main.Inactive = true;
+	Event_RaiseVoid(&WindowEvents.InactiveChanged);
+	return 0;
+}
+
 void Window_Init(void) {
 	LoadTVDimensions();
 	DisplayInfo.ScaleX = 1;
@@ -72,6 +84,9 @@ void Window_Init(void) {
 		
 	KPADInit();
 	VPADInit();
+
+	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
+	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
 }
 
 void Window_Free(void) { }
@@ -81,17 +96,22 @@ void Window_Free(void) { }
 #define OSSCREEN_TV_HEIGHT  720
 #define OSSCREEN_DRC_WIDTH  854
 #define OSSCREEN_DRC_HEIGHT 480
+static void LauncherInactiveChanged(void* obj);
 
 void Window_Create2D(int width, int height) {
 	Window_Main.Width  = OSSCREEN_DRC_WIDTH;
 	Window_Main.Height = OSSCREEN_DRC_HEIGHT;
-	launcherMode  = true;  
+
+	launcherMode = true;
+	Event_Register_(&WindowEvents.InactiveChanged,   LauncherInactiveChanged, NULL);
 }
 
 void Window_Create3D(int width, int height) { 
 	Window_Main.Width   = DisplayInfo.Width;
 	Window_Main.Height  = DisplayInfo.Height;
+
 	launcherMode = false; 
+	Event_Unregister_(&WindowEvents.InactiveChanged, LauncherInactiveChanged, NULL);
 }
 
 void Window_RequestClose(void) {
@@ -198,8 +218,40 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+#define FB_HEAP_TAG (0x200CCBFF)
+
+static void AllocNativeFramebuffer(void) {
+	MEMHeapHandle heap = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
+	MEMRecordStateForFrmHeap(heap, FB_HEAP_TAG);
+
+	int tv_size   = OSScreenGetBufferSizeEx(SCREEN_TV);
+	void* tv_data = MEMAllocFromFrmHeapEx(heap, tv_size, 4);
+	OSScreenSetBufferEx(SCREEN_TV, tv_data);
+	
+	int drc_size   = OSScreenGetBufferSizeEx(SCREEN_DRC);
+    void* drc_data = MEMAllocFromFrmHeapEx(heap, drc_size, 4);
+	OSScreenSetBufferEx(SCREEN_DRC, drc_data);
+}
+
+static void FreeNativeFramebuffer(void) {
+   MEMHeapHandle heap = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
+   MEMFreeByStateToFrmHeap(heap, FB_HEAP_TAG);
+}
+
+static void LauncherInactiveChanged(void* obj) {
+	if (Window_Main.Inactive) {
+		FreeNativeFramebuffer();
+	} else {
+		AllocNativeFramebuffer();
+	}
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	WHBLogConsoleInit();  	
+	OSScreenInit();
+	AllocNativeFramebuffer();
+	OSScreenEnableEx(SCREEN_TV, 1);
+	OSScreenEnableEx(SCREEN_DRC, 1);
+ 	
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
@@ -234,7 +286,7 @@ static void DrawDRCOutput(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	if (launcherTop) return;
+	if (launcherTop || Window_Main.Inactive) return;
 
 	// Draw launcher output on both DRC and TV
 	// NOTE: Partial redraws produce bogus output, so always have to redraw all
@@ -244,7 +296,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
-	WHBLogConsoleFree();
+	FreeNativeFramebuffer();
+	OSScreenShutdown();
 }
 
 
