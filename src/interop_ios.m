@@ -1466,6 +1466,7 @@ static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     lbl.textColor = UIColor.whiteColor;
     lbl.text      = ToNSString(&w->text);
+    lbl.backgroundColor = UIColor.clearColor;
     [lbl sizeToFit]; // adjust label to fit text
                      
     [root addSubview:swt];
@@ -1563,6 +1564,7 @@ void LBackend_LabelInit(struct LLabel* w) { }
 static UIView* LBackend_LabelShow(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     w->meta       = (__bridge void*)lbl;
+    lbl.backgroundColor = UIColor.clearColor;
     
     if (w->small) lbl.font = [UIFont systemFontOfSize:14.0f];
     LBackend_LabelUpdate(w);
