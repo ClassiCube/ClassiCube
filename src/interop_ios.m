@@ -1,5 +1,4 @@
 #define GLES_SILENCE_DEPRECATION
-#define GL_SILENCE_DEPRECATION
 #include "_WindowBase.h"
 #include "Bitmap.h"
 #include "Input.h"
@@ -75,6 +74,15 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
 }
 
 static cc_bool fullscreen = true;
+static void UpdateStatusBar(void) {
+    if ([cc_controller respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
+        // setNeedsStatusBarAppearanceUpdate - iOS 7.0
+        [cc_controller setNeedsStatusBarAppearanceUpdate];
+    } else {
+        [[UIApplication sharedApplication] setStatusBarHidden:fullscreen withAnimation:UIStatusBarAnimationNone];
+    }
+}
+
 static CGRect GetViewFrame(void) {
     UIScreen* screen = UIScreen.mainScreen;
     return fullscreen ? screen.bounds : screen.applicationFrame;
@@ -442,8 +450,10 @@ static UIColor* CalcBackgroundColor(void) {
 
 static CGRect DoCreateWindow(void) {
     // UIKeyboardWillShowNotification - iOS 2.0
-    CGRect bounds = GetViewFrame();
     cc_controller = [CCViewController alloc];
+    UpdateStatusBar();
+    
+    CGRect bounds = GetViewFrame();
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
     win_handle.rootViewController = cc_controller;
@@ -574,9 +584,8 @@ int Window_GetWindowState(void) {
 }
 
 static void ToggleFullscreen(cc_bool isFullscreen) {
-    // setNeedsStatusBarAppearanceUpdate - iOS 7.0
     fullscreen = isFullscreen;
-    [cc_controller setNeedsStatusBarAppearanceUpdate];
+    UpdateStatusBar();
     view_handle.frame = GetViewFrame();
 }
 
@@ -1469,11 +1478,11 @@ static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     UILabel* lbl  = [[UILabel alloc] init];
+    lbl.backgroundColor = UIColor.clearColor;
     lbl.textColor = UIColor.whiteColor;
     lbl.text      = ToNSString(&w->text);
-    lbl.backgroundColor = UIColor.clearColor;
     [lbl sizeToFit]; // adjust label to fit text
-                     
+    
     [root addSubview:swt];
     [root addSubview:lbl];
     
@@ -1644,8 +1653,10 @@ void LBackend_TableInit(struct LTable* w) { }
 
 static UIView* LBackend_TableShow(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.delegate     = ui_controller;
-    tbl.dataSource   = ui_controller;
+    tbl.delegate   = ui_controller;
+    tbl.dataSource = ui_controller;
+    tbl.editing    = NO;
+    tbl.allowsSelection = YES;
     LTable_UpdateCellColor(tbl, NULL, 1, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
