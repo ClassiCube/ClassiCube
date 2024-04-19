@@ -252,7 +252,7 @@ static struct ListScreen {
 	struct StringsBuffer entries;
 } ListScreen;
 
-static struct Widget* list_widgets[10];
+static struct Widget* list_widgets[LIST_SCREEN_ITEMS + 4 + 1];
 #define LISTSCREEN_EMPTY "-"
 
 static void ListScreen_Layout(void* screen) {
@@ -799,12 +799,7 @@ static struct EditHotkeyScreen {
 	struct ButtonWidget btns[5], cancel;
 } EditHotkeyScreen;
 
-static struct Widget* edithotkey_widgets[] = {
-	(struct Widget*)&EditHotkeyScreen.btns[0], (struct Widget*)&EditHotkeyScreen.btns[1],
-	(struct Widget*)&EditHotkeyScreen.btns[2], (struct Widget*)&EditHotkeyScreen.btns[3],
-	(struct Widget*)&EditHotkeyScreen.btns[4], (struct Widget*)&EditHotkeyScreen.input,
-	(struct Widget*)&EditHotkeyScreen.cancel
-};
+static struct Widget* edithotkey_widgets[1 + 5 + 1];
 
 static void HotkeyListScreen_MakeFlags(int flags, cc_string* str);
 static void EditHotkeyScreen_MakeFlags(int flags, cc_string* str) {
@@ -1011,22 +1006,24 @@ static void EditHotkeyScreen_Init(void* screen) {
 	cc_string text;
 
 	s->widgets     = edithotkey_widgets;
-	s->numWidgets  = Array_Elems(edithotkey_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(edithotkey_widgets);
+	
 	s->selectedI   = -1;
 	MenuInput_String(desc);
 
-	ButtonWidget_Init(&s->btns[0], 300, EditHotkeyScreen_BaseKey);
-	ButtonWidget_Init(&s->btns[1], 300, EditHotkeyScreen_Modifiers);
-	ButtonWidget_Init(&s->btns[2], 300, EditHotkeyScreen_LeaveOpen);
-	ButtonWidget_Init(&s->btns[3], 300, EditHotkeyScreen_SaveChanges);
-	ButtonWidget_Init(&s->btns[4], 300, EditHotkeyScreen_RemoveHotkey);
+	ButtonWidget_Add(s, &s->btns[0], 300, EditHotkeyScreen_BaseKey);
+	ButtonWidget_Add(s, &s->btns[1], 300, EditHotkeyScreen_Modifiers);
+	ButtonWidget_Add(s, &s->btns[2], 300, EditHotkeyScreen_LeaveOpen);
+	ButtonWidget_Add(s, &s->btns[3], 300, EditHotkeyScreen_SaveChanges);
+	ButtonWidget_Add(s, &s->btns[4], 300, EditHotkeyScreen_RemoveHotkey);
 
 	if (s->origHotkey.trigger) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.textIndex);
 	} else { text = String_Empty; }
 
-	TextInputWidget_Create(&s->input, 500, &text, &desc);
-	ButtonWidget_Init(&s->cancel, 400, Menu_SwitchHotkeys);
+	TextInputWidget_Add(s, &s->input, 500, &text, &desc);
+	ButtonWidget_Add(s,    &s->cancel, 400, Menu_SwitchHotkeys);
 	s->input.onscreenPlaceholder = "Hotkey text";
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
@@ -1284,11 +1281,7 @@ static struct ClassicGenScreen {
 	struct TextWidget title;
 } ClassicGenScreen;
 
-static struct Widget* classicgen_widgets[] = {
-	(struct Widget*)&ClassicGenScreen.title,
-	(struct Widget*)&ClassicGenScreen.btns[0], (struct Widget*)&ClassicGenScreen.btns[1],
-	(struct Widget*)&ClassicGenScreen.btns[2], (struct Widget*)&ClassicGenScreen.cancel
-};
+static struct Widget* classicgen_widgets[1 + 3 + 1];
 
 static void ClassicGenScreen_Gen(int size) {
 	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
@@ -1330,13 +1323,14 @@ static void ClassicGenScreen_Layout(void* screen) {
 static void ClassicGenScreen_Init(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	s->widgets     = classicgen_widgets;
-	s->numWidgets  = Array_Elems(classicgen_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(classicgen_widgets);
 
-	TextWidget_Init(&s->title);
-	ButtonWidget_Init(&s->btns[0], 400, ClassicGenScreen_Small);
-	ButtonWidget_Init(&s->btns[1], 400, ClassicGenScreen_Medium);
-	ButtonWidget_Init(&s->btns[2], 400, ClassicGenScreen_Huge);
-	ButtonWidget_Init(&s->cancel,  400, Menu_SwitchPause);
+	TextWidget_Add(s,   &s->title);
+	ButtonWidget_Add(s, &s->btns[0], 400, ClassicGenScreen_Small);
+	ButtonWidget_Add(s, &s->btns[1], 400, ClassicGenScreen_Medium);
+	ButtonWidget_Add(s, &s->btns[2], 400, ClassicGenScreen_Huge);
+	ButtonWidget_Add(s, &s->cancel,  400, Menu_SwitchPause);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -1368,7 +1362,7 @@ static struct SaveLevelScreen {
 	struct TextWidget desc;
 } SaveLevelScreen;
 
-static struct Widget* save_widgets[5];
+static struct Widget* save_widgets[3 + 1 + 1];
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
@@ -2250,7 +2244,7 @@ static struct MenuInputOverlay {
 	cc_string value; char valueBuffer[STRING_SIZE];
 } MenuInputOverlay;
 
-static struct Widget* menuInput_widgets[3];
+static struct Widget* menuInput_widgets[2 + 1];
 
 static void MenuInputOverlay_Close(struct MenuInputOverlay* s, cc_bool valid) {
 	Gui_Remove((struct Screen*)&MenuInputOverlay);

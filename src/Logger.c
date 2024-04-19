@@ -285,7 +285,11 @@ static void DumpFrame(cc_string* trace, void* addr) {
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
 static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
-	return ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, numBytesRead);
+	SIZE_T numRead = 0;
+	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
+	
+	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
+	return ok;
 }
 static cc_uintptr spRegister;
 
@@ -1033,7 +1037,7 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
-	code = (cc_uint32)info->ExceptionRecord->ExceptionCode;
+	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
 	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
 	desc = ExceptionDescribe(code);
 
@@ -1082,7 +1086,7 @@ void Logger_Hook(void) {
 	GetVersionExA(&osInfo);
 
 	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-		curProcess = (HANDLE)GetCurrentProcessId();
+		curProcess = (HANDLE)((cc_uintptr)GetCurrentProcessId());
 	}
 }
 #elif defined CC_BUILD_POSIX
