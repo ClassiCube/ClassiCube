@@ -102,7 +102,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	tex->surface.image = MEMAllocFromDefaultHeapEx(tex->surface.imageSize, tex->surface.alignment);
 	// TODO check result
   
-	CopyTextureData(tex->surface.image, tex->surface.pitch, bmp, rowWidth << 2);
+	CopyTextureData(tex->surface.image, tex->surface.pitch << 2, bmp, rowWidth << 2);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, tex->surface.image, tex->surface.imageSize);
 	return tex;
 }
