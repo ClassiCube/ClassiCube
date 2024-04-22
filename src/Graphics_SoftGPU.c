@@ -354,11 +354,13 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	if (frag1.w <= 0 || frag2.w <= 0 || frag3.w <= 0) return;
 	
 	for (int y = minY; y <= maxY; y++) {
+		float yy = y + 0.5f;
 		for (int x = minX; x <= maxX; x++) {
-			float ic0 = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) * factor;
+			float xx = x + 0.5f;
 			
+			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;		
 			if (ic0 < 0 || ic0 > 1) continue;
-			float ic1 = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) * factor;
+			float ic1 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) * factor;
 			if (ic1 < 0 || ic1 > 1) continue;
 			float ic2 = 1.0f - ic0 - ic1;
 			if (ic2 < 0 || ic2 > 1) continue;
@@ -368,8 +370,10 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			float z = (ic0 * frag1.z + ic1 * frag2.z + ic2 * frag3.z) * w;
 
 			if (depthTest && (z < 0 || z > depthBuffer[index])) continue;
-			if (depthWrite) depthBuffer[index] = z;
-			if (!colWrite)  continue;
+			if (!colWrite) {
+				if (depthWrite) depthBuffer[index] = z;
+				continue;
+			}
 
 			PackedCol fragColor = color;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
@@ -399,6 +403,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			}
 			if (alphaTest && A < 0x80) continue;
 
+			if (depthWrite) depthBuffer[index] = z;
 			colorBuffer[index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
 	}
