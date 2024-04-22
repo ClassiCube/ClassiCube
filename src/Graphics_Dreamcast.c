@@ -18,6 +18,8 @@ static cc_bool renderingDisabled;
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
 	
+	Gfx.MinTexWidth  = 8;
+	Gfx.MinTexHeight = 8;
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512; // reasonable cap as Dreamcast only has 8MB VRAM

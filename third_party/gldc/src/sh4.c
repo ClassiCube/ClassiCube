@@ -3,7 +3,7 @@
 
 #define CLIP_DEBUG 0
 
-#define PVR_VERTEX_BUF_SIZE 2560 * 256
+#define PVR_VERTEX_BUF_SIZE 32 * 30000
 
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)

@@ -182,29 +182,8 @@ static GLuint _determinePVRFormat(GLint internalFormat, GLenum type) {
 }
 
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define INFO_MSG(x) fprintf(stderr, "%s:%s > %s\n", __FILE__, TOSTRING(__LINE__), x)
-
 int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) {
     TRACE();
-
-    if (w > 1024 || h > 1024){
-        INFO_MSG("Invalid texture size");
-        return GL_INVALID_VALUE;
-    }
-
-    if((w < 8 || (w & -w) != w)) {
-        /* Width is not a power of two. Must be!*/
-        INFO_MSG("Invalid texture width");
-        return GL_INVALID_VALUE;
-    }
-
-    if((h < 8 || (h & -h) != h)) {
-        /* height is not a power of two. Must be!*/
-        INFO_MSG("Invalid texture height");
-        return GL_INVALID_VALUE;
-    }
 
     TextureObject* active = TEXTURE_ACTIVE;
     /* Calculate the format that we need to convert the data to */
@@ -236,7 +215,7 @@ int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) 
 
     /* If we run out of PVR memory just return */
     if(!active->data) {
-        INFO_MSG("Out of texture memory");
+        fprintf(stderr, "Out of texture memory\n");
         return GL_OUT_OF_MEMORY;
     }
 
