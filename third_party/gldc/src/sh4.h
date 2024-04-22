@@ -83,10 +83,6 @@ GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* ox
 
 void InitGPU(_Bool autosort, _Bool fsaa);
 
-static inline void* GPUMemoryAlloc(size_t size) {
-    return pvr_mem_malloc(size);
-}
-
 #define PT_ALPHA_REF 0x011c
 
 static inline void GPUSetAlphaCutOff(uint8_t val) {

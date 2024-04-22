@@ -90,7 +90,7 @@ GLubyte _glInitTextures() {
 
     size_t vram_free = pvr_mem_available();
     YALLOC_SIZE = vram_free - PVR_MEM_BUFFER_SIZE; /* Take all but 64kb VRAM */
-    YALLOC_BASE = GPUMemoryAlloc(YALLOC_SIZE);
+    YALLOC_BASE = pvr_mem_malloc(YALLOC_SIZE);
 
 #ifdef __DREAMCAST__
     /* Ensure memory is aligned */
