@@ -9,7 +9,7 @@ include $(YAUL_INSTALL_ROOT)/share/build.pre.mk
 # Each asset follows the format: <path>;<symbol>. Duplicates are removed
 BUILTIN_ASSETS=
 
-SH_PROGRAM		:= ClassiCube
+SH_PROGRAM		:= ClassiCube-saturn
 SH_SRCS			:= $(wildcard src/*.c)
 
 SH_CFLAGS+= -Os -I. -DPLAT_SATURN
