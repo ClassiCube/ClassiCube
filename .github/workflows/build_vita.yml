@@ -10,15 +10,20 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
-      image: gnuton/vitasdk-docker:latest
+      image: vitasdk/vitasdk-docker:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Compile Vita build
         id: compile
         run: |
           make vita
           
 
+      # otherwise notify_failure doesn't work
+      - name: Install curl when necessary
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        run: apk add curl curl-dev
+        
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:

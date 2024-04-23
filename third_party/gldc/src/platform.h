@@ -7,8 +7,6 @@
 #include "gl_assert.h"
 #include "types.h"
 
-#define MEMSET(dst, v, size) memset((dst), (v), (size))
-
 typedef enum GPUAlpha {
     GPU_ALPHA_DISABLE = 0,
     GPU_ALPHA_ENABLE = 1
