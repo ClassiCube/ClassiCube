@@ -9,8 +9,7 @@ static const void* VERTEX_PTR;
     while(i--)
 
 void _glInitAttributePointers() {
-    VERTEX_PTR    = NULL;
-    VERTEX_STRIDE = 0;
+    VERTEX_PTR = NULL;
 }
 
 
@@ -146,5 +145,5 @@ void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
 }
 
 void APIENTRY gldcVertexPointer(GLsizei stride, const GLvoid * pointer) {
-    VERTEX_PTR    = pointer;
+    VERTEX_PTR = pointer;
 }

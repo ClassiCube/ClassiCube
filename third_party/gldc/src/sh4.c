@@ -88,7 +88,6 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
 }
 
 static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout) {
-    const static float o = 0.003921569f;  // 1 / 255
     const float d0 = v1->w + v1->xyz[2];
     const float d1 = v2->w + v2->xyz[2];
     const float t = (fabs(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
@@ -103,13 +102,10 @@ static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, V
 
     vout->w = invt * v1->w + t * v2->w;
 
-    const float m = 255 * t;
-    const float n = 255 - m;
-
-    vout->bgra[0] = (v1->bgra[0] * n + v2->bgra[0] * m) * o;
-    vout->bgra[1] = (v1->bgra[1] * n + v2->bgra[1] * m) * o;
-    vout->bgra[2] = (v1->bgra[2] * n + v2->bgra[2] * m) * o;
-    vout->bgra[3] = (v1->bgra[3] * n + v2->bgra[3] * m) * o;
+    vout->bgra[0] = invt * v1->bgra[0] + t * v2->bgra[0];
+    vout->bgra[1] = invt * v1->bgra[1] + t * v2->bgra[1];
+    vout->bgra[2] = invt * v1->bgra[2] + t * v2->bgra[2];
+    vout->bgra[3] = invt * v1->bgra[3] + t * v2->bgra[3];
 }
 
 #define SPAN_SORT_CFG 0x005F8030
