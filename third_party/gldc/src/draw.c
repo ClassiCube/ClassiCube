@@ -8,10 +8,6 @@ static const void* VERTEX_PTR;
     GLuint i = count; \
     while(i--)
 
-void _glInitAttributePointers() {
-    VERTEX_PTR = NULL;
-}
-
 
 /* Generating PVR vertices from the user-submitted data gets complicated, particularly
  * when a realloc could invalidate pointers. This structure holds all the information

@@ -80,7 +80,7 @@ static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
     txr->mipmap_bias = GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS;
 }
 
-GLubyte _glInitTextures() {
+void _glInitTextures() {
     memset(TEXTURE_USED, 0, sizeof(TEXTURE_USED));
 
     // Initialize zero as an actual texture object though because apparently it is!
@@ -98,7 +98,6 @@ GLubyte _glInitTextures() {
 #endif
 
     yalloc_init(YALLOC_BASE, YALLOC_SIZE);
-    return 1;
 }
 
 GLuint APIENTRY gldcGenTexture(void) {

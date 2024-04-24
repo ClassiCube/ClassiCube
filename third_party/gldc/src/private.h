@@ -107,12 +107,9 @@ GL_FORCE_INLINE void memcpy_vertex(Vertex *dest, const Vertex *src) {
 #endif
 }
 
-void _glInitAttributePointers();
 void _glInitContext();
-void _glInitMatrices();
 void _glInitSubmissionTarget();
-
-GLubyte _glInitTextures();
+void _glInitTextures();
 
 extern TextureObject* TEXTURE_ACTIVE;
 extern GLboolean TEXTURES_ENABLED;

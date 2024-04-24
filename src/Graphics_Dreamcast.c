@@ -15,8 +15,23 @@ static cc_bool renderingDisabled;
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitGLState(void) {
+	glClearDepth(1.0f);
+	glDepthMask(GL_TRUE);
+	glShadeModel(GL_SMOOTH);
+
+	glDisable(GL_ALPHA_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_FOG);
+}
+
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
+	glViewport(0, 0, vid_mode->width, vid_mode->height);
+	InitGLState();
 	
 	Gfx.MinTexWidth  = 8;
 	Gfx.MinTexHeight = 8;

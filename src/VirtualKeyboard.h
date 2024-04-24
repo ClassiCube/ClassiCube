@@ -47,7 +47,7 @@ static const char* kb_table_upper[] =
 	"Caps", "Shift", "Space", "Close"
 };
 
-extern void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
+extern void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int borderX, int borderY,
 								int x, int y, int width, int height);
 
 static void VirtualKeyboard_Init(void) {

@@ -41,7 +41,6 @@ __BEGIN_DECLS
 #define GL_GEQUAL             0x0206
 #define GL_ALWAYS             0x0207
 #define GL_DEPTH_TEST         0x0B71
-#define GL_DEPTH_BITS         0x0D56
 #define GL_DEPTH_FUNC         0x0B74
 #define GL_DEPTH_WRITEMASK    0x0B72
 
@@ -146,7 +145,6 @@ GLAPI void glClear(GLuint mode);
 
 /* Depth Testing */
 GLAPI void glClearDepth(GLfloat depth);
-GLAPI void glClearDepthf(GLfloat depth);
 GLAPI void glDepthMask(GLboolean flag);
 GLAPI void glDepthFunc(GLenum func);
 GLAPI void glDepthRange(GLclampf n, GLclampf f);
@@ -186,7 +184,6 @@ GLAPI void gldcVertexPointer(GLsizei stride, const GLvoid *pointer);
 
 /* Array Data Submission */
 GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-GLAPI void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
 
 /* Transformation / Matrix Functions */
 
