@@ -1516,7 +1516,7 @@ cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 void Audio_FreeChunks(void** chunks, int numChunks) {
 	AudioBase_FreeChunks(chunks, numChunks);
 }
-#elif defined CC_BUILD_SDL2
+#elif defined CC_BUILD_OS2__ 
 /*########################################################################################################################*
 *----------------------------------------------------OS/2 backend---------------------------------------------------*
 *#########################################################################################################################*/
