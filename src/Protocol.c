@@ -1221,7 +1221,7 @@ static void CPE_HackControl(cc_uint8* data) {
 	jumpHeight = Stream_GetU16_BE(data + 5);
 
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
-		LocalPlayer_ResetJumpVelocity();
+		LocalPlayer_ResetJumpVelocity(p);
 	} else {
 		p->Physics.JumpVel       = PhysicsComp_CalcJumpVelocity(jumpHeight / 32.0f);
 		p->Physics.ServerJumpVel = p->Physics.JumpVel;

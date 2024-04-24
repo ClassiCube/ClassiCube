@@ -2002,8 +2002,8 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Blocks = NULL;
 	World.Seed = Gen_Seed;
 
-	LocalPlayer_CalcDefaultSpawn();
-	LocalPlayer_MoveToSpawn();
+	LocalPlayer_CalcDefaultSpawn(&LocalPlayer_Instance);
+	LocalPlayer_MoveToSpawn(&LocalPlayer_Instance);
 }
 
 static void GeneratingScreen_Update(void* screen, double delta) {

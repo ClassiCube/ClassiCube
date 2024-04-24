@@ -84,8 +84,8 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	if (res) Logger_SysWarn2(res, "decoding", path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
-	if (calcDefaultSpawn) LocalPlayer_CalcDefaultSpawn();
-	LocalPlayer_MoveToSpawn();
+	if (calcDefaultSpawn) LocalPlayer_CalcDefaultSpawn(&LocalPlayer_Instance);
+	LocalPlayer_MoveToSpawn(&LocalPlayer_Instance);
 
 	relPath = *path;
 	Utils_UNSAFE_GetFilename(&relPath);

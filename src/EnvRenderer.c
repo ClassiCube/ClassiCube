@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "Particle.h"
 #include "Options.h"
+#include "Entity.h"
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
@@ -322,7 +323,8 @@ void EnvRenderer_RenderSkybox(void) {
 	/* Rotate around camera */
 	pos = Camera.CurrentPos;
 	Vec3_Set(Camera.CurrentPos, 0,0,0);
-	Camera.Active->GetView(&view); Matrix_MulBy(&m, &view);
+	Camera.Active->GetView(&LocalPlayer_Instance, &view); 
+	Matrix_MulBy(&m, &view);
 	Camera.CurrentPos = pos;
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);

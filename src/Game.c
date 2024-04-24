@@ -479,7 +479,7 @@ void Game_SetFpsLimit(int method) {
 }
 
 static void UpdateViewMatrix(void) {
-	Camera.Active->GetView(&Gfx.View);
+	Camera.Active->GetView(&LocalPlayer_Instance, &Gfx.View);
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
@@ -624,7 +624,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
-	Camera.Active->UpdateMouse(delta);
+	Camera.Active->UpdateMouse(&LocalPlayer_Instance, delta);
 
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
@@ -635,9 +635,9 @@ static void Game_RenderFrame(double delta) {
 	PerformScheduledTasks(delta);
 	entTask = tasks[entTaskI];
 	t = (float)(entTask.accumulator / entTask.interval);
-	LocalPlayer_SetInterpPosition(t);
+	LocalPlayer_SetInterpPosition(&LocalPlayer_Instance, t);
 
-	Camera.CurrentPos = Camera.Active->GetPosition(t);
+	Camera.CurrentPos = Camera.Active->GetPosition(&LocalPlayer_Instance, t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
 	UpdateViewMatrix();
@@ -648,7 +648,7 @@ static void Game_RenderFrame(double delta) {
 	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 
 	if (!Gui_GetBlocksWorld()) {
-		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
+		Camera.Active->GetPickedBlock(&LocalPlayer_Instance, &Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
 		InputHandler_Tick();
 

@@ -3147,7 +3147,10 @@ static void HacksSettingsScreen_SetClipping(const cc_string* v) {
 	Camera.Clipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
 }
 
-static void HacksSettingsScreen_GetJump(cc_string* v) { String_AppendFloat(v, LocalPlayer_JumpHeight(), 3); }
+static void HacksSettingsScreen_GetJump(cc_string* v) { 
+	String_AppendFloat(v, LocalPlayer_JumpHeight(&LocalPlayer_Instance), 3); 
+}
+
 static void HacksSettingsScreen_SetJump(const cc_string* v) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	struct PhysicsComp* physics;

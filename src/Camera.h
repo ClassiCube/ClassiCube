@@ -8,6 +8,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 struct RayTracer;
 struct Camera;
 struct IGameComponent;
+struct LocalPlayer;
 extern struct IGameComponent Camera_Component;
 
 /* Shared data for cameras. */
@@ -45,16 +46,16 @@ struct Camera {
 	/* Calculates the current projection matrix of this camera. */
 	void (*GetProjection)(struct Matrix* proj);
 	/* Calculates the current modelview matrix of this camera. */
-	void (*GetView)(struct Matrix* view);
+	void (*GetView)(struct LocalPlayer* p, struct Matrix* view);
 
 	/* Returns the current orientation of the camera. */
-	Vec2 (*GetOrientation)(void);
+	Vec2 (*GetOrientation)(struct LocalPlayer* p);
 	/* Returns the current interpolated position of the camera. */
-	Vec3 (*GetPosition)(float t);
+	Vec3 (*GetPosition)(struct LocalPlayer* p, float t);
 
 	/* Called to update the camera's state. */
 	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */
-	void (*UpdateMouse)(double delta);
+	void (*UpdateMouse)(struct LocalPlayer* p, double delta);
 	/* Called when mouse/pointer has moved. */
 	void (*OnRawMovement)(float deltaX, float deltaY);
 	/* Called when user closes all menus, and is interacting with camera again. */
@@ -63,7 +64,7 @@ struct Camera {
 	void (*LoseFocus)(void);
 
 	/* Calculates selected block in the world, based on camera's current state */
-	void (*GetPickedBlock)(struct RayTracer* t);
+	void (*GetPickedBlock)(struct LocalPlayer* p, struct RayTracer* t);
 	/* Zooms the camera in or out when scrolling mouse wheel. */
 	cc_bool (*Zoom)(float amount);
 

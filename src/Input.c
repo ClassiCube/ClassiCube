@@ -1038,16 +1038,18 @@ static void HandleHotkeyDown(int key) {
 }
 
 static cc_bool HandleLocalPlayerKey(int key) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	
 	if (KeyBind_Claims(KEYBIND_RESPAWN, key)) {
-		return LocalPlayer_HandleRespawn();
+		return LocalPlayer_HandleRespawn(p);
 	} else if (KeyBind_Claims(KEYBIND_SET_SPAWN, key)) {
-		return LocalPlayer_HandleSetSpawn();
+		return LocalPlayer_HandleSetSpawn(p);
 	} else if (KeyBind_Claims(KEYBIND_FLY, key)) {
-		return LocalPlayer_HandleFly();
+		return LocalPlayer_HandleFly(p);
 	} else if (KeyBind_Claims(KEYBIND_NOCLIP, key)) {
-		return LocalPlayer_HandleNoclip();
+		return LocalPlayer_HandleNoclip(p);
 	} else if (KeyBind_Claims(KEYBIND_JUMP, key)) {
-		return LocalPlayer_HandleJump();
+		return LocalPlayer_HandleJump(p);
 	}
 	return false;
 }

@@ -236,18 +236,18 @@ struct LocalPlayer {
 
 extern struct LocalPlayer LocalPlayer_Instance;
 /* Returns how high (in blocks) the player can jump. */
-float LocalPlayer_JumpHeight(void);
+float LocalPlayer_JumpHeight(struct LocalPlayer* p);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */
-void LocalPlayer_SetInterpPosition(float t);
-void LocalPlayer_ResetJumpVelocity(void);
-cc_bool LocalPlayer_CheckCanZoom(void);
+void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t);
+void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p);
+cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
 /* Moves local player back to spawn point. */
-void LocalPlayer_MoveToSpawn(void);
-void LocalPlayer_CalcDefaultSpawn(void);
+void LocalPlayer_MoveToSpawn(struct LocalPlayer* p);
+void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p);
 
-cc_bool LocalPlayer_HandleRespawn(void);
-cc_bool LocalPlayer_HandleSetSpawn(void);
-cc_bool LocalPlayer_HandleFly(void);
-cc_bool LocalPlayer_HandleNoclip(void);
-cc_bool LocalPlayer_HandleJump(void);
+cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p);
 #endif

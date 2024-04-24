@@ -407,7 +407,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 				Platform_LogConst("Skipping invalid HackControl byte from D3 server");
 				readCur++;
-				LocalPlayer_ResetJumpVelocity();
+				LocalPlayer_ResetJumpVelocity(&LocalPlayer_Instance);
 				continue;
 			}
 

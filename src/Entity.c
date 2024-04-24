@@ -615,13 +615,12 @@ struct IGameComponent TabList_Component = {
 *#########################################################################################################################*/
 struct LocalPlayer LocalPlayer_Instance;
 static cc_bool hackPermMsgs;
-float LocalPlayer_JumpHeight(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+
+float LocalPlayer_JumpHeight(struct LocalPlayer* p) {
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
 }
 
-void LocalPlayer_SetInterpPosition(float t) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t) {
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
 		Vec3_Lerp(&p->Base.Position, &p->Base.prev.pos, &p->Base.next.pos, t);
 	}
@@ -789,8 +788,7 @@ static void LocalPlayer_Init(void) {
 	hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);
 }
 
-void LocalPlayer_ResetJumpVelocity(void) {
-	struct LocalPlayer* p  = &LocalPlayer_Instance;
+void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p) {
 	cc_bool higher = HacksComp_CanJumpHigher(&p->Hacks);
 
 	p->Physics.JumpVel       = higher ? p->Physics.UserJumpVel : 0.42f;
@@ -801,7 +799,7 @@ static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
 	Vec3_Set(p->Base.Velocity, 0,0,0);
-	LocalPlayer_ResetJumpVelocity();
+	LocalPlayer_ResetJumpVelocity(p);
 }
 
 static void LocalPlayer_OnNewMap(void) {
@@ -816,8 +814,7 @@ static void LocalPlayer_OnNewMap(void) {
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
-static void LocalPlayer_DoRespawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -863,10 +860,9 @@ static void LocalPlayer_DoRespawn(void) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-cc_bool LocalPlayer_HandleRespawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p) {
 	if (p->Hacks.CanRespawn) {
-		LocalPlayer_DoRespawn();
+		LocalPlayer_DoRespawn(p);
 		return true;
 	} else if (!p->_warnedRespawn) {
 		p->_warnedRespawn = true;
@@ -875,8 +871,7 @@ cc_bool LocalPlayer_HandleRespawn(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleSetSpawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
@@ -896,11 +891,10 @@ cc_bool LocalPlayer_HandleSetSpawn(void) {
 		p->SpawnYaw   = p->Base.Yaw;
 		p->SpawnPitch = p->Base.Pitch;
 	}
-	return LocalPlayer_HandleRespawn();
+	return LocalPlayer_HandleRespawn(p);
 }
 
-cc_bool LocalPlayer_HandleFly(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p) {
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
 		return true;
@@ -911,8 +905,7 @@ cc_bool LocalPlayer_HandleFly(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleNoclip(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p) {
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
@@ -926,8 +919,7 @@ cc_bool LocalPlayer_HandleNoclip(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleJump(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p) {
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
@@ -945,8 +937,7 @@ cc_bool LocalPlayer_HandleJump(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_CheckCanZoom(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
 	if (p->Hacks.CanFly) return true;
 
 	if (!p->_warnedZoom) {
@@ -956,8 +947,7 @@ cc_bool LocalPlayer_CheckCanZoom(void) {
 	return false;
 }
 
-void LocalPlayer_MoveToSpawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void LocalPlayer_MoveToSpawn(struct LocalPlayer* p) {
 	struct LocationUpdate update;
 
 	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
@@ -967,11 +957,10 @@ void LocalPlayer_MoveToSpawn(void) {
 
 	p->Base.VTABLE->SetLocation(&p->Base, &update);
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(p, 0.0f);
 }
 
-void LocalPlayer_CalcDefaultSpawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p) {
 	float x = (World.Width  / 2) + 0.5f; 
 	float z = (World.Length / 2) + 0.5f;
 
