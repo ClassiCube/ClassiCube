@@ -102,7 +102,29 @@ static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_boo
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL instead */
+#define UPDATE_FAST_SIZE (64 * 64)
+static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth, cc_bool full) {
+	BitmapCol buffer[UPDATE_FAST_SIZE];
+	void* ptr = (void*)buffer;
+	int count = part->width * part->height;
+
+	/* cannot allocate memory on the stack for very big updates */
+	if (count > UPDATE_FAST_SIZE) {
+		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
+	}
+
+	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
+
+	if (full) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+	} else {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+	}
+	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
+}
+
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
@@ -118,42 +140,26 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
-
-	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, bmp->width, false);
-	return texId;
-}
-
-#define UPDATE_FAST_SIZE (64 * 64)
-static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth) {
-	BitmapCol buffer[UPDATE_FAST_SIZE];
-	void* ptr = (void*)buffer;
-	int count = part->width * part->height;
-
-	/* cannot allocate memory on the stack for very big updates */
-	if (count > UPDATE_FAST_SIZE) {
-		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
+	if (bmp->width == rowWidth) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
+	} else {
+		UpdateTextureSlow(0, 0, bmp, rowWidth, true);
 	}
 
-	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
-	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
+	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, rowWidth, false);
+	return texId;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-	/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL */
 
 	if (part->width == rowWidth) {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
 	} else {
-		UpdateTextureSlow(x, y, part, rowWidth);
+		UpdateTextureSlow(x, y, part, rowWidth, false);
 	}
-	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
-}
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {

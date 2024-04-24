@@ -53,6 +53,9 @@ void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512;
+	
+	Gfx.MinTexWidth  = 4;
+	Gfx.MinTexHeight = 4;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -137,20 +140,16 @@ static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp,
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	if (bmp->width < 4 || bmp->height < 4) {
-		Platform_LogConst("ERROR: Tried to create texture smaller than 4x4");
-		return 0;
-	}
-	
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
+	if (!tex) return NULL;
 	
 	GX_InitTexObj(&tex->obj, tex->pixels, bmp->width, bmp->height,
 			GX_TF_RGBA8, GX_REPEAT, GX_REPEAT, GX_FALSE);
 	GX_InitTexObjFilterMode(&tex->obj, GX_NEAR, GX_NEAR);
 			
-	ReorderPixels(tex, bmp, 0, 0, bmp->width);
+	ReorderPixels(tex, bmp, 0, 0, rowWidth);
 	DCFlushRange(tex->pixels, size);
 	return tex;
 }
@@ -160,10 +159,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// TODO: wrong behaviour if x/y/part isn't multiple of 4 pixels
 	ReorderPixels(tex, part, x, y, rowWidth);
 	GX_InvalidateTexAll();
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {

@@ -148,7 +148,6 @@ AccessControlInfo:
    - dlp:SRVR
    - dsp::DSP
    - frd:u
-   #- http:C
    - fs:USER
    - gsp::Gpu
    - hid:USER
@@ -159,7 +158,6 @@ AccessControlInfo:
    - ptm:u
    - pxi:dev
    - soc:U
-   #- ssl:C
    - gsp::Lcd
    - y2r:u
    - ldr:ro
@@ -204,4 +202,3 @@ SystemControlInfo:
     ro: 0x0004013000003702L
     socket: 0x0004013000002e02L
     spi: 0x0004013000002302L
-    #ssl: 0x0004013000002f02

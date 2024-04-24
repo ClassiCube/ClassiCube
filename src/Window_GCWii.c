@@ -10,6 +10,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Graphics.h"
+#include "VirtualKeyboard.h"
 #include <gccore.h>
 #if defined HW_RVL
 #include <wiiuse/wpad.h>
@@ -451,12 +452,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	r.x &= ~0x01; // round down to nearest even horizontal index
 	
 	// TODO XFB is raw yuv, but is absolutely a pain to work with..
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
 		cc_uint32* src = bmp->scan0 + y * bmp->width     + r.x;
 		u16* dst       = (u16*)xfb  + y * rmode->fbWidth + r.x;
 		
-		for (int x = 0; x < r.Width / 2; x++) {
+		for (int x = 0; x < r.width / 2; x++) {
 			cc_uint32 rgb0 = src[(x<<1) + 0];
 			cc_uint32 rgb1 = src[(x<<1) + 1];
 			
@@ -468,6 +469,31 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Soft keyboard------------------------------------------------------*
+*#########################################################################################################################*/
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
 }
 
 
@@ -486,10 +512,6 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
 
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */

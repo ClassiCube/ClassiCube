@@ -10,34 +10,30 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "VirtualKeyboard.h"
 #include <xenos/xenos.h>
 #include <input/input.h>
 #include <usb/usbmain.h>
+#include <pci/io.h>
 
 static cc_bool launcherMode;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-// https://github.com/Free60Project/libxenon/blob/71a411cddfc26c9ccade08d054d87180c359797a/libxenon/drivers/console/console.c#L47
-struct ati_info {
-	uint32_t unknown1[4];
-	uint32_t base;
-	uint32_t unknown2[8];
-	uint32_t width;
-	uint32_t height;
-} __attribute__ ((__packed__)) ;
+static uint32_t reg_read32(int reg)
+{
+	return read32n(0xec800000 + reg);
+}
 
 void Window_Init(void) {
-	struct ati_info* ai = (struct ati_info*)0xec806100ULL;
-	
-	DisplayInfo.Width  = ai->width;
-	DisplayInfo.Height = ai->height;
+	DisplayInfo.Width  = reg_read32(D1GRPH_X_END);
+	DisplayInfo.Height = reg_read32(D1GRPH_Y_END);
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
-	Window_Main.Width   = ai->width;
-	Window_Main.Height  = ai->height;
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
@@ -128,17 +124,27 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	return;
-	//void* fb = XVideoGetFB();
-	//XVideoWaitForVBlank();
+	// https://github.com/Free60Project/libxenon/blob/master/libxenon/drivers/console/console.c#L166
+	// https://github.com/Free60Project/libxenon/blob/master/libxenon/drivers/console/console.c#L57
+	uint32_t* fb = (uint32_t*)(reg_read32(D1GRPH_PRIMARY_SURFACE_ADDRESS) | 0x80000000);
+	/* round up size to tiles of 32x32 */
+	int width = ((DisplayInfo.Width + 31) >> 5) << 5;
+	
+#define FB_INDEX(x, y) (((y >> 5)*32*width + ((x >> 5)<<10) + (x&3) + ((y&1)<<2) + (((x&31)>>2)<<3) + (((y&31)>>1)<<6)) ^ ((y&8)<<2))
 
-	/*cc_uint32* src = (cc_uint32*)bmp->scan0 + r.X;
-	cc_uint32* dst = (cc_uint32*)fb           + r.X;
-
-	for (int y = r.Y; y < r.Y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.Width * 4);
-	}*/
+		cc_uint32* src = bmp->scan0 + y * bmp->width;
+		
+		for (int x = r.x; x < r.x + r.width; x++) {
+			// TODO: Can the uint be copied directly ?
+			int R = BitmapCol_R(src[x]);
+			int G = BitmapCol_G(src[x]);
+			int B = BitmapCol_B(src[x]);
+			
+			fb[FB_INDEX(x, y)] = (B << 24) | (G << 16) | (R << 8) | 0xFF;
+		}
+	}
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
@@ -149,9 +155,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

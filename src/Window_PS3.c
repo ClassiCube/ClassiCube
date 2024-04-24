@@ -11,6 +11,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
+#include "VirtualKeyboard.h"
 #include <io/pad.h>
 #include <io/kb.h> 
 #include <sysutil/sysutil.h>
@@ -236,6 +237,17 @@ static void ProcessKBTextInput(void) {
 	}
 }
 
+static void ProcessKBInput(void) {
+	int res = ioKbRead(0, &kb_data);
+	Input.Sources |= INPUT_SOURCE_NORMAL;
+
+	if (res == 0 && kb_data.nb_keycode > 0) {
+		ProcessKBButtons();
+		ProcessKBModifiers(&kb_data.mkey);
+		ProcessKBTextInput();
+	}
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
@@ -284,16 +296,8 @@ void Window_ProcessEvents(double delta) {
 		ProcessPadInput(delta, &pad_data);
 	}
 	
-	// TODO set InputSource keyboard
 	ioKbGetInfo(&kb_info);
-	if (kb_info.status[0]) {
-		int res = ioKbRead(0, &kb_data);
-		if (res == 0 && kb_data.nb_keycode > 0) {
-			ProcessKBButtons();
-			ProcessKBModifiers(&kb_data.mkey);
-			ProcessKBTextInput();
-		}
-	}
+	if (kb_info.status[0]) ProcessKBInput();
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -336,9 +340,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

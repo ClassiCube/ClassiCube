@@ -15,39 +15,39 @@ static void TestAxis(struct RayTracer* t, float dAxis, Face fAxis) {
 	if (dAxis >= pickedPos_dist) return;
 
 	pickedPos_dist = dAxis;
-	t->Closest     = fAxis;
+	t->closest     = fAxis;
 }
 
 static void SetAsValid(struct RayTracer* t) {
-	t->TranslatedPos = t->pos;
-	t->Valid         = true;
+	t->translatedPos = t->pos;
+	t->valid         = true;
 
 	pickedPos_dist = MATH_LARGENUM;
-	TestAxis(t, t->Intersect.x - t->Min.x, FACE_XMIN);
-	TestAxis(t, t->Intersect.x - t->Max.x, FACE_XMAX);
-	TestAxis(t, t->Intersect.y - t->Min.y, FACE_YMIN);
-	TestAxis(t, t->Intersect.y - t->Max.y, FACE_YMAX);
-	TestAxis(t, t->Intersect.z - t->Min.z, FACE_ZMIN);
-	TestAxis(t, t->Intersect.z - t->Max.z, FACE_ZMAX);
+	TestAxis(t, t->intersect.x - t->Min.x, FACE_XMIN);
+	TestAxis(t, t->intersect.x - t->Max.x, FACE_XMAX);
+	TestAxis(t, t->intersect.y - t->Min.y, FACE_YMIN);
+	TestAxis(t, t->intersect.y - t->Max.y, FACE_YMAX);
+	TestAxis(t, t->intersect.z - t->Min.z, FACE_ZMIN);
+	TestAxis(t, t->intersect.z - t->Max.z, FACE_ZMAX);
 
-	switch (t->Closest) {
-	case FACE_XMIN: t->TranslatedPos.x--; break;
-	case FACE_XMAX: t->TranslatedPos.x++; break;
-	case FACE_ZMIN: t->TranslatedPos.z--; break;
-	case FACE_ZMAX: t->TranslatedPos.z++; break;
-	case FACE_YMIN: t->TranslatedPos.y--; break;
-	case FACE_YMAX: t->TranslatedPos.y++; break;
+	switch (t->closest) {
+	case FACE_XMIN: t->translatedPos.x--; break;
+	case FACE_XMAX: t->translatedPos.x++; break;
+	case FACE_ZMIN: t->translatedPos.z--; break;
+	case FACE_ZMAX: t->translatedPos.z++; break;
+	case FACE_YMIN: t->translatedPos.y--; break;
+	case FACE_YMAX: t->translatedPos.y++; break;
 	}
 }
 
 void RayTracer_SetInvalid(struct RayTracer* t) {
 	static const IVec3 pos = { -1, -1, -1 };
 	t->pos           = pos;
-	t->TranslatedPos = pos;
+	t->translatedPos = pos;
 
-	t->Valid   = false;
+	t->valid   = false;
 	t->block   = BLOCK_AIR;
-	t->Closest = FACE_COUNT;
+	t->closest = FACE_COUNT;
 }
 
 static float RayTracer_Div(float a, float b) {
@@ -211,7 +211,7 @@ static cc_bool ClipBlock(struct RayTracer* t) {
 	if (!Intersection_RayIntersectsBox(t->origin, t->invDir, t->Min, t->Max, &t0, &t1)) return false;
 	
 	Vec3_Mul1(&scaledDir, &t->dir, t0);              /* scaledDir = dir * t0 */
-	Vec3_Add(&t->Intersect, &t->origin, &scaledDir); /* intersect = origin + scaledDir */
+	Vec3_Add(&t->intersect, &t->origin, &scaledDir); /* intersect = origin + scaledDir */
 
 	/* Only pick the block if the block is precisely within reach distance. */
 	lenSq = Vec3_LengthSquared(&scaledDir);
@@ -239,7 +239,7 @@ static cc_bool ClipCamera(struct RayTracer* t) {
 	Intersection_RayIntersectsBox(t->origin, t->invDir, t->Min, t->Max, &t0, &t1);
 	
 	Vec3_Mul1(&intersect,   &t->dir, t0);            /* intersect = dir * t0 */
-	Vec3_Add(&t->Intersect, &t->origin, &intersect); /* intersect = origin + dir * t0 */
+	Vec3_Add(&t->intersect, &t->origin, &intersect); /* intersect = origin + dir * t0 */
 	SetAsValid(t);
 	return true;
 }
@@ -255,7 +255,7 @@ void Picking_ClipCameraPos(const Vec3* origin, const Vec3* dir, float reach, str
 						&& LocalPlayer_Instance.Hacks.CanNoclip;
 	if (noClip || !World.Loaded || !RayTrace(t, origin, dir, reach, ClipCamera)) {
 		RayTracer_SetInvalid(t);
-		Vec3_Mul1(&t->Intersect, dir, reach);           /* intersect = dir * reach */
-		Vec3_Add(&t->Intersect, origin, &t->Intersect); /* intersect = origin + dir * reach */
+		Vec3_Mul1(&t->intersect, dir, reach);           /* intersect = dir * reach */
+		Vec3_Add(&t->intersect, origin, &t->intersect); /* intersect = origin + dir * reach */
 	}
 }

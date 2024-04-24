@@ -32,7 +32,8 @@ include $(DEVKITPRO)/wut/share/wut_rules
 #-------------------------------------------------------------------------------
 TARGET		:=	ClassiCube-wiiu
 BUILD		:=	build-wiiu
-SOURCES		:=	src misc/wiiu third_party/bearssl/src
+SOURCES		:=	src third_party/bearssl/src
+SHADERS		:=	misc/wiiu
 DATA		:=	data
 INCLUDES	:=	third_party/bearssl/inc
 CONTENT		:=
@@ -78,7 +79,8 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*))) \
+				$(foreach dir,$(SHADERS),$(notdir $(wildcard $(dir)/*.gsh)))
 
 export LD	:=	$(CC)
 
@@ -152,13 +154,17 @@ $(OUTPUT).elf	:	$(OFILES)
 
 $(OFILES_SRC)	: $(HFILES_BIN)
 
-#-------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
 #-------------------------------------------------------------------------------
 %.bin.o	%_bin.h :	%.bin
 #-------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)
+#-------------------------------------------------------------------------------
+%.gsh.o	%_gsh.h : ../misc/wiiu/%.gsh
+#-------------------------------------------------------------------------------
+	echo $(notdir $<)
+	$(bin2o)
 
 -include $(DEPENDS)
 

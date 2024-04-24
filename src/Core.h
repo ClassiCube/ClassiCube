@@ -122,6 +122,8 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_FREETYPE
 #define CC_BUILD_RESOURCES
 #define CC_BUILD_PLUGINS
+#define CC_BUILD_ANIMATIONS
+#define CC_BUILD_FILESYSTEM
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
@@ -302,7 +304,6 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_DREAMCAST
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
-	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
 	#undef  CC_BUILD_RESOURCES
@@ -322,6 +323,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_OPENAL
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_FILESYSTEM
 #elif defined PLAT_PS2
 	#define CC_BUILD_PS2
 	#define CC_BUILD_CONSOLE
@@ -339,14 +341,15 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_TOUCH
 	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
+	#define CC_BUILD_TOUCH
 #elif defined __SWITCH__
 	#define CC_BUILD_SWITCH
 	#define CC_BUILD_CONSOLE
@@ -366,6 +369,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
@@ -373,6 +378,17 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SDL2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE
+#elif defined PLAT_SATURN
+	#define CC_BUILD_SATURN
+	#define CC_BUILD_CONSOLE
+	#define CC_BUILD_LOWMEM
+	#define CC_BUILD_COOPTHREADED
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
+	#undef  CC_BUILD_RESOURCES
+	#undef  CC_BUILD_NETWORKING
+	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_FILESYSTEM
 #endif
 #endif
 
@@ -405,8 +421,8 @@ typedef cc_uint8 Face;
 typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
 
-typedef struct Rect2D_  { int x, y, Width, Height; } Rect2D;
-typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
+typedef struct Rect2D_  { int x, y, width, height; } Rect2D;
+typedef struct TextureRec_ { float u1, v1, u2, v2; } TextureRec;
 
 typedef struct cc_string_ {
 	char* buffer;       /* Pointer to characters, NOT NULL TERMINATED */
@@ -428,7 +444,7 @@ typedef void* GfxResourceID;
 /* Contains the information to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	short x, y; cc_uint16 Width, Height;
+	short x, y; cc_uint16 width, height;
 	TextureRec uv;
 };
 #endif

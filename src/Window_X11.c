@@ -279,7 +279,9 @@ void Window_Free(void) { }
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
 	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
-	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
+	
+	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
+					(unsigned char*)CCIcon_Data, CCIcon_Size);
 }
 #else
 static void ApplyIcon(void) { }
@@ -1120,10 +1122,10 @@ static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	/* Convert 32 bit depth to window depth when required */
-	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.Width, r.Height, bmp);
+	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.width, r.height, bmp);
 
 	XPutImage(win_display, win_handle, fb_gc, fb_image,
-		r.x, r.y, r.x, r.y, r.Width, r.Height);
+		r.x, r.y, r.x, r.y, r.width, r.height);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
@@ -1132,9 +1134,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	if (bmp->scan0 != fb_data) Mem_Free(fb_data);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { }
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;

@@ -20,13 +20,12 @@
 	#include <imagehlp.h>
 	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
-#include <signal.h>
-/* These operating systems don't provide sys/ucontext.h */
-/*  But register constants be found from includes in <signal.h> */
-#elif defined CC_BUILD_OS2
-#include <signal.h>
-#include <386/ucontext.h>
-
+	#include <signal.h>
+	/* These operating systems don't provide sys/ucontext.h */
+	/*  But register constants be found from includes in <signal.h> */
+	#elif defined CC_BUILD_OS2
+	#include <signal.h>
+	#include <386/ucontext.h>
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 	/* Need to define this to get REG_ constants */
 	#define _GNU_SOURCE
@@ -87,6 +86,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case PNG_ERR_REACHED_IEND:     return "Incomplete PNG image data";
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
+	case PNG_ERR_16BITSAMPLES:     return "16 bpp PNGs unsupported";
 
 	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
 	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
@@ -285,7 +285,11 @@ static void DumpFrame(cc_string* trace, void* addr) {
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
 static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
-	return ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, numBytesRead);
+	SIZE_T numRead = 0;
+	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
+	
+	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
+	return ok;
 }
 static cc_uintptr spRegister;
 
@@ -1033,7 +1037,7 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
-	code = (cc_uint32)info->ExceptionRecord->ExceptionCode;
+	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
 	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
 	desc = ExceptionDescribe(code);
 
@@ -1082,7 +1086,7 @@ void Logger_Hook(void) {
 	GetVersionExA(&osInfo);
 
 	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-		curProcess = (HANDLE)GetCurrentProcessId();
+		curProcess = (HANDLE)((cc_uintptr)GetCurrentProcessId());
 	}
 }
 #elif defined CC_BUILD_POSIX
@@ -1213,7 +1217,7 @@ void Logger_Log(const cc_string* msg) {
 		Stream_AppendFile(&logStream, &path);
 	}
 
-	if (!logStream.Meta.File) return;
+	if (!logStream.meta.file) return;
 	Stream_Write(&logStream, (const cc_uint8*)msg->buffer, msg->length);
 }
 
@@ -1233,7 +1237,7 @@ static void LogCrashHeader(void) {
 }
 
 static void CloseLogFile(void) { 
-	if (logStream.Meta.File) logStream.Close(&logStream);
+	if (logStream.meta.file) logStream.Close(&logStream);
 }
 #endif
 

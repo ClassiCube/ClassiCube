@@ -33,10 +33,10 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	aX = view->row1.x * sX; aY = view->row2.x * sX; aZ = view->row3.x * sX; /* right * size.x * 0.5f */
 	bX = view->row1.y * sY; bY = view->row2.y * sY; bZ = view->row3.y * sY; /* up    * size.y * 0.5f */
 
-	v->x = centre.x - aX - bX; v->y = centre.y - aY - bY; v->z = centre.z - aZ - bZ; v->Col = col; v->U = rec->U1; v->V = rec->V2; v++;
-	v->x = centre.x - aX + bX; v->y = centre.y - aY + bY; v->z = centre.z - aZ + bZ; v->Col = col; v->U = rec->U1; v->V = rec->V1; v++;
-	v->x = centre.x + aX + bX; v->y = centre.y + aY + bY; v->z = centre.z + aZ + bZ; v->Col = col; v->U = rec->U2; v->V = rec->V1; v++;
-	v->x = centre.x + aX - bX; v->y = centre.y + aY - bY; v->z = centre.z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
+	v->x = centre.x - aX - bX; v->y = centre.y - aY - bY; v->z = centre.z - aZ - bZ; v->Col = col; v->U = rec->u1; v->V = rec->v2; v++;
+	v->x = centre.x - aX + bX; v->y = centre.y - aY + bY; v->z = centre.z - aZ + bZ; v->Col = col; v->U = rec->u1; v->V = rec->v1; v++;
+	v->x = centre.x + aX + bX; v->y = centre.y + aY + bY; v->z = centre.z + aZ + bZ; v->Col = col; v->U = rec->u2; v->V = rec->v1; v++;
+	v->x = centre.x + aX - bX; v->y = centre.y + aY - bY; v->z = centre.z + aZ - bZ; v->Col = col; v->U = rec->u2; v->V = rec->v2; v++;
 }
 
 static cc_bool CollidesHor(Vec3* nextPos, BlockID block) {
@@ -355,8 +355,8 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	/* gridOffset gives the centre of the cell on a grid */
 	#define CELL_CENTRE ((1.0f / GRID_SIZE) * 0.5f)
 
-	maxU2 = baseRec.U1 + maxU * uScale;
-	maxV2 = baseRec.V1 + maxV * vScale;
+	maxU2 = baseRec.u1 + maxU * uScale;
+	maxV2 = baseRec.v1 + maxV * vScale;
 	for (x = 0; x < GRID_SIZE; x++) {
 		for (y = 0; y < GRID_SIZE; y++) {
 			for (z = 0; z < GRID_SIZE; z++) {
@@ -375,12 +375,12 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				p->base.velocity.z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
 				rec = baseRec;
-				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
-				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
-				rec.U2 = rec.U1 + 4 * uScale;
-				rec.V2 = rec.V1 + 4 * vScale;
-				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
-				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
+				rec.u1 = baseRec.u1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
+				rec.v1 = baseRec.v1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
+				rec.u2 = rec.u1 + 4 * uScale;
+				rec.v2 = rec.v1 + 4 * vScale;
+				rec.u2 = min(rec.u2, maxU2) - 0.01f * uScale;
+				rec.v2 = min(rec.v2, maxV2) - 0.01f * vScale;
 		
 				Vec3_Add(&p->base.lastPos, &origin, &cell);
 				p->base.nextPos  = p->base.lastPos;
@@ -447,10 +447,10 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, struct Vert
 
 	float time_lived = p->totalLifespan - p->base.lifetime;
 	int curFrame = Math_Floor(e->frameCount * (time_lived / p->totalLifespan));
-	float shiftU = curFrame * (rec.U2 - rec.U1);
+	float shiftU = curFrame * (rec.u2 - rec.u1);
 
-	rec.U1 += shiftU;/* * 0.0078125f; */
-	rec.U2 += shiftU;/* * 0.0078125f; */
+	rec.u1 += shiftU;/* * 0.0078125f; */
+	rec.u2 += shiftU;/* * 0.0078125f; */
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
 	size.x = p->base.size; size.y = size.x;

@@ -47,20 +47,6 @@ GL_FORCE_INLINE void* memcpy_fast(void *dest, const void *src, size_t len) {
   return dest;
 }
 
-/* We use sq_cpy if the src and size is properly aligned. We control that the
- * destination is properly aligned so we assert that. */
-#define FASTCPY(dst, src, bytes) \
-    do { \
-        if(bytes % 32 == 0 && ((uintptr_t) src % 4) == 0) { \
-            gl_assert(((uintptr_t) dst) % 32 == 0); \
-            sq_cpy(dst, src, bytes); \
-        } else { \
-            memcpy_fast(dst, src, bytes); \
-        } \
-    } while(0)
-
-
-#define MEMCPY4(dst, src, bytes) memcpy_fast(dst, src, bytes)
 
 GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* oxyz, float* ow) {
     register float __x __asm__("fr12") = (xyz[0]);
@@ -82,10 +68,6 @@ GL_FORCE_INLINE void TransformVertex(const float* xyz, const float* w, float* ox
 }
 
 void InitGPU(_Bool autosort, _Bool fsaa);
-
-static inline void* GPUMemoryAlloc(size_t size) {
-    return pvr_mem_malloc(size);
-}
 
 #define PT_ALPHA_REF 0x011c
 

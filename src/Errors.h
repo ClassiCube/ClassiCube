@@ -135,5 +135,6 @@ enum CC_ERRORS {
 	HTTP_ERR_TRUNCATED   = 0xCCDED06CUL, /* HTTP respone header was truncated due to being too long */
 
 	SSL_ERR_CONTEXT_DEAD = 0xCCDED070UL, /* Server shutdown the SSL context and it must be recreated */
+	PNG_ERR_16BITSAMPLES = 0xCCDED071UL, /* Image uses 16 bit samples, which is unimplemented */
 };
 #endif

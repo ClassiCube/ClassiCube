@@ -108,7 +108,7 @@ struct LInput {
 	int caretPos;
 	cc_string text;
 	int _textHeight;
-	char _textBuffer[STRING_SIZE];
+	char _textBuffer[STRING_SIZE * 2];
 };
 CC_NOINLINE void LInput_Add(void* screen, struct LInput* w, int width, const char* hintText, 
 							const struct LLayout* layouts);

@@ -30,6 +30,7 @@
 #include <sbv_patches.h>
 #include <netman.h>
 #include <ps2ip.h>
+#include <dma.h>
 #define NEWLIB_PORT_AWARE
 #include <fileio.h>
 #include <io_common.h>
@@ -37,8 +38,8 @@
 #include "_PlatformConsole.h"
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; // not used
-const cc_result ReturnCode_FileNotFound       = -ENOENT;
-const cc_result ReturnCode_DirectoryExists    = -EEXIST;
+const cc_result ReturnCode_FileNotFound       = -4;
+const cc_result ReturnCode_DirectoryExists    = -8;
 
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
@@ -235,7 +236,7 @@ static int ExecThread(void* param) {
 	ee_thread_status_t info;
 	
 	int res = ReferThreadStatus(thdID, &info);
-	if (res > 0 && info.stack) Mem_Free(info.stack);
+	if (res > 0 && info.stack) Mem_Free(info.stack); // TODO is it okay to free stack of running thread ????
 	
 	return 0; // TODO detach ?
 }
@@ -705,6 +706,9 @@ void Platform_Init(void) {
 	// Create root directory
 	int res = fioMkdir("mass:/ClassiCube");
 	Platform_Log1("ROOT CREATE %i", &res);
+	
+	dma_channel_initialize(DMA_CHANNEL_GIF, NULL, 0);
+	dma_channel_fast_waits(DMA_CHANNEL_GIF);
 }
 
 void Platform_Free(void) { }
@@ -724,6 +728,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	String_AppendUtf8(dst, chars, len);
 	return true;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

@@ -39,9 +39,12 @@ static void (*Builder_PostPrepareChunk)(void);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
-	struct VertexTextured* fVertices[FACE_COUNT];
-	int fCount[FACE_COUNT];
-	int sCount, sOffset, sAdvance;
+	/* Union to save on memory, since chunk building is divided into counting then building phases */
+	union FaceData {
+		struct VertexTextured* vertices[FACE_COUNT];
+		int count[FACE_COUNT];
+	} faces;
+	int sCount, sOffset;
 };
 
 /* Part builder data, for both normal and translucent parts.
@@ -51,19 +54,25 @@ static struct VertexTextured* Builder_Vertices;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	int i, count = part->sCount;
-	for (i = 0; i < FACE_COUNT; i++) { count += part->fCount[i]; }
+	for (i = 0; i < FACE_COUNT; i++) { count += part->faces.count[i]; }
 	return count;
 }
 
 static int Builder1DPart_CalcOffsets(struct Builder1DPart* part, int offset) {
-	int i;
-	part->sOffset  = offset;
-	part->sAdvance = part->sCount >> 2;
+	int i, counts[FACE_COUNT];
+	part->sOffset = offset;
+
+	/* Have to copy first due to count and vertices fields being a union */
+	for (i = 0; i < FACE_COUNT; i++)
+	{
+		counts[i] = part->faces.count[i];
+	}
 
 	offset += part->sCount;
-	for (i = 0; i < FACE_COUNT; i++) {
-		part->fVertices[i] = &Builder_Vertices[offset];
-		offset += part->fCount[i];
+	for (i = 0; i < FACE_COUNT; i++) 
+	{
+		part->faces.vertices[i] = &Builder_Vertices[offset];
+		offset += counts[i];
 	}
 	return offset;
 }
@@ -90,54 +99,50 @@ static void AddVertices(BlockID block, Face face) {
 	int baseOffset = (Blocks.Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	int i = Atlas1D_Index(Block_Tex(block, face));
 	struct Builder1DPart* part = &Builder_Parts[baseOffset + i];
-	part->fCount[face] += 4;
+	part->faces.count[face] += 4;
 }
 
 #ifdef CC_BUILD_GL11
 static void BuildPartVbs(struct ChunkPartInfo* info) {
 	/* Sprites vertices are stored before chunk face sides */
-	int i, count, offset = info->Offset + info->SpriteCount;
+	int i, count, offset = info->offset + info->spriteCount;
 	for (i = 0; i < FACE_COUNT; i++) {
-		count = info->Counts[i];
+		count = info->counts[i];
 
 		if (count) {
-			info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
+			info->vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
 			offset += count;
 		} else {
-			info->Vbs[i] = 0;
+			info->vbs[i] = 0;
 		}
 	}
 
-	count  = info->SpriteCount;
-	offset = info->Offset;
+	count  = info->spriteCount;
+	offset = info->offset;
 	if (count) {
-		info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
+		info->vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
 	} else {
-		info->Vbs[i] = 0;
+		info->vbs[i] = 0;
 	}
 }
 #endif
 
-static void SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
+static cc_bool SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info) {
 	int vCount = Builder1DPart_VerticesCount(part);
-	info->Offset = -1;
-	if (!vCount) return;
+	info->offset = -1;
+	if (!vCount) return false;
 
-	info->Offset = *offset;
+	info->offset = *offset;
 	*offset += vCount;
-	*hasParts = true;
 
-	info->Counts[FACE_XMIN] = part->fCount[FACE_XMIN];
-	info->Counts[FACE_XMAX] = part->fCount[FACE_XMAX];
-	info->Counts[FACE_ZMIN] = part->fCount[FACE_ZMIN];
-	info->Counts[FACE_ZMAX] = part->fCount[FACE_ZMAX];
-	info->Counts[FACE_YMIN] = part->fCount[FACE_YMIN];
-	info->Counts[FACE_YMAX] = part->fCount[FACE_YMAX];
-	info->SpriteCount       = part->sCount;
-
-#ifdef CC_BUILD_GL11
-	BuildPartVbs(info);
-#endif
+	info->counts[FACE_XMIN] = part->faces.count[FACE_XMIN];
+	info->counts[FACE_XMAX] = part->faces.count[FACE_XMAX];
+	info->counts[FACE_ZMIN] = part->faces.count[FACE_ZMIN];
+	info->counts[FACE_ZMAX] = part->faces.count[FACE_ZMAX];
+	info->counts[FACE_YMIN] = part->faces.count[FACE_YMIN];
+	info->counts[FACE_YMAX] = part->faces.count[FACE_YMAX];
+	info->spriteCount       = part->sCount;
+	return true;
 }
 
 
@@ -328,7 +333,33 @@ static cc_bool ReadBorderChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 	return false;
 }
 
-static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
+static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
+	cc_bool hasNorm, hasTran;
+	int partsIndex;
+	int i, j, curIdx, offset;
+	
+	partsIndex = World_ChunkPack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	offset  = 0;
+	hasNorm = false;
+	hasTran = false;
+
+	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
+		j = i + ATLAS1D_MAX_ATLASES;
+		curIdx = partsIndex + i * World.ChunksCount;
+
+		hasNorm |= SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx]);
+		hasTran |= SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx]);
+	}
+
+	if (hasNorm) {
+		info->normalParts      = &MapRenderer_PartsNormal[partsIndex];
+	}
+	if (hasTran) {
+		info->translucentParts = &MapRenderer_PartsTranslucent[partsIndex];
+	}
+}
+
+void Builder_MakeChunk(struct ChunkInfo* info) {
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
 	int bitFlags[EXTCHUNK_SIZE_3];
@@ -337,6 +368,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	int xMax, yMax, zMax, totalVerts;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
+	int x1 = info->centreX - 8, y1 = info->centreY - 8, z1 = info->centreZ - 8;
 
 	Builder_Chunk  = chunk;
 	Builder_Counts = counts;
@@ -355,8 +387,8 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 		allSolid = ReadChunkData(x1, y1, z1, &allAir);
 	}
 
-	info->AllAir = allAir;
-	if (allAir || allSolid) return false;
+	info->allAir = allAir;
+	if (allAir || allSolid) return;
 	Lighting.LightHint(x1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
@@ -368,11 +400,17 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	PrepareChunk(x1, y1, z1);
 
 	totalVerts = Builder_TotalVerticesCount();
-	if (!totalVerts) return false;
+	if (!totalVerts) return;
+	
+	OutputChunkPartsMeta(x1, y1, z1, info);
+#ifdef OCCLUSION
+	if (info.NormalParts != null || info.TranslucentParts != null)
+		info.occlusionFlags = (cc_uint8)ComputeOcclusion();
+#endif
 
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	Builder_Vertices = (struct VertexTextured*)Gfx_RecreateAndLockVb(&info->Vb,
+	Builder_Vertices = (struct VertexTextured*)Gfx_RecreateAndLockVb(&info->vb,
 													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #else
 	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */
@@ -397,44 +435,17 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 		}
 	}
 
-#ifndef CC_BUILD_GL11
-	Gfx_UnlockVb(info->Vb);
-#endif
-	return true;
-}
+#ifdef CC_BUILD_GL11
+	cIndex = World_ChunkPack(x1 >> CHUNK_SHIFT, y1 >> CHUNK_SHIFT, z1 >> CHUNK_SHIFT);
 
-void Builder_MakeChunk(struct ChunkInfo* info) {
-	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
-	cc_bool hasMesh, hasNorm, hasTran;
-	int partsIndex;
-	int i, j, curIdx, offset;
+	for (index = 0; index < MapRenderer_1DUsedCount; index++) {
+		int curIdx = cIndex + index * World.ChunksCount;
 
-	hasMesh = BuildChunk(x, y, z, info);
-	if (!hasMesh) return;
-
-	partsIndex = World_ChunkPack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
-	offset  = 0;
-	hasNorm = false;
-	hasTran = false;
-
-	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
-		j = i + ATLAS1D_MAX_ATLASES;
-		curIdx = partsIndex + i * World.ChunksCount;
-
-		SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
-		SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTran);
+		BuildPartVbs(&MapRenderer_PartsNormal[curIdx]);
+		BuildPartVbs(&MapRenderer_PartsTranslucent[curIdx]);
 	}
-
-	if (hasNorm) {
-		info->NormalParts      = &MapRenderer_PartsNormal[partsIndex];
-	}
-	if (hasTran) {
-		info->TranslucentParts = &MapRenderer_PartsTranslucent[partsIndex];
-	}
-
-#ifdef OCCLUSION
-	if (info.NormalParts != null || info.TranslucentParts != null)
-		info.occlusionFlags = (cc_uint8)ComputeOcclusion();
+#else
+	Gfx_UnlockVb(info->vb);
 #endif
 }
 
@@ -466,12 +477,12 @@ static void DefaultPostStretchChunk(void) {
 static RNGState spriteRng;
 static void Builder_DrawSprite(int x, int y, int z) {
 	struct Builder1DPart* part;
-	struct VertexTextured v;
+	struct VertexTextured* v;
 	cc_uint8 offsetType;
 	cc_bool bright;
+	PackedCol color;
 	TextureLoc loc;
 	float v1, v2;
-	int index;
 
 	float X, Y, Z;
 	float valX, valY, valZ;
@@ -501,36 +512,36 @@ static void Builder_DrawSprite(int x, int y, int z) {
 	
 	bright = Blocks.FullBright[Builder_Block];
 	part   = &Builder_Parts[Atlas1D_Index(loc)];
-	v.Col  = bright ? PACKEDCOL_WHITE : Lighting.Color_Sprite_Fast(x, y, z);
-	Block_Tint(v.Col, Builder_Block);
+	color  = bright ? PACKEDCOL_WHITE : Lighting.Color_Sprite_Fast(x, y, z);
+	Block_Tint(color, Builder_Block);
 
 	/* Draw Z axis */
-	index = part->sOffset;
-	v.x = x1; v.y = y1; v.z = z1; v.U = s_u2; v.V = v2; Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x2;           v.z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v = &Builder_Vertices[part->sOffset];
+	v->x = x1; v->y = y1; v->z = z1; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x1; v->y = y2; v->z = z1; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x2; v->y = y2; v->z = z2; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x2; v->y = y1; v->z = z2; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	/* Draw Z axis mirrored */
-	index += part->sAdvance;
-	v.x = x2; v.y = y1; v.z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x1;           v.z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v -= 4; v += part->sCount >> 2;
+	v->x = x2; v->y = y1; v->z = z2; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x2; v->y = y2; v->z = z2; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x1; v->y = y2; v->z = z1; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x1; v->y = y1; v->z = z1; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	/* Draw X axis */
-	index += part->sAdvance;
-	v.x = x1; v.y = y1; v.z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x2;           v.z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v -= 4; v += part->sCount >> 2;
+	v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x1; v->y = y2; v->z = z2; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x2; v->y = y2; v->z = z1; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x2; v->y = y1; v->z = z1; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	/* Draw X axis mirrored */
-	index += part->sAdvance;
-	v.x = x2; v.y = y1; v.z = z1; v.U = s_u2;           Builder_Vertices[index + 0] = v;
-	          v.y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
-	v.x = x1;           v.z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
-	          v.y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
+	v -= 4; v += part->sCount >> 2;
+	v->x = x2; v->y = y1; v->z = z1; v->Col = color; v->U = s_u2; v->V = v2; v++;
+	v->x = x2; v->y = y2; v->z = z1; v->Col = color; v->U = s_u2; v->V = v1; v++;
+	v->x = x1; v->y = y2; v->z = z2; v->Col = color; v->U = s_u1; v->V = v1; v++;
+	v->x = x1; v->y = y1; v->z = z2; v->Col = color; v->U = s_u1; v->V = v2; v++;
 
 	part->sOffset += 4;
 }
@@ -676,7 +687,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 
 		col = fullBright ? PACKEDCOL_WHITE :
 			x >= offset ? Lighting.Color_XSide_Fast(x - offset, y, z) : Env.SunXSide;
-		Drawer_XMin(count_XMin, col, loc, &part->fVertices[FACE_XMIN]);
+		Drawer_XMin(count_XMin, col, loc, &part->faces.vertices[FACE_XMIN]);
 	}
 
 	if (count_XMax) {
@@ -686,7 +697,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 
 		col = fullBright ? PACKEDCOL_WHITE :
 			x <= (World.MaxX - offset) ? Lighting.Color_XSide_Fast(x + offset, y, z) : Env.SunXSide;
-		Drawer_XMax(count_XMax, col, loc, &part->fVertices[FACE_XMAX]);
+		Drawer_XMax(count_XMax, col, loc, &part->faces.vertices[FACE_XMAX]);
 	}
 
 	if (count_ZMin) {
@@ -696,7 +707,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 
 		col = fullBright ? PACKEDCOL_WHITE :
 			z >= offset ? Lighting.Color_ZSide_Fast(x, y, z - offset) : Env.SunZSide;
-		Drawer_ZMin(count_ZMin, col, loc, &part->fVertices[FACE_ZMIN]);
+		Drawer_ZMin(count_ZMin, col, loc, &part->faces.vertices[FACE_ZMIN]);
 	}
 
 	if (count_ZMax) {
@@ -706,7 +717,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 
 		col = fullBright ? PACKEDCOL_WHITE :
 			z <= (World.MaxZ - offset) ? Lighting.Color_ZSide_Fast(x, y, z + offset) : Env.SunZSide;
-		Drawer_ZMax(count_ZMax, col, loc, &part->fVertices[FACE_ZMAX]);
+		Drawer_ZMax(count_ZMax, col, loc, &part->faces.vertices[FACE_ZMAX]);
 	}
 
 	if (count_YMin) {
@@ -715,7 +726,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? PACKEDCOL_WHITE : Lighting.Color_YMin_Fast(x, y - offset, z);
-		Drawer_YMin(count_YMin, col, loc, &part->fVertices[FACE_YMIN]);
+		Drawer_YMin(count_YMin, col, loc, &part->faces.vertices[FACE_YMIN]);
 	}
 
 	if (count_YMax) {
@@ -724,7 +735,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? PACKEDCOL_WHITE : Lighting.Color_YMax_Fast(x, y + offset, z);
-		Drawer_YMax(count_YMax, col, loc, &part->fVertices[FACE_YMAX]);
+		Drawer_YMax(count_YMax, col, loc, &part->faces.vertices[FACE_YMAX]);
 	}
 }
 
@@ -963,7 +974,7 @@ static void Adv_DrawXMin(int count) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_XMIN];
+	vertices = part->faces.vertices[FACE_XMIN];
 	v.x = adv_x1;
 	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
 		v.y = adv_y2; v.z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
@@ -976,7 +987,7 @@ static void Adv_DrawXMin(int count) {
 		v.y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
 		              v.z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
 	}
-	part->fVertices[FACE_XMIN] = vertices;
+	part->faces.vertices[FACE_XMIN] = vertices;
 }
 
 static void Adv_DrawXMax(int count) {
@@ -1005,7 +1016,7 @@ static void Adv_DrawXMax(int count) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_XMAX];
+	vertices = part->faces.vertices[FACE_XMAX];
 	v.x = adv_x2;
 	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
 		v.y = adv_y2; v.z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
@@ -1018,7 +1029,7 @@ static void Adv_DrawXMax(int count) {
 		              v.z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
 		v.y = adv_y2;                                       v.V = v1; v.Col = col1_0; *vertices++ = v;
 	}
-	part->fVertices[FACE_XMAX] = vertices;
+	part->faces.vertices[FACE_XMAX] = vertices;
 }
 
 static void Adv_DrawZMin(int count) {
@@ -1047,7 +1058,7 @@ static void Adv_DrawZMin(int count) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_ZMIN];
+	vertices = part->faces.vertices[FACE_ZMIN];
 	v.z = adv_z1;
 	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
 		v.x = adv_x2 + (count - 1); v.y = adv_y1; v.U = u2; v.V = v2; v.Col = col1_0; *vertices++ = v;
@@ -1060,7 +1071,7 @@ static void Adv_DrawZMin(int count) {
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
 		                            v.y = adv_y1;           v.V = v2; v.Col = col1_0; *vertices++ = v;
 	}
-	part->fVertices[FACE_ZMIN] = vertices;
+	part->faces.vertices[FACE_ZMIN] = vertices;
 }
 
 static void Adv_DrawZMax(int count) {
@@ -1089,7 +1100,7 @@ static void Adv_DrawZMax(int count) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_ZMAX];
+	vertices = part->faces.vertices[FACE_ZMAX];
 	v.z = adv_z2;
 	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
 		v.x = adv_x1;               v.y = adv_y2; v.U = u1; v.V = v1; v.Col = col0_1; *vertices++ = v;
@@ -1102,7 +1113,7 @@ static void Adv_DrawZMax(int count) {
 		                            v.y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
 	}
-	part->fVertices[FACE_ZMAX] = vertices;
+	part->faces.vertices[FACE_ZMAX] = vertices;
 }
 
 static void Adv_DrawYMin(int count) {
@@ -1131,7 +1142,7 @@ static void Adv_DrawYMin(int count) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_YMIN];
+	vertices = part->faces.vertices[FACE_YMIN];
 	v.y = adv_y1;
 	if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
 		v.x = adv_x2 + (count - 1); v.z = adv_z2; v.U = u2; v.V = v2; v.Col = col1_1; *vertices++ = v;
@@ -1144,7 +1155,7 @@ static void Adv_DrawYMin(int count) {
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
 		                            v.z = adv_z2;           v.V = v2; v.Col = col1_1; *vertices++ = v;
 	}
-	part->fVertices[FACE_YMIN] = vertices;
+	part->faces.vertices[FACE_YMIN] = vertices;
 }
 
 static void Adv_DrawYMax(int count) {
@@ -1173,7 +1184,7 @@ static void Adv_DrawYMax(int count) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_YMAX];
+	vertices = part->faces.vertices[FACE_YMAX];
 	v.y = adv_y2;
 	if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
 		v.x = adv_x2 + (count - 1); v.z = adv_z1; v.U = u2; v.V = v1; v.Col = col1_0; *vertices++ = v;
@@ -1186,7 +1197,7 @@ static void Adv_DrawYMax(int count) {
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
 		                            v.z = adv_z1;           v.V = v1; v.Col = col1_0; *vertices++ = v;
 	}
-	part->fVertices[FACE_YMAX] = vertices;
+	part->faces.vertices[FACE_YMAX] = vertices;
 }
 
 static void Adv_RenderBlock(int index, int x, int y, int z) {

@@ -66,6 +66,7 @@ void Window_Init(void) {
 	Window_Main.Exists  = true;
 	Window_Main.Handle = nwindowGetDefault();
 
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
@@ -150,6 +151,7 @@ static void ProcessTouchInput(void) {
 void Window_ProcessEvents(double delta) {
 	// Scan the gamepad. This should be done once for each frame
 	padUpdate(&pad);
+	Input.JoystickMovement = false;
 
 	if (!appletMainLoop()) {
 		Window_Main.Exists = false;
@@ -191,12 +193,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cc_uint32* framebuf = (cc_uint32*)framebufferBegin(&fb, &stride);
 
 	// flip upside down
-	for (cc_uint32 y = r.y; y < r.y + r.Height; y++)
+	for (cc_uint32 y = r.y; y < r.y + r.height; y++)
 	{
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		cc_uint32* dst = framebuf + y * stride / sizeof(cc_uint32);
 
-		for (cc_uint32 x = r.x; x < r.x + r.Width; x++)
+		for (cc_uint32 x = r.x; x < r.x + r.width; x++)
 		{
 			dst[x] = src[x];
 		}
@@ -243,7 +245,7 @@ static void OnscreenTextChanged(const char* text) {
 	Event_RaiseString(&InputEvents.TextChanged, &tmp);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	const char* btnText = args->type & KEYBOARD_FLAG_SEND ? "Send" : "Enter";
 	char input[NATIVE_STR_LEN]  = { 0 };
 	char output[NATIVE_STR_LEN] = { 0 };
@@ -272,8 +274,10 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 
 	swkbdClose(&kbd);
 }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 /*########################################################################################################################*

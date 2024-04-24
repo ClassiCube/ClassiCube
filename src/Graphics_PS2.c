@@ -171,7 +171,7 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(16, 64 + size);
 	
@@ -180,7 +180,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
 	
-	Mem_Copy(tex->pixels, bmp->scan0, size);
+	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
 }
 
@@ -198,10 +198,6 @@ static int BINDS;
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
-	Platform_Log2("BIND: %i x %i", &tex->width, &tex->height);
-	// TODO
-	if (BINDS) return;
-	BINDS = 1;
 	
 	texbuffer_t texbuf;
 	texbuf.width   = max(256, tex->width);
@@ -209,9 +205,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	
 	// TODO terrible perf
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	//
+	dma_wait_fast();
 	
 	packet_t *packet = packet_init(200, PACKET_NORMAL);
 
@@ -223,13 +218,11 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	dma_channel_send_chain(DMA_CHANNEL_GIF,packet->data, Q - packet->data, 0,0);
 	dma_wait_fast();
 
-	//packet_free(packet);
+	packet_free(packet);
 	
 	// TODO terrible perf
 	q = dma_tag + 1;
 	UpdateTextureBuffer(0, &texbuf, tex);
-	
-	Platform_LogConst("=====");
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -239,10 +232,6 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	// TODO
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
 	// TODO
 }
 

@@ -77,7 +77,7 @@ static void SysFont_Done(struct SysFont* font) {
 
 	/* Close the actual underlying file */
 	struct Stream* source = &font->file;
-	if (!source->Meta.File) return;
+	if (!source->meta.file) return;
 	source->Close(source);
 
 	for (i = 0; i < 256; i++) {

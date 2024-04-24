@@ -19,10 +19,10 @@ extern struct IGameComponent Models_Component;
 enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX, ROTATE_ORDER_XYZ };
 
 /* Describes a vertex within a model. */
-struct ModelVertex { float x, y, z; cc_uint16 U, V; };
+struct ModelVertex { float x, y, z; cc_uint16 u, v; };
 static CC_INLINE void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
 	vertex->x = x; vertex->y = y; vertex->z = z;
-	vertex->U = u; vertex->V = v;
+	vertex->u = u; vertex->v = v;
 }
 
 /* Describes the starting index of this part within a model's array of vertices,
@@ -47,7 +47,7 @@ struct Model {
 	/* Name of this model */
 	const char* name;
 	/* Pointer to the raw vertices of the model */
-	struct ModelVertex* vertices;	
+	struct ModelVertex* vertices;
 	/* Pointer to default texture for this model */
 	struct ModelTex* defaultTex;
 
@@ -112,8 +112,10 @@ CC_VAR extern struct _ModelsData {
 	/* Maximum number of vertices that can be stored in Vertices. */
 	/* NOTE: If you change this, you MUST also destroy and recreate the dynamic VB. */
 	int MaxVertices;
-	/* Pointer to humanoid/human model.*/
+	/* Pointer to humanoid/human model */
 	struct Model* Human;
+	/* Pointer to block model */
+	struct Model* Block;
 } Models;
 
 /* Initialises fields of a model to default. */

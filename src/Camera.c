@@ -25,12 +25,12 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 void Camera_KeyLookUpdate(double delta) {
 	if (Gui.InputGrab) return;
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
-	delta = (Camera.Sensitivity / 25.0f) * (1000 * delta);
+	float amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
 
-	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= delta;
-	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += delta;
-	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= delta;
-	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= amount;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += amount;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= amount;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += amount;
 }
 
 /*########################################################################################################################*
@@ -219,7 +219,7 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	Vec3_Negate(&dir, &dir);
 
 	Picking_ClipCameraPos(&target, &dir, dist, &cameraClipPos);
-	return cameraClipPos.Intersect;
+	return cameraClipPos.intersect;
 }
 
 static cc_bool ThirdPersonCamera_Zoom(float amount) {
@@ -253,6 +253,13 @@ static struct Camera cam_ForwardThird = {
 *#########################################################################################################################*/
 static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY);
+}
+
+static void OnAxisUpdate(void* obj, int axis, float x, float y) {
+	if (!Input.RawMode) return;
+	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
+
+	Camera.Active->OnRawMovement(x, y);
 }
 
 static void OnHacksChanged(void* obj) {
@@ -316,7 +323,7 @@ static void OnInit(void) {
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
-	Event_Register_(&ControllerEvents.RawMoved,   NULL, OnRawMovement);
+	Event_Register_(&ControllerEvents.AxisUpdate, NULL, OnAxisUpdate);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN

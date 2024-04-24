@@ -46,10 +46,10 @@ void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char
 
 static CC_NOINLINE cc_uint32 CalcMemSize(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 numBytes;
-	if (!numElems) return 1; /* treat 0 size as 1 byte */
+	if (!numElems || !elemsSize) return 1; /* treat 0 size as 1 byte */
 	
-	numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	if (numBytes < numElems) return 0; /* TODO: Use proper overflow checking */
+	numBytes = numElems * elemsSize;
+	if (numBytes / elemsSize != numElems) return 0; /* Overflow */
 	return numBytes;
 }
 

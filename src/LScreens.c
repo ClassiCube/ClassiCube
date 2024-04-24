@@ -1603,7 +1603,6 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
 		now   = DateTime_CurrentUTC() - UNIX_EPOCH_SECONDS;
-		/* must divide as cc_uint64, int delta overflows after 26 days */
 		delta = (int)(now - timestamp);
 		UpdatesScreen_FormatTime(&str, delta);
 	}

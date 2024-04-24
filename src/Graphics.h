@@ -61,6 +61,11 @@ CC_VAR extern struct _GfxData {
 	/* Maximum total size in pixels a low resolution texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxLowResTexSize;
+	/* Minimum dimensions in pixels that a texture must be */
+	/* NOTE: Most graphics backends do not use this */
+	int MinTexWidth, MinTexHeight;
+	cc_bool  ReducedPerfMode;
+	cc_uint8 ReducedPerfModeCooldown;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
@@ -84,8 +89,6 @@ typedef enum GfxBuffers_ {
 /* Texture can fallback to 16 bpp when necessary (most backends don't do this) */
 #define TEXTURE_FLAG_LOWRES  0x08
 
-#define LOWPERF_EXIT_MESSAGE "&eExited reduced performance mode"
-
 void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
@@ -95,6 +98,7 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags);
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend */
 CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
 CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
@@ -151,6 +155,11 @@ CC_API void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether the game should only write output to depth buffer */
 /*  NOTE: Implicitly calls Gfx_SetColorWrite */
 CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
+
+/* Anaglyph 3D rendering support */
+void Gfx_Set3DLeft( struct Matrix* proj, struct Matrix* view);
+void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view);
+void Gfx_End3D(     struct Matrix* proj, struct Matrix* view);
 
 /* Callback function to initialise/fill out the contents of an index buffer */
 typedef void (*Gfx_FillIBFunc)(cc_uint16* indices, int count, void* obj);
@@ -286,10 +295,10 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Statically initialises the texture coordinate corners of this texture */
 #define Tex_UV(u1,v1, u2,v2)        { u1,v1,u2,v2 }
 /* Sets the position and dimensions of this texture */
-#define Tex_SetRect(tex, xVal,yVal, width, height) tex.x = xVal; tex.y = yVal; tex.Width = width; tex.Height = height;
+#define Tex_SetRect(tex, xVal,yVal, wVal, hVal) tex.x = xVal; tex.y = yVal; tex.width = wVal; tex.height = hVal;
 /* Sets texture coordinate corners of this texture */
 /* Useful to only draw a sub-region of the texture's pixels */
-#define Tex_SetUV(tex, u1,v1, u2,v2) tex.uv.U1 = u1; tex.uv.V1 = v1; tex.uv.U2 = u2; tex.uv.V2 = v2;
+#define Tex_SetUV(tex, U1,V1, U2,V2) tex.uv.u1 = U1; tex.uv.v1 = V1; tex.uv.u2 = U2; tex.uv.v2 = V2;
 
 /* Binds then renders the given texture */
 void Texture_Render(const struct Texture* tex);

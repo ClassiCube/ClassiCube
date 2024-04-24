@@ -201,7 +201,7 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;
@@ -218,7 +218,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem          = bmp->scan0;
-	data.SysMemPitch      = bmp->width * 4;
+	data.SysMemPitch      = rowWidth * 4;
 	data.SysMemSlicePitch = 0;
 	D3D11_SUBRESOURCE_DATA* src = &data;
 
@@ -245,7 +245,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
 	if (hr) Logger_Abort2(hr, "Failed to create view");
 
-	if (mipmaps) Gfx_UpdateTexturePart(view, 0, 0, bmp, mipmaps);
+	if (mipmaps) Gfx_UpdateTexture(view, 0, 0, bmp, rowWidth, mipmaps);
 	return view;
 }
 
@@ -268,10 +268,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 	if (mipmaps) D3D11_DoMipmaps(res, x, y, part, rowWidth);
 	ID3D11Resource_Release(res);
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {

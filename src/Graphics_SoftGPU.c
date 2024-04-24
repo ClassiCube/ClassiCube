@@ -83,13 +83,12 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 		
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	int size = bmp->width * bmp->height * 4;
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	CCTexture* tex = (CCTexture*)Mem_Alloc(2 + bmp->width * bmp->height, 4, "Texture");
 
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	Mem_Copy(tex->pixels, bmp->scan0, size);
+	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
 }
 
@@ -97,10 +96,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	CCTexture* tex = (CCTexture*)texId;
 	cc_uint32* dst = (tex->pixels + x) + y * tex->width;
 	CopyTextureData(dst, tex->width * 4, part, rowWidth << 2);
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_EnableMipmaps(void)  { }
@@ -137,7 +132,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
 	}
 	if (buffers & GFX_BUFFER_DEPTH) {
-		for (i = 0; i < size; i++) depthBuffer[i] = 1.0f;
+		for (i = 0; i < size; i++) depthBuffer[i] = 100000000.0f;
 	}
 }
 
@@ -298,10 +293,11 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
 	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
 
-	frag->x = vp_hwidth  * (1 + coord.x / coord.w);
-	frag->y = vp_hheight * (1 - coord.y / coord.w);
-	frag->z = coord.z / coord.w;
-	frag->w = 1.0f    / coord.w;
+	float invW = 1.0f / coord.w;
+	frag->x = vp_hwidth  * (1 + coord.x * invW);
+	frag->y = vp_hheight * (1 - coord.y * invW);
+	frag->z = coord.z * invW;
+	frag->w = invW;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
@@ -309,8 +305,8 @@ static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* co
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
 		*color = v->Col;
-		uv->x  = v->U + texOffsetX;
-		uv->y  = v->V + texOffsetY;
+		uv->x  = (v->U + texOffsetX) * invW;
+		uv->y  = (v->V + texOffsetY) * invW;
 	}
 }
 	
@@ -337,43 +333,54 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	int maxY = max(y1, max(y2, y3));
 
 	// TODO backface culling
+	if (faceCulling) {
+		// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
+		int sign = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
+		if (sign > 0) return;
+	}
 
 	// Reject triangles completely outside
 	if (minX < 0 && maxX < 0 || minX >= width  && maxX >= width ) return;
 	if (minY < 0 && maxY < 0 || minY >= height && maxY >= height) return;
 
 	// Perform scissoring
-	//minX = max(minX, 0); maxX = min(maxX, sc_maxX);
-	//minY = max(minY, 0); maxY = min(maxY, sc_maxY);
-	// TODO why doesn't this work 
+	minX = max(minX, 0); maxX = min(maxX, sc_maxX);
+	minY = max(minY, 0); maxY = min(maxY, sc_maxY);
 
 	// NOTE: W in frag variables below is actually 1/W 
-
 	float factor = 1.0f / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+	
+	// TODO proper clipping
+	if (frag1.w <= 0 || frag2.w <= 0 || frag3.w <= 0) return;
+	
 	for (int y = minY; y <= maxY; y++) {
+		float yy = y + 0.5f;
 		for (int x = minX; x <= maxX; x++) {
-			if (x < 0 || y < 0 || x >= width || y >= height) return;
-
-			float ic0 = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) * factor;
+			float xx = x + 0.5f;
+			
+			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;		
 			if (ic0 < 0 || ic0 > 1) continue;
-			float ic1 = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) * factor;
+			float ic1 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) * factor;
 			if (ic1 < 0 || ic1 > 1) continue;
 			float ic2 = 1.0f - ic0 - ic1;
 			if (ic2 < 0 || ic2 > 1) continue;
 
 			int index = y * width + x;
 			float w = 1 / (ic0 * frag1.w + ic1 * frag2.w + ic2 * frag3.w);
+			float z = (ic0 * frag1.z + ic1 * frag2.z + ic2 * frag3.z) * w;
 
-			if (depthTest && w <= depthBuffer[index]) continue;
-			if (depthWrite) depthBuffer[index] = w;
-			if (!colWrite)  continue;
+			if (depthTest && (z < 0 || z > depthBuffer[index])) continue;
+			if (!colWrite) {
+				if (depthWrite) depthBuffer[index] = z;
+				continue;
+			}
 
 			PackedCol fragColor = color;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-				float u = (ic0 * uv1.x * frag1.w + ic1 * uv2.x * frag2.w + ic2 * uv3.x * frag3.w) * w;
-				float v = (ic0 * uv1.y * frag1.w + ic1 * uv2.y * frag2.w + ic2 * uv3.y * frag3.w) * w;
-				int texX = (int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth);
-				int texY = (int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight);
+				float u = (ic0 * uv1.x + ic1 * uv2.x + ic2 * uv3.x) * w;
+				float v = (ic0 * uv1.y + ic1 * uv2.y + ic2 * uv3.y) * w;
+				int texX = ((int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth )) % curTexWidth; // TODO avoid slow %
+				int texY = ((int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight)) % curTexHeight;
 				int texIndex = texY * curTexWidth + texX;
 
 				fragColor = MultiplyColours(fragColor, curTexPixels[texIndex]);
@@ -396,6 +403,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			}
 			if (alphaTest && A < 0x80) continue;
 
+			if (depthWrite) depthBuffer[index] = z;
 			colorBuffer[index] = BitmapCol_Make(R, G, B, 0xFF);
 		}
 	}

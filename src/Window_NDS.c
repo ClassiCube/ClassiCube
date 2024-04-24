@@ -51,6 +51,7 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
@@ -155,12 +156,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	swiWaitForVBlank();
 	 
-	for (int y = r.y; y < r.y + r.Height; y++)
+	for (int y = r.y; y < r.y + r.height; y++)
 	{
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		uint16_t*  dst = bg_ptr + 256 * y;
 		
-		for (int x = r.x; x < r.x + r.Width; x++)
+		for (int x = r.x; x < r.x + r.width; x++)
 		{
 			BitmapCol color = src[x];
 			// 888 to 565 (discard least significant bits)
@@ -186,9 +187,9 @@ static cc_string kbText;
 
 static void OnKeyPressed(int key) {
     if (key == 0) {
-        Window_CloseKeyboard();
+        OnscreenKeyboard_Close();
     } else if (key == DVK_ENTER) {
-        Window_CloseKeyboard();
+        OnscreenKeyboard_Close();
         Input_SetPressed(CCKEY_ENTER);
         Input_SetReleased(CCKEY_ENTER);
     } else if (key == DVK_BACKSPACE) {
@@ -200,7 +201,7 @@ static void OnKeyPressed(int key) {
     }
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
     Keyboard* kbd = keyboardGetDefault();
     videoBgDisableSub(0); // hide console
 
@@ -215,9 +216,12 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     keyboardOpen = true;
 }
 
-void Window_SetKeyboardText(const cc_string* text) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+
+void OnscreenKeyboard_Close(void) {
     keyboardHide();
     keyboardOpen = false;
     ResetHBank(); // reset shared VRAM

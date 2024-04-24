@@ -15,7 +15,7 @@ static cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 
 /* Common/Base methods */
 static void AudioBase_Clear(struct AudioContext* ctx);
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size);
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** data, cc_uint32* size);
 static cc_result AudioBase_AllocChunks(int size, void** chunks, int numChunks);
 static void AudioBase_FreeChunks(void** chunks, int numChunks);
 
@@ -359,7 +359,8 @@ struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate, volume;
-	cc_uint32 _tmpSize; void* _tmpData;
+	cc_uint32 _tmpSize[AUDIO_MAX_BUFFERS];
+	void* _tmpData[AUDIO_MAX_BUFFERS];
 };
 #define AUDIO_COMMON_VOLUME
 #define AUDIO_COMMON_ALLOC
@@ -435,14 +436,15 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) { ctx->volume = volum
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 dataSize) {
 	cc_result res;
 	WAVEHDR* hdr;
+	cc_bool ok;
 	int i;
-
-	cc_bool ok = AudioBase_AdjustSound(ctx, &chunk, &dataSize);
-	if (!ok) return ERR_OUT_OF_MEMORY;
 
 	for (i = 0; i < ctx->count; i++) {
 		hdr = &ctx->headers[i];
 		if (!(hdr->dwFlags & WHDR_DONE)) continue;
+		
+		ok = AudioBase_AdjustSound(ctx, i, &chunk, &dataSize);
+		if (!ok) return ERR_OUT_OF_MEMORY;
 
 		Mem_Set(hdr, 0, sizeof(WAVEHDR));
 		hdr->lpData         = (LPSTR)chunk;
@@ -776,9 +778,19 @@ struct AudioContext {
 };
 static int channelIDs;
 
+// See https://github.com/devkitPro/3ds-examples/blob/master/audio/README.md
+// To get audio to work in Citra, just create a 0 byte file in sdmc/3ds named dspfirm.cdca
 cc_bool AudioBackend_Init(void) {
 	int result = ndspInit();
-	Platform_Log1("NDSP_INIT: %i", &result);
+	Platform_Log2("NDSP_INIT: %i, %h", &result, &result);
+
+	if (result == MAKERESULT(RL_PERMANENT, RS_NOTFOUND, RM_DSP, RD_NOT_FOUND)) {
+		static const cc_string msg = String_FromConst("/3ds/dspfirm.cdc not found on SD card, therefore no audio will play");
+		Logger_WarnFunc(&msg);
+	} else if (result) {
+		Audio_Warn(result, "initing DSP for playing audio");
+	}
+
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	return result == 0; 
 }
@@ -1275,7 +1287,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 
 cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks) {
 	size = (size + 0x1F) & ~0x1F; // round up to nearest multiple of 0x20
-	void* dst = memalign(0x20, size);
+	void* dst = memalign(0x20, size * numChunks);
 	if (!dst) return ERR_OUT_OF_MEMORY;
 
 	for (int i = 0; i < numChunks; i++) {
@@ -1962,34 +1974,39 @@ static void ApplyVolume(cc_int16* samples, int count, int volume) {
 }
 
 static void AudioBase_Clear(struct AudioContext* ctx) {
+	int i;
 	ctx->count      = 0;
 	ctx->channels   = 0;
 	ctx->sampleRate = 0;
-	Mem_Free(ctx->_tmpData);
-	ctx->_tmpData = NULL;
-	ctx->_tmpSize = 0;
+	
+	for (i = 0; i < AUDIO_MAX_BUFFERS; i++)
+	{
+		Mem_Free(ctx->_tmpData[i]);
+		ctx->_tmpData[i] = NULL;
+		ctx->_tmpSize[i] = 0;
+	}
 }
 
-static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, void** data, cc_uint32* size) {
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, int i, void** data, cc_uint32* size) {
 	void* audio;
 	cc_uint32 src_size = *size;
 	if (ctx->volume >= 100) return true;
 
 	/* copy to temp buffer to apply volume */
-	if (ctx->_tmpSize < src_size) {
+	if (ctx->_tmpSize[i] < src_size) {
 		/* TODO: check if we can realloc NULL without a problem */
-		if (ctx->_tmpData) {
-			audio = Mem_TryRealloc(ctx->_tmpData, src_size, 1);
+		if (ctx->_tmpData[i]) {
+			audio = Mem_TryRealloc(ctx->_tmpData[i], src_size, 1);
 		} else {
 			audio = Mem_TryAlloc(src_size, 1);
 		}
 
 		if (!data) return false;
-		ctx->_tmpData = audio;
-		ctx->_tmpSize = src_size;
+		ctx->_tmpData[i] = audio;
+		ctx->_tmpSize[i] = src_size;
 	}
 
-	audio = ctx->_tmpData;
+	audio = ctx->_tmpData[i];
 	Mem_Copy(audio, *data, src_size);
 	ApplyVolume((cc_int16*)audio, src_size / 2, ctx->volume);
 

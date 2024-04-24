@@ -600,7 +600,7 @@ static void MakeBorderTex(GfxResourceID* texId, BlockID block) {
 
 static Rect2D EnvRenderer_Rect(int x, int y, int width, int height) {
 	Rect2D r;
-	r.x = x; r.y = y; r.Width = width; r.Height = height; 
+	r.x = x; r.y = y; r.width = width; r.height = height; 
 	return r;
 }
 
@@ -709,7 +709,7 @@ static void UpdateMapSides(void) {
 	sides_vertices = 0;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		sides_vertices += CalcNumVertices(r.Width, r.Height); /* YQuads outside */
+		sides_vertices += CalcNumVertices(r.width, r.height); /* YQuads outside */
 	}
 
 	y = Env_SidesHeight;
@@ -725,7 +725,7 @@ static void UpdateMapSides(void) {
 
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.x, r.y, r.x + r.Width, r.y + r.Height, (float)y, color,
+		DrawBorderY(r.x, r.y, r.x + r.width, r.y + r.height, (float)y, color,
 			0, Borders_YOffset(block), &data);
 	}
 
@@ -760,7 +760,7 @@ static void UpdateMapEdges(void) {
 	edges_vertices = 0;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
+		edges_vertices += CalcNumVertices(r.width, r.height); /* YPlanes outside */
 	}
 	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
@@ -772,7 +772,7 @@ static void UpdateMapEdges(void) {
 	y = (float)Env.EdgeHeight;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.x, r.y, r.x + r.Width, r.y + r.Height, y, color,
+		DrawBorderY(r.x, r.y, r.x + r.width, r.y + r.height, y, color,
 			Borders_HorOffset(block), Borders_YOffset(block), &data);
 	}
 	Gfx_UnlockVb(edges_vb);

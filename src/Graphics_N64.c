@@ -132,7 +132,7 @@ typedef struct CCTexture {
 #define To16BitPixel(src) \
 	((src & 0x80) >> 7) | ((src & 0xF800) >> 10) | ((src & 0xF80000) >> 13) | ((src & 0xF8000000) >> 16);	
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	cc_bool bit16  = flags & TEXTURE_FLAG_LOWRES;
 	// rows are actually 8 byte aligned in TMEM https://github.com/DragonMinded/libdragon/blob/f360fa1bb1fb3ff3d98f4ab58692d40c828636c9/src/rdpq/rdpq_tex.c#L132
 	// so even though width * height * pixel size may fit within 4096 bytes, after adjusting for 8 byte alignment, row pitch * height may exceed 4096 bytes
@@ -147,16 +147,17 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR : GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mipmaps ? GL_LINEAR : GL_NEAREST);
 	
-	tex->surface   = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
-	surface_t* fb  = &tex->surface;
-	cc_uint32* src = (cc_uint32*)bmp->scan0;
-	cc_uint8*  dst = (cc_uint8*)fb->buffer;
+	tex->surface  = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
+	surface_t* fb = &tex->surface;
 		
 	if (bit16) {
+		cc_uint32* src = (cc_uint32*)bmp->scan0;
+		cc_uint8*  dst = (cc_uint8*)fb->buffer;
+		
 		// 16 bpp requires reducing A8R8G8B8 to A1R5G5B5
 		for (int y = 0; y < bmp->height; y++) 
 		{	
-			cc_uint32* src_row = src + y * bmp->width;
+			cc_uint32* src_row = src + y * rowWidth;
 			cc_uint16* dst_row = (cc_uint16*)(dst + y * fb->stride);
 			
 			for (int x = 0; x < bmp->width; x++) 
@@ -166,12 +167,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 		}
 	} else {
 		// 32 bpp can just be copied straight across
-		for (int y = 0; y < bmp->height; y++) 
-		{
-			Mem_Copy(dst + y * fb->stride,
-				 	src + y * bmp->width,
-				 	bmp->width * 4);
-		}
+		CopyTextureData(fb->buffer, fb->stride, bmp, rowWidth << 2);
 	}
 	
 	
@@ -220,10 +216,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
     };
 	// rdpq_tex_upload(TILE0, &tex->surface, &params);
 	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {

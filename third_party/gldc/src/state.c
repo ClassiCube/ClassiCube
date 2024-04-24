@@ -16,7 +16,6 @@ GLboolean ALPHA_TEST_ENABLED = GL_FALSE;
 
 GLboolean SCISSOR_TEST_ENABLED = GL_FALSE;
 GLenum SHADE_MODEL = GL_SMOOTH;
-GLboolean ZNEAR_CLIPPING_ENABLED = GL_FALSE;
 
 GLboolean BLEND_ENABLED = GL_FALSE;
 
@@ -91,10 +90,6 @@ GLAPI void APIENTRY glEnable(GLenum cap) {
                 STATE_DIRTY = GL_TRUE;
             }
         } break;
-        case GL_NEARZ_CLIPPING_KOS:
-            ZNEAR_CLIPPING_ENABLED = GL_TRUE;
-            STATE_DIRTY = GL_TRUE;
-        break;
     default:
         break;
     }
@@ -140,10 +135,6 @@ GLAPI void APIENTRY glDisable(GLenum cap) {
                 STATE_DIRTY = GL_TRUE;
             }
         } break;
-        case GL_NEARZ_CLIPPING_KOS:
-            ZNEAR_CLIPPING_ENABLED = GL_FALSE;
-            STATE_DIRTY = GL_TRUE;
-        break;
     default:
         break;
     }
