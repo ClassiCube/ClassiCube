@@ -320,7 +320,8 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CONSOLE
 	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_COOPTHREADED
-	#define CC_BUILD_OPENAL
+	#define CC_BUILD_NOMUSIC
+	#define CC_BUILD_NOSOUNDS
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_FILESYSTEM

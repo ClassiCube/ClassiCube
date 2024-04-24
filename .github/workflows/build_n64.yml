@@ -41,7 +41,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'ClassiCube-n64.elf'
+          SOURCE_FILE: 'build-n64/ClassiCube-n64.elf'
           DEST_NAME: 'ClassiCube-n64.elf'
           
       - uses: ./.github/actions/upload_build
