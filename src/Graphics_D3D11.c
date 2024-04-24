@@ -648,10 +648,10 @@ static void RS_CreateRasterState(void) {
 
 static void RS_UpdateViewport(void) {
 	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width    = Window_Main.Width;
-	viewport.Height   = Window_Main.Height;
+	viewport.TopLeftX = Gfx.ViewportX;
+	viewport.TopLeftY = Gfx.ViewportY;
+	viewport.Width    = Gfx.ViewportWidth;
+	viewport.Height   = Gfx.ViewportHeight;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);

@@ -325,7 +325,7 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game.Width, Game.Height);
+	glViewport(Gfx.ViewportX, Gfx.ViewportY, Gfx.ViewportWidth, Gfx.ViewportHeight);
 	/* With cocoa backend, in some cases [NSOpenGLContext update] will actually */
 	/*  call glViewport with the size of the window framebuffer */
 	/*  https://github.com/glfw/glfw/issues/80 */

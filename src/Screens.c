@@ -2231,10 +2231,10 @@ static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = 
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
-static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(); }
-static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(); }
-static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(); }
-static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(); }
+static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(&LocalPlayer_Instance); }
+static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(&LocalPlayer_Instance); }
+static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(&LocalPlayer_Instance); }
+static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(&LocalPlayer_Instance); }
 static void TouchScreen_CameraClick(void* s,   void* w) { Camera_CycleActive(); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_SwitchClick(void* s,   void* w) { Inventory_SwitchHotbar(); }

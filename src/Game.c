@@ -281,6 +281,9 @@ cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 void Game_UpdateDimensions(void) {
 	Game.Width  = max(Window_Main.Width,  1);
 	Game.Height = max(Window_Main.Height, 1);
+	
+	Gfx.ViewportWidth  = Game.Width;
+	Gfx.ViewportHeight = Game.Height;
 }
 
 static void Game_OnResize(void* obj) {
@@ -402,6 +405,7 @@ static void Game_Load(void) {
 	Game_UpdateDimensions();
 	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 	Gfx_Create();
+	
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
 	GameVersion_Load();

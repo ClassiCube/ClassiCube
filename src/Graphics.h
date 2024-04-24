@@ -66,6 +66,7 @@ CC_VAR extern struct _GfxData {
 	int MinTexWidth, MinTexHeight;
 	cc_bool  ReducedPerfMode;
 	cc_uint8 ReducedPerfModeCooldown;
+	int ViewportX, ViewportY, ViewportWidth, ViewportHeight;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
