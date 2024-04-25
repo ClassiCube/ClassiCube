@@ -27,9 +27,8 @@ static void InitGX(void) {
 	memset(fifo_buffer, 0, FIFO_SIZE);
 
 	GX_Init(fifo_buffer, FIFO_SIZE);
-	GX_SetViewport(0, 0, mode->fbWidth, mode->efbHeight, 0, 1);
+	Gfx_SetViewport(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyYScale((f32)mode->xfbHeight / (f32)mode->efbHeight);
-	GX_SetScissor(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopySrc(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyDst(mode->fbWidth, mode->xfbHeight);
 	GX_SetCopyFilter(mode->aa, mode->sample_pattern,
@@ -312,7 +311,10 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) { }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	GX_SetViewport(x, y, w, h, 0, 1);
+	GX_SetScissor(x, y, w, h);
+}
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
