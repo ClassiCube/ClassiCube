@@ -367,7 +367,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
-		flags = e == &LocalPlayer_Instance.Base ? HTTP_FLAG_NOCACHE : 0;
+		flags = e == &LocalPlayer_Instances[0].Base ? HTTP_FLAG_NOCACHE : 0;
 
 		if (!first) {
 			e->_skinReqID     = Http_AsyncGetSkin(&skin, flags);
@@ -497,24 +497,24 @@ void Entities_Remove(EntityID id) {
 	}
 }
 
-EntityID Entities_GetClosest(struct Entity* src) {
+int Entities_GetClosest(struct Entity* src) {
 	Vec3 eyePos = Entity_GetEyePosition(src);
 	Vec3 dir    = Vec3_GetDirVector(src->Yaw * MATH_DEG2RAD, src->Pitch * MATH_DEG2RAD);
 	float closestDist = -200; /* NOTE: was previously positive infinity */
-	EntityID targetID = ENTITIES_SELF_ID;
+	int targetID = -1;
 
 	float t0, t1;
 	int i;
 
-	for (i = 0; i < ENTITIES_SELF_ID; i++) /* because we don't want to pick against local player */
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) /* because we don't want to pick against local player */
 	{
-		struct Entity* entity = Entities.List[i];
-		if (!entity) continue;
-		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1)) continue;
+		struct Entity* e = Entities.List[i];
+		if (!e || e == &Entities.CurPlayer->Base) continue;
+		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, e, &t0, &t1)) continue;
 
-		if (targetID == ENTITIES_SELF_ID || t0 < closestDist) {
+		if (targetID == -1 || t0 < closestDist) {
 			closestDist = t0;
-			targetID    = (EntityID)i;
+			targetID    = i;
 		}
 	}
 	return targetID;
@@ -613,7 +613,7 @@ struct IGameComponent TabList_Component = {
 /*########################################################################################################################*
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
-struct LocalPlayer LocalPlayer_Instance;
+struct LocalPlayer LocalPlayer_Instances[MAX_LOCAL_PLAYERS];
 static cc_bool hackPermMsgs;
 static struct LocalPlayerInput* sources_head;
 static struct LocalPlayerInput* sources_tail;
@@ -664,7 +664,7 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 }
 
 static void LocalPlayer_InputSet(int key, cc_bool pressed) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &LocalPlayer_Instances[0].Hacks;
 
 	if (pressed && !hacks->Enabled) return;
 	if (KeyBind_Claims(KEYBIND_SPEED, key))      hacks->Speeding     = pressed;
@@ -682,7 +682,7 @@ static void LocalPlayer_InputUp(void* obj, int key) {
 
 static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
-	LocalInterpComp_SetLocation(&p->Interp, update);
+	LocalInterpComp_SetLocation(&p->Interp, update, e);
 }
 
 static void LocalPlayer_Tick(struct Entity* e, double delta) {
@@ -736,7 +736,7 @@ static cc_bool LocalPlayer_ShouldRenderName(struct Entity* e) {
 }
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
 		p->Physics.JumpVel = p->Physics.ServerJumpVel;
 	}
@@ -787,14 +787,14 @@ void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p) {
 }
 
 static void LocalPlayer_Reset(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 	p->ReachDistance = 5.0f;
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	LocalPlayer_ResetJumpVelocity(p);
 }
 
 static void LocalPlayer_OnNewMap(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	Vec3_Set(p->OldVelocity,   0,0,0);
 
@@ -1020,9 +1020,9 @@ static void Entities_Init(void) {
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
-	Entities.CurPlayer = &LocalPlayer_Instance;
-	LocalPlayer_Init(&LocalPlayer_Instance);
+	Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instances[0].Base;
+	Entities.CurPlayer = &LocalPlayer_Instances[0];
+	LocalPlayer_Init(&LocalPlayer_Instances[0]);
 }
 
 static void Entities_Free(void) {

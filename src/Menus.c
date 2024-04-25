@@ -530,7 +530,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	if (Gui.ClassicMenu) return;
 
 	Widget_SetDisabled(&s->btns[4],
-			!LocalPlayer_Instance.Hacks.CanAnyHacks); /* select texture pack */
+			!Entities.CurPlayer->Hacks.CanAnyHacks); /* select texture pack */
 	s->dirty = true;
 }
 
@@ -702,7 +702,7 @@ static const struct SimpleButtonDesc optsGroup_btns[8] = {
 static void OptionsGroupScreen_CheckHacksAllowed(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	Widget_SetDisabled(&s->btns[6],
-			!LocalPlayer_Instance.Hacks.CanAnyHacks); /* env settings */
+			!Entities.CurPlayer->Hacks.CanAnyHacks); /* env settings */
 	s->dirty = true;
 }
 
@@ -2758,10 +2758,10 @@ static void ClassicOptionsScreen_SetShowFPS(const cc_string* v) { Gui.ShowFPS = 
 static void ClassicOptionsScreen_GetViewBob(cc_string* v) { Menu_GetBool(v, Game_ViewBobbing); }
 static void ClassicOptionsScreen_SetViewBob(const cc_string* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-static void ClassicOptionsScreen_GetHacks(cc_string* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
+static void ClassicOptionsScreen_GetHacks(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.Enabled); }
 static void ClassicOptionsScreen_SetHacks(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v, OPT_HACKS_ENABLED);
-	HacksComp_Update(&LocalPlayer_Instance.Hacks);
+	Entities.CurPlayer->Hacks.Enabled = Menu_SetBool(v, OPT_HACKS_ENABLED);
+	HacksComp_Update(&Entities.CurPlayer->Hacks);
 }
 
 static void ClassicOptionsScreen_RecreateExtra(struct MenuOptionsScreen* s) {
@@ -3130,15 +3130,15 @@ void GuiOptionsScreen_Show(void) {
 /*########################################################################################################################*
 *---------------------------------------------------HacksSettingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static void HacksSettingsScreen_GetHacks(cc_string* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
+static void HacksSettingsScreen_GetHacks(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.Enabled); }
 static void HacksSettingsScreen_SetHacks(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v,OPT_HACKS_ENABLED);
-	HacksComp_Update(&LocalPlayer_Instance.Hacks);
+	Entities.CurPlayer->Hacks.Enabled = Menu_SetBool(v,OPT_HACKS_ENABLED);
+	HacksComp_Update(&Entities.CurPlayer->Hacks);
 }
 
-static void HacksSettingsScreen_GetSpeed(cc_string* v) { String_AppendFloat(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
+static void HacksSettingsScreen_GetSpeed(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->Hacks.SpeedMultiplier, 2); }
 static void HacksSettingsScreen_SetSpeed(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.SpeedMultiplier = Menu_Float(v);
+	Entities.CurPlayer->Hacks.SpeedMultiplier = Menu_Float(v);
 	Options_Set(OPT_SPEED_FACTOR, v);
 }
 
@@ -3148,14 +3148,14 @@ static void HacksSettingsScreen_SetClipping(const cc_string* v) {
 }
 
 static void HacksSettingsScreen_GetJump(cc_string* v) { 
-	String_AppendFloat(v, LocalPlayer_JumpHeight(&LocalPlayer_Instance), 3); 
+	String_AppendFloat(v, LocalPlayer_JumpHeight(Entities.CurPlayer), 3); 
 }
 
 static void HacksSettingsScreen_SetJump(const cc_string* v) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	struct PhysicsComp* physics;
 
-	physics = &LocalPlayer_Instance.Physics;
+	physics = &Entities.CurPlayer->Physics;
 	physics->JumpVel     = PhysicsComp_CalcJumpVelocity(Menu_Float(v));
 	physics->UserJumpVel = physics->JumpVel;
 	
@@ -3164,19 +3164,19 @@ static void HacksSettingsScreen_SetJump(const cc_string* v) {
 	Options_Set(OPT_JUMP_VELOCITY, &str);
 }
 
-static void HacksSettingsScreen_GetWOMHacks(cc_string* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.WOMStyleHacks); }
+static void HacksSettingsScreen_GetWOMHacks(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.WOMStyleHacks); }
 static void HacksSettingsScreen_SetWOMHacks(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.WOMStyleHacks = Menu_SetBool(v, OPT_WOM_STYLE_HACKS);
+	Entities.CurPlayer->Hacks.WOMStyleHacks = Menu_SetBool(v, OPT_WOM_STYLE_HACKS);
 }
 
-static void HacksSettingsScreen_GetFullStep(cc_string* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.FullBlockStep); }
+static void HacksSettingsScreen_GetFullStep(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.FullBlockStep); }
 static void HacksSettingsScreen_SetFullStep(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.FullBlockStep = Menu_SetBool(v, OPT_FULL_BLOCK_STEP);
+	Entities.CurPlayer->Hacks.FullBlockStep = Menu_SetBool(v, OPT_FULL_BLOCK_STEP);
 }
 
-static void HacksSettingsScreen_GetPushback(cc_string* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.PushbackPlacing); }
+static void HacksSettingsScreen_GetPushback(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.PushbackPlacing); }
 static void HacksSettingsScreen_SetPushback(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.PushbackPlacing = Menu_SetBool(v, OPT_PUSHBACK_PLACING);
+	Entities.CurPlayer->Hacks.PushbackPlacing = Menu_SetBool(v, OPT_PUSHBACK_PLACING);
 }
 
 static void HacksSettingsScreen_GetLiquids(cc_string* v) { Menu_GetBool(v, Game_BreakableLiquids); }
@@ -3184,9 +3184,9 @@ static void HacksSettingsScreen_SetLiquids(const cc_string* v) {
 	Game_BreakableLiquids = Menu_SetBool(v, OPT_MODIFIABLE_LIQUIDS);
 }
 
-static void HacksSettingsScreen_GetSlide(cc_string* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.NoclipSlide); }
+static void HacksSettingsScreen_GetSlide(cc_string* v) { Menu_GetBool(v, Entities.CurPlayer->Hacks.NoclipSlide); }
 static void HacksSettingsScreen_SetSlide(const cc_string* v) {
-	LocalPlayer_Instance.Hacks.NoclipSlide = Menu_SetBool(v, OPT_NOCLIP_SLIDE);
+	Entities.CurPlayer->Hacks.NoclipSlide = Menu_SetBool(v, OPT_NOCLIP_SLIDE);
 }
 
 static void HacksSettingsScreen_GetFOV(cc_string* v) { String_AppendInt(v, Camera.Fov); }
@@ -3201,7 +3201,7 @@ static void HacksSettingsScreen_SetFOV(const cc_string* v) {
 
 static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 	struct Widget** widgets = s->widgets;
-	struct LocalPlayer* p   = &LocalPlayer_Instance;
+	struct LocalPlayer* p   = Entities.CurPlayer;
 	cc_bool disabled        = !p->Hacks.Enabled;
 
 	Widget_SetDisabled(widgets[3], disabled || !p->Hacks.CanSpeed);
@@ -3263,8 +3263,8 @@ void HacksSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void MiscOptionsScreen_GetReach(cc_string* v) { String_AppendFloat(v, LocalPlayer_Instance.ReachDistance, 2); }
-static void MiscOptionsScreen_SetReach(const cc_string* v) { LocalPlayer_Instance.ReachDistance = Menu_Float(v); }
+static void MiscOptionsScreen_GetReach(cc_string* v) { String_AppendFloat(v, Entities.CurPlayer->ReachDistance, 2); }
+static void MiscOptionsScreen_SetReach(const cc_string* v) { Entities.CurPlayer->ReachDistance = Menu_Float(v); }
 
 static void MiscOptionsScreen_GetMusic(cc_string* v) { String_AppendInt(v, Audio_MusicVolume); }
 static void MiscOptionsScreen_SetMusic(const cc_string* v) {

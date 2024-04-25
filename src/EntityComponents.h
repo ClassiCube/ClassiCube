@@ -82,7 +82,7 @@ float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed);
 /* Base entity component that performs interpolation of position and orientation */
 struct InterpComp { InterpComp_Layout };
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update);
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, struct Entity* e);
 void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e);
 
 /* Represents a network orientation state */

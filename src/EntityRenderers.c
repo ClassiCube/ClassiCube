@@ -242,6 +242,7 @@ static void EntityShadows_MakeTexture(void) {
 }
 
 void EntityShadows_Render(void) {
+	struct Entity* e;
 	int i;
 	if (Entities.ShadowsMode == SHADOW_MODE_NONE) return;
 
@@ -256,13 +257,13 @@ void EntityShadows_Render(void) {
 	Gfx_SetAlphaBlending(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	EntityShadow_Draw(Entities.List[ENTITIES_SELF_ID]);
+	EntityShadow_Draw(&Entities.CurPlayer->Base);
 
 	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
-		for (i = 0; i < ENTITIES_SELF_ID; i++) 
+		for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 		{
-			if (!Entities.List[i] || !Entities.List[i]->ShouldRender) continue;
-			EntityShadow_Draw(Entities.List[i]);
+			if (!e || !e->ShouldRender || e == &Entities.CurPlayer->Base) continue;
+			EntityShadow_Draw(e);
 		}
 	}
 
@@ -373,7 +374,7 @@ void EntityNames_Delete(struct Entity* e) {
 /*########################################################################################################################*
 *-----------------------------------------------------Names rendering-----------------------------------------------------*
 *#########################################################################################################################*/
-static EntityID closestEntityId;
+static int closestEntityId;
 
 void EntityNames_Render(void) {
 	struct LocalPlayer* p = Entities.CurPlayer;
@@ -391,9 +392,7 @@ void EntityNames_Render(void) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
 		if (!Entities.List[i]) continue;
-		if (i != closestEntityId || i == ENTITIES_SELF_ID) {
-			DrawName(Entities.List[i]);
-		}
+		if (i != closestEntityId) DrawName(Entities.List[i]);
 	}
 
 	Gfx_SetAlphaTest(false);
@@ -417,7 +416,7 @@ void EntityNames_RenderHovered(void) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
 		if (!Entities.List[i]) continue;
-		if ((i == closestEntityId || allNames) && i != ENTITIES_SELF_ID) {
+		if ((i == closestEntityId || allNames) && Entities.List[i] != &p->Base) {
 			DrawName(Entities.List[i]);
 		}
 	}

@@ -684,6 +684,9 @@ static void MouseStateUpdate(int button, cc_bool pressed) {
 	if (input_pickingId == -1) {
 		p = &Entities.CurPlayer->Base;
 		input_pickingId = Entities_GetClosest(p);
+		
+		if (input_pickingId == -1) 
+			input_pickingId = ENTITIES_SELF_ID;
 	}
 
 	input_buttonsDown[button] = pressed;
@@ -779,9 +782,10 @@ static cc_bool IntersectsOthers(Vec3 pos, BlockID block) {
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 	
-	for (id = 0; id < ENTITIES_SELF_ID; id++) {
+	for (id = 0; id < ENTITIES_MAX_COUNT; id++)	
+	{
 		e = Entities.List[id];
-		if (!e) continue;
+		if (!e || e == &Entities.CurPlayer->Base) continue;
 
 		Entity_GetBounds(e, &entityBB);
 		entityBB.Min.y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
@@ -948,7 +952,7 @@ static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg,
 }
 
 cc_bool InputHandler_SetFOV(int fov) {
-	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* h = &Entities.CurPlayer->Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
 	Camera.ZoomFov = fov;
@@ -964,7 +968,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 	if (!hotbar && Camera.Active->Zoom(delta))   return true;
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
-	h = &LocalPlayer_Instance.Hacks;
+	h = &Entities.CurPlayer->Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = (float)Camera.ZoomFov;
@@ -975,7 +979,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 }
 
 static void InputHandler_CheckZoomFov(void* obj) {
-	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* h = &Entities.CurPlayer->Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) Camera_SetFov(Camera.DefaultFov);
 }
 
@@ -1067,7 +1071,7 @@ static void HandleHotkeyDown(int key) {
 }
 
 static cc_bool HandleLocalPlayerKey(int key) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	
 	if (KeyBind_Claims(KEYBIND_RESPAWN, key)) {
 		return LocalPlayer_HandleRespawn(p);

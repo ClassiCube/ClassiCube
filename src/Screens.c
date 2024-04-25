@@ -135,7 +135,7 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 	tex.width = atlas->offset;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &cur);
 
-	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
+	IVec3_Floor(&pos, &Entities.CurPlayer->Base.Position);
 	atlas->curX = tex.x + tex.width;
 
 	/* Make (X, Y, Z) suffix */
@@ -151,14 +151,14 @@ static void HUDScreen_BuildPosition(struct HUDScreen* s, struct VertexTextured* 
 }
 
 static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	float speed = HacksComp_CalcSpeedFactor(hacks, hacks->CanSpeed);
 	return speed != s->lastSpeed || Camera.Fov != s->lastFov || s->hacksChanged;
 }
 
 static void HUDScreen_RemakeLine2(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	float speed;
 	s->dirty = true;
 
@@ -340,7 +340,7 @@ static void HUDScreen_Update(void* screen, double delta) {
 		if (HUDScreen_HasHacksChanged(s)) HUDScreen_RemakeLine2(s);
 	}
 
-	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
+	IVec3_Floor(&pos, &Entities.CurPlayer->Base.Position);
 	if (pos.x != s->lastX || pos.y != s->lastY || pos.z != s->lastZ)
 		s->dirty = true;
 }
@@ -2003,8 +2003,8 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Blocks = NULL;
 	World.Seed = Gen_Seed;
 
-	LocalPlayer_CalcDefaultSpawn(&LocalPlayer_Instance, &update);
-	LocalPlayer_MoveToSpawn(&LocalPlayer_Instance, &update);
+	LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
+	LocalPlayer_MoveToSpawn(&LocalPlayer_Instances[0], &update);
 }
 
 static void GeneratingScreen_Update(void* screen, double delta) {
@@ -2232,10 +2232,10 @@ static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = 
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
-static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(&LocalPlayer_Instance); }
-static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(&LocalPlayer_Instance); }
-static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(&LocalPlayer_Instance); }
-static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(&LocalPlayer_Instance); }
+static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(Entities.CurPlayer); }
+static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(Entities.CurPlayer); }
+static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(Entities.CurPlayer); }
+static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(Entities.CurPlayer); }
 static void TouchScreen_CameraClick(void* s,   void* w) { Camera_CycleActive(); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_SwitchClick(void* s,   void* w) { Inventory_SwitchHotbar(); }
@@ -2253,11 +2253,11 @@ static void TouchScreen_TabClick(void* s, void* w) {
 }
 
 static void TouchScreen_SpeedClick(void* s, void* w) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	if (hacks->Enabled) hacks->Speeding = !hacks->Speeding;
 }
 static void TouchScreen_HalfClick(void* s, void* w) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	if (hacks->Enabled) hacks->HalfSpeeding = !hacks->HalfSpeeding;
 }
 
@@ -2272,13 +2272,13 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Chat",      0,0,0, TouchScreen_ChatClick },
 	{ "Tablist",   0,0,0, TouchScreen_TabClick },
-	{ "Respawn",   0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Set spawn", 0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Fly",       0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
-	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
-	{ "Speed",     0,0,0, TouchScreen_SpeedClick,    &LocalPlayer_Instance.Hacks.CanSpeed   },
-	{ "\xabSpeed", 0,0,0, TouchScreen_HalfClick,     &LocalPlayer_Instance.Hacks.CanSpeed   },
-	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson },
+	{ "Respawn",   0,0,0, TouchScreen_RespawnClick,  &Entities.CurPlayer->Hacks.CanRespawn },
+	{ "Set spawn", 0,0,0, TouchScreen_SetSpawnClick, &Entities.CurPlayer->Hacks.CanRespawn },
+	{ "Fly",       0,0,0, TouchScreen_FlyClick,      &Entities.CurPlayer->Hacks.CanFly     },
+	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &Entities.CurPlayer->Hacks.CanNoclip  },
+	{ "Speed",     0,0,0, TouchScreen_SpeedClick,    &Entities.CurPlayer->Hacks.CanSpeed   },
+	{ "\xabSpeed", 0,0,0, TouchScreen_HalfClick,     &Entities.CurPlayer->Hacks.CanSpeed   },
+	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &Entities.CurPlayer->Hacks.CanUseThirdPerson },
 	{ "Delete",    0,0,0, TouchScreen_DeleteClick },
 	{ "Pick",      0,0,0, TouchScreen_PickClick },
 	{ "Place",     0,0,0, TouchScreen_PlaceClick },
@@ -2294,7 +2294,7 @@ static const struct TouchButtonDesc hackDescs[2] = {
 
 #define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 220)
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	const struct TouchButtonDesc* desc;
 	int i, j;
 	for (i = 0; i < ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS; i++) s->widgets[i] = NULL;

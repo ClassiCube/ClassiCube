@@ -425,8 +425,7 @@ void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e) 
 /*########################################################################################################################*
 *-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
 *#########################################################################################################################*/
-static void LocalInterpComp_SetPosition(struct LocationUpdate* update, int mode) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+static void LocalInterpComp_SetPosition(struct Entity* e, struct LocationUpdate* update, int mode) {
 	float yOffset;
 
 	if (mode == LU_POS_ABSOLUTE_INSTANT || mode == LU_POS_ABSOLUTE_SMOOTH) {
@@ -453,15 +452,14 @@ static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool
 	if (!interpolate) *prev = value;
 }
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, struct Entity* e) {
 	struct EntityLocation* prev = &e->prev;
 	struct EntityLocation* next = &e->next;
 	cc_uint8 flags      = update->flags;
 	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
 
 	if (flags & LU_HAS_POS) {
-		LocalInterpComp_SetPosition(update, flags & LU_POS_MODEMASK);
+		LocalInterpComp_SetPosition(e, update, flags & LU_POS_MODEMASK);
 	}
 	if (flags & LU_HAS_PITCH) {
 		LocalInterpComp_Angle(&prev->pitch, &next->pitch, update->pitch, interpolate);

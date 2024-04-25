@@ -16,9 +16,10 @@ struct LocalPlayer;
 extern struct IGameComponent TabList_Component;
 extern struct IGameComponent Entities_Component;
 
+#define MAX_LOCAL_PLAYERS 1
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
-#define ENTITIES_MAX_COUNT 256
+#define ENTITIES_MAX_COUNT (255 + MAX_LOCAL_PLAYERS)
 #define ENTITIES_SELF_ID 255
 
 enum NameMode {
@@ -174,7 +175,8 @@ void Entities_RenderModels(double delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity */
-EntityID Entities_GetClosest(struct Entity* src);
+/* Returns -1 if there is no other entity nearby */
+int Entities_GetClosest(struct Entity* src);
 
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */
@@ -237,7 +239,7 @@ struct LocalPlayer {
 	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip, _warnedZoom;
 };
 
-extern struct LocalPlayer LocalPlayer_Instance;
+extern struct LocalPlayer LocalPlayer_Instances[MAX_LOCAL_PLAYERS];
 /* Returns how high (in blocks) the player can jump. */
 float LocalPlayer_JumpHeight(struct LocalPlayer* p);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */

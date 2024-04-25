@@ -261,13 +261,13 @@ static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 }
 
 static void OnHacksChanged(void* obj) {
-	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* h = &Entities.CurPlayer->Hacks;
 	/* Leave third person if not allowed anymore */
 	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
 }
 
 void Camera_CycleActive(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->next;
 

@@ -86,8 +86,8 @@ cc_result Map_LoadFrom(const cc_string* path) {
 	if (res) Logger_SysWarn2(res, "decoding", path);
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
-	if (!spawn_point) LocalPlayer_CalcDefaultSpawn(&LocalPlayer_Instance, &update);
-	LocalPlayer_MoveToSpawn(&LocalPlayer_Instance, &update);
+	if (!spawn_point) LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
+	LocalPlayer_MoveToSpawn(&LocalPlayer_Instances[0], &update);
 
 	relPath = *path;
 	Utils_UNSAFE_GetFilename(&relPath);
@@ -703,7 +703,7 @@ static PackedCol Cw_ParseColor(PackedCol defValue) {
 
 static void Cw_Callback_4(struct NbtTag* tag) {
 	BlockID id = cw_curID;
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 
 	if (!IsTag(tag->parent->parent, "CPE")) return;
 	if (!IsTag(tag->parent->parent->parent, "Metadata")) return;
@@ -1572,9 +1572,9 @@ static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 }
 
 cc_result Cw_Save(struct Stream* stream) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_uint8 buffer[2048];
 	cc_uint8* cur;
-	struct LocalPlayer* p = &LocalPlayer_Instance;
 	cc_result res;
 	int b;
 
@@ -1622,7 +1622,7 @@ cc_result Cw_Save(struct Stream* stream) {
 	{
 		cur = Nbt_WriteDict(cur, "ClickDistance");
 		{
-			cur  = Nbt_WriteUInt16(cur, "Distance", (cc_uint16)(LocalPlayer_Instance.ReachDistance * 32));
+			cur  = Nbt_WriteUInt16(cur, "Distance", (cc_uint16)(p->ReachDistance * 32));
 		} *cur++ = NBT_END;
 
 		cur = Nbt_WriteDict(cur, "EnvWeatherType");
@@ -1739,9 +1739,9 @@ static const struct JField {
 	{ JFIELD_I32, false, "width",  &World.Width  },
 	{ JFIELD_I32, false, "depth",  &World.Height },
 	{ JFIELD_I32, false, "height", &World.Length },
-	{ JFIELD_I32, true,  "xSpawn", &LocalPlayer_Instance.Base.Position.x },
-	{ JFIELD_I32, true,  "ySpawn", &LocalPlayer_Instance.Base.Position.y },
-	{ JFIELD_I32, true,  "zSpawn", &LocalPlayer_Instance.Base.Position.z },
+	{ JFIELD_I32, true,  "xSpawn", &LocalPlayer_Instances[0].Base.Position.x },
+	{ JFIELD_I32, true,  "ySpawn", &LocalPlayer_Instances[0].Base.Position.y },
+	{ JFIELD_I32, true,  "zSpawn", &LocalPlayer_Instances[0].Base.Position.z },
 	{ JFIELD_ARRAY,0, "blocks" }
 	/* TODO classic only blocks */
 };
