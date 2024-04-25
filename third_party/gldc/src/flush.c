@@ -26,7 +26,6 @@ void APIENTRY glKosInit() {
     InitGPU(config.autosort_enabled, config.fsaa_enabled);
     AUTOSORT_ENABLED = config.autosort_enabled;
 
-    _glInitSubmissionTarget();
     _glInitContext();
     _glInitTextures();
 

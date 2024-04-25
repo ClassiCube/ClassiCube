@@ -257,10 +257,10 @@ Viewport VIEWPORT;
 
 /* Set the GL viewport */
 void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-    VIEWPORT.hwidth  = ((GLfloat)width)  * 0.5f;
-    VIEWPORT.hheight = ((GLfloat)height) * -0.5f;
-    VIEWPORT.x_plus_hwidth  = x + VIEWPORT.hwidth;
-    VIEWPORT.y_plus_hheight = y + VIEWPORT.hheight;
+    VIEWPORT.hwidth  = width  *  0.5f;
+    VIEWPORT.hheight = height * -0.5f;
+    VIEWPORT.x_plus_hwidth  = x + width  * 0.5f;
+    VIEWPORT.y_plus_hheight = y + height * 0.5f;
 }
 
 

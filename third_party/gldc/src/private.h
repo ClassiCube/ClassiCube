@@ -8,7 +8,7 @@
 #include "platform.h"
 #include "types.h"
 
-#include "../include/gldc.h"
+#include "../gldc.h"
 
 #include "aligned_vector.h"
 

@@ -4,7 +4,7 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "../third_party/gldc/include/gldc.h"
+#include "../third_party/gldc/gldc.h"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
