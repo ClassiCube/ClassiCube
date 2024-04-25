@@ -421,10 +421,6 @@ static void KeyBind_Init(void) {
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
-/* Whether a gamepad joystick is being used to control player movement */
-static cc_bool joystick_movement;
-/* Angle of the gamepad joystick being used to control player movement */
-static float joystick_angle;
 
 struct GamepadState {
 	float axisX[2], axisY[2];
@@ -457,36 +453,46 @@ void Gamepad_SetButton(int port, int btn, int pressed) {
 }
 
 void Gamepad_SetAxis(int port, int axis, float x, float y, double delta) {
+	gamepads[port].axisX[axis] = x;
+	gamepads[port].axisY[axis] = y;
 	if (x == 0 && y == 0) return;
 
 	int sensi   = Gamepad_AxisSensitivity[axis];
 	float scale = delta * 60.0 * axis_sensiFactor[sensi];
 	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
-
-	if (Gamepad_AxisBehaviour[axis] == AXIS_BEHAVIOUR_MOVEMENT) {
-		if (!Input.RawMode) return;
-
-		joystick_movement = true;
-		joystick_angle    = Math_Atan2(x, y);
-	}
 }
 
 void Gamepad_Tick(double delta) {
-	int i;
-	joystick_movement = false;
+	int port;
 	Window_ProcessGamepads(delta);
 	
-	for (i = 0; i < INPUT_MAX_GAMEPADS; i++)
+	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
-		Gamepad_Update(&gamepads[i], delta);
+		Gamepad_Update(&gamepads[port], delta);
+	}
+}
+
+static void PlayerInputPad(int port, int axis, struct LocalPlayer* p, float* xMoving, float* zMoving) {
+	float x, y, angle;
+	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_MOVEMENT) return;
+	
+	x = gamepads[port].axisX[axis];
+	y = gamepads[port].axisY[axis];
+	
+	if (x != 0 || y != 0) {
+		float angle = Math_Atan2(x, y);
+		*xMoving    = Math_CosF(angle);
+		*zMoving    = Math_SinF(angle);
 	}
 }
 
 static void PlayerInputGamepad(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	if (!joystick_movement) return;
-	
-	*xMoving = Math_CosF(joystick_angle);
-	*zMoving = Math_SinF(joystick_angle);
+	int port;
+	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		PlayerInputPad(port, PAD_AXIS_LEFT,  p, xMoving, zMoving);
+		PlayerInputPad(port, PAD_AXIS_RIGHT, p, xMoving, zMoving);
+	}
 }
 static struct LocalPlayerInput gamepadInput = { PlayerInputGamepad };
 

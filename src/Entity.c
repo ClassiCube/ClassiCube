@@ -727,7 +727,7 @@ static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t)
 	AnimatedComp_GetCurrent(e, t);
 	TiltComp_GetCurrent(p, &p->Tilt, t);
 
-	if (!Camera.Active->isThirdPerson) return;
+	if (!Camera.Active->isThirdPerson && p == Entities.CurPlayer) return;
 	Model_Render(e->Model, e);
 }
 
@@ -769,7 +769,7 @@ static void LocalPlayer_Init(struct LocalPlayer* p) {
 	/* p->Base.Health = 20; TODO: survival mode stuff */
 	if (Game_ClassicMode) return;
 
-	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR, 0.1f, 50.0f, 10.0f);
+	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR,  0.1f, 50.0f, 10.0f);
 	hacks->PushbackPlacing = Options_GetBool(OPT_PUSHBACK_PLACING, false);
 	hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE,     false);
 	hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS,  false);
