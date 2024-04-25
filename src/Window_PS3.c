@@ -304,9 +304,12 @@ static void ProcessPadInput(int port, double delta, padData* pad) {
 
 void Window_ProcessGamepads(double delta) {
 	ioPadGetInfo(&pad_info);
-	if (pad_info.status[0]) {
-		ioPadGetData(0, &pad_data);
-		ProcessPadInput(0, delta, &pad_data);
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		if (!pad_info.status[port]) continue;
+		
+		ioPadGetData(port, &pad_data);
+		ProcessPadInput(port, delta, &pad_data);
 	}
 }
 

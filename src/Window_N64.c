@@ -114,15 +114,20 @@ static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, double delta) 
 	int y = inputs->stick_y;
 
 	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;	
+	if (Math_AbsI(y) <= 8) y = 0;
 	
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
 void Window_ProcessGamepads(double delta) {
-	joypad_inputs_t inputs = joypad_get_inputs(JOYPAD_PORT_1);
-	HandleButtons(0, inputs.btn);
-	ProcessAnalogInput(0, &inputs, delta);
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		if (!joypad_is_connected(port)) continue;
+		
+		joypad_inputs_t inputs = joypad_get_inputs(port);
+		HandleButtons(port, inputs.btn);
+		ProcessAnalogInput(port, &inputs, delta);
+	}
 }
 
 

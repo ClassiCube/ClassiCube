@@ -104,7 +104,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *---------------------------------------------GameCube controller processing----------------------------------------------*
 *#########################################################################################################################*/
-static PADStatus gc_pad;
+static PADStatus gc_pads[INPUT_MAX_GAMEPADS];
 
 #define PAD_AXIS_SCALE 8.0f
 static void ProcessPAD_Joystick(int port, int axis, int x, int y, double delta) {
@@ -115,8 +115,7 @@ static void ProcessPAD_Joystick(int port, int axis, int x, int y, double delta) 
 	Gamepad_SetAxis(port, axis, x / PAD_AXIS_SCALE, -y / PAD_AXIS_SCALE, delta);		
 }
 
-static void ProcessPAD_Buttons(int port) {
-	int mods = gc_pad.button;
+static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_L, mods & PAD_TRIGGER_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & PAD_TRIGGER_R);
 	
@@ -134,22 +133,22 @@ static void ProcessPAD_Buttons(int port) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(double delta) {
+static void ProcessPADInput(int port, double delta) {
 	PADStatus pads[4];
 	PAD_Read(pads);
-	int error = pads[0].err;
+	int error = pads[port].err;
 
 	if (error == 0) {
-		gc_pad = pads[0]; // new state arrived
+		gc_pads[port] = pads[port]; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
 		return; // not connected, still busy, etc
 	}
 	
-	ProcessPAD_Buttons(0);
-	ProcessPAD_Joystick(0, PAD_AXIS_LEFT,  gc_pad.stickX,    gc_pad.stickY,    delta);
-	ProcessPAD_Joystick(0, PAD_AXIS_RIGHT, gc_pad.substickX, gc_pad.substickY, delta);
+	ProcessPAD_Buttons(0, gc_pads[port].button);
+	ProcessPAD_Joystick(0, PAD_AXIS_LEFT,  gc_pads[port].stickX,    gc_pads[port].stickY,    delta);
+	ProcessPAD_Joystick(0, PAD_AXIS_RIGHT, gc_pads[port].substickX, gc_pads[port].substickY, delta);
 }
 
 
@@ -398,33 +397,39 @@ static void ProcessClassicInput(int port, double delta) {
 	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
-static void ProcessWPADInput(double delta) {
+static void ProcessWPADInput(int port, double delta) {
 	WPAD_ScanPads();
-	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
 	u32 type;
-	int res  = WPAD_Probe(0, &type);
+	int res  = WPAD_Probe(port, &type);
 	if (res) return;
+	u32 mods = WPAD_ButtonsDown(port) | WPAD_ButtonsHeld(port);
 
 	if (type == WPAD_EXP_CLASSIC) {
-		ProcessClassicInput(0, delta);
+		ProcessClassicInput(port, delta);
 	} else if (launcherMode) {
-		ProcessWPAD_Buttons(0, mods);
+		ProcessWPAD_Buttons(port, mods);
 	} else if (type == WPAD_EXP_NUNCHUK) {
-		ProcessNunchuck_Game(0, mods, delta);
+		ProcessNunchuck_Game(port, mods, delta);
 	} else {
-		ProcessWPAD_Buttons(0, mods);
+		ProcessWPAD_Buttons(port, mods);
 	}
 
 	ProcessWPADDrag(res, mods);
 }
 
 void Window_ProcessGamepads(double delta) {
-	ProcessWPADInput(delta);
-	ProcessPADInput(delta);
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		ProcessWPADInput(port, delta);
+		ProcessPADInput( port, delta);
+	}
 }
 #else
 void Window_ProcessGamepads(double delta) {
-	ProcessPADInput(delta);
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		ProcessPADInput(port, delta);
+	}
 }
 #endif
 
