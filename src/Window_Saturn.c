@@ -78,6 +78,20 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+	smpc_peripheral_process();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true; }
+void Window_UpdateRawMouse(void)  {  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void ProcessButtons(int mods) {
 	Gamepad_SetButton(CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
 	Gamepad_SetButton(CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
@@ -95,18 +109,10 @@ static void ProcessButtons(int mods) {
 	Gamepad_SetButton(CCPAD_DOWN,   mods & PERIPHERAL_DIGITAL_DOWN);
 }
 
-void Window_ProcessEvents(double delta) {
-	smpc_peripheral_process();
+void Window_ProcessGamepads(double delta) {
 	smpc_peripheral_digital_port(1, &state);
-
 	ProcessButtons(state.pressed.raw | state.held.raw);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true; }
-void Window_UpdateRawMouse(void)  {  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

@@ -84,6 +84,19 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true; }
+void Window_UpdateRawMouse(void)  {  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(int buttons) {
 	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
 	// So just flip the bits to make more sense
@@ -124,9 +137,8 @@ static void ProcessPadInput(double delta, struct padButtonStatus* pad) {
 }
 
 static cc_bool setMode;
-void Window_ProcessEvents(double delta) {
+void Window_ProcessGamepads(double delta) {
     struct padButtonStatus pad;
-	Input.JoystickMovement = false;
 	
 	int state = padGetState(0, 0);
     if (state != PAD_STATE_STABLE) return;
@@ -140,12 +152,6 @@ void Window_ProcessEvents(double delta) {
 	int ret = padRead(0, 0, &pad);
 	if (ret != 0) ProcessPadInput(delta, &pad);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true; }
-void Window_UpdateRawMouse(void)  {  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

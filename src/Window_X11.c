@@ -699,6 +699,8 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
+void Window_ProcessGamepads(double delta) { }
+
 static void Cursor_GetRawPos(int* x, int* y) {
 	Window rootW, childW;
 	int childX, childY;

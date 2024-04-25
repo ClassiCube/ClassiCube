@@ -252,6 +252,21 @@ static void ProcessKBInput(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+	ioKbGetInfo(&kb_info);
+	if (kb_info.status[0]) ProcessKBInput();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true; }
+void Window_UpdateRawMouse(void)  {  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(padData* data) {
 	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
 	Gamepad_SetButton(CCPAD_A, data->BTN_TRIANGLE);
@@ -287,24 +302,13 @@ static void ProcessPadInput(double delta, padData* pad) {
 	HandleJoystick(PAD_AXIS_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
+void Window_ProcessGamepads(double delta) {
 	ioPadGetInfo(&pad_info);
 	if (pad_info.status[0]) {
 		ioPadGetData(0, &pad_data);
 		ProcessPadInput(delta, &pad_data);
 	}
-	
-	ioKbGetInfo(&kb_info);
-	if (kb_info.status[0]) ProcessKBInput();
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true; }
-void Window_UpdateRawMouse(void)  {  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

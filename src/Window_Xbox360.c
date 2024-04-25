@@ -71,6 +71,20 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+	usb_do_poll();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 /*
 struct controller_data_s
 {
@@ -99,21 +113,13 @@ static void HandleButtons(struct controller_data_s* pad) {
 	Gamepad_SetButton(CCPAD_DOWN,   pad->down);
 }
 
-void Window_ProcessEvents(double delta) {
-	usb_do_poll();
-	
+void Window_ProcessGamepads(double delta) {
 	struct controller_data_s pad;
- 	int res = get_controller_data(&pad, 0);
- 	if (res == 0) return;
- 	
- 	HandleButtons(&pad);
+	int res = get_controller_data(&pad, 0);
+	if (res == 0) return;
+	
+	HandleButtons(&pad);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

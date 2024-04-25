@@ -295,6 +295,8 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
+void Window_ProcessGamepads(double delta) { }
+
 static void Cursor_GetRawPos(int* x, int* y) {
 	SDL_GetMouseState(x, y);
 }

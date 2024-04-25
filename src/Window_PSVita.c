@@ -86,33 +86,6 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
-	Gamepad_SetButton(CCPAD_A, mods & SCE_CTRL_TRIANGLE);
-	Gamepad_SetButton(CCPAD_B, mods & SCE_CTRL_SQUARE);
-	Gamepad_SetButton(CCPAD_X, mods & SCE_CTRL_CROSS);
-	Gamepad_SetButton(CCPAD_Y, mods & SCE_CTRL_CIRCLE);
-      
-	Gamepad_SetButton(CCPAD_START,  mods & SCE_CTRL_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & SCE_CTRL_SELECT);
-
-	Gamepad_SetButton(CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & SCE_CTRL_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
-	
-	Gamepad_SetButton(CCPAD_L, mods & SCE_CTRL_LTRIGGER);
-	Gamepad_SetButton(CCPAD_R, mods & SCE_CTRL_RTRIGGER);
-}
-
-#define AXIS_SCALE 16.0f
-static void ProcessCircleInput(int axis, int x, int y, double delta) {
-	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
-}
-
 static void AdjustTouchPress(int* x, int* y) {
 	if (!frontPanel.maxDispX || !frontPanel.maxDispY) return;
 	// TODO: Shouldn't ever happen? need to check
@@ -146,6 +119,47 @@ static void ProcessTouchInput(void) {
 	}
 }
 
+void Window_ProcessEvents(double delta) {
+	ProcessTouchInput();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true; }
+void Window_UpdateRawMouse(void)  {  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int mods) {
+	Gamepad_SetButton(CCPAD_A, mods & SCE_CTRL_TRIANGLE);
+	Gamepad_SetButton(CCPAD_B, mods & SCE_CTRL_SQUARE);
+	Gamepad_SetButton(CCPAD_X, mods & SCE_CTRL_CROSS);
+	Gamepad_SetButton(CCPAD_Y, mods & SCE_CTRL_CIRCLE);
+      
+	Gamepad_SetButton(CCPAD_START,  mods & SCE_CTRL_START);
+	Gamepad_SetButton(CCPAD_SELECT, mods & SCE_CTRL_SELECT);
+
+	Gamepad_SetButton(CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
+	Gamepad_SetButton(CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
+	Gamepad_SetButton(CCPAD_UP,     mods & SCE_CTRL_UP);
+	Gamepad_SetButton(CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
+	
+	Gamepad_SetButton(CCPAD_L, mods & SCE_CTRL_LTRIGGER);
+	Gamepad_SetButton(CCPAD_R, mods & SCE_CTRL_RTRIGGER);
+}
+
+#define AXIS_SCALE 16.0f
+static void ProcessCircleInput(int axis, int x, int y, double delta) {
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
 static void ProcessPadInput(double delta) {
 	SceCtrlData pad;
 	
@@ -160,18 +174,9 @@ static void ProcessPadInput(double delta) {
 	ProcessCircleInput(PAD_AXIS_RIGHT, pad.rx - 127, pad.ry - 127, delta);
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
+void Window_ProcessGamepads(double delta) {
 	ProcessPadInput(delta);
-	ProcessTouchInput();
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true; }
-void Window_UpdateRawMouse(void)  {  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

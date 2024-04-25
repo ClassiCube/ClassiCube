@@ -448,6 +448,8 @@ void Gamepad_SetAxis(int axis, float x, float y, double delta) {
 
 void Gamepad_Tick(double delta) {
 	int btn;
+	Input.JoystickMovement = false;
+	Window_ProcessGamepads(delta);
 
 	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
 	{

@@ -529,6 +529,26 @@ static void ProcessPendingResize(void) {
 	UpdateWindowBounds();
 }
 
+void Window_ProcessEvents(double delta) {
+	if (!needResize) return;
+	needResize = false;
+	ProcessPendingResize();
+}
+
+/* Not needed because browser provides relative mouse and touch events */
+static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
+/* Not allowed to move cursor from javascript */
+void Cursor_SetPosition(int x, int y) { }
+
+extern void interop_SetCursorVisible(int visible);
+static void Cursor_DoSetVisible(cc_bool visible) {
+	interop_SetCursorVisible(visible);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 /* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
 #define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
 static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
@@ -566,7 +586,6 @@ static void ProcessGamepadAxis(int axis, float x, float y, double delta) {
 
 static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	Input.JoystickMovement = false;
 	ProcessGamepadButtons(ev);
 
 	if (ev->numAxes >= 4) {
@@ -577,7 +596,7 @@ static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
 	}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessGamepads(double delta) {
 	int i, res, count;
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
@@ -591,22 +610,12 @@ void Window_ProcessEvents(double delta) {
 			if (res == 0) ProcessGamepadInput(&ev, delta);
 		}	
 	}
-
-	if (!needResize) return;
-	needResize = false;
-	ProcessPendingResize();
 }
 
-/* Not needed because browser provides relative mouse and touch events */
-static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-/* Not allowed to move cursor from javascript */
-void Cursor_SetPosition(int x, int y) { }
 
-extern void interop_SetCursorVisible(int visible);
-static void Cursor_DoSetVisible(cc_bool visible) {
-	interop_SetCursorVisible(visible);
-}
-
+/*########################################################################################################################*
+*-------------------------------------------------------Misc/Other--------------------------------------------------------*
+*#########################################################################################################################*/
 extern void interop_ShowDialog(const char* title, const char* msg);
 static void ShowDialogCore(const char* title, const char* msg) { 
 	interop_ShowDialog(title, msg); 

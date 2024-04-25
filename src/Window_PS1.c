@@ -78,6 +78,19 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true; }
+void Window_UpdateRawMouse(void)  {  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(int buttons) {
 	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
 	// So just flip the bits to make more sense
@@ -119,16 +132,10 @@ static void ProcessPadInput(PADTYPE* pad, double delta) {
 	}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessGamepads(double delta) {
 	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
 	if (pad->stat == 0) ProcessPadInput(pad, delta);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true; }
-void Window_UpdateRawMouse(void)  {  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

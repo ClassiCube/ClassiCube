@@ -225,6 +225,84 @@ static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
 
+void Window_ProcessEvents(double delta) {
+	ProcessKeyboardInput();
+}
+
+static void GetIRPos(int res, int* x, int* y) {
+	if (res == WPAD_ERR_NONE) {
+		WPADData* wd = WPAD_Data(0);
+
+		*x = wd->ir.x;
+		*y = wd->ir.y;
+	} else {
+		*x = 0; 
+		*y = 0;
+	}
+}
+
+static void ScanAndGetIRPos(int* x, int* y) {
+	u32 type;
+	WPAD_ScanPads();
+	
+	int res = WPAD_Probe(0, &type);
+	GetIRPos(res, x, y);
+}
+
+
+static void ProcessWPADDrag(u32 mods) {
+	int x, y;
+	GetIRPos(res, &x, &y);
+	
+	if (mods & WPAD_BUTTON_B) {
+		if (!dragActive) {
+			dragStartX = dragCurX = x;
+			dragStartY = dragCurY = y;
+		}
+		dragActive = true;
+	} else {
+		dragActive = false;
+	}
+	Pointer_SetPosition(0, x, y);
+}
+
+#define FACTOR 2
+void Window_UpdateRawMouse(void)  {
+	if (!dragActive) return;
+	int x, y;
+	ScanAndGetIRPos(&x, &y);
+   
+	// TODO: Refactor the logic. is it 100% right too?
+	dragCurX = dragStartX + (dragCurX - dragStartX) / FACTOR;
+	dragCurY = dragStartY + (dragCurY - dragStartY) / FACTOR;
+	
+	int dx = x - dragCurX; Math_Clamp(dx, -40, 40);
+	int dy = y - dragCurY; Math_Clamp(dy, -40, 40);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
+	
+	dragCurX = x; dragCurY = y;
+}
+#else
+void Window_ProcessEvents(double delta) {
+}
+
+void Window_UpdateRawMouse(void) { }
+#endif
+
+void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
+// TODO: Display cursor on Wii when not raw mode
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined HW_RVL
+static int dragCurX, dragCurY;
+static int dragStartX, dragStartY;
+static cc_bool dragActive;
+
 static void ProcessWPAD_Buttons(int mods) {
 	Gamepad_SetButton(CCPAD_L, mods & WPAD_BUTTON_1);
 	Gamepad_SetButton(CCPAD_R, mods & WPAD_BUTTON_2);
@@ -320,20 +398,7 @@ static void ProcessClassicInput(double delta) {
 	ProcessClassic_Joystick(PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
-
-static void GetIRPos(int res, int* x, int* y) {
-	if (res == WPAD_ERR_NONE) {
-		WPADData* wd = WPAD_Data(0);
-
-		*x = wd->ir.x;
-		*y = wd->ir.y;
-	} else {
-		*x = 0; 
-		*y = 0;
-	}
-}
-
-static void ProcessWPADInput(double delta) {	
+static void ProcessWPADInput(double delta) {
 	WPAD_ScanPads();
 	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
 	u32 type;
@@ -350,67 +415,18 @@ static void ProcessWPADInput(double delta) {
 		ProcessWPAD_Buttons(mods);
 	}
 
-	int x, y;
-	GetIRPos(res, &x, &y);
-	
-	if (mods & WPAD_BUTTON_B) {
-		if (!dragActive) {
-			dragStartX = dragCurX = x;
-			dragStartY = dragCurY = y;
-		}
-		dragActive = true;
-	} else {
-		dragActive = false;
-	}
-	Pointer_SetPosition(0, x, y);
+	ProcessWPADDrag(mods);
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
-
+void Window_ProcessGamepads(double delta) {
 	ProcessWPADInput(delta);
 	ProcessPADInput(delta);
-	ProcessKeyboardInput();
-}
-
-static void ScanAndGetIRPos(int* x, int* y) {
-	u32 type;
-	WPAD_ScanPads();
-	
-	int res = WPAD_Probe(0, &type);
-	GetIRPos(res, x, y);
-}
-#define FACTOR 2
-void Window_UpdateRawMouse(void)  {
-	if (!dragActive) return;
-	int x, y;
-	ScanAndGetIRPos(&x, &y);
-   
-	// TODO: Refactor the logic. is it 100% right too?
-	dragCurX = dragStartX + (dragCurX - dragStartX) / FACTOR;
-	dragCurY = dragStartY + (dragCurY - dragStartY) / FACTOR;
-	
-	int dx = x - dragCurX; Math_Clamp(dx, -40, 40);
-	int dy = y - dragCurY; Math_Clamp(dy, -40, 40);
-	Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
-	
-	dragCurX = x; dragCurY = y;
 }
 #else
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
+void Window_ProcessGamepads(double delta) {
 	ProcessPADInput(delta);
 }
-
-void Window_UpdateRawMouse(void) { }
 #endif
-
-void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
-// TODO: Display cursor on Wii when not raw mode
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

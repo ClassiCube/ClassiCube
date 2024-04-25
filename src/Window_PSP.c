@@ -67,6 +67,18 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(int mods) {
 	Gamepad_SetButton(CCPAD_L, mods & PSP_CTRL_LTRIGGER);
 	Gamepad_SetButton(CCPAD_R, mods & PSP_CTRL_RTRIGGER);
@@ -96,7 +108,7 @@ static void ProcessCircleInput(SceCtrlData* pad, double delta) {
 	Gamepad_SetAxis(PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessGamepads(double delta) {
 	SceCtrlData pad;
 	/* TODO implement */
 	int ret = sceCtrlPeekBufferPositive(&pad, 1);
@@ -106,11 +118,6 @@ void Window_ProcessEvents(double delta) {
 	HandleButtons(pad.Buttons);
 	ProcessCircleInput(&pad, delta);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

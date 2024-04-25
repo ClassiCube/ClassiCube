@@ -373,6 +373,8 @@ void Window_ProcessEvents(double delta) {
 	JavaICall_Void(env, JAVA_processEvents, NULL);
 }
 
+void Window_ProcessGamepads(double delta) { }
+
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }

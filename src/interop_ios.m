@@ -493,6 +493,8 @@ void Window_ProcessEvents(double delta) {
     } while (res == kCFRunLoopRunHandledSource);
 }
 
+void Window_ProcessGamepads(double delta) { }
+
 void ShowDialogCore(const char* title, const char* msg) {
     // UIAlertController - iOS 8.0
     // UIAlertAction - iOS 8.0

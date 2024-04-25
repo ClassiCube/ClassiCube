@@ -74,6 +74,19 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+	joypad_poll();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(joypad_buttons_t btns) {
 	Gamepad_SetButton(CCPAD_L, btns.l);
 	Gamepad_SetButton(CCPAD_R, btns.r);
@@ -106,18 +119,11 @@ static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
 	Gamepad_SetAxis(PAD_AXIS_RIGHT, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessEvents(double delta) {
-	joypad_poll();
-	
+void Window_ProcessGamepads(double delta) {
 	joypad_inputs_t inputs = joypad_get_inputs(JOYPAD_PORT_1);
 	HandleButtons(inputs.btn);
 	ProcessAnalogInput(&inputs, delta);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

@@ -108,6 +108,41 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void ProcessTouchInput(void) {
+	static int prev_touchcount = 0;
+	HidTouchScreenState state = {0};
+	hidGetTouchScreenStates(&state, 1);
+
+	if (state.count) {
+		Input_AddTouch(0,    state.touches[0].x, state.touches[0].y);
+	} else if (prev_touchcount) {
+		Input_RemoveTouch(0, Pointers[0].x,      Pointers[0].y);
+	}
+	prev_touchcount = state.count;
+}
+
+void Window_ProcessEvents(double delta) {
+	// Scan the gamepad. This should be done once for each frame
+	padUpdate(&pad);
+
+	if (!appletMainLoop()) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
+		return;
+	}
+	ProcessTouchInput();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(u64 mods) {
 	Gamepad_SetButton(CCPAD_L, mods & HidNpadButton_L);
 	Gamepad_SetButton(CCPAD_R, mods & HidNpadButton_R);
@@ -135,30 +170,7 @@ static void ProcessJoystickInput(int axis, HidAnalogStickState* pos, double delt
 	Gamepad_SetAxis(axis, pos->x / AXIS_SCALE, -pos->y / AXIS_SCALE, delta);
 }
 
-static void ProcessTouchInput(void) {
-	static int prev_touchcount = 0;
-	HidTouchScreenState state = {0};
-	hidGetTouchScreenStates(&state, 1);
-
-	if (state.count) {
-		Input_AddTouch(0,    state.touches[0].x, state.touches[0].y);
-	} else if (prev_touchcount) {
-		Input_RemoveTouch(0, Pointers[0].x,      Pointers[0].y);
-	}
-	prev_touchcount = state.count;
-}
-
-void Window_ProcessEvents(double delta) {
-	// Scan the gamepad. This should be done once for each frame
-	padUpdate(&pad);
-	Input.JoystickMovement = false;
-
-	if (!appletMainLoop()) {
-		Window_Main.Exists = false;
-		Window_RequestClose();
-		return;
-	}
-
+void Window_ProcessGamepads(double delta) {
 	u64 keys = padGetButtons(&pad);
 	HandleButtons(keys);
 
@@ -167,15 +179,7 @@ void Window_ProcessEvents(double delta) {
 	HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
 	ProcessJoystickInput(PAD_AXIS_LEFT,  &analog_stick_l, delta);
 	ProcessJoystickInput(PAD_AXIS_RIGHT, &analog_stick_r, delta);
-
-	ProcessTouchInput();
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

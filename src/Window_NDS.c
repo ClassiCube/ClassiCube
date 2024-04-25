@@ -97,7 +97,41 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
+static void ProcessTouchInput(int mods) {
+	touchPosition touch;
+	touchRead(&touch);
+	Camera.Sensitivity = 100; // TODO not hardcode this
+	
+	if (mods & KEY_TOUCH) {
+		Input_AddTouch(0,    touch.px,      touch.py);
+	} else if (keysUp() & KEY_TOUCH) {
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
+	}
+}
+
+void Window_ProcessEvents(double delta) {
+	scanKeys();	
+	
+	if (keyboardOpen) {
+		keyboardUpdate();
+	} else {
+		ProcessTouchInput(keys);
+	}
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+void Window_ProcessGamepads(double delta) {
+	int mods = keysDown() | keysHeld();
+	
 	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
 	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
 	
@@ -114,36 +148,6 @@ static void HandleButtons(int mods) {
 	Gamepad_SetButton(CCPAD_UP,     mods & KEY_UP);
 	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DOWN);
 }
-
-static void ProcessTouchInput(int mods) {
-	touchPosition touch;
-	touchRead(&touch);
-    Camera.Sensitivity = 100; // TODO not hardcode this
-	
-	if (mods & KEY_TOUCH) {
-		Input_AddTouch(0,    touch.px,      touch.py);
-	} else if (keysUp() & KEY_TOUCH) {
-		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
-	}
-}
-
-void Window_ProcessEvents(double delta) {
-	scanKeys();	
-	int keys = keysDown() | keysHeld();
-	HandleButtons(keys);
-	
-    if (keyboardOpen) {
-        keyboardUpdate();
-    } else {
-	    ProcessTouchInput(keys);
-    }
-}
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

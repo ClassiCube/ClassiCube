@@ -89,6 +89,43 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+static void ProcessTouchInput(int mods) {
+	touchPosition touch;
+	hidTouchRead(&touch);
+
+	if (mods & KEY_TOUCH) {
+		Input_AddTouch(0,    touch.px,      touch.py);
+	} else if (hidKeysUp() & KEY_TOUCH) {
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
+	}
+}
+
+void Window_ProcessEvents(double delta) {
+	hidScanInput();
+
+	if (!aptMainLoop()) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
+		return;
+	}
+	
+	u32 mods = hidKeysDown() | hidKeysHeld();
+	ProcessTouchInput(mods);
+}
+
+void Window_ProcessGamepads(double delta) { }
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void HandleButtons(u32 mods) {
 	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
 	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
@@ -119,31 +156,9 @@ static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
 	Gamepad_SetAxis(axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
 
-static void ProcessTouchInput(int mods) {
-	touchPosition touch;
-	hidTouchRead(&touch);
-
-	if (mods & KEY_TOUCH) {
-		Input_AddTouch(0,    touch.px,      touch.py);
-	} else if (hidKeysUp() & KEY_TOUCH) {
-		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
-	}
-}
-
-void Window_ProcessEvents(double delta) {
-	hidScanInput();
-	Input.JoystickMovement = false;
-
-	if (!aptMainLoop()) {
-		Window_Main.Exists = false;
-		Window_RequestClose();
-		return;
-	}
-	
+void Window_ProcessGamepads(double delta) {
 	u32 mods = hidKeysDown() | hidKeysHeld();
 	HandleButtons(mods);
-
-	ProcessTouchInput(mods);
 	
 	circlePosition hid_pos;
 	hidCircleRead(&hid_pos);
@@ -160,12 +175,6 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-
-void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*

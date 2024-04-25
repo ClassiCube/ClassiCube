@@ -107,6 +107,20 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+	usbh_pooling_hubs();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 // https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_gamepad
 // NOTE: Analog buttons use dedicated field rather than being part of dButtons
 #define XINPUT_GAMEPAD_DPAD_UP     0x0001
@@ -149,21 +163,13 @@ static void HandleJoystick(int axis, int x, int y, double delta) {
 	Gamepad_SetAxis(axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	usbh_pooling_hubs();
+void Window_ProcessGamepads(double delta) {
 	if (!xid_ctrl) return;
 	
 	HandleButtons(&gp_state);
 	HandleJoystick(PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);
 	HandleJoystick(PAD_AXIS_RIGHT, gp_state.rightStickX, gp_state.rightStickY, delta);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

@@ -119,6 +119,26 @@ void Window_RequestClose(void) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
+void Window_ProcessEvents(double delta) {
+	if (!WHBProcIsRunning()) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
+	}
+}
+
+void Window_UpdateRawMouse(void) { }
+
+void Cursor_SetPosition(int x, int y) { }
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 static void ProcessKPAD(double delta) {
 	KPADStatus kpad = { 0 };
 	int res = KPADRead(0, &kpad, 1);
@@ -195,24 +215,10 @@ static void ProcessVPAD(double delta) {
 }
 
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
-	if (!WHBProcIsRunning()) {
-		Window_Main.Exists = false;
-		Window_RequestClose();
-		return;
-	}
-	
+void Window_ProcessGamepads(double delta) {
 	ProcessVPAD(delta);
 	ProcessKPAD(delta);
 }
-
-void Window_UpdateRawMouse(void) { }
-
-void Cursor_SetPosition(int x, int y) { }
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*
