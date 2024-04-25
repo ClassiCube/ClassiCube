@@ -610,7 +610,7 @@ static void UpdateChunks(double delta) {
 	chunksTarget += delta < CHUNK_TARGET_TIME ? 1 : -1; 
 	Math_Clamp(chunksTarget, 4, maxChunkUpdates);
 
-	p = &LocalPlayer_Instance;
+	p = Entities.CurPlayer;
 	samePos = Vec3_Equals(&Camera.CurrentPos, &lastCamPos)
 		&& p->Base.Pitch == lastPitch && p->Base.Yaw == lastYaw;
 

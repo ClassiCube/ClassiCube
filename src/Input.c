@@ -655,7 +655,7 @@ static void MouseStateUpdate(int button, cc_bool pressed) {
 	struct Entity* p;
 	/* defer getting the targeted entity, as it's a costly operation */
 	if (input_pickingId == -1) {
-		p = &LocalPlayer_Instance.Base;
+		p = &Entities.CurPlayer->Base;
 		input_pickingId = Entities_GetClosest(p);
 	}
 
@@ -700,8 +700,8 @@ void InputHandler_OnScreensChanged(void) {
 
 static cc_bool TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 static cc_bool PushbackPlace(struct AABB* blockBB) {
-	struct Entity* p        = &LocalPlayer_Instance.Base;
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct Entity* p        = &Entities.CurPlayer->Base;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	Face closestFace;
 	cc_bool insideMap;
 
@@ -764,8 +764,8 @@ static cc_bool IntersectsOthers(Vec3 pos, BlockID block) {
 }
 
 static cc_bool CheckIsFree(BlockID block) {
-	struct Entity* p        = &LocalPlayer_Instance.Base;
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct Entity* p        = &Entities.CurPlayer->Base;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 
 	Vec3 pos, nextPos;
 	struct AABB blockBB, playerBB;
@@ -777,7 +777,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	IVec3_ToVec3(&pos, &Game_SelectedPos.translatedPos);
 	if (IntersectsOthers(pos, block)) return false;
 	
-	nextPos = LocalPlayer_Instance.Base.next.pos;
+	nextPos = p->next.pos;
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 

@@ -376,7 +376,7 @@ void EntityNames_Delete(struct Entity* e) {
 static EntityID closestEntityId;
 
 void EntityNames_Render(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_bool hadFog;
 	int i;
 
@@ -401,7 +401,7 @@ void EntityNames_Render(void) {
 }
 
 void EntityNames_RenderHovered(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_bool allNames, hadFog;
 	int i;
 

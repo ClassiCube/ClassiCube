@@ -113,8 +113,6 @@ void Window_ProcessEvents(double delta) {
 	ProcessTouchInput(mods);
 }
 
-void Window_ProcessGamepads(double delta) { }
-
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
 
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }

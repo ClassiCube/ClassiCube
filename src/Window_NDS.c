@@ -115,7 +115,7 @@ void Window_ProcessEvents(double delta) {
 	if (keyboardOpen) {
 		keyboardUpdate();
 	} else {
-		ProcessTouchInput(keys);
+		ProcessTouchInput(keysDown() | keysHeld());
 	}
 }
 
@@ -132,21 +132,21 @@ void Window_UpdateRawMouse(void)  { }
 void Window_ProcessGamepads(double delta) {
 	int mods = keysDown() | keysHeld();
 	
-	Gamepad_SetButton(port, CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(port, CCPAD_R, mods & KEY_R);
+	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
 	
-	Gamepad_SetButton(port, CCPAD_A, mods & KEY_A);
-	Gamepad_SetButton(port, CCPAD_B, mods & KEY_B);
-	Gamepad_SetButton(port, CCPAD_X, mods & KEY_X);
-	Gamepad_SetButton(port, CCPAD_Y, mods & KEY_Y);
+	Gamepad_SetButton(0, CCPAD_A, mods & KEY_A);
+	Gamepad_SetButton(0, CCPAD_B, mods & KEY_B);
+	Gamepad_SetButton(0, CCPAD_X, mods & KEY_X);
+	Gamepad_SetButton(0, CCPAD_Y, mods & KEY_Y);
 	
-	Gamepad_SetButton(port, CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(port, CCPAD_SELECT, mods & KEY_SELECT);
+	Gamepad_SetButton(0, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(0, CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Gamepad_SetButton(port, CCPAD_LEFT,   mods & KEY_LEFT);
-	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & KEY_RIGHT);
-	Gamepad_SetButton(port, CCPAD_UP,     mods & KEY_UP);
-	Gamepad_SetButton(port, CCPAD_DOWN,   mods & KEY_DOWN);
+	Gamepad_SetButton(0, CCPAD_LEFT,   mods & KEY_LEFT);
+	Gamepad_SetButton(0, CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Gamepad_SetButton(0, CCPAD_UP,     mods & KEY_UP);
+	Gamepad_SetButton(0, CCPAD_DOWN,   mods & KEY_DOWN);
 }
 
 

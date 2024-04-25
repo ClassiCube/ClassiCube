@@ -92,7 +92,7 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void ProcessButtons(int mods) {
+static void ProcessButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
 	Gamepad_SetButton(port, CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
 	Gamepad_SetButton(port, CCPAD_X, mods & PERIPHERAL_DIGITAL_C);
@@ -111,7 +111,7 @@ static void ProcessButtons(int mods) {
 
 void Window_ProcessGamepads(double delta) {
 	smpc_peripheral_digital_port(1, &state);
-	ProcessButtons(state.pressed.raw | state.held.raw);
+	ProcessButtons(0, state.pressed.raw | state.held.raw);
 }
 
 

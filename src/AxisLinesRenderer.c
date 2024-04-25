@@ -30,21 +30,23 @@ void AxisLinesRenderer_Render(void) {
 	Vec3 coords[5], pos, dirVector;
 	int i, count;
 	float axisLengthScale, axisThicknessScale;
+	struct Entity* e;
 
 	if (!AxisLinesRenderer_Enabled) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
 		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	}
+	e = &Entities.CurPlayer->Base;
 	
 	if (Camera.Active->isThirdPerson) {
-		pos = LocalPlayer_Instance.Base.Position;
+		pos = e->Position;
 		axisLengthScale = 1;
 		axisThicknessScale = 1;
 		pos.y += 0.05f;
 	} else {
 		pos = Camera.CurrentPos;
-		dirVector = Vec3_GetDirVector(LocalPlayer_Instance.Base.Yaw * MATH_DEG2RAD, LocalPlayer_Instance.Base.Pitch * MATH_DEG2RAD);
+		dirVector = Vec3_GetDirVector(e->Yaw * MATH_DEG2RAD, e->Pitch * MATH_DEG2RAD);
 		Vec3_Mul1(&dirVector, &dirVector, 0.5f);
 		Vec3_Add(&pos, &dirVector, &pos);
 		axisLengthScale = 1.0f / 32.0f;

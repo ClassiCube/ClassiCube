@@ -753,8 +753,7 @@ static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
 	LocalPlayer_RenderModel, LocalPlayer_ShouldRenderName
 };
-static void LocalPlayer_Init(void) {
-	struct LocalPlayer* p   = &LocalPlayer_Instance;
+static void LocalPlayer_Init(struct LocalPlayer* p) {
 	struct HacksComp* hacks = &p->Hacks;
 
 	Entity_Init(&p->Base);
@@ -1036,7 +1035,8 @@ static void Entities_Init(void) {
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
 	Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
-	LocalPlayer_Init();
+	Entities.CurPlayer = &LocalPlayer_Instance;
+	LocalPlayer_Init(&LocalPlayer_Instance);
 }
 
 static void Entities_Free(void) {

@@ -11,6 +11,8 @@
 struct Model;
 struct IGameComponent;
 struct ScheduledTask;
+struct LocalPlayer;
+
 extern struct IGameComponent TabList_Component;
 extern struct IGameComponent Entities_Component;
 
@@ -162,6 +164,7 @@ void Entity_LerpAngles(struct Entity* e, float t);
 CC_VAR extern struct _EntitiesData {
 	struct Entity* List[ENTITIES_MAX_COUNT];
 	cc_uint8 NamesMode, ShadowsMode;
+	struct LocalPlayer* CurPlayer;
 } Entities;
 
 /* Ticks all entities */

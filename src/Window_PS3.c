@@ -306,7 +306,7 @@ void Window_ProcessGamepads(double delta) {
 	ioPadGetInfo(&pad_info);
 	if (pad_info.status[0]) {
 		ioPadGetData(0, &pad_data);
-		ProcessPadInput(port, delta, &pad_data);
+		ProcessPadInput(0, delta, &pad_data);
 	}
 }
 

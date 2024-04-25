@@ -39,7 +39,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 	/* TODO: Need to properly reallocate per model VB here */
 
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
-		model = LocalPlayer_Instance.Base.Model;
+		model = Entities.CurPlayer->Base.Model;
 		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
 
@@ -61,7 +61,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 }
 
 static void SetMatrix(void) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p = &Entities.CurPlayer->Base;
 	struct Matrix lookAt;
 	Vec3 eye = { 0,0,0 }; eye.y = Entity_GetEyeHeight(p);
 
@@ -71,7 +71,7 @@ static void SetMatrix(void) {
 
 static void ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p = &Entities.CurPlayer->Base;
 	Vec3 eye = { 0,0,0 }; eye.y = Entity_GetEyeHeight(p);
 	held_entity.Position = eye;
 
@@ -147,7 +147,7 @@ static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
 	PackedCol col;
 	float adjPitch, t, scale;
 
-	player = &LocalPlayer_Instance.Base;
+	player = &Entities.CurPlayer->Base;
 	col    = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */

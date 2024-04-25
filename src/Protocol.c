@@ -197,7 +197,7 @@ static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags);
 static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const cc_string* skin, cc_bool readPosition) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e;
 
 	if (id != ENTITIES_SELF_ID) {
@@ -208,7 +208,7 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 		Entities.List[id] = e;
 		Event_RaiseInt(&EntityEvents.Added, id);
 	} else {
-		e = &LocalPlayer_Instance.Base;
+		e = &Entities.CurPlayer->Base;
 	}
 	Entity_SetSkin(e, skin);
 	Entity_SetName(e, name);
@@ -511,7 +511,7 @@ static void Classic_Handshake(cc_uint8* data) {
 	ReadString(&data, &Server.MOTD);
 	Chat_SetLogName(&Server.Name);
 
-	hacks = &LocalPlayer_Instance.Hacks;
+	hacks = &Entities.CurPlayer->Hacks;
 	UpdateUserType(hacks, *data);
 	
 	String_Copy(&hacks->HacksFlags,         &Server.Name);
@@ -744,7 +744,7 @@ static void Classic_Kick(cc_uint8* data) {
 }
 
 static void Classic_SetPermission(cc_uint8* data) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	UpdateUserType(hacks, data[0]);
 	HacksComp_RecheckFlags(hacks);
 }
@@ -813,7 +813,7 @@ static void Classic_Reset(void) {
 }
 
 static cc_uint8* Classic_Tick(cc_uint8* data) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+	struct Entity* e = &Entities.CurPlayer->Base;
 	if (!classic_receivedFirstPos) return data;
 
 	/* Report end position of each physics tick, rather than current position */
@@ -850,7 +850,7 @@ static struct CpeExt* CPEExtensions_Find(const cc_string* name) {
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p = &Entities.CurPlayer->Base;
 	cc_uint8 data[15];
 
 	data[0] = OPCODE_PLAYER_CLICK;
@@ -1041,7 +1041,7 @@ static void CPE_ApplyTexturePack(const cc_string* url) {
 
 
 static void CPE_SetClickDistance(cc_uint8* data) {
-	LocalPlayer_Instance.ReachDistance = Stream_GetU16_BE(data) / 32.0f;
+	Entities.CurPlayer->ReachDistance = Stream_GetU16_BE(data) / 32.0f;
 }
 
 static void CPE_CustomBlockLevel(cc_uint8* data) {
@@ -1209,7 +1209,7 @@ static void CPE_EnvWeatherType(cc_uint8* data) {
 }
 
 static void CPE_HackControl(cc_uint8* data) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	int jumpHeight;
 
 	p->Hacks.CanFly            = data[0] != 0;
@@ -1423,7 +1423,7 @@ static void CPE_SetHotbar(cc_uint8* data) {
 }
 
 static void CPE_SetSpawnPoint(cc_uint8* data) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	int x, y, z;
 
 	if (IsSupported(extEntityPos_Ext)) {
@@ -1457,7 +1457,7 @@ static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
 }
 
 static void CPE_VelocityControl(cc_uint8* data) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	CalcVelocity(&p->Base.Velocity.x, data + 0, data[12]);
 	CalcVelocity(&p->Base.Velocity.y, data + 4, data[13]);
 	CalcVelocity(&p->Base.Velocity.z, data + 8, data[14]);
