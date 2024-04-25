@@ -66,7 +66,6 @@ CC_VAR extern struct _GfxData {
 	int MinTexWidth, MinTexHeight;
 	cc_bool  ReducedPerfMode;
 	cc_uint8 ReducedPerfModeCooldown;
-	int ViewportX, ViewportY, ViewportWidth, ViewportHeight;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
@@ -254,7 +253,7 @@ void Gfx_GetApiInfo(cc_string* info);
 /* Updates state when the window's dimensions have changed */
 /* NOTE: This may require recreating the context depending on the backend */
 void Gfx_OnWindowResize(void);
-void Gfx_UpdateViewport(void);
+void Gfx_SetViewport(int x, int y, int w, int h);
 
 enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
 #ifdef CC_BUILD_DUALSCREEN

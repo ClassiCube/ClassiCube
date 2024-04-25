@@ -646,12 +646,12 @@ static void RS_CreateRasterState(void) {
 	ID3D11Device_CreateRasterizerState(device, &desc, &rs_states[1]);
 }
 
-static void RS_UpdateViewport(void) {
+void Gfx_SetViewport(int x, int y, int w, int h) {
 	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = Gfx.ViewportX;
-	viewport.TopLeftY = Gfx.ViewportY;
-	viewport.Width    = Gfx.ViewportWidth;
-	viewport.Height   = Gfx.ViewportHeight;
+	viewport.TopLeftX = x;
+	viewport.TopLeftY = y;
+	viewport.Width    = w;
+	viewport.Height   = h;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
@@ -670,7 +670,7 @@ static void RS_FreeRasterStates(void) {
 
 static void RS_Init(void) {
 	RS_CreateRasterState();
-	RS_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	RS_UpdateRasterState();
 }
 
@@ -1173,11 +1173,7 @@ void Gfx_OnWindowResize(void) {
 	if (hr) Logger_Abort2(hr, "Failed to resize swapchain");
 
 	OM_InitTargets();
-	RS_UpdateViewport();
-}
-
-void Gfx_UpdateViewport(void) {
-	RS_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
 static void InitPipeline(void) {

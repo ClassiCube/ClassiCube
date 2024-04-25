@@ -887,5 +887,5 @@ void Gfx_OnWindowResize(void) {
 	UpdateSwapchain(" (resizing window)");
 }
 
-void Gfx_UpdateViewport(void) { }
+void Gfx_SetViewport(int x, int y, int w, int h) { }
 #endif

@@ -403,5 +403,5 @@ void Gfx_OnWindowResize(void) {
 
 }
 
-void Gfx_UpdateViewport(void) { }
+void Gfx_SetViewport(int x, int y, int w, int h) { }
 #endif

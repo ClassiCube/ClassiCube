@@ -639,11 +639,7 @@ static CC_INLINE void Game_DrawFrame(double delta, float t) {
 
 #ifdef CC_BUILD_SPLITSCREEN
 static void DrawSplitscreen(double delta, float t, int i, int x, int y, int w, int h) {
-	Gfx.ViewportX = x;
-	Gfx.ViewportY = y;
-	Gfx.ViewportWidth = w;
-	Gfx.ViewportHeight = h;
-	Gfx_UpdateViewport();
+	Gfx_SetViewport(x, y, w, h);
 	
 	Entities.CurPlayer = &LocalPlayer_Instances[i];
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);

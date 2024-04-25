@@ -30,7 +30,7 @@ static void InitGLState(void) {
 
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
-	Gfx_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	InitGLState();
 	
 	Gfx.MinTexWidth  = 8;
@@ -555,11 +555,11 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	Gfx_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
-void Gfx_UpdateViewport(void) {
-	glViewport(Gfx.ViewportX, Gfx.ViewportY, Gfx.ViewportWidth, Gfx.ViewportHeight);
-	glScissor (Gfx.ViewportX, Gfx.ViewportY, Gfx.ViewportWidth, Gfx.ViewportHeight);
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	glViewport(x, y, w, h);
+	glScissor (x, y, w, h);
 }
 #endif
