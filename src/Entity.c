@@ -615,6 +615,12 @@ struct IGameComponent TabList_Component = {
 *#########################################################################################################################*/
 struct LocalPlayer LocalPlayer_Instance;
 static cc_bool hackPermMsgs;
+static struct LocalPlayerInput* sources_head;
+static struct LocalPlayerInput* sources_tail;
+
+void LocalPlayerInput_Add(struct LocalPlayerInput* source) {
+	LinkedList_Append(source, sources_head, sources_tail);
+}
 
 float LocalPlayer_JumpHeight(struct LocalPlayer* p) {
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
@@ -639,8 +645,8 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	}
 
 	/* keyboard input, touch, joystick, etc */
-	for (input = &p->input; input; input = input->next) {
-		input->GetMovement(xMoving, zMoving);
+	for (input = sources_head; input; input = input->next) {
+		input->GetMovement(p, xMoving, zMoving);
 	}
 	*xMoving *= 0.98f; 
 	*zMoving *= 0.98f;
@@ -737,18 +743,6 @@ static void LocalPlayer_CheckJumpVelocity(void* obj) {
 	}
 }
 
-static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
-	if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 1;
-	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
-	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
-	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
-
-	/* TODO: Move to separate LocalPlayerInputSource */
-	if (!Input.JoystickMovement) return;
-	*xMoving = Math_CosF(Input.JoystickAngle);
-	*zMoving = Math_SinF(Input.JoystickAngle);
-}
-
 static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
 	LocalPlayer_RenderModel, LocalPlayer_ShouldRenderName
@@ -761,7 +755,6 @@ static void LocalPlayer_Init(struct LocalPlayer* p) {
 	Entity_SetSkin(&p->Base, &Game_Username);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
-	p->input.GetMovement = LocalPlayer_GetMovement;
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
 	PhysicsComp_Init(&p->Physics, &p->Base);

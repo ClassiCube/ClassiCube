@@ -2450,10 +2450,11 @@ static void TouchScreen_Layout(void* screen) {
 	Widget_Layout(&s->thumbstick);
 }
 
-struct LocalPlayerInput touchInput;
-static void TouchScreen_GetMovement(float* xMoving, float* zMoving) {
+static void TouchScreen_GetMovement(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	ThumbstickWidget_GetMovement(&TouchScreen.thumbstick, xMoving, zMoving);
 }
+static struct LocalPlayerInput touchInput = { TouchScreen_GetMovement };
+static cc_bool touchHooked;
 
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -2467,10 +2468,11 @@ static void TouchScreen_Init(void* screen) {
 	TouchScreen_InitButtons(s);
 	ButtonWidget_Init(&s->more, 40, TouchScreen_MoreClick);
 	s->more.color = TOUCHSCREEN_BTN_COLOR;
-
 	ThumbstickWidget_Init(&s->thumbstick);
-	touchInput.GetMovement = TouchScreen_GetMovement;
-	LocalPlayer_Instance.input.next = &touchInput;
+	
+	if (touchHooked) return;
+	touchHooked = true;
+	LocalPlayerInput_Add(&touchInput);
 }
 
 static void TouchScreen_Free(void* s) {

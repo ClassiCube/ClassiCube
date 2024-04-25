@@ -63,7 +63,7 @@ struct Event_RawMove {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_PadAxis_Callback)(void* obj, int axis, float x, float y);
+typedef void (*Event_PadAxis_Callback)(void* obj, int port, int axis, float x, float y);
 struct Event_PadAxis {
 	Event_PadAxis_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -108,7 +108,7 @@ void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
 void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
 /* Calls all registered callbacks for an event which has pad axis arguments. */
-void Event_RaisePadAxis(struct Event_PadAxis* handlers, int axis, float x, float y);
+void Event_RaisePadAxis(struct Event_PadAxis* handlers, int port, int axis, float x, float y);
 /* Calls all registered callbacks for an event which has a channel and a 64 byte data argument. */
 void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 channel, cc_uint8* data);
 

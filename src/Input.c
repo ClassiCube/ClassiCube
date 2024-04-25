@@ -423,6 +423,10 @@ static float pad_holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
+/* Whether a gamepad joystick is being used to control player movement */
+static cc_bool joystick_movement;
+/* Angle of the gamepad joystick being used to control player movement */
+static float joystick_angle;
 
 void Gamepad_SetButton(int port, int btn, int pressed) {
 	/* Reset hold tracking time */
@@ -436,19 +440,19 @@ void Gamepad_SetAxis(int port, int axis, float x, float y, double delta) {
 
 	int sensi   = Gamepad_AxisSensitivity[axis];
 	float scale = delta * 60.0 * axis_sensiFactor[sensi];
-	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, axis, x * scale, y * scale);
+	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
 
 	if (Gamepad_AxisBehaviour[axis] == AXIS_BEHAVIOUR_MOVEMENT) {
 		if (!Input.RawMode) return;
 
-		Input.JoystickMovement = true;
-		Input.JoystickAngle    = Math_Atan2(x, y);
+		joystick_movement = true;
+		joystick_angle    = Math_Atan2(x, y);
 	}
 }
 
 void Gamepad_Tick(double delta) {
 	int btn;
-	Input.JoystickMovement = false;
+	joystick_movement = false;
 	Window_ProcessGamepads(delta);
 
 	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
@@ -462,6 +466,14 @@ void Gamepad_Tick(double delta) {
 		Input_SetPressed(btn);
 	}
 }
+
+static void PlayerInputGamepad(struct LocalPlayer* p, float* xMoving, float* zMoving) {
+	if (!joystick_movement) return;
+	
+	*xMoving = Math_CosF(joystick_angle);
+	*zMoving = Math_SinF(joystick_angle);
+}
+static struct LocalPlayerInput gamepadInput = { PlayerInputGamepad };
 
 
 /*########################################################################################################################*
@@ -1181,7 +1193,19 @@ static void OnInputUp(void* obj, int key) {
 }
 
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
+
+static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
+	if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 1;
+	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
+	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
+	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
+}
+static struct LocalPlayerInput normalInput = { PlayerInputNormal };
+
 static void OnInit(void) {
+	LocalPlayerInput_Add(&normalInput);
+	LocalPlayerInput_Add(&gamepadInput);
+	
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);

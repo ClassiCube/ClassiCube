@@ -131,9 +131,9 @@ static void HandleJoystick(int port, int axis, int x, int y, double delta) {
 }
 
 static void ProcessPadInput(int port, double delta, struct padButtonStatus* pad) {
-	HandleButtons(pad->btns);
-	HandleJoystick(PAD_AXIS_LEFT,  pad->ljoy_h - 0x80, pad->ljoy_v - 0x80, delta);
-	HandleJoystick(PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
+	HandleButtons(port, pad->btns);
+	HandleJoystick(port, PAD_AXIS_LEFT,  pad->ljoy_h - 0x80, pad->ljoy_v - 0x80, delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
 }
 
 static cc_bool setMode;

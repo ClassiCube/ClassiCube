@@ -219,9 +219,10 @@ extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 struct LocalPlayerInput;
 struct LocalPlayerInput {
-	void (*GetMovement)(float* xMoving, float* zMoving);
+	void (*GetMovement)(struct LocalPlayer* p, float* xMoving, float* zMoving);
 	struct LocalPlayerInput* next;
 };
+void LocalPlayerInput_Add(struct LocalPlayerInput* source);
 
 /* Represents the user/player's own entity. */
 struct LocalPlayer {
@@ -234,7 +235,6 @@ struct LocalPlayer {
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
 	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip, _warnedZoom;
-	struct LocalPlayerInput input;
 };
 
 extern struct LocalPlayer LocalPlayer_Instance;

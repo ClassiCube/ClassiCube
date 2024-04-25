@@ -178,10 +178,10 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 	}
 }
 
-void Event_RaisePadAxis(struct Event_PadAxis* handlers, int axis, float x, float y) {
+void Event_RaisePadAxis(struct Event_PadAxis* handlers, int port, int axis, float x, float y) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], axis, x, y);
+		handlers->Handlers[i](handlers->Objs[i], port, axis, x, y);
 	}
 }
 

@@ -67,10 +67,6 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
-	/* Whether a gamepad joystick is being used to control player movement */
-	cc_bool JoystickMovement;
-	/* Angle of the gamepad joystick being used to control player movement */
-	float JoystickAngle;
 } Input;
 
 #define INPUT_SOURCE_NORMAL  (1 << 0)
