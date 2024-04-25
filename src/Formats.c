@@ -87,7 +87,7 @@ cc_result Map_LoadFrom(const cc_string* path) {
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	if (!spawn_point) LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
-	LocalPlayer_MoveToSpawn(&LocalPlayer_Instances[0], &update);
+	LocalPlayers_MoveToSpawn(&update);
 
 	relPath = *path;
 	Utils_UNSAFE_GetFilename(&relPath);

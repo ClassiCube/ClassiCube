@@ -284,9 +284,6 @@ cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 void Game_UpdateDimensions(void) {
 	Game.Width  = max(Window_Main.Width,  1);
 	Game.Height = max(Window_Main.Height, 1);
-	
-	Gfx.ViewportWidth  = Game.Width;
-	Gfx.ViewportHeight = Game.Height;
 }
 
 static void Game_OnResize(void* obj) {

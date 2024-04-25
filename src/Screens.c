@@ -2004,7 +2004,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	World.Seed = Gen_Seed;
 
 	LocalPlayer_CalcDefaultSpawn(Entities.CurPlayer, &update);
-	LocalPlayer_MoveToSpawn(&LocalPlayer_Instances[0], &update);
+	LocalPlayers_MoveToSpawn(&update);
 }
 
 static void GeneratingScreen_Update(void* screen, double delta) {

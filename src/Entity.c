@@ -952,10 +952,18 @@ cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
 	return false;
 }
 
-void LocalPlayer_MoveToSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
-	p->Base.VTABLE->SetLocation(&p->Base, update);
+void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
+	struct LocalPlayer* p;
+	int i;
+	
+	for (i = 0; i < Game_NumLocalPlayers; i++)
+	{
+		p = &LocalPlayer_Instances[i];
+		p->Base.VTABLE->SetLocation(&p->Base, update);
+	}
+	
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(p, 0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, 0.0f);
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
