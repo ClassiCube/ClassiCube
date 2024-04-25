@@ -196,6 +196,7 @@ void Gamepad_SetButton(int port, int btn, int pressed);
 /* Sets value of the given axis */
 void Gamepad_SetAxis(int port, int axis, float x, float y, double delta);
 void Gamepad_Tick(double delta);
+#define INPUT_MAX_GAMEPADS 4
 
 
 /* whether to leave text input open for user to enter further input */

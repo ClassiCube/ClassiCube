@@ -348,7 +348,7 @@ static void DrawName(struct Entity* e) {
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
 	size.x = e->NameTex.width * scale; size.y = e->NameTex.height * scale;
 
-	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
+	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && Entities.CurPlayer->Hacks.CanSeeAllNames) {
 		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
 		scale = pos.x * mat.row1.w + pos.y * mat.row2.w + pos.z * mat.row3.w + mat.row4.w;

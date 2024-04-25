@@ -672,7 +672,7 @@ static CC_INLINE void Game_RenderFrame(double delta) {
 	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
 
-	Camera.CurrentPos = Camera.Active->GetPosition(&LocalPlayer_Instance, t);
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
 	AudioBackend_Tick();

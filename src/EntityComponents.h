@@ -8,6 +8,7 @@
 
 struct Entity;
 struct LocationUpdate;
+struct LocalPlayer;
 
 /* Entity component that performs model animation depending on movement speed and time */
 struct AnimatedComp {
@@ -30,8 +31,8 @@ struct TiltComp {
 };
 
 void TiltComp_Init(struct TiltComp* anim);
-void TiltComp_Update(struct TiltComp* anim, double delta);
-void TiltComp_GetCurrent(struct TiltComp* anim, float t);
+void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, double delta);
+void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {
@@ -130,5 +131,5 @@ double PhysicsComp_CalcMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
-void SoundComp_Tick(cc_bool wasOnGround);
+void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround);
 #endif

@@ -418,8 +418,6 @@ static void KeyBind_Init(void) {
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
 #define GAMEPAD_BEG_BTN CCPAD_A
-static float pad_holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
-
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
@@ -428,9 +426,32 @@ static cc_bool joystick_movement;
 /* Angle of the gamepad joystick being used to control player movement */
 static float joystick_angle;
 
+struct GamepadState {
+	float axisX[2], axisY[2];
+	/*cc_bool pressed[INPUT_COUNT - GAMEPAD_BEG_BTN];*/
+	float holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
+};
+static struct GamepadState gamepads[INPUT_MAX_GAMEPADS];
+
+static void Gamepad_Update(struct GamepadState* pad, double delta) {
+	int btn;
+	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
+	{
+		if (!Input.Pressed[btn]) continue;
+		pad->holdtime[btn - GAMEPAD_BEG_BTN] += delta;
+		if (pad->holdtime[btn - GAMEPAD_BEG_BTN] < 1.0) continue;
+
+		/* Held for over a second, trigger a fake press */
+		pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
+		Input_SetPressed(btn);
+	}
+}
+
+
 void Gamepad_SetButton(int port, int btn, int pressed) {
+	struct GamepadState* pad = &gamepads[port];
 	/* Reset hold tracking time */
-	if (pressed && !Input.Pressed[btn]) pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
+	if (pressed && !Input.Pressed[btn]) pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
 
 	Input_SetNonRepeatable(btn, pressed);
 }
@@ -451,19 +472,13 @@ void Gamepad_SetAxis(int port, int axis, float x, float y, double delta) {
 }
 
 void Gamepad_Tick(double delta) {
-	int btn;
+	int i;
 	joystick_movement = false;
 	Window_ProcessGamepads(delta);
-
-	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
+	
+	for (i = 0; i < INPUT_MAX_GAMEPADS; i++)
 	{
-		if (!Input.Pressed[btn]) continue;
-		pad_holdtime[btn - GAMEPAD_BEG_BTN] += delta;
-		if (pad_holdtime[btn - GAMEPAD_BEG_BTN] < 1.0) continue;
-
-		/* Held for over a second, trigger a fake press */
-		pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
-		Input_SetPressed(btn);
+		Gamepad_Update(&gamepads[i], delta);
 	}
 }
 

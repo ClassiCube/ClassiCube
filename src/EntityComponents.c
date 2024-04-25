@@ -120,8 +120,7 @@ void TiltComp_Init(struct TiltComp* anim) {
 	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
 }
 
-void TiltComp_Update(struct TiltComp* anim, double delta) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, double delta) {
 	int i;
 
 	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
@@ -131,8 +130,7 @@ void TiltComp_Update(struct TiltComp* anim, double delta) {
 	}
 }
 
-void TiltComp_GetCurrent(struct TiltComp* anim, float t) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t) {
 	struct AnimatedComp* pAnim = &p->Base.Anim;
 
 	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
@@ -1143,9 +1141,8 @@ static cc_bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 	return Math_Sign(oldLegRot) != Math_Sign(newLegRot);
 }
 
-void SoundComp_Tick(cc_bool wasOnGround) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vec3 soundPos         = p->Base.next.pos;
+void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround) {
+	Vec3 soundPos = p->Base.next.pos;
 
 	SoundComp_GetSound(p);
 	if (!sounds_anyNonAir) soundPos = Vec3_BigPos();

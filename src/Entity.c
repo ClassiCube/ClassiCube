@@ -633,8 +633,7 @@ void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t) {
 	Entity_LerpAngles(&p->Base, t);
 }
 
-static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	struct HacksComp* hacks = &p->Hacks;
 	struct LocalPlayerInput* input;
 
@@ -699,7 +698,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	wasOnGround    = e->OnGround;
 
 	LocalInterpComp_AdvanceState(&p->Interp, e);
-	LocalPlayer_HandleInput(&xMoving, &zMoving);
+	LocalPlayer_HandleInput(p, &xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
 	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
 
@@ -717,16 +716,16 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 
 	e->next.pos = e->Position; e->Position = e->prev.pos;
 	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
-	TiltComp_Update(&p->Tilt, delta);
+	TiltComp_Update(p, &p->Tilt, delta);
 
 	Entity_CheckSkin(&p->Base);
-	SoundComp_Tick(wasOnGround);
+	SoundComp_Tick(p, wasOnGround);
 }
 
 static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
-	TiltComp_GetCurrent(&p->Tilt, t);
+	TiltComp_GetCurrent(p, &p->Tilt, t);
 
 	if (!Camera.Active->isThirdPerson) return;
 	Model_Render(e->Model, e);
