@@ -79,6 +79,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_UpdateViewport(void) { }
+
 
 void Gfx_BeginFrame(void) {
 	surface_t* disp = display_get();

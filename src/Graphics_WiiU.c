@@ -458,6 +458,9 @@ void Gfx_GetApiInfo(cc_string* info) {
 void Gfx_OnWindowResize(void) {
 
 }
+
+void Gfx_UpdateViewport(void) { }
+
 void Gfx_3DS_SetRenderScreen1(enum Screen3DS screen) {
 	GX2ContextState* tv_state  = WHBGfxGetTVContextState();
 	GX2ContextState* drc_state = WHBGfxGetDRCContextState(); // TODO

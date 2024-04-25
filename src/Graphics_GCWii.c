@@ -312,6 +312,8 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_UpdateViewport(void) { }
+
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 

@@ -325,7 +325,7 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(Gfx.ViewportX, Gfx.ViewportY, Gfx.ViewportWidth, Gfx.ViewportHeight);
+	Gfx_UpdateViewport();
 	/* With cocoa backend, in some cases [NSOpenGLContext update] will actually */
 	/*  call glViewport with the size of the window framebuffer */
 	/*  https://github.com/glfw/glfw/issues/80 */
@@ -334,4 +334,8 @@ void Gfx_OnWindowResize(void) {
 	/*  above would otherwise result in game rendering to only 1/4 of the screen */
 	/*  https://github.com/ClassiCube/ClassiCube/issues/888 */
 	GLContext_Update();
+}
+
+void Gfx_UpdateViewport(void) {
+	glViewport(Gfx.ViewportX, Gfx.ViewportY, Gfx.ViewportWidth, Gfx.ViewportHeight);
 }

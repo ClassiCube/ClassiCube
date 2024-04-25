@@ -535,6 +535,8 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_UpdateViewport(void) { }
+
 static struct Matrix _view, _proj, _mvp;
 
 void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {

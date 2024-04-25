@@ -435,6 +435,8 @@ void Gfx_OnWindowResize(void) {
 	// TODO
 }
 
+void Gfx_UpdateViewport(void) { }
+
 void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using Saturn --\n");
 	PrintMaxTextureInfo(info);

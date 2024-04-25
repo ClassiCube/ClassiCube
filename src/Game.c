@@ -603,7 +603,38 @@ void Game_TakeScreenshot(void) {
 #endif
 }
 
-static void Game_RenderFrame(double delta) {
+static CC_INLINE void Game_DrawFrame(double delta, float t) {
+	UpdateViewMatrix();
+
+	if (!Gui_GetBlocksWorld()) {
+		Camera.Active->GetPickedBlock(Entities.CurPlayer, &Game_SelectedPos); /* TODO: only pick when necessary */
+		Camera_KeyLookUpdate(delta);
+		InputHandler_Tick();
+
+		if (Game_Anaglyph3D) {
+			Render3D_Anaglyph(delta, t);
+		} else {
+			Render3DFrame(delta, t);
+		}
+	} else {
+		RayTracer_SetInvalid(&Game_SelectedPos);
+	}
+
+	Gfx_Begin2D(Game.Width, Game.Height);
+	Gui_RenderGui(delta);
+	OnscreenKeyboard_Draw3D();
+/* TODO find a better solution than this */
+#ifdef CC_BUILD_3DS
+	if (Game_Anaglyph3D) {
+		extern void Gfx_SetTopRight(void);
+		Gfx_SetTopRight();
+		Gui_RenderGui(delta);
+	}
+#endif
+	Gfx_End2D();
+}
+
+static CC_INLINE void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
 	float t;
 
@@ -644,39 +675,12 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(&LocalPlayer_Instance, t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
-	UpdateViewMatrix();
 	AudioBackend_Tick();
 
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
 	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
-
-	if (!Gui_GetBlocksWorld()) {
-		Camera.Active->GetPickedBlock(Entities.CurPlayer, &Game_SelectedPos); /* TODO: only pick when necessary */
-		Camera_KeyLookUpdate(delta);
-		InputHandler_Tick();
-
-		if (Game_Anaglyph3D) {
-			Render3D_Anaglyph(delta, t);
-		} else {
-			Render3DFrame(delta, t);
-		}
-	} else {
-		RayTracer_SetInvalid(&Game_SelectedPos);
-	}
-
-	Gfx_Begin2D(Game.Width, Game.Height);
-	Gui_RenderGui(delta);
-	OnscreenKeyboard_Draw3D();
-/* TODO find a better solution than this */
-#ifdef CC_BUILD_3DS
-	if (Game_Anaglyph3D) {
-		extern void Gfx_SetTopRight(void);
-		Gfx_SetTopRight();
-		Gui_RenderGui(delta);
-	}
-#endif
-	Gfx_End2D();
+	Game_DrawFrame(delta, t);
 
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 	Gfx_EndFrame();

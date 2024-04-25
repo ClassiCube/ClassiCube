@@ -283,6 +283,8 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_UpdateViewport(void) { }
+
 
 static cc_uint8* gfx_vertices;
 static int gfx_fields;

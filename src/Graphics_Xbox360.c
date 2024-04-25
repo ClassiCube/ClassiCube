@@ -402,4 +402,6 @@ void Gfx_GetApiInfo(cc_string* info) {
 void Gfx_OnWindowResize(void) {
 
 }
+
+void Gfx_UpdateViewport(void) { }
 #endif

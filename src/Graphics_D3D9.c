@@ -886,4 +886,6 @@ void Gfx_OnWindowResize(void) {
 	/* Only resize when necessary */
 	UpdateSwapchain(" (resizing window)");
 }
+
+void Gfx_UpdateViewport(void) { }
 #endif

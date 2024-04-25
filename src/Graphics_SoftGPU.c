@@ -491,6 +491,8 @@ void Gfx_OnWindowResize(void) {
 	colorBuffer = fb_bmp.scan0;
 }
 
+void Gfx_UpdateViewport(void) { }
+
 void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;
 	String_Format1(info, "-- Using software (%i bit) --\n", &pointerSize);

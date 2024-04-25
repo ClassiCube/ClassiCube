@@ -1176,6 +1176,10 @@ void Gfx_OnWindowResize(void) {
 	RS_UpdateViewport();
 }
 
+void Gfx_UpdateViewport(void) {
+	RS_UpdateViewport();
+}
+
 static void InitPipeline(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics-pipeline
 	IA_Init();
