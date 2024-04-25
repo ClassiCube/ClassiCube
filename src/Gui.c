@@ -592,7 +592,7 @@ static void OnPointerMove(void* obj, int idx) {
 	}
 }
 
-static void OnAxisUpdate(void* obj, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 	struct Screen* s;
 	int i;
 	

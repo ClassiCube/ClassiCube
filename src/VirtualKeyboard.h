@@ -207,7 +207,7 @@ static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
 	}
 }
 
-static void VirtualKeyboard_PadAxis(void* obj, int axis, float x, float y) {
+static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, float y) {
 	int xSteps, ySteps;
 
 	xSteps = Utils_AccumulateWheelDelta(&kb_padXAcc, x / 100.0f);

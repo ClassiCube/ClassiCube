@@ -71,7 +71,7 @@ void Platform_Log(const char* msg, int len) {
 	
 	if (window_inited) return;
 	// Log details on-screen for initial model initing etc
-	//  (this can take around 40 seconds on average)	
+	//  (this can take around 40 seconds on average)
 	LogOnscreen(msg, len);
 }
 
