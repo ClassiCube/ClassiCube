@@ -127,24 +127,24 @@ void Window_UpdateRawMouse(void)  { }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(u32 mods) {
-	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
+	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
 	
-	Gamepad_SetButton(CCPAD_A, mods & KEY_A);
-	Gamepad_SetButton(CCPAD_B, mods & KEY_B);
-	Gamepad_SetButton(CCPAD_X, mods & KEY_X);
-	Gamepad_SetButton(CCPAD_Y, mods & KEY_Y);
+	Gamepad_SetButton(0, CCPAD_A, mods & KEY_A);
+	Gamepad_SetButton(0, CCPAD_B, mods & KEY_B);
+	Gamepad_SetButton(0, CCPAD_X, mods & KEY_X);
+	Gamepad_SetButton(0, CCPAD_Y, mods & KEY_Y);
 	
-	Gamepad_SetButton(CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & KEY_SELECT);
+	Gamepad_SetButton(0, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(0, CCPAD_SELECT, mods & KEY_SELECT);
 	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & KEY_DLEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & KEY_DRIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & KEY_DUP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DDOWN);
+	Gamepad_SetButton(0, CCPAD_LEFT,   mods & KEY_DLEFT);
+	Gamepad_SetButton(0, CCPAD_RIGHT,  mods & KEY_DRIGHT);
+	Gamepad_SetButton(0, CCPAD_UP,     mods & KEY_DUP);
+	Gamepad_SetButton(0, CCPAD_DOWN,   mods & KEY_DDOWN);
 	
-	Gamepad_SetButton(CCPAD_ZL, mods & KEY_ZL);
-	Gamepad_SetButton(CCPAD_ZR, mods & KEY_ZR);
+	Gamepad_SetButton(0, CCPAD_ZL, mods & KEY_ZL);
+	Gamepad_SetButton(0, CCPAD_ZR, mods & KEY_ZR);
 }
 
 #define AXIS_SCALE 8.0f
@@ -153,7 +153,7 @@ static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
 	if (Math_AbsI(pos->dx) <= 24) pos->dx = 0;
 	if (Math_AbsI(pos->dy) <= 24) pos->dy = 0;
 		
-	Gamepad_SetAxis(axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
+	Gamepad_SetAxis(0, axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
 
 void Window_ProcessGamepads(double delta) {

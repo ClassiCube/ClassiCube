@@ -93,20 +93,20 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static void ProcessButtons(int mods) {
-	Gamepad_SetButton(CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
-	Gamepad_SetButton(CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
-	Gamepad_SetButton(CCPAD_X, mods & PERIPHERAL_DIGITAL_C);
+	Gamepad_SetButton(port, CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & PERIPHERAL_DIGITAL_C);
 
-	Gamepad_SetButton(CCPAD_L, mods & PERIPHERAL_DIGITAL_L);
-	Gamepad_SetButton(CCPAD_R, mods & PERIPHERAL_DIGITAL_R);
+	Gamepad_SetButton(port, CCPAD_L, mods & PERIPHERAL_DIGITAL_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & PERIPHERAL_DIGITAL_R);
       
-	Gamepad_SetButton(CCPAD_START,  mods & PERIPHERAL_DIGITAL_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & PERIPHERAL_DIGITAL_Z);
+	Gamepad_SetButton(port, CCPAD_START,  mods & PERIPHERAL_DIGITAL_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & PERIPHERAL_DIGITAL_Z);
 
-	Gamepad_SetButton(CCPAD_LEFT,   mods & PERIPHERAL_DIGITAL_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & PERIPHERAL_DIGITAL_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & PERIPHERAL_DIGITAL_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & PERIPHERAL_DIGITAL_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & PERIPHERAL_DIGITAL_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & PERIPHERAL_DIGITAL_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & PERIPHERAL_DIGITAL_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PERIPHERAL_DIGITAL_DOWN);
 }
 
 void Window_ProcessGamepads(double delta) {

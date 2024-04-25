@@ -97,40 +97,40 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int buttons) {
+static void HandleButtons(int port, int buttons) {
 	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
 	// So just flip the bits to make more sense
 	buttons = buttons ^ 0xFFFF;
 	//Platform_Log1("BUTTONS: %h", &buttons);
 	
-	Gamepad_SetButton(CCPAD_A, buttons & PAD_TRIANGLE);
-	Gamepad_SetButton(CCPAD_B, buttons & PAD_SQUARE);
-	Gamepad_SetButton(CCPAD_X, buttons & PAD_CROSS);
-	Gamepad_SetButton(CCPAD_Y, buttons & PAD_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_A, buttons & PAD_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, buttons & PAD_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, buttons & PAD_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, buttons & PAD_CIRCLE);
       
-	Gamepad_SetButton(CCPAD_START,  buttons & PAD_START);
-	Gamepad_SetButton(CCPAD_SELECT, buttons & PAD_SELECT);
+	Gamepad_SetButton(port, CCPAD_START,  buttons & PAD_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, buttons & PAD_SELECT);
 
-	Gamepad_SetButton(CCPAD_LEFT,   buttons & PAD_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  buttons & PAD_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     buttons & PAD_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   buttons & PAD_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   buttons & PAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  buttons & PAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     buttons & PAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   buttons & PAD_DOWN);
 	
-	Gamepad_SetButton(CCPAD_L,  buttons & PAD_L1);
-	Gamepad_SetButton(CCPAD_R,  buttons & PAD_R1);
-	Gamepad_SetButton(CCPAD_ZL, buttons & PAD_L2);
-	Gamepad_SetButton(CCPAD_ZR, buttons & PAD_R2);
+	Gamepad_SetButton(port, CCPAD_L,  buttons & PAD_L1);
+	Gamepad_SetButton(port, CCPAD_R,  buttons & PAD_R1);
+	Gamepad_SetButton(port, CCPAD_ZL, buttons & PAD_L2);
+	Gamepad_SetButton(port, CCPAD_ZR, buttons & PAD_R2);
 }
 
 #define AXIS_SCALE 16.0f
-static void HandleJoystick(int axis, int x, int y, double delta) {
+static void HandleJoystick(int port, int axis, int x, int y, double delta) {
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;
 	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void ProcessPadInput(double delta, struct padButtonStatus* pad) {
+static void ProcessPadInput(int port, double delta, struct padButtonStatus* pad) {
 	HandleButtons(pad->btns);
 	HandleJoystick(PAD_AXIS_LEFT,  pad->ljoy_h - 0x80, pad->ljoy_v - 0x80, delta);
 	HandleJoystick(PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
@@ -150,7 +150,7 @@ void Window_ProcessGamepads(double delta) {
     }
     
 	int ret = padRead(0, 0, &pad);
-	if (ret != 0) ProcessPadInput(delta, &pad);
+	if (ret != 0) ProcessPadInput(0, delta, &pad);
 }
 
 

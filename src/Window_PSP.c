@@ -79,33 +79,33 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
-	Gamepad_SetButton(CCPAD_L, mods & PSP_CTRL_LTRIGGER);
-	Gamepad_SetButton(CCPAD_R, mods & PSP_CTRL_RTRIGGER);
+static void HandleButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & PSP_CTRL_LTRIGGER);
+	Gamepad_SetButton(port, CCPAD_R, mods & PSP_CTRL_RTRIGGER);
 	
-	Gamepad_SetButton(CCPAD_A, mods & PSP_CTRL_TRIANGLE);
-	Gamepad_SetButton(CCPAD_B, mods & PSP_CTRL_SQUARE);
-	Gamepad_SetButton(CCPAD_X, mods & PSP_CTRL_CROSS);
-	Gamepad_SetButton(CCPAD_Y, mods & PSP_CTRL_CIRCLE);
+	Gamepad_SetButton(port, CCPAD_A, mods & PSP_CTRL_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, mods & PSP_CTRL_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, mods & PSP_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, mods & PSP_CTRL_CIRCLE);
 	
-	Gamepad_SetButton(CCPAD_START,  mods & PSP_CTRL_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & PSP_CTRL_SELECT);
+	Gamepad_SetButton(port, CCPAD_START,  mods & PSP_CTRL_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & PSP_CTRL_SELECT);
 	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & PSP_CTRL_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & PSP_CTRL_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
 }
 
 #define AXIS_SCALE 16.0f
-static void ProcessCircleInput(SceCtrlData* pad, double delta) {
+static void ProcessCircleInput(int port, SceCtrlData* pad, double delta) {
 	int x = pad->Lx - 127;
 	int y = pad->Ly - 127;
 
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;
 
-	Gamepad_SetAxis(PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
 void Window_ProcessGamepads(double delta) {
@@ -115,8 +115,8 @@ void Window_ProcessGamepads(double delta) {
 	if (ret <= 0) return;
 	// TODO: need to use cached version still? like GameCube/Wii
 
-	HandleButtons(pad.Buttons);
-	ProcessCircleInput(&pad, delta);
+	HandleButtons(0, pad.Buttons);
+	ProcessCircleInput(0, &pad, delta);
 }
 
 

@@ -208,37 +208,37 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
+static void HandleButtons(int port, int mods) {
 	// TODO CONT_Z
       
-	Gamepad_SetButton(CCPAD_A, mods & CONT_A);
-	Gamepad_SetButton(CCPAD_B, mods & CONT_B);
-	Gamepad_SetButton(CCPAD_X, mods & CONT_X);
-	Gamepad_SetButton(CCPAD_Y, mods & CONT_Y);
+	Gamepad_SetButton(port, CCPAD_A, mods & CONT_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & CONT_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & CONT_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & CONT_Y);
       
-	Gamepad_SetButton(CCPAD_START,  mods & CONT_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & CONT_D);
+	Gamepad_SetButton(port, CCPAD_START,  mods & CONT_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & CONT_D);
 
-	Gamepad_SetButton(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & CONT_DPAD_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & CONT_DPAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 }
 
 #define AXIS_SCALE 8.0f
-static void HandleJoystick(int axis, int x, int y, double delta) {
+static void HandleJoystick(int port, int axis, int x, int y, double delta) {
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;	
 	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void HandleController(cont_state_t* state, double delta) {
-	Gamepad_SetButton(CCPAD_L, state->ltrig > 10);
-	Gamepad_SetButton(CCPAD_R, state->rtrig > 10);
+static void HandleController(int port, cont_state_t* state, double delta) {
+	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
+	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
 	// TODO CONT_Z, joysticks
 	// TODO: verify values are right     
-	HandleJoystick(PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
 }
 
 void Window_ProcessGamepads(double delta) {
@@ -250,8 +250,8 @@ void Window_ProcessGamepads(double delta) {
 	state = (cont_state_t*)maple_dev_status(cont);
 	if (!state) return;
 	
-	HandleButtons(state->buttons);
-	HandleController(state, delta);
+	HandleButtons(0, state->buttons);
+	HandleController(0, state, delta);
 }
 
 

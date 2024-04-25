@@ -143,42 +143,42 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(u64 mods) {
-	Gamepad_SetButton(CCPAD_L, mods & HidNpadButton_L);
-	Gamepad_SetButton(CCPAD_R, mods & HidNpadButton_R);
+static void HandleButtons(int port, u64 mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & HidNpadButton_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & HidNpadButton_R);
 	
-	Gamepad_SetButton(CCPAD_A, mods & HidNpadButton_A);
-	Gamepad_SetButton(CCPAD_B, mods & HidNpadButton_B);
-	Gamepad_SetButton(CCPAD_X, mods & HidNpadButton_X);
-	Gamepad_SetButton(CCPAD_Y, mods & HidNpadButton_Y);
+	Gamepad_SetButton(port, CCPAD_A, mods & HidNpadButton_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & HidNpadButton_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & HidNpadButton_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & HidNpadButton_Y);
 	
-	Gamepad_SetButton(CCPAD_START,  mods & HidNpadButton_Plus);
-	Gamepad_SetButton(CCPAD_SELECT, mods & HidNpadButton_Minus);
+	Gamepad_SetButton(port, CCPAD_START,  mods & HidNpadButton_Plus);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & HidNpadButton_Minus);
 	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & HidNpadButton_Left);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & HidNpadButton_Right);
-	Gamepad_SetButton(CCPAD_UP,     mods & HidNpadButton_Up);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & HidNpadButton_Down);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & HidNpadButton_Left);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & HidNpadButton_Right);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & HidNpadButton_Up);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & HidNpadButton_Down);
 }
 
 #define AXIS_SCALE 512.0f
-static void ProcessJoystickInput(int axis, HidAnalogStickState* pos, double delta) {
+static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, double delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
 	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
 	
-	Gamepad_SetAxis(axis, pos->x / AXIS_SCALE, -pos->y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, axis, pos->x / AXIS_SCALE, -pos->y / AXIS_SCALE, delta);
 }
 
 void Window_ProcessGamepads(double delta) {
 	u64 keys = padGetButtons(&pad);
-	HandleButtons(keys);
+	HandleButtons(0, keys);
 
 	// Read the sticks' position
 	HidAnalogStickState analog_stick_l = padGetStickPos(&pad, 0);
 	HidAnalogStickState analog_stick_r = padGetStickPos(&pad, 1);
-	ProcessJoystickInput(PAD_AXIS_LEFT,  &analog_stick_l, delta);
-	ProcessJoystickInput(PAD_AXIS_RIGHT, &analog_stick_r, delta);
+	ProcessJoystickInput(0, PAD_AXIS_LEFT,  &analog_stick_l, delta);
+	ProcessJoystickInput(0, PAD_AXIS_RIGHT, &analog_stick_r, delta);
 }
 
 

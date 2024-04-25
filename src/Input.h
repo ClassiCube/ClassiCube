@@ -196,9 +196,9 @@ extern int Gamepad_AxisBehaviour[2];
 extern int Gamepad_AxisSensitivity[2];
 
 /* Sets value of the given gamepad button */
-void Gamepad_SetButton(int btn, int pressed);
+void Gamepad_SetButton(int port, int btn, int pressed);
 /* Sets value of the given axis */
-void Gamepad_SetAxis(int axis, float x, float y, double delta);
+void Gamepad_SetAxis(int port, int axis, float x, float y, double delta);
 void Gamepad_Tick(double delta);
 
 

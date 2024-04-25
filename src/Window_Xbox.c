@@ -132,43 +132,43 @@ void Window_UpdateRawMouse(void)  { }
 #define XINPUT_GAMEPAD_LEFT_THUMB  0x0040
 #define XINPUT_GAMEPAD_RIGHT_THUMB 0x0080
 
-static void HandleButtons(xid_gamepad_in* gp) {
+static void HandleButtons(int port, xid_gamepad_in* gp) {
 	int mods = gp->dButtons;
-	Gamepad_SetButton(CCPAD_L,  gp->l     > 0x7F);
-	Gamepad_SetButton(CCPAD_R,  gp->r     > 0x7F);
-	Gamepad_SetButton(CCPAD_ZL, gp->white > 0x7F);
-	Gamepad_SetButton(CCPAD_ZR, gp->black > 0x7F);
+	Gamepad_SetButton(port, CCPAD_L,  gp->l     > 0x7F);
+	Gamepad_SetButton(port, CCPAD_R,  gp->r     > 0x7F);
+	Gamepad_SetButton(port, CCPAD_ZL, gp->white > 0x7F);
+	Gamepad_SetButton(port, CCPAD_ZR, gp->black > 0x7F);
 	
-	Gamepad_SetButton(CCPAD_A, gp->a > 0x7F);
-	Gamepad_SetButton(CCPAD_B, gp->b > 0x7F);
-	Gamepad_SetButton(CCPAD_X, gp->x > 0x7F);
-	Gamepad_SetButton(CCPAD_Y, gp->y > 0x7F);
+	Gamepad_SetButton(port, CCPAD_A, gp->a > 0x7F);
+	Gamepad_SetButton(port, CCPAD_B, gp->b > 0x7F);
+	Gamepad_SetButton(port, CCPAD_X, gp->x > 0x7F);
+	Gamepad_SetButton(port, CCPAD_Y, gp->y > 0x7F);
 	
-	Gamepad_SetButton(CCPAD_START,  mods & XINPUT_GAMEPAD_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);
-	Gamepad_SetButton(CCPAD_LSTICK, mods & XINPUT_GAMEPAD_LEFT_THUMB);
-	Gamepad_SetButton(CCPAD_RSTICK, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
+	Gamepad_SetButton(port, CCPAD_START,  mods & XINPUT_GAMEPAD_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);
+	Gamepad_SetButton(port, CCPAD_LSTICK, mods & XINPUT_GAMEPAD_LEFT_THUMB);
+	Gamepad_SetButton(port, CCPAD_RSTICK, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
 	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & XINPUT_GAMEPAD_DPAD_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & XINPUT_GAMEPAD_DPAD_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & XINPUT_GAMEPAD_DPAD_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & XINPUT_GAMEPAD_DPAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & XINPUT_GAMEPAD_DPAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & XINPUT_GAMEPAD_DPAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
 }
 
 #define AXIS_SCALE 8192.0f
-static void HandleJoystick(int axis, int x, int y, double delta) {
+static void HandleJoystick(int port, int axis, int x, int y, double delta) {
 	if (Math_AbsI(x) <= 512) x = 0;
 	if (Math_AbsI(y) <= 512) y = 0;	
 	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
 void Window_ProcessGamepads(double delta) {
 	if (!xid_ctrl) return;
 	
-	HandleButtons(&gp_state);
-	HandleJoystick(PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);
-	HandleJoystick(PAD_AXIS_RIGHT, gp_state.rightStickX, gp_state.rightStickY, delta);
+	HandleButtons(0, &gp_state);
+	HandleJoystick(0, PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);
+	HandleJoystick(0, PAD_AXIS_RIGHT, gp_state.rightStickX, gp_state.rightStickY, delta);
 }
 
 

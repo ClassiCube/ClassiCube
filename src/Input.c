@@ -424,14 +424,14 @@ int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMER
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
 
-void Gamepad_SetButton(int btn, int pressed) {
+void Gamepad_SetButton(int port, int btn, int pressed) {
 	/* Reset hold tracking time */
 	if (pressed && !Input.Pressed[btn]) pad_holdtime[btn - GAMEPAD_BEG_BTN] = 0;
 
 	Input_SetNonRepeatable(btn, pressed);
 }
 
-void Gamepad_SetAxis(int axis, float x, float y, double delta) {
+void Gamepad_SetAxis(int port, int axis, float x, float y, double delta) {
 	if (x == 0 && y == 0) return;
 
 	int sensi   = Gamepad_AxisSensitivity[axis];
