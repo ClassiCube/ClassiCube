@@ -65,8 +65,11 @@ struct GameVersion Game_Version;
 
 static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
-cc_string Game_Username = String_FromArray(usernameBuffer);
-cc_string Game_Mppass   = String_FromArray(mppassBuffer);
+cc_string Game_Username  = String_FromArray(usernameBuffer);
+cc_string Game_Mppass    = String_FromArray(mppassBuffer);
+#ifdef CC_BUILD_SPLITSCREEN
+int Game_NumLocalPlayers = 1;
+#endif
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
@@ -634,6 +637,22 @@ static CC_INLINE void Game_DrawFrame(double delta, float t) {
 	Gfx_End2D();
 }
 
+#ifdef CC_BUILD_SPLITSCREEN
+static void DrawSplitscreen(double delta, float t, int i, int x, int y, int w, int h) {
+	Gfx.ViewportX = x;
+	Gfx.ViewportY = y;
+	Gfx.ViewportWidth = w;
+	Gfx.ViewportHeight = h;
+	Gfx_UpdateViewport();
+	
+	Entities.CurPlayer = &LocalPlayer_Instances[i];
+	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
+	
+	Game_DrawFrame(delta, t);
+}
+#endif
+
 static CC_INLINE void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
 	float t;
@@ -680,7 +699,30 @@ static CC_INLINE void Game_RenderFrame(double delta) {
 	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
 	if (Window_Main.Inactive) return;
 	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
+	
+#ifdef CC_BUILD_SPLITSCREEN
+	switch (Game_NumLocalPlayers) {
+		case 1:
+			Game_DrawFrame(delta, t); break;
+		case 2:
+			DrawSplitscreen(delta, t, 0,  0,               0, Game.Width, Game.Height / 2);
+			DrawSplitscreen(delta, t, 1,  0, Game.Height / 2, Game.Width, Game.Height / 2);
+			break;
+		case 3:
+			DrawSplitscreen(delta, t, 0,              0,               0, Game.Width    , Game.Height / 2);
+			DrawSplitscreen(delta, t, 1,              0, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 2, Game.Width / 2, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			break;
+		case 4:
+			DrawSplitscreen(delta, t, 0,              0,               0, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 1, Game.Width / 2,               0, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 2,              0, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 3, Game.Width / 2, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			break;
+	}
+#else
 	Game_DrawFrame(delta, t);
+#endif
 
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 	Gfx_EndFrame();

@@ -491,7 +491,7 @@ static void OnNewMap(void) {
 	if (Server.IsSinglePlayer) return;
 
 	/* wipe all existing entities */
-	for (i = 0; i < ENTITIES_SELF_ID; i++) 
+	for (i = 0; i < MAX_NET_PLAYERS; i++) 
 	{
 		Entities_Remove((EntityID)i);
 	}

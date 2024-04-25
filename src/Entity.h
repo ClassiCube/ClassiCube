@@ -16,10 +16,16 @@ struct LocalPlayer;
 extern struct IGameComponent TabList_Component;
 extern struct IGameComponent Entities_Component;
 
+#ifdef CC_BUILD_SPLITSCREEN
+#define MAX_LOCAL_PLAYERS 4
+#else
 #define MAX_LOCAL_PLAYERS 1
+#endif
+#define MAX_NET_PLAYERS   255
+
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
-#define ENTITIES_MAX_COUNT (255 + MAX_LOCAL_PLAYERS)
+#define ENTITIES_MAX_COUNT (MAX_NET_PLAYERS + MAX_LOCAL_PLAYERS)
 #define ENTITIES_SELF_ID 255
 
 enum NameMode {
@@ -217,7 +223,7 @@ struct NetPlayer {
 	struct NetInterpComp Interp;
 };
 CC_API void NetPlayer_Init(struct NetPlayer* player);
-extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+extern struct NetPlayer NetPlayers_List[MAX_NET_PLAYERS];
 
 struct LocalPlayerInput;
 struct LocalPlayerInput {

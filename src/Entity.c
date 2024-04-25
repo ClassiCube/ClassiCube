@@ -736,7 +736,7 @@ static cc_bool LocalPlayer_ShouldRenderName(struct Entity* e) {
 }
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
-	struct LocalPlayer* p = &LocalPlayer_Instances[0];
+	struct LocalPlayer* p = (struct LocalPlayer*)obj;
 	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
 		p->Physics.JumpVel = p->Physics.ServerJumpVel;
 	}
@@ -752,7 +752,7 @@ static void LocalPlayer_Init(struct LocalPlayer* p) {
 	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
 	Entity_SetSkin(&p->Base, &Game_Username);
-	Event_Register_(&UserEvents.HackPermsChanged, NULL, LocalPlayer_CheckJumpVelocity);
+	Event_Register_(&UserEvents.HackPermsChanged, p, LocalPlayer_CheckJumpVelocity);
 
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
@@ -794,7 +794,7 @@ static void LocalPlayer_Reset(struct LocalPlayer* p) {
 
 static void LocalPlayers_Reset(void) {
 	int i;
-	for (i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	for (i = 0; i < Game_NumLocalPlayers; i++)
 	{
 		LocalPlayer_Reset(&LocalPlayer_Instances[i]);
 	}
@@ -812,7 +812,7 @@ static void LocalPlayer_OnNewMap(struct LocalPlayer* p) {
 
 static void LocalPlayers_OnNewMap(void) {
 	int i;
-	for (i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	for (i = 0; i < Game_NumLocalPlayers; i++)
 	{
 		LocalPlayer_OnNewMap(&LocalPlayer_Instances[i]);
 	}
@@ -972,7 +972,7 @@ void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* 
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
 *#########################################################################################################################*/
-struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+struct NetPlayer NetPlayers_List[MAX_NET_PLAYERS];
 
 static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
@@ -1035,10 +1035,10 @@ static void Entities_Init(void) {
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	for (i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	for (i = 0; i < Game_NumLocalPlayers; i++)
 	{
 		LocalPlayer_Init(&LocalPlayer_Instances[i]);
-		Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instances[i].Base;
+		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;
 	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
 }
