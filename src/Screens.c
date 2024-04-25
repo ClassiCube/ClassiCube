@@ -1996,14 +1996,15 @@ static void GeneratingScreen_Free(void* screen) {
 }
 
 static void GeneratingScreen_EndGeneration(void) {
+	struct LocationUpdate update;
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 
 	Gen_Blocks = NULL;
 	World.Seed = Gen_Seed;
 
-	LocalPlayer_CalcDefaultSpawn(&LocalPlayer_Instance);
-	LocalPlayer_MoveToSpawn(&LocalPlayer_Instance);
+	LocalPlayer_CalcDefaultSpawn(&LocalPlayer_Instance, &update);
+	LocalPlayer_MoveToSpawn(&LocalPlayer_Instance, &update);
 }
 
 static void GeneratingScreen_Update(void* screen, double delta) {

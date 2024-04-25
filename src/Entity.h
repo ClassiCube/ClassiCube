@@ -245,8 +245,8 @@ void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t);
 void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p);
 cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
 /* Moves local player back to spawn point. */
-void LocalPlayer_MoveToSpawn(struct LocalPlayer* p);
-void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p);
+void LocalPlayer_MoveToSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
+void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
 
 cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p);
 cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p);

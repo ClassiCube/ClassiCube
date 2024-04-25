@@ -938,26 +938,20 @@ cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
 	return false;
 }
 
-void LocalPlayer_MoveToSpawn(struct LocalPlayer* p) {
-	struct LocationUpdate update;
-
-	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
-	update.pos   = p->Spawn;
-	update.yaw   = p->SpawnYaw;
-	update.pitch = p->SpawnPitch;
-
-	p->Base.VTABLE->SetLocation(&p->Base, &update);
+void LocalPlayer_MoveToSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
+	p->Base.VTABLE->SetLocation(&p->Base, update);
 	/* TODO: This needs to be before new map... */
 	Camera.CurrentPos = Camera.Active->GetPosition(p, 0.0f);
 }
 
-void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p) {
+void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
 	float x = (World.Width  / 2) + 0.5f; 
 	float z = (World.Length / 2) + 0.5f;
 
-	p->Spawn      = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-	p->SpawnYaw   = 0.0f;
-	p->SpawnPitch = 0.0f;
+	update->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
+	update->pos   = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+	update->yaw   = 0.0f;
+	update->pitch = 0.0f;
 }
 
 
