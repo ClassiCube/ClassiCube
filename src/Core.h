@@ -136,6 +136,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_NOSOUNDS
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
+	#define CC_BUILD_SPLITSCREEN
 #elif defined XENON
 	/* libxenon also defines __linux__ (yes, really) */
 	#define CC_BUILD_XBOX360
