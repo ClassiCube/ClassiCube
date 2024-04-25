@@ -786,15 +786,21 @@ void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p) {
 	p->Physics.ServerJumpVel = p->Physics.JumpVel;
 }
 
-static void LocalPlayer_Reset(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instances[0];
+static void LocalPlayer_Reset(struct LocalPlayer* p) {
 	p->ReachDistance = 5.0f;
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	LocalPlayer_ResetJumpVelocity(p);
 }
 
-static void LocalPlayer_OnNewMap(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instances[0];
+static void LocalPlayers_Reset(void) {
+	int i;
+	for (i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		LocalPlayer_Reset(&LocalPlayer_Instances[i]);
+	}
+}
+
+static void LocalPlayer_OnNewMap(struct LocalPlayer* p) {
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	Vec3_Set(p->OldVelocity,   0,0,0);
 
@@ -802,6 +808,14 @@ static void LocalPlayer_OnNewMap(void) {
 	p->_warnedFly     = false;
 	p->_warnedNoclip  = false;
 	p->_warnedZoom    = false;
+}
+
+static void LocalPlayers_OnNewMap(void) {
+	int i;
+	for (i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		LocalPlayer_OnNewMap(&LocalPlayer_Instances[i]);
+	}
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
@@ -1008,6 +1022,7 @@ void NetPlayer_Init(struct NetPlayer* p) {
 *---------------------------------------------------Entities component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Entities_Init(void) {
+	int i;
 	Event_Register_(&GfxEvents.ContextLost, NULL, Entities_ContextLost);
 	Event_Register_(&InputEvents.Down,      NULL, LocalPlayer_InputDown);
 	Event_Register_(&InputEvents.Up,        NULL, LocalPlayer_InputUp);
@@ -1020,9 +1035,12 @@ static void Entities_Init(void) {
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instances[0].Base;
+	for (i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		LocalPlayer_Init(&LocalPlayer_Instances[i]);
+		Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instances[i].Base;
+	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];
-	LocalPlayer_Init(&LocalPlayer_Instances[0]);
 }
 
 static void Entities_Free(void) {
@@ -1036,6 +1054,6 @@ static void Entities_Free(void) {
 struct IGameComponent Entities_Component = {
 	Entities_Init,  /* Init  */
 	Entities_Free,  /* Free  */
-	LocalPlayer_Reset,    /* Reset */
-	LocalPlayer_OnNewMap, /* OnNewMap */
+	LocalPlayers_Reset,    /* Reset */
+	LocalPlayers_OnNewMap, /* OnNewMap */
 };
