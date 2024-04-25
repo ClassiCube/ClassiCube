@@ -253,20 +253,14 @@ void APIENTRY glGetIntegerv(GLenum pname, GLint *params) {
 }
 
 
-Viewport VIEWPORT = {
-    0, 0, 640, 480, 320.0f, 240.0f, 320.0f, 240.0f
-};
+Viewport VIEWPORT;
 
 /* Set the GL viewport */
 void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-    VIEWPORT.x = x;
-    VIEWPORT.y = y;
-    VIEWPORT.width   = width;
-    VIEWPORT.height  = height;
-    VIEWPORT.hwidth  = ((GLfloat) VIEWPORT.width) * 0.5f;
-    VIEWPORT.hheight = ((GLfloat) VIEWPORT.height) * 0.5f;
-    VIEWPORT.x_plus_hwidth  = VIEWPORT.x + VIEWPORT.hwidth;
-    VIEWPORT.y_plus_hheight = VIEWPORT.y + VIEWPORT.hheight;
+    VIEWPORT.hwidth  = ((GLfloat)width)  * 0.5f;
+    VIEWPORT.hheight = ((GLfloat)height) * -0.5f;
+    VIEWPORT.x_plus_hwidth  = x + VIEWPORT.hwidth;
+    VIEWPORT.y_plus_hheight = y + VIEWPORT.hheight;
 }
 
 

@@ -559,6 +559,12 @@ void Gfx_OnWindowResize(void) {
 }
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
+	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
+		glDisable(GL_SCISSOR_TEST);
+	} else {
+		glEnable(GL_SCISSOR_TEST);
+	}
+	
 	glViewport(x, y, w, h);
 	glScissor (x, y, w, h);
 }
