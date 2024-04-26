@@ -19,7 +19,6 @@
 
 #ifdef CC_BUILD_FILESYSTEM
 static struct LocationUpdate* spawn_point;
-static cc_bool calcDefaultSpawn;
 static struct MapImporter* imp_head;
 static struct MapImporter* imp_tail;
 

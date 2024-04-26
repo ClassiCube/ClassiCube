@@ -24,7 +24,7 @@ void Gfx_Create(void) {
     glClearPolyID(63);
     glAlphaFunc(7);
 
-    glClearDepth(0x7FFF);
+    glClearDepth(GL_MAX_DEPTH);
     glViewport(0, 0, 255, 191);
     
     vramSetBankA(VRAM_A_TEXTURE);
@@ -172,8 +172,18 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetFaceCulling(cc_bool enabled)   { }
-void Gfx_SetAlphaBlending(cc_bool enabled) { }
+void Gfx_SetFaceCulling(cc_bool enabled) {
+	glPolyFmt(POLY_ALPHA(31) | (enabled ? POLY_CULL_BACK : POLY_CULL_NONE));
+}
+
+void Gfx_SetAlphaBlending(cc_bool enabled) {
+	/*if (enabled) {
+		glEnable(GL_BLEND);
+	} else {
+		glDisable(GL_BLEND);
+	}*/
+}
+
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
