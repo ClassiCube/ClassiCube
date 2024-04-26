@@ -136,21 +136,28 @@ static void ProcessPadInput(int port, double delta, struct padButtonStatus* pad)
 	HandleJoystick(port, PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
 }
 
-static cc_bool setMode;
-void Window_ProcessGamepads(double delta) {
-    struct padButtonStatus pad;
+static cc_bool setMode[INPUT_MAX_GAMEPADS];
+static void ProcessPad(int port, double delta) {
+	 struct padButtonStatus pad;
 	
-	int state = padGetState(0, 0);
-    if (state != PAD_STATE_STABLE) return;
-    
-    // Change to DUALSHOCK mode so analog joysticks return values
-    if (!setMode) { 
-    	padSetMainMode(0, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK); 
-    	setMode = true;
-    }
-    
-	int ret = padRead(0, 0, &pad);
-	if (ret != 0) ProcessPadInput(0, delta, &pad);
+	int state = padGetState(port, 0);
+	if (state != PAD_STATE_STABLE) return;
+
+	// Change to DUALSHOCK mode so analog joysticks return values
+	if (!setMode[port]) { 
+		padSetMainMode(port, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK); 
+		setMode[port] = true;
+	}
+
+	int ret = padRead(port, 0, &pad);
+	if (ret != 0) ProcessPadInput(port, delta, &pad);
+}
+
+void Window_ProcessGamepads(double delta) {
+	for (int port = 0; port < 2; port++)
+	{
+		ProcessPad(port, delta);
+	}
 }
 
 
