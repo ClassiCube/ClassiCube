@@ -339,7 +339,7 @@ static cc_result Stream_BufferedSeek(struct Stream* s, cc_uint32 position) {
 
 	s->meta.buffered.cur  = s->meta.buffered.base;
 	s->meta.buffered.left = 0;
-	s->meta.buffered.end  = position;	
+	s->meta.buffered.end  = position;
 	return res;
 }
 
@@ -350,7 +350,7 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 	s->Seek   = Stream_BufferedSeek;
 
 	s->meta.buffered.left   = 0;
-	s->meta.buffered.end    = 0;	
+	s->meta.buffered.end    = 0;
 	s->meta.buffered.cur    = (cc_uint8*)data;
 	s->meta.buffered.base   = (cc_uint8*)data;
 	s->meta.buffered.length = size;

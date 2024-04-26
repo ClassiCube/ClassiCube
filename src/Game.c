@@ -487,7 +487,7 @@ static void UpdateViewMatrix(void) {
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
-static void Render3DFrame(double delta, float t) {
+static void Render3DFrame(float delta, float t) {
 	Vec3 pos;
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
@@ -531,7 +531,7 @@ static void Render3DFrame(double delta, float t) {
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 
-static void Render3D_Anaglyph(double delta, float t) {
+static void Render3D_Anaglyph(float delta, float t) {
 	struct Matrix proj = Gfx.Projection;
 	struct Matrix view = Gfx.View;
 
@@ -603,7 +603,7 @@ void Game_TakeScreenshot(void) {
 #endif
 }
 
-static CC_INLINE void Game_DrawFrame(double delta, float t) {
+static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld()) {
@@ -635,7 +635,7 @@ static CC_INLINE void Game_DrawFrame(double delta, float t) {
 }
 
 #ifdef CC_BUILD_SPLITSCREEN
-static void DrawSplitscreen(double delta, float t, int i, int x, int y, int w, int h) {
+static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, int h) {
 	Gfx_SetViewport(x, y, w, h);
 	
 	Entities.CurPlayer = &LocalPlayer_Instances[i];

@@ -145,8 +145,6 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	if (!fat_available) return ENOSYS;
-	
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 	*file = open(str, mode, 0);
@@ -154,12 +152,17 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
+	if (!fat_available) return ReturnCode_FileNotFound;
 	return File_Do(file, path, O_RDONLY);
 }
+
 cc_result File_Create(cc_file* file, const cc_string* path) {
+	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+	if (!fat_available) return ENOTSUP;
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 

@@ -508,12 +508,12 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 }
 
 // https://github.com/XboxDev/nxdk/blob/master/samples/mesh/math3d.c#L292
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	/* NOTE: This calculation is shared with Direct3D 11 backend */
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;

@@ -1,14 +1,27 @@
 #ifndef CC_MENUS_H
 #define CC_MENUS_H
-#include "Core.h"
+#include "Gui.h"
 
 /* Contains all 2D menu screen implementations.
    Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
+struct MenuInputDesc;
+struct FontDesc;
+struct ButtonWidget;
+
 int Menu_InputDown(void* screen, int key);
 int Menu_PointerDown(void* screen, int id, int x, int y);
 int Menu_PointerMove(void* screen, int id, int x, int y);
+
+struct SimpleButtonDesc { short x, y; const char* title; Widget_LeftClick onClick; };
+void Menu_AddButtons(void* screen, struct ButtonWidget* btns, int width, 
+					const struct SimpleButtonDesc* descs, int count);
+void Menu_LayoutButtons(struct ButtonWidget* btns, 
+					const struct SimpleButtonDesc* descs, int count);
+void Menu_SetButtons(struct ButtonWidget* btns, struct FontDesc* font, 
+					const struct SimpleButtonDesc* descs, int count);
+void Menu_LayoutBack(struct ButtonWidget* btn);
 
 void PauseScreen_Show(void);
 void OptionsGroupScreen_Show(void);
@@ -49,4 +62,8 @@ void TouchCtrlsScreen_Show(void);
 void TouchMoreScreen_Show(void);
 void TouchOnscreenScreen_Show(void);
 #endif
+
+void MenuScreen_Render2(void* screen, float delta);
+typedef void (*MenuInputDone)(const cc_string* value, cc_bool valid);
+void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, MenuInputDone onDone, cc_bool screenMode);
 #endif

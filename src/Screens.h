@@ -34,6 +34,9 @@ void TouchScreen_Refresh(void);
 void TouchScreen_Show(void);
 #endif
 
+int HUDScreen_LayoutHotbar(void);
+void TabListOverlay_Show(cc_bool staysOpen);
+
 /* Opens chat input for the HUD with the given initial text. */
 void ChatScreen_OpenInput(const cc_string* text);
 /* Appends text to the chat input in the HUD. */

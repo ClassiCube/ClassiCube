@@ -248,13 +248,12 @@ void Gui_Remove(struct Screen* s) {
 }
 
 void Gui_Add(struct Screen* s, int priority) {
+	struct Screen* existing;
 	int i;
 	Gui_RemoveCore(s);
-	/* Backwards loop since removing changes count and gui_screens */
-	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
-	{
-		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
-	}
+	
+	existing = Gui_GetScreen(priority);
+	if (existing) Gui_RemoveCore(existing);
 
 	Gui_AddCore(s, priority);
 	Gui_OnScreensChanged();
@@ -283,6 +282,15 @@ struct Screen* Gui_GetClosable(void) {
 	for (i = 0; i < Gui.ScreensCount; i++) 
 	{
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
+	}
+	return NULL;
+}
+
+struct Screen* Gui_GetScreen(int priority) {
+	int i;
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
+		if (priorities[i] == priority) return Gui_Screens[i];
 	}
 	return NULL;
 }
@@ -699,13 +707,6 @@ static void OnInit(void) {
 	Event_Register_(&InputEvents.Press,          NULL, OnKeyPress);
 	Event_Register_(&WindowEvents.Resized,       NULL, OnResize);
 	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
-
-#ifdef CC_BUILD_TOUCH
-	#define DEFAULT_SP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED)
-	#define DEFAULT_MP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED | ONSCREEN_BTN_CHAT)
-	Gui._onscreenButtons = Options_GetInt(OPT_TOUCH_BUTTONS, 0, Int32_MaxValue,
-											Server.IsSinglePlayer ? DEFAULT_SP_ONSCREEN : DEFAULT_MP_ONSCREEN);
-#endif
 
 	LoadOptions();
 	Gui_ShowDefault();

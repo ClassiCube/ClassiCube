@@ -242,20 +242,4 @@ void InputHandler_OnScreensChanged(void);
 void InputHandler_DeleteBlock(void);
 void InputHandler_PlaceBlock(void);
 void InputHandler_PickBlock(void);
-
-/* Enumeration of on-screen buttons for touch GUI */
-#define ONSCREEN_BTN_CHAT      (1 << 0)
-#define ONSCREEN_BTN_LIST      (1 << 1)
-#define ONSCREEN_BTN_SPAWN     (1 << 2)
-#define ONSCREEN_BTN_SETSPAWN  (1 << 3)
-#define ONSCREEN_BTN_FLY       (1 << 4)
-#define ONSCREEN_BTN_NOCLIP    (1 << 5)
-#define ONSCREEN_BTN_SPEED     (1 << 6)
-#define ONSCREEN_BTN_HALFSPEED (1 << 7)
-#define ONSCREEN_BTN_CAMERA    (1 << 8)
-#define ONSCREEN_BTN_DELETE    (1 << 9)
-#define ONSCREEN_BTN_PICK      (1 << 10)
-#define ONSCREEN_BTN_PLACE     (1 << 11)
-#define ONSCREEN_BTN_SWITCH    (1 << 12)
-#define ONSCREEN_MAX_BTNS 13
 #endif

@@ -512,7 +512,8 @@ int Block_FindID(const cc_string* name) {
 	cc_string blockName;
 	int block;
 
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) 
+	{
 		blockName = Block_UNSAFE_GetName(block);
 		if (String_CaselessEquals(&blockName, name)) return block;
 	}

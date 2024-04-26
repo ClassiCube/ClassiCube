@@ -297,7 +297,7 @@ static cc_result ZipWriter_FixupLocalFile(struct Stream* s, struct ResourceZipEn
 	e->crc32 = crc ^ 0xffffffffUL;
 
 	/* then fixup the header */
-	if ((res = s->Seek(s, e->offset)))      return res;
+	if ((res = s->Seek(s, e->offset)))     return res;
 	if ((res = ZipWriter_LocalFile(s, e))) return res;
 	return s->Seek(s, dataEnd);
 }

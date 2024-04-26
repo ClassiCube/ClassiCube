@@ -624,7 +624,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->sampleRate = 0;
 }
 
-static float Log10(float volume) { return Math_Log(volume) / Math_Log(10); }
+static float Log10(float volume) { return Math_Log2(volume) / Math_Log2(10); }
 
 static void UpdateVolume(struct AudioContext* ctx) {
 	/* Object doesn't exist until Audio_SetFormat is called */
