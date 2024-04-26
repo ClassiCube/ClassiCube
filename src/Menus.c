@@ -499,12 +499,10 @@ static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontD
 	TextWidget_SetConst(&s->title,  "Game menu", titleFont);
 }
 
-static void PauseScreenBase_Init(struct PauseScreen* s, int width) {
+static void PauseScreenBase_AddWidgets(struct PauseScreen* s, int width) {
 	TextWidget_Add(s,   &s->title);
 	Menu_AddButtons(s,  s->btns, width, s->descs, s->descsCount);
 	ButtonWidget_Add(s, &s->back, 400, PauseScreenBase_Game);
-
-	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
 
@@ -557,8 +555,9 @@ static void PauseScreen_Init(void* screen) {
 
 	s->descs      = descs;
 	s->descsCount = Array_Elems(descs);
-	PauseScreenBase_Init(s, 300);
+	PauseScreenBase_AddWidgets(s, 300);
 	ButtonWidget_Add(s, &s->quit, 120, PauseScreenBase_Quit);
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 
 	if (Server.IsSinglePlayer) return;
 	s->btns[1].flags = WIDGET_FLAG_DISABLED;
@@ -620,7 +619,8 @@ static void ClassicPauseScreen_Init(void* screen) {
 
 	/* Don't show nostalgia options in classic mode */
 	s->descsCount = Game_ClassicMode ? 4 : 5;
-	PauseScreenBase_Init(s, 400);
+	PauseScreenBase_AddWidgets(s, 400);
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 
 	if (Server.IsSinglePlayer) return;
 	s->btns[1].flags = WIDGET_FLAG_DISABLED;
