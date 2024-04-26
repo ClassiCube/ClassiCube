@@ -232,10 +232,6 @@ static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_Pointer,      Widget_PointerUp,  Widget_PointerMove,
 	ButtonWidget_BuildMesh, ButtonWidget_Render2, ButtonWidget_MaxVertices
 };
-void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
-	ButtonWidget_Init(w, minWidth, onClick);
-	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
-}
 
 void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
@@ -1015,7 +1011,7 @@ static const struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_BuildMesh,   TableWidget_Render2,   TableWidget_MaxVertices,
 	TableWidget_PadAxis
 };
-void TableWidget_Create(struct TableWidget* w, int sbWidth) {
+void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth) {
 	cc_bool classic;
 	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
@@ -1032,6 +1028,7 @@ void TableWidget_Create(struct TableWidget* w, int sbWidth) {
 		w->everCreated   = true;
 		w->selectedIndex = -1;
 	}
+	AddWidget(screen, w);
 
 	classic     = Gui.ClassicInventory;
 	w->paddingL = Display_ScaleX(classic ? 20 : 15);

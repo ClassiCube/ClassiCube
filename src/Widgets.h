@@ -44,9 +44,6 @@ struct ButtonWidget {
 #define BUTTONWIDGET_MAX 12
 
 /* Initialises a button widget. */
-CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
-								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
-/* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Initialises then adds a button widget. */
 CC_NOINLINE void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
@@ -116,7 +113,7 @@ struct TableWidget {
 	int verticesCount;
 };
 
-CC_NOINLINE void TableWidget_Create(struct TableWidget* w, int sbWidth);
+CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
 CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);

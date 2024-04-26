@@ -54,13 +54,6 @@ static void Menu_AddButtons(void* screen, struct ButtonWidget* btns, int width, 
 	}
 }
 
-static void Menu_InitButtons(struct ButtonWidget* btns, int width, const struct SimpleButtonDesc* descs, int count) {
-	int i;
-	for (i = 0; i < count; i++) {
-		ButtonWidget_Init(&btns[i], width, descs[i].onClick);
-	}
-}
-
 static void Menu_LayoutButtons(struct ButtonWidget* btns, const struct SimpleButtonDesc* descs, int count) {
 	int i;
 	for (i = 0; i < count; i++) {
@@ -2391,7 +2384,7 @@ static struct MenuOptionsScreen {
 	const char* descriptions[MENUOPTS_MAX_OPTS + 1];
 	struct ButtonWidget* activeBtn;
 	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
-	int numButtons, numCore;
+	int numButtons;
 	struct FontDesc titleFont, textFont;
 	struct TextGroupWidget extHelp;
 	struct Texture extHelpTextures[5]; /* max lines is 5 */
@@ -2400,11 +2393,7 @@ static struct MenuOptionsScreen {
 } MenuOptionsScreen_Instance;
 
 static struct MenuInputDesc menuOpts_descs[MENUOPTS_MAX_OPTS];
-static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1] = {
-	NULL,NULL,NULL,NULL,NULL,  NULL,NULL,NULL,NULL,NULL,
-	NULL, 
-	(struct Widget*)&MenuOptionsScreen_Instance.done
-};
+static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1];
 
 static void Menu_GetBool(cc_string* raw, cc_bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
@@ -2507,14 +2496,14 @@ static int MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
 	return true;
 }
 
-static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const struct MenuOptionDesc* btns, int count, Widget_LeftClick backClick) {
+static void MenuOptionsScreen_AddButtons(struct MenuOptionsScreen* s, const struct MenuOptionDesc* btns, int count, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
 	int i;
 	
 	for (i = 0; i < count; i++) {
 		btn = &s->buttons[i];
-		ButtonWidget_Make(btn, 300, btns[i].OnClick,
-			ANCHOR_CENTRE, ANCHOR_CENTRE, btns[i].dir * 160, btns[i].y);
+		ButtonWidget_Add(s, btn,  300, btns[i].OnClick);
+		Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_CENTRE, btns[i].dir * 160, btns[i].y);
 
 		btn->optName  = btns[i].name;
 		btn->GetValue = btns[i].GetValue;
@@ -2523,7 +2512,7 @@ static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const str
 		s->widgets[i] = (struct Widget*)btn;
 	}
 	s->numButtons = count;
-	ButtonWidget_Init(&s->done, 400, backClick);
+	ButtonWidget_Add(s, &s->done, 400, backClick);
 }
 
 static void MenuOptionsScreen_Bool(void* screen, void* widget) {
@@ -2595,7 +2584,8 @@ static void MenuOptionsScreen_Init(void* screen) {
 	int i;
 
 	s->widgets     = menuOpts_widgets;
-	s->numWidgets  = MENUOPTS_MAX_OPTS + 1; /* always have back button */
+	s->numWidgets  = 0;
+	s->maxWidgets  = MENUOPTS_MAX_OPTS + 1; /* always have back button */
 	s->maxVertices = BUTTONWIDGET_MAX;
 
 	/* The various menu options screens might have different number of widgets */
@@ -2769,14 +2759,12 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 0,   60, "Hacks enabled", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetHacks,   ClassicOptionsScreen_SetHacks }
 	};
-	s->numCore         = 9 + 1;
-	s->maxVertices    += 9 * BUTTONWIDGET_MAX + BUTTONWIDGET_MAX;
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX + BUTTONWIDGET_MAX;
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
 
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchPause);
-	ButtonWidget_Make(&s->buttons[9], 400, Menu_SwitchBindsClassic,
-						ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
-	s->widgets[9] = (struct Widget*)&s->buttons[9];
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchPause);
+	ButtonWidget_Add(s, &s->buttons[9], 400, Menu_SwitchBindsClassic);
+	Widget_SetLocation(&s->buttons[9],  ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
 
 	/* Disable certain options */
 	if (!Server.IsSinglePlayer) Menu_Remove(s, 3);
@@ -2852,9 +2840,8 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight }
 	};
 
-	s->numCore      = 10;
-	s->maxVertices += 10 * BUTTONWIDGET_MAX;
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void EnvSettingsScreen_Show(void) {
@@ -2942,9 +2929,8 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
 
-	s->numCore      = 9;
-	s->maxVertices += 9 * BUTTONWIDGET_MAX;
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
 	s->descriptions[1] = \
@@ -3027,9 +3013,8 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ChatOptionsScreen_GetAutoScaleChat, ChatOptionsScreen_SetAutoScaleChat }
 	};
 
-	s->numCore      = 5;
-	s->maxVertices += 5 * BUTTONWIDGET_MAX;
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void ChatOptionsScreen_Show(void) {
@@ -3092,9 +3077,8 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			NULL,                          NULL }
 	};
 
-	s->numCore      = 8;
-	s->maxVertices += 8 * BUTTONWIDGET_MAX;
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void GuiOptionsScreen_Show(void) {
@@ -3214,11 +3198,10 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Field of view",       MenuOptionsScreen_Input,
 			HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV },
 	};
-	s->numCore        = 10;
-	s->maxVertices   += 10 * BUTTONWIDGET_MAX;
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 	HacksSettingsScreen_CheckHacksAllowed(s);
 
 	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
@@ -3292,9 +3275,8 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity }
 	};
-	s->numCore      = 7;
-	s->maxVertices += 7 * BUTTONWIDGET_MAX;
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	/* Disable certain options */
 	if (!Server.IsSinglePlayer) Menu_Remove(s, 0);
@@ -3430,10 +3412,9 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{  1,   50, "Classic options",      MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts },
 	};
-	s->numCore         = Array_Elems(buttons);
-	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX;
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
 }
 
 void NostalgiaAppearanceScreen_Show(void) {
@@ -3492,14 +3473,12 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 		{  1,   0, "Game version",         NostalgiaScreen_Version,
 			NostalgiaScreen_GetVersion, NostalgiaScreen_SetVersion }
 	};
-	s->numCore         = Array_Elems(buttons) + 1;
-	s->maxVertices    += Array_Elems(buttons) * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
+	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
-	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
-	TextWidget_Init(&nostalgia_desc);
+	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
+	TextWidget_Add(s, &nostalgia_desc);
 	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	s->widgets[4] = (struct Widget*)&nostalgia_desc;
 
 	NostalgiaScreen_UpdateVersionDisabled();
 	s->descriptions[3] = \
@@ -4068,11 +4047,22 @@ static const struct SimpleButtonDesc touchOnscreen_page2[ONSCREEN_PAGE_BTNS] = {
 	{ -120,  100, "---",           TouchOnscreen_Any }, {  120,  100, "---",    TouchOnscreen_Any }
 };
 
-static void TouchOnscreen_SetPage(struct TouchOnscreenScreen* s, cc_bool page1) {
+static void TouchOnscreen_Left(void* screen,  void* b);
+static void TouchOnscreen_Right(void* screen, void* b);
+
+static void TouchOnscreen_RemakeWidgets(struct TouchOnscreenScreen* s, cc_bool page1) {
 	int i;
 	int offset  = page1 ? 0 : ONSCREEN_PAGE_BTNS;
 	s->btnDescs = page1 ? touchOnscreen_page1 : touchOnscreen_page2;
-	Menu_InitButtons(s->btns, 200, s->btnDescs, ONSCREEN_PAGE_BTNS);
+	
+	s->widgets    = touchOnscreen_widgets;
+	s->numWidgets = 0;
+	s->maxWidgets = Array_Elems(touchOnscreen_widgets);
+
+	Menu_AddButtons(s, s->btns,   200, s->btnDescs, ONSCREEN_PAGE_BTNS);
+	ButtonWidget_Add(s, &s->back, 400, TouchOnscreen_More);
+	ButtonWidget_Add(s, &s->left,  40, TouchOnscreen_Left);
+	ButtonWidget_Add(s, &s->right, 40, TouchOnscreen_Right);
 
 	Widget_SetDisabled(&s->left,   page1);
 	Widget_SetDisabled(&s->right, !page1);
@@ -4085,14 +4075,14 @@ static void TouchOnscreen_SetPage(struct TouchOnscreenScreen* s, cc_bool page1) 
 
 static void TouchOnscreen_Left(void* screen, void* b) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	TouchOnscreen_SetPage(s, true);
+	TouchOnscreen_RemakeWidgets(s, true);
 	Gui_Refresh((struct Screen*)s);
 	TouchOnscreen_UpdateColors(s);
 }
 
 static void TouchOnscreen_Right(void* screen, void* b) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	TouchOnscreen_SetPage(s, false);
+	TouchOnscreen_RemakeWidgets(s, false);
 	Gui_Refresh((struct Screen*)s);
 	TouchOnscreen_UpdateColors(s);
 }
@@ -4123,13 +4113,7 @@ static void TouchOnscreenScreen_Layout(void* screen) {
 
 static void TouchOnscreenScreen_Init(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	s->widgets     = touchOnscreen_widgets;
-	s->numWidgets  = Array_Elems(touchOnscreen_widgets);
-
-	ButtonWidget_Init(&s->back, 400, TouchOnscreen_More);
-	ButtonWidget_Init(&s->left,  40, TouchOnscreen_Left);
-	ButtonWidget_Init(&s->right, 40, TouchOnscreen_Right);
-	TouchOnscreen_SetPage(s, true);
+	TouchOnscreen_RemakeWidgets(s, true);
 	TouchOnscreen_UpdateColors(screen);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
@@ -4163,11 +4147,7 @@ static struct TouchCtrlsScreen {
 	struct FontDesc font;
 } TouchCtrlsScreen;
 
-static struct Widget* touchCtrls_widgets[1 + TOUCHCTRLS_BTNS] = {
-	(struct Widget*)&TouchCtrlsScreen.back,    (struct Widget*)&TouchCtrlsScreen.btns[0], 
-	(struct Widget*)&TouchCtrlsScreen.btns[1], (struct Widget*)&TouchCtrlsScreen.btns[2], 
-	(struct Widget*)&TouchCtrlsScreen.btns[3], (struct Widget*)&TouchCtrlsScreen.btns[4]
-};
+static struct Widget* touchCtrls_widgets[TOUCHCTRLS_BTNS + 1];
 
 static const char* GetTapDesc(int mode) {
 	if (mode == INPUT_MODE_PLACE)  return "Tap: Place";
@@ -4299,11 +4279,12 @@ static void TouchCtrlsScreen_Layout(void* screen) {
 static void TouchCtrlsScreen_Init(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	s->widgets     = touchCtrls_widgets;
-	s->numWidgets  = Array_Elems(touchCtrls_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(touchCtrls_widgets);
 
-	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     4);
-	Menu_InitButtons(s->btns + 4, 400, touchCtrls_btns + 4, 1);
-	ButtonWidget_Init(&s->back,   400, TouchCtrls_More);
+	Menu_AddButtons(s,  s->btns,     195, touchCtrls_btns,     4);
+	Menu_AddButtons(s,  s->btns + 4, 400, touchCtrls_btns + 4, 1);
+	ButtonWidget_Add(s, &s->back,    400, TouchCtrls_More);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -4335,12 +4316,7 @@ static struct TouchMoreScreen {
 	struct ButtonWidget btns[TOUCHMORE_BTNS];
 } TouchMoreScreen;
 
-static struct Widget* touchMore_widgets[1 + TOUCHMORE_BTNS] = {
-	(struct Widget*)&TouchMoreScreen.back,    (struct Widget*)&TouchMoreScreen.btns[0], 
-	(struct Widget*)&TouchMoreScreen.btns[1], (struct Widget*)&TouchMoreScreen.btns[2], 
-	(struct Widget*)&TouchMoreScreen.btns[3], (struct Widget*)&TouchMoreScreen.btns[4],
-	(struct Widget*)&TouchMoreScreen.btns[5]
-};
+static struct Widget* touchMore_widgets[TOUCHMORE_BTNS + 1];
 
 static void TouchMore_Take(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
@@ -4393,11 +4369,12 @@ static void TouchMoreScreen_Layout(void* screen) {
 static void TouchMoreScreen_Init(void* screen) {
 	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
 	s->widgets     = touchMore_widgets;
-	s->numWidgets  = Array_Elems(touchMore_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(touchMore_widgets);
 
-	Menu_InitButtons(s->btns,     195, touchMore_btns,     4);
-	Menu_InitButtons(s->btns + 4, 400, touchMore_btns + 4, 2);
-	ButtonWidget_Init(&s->back,   400, TouchMore_Game);
+	Menu_AddButtons(s,  s->btns,     195, touchMore_btns,     4);
+	Menu_AddButtons(s,  s->btns + 4, 400, touchMore_btns + 4, 2);
+	ButtonWidget_Add(s, &s->back,    400, TouchMore_Game);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }

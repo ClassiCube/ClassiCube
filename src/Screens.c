@@ -1581,9 +1581,7 @@ static struct InventoryScreen {
 	cc_bool releasedInv, deferredSelect;
 } InventoryScreen;
 
-static struct Widget* inventory_widgets[] = {
-	(struct Widget*)&InventoryScreen.title, (struct Widget*)&InventoryScreen.table
-};
+static struct Widget* inventory_widgets[2];
 
 
 static void InventoryScreen_GetTitleText(cc_string* desc, BlockID block) {
@@ -1665,10 +1663,11 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	s->widgets     = inventory_widgets;
-	s->numWidgets  = Array_Elems(inventory_widgets);
+	s->numWidgets  = 0;
+	s->maxWidgets  = Array_Elems(inventory_widgets);
 	
-	TextWidget_Init(&s->title);
-	TableWidget_Create(&s->table, 22 * Options_GetFloat(OPT_INV_SCROLLBAR_SCALE, 0, 10, 1));
+	TextWidget_Add(s,  &s->title);
+	TableWidget_Add(s, &s->table, 22 * Options_GetFloat(OPT_INV_SCROLLBAR_SCALE, 0, 10, 1));
 	s->table.blocksPerRow = Inventory.BlocksPerRow;
 	s->table.UpdateTitle   = InventoryScreen_OnUpdateTitle;
 	TableWidget_RecreateBlocks(&s->table);
