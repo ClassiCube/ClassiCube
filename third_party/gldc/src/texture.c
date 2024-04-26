@@ -86,6 +86,7 @@ void _glInitTextures() {
     // Initialize zero as an actual texture object though because apparently it is!
     TextureObject* default_tex = &TEXTURE_LIST[0];
     _glInitializeTextureObject(default_tex, 0);
+    texture_id_map_reserve(0);
     TEXTURE_ACTIVE = default_tex;
 
     size_t vram_free = pvr_mem_available();
