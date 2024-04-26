@@ -446,6 +446,9 @@ static uint8 partition_type;
 
 static void InitSDCard(void) {
 	if (sd_init()) {
+		// Both SD card and debug interface use the serial port
+		// So if initing SD card fails, need to restore serial port state for debug logging
+		scif_init();
 		Platform_LogConst("Failed to init SD card"); return;
 	}
 	
