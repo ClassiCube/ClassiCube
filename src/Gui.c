@@ -406,7 +406,7 @@ void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, in
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
 	w->xOffset = Display_ScaleX(xOffset);
 	w->yOffset = Display_ScaleY(yOffset);
-	Widget_Layout(w);
+	if (w->VTABLE) Widget_Layout(w);
 }
 
 void Widget_CalcPosition(void* widget) {

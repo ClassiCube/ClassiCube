@@ -41,17 +41,17 @@ static void OnDataReceived(UTR_T* utr) {
 
 static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_dev_t* xid_dev = usbh_xid_get_device_list();
-    Platform_LogConst("DEVICE CHECK!!!");
+    Platform_LogConst("Devices check");
 	
-    while (xid_dev)
+    for (; xid_dev; xid_dev = xid_dev->next)
     {
     	int DEV = xid_dev->xid_desc.bType;
-    	Platform_Log1("DEV: %i", &DEV);
+    	Platform_Log1("DEVICE: %i", &DEV);
         if (xid_dev->xid_desc.bType != XID_TYPE_GAMECONTROLLER)
         	continue;
         	
         xid_ctrl = xid_dev;
-        usbh_xid_read(xid_ctrl, 0, OnDataReceived);
+        usbh_xid_read(xid_dev, 0, OnDataReceived);
         return;
     }
     xid_ctrl = NULL;
