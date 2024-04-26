@@ -59,13 +59,13 @@ struct ChunkInfo {
 };
 
 /* Renders the meshes of non-translucent blocks in visible chunks. */
-void MapRenderer_RenderNormal(double delta);
+void MapRenderer_RenderNormal(float delta);
 /* Renders the meshes of translucent blocks in visible chunks. */
-void MapRenderer_RenderTranslucent(double delta);
+void MapRenderer_RenderTranslucent(float delta);
 /* Potentially updates sort order of rendered chunks. */
 /* Potentially builds meshes for several nearby chunks. */
 /* NOTE: This should be called once per frame. */
-void MapRenderer_Update(double delta);
+void MapRenderer_Update(float delta);
 
 /* Marks the given chunk as needing to be rebuilt/redrawn. */
 /* NOTE: Coordinates outside the map are simply ignored. */

@@ -80,7 +80,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	joypad_poll();
 }
 
@@ -115,7 +115,7 @@ static void HandleButtons(int port, joypad_buttons_t btns) {
 }
 
 #define AXIS_SCALE 8.0f
-static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, double delta) {
+static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, float delta) {
 	int x = inputs->stick_x;
 	int y = inputs->stick_y;
 
@@ -125,7 +125,7 @@ static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, double delta) 
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		if (!joypad_is_connected(port)) continue;

@@ -78,7 +78,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	smpc_peripheral_process();
 }
 
@@ -109,7 +109,7 @@ static void ProcessButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PERIPHERAL_DIGITAL_DOWN);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	smpc_peripheral_digital_port(1, &state);
 	ProcessButtons(0, state.pressed.raw | state.held.raw);
 }

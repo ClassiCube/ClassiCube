@@ -71,7 +71,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	usb_do_poll();
 }
 
@@ -113,7 +113,7 @@ static void HandleButtons(int port, struct controller_data_s* pad) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   pad->down);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	struct controller_data_s pad;
 	int res = get_controller_data(&pad, 0);
 	if (res == 0) return;

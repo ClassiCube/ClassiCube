@@ -75,11 +75,11 @@ struct EntityLocation { Vec3 pos; float pitch, yaw, rotX, rotY, rotZ; };
 
 struct Entity;
 struct EntityVTABLE {
-	void (*Tick)(struct Entity* e, double delta);
+	void (*Tick)(struct Entity* e, float delta);
 	void (*Despawn)(struct Entity* e);
 	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update);
 	PackedCol (*GetCol)(struct Entity* e);
-	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
+	void (*RenderModel)(struct Entity* e, float delta, float t);
 	cc_bool (*ShouldRenderName)(struct Entity* e);
 };
 
@@ -177,7 +177,7 @@ CC_VAR extern struct _EntitiesData {
 /* Ticks all entities */
 void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities */
-void Entities_RenderModels(double delta, float t);
+void Entities_RenderModels(float delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity */

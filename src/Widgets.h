@@ -79,7 +79,7 @@ struct HotbarWidget {
 	int verticesCount;
 #ifdef CC_BUILD_TOUCH
 	int touchId[HOTBAR_MAX_INDEX];
-	double touchTime[HOTBAR_MAX_INDEX];
+	float touchTime[HOTBAR_MAX_INDEX];
 #endif
 };
 #define HOTBAR_MAX_VERTICES (4 + 4 + HOTBAR_CORE_VERTICES)
@@ -87,7 +87,7 @@ struct HotbarWidget {
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
-CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, double delta);
+CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, float delta);
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 /* A table of blocks. */
@@ -150,7 +150,7 @@ struct InputWidget {
 	int caretOffset;
 	PackedCol caretCol;
 	struct Texture caretTex;
-	double caretAccumulator;
+	float caretAccumulator;
 };
 
 /* Removes all characters and then deletes the input texture. */

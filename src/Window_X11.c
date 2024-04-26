@@ -525,7 +525,7 @@ static void HandleWMPing(XEvent* e) {
 }
 static void HandleGenericEvent(XEvent* e);
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	XEvent e;
 	Window focus;
 	int focusRevert;
@@ -699,7 +699,7 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-void Window_ProcessGamepads(double delta) { }
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	Window rootW, childW;

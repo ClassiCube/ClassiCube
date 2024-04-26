@@ -22,7 +22,7 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
 
-void Camera_KeyLookUpdate(double delta) {
+void Camera_KeyLookUpdate(float delta) {
 	if (Gui.InputGrab) return;
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
 	float amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
@@ -58,7 +58,7 @@ static void PerspectiveCamera_GetPickedBlock(struct LocalPlayer* p, struct RayTr
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
 
-static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
+static Vec2 PerspectiveCamera_GetMouseDelta(float delta) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
 	static float speedX, speedY, newSpeedX, newSpeedY, accelX, accelY;
 	Vec2 v;
@@ -66,8 +66,8 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	if (Camera.Smooth) {
 		accelX = (cam_deltaX - speedX) * 35 / Camera.Mass;
 		accelY = (cam_deltaY - speedY) * 35 / Camera.Mass;
-		newSpeedX = accelX * (float)delta + speedX;
-		newSpeedY = accelY * (float)delta + speedY;
+		newSpeedX = accelX * delta + speedX;
+		newSpeedY = accelY * delta + speedY;
 
 		/* High acceleration means velocity overshoots the correct position on low FPS, */
 		/* causing wiggling. If newSpeed has opposite sign of speed, set speed to 0 */
@@ -85,7 +85,7 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	return v;
 }
 
-static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, double delta) {
+static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, float delta) {
 	struct Entity* e = &p->Base;
 	struct LocationUpdate update;
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
@@ -107,7 +107,7 @@ static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, double 
 	e->VTABLE->SetLocation(e, &update);
 }
 
-static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, double delta) {
+static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, float delta) {
 	if (!Gui.InputGrab && Window_Main.Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(p, delta);
@@ -161,8 +161,8 @@ static Vec3 FirstPersonCamera_GetPosition(struct LocalPlayer* p, float t) {
 	PerspectiveCamera_CalcViewBobbing(p, t, 1);
 	
 	camPos.y += Camera.BobbingVer;
-	camPos.x += Camera.BobbingHor * (float)Math_Cos(yaw);
-	camPos.z += Camera.BobbingHor * (float)Math_Sin(yaw);
+	camPos.x += Camera.BobbingHor * Math_CosF(yaw);
+	camPos.z += Camera.BobbingHor * Math_SinF(yaw);
 	return camPos;
 }
 

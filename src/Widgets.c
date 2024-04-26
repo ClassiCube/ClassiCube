@@ -35,7 +35,7 @@ static void AddWidget(void* screen, void* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void TextWidget_Render(void* widget, double delta) {
+static void TextWidget_Render(void* widget, float delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->color);
 }
@@ -131,7 +131,7 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->tex.y = w->y + (w->height / 2 - w->tex.height / 2);
 }
 
-static void ButtonWidget_Render(void* widget, double delta) {
+static void ButtonWidget_Render(void* widget, float delta) {
 	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
 	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
@@ -293,7 +293,7 @@ static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y
 	*height = min(*y + *height, w->height - w->borderY) - *y;
 }
 
-static void ScrollbarWidget_Render(void* widget, double delta) {
+static void ScrollbarWidget_Render(void* widget, float delta) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int x, y, width, height;
 	PackedCol barCol;
@@ -481,20 +481,21 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 
 static int HotbarWidget_MaxVertices(void* w) { return HOTBAR_MAX_VERTICES; }
 
-void HotbarWidget_Update(struct HotbarWidget* w, double delta) {
+void HotbarWidget_Update(struct HotbarWidget* w, float delta) {
 #ifdef CC_BUILD_TOUCH
 	int i;
 	if (!Gui.TouchUI) return;
 
-	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
-		if(w->touchId[i] != -1) {
-			w->touchTime[i] += delta;
-			if(w->touchTime[i] > 1) {
-				w->touchId[i] = -1;
-				w->touchTime[i] = 0;
-				Inventory_Set(i, 0);
-			}
-		}
+	for (i = 0; i < HOTBAR_MAX_INDEX; i++) 
+	{
+		if (w->touchId[i] < 0) continue;
+		
+		w->touchTime[i] += delta;
+		if (w->touchTime[i] <= 1.0f) continue;
+		
+		w->touchId[i]   = -1;
+		w->touchTime[i] =  0;
+		Inventory_Set(i, 0);
 	}
 #endif
 }
@@ -1185,12 +1186,12 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	}
 }
 
-static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
+static void InputWidget_RenderCaret(struct InputWidget* w, float delta) {
 	float second;
 	if (!w->showCaret) return;
 	w->caretAccumulator += delta;
 
-	second = Math_Mod1((float)w->caretAccumulator);
+	second = Math_Mod1(w->caretAccumulator);
 	if (second < 0.5f) Texture_RenderShaded(&w->caretTex, w->caretCol);
 }
 
@@ -1596,7 +1597,7 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 /*########################################################################################################################*
 *-----------------------------------------------------TextInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void TextInputWidget_Render(void* widget, double delta) {
+static void TextInputWidget_Render(void* widget, float delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Texture_Render(&w->inputTex);
 	InputWidget_RenderCaret(w, delta);
@@ -1815,7 +1816,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->inputTex.y = w->y;
 }
 
-static void ChatInputWidget_Render(void* widget, double delta) {
+static void ChatInputWidget_Render(void* widget, float delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	PackedCol backColor   = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
@@ -2402,7 +2403,7 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 	Widget_Layout(w);
 }
 
-static void TextGroupWidget_Render(void* widget, double delta) {
+static void TextGroupWidget_Render(void* widget, float delta) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	struct Texture* textures  = w->textures;
 	int i;
@@ -2657,7 +2658,7 @@ void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	Widget_Layout(w);
 }
 
-static void SpecialInputWidget_Render(void* widget, double delta) {
+static void SpecialInputWidget_Render(void* widget, float delta) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	Texture_Render(&w->tex);
 }

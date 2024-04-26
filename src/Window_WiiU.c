@@ -122,7 +122,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	if (!WHBProcIsRunning()) {
 		Window_Main.Exists = false;
 		Window_RequestClose();
@@ -139,7 +139,7 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-static void ProcessKPAD(double delta) {
+static void ProcessKPAD(float delta) {
 	KPADStatus kpad = { 0 };
 	int res = KPADRead(0, &kpad, 1);
 	if (res != KPAD_ERROR_OK) return;
@@ -152,7 +152,7 @@ static void ProcessKPAD(double delta) {
 
 
 #define AXIS_SCALE 4.0f
-static void ProcessVpadStick(int port, int axis, float x, float y, double delta) {
+static void ProcessVpadStick(int port, int axis, float x, float y, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsF(x) <= 0.1f) x = 0;
 	if (Math_AbsF(y) <= 0.1f) y = 0;
@@ -200,7 +200,7 @@ static void ProcessVpadTouch(VPADTouchData* data) {
 	was_touched = data->touched;
 }
 
-static void ProcessVPAD(double delta) {
+static void ProcessVPAD(float delta) {
 	VPADStatus vpadStatus;
 	VPADReadError error = VPAD_READ_SUCCESS;
 	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
@@ -215,7 +215,7 @@ static void ProcessVPAD(double delta) {
 }
 
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	ProcessVPAD(delta);
 	ProcessKPAD(delta);
 }

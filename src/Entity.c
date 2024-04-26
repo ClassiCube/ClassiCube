@@ -452,7 +452,7 @@ void Entities_Tick(struct ScheduledTask* task) {
 	}
 }
 
-void Entities_RenderModels(double delta, float t) {
+void Entities_RenderModels(float delta, float t) {
 	int i;
 	Gfx_SetAlphaTest(true);
 	
@@ -685,7 +685,7 @@ static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* upd
 	LocalInterpComp_SetLocation(&p->Interp, update, e);
 }
 
-static void LocalPlayer_Tick(struct Entity* e, double delta) {
+static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
 	float xMoving = 0, zMoving = 0;
@@ -722,7 +722,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	SoundComp_Tick(p, wasOnGround);
 }
 
-static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
+static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
 	TiltComp_GetCurrent(p, &p->Tilt, t);
@@ -992,7 +992,7 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 	NetInterpComp_SetLocation(&p->Interp, update, e);
 }
 
-static void NetPlayer_Tick(struct Entity* e, double delta) {
+static void NetPlayer_Tick(struct Entity* e, float delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_AdvanceState(&p->Interp, e);
 
@@ -1000,7 +1000,7 @@ static void NetPlayer_Tick(struct Entity* e, double delta) {
 	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 }
 
-static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
+static void NetPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	Vec3_Lerp(&e->Position, &e->prev.pos, &e->next.pos, t);
 	Entity_LerpAngles(e, t);
 

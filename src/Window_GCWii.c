@@ -107,12 +107,12 @@ void Window_RequestClose(void) {
 static PADStatus gc_pads[INPUT_MAX_GAMEPADS];
 
 #define PAD_AXIS_SCALE 8.0f
-static void ProcessPAD_Joystick(int port, int axis, int x, int y, double delta) {
+static void ProcessPAD_Joystick(int port, int axis, int x, int y, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;
 	
-	Gamepad_SetAxis(port, axis, x / PAD_AXIS_SCALE, -y / PAD_AXIS_SCALE, delta);		
+	Gamepad_SetAxis(port, axis, x / PAD_AXIS_SCALE, -y / PAD_AXIS_SCALE, delta);
 }
 
 static void ProcessPAD_Buttons(int port, int mods) {
@@ -133,7 +133,7 @@ static void ProcessPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(int port, double delta) {
+static void ProcessPADInput(int port, float delta) {
 	PADStatus pads[4];
 	PAD_Read(pads);
 	int error = pads[port].err;
@@ -224,7 +224,7 @@ static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	ProcessKeyboardInput();
 }
 
@@ -282,7 +282,7 @@ void Window_UpdateRawMouse(void)  {
 	dragCurX = x; dragCurY = y;
 }
 #else
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 }
 
 void Window_UpdateRawMouse(void) { }
@@ -319,7 +319,7 @@ static void ProcessWPAD_Buttons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
 }
 
-static void ProcessNunchuck_Game(int port, int mods, double delta) {
+static void ProcessNunchuck_Game(int port, int mods, float delta) {
 	WPADData* wd = WPAD_Data(0);
 	joystick_t analog = wd->exp.nunchuk.js;
 
@@ -355,7 +355,7 @@ static void ProcessNunchuck_Game(int port, int mods, double delta) {
 }
 
 #define CLASSIC_AXIS_SCALE 2.0f
-static void ProcessClassic_Joystick(int port, int axis, struct joystick_t* js, double delta) {
+static void ProcessClassic_Joystick(int port, int axis, struct joystick_t* js, float delta) {
 	// TODO: need to account for min/max?? see libogc
 	int x = js->pos.x - js->center.x;
 	int y = js->pos.y - js->center.y;
@@ -387,7 +387,7 @@ static void ProcessClassicButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
 }
 
-static void ProcessClassicInput(int port, double delta) {
+static void ProcessClassicInput(int port, float delta) {
 	WPADData* wd = WPAD_Data(0);
 	classic_ctrl_t ctrls = wd->exp.classic;
 	int mods = ctrls.btns | ctrls.btns_held;
@@ -397,7 +397,7 @@ static void ProcessClassicInput(int port, double delta) {
 	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
 }
 
-static void ProcessWPADInput(int port, double delta) {
+static void ProcessWPADInput(int port, float delta) {
 	WPAD_ScanPads();
 	u32 type;
 	int res  = WPAD_Probe(port, &type);
@@ -417,7 +417,7 @@ static void ProcessWPADInput(int port, double delta) {
 	ProcessWPADDrag(res, mods);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		ProcessWPADInput(port, delta);
@@ -425,7 +425,7 @@ void Window_ProcessGamepads(double delta) {
 	}
 }
 #else
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
 		ProcessPADInput(port, delta);

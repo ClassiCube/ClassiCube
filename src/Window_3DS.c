@@ -100,7 +100,7 @@ static void ProcessTouchInput(int mods) {
 	}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	hidScanInput();
 
 	if (!aptMainLoop()) {
@@ -146,7 +146,7 @@ static void HandleButtons(u32 mods) {
 }
 
 #define AXIS_SCALE 8.0f
-static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
+static void ProcessCircleInput(int axis, circlePosition* pos, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->dx) <= 24) pos->dx = 0;
 	if (Math_AbsI(pos->dy) <= 24) pos->dy = 0;
@@ -154,7 +154,7 @@ static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
 	Gamepad_SetAxis(0, axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	u32 mods = hidKeysDown() | hidKeysHeld();
 	HandleButtons(mods);
 	

@@ -67,7 +67,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
@@ -98,7 +98,7 @@ static void HandleButtons(int port, int mods) {
 }
 
 #define AXIS_SCALE 16.0f
-static void ProcessCircleInput(int port, SceCtrlData* pad, double delta) {
+static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
 	int x = pad->Lx - 127;
 	int y = pad->Ly - 127;
 
@@ -108,7 +108,7 @@ static void ProcessCircleInput(int port, SceCtrlData* pad, double delta) {
 	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	SceCtrlData pad;
 	/* TODO implement */
 	int ret = sceCtrlPeekBufferPositive(&pad, 1);

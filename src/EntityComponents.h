@@ -21,7 +21,7 @@ struct AnimatedComp {
 };
 
 void AnimatedComp_Init(struct AnimatedComp* anim);
-void AnimatedComp_Update(struct Entity* entity, Vec3 oldPos, Vec3 newPos, double delta);
+void AnimatedComp_Update(struct Entity* entity, Vec3 oldPos, Vec3 newPos, float delta);
 void AnimatedComp_GetCurrent(struct Entity* entity, float t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
@@ -31,7 +31,7 @@ struct TiltComp {
 };
 
 void TiltComp_Init(struct TiltComp* anim);
-void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, double delta);
+void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta);
 void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */

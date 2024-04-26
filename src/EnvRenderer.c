@@ -344,7 +344,7 @@ void EnvRenderer_RenderSkybox(void) {
 *#########################################################################################################################*/
 cc_int16* Weather_Heightmap;
 static GfxResourceID rain_tex, snow_tex, weather_vb;
-static double weather_accumulator;
+static float weather_accumulator;
 static IVec3 lastPos;
 
 #define WEATHER_EXTENT 4
@@ -435,7 +435,7 @@ static float CalcRainAlphaAt(float x) {
 struct RainCoord { int dx, dz; float y; };
 static RNGState snowDirRng;
 
-void EnvRenderer_RenderWeather(double deltaTime) {
+void EnvRenderer_RenderWeather(float delta) {
 	struct RainCoord coords[WEATHER_RANGE * WEATHER_RANGE];
 	int i, weather, numCoords = 0;
 	struct VertexTextured* v;
@@ -466,7 +466,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.y += 64;
 	pos.y = max(World.Height, pos.y);
 
-	weather_accumulator += deltaTime;
+	weather_accumulator += delta;
 	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25 || moved);
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {

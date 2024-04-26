@@ -31,7 +31,7 @@ extern cc_int16* Weather_Heightmap;
 /* Called when a block is changed to update internal weather state. */
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 /* Renders rainfall/snowfall weather. */
-void EnvRenderer_RenderWeather(double deltaTime);
+void EnvRenderer_RenderWeather(float delta);
 
 /* Whether large quads are broken down into smaller quads. */
 /* This makes them have less rendering issues when using vertex fog. */

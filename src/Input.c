@@ -429,7 +429,7 @@ struct GamepadState {
 };
 static struct GamepadState gamepads[INPUT_MAX_GAMEPADS];
 
-static void Gamepad_Update(struct GamepadState* pad, double delta) {
+static void Gamepad_Update(struct GamepadState* pad, float delta) {
 	int btn;
 	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
 	{
@@ -452,7 +452,7 @@ void Gamepad_SetButton(int port, int btn, int pressed) {
 	Input_SetNonRepeatable(btn, pressed);
 }
 
-void Gamepad_SetAxis(int port, int axis, float x, float y, double delta) {
+void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
 	gamepads[port].axisX[axis] = x;
 	gamepads[port].axisY[axis] = y;
 	if (x == 0 && y == 0) return;
@@ -462,7 +462,7 @@ void Gamepad_SetAxis(int port, int axis, float x, float y, double delta) {
 	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
 }
 
-void Gamepad_Tick(double delta) {
+void Gamepad_Tick(float delta) {
 	int port;
 	Window_ProcessGamepads(delta);
 	

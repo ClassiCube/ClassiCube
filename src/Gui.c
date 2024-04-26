@@ -300,7 +300,7 @@ void Gui_ShowPauseMenu(void) {
 	}
 }
 
-void Gui_RenderGui(double delta) {
+void Gui_RenderGui(float delta) {
 	struct Screen* s;
 	int i;
 
@@ -457,7 +457,7 @@ void Widget_SetDisabled(void* widget, int disabled) {
 /*########################################################################################################################*
 *-------------------------------------------------------Screen base-------------------------------------------------------*
 *#########################################################################################################################*/
-void Screen_Render2Widgets(void* screen, double delta) {
+void Screen_Render2Widgets(void* screen, float delta) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, offset = 0;

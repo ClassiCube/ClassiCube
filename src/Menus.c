@@ -415,7 +415,7 @@ static void ListScreen_Init(void* screen) {
 	s->LoadEntries(s);
 }
 
-static void ListScreen_Render(void* screen, double delta) {
+static void ListScreen_Render(void* screen, float delta) {
 	Menu_RenderBounds();
 	Screen_Render2Widgets(screen, delta);
 }
@@ -470,7 +470,7 @@ void ListScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuScreen_Render2(void* screen, double delta) {
+static void MenuScreen_Render2(void* screen, float delta) {
 	Menu_RenderBounds();
 	Screen_Render2Widgets(screen, delta);
 }
@@ -882,7 +882,7 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 	HotkeyListScreen_Show();
 }
 
-static void EditHotkeyScreen_Render(void* screen, double delta) {
+static void EditHotkeyScreen_Render(void* screen, float delta) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 
@@ -954,7 +954,7 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &s->titleFont);
 }
 
-static void EditHotkeyScreen_Update(void* screen, double delta) {
+static void EditHotkeyScreen_Update(void* screen, float delta) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	s->input.base.caretAccumulator += delta;
 }
@@ -1186,7 +1186,7 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void GenLevelScreen_Update(void* screen, double delta) {
+static void GenLevelScreen_Update(void* screen, float delta) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	struct TextInputWidget* selected = GenLevelScreen_SelectedInput(s);
 	int i;
@@ -1493,7 +1493,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 #endif
 }
 
-static void SaveLevelScreen_Update(void* screen, double delta) {
+static void SaveLevelScreen_Update(void* screen, float delta) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	s->input.base.caretAccumulator += delta;
 }
@@ -2293,12 +2293,12 @@ static void MenuInputOverlay_Init(void* screen) {
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
-static void MenuInputOverlay_Update(void* screen, double delta) {
+static void MenuInputOverlay_Update(void* screen, float delta) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	s->input.base.caretAccumulator += delta;
 }
 
-static void MenuInputOverlay_Render(void* screen, double delta) {
+static void MenuInputOverlay_Render(void* screen, float delta) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (s->screenMode) Menu_RenderBounds();
 
@@ -2601,7 +2601,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 }
 	
 #define EXTHELP_PAD 5 /* padding around extended help box */
-static void MenuOptionsScreen_Render(void* screen, double delta) {
+static void MenuOptionsScreen_Render(void* screen, float delta) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct TextGroupWidget* w;
 	PackedCol tableColor = PackedCol_Make(20, 20, 20, 200);
@@ -3664,7 +3664,7 @@ static void TexIdsOverlay_Free(void* screen) {
 	Event_Unregister_(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
 }
 
-static void TexIdsOverlay_Render(void* screen, double delta) {
+static void TexIdsOverlay_Render(void* screen, float delta) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int offset = 0;
 	Menu_RenderBounds();
@@ -3867,7 +3867,7 @@ static void TexPackOverlay_UpdateLine3(struct TexPackOverlay* s) {
 	}
 }
 
-static void TexPackOverlay_Update(void* screen, double delta) {
+static void TexPackOverlay_Update(void* screen, float delta) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	struct HttpRequest item;
 	if (!Http_GetResult(s->reqID, &item)) return;

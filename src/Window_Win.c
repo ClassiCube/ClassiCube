@@ -513,7 +513,7 @@ void Window_RequestClose(void) {
 	PostMessageA(win_handle, WM_CLOSE, 0, 0);
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	HWND foreground;
 	MSG msg;
 
@@ -533,7 +533,7 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-void Window_ProcessGamepads(double delta) { }
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	POINT point; 

@@ -70,11 +70,11 @@ struct ScreenVTABLE {
 	/* Initialises persistent state. */
 	void (*Init)(void* elem);
 	/* Updates this screen, called every frame just before Render(). */
-	void (*Update)(void* elem, double delta);
+	void (*Update)(void* elem, float delta);
 	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
 	/* Draws this screen and its widgets on screen. */
-	void (*Render)(void* elem, double delta);
+	void (*Render)(void* elem, float delta);
 	/* Builds the vertex mesh for all the widgets in the screen. */
 	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
@@ -114,7 +114,7 @@ struct ScreenVTABLE {
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
 /* Calls Widget_Render2 on each widget in the screen. */
-void Screen_Render2Widgets(void* screen, double delta);
+void Screen_Render2Widgets(void* screen, float delta);
 void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
@@ -145,7 +145,7 @@ union WidgetMeta { int val; void* ptr; };
 
 struct WidgetVTABLE {
 	/* Draws this widget on-screen. */
-	void (*Render)(void* elem, double delta);
+	void (*Render)(void* elem, float delta);
 	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
 	/* Positions this widget on-screen. */
@@ -265,7 +265,7 @@ void Gui_ShowPauseMenu(void);
 void Gui_LayoutAll(void);
 void Gui_RefreshAll(void);
 void Gui_Refresh(struct Screen* s);
-void Gui_RenderGui(double delta);
+void Gui_RenderGui(float delta);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {

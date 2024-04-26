@@ -109,7 +109,7 @@ static void ProcessTouchInput(int mods) {
 	}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	scanKeys();	
 	
 	if (keyboardOpen) {
@@ -129,7 +129,7 @@ void Window_UpdateRawMouse(void)  { }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	int mods = keysDown() | keysHeld();
 	
 	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);

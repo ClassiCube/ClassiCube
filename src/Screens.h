@@ -21,7 +21,7 @@ int Screen_TMouseScroll(void* s, float delta);
 int Screen_TPointer(void* s, int id, int x, int y);
 
 void Screen_NullFunc(void* screen);
-void Screen_NullUpdate(void* screen, double delta);
+void Screen_NullUpdate(void* screen, float delta);
 
 void InventoryScreen_Show(void);
 void HUDScreen_Show(void);

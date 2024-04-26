@@ -107,7 +107,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	usbh_pooling_hubs();
 }
 
@@ -156,14 +156,14 @@ static void HandleButtons(int port, xid_gamepad_in* gp) {
 }
 
 #define AXIS_SCALE 8192.0f
-static void HandleJoystick(int port, int axis, int x, int y, double delta) {
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	if (Math_AbsI(x) <= 512) x = 0;
 	if (Math_AbsI(y) <= 512) y = 0;	
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	if (!xid_ctrl) return;
 	
 	HandleButtons(0, &gp_state);

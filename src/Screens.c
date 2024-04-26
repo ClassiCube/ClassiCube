@@ -40,7 +40,7 @@ int Screen_TMouseScroll(void* s, float delta)   { return true; }
 int Screen_TPointer(void* s, int id, int x, int y) { return true; }
 
 void Screen_NullFunc(void* screen) { }
-void Screen_NullUpdate(void* screen, double delta) { }
+void Screen_NullUpdate(void* screen, float delta) { }
 
 /* TODO: Remove these */
 struct HUDScreen;
@@ -70,7 +70,7 @@ static struct HUDScreen {
 	struct FontDesc font;
 	struct TextWidget line1, line2;
 	struct TextAtlas posAtlas;
-	double accumulator;
+	float accumulator;
 	int frames, posCount;
 	cc_bool hacksChanged;
 	float lastSpeed;
@@ -317,18 +317,18 @@ static void HUDScreen_Free(void* screen) {
 	Event_Unregister_(&BlockEvents.BlockDefChanged,  screen, HUDScreen_NeedRedrawing);
 }
 
-static void HUDScreen_UpdateFPS(struct HUDScreen* s, double delta) {
+static void HUDScreen_UpdateFPS(struct HUDScreen* s, float delta) {
 	s->frames++;
 	s->accumulator += delta;
-	if (s->accumulator < 1.0) return;
+	if (s->accumulator < 1.0f) return;
 
 	HUDScreen_RemakeLine1(s);
-	s->accumulator    = 0.0;
+	s->accumulator    = 0.0f;
 	s->frames         = 0;
 	Game.ChunkUpdates = 0;
 }
 
-static void HUDScreen_Update(void* screen, double delta) {
+static void HUDScreen_Update(void* screen, float delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	IVec3 pos;
 
@@ -378,7 +378,7 @@ static void HUDScreen_BuildMesh(void* screen) {
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
-static void HUDScreen_Render(void* screen, double delta) {
+static void HUDScreen_Render(void* screen, float delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (Game_HideGui) return;
 
@@ -815,7 +815,7 @@ static void TabListOverlay_BuildMesh(void* screen) {
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
-static void TabListOverlay_Render(void* screen, double delta) {
+static void TabListOverlay_Render(void* screen, float delta) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
 	int i, offset = 0;
 	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
@@ -1051,7 +1051,7 @@ static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
 
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	double caretAcc;
+	float caretAcc;
 	if (Gfx.LostContext) return;
 
 	SpecialInputWidget_UpdateCols(&s->altText);
@@ -1100,7 +1100,7 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 }
 
 
-static void ChatScreen_Update(void* screen, double delta) {
+static void ChatScreen_Update(void* screen, float delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	double now = Game.Time;
 
@@ -1134,7 +1134,7 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 	}
 }
 
-static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
+static void ChatScreen_DrawChat(struct ChatScreen* s, float delta) {
 	struct Texture tex;
 	double now;
 	int i, logIdx;
@@ -1495,7 +1495,7 @@ static void ChatScreen_Init(void* screen) {
 #endif
 }
 
-static void ChatScreen_Render(void* screen, double delta) {
+static void ChatScreen_Render(void* screen, float delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 
@@ -1692,12 +1692,12 @@ static void InventoryScreen_Free(void* screen) {
 	Event_Unregister_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
-static void InventoryScreen_Update(void* screen, double delta) {
+static void InventoryScreen_Update(void* screen, float delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	if (s->deferredSelect) InventoryScreen_MoveToSelected(s);
 }
 
-static void InventoryScreen_Render(void* screen, double delta) {
+static void InventoryScreen_Render(void* screen, float delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Widget_Render2(&s->table, TEXTWIDGET_MAX);
 	Widget_Render2(&s->title,              0);
@@ -1916,7 +1916,7 @@ static void LoadingScreen_Init(void* screen) {
 	Event_Register_(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
 }
 
-static void LoadingScreen_Render(void* screen, double delta) {
+static void LoadingScreen_Render(void* screen, float delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	int offset, filledWidth;
 	TextureLoc loc;
@@ -2006,7 +2006,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	LocalPlayers_MoveToSpawn(&update);
 }
 
-static void GeneratingScreen_Update(void* screen, double delta) {
+static void GeneratingScreen_Update(void* screen, float delta) {
 	struct LoadingScreen* s    = (struct LoadingScreen*)screen;
 	const char* state = (const char*)Gen_CurrentState;
 	if (state == s->lastState) return;
@@ -2017,7 +2017,7 @@ static void GeneratingScreen_Update(void* screen, double delta) {
 	LoadingScreen_SetMessage(s);
 }
 
-static void GeneratingScreen_Render(void* screen, double delta) {
+static void GeneratingScreen_Render(void* screen, float delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	s->progress = Gen_CurrentProgress;
 	LoadingScreen_Render(s, delta);
@@ -2135,7 +2135,7 @@ static void DisconnectScreen_Init(void* screen) {
 	s->maxVertices  = Screen_CalcDefaultMaxVertices(s);
 }
 
-static void DisconnectScreen_Update(void* screen, double delta) {
+static void DisconnectScreen_Update(void* screen, float delta) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	int elapsed, secsLeft;
 
@@ -2152,7 +2152,7 @@ static void DisconnectScreen_Update(void* screen, double delta) {
 	s->dirty        = true;
 }
 
-static void DisconnectScreen_Render(void* screen, double delta) {
+static void DisconnectScreen_Render(void* screen, float delta) {
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
 	Gfx_Draw2DGradient(0, 0, Window_UI.Width, Window_UI.Height, top, bottom);
@@ -2365,7 +2365,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->more, "...", &s->font);
 }
 
-static void TouchScreen_Render(void* screen, double delta) {
+static void TouchScreen_Render(void* screen, float delta) {
 	if (Gui.InputGrab) return;
 	Screen_Render2Widgets(screen, delta);
 }

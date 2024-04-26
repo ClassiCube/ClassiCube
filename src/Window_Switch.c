@@ -121,7 +121,7 @@ static void ProcessTouchInput(void) {
 	prev_touchcount = state.count;
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	// Scan the gamepad. This should be done once for each frame
 	padUpdate(&pad);
 
@@ -162,7 +162,7 @@ static void HandleButtons(int port, u64 mods) {
 }
 
 #define AXIS_SCALE 512.0f
-static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, double delta) {
+static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(pos->x) <= 16) pos->x = 0;
 	if (Math_AbsI(pos->y) <= 16) pos->y = 0;
@@ -170,7 +170,7 @@ static void ProcessJoystickInput(int port, int axis, HidAnalogStickState* pos, d
 	Gamepad_SetAxis(port, axis, pos->x / AXIS_SCALE, -pos->y / AXIS_SCALE, delta);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	u64 keys = padGetButtons(&pad);
 	HandleButtons(0, keys);
 

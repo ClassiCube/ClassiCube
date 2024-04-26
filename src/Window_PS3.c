@@ -252,7 +252,7 @@ static void ProcessKBInput(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	ioKbGetInfo(&kb_info);
 	if (kb_info.status[0]) ProcessKBInput();
 }
@@ -289,20 +289,20 @@ static void HandleButtons(int port, padData* data) {
 }
 
 #define AXIS_SCALE 32.0f
-static void HandleJoystick(int port, int axis, int x, int y, double delta) {
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	if (Math_AbsI(x) <= 32) x = 0;
 	if (Math_AbsI(y) <= 32) y = 0;	
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void ProcessPadInput(int port, double delta, padData* pad) {
+static void ProcessPadInput(int port, float delta, padData* pad) {
 	HandleButtons(port, pad);
 	HandleJoystick(port, PAD_AXIS_LEFT,  pad->ANA_L_H - 0x80, pad->ANA_L_V - 0x80, delta);
 	HandleJoystick(port, PAD_AXIS_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	ioPadGetInfo(&pad_info);
 	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{

@@ -529,7 +529,7 @@ static void ProcessPendingResize(void) {
 	UpdateWindowBounds();
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	if (!needResize) return;
 	needResize = false;
 	ProcessPendingResize();
@@ -576,7 +576,7 @@ static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
 }
 
 #define AXIS_SCALE 8.0f
-static void ProcessGamepadAxis(int port, int axis, float x, float y, double delta) {
+static void ProcessGamepadAxis(int port, int axis, float x, float y, float delta) {
 	/* Deadzone adjustment */
 	if (x >= -0.1 && x <= 0.1) x = 0;
 	if (y >= -0.1 && y <= 0.1) y = 0;
@@ -584,7 +584,7 @@ static void ProcessGamepadAxis(int port, int axis, float x, float y, double delt
 	Gamepad_SetAxis(port, axis, x * AXIS_SCALE, y * AXIS_SCALE, delta);
 }
 
-static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, double delta) {
+static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delta) {
 	Input.Sources |= INPUT_SOURCE_GAMEPAD;
 	ProcessGamepadButtons(port, ev);
 
@@ -596,7 +596,7 @@ static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, double del
 	}
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	int i, res, count;
 	Input.Sources = INPUT_SOURCE_NORMAL;
 

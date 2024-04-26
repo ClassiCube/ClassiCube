@@ -78,7 +78,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -116,14 +116,14 @@ static void HandleButtons(int port, int buttons) {
 }
 
 #define AXIS_SCALE 16.0f
-static void HandleJoystick(int port, int axis, int x, int y, double delta) {
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;
 	
 	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
 }
 
-static void ProcessPadInput(int port, PADTYPE* pad, double delta) {
+static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
 	HandleButtons(port, pad->btn);
 
 	if (pad->type == PAD_ID_ANALOG_STICK || pad->type == PAD_ID_ANALOG) {
@@ -132,7 +132,7 @@ static void ProcessPadInput(int port, PADTYPE* pad, double delta) {
 	}
 }
 
-void Window_ProcessGamepads(double delta) {
+void Window_ProcessGamepads(float delta) {
 	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
 	if (pad->stat == 0) ProcessPadInput(0, pad, delta);
 }

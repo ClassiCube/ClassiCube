@@ -194,8 +194,8 @@ extern int Gamepad_AxisSensitivity[2];
 /* Sets value of the given gamepad button */
 void Gamepad_SetButton(int port, int btn, int pressed);
 /* Sets value of the given axis */
-void Gamepad_SetAxis(int port, int axis, float x, float y, double delta);
-void Gamepad_Tick(double delta);
+void Gamepad_SetAxis(int port, int axis, float x, float y, float delta);
+void Gamepad_Tick(float delta);
 #define INPUT_MAX_GAMEPADS 4
 
 

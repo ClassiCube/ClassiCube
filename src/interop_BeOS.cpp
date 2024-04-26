@@ -574,7 +574,7 @@ static int MapNativeKey(int raw) {
 	return key;
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	CCEvent event;
 	int key;
 	
@@ -628,7 +628,7 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-void Window_ProcessGamepads(double delta) { }
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	BPoint where;

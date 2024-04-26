@@ -485,7 +485,7 @@ void Window_RequestClose(void) {
     Event_RaiseVoid(&WindowEvents.Closing);
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
     SInt32 res;
     // manually tick event queue
     do {
@@ -493,7 +493,7 @@ void Window_ProcessEvents(double delta) {
     } while (res == kCFRunLoopRunHandledSource);
 }
 
-void Window_ProcessGamepads(double delta) { }
+void Window_ProcessGamepads(float delta) { }
 
 void ShowDialogCore(const char* title, const char* msg) {
     // UIAlertController - iOS 8.0

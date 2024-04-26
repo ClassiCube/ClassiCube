@@ -57,7 +57,7 @@ void AnimatedComp_Init(struct AnimatedComp* anim) {
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
-void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, double delta) {
+void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, float delta) {
 	struct AnimatedComp* anim = &e->Anim;
 	float dx = newPos.x - oldPos.x;
 	float dz = newPos.z - oldPos.z;
@@ -71,9 +71,9 @@ void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, double delt
 	if (distance > 0.05f) {
 		walkDelta = distance * 2 * (float)(20 * delta);
 		anim->WalkTimeN += walkDelta;
-		anim->SwingN += (float)delta * 3;
+		anim->SwingN += delta * 3;
 	} else {
-		anim->SwingN -= (float)delta * 3;
+		anim->SwingN -= delta * 3;
 	}
 	Math_Clamp(anim->SwingN, 0.0f, 1.0f);
 
@@ -120,7 +120,7 @@ void TiltComp_Init(struct TiltComp* anim) {
 	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
 }
 
-void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, double delta) {
+void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta) {
 	int i;
 
 	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
@@ -1130,11 +1130,11 @@ static cc_bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 
 	/* have our legs just crossed over the '0' point? */
 	if (Camera.Active->isThirdPerson) {
-		oldLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeO);
-		newLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeN);
+		oldLegRot = Math_CosF(p->Base.Anim.WalkTimeO);
+		newLegRot = Math_CosF(p->Base.Anim.WalkTimeN);
 	} else {
-		oldLegRot = (float)Math_Sin(p->Base.Anim.WalkTimeO);
-		newLegRot = (float)Math_Sin(p->Base.Anim.WalkTimeN);
+		oldLegRot = Math_SinF(p->Base.Anim.WalkTimeO);
+		newLegRot = Math_SinF(p->Base.Anim.WalkTimeN);
 	}
 	return Math_Sign(oldLegRot) != Math_Sign(newLegRot);
 }

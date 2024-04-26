@@ -55,7 +55,7 @@ struct Camera {
 
 	/* Called to update the camera's state. */
 	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */
-	void (*UpdateMouse)(struct LocalPlayer* p, double delta);
+	void (*UpdateMouse)(struct LocalPlayer* p, float delta);
 	/* Called when mouse/pointer has moved. */
 	void (*OnRawMovement)(float deltaX, float deltaY);
 	/* Called when user closes all menus, and is interacting with camera again. */
@@ -81,5 +81,5 @@ CC_API void Camera_Register(struct Camera* camera);
 void Camera_CheckFocus(void);
 void Camera_UpdateProjection(void);
 void Camera_SetFov(int fov);
-void Camera_KeyLookUpdate(double delta);
+void Camera_KeyLookUpdate(float delta);
 #endif
