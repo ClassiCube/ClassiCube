@@ -23,11 +23,10 @@
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
 static float CalcBlendFactor(float x) {
-	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
-	double blend = -0.13 + 0.28 * (Math_Log(x) * 0.25);
-	if (blend < 0.0) blend = 0.0;
-	if (blend > 1.0) blend = 1.0;
-	return (float)blend;
+	float blend = -0.13f + 0.28f * ((float)Math_Log2(x) * 0.17329f);
+	if (blend < 0.0f) blend = 0.0f;
+	if (blend > 1.0f) blend = 1.0f;
+	return blend;
 }
 
 #define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 2048)
@@ -467,7 +466,7 @@ void EnvRenderer_RenderWeather(float delta) {
 	pos.y = max(World.Height, pos.y);
 
 	weather_accumulator += delta;
-	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25 || moved);
+	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25f || moved);
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {

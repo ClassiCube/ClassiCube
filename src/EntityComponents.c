@@ -1009,7 +1009,7 @@ static double PhysicsComp_YPosAt(int t, float u) {
 double PhysicsComp_CalcMaxHeight(float u) {
 	/* equation below comes from solving diff(x(t, u))= 0 */
 	/* We only work in discrete timesteps, so test both rounded up and down */
-	double t = 49.49831645 * Math_Log(0.247483075 * u + 0.9899323);
+	double t = 34.30961849 * Math_Log2(0.247483075 * u + 0.9899323);
 	double value_floor = PhysicsComp_YPosAt((int)t,     u);
 	double value_ceil  = PhysicsComp_YPosAt((int)t + 1, u);
 	return max(value_floor, value_ceil);

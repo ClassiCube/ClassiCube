@@ -435,7 +435,7 @@ static void Gamepad_Update(struct GamepadState* pad, float delta) {
 	{
 		if (!Input.Pressed[btn]) continue;
 		pad->holdtime[btn - GAMEPAD_BEG_BTN] += delta;
-		if (pad->holdtime[btn - GAMEPAD_BEG_BTN] < 1.0) continue;
+		if (pad->holdtime[btn - GAMEPAD_BEG_BTN] < 1.0f) continue;
 
 		/* Held for over a second, trigger a fake press */
 		pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
@@ -458,7 +458,7 @@ void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
 	if (x == 0 && y == 0) return;
 
 	int sensi   = Gamepad_AxisSensitivity[axis];
-	float scale = delta * 60.0 * axis_sensiFactor[sensi];
+	float scale = delta * 60.0f * axis_sensiFactor[sensi];
 	Event_RaisePadAxis(&ControllerEvents.AxisUpdate, port, axis, x * scale, y * scale);
 }
 

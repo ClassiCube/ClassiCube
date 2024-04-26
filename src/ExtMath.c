@@ -591,13 +591,3 @@ double Math_Log2(double x) {
 }
 
 #endif
-
-/* Uses the property that
- *   log_e(x) = log_2(x) * log_e(2).
- *
- * Associated math function: log_e(x)
- * Allowed input range: anything
- */
-double Math_Log(double x) {
-	return Math_Log2(x) * LOGE2;
-}
