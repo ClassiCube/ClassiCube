@@ -209,8 +209,6 @@ void Window_UpdateRawMouse(void)  { }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static void HandleButtons(int port, int mods) {
-	// TODO CONT_Z
-      
 	Gamepad_SetButton(port, CCPAD_A, mods & CONT_A);
 	Gamepad_SetButton(port, CCPAD_B, mods & CONT_B);
 	Gamepad_SetButton(port, CCPAD_X, mods & CONT_X);
@@ -223,6 +221,13 @@ static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
 	Gamepad_SetButton(port, CCPAD_UP,     mods & CONT_DPAD_UP);
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
+	
+	// Buttons not on standard controller (todo C)
+	Gamepad_SetButton(port, CCPAD_Z,       mods & CONT_Z);
+	Gamepad_SetButton(port, CCPAD_CLEFT,   mods & CONT_DPAD2_LEFT);
+	Gamepad_SetButton(port, CCPAD_CRIGHT,  mods & CONT_DPAD2_RIGHT);
+	Gamepad_SetButton(port, CCPAD_CUP,     mods & CONT_DPAD2_UP);
+	Gamepad_SetButton(port, CCPAD_CDOWN,   mods & CONT_DPAD2_DOWN);
 }
 
 #define AXIS_SCALE 8.0f
