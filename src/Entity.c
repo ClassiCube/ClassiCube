@@ -746,7 +746,7 @@ static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
 	LocalPlayer_RenderModel, LocalPlayer_ShouldRenderName
 };
-static void LocalPlayer_Init(struct LocalPlayer* p) {
+static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	struct HacksComp* hacks = &p->Hacks;
 
 	Entity_Init(&p->Base);
@@ -764,6 +764,7 @@ static void LocalPlayer_Init(struct LocalPlayer* p) {
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;
 	p->Base.VTABLE   = &localPlayer_VTABLE;
+	p->index = index;
 
 	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -1045,7 +1046,7 @@ static void Entities_Init(void) {
 
 	for (i = 0; i < Game_NumLocalPlayers; i++)
 	{
-		LocalPlayer_Init(&LocalPlayer_Instances[i]);
+		LocalPlayer_Init(&LocalPlayer_Instances[i], i);
 		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;
 	}
 	Entities.CurPlayer = &LocalPlayer_Instances[0];

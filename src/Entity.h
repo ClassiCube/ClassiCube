@@ -243,6 +243,7 @@ struct LocalPlayer {
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
 	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip, _warnedZoom;
+	cc_uint8 index;
 };
 
 extern struct LocalPlayer LocalPlayer_Instances[MAX_LOCAL_PLAYERS];

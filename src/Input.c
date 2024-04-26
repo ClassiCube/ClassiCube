@@ -490,6 +490,9 @@ static void PlayerInputGamepad(struct LocalPlayer* p, float* xMoving, float* zMo
 	int port;
 	for (port = 0; port < INPUT_MAX_GAMEPADS; port++)
 	{
+		/* In splitscreen mode, tie a controller to a specific player*/
+		if (Game_NumLocalPlayers > 1 && p->index != port) continue;
+		
 		PlayerInputPad(port, PAD_AXIS_LEFT,  p, xMoving, zMoving);
 		PlayerInputPad(port, PAD_AXIS_RIGHT, p, xMoving, zMoving);
 	}

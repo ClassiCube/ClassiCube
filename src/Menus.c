@@ -2306,10 +2306,6 @@ static void MenuInputOverlay_Render(void* screen, double delta) {
 }
 
 static void MenuInputOverlay_Free(void* screen) {
-	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
-	Elem_Free(&s->input.base);
-	Elem_Free(&s->ok);
-	Elem_Free(&s->Default);
 	OnscreenKeyboard_Close();
 }
 
@@ -2583,10 +2579,9 @@ static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i;
 
-	s->widgets     = menuOpts_widgets;
-	s->numWidgets  = 0;
-	s->maxWidgets  = MENUOPTS_MAX_OPTS + 1; /* always have back button */
-	s->maxVertices = BUTTONWIDGET_MAX;
+	s->widgets    = menuOpts_widgets;
+	s->numWidgets = 0;
+	s->maxWidgets = MENUOPTS_MAX_OPTS + 1; /* always have back button */
 
 	/* The various menu options screens might have different number of widgets */
 	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { 
@@ -2601,6 +2596,8 @@ static void MenuOptionsScreen_Init(void* screen) {
 	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
 	s->extHelp.lines = 0;
 	Event_Register_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	
+	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 	
 #define EXTHELP_PAD 5 /* padding around extended help box */
@@ -2759,7 +2756,6 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 0,   60, "Hacks enabled", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetHacks,   ClassicOptionsScreen_SetHacks }
 	};
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX + BUTTONWIDGET_MAX;
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
 
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchPause);
@@ -2839,8 +2835,6 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Water level",     MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight }
 	};
-
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
@@ -2928,8 +2922,6 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50,  "Anaglyph 3D", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
-
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
@@ -3012,8 +3004,6 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ -1,-50, "Scale with window",         MenuOptionsScreen_Bool,
 			ChatOptionsScreen_GetAutoScaleChat, ChatOptionsScreen_SetAutoScaleChat }
 	};
-
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
@@ -3076,8 +3066,6 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Select system font", Menu_SwitchFont,
 			NULL,                          NULL }
 	};
-
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
@@ -3198,7 +3186,6 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Field of view",       MenuOptionsScreen_Input,
 			HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV },
 	};
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
@@ -3275,7 +3262,6 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity }
 	};
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	/* Disable certain options */
@@ -3412,7 +3398,6 @@ static void NostalgiaAppearanceScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{  1,   50, "Classic options",      MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts },
 	};
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX;
 
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
 }
@@ -3473,7 +3458,6 @@ static void NostalgiaFunctionalityScreen_InitWidgets(struct MenuOptionsScreen* s
 		{  1,   0, "Game version",         NostalgiaScreen_Version,
 			NostalgiaScreen_GetVersion, NostalgiaScreen_SetVersion }
 	};
-	s->maxVertices += Array_Elems(buttons) * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchNostalgia);
