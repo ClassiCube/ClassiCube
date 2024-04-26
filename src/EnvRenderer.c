@@ -41,21 +41,25 @@ static int CalcNumVertices(int axis1Len, int axis2Len) {
 /*########################################################################################################################*
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
-static void CalcFog(float* density, PackedCol* color) {
+static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
+	struct AABB blockBB;
 	Vec3 pos;
+	IVec3_ToVec3(&pos, coords); /* pos = coords; */
+
+	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
+	return AABB_ContainsPoint(&blockBB, &Camera.CurrentPos);
+}
+
+static void CalcFog(float* density, PackedCol* color) {
 	IVec3 coords;
 	BlockID block;
-	struct AABB blockBB;
 	float blend;
 
 	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
-	IVec3_ToVec3(&pos, &coords);              /* pos = coords; */
-
 	block = World_SafeGetBlock(coords.x, coords.y, coords.z);
-	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
-	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
-	if (AABB_ContainsPoint(&blockBB, &Camera.CurrentPos) && Blocks.FogDensity[block]) {
+	if (Blocks.FogDensity[block] && CameraInsideBlock(block, &coords)) {
 		*density = Blocks.FogDensity[block];
 		*color   = Blocks.FogCol[block];
 	} else {

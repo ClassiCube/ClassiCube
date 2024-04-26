@@ -83,9 +83,9 @@ void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir) {
 	t->tMax.z = RayTracer_Div(cellBoundary.z - origin->z, dir->z); /* Boundary is a plane on the XY axis. */
 
 	/* Determine how far we must travel along the ray before we have crossed a gridcell. */
-	t->tDelta.x = RayTracer_Div((float)t->step.x, dir->x);
-	t->tDelta.y = RayTracer_Div((float)t->step.y, dir->y);
-	t->tDelta.z = RayTracer_Div((float)t->step.z, dir->z);
+	t->tDelta.x = (float)t->step.x * t->invDir.x;
+	t->tDelta.y = (float)t->step.y * t->invDir.y;
+	t->tDelta.z = (float)t->step.z * t->invDir.z;
 }
 
 void RayTracer_Step(struct RayTracer* t) {

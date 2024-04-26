@@ -961,6 +961,10 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	{
 		p = &LocalPlayer_Instances[i];
 		p->Base.VTABLE->SetLocation(&p->Base, update);
+		
+		if (update->flags & LU_HAS_POS)   p->Spawn      = update->pos;
+		if (update->flags & LU_HAS_YAW)   p->SpawnYaw   = update->yaw;
+		if (update->flags & LU_HAS_PITCH) p->SpawnPitch = update->pitch;
 	}
 	
 	/* TODO: This needs to be before new map... */
