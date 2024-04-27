@@ -13,10 +13,115 @@
 #include "Camera.h"
 #include <nds/arm9/background.h>
 #include <nds/arm9/input.h>
-#include <nds/arm9/console.h>
 #include <nds/arm9/keyboard.h>
 #include <nds/interrupts.h>
 
+
+/*########################################################################################################################*
+*----------------------------------------------------Onscreen console-----------------------------------------------------*
+*#########################################################################################################################*/
+// A majorly cutdown version of the Console included in libnds
+#define CON_WIDTH  32
+#define CON_HEIGHT 24
+
+extern u8 default_fontTiles[];
+#define FONT_NUM_CHARACTERS 96
+
+#define FONT_ASCII_OFFSET 32
+static u16* conFontBgMap;
+static int  conFontCurPal;
+static int  conCursorX, conCursorY;
+
+static void consoleClear(void) {
+    for (int i = 0; i < CON_WIDTH * CON_HEIGHT; i++)
+    {
+        conFontBgMap[i] = ' ' - FONT_ASCII_OFFSET;
+    }
+
+    conCursorX = 0;
+    conCursorY = 0;
+}
+
+static void consoleNewLine(void) {
+    conCursorX = 0;
+    conCursorY++;
+    if (conCursorY < CON_HEIGHT) return;
+
+    // Shift entire screen upwards by one row
+    conCursorY--;
+
+    for (int y = 0; y < CON_HEIGHT - 1; y++)
+    {
+        for (int x = 0; x < CON_WIDTH; x++)
+        {
+            int src = x + (y + 1) * CON_WIDTH;
+            int dst = x + (y    ) * CON_WIDTH;
+            conFontBgMap[dst] = conFontBgMap[src];
+        }
+    }
+
+    for (int x = 0; x < CON_WIDTH; x++)
+    {
+        int index = x + (CON_HEIGHT - 1) * CON_WIDTH;
+        conFontBgMap[index] = ' ' - FONT_ASCII_OFFSET;
+    }
+}
+
+static void consolePrintChar(char c) {
+    if (conCursorX >= CON_WIDTH) 
+        consoleNewLine();
+
+    u16 value = conFontCurPal | (c - FONT_ASCII_OFFSET);
+    conFontBgMap[conCursorX + conCursorY * CON_WIDTH] = value;
+    conCursorX++;
+}
+
+void consolePrintString(const char* ptr, int len) {
+	if (!conFontBgMap) return;
+	consoleClear();
+
+    for (int i = 0; i < len; i++)
+    {
+        consolePrintChar(ptr[i]);
+    }
+    consoleNewLine();
+}
+
+static void consoleLoadFont(u16* fontBgGfx) {
+    u16* palette  = BG_PALETTE_SUB;
+    conFontCurPal = 15 << 12;
+
+    for (int i = 0; i < FONT_NUM_CHARACTERS * 8; i++)
+    {
+        u8 row  = default_fontTiles[i];
+        u32 gfx = 0;
+        if (row & 0x01) gfx |= 0x0000000F;
+        if (row & 0x02) gfx |= 0x000000F0;
+        if (row & 0x04) gfx |= 0x00000F00;
+        if (row & 0x08) gfx |= 0x0000F000;
+        if (row & 0x10) gfx |= 0x000F0000;
+        if (row & 0x20) gfx |= 0x00F00000;
+        if (row & 0x40) gfx |= 0x0F000000;
+        if (row & 0x80) gfx |= 0xF0000000;
+        ((u32 *)conFontBgGfx)[i] = gfx;
+    }
+
+    palette[16 * 16 - 1] = RGB15(31, 31, 31);
+    palette[0]           = RGB15( 0,  0,  0);
+}
+
+static void consoleInit(void) {
+    int bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 14, 0);
+    conFontBgMap = (u16*)bgGetMapPtr(bgId);
+
+    consoleLoadFont(u16*)bgGetGfxPtr(bgId));
+    consoleClear();
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------General data-------------------------------------------------------*
+*#########################################################################################################################*/
 static cc_bool launcherMode;
 cc_bool keyboardOpen;
 static int bg_id;
@@ -34,10 +139,6 @@ static void ResetHBank(void) {
     vramSetBankH(VRAM_H_LCD);
     dmaFillWords(0, VRAM_H, 32 * 1024);
     vramSetBankH(VRAM_H_SUB_BG);
-}
-
-static void InitConsoleWindow(void) {
-    consoleInit(NULL, 0, BgType_Text4bpp, BgSize_T_256x256, 14, 0, false, true);
 }
 
 void Window_Init(void) {  
@@ -58,7 +159,7 @@ void Window_Init(void) {
     videoSetModeSub(MODE_0_2D);
     vramSetBankH(VRAM_H_SUB_BG);
     setBrightness(2, 0);
-	InitConsoleWindow();
+	consoleInit();
 }
 
 void Window_Free(void) { }
@@ -231,7 +332,7 @@ void OnscreenKeyboard_Close(void) {
     ResetHBank(); // reset shared VRAM
 
     videoBgEnableSub(0); // show console
-    InitConsoleWindow();
+    consoleInit();
 }
 
 
