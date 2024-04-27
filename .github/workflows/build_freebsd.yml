@@ -66,3 +66,10 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc-fbsd64-gl1'
           DEST_NAME: 'ClassiCube-FreeBSD-64'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'freebsd'

@@ -37,3 +37,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-switch.elf'
           DEST_NAME: 'ClassiCube-switch.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'switch'

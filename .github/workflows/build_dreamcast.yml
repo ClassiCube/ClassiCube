@@ -39,3 +39,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-dc.elf'
           DEST_NAME: 'ClassiCube-dc.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'dreamcast'

@@ -19,11 +19,6 @@ jobs:
           make vita
           
 
-      # otherwise notify_failure doesn't work
-      - name: Install curl when necessary
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        run: apk add curl curl-dev
-        
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
         with:
@@ -42,3 +37,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-vita.elf'
           DEST_NAME: 'ClassiCube-vita.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'vita'

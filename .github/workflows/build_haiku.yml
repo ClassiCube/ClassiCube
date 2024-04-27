@@ -34,3 +34,10 @@ jobs:
         with:
           SOURCE_FILE: 'src/ClassiCube-haiku'
           DEST_NAME: 'ClassiCube-haiku'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'haiku'

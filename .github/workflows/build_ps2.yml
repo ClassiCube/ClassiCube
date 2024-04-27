@@ -16,14 +16,9 @@ jobs:
       - name: Compile PS2 build
         id: compile
         run: |
-          apk add make mpc1
+          apk add make mpc1 curl
           make ps2
           
-
-      # otherwise notify_failure doesn't work
-      - name: Install curl when necessary
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        run: apk add curl
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -37,3 +32,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-ps2.elf'
           DEST_NAME: 'ClassiCube-ps2.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'ps2'
