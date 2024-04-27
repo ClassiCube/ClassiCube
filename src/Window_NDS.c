@@ -30,7 +30,7 @@ extern u8 default_fontTiles[];
 #define FONT_ASCII_OFFSET 32
 static u16* conFontBgMap;
 static int  conFontCurPal;
-static int  conCursorX, conCursorY;
+static int  conCursorX, conCurrentRow;
 
 static void consoleClear(void) {
     for (int i = 0; i < CON_WIDTH * CON_HEIGHT; i++)
@@ -38,17 +38,17 @@ static void consoleClear(void) {
         conFontBgMap[i] = ' ' - FONT_ASCII_OFFSET;
     }
 
-    conCursorX = 0;
-    conCursorY = 0;
+    conCursorX    = 0;
+    conCurrentRow = 0;
 }
 
 static void consoleNewLine(void) {
     conCursorX = 0;
-    conCursorY++;
-    if (conCursorY < CON_HEIGHT) return;
+    conCurrentRow++;
+    if (conCurrentRow < CON_HEIGHT) return;
 
     // Shift entire screen upwards by one row
-    conCursorY--;
+    conCurrentRow--;
 
     for (int y = 0; y < CON_HEIGHT - 1; y++)
     {
@@ -72,13 +72,12 @@ static void consolePrintChar(char c) {
         consoleNewLine();
 
     u16 value = conFontCurPal | (c - FONT_ASCII_OFFSET);
-    conFontBgMap[conCursorX + conCursorY * CON_WIDTH] = value;
+    conFontBgMap[conCursorX + conCurrentRow * CON_WIDTH] = value;
     conCursorX++;
 }
 
 void consolePrintString(const char* ptr, int len) {
 	if (!conFontBgMap) return;
-	consoleClear();
 
     for (int i = 0; i < len; i++)
     {
@@ -103,7 +102,7 @@ static void consoleLoadFont(u16* fontBgGfx) {
         if (row & 0x20) gfx |= 0x00F00000;
         if (row & 0x40) gfx |= 0x0F000000;
         if (row & 0x80) gfx |= 0xF0000000;
-        ((u32 *)conFontBgGfx)[i] = gfx;
+        ((u32 *)fontBgGfx)[i] = gfx;
     }
 
     palette[16 * 16 - 1] = RGB15(31, 31, 31);
@@ -328,9 +327,10 @@ void OnscreenKeyboard_Draw3D(void) { }
 
 void OnscreenKeyboard_Close(void) {
     keyboardHide();
+	if (!keyboardOpen) return;
     keyboardOpen = false;
-    ResetHBank(); // reset shared VRAM
 
+    ResetHBank(); // reset shared VRAM
     videoBgEnableSub(0); // show console
     consoleInit();
 }

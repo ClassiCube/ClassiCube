@@ -468,19 +468,28 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 
 static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 	glBegin(GL_QUADS);
-    int width = 0, height = 0;
-    glGetInt(GL_GET_TEXTURE_WIDTH,  &width);  width  = inttof32(width);
-    glGetInt(GL_GET_TEXTURE_HEIGHT, &height); height = inttof32(height);
-    
+	int width = 0, height = 0;
+	glGetInt(GL_GET_TEXTURE_WIDTH,  &width);
+	glGetInt(GL_GET_TEXTURE_HEIGHT, &height);
+
+	// Original code used was
+	//   U = mulf32(v->u, inttof32(width))
+	// which behind the scenes expands to
+	//   W = width << 12
+	//   U = ((int64)v->u * W) >> 12;
+	// and in this case, the bit shifts can be cancelled out
+	//  to avoid calling __aeabi_lmul to perform the 64 bit multiplication
+	// therefore the code can be simplified to
+	//   U = v->u * width
 
 	for (int i = 0; i < verticesCount; i++)
 	{
 		struct DSTexturedVertex* v = (struct DSTexturedVertex*)gfx_vertices + startVertex + i;
 		
-		GFX_COLOR    = v->rgb;
-        glTexCoord2t16(f32tot16(mulf32(v->u, width)), f32tot16(mulf32(v->v, height)));
-		GFX_VERTEX16 = v->xy;
-        GFX_VERTEX16 = v->z;
+		GFX_COLOR     = v->rgb;
+		GFX_TEX_COORD = TEXTURE_PACK(f32tot16(v->u * width), f32tot16(v->v * height));
+		GFX_VERTEX16  = v->xy;
+		GFX_VERTEX16  = v->z;
 	}
 	glEnd();
 }
