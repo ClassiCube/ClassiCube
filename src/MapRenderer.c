@@ -78,7 +78,7 @@ CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Map rendering-----------------------------------------------------*
 *#########################################################################################################################*/
-static void CheckWeather(double delta) {
+static void CheckWeather(float delta) {
 	IVec3 pos;
 	BlockID block;
 	cc_bool outside;
@@ -183,7 +183,7 @@ static void RenderNormalBatch(int batch) {
 	}
 }
 
-void MapRenderer_RenderNormal(double delta) {
+void MapRenderer_RenderNormal(float delta) {
 	int batch;
 	if (!mapChunks) return;
 
@@ -256,7 +256,7 @@ static void RenderTranslucentBatch(int batch) {
 	}
 }
 
-void MapRenderer_RenderTranslucent(double delta) {
+void MapRenderer_RenderTranslucent(float delta) {
 	int vertices, batch;
 	if (!mapChunks) return;
 
@@ -510,7 +510,7 @@ static void RefreshBorderChunks(int maxHeight) {
 /*########################################################################################################################*
 *--------------------------------------------------Chunks updating/sorting------------------------------------------------*
 *#########################################################################################################################*/
-#define CHUNK_TARGET_TIME ((1.0/30) + 0.01)
+#define CHUNK_TARGET_TIME ((1.0f/30) + 0.01f)
 static int chunksTarget = 12;
 static Vec3 lastCamPos;
 static float lastYaw, lastPitch;
@@ -601,7 +601,7 @@ static int UpdateChunksStill(int* chunkUpdates) {
 	return j;
 }
 
-static void UpdateChunks(double delta) {
+static void UpdateChunks(float delta) {
 	struct LocalPlayer* p;
 	cc_bool samePos;
 	int chunkUpdates = 0;
@@ -610,7 +610,7 @@ static void UpdateChunks(double delta) {
 	chunksTarget += delta < CHUNK_TARGET_TIME ? 1 : -1; 
 	Math_Clamp(chunksTarget, 4, maxChunkUpdates);
 
-	p = &LocalPlayer_Instance;
+	p = Entities.CurPlayer;
 	samePos = Vec3_Equals(&Camera.CurrentPos, &lastCamPos)
 		&& p->Base.Pitch == lastPitch && p->Base.Yaw == lastYaw;
 
@@ -684,7 +684,7 @@ static void UpdateSortOrder(void) {
 	/*SimpleOcclusionCulling();*/
 }
 
-void MapRenderer_Update(double delta) {
+void MapRenderer_Update(float delta) {
 	if (!mapChunks) return;
 	UpdateSortOrder();
 	UpdateChunks(delta);

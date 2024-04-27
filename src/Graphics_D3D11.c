@@ -440,7 +440,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	// Deliberately swap zNear/zFar in projection matrix calculation to produce
 	//  a projection matrix that results in a reversed depth buffer
@@ -450,7 +450,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 	// Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
 	// NOTE: This calculation is shared with Direct3D 9 backend
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
@@ -646,12 +646,12 @@ static void RS_CreateRasterState(void) {
 	ID3D11Device_CreateRasterizerState(device, &desc, &rs_states[1]);
 }
 
-static void RS_UpdateViewport(void) {
+void Gfx_SetViewport(int x, int y, int w, int h) {
 	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width    = Window_Main.Width;
-	viewport.Height   = Window_Main.Height;
+	viewport.TopLeftX = x;
+	viewport.TopLeftY = y;
+	viewport.Width    = w;
+	viewport.Height   = h;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
@@ -670,7 +670,7 @@ static void RS_FreeRasterStates(void) {
 
 static void RS_Init(void) {
 	RS_CreateRasterState();
-	RS_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	RS_UpdateRasterState();
 }
 
@@ -1173,7 +1173,7 @@ void Gfx_OnWindowResize(void) {
 	if (hr) Logger_Abort2(hr, "Failed to resize swapchain");
 
 	OM_InitTargets();
-	RS_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
 static void InitPipeline(void) {

@@ -83,9 +83,9 @@ void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir) {
 	t->tMax.z = RayTracer_Div(cellBoundary.z - origin->z, dir->z); /* Boundary is a plane on the XY axis. */
 
 	/* Determine how far we must travel along the ray before we have crossed a gridcell. */
-	t->tDelta.x = RayTracer_Div((float)t->step.x, dir->x);
-	t->tDelta.y = RayTracer_Div((float)t->step.y, dir->y);
-	t->tDelta.z = RayTracer_Div((float)t->step.z, dir->z);
+	t->tDelta.x = (float)t->step.x * t->invDir.x;
+	t->tDelta.y = (float)t->step.y * t->invDir.y;
+	t->tDelta.z = (float)t->step.z * t->invDir.z;
 }
 
 void RayTracer_Step(struct RayTracer* t) {
@@ -215,7 +215,7 @@ static cc_bool ClipBlock(struct RayTracer* t) {
 
 	/* Only pick the block if the block is precisely within reach distance. */
 	lenSq = Vec3_LengthSquared(&scaledDir);
-	reach = LocalPlayer_Instance.ReachDistance;
+	reach = Entities.CurPlayer->ReachDistance;
 
 	if (lenSq <= reach * reach) {
 		SetAsValid(t);
@@ -251,8 +251,8 @@ void Picking_CalcPickedBlock(const Vec3* origin, const Vec3* dir, float reach, s
 }
 
 void Picking_ClipCameraPos(const Vec3* origin, const Vec3* dir, float reach, struct RayTracer* t) {
-	cc_bool noClip = (!Camera.Clipping || LocalPlayer_Instance.Hacks.Noclip)
-						&& LocalPlayer_Instance.Hacks.CanNoclip;
+	cc_bool noClip = (!Camera.Clipping || Entities.CurPlayer->Hacks.Noclip)
+						&& Entities.CurPlayer->Hacks.CanNoclip;
 	if (noClip || !World.Loaded || !RayTrace(t, origin, dir, reach, ClipCamera)) {
 		RayTracer_SetInvalid(t);
 		Vec3_Mul1(&t->intersect, dir, reach);           /* intersect = dir * reach */

@@ -4,7 +4,7 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "../third_party/gldc/include/gldc.h"
+#include "../third_party/gldc/gldc.h"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
@@ -15,8 +15,23 @@ static cc_bool renderingDisabled;
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitGLState(void) {
+	glClearDepth(1.0f);
+	glDepthMask(GL_TRUE);
+	glShadeModel(GL_SMOOTH);
+
+	glDisable(GL_ALPHA_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_FOG);
+}
+
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	InitGLState();
 	
 	Gfx.MinTexWidth  = 8;
 	Gfx.MinTexHeight = 8;
@@ -89,10 +104,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
 	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
@@ -540,6 +555,17 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
+
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
+		glDisable(GL_SCISSOR_TEST);
+	} else {
+		glEnable(GL_SCISSOR_TEST);
+	}
+	
+	glViewport(x, y, w, h);
+	glScissor (x, y, w, h);
 }
 #endif

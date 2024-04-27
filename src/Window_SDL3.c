@@ -218,7 +218,7 @@ static void OnTextEvent(const SDL_Event* e) {
 }
 static void ProcessDialogEvent(SDL_Event* e);
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {
@@ -280,6 +280,8 @@ void Window_ProcessEvents(double delta) {
 		}
 	}
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	float xPos, yPos;

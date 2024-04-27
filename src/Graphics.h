@@ -245,13 +245,15 @@ void Gfx_EndFrame(void);
 /* Sets whether to synchronise with monitor refresh to avoid tearing, and maximum frame rate */
 /* NOTE: VSync setting may be unsupported or just ignored */
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMillis);
-/* Updates state when the window's dimensions have changed */
-/* NOTE: This may require recreating the context depending on the backend */
-void Gfx_OnWindowResize(void);
 /* Gets information about the user's GPU and current backend state */
 /* Backend state may include depth buffer bits, free memory, etc */
 /* NOTE: Each line is separated by \n */
 void Gfx_GetApiInfo(cc_string* info);
+
+/* Updates state when the window's dimensions have changed */
+/* NOTE: This may require recreating the context depending on the backend */
+void Gfx_OnWindowResize(void);
+void Gfx_SetViewport(int x, int y, int w, int h);
 
 enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
 #ifdef CC_BUILD_DUALSCREEN

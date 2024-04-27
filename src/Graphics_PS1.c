@@ -489,7 +489,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.01f;
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
@@ -726,6 +726,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_OnWindowResize(void) {
 	// TODO
 }
+
+void Gfx_SetViewport(int x, int y, int w, int h) { }
 
 void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using PS1 --\n");

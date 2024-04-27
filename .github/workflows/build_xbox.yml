@@ -18,6 +18,7 @@ jobs:
         run: |
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
+          cp bin/default.xbe ClassiCube-xbox.xbe
           
 
       # otherwise notify_failure doesn't work
@@ -35,7 +36,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'bin/default.xbe'
+          SOURCE_FILE: 'ClassiCube-xbox.xbe'
           DEST_NAME: 'ClassiCube-xbox.xbe'
           
       - uses: ./.github/actions/upload_build

@@ -33,14 +33,11 @@ float Math_SinF(float x);
 float Math_CosF(float x);
 double Math_Atan2(double x, double y);
 
-/* Computes loge(x). Can also be used to approximate logy(x). */
-/*   e.g. for log3(x), use: Math_Log(x)/log(3) */
-double Math_Log(double x);
-/* Computes log2(x). Can also be used to approximate log2(x). */
-/*   e.g. for log3(x), use: Math_Log2(x)/log2(3) */
+/* Computes log2(x). Can also be used to approximate log_y(x). */
+/*   e.g. for log3(x), use: log2(x)/log2(3) */
 double Math_Log2(double x);
 /* Computes 2^x. Can also be used to approximate y^x. */
-/*   e.g. for 3^x, use: Math_Exp2(log2(3)*x) */
+/*   e.g. for 3^x, use: exp2(log2(3)*x) */
 double Math_Exp2(double x);
 
 int Math_Floor(float value);

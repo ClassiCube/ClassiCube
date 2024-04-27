@@ -374,11 +374,11 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	// TODO verify this
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
@@ -458,6 +458,9 @@ void Gfx_GetApiInfo(cc_string* info) {
 void Gfx_OnWindowResize(void) {
 
 }
+
+void Gfx_SetViewport(int x, int y, int w, int h) { }
+
 void Gfx_3DS_SetRenderScreen1(enum Screen3DS screen) {
 	GX2ContextState* tv_state  = WHBGfxGetTVContextState();
 	GX2ContextState* drc_state = WHBGfxGetDRCContextState(); // TODO

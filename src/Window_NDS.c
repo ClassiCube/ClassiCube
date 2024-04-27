@@ -97,28 +97,10 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
-	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
-	
-	Gamepad_SetButton(CCPAD_A, mods & KEY_A);
-	Gamepad_SetButton(CCPAD_B, mods & KEY_B);
-	Gamepad_SetButton(CCPAD_X, mods & KEY_X);
-	Gamepad_SetButton(CCPAD_Y, mods & KEY_Y);
-	
-	Gamepad_SetButton(CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & KEY_SELECT);
-	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & KEY_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & KEY_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & KEY_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DOWN);
-}
-
 static void ProcessTouchInput(int mods) {
 	touchPosition touch;
 	touchRead(&touch);
-    Camera.Sensitivity = 100; // TODO not hardcode this
+	Camera.Sensitivity = 100; // TODO not hardcode this
 	
 	if (mods & KEY_TOUCH) {
 		Input_AddTouch(0,    touch.px,      touch.py);
@@ -127,16 +109,14 @@ static void ProcessTouchInput(int mods) {
 	}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	scanKeys();	
-	int keys = keysDown() | keysHeld();
-	HandleButtons(keys);
 	
-    if (keyboardOpen) {
-        keyboardUpdate();
-    } else {
-	    ProcessTouchInput(keys);
-    }
+	if (keyboardOpen) {
+		keyboardUpdate();
+	} else {
+		ProcessTouchInput(keysDown() | keysHeld());
+	}
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
@@ -144,6 +124,30 @@ void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+void Window_ProcessGamepads(float delta) {
+	int mods = keysDown() | keysHeld();
+	
+	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
+	
+	Gamepad_SetButton(0, CCPAD_A, mods & KEY_A);
+	Gamepad_SetButton(0, CCPAD_B, mods & KEY_B);
+	Gamepad_SetButton(0, CCPAD_X, mods & KEY_X);
+	Gamepad_SetButton(0, CCPAD_Y, mods & KEY_Y);
+	
+	Gamepad_SetButton(0, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(0, CCPAD_SELECT, mods & KEY_SELECT);
+	
+	Gamepad_SetButton(0, CCPAD_LEFT,   mods & KEY_LEFT);
+	Gamepad_SetButton(0, CCPAD_RIGHT,  mods & KEY_RIGHT);
+	Gamepad_SetButton(0, CCPAD_UP,     mods & KEY_UP);
+	Gamepad_SetButton(0, CCPAD_DOWN,   mods & KEY_DOWN);
+}
 
 
 /*########################################################################################################################*

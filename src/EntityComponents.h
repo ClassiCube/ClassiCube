@@ -8,6 +8,7 @@
 
 struct Entity;
 struct LocationUpdate;
+struct LocalPlayer;
 
 /* Entity component that performs model animation depending on movement speed and time */
 struct AnimatedComp {
@@ -20,7 +21,7 @@ struct AnimatedComp {
 };
 
 void AnimatedComp_Init(struct AnimatedComp* anim);
-void AnimatedComp_Update(struct Entity* entity, Vec3 oldPos, Vec3 newPos, double delta);
+void AnimatedComp_Update(struct Entity* entity, Vec3 oldPos, Vec3 newPos, float delta);
 void AnimatedComp_GetCurrent(struct Entity* entity, float t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
@@ -30,8 +31,8 @@ struct TiltComp {
 };
 
 void TiltComp_Init(struct TiltComp* anim);
-void TiltComp_Update(struct TiltComp* anim, double delta);
-void TiltComp_GetCurrent(struct TiltComp* anim, float t);
+void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta);
+void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {
@@ -81,7 +82,7 @@ float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed);
 /* Base entity component that performs interpolation of position and orientation */
 struct InterpComp { InterpComp_Layout };
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update);
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, struct Entity* e);
 void LocalInterpComp_AdvanceState(struct InterpComp* interp, struct Entity* e);
 
 /* Represents a network orientation state */
@@ -130,5 +131,5 @@ double PhysicsComp_CalcMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
-void SoundComp_Tick(cc_bool wasOnGround);
+void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround);
 #endif

@@ -671,7 +671,7 @@ static void NotchyGen_PlantTrees(void) {
 				treeX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				treeZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
-				if (!World_ContainsXZ(treeX, treeZ) || Random_Float(&rnd) >= 0.25) continue;
+				if (!World_ContainsXZ(treeX, treeZ) || Random_Float(&rnd) >= 0.25f) continue;
 				treeY = heightmap[treeZ * World.Width + treeX] + 1;
 				if (treeY >= World.Height) continue;
 				treeHeight = 5 + Random_Next(&rnd, 3);

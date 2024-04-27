@@ -32,8 +32,8 @@ void LWidget_CalcOffsets(void) {
 	flagYOffset  = Display_ScaleY(6);
 }
 
-void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
-						int x, int y, int width, int height) {
+static void LWidget_DrawInsetBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
+									int x, int y, int width, int height) {
 	Context2D_Clear(ctx, color,
 					x + insetX,         y,
 					width - 2 * insetX, insetY);
@@ -46,6 +46,22 @@ void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int insetX, int 
 	Context2D_Clear(ctx, color,
 					x + width - insetX, y + insetY,
 					insetX,             height - 2 * insetY);
+}
+
+void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int borderX, int borderY,
+									int x, int y, int width, int height) {
+	Context2D_Clear(ctx, color,
+					x,         y,
+					width, borderY);
+	Context2D_Clear(ctx, color,
+					x,         y + height - borderY,
+					width, borderY);
+	Context2D_Clear(ctx, color,
+					x,                   y,
+					borderX,             height);
+	Context2D_Clear(ctx, color,
+					x + width - borderX, y,
+					borderX,             height);
 }
 
 
@@ -70,11 +86,10 @@ static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int
 static void LButton_DrawBorder(struct Context2D* ctx, int x, int y, int width, int height) {
 	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
 #ifdef CC_BUILD_IOS
-	int xoff = 0; /* TODO temp hack */
+	LWidget_DrawBorder(ctx,      backColor, oneX, oneY, x, y, width, height);
 #else
-	int xoff = oneX;
+	LWidget_DrawInsetBorder(ctx, backColor, oneX, oneY, x, y, width, height);
 #endif
-	LWidget_DrawBorder(ctx, backColor, xoff, oneY, x, y, width, height);
 }
 
 static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active) {

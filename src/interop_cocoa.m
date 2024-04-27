@@ -486,7 +486,7 @@ static void DebugScrollEvent(NSEvent* ev) {
 #endif
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
 	float dy;
@@ -567,6 +567,8 @@ void Window_ProcessEvents(double delta) {
 		[appHandle sendEvent:ev];
 	}
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 
 /*########################################################################################################################*

@@ -148,7 +148,6 @@ float Random_Float(RNGState* seed) {
 *--------------------------------------------------Transcendental functions-----------------------------------------------*
 *#########################################################################################################################*/
 static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
-static const double LOGE2 = 0.6931471805599453094172321214581765680755001343602;
 
 #ifdef CC_BUILD_DREAMCAST
 #include <math.h>
@@ -591,13 +590,3 @@ double Math_Log2(double x) {
 }
 
 #endif
-
-/* Uses the property that
- *   log_e(x) = log_2(x) * log_e(2).
- *
- * Associated math function: log_e(x)
- * Allowed input range: anything
- */
-double Math_Log(double x) {
-	return Math_Log2(x) * LOGE2;
-}

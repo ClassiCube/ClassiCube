@@ -7,7 +7,6 @@
 #include <dc/fmath.h>
 #include <dc/matrix3d.h>
 
-#include "types.h"
 #include "private.h"
 #include "sh4_math.h"
 

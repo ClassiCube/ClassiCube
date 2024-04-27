@@ -37,17 +37,6 @@ void _glInitContext() {
     scissor_rect.y = 0;
     scissor_rect.width  = vid_mode->width;
     scissor_rect.height = vid_mode->height;
-
-    glClearDepth(1.0f);
-    glDepthMask(GL_TRUE);
-    glShadeModel(GL_SMOOTH);
-
-    glDisable(GL_ALPHA_TEST);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_FOG);
 }
 
 GLAPI void APIENTRY glEnable(GLenum cap) {
@@ -141,10 +130,6 @@ GLAPI void APIENTRY glDisable(GLenum cap) {
 }
 
 /* Depth Testing */
-GLAPI void APIENTRY glClearDepthf(GLfloat depth) {
-    glClearDepth(depth);
-}
-
 GLAPI void APIENTRY glClearDepth(GLfloat depth) {
     /* We reverse because using invW means that farther Z == lower number */
     GPUSetClearDepth(MIN(1.0f - depth, PVR_MIN_Z));
@@ -268,24 +253,14 @@ void APIENTRY glGetIntegerv(GLenum pname, GLint *params) {
 }
 
 
-Viewport VIEWPORT = {
-    0, 0, 640, 480, 320.0f, 240.0f, 320.0f, 240.0f
-};
-
-void _glInitMatrices() {
-    glViewport(0, 0, vid_mode->width, vid_mode->height);
-}
+Viewport VIEWPORT;
 
 /* Set the GL viewport */
 void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-    VIEWPORT.x = x;
-    VIEWPORT.y = y;
-    VIEWPORT.width   = width;
-    VIEWPORT.height  = height;
-    VIEWPORT.hwidth  = ((GLfloat) VIEWPORT.width) * 0.5f;
-    VIEWPORT.hheight = ((GLfloat) VIEWPORT.height) * 0.5f;
-    VIEWPORT.x_plus_hwidth  = VIEWPORT.x + VIEWPORT.hwidth;
-    VIEWPORT.y_plus_hheight = VIEWPORT.y + VIEWPORT.hheight;
+    VIEWPORT.hwidth  = width  *  0.5f;
+    VIEWPORT.hheight = height * -0.5f;
+    VIEWPORT.x_plus_hwidth  = x + width  * 0.5f;
+    VIEWPORT.y_plus_hheight = y + height * 0.5f;
 }
 
 
@@ -293,9 +268,9 @@ GL_FORCE_INLINE void _updatePVRTextureContext(PolyContext *context, GLshort text
     const TextureObject *tx1 = TEXTURE_ACTIVE;
 
     /* Disable all texturing to start with */
-    context->txr.enable = GPU_TEXTURE_DISABLE;
+    context->txr.enable  = GPU_TEXTURE_DISABLE;
     context->txr2.enable = GPU_TEXTURE_DISABLE;
-    context->txr2.alpha = GPU_TXRALPHA_DISABLE;
+    context->txr2.alpha  = GPU_TXRALPHA_DISABLE;
 
     if(!TEXTURES_ENABLED || !tx1 || !tx1->data) {
         context->txr.base = NULL;
@@ -318,31 +293,12 @@ GL_FORCE_INLINE void _updatePVRTextureContext(PolyContext *context, GLshort text
         context->txr.mipmap = GL_FALSE;
         context->txr.mipmap_bias = tx1->mipmap_bias;
         
-	context->txr.base = tx1->data;
+        context->txr.base = tx1->data;
         context->txr.format = tx1->color;
         context->txr.env = tx1->env;
         context->txr.uv_flip = GPU_UVFLIP_NONE;
         context->txr.uv_clamp = GPU_UVCLAMP_NONE;
     }
-}
-
-GL_FORCE_INLINE int _calc_pvr_face_culling() {
-    if(!CULLING_ENABLED) {
-        return GPU_CULLING_SMALL;
-    } else {
-        return GPU_CULLING_CW;
-    }
-}
-
-GL_FORCE_INLINE void _updatePVRBlend(PolyContext* context) {
-    if(BLEND_ENABLED || ALPHA_TEST_ENABLED) {
-        context->gen.alpha = GPU_ALPHA_ENABLE;
-    } else {
-        context->gen.alpha = GPU_ALPHA_DISABLE;
-    }
-
-    context->blend.src = PVR_BLEND_SRCALPHA;
-    context->blend.dst = PVR_BLEND_INVSRCALPHA;
 }
 
 void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
@@ -354,28 +310,20 @@ void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
 
     ctx.list_type = activePolyList->list_type;
     ctx.fmt.color = GPU_CLRFMT_ARGBPACKED;
-    ctx.fmt.uv = GPU_UVFMT_32BIT;
+    ctx.fmt.uv    = GPU_UVFMT_32BIT;
     ctx.gen.color_clamp = GPU_CLRCLAMP_DISABLE;
 
-    ctx.gen.culling = _calc_pvr_face_culling();
+    ctx.gen.culling      = CULLING_ENABLED ? GPU_CULLING_CW : GPU_CULLING_SMALL;
     ctx.depth.comparison = DEPTH_TEST_ENABLED ? GPU_DEPTHCMP_GEQUAL : GPU_DEPTHCMP_ALWAYS;
-    ctx.depth.write = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
+    ctx.depth.write      = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
 
-    ctx.gen.shading = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
+    ctx.gen.shading   = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
+    ctx.gen.clip_mode = SCISSOR_TEST_ENABLED ? GPU_USERCLIP_INSIDE : GPU_USERCLIP_DISABLE;
+    ctx.gen.fog_type  = FOG_ENABLED ? GPU_FOG_TABLE : GPU_FOG_DISABLE;
 
-    if(SCISSOR_TEST_ENABLED) {
-        ctx.gen.clip_mode = GPU_USERCLIP_INSIDE;
-    } else {
-        ctx.gen.clip_mode = GPU_USERCLIP_DISABLE;
-    }
-
-    if(FOG_ENABLED) {
-        ctx.gen.fog_type = GPU_FOG_TABLE;
-    } else {
-        ctx.gen.fog_type = GPU_FOG_DISABLE;
-    }
-
-    _updatePVRBlend(&ctx);
+    ctx.gen.alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_ALPHA_ENABLE : GPU_ALPHA_DISABLE;
+    ctx.blend.src = PVR_BLEND_SRCALPHA;
+    ctx.blend.dst = PVR_BLEND_INVSRCALPHA;
 
     if(ctx.list_type == GPU_LIST_OP_POLY) {
         /* Opaque polys are always one/zero */

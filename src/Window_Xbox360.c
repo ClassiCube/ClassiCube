@@ -71,6 +71,20 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(float delta) {
+	usb_do_poll();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 /*
 struct controller_data_s
 {
@@ -81,39 +95,31 @@ struct controller_data_s
 };
 */
 
-static void HandleButtons(struct controller_data_s* pad) {
-	Gamepad_SetButton(CCPAD_L, pad->lb);
-	Gamepad_SetButton(CCPAD_R, pad->rb);
+static void HandleButtons(int port, struct controller_data_s* pad) {
+	Gamepad_SetButton(port, CCPAD_L, pad->lb);
+	Gamepad_SetButton(port, CCPAD_R, pad->rb);
 	
-	Gamepad_SetButton(CCPAD_A, pad->a);
-	Gamepad_SetButton(CCPAD_B, pad->b);
-	Gamepad_SetButton(CCPAD_X, pad->x);
-	Gamepad_SetButton(CCPAD_Y, pad->y);
+	Gamepad_SetButton(port, CCPAD_A, pad->a);
+	Gamepad_SetButton(port, CCPAD_B, pad->b);
+	Gamepad_SetButton(port, CCPAD_X, pad->x);
+	Gamepad_SetButton(port, CCPAD_Y, pad->y);
 	
-	Gamepad_SetButton(CCPAD_START,  pad->start);
-	Gamepad_SetButton(CCPAD_SELECT, pad->back);
+	Gamepad_SetButton(port, CCPAD_START,  pad->start);
+	Gamepad_SetButton(port, CCPAD_SELECT, pad->back);
 	
-	Gamepad_SetButton(CCPAD_LEFT,   pad->left);
-	Gamepad_SetButton(CCPAD_RIGHT,  pad->right);
-	Gamepad_SetButton(CCPAD_UP,     pad->up);
-	Gamepad_SetButton(CCPAD_DOWN,   pad->down);
+	Gamepad_SetButton(port, CCPAD_LEFT,   pad->left);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  pad->right);
+	Gamepad_SetButton(port, CCPAD_UP,     pad->up);
+	Gamepad_SetButton(port, CCPAD_DOWN,   pad->down);
 }
 
-void Window_ProcessEvents(double delta) {
-	usb_do_poll();
-	
+void Window_ProcessGamepads(float delta) {
 	struct controller_data_s pad;
- 	int res = get_controller_data(&pad, 0);
- 	if (res == 0) return;
- 	
- 	HandleButtons(&pad);
+	int res = get_controller_data(&pad, 0);
+	if (res == 0) return;
+	
+	HandleButtons(0, &pad);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*

@@ -135,7 +135,9 @@ void Window_SetSize(int width, int height);
 /* May raise the WindowClosing and WindowClosed events. */
 void Window_RequestClose(void);
 /* Processes all pending window messages/events. */
-void Window_ProcessEvents(double delta);
+void Window_ProcessEvents(float delta);
+/* Processes all pending gamepad/joystick input. */
+void Window_ProcessGamepads(float delta);
 
 /* Sets the position of the cursor. */
 /* NOTE: This should be avoided because it is unsupported on some platforms. */

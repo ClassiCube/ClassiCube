@@ -97,17 +97,17 @@ static cc_bool IntersectsBlock(struct Particle* p, CanPassThroughFunc canPassThr
 	return !canPassThrough(cur) && p->nextPos.y >= minY && p->nextPos.y < maxY && CollidesHor(&p->nextPos, cur);
 }
 
-static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, double delta) {
+static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, float delta) {
 	Vec3 velocity;
 	int y, begY, endY;
 
 	p->lastPos = p->nextPos;
 	if (IntersectsBlock(p, canPassThrough)) return true;
 
-	p->velocity.y -= gravity * (float)delta;
+	p->velocity.y -= gravity * delta;
 	begY = Math_Floor(p->nextPos.y);
 	
-	Vec3_Mul1(&velocity, &p->velocity, (float)delta * 3.0f);
+	Vec3_Mul1(&velocity, &p->velocity, delta * 3.0f);
 	Vec3_Add(&p->nextPos, &p->nextPos, &velocity);
 	endY = Math_Floor(p->nextPos.y);
 
@@ -118,7 +118,7 @@ static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc
 		for (y = begY; y >= endY && ClipY(p, y, true, canPassThrough); y--) {}
 	}
 
-	p->lifetime -= (float)delta;
+	p->lifetime -= delta;
 	return p->lifetime < 0.0f;
 }
 
@@ -135,7 +135,7 @@ static cc_bool RainParticle_CanPass(BlockID block) {
 	return draw == DRAW_GAS || draw == DRAW_SPRITE;
 }
 
-static cc_bool RainParticle_Tick(struct Particle* p, double delta) {
+static cc_bool RainParticle_Tick(struct Particle* p, float delta) {
 	hitTerrain = false;
 	return PhysicsTick(p, 3.5f, RainParticle_CanPass, delta) || hitTerrain;
 }
@@ -178,7 +178,7 @@ static void Rain_RemoveAt(int i) {
 	rain_count--;
 }
 
-static void Rain_Tick(double delta) {
+static void Rain_Tick(float delta) {
 	int i;
 	for (i = 0; i < rain_count; i++) {
 		if (RainParticle_Tick(&rain_Particles[i], delta)) {
@@ -232,7 +232,7 @@ static cc_bool TerrainParticle_CanPass(BlockID block) {
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || Blocks.IsLiquid[block];
 }
 
-static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
+static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, float delta) {
 	return PhysicsTick(&p->base, Blocks.ParticleGravity[p->block], TerrainParticle_CanPass, delta);
 }
 
@@ -306,7 +306,7 @@ static void Terrain_RemoveAt(int i) {
 	terrain_count--;
 }
 
-static void Terrain_Tick(double delta) {
+static void Terrain_Tick(float delta) {
 	int i;
 	for (i = 0; i < terrain_count; i++) {
 		if (TerrainParticle_Tick(&terrain_particles[i], delta)) {
@@ -428,7 +428,7 @@ static cc_bool CustomParticle_CanPass(BlockID block) {
 	return true;
 }
 
-static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
+static cc_bool CustomParticle_Tick(struct CustomParticle* p, float delta) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
 	hitTerrain   = false;
 	collideFlags = e->collideFlags;
@@ -486,7 +486,7 @@ static void Custom_RemoveAt(int i) {
 	custom_count--;
 }
 
-static void Custom_Tick(double delta) {
+static void Custom_Tick(float delta) {
 	int i;
 	for (i = 0; i < custom_count; i++) {
 		if (CustomParticle_Tick(&custom_particles[i], delta)) {
@@ -546,7 +546,7 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 static int custom_count;
 
 static void Custom_Render(float t) { }
-static void Custom_Tick(double delta) { }
+static void Custom_Tick(float delta) { }
 #endif
 
 
@@ -571,7 +571,7 @@ void Particles_Render(float t) {
 }
 
 static void Particles_Tick(struct ScheduledTask* task) {
-	double delta = task->interval;
+	float delta = task->interval;
 	Terrain_Tick(delta);
 	Rain_Tick(delta);
 	Custom_Tick(delta);

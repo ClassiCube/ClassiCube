@@ -11,5 +11,5 @@ extern struct IGameComponent HeldBlockRenderer_Component;
 extern cc_bool HeldBlockRenderer_Show;
 
 void HeldBlockRenderer_ClickAnim(cc_bool digging);
-void HeldBlockRenderer_Render(double delta);
+void HeldBlockRenderer_Render(float delta);
 #endif

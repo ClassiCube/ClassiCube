@@ -27,9 +27,8 @@ static void InitGX(void) {
 	memset(fifo_buffer, 0, FIFO_SIZE);
 
 	GX_Init(fifo_buffer, FIFO_SIZE);
-	GX_SetViewport(0, 0, mode->fbWidth, mode->efbHeight, 0, 1);
+	Gfx_SetViewport(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyYScale((f32)mode->xfbHeight / (f32)mode->efbHeight);
-	GX_SetScissor(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopySrc(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyDst(mode->fbWidth, mode->xfbHeight);
 	GX_SetCopyFilter(mode->aa, mode->sample_pattern,
@@ -312,6 +311,11 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	GX_SetViewport(x, y, w, h, 0, 1);
+	GX_SetScissor(x, y, w, h);
+}
+
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 
@@ -442,10 +446,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -zFar / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	
 	// Transposed, source guPersepctive https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	*matrix = Matrix_Identity;

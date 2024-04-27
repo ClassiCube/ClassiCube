@@ -248,13 +248,12 @@ void Gui_Remove(struct Screen* s) {
 }
 
 void Gui_Add(struct Screen* s, int priority) {
+	struct Screen* existing;
 	int i;
 	Gui_RemoveCore(s);
-	/* Backwards loop since removing changes count and gui_screens */
-	for (i = Gui.ScreensCount - 1; i >= 0; i--) 
-	{
-		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
-	}
+	
+	existing = Gui_GetScreen(priority);
+	if (existing) Gui_RemoveCore(existing);
 
 	Gui_AddCore(s, priority);
 	Gui_OnScreensChanged();
@@ -287,6 +286,15 @@ struct Screen* Gui_GetClosable(void) {
 	return NULL;
 }
 
+struct Screen* Gui_GetScreen(int priority) {
+	int i;
+	for (i = 0; i < Gui.ScreensCount; i++) 
+	{
+		if (priorities[i] == priority) return Gui_Screens[i];
+	}
+	return NULL;
+}
+
 void Gui_UpdateInputGrab(void) {
 	Gui.InputGrab = Gui_GetInputGrab();
 	Camera_CheckFocus();
@@ -300,7 +308,7 @@ void Gui_ShowPauseMenu(void) {
 	}
 }
 
-void Gui_RenderGui(double delta) {
+void Gui_RenderGui(float delta) {
 	struct Screen* s;
 	int i;
 
@@ -406,7 +414,7 @@ void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, in
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
 	w->xOffset = Display_ScaleX(xOffset);
 	w->yOffset = Display_ScaleY(yOffset);
-	Widget_Layout(w);
+	if (w->VTABLE) Widget_Layout(w);
 }
 
 void Widget_CalcPosition(void* widget) {
@@ -457,7 +465,7 @@ void Widget_SetDisabled(void* widget, int disabled) {
 /*########################################################################################################################*
 *-------------------------------------------------------Screen base-------------------------------------------------------*
 *#########################################################################################################################*/
-void Screen_Render2Widgets(void* screen, double delta) {
+void Screen_Render2Widgets(void* screen, float delta) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, offset = 0;
@@ -592,7 +600,7 @@ static void OnPointerMove(void* obj, int idx) {
 	}
 }
 
-static void OnAxisUpdate(void* obj, int axis, float x, float y) {
+static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
 	struct Screen* s;
 	int i;
 	
@@ -604,7 +612,6 @@ static void OnAxisUpdate(void* obj, int axis, float x, float y) {
 		if (s->VTABLE->HandlesPadAxis(s, axis, x, y)) return;
 	}
 }
-
 
 
 /*########################################################################################################################*
@@ -700,13 +707,6 @@ static void OnInit(void) {
 	Event_Register_(&InputEvents.Press,          NULL, OnKeyPress);
 	Event_Register_(&WindowEvents.Resized,       NULL, OnResize);
 	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
-
-#ifdef CC_BUILD_TOUCH
-	#define DEFAULT_SP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED)
-	#define DEFAULT_MP_ONSCREEN (ONSCREEN_BTN_FLY | ONSCREEN_BTN_SPEED | ONSCREEN_BTN_CHAT)
-	Gui._onscreenButtons = Options_GetInt(OPT_TOUCH_BUTTONS, 0, Int32_MaxValue,
-											Server.IsSinglePlayer ? DEFAULT_SP_ONSCREEN : DEFAULT_MP_ONSCREEN);
-#endif
 
 	LoadOptions();
 	Gui_ShowDefault();

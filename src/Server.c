@@ -407,7 +407,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 				Platform_LogConst("Skipping invalid HackControl byte from D3 server");
 				readCur++;
-				LocalPlayer_ResetJumpVelocity();
+				LocalPlayer_ResetJumpVelocity(Entities.CurPlayer);
 				continue;
 			}
 
@@ -491,7 +491,7 @@ static void OnNewMap(void) {
 	if (Server.IsSinglePlayer) return;
 
 	/* wipe all existing entities */
-	for (i = 0; i < ENTITIES_SELF_ID; i++) 
+	for (i = 0; i < MAX_NET_PLAYERS; i++) 
 	{
 		Entities_Remove((EntityID)i);
 	}

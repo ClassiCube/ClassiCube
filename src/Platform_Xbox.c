@@ -169,8 +169,6 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
-	
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 	cc_result res;
@@ -180,12 +178,17 @@ static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWOR
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
+	if (!hdd_mounted) return ReturnCode_FileNotFound;
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
+
 cc_result File_Create(cc_file* file, const cc_string* path) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 

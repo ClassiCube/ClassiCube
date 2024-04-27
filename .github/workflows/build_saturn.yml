@@ -24,6 +24,13 @@ jobs:
           NOTIFY_MESSAGE: 'Failed to compile Saturn build'
           WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
           
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'build-saturn/ClassiCube-saturn.elf'
+          DEST_NAME: 'ClassiCube-saturn.elf'
+          
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:

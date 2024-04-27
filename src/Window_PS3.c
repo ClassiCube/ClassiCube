@@ -252,50 +252,7 @@ static void ProcessKBInput(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(padData* data) {
-	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
-	Gamepad_SetButton(CCPAD_A, data->BTN_TRIANGLE);
-	Gamepad_SetButton(CCPAD_B, data->BTN_SQUARE);
-	Gamepad_SetButton(CCPAD_X, data->BTN_CROSS);
-	Gamepad_SetButton(CCPAD_Y, data->BTN_CIRCLE);
-      
-	Gamepad_SetButton(CCPAD_START,  data->BTN_START);
-	Gamepad_SetButton(CCPAD_SELECT, data->BTN_SELECT);
-
-	Gamepad_SetButton(CCPAD_LEFT,   data->BTN_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  data->BTN_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     data->BTN_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   data->BTN_DOWN);
-	
-	Gamepad_SetButton(CCPAD_L,  data->BTN_L1);
-	Gamepad_SetButton(CCPAD_R,  data->BTN_R1);
-	Gamepad_SetButton(CCPAD_ZL, data->BTN_L2);
-	Gamepad_SetButton(CCPAD_ZR, data->BTN_R2);
-}
-
-#define AXIS_SCALE 32.0f
-static void HandleJoystick(int axis, int x, int y, double delta) {
-	if (Math_AbsI(x) <= 32) x = 0;
-	if (Math_AbsI(y) <= 32) y = 0;	
-	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
-}
-
-static void ProcessPadInput(double delta, padData* pad) {
-	HandleButtons(pad);
-	HandleJoystick(PAD_AXIS_LEFT,  pad->ANA_L_H - 0x80, pad->ANA_L_V - 0x80, delta);
-	HandleJoystick(PAD_AXIS_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
-}
-
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
-	ioPadGetInfo(&pad_info);
-	if (pad_info.status[0]) {
-		ioPadGetData(0, &pad_data);
-		ProcessPadInput(delta, &pad_data);
-	}
-	
+void Window_ProcessEvents(float delta) {
 	ioKbGetInfo(&kb_info);
 	if (kb_info.status[0]) ProcessKBInput();
 }
@@ -305,6 +262,56 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, padData* data) {
+	//Platform_Log2("BUTTONS: %h (%h)", &data->button[2], &data->button[0]);
+	Gamepad_SetButton(port, CCPAD_A, data->BTN_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, data->BTN_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, data->BTN_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, data->BTN_CIRCLE);
+      
+	Gamepad_SetButton(port, CCPAD_START,  data->BTN_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, data->BTN_SELECT);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   data->BTN_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  data->BTN_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     data->BTN_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   data->BTN_DOWN);
+	
+	Gamepad_SetButton(port, CCPAD_L,  data->BTN_L1);
+	Gamepad_SetButton(port, CCPAD_R,  data->BTN_R1);
+	Gamepad_SetButton(port, CCPAD_ZL, data->BTN_L2);
+	Gamepad_SetButton(port, CCPAD_ZR, data->BTN_R2);
+}
+
+#define AXIS_SCALE 32.0f
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
+	if (Math_AbsI(x) <= 32) x = 0;
+	if (Math_AbsI(y) <= 32) y = 0;	
+	
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
+static void ProcessPadInput(int port, float delta, padData* pad) {
+	HandleButtons(port, pad);
+	HandleJoystick(port, PAD_AXIS_LEFT,  pad->ANA_L_H - 0x80, pad->ANA_L_V - 0x80, delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, pad->ANA_R_H - 0x80, pad->ANA_R_V - 0x80, delta);
+}
+
+void Window_ProcessGamepads(float delta) {
+	ioPadGetInfo(&pad_info);
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		if (!pad_info.status[port]) continue;
+		
+		ioPadGetData(port, &pad_data);
+		ProcessPadInput(port, delta, &pad_data);
+	}
+}
 
 
 /*########################################################################################################################*

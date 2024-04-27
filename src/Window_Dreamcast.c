@@ -173,53 +173,7 @@ static void ProcessKeyboardInput(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
-	// TODO CONT_Z
-      
-	Gamepad_SetButton(CCPAD_A, mods & CONT_A);
-	Gamepad_SetButton(CCPAD_B, mods & CONT_B);
-	Gamepad_SetButton(CCPAD_X, mods & CONT_X);
-	Gamepad_SetButton(CCPAD_Y, mods & CONT_Y);
-      
-	Gamepad_SetButton(CCPAD_START,  mods & CONT_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & CONT_D);
-
-	Gamepad_SetButton(CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & CONT_DPAD_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
-}
-
-#define AXIS_SCALE 8.0f
-static void HandleJoystick(int axis, int x, int y, double delta) {
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;	
-	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
-}
-
-static void HandleController(cont_state_t* state, double delta) {
-	Gamepad_SetButton(CCPAD_L, state->ltrig > 10);
-	Gamepad_SetButton(CCPAD_R, state->rtrig > 10);
-	// TODO CONT_Z, joysticks
-	// TODO: verify values are right     
-	HandleJoystick(PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
-}
-
-static void ProcessControllerInput(double delta) {
-	maple_device_t* cont;
-	cont_state_t*  state;
-
-	cont  = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
-	if (!cont)  return;
-	state = (cont_state_t*)maple_dev_status(cont);
-	if (!state) return;
-	
-	HandleButtons(state->buttons);
-	HandleController(state, delta);
-}
-
-static void ProcessMouseInput(double delta) {
+static void ProcessMouseInput(float delta) {
 	maple_device_t* mouse;
 	mouse_state_t*  state;
 
@@ -239,8 +193,7 @@ static void ProcessMouseInput(double delta) {
 				state->dx * scale, state->dy * scale);
 }
 
-void Window_ProcessEvents(double delta) {
-	ProcessControllerInput(delta);
+void Window_ProcessEvents(float delta) {
 	ProcessKeyboardInput();
 	ProcessMouseInput(delta);
 }
@@ -250,6 +203,64 @@ void Cursor_SetPosition(int x, int y) { } /* TODO: Dreamcast mouse support */
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_A, mods & CONT_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & CONT_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & CONT_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & CONT_Y);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & CONT_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & CONT_D);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & CONT_DPAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & CONT_DPAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & CONT_DPAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
+	
+	// Buttons not on standard controller (todo C)
+	Gamepad_SetButton(port, CCPAD_Z,       mods & CONT_Z);
+	Gamepad_SetButton(port, CCPAD_CLEFT,   mods & CONT_DPAD2_LEFT);
+	Gamepad_SetButton(port, CCPAD_CRIGHT,  mods & CONT_DPAD2_RIGHT);
+	Gamepad_SetButton(port, CCPAD_CUP,     mods & CONT_DPAD2_UP);
+	Gamepad_SetButton(port, CCPAD_CDOWN,   mods & CONT_DPAD2_DOWN);
+}
+
+#define AXIS_SCALE 8.0f
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;	
+	
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
+static void HandleController(int port, cont_state_t* state, float delta) {
+	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
+	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
+	// TODO CONT_Z, joysticks
+	// TODO: verify values are right     
+	HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
+}
+
+void Window_ProcessGamepads(float delta) {
+	maple_device_t* cont;
+	cont_state_t*  state;
+
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		cont  = maple_enum_type(port, MAPLE_FUNC_CONTROLLER);
+		if (!cont)  return;
+		state = (cont_state_t*)maple_dev_status(cont);
+		if (!state) return;
+		
+		HandleButtons(port, state->buttons);
+		HandleController(port, state, delta);
+	}
+}
 
 
 /*########################################################################################################################*

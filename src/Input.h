@@ -67,10 +67,6 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
-	/* Whether a gamepad joystick is being used to control player movement */
-	cc_bool JoystickMovement;
-	/* Angle of the gamepad joystick being used to control player movement */
-	float JoystickAngle;
 } Input;
 
 #define INPUT_SOURCE_NORMAL  (1 << 0)
@@ -196,10 +192,11 @@ extern int Gamepad_AxisBehaviour[2];
 extern int Gamepad_AxisSensitivity[2];
 
 /* Sets value of the given gamepad button */
-void Gamepad_SetButton(int btn, int pressed);
+void Gamepad_SetButton(int port, int btn, int pressed);
 /* Sets value of the given axis */
-void Gamepad_SetAxis(int axis, float x, float y, double delta);
-void Gamepad_Tick(double delta);
+void Gamepad_SetAxis(int port, int axis, float x, float y, float delta);
+void Gamepad_Tick(float delta);
+#define INPUT_MAX_GAMEPADS 4
 
 
 /* whether to leave text input open for user to enter further input */
@@ -245,20 +242,4 @@ void InputHandler_OnScreensChanged(void);
 void InputHandler_DeleteBlock(void);
 void InputHandler_PlaceBlock(void);
 void InputHandler_PickBlock(void);
-
-/* Enumeration of on-screen buttons for touch GUI */
-#define ONSCREEN_BTN_CHAT      (1 << 0)
-#define ONSCREEN_BTN_LIST      (1 << 1)
-#define ONSCREEN_BTN_SPAWN     (1 << 2)
-#define ONSCREEN_BTN_SETSPAWN  (1 << 3)
-#define ONSCREEN_BTN_FLY       (1 << 4)
-#define ONSCREEN_BTN_NOCLIP    (1 << 5)
-#define ONSCREEN_BTN_SPEED     (1 << 6)
-#define ONSCREEN_BTN_HALFSPEED (1 << 7)
-#define ONSCREEN_BTN_CAMERA    (1 << 8)
-#define ONSCREEN_BTN_DELETE    (1 << 9)
-#define ONSCREEN_BTN_PICK      (1 << 10)
-#define ONSCREEN_BTN_PLACE     (1 << 11)
-#define ONSCREEN_BTN_SWITCH    (1 << 12)
-#define ONSCREEN_MAX_BTNS 13
 #endif

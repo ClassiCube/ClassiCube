@@ -78,50 +78,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int buttons) {
-	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
-	// So just flip the bits to make more sense
-	buttons = ~buttons;
-	
-	Gamepad_SetButton(CCPAD_A, buttons & PAD_TRIANGLE);
-	Gamepad_SetButton(CCPAD_B, buttons & PAD_SQUARE);
-	Gamepad_SetButton(CCPAD_X, buttons & PAD_CROSS);
-	Gamepad_SetButton(CCPAD_Y, buttons & PAD_CIRCLE);
-      
-	Gamepad_SetButton(CCPAD_START,  buttons & PAD_START);
-	Gamepad_SetButton(CCPAD_SELECT, buttons & PAD_SELECT);
-
-	Gamepad_SetButton(CCPAD_LEFT,   buttons & PAD_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  buttons & PAD_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     buttons & PAD_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   buttons & PAD_DOWN);
-	
-	Gamepad_SetButton(CCPAD_L,  buttons & PAD_L1);
-	Gamepad_SetButton(CCPAD_R,  buttons & PAD_R1);
-	Gamepad_SetButton(CCPAD_ZL, buttons & PAD_L2);
-	Gamepad_SetButton(CCPAD_ZR, buttons & PAD_R2);
-}
-
-#define AXIS_SCALE 16.0f
-static void HandleJoystick(int axis, int x, int y, double delta) {
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	Gamepad_SetAxis(axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
-}
-
-static void ProcessPadInput(PADTYPE* pad, double delta) {
-	HandleButtons(pad->btn);
-
-	if (pad->type == PAD_ID_ANALOG_STICK || pad->type == PAD_ID_ANALOG) {
-		HandleJoystick(PAD_AXIS_LEFT,  pad->ls_x - 0x80, pad->ls_y - 0x80, delta);
-		HandleJoystick(PAD_AXIS_RIGHT, pad->rs_x - 0x80, pad->rs_y - 0x80, delta);
-	}
-}
-
-void Window_ProcessEvents(double delta) {
-	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
-	if (pad->stat == 0) ProcessPadInput(pad, delta);
+void Window_ProcessEvents(float delta) {
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -129,6 +86,56 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, int buttons) {
+	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
+	// So just flip the bits to make more sense
+	buttons = ~buttons;
+	
+	Gamepad_SetButton(port, CCPAD_A, buttons & PAD_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, buttons & PAD_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, buttons & PAD_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, buttons & PAD_CIRCLE);
+      
+	Gamepad_SetButton(port, CCPAD_START,  buttons & PAD_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, buttons & PAD_SELECT);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   buttons & PAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  buttons & PAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     buttons & PAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   buttons & PAD_DOWN);
+	
+	Gamepad_SetButton(port, CCPAD_L,  buttons & PAD_L1);
+	Gamepad_SetButton(port, CCPAD_R,  buttons & PAD_R1);
+	Gamepad_SetButton(port, CCPAD_ZL, buttons & PAD_L2);
+	Gamepad_SetButton(port, CCPAD_ZR, buttons & PAD_R2);
+}
+
+#define AXIS_SCALE 16.0f
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
+static void ProcessPadInput(int port, PADTYPE* pad, float delta) {
+	HandleButtons(port, pad->btn);
+
+	if (pad->type == PAD_ID_ANALOG_STICK || pad->type == PAD_ID_ANALOG) {
+		HandleJoystick(port, PAD_AXIS_LEFT,  pad->ls_x - 0x80, pad->ls_y - 0x80, delta);
+		HandleJoystick(port, PAD_AXIS_RIGHT, pad->rs_x - 0x80, pad->rs_y - 0x80, delta);
+	}
+}
+
+void Window_ProcessGamepads(float delta) {
+	PADTYPE* pad = (PADTYPE*)&pad_buff[0][0];
+	if (pad->stat == 0) ProcessPadInput(0, pad, delta);
+}
 
 
 /*########################################################################################################################*

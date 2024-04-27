@@ -31,6 +31,9 @@ build-switch/
 classicube.nds
 # SEGA console build results
 build-dc/
+IP.BIN
+ISO_FILES/
+third_party/gldc/libGLdc.a
 build-saturn/
 cd/
 # Microsoft console build results

@@ -45,8 +45,8 @@ GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
 
     /* Convert to NDC and apply viewport */
-    vertex->xyz[0] = (vertex->xyz[0] * f *  320) + 320;
-    vertex->xyz[1] = (vertex->xyz[1] * f * -240) + 240;
+    vertex->xyz[0] = (vertex->xyz[0] * f * VIEWPORT.hwidth)  + VIEWPORT.x_plus_hwidth;
+    vertex->xyz[1] = (vertex->xyz[1] * f * VIEWPORT.hheight) + VIEWPORT.y_plus_hheight;
 
     /* Orthographic projections need to use invZ otherwise we lose
     the depth information. As w == 1, and clip-space range is -w to +w

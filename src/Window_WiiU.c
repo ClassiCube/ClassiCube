@@ -119,7 +119,27 @@ void Window_RequestClose(void) {
 }
 
 
-static void ProcessKPAD(double delta) {
+/*########################################################################################################################*
+*----------------------------------------------------Input processing-----------------------------------------------------*
+*#########################################################################################################################*/
+void Window_ProcessEvents(float delta) {
+	if (!WHBProcIsRunning()) {
+		Window_Main.Exists = false;
+		Window_RequestClose();
+	}
+}
+
+void Window_UpdateRawMouse(void) { }
+
+void Cursor_SetPosition(int x, int y) { }
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void ProcessKPAD(float delta) {
 	KPADStatus kpad = { 0 };
 	int res = KPADRead(0, &kpad, 1);
 	if (res != KPAD_ERROR_OK) return;
@@ -132,32 +152,32 @@ static void ProcessKPAD(double delta) {
 
 
 #define AXIS_SCALE 4.0f
-static void ProcessVpadStick(int axis, float x, float y, double delta) {
+static void ProcessVpadStick(int port, int axis, float x, float y, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsF(x) <= 0.1f) x = 0;
 	if (Math_AbsF(y) <= 0.1f) y = 0;
 	
-	Gamepad_SetAxis(axis, x * AXIS_SCALE, -y * AXIS_SCALE, delta);
+	Gamepad_SetAxis(port, axis, x * AXIS_SCALE, -y * AXIS_SCALE, delta);
 }
    
-static void ProcessVpadButtons(int mods) {
-	Gamepad_SetButton(CCPAD_L,  mods & VPAD_BUTTON_L);
-	Gamepad_SetButton(CCPAD_R,  mods & VPAD_BUTTON_R);
-	Gamepad_SetButton(CCPAD_ZL, mods & VPAD_BUTTON_ZL);
-	Gamepad_SetButton(CCPAD_ZR, mods & VPAD_BUTTON_ZR);
+static void ProcessVpadButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L,  mods & VPAD_BUTTON_L);
+	Gamepad_SetButton(port, CCPAD_R,  mods & VPAD_BUTTON_R);
+	Gamepad_SetButton(port, CCPAD_ZL, mods & VPAD_BUTTON_ZL);
+	Gamepad_SetButton(port, CCPAD_ZR, mods & VPAD_BUTTON_ZR);
       
-	Gamepad_SetButton(CCPAD_A, mods & VPAD_BUTTON_A);
-	Gamepad_SetButton(CCPAD_B, mods & VPAD_BUTTON_B);
-	Gamepad_SetButton(CCPAD_X, mods & VPAD_BUTTON_X);
-	Gamepad_SetButton(CCPAD_Y, mods & VPAD_BUTTON_Y);
+	Gamepad_SetButton(port, CCPAD_A, mods & VPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & VPAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & VPAD_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & VPAD_BUTTON_Y);
       
-	Gamepad_SetButton(CCPAD_START,  mods & VPAD_BUTTON_PLUS);
-	Gamepad_SetButton(CCPAD_SELECT, mods & VPAD_BUTTON_MINUS);
+	Gamepad_SetButton(port, CCPAD_START,  mods & VPAD_BUTTON_PLUS);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & VPAD_BUTTON_MINUS);
 
-	Gamepad_SetButton(CCPAD_LEFT,   mods & VPAD_BUTTON_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & VPAD_BUTTON_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & VPAD_BUTTON_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & VPAD_BUTTON_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & VPAD_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & VPAD_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & VPAD_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & VPAD_BUTTON_DOWN);
 	
 }
 
@@ -180,39 +200,25 @@ static void ProcessVpadTouch(VPADTouchData* data) {
 	was_touched = data->touched;
 }
 
-static void ProcessVPAD(double delta) {
+static void ProcessVPAD(float delta) {
 	VPADStatus vpadStatus;
 	VPADReadError error = VPAD_READ_SUCCESS;
 	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
 	if (error != VPAD_READ_SUCCESS) return;
 	
 	VPADGetTPCalibratedPoint(VPAD_CHAN_0, &vpadStatus.tpNormal, &vpadStatus.tpNormal);
-	ProcessVpadButtons(vpadStatus.hold);
+	ProcessVpadButtons(0, vpadStatus.hold);
 	ProcessVpadTouch(&vpadStatus.tpNormal);
 	
-	ProcessVpadStick(PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
-	ProcessVpadStick(PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
+	ProcessVpadStick(0, PAD_AXIS_LEFT,  vpadStatus.leftStick.x,  vpadStatus.leftStick.y,  delta);
+	ProcessVpadStick(0, PAD_AXIS_RIGHT, vpadStatus.rightStick.x, vpadStatus.rightStick.y, delta);
 }
 
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
-	if (!WHBProcIsRunning()) {
-		Window_Main.Exists = false;
-		Window_RequestClose();
-		return;
-	}
-	
+void Window_ProcessGamepads(float delta) {
 	ProcessVPAD(delta);
 	ProcessKPAD(delta);
 }
-
-void Window_UpdateRawMouse(void) { }
-
-void Cursor_SetPosition(int x, int y) { }
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
 
 
 /*########################################################################################################################*

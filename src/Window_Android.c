@@ -306,7 +306,7 @@ static void RemakeWindowSurface(void) {
 	/* Loop until window gets created by main UI thread */
 	/* (i.e. until processSurfaceCreated is received) */
 	while (!winCreated) {
-		Window_ProcessEvents(0.01);
+		Window_ProcessEvents(0.01f);
 		Thread_Sleep(10);
 	}
 
@@ -366,12 +366,14 @@ void Window_RequestClose(void) {
 	/* ANativeActivity_finish(app->activity); */
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	/* TODO: Cache the java env */
 	JavaICall_Void(env, JAVA_processEvents, NULL);
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }

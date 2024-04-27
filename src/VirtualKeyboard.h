@@ -47,7 +47,7 @@ static const char* kb_table_upper[] =
 	"Caps", "Shift", "Space", "Close"
 };
 
-extern void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
+extern void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int borderX, int borderY,
 								int x, int y, int width, int height);
 
 static void VirtualKeyboard_Init(void) {
@@ -207,7 +207,7 @@ static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
 	}
 }
 
-static void VirtualKeyboard_PadAxis(void* obj, int axis, float x, float y) {
+static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, float y) {
 	int xSteps, ySteps;
 
 	xSteps = Utils_AccumulateWheelDelta(&kb_padXAcc, x / 100.0f);

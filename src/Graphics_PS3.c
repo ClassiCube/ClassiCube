@@ -354,10 +354,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	// Same as Direct3D9
 	// TODO: should it be like OpenGL? ???
@@ -414,7 +414,7 @@ static void ResetFrameState(void) {
 						GCM_USER_CLIP_PLANE_DISABLE);
         
 	// NOTE: Must be called each frame, otherwise renders upside down at 4x zoom
-	Gfx_OnWindowResize();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
 // https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
@@ -450,24 +450,26 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
+
+void Gfx_SetViewport(int x, int y, int w, int h) {
 	f32 scale[4], offset[4];
-	
-	u16 w = DisplayInfo.Width;
-	u16 h = DisplayInfo.Height;
 	f32 zmin = 0.0f;
 	f32 zmax = 1.0f;
+	y = Game.Height - y - h;
 	
 	scale[0]  = w *  0.5f;
 	scale[1]  = h * -0.5f;
 	scale[2]  = (zmax - zmin) * 0.5f;
 	scale[3]  = 0.0f;
-	offset[0] = w * 0.5f;
-	offset[1] = h * 0.5f;
+	offset[0] = x + w * 0.5f;
+	offset[1] = x + h * 0.5f;
 	offset[2] = (zmax + zmin) * 0.5f;
 	offset[3] = 0.0f;
 
-	rsxSetViewport(context, 0, 0, w, h, zmin, zmax, scale, offset);
-	rsxSetScissor(context,  0, 0, w, h);
+	rsxSetViewport(context, x, y, w, h, zmin, zmax, scale, offset);
+	rsxSetScissor(context,  x, y, w, h);
 	
 	// TODO: even needed?
 	for (int i = 0; i < 8; i++)

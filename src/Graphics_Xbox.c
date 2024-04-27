@@ -106,6 +106,7 @@ static void ResetState(void) {
 }
 
 static GfxResourceID white_square;
+
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 512;
 	Gfx.MaxTexHeight = 512; // TODO: 1024?
@@ -507,12 +508,12 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 }
 
 // https://github.com/XboxDev/nxdk/blob/master/samples/mesh/math3d.c#L292
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
 	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
 	/* NOTE: This calculation is shared with Direct3D 11 backend */
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
@@ -535,15 +536,11 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 void Gfx_OnWindowResize(void) { }
 
+static struct Vec4 vp_offset = { 320, -240, 8388608, 1 };
+static struct Vec4 vp_scale  = { 320,  240, 8388608, 1 };
 static struct Matrix _view, _proj, _mvp;
 
-void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
-	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
-	*dst = *matrix;
-	
-	struct Matrix combined;
-	Matrix_Mul(&combined, &_view, &_proj);
-
+static void UpdateVSConstants(void) {
 	uint32_t* p;
 	p = pb_begin();
 	
@@ -554,17 +551,25 @@ void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	p = pb_push1(p, NV097_SET_TRANSFORM_CONSTANT_LOAD, 96);
 
 	// upload transformation matrix
-	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4);
-	Mem_Copy(p, &combined, 16 * 4); p += 16;
+	pb_push(p++, NV097_SET_TRANSFORM_CONSTANT, 4*4 + 4 + 4);
+	Mem_Copy(p, &_mvp,     16 * 4); p += 16;
 	// Upload viewport too
-	struct Vec4 viewport = { 320, 240, 8388608, 1 };
-	Mem_Copy(p, &viewport, 4 * 4); p += 4;
+	Mem_Copy(p, &vp_scale,  4 * 4); p += 4;
+	Mem_Copy(p, &vp_offset, 4 * 4); p += 4;
 	// Upload constants too
 	//struct Vec4 v = { 1, 1, 1, 1 };
 	//Mem_Copy(p, &v, 4 * 4); p += 4;
 	// if necessary, look at vs.inl output for 'c[5]' etc..
 
 	pb_end(p);
+}
+
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
+	struct Matrix* dst = type == MATRIX_PROJECTION ? &_proj : &_view;
+	*dst = *matrix;
+
+	Matrix_Mul(&_mvp, &_view, &_proj);
+	UpdateVSConstants();
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {	
@@ -576,6 +581,20 @@ void Gfx_EnableTextureOffset(float x, float y) {
 
 void Gfx_DisableTextureOffset(void) {
 }
+
+void Gfx_SetViewport(int x, int y, int w, int h) {
+    vp_scale.x  = w *  0.5f;
+    vp_scale.y  = h * -0.5f;
+    vp_offset.x = x + w * 0.5f;
+    vp_offset.y = y + h * 0.5f;
+
+	uint32_t* p;
+	p = pb_begin();
+    // NV097_SET_SURFACE_CLIP_HORIZONTAL followed by NV097_SET_SURFACE_CLIP_VERTICAL 
+    p = pb_push2(p, NV097_SET_SURFACE_CLIP_HORIZONTAL, x | (w << 16), y | (h << 16));
+    pb_end(p);
+}
+
 
 
 

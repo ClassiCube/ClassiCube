@@ -8,38 +8,12 @@ static const void* VERTEX_PTR;
     GLuint i = count; \
     while(i--)
 
-void _glInitAttributePointers() {
-    VERTEX_PTR = NULL;
-}
-
-
-/* Generating PVR vertices from the user-submitted data gets complicated, particularly
- * when a realloc could invalidate pointers. This structure holds all the information
- * we need on the target vertex array to allow passing around to the various stages (e.g. generate/clip etc.)
- */
-typedef struct __attribute__((aligned(32))) {
-    PolyList* output;
-    uint32_t header_offset; // The offset of the header in the output list
-    uint32_t start_offset; // The offset into the output list
-} SubmissionTarget;
-static SubmissionTarget SUBMISSION_TARGET;
-
-GL_FORCE_INLINE PolyHeader* _glSubmissionTargetHeader(SubmissionTarget* target) {
-    return aligned_vector_at(&target->output->vector, target->header_offset);
-}
-
-GL_FORCE_INLINE Vertex* _glSubmissionTargetStart(SubmissionTarget* target) {
-    return aligned_vector_at(&target->output->vector, target->start_offset);
-}
-
-static void generateColouredQuads(SubmissionTarget* target, const GLsizei first, const GLuint count) {
+static void generateColouredQuads(Vertex* dst, const GLsizei first, const GLuint count) {
     /* Read from the client buffers and generate an array of ClipVertices */
     GLuint numQuads = count / 4;
-    Vertex* start   = _glSubmissionTargetStart(target);
     /* Copy the pos, uv and color directly in one go */
     const GLubyte* src = VERTEX_PTR + (first * 16);
 
-    Vertex* dst = start;
     const float w = 1.0f;
     PREFETCH(src);
 
@@ -66,14 +40,12 @@ static void generateColouredQuads(SubmissionTarget* target, const GLsizei first,
     }
 }
 
-static void generateTexturedQuads(SubmissionTarget* target, const GLsizei first, const GLuint count) {
+static void generateTexturedQuads(Vertex* dst, const GLsizei first, const GLuint count) {
     /* Read from the client buffers and generate an array of ClipVertices */
     GLuint numQuads = count / 4;
-    Vertex* start   = _glSubmissionTargetStart(target);
     /* Copy the pos, uv and color directly in one go */
     const GLubyte* src = VERTEX_PTR + (first * 24);
 
-    Vertex* dst = start;
     const float w = 1.0f;
     PREFETCH(src);
 
@@ -100,47 +72,40 @@ static void generateTexturedQuads(SubmissionTarget* target, const GLsizei first,
     }
 }
 
-void _glInitSubmissionTarget() {
-    SubmissionTarget* target = &SUBMISSION_TARGET;
-
-    target->output = NULL;
-    target->header_offset = target->start_offset = 0;
-}
-
 extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
 
-GL_FORCE_INLINE void submitVertices(GLuint vertexCount) {
-    SubmissionTarget* const target = &SUBMISSION_TARGET;
+GL_FORCE_INLINE Vertex* submitVertices(GLuint vertexCount) {
     TRACE();
-    target->output = _glActivePolyList();
+    PolyList* output = _glActivePolyList();
+    uint32_t header_offset;
+    uint32_t start_offset;
     
-    uint32_t vector_size      = aligned_vector_size(&target->output->vector);
+    uint32_t vector_size      = aligned_vector_size(&output->vector);
     GLboolean header_required = (vector_size == 0) || STATE_DIRTY;
 
-    target->header_offset = vector_size;
-    target->start_offset  = target->header_offset + (header_required ? 1 : 0);
-    gl_assert(target->header_offset >= 0);
+    header_offset = vector_size;
+    start_offset  = header_offset + (header_required ? 1 : 0);
 
     /* Make room for the vertices and header */
-    aligned_vector_extend(&target->output->vector, (header_required) + vertexCount);    
-    gl_assert(target->header_offset < aligned_vector_size(&target->output->vector));
+    aligned_vector_extend(&output->vector, (header_required) + vertexCount);
+    gl_assert(header_offset < aligned_vector_size(&output->vector));
 
     if (header_required) {
-        apply_poly_header(_glSubmissionTargetHeader(target), target->output);
+        apply_poly_header(aligned_vector_at(&output->vector, header_offset), output);
         STATE_DIRTY = GL_FALSE;
     }
+    return aligned_vector_at(&output->vector, start_offset);
 }
 
 void APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     TRACE();
     if (!count) return;
-    
-    submitVertices(count);
+    Vertex* start = submitVertices(count);
 
     if (TEXTURES_ENABLED) {
-        generateTexturedQuads(&SUBMISSION_TARGET, first, count);
+        generateTexturedQuads(start, first, count);
     } else {
-        generateColouredQuads(&SUBMISSION_TARGET, first, count);
+        generateColouredQuads(start, first, count);
     }
 }
 

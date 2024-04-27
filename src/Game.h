@@ -24,6 +24,12 @@ extern cc_bool Game_UseCPEBlocks;
 extern cc_string Game_Username;
 extern cc_string Game_Mppass;
 
+#ifdef CC_BUILD_SPLITSCREEN
+extern int Game_NumLocalPlayers;
+#else
+#define Game_NumLocalPlayers 1
+#endif
+
 #if defined CC_BUILD_N64
     #define DEFAULT_VIEWDIST 20
 #elif defined CC_BUILD_NDS || defined CC_BUILD_PS1

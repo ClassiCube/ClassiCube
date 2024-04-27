@@ -89,36 +89,6 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(u32 mods) {
-	Gamepad_SetButton(CCPAD_L, mods & KEY_L);
-	Gamepad_SetButton(CCPAD_R, mods & KEY_R);
-	
-	Gamepad_SetButton(CCPAD_A, mods & KEY_A);
-	Gamepad_SetButton(CCPAD_B, mods & KEY_B);
-	Gamepad_SetButton(CCPAD_X, mods & KEY_X);
-	Gamepad_SetButton(CCPAD_Y, mods & KEY_Y);
-	
-	Gamepad_SetButton(CCPAD_START,  mods & KEY_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & KEY_SELECT);
-	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & KEY_DLEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & KEY_DRIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & KEY_DUP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & KEY_DDOWN);
-	
-	Gamepad_SetButton(CCPAD_ZL, mods & KEY_ZL);
-	Gamepad_SetButton(CCPAD_ZR, mods & KEY_ZR);
-}
-
-#define AXIS_SCALE 8.0f
-static void ProcessCircleInput(int axis, circlePosition* pos, double delta) {
-	// May not be exactly 0 on actual hardware
-	if (Math_AbsI(pos->dx) <= 24) pos->dx = 0;
-	if (Math_AbsI(pos->dy) <= 24) pos->dy = 0;
-		
-	Gamepad_SetAxis(axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
-}
-
 static void ProcessTouchInput(int mods) {
 	touchPosition touch;
 	hidTouchRead(&touch);
@@ -130,9 +100,8 @@ static void ProcessTouchInput(int mods) {
 	}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	hidScanInput();
-	Input.JoystickMovement = false;
 
 	if (!aptMainLoop()) {
 		Window_Main.Exists = false;
@@ -141,9 +110,53 @@ void Window_ProcessEvents(double delta) {
 	}
 	
 	u32 mods = hidKeysDown() | hidKeysHeld();
-	HandleButtons(mods);
-
 	ProcessTouchInput(mods);
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(u32 mods) {
+	Gamepad_SetButton(0, CCPAD_L, mods & KEY_L);
+	Gamepad_SetButton(0, CCPAD_R, mods & KEY_R);
+	
+	Gamepad_SetButton(0, CCPAD_A, mods & KEY_A);
+	Gamepad_SetButton(0, CCPAD_B, mods & KEY_B);
+	Gamepad_SetButton(0, CCPAD_X, mods & KEY_X);
+	Gamepad_SetButton(0, CCPAD_Y, mods & KEY_Y);
+	
+	Gamepad_SetButton(0, CCPAD_START,  mods & KEY_START);
+	Gamepad_SetButton(0, CCPAD_SELECT, mods & KEY_SELECT);
+	
+	Gamepad_SetButton(0, CCPAD_LEFT,   mods & KEY_DLEFT);
+	Gamepad_SetButton(0, CCPAD_RIGHT,  mods & KEY_DRIGHT);
+	Gamepad_SetButton(0, CCPAD_UP,     mods & KEY_DUP);
+	Gamepad_SetButton(0, CCPAD_DOWN,   mods & KEY_DDOWN);
+	
+	Gamepad_SetButton(0, CCPAD_ZL, mods & KEY_ZL);
+	Gamepad_SetButton(0, CCPAD_ZR, mods & KEY_ZR);
+}
+
+#define AXIS_SCALE 8.0f
+static void ProcessCircleInput(int axis, circlePosition* pos, float delta) {
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(pos->dx) <= 24) pos->dx = 0;
+	if (Math_AbsI(pos->dy) <= 24) pos->dy = 0;
+		
+	Gamepad_SetAxis(0, axis, pos->dx / AXIS_SCALE, -pos->dy / AXIS_SCALE, delta);
+}
+
+void Window_ProcessGamepads(float delta) {
+	u32 mods = hidKeysDown() | hidKeysHeld();
+	HandleButtons(mods);
 	
 	circlePosition hid_pos;
 	hidCircleRead(&hid_pos);
@@ -160,12 +173,6 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for 3DS
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-
-void Window_UpdateRawMouse(void)  { }
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*

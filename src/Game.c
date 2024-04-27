@@ -65,8 +65,11 @@ struct GameVersion Game_Version;
 
 static char usernameBuffer[STRING_SIZE];
 static char mppassBuffer[STRING_SIZE];
-cc_string Game_Username = String_FromArray(usernameBuffer);
-cc_string Game_Mppass   = String_FromArray(mppassBuffer);
+cc_string Game_Username  = String_FromArray(usernameBuffer);
+cc_string Game_Mppass    = String_FromArray(mppassBuffer);
+#ifdef CC_BUILD_SPLITSCREEN
+int Game_NumLocalPlayers = 1;
+#endif
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
@@ -402,6 +405,7 @@ static void Game_Load(void) {
 	Game_UpdateDimensions();
 	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 	Gfx_Create();
+	
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
 	GameVersion_Load();
@@ -479,11 +483,11 @@ void Game_SetFpsLimit(int method) {
 }
 
 static void UpdateViewMatrix(void) {
-	Camera.Active->GetView(&Gfx.View);
+	Camera.Active->GetView(Entities.CurPlayer, &Gfx.View);
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
-static void Render3DFrame(double delta, float t) {
+static void Render3DFrame(float delta, float t) {
 	Vec3 pos;
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
@@ -527,7 +531,7 @@ static void Render3DFrame(double delta, float t) {
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 
-static void Render3D_Anaglyph(double delta, float t) {
+static void Render3D_Anaglyph(float delta, float t) {
 	struct Matrix proj = Gfx.Projection;
 	struct Matrix view = Gfx.View;
 
@@ -599,56 +603,11 @@ void Game_TakeScreenshot(void) {
 #endif
 }
 
-static void Game_RenderFrame(double delta) {
-	struct ScheduledTask entTask;
-	float t;
-
-	/* TODO: Should other tasks get called back too? */
-	/* Might not be such a good idea for the http_clearcache, */
-	/* don't really want all skins getting lost */
-	if (Gfx.LostContext) {
-		if (Gfx_TryRestoreContext()) {
-			Gfx_RecreateContext();
-			/* all good, context is back */
-		} else {
-			Game.Time += delta; /* TODO: Not set in two places? */
-			Server.Tick(NULL);
-			Thread_Sleep(16);
-			return;
-		}
-	}
-
-	Gfx_BeginFrame();
-	Gfx_BindIb(Gfx_defaultIb);
-	Game.Time += delta;
-	Game_Vertices = 0;
-
-	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
-	Camera.Active->UpdateMouse(delta);
-
-	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
-
-	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui.InputGrab) {
-		InputHandler_SetFOV(Camera.ZoomFov);
-	}
-
-	PerformScheduledTasks(delta);
-	entTask = tasks[entTaskI];
-	t = (float)(entTask.accumulator / entTask.interval);
-	LocalPlayer_SetInterpPosition(t);
-
-	Camera.CurrentPos = Camera.Active->GetPosition(t);
-	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
-	EnvRenderer_UpdateFog();
+static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	UpdateViewMatrix();
-	AudioBackend_Tick();
-
-	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
-	if (Window_Main.Inactive) return;
-	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
 
 	if (!Gui_GetBlocksWorld()) {
-		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
+		Camera.Active->GetPickedBlock(Entities.CurPlayer, &Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
 		InputHandler_Tick();
 
@@ -673,6 +632,90 @@ static void Game_RenderFrame(double delta) {
 	}
 #endif
 	Gfx_End2D();
+}
+
+#ifdef CC_BUILD_SPLITSCREEN
+static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, int h) {
+	Gfx_SetViewport(x, y, w, h);
+	
+	Entities.CurPlayer = &LocalPlayer_Instances[i];
+	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
+	
+	Game_DrawFrame(delta, t);
+}
+#endif
+
+static CC_INLINE void Game_RenderFrame(double delta) {
+	struct ScheduledTask entTask;
+	float t;
+
+	/* TODO: Should other tasks get called back too? */
+	/* Might not be such a good idea for the http_clearcache, */
+	/* don't really want all skins getting lost */
+	if (Gfx.LostContext) {
+		if (Gfx_TryRestoreContext()) {
+			Gfx_RecreateContext();
+			/* all good, context is back */
+		} else {
+			Game.Time += delta; /* TODO: Not set in two places? */
+			Server.Tick(NULL);
+			Thread_Sleep(16);
+			return;
+		}
+	}
+
+	Gfx_BeginFrame();
+	Gfx_BindIb(Gfx_defaultIb);
+	Game.Time += delta;
+	Game_Vertices = 0;
+
+	if (Input.Sources & INPUT_SOURCE_GAMEPAD) Gamepad_Tick(delta);
+	Camera.Active->UpdateMouse(Entities.CurPlayer, delta);
+
+	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
+
+	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui.InputGrab) {
+		InputHandler_SetFOV(Camera.ZoomFov);
+	}
+
+	PerformScheduledTasks(delta);
+	entTask = tasks[entTaskI];
+	t = (float)(entTask.accumulator / entTask.interval);
+	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
+
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
+	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
+	EnvRenderer_UpdateFog();
+	AudioBackend_Tick();
+
+	/* TODO: Not calling Gfx_EndFrame doesn't work with Direct3D9 */
+	if (Window_Main.Inactive) return;
+	Gfx_ClearBuffers(GFX_BUFFER_COLOR | GFX_BUFFER_DEPTH);
+	
+#ifdef CC_BUILD_SPLITSCREEN
+	switch (Game_NumLocalPlayers) {
+		case 1:
+			Game_DrawFrame(delta, t); break;
+		case 2:
+			DrawSplitscreen(delta, t, 0,  0,               0, Game.Width, Game.Height / 2);
+			DrawSplitscreen(delta, t, 1,  0, Game.Height / 2, Game.Width, Game.Height / 2);
+			break;
+		case 3:
+			DrawSplitscreen(delta, t, 0,              0,               0, Game.Width    , Game.Height / 2);
+			DrawSplitscreen(delta, t, 1,              0, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 2, Game.Width / 2, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			break;
+		case 4:
+			DrawSplitscreen(delta, t, 0,              0,               0, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 1, Game.Width / 2,               0, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 2,              0, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			DrawSplitscreen(delta, t, 3, Game.Width / 2, Game.Height / 2, Game.Width / 2, Game.Height / 2);
+			break;
+	}
+#else
+	Game_DrawFrame(delta, t);
+#endif
 
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 	Gfx_EndFrame();

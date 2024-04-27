@@ -237,7 +237,7 @@ static struct ChatCommand ResolutionCommand = {
 
 static void ModelCommand_Execute(const cc_string* args, int argsCount) {
 	if (argsCount) {
-		Entity_SetModel(&LocalPlayer_Instance.Base, args);
+		Entity_SetModel(&Entities.CurPlayer->Base, args);
 	} else {
 		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	}
@@ -482,7 +482,7 @@ static struct ChatCommand ReplaceCommand = {
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(const cc_string* args, int argsCount) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+	struct Entity* e = &Entities.CurPlayer->Base;
 	struct LocationUpdate update;
 	Vec3 v;
 

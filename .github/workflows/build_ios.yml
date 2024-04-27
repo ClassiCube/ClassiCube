@@ -1,0 +1,34 @@
+name: Build latest (iOS)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-ios
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: macOS-11
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile iOS build
+        id: compile
+        run: |
+          cd ios
+          xcodebuild -sdk iphoneos -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          cd build/Release-iphoneos
+          mkdir Payload
+          mv ClassiCube.app Payload/ClassiCube.app
+          zip -r cc.ipa Payload
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile iOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ios/build/Release-iphoneos/cc.ipa'
+          DEST_NAME: 'cc.ipa'

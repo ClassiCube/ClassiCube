@@ -104,52 +104,51 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *---------------------------------------------GameCube controller processing----------------------------------------------*
 *#########################################################################################################################*/
-static PADStatus gc_pad;
+static PADStatus gc_pads[INPUT_MAX_GAMEPADS];
 
 #define PAD_AXIS_SCALE 8.0f
-static void ProcessPAD_Joystick(int axis, int x, int y, double delta) {
+static void ProcessPAD_Joystick(int port, int axis, int x, int y, float delta) {
 	// May not be exactly 0 on actual hardware
 	if (Math_AbsI(x) <= 8) x = 0;
 	if (Math_AbsI(y) <= 8) y = 0;
 	
-	Gamepad_SetAxis(axis, x / PAD_AXIS_SCALE, -y / PAD_AXIS_SCALE, delta);		
+	Gamepad_SetAxis(port, axis, x / PAD_AXIS_SCALE, -y / PAD_AXIS_SCALE, delta);
 }
 
-static void ProcessPAD_Buttons(void) {
-	int mods = gc_pad.button;
-	Gamepad_SetButton(CCPAD_L, mods & PAD_TRIGGER_L);
-	Gamepad_SetButton(CCPAD_R, mods & PAD_TRIGGER_R);
+static void ProcessPAD_Buttons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & PAD_TRIGGER_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & PAD_TRIGGER_R);
 	
-	Gamepad_SetButton(CCPAD_A, mods & PAD_BUTTON_A);
-	Gamepad_SetButton(CCPAD_B, mods & PAD_BUTTON_B);
-	Gamepad_SetButton(CCPAD_X, mods & PAD_BUTTON_X);
-	Gamepad_SetButton(CCPAD_Y, mods & PAD_BUTTON_Y);
+	Gamepad_SetButton(port, CCPAD_A, mods & PAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & PAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & PAD_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & PAD_BUTTON_Y);
 	
-	Gamepad_SetButton(CCPAD_START,  mods & PAD_BUTTON_START);
-	Gamepad_SetButton(CCPAD_SELECT, mods & PAD_TRIGGER_Z);
+	Gamepad_SetButton(port, CCPAD_START,  mods & PAD_BUTTON_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & PAD_TRIGGER_Z);
 	
-	Gamepad_SetButton(CCPAD_LEFT,   mods & PAD_BUTTON_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & PAD_BUTTON_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & PAD_BUTTON_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & PAD_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & PAD_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & PAD_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PAD_BUTTON_DOWN);
 }
 
-static void ProcessPADInput(double delta) {
+static void ProcessPADInput(int port, float delta) {
 	PADStatus pads[4];
 	PAD_Read(pads);
-	int error = pads[0].err;
+	int error = pads[port].err;
 
 	if (error == 0) {
-		gc_pad = pads[0]; // new state arrived
+		gc_pads[port] = pads[port]; // new state arrived
 	} else if (error == PAD_ERR_TRANSFER) {
 		// usually means still busy transferring state - use last state
 	} else {
 		return; // not connected, still busy, etc
 	}
 	
-	ProcessPAD_Buttons();
-	ProcessPAD_Joystick(PAD_AXIS_LEFT,  gc_pad.stickX,    gc_pad.stickY,    delta);
-	ProcessPAD_Joystick(PAD_AXIS_RIGHT, gc_pad.substickX, gc_pad.substickY, delta);
+	ProcessPAD_Buttons(0, gc_pads[port].button);
+	ProcessPAD_Joystick(0, PAD_AXIS_LEFT,  gc_pads[port].stickX,    gc_pads[port].stickY,    delta);
+	ProcessPAD_Joystick(0, PAD_AXIS_RIGHT, gc_pads[port].substickX, gc_pads[port].substickY, delta);
 }
 
 
@@ -225,101 +224,9 @@ static int dragCurX, dragCurY;
 static int dragStartX, dragStartY;
 static cc_bool dragActive;
 
-static void ProcessWPAD_Buttons(int mods) {
-	Gamepad_SetButton(CCPAD_L, mods & WPAD_BUTTON_1);
-	Gamepad_SetButton(CCPAD_R, mods & WPAD_BUTTON_2);
-      
-	Gamepad_SetButton(CCPAD_A, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(CCPAD_B, mods & WPAD_BUTTON_B);
-	Gamepad_SetButton(CCPAD_X, mods & WPAD_BUTTON_PLUS);
-      
-	Gamepad_SetButton(CCPAD_START,  mods & WPAD_BUTTON_HOME);
-	Gamepad_SetButton(CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
-
-	Gamepad_SetButton(CCPAD_LEFT,   mods & WPAD_BUTTON_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & WPAD_BUTTON_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & WPAD_BUTTON_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
+void Window_ProcessEvents(float delta) {
+	ProcessKeyboardInput();
 }
-
-static void ProcessNunchuck_Game(int mods, double delta) {
-	WPADData* wd = WPAD_Data(0);
-	joystick_t analog = wd->exp.nunchuk.js;
-
-	Gamepad_SetButton(CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
-	Gamepad_SetButton(CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_Z);
-      
-	Gamepad_SetButton(CCPAD_A, mods & WPAD_BUTTON_A);
-	Gamepad_SetButton(CCPAD_Y, mods & WPAD_BUTTON_1);
-	Gamepad_SetButton(CCPAD_X, mods & WPAD_BUTTON_2);
-
-	Gamepad_SetButton(CCPAD_START,  mods & WPAD_BUTTON_HOME);
-	Gamepad_SetButton(CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
-
-	Gamepad_SetButton(KeyBinds_Normal[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
-
-	if (mods & WPAD_BUTTON_RIGHT) {
-		Mouse_ScrollWheel(1.0*delta);
-	}
-
-	Gamepad_SetButton(KeyBinds_Normal[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
-	Gamepad_SetButton(KeyBinds_Normal[KEYBIND_FLY_DOWN],    mods & WPAD_BUTTON_DOWN);
-
-	const float ANGLE_DELTA = 50;
-	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);
-	bool nunchuckDown  = (analog.ang > 180-ANGLE_DELTA) && (analog.ang < 180+ANGLE_DELTA) && (analog.mag > 0.5);
-	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
-	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
-
-	Gamepad_SetButton(CCPAD_LEFT,  nunchuckLeft);
-	Gamepad_SetButton(CCPAD_RIGHT, nunchuckRight);
-	Gamepad_SetButton(CCPAD_UP,    nunchuckUp);
-	Gamepad_SetButton(CCPAD_DOWN,  nunchuckDown);
-}
-
-#define CLASSIC_AXIS_SCALE 2.0f
-static void ProcessClassic_Joystick(int axis, struct joystick_t* js, double delta) {
-	// TODO: need to account for min/max?? see libogc
-	int x = js->pos.x - js->center.x;
-	int y = js->pos.y - js->center.y;
-	
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	Gamepad_SetAxis(axis, x / CLASSIC_AXIS_SCALE, -y / CLASSIC_AXIS_SCALE, delta);
-}
-
-static void ProcessClassicButtons(int mods) {
-	Gamepad_SetButton(CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
-	Gamepad_SetButton(CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
-      
-	Gamepad_SetButton(CCPAD_A, mods & CLASSIC_CTRL_BUTTON_A);
-	Gamepad_SetButton(CCPAD_B, mods & CLASSIC_CTRL_BUTTON_B);
-	Gamepad_SetButton(CCPAD_X, mods & CLASSIC_CTRL_BUTTON_X);
-	Gamepad_SetButton(CCPAD_Y, mods & CLASSIC_CTRL_BUTTON_Y);
-      
-	Gamepad_SetButton(CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_PLUS);
-	Gamepad_SetButton(CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_MINUS);
-
-	Gamepad_SetButton(CCPAD_LEFT,   mods & CLASSIC_CTRL_BUTTON_LEFT);
-	Gamepad_SetButton(CCPAD_RIGHT,  mods & CLASSIC_CTRL_BUTTON_RIGHT);
-	Gamepad_SetButton(CCPAD_UP,     mods & CLASSIC_CTRL_BUTTON_UP);
-	Gamepad_SetButton(CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
-	
-	Gamepad_SetButton(CCPAD_ZL, mods & CLASSIC_CTRL_BUTTON_ZL);
-	Gamepad_SetButton(CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
-}
-
-static void ProcessClassicInput(double delta) {
-	WPADData* wd = WPAD_Data(0);
-	classic_ctrl_t ctrls = wd->exp.classic;
-	int mods = ctrls.btns | ctrls.btns_held;
-
-	ProcessClassicButtons(mods);
-	ProcessClassic_Joystick(PAD_AXIS_LEFT,  &ctrls.ljs, delta);
-	ProcessClassic_Joystick(PAD_AXIS_RIGHT, &ctrls.rjs, delta);
-}
-
 
 static void GetIRPos(int res, int* x, int* y) {
 	if (res == WPAD_ERR_NONE) {
@@ -333,23 +240,16 @@ static void GetIRPos(int res, int* x, int* y) {
 	}
 }
 
-static void ProcessWPADInput(double delta) {	
-	WPAD_ScanPads();
-	u32 mods = WPAD_ButtonsDown(0) | WPAD_ButtonsHeld(0);
+static void ScanAndGetIRPos(int* x, int* y) {
 	u32 type;
-	int res  = WPAD_Probe(0, &type);
-	if (res) return;
+	WPAD_ScanPads();
+	
+	int res = WPAD_Probe(0, &type);
+	GetIRPos(res, x, y);
+}
 
-	if (type == WPAD_EXP_CLASSIC) {
-		ProcessClassicInput(delta);
-	} else if (launcherMode) {
-		ProcessWPAD_Buttons(mods);
-	} else if (type == WPAD_EXP_NUNCHUK) {
-		ProcessNunchuck_Game(mods, delta);
-	} else {
-		ProcessWPAD_Buttons(mods);
-	}
 
+static void ProcessWPADDrag(int res, u32 mods) {
 	int x, y;
 	GetIRPos(res, &x, &y);
 	
@@ -365,22 +265,6 @@ static void ProcessWPADInput(double delta) {
 	Pointer_SetPosition(0, x, y);
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	Input.Sources = INPUT_SOURCE_GAMEPAD;
-
-	ProcessWPADInput(delta);
-	ProcessPADInput(delta);
-	ProcessKeyboardInput();
-}
-
-static void ScanAndGetIRPos(int* x, int* y) {
-	u32 type;
-	WPAD_ScanPads();
-	
-	int res = WPAD_Probe(0, &type);
-	GetIRPos(res, x, y);
-}
 #define FACTOR 2
 void Window_UpdateRawMouse(void)  {
 	if (!dragActive) return;
@@ -398,10 +282,7 @@ void Window_UpdateRawMouse(void)  {
 	dragCurX = x; dragCurY = y;
 }
 #else
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
-	ProcessPADInput(delta);
+void Window_ProcessEvents(float delta) {
 }
 
 void Window_UpdateRawMouse(void) { }
@@ -411,6 +292,146 @@ void Cursor_SetPosition(int x, int y) { } // No point in GameCube/Wii
 // TODO: Display cursor on Wii when not raw mode
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined HW_RVL
+static int dragCurX, dragCurY;
+static int dragStartX, dragStartY;
+static cc_bool dragActive;
+
+static void ProcessWPAD_Buttons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);
+	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_BUTTON_2);
+      
+	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & WPAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_PLUS);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & WPAD_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & WPAD_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & WPAD_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
+}
+
+static void ProcessNunchuck_Game(int port, int mods, float delta) {
+	WPADData* wd = WPAD_Data(0);
+	joystick_t analog = wd->exp.nunchuk.js;
+
+	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_C);
+	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_Z);
+      
+	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_Y, mods & WPAD_BUTTON_1);
+	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_2);
+
+	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
+
+	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
+
+	if (mods & WPAD_BUTTON_RIGHT) {
+		Mouse_ScrollWheel(1.0*delta);
+	}
+
+	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);
+	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_FLY_DOWN],     mods & WPAD_BUTTON_DOWN);
+
+	const float ANGLE_DELTA = 50;
+	bool nunchuckUp    = (analog.ang > -ANGLE_DELTA)    && (analog.ang < ANGLE_DELTA)     && (analog.mag > 0.5);
+	bool nunchuckDown  = (analog.ang > 180-ANGLE_DELTA) && (analog.ang < 180+ANGLE_DELTA) && (analog.mag > 0.5);
+	bool nunchuckLeft  = (analog.ang > -90-ANGLE_DELTA) && (analog.ang < -90+ANGLE_DELTA) && (analog.mag > 0.5);
+	bool nunchuckRight = (analog.ang > 90-ANGLE_DELTA)  && (analog.ang < 90+ANGLE_DELTA)  && (analog.mag > 0.5);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,  nunchuckLeft);
+	Gamepad_SetButton(port, CCPAD_RIGHT, nunchuckRight);
+	Gamepad_SetButton(port, CCPAD_UP,    nunchuckUp);
+	Gamepad_SetButton(port, CCPAD_DOWN,  nunchuckDown);
+}
+
+#define CLASSIC_AXIS_SCALE 2.0f
+static void ProcessClassic_Joystick(int port, int axis, struct joystick_t* js, float delta) {
+	// TODO: need to account for min/max?? see libogc
+	int x = js->pos.x - js->center.x;
+	int y = js->pos.y - js->center.y;
+	
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(port, axis, x / CLASSIC_AXIS_SCALE, -y / CLASSIC_AXIS_SCALE, delta);
+}
+
+static void ProcessClassicButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & CLASSIC_CTRL_BUTTON_FULL_L);
+	Gamepad_SetButton(port, CCPAD_R, mods & CLASSIC_CTRL_BUTTON_FULL_R);
+      
+	Gamepad_SetButton(port, CCPAD_A, mods & CLASSIC_CTRL_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & CLASSIC_CTRL_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & CLASSIC_CTRL_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & CLASSIC_CTRL_BUTTON_Y);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & CLASSIC_CTRL_BUTTON_PLUS);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & CLASSIC_CTRL_BUTTON_MINUS);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & CLASSIC_CTRL_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & CLASSIC_CTRL_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & CLASSIC_CTRL_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CLASSIC_CTRL_BUTTON_DOWN);
+	
+	Gamepad_SetButton(port, CCPAD_ZL, mods & CLASSIC_CTRL_BUTTON_ZL);
+	Gamepad_SetButton(port, CCPAD_ZR, mods & CLASSIC_CTRL_BUTTON_ZR);
+}
+
+static void ProcessClassicInput(int port, float delta) {
+	WPADData* wd = WPAD_Data(0);
+	classic_ctrl_t ctrls = wd->exp.classic;
+	int mods = ctrls.btns | ctrls.btns_held;
+
+	ProcessClassicButtons(port, mods);
+	ProcessClassic_Joystick(port, PAD_AXIS_LEFT,  &ctrls.ljs, delta);
+	ProcessClassic_Joystick(port, PAD_AXIS_RIGHT, &ctrls.rjs, delta);
+}
+
+static void ProcessWPADInput(int port, float delta) {
+	WPAD_ScanPads();
+	u32 type;
+	int res  = WPAD_Probe(port, &type);
+	if (res) return;
+	u32 mods = WPAD_ButtonsDown(port) | WPAD_ButtonsHeld(port);
+
+	if (type == WPAD_EXP_CLASSIC) {
+		ProcessClassicInput(port, delta);
+	} else if (launcherMode) {
+		ProcessWPAD_Buttons(port, mods);
+	} else if (type == WPAD_EXP_NUNCHUK) {
+		ProcessNunchuck_Game(port, mods, delta);
+	} else {
+		ProcessWPAD_Buttons(port, mods);
+	}
+
+	ProcessWPADDrag(res, mods);
+}
+
+void Window_ProcessGamepads(float delta) {
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		ProcessWPADInput(port, delta);
+		ProcessPADInput( port, delta);
+	}
+}
+#else
+void Window_ProcessGamepads(float delta) {
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		ProcessPADInput(port, delta);
+	}
+}
+#endif
 
 
 /*########################################################################################################################*

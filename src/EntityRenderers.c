@@ -242,6 +242,7 @@ static void EntityShadows_MakeTexture(void) {
 }
 
 void EntityShadows_Render(void) {
+	struct Entity* e;
 	int i;
 	if (Entities.ShadowsMode == SHADOW_MODE_NONE) return;
 
@@ -256,13 +257,13 @@ void EntityShadows_Render(void) {
 	Gfx_SetAlphaBlending(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	EntityShadow_Draw(Entities.List[ENTITIES_SELF_ID]);
+	EntityShadow_Draw(&Entities.CurPlayer->Base);
 
 	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
-		for (i = 0; i < ENTITIES_SELF_ID; i++) 
+		for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 		{
-			if (!Entities.List[i] || !Entities.List[i]->ShouldRender) continue;
-			EntityShadow_Draw(Entities.List[i]);
+			if (!e || !e->ShouldRender || e == &Entities.CurPlayer->Base) continue;
+			EntityShadow_Draw(e);
 		}
 	}
 
@@ -348,7 +349,7 @@ static void DrawName(struct Entity* e) {
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
 	size.x = e->NameTex.width * scale; size.y = e->NameTex.height * scale;
 
-	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
+	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && Entities.CurPlayer->Hacks.CanSeeAllNames) {
 		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
 		scale = pos.x * mat.row1.w + pos.y * mat.row2.w + pos.z * mat.row3.w + mat.row4.w;
@@ -373,10 +374,10 @@ void EntityNames_Delete(struct Entity* e) {
 /*########################################################################################################################*
 *-----------------------------------------------------Names rendering-----------------------------------------------------*
 *#########################################################################################################################*/
-static EntityID closestEntityId;
+static int closestEntityId;
 
 void EntityNames_Render(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_bool hadFog;
 	int i;
 
@@ -391,9 +392,7 @@ void EntityNames_Render(void) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
 		if (!Entities.List[i]) continue;
-		if (i != closestEntityId || i == ENTITIES_SELF_ID) {
-			DrawName(Entities.List[i]);
-		}
+		if (i != closestEntityId) DrawName(Entities.List[i]);
 	}
 
 	Gfx_SetAlphaTest(false);
@@ -401,7 +400,7 @@ void EntityNames_Render(void) {
 }
 
 void EntityNames_RenderHovered(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_bool allNames, hadFog;
 	int i;
 
@@ -417,7 +416,7 @@ void EntityNames_RenderHovered(void) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
 		if (!Entities.List[i]) continue;
-		if ((i == closestEntityId || allNames) && i != ENTITIES_SELF_ID) {
+		if ((i == closestEntityId || allNames) && Entities.List[i] != &p->Base) {
 			DrawName(Entities.List[i]);
 		}
 	}

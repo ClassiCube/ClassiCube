@@ -512,7 +512,8 @@ int Block_FindID(const cc_string* name) {
 	cc_string blockName;
 	int block;
 
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) 
+	{
 		blockName = Block_UNSAFE_GetName(block);
 		if (String_CaselessEquals(&blockName, name)) return block;
 	}
@@ -604,7 +605,7 @@ static int RotateVertical(cc_string* name, int offset) {
 
 static int RotateFence(cc_string* name, int offset) {
 	/* Fence type blocks */
-	float yaw = Math_ClampAngle(LocalPlayer_Instance.Base.Yaw);
+	float yaw = Math_ClampAngle(Entities.CurPlayer->Base.Yaw);
 
 	if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
 		AutoRotate_Insert(name, offset, "-WE");
@@ -629,7 +630,7 @@ static int RotatePillar(cc_string* name, int offset) {
 }
 
 static int RotateDirection(cc_string* name, int offset) {
-	float yaw = Math_ClampAngle(LocalPlayer_Instance.Base.Yaw);
+	float yaw = Math_ClampAngle(Entities.CurPlayer->Base.Yaw);
 
 	if (yaw >= 45.0f && yaw < 135.0f) {
 		AutoRotate_Insert(name, offset, "-E");
