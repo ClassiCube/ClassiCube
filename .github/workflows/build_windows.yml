@@ -45,7 +45,7 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'src/cc-w32-d3d9.exe'
-          DEST_NAME: 'ClassiCube-Win32.exe'
+          DEST_NAME: 'ClassiCube-Win32-Direct3D9.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
@@ -109,7 +109,7 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'src/cc-w64-d3d9.exe'
-          DEST_NAME: 'ClassiCube-Win64.exe'
+          DEST_NAME: 'ClassiCube-Win64-Direct3D9.exe'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}

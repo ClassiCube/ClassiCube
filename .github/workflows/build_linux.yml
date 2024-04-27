@@ -45,7 +45,7 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'src/cc-nix32-gl1'
-          DEST_NAME: 'ClassiCube-Linux32'
+          DEST_NAME: 'ClassiCube-Linux32-OpenGL'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
@@ -94,7 +94,7 @@ jobs:
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
           SOURCE_FILE: 'src/cc-nix64-gl1'
-          DEST_NAME: 'ClassiCube-Linux64'
+          DEST_NAME: 'ClassiCube-Linux64-OpenGL'
           
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}

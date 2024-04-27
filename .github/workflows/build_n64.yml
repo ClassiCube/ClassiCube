@@ -16,6 +16,7 @@ jobs:
       - name: Compile N64 build
         id: compile
         run: |
+          apt-get update
           apt-get -y install curl
           REAL_DIR=`pwd`
           cd /tmp

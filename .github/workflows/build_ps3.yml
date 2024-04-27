@@ -16,6 +16,7 @@ jobs:
       - name: Compile PS3 build
         id: compile
         run: |
+          apt-get update
           apt-get install -y curl
           export PS3DEV=/usr/local/ps3dev
           export PSL1GHT=/usr/local/ps3dev

@@ -43,3 +43,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-wiiu.elf'
           DEST_NAME: 'ClassiCube-wiiu.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'wiiu'

@@ -47,3 +47,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-xbox360.elf32'
           DEST_NAME: 'ClassiCube-xbox360.elf32'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'xbox360'
