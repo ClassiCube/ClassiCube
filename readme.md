@@ -73,13 +73,13 @@ And also runs on:
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
 * Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
-* Switch - unfinished, but usable (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_switch.yml))
+* Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
 * Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml)), **untested on real hardware**)
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
 * Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
 * 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
-* DS/DSi - unfinished, rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ds.yml))
+* DS/DSi - unfinished, rendering issues  (can [download from here](https://www.classicube.net/download/nds))
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
 * PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
 * PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
@@ -293,6 +293,10 @@ Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
 
 Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
 
+#### Saturn
+
+Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
+
 </details>
 
 </details>
@@ -397,7 +401,7 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
 * [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
 * [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
-* [blocksds](https://github.com/blocksds/sdk) - Backend for Nintendo DS
+* [BlocksDS](https://github.com/blocksds/sdk) - Backend for Nintendo DS
 * [melonDS](https://github.com/melonDS-emu/melonDS) - Emulator used to test Nintendo DS port
 * [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
 * [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
@@ -416,6 +420,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
 * [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
 * [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
+* [libyaul](https://github.com/yaul-org/libyaul) - Backend for Saturn
+* [mednafen](https://mednafen.github.io/) - Emulator used to test Saturn port
 
 </details>
 
