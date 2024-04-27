@@ -45,26 +45,18 @@ static BitmapCol fallback_terrain[16 * 8] = {
 };
 
 static void LoadFallbackAtlas(void) {
-	struct Bitmap bmp;
-	BitmapCol* dst;
-	int x, y;
+	struct Bitmap bmp, src;
+	src.width  = 16;
+	src.height = 8;
+	src.scan0  = fallback_terrain;
 	
 	if (Gfx.MinTexWidth || Gfx.MinTexHeight) {
 		Bitmap_Allocate(&bmp, 16 * Gfx.MinTexWidth, 8 * Gfx.MinTexHeight);
-		dst = bmp.scan0;
-		
-		/* Would be faster if upscaling was done instead, but this code isn't performance sensitive */
-		for (y = 0; y < bmp.height; y++)
-			for (x = 0; x < bmp.width; x++)
-			{
-				*dst++ = fallback_terrain[(y / Gfx.MinTexHeight) * 16 + (x / Gfx.MinTexWidth)];
-			}
+		Bitmap_Scale(&bmp, &src, 0, 0, 16, 8);
+		Atlas_TryChange(&bmp);
 	} else {
-		bmp.width  = 16;
-		bmp.height = 8;
-		bmp.scan0  = fallback_terrain;
+		Atlas_TryChange(&src);
 	}
-	Atlas_TryChange(&bmp);
 }
 
 /*########################################################################################################################*

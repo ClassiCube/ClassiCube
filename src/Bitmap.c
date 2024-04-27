@@ -334,7 +334,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint32 i;
 
 	/* idat state */
-	cc_uint32 begY, rowY = 0, endY;
+	cc_uint32 available = 0, rowY = 0;
 	cc_uint8 buffer[PNG_PALETTE * 3];
 	cc_uint32 read, bufferIdx = 0;
 	cc_uint32 left, bufferLen = 0;
@@ -461,19 +461,18 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			if (!bmp->scan0) return PNG_ERR_NO_DATA;
 			if (rowY >= bmp->height) break;
-
-			begY = bufferIdx / scanlineBytes;
 			left = bufferLen - bufferIdx;
 
-			res = compStream.Read(&compStream, &data[bufferIdx], left, &read);
+			res  = compStream.Read(&compStream, &data[bufferIdx], left, &read);
 			if (res) return res;
 			if (!read) break;
 
+			available += read;
 			bufferIdx += read;
-			endY = bufferIdx / scanlineBytes;
 
+			/* Process all of the scanline(s) that have been fully decompressed */
 			/* NOTE: Need to check height too, in case IDAT is corrupted and has extra data */
-			for (rowY = begY; rowY < endY && rowY < bmp->height; rowY++) {
+			for (; available >= scanlineBytes && rowY < bmp->height; rowY++, available -= scanlineBytes) {
 				cc_uint8* scanline = &data[rowY * scanlineBytes];
 				if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
 

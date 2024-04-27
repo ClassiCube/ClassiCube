@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A4D0C642BDD168800E1695D /* TouchUI.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A4D0C632BDD168800E1695D /* TouchUI.c */; };
 		9A57ECEE2BCD1408006A89F0 /* AudioBackend.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECED2BCD1408006A89F0 /* AudioBackend.c */; };
 		9A57ECF02BCD1413006A89F0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECEF2BCD1412006A89F0 /* main.c */; };
 		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
@@ -92,6 +93,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9A4D0C632BDD168800E1695D /* TouchUI.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TouchUI.c; sourceTree = "<group>"; };
 		9A57ECED2BCD1408006A89F0 /* AudioBackend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AudioBackend.c; sourceTree = "<group>"; };
 		9A57ECEF2BCD1412006A89F0 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
@@ -210,6 +212,7 @@
 		9A89D37727F802F500FF3F80 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9A4D0C632BDD168800E1695D /* TouchUI.c */,
 				9A57ECEF2BCD1412006A89F0 /* main.c */,
 				9A57ECED2BCD1408006A89F0 /* AudioBackend.c */,
 				9A7401DA2B7384060040E575 /* SSL.c */,
@@ -429,6 +432,7 @@
 				9A89D56227F802F600FF3F80 /* _ftbase.c in Sources */,
 				9A89D56B27F802F600FF3F80 /* Server.c in Sources */,
 				9A89D50027F802F600FF3F80 /* _truetype.c in Sources */,
+				9A4D0C642BDD168800E1695D /* TouchUI.c in Sources */,
 				9AC5433E2AE2649F0086C85F /* SystemFonts.c in Sources */,
 				9A89D57F27F802F600FF3F80 /* LWeb.c in Sources */,
 				9A89D56627F802F600FF3F80 /* Drawer2D.c in Sources */,

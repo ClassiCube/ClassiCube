@@ -114,7 +114,7 @@ static void consoleInit(void) {
     int bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 14, 0);
     conFontBgMap = (u16*)bgGetMapPtr(bgId);
 
-    consoleLoadFont(u16*)bgGetGfxPtr(bgId));
+    consoleLoadFont((u16*)bgGetGfxPtr(bgId));
     consoleClear();
 }
 
@@ -131,7 +131,7 @@ struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
 // Console and Keyboard combined need more than 32 kb of H VRAM bank
-// The simple solution is to allocate the C VRAM bank, but ClassiCube
+// The simple solution would be to allocate the C VRAM bank, but ClassiCube
 // needs as much VRAM as it can get for textures
 // So the solution is to share the H VRAM bank between console and keyboard
 static void ResetHBank(void) {
