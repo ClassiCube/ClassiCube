@@ -187,7 +187,7 @@ void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 	cc_uint32 alpha;
 
 	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
-	alpha = BitmapColor_A_Bits(color);
+	alpha = color & BITMAPCOLOR_A_MASK;
 
 	for (yy = 0; yy < height; yy++) {
 		dst = Bitmap_GetRow(bmp, y + yy) + x;

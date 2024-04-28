@@ -82,6 +82,9 @@ ClassiCube*
 screenshots
 fontscache.txt
 
+# Android source files need to be included
+!android/app/src/main/java/com/classicube
+
 # CMake files
 CMakeFiles/
 CMakeCache.txt
