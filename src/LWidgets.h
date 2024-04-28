@@ -247,5 +247,5 @@ int LTable_GetSelectedIndex(struct LTable* w);
 void LTable_SetSelectedTo(struct LTable* w, int index);
 void LTable_RowClick(struct LTable* w, int row);
 /* Works out the background color of the given row */
-BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected);
+BitmapCol LTable_RowColor(int row, cc_bool selected, cc_bool featured);
 #endif

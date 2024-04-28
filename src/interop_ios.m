@@ -1696,7 +1696,7 @@ void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
 
 static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected) {
-    BitmapCol color = LTable_RowColor(server, row, selected);
+    BitmapCol color = LTable_RowColor(row, selected, server && server->featured);
     if (color) {
         view.backgroundColor = ToUIColor(color, 1.0f);
         view.opaque          = YES;

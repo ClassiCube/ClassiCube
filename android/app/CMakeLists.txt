@@ -102,6 +102,7 @@ add_library(classicube SHARED
         ../../src/EntityRenderers.c
         ../../src/AudioBackend.c
         ../../src/TouchUI.c
+        ../../src/LBackend_Android.c
         )
 
 # add lib dependencies
@@ -110,4 +111,5 @@ target_link_libraries(classicube
     EGL
     GLESv2
     log
-    OpenSLES)
+    OpenSLES
+    jnigraphics)
