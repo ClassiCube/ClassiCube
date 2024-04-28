@@ -102,6 +102,36 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
 	Launcher_DrawTitle(&logoFont, title, ctx);
 }
 
+/* Scales up flag bitmap if necessary */
+static void LBackend_ScaleFlag(struct Bitmap* bmp) {
+	struct Bitmap scaled;
+	int width  = Display_ScaleX(bmp->width);
+	int height = Display_ScaleY(bmp->height);
+	/* at default DPI don't need to rescale it */
+	if (width == bmp->width && height == bmp->height) return;
+
+	Bitmap_TryAllocate(&scaled, width, height);
+	if (!scaled.scan0) {
+		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
+	}
+
+	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->width, bmp->height);
+	Mem_Free(bmp->scan0);
+	*bmp = scaled;
+}
+
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	struct Stream s;
+	cc_result res;
+
+	Stream_ReadonlyMemory(&s, data, len);
+	res = Png_Decode(&flag->bmp, &s);
+	if (res) Logger_SysWarn(res, "decoding flag");
+	flag->meta = NULL;
+
+	LBackend_ScaleFlag(&flag->bmp);
+}
+
 static void OnPointerMove(void* obj, int idx);
 void LBackend_SetScreen(struct LScreen* s) {
 	int i;

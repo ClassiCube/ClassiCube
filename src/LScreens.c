@@ -1367,12 +1367,8 @@ static void ServersScreen_Activated(struct LScreen* s_) {
 
 static void ServersScreen_Tick(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	int count;
 	LScreen_Tick(s_);
-
-	count = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base, NULL);
-	if (count != FetchFlagsTask.count) LBackend_TableFlagAdded(&s->table);
 
 	if (!FetchServersTask.Base.working) return;
 	LWebTask_Tick(&FetchServersTask.Base, NULL);

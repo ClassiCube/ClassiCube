@@ -15,6 +15,7 @@ struct LLabel;
 struct LLine;
 struct LSlider;
 struct LTable;
+struct Flag;
 
 void LBackend_Init(void);
 void LBackend_Free(void);
@@ -23,6 +24,8 @@ void LBackend_CloseScreen(struct LScreen* s);
 
 void LBackend_UpdateTitleFont(void);
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title);
+
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len);
 
 /* Resets pixels to default, then draws widgets of current screen over it */
 void LBackend_Redraw(void);
@@ -65,7 +68,6 @@ void LBackend_TableInit(struct LTable* w);
 void LBackend_TableUpdate(struct LTable* w);
 /* Adjusts Y position of rows and number of visible rows */
 void LBackend_TableReposition(struct LTable* w);
-void LBackend_TableFlagAdded(struct LTable* w);
 void LBackend_TableDraw(struct LTable* w);
 
 void LBackend_TableMouseDown(struct LTable* w, int idx);

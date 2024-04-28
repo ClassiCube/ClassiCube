@@ -1678,17 +1678,6 @@ void LBackend_TableUpdate(struct LTable* w) {
     [tbl reloadData];
 }
 
-// TODO only redraw flags
-void LBackend_TableFlagAdded(struct LTable* w) {
-    UITableView* tbl = (__bridge UITableView*)w->meta;
-    
-    // trying to update cell.imageView.image doesn't seem to work,
-    // so pointlessly reload entire table data instead
-    NSIndexPath* selected = [tbl indexPathForSelectedRow];
-    [tbl reloadData];
-    [tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
-}
-
 void LBackend_TableDraw(struct LTable* w) { }
 void LBackend_TableReposition(struct LTable* w) { }
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
@@ -1716,10 +1705,6 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_FormatUptime(&desc, server->uptime);
     if (server->software.length) String_Format1(&desc, " | %s", &server->software);
     
-    if (flag && !flag->meta && flag->bmp.scan0) {
-        UIImage* img = ToUIImage(&flag->bmp);
-        flag->meta   = CFBridgingRetain(img);
-    }
     if (flag && flag->meta)
         cell.imageView.image = (__bridge UIImage*)flag->meta;
         
@@ -1734,9 +1719,33 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_UpdateCellColor(cell, server, row, selected);
 }
 
+// TODO only redraw flags
+static void OnFlagsChanged(void) {
+	struct LScreen* s = Launcher_Active;
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+		if (s->widgets[i]->type != LWIDGET_TABLE) continue;
+        UITableView* tbl = (__bridge UITableView*)s->widgets[i]->meta;
+    
+		// trying to update cell.imageView.image doesn't seem to work,
+		// so pointlessly reload entire table data instead
+		NSIndexPath* selected = [tbl indexPathForSelectedRow];
+		[tbl reloadData];
+		[tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
+    }
+}
+
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	NSData* ns_data = [NSData dataWithBytes:data length:len];
+	UIImage* img = [UIImage imageWithData:ns_data];
+	if (!img) return;
+	
+    flag->meta = CFBridgingRetain(img);  
+	OnFlagsChanged();
+}
 
 static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
     const struct LLayout* l = w->layouts + 2;
