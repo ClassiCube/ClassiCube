@@ -24,6 +24,9 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Event.h"
+#include "Stream.h"
+#include "Logger.h"
+#include "Errors.h"
 
 struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
