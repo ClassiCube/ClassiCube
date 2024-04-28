@@ -72,6 +72,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 #define OPT_CAMERA_SMOOTH "camera-smooth"
 #define OPT_GRAB_CURSOR "win-grab-cursor"
 #define OPT_TOUCH_BUTTONS "gui-touchbuttons"
+#define OPT_TOUCH_HALIGN "gui-touch-halign"
 #define OPT_TOUCH_SCALE "gui-touchscale"
 #define OPT_HTTP_ONLY "http-no-https"
 #define OPT_HTTPS_VERIFY "https-verify"
