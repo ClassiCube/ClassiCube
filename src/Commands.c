@@ -272,14 +272,14 @@ static void MotdCommand_Execute(const cc_string* args, int argsCount) {
 		Chat_AddRaw("&eThis command can only be used in multiplayer.");
 		return;
 	}
-	char namebuff[70];
-	char motdbuff[70];
+	char namebuff[74];
+	char motdbuff[74];
 	cc_string name, motd;
 	
 	String_InitArray(name, namebuff);
 	String_InitArray(motd, motdbuff);
-	String_Format1(&name, "Name: %s", &Server.Name);
-	String_Format1(&motd, "MOTD: %s", &Server.MOTD);
+	String_Format1(&name, "&eName: &f%s", &Server.Name);
+	String_Format1(&motd, "&eMOTD: &f%s", &Server.MOTD);
 	Chat_Add(&name);
 	Chat_Add(&motd);
 }
