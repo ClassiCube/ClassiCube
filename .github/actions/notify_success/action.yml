@@ -16,4 +16,4 @@ runs:
       if: ${{ inputs.DESTINATION_URL != '' }}
       shell: sh
       run: |
-        curl ${{ inputs.DESTINATION_URL }}/${{ inputs.WORKFLOW_NAME }} -X POST --data "finished"
+        curl ${{ inputs.DESTINATION_URL }}/${{ inputs.WORKFLOW_NAME }}/${{ github.sha }}
