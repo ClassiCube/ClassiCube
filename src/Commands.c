@@ -267,6 +267,31 @@ static struct ChatCommand ClearDeniedCommand = {
 	}
 };
 
+static void MotdCommand_Execute(const cc_string* args, int argsCount) {
+	if (Server.IsSinglePlayer) {
+		Chat_AddRaw("&eThis command can only be used in multiplayer.");
+		return;
+	}
+	char namebuff[70];
+	char motdbuff[70];
+	cc_string name, motd;
+	
+	String_InitArray(name, namebuff);
+	String_InitArray(motd, motdbuff);
+	String_Format1(&name, "Name: %s", &Server.Name);
+	String_Format1(&motd, "MOTD: %s", &Server.MOTD);
+	Chat_Add(&name);
+	Chat_Add(&motd);
+}
+
+static struct ChatCommand MotdCommand = {
+	"Motd", MotdCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client motd",
+		"&eDisplays the server's name and MOTD."
+	}
+};
 
 /*########################################################################################################################*
 *-------------------------------------------------------DrawOpCommand-----------------------------------------------------*
@@ -709,6 +734,7 @@ static void OnInit(void) {
 	Commands_Register(&ModelCommand);
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
+	Commands_Register(&MotdCommand);
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);
