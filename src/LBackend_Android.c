@@ -1,5 +1,5 @@
 #include "LBackend.h"
-#if defined CC_BUILD_ANDROID11111111111
+#if defined CC_BUILD_ANDROID
 #include "Launcher.h"
 #include "Drawer2D.h"
 #include "Window.h"
@@ -17,6 +17,8 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Event.h"
+#include "Errors.h"
+#include "Stream.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
@@ -35,12 +37,12 @@ void LBackend_Free(void) {
     Font_Free(&logoFont);
 }
 
-void LBackend_UpdateLogoFont(void) {
-    Font_Free(&logoFont);
-    Launcher_MakeLogoFont(&logoFont);
+void LBackend_UpdateTitleFont(void) {
+	Font_Free(&logoFont);
+	Launcher_MakeTitleFont(&logoFont);
 }
-void LBackend_DrawLogo(struct Context2D* ctx, const char* title) {
-    Launcher_DrawLogo(&logoFont, title, ctx);
+void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
+	Launcher_DrawTitle(&logoFont, title, ctx);
 }
 
 static void LBackend_LayoutDimensions(struct LWidget* w) {
@@ -85,26 +87,33 @@ void LBackend_MarkDirty(void* widget) { }
 void LBackend_InitFramebuffer(void) { }
 void LBackend_FreeFramebuffer(void) { }
 
-static void JNICALL java_drawBackground(JNIEnv* env, jobject o, jobject bmp) {
-    Platform_LogConst("---$$$--");
+static void LockBitmap(JNIEnv* env, jobject bmp, struct Context2D* ctx) {
     AndroidBitmapInfo info;
     void* addr = NULL;
 
     AndroidBitmap_getInfo(env, bmp, &info);
     AndroidBitmap_lockPixels(env, bmp, &addr);
 
-    // TODO refactor this
-    struct Context2D ctx;
     struct Bitmap pixels;
     pixels.scan0  = addr;
     pixels.width  = info.width;
     pixels.height = info.height;
-    Context2D_Wrap(&ctx, &pixels);
+    Context2D_Wrap(ctx, &pixels);
+}
+
+void UnlockBitmap(JNIEnv* env, jobject bmp) {
+    AndroidBitmap_unlockPixels(env, bmp);
+}
+
+static void JNICALL java_drawBackground(JNIEnv* env, jobject o, jobject bmp) {
+    Platform_LogConst("---DRAW BG----");
+    struct Context2D ctx;
+    LockBitmap(env, bmp, &ctx);
 
     struct LScreen* s = Launcher_Active;
     if (s) s->DrawBackground(s, &ctx);
 
-    AndroidBitmap_unlockPixels(env, bmp);
+	UnlockBitmap(env, bmp);
 }
 
 void LBackend_Redraw(void) {
@@ -170,6 +179,10 @@ static jstring JNICALL java_nextTextPart(JNIEnv* env, jobject o, jstring total, 
     return JavaMakeString(env, &part);
 }
 
+static JNICALL jint java_calcOffset(JNIEnv* env, jobject o, jint anchor, jint offset, jint size, jint axisLen) {
+	return Gui_CalcPos(anchor, offset, size, axisLen);
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Event handling------------------------------------------------------*
@@ -183,7 +196,11 @@ static void OnPointerUp(void* obj, int idx) {
 static void OnWindowCreated(void* obj) {
     // e.g. after pause and resume
     // TODO should pause/resume not trigger launcher screen recreation?
-    if (Launcher_Active) Launcher_SetScreen(Launcher_Active);
+    if (!Launcher_Active) return;
+	
+	LBackend_CloseScreen(Launcher_Active);
+	LBackend_SetScreen(Launcher_Active);
+	LBackend_Redraw();
 }
 
 static void HookEvents(void) {
@@ -230,44 +247,20 @@ void LBackend_ButtonDraw(struct LButton* w) { }
 
 static void JNICALL java_makeButtonActive(JNIEnv* env, jobject o, jobject bmp) {
     Platform_LogConst("---&&&--");
-    AndroidBitmapInfo info;
-    void* addr = NULL;
-
-    // TODO share code with drawBackground
-    AndroidBitmap_getInfo(env, bmp, &info);
-    AndroidBitmap_lockPixels(env, bmp, &addr);
-
-    // TODO refactor this
     struct Context2D ctx;
-    struct Bitmap pixels;
-    pixels.scan0  = addr;
-    pixels.width  = info.width;
-    pixels.height = info.height;
-    Context2D_Wrap(&ctx, &pixels);
-
-    LButton_DrawBackground(&ctx, 0, 0, info.width, info.height, true);
-    AndroidBitmap_unlockPixels(env, bmp);
+	
+    LockBitmap(env, bmp, &ctx);
+    LButton_DrawBackground(&ctx, 0, 0, ctx.width, ctx.height, true);
+    UnlockBitmap(env, bmp);
 }
 
 static void JNICALL java_makeButtonDefault(JNIEnv* env, jobject o, jobject bmp) {
     Platform_LogConst("---####--");
-    AndroidBitmapInfo info;
-    void* addr = NULL;
-
-    // TODO share code with drawBackground
-    AndroidBitmap_getInfo(env, bmp, &info);
-    AndroidBitmap_lockPixels(env, bmp, &addr);
-
-    // TODO refactor this
     struct Context2D ctx;
-    struct Bitmap pixels;
-    pixels.scan0  = addr;
-    pixels.width  = info.width;
-    pixels.height = info.height;
-    Context2D_Wrap(&ctx, &pixels);
-
-    LButton_DrawBackground(&ctx, 0, 0, info.width, info.height, false);
-    AndroidBitmap_unlockPixels(env, bmp);
+	
+    LockBitmap(env, bmp, &ctx);
+    LButton_DrawBackground(&ctx, 0, 0, ctx.width, ctx.height, false);
+    UnlockBitmap(env, bmp);
 }
 
 static void LBackend_ButtonUpdateBackground(struct LButton* w) {
@@ -452,12 +445,13 @@ void LBackend_TableInit(struct LTable* w) {
 
 static void LBackend_TableShow(struct LTable* w) {
     JNIEnv* env; JavaGetCurrentEnv(env);
-    jvalue args[5];
+    jvalue args[6];
 
     LBackend_GetLayoutArgs(w, args);
     args[4].i = ToAndroidColor(LTable_RowColor(1, false, false));
+    args[5].i = Display_ScaleY(100);
 
-    jmethodID method = JavaGetIMethod(env, "tableAdd", "(IIIII)I");
+    jmethodID method = JavaGetIMethod(env, "tableAdd", "(IIIIII)I");
     w->meta = (void*)JavaICall_Int(env, method, args);
     LBackend_TableUpdate(w);
 }
@@ -468,19 +462,23 @@ static jstring GetTableDetails(JNIEnv* env, struct ServerInfo* server) {
 
     String_Format2(&text, "%i/%i players, up for ", &server->players, &server->maxPlayers);
     LTable_FormatUptime(&text, server->uptime);
-    if (server->software.length) String_Format1(&text, " | %s", &server->software);
+	
+    if (server->software.length) {
+		String_AppendConst(&text, " | ");
+		String_AppendColorless(&text, &server->software);
+	}
 
     return JavaMakeString(env, &text);
 }
 
 void LBackend_TableUpdate(struct LTable* w) {
     JNIEnv* env; JavaGetCurrentEnv(env);
-    jvalue args[3];
+    jvalue args[4];
     jmethodID method;
 
     method = JavaGetIMethod(env, "tableStartUpdate", "()V");
     JavaICall_Void(env, method, args);
-    method = JavaGetIMethod(env, "tableAddEntry", "(Ljava/lang/String;Ljava/lang/String;Z)V");
+    method = JavaGetIMethod(env, "tableAddEntry", "(Ljava/lang/String;Ljava/lang/String;ZLandroid/graphics/Bitmap;)V");
 
     for (int i = 0; i < w->rowsCount; i++)
     {
@@ -488,6 +486,12 @@ void LBackend_TableUpdate(struct LTable* w) {
         args[0].l = JavaMakeString(env, &info->name);
         args[1].l = GetTableDetails(env, info);
         args[2].z = info->featured;
+        args[3].l = 0;
+
+        struct Flag* flag = Flags_Get(info);
+        if (flag && flag->meta)
+            args[3].l = flag->meta;
+
         JavaICall_Void(env, method, args);
 
         (*env)->DeleteLocalRef(env, args[0].l);
@@ -500,10 +504,6 @@ void LBackend_TableUpdate(struct LTable* w) {
 }
 
 void LBackend_TableReposition(struct LTable* w) {
-
-}
-
-void LBackend_TableFlagAdded(struct LTable* w) {
 }
 
 void LBackend_TableDraw(struct LTable* w) { }
@@ -515,12 +515,38 @@ static jint JNICALL java_tableGetColor(JNIEnv* env, jobject o, jint row, jboolea
     return ToAndroidColor(LTable_RowColor(row, selected, featured));
 }
 
+static void OnFlagsChanged(void) {
+	struct LScreen* s = Launcher_Active;
+
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+		if (s->widgets[i]->type != LWIDGET_TABLE) continue;
+		LBackend_TableUpdate(s->widgets[i]);
+    }
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------UIBackend--------------------------------------------------------*
 *#########################################################################################################################*/
 #define UI_EVENT_CLICKED 1
 #define UI_EVENT_CHANGED 2
+
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	JNIEnv* env;
+	jobject bmp;
+	jvalue args[1];
+	JavaGetCurrentEnv(env);
+
+	args[0].l = JavaMakeBytes(env, data, len);
+	bmp       = JavaCallObject(env, "decodeFlag", "([B)Landroid/graphics/Bitmap;", args);
+
+	(*env)->DeleteLocalRef(env, args[0].l);
+	if (!bmp) return;
+
+	flag->meta = (*env)->NewGlobalRef(env, bmp);
+	OnFlagsChanged();
+}
 
 static void JNICALL java_UIClicked(JNIEnv* env, jobject o, jint id) {
     struct LWidget* w = FindWidgetForView(id);
@@ -604,6 +630,7 @@ static const JNINativeMethod methods[] = {
         { "processOnUIChanged", "(II)V", java_UIChanged },
         { "processOnUIString",  "(ILjava/lang/String;)V", java_UIString },
         { "tableGetColor",      "(IZZ)I", java_tableGetColor },
+        { "calcOffset",         "(IIII)I", java_calcOffset },
 };
 
 static void LBackend_InitHooks(void) {

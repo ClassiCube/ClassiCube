@@ -23,6 +23,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
@@ -39,6 +41,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View;
 import android.view.Window;
@@ -46,6 +49,8 @@ import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -58,6 +63,7 @@ import android.view.inputmethod.InputMethodManager;
 public class MainActivity extends Activity 
 {
 	public boolean launcher;
+	UIBackend uiBackend = new UIBackend(this);
 	// ==================================================================
 	// ---------------------------- COMMANDS ----------------------------
 	// ==================================================================
@@ -293,7 +299,9 @@ public class MainActivity extends Activity
 	
 	@Override
 	protected void onResume() {
-		attachSurface();
+		if (launcher) create2DView();
+		else create3DView();
+
 		super.onResume();
 		pushCmd(CMD_APP_RESUME); 
 	}
@@ -361,6 +369,11 @@ public class MainActivity extends Activity
 			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
 
 			case CMD_OFD_RESULT: processOFDResult(c.str); break;
+
+			case CMD_UI_CREATED:  processOnUICreated();	 break;
+			case CMD_UI_CLICKED:  processOnUIClicked(c.arg1); break;
+			case CMD_UI_CHANGED:  processOnUIChanged(c.arg1, c.arg2); break;
+			case CMD_UI_STRING:	  processOnUIString(c.arg1, c.str); break;
 			}
 
 			c.str = null;
@@ -395,9 +408,22 @@ public class MainActivity extends Activity
 	native void processOnLowMemory();
 
 	native void processOFDResult(String path);
+
+	native void processOnUICreated();
+	native void processOnUIClicked(int id);
+	native void processOnUIChanged(int id, int val);
+	native void processOnUIString(int id, String str);
 	
 	native void runGameAsync();
 	native void updateInstance();
+
+	Bitmap decodeFlag(byte[] data) {
+		try {
+			return BitmapFactory.decodeByteArray(data, 0, data.length);
+		} catch (Exception ex) {
+			return null;
+		}
+	}
 	
 	
 	// ====================================================================
@@ -416,6 +442,7 @@ public class MainActivity extends Activity
 		curView.requestFocus();
 		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
 	}
+
 	
 	// SurfaceHolder.Callback - API level 1
 	class CCSurfaceCallback implements SurfaceHolder.Callback {
@@ -475,11 +502,22 @@ public class MainActivity extends Activity
 			callback = new CCSurfaceCallback();
 		}
 	}
-	 
-	void attachSurface() {
+
+	public void create3DView_async() {
+		// Once a surface has been locked for drawing with canvas, can't ever be detached
+		// This means trying to attach an OpenGL ES context to the surface will fail
+		// So just destroy the current surface and make a new one
+		runOnUiThread(new Runnable() {
+			public void run() { create3DView(); }
+		});
+	}
+
+	void create3DView() {
 		// setContentView, requestFocus, getHolder, addCallback, RGBX_8888 - API level 1
 		createSurfaceCallback();
 		CCView view = new CCView(this);
+		launcher    = false;
+
 		view.getHolder().addCallback(callback);
 		view.getHolder().setFormat(PixelFormat.RGBX_8888);
 
@@ -491,17 +529,6 @@ public class MainActivity extends Activity
 	// ---------------------------- PLATFORM ----------------------------
 	// ==================================================================
 	//  Implements java Android side of the Android Platform backend (See Platform.c)
-	public void setupForGame() {
-		// Once a surface has been locked for drawing with canvas, can't ever be detached
-		// This means trying to attach an OpenGL ES context to the surface will fail
-		// So just destroy the current surface and make a new one
-		runOnUiThread(new Runnable() {
-			public void run() {
-				attachSurface();
-			}
-		});
-	}
-	
 	public void startOpen(String url) {
 		// ACTION_VIEW, resolveActivity, getPackageManager, startActivity - API level 1
 		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -989,4 +1016,110 @@ public class MainActivity extends Activity
 
 	native static void httpParseHeader(String header);
 	native static void httpAppendData(byte[] data, int len);
+
+
+	// ====================================================================
+	// ---------------------------- UIBackend -----------------------------
+	// ====================================================================
+	public native static void makeButtonActive(Bitmap bmp);
+	public native static void makeButtonDefault(Bitmap bmp);
+	public native static int tableGetColor(int pos, boolean selected, boolean featured);
+	public native static void drawBackground(Bitmap bmp);
+	public native static String nextTextPart(String total, int[] state);
+	public native static int calcOffset(int anchor, int offset, int size, int axisLen);
+
+	public void create2DView_async() {
+		runOnUiThread(new Runnable() {
+			public void run() { create2DView(); }
+		});
+	}
+
+	void create2DView() {
+		uiBackend.create2DView();
+	}
+
+	int buttonAdd(int xMode, int xOffset, int yMode, int yOffset,
+				  int width, int height) {
+		return uiBackend.buttonAdd(xMode, xOffset, yMode, yOffset,
+				width, height);
+	}
+
+	void buttonUpdate(final int id, final String text) {
+		uiBackend.buttonUpdate(id, text);
+	}
+
+	void buttonUpdateBackground(final int id) {
+		uiBackend.buttonUpdateBackground(id);
+	}
+
+	int labelAdd(int xMode, int xOffset, int yMode, int yOffset) {
+		return uiBackend.labelAdd(xMode, xOffset, yMode, yOffset);
+	}
+
+	void labelUpdate(final int id, final String text) {
+		uiBackend.labelUpdate(id, text);
+	}
+
+	int inputAdd(int xMode, int xOffset, int yMode, int yOffset,
+				 int width, int height, int flags, String placeholder) {
+		return uiBackend.inputAdd(xMode, xOffset, yMode, yOffset,
+				width, height, flags, placeholder);
+	}
+
+	void inputUpdate(final int id, final String text) {
+		uiBackend.inputUpdate(id, text);
+	}
+
+	int lineAdd(int xMode, int xOffset, int yMode, int yOffset,
+				int width, int height, int color) {
+		return uiBackend.lineAdd(xMode, xOffset, yMode, yOffset,
+				width, height, color);
+	}
+
+	int checkboxAdd(int xMode, int xOffset, int yMode, int yOffset,
+					String title, final boolean checked) {
+		return uiBackend.checkboxAdd(xMode, xOffset, yMode, yOffset,
+				title, checked);
+	}
+
+	void checkboxUpdate(final int id, final boolean checked) {
+		uiBackend.checkboxUpdate(id, checked);
+	}
+
+	int sliderAdd(int xMode, int xOffset, int yMode, int yOffset,
+				  int width, int height, int color) {
+		return uiBackend.sliderAdd(xMode, xOffset, yMode, yOffset,
+				width, height, color);
+	}
+
+	void sliderUpdate(final int id, final int progress) {
+		uiBackend.sliderUpdate(id, progress);
+	}
+
+	int tableAdd(int xMode, int xOffset, int yMode, int yOffset,
+				 int color, int offset) {
+		return uiBackend.tableAdd(xMode, xOffset, yMode, yOffset,
+				color, offset);
+	}
+
+	void tableStartUpdate() {
+		uiBackend.tableStartUpdate();
+	}
+
+	void tableAddEntry(String name, String details, boolean featured, Bitmap flag) {
+		uiBackend.tableAddEntry(name, details, featured, flag);
+	}
+
+	void tableFinishUpdate(final int id) {
+		uiBackend.tableFinishUpdate(id);
+	}
+
+
+	void redrawBackground() {
+		uiBackend.redrawBackground();
+	}
+
+	void clearWidgetsAsync() {
+		uiBackend.clearWidgetsAsync();
+	}
 }
