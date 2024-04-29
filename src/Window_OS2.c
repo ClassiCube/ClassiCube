@@ -69,7 +69,7 @@ static const cc_uint8 key_map[14 * 16] = { 0,
 	0, 0, 0, 0, 0, 0, 'A', 'B', 'C', 'D',
 	'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
   'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-	'Y', 'Z', 0	
+	'Y', 'Z', 0
 };
 
 static int MapNativeKey(MPARAM mp1, MPARAM mp2) {
@@ -96,13 +96,13 @@ if (flags & KC_CHAR) {
 		}
 		printf("KC_VIRTUALKEY not mapped %u\n", vkey);
 	}
-	
+
 	return 0;
 }
 
 static void RefreshWindowBounds() {
 	RECTL rect;
-	
+
 	if (WinQueryWindowRect(hwndClient, &rect)) {
 		Window_Main.Width = Rect_Width(rect);
 		Window_Main.Height = Rect_Height(rect);
@@ -125,16 +125,19 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 				 Window_Main.Handle = NULL;
 				 Window_Main.Exists = false;
 				 break;
-				
+
 		case WM_SIZE:
 			RefreshWindowBounds();
 			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
-			
+
 		case WM_MOVE:
 			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
-		
+
+		case WM_ERASEBACKGROUND:
+			return (MRESULT)TRUE;
+			
 		case WM_VRNDISABLED:
       fVrnDisabled = TRUE;
       return FALSE;
@@ -155,27 +158,27 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 					rgnCtl.ircStart     = 0;
 					rgnCtl.crc          = 50;
 					rgnCtl.ulDirection  = 1;
-				
+
 					// Get the all visible rectangles
 					if(!GpiQueryRegionRects(hps, hrgn, NULL, &rgnCtl, rcls)) {
 						 DiveSetupBlitter (hDive, 0);
 						 GpiDestroyRegion (hps, hrgn);
 						 break;
 					}
-				
+
 					ulNumRcls = rgnCtl.crcReturned;
 					GpiDestroyRegion(hps, hrgn);
-				
+
 					// Release presentation space
 					WinReleasePS(hps);
-				} 
+				}
 				if (mp1 == 0) Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 				// Enable blitting
 				fVrnDisabled = FALSE;
 			}
 			return FALSE;
       break;
-			
+
 		case WM_MOUSEMOVE: {
 				SHORT x = SHORT1FROMMP(mp1);
 				SHORT y = Window_Main.Height - SHORT2FROMMP(mp1);
@@ -196,7 +199,7 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 			Input_SetReleased(CCMOUSE_M); break;
 		case WM_BUTTON2UP:
 			Input_SetReleased(CCMOUSE_R); break;
-			
+
 		case WM_MATCHMNEMONIC:
 			return (MRESULT)TRUE;
 		case WM_CHAR: {
@@ -205,7 +208,7 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 
 			int mappedKey = MapNativeKey(mp1, mp2);
 			if (mappedKey != 0) {
-				printf("key mapped %c => %c\n", CHAR4FROMMP(mp1), mappedKey);
+				//printf("key mapped %c => %c\n", CHAR4FROMMP(mp1), mappedKey);
 				Input_SetPressed(mappedKey/*, (flags & KC_KEYUP) == 0*/);
 				break;
 			}
@@ -309,7 +312,8 @@ void Window_Create(int width, int height) {
 	Window_SetSize(width, height);
 	Window_Main.Exists = true;
 	Window_Main.Handle = &hwndFrame;
-	
+	Window_Main.Focused = TRUE;
+
   WinSetVisibleRegionNotify(hwndClient, TRUE);
 	// Send an invlaidation message to the client.
 	WinPostMsg(hwndFrame, WM_VRNENABLED, 0L, 0L);
@@ -420,7 +424,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 			Logger_Abort2(rc, "Dive: Could not allocate image buffer");
 			return;
 	}
-	
+
 	rc = DiveBeginImageBufferAccess(hDive, bufNum,
 			&imageBuffer, &bufferScanLineSize, &bufferScanLines);
 	if (rc != DIVE_SUCCESS) {
@@ -459,9 +463,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		pointl.y = swp.y;
 		WinMapWindowPoints(hwndFrame, HWND_DESKTOP, &pointl, 1);
 		WinQueryWindowRect(hwndClient, &rect);
-		
-		// TODO CC's coordinate begins in the upper left corner. 
-		// TODO Fix coordinate system for partial updates 
+
+		// TODO CC's coordinate begins in the upper left corner.
+		// TODO Fix coordinate system for partial updates
 		// Tell DIVE about the new settings.
 		setupBlitter.ulStructLen       = sizeof(SETUP_BLITTER);
 		setupBlitter.fccSrcColorFormat = FOURCC_BGR4;
@@ -509,7 +513,7 @@ int Window_IsObscured(void) { return 0; }
 
 void ShowDialogCore(const char *title, const char *name) {
 	WinMessageBox(HWND_DESKTOP, hwndClient, name, title, 0, MB_OK|MB_APPLMODAL);
-}                                                           
+}
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	FILEDLG fileDialog;
@@ -570,7 +574,7 @@ void OnscreenKeyboard_Close(void) { }
 void Window_LockLandscapeOrientation(cc_bool lock) { }
 
 void Window_EnableRawMouse(void) {
-	printf("Window_EnableRawMouse");
+	printf("Window_EnableRawMouse\n");
 }
 
 void Window_UpdateRawMouse(void) { }
