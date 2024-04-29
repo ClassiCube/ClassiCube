@@ -536,8 +536,8 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 void Gfx_OnWindowResize(void) { }
 
-static struct Vec4 vp_offset = { 320, -240, 8388608, 1 };
-static struct Vec4 vp_scale  = { 320,  240, 8388608, 1 };
+static struct Vec4 vp_scale  = { 320, -240, 8388608, 1 };
+static struct Vec4 vp_offset = { 320,  240, 8388608, 1 };
 static struct Matrix _view, _proj, _mvp;
 
 static void UpdateVSConstants(void) {

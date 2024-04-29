@@ -108,16 +108,15 @@ static bool fat_available;
 
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
-	str   += root_path.length;
+	str += root_path.length;
 	String_EncodeUtf8(str, path);
-    Platform_Log1("Open %c", str - root_path.length);
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	if (!fat_available) return ENOTSUP;
-	
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+    Platform_Log1("mkdir %c", str);
+
 	return mkdir(str, 0) == -1 ? errno : 0;
 }
 
@@ -127,6 +126,8 @@ int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	GetNativePath(str, path);
+    Platform_Log1("Check %c", str);
+
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -137,6 +138,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+    Platform_Log1("Open %c", str);
+
 	*file = open(str, mode, 0);
 	return *file == -1 ? errno : 0;
 }
@@ -187,6 +190,12 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 }
 
 static void InitFilesystem(cc_bool dsiMode) {
+    char* dir = fatGetDefaultCwd();
+    if (dir && dir[0]) {
+        root_path.buffer = dir;
+        root_path.length = String_Length(dir);
+    }
+
 	// I don't know why I have to call this function, but if I don't,
 	//  then when running in DSi mode AND an SD card is readable,
 	//  fatInitDefault gets stuck somewhere (in disk_initialize it seems)
@@ -197,13 +206,6 @@ static void InitFilesystem(cc_bool dsiMode) {
 
     fat_available = fatInitDefault();
 	Platform_ReadonlyFilesystem = !fat_available;
-    if (!fat_available) return;
-
-    char* dir = fatGetDefaultCwd();
-    if (dir && dir[0]) {
-        root_path.buffer = dir;
-        root_path.length = String_Length(dir);
-    }
 }
 
 

@@ -68,6 +68,8 @@ static void consoleNewLine(void) {
 }
 
 static void consolePrintChar(char c) {
+	if (c < ' ') return; // only ASCII supported
+
     if (conCursorX >= CON_WIDTH) 
         consoleNewLine();
 

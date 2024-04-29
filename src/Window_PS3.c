@@ -276,6 +276,8 @@ static void HandleButtons(int port, padData* data) {
       
 	Gamepad_SetButton(port, CCPAD_START,  data->BTN_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, data->BTN_SELECT);
+	Gamepad_SetButton(port, CCPAD_LSTICK, data->BTN_L3);
+	Gamepad_SetButton(port, CCPAD_RSTICK, data->BTN_R3);
 
 	Gamepad_SetButton(port, CCPAD_LEFT,   data->BTN_LEFT);
 	Gamepad_SetButton(port, CCPAD_RIGHT,  data->BTN_RIGHT);
