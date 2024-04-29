@@ -418,38 +418,49 @@ static void KeyBind_Init(void) {
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
 #define GAMEPAD_BEG_BTN CCPAD_A
+#define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
+
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
 
 struct GamepadState {
 	float axisX[2], axisY[2];
-	/*cc_bool pressed[INPUT_COUNT - GAMEPAD_BEG_BTN];*/
-	float holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
+	cc_bool pressed[GAMEPAD_BTN_COUNT];
+	float holdtime[GAMEPAD_BTN_COUNT];
 };
 static struct GamepadState gamepads[INPUT_MAX_GAMEPADS];
 
 static void Gamepad_Update(struct GamepadState* pad, float delta) {
 	int btn;
-	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
+	for (btn = 0; btn < GAMEPAD_BTN_COUNT; btn++)
 	{
-		if (!Input.Pressed[btn]) continue;
-		pad->holdtime[btn - GAMEPAD_BEG_BTN] += delta;
-		if (pad->holdtime[btn - GAMEPAD_BEG_BTN] < 1.0f) continue;
+		if (!pad->pressed[btn]) continue;
+		pad->holdtime[btn] += delta;
+		if (pad->holdtime[btn] < 1.0f) continue;
 
 		/* Held for over a second, trigger a fake press */
-		pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
-		Input_SetPressed(btn);
+		pad->holdtime[btn] = 0;
+		Input_SetPressed(btn + GAMEPAD_BEG_BTN);
 	}
 }
 
 
 void Gamepad_SetButton(int port, int btn, int pressed) {
 	struct GamepadState* pad = &gamepads[port];
-	/* Reset hold tracking time */
-	if (pressed && !Input.Pressed[btn]) pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
+	int i;
+	btn -= GAMEPAD_BEG_BTN;
 
-	Input_SetNonRepeatable(btn, pressed);
+	/* Reset hold tracking time */
+	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
+	pad->pressed[btn] = pressed != 0;;
+
+	/* Set pressed if button pressed on any gamepad, to avoid constant flip flopping */
+	/*  between pressed and non-pressed when multiple controllers are plugged in */
+	for (i = 0; i < INPUT_MAX_GAMEPADS; i++) 
+		pressed |= gamepads[i].pressed[btn];
+
+	Input_SetNonRepeatable(btn + GAMEPAD_BEG_BTN, pressed);
 }
 
 void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
