@@ -7,11 +7,11 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include <SDL2/SDL.h>
-static SDL_Window* win_handle;
 
-#ifndef CC_BUILD_OS2
-#error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
-#else
+static SDL_Window* win_handle;
+#warning "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+
+#ifdef CC_BUILD_OS2
 #define INCL_PM
 #include <os2.h>
 // Internal OS/2 driver data

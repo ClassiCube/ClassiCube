@@ -1278,7 +1278,7 @@ static void PerformRequest(struct HttpRequest* req, cc_string* url) {
 	end = Stopwatch_Measure();
 
 	elapsed = Stopwatch_ElapsedMS(beg, end);
-	Platform_Log4("HTTP: result %i (http %i) in %i ms (%i bytes)",
+	Platform_Log4("HTTP: result %e (http %i) in %i ms (%i bytes)",
 		&req->result, &req->statusCode, &elapsed, &req->size);
 
 	Http_FinishRequest(req);

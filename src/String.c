@@ -441,33 +441,52 @@ void String_Format4(cc_string* str, const char* format, const void* a1, const vo
 
 		switch (format[++i]) {
 		case 'b': 
-			String_AppendInt(str, *((cc_uint8*)arg)); break;
+			String_AppendInt(str, *((cc_uint8*)arg)); 
+			break;
 		case 'i': 
-			String_AppendInt(str, *((int*)arg)); break;
+			String_AppendInt(str, *((int*)arg)); 
+			break;
 		case 'f': 
 			digits = format[++i] - '0';
-			String_AppendFloat(str, *((float*)arg), digits); break;
+			String_AppendFloat(str, *((float*)arg), digits); 
+			break;
 		case 'p':
 			digits = format[++i] - '0';
-			String_AppendPaddedInt(str, *((int*)arg), digits); break;
+			String_AppendPaddedInt(str, *((int*)arg), digits); 
+			break;
 		case 't': 
-			String_AppendBool(str, *((cc_bool*)arg)); break;
+			String_AppendBool(str, *((cc_bool*)arg)); 
+			break;
 		case 'c': 
-			String_AppendConst(str, (char*)arg);  break;
+			String_AppendConst(str, (char*)arg);  
+			break;
 		case 's': 
-			String_AppendString(str, (cc_string*)arg);  break;
+			String_AppendString(str, (cc_string*)arg);  
+			break;
 		case 'r':
-			String_Append(str, *((char*)arg)); break;
+			String_Append(str, *((char*)arg)); 
+			break;
 		case 'x':
 			if (sizeof(cc_uintptr) == 4) {
-				String_Hex32(str, *((cc_uint32*)arg)); break;
+				String_Hex32(str, *((cc_uint32*)arg));
 			} else {
-				String_Hex64(str, *((cc_uint64*)arg)); break;
+				String_Hex64(str, *((cc_uint64*)arg));
 			}
+			break;
 		case 'h':
-			String_Hex32(str, *((cc_uint32*)arg)); break;
+			String_Hex32(str, *((cc_uint32*)arg)); 
+			break;
+		case 'e':
+			digits = *((int*)arg);
+			if (digits >= -0xFFFF && digits <= 0xFFFF) {
+				String_AppendInt(str, digits);
+			} else {
+				String_Hex32(str, (cc_uint32)digits); 
+			}
+			break;
 		case '%':
-			String_Append(str, '%'); break;
+			String_Append(str, '%'); 
+			break;
 		default: 
 			Logger_Abort("Invalid type for string format");
 		}

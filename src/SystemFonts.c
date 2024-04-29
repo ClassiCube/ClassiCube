@@ -443,7 +443,7 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 			res = FT_Load_Char(face, uc, 0);
 
 			if (res) {
-				Platform_Log2("Error %i measuring width of %r", &res, &c);
+				Platform_Log2("Error %e measuring width of %r", &res, &c);
 				charWidth = 0;
 			} else {
 				charWidth = face->glyph->advance.x;		
@@ -554,7 +554,7 @@ void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int 
 			res = FT_Load_Char(face, uc, FT_LOAD_RENDER);
 
 			if (res) {
-				Platform_Log2("Error %i drawing %r", &res, &text.buffer[i]);
+				Platform_Log2("Error %e drawing %r", &res, &text.buffer[i]);
 				continue;
 			}
 

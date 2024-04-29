@@ -358,7 +358,7 @@ static void DisconnectInvalidMap(cc_result res) {
 	cc_string tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
-	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
+	String_Format1(&tmp, "Server sent corrupted map data (error %e)", &res);
 	Game_Disconnect(&title, &tmp); return;
 }
 
