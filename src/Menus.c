@@ -1655,8 +1655,18 @@ static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	ListScreen_Select(s, SysFonts_UNSAFE_GetDefault());
 }
 
+static void FontListScreen_RegisterCallback(const cc_string* path) {
+	Chat_Add1("Loaded font from %s", path);
+}
+
 static void FontListScreen_UploadCallback(const cc_string* path) { 
-	SysFonts_Register(path);
+	cc_result res = SysFonts_Register(path, FontListScreen_RegisterCallback);
+
+	if (res) {
+		Logger_SimpleWarn2(res, "loading font from", path);
+	} else {
+		SysFonts_SaveCache();
+	}
 }
 
 static void FontListScreen_ActionFunc(void* s, void* w) {

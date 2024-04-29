@@ -191,7 +191,7 @@ static void SysFonts_LoadPlatform(void) {
 	InitFreeTypeLibrary();
 	Platform_LoadSysFonts();
 
-	if (fonts_changed) EntryList_Save(&font_list, FONT_CACHE_FILE);
+	if (fonts_changed) SysFonts_SaveCache();
 }
 
 static cc_bool loadedCachedFonts;
@@ -200,6 +200,10 @@ static void SysFonts_LoadCached(void) {
 	loadedCachedFonts = true;
 
 	EntryList_UNSAFE_Load(&font_list, FONT_CACHE_FILE);
+}
+
+void SysFonts_SaveCache(void) {
+	EntryList_Save(&font_list, FONT_CACHE_FILE);
 }
 
 
@@ -240,7 +244,7 @@ static void SysFonts_Add(const cc_string* path, FT_Face face, int index, char ty
 	fonts_changed = true;
 }
 
-static int SysFonts_DoRegister(const cc_string* path, int faceIndex) {
+static int SysFonts_DoRegister(const cc_string* path, int faceIndex, SysFont_RegisterCallback callback) {
 	struct SysFont font;
 	FT_Open_Args args;
 	FT_Error err;
@@ -263,11 +267,12 @@ static int SysFonts_DoRegister(const cc_string* path, int faceIndex) {
 		SysFonts_Add(path, font.face, faceIndex, 'R', "Regular");
 	}
 
+	if (callback) callback(path);
 	FT_Done_Face(font.face);
 	return count;
 }
 
-void SysFonts_Register(const cc_string* path) {
+cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback callback) {
 	cc_string entry, name, value;
 	cc_string fontPath, index;
 	int i, count;
@@ -278,14 +283,15 @@ void SysFonts_Register(const cc_string* path) {
 		String_UNSAFE_Separate(&entry, '=', &name, &value);
 
 		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
-		if (String_CaselessEquals(path, &fontPath)) return;
+		if (String_CaselessEquals(path, &fontPath)) return 0;
 	}
 
-	count = SysFonts_DoRegister(path, 0);
+	count = SysFonts_DoRegister(path, 0, callback);
 	/* there may be more than one font in a font file */
 	for (i = 1; i < count; i++) {
-		SysFonts_DoRegister(path, i);
+		SysFonts_DoRegister(path, i, callback);
 	}
+	return 0;
 }
 
 
@@ -631,7 +637,11 @@ void SysFont_Free(struct FontDesc* desc) {
 	Mem_Free(desc->handle);
 }
 
-void SysFonts_Register(const cc_string* path) { }
+void SysFonts_SaveCache(void) { }
+cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
+
 extern void   interop_SetFont(const char* font, int size, int flags);
 extern double interop_TextWidth(const char* text, const int len);
 extern double interop_TextDraw(const char* text, const int len, struct Bitmap* bmp, int x, int y, cc_bool shadow, const char* hex);
@@ -692,7 +702,10 @@ extern void interop_SysFontFree(void* handle);
 extern int interop_SysTextWidth(struct DrawTextArgs* args);
 extern void interop_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow);
 
-void SysFonts_Register(const cc_string* path) { }
+void SysFonts_SaveCache(void) { }
+cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
 
 const cc_string* SysFonts_UNSAFE_GetDefault(void) {
     return &String_Empty;
@@ -834,7 +847,10 @@ static cc_uint8 font_bitmap[][CELL_SIZE] = {
 };
 
 
-void SysFonts_Register(const cc_string* path) { }
+void SysFonts_SaveCache(void) { }
+cc_result SysFonts_Register(const cc_string* path, SysFont_RegisterCallback callback) {
+	return ERR_NOT_SUPPORTED;
+}
 
 const cc_string* SysFonts_UNSAFE_GetDefault(void) { return &String_Empty; }
 
