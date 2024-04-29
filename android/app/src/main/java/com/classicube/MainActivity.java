@@ -5,10 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -30,27 +28,18 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.provider.Settings.Secure;
-import android.text.Editable;
 import android.text.InputType;
-import android.text.Selection;
-import android.text.SpannableStringBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View;
 import android.view.Window;
-import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 
 // This class contains all the glue/interop code for bridging ClassiCube to the java Android world.
 // Some functionality is only available on later Android versions - try {} catch {} is used in such places 
@@ -515,7 +504,7 @@ public class MainActivity extends Activity
 	void create3DView() {
 		// setContentView, requestFocus, getHolder, addCallback, RGBX_8888 - API level 1
 		createSurfaceCallback();
-		CCView view = new CCView(this);
+		View3D view = new View3D(this);
 		launcher    = false;
 
 		view.getHolder().addCallback(callback);
@@ -616,7 +605,7 @@ public class MainActivity extends Activity
 		if (curView == null) return;
 
 		// Try to avoid restarting input if possible
-		CCView view = (CCView)curView;
+		View3D view = (View3D)curView;
 		if (view.kbText != null) {
 			String curText = view.kbText.toString();
 			if (text.equals(curText)) return;

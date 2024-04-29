@@ -8,12 +8,14 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.View;
 import android.widget.AdapterView;
@@ -61,15 +63,19 @@ public class UIBackend
     static final int _WRAP_CONTENT = ViewGroup.LayoutParams.WRAP_CONTENT;
     interface UICallback { void execute(); }
 
-    public void create2DView_async() {
-        activity.runOnUiThread(new Runnable() {
-            public void run() { create2DView(); }
-        });
-    }
-
     void create2DView() {
+        View view = new CC2DLayout(activity);
+        view.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            // If the main view has focus, then no child view is being clicked
+            //  (I.e. user clicked somewhere on the launcher background)
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) activity.closeKeyboard();
+            }
+        });
+
         activity.launcher = true;
-        activity.setActiveView(new CC2DLayout(activity));
+        activity.setActiveView(view);
         activity.pushCmd(MainActivity.CMD_UI_CREATED);
     }
 
@@ -106,7 +112,12 @@ public class UIBackend
 
     class CC2DLayout extends ViewGroup
     {
-        public CC2DLayout(Context context) { super(context, null); }
+        public CC2DLayout(Context context) {
+            super(context, null);
+            setClickable(true);
+            setFocusable(true);
+            setFocusableInTouchMode(true);
+        }
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -259,7 +270,7 @@ public class UIBackend
         ipt.setBackgroundColor(Color.WHITE);
         ipt.setPadding(ipt.getPaddingLeft(), 0, ipt.getPaddingRight(), 0);
         ipt.setHint(placeholder);
-        ipt.setInputType(MainActivity.calcKeyboardType(flags));
+        ipt.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | MainActivity.calcKeyboardType(flags));
         ipt.setImeOptions(MainActivity.calcKeyboardOptions(flags));
 
         ipt.addTextChangedListener(new TextWatcher() {
