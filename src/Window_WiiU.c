@@ -269,7 +269,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
-static void DrawIt(struct Bitmap* bmp) {
+static void DrawIt(void) {
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
 	Gfx_SetDepthTest(false);
@@ -281,19 +281,18 @@ static void DrawIt(struct Bitmap* bmp) {
 	Gfx_DrawVb_IndexedTris(4);
 }
 
-static void DrawTV(struct Bitmap* bmp) {
+static void DrawTV(void) {
 	WHBGfxBeginRenderTV();
 	WHBGfxClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-	DrawIt(bmp);	
+	DrawIt();	
 	WHBGfxFinishRenderTV();
 }
 
-static void DrawDRC(struct Bitmap* bmp) {
+static void DrawDRC(void) {
 	WHBGfxBeginRenderDRC();
 	WHBGfxClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	DrawIt(bmp);
+	DrawIt();
 	WHBGfxFinishRenderDRC();
-
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
@@ -306,8 +305,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	Gfx_UpdateTexture(&fb, r.x, r.y, &part, bmp->width, false);
 
 	WHBGfxBeginRender();
-	DrawTV(bmp);
-	DrawDRC(bmp);
+	DrawTV();
+	DrawDRC();
 	WHBGfxFinishRender();
 }
 

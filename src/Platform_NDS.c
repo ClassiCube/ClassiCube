@@ -66,17 +66,18 @@ cc_uint64 Stopwatch_Measure(void) {
 static void LogNocash(const char* msg, int len) {
     // Can only be up to 120 bytes total
 	char buffer[120];
-	len = min(len, 119);
+	len = min(len, 118);
 	
 	Mem_Copy(buffer, msg, len);
-	buffer[len] = '\n';
-	nocashWrite(buffer, len + 1);
+	buffer[len + 0] = '\n';
+	buffer[len + 1] = '\0';
+	nocashWrite(buffer, len + 2);
 }
 
 extern void consolePrintString(const char* ptr, int len);
 void Platform_Log(const char* msg, int len) {
     LogNocash(msg, len);
-	if (!keyboardOpen) consolePrintString(msg, len);
+	consolePrintString(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
