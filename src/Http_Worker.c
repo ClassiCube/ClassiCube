@@ -500,11 +500,11 @@ static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data
 	return Socket_Read(conn->socket,  data, count, read);
 }
 
-static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
+static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count) {
 	if (conn->sslCtx) 
-		return SSL_Write(conn->sslCtx, data, count, wrote);
+		return SSL_WriteAll(conn->sslCtx, data, count);
 
-	return Socket_WriteAll(conn->socket,  data, count, wrote);
+	return Socket_WriteAll(conn->socket,  data, count);
 }
 
 
@@ -623,15 +623,13 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	char inputBuffer[16384];
 	cc_string inputMsg;
-	cc_uint32 wrote;
 
 	String_InitArray(inputMsg, inputBuffer);
 	state->req->meta     = &inputMsg;
 	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
 	HttpClient_Serialise(state);
 
-	/* TODO check that wrote is >= inputMsg.length */
-	return HttpConnection_Write(state->conn, (cc_uint8*)inputBuffer, inputMsg.length, &wrote);
+	return HttpConnection_Write(state->conn, (cc_uint8*)inputBuffer, inputMsg.length);
 }
 
 

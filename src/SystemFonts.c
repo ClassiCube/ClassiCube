@@ -80,11 +80,13 @@ static void SysFont_Done(struct SysFont* font) {
 	if (!source->meta.file) return;
 	source->Close(source);
 
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) 
+	{
 		if (!font->glyphs[i]) continue;
 		FT_Done_Glyph((FT_Glyph)font->glyphs[i]);
 	}
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) 
+	{
 		if (!font->shadow_glyphs[i]) continue;
 		FT_Done_Glyph((FT_Glyph)font->shadow_glyphs[i]);
 	}

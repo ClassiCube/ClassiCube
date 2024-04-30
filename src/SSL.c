@@ -380,10 +380,9 @@ static cc_result SSL_WriteChunk(struct SSLContext* s, const cc_uint8* data, cc_u
 	return Socket_WriteAll(s->socket, buffer, total);
 }
 
-cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
+cc_result SSL_WriteAll(void* ctx, const cc_uint8* data, cc_uint32 count) {
 	struct SSLContext* s = ctx;
 	cc_result res;
-	*wrote = 0;
 
 	/* TODO: Don't loop here? move to HTTPConnection instead?? */
 	while (count)
@@ -391,7 +390,6 @@ cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32*
 		int len = min(count, s->sizes.cbMaximumMessage);
 		if ((res = SSL_WriteChunk(s, data, len))) return res;
 
-		*wrote += len;
 		data   += len;
 		count  -= len;
 	}
@@ -543,7 +541,7 @@ cc_result SSL_Read(void* ctx_, cc_uint8* data, cc_uint32 count, cc_uint32* read)
 	return 0;
 }
 
-cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
+cc_result SSL_WriteAll(void* ctx_, const cc_uint8* data, cc_uint32 count) {
 	SSLContext* ctx = (SSLContext*)ctx_;
 	// TODO: just br_sslio_write ??
 	int res = br_sslio_write_all(&ctx->ioc, data, count);
@@ -554,7 +552,6 @@ cc_result SSL_Write(void* ctx_, const cc_uint8* data, cc_uint32 count, cc_uint32
 	}
 	
 	br_sslio_flush(&ctx->ioc);
-	*wrote = res;
 	return 0;
 }
 
@@ -577,7 +574,7 @@ cc_result SSL_Read(void* ctx, cc_uint8* data, cc_uint32 count, cc_uint32* read) 
 	return ERR_NOT_SUPPORTED; 
 }
 
-cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) { 
+cc_result SSL_WriteAll(void* ctx, const cc_uint8* data, cc_uint32 count) { 
 	return ERR_NOT_SUPPORTED; 
 }
 
