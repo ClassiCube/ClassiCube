@@ -16,6 +16,7 @@
 #include <nds/arm9/keyboard.h>
 #include <nds/interrupts.h>
 #include <nds/system.h>
+#include <fat.h>
 
 
 /*########################################################################################################################*
@@ -155,6 +156,10 @@ void Window_Init(void) {
 
 	cc_bool dsiMode = isDSiMode();
 	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
+
+	char* dir = fatGetDefaultCwd();
+    if (dir) Platform_Log1("CWD: %c", dir);
+	Mem_Free(dir);
 }
 
 void Window_Free(void) { }
