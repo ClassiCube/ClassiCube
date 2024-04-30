@@ -299,18 +299,15 @@ static void PlaceCommand_Execute(const cc_string* args, int argsCount) {
 		return;
 	}
 	
-	if (!argsCount || argsCount == 3) {
-		block = Inventory_SelectedBlock;
+	block = !argsCount || argsCount == 3 ? Inventory_SelectedBlock : Block_Parse(&args[0]);
+	
+	if (block == -1) {
+		Chat_AddRaw("&eCould not parse block.");
+		return;
 	}
-	else {
-		if (!Convert_ParseInt(&args[0], &block)) {
-			Chat_AddRaw("&eCould not parse block.");
-			return;
-		}
-		if (block > Game_Version.MaxCoreBlock && !Block_IsCustomDefined(block)) {
-			Chat_Add1("&eThere is no block with id \"%i\".", &block); 
-			return;
-		}
+	if (block > Game_Version.MaxCoreBlock && !Block_IsCustomDefined(block)) {
+		Chat_Add1("&eThere is no block with id \"%i\".", &block); 
+		return;
 	}
 	
 	if (argsCount > 2) {
