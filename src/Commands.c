@@ -339,7 +339,7 @@ static struct ChatCommand PlaceCommand = {
 		"&ePlaces block at [x y z].",
 		"&eIf no block is provided, held block is used.",
 		"&eIf no coordinates are provided, current",
-		"&e coordinates will be used."
+		"&e coordinates are used."
 	}
 };
 
