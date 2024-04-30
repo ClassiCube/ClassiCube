@@ -189,7 +189,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	*len = st.st_size; return 0;
 }
 
-static void InitFilesystem(cc_bool dsiMode) {
+static void InitFilesystem(void) {
     char* dir = fatGetDefaultCwd();
     if (dir && dir[0]) {
         root_path.buffer = dir;
@@ -199,7 +199,7 @@ static void InitFilesystem(cc_bool dsiMode) {
 	// I don't know why I have to call this function, but if I don't,
 	//  then when running in DSi mode AND an SD card is readable,
 	//  fatInitDefault gets stuck somewhere (in disk_initialize it seems)
-	if (dsiMode) {
+	if (isDSiMode()) {
  		const DISC_INTERFACE* sd_io = get_io_dsisd();
 		if (sd_io) sd_io->startup();
 	}
@@ -404,10 +404,7 @@ static void InitNetworking(void) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
-	cc_bool dsiMode = isDSiMode();
-	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
-
-	InitFilesystem(dsiMode);
+	InitFilesystem();
     InitNetworking();
 
 	cpuStartTiming(1);

@@ -886,6 +886,12 @@ static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
 	}
 }
 
+#ifdef CC_BUILD_CONSOLE
+static void MainScreen_ExitApp(void* w) {
+	Window_Main.Exists = false;
+}
+#endif
+
 static void MainScreen_Activated(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 
@@ -909,8 +915,6 @@ static void MainScreen_Activated(struct LScreen* s_) {
 				SwitchToSplitScreen,     main_btnSplit);
 #endif
 
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
-				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	if (Process_OpenSupported) {
 		LButton_Add(s, &s->btnRegister, 100, 35, "Register", 
 					MainScreen_Register, main_btnRegister);
@@ -918,10 +922,19 @@ static void MainScreen_Activated(struct LScreen* s_) {
 
 	LButton_Add(s, &s->btnOptions, 100, 35, "Options", 
 				SwitchToSettings, main_btnOptions);
+
+#ifdef CC_BUILD_CONSOLE
+	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
+	LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
+				MainScreen_ExitApp, main_btnUpdates);
+#else
+	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
+				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	if (Updater_Supported) {
 		LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
 					SwitchToUpdates, main_btnUpdates);
 	}
+#endif
 
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;

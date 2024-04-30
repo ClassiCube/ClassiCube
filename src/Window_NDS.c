@@ -15,6 +15,7 @@
 #include <nds/arm9/input.h>
 #include <nds/arm9/keyboard.h>
 #include <nds/interrupts.h>
+#include <nds/system.h>
 
 
 /*########################################################################################################################*
@@ -151,6 +152,9 @@ void Window_Init(void) {
 	vramSetBankI(VRAM_I_SUB_BG_0x06208000);
     setBrightness(2, 0);
 	consoleInit();
+
+	cc_bool dsiMode = isDSiMode();
+	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
 }
 
 void Window_Free(void) { }

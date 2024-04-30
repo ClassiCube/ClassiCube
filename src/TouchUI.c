@@ -725,10 +725,8 @@ static void TouchScreen_LayoutOnscreen(struct TouchScreen* s, cc_uint8 alignment
 static void TouchScreen_Layout(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchButtonDesc* desc;
-	int haligns = GetOnscreenHAligns();
 	float scale = Gui.RawTouchScale;
-	cc_uint8 halign;
-	int i, x, y, height;
+	int i, height;
 
 	/* Need to align these relative to the hotbar */
 	height = HUDScreen_LayoutHotbar();
