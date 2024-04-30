@@ -163,8 +163,8 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 
 /* 7.2 Scanlines */
 #define PNG_Do_Grayscale(dstI, src, scale)  rgb = (src) * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
-#define PNG_Do_Grayscale_8()      rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb,    255); dst--; src -= 2;
-#define PNG_Do_Grayscale_A__8()   rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb, src[1]); dst--; src -= 1;
+#define PNG_Do_Grayscale_8()      rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb,    255); dst--; src -= 1;
+#define PNG_Do_Grayscale_A__8()   rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb, src[1]); dst--; src -= 2;
 #define PNG_Do_RGB__8()           Bitmap_Set(*dst, src[0], src[1], src[2],    255); dst--; src -= 3;
 #define PNG_Do_RGB_A__8()         Bitmap_Set(*dst, src[0], src[1], src[2], src[3]); dst++; src += 4;
 #define PNG_Do_Palette__8()       *dst-- = palette[*src--];
@@ -488,11 +488,13 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 					/* immediately into the destination colour format */
 					if (colorspace == PNG_COLOR_RGB_A) {
 						/* Prior line is no longer needed and can be overwritten now */
-						rowExpander(bmp->width,     palette, &prior[1],    Bitmap_GetRow(bmp, rowY - 1));
-						/* Current line is also no longer needed and can be overwritten now */
-						if (rowY == bmp->height - 1)
-							rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, rowY));
+						rowExpander(bmp->width, palette, &prior[1], Bitmap_GetRow(bmp, rowY - 1));
 					}
+				}
+
+				/* Current line is also no longer needed and can be overwritten now */
+				if (colorspace == PNG_COLOR_RGB_A && rowY == bmp->height - 1) {
+					rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, rowY));
 				}
 			}
 

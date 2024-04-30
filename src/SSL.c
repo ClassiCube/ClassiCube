@@ -105,21 +105,6 @@ static SECURITY_STATUS SSL_CreateHandle(struct SSLContext* ctx) {
 						&cred, NULL, NULL, &ctx->handle, NULL);
 }
 
-static cc_result SSL_SendRaw(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
-	cc_uint32 sent;
-	cc_result res;
-
-	while (count)
-	{
-		if ((res = Socket_Write(socket, data, count, &sent))) return res;
-		if (!sent) return ERR_END_OF_STREAM;
-
-		data  += sent;
-		count -= sent;
-	}
-	return 0;
-}
-
 static cc_result SSL_RecvRaw(struct SSLContext* ctx) {
 	cc_uint32 read;
 	cc_result res;
@@ -160,7 +145,7 @@ static SECURITY_STATUS SSL_Connect(struct SSLContext* ctx, const char* hostname)
 
 	/* Send initial handshake to the server (if there is one) */
 	if (out_buffers[0].pvBuffer) {
-		res = SSL_SendRaw(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
+		res = Socket_WriteAll(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
 		FP_FreeContextBuffer(out_buffers[0].pvBuffer);
 	}
 	return res;
@@ -221,7 +206,7 @@ static SECURITY_STATUS SSL_Negotiate(struct SSLContext* ctx) {
 
 		/* Need to send data to the server */
 		if (sec == SEC_I_CONTINUE_NEEDED) {
-			res = SSL_SendRaw(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
+			res = Socket_WriteAll(ctx->socket, out_buffers[0].pvBuffer, out_buffers[0].cbBuffer);
 			FP_FreeContextBuffer(out_buffers[0].pvBuffer); /* TODO always free? */
 
 			if (res) return res;
@@ -392,7 +377,7 @@ static cc_result SSL_WriteChunk(struct SSLContext* s, const cc_uint8* data, cc_u
 	/* NOTE: Okay to write in one go, since all three buffers will be contiguous */
 	/*  (as TLS record header size will always be the same size) */
 	total = buffers[0].cbBuffer + buffers[1].cbBuffer + buffers[2].cbBuffer;
-	return SSL_SendRaw(s->socket, buffer, total);
+	return Socket_WriteAll(s->socket, buffer, total);
 }
 
 cc_result SSL_Write(void* ctx, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {

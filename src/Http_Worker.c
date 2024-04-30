@@ -496,13 +496,15 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
 	if (conn->sslCtx)
 		return SSL_Read(conn->sslCtx, data, count, read);
+
 	return Socket_Read(conn->socket,  data, count, read);
 }
 
 static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
 	if (conn->sslCtx) 
 		return SSL_Write(conn->sslCtx, data, count, wrote);
-	return Socket_Write(conn->socket,  data, count, wrote);
+
+	return Socket_WriteAll(conn->socket,  data, count, wrote);
 }
 
 
