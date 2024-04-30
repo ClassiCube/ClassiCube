@@ -31,7 +31,6 @@ static GfxResourceID white_square;
 static WHBGfxShaderGroup* group;
 
 static void InitGfx(void) {
-	WHBGfxInit();
    	GX2InitSampler(&sampler, GX2_TEX_CLAMP_MODE_WRAP, GX2_TEX_XY_FILTER_MODE_POINT);
 	
 	WHBGfxLoadGFDShaderGroup(&colorShader, 0, coloured_gsh);

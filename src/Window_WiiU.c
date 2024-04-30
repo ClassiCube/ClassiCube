@@ -14,6 +14,7 @@
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
+#include <coreinit/memdefaultheap.h>
 #include <coreinit/memory.h>
 #include <coreinit/screen.h>
 #include <proc_ui/procui.h>
@@ -21,7 +22,8 @@
 #include <vpad/input.h>
 #include <whb/proc.h>
 #include <padscore/kpad.h>
-#include <avm/drc.h>
+#include <whb/gfx.h>
+#include <gx2/mem.h>
 
 static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
@@ -87,6 +89,7 @@ void Window_Init(void) {
 
 	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
 	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
+	WHBGfxInit();
 }
 
 void Window_Free(void) { }
@@ -97,6 +100,7 @@ void Window_Free(void) { }
 #define OSSCREEN_DRC_WIDTH  854
 #define OSSCREEN_DRC_HEIGHT 480
 static void LauncherInactiveChanged(void* obj);
+static void Init2DResources(void);
 
 void Window_Create2D(int width, int height) {
 	Window_Main.Width  = OSSCREEN_DRC_WIDTH;
@@ -104,6 +108,7 @@ void Window_Create2D(int width, int height) {
 
 	launcherMode = true;
 	Event_Register_(&WindowEvents.InactiveChanged,   LauncherInactiveChanged, NULL);
+	Init2DResources();
 }
 
 void Window_Create3D(int width, int height) { 
@@ -122,7 +127,10 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+extern Rect2D dirty_rect;
 void Window_ProcessEvents(float delta) {
+	if (!dirty_rect.width) dirty_rect.width = 1;
+
 	if (!WHBProcIsRunning()) {
 		Window_Main.Exists = false;
 		Window_RequestClose();
@@ -224,86 +232,88 @@ void Window_ProcessGamepads(float delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
-#define FB_HEAP_TAG (0x200CCBFF)
-
-static void AllocNativeFramebuffer(void) {
-	MEMHeapHandle heap = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
-	MEMRecordStateForFrmHeap(heap, FB_HEAP_TAG);
-
-	int tv_size   = OSScreenGetBufferSizeEx(SCREEN_TV);
-	void* tv_data = MEMAllocFromFrmHeapEx(heap, tv_size, 4);
-	OSScreenSetBufferEx(SCREEN_TV, tv_data);
-	
-	int drc_size   = OSScreenGetBufferSizeEx(SCREEN_DRC);
-    void* drc_data = MEMAllocFromFrmHeapEx(heap, drc_size, 4);
-	OSScreenSetBufferEx(SCREEN_DRC, drc_data);
-}
-
-static void FreeNativeFramebuffer(void) {
-   MEMHeapHandle heap = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
-   MEMFreeByStateToFrmHeap(heap, FB_HEAP_TAG);
-}
+static GfxResourceID framebuffer_vb;
 
 static void LauncherInactiveChanged(void* obj) {
-	if (Window_Main.Inactive) {
-		FreeNativeFramebuffer();
-	} else {
-		AllocNativeFramebuffer();
-	}
+	// TODO
 }
 
+static void Init2DResources(void) {
+	Gfx_Create();
+	if (framebuffer_vb) return;
+
+	struct VertexTextured* data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&framebuffer_vb,
+															VERTEX_FORMAT_TEXTURED, 4);
+	data[0].x = -1.0f; data[0].y = -1.0f; data[0].z = 0.0f; data[0].Col = PACKEDCOL_WHITE; data[0].U = 0.0f; data[0].V = 1.0f;
+	data[1].x =  1.0f; data[1].y = -1.0f; data[1].z = 0.0f; data[1].Col = PACKEDCOL_WHITE; data[1].U = 1.0f; data[1].V = 1.0f;
+	data[2].x =  1.0f; data[2].y =  1.0f; data[2].z = 0.0f; data[2].Col = PACKEDCOL_WHITE; data[2].U = 1.0f; data[2].V = 0.0f;
+	data[3].x = -1.0f; data[3].y =  1.0f; data[3].z = 0.0f; data[3].Col = PACKEDCOL_WHITE; data[3].U = 0.0f; data[2].V = 0.0f;
+
+	Gfx_UnlockVb(framebuffer_vb);
+}
+
+static GX2Texture fb;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	OSScreenInit();
-	AllocNativeFramebuffer();
-	OSScreenEnableEx(SCREEN_TV, 1);
-	OSScreenEnableEx(SCREEN_DRC, 1);
- 	
+	fb.surface.width    = bmp->width;
+	fb.surface.height   = bmp->height;
+	fb.surface.depth    = 1;
+	fb.surface.dim      = GX2_SURFACE_DIM_TEXTURE_2D;
+	fb.surface.format   = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
+	fb.surface.tileMode = GX2_TILE_MODE_LINEAR_ALIGNED;
+	fb.viewNumSlices    = 1;
+	fb.compMap          = 0x00010203;
+	GX2CalcSurfaceSizeAndAlignment(&fb.surface);
+	GX2InitTextureRegs(&fb);
+
+	fb.surface.image = MEMAllocFromDefaultHeapEx(fb.surface.imageSize, fb.surface.alignment);
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
-#define TV_OFFSET_X (OSSCREEN_TV_WIDTH  - OSSCREEN_DRC_WIDTH ) / 2
-#define TV_OFFSET_Y (OSSCREEN_TV_HEIGHT - OSSCREEN_DRC_HEIGHT) / 2
+static void DrawIt(struct Bitmap* bmp) {
+	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
+	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
+	Gfx_SetDepthTest(false);
 
-static void DrawTVOutput(struct Bitmap* bmp) {
-	OSScreenClearBufferEx(SCREEN_TV, 0);
-
-	for (int y = 0; y < bmp->height; y++) 
-	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width;
-		
-		for (int x = 0; x < bmp->width; x++) {
-			OSScreenPutPixelEx(SCREEN_TV, x + TV_OFFSET_X, y + TV_OFFSET_Y, src[x]);
-		}
-	}
-	OSScreenFlipBuffersEx(SCREEN_TV);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindTexture(&fb);
+	Gfx_BindVb(framebuffer_vb);
+	Gfx_DrawVb_IndexedTris(4);
 }
 
-static void DrawDRCOutput(struct Bitmap* bmp) {
-	for (int y = 0; y < bmp->height; y++) 
-	{
-		cc_uint32* src = bmp->scan0 + y * bmp->width;
-		
-		for (int x = 0; x < bmp->width; x++) {
-			OSScreenPutPixelEx(SCREEN_DRC, x, y, src[x]);
-		}
-	}
-	OSScreenFlipBuffersEx(SCREEN_DRC);
+static void DrawTV(struct Bitmap* bmp) {
+	WHBGfxBeginRenderTV();
+	WHBGfxClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	DrawIt(bmp);	
+	WHBGfxFinishRenderTV();
+}
+
+static void DrawDRC(struct Bitmap* bmp) {
+	WHBGfxBeginRenderDRC();
+	WHBGfxClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	DrawIt(bmp);
+	WHBGfxFinishRenderDRC();
 
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	if (launcherTop || Window_Main.Inactive) return;
 
-	// Draw launcher output on both DRC and TV
-	// NOTE: Partial redraws produce bogus output, so always have to redraw all
-	DrawTVOutput(bmp);
-	DrawDRCOutput(bmp);
+	struct Bitmap part;
+	part.scan0  = Bitmap_GetRow(bmp, r.y) + r.x;
+	part.width  = r.width;
+	part.height = r.height;
+	Gfx_UpdateTexture(&fb, r.x, r.y, &part, bmp->width, false);
+
+	WHBGfxBeginRender();
+	DrawTV(bmp);
+	DrawDRC(bmp);
+	WHBGfxFinishRender();
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
+	MEMFreeToDefaultHeap(fb.surface.image);
 	Mem_Free(bmp->scan0);
-	FreeNativeFramebuffer();
-	OSScreenShutdown();
 }
 
 
