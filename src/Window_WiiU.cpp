@@ -1,5 +1,6 @@
 #include "Core.h"
 #if defined CC_BUILD_WIIU
+extern "C" {
 #include "Window.h"
 #include "Platform.h"
 #include "Input.h"
@@ -24,12 +25,23 @@
 #include <padscore/kpad.h>
 #include <whb/gfx.h>
 #include <gx2/mem.h>
+#include <coreinit/filesystem.h>
+#include <coreinit/memdefaultheap.h>
+}
+#include <nn/swkbd.h>
 
 static cc_bool launcherMode;
+static cc_bool keyboardOpen;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 struct _WindowData Window_Alt;
 cc_bool launcherTop;
+
+
+
+static void OnscreenKeyboard_Update(void);
+static void OnscreenKeyboard_DrawTV(void);
+static void OnscreenKeyboard_DrawDRC(void);
 
 static void LoadTVDimensions(void) {
 	switch(GX2GetSystemTVScanMode())
@@ -107,7 +119,7 @@ void Window_Create2D(int width, int height) {
 	Window_Main.Height = OSSCREEN_DRC_HEIGHT;
 
 	launcherMode = true;
-	Event_Register_(&WindowEvents.InactiveChanged,   LauncherInactiveChanged, NULL);
+	Event_Register_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 	Init2DResources();
 }
 
@@ -116,7 +128,7 @@ void Window_Create3D(int width, int height) {
 	Window_Main.Height  = DisplayInfo.Height;
 
 	launcherMode = false; 
-	Event_Unregister_(&WindowEvents.InactiveChanged, LauncherInactiveChanged, NULL);
+	Event_Unregister_(&WindowEvents.InactiveChanged, NULL, LauncherInactiveChanged);
 }
 
 void Window_RequestClose(void) {
@@ -147,9 +159,11 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 /*########################################################################################################################*
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
+static VPADStatus vpadStatus;
+
 static void ProcessKPAD(float delta) {
 	KPADStatus kpad = { 0 };
-	int res = KPADRead(0, &kpad, 1);
+	int res = KPADRead(WPAD_CHAN_0, &kpad, 1);
 	if (res != KPAD_ERROR_OK) return;
 	
 	switch (kpad.extensionType)
@@ -209,7 +223,6 @@ static void ProcessVpadTouch(VPADTouchData* data) {
 }
 
 static void ProcessVPAD(float delta) {
-	VPADStatus vpadStatus;
 	VPADReadError error = VPAD_READ_SUCCESS;
 	VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &error);
 	if (error != VPAD_READ_SUCCESS) return;
@@ -226,6 +239,7 @@ static void ProcessVPAD(float delta) {
 void Window_ProcessGamepads(float delta) {
 	ProcessVPAD(delta);
 	ProcessKPAD(delta);
+	if (keyboardOpen) OnscreenKeyboard_Update();
 }
 
 
@@ -269,7 +283,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
-static void DrawIt(void) {
+static void DrawLauncher(void) {
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 	Gfx_LoadIdentityMatrix(MATRIX_PROJECTION);
 	Gfx_SetDepthTest(false);
@@ -284,14 +298,16 @@ static void DrawIt(void) {
 static void DrawTV(void) {
 	WHBGfxBeginRenderTV();
 	WHBGfxClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-	DrawIt();	
+	DrawLauncher();
+	if (keyboardOpen) OnscreenKeyboard_DrawTV();
 	WHBGfxFinishRenderTV();
 }
 
 static void DrawDRC(void) {
 	WHBGfxBeginRenderDRC();
 	WHBGfxClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	DrawIt();
+	DrawLauncher();
+	if (keyboardOpen) OnscreenKeyboard_DrawDRC();
 	WHBGfxFinishRenderDRC();
 }
 
@@ -331,13 +347,6 @@ int Window_IsObscured(void)            { return 0; }
 void Window_Show(void) { }
 void Window_SetSize(int width, int height) { }
 
-
-void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void OnscreenKeyboard_SetText(const cc_string* text) { }
-void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
-void OnscreenKeyboard_Draw3D(void) { }
-void OnscreenKeyboard_Close(void) { /* TODO implement */ }
-
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* TODO implement */
 	Platform_LogConst(title);
@@ -350,5 +359,137 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	return ERR_NOT_SUPPORTED;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Onscreen keyboard----------------------------------------------------*
+*#########################################################################################################################*/
+static FSClient* fs_client;
+static nn::swkbd::CreateArg create_arg;
+static nn::swkbd::AppearArg appear_arg;
+static char kb_buffer[512];
+static cc_string kb_str = String_FromArray(kb_buffer);
+
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (keyboardOpen) OnscreenKeyboard_Close();
+	kb_str.length = 0;
+	keyboardOpen  = true;
+	Window_Main.SoftKeyboardFocus = true;
+
+	fs_client = (FSClient *)MEMAllocFromDefaultHeap(sizeof(FSClient));
+	FSAddClient(fs_client, FS_ERROR_FLAG_NONE);
+
+	Mem_Set(&create_arg, 0, sizeof(create_arg));
+	create_arg.regionType = nn::swkbd::RegionType::Europe;
+	create_arg.workMemory = MEMAllocFromDefaultHeap(nn::swkbd::GetWorkMemorySize(0));
+	create_arg.fsClient   = fs_client;
+
+	if (!nn::swkbd::Create(create_arg)) {
+		Platform_LogConst("nn::swkbd::Create failed");
+		return;
+	}
+	nn::swkbd::MuteAllSound(false);
+
+	Mem_Set(&appear_arg, 0, sizeof(appear_arg));
+	appear_arg.inputFormArg.hintText = u"I'm a hint.";
+
+	nn::swkbd::ConfigArg* cfg = &appear_arg.keyboardArg.configArg;
+	cfg->languageType = nn::swkbd::LanguageType::English;
+	int mode = args->type & 0xFF;
+
+	if (mode == KEYBOARD_TYPE_INTEGER) {
+		cfg->keyboardMode = nn::swkbd::KeyboardMode::Numpad;
+		cfg->numpadCharLeft  = '-';
+		cfg->numpadCharRight = 0;
+	} else if (mode == KEYBOARD_TYPE_NUMBER) {
+		cfg->keyboardMode = nn::swkbd::KeyboardMode::Numpad;
+		cfg->numpadCharLeft  = '-';
+		cfg->numpadCharRight = '.';
+	}
+	
+	if (mode == KEYBOARD_TYPE_PASSWORD)
+		appear_arg.inputFormArg.passwordMode = nn::swkbd::PasswordMode::Hide;
+
+	if (!nn::swkbd::AppearInputForm(appear_arg)) {
+		Platform_LogConst("nn::swkbd::AppearInputForm failed");
+		return;
+   }
+}
+
+static int UniString_Length(const char16_t* raw) {
+	int length = 0;
+	while (length < UInt16_MaxValue && *raw) { raw++; length++; }
+	return length;
+}
+
+static void ProcessKeyboardInput(void) {
+	char tmpBuffer[NATIVE_STR_LEN];
+	cc_string tmp = String_FromArray(tmpBuffer);
+
+	const char16_t* str = nn::swkbd::GetInputFormString();
+	if (!str) return;
+	String_AppendUtf16(&tmp, str, UniString_Length(str));
+    
+	if (String_Equals(&tmp, &kb_str)) return;
+	String_Copy(&kb_str, &tmp);
+	Event_RaiseString(&InputEvents.TextChanged, &tmp);
+}
+
+static void OnscreenKeyboard_Update(void) {
+	nn::swkbd::ControllerInfo controllerInfo;
+	controllerInfo.vpad = &vpadStatus;
+	controllerInfo.kpad[0] = nullptr;
+	controllerInfo.kpad[1] = nullptr;
+	controllerInfo.kpad[2] = nullptr;
+	controllerInfo.kpad[3] = nullptr;
+	nn::swkbd::Calc(controllerInfo);
+
+	if (nn::swkbd::IsNeedCalcSubThreadFont()) {
+		nn::swkbd::CalcSubThreadFont();
+	}
+
+	if (nn::swkbd::IsNeedCalcSubThreadPredict()) {
+		nn::swkbd::CalcSubThreadPredict();
+	}
+	ProcessKeyboardInput();
+
+	if (nn::swkbd::IsDecideOkButton(nullptr)) {
+		Input_SetPressed(CCKEY_ENTER);
+		Input_SetReleased(CCKEY_ENTER);
+		OnscreenKeyboard_Close();
+		return;
+	}
+
+	if (nn::swkbd::IsDecideCancelButton(nullptr)) {
+		OnscreenKeyboard_Close();
+		return;
+	}
+}
+
+static void OnscreenKeyboard_DrawTV(void) {
+	nn::swkbd::DrawTV();
+}
+
+static void OnscreenKeyboard_DrawDRC(void) {
+	nn::swkbd::DrawDRC();
+}
+
+
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+
+void OnscreenKeyboard_Close(void) { 
+	if (!keyboardOpen) return;
+	keyboardOpen = false;
+	Window_Main.SoftKeyboardFocus = false;
+
+	nn::swkbd::DisappearInputForm();
+	nn::swkbd::Destroy();
+	MEMFreeToDefaultHeap(create_arg.workMemory);
+
+	FSDelClient(fs_client, FS_ERROR_FLAG_NONE);
+	MEMFreeToDefaultHeap(fs_client);
 }
 #endif
