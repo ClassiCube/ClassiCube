@@ -833,9 +833,12 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	{
 		dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
 		res = HttpConnection_Read(state->conn, dst, INPUT_BUFFER_LEN, &total);
+		if (res) return res;
 
-		if (res)        return res;
-		if (total == 0) return ERR_END_OF_STREAM;
+		if (total == 0) {
+			Platform_LogConst("Http read unexpectedly returned 0");
+			return ERR_END_OF_STREAM;
+		}
 
 		if (dst != buffer) {
 			/* When there is more than INPUT_BUFFER_LEN bytes of unread data/content, */

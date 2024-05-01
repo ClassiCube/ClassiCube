@@ -639,7 +639,9 @@ void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
 			return;
 		}
 	}
-	Logger_Abort2(res, "Failed to init default font");
+
+	Window_ShowDialog("Failed to init default font", "Falling back to built-in font");
+	Font_MakeBitmapped(desc, size, flags);
 }
 
 void SysFont_Free(struct FontDesc* desc) {
@@ -973,7 +975,7 @@ cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int siz
 	desc->flags  = flags;
 	desc->height = Drawer2D_AdjHeight(size);
 
-	desc->handle = (void*);
+	desc->handle = (void*)1;
 	return 0;
 }
 
@@ -990,6 +992,6 @@ int SysFont_TextWidth(struct DrawTextArgs* args) {
 }
 
 void SysFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
-	FallbackFont_DrawText(args, size, bmp, x, y, shadow);
+	FallbackFont_DrawText(args, bmp, x, y, shadow);
 }
 #endif
