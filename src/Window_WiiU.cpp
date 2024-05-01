@@ -160,13 +160,17 @@ void Window_DisableRawMouse(void) { Input.RawMode = false; }
 *-------------------------------------------------------Gamepads----------------------------------------------------------*
 *#########################################################################################################################*/
 static VPADStatus vpadStatus;
+static bool kpad_valid[4];
+static KPADStatus kpads[4];
 
-static void ProcessKPAD(float delta) {
-	KPADStatus kpad = { 0 };
-	int res = KPADRead(WPAD_CHAN_0, &kpad, 1);
+static void ProcessKPAD(float delta, int i) {
+	kpad_valid[i] = false;
+	int res = KPADRead((WPADChan)(WPAD_CHAN_0 + i), &kpads[i], 1);
+
 	if (res != KPAD_ERROR_OK) return;
+	kpad_valid[i] = true;
 	
-	switch (kpad.extensionType)
+	switch (kpads[i].extensionType)
 	{
 	
 	}
@@ -238,7 +242,9 @@ static void ProcessVPAD(float delta) {
 
 void Window_ProcessGamepads(float delta) {
 	ProcessVPAD(delta);
-	ProcessKPAD(delta);
+	for (int i = 0; i < 4; i++)
+		ProcessKPAD(delta, i);
+
 	if (keyboardOpen) OnscreenKeyboard_Update();
 }
 
@@ -297,7 +303,7 @@ static void DrawLauncher(void) {
 
 static void DrawTV(void) {
 	WHBGfxBeginRenderTV();
-	WHBGfxClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 	DrawLauncher();
 	if (keyboardOpen) OnscreenKeyboard_DrawTV();
 	WHBGfxFinishRenderTV();
@@ -305,7 +311,7 @@ static void DrawTV(void) {
 
 static void DrawDRC(void) {
 	WHBGfxBeginRenderDRC();
-	WHBGfxClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	WHBGfxClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 	DrawLauncher();
 	if (keyboardOpen) OnscreenKeyboard_DrawDRC();
 	WHBGfxFinishRenderDRC();
@@ -321,8 +327,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	Gfx_UpdateTexture(&fb, r.x, r.y, &part, bmp->width, false);
 
 	WHBGfxBeginRender();
-	DrawTV();
 	DrawDRC();
+	DrawTV();
 	WHBGfxFinishRender();
 }
 
@@ -368,11 +374,39 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 static FSClient* fs_client;
 static nn::swkbd::CreateArg create_arg;
 static nn::swkbd::AppearArg appear_arg;
+
 static char kb_buffer[512];
 static cc_string kb_str = String_FromArray(kb_buffer);
+#define UNI_STR_LENGTH 64
+
+static int UniString_Length(const char16_t* raw) {
+	int length = 0;
+	while (length < UInt16_MaxValue && *raw) { raw++; length++; }
+	return length;
+}
+
+static void UniString_WriteConst(const char* src, char16_t* dst) {
+	while (*src) { *dst++ = *src++; }
+	*dst = '\0';
+}
+
+static void UniString_WriteString(const cc_string* src, char16_t* dst) {
+	int len = min(src->length, UNI_STR_LENGTH);
+
+	for (int i = 0; i < len; i++) 
+	{
+		*dst++ = Convert_CP437ToUnicode(src->buffer[i]);
+	}
+	*dst = '\0';
+}
+
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	if (keyboardOpen) OnscreenKeyboard_Close();
+	char16_t hint[UNI_STR_LENGTH + 1]   = { 0 };
+	char16_t initial[UNI_STR_LENGTH + 1] = { 0 };
+	int mode = args->type & 0xFF;
+
 	kb_str.length = 0;
 	keyboardOpen  = true;
 	Window_Main.SoftKeyboardFocus = true;
@@ -389,15 +423,13 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 		Platform_LogConst("nn::swkbd::Create failed");
 		return;
 	}
-	nn::swkbd::MuteAllSound(false);
 
-	// TODO
+	nn::swkbd::MuteAllSound(false);
 	Mem_Set(&appear_arg, 0, sizeof(appear_arg));
-	appear_arg.inputFormArg.hintText = u"I'm a hint.";
 
 	nn::swkbd::ConfigArg* cfg = &appear_arg.keyboardArg.configArg;
 	cfg->languageType = nn::swkbd::LanguageType::English;
-	int mode = args->type & 0xFF;
+	cfg->okString = args->type & KEYBOARD_FLAG_SEND ? u"Send" : u"OK";
 
 	if (mode == KEYBOARD_TYPE_INTEGER) {
 		cfg->keyboardMode = nn::swkbd::KeyboardMode::Numpad;
@@ -408,20 +440,20 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 		cfg->numpadCharLeft  = '-';
 		cfg->numpadCharRight = '.';
 	}
+
+	nn::swkbd::InputFormArg* ipt = &appear_arg.inputFormArg;
+	UniString_WriteConst(args->placeholder, hint);
+	UniString_WriteString(args->text, initial);
+	ipt->hintText    = hint;
+	ipt->initialText = initial;
 	
 	if (mode == KEYBOARD_TYPE_PASSWORD)
-		appear_arg.inputFormArg.passwordMode = nn::swkbd::PasswordMode::Hide;
+		ipt->passwordMode = nn::swkbd::PasswordMode::Hide;
 
 	if (!nn::swkbd::AppearInputForm(appear_arg)) {
 		Platform_LogConst("nn::swkbd::AppearInputForm failed");
 		return;
    }
-}
-
-static int UniString_Length(const char16_t* raw) {
-	int length = 0;
-	while (length < UInt16_MaxValue && *raw) { raw++; length++; }
-	return length;
 }
 
 static void ProcessKeyboardInput(void) {
@@ -440,10 +472,10 @@ static void ProcessKeyboardInput(void) {
 static void OnscreenKeyboard_Update(void) {
 	nn::swkbd::ControllerInfo controllerInfo;
 	controllerInfo.vpad = &vpadStatus;
-	controllerInfo.kpad[0] = nullptr;
-	controllerInfo.kpad[1] = nullptr;
-	controllerInfo.kpad[2] = nullptr;
-	controllerInfo.kpad[3] = nullptr;
+	controllerInfo.kpad[0] = kpad_valid[0] ? &kpads[0] : nullptr;
+	controllerInfo.kpad[1] = kpad_valid[1] ? &kpads[1] : nullptr;
+	controllerInfo.kpad[2] = kpad_valid[2] ? &kpads[2] : nullptr;
+	controllerInfo.kpad[3] = kpad_valid[3] ? &kpads[3] : nullptr;
 	nn::swkbd::Calc(controllerInfo);
 
 	if (nn::swkbd::IsNeedCalcSubThreadFont()) {
