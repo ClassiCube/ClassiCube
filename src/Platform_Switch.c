@@ -500,9 +500,6 @@ static void CreateRootDirectory(void) {
 }
 
 void Platform_Init(void) {
-	// TODO: Redesign Drawer2D to better handle this
-	//Options_SetBool(OPT_USE_CHAT_FONT, true);
-
 	CreateRootDirectory();
 	socketInitializeDefault();
 }

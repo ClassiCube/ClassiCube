@@ -391,6 +391,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
 	}
 	nn::swkbd::MuteAllSound(false);
 
+	// TODO
 	Mem_Set(&appear_arg, 0, sizeof(appear_arg));
 	appear_arg.inputFormArg.hintText = u"I'm a hint.";
 
