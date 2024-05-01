@@ -467,7 +467,10 @@ void Gfx_OnWindowResize(void) {
 
 }
 
-void Gfx_SetViewport(int x, int y, int w, int h) { }
+void Gfx_SetViewport(int x, int y, int w, int h) {
+   GX2SetViewport(x, y, w, h, 0.0f, 1.0f);
+   GX2SetScissor( x, y, w, h);
+}
 
 void Gfx_3DS_SetRenderScreen1(enum Screen3DS screen) {
 	GX2ContextState* tv_state  = WHBGfxGetTVContextState();

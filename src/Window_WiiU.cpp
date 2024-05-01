@@ -163,6 +163,72 @@ static VPADStatus vpadStatus;
 static bool kpad_valid[4];
 static KPADStatus kpads[4];
 
+static void ProcessKPadButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_BUTTON_1);
+	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_BUTTON_2);
+      
+	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & WPAD_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_BUTTON_PLUS);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_BUTTON_HOME);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_BUTTON_MINUS);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & WPAD_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & WPAD_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & WPAD_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_BUTTON_DOWN);
+}
+
+static void ProcessNunchuckButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & WPAD_NUNCHUK_BUTTON_Z);
+	Gamepad_SetButton(port, CCPAD_R, mods & WPAD_NUNCHUK_BUTTON_C);
+}
+
+static void ProcessClassicButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L,  mods & WPAD_CLASSIC_BUTTON_L);
+	Gamepad_SetButton(port, CCPAD_R,  mods & WPAD_CLASSIC_BUTTON_R);
+	Gamepad_SetButton(port, CCPAD_ZL, mods & WPAD_CLASSIC_BUTTON_ZL);
+	Gamepad_SetButton(port, CCPAD_ZR, mods & WPAD_CLASSIC_BUTTON_ZR);
+      
+	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_CLASSIC_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & WPAD_CLASSIC_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_CLASSIC_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & WPAD_CLASSIC_BUTTON_Y);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_CLASSIC_BUTTON_HOME);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_CLASSIC_BUTTON_MINUS);
+	Gamepad_SetButton(port, CCPAD_Z,      mods & WPAD_CLASSIC_BUTTON_PLUS);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & WPAD_CLASSIC_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & WPAD_CLASSIC_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & WPAD_CLASSIC_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_CLASSIC_BUTTON_DOWN);
+}
+
+static void ProcessProButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L,  mods & WPAD_PRO_TRIGGER_L);
+	Gamepad_SetButton(port, CCPAD_R,  mods & WPAD_PRO_TRIGGER_R);
+	Gamepad_SetButton(port, CCPAD_ZL, mods & WPAD_PRO_TRIGGER_ZL);
+	Gamepad_SetButton(port, CCPAD_ZR, mods & WPAD_PRO_TRIGGER_ZR);
+      
+	Gamepad_SetButton(port, CCPAD_A, mods & WPAD_PRO_BUTTON_A);
+	Gamepad_SetButton(port, CCPAD_B, mods & WPAD_PRO_BUTTON_B);
+	Gamepad_SetButton(port, CCPAD_X, mods & WPAD_PRO_BUTTON_X);
+	Gamepad_SetButton(port, CCPAD_Y, mods & WPAD_PRO_BUTTON_Y);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & WPAD_PRO_BUTTON_HOME);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & WPAD_PRO_BUTTON_MINUS);
+	Gamepad_SetButton(port, CCPAD_Z,      mods & WPAD_PRO_BUTTON_PLUS);
+	Gamepad_SetButton(port, CCPAD_LSTICK, mods & WPAD_PRO_BUTTON_STICK_L);
+	Gamepad_SetButton(port, CCPAD_RSTICK, mods & WPAD_PRO_BUTTON_STICK_R);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & WPAD_PRO_BUTTON_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & WPAD_PRO_BUTTON_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & WPAD_PRO_BUTTON_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & WPAD_PRO_BUTTON_DOWN);
+}
+
 static void ProcessKPAD(float delta, int i) {
 	kpad_valid[i] = false;
 	int res = KPADRead((WPADChan)(WPAD_CHAN_0 + i), &kpads[i], 1);
@@ -172,7 +238,19 @@ static void ProcessKPAD(float delta, int i) {
 	
 	switch (kpads[i].extensionType)
 	{
-	
+	case WPAD_EXT_CLASSIC:
+		ProcessClassicButtons(i,  kpads[i].classic.hold  | kpads[i].classic.trigger);
+		break;
+	case WPAD_EXT_PRO_CONTROLLER:
+		ProcessProButtons( i,     kpads[i].pro.hold      | kpads[i].pro.trigger);
+		break;
+	case WPAD_EXT_NUNCHUK:
+		ProcessKPadButtons(i,     kpads[i].hold          | kpads[i].trigger);
+		ProcessNunchuckButtons(i, kpads[i].nunchuck.hold | kpads[i].nunchuck.trigger);
+		break;
+	default:
+		ProcessKPadButtons(i,     kpads[i].hold          | kpads[i].trigger);
+		break;
 	}
 }
 
