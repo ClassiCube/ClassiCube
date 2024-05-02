@@ -21,6 +21,8 @@ struct TextWidget {
 
 /* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
+/* Initialises then adds a text widget. */
+CC_NOINLINE void TextWidget_Add(void* screen, struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
@@ -42,10 +44,9 @@ struct ButtonWidget {
 #define BUTTONWIDGET_MAX 12
 
 /* Initialises a button widget. */
-CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
-								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
-/* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+/* Initialises then adds a button widget. */
+CC_NOINLINE void ButtonWidget_Add(void* screen, struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
@@ -78,7 +79,7 @@ struct HotbarWidget {
 	int verticesCount;
 #ifdef CC_BUILD_TOUCH
 	int touchId[HOTBAR_MAX_INDEX];
-	double touchTime[HOTBAR_MAX_INDEX];
+	float touchTime[HOTBAR_MAX_INDEX];
 #endif
 };
 #define HOTBAR_MAX_VERTICES (4 + 4 + HOTBAR_CORE_VERTICES)
@@ -86,7 +87,7 @@ struct HotbarWidget {
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
-CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, double delta);
+CC_NOINLINE void HotbarWidget_Update(struct HotbarWidget* w, float delta);
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 /* A table of blocks. */
@@ -98,8 +99,9 @@ struct TableWidget {
 	int selectedIndex, cellSizeX, cellSizeY;
 	float normBlockSize, selBlockSize;
 	GfxResourceID vb;
-	cc_bool pendingClose;
+	cc_bool pendingClose, everCreated;
 	float scale;
+	float padXAcc, padYAcc;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
@@ -111,13 +113,14 @@ struct TableWidget {
 	int verticesCount;
 };
 
-CC_NOINLINE void TableWidget_Create(struct TableWidget* w, int sbWidth);
+CC_NOINLINE void TableWidget_Add(void* screen, struct TableWidget* w, int sbWidth);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
-CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToBlock(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_SetToIndex(struct TableWidget* w, int index);
 CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
+CC_NOINLINE void TableWidget_RecreateTitle(struct TableWidget* w, cc_bool force);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -147,7 +150,7 @@ struct InputWidget {
 	int caretOffset;
 	PackedCol caretCol;
 	struct Texture caretTex;
-	double caretAccumulator;
+	float caretAccumulator;
 };
 
 /* Removes all characters and then deletes the input texture. */
@@ -157,12 +160,12 @@ CC_NOINLINE void InputWidget_AppendText(struct InputWidget* w, const cc_string* 
 /* Tries appending the given character, then updates the input texture. */
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 /* Redraws text and recalculates associated state. */
-/* Also calls Window_SetKeyboardText with the text in the input widget. */
+/* Also calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 /* Shorthand for InputWidget_Clear followed by InputWidget_AppendText, */
-/* then calls Window_SetKeyboardText with the text in the input widget. */
+/* then calls OnscreenKeyboard_SetText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_SetText(struct InputWidget* w, const cc_string* str);
@@ -223,6 +226,7 @@ struct TextInputWidget {
 #define MENUINPUTWIDGET_MAX 8
 
 CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
+CC_NOINLINE void TextInputWidget_Add(void* screen, struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
 

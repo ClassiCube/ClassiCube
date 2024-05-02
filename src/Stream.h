@@ -29,13 +29,13 @@ struct Stream {
 	cc_result (*Close)(struct Stream* s);
 	
 	union {
-		cc_file File;
-		void* Inflate;
-		struct { cc_uint8* Cur; cc_uint32 Left, Length; cc_uint8* Base; } Mem;
-		struct { struct Stream* Source; cc_uint32 Left, Length; } Portion;
-		struct { cc_uint8* Cur; cc_uint32 Left, Length; cc_uint8* Base; struct Stream* Source; cc_uint32 End; } Buffered;
-		struct { struct Stream* Source; cc_uint32 CRC32; } CRC32;
-	} Meta;
+		cc_file file;
+		void* inflate;
+		struct { cc_uint8* cur; cc_uint32 left, length; cc_uint8* base; } mem;
+		struct { struct Stream* source; cc_uint32 left, length; } portion;
+		struct { cc_uint8* cur; cc_uint32 left, length; cc_uint8* base; struct Stream* source; cc_uint32 end; } buffered;
+		struct { struct Stream* source; cc_uint32 crc32; } crc32;
+	} meta;
 };
 
 /* Attempts to fully read up to count bytes from the stream. */

@@ -24,8 +24,8 @@ typedef int cc_file;
 /* Origin points for when seeking in a file. */
 /*  NOTE: These have same values as SEEK_SET/SEEK_CUR/SEEK_END, do not change them */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
-/* Number of milliseconds since 01/01/0001 to start of unix time. */
-#define UNIX_EPOCH 62135596800000ULL
+/* Number of seconds since 01/01/0001 to start of unix time. */
+#define UNIX_EPOCH_SECONDS 62135596800ULL
 
 extern const cc_result ReturnCode_FileShareViolation;
 extern const cc_result ReturnCode_FileNotFound;
@@ -121,6 +121,9 @@ extern const cc_string DynamicLib_Ext;
 #define DYNAMICLIB_QUOTE(x) #x
 #define DynamicLib_Sym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&_ ## sym }
 #define DynamicLib_Sym2(name, sym) { name,           (void**)&_ ## sym }
+#if defined CC_BUILD_OS2
+#define DynamicLib_SymC(sym) { DYNAMICLIB_QUOTE(_ ## sym), (void**)&_ ## sym }
+#endif
 
 CC_API cc_result DynamicLib_Load(const cc_string* path, void** lib); /* OBSOLETE */
 CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */
@@ -163,8 +166,8 @@ void Platform_Log2(const char* format, const void* a1, const void* a2);
 void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3);
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
-/* Returns the current UTC time, as number of milliseconds since 1/1/0001 */
-CC_API TimeMS DateTime_CurrentUTC_MS(void);
+/* Returns the current UTC time, as number of seconds since 1/1/0001 */
+CC_API TimeMS DateTime_CurrentUTC(void);
 /* Returns the current local Time. */
 CC_API void DateTime_CurrentLocal(struct DateTime* t);
 /* Takes a platform-specific stopwatch measurement. */
@@ -208,12 +211,9 @@ cc_result File_Length(cc_file file, cc_uint32* len);
 typedef void (*Thread_StartFunc)(void);
 /* Blocks the current thread for the given number of milliseconds. */
 CC_API void Thread_Sleep(cc_uint32 milliseconds);
-/* Initialises a new thread that will run the given function. */
-/* Because of backend differences, func must also be provided in Thread_Start2 */
-CC_API void* Thread_Create(Thread_StartFunc func);
-/* Starts a new thread that runs the given function. */
+/* Initialises and starts a new thread that runs the given function. */
 /* NOTE: Threads must either be detached or joined, otherwise data leaks. */
-CC_API void Thread_Start2(void* handle, Thread_StartFunc func);
+CC_API void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name);
 /* Frees the platform specific persistent data associated with the thread. */
 /* NOTE: Once a thread has been detached, Thread_Join can no longer be used. */
 CC_API void Thread_Detach(void* handle);
@@ -270,6 +270,8 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 /* Attempts to close the given socket */
 void Socket_Close(cc_socket s);
+/* Attempts to write all data to the given socket, returning ERR_END_OF_STREAM if it could not */
+cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count);
 
 #ifdef CC_BUILD_MOBILE
 void Platform_ShareScreenshot(const cc_string* filename);

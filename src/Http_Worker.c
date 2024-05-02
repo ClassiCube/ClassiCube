@@ -179,6 +179,9 @@ static const cc_string curlAlt = String_FromConst("libcurl.so");
 #elif defined CC_BUILD_SERENITY
 static const cc_string curlLib = String_FromConst("/usr/local/lib/libcurl.so");
 static const cc_string curlAlt = String_FromConst("/usr/local/lib/libcurl.so");
+#elif defined CC_BUILD_OS2
+static const cc_string curlLib = String_FromConst("/@unixroot/usr/lib/curl4.dll");
+static const cc_string curlAlt = String_FromConst("/@unixroot/usr/local/lib/curl4.dll");
 #else
 static const cc_string curlLib = String_FromConst("libcurl.so.4");
 static const cc_string curlAlt = String_FromConst("libcurl.so.3");
@@ -186,10 +189,17 @@ static const cc_string curlAlt = String_FromConst("libcurl.so.3");
 
 static cc_bool LoadCurlFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
+#if !defined CC_BUILD_OS2
 		DynamicLib_Sym(curl_global_init),    DynamicLib_Sym(curl_global_cleanup),
 		DynamicLib_Sym(curl_easy_init),      DynamicLib_Sym(curl_easy_perform),
 		DynamicLib_Sym(curl_easy_setopt),    DynamicLib_Sym(curl_easy_cleanup),
 		DynamicLib_Sym(curl_slist_free_all), DynamicLib_Sym(curl_slist_append)
+#else
+		DynamicLib_SymC(curl_global_init),    DynamicLib_SymC(curl_global_cleanup),
+		DynamicLib_SymC(curl_easy_init),      DynamicLib_SymC(curl_easy_perform),
+		DynamicLib_SymC(curl_easy_setopt),    DynamicLib_SymC(curl_easy_cleanup),
+		DynamicLib_SymC(curl_slist_free_all), DynamicLib_SymC(curl_slist_append)
+#endif
 	};
 	cc_bool success;
 	void* lib;
@@ -225,7 +235,6 @@ static void HttpBackend_Init(void) {
 	if (!LoadCurlFuncs()) { Logger_WarnFunc(&msg); return; }
 	res = _curl_global_init(CURL_GLOBAL_DEFAULT);
 	if (res) { Logger_SimpleWarn(res, "initing curl"); return; }
-
 	curl = _curl_easy_init();
 	if (!curl) { Logger_SimpleWarn(res, "initing curl_easy"); return; }
 
@@ -487,13 +496,15 @@ static cc_result HttpConnection_Open(struct HttpConnection* conn, const struct H
 static cc_result HttpConnection_Read(struct HttpConnection* conn, cc_uint8* data, cc_uint32 count, cc_uint32* read) {
 	if (conn->sslCtx)
 		return SSL_Read(conn->sslCtx, data, count, read);
+
 	return Socket_Read(conn->socket,  data, count, read);
 }
 
-static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count, cc_uint32* wrote) {
+static cc_result HttpConnection_Write(struct HttpConnection* conn, const cc_uint8* data, cc_uint32 count) {
 	if (conn->sslCtx) 
-		return SSL_Write(conn->sslCtx, data, count, wrote);
-	return Socket_Write(conn->socket,  data, count, wrote);
+		return SSL_WriteAll(conn->sslCtx, data, count);
+
+	return Socket_WriteAll(conn->socket,  data, count);
 }
 
 
@@ -612,15 +623,13 @@ static void HttpClient_Serialise(struct HttpClientState* state) {
 static cc_result HttpClient_SendRequest(struct HttpClientState* state) {
 	char inputBuffer[16384];
 	cc_string inputMsg;
-	cc_uint32 wrote;
 
 	String_InitArray(inputMsg, inputBuffer);
 	state->req->meta     = &inputMsg;
 	state->req->progress = HTTP_PROGRESS_FETCHING_DATA;
 	HttpClient_Serialise(state);
 
-	/* TODO check that wrote is >= inputMsg.length */
-	return HttpConnection_Write(state->conn, (cc_uint8*)inputBuffer, inputMsg.length, &wrote);
+	return HttpConnection_Write(state->conn, (cc_uint8*)inputBuffer, inputMsg.length);
 }
 
 
@@ -824,9 +833,12 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 	{
 		dst = state->dataLeft > INPUT_BUFFER_LEN ? (req->data + req->size) : buffer;
 		res = HttpConnection_Read(state->conn, dst, INPUT_BUFFER_LEN, &total);
+		if (res) return res;
 
-		if (res)        return res;
-		if (total == 0) return ERR_END_OF_STREAM;
+		if (total == 0) {
+			Platform_LogConst("Http read unexpectedly returned 0");
+			return ERR_END_OF_STREAM;
+		}
 
 		if (dst != buffer) {
 			/* When there is more than INPUT_BUFFER_LEN bytes of unread data/content, */
@@ -1155,6 +1167,24 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
     CFRelease(request);
     return result;
 }
+#elif !defined CC_BUILD_NETWORKING
+/*########################################################################################################################*
+*------------------------------------------------------Null backend-------------------------------------------------------*
+*#########################################################################################################################*/
+#include "Errors.h"
+
+static cc_bool HttpBackend_DescribeError(cc_result res, cc_string* dst) {
+	return false;
+}
+
+static void HttpBackend_Init(void) { }
+
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) { }
+
+static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
+	req->progress = 100;
+	return ERR_NOT_SUPPORTED;
+}
 #endif
 
 
@@ -1251,7 +1281,7 @@ static void PerformRequest(struct HttpRequest* req, cc_string* url) {
 	end = Stopwatch_Measure();
 
 	elapsed = Stopwatch_ElapsedMS(beg, end);
-	Platform_Log4("HTTP: result %i (http %i) in %i ms (%i bytes)",
+	Platform_Log4("HTTP: result %e (http %i) in %i ms (%i bytes)",
 		&req->result, &req->statusCode, &elapsed, &req->size);
 
 	Http_FinishRequest(req);
@@ -1304,8 +1334,8 @@ static void WorkerLoop(void) {
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
 static void HttpBackend_Add(struct HttpRequest* req, cc_uint8 flags) {
-#ifdef CC_BUILD_PSP
-	/* TODO why doesn't threading work properly */
+#if defined CC_BUILD_PSP || defined CC_BUILD_NDS
+	/* TODO why doesn't threading work properly on PSP */
 	DoRequest(req);
 #else
 	Mutex_Lock(pendingMutex);
@@ -1334,8 +1364,7 @@ static void Http_Init(void) {
 	pendingMutex    = Mutex_Create();
 	processedMutex  = Mutex_Create();
 	curRequestMutex = Mutex_Create();
-	workerThread    = Thread_Create(WorkerLoop);
-
-	Thread_Start2(workerThread, WorkerLoop);
+	
+	Thread_Run(&workerThread, WorkerLoop, 128 * 1024, "HTTP");
 }
 #endif

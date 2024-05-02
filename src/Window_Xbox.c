@@ -10,6 +10,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "VirtualKeyboard.h"
 #include <hal/video.h>
 #include <usbh_lib.h>
 #include <xid_driver.h>
@@ -40,17 +41,17 @@ static void OnDataReceived(UTR_T* utr) {
 
 static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_dev_t* xid_dev = usbh_xid_get_device_list();
-    Platform_LogConst("DEVICE CHECK!!!");
+    Platform_LogConst("Devices check");
 	
-    while (xid_dev)
+    for (; xid_dev; xid_dev = xid_dev->next)
     {
     	int DEV = xid_dev->xid_desc.bType;
-    	Platform_Log1("DEV: %i", &DEV);
+    	Platform_Log1("DEVICE: %i", &DEV);
         if (xid_dev->xid_desc.bType != XID_TYPE_GAMECONTROLLER)
         	continue;
         	
         xid_ctrl = xid_dev;
-        usbh_xid_read(xid_ctrl, 0, OnDataReceived);
+        usbh_xid_read(xid_dev, 0, OnDataReceived);
         return;
     }
     xid_ctrl = NULL;
@@ -62,7 +63,6 @@ void Window_Init(void) {
 	
 	DisplayInfo.Width  = mode.width;
 	DisplayInfo.Height = mode.height;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -107,6 +107,20 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
+void Window_ProcessEvents(float delta) {
+	usbh_pooling_hubs();
+}
+
+void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
+
+void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
+void Window_DisableRawMouse(void) { Input.RawMode = false; }
+void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
 // https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_gamepad
 // NOTE: Analog buttons use dedicated field rather than being part of dButtons
 #define XINPUT_GAMEPAD_DPAD_UP     0x0001
@@ -118,62 +132,44 @@ void Window_RequestClose(void) {
 #define XINPUT_GAMEPAD_LEFT_THUMB  0x0040
 #define XINPUT_GAMEPAD_RIGHT_THUMB 0x0080
 
-static void HandleButtons(xid_gamepad_in* gp) {
+static void HandleButtons(int port, xid_gamepad_in* gp) {
 	int mods = gp->dButtons;
-	Input_SetNonRepeatable(CCPAD_L,  gp->l     > 0x7F);
-	Input_SetNonRepeatable(CCPAD_R,  gp->r     > 0x7F);
-	Input_SetNonRepeatable(CCPAD_ZL, gp->white > 0x7F);
-	Input_SetNonRepeatable(CCPAD_ZR, gp->black > 0x7F);
+	Gamepad_SetButton(port, CCPAD_L,  gp->l     > 0x7F);
+	Gamepad_SetButton(port, CCPAD_R,  gp->r     > 0x7F);
+	Gamepad_SetButton(port, CCPAD_ZL, gp->white > 0x7F);
+	Gamepad_SetButton(port, CCPAD_ZR, gp->black > 0x7F);
 	
-	Input_SetNonRepeatable(CCPAD_A, gp->a > 0x7F);
-	Input_SetNonRepeatable(CCPAD_B, gp->b > 0x7F);
-	Input_SetNonRepeatable(CCPAD_X, gp->x > 0x7F);
-	Input_SetNonRepeatable(CCPAD_Y, gp->y > 0x7F);
+	Gamepad_SetButton(port, CCPAD_A, gp->a > 0x7F);
+	Gamepad_SetButton(port, CCPAD_B, gp->b > 0x7F);
+	Gamepad_SetButton(port, CCPAD_X, gp->x > 0x7F);
+	Gamepad_SetButton(port, CCPAD_Y, gp->y > 0x7F);
 	
-	Input_SetNonRepeatable(CCPAD_START,  mods & XINPUT_GAMEPAD_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);
-	Input_SetNonRepeatable(CCPAD_LSTICK, mods & XINPUT_GAMEPAD_LEFT_THUMB);
-	Input_SetNonRepeatable(CCPAD_RSTICK, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
+	Gamepad_SetButton(port, CCPAD_START,  mods & XINPUT_GAMEPAD_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & XINPUT_GAMEPAD_BACK);
+	Gamepad_SetButton(port, CCPAD_LSTICK, mods & XINPUT_GAMEPAD_LEFT_THUMB);
+	Gamepad_SetButton(port, CCPAD_RSTICK, mods & XINPUT_GAMEPAD_RIGHT_THUMB);
 	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & XINPUT_GAMEPAD_DPAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & XINPUT_GAMEPAD_DPAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & XINPUT_GAMEPAD_DPAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & XINPUT_GAMEPAD_DPAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & XINPUT_GAMEPAD_DPAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & XINPUT_GAMEPAD_DPAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & XINPUT_GAMEPAD_DPAD_DOWN);
 }
 
-static void HandleJoystick_Left(int x, int y) {
-	if (Math_AbsI(x) <= 256) x = 0;
-	if (Math_AbsI(y) <= 256) y = 0;	
+#define AXIS_SCALE 8192.0f
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
+	if (Math_AbsI(x) <= 512) x = 0;
+	if (Math_AbsI(y) <= 512) y = 0;	
 	
-	if (x == 0 && y == 0) return;
-	Input.JoystickMovement = true;
-	Input.JoystickAngle    = Math_Atan2(x, -y);
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
 }
 
-static void HandleJoystick_Right(int x, int y, double delta) {
-	float scale = (delta * 60.0) / 8192.0f;
-	
-	if (Math_AbsI(x) <= 256) x = 0;
-	if (Math_AbsI(y) <= 256) y = 0;
-	
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, -y * scale);	
-}
-
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	usbh_pooling_hubs();
+void Window_ProcessGamepads(float delta) {
 	if (!xid_ctrl) return;
 	
-	HandleButtons(&gp_state);
-	HandleJoystick_Left( gp_state.leftStickX,  gp_state.leftStickY );
-	HandleJoystick_Right(gp_state.rightStickX, gp_state.rightStickY, delta);
+	HandleButtons(0, &gp_state);
+	HandleJoystick(0, PAD_AXIS_LEFT,  gp_state.leftStickX,  gp_state.leftStickY,  delta);
+	HandleJoystick(0, PAD_AXIS_RIGHT, gp_state.rightStickX, gp_state.rightStickY, delta);
 }
-
-void Cursor_SetPosition(int x, int y) { } // Makes no sense for Xbox
-
-void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
-void Window_DisableRawMouse(void) { Input.RawMode = false; }
-void Window_UpdateRawMouse(void)  { }
 
 
 /*########################################################################################################################*
@@ -193,9 +189,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
 	cc_uint32* dst = (cc_uint32*)fb         + r.x;
 
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.Width * 4);
+		Mem_Copy(dst + y * bmp->width, src + y * bmp->width, r.width * 4);
 	}
 }
 
@@ -207,9 +203,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

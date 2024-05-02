@@ -37,11 +37,10 @@ void Platform_Log(const char* msg, int len) {
 	sceIoWrite(stdout_fd, msg, len);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.sec * 1000 + UNIX_EPOCH + (time.usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	struct SceKernelTimeval cur;
 	sceKernelLibcGettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+	return (cc_uint64)cur.sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -202,18 +201,16 @@ static int ExecThread(unsigned int argc, void *argv) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	#define CC_THREAD_PRIORITY 0x10000100
-	#define CC_THREAD_STACKSIZE 128 * 1024
 	#define CC_THREAD_ATTRS 0 // TODO PSP_THREAD_ATTR_VFPU?
-	
-	return (void*)sceKernelCreateThread("CC thread", ExecThread, CC_THREAD_PRIORITY, 
-						CC_THREAD_STACKSIZE, CC_THREAD_ATTRS, 0, NULL);
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
 	Thread_StartFunc func_ = func;
-	sceKernelStartThread((int)handle, sizeof(func_), (void*)&func_);
+	
+	int threadID = sceKernelCreateThread(name, ExecThread, CC_THREAD_PRIORITY, 
+										stackSize, CC_THREAD_ATTRS, 0, NULL);
+																				
+	*handle = (int)threadID;
+	sceKernelStartThread(threadID, sizeof(func_), (void*)&func_);
 }
 
 void Thread_Detach(void* handle) {
@@ -418,6 +415,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	String_AppendUtf8(dst, chars, len);
 	return true;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

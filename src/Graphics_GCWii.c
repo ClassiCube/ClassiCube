@@ -27,9 +27,8 @@ static void InitGX(void) {
 	memset(fifo_buffer, 0, FIFO_SIZE);
 
 	GX_Init(fifo_buffer, FIFO_SIZE);
-	GX_SetViewport(0, 0, mode->fbWidth, mode->efbHeight, 0, 1);
+	Gfx_SetViewport(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyYScale((f32)mode->xfbHeight / (f32)mode->efbHeight);
-	GX_SetScissor(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopySrc(0, 0, mode->fbWidth, mode->efbHeight);
 	GX_SetDispCopyDst(mode->fbWidth, mode->xfbHeight);
 	GX_SetCopyFilter(mode->aa, mode->sample_pattern,
@@ -50,8 +49,12 @@ static void InitGX(void) {
 void Gfx_Create(void) {
 	if (!Gfx.Created) InitGX();
 	
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
+	
+	Gfx.MinTexWidth  = 4;
+	Gfx.MinTexHeight = 4;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -136,20 +139,16 @@ static void ReorderPixels(CCTexture* tex, struct Bitmap* bmp,
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
-	if (bmp->width < 4 || bmp->height < 4) {
-		Platform_LogConst("ERROR: Tried to create texture smaller than 4x4");
-		return 0;
-	}
-	
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(32, 32 + size);
+	if (!tex) return NULL;
 	
 	GX_InitTexObj(&tex->obj, tex->pixels, bmp->width, bmp->height,
 			GX_TF_RGBA8, GX_REPEAT, GX_REPEAT, GX_FALSE);
 	GX_InitTexObjFilterMode(&tex->obj, GX_NEAR, GX_NEAR);
 			
-	ReorderPixels(tex, bmp, 0, 0, bmp->width);
+	ReorderPixels(tex, bmp, 0, 0, rowWidth);
 	DCFlushRange(tex->pixels, size);
 	return tex;
 }
@@ -159,10 +158,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// TODO: wrong behaviour if x/y/part isn't multiple of 4 pixels
 	ReorderPixels(tex, part, x, y, rowWidth);
 	GX_InvalidateTexAll();
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -203,7 +198,7 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { 
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor.r = PackedCol_R(color);
 	gfx_clearColor.g = PackedCol_G(color);
 	gfx_clearColor.b = PackedCol_B(color);
@@ -211,7 +206,8 @@ void Gfx_ClearCol(PackedCol color) {
 	GX_SetCopyClear(gfx_clearColor, 0x00ffffff); // TODO: use GX_MAX_Z24 
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	// TODO
 }
 
 static cc_bool depth_write = true, depth_test = true;
@@ -235,8 +231,53 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static BitmapCol* GCWii_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	u8* buffer = (u8*)ctx;
+	u8 a, r, g, b;
+	int blockYStride = 4 * (bmp->width * 4); // tile row stride = 4 * row stride
+	int blockXStride = (4 * 4) * 4; // 16 pixels per tile
+
+	// Do the inverse of converting from 4x4 tiled to linear
+	for (u32 x = 0; x < bmp->width; x++){
+		int tileY = y >> 2, tileX = x >> 2;
+		int locY  = y & 0x3, locX = x & 0x3;
+		int idx   = (tileY * blockYStride) + (tileX * blockXStride) + ((locY << 2) + locX) * 2; 
+
+		// All 16 pixels are stored with AR first, then GB
+		//a = buffer[idx     ];
+		r = buffer[idx +  1];
+		g = buffer[idx + 32]; 
+		b = buffer[idx + 33];
+
+		bmp->scan0[x] = BitmapColor_RGB(r, g, b);
+	}
+	return bmp->scan0;
+}
+
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
+	BitmapCol tmp[1024];
+	GXRModeObj* vmode = VIDEO_GetPreferredMode(NULL);
+	int width  = vmode->fbWidth;
+	int height = vmode->efbHeight;
+
+	u8* buffer = memalign(32, width * height * 4);
+	if (!buffer) return ERR_OUT_OF_MEMORY;
+
+	GX_SetTexCopySrc(0, 0, width, height);
+	GX_SetTexCopyDst(width, height, GX_TF_RGBA8, GX_FALSE);
+	GX_CopyTex(buffer, GX_FALSE);
+	GX_PixModeSync();
+	GX_Flush();
+	DCFlushRange(buffer, width * height * 4);
+
+	struct Bitmap bmp;
+	bmp.scan0  = tmp;
+	bmp.width  = width; 
+	bmp.height = height;
+
+	cc_result res = Png_Encode(&bmp, output, GCWii_GetRow, false, buffer);
+	free(buffer);
+	return res;
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
@@ -252,7 +293,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) {
 }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 }
 
 void Gfx_EndFrame(void) {
@@ -269,6 +311,11 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	GX_SetViewport(x, y, w, h, 0, 1);
+	GX_SetScissor(x, y, w, h);
+}
+
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 
@@ -280,7 +327,7 @@ cc_bool Gfx_WarnIfNecessary(void) { return false; }
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	//fillFunc(gfx_indices, count, obj);
 	// not used since render using GX_QUADS anyways
-	return 1;
+	return (void*)1;
 }
 
 void Gfx_BindIb(GfxResourceID ib) { }
@@ -399,10 +446,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -zFar / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	
 	// Transposed, source guPersepctive https://github.com/devkitPro/libogc/blob/master/libogc/gu.c
 	*matrix = Matrix_Identity;

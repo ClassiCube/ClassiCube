@@ -10,6 +10,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "ExtMath.h"
+#include "VirtualKeyboard.h"
 #include <pspdisplay.h>
 #include <pspge.h>
 #include <pspctrl.h>
@@ -26,7 +27,6 @@ struct _WindowData WindowInfo;
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -67,51 +67,57 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
-	Input_SetNonRepeatable(CCPAD_L, mods & PSP_CTRL_LTRIGGER);
-	Input_SetNonRepeatable(CCPAD_R, mods & PSP_CTRL_RTRIGGER);
-	
-	Input_SetNonRepeatable(CCPAD_A, mods & PSP_CTRL_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_B, mods & PSP_CTRL_SQUARE);
-	Input_SetNonRepeatable(CCPAD_X, mods & PSP_CTRL_CROSS);
-	Input_SetNonRepeatable(CCPAD_Y, mods & PSP_CTRL_CIRCLE);
-	
-	Input_SetNonRepeatable(CCPAD_START,  mods & PSP_CTRL_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & PSP_CTRL_SELECT);
-	
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & PSP_CTRL_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
-}
-
-static void ProcessCircleInput(SceCtrlData* pad, double delta) {
-	float scale = (delta * 60.0) / 16.0f;
-	int dx = pad->Lx - 127;
-	int dy = pad->Ly - 127;
-
-	if (Math_AbsI(dx) <= 8) dx = 0;
-	if (Math_AbsI(dy) <= 8) dy = 0;
-
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
-}
-
-void Window_ProcessEvents(double delta) {
-	SceCtrlData pad;
-	/* TODO implement */
-	int ret = sceCtrlPeekBufferPositive(&pad, 1);
-	if (ret <= 0) return;
-	// TODO: need to use cached version still? like GameCube/Wii
-
-	HandleButtons(pad.Buttons);
-	if (Input.RawMode) 
-		ProcessCircleInput(&pad, delta);
+void Window_ProcessEvents(float delta) {
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_L, mods & PSP_CTRL_LTRIGGER);
+	Gamepad_SetButton(port, CCPAD_R, mods & PSP_CTRL_RTRIGGER);
+	
+	Gamepad_SetButton(port, CCPAD_A, mods & PSP_CTRL_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, mods & PSP_CTRL_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, mods & PSP_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, mods & PSP_CTRL_CIRCLE);
+	
+	Gamepad_SetButton(port, CCPAD_START,  mods & PSP_CTRL_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & PSP_CTRL_SELECT);
+	
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & PSP_CTRL_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & PSP_CTRL_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & PSP_CTRL_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PSP_CTRL_DOWN);
+}
+
+#define AXIS_SCALE 16.0f
+static void ProcessCircleInput(int port, SceCtrlData* pad, float delta) {
+	int x = pad->Lx - 127;
+	int y = pad->Ly - 127;
+
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+
+	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
+void Window_ProcessGamepads(float delta) {
+	SceCtrlData pad;
+	/* TODO implement */
+	int ret = sceCtrlPeekBufferPositive(&pad, 1);
+	if (ret <= 0) return;
+	// TODO: need to use cached version still? like GameCube/Wii
+
+	HandleButtons(0, pad.Buttons);
+	ProcessCircleInput(0, &pad, delta);
+}
 
 
 /*########################################################################################################################*
@@ -130,9 +136,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	cc_uint32* src = (cc_uint32*)bmp->scan0 + r.x;
 	cc_uint32* dst = (cc_uint32*)fb         + r.x;
 
-	for (int y = r.y; y < r.y + r.Height; y++) 
+	for (int y = r.y; y < r.y + r.height; y++) 
 	{
-		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.Width * 4);
+		Mem_Copy(dst + y * BUFFER_WIDTH, src + y * bmp->width, r.width * 4);
 	}
 	sceKernelDcacheWritebackAll();
 }
@@ -145,9 +151,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

@@ -18,6 +18,7 @@
 #include "Utils.h"
 #include "LBackend.h"
 #include "Http.h"
+#include "Game.h"
 
 #define LAYOUTS static const struct LLayout
 #define IsEnterButton(btn) (btn == CCKEY_ENTER  || btn == CCPAD_START  || btn == CCPAD_A || btn == CCKEY_KP_ENTER)
@@ -653,17 +654,78 @@ void MFAScreen_SetActive(void) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------------SplitScreen----------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_SPLITSCREEN
+static struct SplitScreen {
+	LScreen_Layout
+	struct LButton btnPlayers[3], btnBack;
+	cc_bool signingIn;
+} SplitScreen;
+
+#define SPLITSCREEN_MAX_WIDGETS 4
+static struct LWidget* split_widgets[SPLITSCREEN_MAX_WIDGETS];
+
+LAYOUTS sps_btnPlayers2[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE, -120 } };
+LAYOUTS sps_btnPlayers3[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -70 } };
+LAYOUTS sps_btnPlayers4[] = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  -20 } };
+LAYOUTS sps_btnBack[]     = { { ANCHOR_CENTRE, 0 }, { ANCHOR_CENTRE,  170 } };
+
+static void SplitScreen_Start(int players) {
+	static const cc_string user = String_FromConst(DEFAULT_USERNAME);
+	Game_NumLocalPlayers = players;
+	
+	Launcher_StartGame(&user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
+}
+
+static void SplitScreen_Players2(void* w) { SplitScreen_Start(2); }
+static void SplitScreen_Players3(void* w) { SplitScreen_Start(3); }
+static void SplitScreen_Players4(void* w) { SplitScreen_Start(4); }
+
+static void SplitScreen_Activated(struct LScreen* s_) {
+	struct SplitScreen* s = (struct SplitScreen*)s_;
+
+	LButton_Add(s, &s->btnPlayers[0], 300, 35, "2 player splitscreen", 
+				SplitScreen_Players2, sps_btnPlayers2);
+	LButton_Add(s, &s->btnPlayers[1], 300, 35, "3 player splitscreen", 
+				SplitScreen_Players3, sps_btnPlayers3);
+	LButton_Add(s, &s->btnPlayers[2], 300, 35, "4 player splitscreen", 
+				SplitScreen_Players4, sps_btnPlayers4);
+
+	LButton_Add(s, &s->btnBack, 100, 35, "Back", 
+				SwitchToMain, sps_btnBack);
+}
+
+void SplitScreen_SetActive(void) {
+	struct SplitScreen* s = &SplitScreen;
+	LScreen_Reset((struct LScreen*)s);
+	
+	s->widgets    = split_widgets;
+	s->maxWidgets = Array_Elems(split_widgets);
+
+	s->Activated     = SplitScreen_Activated;
+	s->title         = "Splitscreen mode";
+
+	Launcher_SetScreen((struct LScreen*)s);
+}
+
+static void SwitchToSplitScreen(void* w) { SplitScreen_SetActive(); }
+#endif
+
+
+/*########################################################################################################################*
 *----------------------------------------------------------MainScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct MainScreen {
 	LScreen_Layout
-	struct LButton btnLogin, btnResume, btnDirect, btnSPlayer, btnRegister, btnOptions, btnUpdates;
+	struct LButton btnLogin, btnResume, btnDirect, btnSPlayer, btnSplit;
+	struct LButton btnRegister, btnOptions, btnUpdates;
 	struct LInput iptUsername, iptPassword;
 	struct LLabel lblStatus, lblUpdate;
 	cc_bool signingIn;
 } MainScreen;
 
-#define MAINSCREEN_MAX_WIDGETS 11
+#define MAINSCREEN_MAX_WIDGETS 12
 static struct LWidget* main_widgets[MAINSCREEN_MAX_WIDGETS];
 
 LAYOUTS main_iptUsername[] = { { ANCHOR_CENTRE_MIN, -140 }, { ANCHOR_CENTRE, -120 } };
@@ -675,6 +737,7 @@ LAYOUTS main_lblStatus[] = { { ANCHOR_CENTRE,   0 }, { ANCHOR_CENTRE,  20 } };
 LAYOUTS main_btnResume[]  = { { ANCHOR_CENTRE, 90 }, { ANCHOR_CENTRE, -25 } };
 LAYOUTS main_btnDirect[]  = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE,  60 } };
 LAYOUTS main_btnSPlayer[] = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 110 } };
+LAYOUTS main_btnSplit[]   = { { ANCHOR_CENTRE,  0 }, { ANCHOR_CENTRE, 160 } };
 
 LAYOUTS main_btnRegister[] = { { ANCHOR_MIN,    6 }, { ANCHOR_MAX,  6 } };
 LAYOUTS main_btnOptions[]  = { { ANCHOR_CENTRE, 0 }, { ANCHOR_MAX,  6 } };
@@ -823,6 +886,12 @@ static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
 	}
 }
 
+#ifdef CC_BUILD_CONSOLE
+static void MainScreen_ExitApp(void* w) {
+	Window_Main.Exists = false;
+}
+#endif
+
 static void MainScreen_Activated(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 
@@ -839,11 +908,13 @@ static void MainScreen_Activated(struct LScreen* s_) {
 	LLabel_Add(s,  &s->lblStatus,  "",  main_lblStatus);
 	LButton_Add(s, &s->btnDirect,  200, 35, "Direct connect", 
 				SwitchToDirectConnect,   main_btnDirect);
-	LButton_Add(s, &s->btnSPlayer, 200, 35, "Singleplayer",   
+	LButton_Add(s, &s->btnSPlayer, 200, 35, "Singleplayer",
 				MainScreen_Singleplayer, main_btnSPlayer);
+#ifdef CC_BUILD_SPLITSCREEN
+	LButton_Add(s, &s->btnSplit,   200, 35, "Splitscreen (WIP)", 
+				SwitchToSplitScreen,     main_btnSplit);
+#endif
 
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
-				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	if (Process_OpenSupported) {
 		LButton_Add(s, &s->btnRegister, 100, 35, "Register", 
 					MainScreen_Register, main_btnRegister);
@@ -851,10 +922,19 @@ static void MainScreen_Activated(struct LScreen* s_) {
 
 	LButton_Add(s, &s->btnOptions, 100, 35, "Options", 
 				SwitchToSettings, main_btnOptions);
+
+#ifdef CC_BUILD_CONSOLE
+	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
+	LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
+				MainScreen_ExitApp, main_btnUpdates);
+#else
+	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
+				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	if (Updater_Supported) {
 		LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
 					SwitchToUpdates, main_btnUpdates);
 	}
+#endif
 
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
@@ -1012,9 +1092,11 @@ static void CheckResourcesScreen_Next(void* w) {
 }
 
 static void CheckResourcesScreen_AddWidgets(struct CheckResourcesScreen* s) {
+	const char* line1_msg = Resources_MissingRequired ? "Some required resources weren't found" 
+														: "Some optional resources weren't found";
 	s->lblStatus.small = true;
 
-	LLabel_Add(s,  &s->lblLine1,  "Some required resources weren't found", cres_lblLine1);
+	LLabel_Add(s,  &s->lblLine1,  line1_msg,           cres_lblLine1);
 	LLabel_Add(s,  &s->lblLine2,  "Okay to download?", cres_lblLine2);
 	LLabel_Add(s,  &s->lblStatus, "",                  cres_lblStatus);
 
@@ -1030,7 +1112,7 @@ static void CheckResourcesScreen_Activated(struct LScreen* s_) {
 	float size;
 	CheckResourcesScreen_AddWidgets(s);
 		
-	size = Resources_Size / 1024.0f;
+	size = Resources_MissingSize / 1024.0f;
 	String_InitArray(str, buffer);
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
 	LLabel_SetText(&s->lblStatus, &str);
@@ -1121,7 +1203,7 @@ static void FetchResourcesScreen_UpdateStatus(struct FetchResourcesScreen* s, in
 
 	String_InitArray(str, strBuffer);
 	count = Fetcher_Downloaded + 1;
-	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
+	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_MissingCount);
 
 	if (String_Equals(&str, &s->lblStatus.text)) return;
 	LLabel_SetText(&s->lblStatus, &str);
@@ -1298,12 +1380,8 @@ static void ServersScreen_Activated(struct LScreen* s_) {
 
 static void ServersScreen_Tick(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	int count;
 	LScreen_Tick(s_);
-
-	count = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base, NULL);
-	if (count != FetchFlagsTask.count) LBackend_TableFlagAdded(&s->table);
 
 	if (!FetchServersTask.Base.working) return;
 	LWebTask_Tick(&FetchServersTask.Base, NULL);
@@ -1600,9 +1678,8 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint
 	if (!timestamp) {
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
-		now   = DateTime_CurrentUTC_MS() - UNIX_EPOCH;
-		/* must divide as cc_uint64, int delta overflows after 26 days */
-		delta = (int)((now / 1000) - timestamp);
+		now   = DateTime_CurrentUTC() - UNIX_EPOCH_SECONDS;
+		delta = (int)(now - timestamp);
 		UpdatesScreen_FormatTime(&str, delta);
 	}
 	LLabel_SetText(lbl, &str);

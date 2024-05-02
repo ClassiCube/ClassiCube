@@ -22,15 +22,15 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
 
-void Camera_KeyLookUpdate(double delta) {
+void Camera_KeyLookUpdate(float delta) {
 	if (Gui.InputGrab) return;
 	/* divide by 25 to have reasonable sensitivity for default mouse sens */
-	delta = (Camera.Sensitivity / 25.0f) * (1000 * delta);
+	float amount = (Camera.Sensitivity / 25.0f) * (1000 * delta);
 
-	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= delta;
-	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += delta;
-	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= delta;
-	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += delta;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_UP))    cam_deltaY -= amount;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_DOWN))  cam_deltaY += amount;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_LEFT))  cam_deltaX -= amount;
+	if (KeyBind_IsPressed(KEYBIND_LOOK_RIGHT)) cam_deltaX += amount;
 }
 
 /*########################################################################################################################*
@@ -42,24 +42,23 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	Gfx_CalcPerspectiveMatrix(proj, fovy, aspectRatio, (float)Game_ViewDistance);
 }
 
-static void PerspectiveCamera_GetView(struct Matrix* mat) {
+static void PerspectiveCamera_GetView(struct LocalPlayer* p, struct Matrix* mat) {
 	Vec3 pos = Camera.CurrentPos;
-	Vec2 rot = Camera.Active->GetOrientation();
+	Vec2 rot = Camera.Active->GetOrientation(p);
 	Matrix_LookRot(mat, pos, rot);
 	Matrix_MulBy(mat, &Camera.TiltM);
 }
 
-static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD + Camera.TiltPitch);
-	Vec3 eyePos = Entity_GetEyePosition(p);
-	float reach = LocalPlayer_Instance.ReachDistance;
-	Picking_CalcPickedBlock(&eyePos, &dir, reach, t);
+static void PerspectiveCamera_GetPickedBlock(struct LocalPlayer* p, struct RayTracer* t) {
+	struct Entity* e = &p->Base;
+	Vec3 dir    = Vec3_GetDirVector(e->Yaw * MATH_DEG2RAD, e->Pitch * MATH_DEG2RAD + Camera.TiltPitch);
+	Vec3 eyePos = Entity_GetEyePosition(e);
+	Picking_CalcPickedBlock(&eyePos, &dir, p->ReachDistance, t);
 }
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
 
-static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
+static Vec2 PerspectiveCamera_GetMouseDelta(float delta) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
 	static float speedX, speedY, newSpeedX, newSpeedY, accelX, accelY;
 	Vec2 v;
@@ -67,8 +66,8 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	if (Camera.Smooth) {
 		accelX = (cam_deltaX - speedX) * 35 / Camera.Mass;
 		accelY = (cam_deltaY - speedY) * 35 / Camera.Mass;
-		newSpeedX = accelX * (float)delta + speedX;
-		newSpeedY = accelY * (float)delta + speedY;
+		newSpeedX = accelX * delta + speedX;
+		newSpeedY = accelY * delta + speedY;
 
 		/* High acceleration means velocity overshoots the correct position on low FPS, */
 		/* causing wiggling. If newSpeed has opposite sign of speed, set speed to 0 */
@@ -86,8 +85,8 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	return v;
 }
 
-static void PerspectiveCamera_UpdateMouseRotation(double delta) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+static void PerspectiveCamera_UpdateMouseRotation(struct LocalPlayer* p, float delta) {
+	struct Entity* e = &p->Base;
 	struct LocationUpdate update;
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
@@ -108,15 +107,14 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	e->VTABLE->SetLocation(e, &update);
 }
 
-static void PerspectiveCamera_UpdateMouse(double delta) {
+static void PerspectiveCamera_UpdateMouse(struct LocalPlayer* p, float delta) {
 	if (!Gui.InputGrab && Window_Main.Focused) Window_UpdateRawMouse();
 
-	PerspectiveCamera_UpdateMouseRotation(delta);
+	PerspectiveCamera_UpdateMouseRotation(p, delta);
 	cam_deltaX = 0; cam_deltaY = 0;
 }
 
-static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void PerspectiveCamera_CalcViewBobbing(struct LocalPlayer* p, float t, float velTiltScale) {
 	struct Entity* e = &p->Base;
 
 	struct Matrix tiltY, velX;
@@ -148,23 +146,23 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 /*########################################################################################################################*
 *---------------------------------------------------First person camera---------------------------------------------------*
 *#########################################################################################################################*/
-static Vec2 FirstPersonCamera_GetOrientation(void) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+static Vec2 FirstPersonCamera_GetOrientation(struct LocalPlayer* p) {
+	struct Entity* e = &p->Base;
 	Vec2 v;	
-	v.x = p->Yaw   * MATH_DEG2RAD; 
-	v.y = p->Pitch * MATH_DEG2RAD;
+	v.x = e->Yaw   * MATH_DEG2RAD; 
+	v.y = e->Pitch * MATH_DEG2RAD;
 	return v;
 }
 
-static Vec3 FirstPersonCamera_GetPosition(float t) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vec3 camPos   = Entity_GetEyePosition(p);
-	float yaw     = p->Yaw * MATH_DEG2RAD;
-	PerspectiveCamera_CalcViewBobbing(t, 1);
+static Vec3 FirstPersonCamera_GetPosition(struct LocalPlayer* p, float t) {
+	struct Entity* e = &p->Base;
+	Vec3 camPos   = Entity_GetEyePosition(e);
+	float yaw     = e->Yaw * MATH_DEG2RAD;
+	PerspectiveCamera_CalcViewBobbing(p, t, 1);
 	
 	camPos.y += Camera.BobbingVer;
-	camPos.x += Camera.BobbingHor * (float)Math_Cos(yaw);
-	camPos.z += Camera.BobbingHor * (float)Math_Sin(yaw);
+	camPos.x += Camera.BobbingHor * Math_CosF(yaw);
+	camPos.z += Camera.BobbingHor * Math_SinF(yaw);
 	return camPos;
 }
 
@@ -185,11 +183,11 @@ static struct Camera cam_FirstPerson = {
 #define DEF_ZOOM 3.0f
 static float dist_third = DEF_ZOOM, dist_forward = DEF_ZOOM;
 
-static Vec2 ThirdPersonCamera_GetOrientation(void) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+static Vec2 ThirdPersonCamera_GetOrientation(struct LocalPlayer* p) {
+	struct Entity* e = &p->Base;
 	Vec2 v;	
-	v.x = p->Yaw   * MATH_DEG2RAD; 
-	v.y = p->Pitch * MATH_DEG2RAD;
+	v.x = e->Yaw   * MATH_DEG2RAD; 
+	v.y = e->Pitch * MATH_DEG2RAD;
 	if (cam_isForwardThird) { v.x += MATH_PI; v.y = -v.y; }
 
 	v.x += cam_rotOffset.x * MATH_DEG2RAD; 
@@ -197,29 +195,29 @@ static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	return v;
 }
 
-static float ThirdPersonCamera_GetZoom(void) {
+static float ThirdPersonCamera_GetZoom(struct LocalPlayer* p) {
 	float dist = cam_isForwardThird ? dist_forward : dist_third;
 	/* Don't allow zooming out when -fly */
-	if (dist > DEF_ZOOM && !LocalPlayer_CheckCanZoom()) dist = DEF_ZOOM;
+	if (dist > DEF_ZOOM && !LocalPlayer_CheckCanZoom(p)) dist = DEF_ZOOM;
 	return dist;
 }
 
-static Vec3 ThirdPersonCamera_GetPosition(float t) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
-	float dist = ThirdPersonCamera_GetZoom();
+static Vec3 ThirdPersonCamera_GetPosition(struct LocalPlayer* p, float t) {
+	struct Entity* e = &p->Base;
+	float dist = ThirdPersonCamera_GetZoom(p);
 	Vec3 target, dir;
 	Vec2 rot;
 
-	PerspectiveCamera_CalcViewBobbing(t, dist);
-	target = Entity_GetEyePosition(p);
+	PerspectiveCamera_CalcViewBobbing(p, t, dist);
+	target = Entity_GetEyePosition(e);
 	target.y += Camera.BobbingVer;
 
-	rot = Camera.Active->GetOrientation();
+	rot = Camera.Active->GetOrientation(p);
 	dir = Vec3_GetDirVector(rot.x, rot.y);
 	Vec3_Negate(&dir, &dir);
 
 	Picking_ClipCameraPos(&target, &dir, dist, &cameraClipPos);
-	return cameraClipPos.Intersect;
+	return cameraClipPos.intersect;
 }
 
 static cc_bool ThirdPersonCamera_Zoom(float amount) {
@@ -255,14 +253,21 @@ static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY);
 }
 
+static void OnAxisUpdate(void* obj, int port, int axis, float x, float y) {
+	if (!Input.RawMode) return;
+	if (Gamepad_AxisBehaviour[axis] != AXIS_BEHAVIOUR_CAMERA) return;
+
+	Camera.Active->OnRawMovement(x, y);
+}
+
 static void OnHacksChanged(void* obj) {
-	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* h = &Entities.CurPlayer->Hacks;
 	/* Leave third person if not allowed anymore */
 	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
 }
 
 void Camera_CycleActive(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instances[0];
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->next;
 
@@ -316,7 +321,7 @@ static void OnInit(void) {
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
-	Event_Register_(&ControllerEvents.RawMoved,   NULL, OnRawMovement);
+	Event_Register_(&ControllerEvents.AxisUpdate, NULL, OnAxisUpdate);
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN

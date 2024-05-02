@@ -34,7 +34,7 @@
 @interface CCWindow : UIWindow
 @end
 
-@interface CCViewController : UIViewController<UIDocumentPickerDelegate>
+@interface CCViewController : UIViewController<UIDocumentPickerDelegate, UIAlertViewDelegate>
 @end
 
 @interface CCAppDelegate : UIResponder<UIApplicationDelegate>
@@ -44,6 +44,7 @@
 static CCViewController* cc_controller;
 static UIWindow* win_handle;
 static UIView* view_handle;
+static cc_bool launcherMode;
 
 static void AddTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
@@ -74,6 +75,15 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
 }
 
 static cc_bool fullscreen = true;
+static void UpdateStatusBar(void) {
+    if ([cc_controller respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
+        // setNeedsStatusBarAppearanceUpdate - iOS 7.0
+        [cc_controller setNeedsStatusBarAppearanceUpdate];
+    } else {
+        [[UIApplication sharedApplication] setStatusBarHidden:fullscreen withAnimation:UIStatusBarAnimationNone];
+    }
+}
+
 static CGRect GetViewFrame(void) {
     UIScreen* screen = UIScreen.mainScreen;
     return fullscreen ? screen.bounds : screen.applicationFrame;
@@ -84,6 +94,9 @@ static CGRect GetViewFrame(void) {
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
+    
+    // clicking on the background should dismiss onscren keyboard
+    if (launcherMode) { [view_handle endEditing:NO]; }
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
@@ -113,6 +126,13 @@ static CGRect GetViewFrame(void) {
 
 - (BOOL)shouldAutorotate {
     // shouldAutorotate - iOS 6.0
+    return YES;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)ori {
+    // shouldAutorotateToInterfaceOrientation - iOS 2.0
+    if (landscape_locked && !(ori == UIInterfaceOrientationLandscapeLeft || ori == UIInterfaceOrientationLandscapeRight))
+        return NO;
     return YES;
 }
 
@@ -217,6 +237,12 @@ static UITextField* kb_widget;
     //  significantly the chance of accidentally triggering this gesture
     return UIRectEdgeBottom;
 }
+
+// == UIAlertViewDelegate ==
+static int alert_completed;
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
+    alert_completed = true;
+}
 @end
 
 @implementation CCAppDelegate
@@ -276,7 +302,28 @@ static UITextField* kb_widget;
 }
 @end
 
+
+static void LogUnhandled(NSString* str) {
+    if (!str) return;
+    const char* src = [str UTF8String];
+    if (!src) return;
+    
+    cc_string msg = String_FromReadonly(src);
+    Platform_Log(msg.buffer, msg.length);
+    Logger_Log(&msg);
+}
+
+// TODO: Should really be handled elsewhere, in Logger or ErrorHandler
+static void LogUnhandledNSErrors(NSException* ex) {
+    // last chance to log exception details before process dies
+    LogUnhandled(@"About to die from unhandled NSException..");
+    LogUnhandled([ex name]);
+    LogUnhandled([ex reason]);
+}
+
 int main(int argc, char * argv[]) {
+    NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+    
     @autoreleasepool {
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([CCAppDelegate class]));
     }
@@ -324,6 +371,25 @@ static NSMutableAttributedString* ToAttributedString(const cc_string* text) {
     }
     return str;
 }
+
+
+static UIColor* GetStringColor(const cc_string* text) {
+    cc_string left = *text, part;
+    char colorCode = 'f';
+    Drawer2D_UNSAFE_NextPart(&left, &part, &colorCode);
+    
+    BitmapCol color = Drawer2D_GetColor(colorCode);
+    return ToUIColor(color, 1.0f);
+}
+
+static NSString* GetColorlessString(const cc_string* text) {
+    char buffer[128];
+    cc_string tmp = String_FromArray(buffer);
+
+    String_AppendColorless(&tmp, text);
+    return ToNSString(&tmp);
+}
+
 
 static void FreeContents(void* info, const void* data, size_t size) { Mem_Free(data); }
 // TODO probably a better way..
@@ -376,10 +442,12 @@ void Window_Init(void) {
     Window_Main.SoftKeyboard = SOFT_KEYBOARD_SHIFT;
     Input_SetTouchMode(true);
     Input.Sources = INPUT_SOURCE_NORMAL;
+    Gui_SetTouchUI(true);
     
     DisplayInfo.Depth  = 32;
     DisplayInfo.ScaleX = 1; // TODO dpi scale
     DisplayInfo.ScaleY = 1; // TODO dpi scale
+    NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
 }
 
 void Window_Free(void) { }
@@ -393,8 +461,10 @@ static UIColor* CalcBackgroundColor(void) {
 
 static CGRect DoCreateWindow(void) {
     // UIKeyboardWillShowNotification - iOS 2.0
-    CGRect bounds = GetViewFrame();
     cc_controller = [CCViewController alloc];
+    UpdateStatusBar();
+    
+    CGRect bounds = GetViewFrame();
     win_handle    = [[CCWindow alloc] initWithFrame:bounds];
     
     win_handle.rootViewController = cc_controller;
@@ -419,7 +489,7 @@ void Window_RequestClose(void) {
     Event_RaiseVoid(&WindowEvents.Closing);
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
     SInt32 res;
     // manually tick event queue
     do {
@@ -427,23 +497,32 @@ void Window_ProcessEvents(double delta) {
     } while (res == kCFRunLoopRunHandledSource);
 }
 
+void Window_ProcessGamepads(float delta) { }
+
 void ShowDialogCore(const char* title, const char* msg) {
     // UIAlertController - iOS 8.0
     // UIAlertAction - iOS 8.0
+    // UIAlertView - iOS 2.0
     Platform_LogConst(title);
     Platform_LogConst(msg);
     NSString* _title = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
     NSString* _msg   = [NSString stringWithCString:msg encoding:NSASCIIStringEncoding];
-    __block int completed = false;
+    alert_completed  = false;
     
+#ifdef TARGET_OS_TV
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { completed = true; }];
+    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
     [alert addAction:okBtn];
     [cc_controller presentViewController:alert animated:YES completion: Nil];
+#else
+    UIAlertView* alert = [UIAlertView alloc];
+    alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [alert show];
+#endif
     
     // TODO clicking outside message box crashes launcher
     // loop until alert is closed TODO avoid sleeping
-    while (!completed) {
+    while (!alert_completed) {
         Window_ProcessEvents(0.0);
         Thread_Sleep(16);
     }
@@ -479,7 +558,7 @@ static void LInput_SetPlaceholder(UITextField* fld, const char* placeholder);
 static UITextField* text_input;
 static CCKBController* kb_controller;
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     if (!kb_controller) {
         kb_controller = [[CCKBController alloc] init];
         CFBridgingRetain(kb_controller); // prevent GC TODO even needed?
@@ -497,11 +576,19 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     [text_input becomeFirstResponder];
 }
 
-void Window_SetKeyboardText(const cc_string* text) {
-    text_input.text = ToNSString(text);
+void OnscreenKeyboard_SetText(const cc_string* text) {
+    NSString* str = ToNSString(text);
+    NSString* cur = text_input.text;
+    
+    // otherwise on iOS 5, this causes an infinite loop
+    if (cur && [str isEqualToString:cur]) return;
+    text_input.text = str;
 }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+
+void OnscreenKeyboard_Close(void) {
     [text_input resignFirstResponder];
 }
 
@@ -510,9 +597,8 @@ int Window_GetWindowState(void) {
 }
 
 static void ToggleFullscreen(cc_bool isFullscreen) {
-    // setNeedsStatusBarAppearanceUpdate - iOS 7.0
     fullscreen = isFullscreen;
-    [cc_controller setNeedsStatusBarAppearanceUpdate];
+    UpdateStatusBar();
     view_handle.frame = GetViewFrame();
 }
 
@@ -605,6 +691,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
  *--------------------------------------------------------2D window--------------------------------------------------------*
  *#########################################################################################################################*/
 void Window_Create2D(int width, int height) {
+    launcherMode  = true;
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[UIView alloc] initWithFrame:bounds];
@@ -634,8 +721,10 @@ static void GLContext_OnLayout(void);
 @end
 
 void Window_Create3D(int width, int height) {
-    // CAEAGLLayer - iOS 2.0
+    launcherMode  = false;
     CGRect bounds = DoCreateWindow();
+    
+    // CAEAGLLayer - iOS 2.0
     view_handle   = [[CCGLView alloc] initWithFrame:bounds];
     view_handle.multipleTouchEnabled = true;
     cc_controller.view = view_handle;
@@ -658,20 +747,41 @@ static GLuint framebuffer;
 static GLuint color_renderbuffer, depth_renderbuffer;
 static int fb_width, fb_height;
 
-static void CreateFramebuffer(void) {
+static void UpdateColorbuffer(void) {
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    
+    if (![ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer])
+        Logger_Abort("Failed to link renderbuffer to window");
+}
+
+static void UpdateDepthbuffer(void) {
+    int backingW = 0, backingH = 0;
+    
+    // In case layer dimensions are different
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH,  &backingW);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &backingH);
+    
+    // Shouldn't happen but just in case
+    if (backingW <= 0) backingW = Window_Main.Width;
+    if (backingH <= 0) backingH = Window_Main.Height;
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, backingW, backingH);
+}
+
+static void CreateFramebuffer(void) {
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     
     glGenRenderbuffers(1, &color_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
-    [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
+    UpdateColorbuffer();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_renderbuffer);
-    
+
     glGenRenderbuffers(1, &depth_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
+    UpdateDepthbuffer();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_RENDERBUFFER, depth_renderbuffer);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -695,18 +805,13 @@ void GLContext_Update(void) {
 }
 
 static void GLContext_OnLayout(void) {
-    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
-    
     // only resize buffers when absolutely have to
     if (fb_width == Window_Main.Width && fb_height == Window_Main.Height) return;
     fb_width  = Window_Main.Width;
     fb_height = Window_Main.Height;
     
-    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
-    [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
-    
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, Window_Main.Width, Window_Main.Height);
+    UpdateColorbuffer();
+    UpdateDepthbuffer();
 }
 
 void GLContext_Free(void) {
@@ -824,11 +929,14 @@ void Platform_ShareScreenshot(const cc_string* filename) {
 void GetDeviceUUID(cc_string* str) {
     // identifierForVendor - iOS 6.0
     UIDevice* device = UIDevice.currentDevice;
-    NSString* string = [[device identifierForVendor] UUIDString];
     
-    // TODO avoid code duplication
-    const char* src = string.UTF8String;
-    String_AppendUtf8(str, src, String_Length(src));
+    if ([device respondsToSelector:@selector(identifierForVendor)]) {
+        NSString* string = [[device identifierForVendor] UUIDString];
+        // TODO avoid code duplication
+        const char* src = string.UTF8String;
+        String_AppendUtf8(str, src, String_Length(src));
+    }
+    // TODO find a pre iOS 6 solution
 }
 
 void Directory_GetCachePath(cc_string* path) {
@@ -1364,7 +1472,10 @@ static UIView* LBackend_ButtonShow(struct LButton* w) {
 void LBackend_ButtonUpdate(struct LButton* w) {
     UIButton* btn = (__bridge UIButton*)w->meta;
     
-    NSString* str = ToNSString(&w->text);
+    UIColor* color = GetStringColor(&w->text);
+    [btn setTitleColor:color forState:UIControlStateNormal];
+    
+    NSString* str = GetColorlessString(&w->text);
     [btn setTitle:str forState:UIControlStateNormal];
 }
 void LBackend_ButtonDraw(struct LButton* w) { }
@@ -1377,40 +1488,31 @@ void LBackend_CheckboxInit(struct LCheckbox* w) { }
 
 static UIView* LBackend_CheckboxShow(struct LCheckbox* w) {
     UIView* root  = [[UIView alloc] init];
+    CGRect frame;
+    
     UISwitch* swt = [[UISwitch alloc] init];
     [swt addTarget:ui_controller action:@selector(handleValueChanged:) forControlEvents:UIControlEventValueChanged];
     
     UILabel* lbl  = [[UILabel alloc] init];
+    lbl.backgroundColor = UIColor.clearColor;
     lbl.textColor = UIColor.whiteColor;
     lbl.text      = ToNSString(&w->text);
-    lbl.translatesAutoresizingMaskIntoConstraints = false;
     [lbl sizeToFit]; // adjust label to fit text
-                     
+    
     [root addSubview:swt];
     [root addSubview:lbl];
     
-    // label should be slightly to right of switch
-    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
-                                            attribute: NSLayoutAttributeLeft
-                                            relatedBy: NSLayoutRelationEqual
-                                            toItem:swt
-                                            attribute:NSLayoutAttributeRight
-                                            multiplier:1.0f
-                                            constant:10.0f]];
-    // label should be vertically aligned
-    [root addConstraint:[NSLayoutConstraint constraintWithItem:lbl
-                                            attribute: NSLayoutAttributeCenterY
-                                            relatedBy: NSLayoutRelationEqual
-                                            toItem:root
-                                            attribute:NSLayoutAttributeCenterY
-                                            multiplier:1.0f
-                                            constant:0.0f]];
+    // label should be slightly to right of switch and vertically centred
+    frame = lbl.frame;
+    frame.origin.x = swt.frame.size.width + 10.0f;
+    frame.origin.y = swt.frame.size.height / 2 - frame.size.height / 2;
+    lbl.frame = frame;
     
     // adjust root view height to enclose children
-    CGRect frame = root.frame;
+    frame = root.frame;
     frame.size.width  = lbl.frame.origin.x + lbl.frame.size.width;
-    frame.size.height = swt.frame.size.height;
-    root.frame   = frame;
+    frame.size.height = max(swt.frame.size.height, lbl.frame.size.height);
+    root.frame = frame;
     
     //root.userInteractionEnabled = YES;
     w->meta = (__bridge void*)root;
@@ -1492,6 +1594,7 @@ void LBackend_LabelInit(struct LLabel* w) { }
 static UIView* LBackend_LabelShow(struct LLabel* w) {
     UILabel* lbl  = [[UILabel alloc] init];
     w->meta       = (__bridge void*)lbl;
+    lbl.backgroundColor = UIColor.clearColor;
     
     if (w->small) lbl.font = [UIFont systemFontOfSize:14.0f];
     LBackend_LabelUpdate(w);
@@ -1502,7 +1605,14 @@ void LBackend_LabelUpdate(struct LLabel* w) {
     UILabel* lbl = (__bridge UILabel*)w->meta;
     if (!lbl) return;
     
-    lbl.attributedText = ToAttributedString(&w->text);
+    if ([lbl respondsToSelector:@selector(attributedText)]) {
+        // attributedText - iOS 6.0
+        lbl.attributedText = ToAttributedString(&w->text);
+    } else {
+        lbl.textColor = GetStringColor(&w->text);
+        lbl.text      = GetColorlessString(&w->text);
+    }
+    
     [lbl sizeToFit]; // adjust label to fit text
 }
 void LBackend_LabelDraw(struct LLabel* w) { }
@@ -1559,8 +1669,10 @@ void LBackend_TableInit(struct LTable* w) { }
 
 static UIView* LBackend_TableShow(struct LTable* w) {
     UITableView* tbl = [[UITableView alloc] init];
-    tbl.delegate     = ui_controller;
-    tbl.dataSource   = ui_controller;
+    tbl.delegate   = ui_controller;
+    tbl.dataSource = ui_controller;
+    tbl.editing    = NO;
+    tbl.allowsSelection = YES;
     LTable_UpdateCellColor(tbl, NULL, 1, false);
     
     //[tbl registerClass:UITableViewCell.class forCellReuseIdentifier:cellID];
@@ -1573,17 +1685,6 @@ void LBackend_TableUpdate(struct LTable* w) {
     [tbl reloadData];
 }
 
-// TODO only redraw flags
-void LBackend_TableFlagAdded(struct LTable* w) {
-    UITableView* tbl = (__bridge UITableView*)w->meta;
-    
-    // trying to update cell.imageView.image doesn't seem to work,
-    // so pointlessly reload entire table data instead
-    NSIndexPath* selected = [tbl indexPathForSelectedRow];
-    [tbl reloadData];
-    [tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
-}
-
 void LBackend_TableDraw(struct LTable* w) { }
 void LBackend_TableReposition(struct LTable* w) { }
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
@@ -1591,7 +1692,7 @@ void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
 
 static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected) {
-    BitmapCol color = LTable_RowColor(server, row, selected);
+    BitmapCol color = LTable_RowColor(row, selected, server && server->featured);
     if (color) {
         view.backgroundColor = ToUIColor(color, 1.0f);
         view.opaque          = YES;
@@ -1611,10 +1712,6 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_FormatUptime(&desc, server->uptime);
     if (server->software.length) String_Format1(&desc, " | %s", &server->software);
     
-    if (flag && !flag->meta && flag->bmp.scan0) {
-        UIImage* img = ToUIImage(&flag->bmp);
-        flag->meta   = CFBridgingRetain(img);
-    }
     if (flag && flag->meta)
         cell.imageView.image = (__bridge UIImage*)flag->meta;
         
@@ -1629,9 +1726,33 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_UpdateCellColor(cell, server, row, selected);
 }
 
+// TODO only redraw flags
+static void OnFlagsChanged(void) {
+	struct LScreen* s = Launcher_Active;
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+		if (s->widgets[i]->type != LWIDGET_TABLE) continue;
+        UITableView* tbl = (__bridge UITableView*)s->widgets[i]->meta;
+    
+		// trying to update cell.imageView.image doesn't seem to work,
+		// so pointlessly reload entire table data instead
+		NSIndexPath* selected = [tbl indexPathForSelectedRow];
+		[tbl reloadData];
+		[tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
+    }
+}
+
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	NSData* ns_data = [NSData dataWithBytes:data length:len];
+	UIImage* img = [UIImage imageWithData:ns_data];
+	if (!img) return;
+	
+    flag->meta = CFBridgingRetain(img);  
+	OnFlagsChanged();
+}
 
 static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
     const struct LLayout* l = w->layouts + 2;

@@ -59,10 +59,10 @@ static void IsometricDrawer_Flat(BlockID block, float size) {
 	minY  = iso_posY - size; maxY = iso_posY + size;
 
 	v.z = 0.0f;
-	v.x = minX; v.y = minY; v.U = rec.U1; v.V = rec.V1; *iso_vertices++ = v;
-	            v.y = maxY;               v.V = rec.V2; *iso_vertices++ = v;
-	v.x = maxX;             v.U = rec.U2;               *iso_vertices++ = v;
-	            v.y = minY;               v.V = rec.V1; *iso_vertices++ = v;
+	v.x = minX; v.y = minY; v.U = rec.u1; v.V = rec.v1; *iso_vertices++ = v;
+	            v.y = maxY;               v.V = rec.v2; *iso_vertices++ = v;
+	v.x = maxX;             v.U = rec.u2;               *iso_vertices++ = v;
+	            v.y = minY;               v.V = rec.v1; *iso_vertices++ = v;
 }
 
 static void IsometricDrawer_Angled(BlockID block, float size) {

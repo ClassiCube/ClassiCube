@@ -21,7 +21,7 @@ int Screen_TMouseScroll(void* s, float delta);
 int Screen_TPointer(void* s, int id, int x, int y);
 
 void Screen_NullFunc(void* screen);
-void Screen_NullUpdate(void* screen, double delta);
+void Screen_NullUpdate(void* screen, float delta);
 
 void InventoryScreen_Show(void);
 void HUDScreen_Show(void);
@@ -33,6 +33,9 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message);
 void TouchScreen_Refresh(void);
 void TouchScreen_Show(void);
 #endif
+
+int HUDScreen_LayoutHotbar(void);
+void TabListOverlay_Show(cc_bool staysOpen);
 
 /* Opens chat input for the HUD with the given initial text. */
 void ChatScreen_OpenInput(const cc_string* text);

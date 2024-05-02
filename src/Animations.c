@@ -12,10 +12,17 @@
 #include "Options.h"
 #include "Logger.h"
 
-#define LIQUID_ANIM_MAX 64
+#ifdef CC_BUILD_ANIMATIONS
+static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
+
+#ifdef CC_BUILD_LOWMEM
+	#define LIQUID_ANIM_MAX 16
+#else
+	#define LIQUID_ANIM_MAX 64
+#endif
+
 #define WATER_TEX_LOC 14
 #define LAVA_TEX_LOC  30
-static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
 
 #ifndef CC_BUILD_WEB
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
@@ -292,20 +299,20 @@ static void Animations_Clear(void) {
 }
 
 static void Animations_Validate(void) {
-	struct AnimationData data;
+	struct AnimationData* data;
 	int maxX, maxY, tileX, tileY;
 	int i, j;
 
 	anims_validated = true;
 	for (i = 0; i < anims_count; i++) {
-		data  = anims_list[i];
+		data  = &anims_list[i];
 
-		maxX  = data.frameX + data.frameSize * data.statesCount;
-		maxY  = data.frameY + data.frameSize;
-		tileX = Atlas2D_TileX(data.texLoc); 
-		tileY = Atlas2D_TileY(data.texLoc);
+		maxX  = data->frameX + data->frameSize * data->statesCount;
+		maxY  = data->frameY + data->frameSize;
+		tileX = Atlas2D_TileX(data->texLoc); 
+		tileY = Atlas2D_TileY(data->texLoc);
 
-		if (data.frameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
+		if (data->frameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.width || maxY > anims_bmp.height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
@@ -313,8 +320,8 @@ static void Animations_Validate(void) {
 			/* if user has water/lava animations in their default.zip, disable built-in */
 			/* However, 'usewateranim' and 'uselavaanim' files should always disable use */
 			/* of custom water/lava animations, even when they exist in animations.png */
-			if (data.texLoc == LAVA_TEX_LOC  && !alwaysLavaAnim)  useLavaAnim  = false;
-			if (data.texLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;
+			if (data->texLoc == LAVA_TEX_LOC  && !alwaysLavaAnim)  useLavaAnim  = false;
+			if (data->texLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;
 			continue;
 		}
 
@@ -391,6 +398,10 @@ static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
 }
+#else
+static void Animations_Clear(void) { }
+static void OnInit(void) { }
+#endif
 
 struct IGameComponent Animations_Component = {
 	OnInit,            /* Init  */

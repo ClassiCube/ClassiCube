@@ -79,6 +79,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_SetViewport(int x, int y, int w, int h) { }
+
 
 void Gfx_BeginFrame(void) {
 	surface_t* disp = display_get();
@@ -90,13 +92,17 @@ void Gfx_BeginFrame(void) {
 
 extern void __rdpq_autosync_change(int mode);
 static color_t gfx_clearColor;
-void Gfx_Clear(void) {
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
 	__rdpq_autosync_change(AUTOSYNC_PIPE);
-	rdpq_clear(gfx_clearColor);
-    rdpq_clear_z(0xFFFC);
+	
+	if (buffers & GFX_BUFFER_COLOR)
+		rdpq_clear(gfx_clearColor);
+	if (buffers & GFX_BUFFER_DEPTH)
+		rdpq_clear_z(0xFFFC);
 } 
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor.r = PackedCol_R(color);
 	gfx_clearColor.g = PackedCol_G(color);
 	gfx_clearColor.b = PackedCol_B(color);
@@ -128,7 +134,7 @@ typedef struct CCTexture {
 #define To16BitPixel(src) \
 	((src & 0x80) >> 7) | ((src & 0xF800) >> 10) | ((src & 0xF80000) >> 13) | ((src & 0xF8000000) >> 16);	
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	cc_bool bit16  = flags & TEXTURE_FLAG_LOWRES;
 	// rows are actually 8 byte aligned in TMEM https://github.com/DragonMinded/libdragon/blob/f360fa1bb1fb3ff3d98f4ab58692d40c828636c9/src/rdpq/rdpq_tex.c#L132
 	// so even though width * height * pixel size may fit within 4096 bytes, after adjusting for 8 byte alignment, row pitch * height may exceed 4096 bytes
@@ -143,16 +149,17 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR : GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mipmaps ? GL_LINEAR : GL_NEAREST);
 	
-	tex->surface   = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
-	surface_t* fb  = &tex->surface;
-	cc_uint32* src = (cc_uint32*)bmp->scan0;
-	cc_uint8*  dst = (cc_uint8*)fb->buffer;
+	tex->surface  = surface_alloc(bit16 ? FMT_RGBA16 : FMT_RGBA32, bmp->width, bmp->height);
+	surface_t* fb = &tex->surface;
 		
 	if (bit16) {
+		cc_uint32* src = (cc_uint32*)bmp->scan0;
+		cc_uint8*  dst = (cc_uint8*)fb->buffer;
+		
 		// 16 bpp requires reducing A8R8G8B8 to A1R5G5B5
 		for (int y = 0; y < bmp->height; y++) 
 		{	
-			cc_uint32* src_row = src + y * bmp->width;
+			cc_uint32* src_row = src + y * rowWidth;
 			cc_uint16* dst_row = (cc_uint16*)(dst + y * fb->stride);
 			
 			for (int x = 0; x < bmp->width; x++) 
@@ -162,12 +169,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 		}
 	} else {
 		// 32 bpp can just be copied straight across
-		for (int y = 0; y < bmp->height; y++) 
-		{
-			Mem_Copy(dst + y * fb->stride,
-				 	src + y * bmp->width,
-				 	bmp->width * 4);
-		}
+		CopyTextureData(fb->buffer, fb->stride, bmp, rowWidth << 2);
 	}
 	
 	
@@ -218,10 +220,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	glSurfaceTexImageN64(GL_TEXTURE_2D, 0, fb, &params);
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	CCTexture* tex = (CCTexture*)(*texId);
 	if (!tex) return;
@@ -242,7 +240,7 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	//glColorMask(r, g, b, a); TODO
 }
 
@@ -283,10 +281,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
 	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
@@ -379,8 +377,6 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) { 
 	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }
@@ -388,7 +384,8 @@ void Gfx_SetAlphaTest(cc_bool enabled) {
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	depthOnlyRendering = depthOnly; // TODO: Better approach? maybe using glBlendFunc instead?
 	cc_bool enabled    = !depthOnly;
-	//Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	//SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+	//			  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
 

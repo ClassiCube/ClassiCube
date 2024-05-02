@@ -11,12 +11,21 @@
 struct Model;
 struct IGameComponent;
 struct ScheduledTask;
+struct LocalPlayer;
+
 extern struct IGameComponent TabList_Component;
 extern struct IGameComponent Entities_Component;
 
+#ifdef CC_BUILD_SPLITSCREEN
+#define MAX_LOCAL_PLAYERS 4
+#else
+#define MAX_LOCAL_PLAYERS 1
+#endif
+#define MAX_NET_PLAYERS   255
+
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
-#define ENTITIES_MAX_COUNT 256
+#define ENTITIES_MAX_COUNT (MAX_NET_PLAYERS + MAX_LOCAL_PLAYERS)
 #define ENTITIES_SELF_ID 255
 
 enum NameMode {
@@ -66,11 +75,11 @@ struct EntityLocation { Vec3 pos; float pitch, yaw, rotX, rotY, rotZ; };
 
 struct Entity;
 struct EntityVTABLE {
-	void (*Tick)(struct Entity* e, double delta);
+	void (*Tick)(struct Entity* e, float delta);
 	void (*Despawn)(struct Entity* e);
 	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update);
 	PackedCol (*GetCol)(struct Entity* e);
-	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
+	void (*RenderModel)(struct Entity* e, float delta, float t);
 	cc_bool (*ShouldRenderName)(struct Entity* e);
 };
 
@@ -87,6 +96,9 @@ struct EntityVTABLE {
 /* And therefore trying to access the ModelVB Field in entity struct instances created by the CEF plugin */
 /*   results in attempting to read or write data from potentially invalid memory */
 #define ENTITY_FLAG_HAS_MODELVB 0x02
+/* Whether in classic mode, to slightly adjust this entity downwards when rendering it */
+/*  to replicate the behaviour of the original vanilla classic client */
+#define ENTITY_FLAG_CLASSIC_ADJUST 0x04
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 struct Entity {
@@ -159,16 +171,18 @@ void Entity_LerpAngles(struct Entity* e, float t);
 CC_VAR extern struct _EntitiesData {
 	struct Entity* List[ENTITIES_MAX_COUNT];
 	cc_uint8 NamesMode, ShadowsMode;
+	struct LocalPlayer* CurPlayer;
 } Entities;
 
 /* Ticks all entities */
 void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities */
-void Entities_RenderModels(double delta, float t);
+void Entities_RenderModels(float delta, float t);
 /* Removes the given entity, raising EntityEvents.Removed event */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity */
-EntityID Entities_GetClosest(struct Entity* src);
+/* Returns -1 if there is no other entity nearby */
+int Entities_GetClosest(struct Entity* src);
 
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */
@@ -209,13 +223,14 @@ struct NetPlayer {
 	struct NetInterpComp Interp;
 };
 CC_API void NetPlayer_Init(struct NetPlayer* player);
-extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+extern struct NetPlayer NetPlayers_List[MAX_NET_PLAYERS];
 
 struct LocalPlayerInput;
 struct LocalPlayerInput {
-	void (*GetMovement)(float* xMoving, float* zMoving);
+	void (*GetMovement)(struct LocalPlayer* p, float* xMoving, float* zMoving);
 	struct LocalPlayerInput* next;
 };
+void LocalPlayerInput_Add(struct LocalPlayerInput* source);
 
 /* Represents the user/player's own entity. */
 struct LocalPlayer {
@@ -228,23 +243,23 @@ struct LocalPlayer {
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
 	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip, _warnedZoom;
-	struct LocalPlayerInput input;
+	cc_uint8 index;
 };
 
-extern struct LocalPlayer LocalPlayer_Instance;
+extern struct LocalPlayer LocalPlayer_Instances[MAX_LOCAL_PLAYERS];
 /* Returns how high (in blocks) the player can jump. */
-float LocalPlayer_JumpHeight(void);
+float LocalPlayer_JumpHeight(struct LocalPlayer* p);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */
-void LocalPlayer_SetInterpPosition(float t);
-void LocalPlayer_ResetJumpVelocity(void);
-cc_bool LocalPlayer_CheckCanZoom(void);
+void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t);
+void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p);
+cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p);
 /* Moves local player back to spawn point. */
-void LocalPlayer_MoveToSpawn(void);
-void LocalPlayer_CalcDefaultSpawn(void);
+void LocalPlayers_MoveToSpawn(struct LocationUpdate* update);
+void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update);
 
-cc_bool LocalPlayer_HandleRespawn(void);
-cc_bool LocalPlayer_HandleSetSpawn(void);
-cc_bool LocalPlayer_HandleFly(void);
-cc_bool LocalPlayer_HandleNoclip(void);
-cc_bool LocalPlayer_HandleJump(void);
+cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p);
+cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p);
 #endif

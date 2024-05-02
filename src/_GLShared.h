@@ -102,7 +102,29 @@ static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_boo
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL instead */
+#define UPDATE_FAST_SIZE (64 * 64)
+static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth, cc_bool full) {
+	BitmapCol buffer[UPDATE_FAST_SIZE];
+	void* ptr = (void*)buffer;
+	int count = part->width * part->height;
+
+	/* cannot allocate memory on the stack for very big updates */
+	if (count > UPDATE_FAST_SIZE) {
+		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
+	}
+
+	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
+
+	if (full) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+	} else {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+	}
+	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
+}
+
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
@@ -118,42 +140,26 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
-
-	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, bmp->width, false);
-	return texId;
-}
-
-#define UPDATE_FAST_SIZE (64 * 64)
-static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth) {
-	BitmapCol buffer[UPDATE_FAST_SIZE];
-	void* ptr = (void*)buffer;
-	int count = part->width * part->height;
-
-	/* cannot allocate memory on the stack for very big updates */
-	if (count > UPDATE_FAST_SIZE) {
-		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
+	if (bmp->width == rowWidth) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
+	} else {
+		UpdateTextureSlow(0, 0, bmp, rowWidth, true);
 	}
 
-	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
-	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
+	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, rowWidth, false);
+	return texId;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-	/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL */
 
 	if (part->width == rowWidth) {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
 	} else {
-		UpdateTextureSlow(x, y, part, rowWidth);
+		UpdateTextureSlow(x, y, part, rowWidth, false);
 	}
-	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
-}
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
+	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -178,13 +184,13 @@ static void GL_ClearColor(PackedCol color) {
 	glClearColor(PackedCol_R(color) / 255.0f, PackedCol_G(color) / 255.0f,
 				 PackedCol_B(color) / 255.0f, PackedCol_A(color) / 255.0f);
 }
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
 	GL_ClearColor(color);
 	gfx_clearColor = color;
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	glColorMask(r, g, b, a);
 }
 
@@ -209,10 +215,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
 	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
@@ -232,7 +238,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-static BitmapCol* GL_GetRow(struct Bitmap* bmp, int y) { 
+static BitmapCol* GL_GetRow(struct Bitmap* bmp, int y, void* ctx) { 
 	/* OpenGL stores bitmap in bottom-up order, so flip order when saving */
 	return Bitmap_GetRow(bmp, (bmp->height - 1) - y); 
 }
@@ -249,7 +255,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
 	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
-	res = Png_Encode(&bmp, output, GL_GetRow, false);
+	res = Png_Encode(&bmp, output, GL_GetRow, false, NULL);
 	Mem_Free(bmp.scan0);
 	return res;
 }
@@ -297,7 +303,13 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) { }
-void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= GL_COLOR_BUFFER_BIT;
+	if (buffers & GFX_BUFFER_DEPTH) targets |= GL_DEPTH_BUFFER_BIT;
+	
+	glClear(targets); 
+}
 
 void Gfx_EndFrame(void) {
 #ifndef CC_BUILD_GLMODERN
@@ -313,7 +325,7 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	/* With cocoa backend, in some cases [NSOpenGLContext update] will actually */
 	/*  call glViewport with the size of the window framebuffer */
 	/*  https://github.com/glfw/glfw/issues/80 */
@@ -322,4 +334,8 @@ void Gfx_OnWindowResize(void) {
 	/*  above would otherwise result in game rendering to only 1/4 of the screen */
 	/*  https://github.com/ClassiCube/ClassiCube/issues/888 */
 	GLContext_Update();
+}
+
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	glViewport(x, y, w, h);
 }

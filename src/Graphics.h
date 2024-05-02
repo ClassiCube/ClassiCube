@@ -61,6 +61,11 @@ CC_VAR extern struct _GfxData {
 	/* Maximum total size in pixels a low resolution texture can consist of */
 	/* NOTE: Not all graphics backends specify a value for this */
 	int MaxLowResTexSize;
+	/* Minimum dimensions in pixels that a texture must be */
+	/* NOTE: Most graphics backends do not use this */
+	int MinTexWidth, MinTexHeight;
+	cc_bool  ReducedPerfMode;
+	cc_uint8 ReducedPerfModeCooldown;
 } Gfx;
 
 extern GfxResourceID Gfx_defaultIb;
@@ -69,6 +74,11 @@ extern const cc_string Gfx_LowPerfMessage;
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
+
+typedef enum GfxBuffers_ {
+	GFX_BUFFER_COLOR = 1,
+	GFX_BUFFER_DEPTH = 2
+} GfxBuffers;
 
 /* Texture should persist across gfx context loss (if backend supports ManagedTextures) */
 #define TEXTURE_FLAG_MANAGED 0x01
@@ -79,8 +89,6 @@ extern const cc_string Gfx_LowPerfMessage;
 /* Texture can fallback to 16 bpp when necessary (most backends don't do this) */
 #define TEXTURE_FLAG_LOWRES  0x08
 
-#define LOWPERF_EXIT_MESSAGE "&eExited reduced performance mode"
-
 void  Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
@@ -90,6 +98,7 @@ cc_bool Gfx_CheckTextureSize(int width, int height, cc_uint8 flags);
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend */
 CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
+GfxResourceID Gfx_CreateTexture2(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
 CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
@@ -132,19 +141,25 @@ CC_API void Gfx_SetAlphaBlending(cc_bool enabled);
 /* Sets whether blending between the alpha components of texture and vertex colour is performed */
 CC_API void Gfx_SetAlphaArgBlend(cc_bool enabled);
 
-/* Clears the colour and depth buffer to default */
-CC_API void Gfx_Clear(void);
+/* Clears the given rendering buffer(s) to default. */
+/* buffers can be either GFX_BUFFER_COLOR or GFX_BUFFER_DEPTH, or both */
+CC_API void Gfx_ClearBuffers(GfxBuffers buffers);
 /* Sets the colour that the colour buffer is cleared to */
-CC_API void Gfx_ClearCol(PackedCol col);
+CC_API void Gfx_ClearColor(PackedCol color);
 /* Sets whether pixels may be discard based on z/depth */
 CC_API void Gfx_SetDepthTest(cc_bool enabled);
-/* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels */
-CC_API void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer */
 CC_API void Gfx_SetDepthWrite(cc_bool enabled);
+/* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels */
+CC_API void Gfx_SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether the game should only write output to depth buffer */
-/*  NOTE: Implicitly calls Gfx_SetColWriteMask */
+/*  NOTE: Implicitly calls Gfx_SetColorWrite */
 CC_API void Gfx_DepthOnlyRendering(cc_bool depthOnly);
+
+/* Anaglyph 3D rendering support */
+void Gfx_Set3DLeft( struct Matrix* proj, struct Matrix* view);
+void Gfx_Set3DRight(struct Matrix* proj, struct Matrix* view);
+void Gfx_End3D(     struct Matrix* proj, struct Matrix* view);
 
 /* Callback function to initialise/fill out the contents of an index buffer */
 typedef void (*Gfx_FillIBFunc)(cc_uint16* indices, int count, void* obj);
@@ -230,13 +245,15 @@ void Gfx_EndFrame(void);
 /* Sets whether to synchronise with monitor refresh to avoid tearing, and maximum frame rate */
 /* NOTE: VSync setting may be unsupported or just ignored */
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMillis);
-/* Updates state when the window's dimensions have changed */
-/* NOTE: This may require recreating the context depending on the backend */
-void Gfx_OnWindowResize(void);
 /* Gets information about the user's GPU and current backend state */
 /* Backend state may include depth buffer bits, free memory, etc */
 /* NOTE: Each line is separated by \n */
 void Gfx_GetApiInfo(cc_string* info);
+
+/* Updates state when the window's dimensions have changed */
+/* NOTE: This may require recreating the context depending on the backend */
+void Gfx_OnWindowResize(void);
+void Gfx_SetViewport(int x, int y, int w, int h);
 
 enum Screen3DS { TOP_SCREEN, BOTTOM_SCREEN };
 #ifdef CC_BUILD_DUALSCREEN
@@ -280,10 +297,10 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Statically initialises the texture coordinate corners of this texture */
 #define Tex_UV(u1,v1, u2,v2)        { u1,v1,u2,v2 }
 /* Sets the position and dimensions of this texture */
-#define Tex_SetRect(tex, xVal,yVal, width, height) tex.x = xVal; tex.y = yVal; tex.Width = width; tex.Height = height;
+#define Tex_SetRect(tex, xVal,yVal, wVal, hVal) tex.x = xVal; tex.y = yVal; tex.width = wVal; tex.height = hVal;
 /* Sets texture coordinate corners of this texture */
 /* Useful to only draw a sub-region of the texture's pixels */
-#define Tex_SetUV(tex, u1,v1, u2,v2) tex.uv.U1 = u1; tex.uv.V1 = v1; tex.uv.U2 = u2; tex.uv.V2 = v2;
+#define Tex_SetUV(tex, U1,V1, U2,V2) tex.uv.u1 = U1; tex.uv.v1 = V1; tex.uv.u2 = U2; tex.uv.v2 = V2;
 
 /* Binds then renders the given texture */
 void Texture_Render(const struct Texture* tex);

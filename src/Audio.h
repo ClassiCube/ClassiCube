@@ -34,6 +34,8 @@ extern int Audio_SoundsVolume;
 /* Volume music is played at, from 0-100. */
 /* NOTE: Use Audio_SetMusic, don't change this directly. */
 extern int Audio_MusicVolume;
+extern const cc_string Sounds_ZipPathMC;
+extern const cc_string Sounds_ZipPathCC;
 
 void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);
@@ -41,13 +43,19 @@ void Audio_PlayDigSound(cc_uint8 type);
 void Audio_PlayStepSound(cc_uint8 type);
 #define AUDIO_MAX_BUFFERS 4
 
+cc_bool AudioBackend_Init(void);
+void    AudioBackend_Tick(void);
+void    AudioBackend_Free(void);
+
 /* Initialises an audio context. */
-void Audio_Init(struct AudioContext* ctx, int buffers);
+cc_result Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
 void Audio_Close(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate, int playbackRate);
+/* Sets the volume audio data is played at */
+void Audio_SetVolume(struct AudioContext* ctx, int volume);
 /* Queues the given audio chunk for playing. */
 /* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
 /* NOTE: Some backends directly read from the data - therefore you MUST NOT modify it */
@@ -58,16 +66,18 @@ cc_result Audio_Play(struct AudioContext* ctx);
 /* Returns the number of buffers being played or queued */
 /* (e.g. if inUse is 0, no audio buffers are being played or queued) */
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
+cc_result Audio_Pause(struct AudioContext* ctx); /* Only implemented with OpenSL ES backend */
 
-/* Plays the given audio data */
-cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data);
-/* Whether the given audio data can be played without recreating the underlying audio device */
-cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
-
 /* Allocates a group of chunks of data to store audio samples */
-void Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
+cc_result Audio_AllocChunks(cc_uint32 size, void** chunks, int numChunks);
 /* Frees a previously allocated group of chunks of data */
 void Audio_FreeChunks(void** chunks, int numChunks);
+
+extern struct AudioContext music_ctx;
+void Audio_Warn(cc_result res, const char* action);
+
+cc_result AudioPool_Play(struct AudioData* data);
+void AudioPool_Close(void);
 #endif

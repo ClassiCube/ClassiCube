@@ -4,7 +4,7 @@
 #include "Errors.h"
 #include "Logger.h"
 #include "Window.h"
-#include "../third_party/gldc/include/gldc.h"
+#include "../third_party/gldc/gldc.h"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
@@ -15,9 +15,26 @@ static cc_bool renderingDisabled;
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
+static void InitGLState(void) {
+	glClearDepth(1.0f);
+	glDepthMask(GL_TRUE);
+	glShadeModel(GL_SMOOTH);
+
+	glDisable(GL_ALPHA_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_FOG);
+}
+
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+	InitGLState();
 	
+	Gfx.MinTexWidth  = 8;
+	Gfx.MinTexHeight = 8;
 	Gfx.MaxTexWidth  = 1024;
 	Gfx.MaxTexHeight = 1024;
 	Gfx.MaxTexSize   = 512 * 512; // reasonable cap as Dreamcast only has 8MB VRAM
@@ -45,7 +62,7 @@ void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	if (color == gfx_clearColor) return;
 	gfx_clearColor = color;
 	
@@ -55,14 +72,12 @@ void Gfx_ClearCol(PackedCol color) {
 	pvr_set_bg_color(r, g, b); // TODO: not working ?
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO: Doesn't work
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
 void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
-
-void Gfx_SetTexturing(cc_bool enabled) { }
 
 void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 
@@ -89,10 +104,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
 	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
@@ -254,7 +269,7 @@ static unsigned Interleave(unsigned x) {
 #define BGRA8_to_BGRA4(src) \
 	((src[0] & 0xF0) >> 4) | (src[1] & 0xF0) | ((src[2] & 0xF0) << 4) | ((src[3] & 0xF0) << 8);	
 
-static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
+static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp, int rowWidth) {
 	unsigned min_dimension;
 	unsigned interleave_mask, interleaved_bits;
 	unsigned shifted_mask, shift_bits;
@@ -262,10 +277,11 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	unsigned lo_X, hi_X, X;	
 	Twiddle_CalcFactors(bmp->width, bmp->height);
 	
-	cc_uint8* src = (cc_uint8*)bmp->scan0;	
 	for (int y = 0; y < bmp->height; y++)
 	{
 		Twiddle_CalcY(y);
+		cc_uint8* src = (cc_uint8*)(bmp->scan0 + y * rowWidth);
+		
 		for (int x = 0; x < bmp->width; x++, src += 4)
 		{
 			Twiddle_CalcX(x);
@@ -274,7 +290,7 @@ static void ConvertTexture(cc_uint16* dst, struct Bitmap* bmp) {
 	}
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	GLuint texId = gldcGenTexture();
 	gldcBindTexture(texId);
 	
@@ -284,7 +300,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	void* pixels;
 	GLsizei width, height;
 	gldcGetTexture(&pixels, &width, &height);
-	ConvertTexture(pixels, bmp);
+	ConvertTexture(pixels, bmp, rowWidth);
 	return texId;
 }
 
@@ -324,10 +340,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	ConvertSubTexture(pixels, width, height,
 				x, y, part, rowWidth);
 	// TODO: Do we need to flush VRAM?
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 
@@ -531,7 +543,9 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 
 void Gfx_BeginFrame(void) { }
-void Gfx_Clear(void) {
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	// no need to use glClear
 }
 
@@ -541,6 +555,17 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game.Width, Game.Height);
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
+
+void Gfx_SetViewport(int x, int y, int w, int h) {
+	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
+		glDisable(GL_SCISSOR_TEST);
+	} else {
+		glEnable(GL_SCISSOR_TEST);
+	}
+	
+	glViewport(x, y, w, h);
+	glScissor (x, y, w, h);
 }
 #endif

@@ -33,7 +33,6 @@ static void DQ_OnNextFrame2D(void* fb);
 void Window_Init(void) {
 	DisplayInfo.Width  = DISPLAY_WIDTH;
 	DisplayInfo.Height = DISPLAY_HEIGHT;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -42,7 +41,10 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 
+	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
+	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
+
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);
@@ -84,60 +86,16 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int mods) {
-	Input_SetNonRepeatable(CCPAD_A, mods & SCE_CTRL_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_B, mods & SCE_CTRL_SQUARE);
-	Input_SetNonRepeatable(CCPAD_X, mods & SCE_CTRL_CROSS);
-	Input_SetNonRepeatable(CCPAD_Y, mods & SCE_CTRL_CIRCLE);
-      
-	Input_SetNonRepeatable(CCPAD_START,  mods & SCE_CTRL_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, mods & SCE_CTRL_SELECT);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     mods & SCE_CTRL_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
-	
-	Input_SetNonRepeatable(CCPAD_L, mods & SCE_CTRL_LTRIGGER);
-	Input_SetNonRepeatable(CCPAD_R, mods & SCE_CTRL_RTRIGGER);
-}
-
-static void ProcessLCircleInput(SceCtrlData* pad) {
-	int dx = pad->lx - 127;
-	int dy = pad->ly - 127;
-	
-	if (Math_AbsI(dx) <= 8) dx = 0;
-	if (Math_AbsI(dy) <= 8) dy = 0;
-	
-	if (dx == 0 && dy == 0) return;
-	Input.JoystickMovement = true;
-	Input.JoystickAngle    = Math_Atan2(dx, dy);
-}
-
-static void ProcessRCircleInput(SceCtrlData* pad, double delta) {
-	float scale = (delta * 60.0) / 16.0f;
-	int dx = pad->rx - 127;
-	int dy = pad->ry - 127;
-	
-	if (Math_AbsI(dx) <= 8) dx = 0;
-	if (Math_AbsI(dy) <= 8) dy = 0;
-	
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, dy * scale);
-}
-
-static void ProcessTouchPress(int x, int y) {
-	if (!frontPanel.maxDispX || !frontPanel.maxDispY) {
-		// TODO: Shouldn't ever happen? need to check
-		Pointer_SetPosition(0, x, y);
-		return;
-	}
+static void AdjustTouchPress(int* x, int* y) {
+	if (!frontPanel.maxDispX || !frontPanel.maxDispY) return;
+	// TODO: Shouldn't ever happen? need to check
 	
 	// rescale from touch range to screen range
-	x = (x - frontPanel.minDispX) * DISPLAY_WIDTH  / frontPanel.maxDispX;
-	y = (y - frontPanel.minDispY) * DISPLAY_HEIGHT / frontPanel.maxDispY;
-	Pointer_SetPosition(0, x, y);
+	*x = (*x - frontPanel.minDispX) * DISPLAY_WIDTH  / frontPanel.maxDispX;
+	*y = (*y - frontPanel.minDispY) * DISPLAY_HEIGHT / frontPanel.maxDispY;
 }
 
+static cc_bool touch_pressed;
 static void ProcessTouchInput(void) {
 	SceTouchData touch;
 	
@@ -146,34 +104,22 @@ static void ProcessTouchInput(void) {
 	if (res == 0) return; // no data available yet
 	if (res < 0)  return; // error occurred
 	
-	if (touch.reportNum > 0) {
+	cc_bool isPressed = touch.reportNum > 0;
+	if (isPressed) {
 		int x = touch.report[0].x;
 		int y = touch.report[0].y;
-		ProcessTouchPress(x, y);
-	}
-	Input_SetNonRepeatable(CCMOUSE_L, touch.reportNum > 0);
-}
+		AdjustTouchPress(&x, &y);
 
-static void ProcessPadInput(double delta) {
-	SceCtrlData pad;
-	
-	// sceCtrlReadBufferPositive is blocking (seems to block until vblank), and don't want that
-	int res = sceCtrlPeekBufferPositive(0, &pad, 1);
-	if (res == 0) return; // no data available yet
-	if (res < 0)  return; // error occurred
-	// TODO: need to use cached version still? like GameCube/Wii
-	
-	HandleButtons(pad.buttons);
-	if (Input.RawMode) {
-		ProcessLCircleInput(&pad);
-		ProcessRCircleInput(&pad, delta);
+		Input_AddTouch(0, x, y);
+		touch_pressed = true;
+	} else if (touch_pressed) {
+		// touch.report[0].xy will be 0 when touch.reportNum is 0
+		Input_RemoveTouch(0, Pointers[0].x, Pointers[0].y);
+		touch_pressed = false;
 	}
 }
 
-void Window_ProcessEvents(double delta) {
-	Input.JoystickMovement = false;
-	
-	ProcessPadInput(delta);
+void Window_ProcessEvents(float delta) {
 	ProcessTouchInput();
 }
 
@@ -182,6 +128,55 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, int mods) {
+	Gamepad_SetButton(port, CCPAD_A, mods & SCE_CTRL_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, mods & SCE_CTRL_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, mods & SCE_CTRL_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, mods & SCE_CTRL_CIRCLE);
+      
+	Gamepad_SetButton(port, CCPAD_START,  mods & SCE_CTRL_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, mods & SCE_CTRL_SELECT);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   mods & SCE_CTRL_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  mods & SCE_CTRL_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     mods & SCE_CTRL_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   mods & SCE_CTRL_DOWN);
+	
+	Gamepad_SetButton(port, CCPAD_L, mods & SCE_CTRL_LTRIGGER);
+	Gamepad_SetButton(port, CCPAD_R, mods & SCE_CTRL_RTRIGGER);
+}
+
+#define AXIS_SCALE 16.0f
+static void ProcessCircleInput(int port, int axis, int x, int y, float delta) {
+	// May not be exactly 0 on actual hardware
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
+static void ProcessPadInput(float delta) {
+	SceCtrlData pad;
+	
+	// sceCtrlReadBufferPositive is blocking (seems to block until vblank), and don't want that
+	int res = sceCtrlPeekBufferPositive(0, &pad, 1);
+	if (res == 0) return; // no data available yet
+	if (res < 0)  return; // error occurred
+	// TODO: need to use cached version still? like GameCube/Wii
+	
+	HandleButtons(0, pad.buttons);
+	ProcessCircleInput(0, PAD_AXIS_LEFT,  pad.lx - 127, pad.ly - 127, delta);
+	ProcessCircleInput(0, PAD_AXIS_RIGHT, pad.rx - 127, pad.ry - 127, delta);
+}
+
+void Window_ProcessGamepads(float delta) {
+	ProcessPadInput(delta);
+}
 
 
 /*########################################################################################################################*
@@ -232,7 +227,7 @@ static void DisplayDialog(const char* msg) {
 	msgParam.buttonType = SCE_MSG_DIALOG_BUTTON_TYPE_OK;
 
 	int ret = sceMsgDialogInit(&param);
-	if (ret) { Platform_Log1("ERROR SHOWING DIALOG: %i", &ret); return; }
+	if (ret) { Platform_Log1("ERROR SHOWING DIALOG: %e", &ret); return; }
 	
 	void (*prevCallback)(void* fb);	
 	prevCallback   = DQ_OnNextFrame;
@@ -292,7 +287,7 @@ static void SendIMEResult(void) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { 
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { 
 	SetIMEString(imeText,   args->text);
 	SetIMEString(imeBuffer, &String_Empty);
 	
@@ -320,7 +315,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
     param.inputTextBuffer = imeBuffer;
 
     int ret = sceImeDialogInit(&param);
-	if (ret) { Platform_Log1("ERROR SHOWING IME: %i", &ret); return; }
+	if (ret) { Platform_Log1("ERROR SHOWING IME: %e", &ret); return; }
 	
 	void (*prevCallback)(void* fb);
 	prevCallback   = DQ_OnNextFrame;
@@ -338,8 +333,10 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* args) {
 	SendIMEResult();
 /* TODO implement */ 
 }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 #endif

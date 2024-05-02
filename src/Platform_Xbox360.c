@@ -13,6 +13,7 @@
 #include <xenos/edram.h>
 #include <console/console.h>
 #include <network/network.h>
+#include <ppc/timebase.h>
 #include <time/time.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -41,11 +42,10 @@ void Platform_Log(const char* msg, int len) {
 	puts(tmp);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	struct timeval cur;
 	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -64,16 +64,11 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg);
+	return tb_diff_usec(end, beg);
 }
 
-#define US_PER_SEC 1000000ULL
 cc_uint64 Stopwatch_Measure(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return cur.tv_sec * US_PER_SEC + cur.tv_usec;
-	// TODO: <ppc/timebase.h>
-	// mftb()-beg)/PPC_TIMEBASE_FREQ));
+	return mftb();
 }
 
 
@@ -197,8 +192,8 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#############################################################################################################p############*/
 void Thread_Sleep(cc_uint32 milliseconds) { mdelay(milliseconds); }
 
-void* Thread_Create(Thread_StartFunc func) {
-	return NULL; // TODO
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	*handle = NULL; // TODO
 }
 
 void Thread_Start2(void* handle, Thread_StartFunc func) {// TODO
@@ -283,6 +278,11 @@ void Platform_Free(void) {
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

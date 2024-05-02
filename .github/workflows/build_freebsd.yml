@@ -35,8 +35,8 @@ jobs:
           PLAT32_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I freebsd32/include -L freebsd32/lib"
           PLAT64_FLAGS: "-fno-pie -fvisibility=hidden -fcf-protection=none -rdynamic -DCC_BUILD_ICON -I freebsd64/include -L freebsd64/lib"
         run: |
+          apk add curl
           LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
-          echo $LATEST_FLAG
           
           cd src
           i386-freebsd11-clang *.c ${{ env.COMMON_FLAGS }} ${{ env.PLAT32_FLAGS }} $LATEST_FLAG -o cc-fbsd32-gl1 -lm -lpthread -lX11 -lXi -lGL -lexecinfo
@@ -66,3 +66,10 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc-fbsd64-gl1'
           DEST_NAME: 'ClassiCube-FreeBSD-64'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'freebsd'

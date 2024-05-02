@@ -17,11 +17,21 @@ static struct Matrix held_blockProj;
 
 static cc_bool held_animating, held_breaking, held_swinging;
 static float held_swingY;
-static double held_time, held_period = 0.25;
+static float held_time, held_period = 0.25f;
 static BlockID held_lastBlock;
 
+/* Since not using Entity_SetModel, which normally automatically does this */
+static void SetHeldModel(struct Model* model) {
+#ifdef CC_BUILD_CONSOLE
+	static int maxVertices;
+	if (model->maxVertices <= maxVertices) return;
+
+	maxVertices = model->maxVertices;
+	Gfx_DeleteDynamicVb(&held_entity.ModelVB);
+#endif
+}
+
 static void HeldBlockRenderer_RenderModel(void) {
-	static const cc_string block = String_FromConst("block");
 	struct Model* model;
 
 	Gfx_SetFaceCulling(true);
@@ -29,14 +39,16 @@ static void HeldBlockRenderer_RenderModel(void) {
 	/* TODO: Need to properly reallocate per model VB here */
 
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
-		model = LocalPlayer_Instance.Base.Model;
+		model = Entities.CurPlayer->Base.Model;
+		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
 
 		Gfx_SetAlphaTest(true);
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {	
-		model = Model_Get(&block);
+		model = Models.Block;
+		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
@@ -49,7 +61,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 }
 
 static void SetMatrix(void) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p = &Entities.CurPlayer->Base;
 	struct Matrix lookAt;
 	Vec3 eye = { 0,0,0 }; eye.y = Entity_GetEyeHeight(p);
 
@@ -59,7 +71,7 @@ static void SetMatrix(void) {
 
 static void ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p = &Entities.CurPlayer->Base;
 	Vec3 eye = { 0,0,0 }; eye.y = Entity_GetEyeHeight(p);
 	held_entity.Position = eye;
 
@@ -106,24 +118,24 @@ static void OnProjectionChanged(void* obj) {
 	https://github.com/UnknownShadow200/ClassicalSharp/wiki/Dig-animation-details
 */
 static void HeldBlockRenderer_DigAnimation(void) {
-	double sinHalfCircle, sinHalfCircleWeird;
+	float sinHalfCircle, sinHalfCircleWeird;
 	float t, sqrtLerpPI;
 
 	t = held_time / held_period;
-	sinHalfCircle = Math_Sin(t * MATH_PI);
+	sinHalfCircle = Math_SinF(t * MATH_PI);
 	sqrtLerpPI    = Math_SqrtF(t) * MATH_PI;
 
-	held_entity.Position.x -= (float)Math_Sin(sqrtLerpPI)     * 0.4f;
-	held_entity.Position.y += (float)Math_Sin(sqrtLerpPI * 2) * 0.2f;
-	held_entity.Position.z -= (float)sinHalfCircle            * 0.2f;
+	held_entity.Position.x -= Math_SinF(sqrtLerpPI)     * 0.4f;
+	held_entity.Position.y += Math_SinF(sqrtLerpPI * 2) * 0.2f;
+	held_entity.Position.z -= sinHalfCircle            * 0.2f;
 
-	sinHalfCircleWeird = Math_Sin(t * t * MATH_PI);
-	held_entity.RotY  -= (float)Math_Sin(sqrtLerpPI) * 80.0f;
-	held_entity.Yaw   -= (float)Math_Sin(sqrtLerpPI) * 80.0f;
-	held_entity.RotX  += (float)sinHalfCircleWeird   * 20.0f;
+	sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
+	held_entity.RotY  -= Math_SinF(sqrtLerpPI) * 80.0f;
+	held_entity.Yaw   -= Math_SinF(sqrtLerpPI) * 80.0f;
+	held_entity.RotX  += sinHalfCircleWeird    * 20.0f;
 }
 
-static void HeldBlockRenderer_ResetAnim(cc_bool setLastHeld, double period) {
+static void HeldBlockRenderer_ResetAnim(cc_bool setLastHeld, float period) {
 	held_time = 0.0f; held_swingY = 0.0f;
 	held_animating = false; held_swinging = false;
 	held_period = period;
@@ -135,7 +147,7 @@ static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
 	PackedCol col;
 	float adjPitch, t, scale;
 
-	player = &LocalPlayer_Instance.Base;
+	player = &Entities.CurPlayer->Base;
 	col    = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */
@@ -178,13 +190,13 @@ static void OnBlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	HeldBlockRenderer_ClickAnim(false);
 }
 
-static void DoAnimation(double delta, float lastSwingY) {
-	double t;
+static void DoAnimation(float delta, float lastSwingY) {
+	float t;
 	if (!held_animating) return;
 
 	if (held_swinging || !held_breaking) {
 		t = held_time / held_period;
-		held_swingY = -0.4f * (float)Math_Sin(t * MATH_PI);
+		held_swingY = -0.4f * Math_SinF(t * MATH_PI);
 		held_entity.Position.y += held_swingY;
 
 		if (held_swinging) {
@@ -200,11 +212,11 @@ static void DoAnimation(double delta, float lastSwingY) {
 	
 	held_time += delta;
 	if (held_time > held_period) {
-		HeldBlockRenderer_ResetAnim(true, 0.25);
+		HeldBlockRenderer_ResetAnim(true, 0.25f);
 	}
 }
 
-void HeldBlockRenderer_Render(double delta) {
+void HeldBlockRenderer_Render(float delta) {
 	float lastSwingY;
 	struct Matrix view;
 	if (!HeldBlockRenderer_Show) return;

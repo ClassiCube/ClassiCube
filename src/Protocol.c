@@ -1,9 +1,10 @@
 #include "Protocol.h"
+#include "Game.h"
+#ifdef CC_BUILD_NETWORKING
 #include "String.h"
 #include "Deflate.h"
 #include "Server.h"
 #include "Stream.h"
-#include "Game.h"
 #include "Entity.h"
 #include "Platform.h"
 #include "Screens.h"
@@ -196,7 +197,7 @@ static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
 
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_uint8 flags);
 static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const cc_string* skin, cc_bool readPosition) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e;
 
 	if (id != ENTITIES_SELF_ID) {
@@ -207,7 +208,7 @@ static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const 
 		Entities.List[id] = e;
 		Event_RaiseInt(&EntityEvents.Added, id);
 	} else {
-		e = &LocalPlayer_Instance.Base;
+		e = &Entities.CurPlayer->Base;
 	}
 	Entity_SetSkin(e, skin);
 	Entity_SetName(e, name);
@@ -357,7 +358,7 @@ static void DisconnectInvalidMap(cc_result res) {
 	cc_string tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
-	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
+	String_Format1(&tmp, "Server sent corrupted map data (error %e)", &res);
 	Game_Disconnect(&title, &tmp); return;
 }
 
@@ -510,7 +511,7 @@ static void Classic_Handshake(cc_uint8* data) {
 	ReadString(&data, &Server.MOTD);
 	Chat_SetLogName(&Server.Name);
 
-	hacks = &LocalPlayer_Instance.Hacks;
+	hacks = &Entities.CurPlayer->Hacks;
 	UpdateUserType(hacks, *data);
 	
 	String_Copy(&hacks->HacksFlags,         &Server.Name);
@@ -561,10 +562,10 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	if (!map_begunLoading) Classic_StartLoading();
 	usedLength = Stream_GetU16_BE(data);
 
-	map_part.Meta.Mem.Cur    = data + 2;
-	map_part.Meta.Mem.Base   = data + 2;
-	map_part.Meta.Mem.Left   = usedLength;
-	map_part.Meta.Mem.Length = usedLength;
+	map_part.meta.mem.cur    = data + 2;
+	map_part.meta.mem.base   = data + 2;
+	map_part.meta.mem.left   = usedLength;
+	map_part.meta.mem.length = usedLength;
 
 #ifndef EXTENDED_BLOCKS
 	m = &map1;
@@ -611,11 +612,13 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	length = Stream_GetU16_BE(data + 4);
 	volume = width * height * length;
 
-	if (!map1.blocks) {
+	if (map1.allocFailed) {
+		Chat_AddRaw("&cFailed to load map, try joining a different map");
+		Chat_AddRaw("   &cNot enough free memory to load the map");
+	} else if (!map1.blocks) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_AddRaw("   &cAttempted to load map without a Blocks array");
-	}
-	if (map_volume != volume) {
+	} else if (map_volume != volume) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_Add2(  "   &cBlocks array size (%i) does not match volume of map (%i)", &map_volume, &volume);
 		FreeMapStates();
@@ -741,7 +744,7 @@ static void Classic_Kick(cc_uint8* data) {
 }
 
 static void Classic_SetPermission(cc_uint8* data) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	UpdateUserType(hacks, data[0]);
 	HacksComp_RecheckFlags(hacks);
 }
@@ -810,7 +813,7 @@ static void Classic_Reset(void) {
 }
 
 static cc_uint8* Classic_Tick(cc_uint8* data) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+	struct Entity* e = &Entities.CurPlayer->Base;
 	if (!classic_receivedFirstPos) return data;
 
 	/* Report end position of each physics tick, rather than current position */
@@ -847,7 +850,7 @@ static struct CpeExt* CPEExtensions_Find(const cc_string* name) {
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
 void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p = &Entities.CurPlayer->Base;
 	cc_uint8 data[15];
 
 	data[0] = OPCODE_PLAYER_CLICK;
@@ -864,7 +867,7 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 
 		data[14] = 255;
 		/* FACE enum values differ from CPE block face values */
-		switch (t->Closest) {
+		switch (t->closest) {
 		case FACE_XMAX: data[14] = 0; break;
 		case FACE_XMIN: data[14] = 1; break;
 		case FACE_YMAX: data[14] = 2; break;
@@ -1038,7 +1041,7 @@ static void CPE_ApplyTexturePack(const cc_string* url) {
 
 
 static void CPE_SetClickDistance(cc_uint8* data) {
-	LocalPlayer_Instance.ReachDistance = Stream_GetU16_BE(data) / 32.0f;
+	Entities.CurPlayer->ReachDistance = Stream_GetU16_BE(data) / 32.0f;
 }
 
 static void CPE_CustomBlockLevel(cc_uint8* data) {
@@ -1206,7 +1209,7 @@ static void CPE_EnvWeatherType(cc_uint8* data) {
 }
 
 static void CPE_HackControl(cc_uint8* data) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	int jumpHeight;
 
 	p->Hacks.CanFly            = data[0] != 0;
@@ -1218,7 +1221,7 @@ static void CPE_HackControl(cc_uint8* data) {
 	jumpHeight = Stream_GetU16_BE(data + 5);
 
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
-		LocalPlayer_ResetJumpVelocity();
+		LocalPlayer_ResetJumpVelocity(p);
 	} else {
 		p->Physics.JumpVel       = PhysicsComp_CalcJumpVelocity(jumpHeight / 32.0f);
 		p->Physics.ServerJumpVel = p->Physics.JumpVel;
@@ -1420,7 +1423,7 @@ static void CPE_SetHotbar(cc_uint8* data) {
 }
 
 static void CPE_SetSpawnPoint(cc_uint8* data) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	int x, y, z;
 
 	if (IsSupported(extEntityPos_Ext)) {
@@ -1454,7 +1457,7 @@ static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
 }
 
 static void CPE_VelocityControl(cc_uint8* data) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	CalcVelocity(&p->Base.Velocity.x, data + 0, data[12]);
 	CalcVelocity(&p->Base.Velocity.y, data + 4, data[13]);
 	CalcVelocity(&p->Base.Velocity.z, data + 8, data[14]);
@@ -1464,10 +1467,10 @@ static void CPE_DefineEffect(cc_uint8* data) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[data[0]];
 
 	/* e.g. bounds of 0,0, 15,15 gives an 8x8 icon in the default 128x128 particles.png */
-	e->rec.U1 = data[1]       / 256.0f;
-	e->rec.V1 = data[2]       / 256.0f;
-	e->rec.U2 = (data[3] + 1) / 256.0f;
-	e->rec.V2 = (data[4] + 1) / 256.0f;
+	e->rec.u1 = data[1]       / 256.0f;
+	e->rec.v1 = data[2]       / 256.0f;
+	e->rec.u2 = (data[3] + 1) / 256.0f;
+	e->rec.v2 = (data[4] + 1) / 256.0f;
 
 	e->tintCol       = PackedCol_Make(data[5], data[6], data[7], 255);
 	e->frameCount    = data[8];
@@ -1872,6 +1875,13 @@ static void OnReset(void) {
 	Protocol_Reset();
 	FreeMapStates();
 }
+#else
+void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) { }
+
+static void OnInit(void) { }
+
+static void OnReset(void) { }
+#endif
 
 struct IGameComponent Protocol_Component = {
 	OnInit,  /* Init  */

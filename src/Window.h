@@ -35,7 +35,7 @@ struct Bitmap;
 struct DynamicLibSym;
 /* The states the window can be in. */
 enum WindowState  { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
-enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT };
+enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT, SOFT_KEYBOARD_VIRTUAL };
 enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD, KEYBOARD_TYPE_INTEGER };
 #define KEYBOARD_FLAG_SEND 0x100
 /* (can't name these structs Window/Display, as that conflicts with X11's Window/Display typedef) */
@@ -84,6 +84,8 @@ struct _WindowData {
 	/* Whether this window is backgrounded / inactivated */
 	/* (rendering is not performed when window is inactive) */
 	cc_bool Inactive;
+	/* Whether input should be ignored due to soft keyboard being open */
+	cc_bool SoftKeyboardFocus;
 };
 
 /* Data for the game/launcher window */
@@ -133,7 +135,9 @@ void Window_SetSize(int width, int height);
 /* May raise the WindowClosing and WindowClosed events. */
 void Window_RequestClose(void);
 /* Processes all pending window messages/events. */
-void Window_ProcessEvents(double delta);
+void Window_ProcessEvents(float delta);
+/* Processes all pending gamepad/joystick input. */
+void Window_ProcessGamepads(float delta);
 
 /* Sets the position of the cursor. */
 /* NOTE: This should be avoided because it is unsupported on some platforms. */
@@ -185,15 +189,17 @@ static CC_INLINE void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRIN
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args);
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args);
 /* Sets the text used for keyboard input. */
-/* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
+/* NOTE: This is e.g. used for mobile on-screen keyboard input with the web client, */
 /*  because it is backed by a HTML input, rather than true keyboard input events. */
 /* As such, this is necessary to ensure the HTML input is consistent with */
 /*  whatever text input widget is actually being displayed on screen. */
-void Window_SetKeyboardText(const cc_string* text);
+void OnscreenKeyboard_SetText(const cc_string* text);
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp);
+void OnscreenKeyboard_Draw3D(void);
 /* Hides/Removes the previously displayed on-screen keyboard. */
-void Window_CloseKeyboard(void);
+void OnscreenKeyboard_Close(void);
 /* Locks/Unlocks the landscape orientation. */
 void Window_LockLandscapeOrientation(cc_bool lock);
 

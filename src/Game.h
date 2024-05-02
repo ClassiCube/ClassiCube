@@ -24,10 +24,18 @@ extern cc_bool Game_UseCPEBlocks;
 extern cc_string Game_Username;
 extern cc_string Game_Mppass;
 
-#ifdef CC_BUILD_N64
-#define DEFAULT_VIEWDIST 20
+#ifdef CC_BUILD_SPLITSCREEN
+extern int Game_NumLocalPlayers;
 #else
-#define DEFAULT_VIEWDIST 512
+#define Game_NumLocalPlayers 1
+#endif
+
+#if defined CC_BUILD_N64
+    #define DEFAULT_VIEWDIST 20
+#elif defined CC_BUILD_NDS || defined CC_BUILD_PS1
+    #define DEFAULT_VIEWDIST 192
+#else
+    #define DEFAULT_VIEWDIST 512
 #endif
 #define DEFAULT_MAX_VIEWDIST 32768
 
@@ -46,6 +54,7 @@ extern cc_bool Game_ClassicHacks;
 extern cc_bool Game_AllowCustomBlocks;
 extern cc_bool Game_AllowServerTextures;
 
+extern cc_bool Game_Anaglyph3D;
 extern cc_bool Game_ViewBobbing;
 extern cc_bool Game_BreakableLiquids;
 /* Whether a screenshot should be taken at the end of this frame */

@@ -96,18 +96,18 @@ void Platform_Log(const char* msg, int len) {
 	OutputDebugStringA("\n");
 }
 
-#define FILETIME_EPOCH 50491123200000ULL
-#define FILETIME_UNIX_EPOCH 11644473600LL
-#define FileTime_TotalMS(time)  ((time / 10000)    + FILETIME_EPOCH)
-#define FileTime_UnixTime(time) ((time / 10000000) - FILETIME_UNIX_EPOCH)
-TimeMS DateTime_CurrentUTC_MS(void) {
+#define FILETIME_EPOCH      50491123200ULL
+#define FILETIME_UNIX_EPOCH 11644473600ULL
+#define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
+#define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
+TimeMS DateTime_CurrentUTC(void) {
 	FILETIME ft; 
 	cc_uint64 raw;
 	
 	GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
 	raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-	return FileTime_TotalMS(raw);
+	return FileTime_TotalSecs(raw);
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -296,17 +296,13 @@ static DWORD WINAPI ExecThread(void* param) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating thread");
-	}
-	return handle;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	ResumeThread((HANDLE)handle);
+	HANDLE thread = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
+	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
+	
+	*handle = thread;
+	ResumeThread(thread);
 }
 
 void Thread_Detach(void* handle) {
@@ -364,7 +360,7 @@ static void FontDirCallback(const cc_string* path, void* obj) {
 	static const cc_string fonExt = String_FromConst(".fon");
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
-	SysFonts_Register(path);
+	SysFonts_Register(path, NULL);
 }
 
 void Platform_LoadSysFonts(void) { 
@@ -843,7 +839,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	dynamicErr = 0; /* Reset error (match posix behaviour) */
 
 	Platform_DescribeError(res, dst);
-	String_Format1(dst, " (error %i)", &res);
+	String_Format1(dst, " (error %e)", &res);
 
 	/* Plugin may have been compiled to load symbols from ClassiCube.exe, */
 	/*  but the user might have renamed it to something else */

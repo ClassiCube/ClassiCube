@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	This file is processed by CMake and used by mkpsxiso to build the CD image.
+
+	NOTE: all paths are relative to the build directory; if you want to include
+	a file from the source tree, you'll have to prepend its path with
+	${PROJECT_SOURCE_DIR}.
+-->
+<iso_project>
+	<track type="data">
+		<!--
+			The "volume", "volume_set", "publisher", "data_preparer" and
+			"copyright" strings below can be freely modified. The ISO9660
+			specification, however, imposes the following limitations:
+
+			- "volume" and "volume_set" must be 32 characters or less, and can
+			  only contain uppercase letters, digits and underscores.
+			- "publisher" and "data_preparer" can be up to 128 characters long
+			  and can additionally contain spaces and some special characters.
+			- "copyright" should be a path to a file on the disc, even one that
+			  does not exist (but in practice it can be set to anything).
+
+			"system" and "application" must always be set to "PLAYSTATION" in
+			order for the disc to be recognized as valid.
+		-->
+		<identifiers
+			system			="PLAYSTATION"
+			volume			="PSN00BSDK_TEMPLATE"
+			volume_set		="PSN00BSDK_TEMPLATE"
+			publisher		="MEIDOTEK"
+			data_preparer	="PSN00BSDK ${PSN00BSDK_VERSION}"
+			application		="PLAYSTATION"
+			copyright		="README.TXT;1"
+		/>
+
+		<!--
+			You may optionally include a license file using the <license> tag.
+			Some consoles, particularly Japanese or PAL models with a modchip,
+			require the disc to contain valid license data and will refuse to
+			boot if it is missing. License files are usually not required on
+			US consoles or when booting via softmods or cheat cartridges.
+
+			License files are region-specific and are not distributed with
+			PSn00bSDK for obvious reasons, but can be dumped from an official
+			game using dumpsxiso or extracted from the Sony SDK.
+		-->
+		<!--<license file="${PROJECT_SOURCE_DIR}/license.dat" />-->
+
+		<!--
+			Files and directories can be added to the disc by placing <file>
+			and <dir> tags below. All file names are case-insensitive and must
+			be in 8.3 format, i.e. no more than 8 characters for the name and 3
+			for the optional extension. Directories cannot have extensions.
+
+			A boot configuration file (SYSTEM.CNF) or executable (PSX.EXE) must
+			be present in the root directory. Due to BIOS limitations the root
+			directory cannot hold more than 30 files or directories, and the
+			entire disc must contain 45 directories or less. Subdirectories can
+			contain any number of files.
+		-->
+		<directory_tree>
+			<file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
+			<file name="TEMPLATE.EXE"	type="data" source="template.exe" />
+			<!--
+				This file is only required if you are using dynamic linking
+				(see the system/dynlink example). It contains the executable's
+				symbol map and can be used to obtain the address of a function
+				or global variable by its name.
+			-->
+			<!--<file name="TEMPLATE.MAP"	type="data" source="template.map" />-->
+
+			<dir name="texpacks">
+				<file name="default.zip" type="data" source="../classicube.zip" />
+			</dir>
+			<dummy sectors="1024"/>
+		</directory_tree>
+	</track>
+
+	<!--
+		CD-DA tracks can be added to the CD image by using one or more <track>
+		tags. The source attribute must be a path to an audio file in WAV, FLAC
+		or MP3 format (using WAV or FLAC is highly recommended to preserve
+		audio quality if you have a lossless copy of the source track).
+	-->
+	<!--<track type="audio" source="${PROJECT_SOURCE_DIR}/track2.wav" />-->
+</iso_project>

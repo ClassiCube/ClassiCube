@@ -39,16 +39,16 @@ void Platform_Log(const char* msg, int len) {
 	OutputDebugStringA(tmp);
 }
 
-#define FILETIME_EPOCH 50491123200000ULL
-#define FILETIME_UNIX_EPOCH 11644473600LL
-#define FileTime_TotalMS(time)  ((time / 10000)    + FILETIME_EPOCH)
-#define FileTime_UnixTime(time) ((time / 10000000) - FILETIME_UNIX_EPOCH)
-TimeMS DateTime_CurrentUTC_MS(void) {
+#define FILETIME_EPOCH      50491123200ULL
+#define FILETIME_UNIX_EPOCH 11644473600ULL
+#define FileTime_TotalSecs(time) ((time / 10000000) + FILETIME_EPOCH)
+#define FileTime_UnixTime(time)  ((time / 10000000) - FILETIME_UNIX_EPOCH)
+TimeMS DateTime_CurrentUTC(void) {
 	LARGE_INTEGER ft;
 	
 	KeQuerySystemTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
-	return FileTime_TotalMS(ft.QuadPart);
+	return FileTime_TotalSecs(ft.QuadPart);
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -64,10 +64,10 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 }
 
 /* TODO: check this is actually accurate */
-static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
+static cc_uint64 sw_freqDiv = 1;
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return ((end - beg) * sw_freqMul) / sw_freqDiv;
+	return ((end - beg) * 1000000ULL) / sw_freqDiv;
 }
 
 cc_uint64 Stopwatch_Measure(void) {
@@ -76,9 +76,7 @@ cc_uint64 Stopwatch_Measure(void) {
 
 static void Stopwatch_Init(void) {
 	ULONGLONG freq = KeQueryPerformanceFrequency();
-
-	sw_freqMul = 1000 * 1000;
-	sw_freqDiv = freq;
+	sw_freqDiv     = freq;
 }
 
 
@@ -171,8 +169,6 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
-	
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
 	cc_result res;
@@ -182,12 +178,17 @@ static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWOR
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
+	if (!hdd_mounted) return ReturnCode_FileNotFound;
 	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
+
 cc_result File_Create(cc_file* file, const cc_string* path) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
+
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
+	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
 	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
@@ -232,17 +233,13 @@ static DWORD WINAPI ExecThread(void* param) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating thread");
-	}
-	return handle;
-}
+	HANDLE thread = CreateThread(NULL, stackSize, ExecThread, (void*)func, CREATE_SUSPENDED, &threadID);
+	if (!thread) Logger_Abort2(GetLastError(), "Creating thread");
 
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	NtResumeThread((HANDLE)handle, NULL);
+	*handle = thread;
+	NtResumeThread(thread, NULL);
 }
 
 void Thread_Detach(void* handle) {
@@ -419,6 +416,11 @@ void Platform_Free(void) {
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return false;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

@@ -21,6 +21,7 @@
 #include <kos.h>
 #include <dc/sd.h>
 #include <fat/fs_fat.h>
+#include <kos/dbgio.h>
 #include "_PlatformConsole.h"
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
@@ -65,16 +66,16 @@ static void LogOnscreen(const char* msg, int len) {
 }
 
 void Platform_Log(const char* msg, int len) {
-	fs_write(STDOUT_FILENO, msg,  len);
-	fs_write(STDOUT_FILENO, "\n",   1);
+	dbgio_write_buffer_xlat(msg,  len);
+	dbgio_write_buffer_xlat("\n",   1);
 	
 	if (window_inited) return;
 	// Log details on-screen for initial model initing etc
-	//  (this can take around 40 seconds on average)	
+	//  (this can take around 40 seconds on average)
 	LogOnscreen(msg, len);
 }
 
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	uint32 secs, ms;
 	timer_ms_gettime(&secs, &ms);
 	
@@ -85,7 +86,7 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	if (boot_time < boot_time_2000) boot_time = boot_time_2024;
 	
 	cc_uint64 curSecs = boot_time + secs;
-	return (curSecs * 1000 + ms) + UNIX_EPOCH;
+	return curSecs + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -256,14 +257,11 @@ static void* ExecThread(void* param) {
 	return NULL;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	kthread_attr_t attrs = { 0 };
-	attrs.stack_size     = 96 * 1024;
-	attrs.label          = "CC thread";
-	return thd_create_ex(&attrs, ExecThread, func);
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
+	attrs.stack_size     = stackSize;
+	attrs.label          = name;
+	*handle = thd_create_ex(&attrs, ExecThread, func);
 }
 
 void Thread_Detach(void* handle) {
@@ -448,6 +446,9 @@ static uint8 partition_type;
 
 static void InitSDCard(void) {
 	if (sd_init()) {
+		// Both SD card and debug interface use the serial port
+		// So if initing SD card fails, need to restore serial port state for debug logging
+		scif_init();
 		Platform_LogConst("Failed to init SD card"); return;
 	}
 	
@@ -520,6 +521,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	String_AppendUtf8(dst, chars, len);
 	return true;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

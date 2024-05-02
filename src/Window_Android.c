@@ -6,6 +6,7 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include "Graphics.h"
+#include "Gui.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
@@ -282,6 +283,7 @@ void Window_Init(void) {
 
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
+	Gui_SetTouchUI(true);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	DisplayInfo.Depth  = 32;
@@ -304,7 +306,7 @@ static void RemakeWindowSurface(void) {
 	/* Loop until window gets created by main UI thread */
 	/* (i.e. until processSurfaceCreated is received) */
 	while (!winCreated) {
-		Window_ProcessEvents(0.01);
+		Window_ProcessEvents(0.01f);
 		Thread_Sleep(10);
 	}
 
@@ -364,12 +366,14 @@ void Window_RequestClose(void) {
 	/* ANativeActivity_finish(app->activity); */
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	/* TODO: Cache the java env */
 	JavaICall_Void(env, JAVA_processEvents, NULL);
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
@@ -466,8 +470,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 	/* window not created yet */
 	if (!win_handle) return;
-	b.left = r.x; b.right  = r.x + r.Width;
-	b.top  = r.y; b.bottom = r.y + r.Height;
+	b.left = r.x; b.right  = r.x + r.width;
+	b.top  = r.y; b.bottom = r.y + r.height;
 
 	/* Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 	res  = ANativeWindow_lock(win_handle, &buffer, &b);
@@ -496,7 +500,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* kArgs) {
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
@@ -507,7 +511,7 @@ void Window_OpenKeyboard(struct OpenKeyboardArgs* kArgs) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-void Window_SetKeyboardText(const cc_string* text) {
+void OnscreenKeyboard_SetText(const cc_string* text) {
 	JNIEnv* env;
 	jvalue args[1];
 	JavaGetCurrentEnv(env);
@@ -517,7 +521,10 @@ void Window_SetKeyboardText(const cc_string* text) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-void Window_CloseKeyboard(void) {
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+
+void OnscreenKeyboard_Close(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaICall_Void(env, JAVA_closeKeyboard, NULL);

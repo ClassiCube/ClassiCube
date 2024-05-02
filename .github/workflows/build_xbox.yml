@@ -16,14 +16,11 @@ jobs:
       - name: Compile Xbox build
         id: compile
         run: |
+          apk add curl curl-dev
           eval $(/usr/src/nxdk/bin/activate -s)
           make xbox
+          cp bin/default.xbe ClassiCube-xbox.xbe
           
-
-      # otherwise notify_failure doesn't work
-      - name: Install curl when necessary
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        run: apk add curl curl-dev
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -35,7 +32,7 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
-          SOURCE_FILE: 'bin/default.xbe'
+          SOURCE_FILE: 'ClassiCube-xbox.xbe'
           DEST_NAME: 'ClassiCube-xbox.xbe'
           
       - uses: ./.github/actions/upload_build
@@ -43,3 +40,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-xbox.iso'
           DEST_NAME: 'ClassiCube-xbox.iso'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'xbox'

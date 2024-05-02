@@ -8,35 +8,38 @@
 #include "Utils.h"
 
 #if defined CC_BUILD_WEB
-/* Can't see native CPU state with javascript */
+	/* Can't see native CPU state with javascript */
 #elif defined CC_BUILD_WIN
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#define CUR_PROCESS_HANDLE ((HANDLE)-1) /* GetCurrentProcess() always returns -1 */
-
-#include <windows.h>
-#include <imagehlp.h>
-static HANDLE curProcess = CUR_PROCESS_HANDLE;
+	#define WIN32_LEAN_AND_MEAN
+	#define NOSERVICE
+	#define NOMCX
+	#define NOIME
+	#define CUR_PROCESS_HANDLE ((HANDLE)-1) /* GetCurrentProcess() always returns -1 */
+	
+	#include <windows.h>
+	#include <imagehlp.h>
+	static HANDLE curProcess = CUR_PROCESS_HANDLE;
 #elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
-#include <signal.h>
-/* These operating systems don't provide sys/ucontext.h */
-/*  But register constants be found from includes in <signal.h> */
+	#include <signal.h>
+	/* These operating systems don't provide sys/ucontext.h */
+	/*  But register constants be found from includes in <signal.h> */
+	#elif defined CC_BUILD_OS2
+	#include <signal.h>
+	#include <386/ucontext.h>
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
-/* Need to define this to get REG_ constants */
-#define _GNU_SOURCE
-#include <sys/ucontext.h>
-#include <signal.h>
+	/* Need to define this to get REG_ constants */
+	#define _GNU_SOURCE
+	#include <sys/ucontext.h>
+	#include <signal.h>
 #elif defined CC_BUILD_POSIX
-#include <signal.h>
-#include <sys/ucontext.h>
+	#include <signal.h>
+	#include <sys/ucontext.h>
 #endif
+
 #ifdef CC_BUILD_DARWIN
 /* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
 #include <AvailabilityMacros.h>
 #endif
-
 /* Only show up to 50 frames in backtrace */
 #define MAX_BACKTRACE_FRAMES 50
 
@@ -83,6 +86,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case PNG_ERR_REACHED_IEND:     return "Incomplete PNG image data";
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
+	case PNG_ERR_16BITSAMPLES:     return "16 bpp PNGs unsupported";
 
 	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
 	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
@@ -122,14 +126,12 @@ static void AppendErrorDesc(cc_string* msg, cc_result res, Logger_DescribeError 
 }
 
 void Logger_FormatWarn(cc_string* msg, cc_result res, const char* action, Logger_DescribeError describeErr) {
-	String_Format2(msg, res < 20000 ? "Error %i when %c" : "Error %h when %c",
-					&res, action);
+	String_Format2(msg, "Error %e when %c", &res, action);
 	AppendErrorDesc(msg, res, describeErr);
 }
 
 void Logger_FormatWarn2(cc_string* msg, cc_result res, const char* action, const cc_string* path, Logger_DescribeError describeErr) {
-	String_Format3(msg, res < 20000 ? "Error %i when %c '%s'" : "Error %h when %c '%s'",
-					&res, action, path);
+	String_Format3(msg, "Error %e when %c '%s'", &res, action, path);
 	AppendErrorDesc(msg, res, describeErr);
 }
 
@@ -244,7 +246,7 @@ static void DumpFrame(cc_string* trace, void* addr) {
 	cc_uintptr addr_ = (cc_uintptr)addr;
 	String_Format1(trace, "%x", &addr_);
 }
-#elif defined CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
 /* need to define __USE_GNU for dladdr */
 #ifndef __USE_GNU
 #define __USE_GNU
@@ -281,7 +283,11 @@ static void DumpFrame(cc_string* trace, void* addr) {
 /*  - however, ReadProcessMemory expects a process handle, and so that will fail since it's given a process ID */
 /* So to work around this, instead manually call ReadProcessMemory with the current process handle */
 static BOOL __stdcall ReadMemCallback(HANDLE process, DWORD_PTR baseAddress, PVOID buffer, DWORD size, PDWORD numBytesRead) {
-	return ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, numBytesRead);
+	SIZE_T numRead = 0;
+	BOOL ok = ReadProcessMemory(CUR_PROCESS_HANDLE, (LPCVOID)baseAddress, buffer, size, &numRead);
+	
+	*numBytesRead = (DWORD)numRead; /* DWORD always 32 bits */
+	return ok;
 }
 static cc_uintptr spRegister;
 
@@ -379,7 +385,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 }
 #elif defined CC_BACKTRACE_BUILTIN
 /* Implemented later at end of the file */
-#elif defined CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX && !defined CC_BUILD_OS2
 #include <execinfo.h>
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[MAX_BACKTRACE_FRAMES];
@@ -1029,7 +1035,7 @@ static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
-	code = (cc_uint32)info->ExceptionRecord->ExceptionCode;
+	code =  (cc_uint32)info->ExceptionRecord->ExceptionCode;
 	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
 	desc = ExceptionDescribe(code);
 
@@ -1078,7 +1084,7 @@ void Logger_Hook(void) {
 	GetVersionExA(&osInfo);
 
 	if (osInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-		curProcess = (HANDLE)GetCurrentProcessId();
+		curProcess = (HANDLE)((cc_uintptr)GetCurrentProcessId());
 	}
 }
 #elif defined CC_BUILD_POSIX
@@ -1209,7 +1215,7 @@ void Logger_Log(const cc_string* msg) {
 		Stream_AppendFile(&logStream, &path);
 	}
 
-	if (!logStream.Meta.File) return;
+	if (!logStream.meta.file) return;
 	Stream_Write(&logStream, (const cc_uint8*)msg->buffer, msg->length);
 }
 
@@ -1229,7 +1235,7 @@ static void LogCrashHeader(void) {
 }
 
 static void CloseLogFile(void) { 
-	if (logStream.Meta.File) logStream.Close(&logStream);
+	if (logStream.meta.file) logStream.Close(&logStream);
 }
 #endif
 

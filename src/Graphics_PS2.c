@@ -171,7 +171,7 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[]; // aligned to 64 bytes (only need 16?)
 } CCTexture;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)memalign(16, 64 + size);
 	
@@ -180,7 +180,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	tex->log2_width  = draw_log2(bmp->width);
 	tex->log2_height = draw_log2(bmp->height);
 	
-	Mem_Copy(tex->pixels, bmp->scan0, size);
+	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
 }
 
@@ -198,10 +198,6 @@ static int BINDS;
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
 	CCTexture* tex = (CCTexture*)texId;
-	Platform_Log2("BIND: %i x %i", &tex->width, &tex->height);
-	// TODO
-	if (BINDS) return;
-	BINDS = 1;
 	
 	texbuffer_t texbuf;
 	texbuf.width   = max(256, tex->width);
@@ -209,9 +205,8 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	
 	// TODO terrible perf
 	DMATAG_END(dma_tag, (q - current->data) - 1, 0, 0, 0);
-	dma_wait_fast();
 	dma_channel_send_chain(DMA_CHANNEL_GIF, current->data, q - current->data, 0, 0);
-	//
+	dma_wait_fast();
 	
 	packet_t *packet = packet_init(200, PACKET_NORMAL);
 
@@ -223,13 +218,11 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	dma_channel_send_chain(DMA_CHANNEL_GIF,packet->data, Q - packet->data, 0,0);
 	dma_wait_fast();
 
-	//packet_free(packet);
+	packet_free(packet);
 	
 	// TODO terrible perf
 	q = dma_tag + 1;
 	UpdateTextureBuffer(0, &texbuf, tex);
-	
-	Platform_LogConst("=====");
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -242,11 +235,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	// TODO
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	// TODO
-}
-
-void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_EnableMipmaps(void)  { }
 void Gfx_DisableMipmaps(void) { }
 
@@ -298,14 +286,15 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	q = draw_disable_tests(q, 0, &fb_depth);
 	q = draw_clear(q, 0, 2048.0f - fb_color.width / 2.0f, 2048.0f - fb_color.height / 2.0f,
 					fb_color.width, fb_color.height, clearR, clearG, clearB);
 	UpdateState(0);
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	clearR = PackedCol_R(color);
 	clearG = PackedCol_G(color);
 	clearB = PackedCol_B(color);
@@ -320,10 +309,14 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) { }
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	// TODO
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
-	// TODO
+	cc_bool enabled = !depthOnly;
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -419,11 +412,11 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear_ = zFar;
 	float zFar_  = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
 	/* For pos FOV based perspective matrix, left/right/top/bottom are calculated as: */
@@ -677,6 +670,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_OnWindowResize(void) {
 	// TODO
 }
+
+void Gfx_SetViewport(int x, int y, int w, int h) { }
 
 void Gfx_GetApiInfo(cc_string* info) {
 	String_AppendConst(info, "-- Using PS2 --\n");

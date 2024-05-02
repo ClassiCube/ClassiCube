@@ -291,22 +291,12 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
         cc_uint32 R = PackedCol_R(color);
         cc_uint32 G = PackedCol_G(color);
         cc_uint32 B = PackedCol_B(color);
         
         clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
-}
-
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	unsigned mask = 0;
-	if (r) mask |= GCM_COLOR_MASK_R;
-	if (g) mask |= GCM_COLOR_MASK_G;
-	if (b) mask |= GCM_COLOR_MASK_B;
-	if (a) mask |= GCM_COLOR_MASK_A;
-
-	rsxSetColorMask(context, mask);
 }
 
 static cc_bool depth_write = true, depth_test = true;
@@ -326,15 +316,24 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) {
 	rsxSetAlphaTestEnable(context, enabled);
 }
 
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+	unsigned mask = 0;
+	if (r) mask |= GCM_COLOR_MASK_R;
+	if (g) mask |= GCM_COLOR_MASK_G;
+	if (b) mask |= GCM_COLOR_MASK_B;
+	if (a) mask |= GCM_COLOR_MASK_A;
+
+	rsxSetColorMask(context, mask);
+}
+
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -355,10 +354,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	// Same as Direct3D9
 	// TODO: should it be like OpenGL? ???
@@ -415,7 +414,7 @@ static void ResetFrameState(void) {
 						GCM_USER_CLIP_PLANE_DISABLE);
         
 	// NOTE: Must be called each frame, otherwise renders upside down at 4x zoom
-	Gfx_OnWindowResize();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
 // https://github.com/ps3dev/PSL1GHT/blob/master/ppu/include/rsx/rsx.h#L30
@@ -431,9 +430,12 @@ void Gfx_BeginFrame(void) {
 	gcmResetFlipStatus();
 }
 
-void Gfx_Clear(void) {
-	rsxClearSurface(context, GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A 
-		| GCM_CLEAR_S | GCM_CLEAR_Z);
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	int targets = 0;
+	if (buffers & GFX_BUFFER_COLOR) targets |= (GCM_CLEAR_R | GCM_CLEAR_G | GCM_CLEAR_B | GCM_CLEAR_A);
+	if (buffers & GFX_BUFFER_DEPTH) targets |= (GCM_CLEAR_S | GCM_CLEAR_Z);
+	
+	rsxClearSurface(context, targets); 
 }
 
 void Gfx_EndFrame(void) {
@@ -448,24 +450,26 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
+}
+
+void Gfx_SetViewport(int x, int y, int w, int h) {
 	f32 scale[4], offset[4];
-	
-	u16 w = DisplayInfo.Width;
-	u16 h = DisplayInfo.Height;
 	f32 zmin = 0.0f;
 	f32 zmax = 1.0f;
+	y = Game.Height - y - h;
 	
 	scale[0]  = w *  0.5f;
 	scale[1]  = h * -0.5f;
 	scale[2]  = (zmax - zmin) * 0.5f;
 	scale[3]  = 0.0f;
-	offset[0] = w * 0.5f;
-	offset[1] = h * 0.5f;
+	offset[0] = x + w * 0.5f;
+	offset[1] = x + h * 0.5f;
 	offset[2] = (zmax + zmin) * 0.5f;
 	offset[3] = 0.0f;
 
-	rsxSetViewport(context, 0, 0, w, h, zmin, zmax, scale, offset);
-	rsxSetScissor(context,  0, 0, w, h);
+	rsxSetViewport(context, x, y, w, h, zmin, zmax, scale, offset);
+	rsxSetScissor(context,  x, y, w, h);
 	
 	// TODO: even needed?
 	for (int i = 0; i < 8; i++)
@@ -559,13 +563,13 @@ typedef struct CCTexture_ {
 	cc_uint32 pixels[];
 } CCTexture;
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	CCTexture* tex = (CCTexture*)rsxMemalign(128, 128 + size);
 	
 	tex->width  = bmp->width;
 	tex->height = bmp->height;
-	Mem_Copy(tex->pixels, bmp->scan0, size);
+	CopyTextureData(tex->pixels, bmp->width * 4, bmp, rowWidth << 2);
 	return tex;
 }
 
@@ -621,10 +625,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	
 	rsxInvalidateTextureCache(context, GCM_INVALIDATE_TEXTURE);
 	/* TODO */
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_EnableMipmaps(void)  { }

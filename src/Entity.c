@@ -367,7 +367,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
-		flags = e == &LocalPlayer_Instance.Base ? HTTP_FLAG_NOCACHE : 0;
+		flags = e == &LocalPlayer_Instances[0].Base ? HTTP_FLAG_NOCACHE : 0;
 
 		if (!first) {
 			e->_skinReqID     = Http_AsyncGetSkin(&skin, flags);
@@ -452,7 +452,7 @@ void Entities_Tick(struct ScheduledTask* task) {
 	}
 }
 
-void Entities_RenderModels(double delta, float t) {
+void Entities_RenderModels(float delta, float t) {
 	int i;
 	Gfx_SetAlphaTest(true);
 	
@@ -497,24 +497,24 @@ void Entities_Remove(EntityID id) {
 	}
 }
 
-EntityID Entities_GetClosest(struct Entity* src) {
+int Entities_GetClosest(struct Entity* src) {
 	Vec3 eyePos = Entity_GetEyePosition(src);
 	Vec3 dir    = Vec3_GetDirVector(src->Yaw * MATH_DEG2RAD, src->Pitch * MATH_DEG2RAD);
 	float closestDist = -200; /* NOTE: was previously positive infinity */
-	EntityID targetID = ENTITIES_SELF_ID;
+	int targetID = -1;
 
 	float t0, t1;
 	int i;
 
-	for (i = 0; i < ENTITIES_SELF_ID; i++) /* because we don't want to pick against local player */
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) /* because we don't want to pick against local player */
 	{
-		struct Entity* entity = Entities.List[i];
-		if (!entity) continue;
-		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1)) continue;
+		struct Entity* e = Entities.List[i];
+		if (!e || e == &Entities.CurPlayer->Base) continue;
+		if (!Intersection_RayIntersectsRotatedBox(eyePos, dir, e, &t0, &t1)) continue;
 
-		if (targetID == ENTITIES_SELF_ID || t0 < closestDist) {
+		if (targetID == -1 || t0 < closestDist) {
 			closestDist = t0;
-			targetID    = (EntityID)i;
+			targetID    = i;
 		}
 	}
 	return targetID;
@@ -613,23 +613,27 @@ struct IGameComponent TabList_Component = {
 /*########################################################################################################################*
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
-struct LocalPlayer LocalPlayer_Instance;
+struct LocalPlayer LocalPlayer_Instances[MAX_LOCAL_PLAYERS];
 static cc_bool hackPermMsgs;
-float LocalPlayer_JumpHeight(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static struct LocalPlayerInput* sources_head;
+static struct LocalPlayerInput* sources_tail;
+
+void LocalPlayerInput_Add(struct LocalPlayerInput* source) {
+	LinkedList_Append(source, sources_head, sources_tail);
+}
+
+float LocalPlayer_JumpHeight(struct LocalPlayer* p) {
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
 }
 
-void LocalPlayer_SetInterpPosition(float t) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void LocalPlayer_SetInterpPosition(struct LocalPlayer* p, float t) {
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
 		Vec3_Lerp(&p->Base.Position, &p->Base.prev.pos, &p->Base.next.pos, t);
 	}
 	Entity_LerpAngles(&p->Base, t);
 }
 
-static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float* zMoving) {
 	struct HacksComp* hacks = &p->Hacks;
 	struct LocalPlayerInput* input;
 
@@ -640,8 +644,8 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	}
 
 	/* keyboard input, touch, joystick, etc */
-	for (input = &p->input; input; input = input->next) {
-		input->GetMovement(xMoving, zMoving);
+	for (input = sources_head; input; input = input->next) {
+		input->GetMovement(p, xMoving, zMoving);
 	}
 	*xMoving *= 0.98f; 
 	*zMoving *= 0.98f;
@@ -660,7 +664,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 }
 
 static void LocalPlayer_InputSet(int key, cc_bool pressed) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &LocalPlayer_Instances[0].Hacks;
 
 	if (pressed && !hacks->Enabled) return;
 	if (KeyBind_Claims(KEYBIND_SPEED, key))      hacks->Speeding     = pressed;
@@ -678,10 +682,10 @@ static void LocalPlayer_InputUp(void* obj, int key) {
 
 static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
-	LocalInterpComp_SetLocation(&p->Interp, update);
+	LocalInterpComp_SetLocation(&p->Interp, update, e);
 }
 
-static void LocalPlayer_Tick(struct Entity* e, double delta) {
+static void LocalPlayer_Tick(struct Entity* e, float delta) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
 	float xMoving = 0, zMoving = 0;
@@ -694,7 +698,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	wasOnGround    = e->OnGround;
 
 	LocalInterpComp_AdvanceState(&p->Interp, e);
-	LocalPlayer_HandleInput(&xMoving, &zMoving);
+	LocalPlayer_HandleInput(p, &xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
 	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
 
@@ -712,18 +716,18 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 
 	e->next.pos = e->Position; e->Position = e->prev.pos;
 	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
-	TiltComp_Update(&p->Tilt, delta);
+	TiltComp_Update(p, &p->Tilt, delta);
 
 	Entity_CheckSkin(&p->Base);
-	SoundComp_Tick(wasOnGround);
+	SoundComp_Tick(p, wasOnGround);
 }
 
-static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
+static void LocalPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
-	TiltComp_GetCurrent(&p->Tilt, t);
+	TiltComp_GetCurrent(p, &p->Tilt, t);
 
-	if (!Camera.Active->isThirdPerson) return;
+	if (!Camera.Active->isThirdPerson && p == Entities.CurPlayer) return;
 	Model_Render(e->Model, e);
 }
 
@@ -732,38 +736,24 @@ static cc_bool LocalPlayer_ShouldRenderName(struct Entity* e) {
 }
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = (struct LocalPlayer*)obj;
 	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
 		p->Physics.JumpVel = p->Physics.ServerJumpVel;
 	}
-}
-
-static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
-	if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 1;
-	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
-	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
-	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
-
-	/* TODO: Move to separate LocalPlayerInputSource */
-	if (!Input.JoystickMovement) return;
-	*xMoving = Math_CosF(Input.JoystickAngle);
-	*zMoving = Math_SinF(Input.JoystickAngle);
 }
 
 static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetColor,
 	LocalPlayer_RenderModel, LocalPlayer_ShouldRenderName
 };
-static void LocalPlayer_Init(void) {
-	struct LocalPlayer* p   = &LocalPlayer_Instance;
+static void LocalPlayer_Init(struct LocalPlayer* p, int index) {
 	struct HacksComp* hacks = &p->Hacks;
 
 	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
 	Entity_SetSkin(&p->Base, &Game_Username);
-	Event_Register_(&UserEvents.HackPermsChanged, NULL, LocalPlayer_CheckJumpVelocity);
+	Event_Register_(&UserEvents.HackPermsChanged, p, LocalPlayer_CheckJumpVelocity);
 
-	p->input.GetMovement = LocalPlayer_GetMovement;
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
 	PhysicsComp_Init(&p->Physics, &p->Base);
@@ -774,12 +764,13 @@ static void LocalPlayer_Init(void) {
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;
 	p->Base.VTABLE   = &localPlayer_VTABLE;
+	p->index = index;
 
 	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
 	/* p->Base.Health = 20; TODO: survival mode stuff */
 	if (Game_ClassicMode) return;
 
-	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR, 0.1f, 50.0f, 10.0f);
+	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR,  0.1f, 50.0f, 10.0f);
 	hacks->PushbackPlacing = Options_GetBool(OPT_PUSHBACK_PLACING, false);
 	hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE,     false);
 	hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS,  false);
@@ -789,23 +780,28 @@ static void LocalPlayer_Init(void) {
 	hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);
 }
 
-void LocalPlayer_ResetJumpVelocity(void) {
-	struct LocalPlayer* p  = &LocalPlayer_Instance;
+void LocalPlayer_ResetJumpVelocity(struct LocalPlayer* p) {
 	cc_bool higher = HacksComp_CanJumpHigher(&p->Hacks);
 
 	p->Physics.JumpVel       = higher ? p->Physics.UserJumpVel : 0.42f;
 	p->Physics.ServerJumpVel = p->Physics.JumpVel;
 }
 
-static void LocalPlayer_Reset(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void LocalPlayer_Reset(struct LocalPlayer* p) {
 	p->ReachDistance = 5.0f;
 	Vec3_Set(p->Base.Velocity, 0,0,0);
-	LocalPlayer_ResetJumpVelocity();
+	LocalPlayer_ResetJumpVelocity(p);
 }
 
-static void LocalPlayer_OnNewMap(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void LocalPlayers_Reset(void) {
+	int i;
+	for (i = 0; i < Game_NumLocalPlayers; i++)
+	{
+		LocalPlayer_Reset(&LocalPlayer_Instances[i]);
+	}
+}
+
+static void LocalPlayer_OnNewMap(struct LocalPlayer* p) {
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	Vec3_Set(p->OldVelocity,   0,0,0);
 
@@ -815,9 +811,16 @@ static void LocalPlayer_OnNewMap(void) {
 	p->_warnedZoom    = false;
 }
 
+static void LocalPlayers_OnNewMap(void) {
+	int i;
+	for (i = 0; i < Game_NumLocalPlayers; i++)
+	{
+		LocalPlayer_OnNewMap(&LocalPlayer_Instances[i]);
+	}
+}
+
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
-static void LocalPlayer_DoRespawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+static void LocalPlayer_DoRespawn(struct LocalPlayer* p) {
 	struct LocationUpdate update;
 	struct AABB bb;
 	Vec3 spawn = p->Spawn;
@@ -863,10 +866,9 @@ static void LocalPlayer_DoRespawn(void) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-cc_bool LocalPlayer_HandleRespawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleRespawn(struct LocalPlayer* p) {
 	if (p->Hacks.CanRespawn) {
-		LocalPlayer_DoRespawn();
+		LocalPlayer_DoRespawn(p);
 		return true;
 	} else if (!p->_warnedRespawn) {
 		p->_warnedRespawn = true;
@@ -875,8 +877,7 @@ cc_bool LocalPlayer_HandleRespawn(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleSetSpawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
 	if (p->Hacks.CanRespawn) {
 
 		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
@@ -896,11 +897,10 @@ cc_bool LocalPlayer_HandleSetSpawn(void) {
 		p->SpawnYaw   = p->Base.Yaw;
 		p->SpawnPitch = p->Base.Pitch;
 	}
-	return LocalPlayer_HandleRespawn();
+	return LocalPlayer_HandleRespawn(p);
 }
 
-cc_bool LocalPlayer_HandleFly(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleFly(struct LocalPlayer* p) {
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
 		return true;
@@ -911,8 +911,7 @@ cc_bool LocalPlayer_HandleFly(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleNoclip(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleNoclip(struct LocalPlayer* p) {
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.y = 0;
@@ -926,8 +925,7 @@ cc_bool LocalPlayer_HandleNoclip(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandleJump(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_HandleJump(struct LocalPlayer* p) {
 	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
@@ -945,8 +943,7 @@ cc_bool LocalPlayer_HandleJump(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_CheckCanZoom(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+cc_bool LocalPlayer_CheckCanZoom(struct LocalPlayer* p) {
 	if (p->Hacks.CanFly) return true;
 
 	if (!p->_warnedZoom) {
@@ -956,42 +953,46 @@ cc_bool LocalPlayer_CheckCanZoom(void) {
 	return false;
 }
 
-void LocalPlayer_MoveToSpawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct LocationUpdate update;
-
-	update.flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
-	update.pos   = p->Spawn;
-	update.yaw   = p->SpawnYaw;
-	update.pitch = p->SpawnPitch;
-
-	p->Base.VTABLE->SetLocation(&p->Base, &update);
+void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
+	struct LocalPlayer* p;
+	int i;
+	
+	for (i = 0; i < Game_NumLocalPlayers; i++)
+	{
+		p = &LocalPlayer_Instances[i];
+		p->Base.VTABLE->SetLocation(&p->Base, update);
+		
+		if (update->flags & LU_HAS_POS)   p->Spawn      = update->pos;
+		if (update->flags & LU_HAS_YAW)   p->SpawnYaw   = update->yaw;
+		if (update->flags & LU_HAS_PITCH) p->SpawnPitch = update->pitch;
+	}
+	
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, 0.0f);
 }
 
-void LocalPlayer_CalcDefaultSpawn(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
 	float x = (World.Width  / 2) + 0.5f; 
 	float z = (World.Length / 2) + 0.5f;
 
-	p->Spawn      = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-	p->SpawnYaw   = 0.0f;
-	p->SpawnPitch = 0.0f;
+	update->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
+	update->pos   = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+	update->yaw   = 0.0f;
+	update->pitch = 0.0f;
 }
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
 *#########################################################################################################################*/
-struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+struct NetPlayer NetPlayers_List[MAX_NET_PLAYERS];
 
 static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_SetLocation(&p->Interp, update, e);
 }
 
-static void NetPlayer_Tick(struct Entity* e, double delta) {
+static void NetPlayer_Tick(struct Entity* e, float delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_AdvanceState(&p->Interp, e);
 
@@ -999,7 +1000,7 @@ static void NetPlayer_Tick(struct Entity* e, double delta) {
 	AnimatedComp_Update(e, e->prev.pos, e->next.pos, delta);
 }
 
-static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
+static void NetPlayer_RenderModel(struct Entity* e, float delta, float t) {
 	Vec3_Lerp(&e->Position, &e->prev.pos, &e->next.pos, t);
 	Entity_LerpAngles(e, t);
 
@@ -1025,6 +1026,7 @@ static const struct EntityVTABLE netPlayer_VTABLE = {
 void NetPlayer_Init(struct NetPlayer* p) {
 	Mem_Set(p, 0, sizeof(struct NetPlayer));
 	Entity_Init(&p->Base);
+	p->Base.Flags |= ENTITY_FLAG_CLASSIC_ADJUST;
 	p->Base.VTABLE = &netPlayer_VTABLE;
 }
 
@@ -1033,6 +1035,7 @@ void NetPlayer_Init(struct NetPlayer* p) {
 *---------------------------------------------------Entities component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Entities_Init(void) {
+	int i;
 	Event_Register_(&GfxEvents.ContextLost, NULL, Entities_ContextLost);
 	Event_Register_(&InputEvents.Down,      NULL, LocalPlayer_InputDown);
 	Event_Register_(&InputEvents.Up,        NULL, LocalPlayer_InputUp);
@@ -1045,8 +1048,12 @@ static void Entities_Init(void) {
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
-	LocalPlayer_Init();
+	for (i = 0; i < Game_NumLocalPlayers; i++)
+	{
+		LocalPlayer_Init(&LocalPlayer_Instances[i], i);
+		Entities.List[MAX_NET_PLAYERS + i] = &LocalPlayer_Instances[i].Base;
+	}
+	Entities.CurPlayer = &LocalPlayer_Instances[0];
 }
 
 static void Entities_Free(void) {
@@ -1060,6 +1067,6 @@ static void Entities_Free(void) {
 struct IGameComponent Entities_Component = {
 	Entities_Init,  /* Init  */
 	Entities_Free,  /* Free  */
-	LocalPlayer_Reset,    /* Reset */
-	LocalPlayer_OnNewMap, /* OnNewMap */
+	LocalPlayers_Reset,    /* Reset */
+	LocalPlayers_OnNewMap, /* OnNewMap */
 };

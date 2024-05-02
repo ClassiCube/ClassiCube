@@ -6,6 +6,7 @@
 #include "Game.h"
 #include "Camera.h"
 
+#ifdef CC_BUILD_NETWORKING
 /* Data for a selection box. */
 struct SelectionBox {
 	Vec3 p0, p1;
@@ -206,6 +207,11 @@ void Selections_Render(void) {
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 }
+#else
+static int selections_count;
+void Selections_Render(void) { }
+static void Selections_ContextLost(void* obj) { }
+#endif
 
 
 /*########################################################################################################################*

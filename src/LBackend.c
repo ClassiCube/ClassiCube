@@ -24,13 +24,16 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Event.h"
+#include "Stream.h"
+#include "Logger.h"
+#include "Errors.h"
 
 struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
 static struct Context2D framebuffer;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */
-static Rect2D dirty_rect;
+Rect2D dirty_rect;
 
 static cc_uint8 pendingRedraw;
 #define REDRAW_ALL  0x02
@@ -102,6 +105,36 @@ void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
 	Launcher_DrawTitle(&logoFont, title, ctx);
 }
 
+/* Scales up flag bitmap if necessary */
+static void LBackend_ScaleFlag(struct Bitmap* bmp) {
+	struct Bitmap scaled;
+	int width  = Display_ScaleX(bmp->width);
+	int height = Display_ScaleY(bmp->height);
+	/* at default DPI don't need to rescale it */
+	if (width == bmp->width && height == bmp->height) return;
+
+	Bitmap_TryAllocate(&scaled, width, height);
+	if (!scaled.scan0) {
+		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
+	}
+
+	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->width, bmp->height);
+	Mem_Free(bmp->scan0);
+	*bmp = scaled;
+}
+
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	struct Stream s;
+	cc_result res;
+
+	Stream_ReadonlyMemory(&s, data, len);
+	res = Png_Decode(&flag->bmp, &s);
+	if (res) Logger_SysWarn(res, "decoding flag");
+	flag->meta = NULL;
+
+	LBackend_ScaleFlag(&flag->bmp);
+}
+
 static void OnPointerMove(void* obj, int idx);
 void LBackend_SetScreen(struct LScreen* s) {
 	int i;
@@ -154,8 +187,8 @@ void LBackend_MarkDirty(void* widget) {
 
 /* Marks the entire window as needing to be redrawn. */
 static CC_NOINLINE void MarkAllDirty(void) {
-	dirty_rect.x = 0; dirty_rect.Width  = framebuffer.width;
-	dirty_rect.y = 0; dirty_rect.Height = framebuffer.height;
+	dirty_rect.x = 0; dirty_rect.width  = framebuffer.width;
+	dirty_rect.y = 0; dirty_rect.height = framebuffer.height;
 }
 
 /* Marks the given area/region as needing to be redrawn. */
@@ -164,19 +197,19 @@ static CC_NOINLINE void MarkAreaDirty(int x, int y, int width, int height) {
 	if (!Drawer2D_Clamp(&framebuffer, &x, &y, &width, &height)) return;
 
 	/* union with existing dirty area */
-	if (dirty_rect.Width) {
+	if (dirty_rect.width) {
 		x1 = min(x, dirty_rect.x);
 		y1 = min(y, dirty_rect.y);
 
-		x2 = max(x +  width, dirty_rect.x + dirty_rect.Width);
-		y2 = max(y + height, dirty_rect.y + dirty_rect.Height);
+		x2 = max(x +  width, dirty_rect.x + dirty_rect.width);
+		y2 = max(y + height, dirty_rect.y + dirty_rect.height);
 
 		x = x1; width  = x2 - x1;
 		y = y1; height = y2 - y1;
 	}
 
-	dirty_rect.x = x; dirty_rect.Width  = width;
-	dirty_rect.y = y; dirty_rect.Height = height;
+	dirty_rect.x = x; dirty_rect.width  = width;
+	dirty_rect.y = y; dirty_rect.height = height;
 }
 
 void LBackend_InitFramebuffer(void) {
@@ -212,8 +245,8 @@ static void DrawBoxBounds(BitmapCol color, int x, int y, int width, int height) 
 }
 
 static CC_NOINLINE void DrawWidget(struct LWidget* w) {
-	w->last.x = w->x; w->last.Width  = w->width;
-	w->last.y = w->y; w->last.Height = w->height;
+	w->last.x = w->x; w->last.width  = w->width;
+	w->last.y = w->y; w->last.height = w->height;
 
 	w->dirty = false;
 	w->VTABLE->Draw(w);
@@ -241,10 +274,10 @@ static CC_NOINLINE void RedrawDirty(void) {
 		if (!w->dirty) continue;
 
 		/* check if widget might need redrawing of background behind */
-		if (!w->opaque || w->last.Width > w->width || w->last.Height > w->height) {
+		if (!w->opaque || w->last.width > w->width || w->last.height > w->height) {
 			s->ResetArea(&framebuffer,
-						  w->last.x, w->last.y, w->last.Width, w->last.Height);
-			MarkAreaDirty(w->last.x, w->last.y, w->last.Width, w->last.Height);
+						  w->last.x, w->last.y, w->last.width, w->last.height);
+			MarkAreaDirty(w->last.x, w->last.y, w->last.width, w->last.height);
 		}
 		DrawWidget(w);
 	}
@@ -268,11 +301,13 @@ void LBackend_ThemeChanged(void) { LBackend_Redraw(); }
 
 void LBackend_Tick(void) {
 	DoRedraw();
-	if (!dirty_rect.Width) return;
+	if (!dirty_rect.width) return;
 
-	Window_DrawFramebuffer(dirty_rect, &framebuffer.bmp);
-	dirty_rect.x = 0; dirty_rect.Width   = 0;
-	dirty_rect.y = 0; dirty_rect.Height  = 0;
+	OnscreenKeyboard_Draw2D(&dirty_rect, &framebuffer.bmp);
+	Window_DrawFramebuffer(dirty_rect,   &framebuffer.bmp);
+
+	dirty_rect.x = 0; dirty_rect.width   = 0;
+	dirty_rect.y = 0; dirty_rect.height  = 0;
 }
 
 
@@ -297,6 +332,7 @@ static void OnPointerDown(void* obj, int idx) {
 	struct LScreen* s = Launcher_Active;
 	struct LWidget* over;
 	struct LWidget* prev;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -310,6 +346,7 @@ static void OnPointerUp(void* obj, int idx) {
 	struct LScreen* s = Launcher_Active;
 	struct LWidget* over;
 	struct LWidget* prev;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -330,6 +367,7 @@ static void OnPointerMove(void* obj, int idx) {
 	struct LWidget* over;
 	struct LWidget* prev;
 	cc_bool overSame;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -534,9 +572,9 @@ void LBackend_CheckboxDraw(struct LCheckbox* w) {
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static TimeMS caretStart;
+static cc_uint64 caretStart;
 static Rect2D caretRect, lastCaretRect;
-#define Rect2D_Equals(a, b) a.x == b.x && a.y == b.y && a.Width == b.Width && a.Height == b.Height
+#define Rect2D_Equals(a, b) a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height
 
 void LBackend_InputInit(struct LInput* w, int width) {
 	w->width    = Display_ScaleX(width);
@@ -568,17 +606,17 @@ static Rect2D LInput_MeasureCaret(struct LInput* w, cc_string* text) {
 	DrawTextArgs_Make(&args, text, &textFont, true);
 
 	r.x = w->x + xInputOffset;
-	r.y = w->y + w->height - caretOffset; r.Height = caretHeight;
+	r.y = w->y + w->height - caretOffset; r.height = caretHeight;
 
 	if (w->caretPos == -1) {
 		r.x += Drawer2D_TextWidth(&args);
-		r.Width = caretWidth;
+		r.width = caretWidth;
 	} else {
 		args.text = String_UNSAFE_Substring(text, 0, w->caretPos);
 		r.x += Drawer2D_TextWidth(&args);
 
 		args.text = String_UNSAFE_Substring(text, w->caretPos, 1);
-		r.Width   = Drawer2D_TextWidth(&args);
+		r.width   = Drawer2D_TextWidth(&args);
 	}
 	return r;
 }
@@ -620,7 +658,7 @@ void LBackend_InputTick(struct LInput* w) {
 	Rect2D r;
 
 	if (!caretStart) return;
-	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
+	elapsed = Stopwatch_ElapsedMS(caretStart, Stopwatch_Measure());
 
 	caretShow = (elapsed % 1000) < 500;
 	if (caretShow == w->caretShow) return;
@@ -631,7 +669,7 @@ void LBackend_InputTick(struct LInput* w) {
 	
 	if (Rect2D_Equals(r, lastCaretRect)) {
 		/* Fast path, caret is blinking in same spot */
-		MarkAreaDirty(r.x, r.y, r.Width, r.Height);
+		MarkAreaDirty(r.x, r.y, r.width, r.height);
 	} else {
 		/* Slow path (new widget, caret moved, etc) */
 		MarkAreaDirty(w->x, w->y, w->width, w->height);
@@ -641,21 +679,21 @@ void LBackend_InputTick(struct LInput* w) {
 
 void LBackend_InputSelect(struct LInput* w, int idx, cc_bool wasSelected) {
 	struct OpenKeyboardArgs args;
-	caretStart   = DateTime_CurrentUTC_MS();
+	caretStart   = Stopwatch_Measure();
 	w->caretShow = true;
 	LInput_MoveCaretToCursor(w, idx);
 	LBackend_MarkDirty(w);
 
 	if (wasSelected) return;
 	OpenKeyboardArgs_Init(&args, &w->text, w->inputType);
-	Window_OpenKeyboard(&args);
+	OnscreenKeyboard_Open(&args);
 }
 
 void LBackend_InputUnselect(struct LInput* w) {
 	caretStart   = 0;
 	w->caretShow = false;
 	LBackend_MarkDirty(w);
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 }
 
 
@@ -753,7 +791,7 @@ void LBackend_InputDraw(struct LInput* w) {
 	caretRect = LInput_MeasureCaret(w, &text);
 	if (!w->caretShow) return;
 	Context2D_Clear(&framebuffer, BITMAPCOLOR_BLACK,
-					caretRect.x, caretRect.y, caretRect.Width, caretRect.Height);
+					caretRect.x, caretRect.y, caretRect.width, caretRect.height);
 }
 
 
@@ -897,8 +935,9 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 static BitmapCol LBackend_TableRowColor(struct LTable* w, int row) {
 	struct ServerInfo* entry = row < w->rowsCount ? LTable_Get(row) : NULL;
 	cc_bool selected         = entry && String_Equals(&entry->hash, w->selectedHash);
+	cc_bool featured         = entry && entry->featured;
 
-	return LTable_RowColor(entry, row, selected);
+	return LTable_RowColor(row, selected, featured);
 }
 
 /* Draws background behind each row in the table */

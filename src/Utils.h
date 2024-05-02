@@ -9,7 +9,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 struct Bitmap;
 struct StringsBuffer;
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
-/* NOTE: TimeMS and DateTime_CurrentUTC_MS() should almost always be used instead. */
+/* NOTE: TimeMS and DateTime_CurrentUTC() should almost always be used instead. */
 /* This struct should only be used when actually needed. (e.g. log message time) */
 struct DateTime {
 	int year;   /* Year,   ranges from 0 to 65535 */
@@ -45,6 +45,7 @@ cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length);
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
 extern const cc_uint32 Utils_Crc32Table[256];
 CC_NOINLINE void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems);
+void Utils_SwapEndian16(cc_int16* values, int numValues);
 
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
 /* Returns the number of ASCII characters written. */

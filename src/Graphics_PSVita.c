@@ -563,8 +563,9 @@ void Gfx_Create(void) {
 	if (!Gfx.Created) InitGPU();
 	in_scene = false;
 	
-	Gfx.MaxTexWidth  = 512;
-	Gfx.MaxTexHeight = 512;
+	Gfx.MaxTexWidth  = 1024;
+	Gfx.MaxTexHeight = 1024;
+	Gfx.MaxTexSize   = 512 * 512;
 	Gfx.Created      = true;
 	gfx_vsync        = true;
 	
@@ -624,15 +625,11 @@ static void GPUTexture_Unref(GfxResourceID* resource) {
 	struct GPUTexture* tex = (struct GPUTexture*)(*resource);
 	if (!tex) return;
 	*resource = NULL;
-	
-	cc_uintptr addr = tex;
-	Platform_Log1("TEX UNREF %h", &addr);
+
 	LinkedList_Append(tex, del_textures_head, del_textures_tail);
 }
 
 static void GPUTexture_Free(struct GPUTexture* tex) {
-	cc_uintptr addr = tex;
-	Platform_Log1("TEX DELETE %h", &addr);
 	FreeGPUMemory(tex->uid);
 	Mem_Free(tex);
 }
@@ -672,10 +669,10 @@ static void GPUTextures_DeleteUnreferenced(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	int size = bmp->width * bmp->height * 4;
 	struct GPUTexture* tex = GPUTexture_Alloc(size);
-	Mem_Copy(tex->data, bmp->scan0, size);
+	CopyTextureData(tex->data, bmp->width * 4, bmp, rowWidth << 2);
             
 	sceGxmTextureInitLinear(&tex->texture, tex->data,
 		SCE_GXM_TEXTURE_FORMAT_A8B8G8R8, bmp->width, bmp->height, 0);
@@ -695,10 +692,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	CopyTextureData(dst, texWidth * 4, part, rowWidth << 2);
 	// TODO: Do line by line and only invalidate the actually changed parts of lines?
 	//sceKernelDcacheWritebackInvalidateRange(dst, (tex->width * part->height) * 4);
-}
-
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -735,10 +728,10 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 
 	// Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum
 	// For a FOV based perspective matrix, left/right/top/bottom are calculated as:
@@ -818,6 +811,8 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) { }
 
+void Gfx_SetViewport(int x, int y, int w, int h) { }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------GPU Buffers------------------------------------------------------*
@@ -838,9 +833,6 @@ struct GPUBuffer* GPUBuffer_Alloc(int size) {
 	buffer->data = AllocGPUMemory(size, 
 		SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, SCE_GXM_MEMORY_ATTRIB_READ,
 		&buffer->uid);
-		
-	cc_uintptr addr = buffer->data;
-	Platform_Log2("VB ALLOC %h = %i bytes", &addr, &size);
 	return buffer;
 }
 
@@ -851,14 +843,10 @@ static void GPUBuffer_Unref(GfxResourceID* resource) {
 	if (!buf) return;
 	*resource = NULL;
 	
-	cc_uintptr addr = buf;
-	Platform_Log1("VB UNREF %h", &addr);
 	LinkedList_Append(buf, del_buffers_head, del_buffers_tail);
 }
 
 static void GPUBuffer_Free(struct GPUBuffer* buf) {
-	cc_uintptr addr = buf;
-	Platform_Log1("VB DELETE %h", &addr);
 	FreeGPUMemory(buf->uid);
 	Mem_Free(buf);
 }
@@ -1000,11 +988,11 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static PackedCol clear_color;
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	clear_color = color;
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
  // TODO
 }
 
@@ -1117,7 +1105,8 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 }
 
 
-void Gfx_Clear(void) {
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	// TODO clear only some buffers
 	static struct GPUBuffer* clearVB;
 	if (!clearVB) {
 		clearVB = GPUBuffer_Alloc(4 * sizeof(struct VertexColoured));

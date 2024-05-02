@@ -80,17 +80,18 @@ static void _glInitializeTextureObject(TextureObject* txr, unsigned int id) {
     txr->mipmap_bias = GL_KOS_INTERNAL_DEFAULT_MIPMAP_LOD_BIAS;
 }
 
-GLubyte _glInitTextures() {
+void _glInitTextures() {
     memset(TEXTURE_USED, 0, sizeof(TEXTURE_USED));
 
     // Initialize zero as an actual texture object though because apparently it is!
     TextureObject* default_tex = &TEXTURE_LIST[0];
     _glInitializeTextureObject(default_tex, 0);
+    texture_id_map_reserve(0);
     TEXTURE_ACTIVE = default_tex;
 
     size_t vram_free = pvr_mem_available();
     YALLOC_SIZE = vram_free - PVR_MEM_BUFFER_SIZE; /* Take all but 64kb VRAM */
-    YALLOC_BASE = GPUMemoryAlloc(YALLOC_SIZE);
+    YALLOC_BASE = pvr_mem_malloc(YALLOC_SIZE);
 
 #ifdef __DREAMCAST__
     /* Ensure memory is aligned */
@@ -98,7 +99,6 @@ GLubyte _glInitTextures() {
 #endif
 
     yalloc_init(YALLOC_BASE, YALLOC_SIZE);
-    return 1;
 }
 
 GLuint APIENTRY gldcGenTexture(void) {
@@ -182,29 +182,8 @@ static GLuint _determinePVRFormat(GLint internalFormat, GLenum type) {
 }
 
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define INFO_MSG(x) fprintf(stderr, "%s:%s > %s\n", __FILE__, TOSTRING(__LINE__), x)
-
 int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) {
     TRACE();
-
-    if (w > 1024 || h > 1024){
-        INFO_MSG("Invalid texture size");
-        return GL_INVALID_VALUE;
-    }
-
-    if((w < 8 || (w & -w) != w)) {
-        /* Width is not a power of two. Must be!*/
-        INFO_MSG("Invalid texture width");
-        return GL_INVALID_VALUE;
-    }
-
-    if((h < 8 || (h & -h) != h)) {
-        /* height is not a power of two. Must be!*/
-        INFO_MSG("Invalid texture height");
-        return GL_INVALID_VALUE;
-    }
 
     TextureObject* active = TEXTURE_ACTIVE;
     /* Calculate the format that we need to convert the data to */
@@ -236,7 +215,7 @@ int APIENTRY gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type) 
 
     /* If we run out of PVR memory just return */
     if(!active->data) {
-        INFO_MSG("Out of texture memory");
+        fprintf(stderr, "Out of texture memory\n");
         return GL_OUT_OF_MEMORY;
     }
 

@@ -48,25 +48,14 @@ unsigned int __stacksize__ = 256 * 1024;
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	//cc_file fd = -1;
-	// CITRA LOGGING
-	//cc_string path = String_Init(msg, len, len);
-	//File_Open(&fd, &path);
-	//if (fd > 0) File_Close(fd);
-	
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
-
 	// output to debug service (visible in Citra with log level set to "Debug.Emulated:Debug", or on console via remote gdb)
 	svcOutputDebugString(msg, len);
-	svcOutputDebugString("\n", 1);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC(void) {
 	struct timeval cur;
 	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -223,13 +212,9 @@ static void Exec3DSThread(void* param) {
 	((Thread_StartFunc)param)(); 
 }
 
-void* Thread_Create(Thread_StartFunc func) {
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	//TODO: Not quite correct, but eh
-	return threadCreate(Exec3DSThread, (void*)func, 256 * 1024, 0x3f, -2, false);
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	
+	*handle = threadCreate(Exec3DSThread, (void*)func, stackSize, 0x3f, -2, false);
 }
 
 void Thread_Detach(void* handle) {
@@ -454,6 +439,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	String_AppendUtf8(dst, chars, len);
 	return true;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

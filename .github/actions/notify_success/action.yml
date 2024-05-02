@@ -1,0 +1,19 @@
+name: Notify success
+description: Sends a notification that a workflow has finished
+inputs:
+  DESTINATION_URL:
+    description: 'Webhook notification URL'
+    type: string
+  WORKFLOW_NAME:
+    description: 'Workflow name'
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Notify failure
+      if: ${{ inputs.DESTINATION_URL != '' }}
+      shell: sh
+      run: |
+        curl ${{ inputs.DESTINATION_URL }}/${{ inputs.WORKFLOW_NAME }}/${{ github.sha }}

@@ -29,6 +29,12 @@ jobs:
       - uses: ./.github/actions/upload_build
         if: ${{ always() && steps.compile.outcome == 'success' }}
         with:
+          SOURCE_FILE: 'ClassiCube-3ds.cia'
+          DEST_NAME: 'ClassiCube-3ds.cia'
+                    
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
           SOURCE_FILE: 'ClassiCube-3ds.3dsx'
           DEST_NAME: 'ClassiCube-3ds.3dsx'
           
@@ -37,3 +43,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-3ds.elf'
           DEST_NAME: 'ClassiCube-3ds.elf'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: '3ds'

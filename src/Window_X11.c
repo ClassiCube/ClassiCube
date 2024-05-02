@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL
+#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL2 && !defined CC_BUILD_SDL3
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -279,7 +279,9 @@ void Window_Free(void) { }
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
 	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
-	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
+	
+	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, 
+					(unsigned char*)CCIcon_Data, CCIcon_Size);
 }
 #else
 static void ApplyIcon(void) { }
@@ -338,8 +340,13 @@ static void DoCreateWindow(int width, int height) {
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
 	XClassHint hint = { 0 };
-	hint.res_name   = GAME_APP_TITLE;
-	hint.res_class  = GAME_APP_TITLE;
+	#ifdef CC_BUILD_FLATPAK
+          hint.res_name   = "net.classicube.flatpak.client";
+          hint.res_class  = "net.classicube.flatpak.client";
+        #else
+	  hint.res_name   = GAME_APP_TITLE;
+          hint.res_class  = GAME_APP_TITLE;
+        #endif
 	XSetClassHint(win_display, win_handle, &hint);
 	ApplyIcon();
 
@@ -518,7 +525,7 @@ static void HandleWMPing(XEvent* e) {
 }
 static void HandleGenericEvent(XEvent* e);
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	XEvent e;
 	Window focus;
 	int focusRevert;
@@ -691,6 +698,8 @@ void Window_ProcessEvents(double delta) {
 		}
 	}
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	Window rootW, childW;
@@ -1115,10 +1124,10 @@ static void BlitFramebuffer(int x1, int y1, int width, int height, struct Bitmap
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	/* Convert 32 bit depth to window depth when required */
-	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.Width, r.Height, bmp);
+	if (!fb_fast) BlitFramebuffer(r.x, r.y, r.width, r.height, bmp);
 
 	XPutImage(win_display, win_handle, fb_gc, fb_image,
-		r.x, r.y, r.x, r.y, r.Width, r.Height);
+		r.x, r.y, r.x, r.y, r.width, r.height);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
@@ -1127,9 +1136,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	if (bmp->scan0 != fb_data) Mem_Free(fb_data);
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { }
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;

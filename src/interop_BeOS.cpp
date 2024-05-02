@@ -65,13 +65,10 @@ static int32 ExecThread(void* param) {
 	return 0;
 }
 
-void* Thread_Create(Thread_StartFunc func) {
-	thread_id thread = spawn_thread(ExecThread, "CC thread", B_NORMAL_PRIORITY, func);
-	return (void*)thread;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	thread_id thread = (thread_id)handle;
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	thread_id thread = spawn_thread(ExecThread, name, B_NORMAL_PRIORITY, func);
+	*handle = (void*)thread;
+	
 	resume_thread(thread);
 }
 
@@ -144,7 +141,8 @@ enum CCEventType {
 	CC_NONE,
 	CC_MOUSE_SCROLL, CC_MOUSE_DOWN, CC_MOUSE_UP, CC_MOUSE_MOVE,
 	CC_KEY_DOWN, CC_KEY_UP, CC_KEY_INPUT,
-	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT
+	CC_WIN_RESIZED, CC_WIN_FOCUS, CC_WIN_REDRAW, CC_WIN_QUIT,
+	CC_RAW_MOUSE
 };
 union CCEventValue { float f32; int i32; void* ptr; };
 struct CCEvent {
@@ -152,7 +150,7 @@ struct CCEvent {
 	CCEventValue v1, v2;
 };
 
-#define EVENTS_DEFAULT_MAX 20
+#define EVENTS_DEFAULT_MAX 30
 static void* events_mutex;
 static int events_count, events_capacity;
 static CCEvent* events_list, events_default[EVENTS_DEFAULT_MAX];
@@ -245,6 +243,17 @@ class CC_BWindow : public BWindow
 	public:
 		CC_BWindow(BRect frame) : BWindow(frame, "", B_TITLED_WINDOW, 0) { }
 		void DispatchMessage(BMessage* msg, BHandler* handler);
+		
+		virtual ~CC_BWindow() {
+			if (!view_3D) return;
+			
+			// Fixes OpenGL related crashes on exit since Mesa 21
+			//  Calling RemoveChild seems to fix the crash as per https://dev.haiku-os.org/ticket/16840
+			//  "Some OpenGL applications like GLInfo crash on exit under Mesa 21"
+			this->Lock();
+			this->RemoveChild(view_3D);
+			this->Unlock();
+		}
 };
 
 static void ProcessKeyInput(BMessage* msg) {
@@ -261,6 +270,8 @@ static void ProcessKeyInput(BMessage* msg) {
 }
 
 static int last_buttons;
+static int mouse_raw_delta, mouse_is_tablet;
+
 static void UpdateMouseButton(int btn, int pressed) {
 	CCEvent event;
 	event.type   = pressed ? CC_MOUSE_DOWN : CC_MOUSE_UP;
@@ -281,6 +292,25 @@ static void UpdateMouseButtons(int buttons) {
 	if (changed & B_TERTIARY_MOUSE_BUTTON) 
 		UpdateMouseButton(CCMOUSE_M, buttons & B_TERTIARY_MOUSE_BUTTON);
 	last_buttons = buttons;
+}
+
+static void HandleMouseMovement(BMessage* msg) {
+	int dx, dy;
+	float prs;
+	
+	if (msg->FindInt32("be:delta_x", &dx) == B_OK &&
+		msg->FindInt32("be:delta_y", &dy) == B_OK) {
+	
+		CCEvent event = { 0 };
+		event.type   = CC_RAW_MOUSE;
+		event.v1.i32 =  dx;
+		event.v2.i32 = -dy;
+		Events_Push(&event);
+			
+		mouse_raw_delta = true;
+	} else if (msg->FindFloat("be:tablet_pressure", &prs) == B_OK) {
+		mouse_is_tablet = true;
+	}
 }
 
 void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
@@ -308,12 +338,14 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 	case B_MOUSE_UP:
 		if (msg->FindInt32("buttons", &value) == B_OK) {
 			UpdateMouseButtons(value);
+			HandleMouseMovement(msg);
 		} break;
 	case B_MOUSE_MOVED:
 		if (msg->FindPoint("where", &where) == B_OK) {
 			event.type   = CC_MOUSE_MOVE;
 			event.v1.i32 = where.x;
 			event.v2.i32 = where.y;
+			HandleMouseMovement(msg);
 		} break;
 	case B_MOUSE_WHEEL_CHANGED:
 		if (msg->FindFloat("be:wheel_delta_y", &delta) == B_OK) {
@@ -366,8 +398,8 @@ static void AppThread(void) {
 }
 
 static void RunApp(void) {
-	void* thread = Thread_Create(AppThread);
-	Thread_Start2(thread, AppThread);
+	void* thread;
+	Thread_Run(&thread, AppThread, 128 * 1024, "App thread");
 	Thread_Detach(thread);
 	
 	// wait for BApplication to be started in other thread
@@ -542,7 +574,7 @@ static int MapNativeKey(int raw) {
 	return key;
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	CCEvent event;
 	int key;
 	
@@ -589,9 +621,14 @@ void Window_ProcessEvents(double delta) {
 			Window_Main.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			break;
+		case CC_RAW_MOUSE:
+			if (Input.RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, event.v1.i32, event.v2.i32);
+			break;
 		}
 	}
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	BPoint where;
@@ -605,6 +642,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	*x = (int)where.x;
 	*y = (int)where.y;
 }
+
 void Cursor_SetPosition(int x, int y) {
 	// https://discourse.libsdl.org/t/sdl-mouse-bug/597/11
 	BRect frame = win_handle->Frame();
@@ -707,7 +745,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	// TODO rect should maybe subtract -1 too ????
-	BRect rect(r.x, r.y, r.x + r.Width, r.y + r.Height);
+	BRect rect(r.x, r.y, r.x + r.width, r.y + r.height);
 	win_handle->Lock();
 	view_handle->DrawBitmap(win_framebuffer, rect, rect);
 	win_handle->Unlock();
@@ -718,13 +756,30 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = NULL;
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) {  }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) {  }
 
-void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
-void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse(); }
-void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+void Window_EnableRawMouse(void) {
+	DefaultEnableRawMouse(); 
+}
+
+void Window_UpdateRawMouse(void) {
+	if (mouse_raw_delta) { // handled by events instead
+		CentreMousePosition();
+	} else if (mouse_is_tablet) {
+		MoveRawUsingCursorDelta();
+		Cursor_GetRawPos(&cursorPrevX, &cursorPrevY);
+	} else {
+		DefaultUpdateRawMouse();
+	}
+}
+
+void Window_DisableRawMouse(void) { 
+	DefaultDisableRawMouse(); 
+}
 
 
 /*########################################################################################################################*

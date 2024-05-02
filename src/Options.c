@@ -201,7 +201,7 @@ void Options_SetSecure(const char* opt, const cc_string* src) {
 
 	String_InitArray(enc, encData);
 	res = Platform_Encrypt(src->buffer, src->length, &enc);
-	if (res) { Platform_Log2("Error %h encrypting option %c", &res, opt); return; }
+	if (res) { Platform_Log2("Error %e encrypting option %c", &res, opt); return; }
 
 	/* base64 encode the data, as user might edit options.txt with a text editor */
 	if (enc.length > 1500) Logger_Abort("too large to base64");
@@ -223,5 +223,5 @@ void Options_GetSecure(const char* opt, cc_string* dst) {
 
 	dataLen = Convert_FromBase64(raw.buffer, raw.length, data);
 	res = Platform_Decrypt(data, dataLen, dst);
-	if (res) Platform_Log2("Error %h decrypting option %c", &res, opt);
+	if (res) Platform_Log2("Error %e decrypting option %c", &res, opt);
 }

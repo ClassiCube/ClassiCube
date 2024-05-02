@@ -11,6 +11,7 @@
 #include "Errors.h"
 #include "ExtMath.h"
 #include "Logger.h"
+#include "VirtualKeyboard.h"
 #include <libpad.h>
 #include <packet.h>
 #include <dma_tags.h>
@@ -30,7 +31,6 @@ struct _WindowData WindowInfo;
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
 	
@@ -84,72 +84,7 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(int buttons) {
-	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
-	// So just flip the bits to make more sense
-	buttons = buttons ^ 0xFFFF;
-	//Platform_Log1("BUTTONS: %h", &buttons);
-	
-	Input_SetNonRepeatable(CCPAD_A, buttons & PAD_TRIANGLE);
-	Input_SetNonRepeatable(CCPAD_B, buttons & PAD_SQUARE);
-	Input_SetNonRepeatable(CCPAD_X, buttons & PAD_CROSS);
-	Input_SetNonRepeatable(CCPAD_Y, buttons & PAD_CIRCLE);
-      
-	Input_SetNonRepeatable(CCPAD_START,  buttons & PAD_START);
-	Input_SetNonRepeatable(CCPAD_SELECT, buttons & PAD_SELECT);
-
-	Input_SetNonRepeatable(CCPAD_LEFT,   buttons & PAD_LEFT);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  buttons & PAD_RIGHT);
-	Input_SetNonRepeatable(CCPAD_UP,     buttons & PAD_UP);
-	Input_SetNonRepeatable(CCPAD_DOWN,   buttons & PAD_DOWN);
-	
-	Input_SetNonRepeatable(CCPAD_L,  buttons & PAD_L1);
-	Input_SetNonRepeatable(CCPAD_R,  buttons & PAD_R1);
-	Input_SetNonRepeatable(CCPAD_ZL, buttons & PAD_L2);
-	Input_SetNonRepeatable(CCPAD_ZR, buttons & PAD_R2);
-}
-
-static void HandleJoystick_Left(int x, int y) {
-	//Platform_Log2("LEFT: %i, %i", &x, &y);
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	if (x == 0 && y == 0) return;
-	Input.JoystickMovement = true;
-	Input.JoystickAngle    = Math_Atan2(x, -y);
-}
-static void HandleJoystick_Right(int x, int y, double delta) {
-	//Platform_Log2("Right: %i, %i", &x, &y);
-	float scale = (delta * 60.0) / 16.0f;
-	
-	if (Math_AbsI(x) <= 8) x = 0;
-	if (Math_AbsI(y) <= 8) y = 0;
-	
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, x * scale, y * scale);	
-}
-
-static void ProcessPadInput(double delta, struct padButtonStatus* pad) {
-	HandleButtons(pad->btns);
-	HandleJoystick_Left( pad->ljoy_h - 0x80, pad->ljoy_v - 0x80);
-	HandleJoystick_Right(pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
-}
-
-static cc_bool setMode;
-void Window_ProcessEvents(double delta) {
-    struct padButtonStatus pad;
-	Input.JoystickMovement = false;
-	
-	int state = padGetState(0, 0);
-    if (state != PAD_STATE_STABLE) return;
-    
-    // Change to DUALSHOCK mode so analog joysticks return values
-    if (!setMode) { 
-    	padSetMainMode(0, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK); 
-    	setMode = true;
-    }
-    
-	int ret = padRead(0, 0, &pad);
-	if (ret != 0) ProcessPadInput(delta, &pad);
+void Window_ProcessEvents(float delta) {
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
@@ -157,6 +92,75 @@ void Cursor_SetPosition(int x, int y) { } // Makes no sense for PS Vita
 void Window_EnableRawMouse(void)  { Input.RawMode = true; }
 void Window_UpdateRawMouse(void)  {  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, int buttons) {
+	// Confusingly, it seems that when a bit is on, it means the button is NOT pressed
+	// So just flip the bits to make more sense
+	buttons = buttons ^ 0xFFFF;
+	//Platform_Log1("BUTTONS: %h", &buttons);
+	
+	Gamepad_SetButton(port, CCPAD_A, buttons & PAD_TRIANGLE);
+	Gamepad_SetButton(port, CCPAD_B, buttons & PAD_SQUARE);
+	Gamepad_SetButton(port, CCPAD_X, buttons & PAD_CROSS);
+	Gamepad_SetButton(port, CCPAD_Y, buttons & PAD_CIRCLE);
+      
+	Gamepad_SetButton(port, CCPAD_START,  buttons & PAD_START);
+	Gamepad_SetButton(port, CCPAD_SELECT, buttons & PAD_SELECT);
+	Gamepad_SetButton(port, CCPAD_LSTICK, buttons & PAD_L3);
+	Gamepad_SetButton(port, CCPAD_RSTICK, buttons & PAD_L3);
+
+	Gamepad_SetButton(port, CCPAD_LEFT,   buttons & PAD_LEFT);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  buttons & PAD_RIGHT);
+	Gamepad_SetButton(port, CCPAD_UP,     buttons & PAD_UP);
+	Gamepad_SetButton(port, CCPAD_DOWN,   buttons & PAD_DOWN);
+	
+	Gamepad_SetButton(port, CCPAD_L,  buttons & PAD_L1);
+	Gamepad_SetButton(port, CCPAD_R,  buttons & PAD_R1);
+	Gamepad_SetButton(port, CCPAD_ZL, buttons & PAD_L2);
+	Gamepad_SetButton(port, CCPAD_ZR, buttons & PAD_R2);
+}
+
+#define AXIS_SCALE 16.0f
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, y / AXIS_SCALE, delta);
+}
+
+static void ProcessPadInput(int port, float delta, struct padButtonStatus* pad) {
+	HandleButtons(port, pad->btns);
+	HandleJoystick(port, PAD_AXIS_LEFT,  pad->ljoy_h - 0x80, pad->ljoy_v - 0x80, delta);
+	HandleJoystick(port, PAD_AXIS_RIGHT, pad->rjoy_h - 0x80, pad->rjoy_v - 0x80, delta);
+}
+
+static cc_bool setMode[INPUT_MAX_GAMEPADS];
+static void ProcessPad(int port, float delta) {
+	 struct padButtonStatus pad;
+	
+	int state = padGetState(port, 0);
+	if (state != PAD_STATE_STABLE) return;
+
+	// Change to DUALSHOCK mode so analog joysticks return values
+	if (!setMode[port]) { 
+		padSetMainMode(port, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK); 
+		setMode[port] = true;
+	}
+
+	int ret = padRead(port, 0, &pad);
+	if (ret != 0) ProcessPadInput(port, delta, &pad);
+}
+
+void Window_ProcessGamepads(float delta) {
+	for (int port = 0; port < 2; port++)
+	{
+		ProcessPad(port, delta);
+	}
+}
 
 
 /*########################################################################################################################*
@@ -186,7 +190,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	//   mode=0: Flush data cache (invalidate+writeback dirty contents to memory)
 	FlushCache(0);
 	
-	packet_t* packet = packet_init(50,PACKET_NORMAL);
+	packet_t* packet = packet_init(50, PACKET_NORMAL);
 	qword_t* q = packet->data;
 
 	q = draw_texture_transfer(q, bmp->scan0, bmp->width, bmp->height, GS_PSM_32, 
@@ -207,9 +211,26 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
+	if (Input.Sources & INPUT_SOURCE_NORMAL) return;
+	VirtualKeyboard_Open(args, launcherMode);
+}
+
+void OnscreenKeyboard_SetText(const cc_string* text) {
+	VirtualKeyboard_SetText(text);
+}
+
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) {
+	VirtualKeyboard_Display2D(r, bmp);
+}
+
+void OnscreenKeyboard_Draw3D(void) {
+	VirtualKeyboard_Display3D();
+}
+
+void OnscreenKeyboard_Close(void) {
+	VirtualKeyboard_Close();
+}
 
 
 /*########################################################################################################################*

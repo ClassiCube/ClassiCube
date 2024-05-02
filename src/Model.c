@@ -98,7 +98,8 @@ void Model_Render(struct Model* model, struct Entity* e) {
 	Vec3 pos = e->Position;
 	if (model->bobbing) pos.y += e->Anim.BobbingModel;
 	/* Original classic offsets models slightly into ground */
-	if (Game_ClassicMode) pos.y -= 1.5f / 16.0f;
+	if (Game_ClassicMode && (e->Flags & ENTITY_FLAG_CLASSIC_ADJUST))
+		pos.y -= 1.5f / 16.0f;
 
 	Model_SetupState(model, e);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -181,7 +182,7 @@ static struct VertexTextured* real_vertices;
 static GfxResourceID modelVB;
 
 void Model_LockVB(struct Entity* entity, int verticesCount) {
-#ifdef CC_BUILD_LOWMEM
+#ifdef CC_BUILD_CONSOLE
 	if (!entity->ModelVB) {
 		entity->ModelVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.Active->maxVertices);
 	}
@@ -216,8 +217,8 @@ void Model_DrawPart(struct ModelPart* part) {
 		dst->x = v.x; dst->y = v.y; dst->z = v.z;
 		dst->Col = Models.Cols[i >> 2];
 
-		dst->U = (v.U & UV_POS_MASK) * Models.uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
-		dst->V = (v.V & UV_POS_MASK) * Models.vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
+		dst->U = (v.u & UV_POS_MASK) * Models.uScale - (v.u >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
+		dst->V = (v.v & UV_POS_MASK) * Models.vScale - (v.v >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
 		src++; dst++;
 	}
 	model->index += count;
@@ -270,8 +271,8 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 		dst->x = v.x + x; dst->y = v.y + y; dst->z = v.z + z;
 		dst->Col = Models.Cols[i >> 2];
 
-		dst->U = (v.U & UV_POS_MASK) * Models.uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
-		dst->V = (v.V & UV_POS_MASK) * Models.vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
+		dst->U = (v.u & UV_POS_MASK) * Models.uScale - (v.u >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
+		dst->V = (v.v & UV_POS_MASK) * Models.vScale - (v.v >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
 		src++; dst++;
 	}
 	model->index += count;
@@ -479,24 +480,13 @@ void Model_Register(struct Model* model) {
 }
 
 void Model_Unregister(struct Model* model) {
+	struct Model* cur;
 	int i;
-	
-	/* remove the model from the list */
-	struct Model* item = models_head;
-	if (models_head == model) {
-		models_head = model->next;
-	}
-	while (item) {
-		if (item->next == model) {
-			item->next = model->next;
-		}
-
-		models_tail = item;
-		item = item->next;
-	}
+	LinkedList_Remove(model, cur, models_head, models_tail); 
 
 	/* unset this model from all entities, replacing with default fallback */
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	{
 		struct Entity* e = Entities.List[i];
 		if (e && e->Model == model) {
 			cc_string humanModelName = String_FromReadonly(Models.Human->name);
@@ -2079,20 +2069,20 @@ static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 
 	xz1 = 0.0f; xz2 = 0.0f;
 	if (firstPart) { /* Need to break into two quads for when drawing a sprite model in hand. */
-		if (mirror) { rec.U1 = 0.5f; xz1 = -5.5f/16.0f; }
-		else {        rec.U2 = 0.5f; xz2 = -5.5f/16.0f; }
+		if (mirror) { rec.u1 = 0.5f; xz1 = -5.5f/16.0f; }
+		else {        rec.u2 = 0.5f; xz2 = -5.5f/16.0f; }
 	} else {
-		if (mirror) { rec.U2 = 0.5f; xz2 =  5.5f/16.0f; }
-		else {        rec.U1 = 0.5f; xz1 =  5.5f/16.0f; }
+		if (mirror) { rec.u2 = 0.5f; xz2 =  5.5f/16.0f; }
+		else {        rec.u1 = 0.5f; xz1 =  5.5f/16.0f; }
 	}
 
 	ptr   = bModel_vertices;
 	v.Col = col;
 
-	v.x = xz1; v.y = 0.0f; v.z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
-	           v.y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
-	v.x = xz2;             v.z = xz2; v.U = rec.U1;               *ptr++ = v;
-	           v.y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
+	v.x = xz1; v.y = 0.0f; v.z = xz1; v.U = rec.u2; v.V = rec.v2; *ptr++ = v;
+	           v.y = 1.0f;                          v.V = rec.v1; *ptr++ = v;
+	v.x = xz2;             v.z = xz2; v.U = rec.u1;               *ptr++ = v;
+	           v.y = 0.0f;                          v.V = rec.v2; *ptr++ = v;
 
 	bModel_vertices = ptr;
 }
@@ -2109,20 +2099,20 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 
 	x1 = 0.0f; x2 = 0.0f; z1 = 0.0f; z2 = 0.0f;
 	if (firstPart) {
-		if (mirror) { rec.U2 = 0.5f; x2 = -5.5f/16.0f; z2 =  5.5f/16.0f; }
-		else {        rec.U1 = 0.5f; x1 = -5.5f/16.0f; z1 =  5.5f/16.0f; }
+		if (mirror) { rec.u2 = 0.5f; x2 = -5.5f/16.0f; z2 =  5.5f/16.0f; }
+		else {        rec.u1 = 0.5f; x1 = -5.5f/16.0f; z1 =  5.5f/16.0f; }
 	} else {
-		if (mirror) { rec.U1 = 0.5f; x1 =  5.5f/16.0f; z1 = -5.5f/16.0f; }
-		else {        rec.U2 = 0.5f; x2 =  5.5f/16.0f; z2 = -5.5f/16.0f; }
+		if (mirror) { rec.u1 = 0.5f; x1 =  5.5f/16.0f; z1 = -5.5f/16.0f; }
+		else {        rec.u2 = 0.5f; x2 =  5.5f/16.0f; z2 = -5.5f/16.0f; }
 	}
 
 	ptr   = bModel_vertices;
 	v.Col = col;
 
-	v.x = x1; v.y = 0.0f; v.z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
-	          v.y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
-	v.x = x2;             v.z = z2; v.U = rec.U1;               *ptr++ = v;
-	          v.y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
+	v.x = x1; v.y = 0.0f; v.z = z1; v.U = rec.u2; v.V = rec.v2; *ptr++ = v;
+	          v.y = 1.0f;                         v.V = rec.v1; *ptr++ = v;
+	v.x = x2;             v.z = z2; v.U = rec.u1;               *ptr++ = v;
+	          v.y = 0.0f;                         v.V = rec.v2; *ptr++ = v;
 
 	bModel_vertices = ptr;
 }
@@ -2228,6 +2218,7 @@ static void BlockModel_Register(void) {
 	block_model.pushes      = false;
 	block_model.maxVertices = BLOCKMODEL_MAX_VERTICES;
 	Model_Register(&block_model);
+	Models.Block = &block_model;
 }
 
 

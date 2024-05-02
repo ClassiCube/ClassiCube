@@ -1229,6 +1229,10 @@ static void Vorbis_CalcWindow(struct VorbisWindow* window, int blockSize) {
 	}
 }
 
+void Vorbis_Init(struct VorbisState* ctx) {
+	Mem_Set(ctx, 0, sizeof(*ctx) - sizeof(ctx->imdct));
+}
+
 void Vorbis_Free(struct VorbisState* ctx) {
 	int i;
 	for (i = 0; i < ctx->numCodebooks; i++) 

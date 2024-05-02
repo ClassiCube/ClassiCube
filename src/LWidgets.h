@@ -108,7 +108,7 @@ struct LInput {
 	int caretPos;
 	cc_string text;
 	int _textHeight;
-	char _textBuffer[STRING_SIZE];
+	char _textBuffer[STRING_SIZE * 2];
 };
 CC_NOINLINE void LInput_Add(void* screen, struct LInput* w, int width, const char* hintText, 
 							const struct LLayout* layouts);
@@ -247,5 +247,5 @@ int LTable_GetSelectedIndex(struct LTable* w);
 void LTable_SetSelectedTo(struct LTable* w, int index);
 void LTable_RowClick(struct LTable* w, int row);
 /* Works out the background color of the given row */
-BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected);
+BitmapCol LTable_RowColor(int row, cc_bool selected, cc_bool featured);
 #endif

@@ -23,7 +23,6 @@ void Window_Init(void) {
     
 	DisplayInfo.Width  = display_get_width();
 	DisplayInfo.Height = display_get_height();
-	DisplayInfo.Depth  = 4; // 32 bit
 	DisplayInfo.ScaleX = 0.5f;
 	DisplayInfo.ScaleY = 0.5f;
 	
@@ -39,6 +38,7 @@ void Window_Init(void) {
 
 	// change defaults to make more sense for N64
 	cc_uint8* binds = (cc_uint8*)KeyBind_GamepadDefaults;
+	binds[KEYBIND_JUMP]         = CCPAD_A;
 	binds[KEYBIND_INVENTORY]    = CCPAD_B;
 	binds[KEYBIND_PLACE_BLOCK]  = CCPAD_Z;
 	binds[KEYBIND_HOTBAR_RIGHT] = CCPAD_L;
@@ -48,6 +48,11 @@ void Window_Init(void) {
 	binds[KEYBIND_BACK]      = CCPAD_CDOWN;
 	binds[KEYBIND_LEFT]      = CCPAD_CLEFT;
 	binds[KEYBIND_RIGHT]     = CCPAD_CRIGHT;
+
+	binds[KEYBIND_FLY_UP]    = CCPAD_UP;
+	binds[KEYBIND_FLY_DOWN]  = CCPAD_DOWN;
+	binds[KEYBIND_SPEED]     = CCPAD_LEFT;
+	binds[KEYBIND_FLY]       = CCPAD_RIGHT;
 }
 
 void Window_Free(void) { }
@@ -75,51 +80,61 @@ void Window_RequestClose(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Input processing-----------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleButtons(joypad_buttons_t btns) {
-	Input_SetNonRepeatable(CCPAD_L, btns.l);
-	Input_SetNonRepeatable(CCPAD_R, btns.r);
-	
-	Input_SetNonRepeatable(CCPAD_A, btns.a);
-	Input_SetNonRepeatable(CCPAD_B, btns.b);
-	Input_SetNonRepeatable(CCPAD_Z, btns.z);
-	
-	Input_SetNonRepeatable(CCPAD_START,  btns.start);
-	
-	Input_SetNonRepeatable(CCPAD_LEFT,   btns.d_left);
-	Input_SetNonRepeatable(CCPAD_RIGHT,  btns.d_right);
-	Input_SetNonRepeatable(CCPAD_UP,     btns.d_up);
-	Input_SetNonRepeatable(CCPAD_DOWN,   btns.d_down);
-
-	Input_SetNonRepeatable(CCPAD_CLEFT,  btns.c_left);
-	Input_SetNonRepeatable(CCPAD_CRIGHT, btns.c_right);
-	Input_SetNonRepeatable(CCPAD_CUP,    btns.c_up);
-	Input_SetNonRepeatable(CCPAD_CDOWN,  btns.c_down);
-}
-
-static void ProcessAnalogInput(joypad_inputs_t* inputs, double delta) {
-	float scale = (delta * 60.0) / 8.0f;
-	int dx = inputs->stick_x;
-	int dy = inputs->stick_y;
-
-	if (Math_AbsI(dx) <= 8) dx = 0;
-	if (Math_AbsI(dy) <= 8) dy = 0;
-
-	Event_RaiseRawMove(&ControllerEvents.RawMoved, dx * scale, -dy * scale);
-}
-
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	joypad_poll();
-	
-	joypad_inputs_t inputs = joypad_get_inputs(JOYPAD_PORT_1);
-	HandleButtons(inputs.btn);
-	
-	if (Input.RawMode) ProcessAnalogInput(&inputs, delta);
 }
 
 void Cursor_SetPosition(int x, int y) { } // Makes no sense for PSP
 void Window_EnableRawMouse(void)  { Input.RawMode = true;  }
 void Window_DisableRawMouse(void) { Input.RawMode = false; }
 void Window_UpdateRawMouse(void)  { }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+static void HandleButtons(int port, joypad_buttons_t btns) {
+	Gamepad_SetButton(port, CCPAD_L, btns.l);
+	Gamepad_SetButton(port, CCPAD_R, btns.r);
+	
+	Gamepad_SetButton(port, CCPAD_A, btns.a);
+	Gamepad_SetButton(port, CCPAD_B, btns.b);
+	Gamepad_SetButton(port, CCPAD_Z, btns.z);
+	
+	Gamepad_SetButton(port, CCPAD_START,  btns.start);
+	
+	Gamepad_SetButton(port, CCPAD_LEFT,   btns.d_left);
+	Gamepad_SetButton(port, CCPAD_RIGHT,  btns.d_right);
+	Gamepad_SetButton(port, CCPAD_UP,     btns.d_up);
+	Gamepad_SetButton(port, CCPAD_DOWN,   btns.d_down);
+
+	Gamepad_SetButton(port, CCPAD_CLEFT,  btns.c_left);
+	Gamepad_SetButton(port, CCPAD_CRIGHT, btns.c_right);
+	Gamepad_SetButton(port, CCPAD_CUP,    btns.c_up);
+	Gamepad_SetButton(port, CCPAD_CDOWN,  btns.c_down);
+}
+
+#define AXIS_SCALE 8.0f
+static void ProcessAnalogInput(int port, joypad_inputs_t* inputs, float delta) {
+	int x = inputs->stick_x;
+	int y = inputs->stick_y;
+
+	if (Math_AbsI(x) <= 8) x = 0;
+	if (Math_AbsI(y) <= 8) y = 0;
+	
+	Gamepad_SetAxis(port, PAD_AXIS_RIGHT, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
+}
+
+void Window_ProcessGamepads(float delta) {
+	for (int port = 0; port < INPUT_MAX_GAMEPADS; port++)
+	{
+		if (!joypad_is_connected(port)) continue;
+		
+		joypad_inputs_t inputs = joypad_get_inputs(port);
+		HandleButtons(port, inputs.btn);
+		ProcessAnalogInput(port, &inputs, delta);
+	}
+}
 
 
 /*########################################################################################################################*
@@ -152,9 +167,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 /*########################################################################################################################*
 *------------------------------------------------------Soft keyboard------------------------------------------------------*
 *#########################################################################################################################*/
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { /* TODO implement */ }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { /* TODO implement */ }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { /* TODO implement */ }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { /* TODO implement */ }
 
 
 /*########################################################################################################################*

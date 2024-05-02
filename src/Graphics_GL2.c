@@ -500,12 +500,12 @@ void Gfx_SetFogMode(FogFunc func) {
 	SwitchProgram();
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
@@ -546,7 +546,17 @@ static void GLBackend_Init(void) {
 #endif
 
 #ifdef CC_BUILD_GLES
-	// OpenGL ES 2.0 doesn't support custom mipmaps levels
+	// OpenGL ES 2.0 doesn't support custom mipmaps levels, but 3.2 does
+	// Note that GL_MAJOR_VERSION and GL_MINOR_VERSION were not actually
+	//  implemented until 3.0.. but hopefully older GPU drivers out there
+	//  don't try and set a value even when it's unsupported
+	#define _GL_MAJOR_VERSION 33307
+	#define _GL_MINOR_VERSION 33308
+	
+	GLint major = 0, minor = 0;
+	glGetIntegerv(_GL_MAJOR_VERSION, &major);
+	glGetIntegerv(_GL_MINOR_VERSION, &minor);
+	customMipmapsLevels = major >= 3 && minor >= 2;
 #else
     customMipmapsLevels = true;
     const GLubyte* ver  = glGetString(GL_VERSION);

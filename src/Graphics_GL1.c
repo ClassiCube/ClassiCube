@@ -534,15 +534,14 @@ void Gfx_SetFogMode(FogFunc func) {
 	gfx_fogMode = func;
 }
 
-void Gfx_SetTexturing(cc_bool enabled) { }
-
 void Gfx_SetAlphaTest(cc_bool enabled) { 
 	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 	if (enabled) { glEnable(GL_TEXTURE_2D); } else { glDisable(GL_TEXTURE_2D); }
 }
 
@@ -590,20 +589,27 @@ static void Gfx_RestoreState(void) {
 
 cc_bool Gfx_WarnIfNecessary(void) {
 	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
-
+	
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
 	Chat_AddRaw("&cAs such you may experience poor performance.");
 	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
 #endif
-	if (!String_ContainsConst(&renderer, "Intel")) return false;
 
-	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
-	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
-#ifdef CC_BUILD_WIN
-	Chat_AddRaw("&cTry downloading the Direct3D 9 build instead.");
-#endif
-	return true;
+	if (String_ContainsConst(&renderer, "llvmpipe")) {
+		Chat_AddRaw("&cSoftware rendering is being used, performance will greatly suffer.");
+		Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+		return true;
+	}
+	if (String_ContainsConst(&renderer, "Intel")) {
+		Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
+		Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+		#ifdef CC_BUILD_WIN
+		Chat_AddRaw("&cTry downloading the Direct3D 9 build instead.");
+		#endif
+		return true;
+	}
+	return false;
 }
 
 

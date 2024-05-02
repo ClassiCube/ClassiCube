@@ -11,6 +11,7 @@
 #include "Errors.h"
 #include "Utils.h"
 #include "Http.h"
+#include "LBackend.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------------JSON-----------------------------------------------------------*
@@ -219,6 +220,7 @@ static void LWebTask_Reset(struct LWebTask* task) {
 
 void LWebTask_Tick(struct LWebTask* task, LWebTask_ErrorCallback errorCallback) {
 	struct HttpRequest item;
+
 	if (task->completed) return;
 	if (!Http_GetResult(task->reqID, &item)) return;
 
@@ -579,39 +581,13 @@ void FetchUpdateTask_Run(cc_bool release, int buildIndex) {
 *#########################################################################################################################*/
 struct FetchFlagsData FetchFlagsTask;
 static int flagsCount, flagsCapacity;
-
 static struct Flag* flags;
-
-/* Scales up flag bitmap if necessary */
-static void FetchFlagsTask_Scale(struct Bitmap* bmp) {
-	struct Bitmap scaled;
-	int width  = Display_ScaleX(bmp->width);
-	int height = Display_ScaleY(bmp->height);
-	/* at default DPI don't need to rescale it */
-	if (width == bmp->width && height == bmp->height) return;
-
-	Bitmap_TryAllocate(&scaled, width, height);
-	if (!scaled.scan0) {
-		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
-	}
-
-	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->width, bmp->height);
-	Mem_Free(bmp->scan0);
-	*bmp = scaled;
-}
 
 static void FetchFlagsTask_DownloadNext(void);
 static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 	struct Flag* flag = &flags[FetchFlagsTask.count];
-	struct Stream s;
-	cc_result res;
-
-	Stream_ReadonlyMemory(&s, data, len);
-	res = Png_Decode(&flag->bmp, &s);
-	if (res) Logger_SysWarn(res, "decoding flag");
-	flag->meta = NULL;
-
-	FetchFlagsTask_Scale(&flag->bmp);
+	LBackend_DecodeFlag(flag, data, len);
+	
 	FetchFlagsTask.count++;
 	FetchFlagsTask_DownloadNext();
 }
@@ -644,7 +620,8 @@ static void FetchFlagsTask_Ensure(void) {
 
 void FetchFlagsTask_Add(const struct ServerInfo* server) {
 	int i;
-	for (i = 0; i < flagsCount; i++) {
+	for (i = 0; i < flagsCount; i++) 
+	{
 		if (flags[i].country[0] != server->country[0]) continue;
 		if (flags[i].country[1] != server->country[1]) continue;
 		/* flag is already or will be downloaded */
@@ -655,6 +632,7 @@ void FetchFlagsTask_Add(const struct ServerInfo* server) {
 	Bitmap_Init(flags[flagsCount].bmp, 0, 0, NULL);
 	flags[flagsCount].country[0] = server->country[0];
 	flags[flagsCount].country[1] = server->country[1];
+	flags[flagsCount].meta = NULL;
 
 	flagsCount++;
 	FetchFlagsTask_DownloadNext();
@@ -662,7 +640,8 @@ void FetchFlagsTask_Add(const struct ServerInfo* server) {
 
 struct Flag* Flags_Get(const struct ServerInfo* server) {
 	int i;
-	for (i = 0; i < FetchFlagsTask.count; i++) {
+	for (i = 0; i < FetchFlagsTask.count; i++) 
+	{
 		if (flags[i].country[0] != server->country[0]) continue;
 		if (flags[i].country[1] != server->country[1]) continue;
 		return &flags[i];

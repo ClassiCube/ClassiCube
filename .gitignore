@@ -20,16 +20,38 @@ android/app/.externalNativeBuild/
 android/local.properties
 *.iml
 
-# Console build results
-build-360/
+# Nintendo Console build results
 build-3ds/
-build-dc/
 build-gc/
+build-nds/
 build-n64/
+build-wii/
+build-wiiu/
+build-switch/
+classicube.nds
+# SEGA console build results
+build-dc/
+IP.BIN
+ISO_FILES/
+third_party/gldc/libGLdc.a
+build-saturn/
+cd/
+# Microsoft console build results
+build-360/
+main.exe
+main.lib
+misc/xbox/ps_coloured.inl
+misc/xbox/ps_textured.inl
+misc/xbox/vs_coloured.inl
+misc/xbox/vs_textured.inl
+# Sony console build results
 build-ps2/
 build-ps3/
+build-psp/
 build-vita/
-build-wii/
+eboot.pbp
+eboot.bin
+param.sfo
 
 # Build results
 [Dd]ebug/
@@ -65,6 +87,13 @@ options.txt
 ClassiCube*
 screenshots
 fontscache.txt
+
+# Android source files need to be included
+!android/app/src/main/java/com/classicube
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
 
 #GCC object files
 *.o

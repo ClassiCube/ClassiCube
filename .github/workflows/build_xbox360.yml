@@ -1,0 +1,50 @@
+name: Build latest (Xbox 360)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-xbox360
+  cancel-in-progress: true
+
+jobs:
+  build-Xbox:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container:
+      image: free60/libxenon
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile 360 build
+        id: compile
+        run: |
+          sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+          apt-get update
+          apt-get install -y curl
+          export DEVKITXENON=/usr/local/xenon
+          export PATH=$PATH:$DEVKITXENON/bin:$DEVKITXENON/usr/bin
+          make xbox360
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Xbox 360 build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-xbox360.elf'
+          DEST_NAME: 'ClassiCube-xbox360.elf'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-xbox360.elf32'
+          DEST_NAME: 'ClassiCube-xbox360.elf32'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'xbox360'

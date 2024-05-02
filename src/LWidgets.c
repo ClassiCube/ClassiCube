@@ -32,6 +32,38 @@ void LWidget_CalcOffsets(void) {
 	flagYOffset  = Display_ScaleY(6);
 }
 
+static void LWidget_DrawInsetBorder(struct Context2D* ctx, BitmapCol color, int insetX, int insetY,
+									int x, int y, int width, int height) {
+	Context2D_Clear(ctx, color,
+					x + insetX,         y,
+					width - 2 * insetX, insetY);
+	Context2D_Clear(ctx, color,
+					x + insetX,         y + height - insetY,
+					width - 2 * insetX, insetY);
+	Context2D_Clear(ctx, color,
+					x,                  y + insetY,
+					insetX,             height - 2 * insetY);
+	Context2D_Clear(ctx, color,
+					x + width - insetX, y + insetY,
+					insetX,             height - 2 * insetY);
+}
+
+void LWidget_DrawBorder(struct Context2D* ctx, BitmapCol color, int borderX, int borderY,
+									int x, int y, int width, int height) {
+	Context2D_Clear(ctx, color,
+					x,         y,
+					width, borderY);
+	Context2D_Clear(ctx, color,
+					x,         y + height - borderY,
+					width, borderY);
+	Context2D_Clear(ctx, color,
+					x,                   y,
+					borderX,             height);
+	Context2D_Clear(ctx, color,
+					x + width - borderX, y,
+					borderX,             height);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -54,23 +86,10 @@ static void LButton_DrawBase(struct Context2D* ctx, int x, int y, int width, int
 static void LButton_DrawBorder(struct Context2D* ctx, int x, int y, int width, int height) {
 	BitmapCol backColor = Launcher_Theme.ButtonBorderColor;
 #ifdef CC_BUILD_IOS
-	int xoff = 0; /* TODO temp hack */
+	LWidget_DrawBorder(ctx,      backColor, oneX, oneY, x, y, width, height);
 #else
-	int xoff = oneX;
+	LWidget_DrawInsetBorder(ctx, backColor, oneX, oneY, x, y, width, height);
 #endif
-
-	Context2D_Clear(ctx, backColor, 
-					x + xoff,         y,
-					width - 2 * xoff, oneY);
-	Context2D_Clear(ctx, backColor,
-					x + xoff,         y + height - oneY,
-					width - 2 * xoff, oneY);
-	Context2D_Clear(ctx, backColor,
-					x,                y + oneY,
-					oneX,             height - twoY);
-	Context2D_Clear(ctx, backColor,
-					x + width - oneX, y + oneY,
-					oneX,             height - twoY);
 }
 
 static void LButton_DrawHighlight(struct Context2D* ctx, int x, int y, int width, int height, cc_bool active) {
@@ -335,6 +354,7 @@ void LInput_Add(void* screen, struct LInput* w, int width, const char* hintText,
 	w->opaque  = true;
 	w->layouts = layouts;
 
+	/* Preserve existing input across Add calls */
 	if (!w->text.buffer) {
 		String_InitArray(w->text, w->_textBuffer);
 	}
@@ -753,14 +773,14 @@ void LTable_ShowSelected(struct LTable* w) {
 	LTable_ClampTopRow(w);
 }
 
-BitmapCol LTable_RowColor(struct ServerInfo* entry, int row, cc_bool selected) {
+BitmapCol LTable_RowColor(int row, cc_bool selected, cc_bool featured) {
 	BitmapCol featSelColor  = BitmapColor_RGB( 50,  53,  0);
 	BitmapCol featuredColor = BitmapColor_RGB(101, 107,  0);
 	BitmapCol selectedColor = BitmapColor_RGB( 40,  40, 40);
 
-	if (entry && entry->featured) {
+	if (featured) {
 		return selected ? featSelColor : featuredColor;
-	} else if (entry && selected) {
+	} else if (selected) {
 		return selectedColor;
 	}
 

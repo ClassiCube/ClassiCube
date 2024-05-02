@@ -33,10 +33,10 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	aX = view->row1.x * sX; aY = view->row2.x * sX; aZ = view->row3.x * sX; /* right * size.x * 0.5f */
 	bX = view->row1.y * sY; bY = view->row2.y * sY; bZ = view->row3.y * sY; /* up    * size.y * 0.5f */
 
-	v->x = centre.x - aX - bX; v->y = centre.y - aY - bY; v->z = centre.z - aZ - bZ; v->Col = col; v->U = rec->U1; v->V = rec->V2; v++;
-	v->x = centre.x - aX + bX; v->y = centre.y - aY + bY; v->z = centre.z - aZ + bZ; v->Col = col; v->U = rec->U1; v->V = rec->V1; v++;
-	v->x = centre.x + aX + bX; v->y = centre.y + aY + bY; v->z = centre.z + aZ + bZ; v->Col = col; v->U = rec->U2; v->V = rec->V1; v++;
-	v->x = centre.x + aX - bX; v->y = centre.y + aY - bY; v->z = centre.z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
+	v->x = centre.x - aX - bX; v->y = centre.y - aY - bY; v->z = centre.z - aZ - bZ; v->Col = col; v->U = rec->u1; v->V = rec->v2; v++;
+	v->x = centre.x - aX + bX; v->y = centre.y - aY + bY; v->z = centre.z - aZ + bZ; v->Col = col; v->U = rec->u1; v->V = rec->v1; v++;
+	v->x = centre.x + aX + bX; v->y = centre.y + aY + bY; v->z = centre.z + aZ + bZ; v->Col = col; v->U = rec->u2; v->V = rec->v1; v++;
+	v->x = centre.x + aX - bX; v->y = centre.y + aY - bY; v->z = centre.z + aZ - bZ; v->Col = col; v->U = rec->u2; v->V = rec->v2; v++;
 }
 
 static cc_bool CollidesHor(Vec3* nextPos, BlockID block) {
@@ -97,17 +97,17 @@ static cc_bool IntersectsBlock(struct Particle* p, CanPassThroughFunc canPassThr
 	return !canPassThrough(cur) && p->nextPos.y >= minY && p->nextPos.y < maxY && CollidesHor(&p->nextPos, cur);
 }
 
-static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, double delta) {
+static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, float delta) {
 	Vec3 velocity;
 	int y, begY, endY;
 
 	p->lastPos = p->nextPos;
 	if (IntersectsBlock(p, canPassThrough)) return true;
 
-	p->velocity.y -= gravity * (float)delta;
+	p->velocity.y -= gravity * delta;
 	begY = Math_Floor(p->nextPos.y);
 	
-	Vec3_Mul1(&velocity, &p->velocity, (float)delta * 3.0f);
+	Vec3_Mul1(&velocity, &p->velocity, delta * 3.0f);
 	Vec3_Add(&p->nextPos, &p->nextPos, &velocity);
 	endY = Math_Floor(p->nextPos.y);
 
@@ -118,7 +118,7 @@ static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc
 		for (y = begY; y >= endY && ClipY(p, y, true, canPassThrough); y--) {}
 	}
 
-	p->lifetime -= (float)delta;
+	p->lifetime -= delta;
 	return p->lifetime < 0.0f;
 }
 
@@ -135,7 +135,7 @@ static cc_bool RainParticle_CanPass(BlockID block) {
 	return draw == DRAW_GAS || draw == DRAW_SPRITE;
 }
 
-static cc_bool RainParticle_Tick(struct Particle* p, double delta) {
+static cc_bool RainParticle_Tick(struct Particle* p, float delta) {
 	hitTerrain = false;
 	return PhysicsTick(p, 3.5f, RainParticle_CanPass, delta) || hitTerrain;
 }
@@ -178,12 +178,36 @@ static void Rain_RemoveAt(int i) {
 	rain_count--;
 }
 
-static void Rain_Tick(double delta) {
+static void Rain_Tick(float delta) {
 	int i;
 	for (i = 0; i < rain_count; i++) {
 		if (RainParticle_Tick(&rain_Particles[i], delta)) {
 			Rain_RemoveAt(i); i--;
 		}
+	}
+}
+
+void Particles_RainSnowEffect(float x, float y, float z) {
+	struct Particle* p;
+	int i, type;
+
+	for (i = 0; i < 2; i++) {
+		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
+		p = &rain_Particles[rain_count++];
+
+		p->velocity.x = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
+		p->velocity.z = Random_Float(&rnd) * 0.8f - 0.4f;
+		p->velocity.y = Random_Float(&rnd) + 0.4f;
+
+		p->lastPos.x = x + Random_Float(&rnd); /* [0.0, 1.0] */
+		p->lastPos.y = y + Random_Float(&rnd) * 0.1f + 0.01f;
+		p->lastPos.z = z + Random_Float(&rnd);
+
+		p->nextPos  = p->lastPos;
+		p->lifetime = 40.0f;
+
+		type = Random_Next(&rnd, 30);
+		p->size = type >= 28 ? 2 : (type >= 25 ? 4 : 3);
 	}
 }
 
@@ -208,7 +232,7 @@ static cc_bool TerrainParticle_CanPass(BlockID block) {
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || Blocks.IsLiquid[block];
 }
 
-static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
+static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, float delta) {
 	return PhysicsTick(&p->base, Blocks.ParticleGravity[p->block], TerrainParticle_CanPass, delta);
 }
 
@@ -282,138 +306,13 @@ static void Terrain_RemoveAt(int i) {
 	terrain_count--;
 }
 
-static void Terrain_Tick(double delta) {
+static void Terrain_Tick(float delta) {
 	int i;
 	for (i = 0; i < terrain_count; i++) {
 		if (TerrainParticle_Tick(&terrain_particles[i], delta)) {
 			Terrain_RemoveAt(i); i--;
 		}
 	}
-}
-
-/*########################################################################################################################*
-*-------------------------------------------------------Custom particle---------------------------------------------------*
-*#########################################################################################################################*/
-struct CustomParticle {
-	struct Particle base;
-	int effectId;
-	float totalLifespan;
-};
-
-struct CustomParticleEffect Particles_CustomEffects[256];
-static struct CustomParticle custom_particles[PARTICLES_MAX];
-static int custom_count;
-static cc_uint8 collideFlags;
-#define EXPIRES_UPON_TOUCHING_GROUND (1 << 0)
-#define SOLID_COLLIDES  (1 << 1)
-#define LIQUID_COLLIDES (1 << 2)
-#define LEAF_COLLIDES   (1 << 3)
-
-static cc_bool CustomParticle_CanPass(BlockID block) {
-	cc_uint8 draw, collide;
-	
-	draw = Blocks.Draw[block];
-	if (draw == DRAW_TRANSPARENT_THICK && !(collideFlags & LEAF_COLLIDES)) return true;
-
-	collide = Blocks.Collide[block];
-	if (collide == COLLIDE_SOLID  && (collideFlags & SOLID_COLLIDES))  return false;
-	if (collide == COLLIDE_LIQUID && (collideFlags & LIQUID_COLLIDES)) return false;
-	return true;
-}
-
-static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
-	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
-	hitTerrain   = false;
-	collideFlags = e->collideFlags;
-
-	return PhysicsTick(&p->base, e->gravity, CustomParticle_CanPass, delta)
-		|| (hitTerrain && (e->collideFlags & EXPIRES_UPON_TOUCHING_GROUND));
-}
-
-static void CustomParticle_Render(struct CustomParticle* p, float t, struct VertexTextured* vertices) {
-	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
-	Vec3 pos;
-	Vec2 size;
-	PackedCol col;
-	TextureRec rec = e->rec;
-	int x, y, z;
-
-	float time_lived = p->totalLifespan - p->base.lifetime;
-	int curFrame = Math_Floor(e->frameCount * (time_lived / p->totalLifespan));
-	float shiftU = curFrame * (rec.U2 - rec.U1);
-
-	rec.U1 += shiftU;/* * 0.0078125f; */
-	rec.U2 += shiftU;/* * 0.0078125f; */
-
-	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
-	size.x = p->base.size; size.y = size.x;
-
-	x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
-	col = e->fullBright ? PACKEDCOL_WHITE : Lighting.Color(x, y, z);
-	col = PackedCol_Tint(col, e->tintCol);
-
-	Particle_DoRender(&size, &pos, &rec, col, vertices);
-}
-
-static void Custom_Render(float t) {
-	struct VertexTextured* data;
-	int i;
-	if (!custom_count) return;
-
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
-										VERTEX_FORMAT_TEXTURED, custom_count * 4);
-	for (i = 0; i < custom_count; i++) {
-		CustomParticle_Render(&custom_particles[i], t, data);
-		data += 4;
-	}
-
-	Gfx_BindTexture(particles_TexId);
-	Gfx_UnlockDynamicVb(particles_VB);
-	Gfx_DrawVb_IndexedTris(custom_count * 4);
-}
-
-static void Custom_RemoveAt(int i) {
-	for (; i < custom_count - 1; i++) {
-		custom_particles[i] = custom_particles[i + 1];
-	}
-	custom_count--;
-}
-
-static void Custom_Tick(double delta) {
-	int i;
-	for (i = 0; i < custom_count; i++) {
-		if (CustomParticle_Tick(&custom_particles[i], delta)) {
-			Custom_RemoveAt(i); i--;
-		}
-	}
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Particles--------------------------------------------------------*
-*#########################################################################################################################*/
-void Particles_Render(float t) {
-	if (!terrain_count && !rain_count && !custom_count) return;
-
-	if (Gfx.LostContext) return;
-	if (!particles_VB)
-		particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
-
-	Gfx_SetAlphaTest(true);
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Terrain_Render(t);
-	Rain_Render(t);
-	Custom_Render(t);
-
-	Gfx_SetAlphaTest(false);
-}
-
-static void Particles_Tick(struct ScheduledTask* task) {
-	double delta = task->interval;
-	Terrain_Tick(delta);
-	Rain_Tick(delta);
-	Custom_Tick(delta);
 }
 
 void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
@@ -456,8 +355,8 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	/* gridOffset gives the centre of the cell on a grid */
 	#define CELL_CENTRE ((1.0f / GRID_SIZE) * 0.5f)
 
-	maxU2 = baseRec.U1 + maxU * uScale;
-	maxV2 = baseRec.V1 + maxV * vScale;
+	maxU2 = baseRec.u1 + maxU * uScale;
+	maxV2 = baseRec.v1 + maxV * vScale;
 	for (x = 0; x < GRID_SIZE; x++) {
 		for (y = 0; y < GRID_SIZE; y++) {
 			for (z = 0; z < GRID_SIZE; z++) {
@@ -476,12 +375,12 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				p->base.velocity.z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
 				rec = baseRec;
-				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
-				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
-				rec.U2 = rec.U1 + 4 * uScale;
-				rec.V2 = rec.V1 + 4 * vScale;
-				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
-				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
+				rec.u1 = baseRec.u1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
+				rec.v1 = baseRec.v1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
+				rec.u2 = rec.u1 + 4 * uScale;
+				rec.v2 = rec.v1 + 4 * vScale;
+				rec.u2 = min(rec.u2, maxU2) - 0.01f * uScale;
+				rec.v2 = min(rec.v2, maxV2) - 0.01f * vScale;
 		
 				Vec3_Add(&p->base.lastPos, &origin, &cell);
 				p->base.nextPos  = p->base.lastPos;
@@ -497,27 +396,102 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	}
 }
 
-void Particles_RainSnowEffect(float x, float y, float z) {
-	struct Particle* p;
-	int i, type;
 
-	for (i = 0; i < 2; i++) {
-		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
-		p = &rain_Particles[rain_count++];
+/*########################################################################################################################*
+*-------------------------------------------------------Custom particle---------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_NETWORKING
+struct CustomParticle {
+	struct Particle base;
+	int effectId;
+	float totalLifespan;
+};
 
-		p->velocity.x = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
-		p->velocity.z = Random_Float(&rnd) * 0.8f - 0.4f;
-		p->velocity.y = Random_Float(&rnd) + 0.4f;
+struct CustomParticleEffect Particles_CustomEffects[256];
+static struct CustomParticle custom_particles[PARTICLES_MAX];
+static int custom_count;
+static cc_uint8 collideFlags;
+#define EXPIRES_UPON_TOUCHING_GROUND (1 << 0)
+#define SOLID_COLLIDES  (1 << 1)
+#define LIQUID_COLLIDES (1 << 2)
+#define LEAF_COLLIDES   (1 << 3)
 
-		p->lastPos.x = x + Random_Float(&rnd); /* [0.0, 1.0] */
-		p->lastPos.y = y + Random_Float(&rnd) * 0.1f + 0.01f;
-		p->lastPos.z = z + Random_Float(&rnd);
+static cc_bool CustomParticle_CanPass(BlockID block) {
+	cc_uint8 draw, collide;
+	
+	draw = Blocks.Draw[block];
+	if (draw == DRAW_TRANSPARENT_THICK && !(collideFlags & LEAF_COLLIDES)) return true;
 
-		p->nextPos  = p->lastPos;
-		p->lifetime = 40.0f;
+	collide = Blocks.Collide[block];
+	if (collide == COLLIDE_SOLID  && (collideFlags & SOLID_COLLIDES))  return false;
+	if (collide == COLLIDE_LIQUID && (collideFlags & LIQUID_COLLIDES)) return false;
+	return true;
+}
 
-		type = Random_Next(&rnd, 30);
-		p->size = type >= 28 ? 2 : (type >= 25 ? 4 : 3);
+static cc_bool CustomParticle_Tick(struct CustomParticle* p, float delta) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
+	hitTerrain   = false;
+	collideFlags = e->collideFlags;
+
+	return PhysicsTick(&p->base, e->gravity, CustomParticle_CanPass, delta)
+		|| (hitTerrain && (e->collideFlags & EXPIRES_UPON_TOUCHING_GROUND));
+}
+
+static void CustomParticle_Render(struct CustomParticle* p, float t, struct VertexTextured* vertices) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
+	Vec3 pos;
+	Vec2 size;
+	PackedCol col;
+	TextureRec rec = e->rec;
+	int x, y, z;
+
+	float time_lived = p->totalLifespan - p->base.lifetime;
+	int curFrame = Math_Floor(e->frameCount * (time_lived / p->totalLifespan));
+	float shiftU = curFrame * (rec.u2 - rec.u1);
+
+	rec.u1 += shiftU;/* * 0.0078125f; */
+	rec.u2 += shiftU;/* * 0.0078125f; */
+
+	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	size.x = p->base.size; size.y = size.x;
+
+	x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
+	col = e->fullBright ? PACKEDCOL_WHITE : Lighting.Color(x, y, z);
+	col = PackedCol_Tint(col, e->tintCol);
+
+	Particle_DoRender(&size, &pos, &rec, col, vertices);
+}
+
+static void Custom_Render(float t) {
+	struct VertexTextured* data;
+	int i;
+	if (!custom_count) return;
+
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(particles_VB, 
+										VERTEX_FORMAT_TEXTURED, custom_count * 4);
+	for (i = 0; i < custom_count; i++) {
+		CustomParticle_Render(&custom_particles[i], t, data);
+		data += 4;
+	}
+
+	Gfx_BindTexture(particles_TexId);
+	Gfx_UnlockDynamicVb(particles_VB);
+	Gfx_DrawVb_IndexedTris(custom_count * 4);
+}
+
+static void Custom_RemoveAt(int i) {
+	for (; i < custom_count - 1; i++) {
+		custom_particles[i] = custom_particles[i + 1];
+	}
+	custom_count--;
+}
+
+static void Custom_Tick(float delta) {
+	int i;
+	for (i = 0; i < custom_count; i++) {
+		if (CustomParticle_Tick(&custom_particles[i], delta)) {
+			Custom_RemoveAt(i); i--;
+		}
 	}
 }
 
@@ -567,6 +541,40 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		collideFlags = e->collideFlags;
 		if (IntersectsBlock(&p->base, CustomParticle_CanPass)) custom_count--;
 	}
+}
+#else
+static int custom_count;
+
+static void Custom_Render(float t) { }
+static void Custom_Tick(float delta) { }
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Particles--------------------------------------------------------*
+*#########################################################################################################################*/
+void Particles_Render(float t) {
+	if (!terrain_count && !rain_count && !custom_count) return;
+
+	if (Gfx.LostContext) return;
+	if (!particles_VB)
+		particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
+
+	Gfx_SetAlphaTest(true);
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Terrain_Render(t);
+	Rain_Render(t);
+	Custom_Render(t);
+
+	Gfx_SetAlphaTest(false);
+}
+
+static void Particles_Tick(struct ScheduledTask* task) {
+	float delta = task->interval;
+	Terrain_Tick(delta);
+	Rain_Tick(delta);
+	Custom_Tick(delta);
 }
 
 

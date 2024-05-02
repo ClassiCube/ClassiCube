@@ -52,11 +52,10 @@ void Platform_Log(const char* msg, int len) {
 	sysTtyWrite(STDOUT_FILENO, "\n", 1,   &done);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+TimeMS DateTime_CurrentUTC(void) {
+	u64 sec, nanosec;
+	sysGetCurrentTime(&sec, &nanosec);
+	return sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -236,16 +235,13 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 static void ExecThread(void* param) {
 	((Thread_StartFunc)param)(); 
 }
-#define STACK_SIZE (128 * 1024)
 
-void* Thread_Create(Thread_StartFunc func) {
-	return Mem_Alloc(1, sizeof(sys_ppu_thread_t), "thread");
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)handle;
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	sys_ppu_thread_t* thread = (sys_ppu_thread_t*)Mem_Alloc(1, sizeof(sys_ppu_thread_t), "thread");
+	*handle = thread;
+	
 	int res = sysThreadCreate(thread, ExecThread, (void*)func,
-			0, STACK_SIZE, THREAD_JOINABLE, "CC thread");
+			0, stackSize, THREAD_JOINABLE, name);
 	if (res) Logger_Abort2(res, "Creating thread");
 }
 
@@ -477,6 +473,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	String_AppendUtf8(dst, chars, len);
 	return true;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

@@ -20,9 +20,9 @@ extern struct IGameComponent Textures_Component;
 #define ATLAS2D_SHIFT 4
 /* Maximum supported number of rows in the atlas. */
 #ifdef EXTENDED_TEXTURES
-#define ATLAS2D_MAX_ROWS_COUNT 32
+	#define ATLAS2D_MAX_ROWS_COUNT 32
 #else
-#define ATLAS2D_MAX_ROWS_COUNT 16
+	#define ATLAS2D_MAX_ROWS_COUNT 16
 #endif
 /* Maximum possible number of 1D terrain atlases. (worst case, each 1D atlas only has 1 tile) */
 #define ATLAS1D_MAX_ATLASES (ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT)

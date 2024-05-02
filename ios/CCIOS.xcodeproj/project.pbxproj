@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A4D0C642BDD168800E1695D /* TouchUI.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A4D0C632BDD168800E1695D /* TouchUI.c */; };
+		9A57ECEE2BCD1408006A89F0 /* AudioBackend.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECED2BCD1408006A89F0 /* AudioBackend.c */; };
+		9A57ECF02BCD1413006A89F0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A57ECEF2BCD1412006A89F0 /* main.c */; };
 		9A62ADF5286D906F00E5E3DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A62ADF4286D906F00E5E3DE /* Assets.xcassets */; };
 		9A7401D92B737D5C0040E575 /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401D82B737D5B0040E575 /* Commands.c */; };
 		9A7401DB2B7384060040E575 /* SSL.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A7401DA2B7384060040E575 /* SSL.c */; };
@@ -39,7 +42,6 @@
 		9A89D55627F802F600FF3F80 /* EnvRenderer.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47A27F802F500FF3F80 /* EnvRenderer.c */; };
 		9A89D55827F802F600FF3F80 /* Graphics_GL1.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47E27F802F500FF3F80 /* Graphics_GL1.c */; };
 		9A89D55927F802F600FF3F80 /* interop_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D47F27F802F600FF3F80 /* interop_ios.m */; };
-		9A89D55A27F802F600FF3F80 /* Program.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48127F802F600FF3F80 /* Program.c */; };
 		9A89D55B27F802F600FF3F80 /* _type1.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48227F802F600FF3F80 /* _type1.c */; };
 		9A89D55C27F802F600FF3F80 /* Animations.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48527F802F600FF3F80 /* Animations.c */; };
 		9A89D55D27F802F600FF3F80 /* _psmodule.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A89D48627F802F600FF3F80 /* _psmodule.c */; };
@@ -91,6 +93,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9A4D0C632BDD168800E1695D /* TouchUI.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TouchUI.c; sourceTree = "<group>"; };
+		9A57ECED2BCD1408006A89F0 /* AudioBackend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AudioBackend.c; sourceTree = "<group>"; };
+		9A57ECEF2BCD1412006A89F0 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		9A62ADF4286D906F00E5E3DE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ClassiCube/Assets.xcassets; sourceTree = "<group>"; };
 		9A7401D82B737D5B0040E575 /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Commands.c; sourceTree = "<group>"; };
 		9A7401DA2B7384060040E575 /* SSL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SSL.c; sourceTree = "<group>"; };
@@ -125,7 +130,6 @@
 		9A89D47A27F802F500FF3F80 /* EnvRenderer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EnvRenderer.c; sourceTree = "<group>"; };
 		9A89D47E27F802F500FF3F80 /* Graphics_GL1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Graphics_GL1.c; sourceTree = "<group>"; };
 		9A89D47F27F802F600FF3F80 /* interop_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = interop_ios.m; sourceTree = "<group>"; };
-		9A89D48127F802F600FF3F80 /* Program.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Program.c; sourceTree = "<group>"; };
 		9A89D48227F802F600FF3F80 /* _type1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _type1.c; sourceTree = "<group>"; };
 		9A89D48527F802F600FF3F80 /* Animations.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Animations.c; sourceTree = "<group>"; };
 		9A89D48627F802F600FF3F80 /* _psmodule.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _psmodule.c; sourceTree = "<group>"; };
@@ -208,6 +212,9 @@
 		9A89D37727F802F500FF3F80 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9A4D0C632BDD168800E1695D /* TouchUI.c */,
+				9A57ECEF2BCD1412006A89F0 /* main.c */,
+				9A57ECED2BCD1408006A89F0 /* AudioBackend.c */,
 				9A7401DA2B7384060040E575 /* SSL.c */,
 				9A7401D82B737D5B0040E575 /* Commands.c */,
 				9AC543412AE264B90086C85F /* EntityRenderers.c */,
@@ -272,7 +279,6 @@
 				9A89D4C927F802F600FF3F80 /* SelOutlineRenderer.c */,
 				9A89D4AA27F802F600FF3F80 /* Picking.c */,
 				9A89D39227F802F500FF3F80 /* Platform_Posix.c */,
-				9A89D48127F802F600FF3F80 /* Program.c */,
 				9A89D4B327F802F600FF3F80 /* Protocol.c */,
 				9A89D4BE27F802F600FF3F80 /* Resources.c */,
 				9A89D4D127F802F600FF3F80 /* Screens.c */,
@@ -402,6 +408,7 @@
 				9A89D55F27F802F600FF3F80 /* _sfnt.c in Sources */,
 				9A89D55527F802F600FF3F80 /* HeldBlockRenderer.c in Sources */,
 				9A89D4FD27F802F600FF3F80 /* ExtMath.c in Sources */,
+				9A57ECEE2BCD1408006A89F0 /* AudioBackend.c in Sources */,
 				9A89D56427F802F600FF3F80 /* String.c in Sources */,
 				9A89D57D27F802F600FF3F80 /* _smooth.c in Sources */,
 				9AC543402AE264AC0086C85F /* GameVersion.c in Sources */,
@@ -416,7 +423,6 @@
 				9A89D55827F802F600FF3F80 /* Graphics_GL1.c in Sources */,
 				9A89D59427F802F600FF3F80 /* Widgets.c in Sources */,
 				9A89D55927F802F600FF3F80 /* interop_ios.m in Sources */,
-				9A89D55A27F802F600FF3F80 /* Program.c in Sources */,
 				9A7401DB2B7384060040E575 /* SSL.c in Sources */,
 				9A89D4F527F802F600FF3F80 /* _ftsynth.c in Sources */,
 				9A89D55D27F802F600FF3F80 /* _psmodule.c in Sources */,
@@ -426,9 +432,11 @@
 				9A89D56227F802F600FF3F80 /* _ftbase.c in Sources */,
 				9A89D56B27F802F600FF3F80 /* Server.c in Sources */,
 				9A89D50027F802F600FF3F80 /* _truetype.c in Sources */,
+				9A4D0C642BDD168800E1695D /* TouchUI.c in Sources */,
 				9AC5433E2AE2649F0086C85F /* SystemFonts.c in Sources */,
 				9A89D57F27F802F600FF3F80 /* LWeb.c in Sources */,
 				9A89D56627F802F600FF3F80 /* Drawer2D.c in Sources */,
+				9A57ECF02BCD1413006A89F0 /* main.c in Sources */,
 				9A89D57427F802F600FF3F80 /* MapRenderer.c in Sources */,
 				9A89D57627F802F600FF3F80 /* _pshinter.c in Sources */,
 				9A89D56A27F802F600FF3F80 /* Physics.c in Sources */,

@@ -48,11 +48,8 @@ void Platform_Log(const char* msg, int len) {
 	write(STDERR_FILENO, "\n",   1);
 }
 
-#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-TimeMS DateTime_CurrentUTC_MS(void) {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	return UnixTime_TotalMS(cur);
+TimeMS DateTime_CurrentUTC(void) {
+	return 0;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
@@ -173,12 +170,8 @@ void Thread_Sleep(cc_uint32 milliseconds) {
 	wait_ms(milliseconds); 
 }
 
-void* Thread_Create(Thread_StartFunc func) {
-	return NULL;
-}
-
-void Thread_Start2(void* handle, Thread_StartFunc func) {
-	// TODO: actual multithreading ???
+void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
+	*handle = NULL;
 }
 
 void Thread_Detach(void* handle) {
@@ -267,13 +260,6 @@ void Platform_Init(void) {
 	DisableFpuExceptions();
 	
 	Platform_ReadonlyFilesystem = true;
-	// TODO: Redesign Drawer2D to better handle this
-	Options_SetBool(OPT_USE_CHAT_FONT, true);
-	
-    //console_init();
-    //console_set_render_mode(RENDER_AUTOMATIC);
-    //console_set_debug(true);
-	
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
 	rtc_init();
@@ -295,6 +281,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	String_AppendUtf8(dst, chars, len);
 	return true;
+}
+
+cc_bool Process_OpenSupported = false;
+cc_result Process_StartOpen(const cc_string* args) {
+	return ERR_NOT_SUPPORTED;
 }
 
 

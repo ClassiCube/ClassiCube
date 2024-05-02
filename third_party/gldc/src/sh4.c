@@ -3,7 +3,7 @@
 
 #define CLIP_DEBUG 0
 
-#define PVR_VERTEX_BUF_SIZE 2560 * 256
+#define PVR_VERTEX_BUF_SIZE 32 * 30000
 
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
@@ -45,8 +45,8 @@ GL_FORCE_INLINE void _glPerspectiveDivideVertex(Vertex* vertex) {
     const float f = _glFastInvert(vertex->w);
 
     /* Convert to NDC and apply viewport */
-    vertex->xyz[0] = (vertex->xyz[0] * f *  320) + 320;
-    vertex->xyz[1] = (vertex->xyz[1] * f * -240) + 240;
+    vertex->xyz[0] = (vertex->xyz[0] * f * VIEWPORT.hwidth)  + VIEWPORT.x_plus_hwidth;
+    vertex->xyz[1] = (vertex->xyz[1] * f * VIEWPORT.hheight) + VIEWPORT.y_plus_hheight;
 
     /* Orthographic projections need to use invZ otherwise we lose
     the depth information. As w == 1, and clip-space range is -w to +w
@@ -88,7 +88,6 @@ static inline void _glPushHeaderOrVertex(Vertex* v)  {
 }
 
 static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, Vertex* vout) {
-    const static float o = 0.003921569f;  // 1 / 255
     const float d0 = v1->w + v1->xyz[2];
     const float d1 = v2->w + v2->xyz[2];
     const float t = (fabs(d0) * MATH_fsrra((d1 - d0) * (d1 - d0))) + 0.000001f;
@@ -103,13 +102,10 @@ static inline void _glClipEdge(const Vertex* const v1, const Vertex* const v2, V
 
     vout->w = invt * v1->w + t * v2->w;
 
-    const float m = 255 * t;
-    const float n = 255 - m;
-
-    vout->bgra[0] = (v1->bgra[0] * n + v2->bgra[0] * m) * o;
-    vout->bgra[1] = (v1->bgra[1] * n + v2->bgra[1] * m) * o;
-    vout->bgra[2] = (v1->bgra[2] * n + v2->bgra[2] * m) * o;
-    vout->bgra[3] = (v1->bgra[3] * n + v2->bgra[3] * m) * o;
+    vout->bgra[0] = invt * v1->bgra[0] + t * v2->bgra[0];
+    vout->bgra[1] = invt * v1->bgra[1] + t * v2->bgra[1];
+    vout->bgra[2] = invt * v1->bgra[2] + t * v2->bgra[2];
+    vout->bgra[3] = invt * v1->bgra[3] + t * v2->bgra[3];
 }
 
 #define SPAN_SORT_CFG 0x005F8030
@@ -165,9 +161,6 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
             two new vertices: 1-2, and 2-3. */
         Vertex* a = &scratch[0];
         Vertex* b = &scratch[1];
-        Vertex* c = &scratch[2];
-
-        memcpy_vertex(c, v1);
 
         _glClipEdge(v0, v1, a);
         a->flags = GPU_CMD_VERTEX;
@@ -178,8 +171,8 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
         _glPerspectiveDivideVertex(a);
         _glPushHeaderOrVertex(a);
 
-        _glPerspectiveDivideVertex(c);
-        _glPushHeaderOrVertex(c);
+        _glPerspectiveDivideVertex(v1);
+        _glPushHeaderOrVertex(v1);
 
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
@@ -189,9 +182,6 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
     {
         Vertex* a = &scratch[0];
         Vertex* b = &scratch[1];
-        Vertex* c = &scratch[2];
-
-        memcpy_vertex(c, v1);
 
         _glClipEdge(v2, v0, b);
         b->flags = GPU_CMD_VERTEX;
@@ -202,14 +192,14 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
         _glClipEdge(v1, v2, a);
         a->flags = GPU_CMD_VERTEX_EOL;
 
-        _glPerspectiveDivideVertex(c);
-        _glPushHeaderOrVertex(c);
+        _glPerspectiveDivideVertex(v1);
+        _glPushHeaderOrVertex(v1);
 
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
 
         _glPerspectiveDivideVertex(a);
-        _glPushHeaderOrVertex(c);
+        _glPushHeaderOrVertex(v1);
         _glPushHeaderOrVertex(a);
     }
     break;
@@ -217,9 +207,6 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
     {
         Vertex* a = &scratch[0];
         Vertex* b = &scratch[1];
-        Vertex* c = &scratch[2];
-
-        memcpy_vertex(c, v2);
 
         _glClipEdge(v2, v0, a);
         a->flags = GPU_CMD_VERTEX;
@@ -233,18 +220,15 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
 
-        _glPerspectiveDivideVertex(c);
-        _glPushHeaderOrVertex(c);
+        _glPerspectiveDivideVertex(v2);
+        _glPushHeaderOrVertex(v2);
     }
     break;
     case V0_VIS | V2_VIS: // First and third vertex were visible
     {
         Vertex* a = &scratch[0];
         Vertex* b = &scratch[1];
-        Vertex* c = &scratch[2];
-
-        memcpy_vertex(c, v2);
-        c->flags = GPU_CMD_VERTEX;
+		v2->flags = GPU_CMD_VERTEX;
 
         _glClipEdge(v0, v1, a);
         a->flags = GPU_CMD_VERTEX;
@@ -258,22 +242,19 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
         _glPerspectiveDivideVertex(a);
         _glPushHeaderOrVertex(a);
 
-        _glPerspectiveDivideVertex(c);
-        _glPushHeaderOrVertex(c);
+        _glPerspectiveDivideVertex(v2);
+        _glPushHeaderOrVertex(v2);
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
 
-        c->flags = GPU_CMD_VERTEX_EOL;
-        _glPushHeaderOrVertex(c);
+        v2->flags = GPU_CMD_VERTEX_EOL;
+        _glPushHeaderOrVertex(v2);
     }
     break;
     case V1_VIS | V2_VIS: // Second and third vertex were visible
     {
         Vertex* a = &scratch[0];
         Vertex* b = &scratch[1];
-        Vertex* c = &scratch[2];
-
-        memcpy_vertex(c, v1);
 
         _glClipEdge(v0, v1, a);
         a->flags = GPU_CMD_VERTEX;
@@ -284,12 +265,12 @@ static void SubmitTriangle(Vertex* v0, Vertex* v1, Vertex* v2, uint8_t visible_m
         _glPerspectiveDivideVertex(a);
         _glPushHeaderOrVertex(a);
 
-        _glPerspectiveDivideVertex(c);
-        _glPushHeaderOrVertex(c);
+        _glPerspectiveDivideVertex(v1);
+        _glPushHeaderOrVertex(v1);
 
         _glPerspectiveDivideVertex(b);
         _glPushHeaderOrVertex(b);
-        _glPushHeaderOrVertex(c);
+        _glPushHeaderOrVertex(v1);
 
         _glPerspectiveDivideVertex(v2);
         _glPushHeaderOrVertex(v2);

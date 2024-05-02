@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_SDL
+#if defined CC_BUILD_SDL2
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
@@ -7,9 +7,36 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include <SDL2/SDL.h>
-static SDL_Window* win_handle;
 
-#error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+static SDL_Window* win_handle;
+#warning "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+
+#ifdef CC_BUILD_OS2
+#define INCL_PM
+#include <os2.h>
+// Internal OS/2 driver data
+typedef struct _WINDATA {
+    SDL_Window     *window;
+    void					 *pOutput; /* Video output routines */
+    HWND            hwndFrame;
+    HWND            hwnd;
+    PFNWP           fnUserWndProc;
+    PFNWP           fnWndFrameProc;
+
+    void         		*pVOData; /* Video output data */
+
+    HRGN            hrgnShape;
+    HPOINTER        hptrIcon;
+    RECTL           rectlBeforeFS;
+
+    LONG            lSkipWMSize;
+    LONG            lSkipWMMove;
+    LONG            lSkipWMMouseMove;
+    LONG            lSkipWMVRNEnabled;
+    LONG            lSkipWMAdjustFramePos;
+} WINDATA;
+#endif
+
 
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
@@ -41,10 +68,7 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height, int flags) {
-	int x = Display_CentreX(width);
-	int y = Display_CentreY(height);
-
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, 
+	win_handle = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 
 					flags | SDL_WINDOW_RESIZABLE);
 	if (!win_handle) Window_SDLFail("creating window");
 
@@ -54,7 +78,11 @@ static void DoCreateWindow(int width, int height, int flags) {
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
+#if !defined CC_BUILD_SOFTGPU
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
+#else
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
+#endif
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
@@ -230,7 +258,7 @@ static void OnWindowEvent(const SDL_Event* e) {
 		}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {
@@ -267,6 +295,8 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
+void Window_ProcessGamepads(float delta) { }
+
 static void Cursor_GetRawPos(int* x, int* y) {
 	SDL_GetMouseState(x, y);
 }
@@ -283,11 +313,53 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+#if defined CC_BUILD_OS2
+	FILEDLG fileDialog;
+	HWND hDialog;
+
+	memset(&fileDialog, 0, sizeof(FILEDLG));
+	fileDialog.cbSize = sizeof(FILEDLG);
+	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_OPEN_DIALOG;
+	fileDialog.pszTitle = args->description;
+	fileDialog.pszOKButton = NULL;
+	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+
+	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	hDialog = WinFileDlg(HWND_DESKTOP, 0, &fileDialog);
+	if (fileDialog.lReturn == DID_OK) {
+		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH); 
+		args->Callback(&temp);
+	}
+	
+	return 0;
+#else
 	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+#if defined CC_BUILD_OS2
+	FILEDLG fileDialog;
+	HWND hDialog;
+
+	memset(&fileDialog, 0, sizeof(FILEDLG));
+	fileDialog.cbSize = sizeof(FILEDLG);
+	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_SAVEAS_DIALOG;
+	fileDialog.pszTitle = args->titles;
+	fileDialog.pszOKButton = NULL;
+	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+
+	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	hDialog = WinFileDlg(HWND_DESKTOP, 0, &fileDialog);
+	if (fileDialog.lReturn == DID_OK) {
+		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
+		args->Callback(&temp);
+	}
+	
+	return 0;
+#else
 	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 static SDL_Surface* win_surface;
@@ -319,8 +391,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	SDL_Rect rect;
-	rect.x = r.x; rect.w = r.Width;
-	rect.y = r.y; rect.h = r.Height;
+	rect.x = r.x; rect.w = r.width;
+	rect.y = r.y; rect.h = r.height;
 
 	if (blit_surface) SDL_BlitSurface(blit_surface, &rect, win_surface, &rect);
 	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
@@ -335,9 +407,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
@@ -370,6 +444,9 @@ void GLContext_Create(void) {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
+#ifdef CC_BUILD_GLES
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif
 
 	win_ctx = SDL_GL_CreateContext(win_handle);
 	if (!win_ctx) Window_SDLFail("creating OpenGL context");
@@ -395,5 +472,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	SDL_GL_SetSwapInterval(vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
+
 #endif
 #endif

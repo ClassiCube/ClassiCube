@@ -3,9 +3,11 @@ Although most of the code is platform-independent, some per-platform functionali
 By default I try to automatically define appropriate backends for your system in `Core.h`. Define ```CC_BUILD_MANUAL``` to disable this.
 
 ## Before you start
-* IEEE floating support is required.
+* IEEE floating support is required. (Can be emulated in software, but will affect performance)
 * int must be 32-bits. 32-bit addressing (or more) is required.
 * Support for 8/16/32/64 integer types is required. (your compiler must support 64-bit arithmetic)
+* At least around 2 MB of RAM is required at a minimum
+* At least 128 kb for main thread stack size
 
 In other words, the codebase can theroetically be ported to any modern-ish hardware, but not stuff like a UNIVAC machine, the SuperFX chip on the SNES, or an 8-bit microcontroller.
 

@@ -67,10 +67,6 @@ extern struct _InputState {
 	cc_bool RawMode;
 	/* Sources available for input (Mouse/Keyboard, Gamepad) */
 	cc_uint8 Sources;
-	/* Whether a gamepad joystick is being used to control player movement */
-	cc_bool JoystickMovement;
-	/* Angle of the gamepad joystick being used to control player movement */
-	float JoystickAngle;
 } Input;
 
 #define INPUT_SOURCE_NORMAL  (1 << 0)
@@ -102,14 +98,15 @@ void Input_Clear(void);
 #define Input_IsEscapeButton(btn) ((btn) == CCKEY_ESCAPE || (btn) == CCPAD_SELECT)
 
 #if defined CC_BUILD_HAIKU
-/* Haiku uses ALT instead of CTRL for clipboard and stuff */
-#define Input_IsActionPressed() Input_IsAltPressed()
+	/* Haiku uses ALT instead of CTRL for clipboard and stuff */
+	#define Input_IsActionPressed() Input_IsAltPressed()
 #elif defined CC_BUILD_DARWIN
-/* macOS uses CMD instead of CTRL for clipboard and stuff */
-#define Input_IsActionPressed() Input_IsWinPressed()
+	/* macOS uses CMD instead of CTRL for clipboard and stuff */
+	#define Input_IsActionPressed() Input_IsWinPressed()
 #else
-#define Input_IsActionPressed() Input_IsCtrlPressed()
+	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
+
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
@@ -184,6 +181,24 @@ CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
 void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
 
+
+/* Gamepad axes. Default behaviour is: */
+/*  - left axis:  player movement  */
+/*  - right axis: camera movement */
+enum PAD_AXIS         { PAD_AXIS_LEFT, PAD_AXIS_RIGHT };
+enum AXIS_SENSITIVITY { AXIS_SENSI_LOWER, AXIS_SENSI_LOW, AXIS_SENSI_NORMAL, AXIS_SENSI_HIGH, AXIS_SENSI_HIGHER };
+enum AXIS_BEHAVIOUR   { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
+extern int Gamepad_AxisBehaviour[2];
+extern int Gamepad_AxisSensitivity[2];
+
+/* Sets value of the given gamepad button */
+void Gamepad_SetButton(int port, int btn, int pressed);
+/* Sets value of the given axis */
+void Gamepad_SetAxis(int port, int axis, float x, float y, float delta);
+void Gamepad_Tick(float delta);
+#define INPUT_MAX_GAMEPADS 4
+
+
 /* whether to leave text input open for user to enter further input */
 #define HOTKEY_FLAG_STAYS_OPEN   0x01
 /* Whether the hotkey was auto defined (e.g. by server) */
@@ -219,6 +234,7 @@ void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Adds the given hotkey from options. */
 void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text);
 
+
 cc_bool InputHandler_SetFOV(int fov);
 cc_bool Input_HandleMouseWheel(float delta);
 void InputHandler_Tick(void);
@@ -226,20 +242,4 @@ void InputHandler_OnScreensChanged(void);
 void InputHandler_DeleteBlock(void);
 void InputHandler_PlaceBlock(void);
 void InputHandler_PickBlock(void);
-
-/* Enumeration of on-screen buttons for touch GUI */
-#define ONSCREEN_BTN_CHAT      (1 << 0)
-#define ONSCREEN_BTN_LIST      (1 << 1)
-#define ONSCREEN_BTN_SPAWN     (1 << 2)
-#define ONSCREEN_BTN_SETSPAWN  (1 << 3)
-#define ONSCREEN_BTN_FLY       (1 << 4)
-#define ONSCREEN_BTN_NOCLIP    (1 << 5)
-#define ONSCREEN_BTN_SPEED     (1 << 6)
-#define ONSCREEN_BTN_HALFSPEED (1 << 7)
-#define ONSCREEN_BTN_CAMERA    (1 << 8)
-#define ONSCREEN_BTN_DELETE    (1 << 9)
-#define ONSCREEN_BTN_PICK      (1 << 10)
-#define ONSCREEN_BTN_PLACE     (1 << 11)
-#define ONSCREEN_BTN_SWITCH    (1 << 12)
-#define ONSCREEN_MAX_BTNS 13
 #endif

@@ -201,7 +201,7 @@ static void D3D11_DoMipmaps(ID3D11Resource* texture, int x, int y, struct Bitmap
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
+static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
 	ID3D11Texture2D* tex = NULL;
 	ID3D11ShaderResourceView* view = NULL;
 	HRESULT hr;
@@ -218,7 +218,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem          = bmp->scan0;
-	data.SysMemPitch      = bmp->width * 4;
+	data.SysMemPitch      = rowWidth * 4;
 	data.SysMemSlicePitch = 0;
 	D3D11_SUBRESOURCE_DATA* src = &data;
 
@@ -245,7 +245,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, cc_uint8 flags, cc_boo
 	hr = ID3D11Device_CreateShaderResourceView(device, tex, NULL, &view);
 	if (hr) Logger_Abort2(hr, "Failed to create view");
 
-	if (mipmaps) Gfx_UpdateTexturePart(view, 0, 0, bmp, mipmaps);
+	if (mipmaps) Gfx_UpdateTexture(view, 0, 0, bmp, rowWidth, mipmaps);
 	return view;
 }
 
@@ -270,10 +270,6 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	ID3D11Resource_Release(res);
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
-}
-
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	ID3D11ShaderResourceView* view = (ID3D11ShaderResourceView*)(*texId);
 	ID3D11Resource* res = NULL;
@@ -289,8 +285,6 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	}
 	*texId = NULL;
 }
-
-void Gfx_SetTexturing(cc_bool enabled) { }
 
 
 /*########################################################################################################################*
@@ -446,7 +440,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row4.z = zNear / (zNear - zFar);
 }
 
-static double Cotangent(double x) { return Math_Cos(x) / Math_Sin(x); }
+static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	// Deliberately swap zNear/zFar in projection matrix calculation to produce
 	//  a projection matrix that results in a reversed depth buffer
@@ -456,7 +450,7 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 
 	// Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
 	// NOTE: This calculation is shared with Direct3D 9 backend
-	float c = (float)Cotangent(0.5f * fov);
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
@@ -652,12 +646,12 @@ static void RS_CreateRasterState(void) {
 	ID3D11Device_CreateRasterizerState(device, &desc, &rs_states[1]);
 }
 
-static void RS_UpdateViewport(void) {
+void Gfx_SetViewport(int x, int y, int w, int h) {
 	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width    = Window_Main.Width;
-	viewport.Height   = Window_Main.Height;
+	viewport.TopLeftX = x;
+	viewport.TopLeftY = y;
+	viewport.Width    = w;
+	viewport.Height   = h;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	ID3D11DeviceContext_RSSetViewports(context, 1, &viewport);
@@ -676,7 +670,7 @@ static void RS_FreeRasterStates(void) {
 
 static void RS_Init(void) {
 	RS_CreateRasterState();
-	RS_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	RS_UpdateRasterState();
 }
 
@@ -899,9 +893,13 @@ static float gfx_clearColor[4];
 static cc_bool gfx_alphaBlending, gfx_colorEnabled = true;
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
-static void OM_Clear(void) {
-	ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
-	ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
+static void OM_Clear(GfxBuffers buffers) {
+	if (buffers & GFX_BUFFER_COLOR) {
+		ID3D11DeviceContext_ClearRenderTargetView(context, backbuffer, gfx_clearColor);
+	}
+	if (buffers & GFX_BUFFER_DEPTH) {
+		ID3D11DeviceContext_ClearDepthStencilView(context, depthbufferView, D3D11_CLEAR_DEPTH, 0.0f, 0);
+	}
 }
 
 static void OM_UpdateTarget(void) {
@@ -1015,7 +1013,7 @@ static void OM_Free(void) {
 	OM_FreeBlendStates();
 }
 
-void Gfx_ClearCol(PackedCol color) {
+void Gfx_ClearColor(PackedCol color) {
 	gfx_clearColor[0] = PackedCol_R(color) / 255.0f;
 	gfx_clearColor[1] = PackedCol_G(color) / 255.0f;
 	gfx_clearColor[2] = PackedCol_B(color) / 255.0f;
@@ -1037,27 +1035,24 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	OM_UpdateBlendState();
 }
 
-void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
+static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	gfx_colorEnabled = r;
 	OM_UpdateBlendState();
+	// TODO all channels
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
-	Gfx_SetColWriteMask(enabled, enabled, enabled, enabled);
+	SetColorWrite(enabled & gfx_colorMask[0], enabled & gfx_colorMask[1], 
+				  enabled & gfx_colorMask[2], enabled & gfx_colorMask[3]);
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-static BitmapCol* D3D11_GetRow(struct Bitmap* bmp, int y) {
-	// You were expecting a BitmapCol*, but it was me, D3D11_MAPPED_SUBRESOURCE*!
-	//  This is necessary because the stride of the mapped backbuffer often doesn't equal width of the bitmap
-	//    e.g. with backbuffer width of 854, stride is 3456 bytes instead of expected 3416 (854*4)
-	//  Therefore have to calculate row address manually instead of using Bitmap_GetRow
-	D3D11_MAPPED_SUBRESOURCE* buffer = (D3D11_MAPPED_SUBRESOURCE*)bmp->scan0;
-
+static BitmapCol* D3D11_GetRow(struct Bitmap* bmp, int y, void* ctx) {
+	D3D11_MAPPED_SUBRESOURCE* buffer = (D3D11_MAPPED_SUBRESOURCE*)ctx;
 	char* row = (char*)buffer->pData + y * buffer->RowPitch;
 	return (BitmapCol*)row;
 }
@@ -1090,8 +1085,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	hr = ID3D11DeviceContext_Map(context, tmp, 0, D3D11_MAP_READ, 0, &buffer);
 	if (hr) goto finished;
 	{
-		Bitmap_Init(bmp, desc.Width, desc.Height, (BitmapCol*)&buffer);
-		hr = Png_Encode(&bmp, output, D3D11_GetRow, false);
+		Bitmap_Init(bmp, desc.Width, desc.Height, NULL);
+		hr = Png_Encode(&bmp, output, D3D11_GetRow, false, &buffer);
 	}
 	ID3D11DeviceContext_Unmap(context, tmp, 0);
 
@@ -1106,7 +1101,10 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_vsync      = vsync;
 }
 void Gfx_BeginFrame(void) { OM_UpdateTarget(); }
-void Gfx_Clear(void)      { OM_Clear(); }
+
+void Gfx_ClearBuffers(GfxBuffers buffers) {
+	OM_Clear(buffers); 
+}
 
 void Gfx_EndFrame(void) {
 	// https://docs.microsoft.com/en-us/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present
@@ -1175,7 +1173,7 @@ void Gfx_OnWindowResize(void) {
 	if (hr) Logger_Abort2(hr, "Failed to resize swapchain");
 
 	OM_InitTargets();
-	RS_UpdateViewport();
+	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
 static void InitPipeline(void) {

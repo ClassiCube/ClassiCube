@@ -48,19 +48,19 @@ static int maxChunkUpdates;
 static int chunksCount;
 
 static void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
-	chunk->CentreX = x + HALF_CHUNK_SIZE; chunk->CentreY = y + HALF_CHUNK_SIZE; 
-	chunk->CentreZ = z + HALF_CHUNK_SIZE;
+	chunk->centreX = x + HALF_CHUNK_SIZE; chunk->centreY = y + HALF_CHUNK_SIZE; 
+	chunk->centreZ = z + HALF_CHUNK_SIZE;
 #ifndef CC_BUILD_GL11
-	chunk->Vb = 0;
+	chunk->vb = 0;
 #endif
 
-	chunk->Visible = true;        chunk->Empty = false;
-	chunk->PendingDelete = false; chunk->AllAir = false;
-	chunk->DrawXMin = false; chunk->DrawXMax = false; chunk->DrawZMin = false;
-	chunk->DrawZMax = false; chunk->DrawYMin = false; chunk->DrawYMax = false;
+	chunk->visible = true;        chunk->empty = false;
+	chunk->pendingDelete = false; chunk->allAir = false;
+	chunk->drawXMin = false; chunk->drawXMax = false; chunk->drawZMin = false;
+	chunk->drawZMax = false; chunk->drawYMin = false; chunk->drawYMax = false;
 
-	chunk->NormalParts      = NULL;
-	chunk->TranslucentParts = NULL;
+	chunk->normalParts      = NULL;
+	chunk->translucentParts = NULL;
 }
 
 /* Index of maximum used 1D atlas + 1 */
@@ -78,7 +78,7 @@ CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Map rendering-----------------------------------------------------*
 *#########################################################################################################################*/
-static void CheckWeather(double delta) {
+static void CheckWeather(float delta) {
 	IVec3 pos;
 	BlockID block;
 	cc_bool outside;
@@ -96,11 +96,11 @@ static void CheckWeather(double delta) {
 }
 
 #ifdef CC_BUILD_GL11
-#define DrawFace(face, ign)    Gfx_BindVb(part.Vbs[face]); Gfx_DrawIndexedTris_T2fC4b(0, 0);
+#define DrawFace(face, ign)    Gfx_BindVb(part.vbs[face]); Gfx_DrawIndexedTris_T2fC4b(0, 0);
 #define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
 #else
-#define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.Counts[face], offset);
-#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedTris_T2fC4b(part.Counts[f1] + part.Counts[f2], offset);
+#define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.counts[face], offset);
+#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedTris_T2fC4b(part.counts[f1] + part.counts[f2], offset);
 #endif
 
 #define DrawNormalFaces(minFace, maxFace) \
@@ -108,13 +108,13 @@ if (drawMin && drawMax) { \
 	Gfx_SetFaceCulling(true); \
 	DrawFaces(minFace, maxFace, offset); \
 	Gfx_SetFaceCulling(false); \
-	Game_Vertices += (part.Counts[minFace] + part.Counts[maxFace]); \
+	Game_Vertices += (part.counts[minFace] + part.counts[maxFace]); \
 } else if (drawMin) { \
 	DrawFace(minFace, offset); \
-	Game_Vertices += part.Counts[minFace]; \
+	Game_Vertices += part.counts[minFace]; \
 } else if (drawMax) { \
-	DrawFace(maxFace, offset + part.Counts[minFace]); \
-	Game_Vertices += part.Counts[maxFace]; \
+	DrawFace(maxFace, offset + part.counts[minFace]); \
+	Game_Vertices += part.counts[maxFace]; \
 }
 
 static void RenderNormalBatch(int batch) {
@@ -126,64 +126,64 @@ static void RenderNormalBatch(int batch) {
 
 	for (i = 0; i < renderChunksCount; i++) {
 		info = renderChunks[i];
-		if (!info->NormalParts) continue;
+		if (!info->normalParts) continue;
 
-		part = info->NormalParts[batchOffset];
-		if (part.Offset < 0) continue;
+		part = info->normalParts[batchOffset];
+		if (part.offset < 0) continue;
 		hasNormParts[batch] = true;
 
 #ifndef CC_BUILD_GL11
-		Gfx_BindVb_Textured(info->Vb);
+		Gfx_BindVb_Textured(info->vb);
 #endif
 
-		offset  = part.Offset + part.SpriteCount;
-		drawMin = info->DrawXMin && part.Counts[FACE_XMIN];
-		drawMax = info->DrawXMax && part.Counts[FACE_XMAX];
+		offset  = part.offset + part.spriteCount;
+		drawMin = info->drawXMin && part.counts[FACE_XMIN];
+		drawMax = info->drawXMax && part.counts[FACE_XMAX];
 		DrawNormalFaces(FACE_XMIN, FACE_XMAX);
 
-		offset  += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
-		drawMin = info->DrawZMin && part.Counts[FACE_ZMIN];
-		drawMax = info->DrawZMax && part.Counts[FACE_ZMAX];
+		offset  += part.counts[FACE_XMIN] + part.counts[FACE_XMAX];
+		drawMin = info->drawZMin && part.counts[FACE_ZMIN];
+		drawMax = info->drawZMax && part.counts[FACE_ZMAX];
 		DrawNormalFaces(FACE_ZMIN, FACE_ZMAX);
 
-		offset  += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
-		drawMin = info->DrawYMin && part.Counts[FACE_YMIN];
-		drawMax = info->DrawYMax && part.Counts[FACE_YMAX];
+		offset  += part.counts[FACE_ZMIN] + part.counts[FACE_ZMAX];
+		drawMin = info->drawYMin && part.counts[FACE_YMIN];
+		drawMax = info->drawYMax && part.counts[FACE_YMAX];
 		DrawNormalFaces(FACE_YMIN, FACE_YMAX);
 
-		if (!part.SpriteCount) continue;
-		offset = part.Offset;
-		count  = part.SpriteCount >> 2; /* 4 per sprite */
+		if (!part.spriteCount) continue;
+		offset = part.offset;
+		count  = part.spriteCount >> 2; /* 4 per sprite */
 
 		Gfx_SetFaceCulling(true);
 		/* TODO: fix to not render them all */
 #ifdef CC_BUILD_GL11
-		Gfx_BindVb(part.Vbs[FACE_COUNT]);
+		Gfx_BindVb(part.vbs[FACE_COUNT]);
 		Gfx_DrawIndexedTris_T2fC4b(0, 0);
 		Game_Vertices += count * 4;
 		Gfx_SetFaceCulling(false);
 		continue;
 #endif
-		if (info->DrawXMax || info->DrawZMin) {
+		if (info->drawXMax || info->drawZMin) {
 			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
 
-		if (info->DrawXMin || info->DrawZMax) {
+		if (info->drawXMin || info->drawZMax) {
 			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
 
-		if (info->DrawXMin || info->DrawZMin) {
+		if (info->drawXMin || info->drawZMin) {
 			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
 
-		if (info->DrawXMax || info->DrawZMax) {
+		if (info->drawXMax || info->drawZMax) {
 			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		}
 		Gfx_SetFaceCulling(false);
 	}
 }
 
-void MapRenderer_RenderNormal(double delta) {
+void MapRenderer_RenderNormal(float delta) {
 	int batch;
 	if (!mapChunks) return;
 
@@ -211,13 +211,13 @@ void MapRenderer_RenderNormal(double delta) {
 #define DrawTranslucentFaces(minFace, maxFace) \
 if (drawMin && drawMax) { \
 	DrawFaces(minFace, maxFace, offset); \
-	Game_Vertices += (part.Counts[minFace] + part.Counts[maxFace]); \
+	Game_Vertices += (part.counts[minFace] + part.counts[maxFace]); \
 } else if (drawMin) { \
 	DrawFace(minFace, offset); \
-	Game_Vertices += part.Counts[minFace]; \
+	Game_Vertices += part.counts[minFace]; \
 } else if (drawMax) { \
-	DrawFace(maxFace, offset + part.Counts[minFace]); \
-	Game_Vertices += part.Counts[maxFace]; \
+	DrawFace(maxFace, offset + part.counts[minFace]); \
+	Game_Vertices += part.counts[maxFace]; \
 }
 
 static void RenderTranslucentBatch(int batch) {
@@ -229,34 +229,34 @@ static void RenderTranslucentBatch(int batch) {
 
 	for (i = 0; i < renderChunksCount; i++) {
 		info = renderChunks[i];
-		if (!info->TranslucentParts) continue;
+		if (!info->translucentParts) continue;
 
-		part = info->TranslucentParts[batchOffset];
-		if (part.Offset < 0) continue;
+		part = info->translucentParts[batchOffset];
+		if (part.offset < 0) continue;
 		hasTranParts[batch] = true;
 
 #ifndef CC_BUILD_GL11
-		Gfx_BindVb_Textured(info->Vb);
+		Gfx_BindVb_Textured(info->vb);
 #endif
 
-		offset  = part.Offset;
-		drawMin = (inTranslucent || info->DrawXMin) && part.Counts[FACE_XMIN];
-		drawMax = (inTranslucent || info->DrawXMax) && part.Counts[FACE_XMAX];
+		offset  = part.offset;
+		drawMin = (inTranslucent || info->drawXMin) && part.counts[FACE_XMIN];
+		drawMax = (inTranslucent || info->drawXMax) && part.counts[FACE_XMAX];
 		DrawTranslucentFaces(FACE_XMIN, FACE_XMAX);
 
-		offset  += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
-		drawMin = (inTranslucent || info->DrawZMin) && part.Counts[FACE_ZMIN];
-		drawMax = (inTranslucent || info->DrawZMax) && part.Counts[FACE_ZMAX];
+		offset  += part.counts[FACE_XMIN] + part.counts[FACE_XMAX];
+		drawMin = (inTranslucent || info->drawZMin) && part.counts[FACE_ZMIN];
+		drawMax = (inTranslucent || info->drawZMax) && part.counts[FACE_ZMAX];
 		DrawTranslucentFaces(FACE_ZMIN, FACE_ZMAX);
 
-		offset  += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
-		drawMin = (inTranslucent || info->DrawYMin) && part.Counts[FACE_YMIN];
-		drawMax = (inTranslucent || info->DrawYMax) && part.Counts[FACE_YMAX];
+		offset  += part.counts[FACE_ZMIN] + part.counts[FACE_ZMAX];
+		drawMin = (inTranslucent || info->drawYMin) && part.counts[FACE_YMIN];
+		drawMax = (inTranslucent || info->drawYMax) && part.counts[FACE_YMAX];
 		DrawTranslucentFaces(FACE_YMIN, FACE_YMAX);
 	}
 }
 
-void MapRenderer_RenderTranslucent(double delta) {
+void MapRenderer_RenderTranslucent(float delta) {
 	int vertices, batch;
 	if (!mapChunks) return;
 
@@ -310,37 +310,37 @@ static void DeleteChunk(struct ChunkInfo* info) {
 #ifdef CC_BUILD_GL11
 	int j;
 #else
-	Gfx_DeleteVb(&info->Vb);
+	Gfx_DeleteVb(&info->vb);
 #endif
 
-	info->Empty = false; info->AllAir = false;
+	info->empty = false; info->allAir = false;
 #ifdef OCCLUSION
 	info.OcclusionFlags = 0;
 	info.OccludedFlags = 0;
 #endif
 
-	if (info->NormalParts) {
-		ptr = info->NormalParts;
+	if (info->normalParts) {
+		ptr = info->normalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
-			if (ptr->Offset < 0) continue; 
+			if (ptr->offset < 0) continue; 
 			normPartsCount[i]--;
 #ifdef CC_BUILD_GL11
-			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
+			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		info->NormalParts = NULL;
+		info->normalParts = NULL;
 	}
 
-	if (info->TranslucentParts) {
-		ptr = info->TranslucentParts;
+	if (info->translucentParts) {
+		ptr = info->translucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
-			if (ptr->Offset < 0) continue;
+			if (ptr->offset < 0) continue;
 			tranPartsCount[i]--;
 #ifdef CC_BUILD_GL11
-			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
+			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->vbs[j]);
 #endif
 		}
-		info->TranslucentParts = NULL;
+		info->translucentParts = NULL;
 	}
 }
 
@@ -351,24 +351,24 @@ static void BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 
 	Game.ChunkUpdates++;
 	(*chunkUpdates)++;
-	info->PendingDelete = false;
+	info->pendingDelete = false;
 	Builder_MakeChunk(info);
 
-	if (!info->NormalParts && !info->TranslucentParts) {
-		info->Empty = true; return;
+	if (!info->normalParts && !info->translucentParts) {
+		info->empty = true; return;
 	}
 	
-	if (info->NormalParts) {
-		ptr = info->NormalParts;
+	if (info->normalParts) {
+		ptr = info->normalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
-			if (ptr->Offset >= 0) normPartsCount[i]++;
+			if (ptr->offset >= 0) normPartsCount[i]++;
 		}
 	}
 
-	if (info->TranslucentParts) {
-		ptr = info->TranslucentParts;
+	if (info->translucentParts) {
+		ptr = info->translucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += chunksCount) {
-			if (ptr->Offset >= 0) tranPartsCount[i]++;
+			if (ptr->offset >= 0) tranPartsCount[i]++;
 		}
 	}
 }
@@ -510,7 +510,7 @@ static void RefreshBorderChunks(int maxHeight) {
 /*########################################################################################################################*
 *--------------------------------------------------Chunks updating/sorting------------------------------------------------*
 *#########################################################################################################################*/
-#define CHUNK_TARGET_TIME ((1.0/30) + 0.01)
+#define CHUNK_TARGET_TIME ((1.0f/30) + 0.01f)
 static int chunksTarget = 12;
 static Vec3 lastCamPos;
 static float lastYaw, lastPitch;
@@ -542,25 +542,25 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 
 	for (i = 0; i < chunksCount; i++) {
 		info = sortedChunks[i];
-		if (info->Empty) continue;
+		if (info->empty) continue;
 
 		distSqr = distances[i];
-		noData  = !info->NormalParts && !info->TranslucentParts;
+		noData  = !info->normalParts && !info->translucentParts;
 		
 		/* Auto unload chunks far away chunks */
 		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(info); continue;
 		}
-		noData |= info->PendingDelete;
+		noData |= info->pendingDelete;
 
 		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(info);
 			BuildChunk(info, chunkUpdates);
 		}
 
-		info->Visible = distSqr <= renderDistSqr &&
-			FrustumCulling_SphereInFrustum(info->CentreX, info->CentreY, info->CentreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
-		if (info->Visible && !info->Empty) { renderChunks[j] = info; j++; }
+		info->visible = distSqr <= renderDistSqr &&
+			FrustumCulling_SphereInFrustum(info->centreX, info->centreY, info->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+		if (info->visible && !info->empty) { renderChunks[j] = info; j++; }
 	}
 	return j;
 }
@@ -575,33 +575,33 @@ static int UpdateChunksStill(int* chunkUpdates) {
 
 	for (i = 0; i < chunksCount; i++) {
 		info = sortedChunks[i];
-		if (info->Empty) continue;
+		if (info->empty) continue;
 
 		distSqr = distances[i];
-		noData  = !info->NormalParts && !info->TranslucentParts;
+		noData  = !info->normalParts && !info->translucentParts;
 
 		/* Auto unload chunks far away chunks */
 		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
 			DeleteChunk(info); continue;
 		}
-		noData |= info->PendingDelete;
+		noData |= info->pendingDelete;
 
 		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			DeleteChunk(info);
 			BuildChunk(info, chunkUpdates);
 
 			/* only need to update the visibility of chunks in range. */
-			info->Visible = distSqr <= renderDistSqr &&
-				FrustumCulling_SphereInFrustum(info->CentreX, info->CentreY, info->CentreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
-			if (info->Visible && !info->Empty) { renderChunks[j] = info; j++; }
-		} else if (info->Visible) {
+			info->visible = distSqr <= renderDistSqr &&
+				FrustumCulling_SphereInFrustum(info->centreX, info->centreY, info->centreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+			if (info->visible && !info->empty) { renderChunks[j] = info; j++; }
+		} else if (info->visible) {
 			renderChunks[j] = info; j++;
 		}
 	}
 	return j;
 }
 
-static void UpdateChunks(double delta) {
+static void UpdateChunks(float delta) {
 	struct LocalPlayer* p;
 	cc_bool samePos;
 	int chunkUpdates = 0;
@@ -610,7 +610,7 @@ static void UpdateChunks(double delta) {
 	chunksTarget += delta < CHUNK_TARGET_TIME ? 1 : -1; 
 	Math_Clamp(chunksTarget, 4, maxChunkUpdates);
 
-	p = &LocalPlayer_Instance;
+	p = Entities.CurPlayer;
 	samePos = Vec3_Equals(&Camera.CurrentPos, &lastCamPos)
 		&& p->Base.Pitch == lastPitch && p->Base.Yaw == lastYaw;
 
@@ -663,7 +663,7 @@ static void UpdateSortOrder(void) {
 	for (i = 0; i < chunksCount; i++) {
 		info = sortedChunks[i];
 		/* Calculate distance to chunk centre */
-		dx = info->CentreX - pos.x; dy = info->CentreY - pos.y; dz = info->CentreZ - pos.z;
+		dx = info->centreX - pos.x; dy = info->centreY - pos.y; dz = info->centreZ - pos.z;
 		distances[i] = dx * dx + dy * dy + dz * dz;
 
 		/* Consider these 3 chunks: */
@@ -674,9 +674,9 @@ static void UpdateSortOrder(void) {
 		/*    X  : DrawXMin = true,  DrawXMax = true  */
 		/*    X+1: DrawXMin = true,  DrawXMax = false */
 
-		info->DrawXMin = dx >= 0; info->DrawXMax = dx <= 0;
-		info->DrawZMin = dz >= 0; info->DrawZMax = dz <= 0;
-		info->DrawYMin = dy >= 0; info->DrawYMax = dy <= 0;
+		info->drawXMin = dx >= 0; info->drawXMax = dx <= 0;
+		info->drawZMin = dz >= 0; info->drawZMax = dz <= 0;
+		info->drawYMin = dy >= 0; info->drawYMax = dy <= 0;
 	}
 
 	SortMapChunks(0, chunksCount - 1);
@@ -684,7 +684,7 @@ static void UpdateSortOrder(void) {
 	/*SimpleOcclusionCulling();*/
 }
 
-void MapRenderer_Update(double delta) {
+void MapRenderer_Update(float delta) {
 	if (!mapChunks) return;
 	UpdateSortOrder();
 	UpdateChunks(delta);
@@ -699,9 +699,9 @@ void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= World.ChunksX || cy >= World.ChunksY || cz >= World.ChunksZ) return;
 
 	info = &mapChunks[World_ChunkPack(cx, cy, cz)];
-	if (info->AllAir) return; /* do not recreate chunks completely air */
-	info->Empty         = false;
-	info->PendingDelete = true;
+	if (info->allAir) return; /* do not recreate chunks completely air */
+	info->empty         = false;
+	info->pendingDelete = true;
 }
 
 void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
@@ -709,7 +709,7 @@ void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
 	struct ChunkInfo* chunk;
 
 	chunk = &mapChunks[World_ChunkPack(cx, cy, cz)];
-	chunk->AllAir &= Blocks.Draw[block] == DRAW_GAS;
+	chunk->allAir &= Blocks.Draw[block] == DRAW_GAS;
 	/* TODO: Don't lookup twice, refresh directly using chunk pointer */
 	MapRenderer_RefreshChunk(cx, cy, cz);
 }

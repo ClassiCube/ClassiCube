@@ -19,7 +19,7 @@ static cc_bool shadows_boundTex;
 static GfxResourceID shadows_VB;
 static GfxResourceID shadows_tex;
 static float shadow_radius, shadow_uvScale;
-struct ShadowData { float y; BlockID Block; cc_uint8 A; };
+struct ShadowData { float y; BlockID block; cc_uint8 alpha; };
 
 /* Circle shadows extend at most 4 blocks vertically */
 #define SHADOW_MAX_RANGE 4 
@@ -54,7 +54,7 @@ static void EntityShadow_DrawCoords(struct VertexTextured** vertices, struct Ent
 	z2 = min(z2, cen.z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
 	v   = *vertices;
-	col = PackedCol_Make(255, 255, 255, data->A);
+	col = PackedCol_Make(255, 255, 255, data->alpha);
 
 	v->x = x1; v->y = data->y; v->z = z1; v->Col = col; v->U = u1; v->V = v1; v++;
 	v->x = x2; v->y = data->y; v->z = z1; v->Col = col; v->U = u2; v->V = v1; v++;
@@ -83,13 +83,13 @@ static void EntityShadow_DrawCircle(struct VertexTextured** vertices, struct Ent
 	Vec3 min, max, nMin, nMax;
 	int i;
 	x = (float)Math_Floor(x); z = (float)Math_Floor(z);
-	min = Blocks.MinBB[data[0].Block]; max = Blocks.MaxBB[data[0].Block];
+	min = Blocks.MinBB[data[0].block]; max = Blocks.MaxBB[data[0].block];
 
 	EntityShadow_DrawCoords(vertices, e, &data[0], x + min.x, z + min.z, x + max.x, z + max.z);
 	for (i = 1; i < 4; i++) 
 	{
-		if (data[i].Block == BLOCK_AIR) return;
-		nMin = Blocks.MinBB[data[i].Block]; nMax = Blocks.MaxBB[data[i].Block];
+		if (data[i].block == BLOCK_AIR) return;
+		nMin = Blocks.MinBB[data[i].block]; nMax = Blocks.MaxBB[data[i].block];
 
 		EntityShadow_DrawCoords(vertices, e, &data[i], x +  min.x, z + nMin.z, x +  max.x, z +  min.z);
 		EntityShadow_DrawCoords(vertices, e, &data[i], x +  min.x, z +  max.z, x +  max.x, z + nMax.z);
@@ -103,11 +103,12 @@ static void EntityShadow_DrawCircle(struct VertexTextured** vertices, struct Ent
 static void EntityShadow_CalcAlpha(float playerY, struct ShadowData* data) {
 	float height = playerY - data->y;
 	if (height <= 6.0f) {
-		data->A = (cc_uint8)(160 - 160 * height / 6.0f);
-		data->y += 1.0f / 64.0f; return;
+		data->alpha = (cc_uint8)(160 - 160 * height / 6.0f);
+		data->y     += 1.0f / 64.0f; 
+		return;
 	}
 
-	data->A = 0;
+	data->alpha = 0;
 	if (height <= 16.0f)      data->y += 1.0f / 64.0f;
 	else if (height <= 32.0f) data->y += 1.0f / 16.0f;
 	else if (height <= 96.0f) data->y += 1.0f / 8.0f;
@@ -144,7 +145,7 @@ static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, str
 		topY = y + Blocks.MaxBB[block].y;
 		if (topY >= posY + 0.01f) continue;
 
-		cur->Block = block; cur->y = topY;
+		cur->block = block; cur->y = topY;
 		EntityShadow_CalcAlpha(posY, cur);
 		i++; cur++;
 
@@ -154,7 +155,7 @@ static cc_bool EntityShadow_GetBlocks(struct Entity* e, int x, int y, int z, str
 	}
 
 	if (i < 4) {
-		cur->Block = Env.EdgeBlock; cur->y = 0.0f;
+		cur->block = Env.EdgeBlock; cur->y = 0.0f;
 		EntityShadow_CalcAlpha(posY, cur);
 		i++; cur++;
 	}
@@ -188,16 +189,16 @@ static void EntityShadow_Draw(struct Entity* e) {
 		x1 = Math_Floor(pos.x - shadow_radius); z1 = Math_Floor(pos.z - shadow_radius);
 		x2 = Math_Floor(pos.x + shadow_radius); z2 = Math_Floor(pos.z + shadow_radius);
 
-		if (EntityShadow_GetBlocks(e, x1, y, z1, data) && data[0].A > 0) {
+		if (EntityShadow_GetBlocks(e, x1, y, z1, data) && data[0].alpha > 0) {
 			EntityShadow_DrawCircle(&ptr, e, data, (float)x1, (float)z1);
 		}
-		if (x1 != x2 && EntityShadow_GetBlocks(e, x2, y, z1, data) && data[0].A > 0) {
+		if (x1 != x2 && EntityShadow_GetBlocks(e, x2, y, z1, data) && data[0].alpha > 0) {
 			EntityShadow_DrawCircle(&ptr, e, data, (float)x2, (float)z1);
 		}
-		if (z1 != z2 && EntityShadow_GetBlocks(e, x1, y, z2, data) && data[0].A > 0) {
+		if (z1 != z2 && EntityShadow_GetBlocks(e, x1, y, z2, data) && data[0].alpha > 0) {
 			EntityShadow_DrawCircle(&ptr, e, data, (float)x1, (float)z2);
 		}
-		if (x1 != x2 && z1 != z2 && EntityShadow_GetBlocks(e, x2, y, z2, data) && data[0].A > 0) {
+		if (x1 != x2 && z1 != z2 && EntityShadow_GetBlocks(e, x2, y, z2, data) && data[0].alpha > 0) {
 			EntityShadow_DrawCircle(&ptr, e, data, (float)x2, (float)z2);
 		}
 	}
@@ -232,9 +233,9 @@ static void EntityShadows_MakeTexture(void) {
 		BitmapCol* row = Bitmap_GetRow(&bmp, y);
 
 		for (x = 0; x < sh_size; x++) {
-			double dist =
-				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +
-				(sh_half - (y + 0.5)) * (sh_half - (y + 0.5));
+			float dist =
+				(sh_half - (x + 0.5f)) * (sh_half - (x + 0.5f)) +
+				(sh_half - (y + 0.5f)) * (sh_half - (y + 0.5f));
 			row[x] = dist < sh_half * sh_half ? color : 0;
 		}
 	}
@@ -242,6 +243,7 @@ static void EntityShadows_MakeTexture(void) {
 }
 
 void EntityShadows_Render(void) {
+	struct Entity* e;
 	int i;
 	if (Entities.ShadowsMode == SHADOW_MODE_NONE) return;
 
@@ -256,13 +258,14 @@ void EntityShadows_Render(void) {
 	Gfx_SetAlphaBlending(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	EntityShadow_Draw(Entities.List[ENTITIES_SELF_ID]);
+	EntityShadow_Draw(&Entities.CurPlayer->Base);
 
 	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
-		for (i = 0; i < ENTITIES_SELF_ID; i++) 
+		for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 		{
-			if (!Entities.List[i] || !Entities.List[i]->ShouldRender) continue;
-			EntityShadow_Draw(Entities.List[i]);
+			e = Entities.List[i];
+			if (!e || !e->ShouldRender || e == &Entities.CurPlayer->Base) continue;
+			EntityShadow_Draw(e);
 		}
 	}
 
@@ -346,9 +349,9 @@ static void DrawName(struct Entity* e) {
 
 	scale  = e->ModelScale.y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
-	size.x = e->NameTex.Width * scale; size.y = e->NameTex.Height * scale;
+	size.x = e->NameTex.width * scale; size.y = e->NameTex.height * scale;
 
-	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
+	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && Entities.CurPlayer->Hacks.CanSeeAllNames) {
 		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
 		scale = pos.x * mat.row1.w + pos.y * mat.row2.w + pos.z * mat.row3.w + mat.row4.w;
@@ -373,10 +376,10 @@ void EntityNames_Delete(struct Entity* e) {
 /*########################################################################################################################*
 *-----------------------------------------------------Names rendering-----------------------------------------------------*
 *#########################################################################################################################*/
-static EntityID closestEntityId;
+static int closestEntityId;
 
 void EntityNames_Render(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_bool hadFog;
 	int i;
 
@@ -391,9 +394,7 @@ void EntityNames_Render(void) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
 		if (!Entities.List[i]) continue;
-		if (i != closestEntityId || i == ENTITIES_SELF_ID) {
-			DrawName(Entities.List[i]);
-		}
+		if (i != closestEntityId) DrawName(Entities.List[i]);
 	}
 
 	Gfx_SetAlphaTest(false);
@@ -401,7 +402,7 @@ void EntityNames_Render(void) {
 }
 
 void EntityNames_RenderHovered(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = Entities.CurPlayer;
 	cc_bool allNames, hadFog;
 	int i;
 
@@ -417,7 +418,7 @@ void EntityNames_RenderHovered(void) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
 	{
 		if (!Entities.List[i]) continue;
-		if ((i == closestEntityId || allNames) && i != ENTITIES_SELF_ID) {
+		if ((i == closestEntityId || allNames) && Entities.List[i] != &p->Base) {
 			DrawName(Entities.List[i]);
 		}
 	}

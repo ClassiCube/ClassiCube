@@ -21,9 +21,9 @@ ClassiCube is not trying to replicate modern Minecraft versions. It will never s
 
 You can **download ClassiCube** [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
-![classic](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/a233cb4c-296a-4d08-87fc-49874c230d4f)
+![classic](https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0)
 
-![enhanced](https://github.com/ClassiCube/actions-testing-cc/assets/7892772/61a064bd-cfaa-4a91-bedf-a16c3dd7e8a2)
+![enhanced](https://github.com/ClassiCube/ClassiCube/assets/6509348/b2fe0e2b-5d76-41ab-909f-048d0ad15f37)
 
 
 # We need your help
@@ -59,7 +59,7 @@ ClassiCube runs on:
 * macOS - 10.5 or later (but can be compiled to work with 10.3/10.4 though)
 * Linux - needs `libcurl` and `libopenal`
 * Android - 2.3 or later
-* iOS - 10.3 or later
+* iOS - 8.0 or later
 * Most web browsers (even runs on IE11)
 
 And also runs on:
@@ -72,16 +72,21 @@ And also runs on:
 * BeOS - untested on actual hardware
 * IRIX - needs <code>curl</code> and <code>openal</code> packages
 * SerenityOS - needs <code>SDL2</code>
-* 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
+* Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
+* Switch - unfinished, but usable (can [download from here](https://www.classicube.net/download/switch))
+* Wii U - unfinished, major issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_wiiu.yml)), **untested on real hardware**)
 * Wii - unfinished, but usable (can [download from here](https://www.classicube.net/download/wii))
 * GameCube - unfinished, but usable (can [download from here](https://www.classicube.net/download/gamecube))
-* Dreamcast - unfinished, but renders (can [download from here](https://www.classicube.net/download/dreamcast))
-* PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
+* Nintendo 64 - unfinished, moderate rendering issues (can [download from here](https://www.classicube.net/download/n64))
+* 3DS - unfinished, but usable (can [download from here](https://www.classicube.net/download/3ds))
+* DS/DSi - unfinished, rendering issues  (can [download from here](https://www.classicube.net/download/nds))
 * PS Vita - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/vita))
-* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox), **untested on real hardware**)
-* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3), **usually outdated**)
-* Nintendo 64 - unfinished, moderate rendering issues (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_n64.yml))
-* PS2 - unfinished, major rendering and **stability issues** (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_ps2.yml))
+* PSP - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/psp))
+* PS3 - unfinished, rendering issues (can [download from here](https://www.classicube.net/download/ps3))
+* PS2 - unfinished, major rendering and **stability issues** (can [download from here](https://www.classicube.net/download/ps2))
+* PS1 - unfinished, major rendering and **stability issues**
+* Xbox 360 - completely unfinished (if you have a GitHub account, can [download from here](https://github.com/ClassiCube/ClassiCube/actions/workflows/build_xbox360.yml)), **untested on real hardware**)
+* Xbox - unfinished, major rendering issues (can [download from here](https://www.classicube.net/download/xbox))
 
 # Compiling 
 
@@ -115,13 +120,17 @@ I am assuming you used the installer from https://osdn.net/projects/mingw/
 4. Enter `gcc -fno-math-errno *.c -o ClassiCube.exe -mwindows -lwinmm -limagehlp`
 
 ##### Using TCC (Tiny C Compiler)
-I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
-1. Extract the .zip file
+Setting up TCC:
+1. Download and extract `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
 2. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext` at line 554 (In between `RtlAddFunctionTable` and `RtlDeleteFunctionTable`)
-3. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
-4. Navigate to the directory with ClassiCube's source code
-5. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
-6. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`
+3. Download `winapi-full-for-0.9.27.zip` from https://bellard.org/tcc/ 
+4. Copy `winapi` folder and `_mingw_dxhelper.h` from `winapi-full-for-0.9.27.zip` into TCC's `include` folder
+
+Compiling with TCC:
+1. Navigate to the directory with ClassiCube's source code
+2. In `ExtMath.c`, change `fabsf` to `fabs` and `sqrtf` to `sqrt`
+3. Enter `tcc.exe -o ClassiCube.exe *.c -lwinmm -limagehlp -lgdi32 -luser32 -lcomdlg32 -lshell32`<br>
+(Note: You may need to specify the full path to `tcc.exe` instead of just `tcc.exe`)
 
 ## Compiling - Linux
 
@@ -146,13 +155,9 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ## Compiling - macOS
 
-##### Using gcc/clang (32 bit)
-
-```cc -fno-math-errno *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
-
-##### Using gcc/clang (64 bit)
-
 ```cc -fno-math-errno *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+
+Note: You may need to install Xcode before you can compile ClassiCube
 
 ## Compiling - for Android
 
@@ -180,7 +185,125 @@ Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
 
 `xcodebuild -sdk iphoneos -configuration Debug` (TODO explain more detailed)
 
-## Compiling - other desktop OSes
+## Compiling - webclient
+
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
+
+The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
+
+For more details on how to integrate into a website, see [here](doc/hosting-webclient.md)
+
+<details>
+<summary><h2>Compiling - consoles</h2></summary>
+
+All console ports needs assistance from someone experienced with homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
+
+<details>
+<summary><h3>Nintendo consoles (click to expand)</h3></summary>
+
+#### Switch
+
+Run `make switch`. You'll need [libnx](https://github.com/switchbrew/libnx) and [mesa](https://github.com/devkitPro/mesa)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `switch-dev` group and the `switch-mesa switch-glm` packages)**
+
+#### Wii U
+
+Run `make wiiu`. You'll need [wut](https://github.com/devkitPro/wut/)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wiiu-dev` group)**
+
+#### 3DS
+
+Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
+
+#### Wii
+
+Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
+
+#### GameCube
+
+Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
+
+**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
+
+#### Nintendo DS/DSi
+
+Run `make ds`. You'll need [BlocksDS](https://github.com/blocksds/sdk)
+
+#### Nintendo 64
+
+Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
+
+</details>
+
+
+<details>
+<summary><h3>Sony consoles (click to expand)</h3></summary>
+
+#### PlayStation Vita
+
+Run `make vita`. You'll need [vitasdk](https://vitasdk.org/)
+
+#### PlayStation Portable
+
+Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
+
+**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
+
+#### PlayStation 3
+
+Run `make ps3`. You'll need [PSL1GHT](https://github.com/ps3dev/PSL1GHT)
+
+#### PlayStation 2
+
+Run `make ps2`. You'll need [ps2sdk](https://github.com/ps2dev/ps2sdk)
+
+#### PlayStation 1
+
+Run `make ps1`. You'll need [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/)
+
+</details>
+
+
+<details>
+<summary><h3>Microsoft consoles (click to expand)</h3></summary>
+
+#### Xbox 360
+
+Run `make 360`. You'll need [libxenon](https://github.com/Free60Project/libxenon)
+
+#### Xbox (original)
+
+Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
+
+</details>
+
+
+<details>
+<summary><h3>SEGA consoles (click to expand)</h3></summary>
+
+### SEGA consoles
+
+#### Dreamcast
+
+Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
+
+#### Saturn
+
+Run `make saturn`. You'll need [libyaul](https://github.com/yaul-org/libyaul)
+
+</details>
+
+</details>
+
+
+<details>
+<summary><h2>Compiling - other platforms (click to expand)</h2></summary>
 
 #### FreeBSD
 
@@ -228,81 +351,11 @@ Install SDL2 port if needed
 
 ```cc *.c -o ClassiCube -lgl -lSDL2```
 
-## Compiling - other
+#### Other systems
 
-#### Web
+You'll have to write the necessary code. You should read `portability.md` in doc folder.
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_STACK=1Mb --js-library interop_web.js```
-
-The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
-
-#### 3DS
-
-Run `make 3ds`. You'll need [libctru](https://github.com/devkitPro/libctru)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `3ds-dev` group)**
-
-The 3DS port needs assistance from someone experienced with 3DS homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Wii
-
-Run `make wii`. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `wii-dev` group)**
-
-The Wii port needs assistance from someone experienced with Wii homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### GameCube
-
-Run `make gamecube`. You'll need [libogc](https://github.com/devkitPro/libogc)
-
-**NOTE: It is highly recommended that you install the precompiled devkitpro packages from [here](https://devkitpro.org/wiki/Getting_Started) - you need the `gamecube-dev` group)**
-
-The GC port needs assistance from someone experienced with GameCube homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### PlayStation Portable
-
-Run `make psp`. You'll need [pspsdk](https://github.com/pspdev/pspsdk)
-
-**NOTE: It is recommended that you install the precompiled pspsdk version from [here](https://github.com/pspdev/pspdev/releases)**
-
-The PSP port needs assistance from someone experienced with PSP homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### PlayStation Vita
-
-Run `make vita`. You'll need [vitasdk](https://vitasdk.org/)
-
-The Vita port needs assistance from someone experienced with Vita homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### PlayStation 3
-
-Run `make ps3`. You'll need [PSL1GHT](https://github.com/ps3dev/PSL1GHT)
-
-The PS3 port needs assistance from someone experienced with PS3 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Xbox
-
-Run `make xbox`. You'll need [nxdk](https://github.com/XboxDev/nxdk)
-
-The Xbox port needs assistance from someone experienced with Xbox homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Dreamcast
-
-Run `make dreamcast`. You'll need [KallistiOS](https://github.com/KallistiOS/KallistiOS)
-
-The Dreamcast port needs assistance from someone experienced with Dreamcast homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-#### Nintendo 64
-
-Run `make n64`. You'll need the opengl branch of [libdragon](https://github.com/DragonMinded/libdragon/tree/opengl)
-
-The Nintendo 64 port needs assistance from someone experienced with Nintendo 64 homebrew development - if you're interested, please get in contact with me. (`unknownshadow200` on Discord)
-
-You'll also need to stub out `WorkerLoop` function in `Http_Worker.c` for now
-
-##### Other
-
-You'll have to write the necessary code. You should read portability.md in doc folder.
+</details>
 
 ## Documentation
 
@@ -325,7 +378,8 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * To see help for a given built in command, type `/client help <command name>`.
 
 
-## Open source technologies
+<details>
+<summary><h2>Open source technologies (click to expand)</h2></summary>
 
 * [curl](https://curl.se/) - HTTP/HTTPS for linux and macOS
 * [FreeType](https://www.freetype.org/) - Font handling for all platforms
@@ -335,31 +389,41 @@ Further information (e.g. style) for ClassiCube's source code can be found in th
 * [Emscripten](https://emscripten.org/) - Compiles client for web
 * [RenderDoc](https://renderdoc.org/) - Graphics debugging
 * [BearSSL](https://www.bearssl.org/) - SSL/TLS support on consoles
+* [libnx](https://github.com/switchbrew/libnx) - Backend for Switch
+* [Ryujinx](https://github.com/Ryujinx/Ryujinx) - Emulator used to test Switch port
+* [wut](https://github.com/devkitPro/wut/) - Backend for Wii U
+* [Cemu](https://github.com/cemu-project/Cemu) - Emulator used to test Wii U port
 * [libctru](https://github.com/devkitPro/libctru) - Backend for 3DS
 * [citro3D](https://github.com/devkitPro/citro3d) - Rendering backend for 3DS
 * [Citra](https://github.com/citra-emu/citra) - Emulator used to test 3DS port
-* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
-* [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test PSP port
-* [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
-* [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
-* [PSL1GHT](https://github.com/ps3dev/PSL1GHT) - Backend for PS3
-* [RPCS3](https://github.com/RPCS3/rpcs3) - Emulator used to test PS3 port
 * [libogc](https://github.com/devkitPro/libogc) - Backend for Wii and GameCube
 * [libfat](https://github.com/devkitPro/libfat) - Filesystem backend for Wii/GC
 * [Dolphin](https://github.com/dolphin-emu/dolphin) - Emulator used to test Wii/GC port
-* [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
-* [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
-* [nullDC](https://github.com/skmp/nulldc) - Emulator used to test Dreamcast port
-* [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
+* [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
+* [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
+* [BlocksDS](https://github.com/blocksds/sdk) - Backend for Nintendo DS
+* [melonDS](https://github.com/melonDS-emu/melonDS) - Emulator used to test Nintendo DS port
+* [vitasdk](https://github.com/vitasdk) - Backend for PS Vita
+* [Vita3K](https://github.com/Vita3K/Vita3K) - Emulator used to test Vita port
+* [pspsdk](https://github.com/pspdev/pspsdk) - Backend for PSP
+* [PPSSPP](https://github.com/hrydgard/ppsspp) - Emulator used to test PSP port
+* [PSL1GHT](https://github.com/ps3dev/PSL1GHT) - Backend for PS3
+* [RPCS3](https://github.com/RPCS3/rpcs3) - Emulator used to test PS3 port
+* [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
+* [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
+* [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/) - Backend for PS1
+* [duckstation](https://github.com/stenzek/duckstation) - Emulator used to test PS1 port
+* [libxenon](https://github.com/Free60Project/libxenon) - Backend for Xbox 360
 * [nxdk](https://github.com/XboxDev/nxdk) - Backend for Xbox
 * [xemu](https://github.com/xemu-project/xemu) - Emulator used to test Xbox port
 * [cxbx-reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) - Emulator used to test Xbox port
-* [libdragon](https://github.com/DragonMinded/libdragon) - Backend for Nintendo 64
-* [cen64](https://github.com/n64dev/cen64) - Emulator used to test Nintendo 64 port
-* [ares](https://github.com/ares-emulator/ares) - Emulator used to test Nintendo 64 port
-* [ps2sdk](https://github.com/ps2dev/ps2sdk) - Backend for PS2
-* [PCSX2](https://github.com/PCSX2/pcsx2) - Emulator used to test PS2 port
+* [KallistiOS](https://github.com/KallistiOS/KallistiOS) - Backend for Dreamcast
+* [GLdc](https://github.com/Kazade/GLdc) - Basis of rendering backend for Dreamcast
+* [flycast](https://github.com/flyinghead/flycast) - Emulator used to test Dreamcast port
+* [libyaul](https://github.com/yaul-org/libyaul) - Backend for Saturn
+* [mednafen](https://mednafen.github.io/) - Emulator used to test Saturn port
 
+</details>
 
 ## Sound Credits
 ClassiCube uses sounds from [Freesound.org](https://freesound.org)<br>

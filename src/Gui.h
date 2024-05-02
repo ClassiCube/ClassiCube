@@ -42,20 +42,24 @@ CC_VAR extern struct _GuiData {
 	cc_bool ShowFPS;
 	/* Whether classic-style inventory is used */
 	cc_bool ClassicInventory;
-	float RawHotbarScale, RawChatScale, RawInventoryScale;
+	float RawHotbarScale, RawChatScale, RawInventoryScale, RawCrosshairScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
-	/* (internal) Bitmask of on-screen buttons, see Input.h */
-	int _onscreenButtons;
+	int _unused;
 	float RawTouchScale;
 	/* The highest priority screen that has grabbed input. */
 	struct Screen* InputGrab;
+	/* Whether chat automatically scales based on window size. */
+	cc_bool AutoScaleChat;
+	/* Whether the touch UI is currently being displayed */
+	cc_bool TouchUI;
 } Gui;
 
 float Gui_Scale(float value);
 float Gui_GetHotbarScale(void);
 float Gui_GetInventoryScale(void);
 float Gui_GetChatScale(void);
+float Gui_GetCrosshairScale(void);
 
 CC_NOINLINE void Gui_MakeTitleFont(struct FontDesc* font);
 CC_NOINLINE void Gui_MakeBodyFont(struct FontDesc* font);
@@ -65,11 +69,11 @@ struct ScreenVTABLE {
 	/* Initialises persistent state. */
 	void (*Init)(void* elem);
 	/* Updates this screen, called every frame just before Render(). */
-	void (*Update)(void* elem, double delta);
+	void (*Update)(void* elem, float delta);
 	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
 	/* Draws this screen and its widgets on screen. */
-	void (*Render)(void* elem, double delta);
+	void (*Render)(void* elem, float delta);
 	/* Builds the vertex mesh for all the widgets in the screen. */
 	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
@@ -94,6 +98,8 @@ struct ScreenVTABLE {
 	void (*ContextLost)(void* elem);
 	/* Allocates graphics resources. (textures, vertex buffers, etc) */
 	void (*ContextRecreated)(void* elem);
+	/* Returns non-zero if a pad axis update is handled. */
+	int (*HandlesPadAxis)(void* elem, int axis, float x, float y);
 };
 #define Screen_Body const struct ScreenVTABLE* VTABLE; \
 	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
@@ -102,16 +108,15 @@ struct ScreenVTABLE {
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
 	int maxVertices; GfxResourceID vb; /* Vertex buffer storing the contents of the screen */ \
 	struct Widget** widgets; int numWidgets; /* The widgets/individual elements in the screen */ \
-	int selectedI;
+	int selectedI, maxWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
 /* Calls Widget_Render2 on each widget in the screen. */
-void Screen_Render2Widgets(void* screen, double delta);
+void Screen_Render2Widgets(void* screen, float delta);
 void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
-int Screen_Index(void* screen, void* w);
 int Screen_CalcDefaultMaxVertices(void* screen);
 
 /* Default mesh building implementation for a screen */
@@ -133,10 +138,13 @@ void Screen_InputUp(void*   screen, int key);
 /*  (does nothing) */
 void Screen_PointerUp(void* s, int id, int x, int y);
 
+
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
+union WidgetMeta { int val; void* ptr; };
+
 struct WidgetVTABLE {
 	/* Draws this widget on-screen. */
-	void (*Render)(void* elem, double delta);
+	void (*Render)(void* elem, float delta);
 	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
 	/* Positions this widget on-screen. */
@@ -159,6 +167,8 @@ struct WidgetVTABLE {
 	int  (*Render2)(void* elem, int offset);
 	/* Returns the maximum number of vertices this widget may use */
 	int  (*GetMaxVertices)(void* elem);
+	/* Returns non-zero if a pad axis update is handled. */
+	int (*HandlesPadAxis)(void* elem, int axis, float x, float y);
 };
 
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
@@ -167,7 +177,8 @@ struct WidgetVTABLE {
 	cc_uint8 flags;                /* Flags controlling the widget's interactability */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
-	Widget_LeftClick MenuClick;
+	Widget_LeftClick MenuClick; \
+	union WidgetMeta meta;
 
 /* Whether a widget is prevented from being interacted with */
 #define WIDGET_FLAG_DISABLED   0x01
@@ -227,6 +238,10 @@ int Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 int Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
+#ifdef CC_BUILD_TOUCH
+/* Sets whether touch UI should be displayed or not */
+void Gui_SetTouchUI(cc_bool enabled);
+#endif
 
 /* (internal) Removes the screen from the screens list. */
 /* NOTE: This does NOT perform the usual 'screens changed' behaviour. */
@@ -243,13 +258,15 @@ CC_API struct Screen* Gui_GetInputGrab(void);
 struct Screen* Gui_GetBlocksWorld(void);
 /* Returns highest priority screen that is closable. */
 struct Screen* Gui_GetClosable(void);
+/* Returns screen with the given priority */
+CC_API struct Screen* Gui_GetScreen(int priority);
 void Gui_UpdateInputGrab(void);
 void Gui_ShowPauseMenu(void);
 
 void Gui_LayoutAll(void);
 void Gui_RefreshAll(void);
 void Gui_Refresh(struct Screen* s);
-void Gui_RenderGui(double delta);
+void Gui_RenderGui(float delta);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {
@@ -274,6 +291,8 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_HandlesPointerDown(elem, id, x, y) (elem)->VTABLE->HandlesPointerDown(elem, id, x, y)
 #define Elem_OnPointerUp(elem,        id, x, y) (elem)->VTABLE->OnPointerUp(elem,        id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
+
+#define Elem_HandlesPadAxis(elem, axis, x, y) (elem)->VTABLE->HandlesPadAxis(elem, axis, x, y)
 
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
 #define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)

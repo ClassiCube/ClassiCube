@@ -192,7 +192,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 
 	Mutex_Lock(processedMutex);
 	{
-		req->timeDownloaded = DateTime_CurrentUTC_MS();
+		req->timeDownloaded = DateTime_CurrentUTC();
 		RequestList_Append(&processedReqs, req, false);
 	}
 	Mutex_Unlock(processedMutex);
@@ -205,10 +205,10 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 
 	Mutex_Lock(processedMutex);
 	{
-		TimeMS now = DateTime_CurrentUTC_MS();
+		TimeMS now = DateTime_CurrentUTC();
 		for (i = processedReqs.count - 1; i >= 0; i--) {
 			item = &processedReqs.entries[i];
-			if (item->timeDownloaded + (10 * 1000) >= now) continue;
+			if (now > item->timeDownloaded + 10) continue;
 
 			HttpRequest_Free(item);
 			RequestList_RemoveAt(&processedReqs, i);

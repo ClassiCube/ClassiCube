@@ -61,7 +61,7 @@ static void ResetLogFile(void) {
 /* Closes handle to the chat log file */
 static void CloseLogFile(void) {
 	cc_result res;
-	if (!logStream.Meta.File) return;
+	if (!logStream.meta.file) return;
 
 	res = logStream.Close(&logStream);
 	if (res) { Logger_SysWarn2(res, "closing", &logPath); }
@@ -164,7 +164,7 @@ static void AppendChatLog(const cc_string* text) {
 	}
 
 	lastLogDay = now.day; lastLogMonth = now.month; lastLogYear = now.year;
-	if (!logStream.Meta.File) return;
+	if (!logStream.meta.file) return;
 
 	/* [HH:mm:ss] text */
 	String_InitArray(str, strBuffer);

@@ -322,7 +322,7 @@ static ATOM DoRegisterClass(void) {
 			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
 	wc.hIconSm = (HICON)LoadImageA(win_instance, MAKEINTRESOURCEA(1), IMAGE_ICON,
 			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
-	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
+	wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
 
 	if ((atom = RegisterClassExW(&wc))) return atom;
 	/* Windows 9x does not support W API functions */
@@ -344,7 +344,7 @@ static void CreateWindowHandle(ATOM atom, int width, int height) {
 	/* Windows 9x does not support W API functions */
 	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
 		is_ansiWindow   = true;
-		if ((win_handle = CreateWindowExA(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+		if ((win_handle = CreateWindowExA(0, (LPCSTR)MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
 			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
 		res = GetLastError();
 	}
@@ -513,7 +513,7 @@ void Window_RequestClose(void) {
 	PostMessageA(win_handle, WM_CLOSE, 0, 0);
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	HWND foreground;
 	MSG msg;
 
@@ -532,6 +532,8 @@ void Window_ProcessEvents(double delta) {
 		Window_Main.Focused = foreground == win_handle;
 	}
 }
+
+void Window_ProcessGamepads(float delta) { }
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	POINT point; 
@@ -685,7 +687,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BitBlt(win_DC, r.x, r.y, r.Width, r.Height, draw_DC, r.x, r.y, SRCCOPY);
+	BitBlt(win_DC, r.x, r.y, r.width, r.height, draw_DC, r.x, r.y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);
 }
 
@@ -711,9 +713,11 @@ static void InitRawMouse(void) {
 	rawMouseSupported = false;
 }
 
-void Window_OpenKeyboard(struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
+void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }
+void OnscreenKeyboard_SetText(const cc_string* text) { }
+void OnscreenKeyboard_Draw2D(Rect2D* r, struct Bitmap* bmp) { }
+void OnscreenKeyboard_Draw3D(void) { }
+void OnscreenKeyboard_Close(void) { }
 
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();

@@ -14,7 +14,7 @@
 #define Math_Deg2Packed(x) ((cc_uint8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
-#ifdef __GNUC__
+#if defined __GNUC__ && !defined CC_PLAT_PS1
 /* fabsf/sqrtf are single intrinsic instructions in gcc/clang */
 /* (sqrtf is only when -fno-math-errno though) */
 #define Math_AbsF(x) __builtin_fabsf(x)
@@ -33,14 +33,11 @@ float Math_SinF(float x);
 float Math_CosF(float x);
 double Math_Atan2(double x, double y);
 
-/* Computes loge(x). Can also be used to approximate logy(x). */
-/*   e.g. for log3(x), use: Math_Log(x)/log(3) */
-double Math_Log(double x);
-/* Computes log2(x). Can also be used to approximate log2(x). */
-/*   e.g. for log3(x), use: Math_Log2(x)/log2(3) */
+/* Computes log2(x). Can also be used to approximate log_y(x). */
+/*   e.g. for log3(x), use: log2(x)/log2(3) */
 double Math_Log2(double x);
 /* Computes 2^x. Can also be used to approximate y^x. */
-/*   e.g. for 3^x, use: Math_Exp2(log2(3)*x) */
+/*   e.g. for 3^x, use: exp2(log2(3)*x) */
 double Math_Exp2(double x);
 
 int Math_Floor(float value);

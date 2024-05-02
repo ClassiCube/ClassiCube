@@ -57,7 +57,7 @@ void AnimatedComp_Init(struct AnimatedComp* anim) {
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
-void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, double delta) {
+void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, float delta) {
 	struct AnimatedComp* anim = &e->Anim;
 	float dx = newPos.x - oldPos.x;
 	float dz = newPos.z - oldPos.z;
@@ -71,9 +71,9 @@ void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, double delt
 	if (distance > 0.05f) {
 		walkDelta = distance * 2 * (float)(20 * delta);
 		anim->WalkTimeN += walkDelta;
-		anim->SwingN += (float)delta * 3;
+		anim->SwingN += delta * 3;
 	} else {
-		anim->SwingN -= (float)delta * 3;
+		anim->SwingN -= delta * 3;
 	}
 	Math_Clamp(anim->SwingN, 0.0f, 1.0f);
 
@@ -120,8 +120,7 @@ void TiltComp_Init(struct TiltComp* anim) {
 	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
 }
 
-void TiltComp_Update(struct TiltComp* anim, double delta) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void TiltComp_Update(struct LocalPlayer* p, struct TiltComp* anim, float delta) {
 	int i;
 
 	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
@@ -131,8 +130,7 @@ void TiltComp_Update(struct TiltComp* anim, double delta) {
 	}
 }
 
-void TiltComp_GetCurrent(struct TiltComp* anim, float t) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+void TiltComp_GetCurrent(struct LocalPlayer* p, struct TiltComp* anim, float t) {
 	struct AnimatedComp* pAnim = &p->Base.Anim;
 
 	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
@@ -427,8 +425,7 @@ void NetInterpComp_AdvanceState(struct NetInterpComp* interp, struct Entity* e) 
 /*########################################################################################################################*
 *-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
 *#########################################################################################################################*/
-static void LocalInterpComp_SetPosition(struct LocationUpdate* update, int mode) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+static void LocalInterpComp_SetPosition(struct Entity* e, struct LocationUpdate* update, int mode) {
 	float yOffset;
 
 	if (mode == LU_POS_ABSOLUTE_INSTANT || mode == LU_POS_ABSOLUTE_SMOOTH) {
@@ -455,15 +452,14 @@ static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool
 	if (!interpolate) *prev = value;
 }
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update) {
-	struct Entity* e = &LocalPlayer_Instance.Base;
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, struct Entity* e) {
 	struct EntityLocation* prev = &e->prev;
 	struct EntityLocation* next = &e->next;
 	cc_uint8 flags      = update->flags;
 	cc_bool interpolate = flags & LU_ORI_INTERPOLATE;
 
 	if (flags & LU_HAS_POS) {
-		LocalInterpComp_SetPosition(update, flags & LU_POS_MODEMASK);
+		LocalInterpComp_SetPosition(e, update, flags & LU_POS_MODEMASK);
 	}
 	if (flags & LU_HAS_PITCH) {
 		LocalInterpComp_Angle(&prev->pitch, &next->pitch, update->pitch, interpolate);
@@ -1013,7 +1009,7 @@ static double PhysicsComp_YPosAt(int t, float u) {
 double PhysicsComp_CalcMaxHeight(float u) {
 	/* equation below comes from solving diff(x(t, u))= 0 */
 	/* We only work in discrete timesteps, so test both rounded up and down */
-	double t = 49.49831645 * Math_Log(0.247483075 * u + 0.9899323);
+	double t = 34.30961849 * Math_Log2(0.247483075 * u + 0.9899323);
 	double value_floor = PhysicsComp_YPosAt((int)t,     u);
 	double value_ceil  = PhysicsComp_YPosAt((int)t + 1, u);
 	return max(value_floor, value_ceil);
@@ -1134,18 +1130,17 @@ static cc_bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 
 	/* have our legs just crossed over the '0' point? */
 	if (Camera.Active->isThirdPerson) {
-		oldLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeO);
-		newLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeN);
+		oldLegRot = Math_CosF(p->Base.Anim.WalkTimeO);
+		newLegRot = Math_CosF(p->Base.Anim.WalkTimeN);
 	} else {
-		oldLegRot = (float)Math_Sin(p->Base.Anim.WalkTimeO);
-		newLegRot = (float)Math_Sin(p->Base.Anim.WalkTimeN);
+		oldLegRot = Math_SinF(p->Base.Anim.WalkTimeO);
+		newLegRot = Math_SinF(p->Base.Anim.WalkTimeN);
 	}
 	return Math_Sign(oldLegRot) != Math_Sign(newLegRot);
 }
 
-void SoundComp_Tick(cc_bool wasOnGround) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vec3 soundPos         = p->Base.next.pos;
+void SoundComp_Tick(struct LocalPlayer* p, cc_bool wasOnGround) {
+	Vec3 soundPos = p->Base.next.pos;
 
 	SoundComp_GetSound(p);
 	if (!sounds_anyNonAir) soundPos = Vec3_BigPos();

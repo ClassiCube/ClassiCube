@@ -351,7 +351,13 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 	cc_bool occludedX, occludedY, occludedZ, bothLiquid;
 	int f;
 
-	/* Some blocks may not cull 'other' block, in which case just skip per-face check */
+	/* Fast path: Full opaque neighbouring blocks will always have all shared faces hidden */
+	if (Blocks.FullOpaque[block] && Blocks.FullOpaque[other]) {
+		Blocks.Hidden[(block * BLOCK_COUNT) + other] = 0x3F;
+		return;
+	}
+
+	/* Some blocks may not cull 'other' block, in which case just skip detailed check */
 	/* e.g. sprite blocks, default leaves, will not cull any other blocks */
 	if (!Block_MightCull(block, other)) {	
 		Blocks.Hidden[(block * BLOCK_COUNT) + other] = 0;
@@ -386,6 +392,7 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 /* Updates culling data of all blocks */
 static void Block_UpdateAllCulling(void) {
 	int block, neighbour;
+
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_CalcStretch((BlockID)block);
 		for (neighbour = BLOCK_AIR; neighbour < BLOCK_COUNT; neighbour++) {
@@ -511,7 +518,8 @@ int Block_FindID(const cc_string* name) {
 	cc_string blockName;
 	int block;
 
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) 
+	{
 		blockName = Block_UNSAFE_GetName(block);
 		if (String_CaselessEquals(&blockName, name)) return block;
 	}
@@ -616,8 +624,8 @@ static int GetRotated(cc_string* name, int offset) {
 }
 
 static int RotateCorner(cc_string* name, int offset) {
-	float x = Game_SelectedPos.Intersect.x - (float)Game_SelectedPos.TranslatedPos.x;
-	float z = Game_SelectedPos.Intersect.z - (float)Game_SelectedPos.TranslatedPos.z;
+	float x = Game_SelectedPos.intersect.x - (float)Game_SelectedPos.translatedPos.x;
+	float z = Game_SelectedPos.intersect.z - (float)Game_SelectedPos.translatedPos.z;
 
 	if (x < 0.5f && z < 0.5f) {
 		AutoRotate_Insert(name, offset, "-NW");
@@ -632,7 +640,7 @@ static int RotateCorner(cc_string* name, int offset) {
 }
 
 static int RotateVertical(cc_string* name, int offset) {
-	float y = Game_SelectedPos.Intersect.y - (float)Game_SelectedPos.TranslatedPos.y;
+	float y = Game_SelectedPos.intersect.y - (float)Game_SelectedPos.translatedPos.y;
 
 	if (y >= 0.5f) {
 		AutoRotate_Insert(name, offset, "-U");
@@ -644,7 +652,7 @@ static int RotateVertical(cc_string* name, int offset) {
 
 static int RotateFence(cc_string* name, int offset) {
 	/* Fence type blocks */
-	float yaw = Math_ClampAngle(LocalPlayer_Instance.Base.Yaw);
+	float yaw = Math_ClampAngle(Entities.CurPlayer->Base.Yaw);
 
 	if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
 		AutoRotate_Insert(name, offset, "-WE");
@@ -656,7 +664,7 @@ static int RotateFence(cc_string* name, int offset) {
 
 static int RotatePillar(cc_string* name, int offset) {
 	/* Thin pillar type blocks */
-	Face face = Game_SelectedPos.Closest;
+	Face face = Game_SelectedPos.closest;
 
 	if (face == FACE_YMAX || face == FACE_YMIN) {
 		AutoRotate_Insert(name, offset, "-UD");
@@ -669,7 +677,7 @@ static int RotatePillar(cc_string* name, int offset) {
 }
 
 static int RotateDirection(cc_string* name, int offset) {
-	float yaw = Math_ClampAngle(LocalPlayer_Instance.Base.Yaw);
+	float yaw = Math_ClampAngle(Entities.CurPlayer->Base.Yaw);
 
 	if (yaw >= 45.0f && yaw < 135.0f) {
 		AutoRotate_Insert(name, offset, "-E");

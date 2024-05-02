@@ -26,6 +26,12 @@ static void Cursor_SetVisible(cc_bool visible) {
 	Cursor_DoSetVisible(visible);
 }
 
+static void MoveRawUsingCursorDelta(void) {
+	int x, y;
+	Cursor_GetRawPos(&x, &y);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
+}
+
 static void CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Main.Width / 2, Window_Main.Height / 2);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
@@ -37,20 +43,18 @@ static void RegrabMouse(void) {
 	CentreMousePosition();
 }
 
-static void DefaultEnableRawMouse(void) {
+static CC_INLINE void DefaultEnableRawMouse(void) {
 	Input.RawMode = true;
 	RegrabMouse();
 	Cursor_SetVisible(false);
 }
 
-static void DefaultUpdateRawMouse(void) {
-	int x, y;
-	Cursor_GetRawPos(&x, &y);
-	Event_RaiseRawMove(&PointerEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
+static CC_INLINE void DefaultUpdateRawMouse(void) {
+	MoveRawUsingCursorDelta();
 	CentreMousePosition();
 }
 
-static void DefaultDisableRawMouse(void) {
+static CC_INLINE void DefaultDisableRawMouse(void) {
 	Input.RawMode = false;
 	RegrabMouse();
 	Cursor_SetVisible(true);
@@ -107,6 +111,9 @@ static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
 
+#ifdef CC_BUILD_SWITCH
+static void GLContext_InitSurface(void); // replacement in Window_Switch.c for handheld/docked resolution fix
+#else
 static void GLContext_InitSurface(void) {
 	void* window = Window_Main.Handle;
 	if (!window) return; /* window not created or lost */
@@ -115,6 +122,7 @@ static void GLContext_InitSurface(void) {
 	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
+#endif
 
 static void GLContext_FreeSurface(void) {
 	if (!ctx_surface) return;
@@ -142,7 +150,7 @@ void GLContext_Create(void) {
 #elif defined CC_BUILD_GLES
 		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES_BIT,
 #else
-		#error "Can't determine appropriate EGL_RENDERABLE_TYPE"
+		EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
 #endif
 		EGL_NONE
 	};

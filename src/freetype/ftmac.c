@@ -101,24 +101,11 @@
 
 #include <CoreServices/CoreServices.h>
 #include <ApplicationServices/ApplicationServices.h>
-#include <sys/syslimits.h> /* PATH_MAX */
 
   /* Don't want warnings about our own use of deprecated functions. */
 #define FT_DEPRECATED_ATTRIBUTE
 
 #include FT_MAC_H
-
-#ifndef kATSOptionFlagsUnRestrictedScope /* since Mac OS X 10.1 */
-#define kATSOptionFlagsUnRestrictedScope kATSOptionFlagsDefault
-#endif
-
-
-  /* Set PREFER_LWFN to 1 if LWFN (Type 1) is preferred over
-     TrueType in case *both* are available (this is not common,
-     but it *is* possible). */
-#ifndef PREFER_LWFN
-#define PREFER_LWFN  1
-#endif
 
 
   static OSErr
@@ -142,56 +129,6 @@
     err  = ResError();
 
     return err;
-  }
-
-
-  /* Return the file type for given pathname */
-  static OSType
-  get_file_type_from_path( const UInt8*  pathname )
-  {
-    FSRef          ref;
-    FSCatalogInfo  info;
-
-
-    if ( noErr != FSPathMakeRef( pathname, &ref, FALSE ) )
-      return ( OSType ) 0;
-
-    if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoFinderInfo, &info,
-                                    NULL, NULL, NULL ) )
-      return ( OSType ) 0;
-
-    return ((FInfo *)(info.finderInfo))->fdType;
-  }
-
-
-  /* Given a PostScript font name, create the Macintosh LWFN file name. */
-  static void
-  create_lwfn_name( char*   ps_name,
-                    Str255  lwfn_file_name )
-  {
-    int       max = 5, count = 0;
-    FT_Byte*  p = lwfn_file_name;
-    FT_Byte*  q = (FT_Byte*)ps_name;
-
-
-    lwfn_file_name[0] = 0;
-
-    while ( *q )
-    {
-      if ( ft_isupper( *q ) )
-      {
-        if ( count )
-          max = 3;
-        count = 0;
-      }
-      if ( count < max && ( ft_isalnum( *q ) || *q == '_' ) )
-      {
-        *++p = *q;
-        lwfn_file_name[0]++;
-        count++;
-      }
-      q++;
-    }
   }
 
 
@@ -277,113 +214,6 @@
         *sfnt_id   = EndianS16_BtoN( base_assoc->fontID );
       }
     }
-
-    if ( EndianS32_BtoN( fond->ffStylOff ) )
-    {
-      unsigned char*  p = (unsigned char*)fond_data;
-      StyleTable*     style;
-      unsigned short  string_count;
-      char            ps_name[256];
-      unsigned char*  names[64];
-      int             i;
-
-
-      p += EndianS32_BtoN( fond->ffStylOff );
-      style = (StyleTable*)p;
-      p += sizeof ( StyleTable );
-      string_count = EndianS16_BtoN( *(short*)(p) );
-      string_count = FT_MIN( 64, string_count );
-      p += sizeof ( short );
-
-      for ( i = 0; i < string_count; i++ )
-      {
-        names[i] = p;
-        p       += names[i][0];
-        p++;
-      }
-
-      {
-        size_t  ps_name_len = (size_t)names[0][0];
-
-
-        if ( ps_name_len != 0 )
-        {
-          ft_memcpy(ps_name, names[0] + 1, ps_name_len);
-          ps_name[ps_name_len] = 0;
-        }
-        if ( style->indexes[face_index] > 1 &&
-             style->indexes[face_index] <= string_count )
-        {
-          unsigned char*  suffixes = names[style->indexes[face_index] - 1];
-
-
-          for ( i = 1; i <= suffixes[0]; i++ )
-          {
-            unsigned char*  s;
-            size_t          j = suffixes[i] - 1;
-
-
-            if ( j < string_count && ( s = names[j] ) != NULL )
-            {
-              size_t  s_len = (size_t)s[0];
-
-
-              if ( s_len != 0 && ps_name_len + s_len < sizeof ( ps_name ) )
-              {
-                ft_memcpy( ps_name + ps_name_len, s + 1, s_len );
-                ps_name_len += s_len;
-                ps_name[ps_name_len] = 0;
-              }
-            }
-          }
-        }
-      }
-
-      create_lwfn_name( ps_name, lwfn_file_name );
-    }
-  }
-
-
-  static  FT_Error
-  lookup_lwfn_by_fond( const UInt8*      path_fond,
-                       ConstStr255Param  base_lwfn,
-                       UInt8*            path_lwfn,
-                       size_t            path_size )
-  {
-    FSRef   ref, par_ref;
-    size_t  dirname_len;
-
-
-    /* Pathname for FSRef can be in various formats: HFS, HFS+, and POSIX. */
-    /* We should not extract parent directory by string manipulation.      */
-
-    if ( noErr != FSPathMakeRef( path_fond, &ref, FALSE ) )
-      return FT_THROW( Invalid_Argument );
-
-    if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoNone,
-                                    NULL, NULL, NULL, &par_ref ) )
-      return FT_THROW( Invalid_Argument );
-
-    if ( noErr != FSRefMakePath( &par_ref, path_lwfn, path_size ) )
-      return FT_THROW( Invalid_Argument );
-
-    if ( ft_strlen( (char *)path_lwfn ) + 1 + base_lwfn[0] > path_size )
-      return FT_THROW( Invalid_Argument );
-
-    /* now we have absolute dirname in path_lwfn */
-    ft_strcat( (char *)path_lwfn, "/" );
-    dirname_len = ft_strlen( (char *)path_lwfn );
-    ft_strcat( (char *)path_lwfn, (char *)base_lwfn + 1 );
-    path_lwfn[dirname_len + base_lwfn[0]] = '\0';
-
-    if ( noErr != FSPathMakeRef( path_lwfn, &ref, FALSE ) )
-      return FT_THROW( Cannot_Open_Resource );
-
-    if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoNone,
-                                    NULL, NULL, NULL, NULL ) )
-      return FT_THROW( Cannot_Open_Resource );
-
-    return FT_Err_Ok;
   }
 
 
@@ -392,184 +222,13 @@
                const UInt8*  pathname )
   {
     ResID     sfnt_id;
-    short     have_sfnt, have_lwfn;
+    short     have_sfnt;
     Str255    lwfn_file_name;
-    UInt8     buff[PATH_MAX];
-    FT_Error  err;
-    short     num_faces;
 
-
-    have_sfnt = have_lwfn = 0;
-
+    have_sfnt = 0;
     parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, 0 );
 
-    if ( lwfn_file_name[0] )
-    {
-      err = lookup_lwfn_by_fond( pathname, lwfn_file_name,
-                                 buff, sizeof ( buff )  );
-      if ( !err )
-        have_lwfn = 1;
-    }
-
-    if ( have_lwfn && ( !have_sfnt || PREFER_LWFN ) )
-      num_faces = 1;
-    else
-      num_faces = count_faces_scalable( *fond );
-
-    return num_faces;
-  }
-
-
-  /* Read Type 1 data from the POST resources inside the LWFN file,
-     return a PFB buffer.  This is somewhat convoluted because the FT2
-     PFB parser wants the ASCII header as one chunk, and the LWFN
-     chunks are often not organized that way, so we glue chunks
-     of the same type together. */
-  static FT_Error
-  read_lwfn( FT_Memory      memory,
-             ResFileRefNum  res,
-             FT_Byte**      pfb_data,
-             FT_ULong*      size )
-  {
-    FT_Error       error = FT_Err_Ok;
-    ResID          res_id;
-    unsigned char  *buffer, *p, *size_p = NULL;
-    FT_ULong       total_size = 0;
-    FT_ULong       old_total_size = 0;
-    FT_ULong       post_size, pfb_chunk_size;
-    Handle         post_data;
-    char           code, last_code;
-
-
-    UseResFile( res );
-
-    /* First pass: load all POST resources, and determine the size of */
-    /* the output buffer.                                             */
-    res_id    = 501;
-    last_code = -1;
-
-    for (;;)
-    {
-      post_data = Get1Resource( TTAG_POST, res_id++ );
-      if ( !post_data )
-        break;  /* we are done */
-
-      code = (*post_data)[0];
-
-      if ( code != last_code )
-      {
-        if ( code == 5 )
-          total_size += 2; /* just the end code */
-        else
-          total_size += 6; /* code + 4 bytes chunk length */
-      }
-
-      total_size += (FT_ULong)GetHandleSize( post_data ) - 2;
-      last_code = code;
-
-      /* detect resource fork overflow */
-      if ( FT_MAC_RFORK_MAX_LEN < total_size )
-      {
-        error = FT_THROW( Array_Too_Large );
-        goto Error;
-      }
-
-      old_total_size = total_size;
-    }
-
-    if ( FT_ALLOC( buffer, (FT_Long)total_size ) )
-      goto Error;
-
-    /* Second pass: append all POST data to the buffer, add PFB fields. */
-    /* Glue all consecutive chunks of the same type together.           */
-    p              = buffer;
-    res_id         = 501;
-    last_code      = -1;
-    pfb_chunk_size = 0;
-
-    for (;;)
-    {
-      post_data = Get1Resource( TTAG_POST, res_id++ );
-      if ( !post_data )
-        break;  /* we are done */
-
-      post_size = (FT_ULong)GetHandleSize( post_data ) - 2;
-      code = (*post_data)[0];
-
-      if ( code != last_code )
-      {
-        if ( last_code != -1 )
-        {
-          /* we are done adding a chunk, fill in the size field */
-          if ( size_p )
-          {
-            *size_p++ = (FT_Byte)(   pfb_chunk_size         & 0xFF );
-            *size_p++ = (FT_Byte)( ( pfb_chunk_size >> 8  ) & 0xFF );
-            *size_p++ = (FT_Byte)( ( pfb_chunk_size >> 16 ) & 0xFF );
-            *size_p++ = (FT_Byte)( ( pfb_chunk_size >> 24 ) & 0xFF );
-          }
-          pfb_chunk_size = 0;
-        }
-
-        *p++ = 0x80;
-        if ( code == 5 )
-          *p++ = 0x03;  /* the end */
-        else if ( code == 2 )
-          *p++ = 0x02;  /* binary segment */
-        else
-          *p++ = 0x01;  /* ASCII segment */
-
-        if ( code != 5 )
-        {
-          size_p = p;   /* save for later */
-          p += 4;       /* make space for size field */
-        }
-      }
-
-      ft_memcpy( p, *post_data + 2, post_size );
-      pfb_chunk_size += post_size;
-      p += post_size;
-      last_code = code;
-    }
-
-    *pfb_data = buffer;
-    *size = total_size;
-
-  Error:
-    CloseResFile( res );
-    return error;
-  }
-
-
-  /* Create a new FT_Face from a file path to an LWFN file. */
-  static FT_Error
-  FT_New_Face_From_LWFN( FT_Library    library,
-                         const UInt8*  pathname,
-                         FT_Long       face_index,
-                         FT_Face*      aface )
-  {
-    FT_Byte*       pfb_data;
-    FT_ULong       pfb_size;
-    FT_Error       error;
-    ResFileRefNum  res;
-
-
-    if ( noErr != FT_FSPathMakeRes( pathname, &res ) )
-      return FT_THROW( Cannot_Open_Resource );
-
-    pfb_data = NULL;
-    pfb_size = 0;
-    error = read_lwfn( library->memory, res, &pfb_data, &pfb_size );
-    CloseResFile( res ); /* PFB is already loaded, useless anymore */
-    if ( error )
-      return error;
-
-    return open_face_from_buffer( library,
-                                  pfb_data,
-                                  pfb_size,
-                                  face_index,
-                                  "type1",
-                                  aface );
+    return count_faces_scalable( *fond );
   }
 
 
@@ -700,14 +359,11 @@
                          FT_Long     face_index,
                          FT_Face*    aface )
   {
-    short     have_sfnt, have_lwfn = 0;
+    short     have_sfnt = 0;
     ResID     sfnt_id, fond_id;
     OSType    fond_type;
     Str255    fond_name;
     Str255    lwfn_file_name;
-    UInt8     path_lwfn[PATH_MAX];
-    OSErr     err;
-    FT_Error  error = FT_Err_Ok;
 
 
     /* check of `library' and `aface' delayed to `FT_New_Face_From_XXX' */
@@ -718,84 +374,10 @@
 
     parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, face_index );
 
-    if ( lwfn_file_name[0] )
-    {
-      ResFileRefNum  res;
-
-
-      res = HomeResFile( fond );
-      if ( noErr != ResError() )
-        goto found_no_lwfn_file;
-
-      {
-        UInt8  path_fond[PATH_MAX];
-        FSRef  ref;
-
-
-        err = FSGetForkCBInfo( res, kFSInvalidVolumeRefNum,
-                               NULL, NULL, NULL, &ref, NULL );
-        if ( noErr != err )
-          goto found_no_lwfn_file;
-
-        err = FSRefMakePath( &ref, path_fond, sizeof ( path_fond ) );
-        if ( noErr != err )
-          goto found_no_lwfn_file;
-
-        error = lookup_lwfn_by_fond( path_fond, lwfn_file_name,
-                                     path_lwfn, sizeof ( path_lwfn ) );
-        if ( !error )
-          have_lwfn = 1;
-      }
-    }
-
-    if ( have_lwfn && ( !have_sfnt || PREFER_LWFN ) )
-      error = FT_New_Face_From_LWFN( library,
-                                     path_lwfn,
-                                     face_index,
-                                     aface );
-    else
-      error = FT_THROW( Unknown_File_Format );
-
-  found_no_lwfn_file:
-    if ( have_sfnt && error )
-      error = FT_New_Face_From_SFNT( library,
+    return FT_New_Face_From_SFNT( library,
                                      sfnt_id,
                                      face_index,
                                      aface );
-
-    return error;
-  }
-
-
-  /* Common function to load a new FT_Face from a resource file. */
-  static FT_Error
-  FT_New_Face_From_Resource( FT_Library    library,
-                             const UInt8*  pathname,
-                             FT_Long       face_index,
-                             FT_Face*      aface )
-  {
-    OSType    file_type;
-    FT_Error  error;
-
-
-    /* LWFN is a (very) specific file format, check for it explicitly */
-    file_type = get_file_type_from_path( pathname );
-    if ( file_type == TTAG_LWFN )
-      return FT_New_Face_From_LWFN( library, pathname, face_index, aface );
-
-    /* Otherwise the file type doesn't matter (there are more than  */
-    /* `FFIL' and `tfil').  Just try opening it as a font suitcase; */
-    /* if it works, fine.                                           */
-
-    error = FT_New_Face_From_Suitcase( library, pathname, face_index, aface );
-    if ( error )
-    {
-      /* let it fall through to normal loader (.ttf, .otf, etc.); */
-      /* we signal this by returning no error and no FT_Face      */
-      *aface = NULL;
-    }
-
-    return FT_Err_Ok;
   }
 
 
@@ -825,11 +407,9 @@
 
     *aface = NULL;
 
-    /* try resourcefork based font: LWFN, FFIL */
-    error = FT_New_Face_From_Resource( library, (UInt8 *)args->pathname,
-                                       face_index, aface );
-    if ( error || *aface )
-      return error;
+    error = FT_New_Face_From_Suitcase( library, args->pathname, face_index, aface );
+    if ( *aface )
+      return FT_Err_Ok;
 
     /* let it fall through to normal loader (.ttf, .otf, etc.) */
     return FT_Open_Face( library, args, face_index, aface );

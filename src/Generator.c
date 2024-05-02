@@ -69,8 +69,8 @@ static void Gen_DoGen(void) {
 }
 
 static void Gen_Run(void) {
-	void* thread = Thread_Create(Gen_DoGen);
-	Thread_Start2(thread, Gen_DoGen);
+	void* thread;
+	Thread_Run(&thread, Gen_DoGen, 128 * 1024, "Map gen");
 	Thread_Detach(thread);
 }
 
@@ -671,7 +671,7 @@ static void NotchyGen_PlantTrees(void) {
 				treeX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				treeZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
-				if (!World_ContainsXZ(treeX, treeZ) || Random_Float(&rnd) >= 0.25) continue;
+				if (!World_ContainsXZ(treeX, treeZ) || Random_Float(&rnd) >= 0.25f) continue;
 				treeY = heightmap[treeZ * World.Width + treeX] + 1;
 				if (treeY >= World.Height) continue;
 				treeHeight = 5 + Random_Next(&rnd, 3);

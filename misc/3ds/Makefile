@@ -28,6 +28,10 @@ BUILD		:=	build-3ds
 SOURCES		:= src misc/3ds third_party/bearssl/src
 INCLUDES	:=	third_party/bearssl/inc
 
+CIA_BANNER_BIN	:= $(TOPDIR)/misc/3ds/banner.bin
+CIA_ICON_BIN	:= $(TOPDIR)/misc/3ds/icon.bin
+CIA_SPEC_RSF	:= $(TOPDIR)/misc/3ds/spec.rsf
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -44,7 +48,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro3d -lctru -lm
+LIBS	:= -lctru -lm
 
 
 #---------------------------------------------------------------------------------
@@ -93,7 +97,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	echo clean ...
-	rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
+	rm -fr $(BUILD) $(TARGET).cia $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
 
 #---------------------------------------------------------------------------------
 else
@@ -101,6 +105,14 @@ else
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
+$(OUTPUT).cia	: $(OUTPUT).3dsx makerom
+	./makerom -f cia -o "$(OUTPUT).cia" -elf "$(OUTPUT).elf" -rsf "$(CIA_SPEC_RSF)" -icon "$(CIA_ICON_BIN)" -banner "$(CIA_BANNER_BIN)" -exefslogo -target t
+	
+makerom:
+	wget https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.3/makerom-v0.18.3-ubuntu_x86_64.zip
+	unzip makerom-v0.18.3-ubuntu_x86_64.zip
+	chmod +x makerom
+
 $(OUTPUT).3dsx	:	$(OUTPUT).elf $(OUTPUT).smdh
 
 $(OUTPUT).elf	:	$(OFILES)

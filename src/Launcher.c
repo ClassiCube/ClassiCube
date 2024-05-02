@@ -36,7 +36,7 @@ static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48
 
 static void CloseActiveScreen(void) {
-	Window_CloseKeyboard();
+	OnscreenKeyboard_Close();
 	if (!Launcher_Active) return;
 	
 	Launcher_Active->Deactivated(Launcher_Active);
@@ -65,8 +65,7 @@ void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_s
 	if (res) {
 		/* Non HTTP error - this is not good */
 		Http_LogError(action, req);
-		String_Format2(dst, res >= 0x80000000 ? "&cError %h when %c" : "&cError %i when %c",
-						&res, action);
+		String_Format2(dst, "&cError %e when %c", &res, action);
 	} else if (status != 200) {
 		String_Format2(dst, "&c%i error when %c", &status, action);
 	} else {
@@ -187,6 +186,8 @@ static cc_bool IsShutdown(int key) {
 }
 
 static void OnInputDown(void* obj, int key, cc_bool was) {
+	if (Window_Main.SoftKeyboardFocus) return;
+
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Active->KeyDown(Launcher_Active, key, was);
 }
@@ -260,7 +261,7 @@ void Launcher_Run(void) {
 #ifdef CC_BUILD_RESOURCES
 	Resources_CheckExistence();
 
-	if (Resources_Count) {
+	if (Resources_MissingCount) {
 		CheckResourcesScreen_SetActive();
 	} else {
 		MainScreen_SetActive();
@@ -270,7 +271,9 @@ void Launcher_Run(void) {
 #endif
 
 	for (;;) {
-		Window_ProcessEvents(10 / 1000.0);
+		Window_ProcessEvents(10 / 1000.0f);
+		Window_ProcessGamepads(10 / 1000.0f);
+		Gamepad_Tick(10 / 1000.0f);
 		if (!Window_Main.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Active->Tick(Launcher_Active);
@@ -419,6 +422,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 	struct Bitmap bmp;
 	cc_result res;
 
+
 	if (String_CaselessEqualsConst(path, "default.png")) {
 		if (hasBitmappedFont) return 0;
 		hasBitmappedFont = false;
@@ -455,7 +459,6 @@ static cc_result ExtractTexturePack(const cc_string* path) {
 
 	res = Zip_Extract(&stream, 
 			Launcher_SelectZipEntry, Launcher_ProcessZipEntry);
-
 	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	/* No point logging error for closing readonly file */
 	(void)stream.Close(&stream);

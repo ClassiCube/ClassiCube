@@ -4,10 +4,37 @@
 /* For abs(x) function */
 #include <stdlib.h>
 
-#ifndef __GNUC__
-#include <math.h>
-float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
-float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
+/* Sega saturn is missing these intrinsics */
+#ifdef CC_BUILD_SATURN
+#include <stdint.h>
+extern int32_t fix16_sqrt(int32_t value);
+static int abs(int x) { return x < 0 ? -x : x; }
+
+float sqrtf(float x) { 
+		int32_t fp_x = (int32_t)(x * (1 << 16));
+		fp_x = fix16_sqrt(fp_x);
+		return (float)fp_x / (1 << 16);
+	}
+#endif
+
+
+#if defined CC_BUILD_PS1
+	/* PS1 is missing these intrinsics */
+	#include <psxgte.h>
+	float Math_AbsF(float x)  { return __builtin_fabsf(x); }
+
+	float Math_SqrtF(float x) { 
+		int fp_x = (int)(x * (1 << 12));
+		fp_x = SquareRoot12(fp_x);
+		return (float)fp_x / (1 << 12);
+	}
+#elif defined __GNUC__
+	/* Defined in .h using builtins */
+#else
+	#include <math.h>
+
+	float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
+	float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
 #endif
 
 float Math_Mod1(float x)  { return x - (int)x; /* fmodf(x, 1); */ }
@@ -82,7 +109,7 @@ cc_bool Math_IsPowOf2(int value) {
 #define RND_MASK ((1ULL << 48) - 1)
 
 void Random_SeedFromCurrentTime(RNGState* rnd) {
-	TimeMS now = DateTime_CurrentUTC_MS();
+	cc_uint64 now = Stopwatch_Measure();
 	Random_Seed(rnd, (int)now);
 }
 
@@ -121,7 +148,6 @@ float Random_Float(RNGState* seed) {
 *--------------------------------------------------Transcendental functions-----------------------------------------------*
 *#########################################################################################################################*/
 static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
-static const double LOGE2 = 0.6931471805599453094172321214581765680755001343602;
 
 #ifdef CC_BUILD_DREAMCAST
 #include <math.h>
@@ -405,10 +431,11 @@ double Math_Atan2(double x, double y) {
 			return Atan(y / x) + PI;
 		return Atan(y / x) - PI;
 	}
-	if (y > 0)
-		return PI / 2.0;
-	if (y < 0)
-		return -PI / 2.0;
+
+	/* x = 0 case */
+	if (y > 0) return  PI / 2.0;
+	if (y < 0) return -PI / 2.0;
+
 	return DBL_NAN;
 }
 
@@ -563,13 +590,3 @@ double Math_Log2(double x) {
 }
 
 #endif
-
-/* Uses the property that
- *   log_e(x) = log_2(x) * log_e(2).
- *
- * Associated math function: log_e(x)
- * Allowed input range: anything
- */
-double Math_Log(double x) {
-	return Math_Log2(x) * LOGE2;
-}

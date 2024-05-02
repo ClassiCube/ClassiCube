@@ -8,7 +8,7 @@
 #include "platform.h"
 #include "types.h"
 
-#include "../include/gldc.h"
+#include "../gldc.h"
 
 #include "aligned_vector.h"
 
@@ -107,23 +107,9 @@ GL_FORCE_INLINE void memcpy_vertex(Vertex *dest, const Vertex *src) {
 #endif
 }
 
-typedef enum {
-    CLIP_RESULT_ALL_IN_FRONT,
-    CLIP_RESULT_ALL_BEHIND,
-    CLIP_RESULT_ALL_ON_PLANE,
-    CLIP_RESULT_FRONT_TO_BACK,
-    CLIP_RESULT_BACK_TO_FRONT
-} ClipResult;
-
-void _glInitAttributePointers();
 void _glInitContext();
-void _glInitMatrices();
 void _glInitSubmissionTarget();
-
-GLubyte _glInitTextures();
-
-void _glUpdatePVRTextureContext(PolyContext* context, GLshort textureUnit);
-
+void _glInitTextures();
 
 extern TextureObject* TEXTURE_ACTIVE;
 extern GLboolean TEXTURES_ENABLED;
@@ -156,16 +142,12 @@ GL_FORCE_INLINE PolyList* _glActivePolyList() {
     }
 }
 
-unsigned char _glIsClippingEnabled();
-void _glEnableClipping(unsigned char v);
-
 GLuint _glFreeTextureMemory();
 GLuint _glUsedTextureMemory();
 GLuint _glFreeContiguousTextureMemory();
 
 void _glApplyScissor(bool force);
 
-extern GLboolean ZNEAR_CLIPPING_ENABLED;
 extern GLboolean STATE_DIRTY;
 
 

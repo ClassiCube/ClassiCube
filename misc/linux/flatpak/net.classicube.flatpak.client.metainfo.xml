@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="desktop-application">
+  <id>net.classicube.flatpak.client</id>
+  <name>ClassiCube</name>
+  <summary>Sandbox building-block game</summary>
+  <developer id="net.classicube">
+    <name>The ClassiCube Project</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>BSD-3-Clause</project_license>
+  <description>
+    <p>ClassiCube brings you back to the days of 2009 where one block game ruled them all, it includes such features as:</p>
+    <ul>
+      <li>Loads of blocks and items to choose from</li>
+      <li>Chatting with other players</li>
+      <li>An extremely simple network protocol to tinker with</li>
+      <li>Hundreds of creative and inventive worlds to explore online</li>
+      <li>A growing community</li>
+      <li>Hundreds of hours of entertainment</li>
+    </ul>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Classic mode features faithful classic gameplay</caption>
+      <image type="source">https://github.com/ClassiCube/ClassiCube/assets/6509348/eedee53f-f53e-456f-b51c-92c62079eee0</image>
+    </screenshot>
+    <screenshot>
+      <caption>Enhanced mode allows hacks like flying and noclipping, it also allows servers to provide many custom features</caption>
+      <image type="source">https://github.com/ClassiCube/ClassiCube/assets/6509348/b2fe0e2b-5d76-41ab-909f-048d0ad15f37</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.3.6" date="2023-08-28" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.6</url>
+    </release>
+    <release version="1.3.5" date="2023-01-06" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.5</url>
+    </release>
+    <release version="1.3.4" date="2022-11-01" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.4</url>
+    </release>
+    <release version="1.3.3" date="2022-10-08" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.3</url>
+    </release>
+    <release version="1.3.2" date="2022-05-26" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.2</url>
+    </release>
+    <release version="1.3.1" date="2022-01-11" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.1</url>
+    </release>
+    <release version="1.3.0" date="2022-01-04" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.3.0</url>
+    </release>
+    <release version="1.2.9" date="2021-10-18" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.9</url>
+    </release>
+    <release version="1.2.8" date="2021-09-18" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.8</url>
+    </release>
+    <release version="1.2.7" date="2021-07-22" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.7</url>
+    </release>
+    <release version="1.2.6" date="2021-07-02" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.6</url>
+    </release>
+    <release version="1.2.5" date="2021-04-02" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.5</url>
+    </release>
+    <release version="1.2.4" date="2021-01-23" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.4</url>
+    </release>
+    <release version="1.2.3" date="2020-12-12" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.3</url>
+    </release>
+    <release version="1.2.2" date="2020-12-11" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.2</url>
+    </release>
+    <release version="1.2.1" date="2020-11-28" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.1</url>
+    </release>
+    <release version="1.2.0" date="2020-10-01" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.2.0</url>
+    </release>
+    <release version="1.1.9" date="2020-08-16" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.9</url>
+    </release>
+    <release version="1.1.8" date="2020-08-05" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.8</url>
+    </release>
+    <release version="1.1.7" date="2020-06-13" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.7</url>
+    </release>
+    <release version="1.1.6" date="2020-05-07" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.6</url>
+    </release>
+    <release version="1.1.5" date="2020-05-01" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.5</url>
+    </release>
+    <release version="1.1.4" date="2020-04-21" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.4</url>
+    </release>
+    <release version="1.1.3" date="2020-03-08" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.3</url>
+    </release>
+    <release version="1.1.2" date="2020-01-26" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.2</url>
+    </release>
+    <release version="1.1.1" date="2019-12-16" type="stable">
+      <url>https://github.com/ClassiCube/ClassiCube/releases/tag/1.1.1</url>
+    </release>
+  </releases>
+  <url type="homepage">https://www.classicube.net/</url>
+  <url type="bugtracker">https://github.com/ClassiCube/ClassiCube/issues</url>
+  <url type="donation">https://www.patreon.com/ClassiCube</url>
+  <url type="vcs-browser">https://github.com/ClassiCube/ClassiCube</url>
+  <categories>
+    <category>Game</category>
+    <category>AdventureGame</category>
+    <category>ActionGame</category>
+  </categories>
+  <recommends>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </recommends>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">moderate</content_attribute>
+    <content_attribute id="social-chat">intense</content_attribute>
+  </content_rating>
+  <launchable type="desktop-id">net.classicube.flatpak.client.desktop</launchable>
+  <provides>
+    <binary>ClassiCube</binary>
+  </provides>
+</component>

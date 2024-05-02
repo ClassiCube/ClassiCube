@@ -18,15 +18,15 @@
 #include "Camera.h"
 #include "Particle.h"
 #include "Options.h"
+#include "Entity.h"
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
 static float CalcBlendFactor(float x) {
-	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
-	double blend = -0.13 + 0.28 * (Math_Log(x) * 0.25);
-	if (blend < 0.0) blend = 0.0;
-	if (blend > 1.0) blend = 1.0;
-	return (float)blend;
+	float blend = -0.13f + 0.28f * ((float)Math_Log2(x) * 0.17329f);
+	if (blend < 0.0f) blend = 0.0f;
+	if (blend > 1.0f) blend = 1.0f;
+	return blend;
 }
 
 #define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 2048)
@@ -40,21 +40,25 @@ static int CalcNumVertices(int axis1Len, int axis2Len) {
 /*########################################################################################################################*
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
-static void CalcFog(float* density, PackedCol* color) {
+static cc_bool CameraInsideBlock(BlockID block, IVec3* coords) {
+	struct AABB blockBB;
 	Vec3 pos;
+	IVec3_ToVec3(&pos, coords); /* pos = coords; */
+
+	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
+	return AABB_ContainsPoint(&blockBB, &Camera.CurrentPos);
+}
+
+static void CalcFog(float* density, PackedCol* color) {
 	IVec3 coords;
 	BlockID block;
-	struct AABB blockBB;
 	float blend;
 
 	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
-	IVec3_ToVec3(&pos, &coords);              /* pos = coords; */
-
 	block = World_SafeGetBlock(coords.x, coords.y, coords.z);
-	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
-	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
-	if (AABB_ContainsPoint(&blockBB, &Camera.CurrentPos) && Blocks.FogDensity[block]) {
+	if (Blocks.FogDensity[block] && CameraInsideBlock(block, &coords)) {
 		*density = Blocks.FogDensity[block];
 		*color   = Blocks.FogCol[block];
 	} else {
@@ -73,7 +77,7 @@ static void UpdateFogMinimal(float fogDensity) {
 		/* Exp fog mode: f = e^(-density*coord) */
 		/* Solve coord for f = 0.05 (good approx for fog end) */
 		/*   i.e. log(0.05) = -density * coord */
-		#define LOG_005 -2.99573227355399
+		#define LOG_005 -2.99573227355399f
 
 		dist = (int)(LOG_005 / -fogDensity);
 		Game_SetViewDistance(min(dist, Game_UserViewDistance));
@@ -83,7 +87,7 @@ static void UpdateFogMinimal(float fogDensity) {
 }
 
 static void UpdateFogNormal(float fogDensity, PackedCol fogColor) {
-	double density;
+	float density;
 
 	if (fogDensity != 0.0f) {
 		Gfx_SetFogMode(FOG_EXP);
@@ -96,10 +100,10 @@ static void UpdateFogNormal(float fogDensity, PackedCol fogColor) {
 		   0.99=z/end   --> z=end*0.99
 		     therefore
 		  d = -ln(0.01)/(end*0.99) */
-		#define LOG_001 -4.60517018598809
+		#define LOG_001 -4.60517018598809f
 
-		density = -(LOG_001) / (Game_ViewDistance * 0.99);
-		Gfx_SetFogDensity((float)density);
+		density = -LOG_001 / (Game_ViewDistance * 0.99f);
+		Gfx_SetFogDensity(density);
 	} else {
 		Gfx_SetFogMode(FOG_LINEAR);
 		Gfx_SetFogEnd((float)Game_ViewDistance);
@@ -114,7 +118,7 @@ void EnvRenderer_UpdateFog(void) {
 	if (!World.Loaded) return;
 
 	CalcFog(&fogDensity, &fogColor);
-	Gfx_ClearCol(fogColor);
+	Gfx_ClearColor(fogColor);
 
 	if (EnvRenderer_Minimal) {
 		UpdateFogMinimal(fogDensity);
@@ -322,7 +326,8 @@ void EnvRenderer_RenderSkybox(void) {
 	/* Rotate around camera */
 	pos = Camera.CurrentPos;
 	Vec3_Set(Camera.CurrentPos, 0,0,0);
-	Camera.Active->GetView(&view); Matrix_MulBy(&m, &view);
+	Camera.Active->GetView(Entities.CurPlayer, &view); 
+	Matrix_MulBy(&m, &view);
 	Camera.CurrentPos = pos;
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
@@ -338,7 +343,7 @@ void EnvRenderer_RenderSkybox(void) {
 *#########################################################################################################################*/
 cc_int16* Weather_Heightmap;
 static GfxResourceID rain_tex, snow_tex, weather_vb;
-static double weather_accumulator;
+static float weather_accumulator;
 static IVec3 lastPos;
 
 #define WEATHER_EXTENT 4
@@ -429,7 +434,7 @@ static float CalcRainAlphaAt(float x) {
 struct RainCoord { int dx, dz; float y; };
 static RNGState snowDirRng;
 
-void EnvRenderer_RenderWeather(double deltaTime) {
+void EnvRenderer_RenderWeather(float delta) {
 	struct RainCoord coords[WEATHER_RANGE * WEATHER_RANGE];
 	int i, weather, numCoords = 0;
 	struct VertexTextured* v;
@@ -460,8 +465,8 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.y += 64;
 	pos.y = max(World.Height, pos.y);
 
-	weather_accumulator += deltaTime;
-	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25 || moved);
+	weather_accumulator += delta;
+	particles = weather == WEATHER_RAINY && (weather_accumulator >= 0.25f || moved);
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
@@ -600,7 +605,7 @@ static void MakeBorderTex(GfxResourceID* texId, BlockID block) {
 
 static Rect2D EnvRenderer_Rect(int x, int y, int width, int height) {
 	Rect2D r;
-	r.x = x; r.y = y; r.Width = width; r.Height = height; 
+	r.x = x; r.y = y; r.width = width; r.height = height; 
 	return r;
 }
 
@@ -709,7 +714,7 @@ static void UpdateMapSides(void) {
 	sides_vertices = 0;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		sides_vertices += CalcNumVertices(r.Width, r.Height); /* YQuads outside */
+		sides_vertices += CalcNumVertices(r.width, r.height); /* YQuads outside */
 	}
 
 	y = Env_SidesHeight;
@@ -725,7 +730,7 @@ static void UpdateMapSides(void) {
 
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.x, r.y, r.x + r.Width, r.y + r.Height, (float)y, color,
+		DrawBorderY(r.x, r.y, r.x + r.width, r.y + r.height, (float)y, color,
 			0, Borders_YOffset(block), &data);
 	}
 
@@ -760,7 +765,7 @@ static void UpdateMapEdges(void) {
 	edges_vertices = 0;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
+		edges_vertices += CalcNumVertices(r.width, r.height); /* YPlanes outside */
 	}
 	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
@@ -772,7 +777,7 @@ static void UpdateMapEdges(void) {
 	y = (float)Env.EdgeHeight;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
-		DrawBorderY(r.x, r.y, r.x + r.Width, r.y + r.Height, y, color,
+		DrawBorderY(r.x, r.y, r.x + r.width, r.y + r.height, y, color,
 			Borders_HorOffset(block), Borders_YOffset(block), &data);
 	}
 	Gfx_UnlockVb(edges_vb);
