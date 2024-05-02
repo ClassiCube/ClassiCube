@@ -380,14 +380,9 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 }
 
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (Input_IsLeftButton(key)) {
-		ColoursScreen_AdjustSelected(s, -1);
-	} else if (Input_IsRightButton(key)) {
-		ColoursScreen_AdjustSelected(s, +1);
-	} else if (Input_IsUpButton(key)) {
-		ColoursScreen_AdjustSelected(s, +10);
-	} else if (Input_IsDownButton(key)) {
-		ColoursScreen_AdjustSelected(s, -10);
+	int delta = Input_CalcDelta(key, 1, 10);
+	if (delta) {
+		ColoursScreen_AdjustSelected(s, delta);
 	} else {
 		LScreen_KeyDown(s, key, was);
 	}

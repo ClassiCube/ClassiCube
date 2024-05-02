@@ -291,6 +291,15 @@ void Input_Clear(void) {
 	ClearTouches();
 }
 
+int Input_CalcDelta(int key, int horDelta, int verDelta) {
+	if (Input_IsLeftButton(key)  || key == CCKEY_KP4) return -horDelta;
+	if (Input_IsRightButton(key) || key == CCKEY_KP6) return +horDelta;
+	if (Input_IsUpButton(key)    || key == CCKEY_KP8) return -verDelta;
+	if (Input_IsDownButton(key)  || key == CCKEY_KP2) return +verDelta;
+	
+	return 0;
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------------Mouse----------------------------------------------------------*

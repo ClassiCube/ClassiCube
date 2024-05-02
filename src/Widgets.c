@@ -975,20 +975,15 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 
 static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
+	int delta;
 	if (w->selectedIndex == -1) return false;
 
-	if (Input_IsLeftButton(key)         || key == CCKEY_KP4) {
-		TableWidget_ScrollRelative(w, -1);
-	} else if (Input_IsRightButton(key) || key == CCKEY_KP6) {
-		TableWidget_ScrollRelative(w, 1);
-	} else if (Input_IsUpButton(key)    || key == CCKEY_KP8) {
-		TableWidget_ScrollRelative(w, -w->blocksPerRow);
-	} else if (Input_IsDownButton(key)  || key == CCKEY_KP2) {
-		TableWidget_ScrollRelative(w, w->blocksPerRow);
-	} else {
-		return false;
+	delta = Input_CalcDelta(key, 1, w->blocksPerRow);
+	if (delta) {
+		TableWidget_ScrollRelative(w, delta);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 static int TableWidget_PadAxis(void* widget, int axis, float x, float y) {

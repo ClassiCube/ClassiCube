@@ -154,6 +154,12 @@ static void VirtualKeyboard_AppendChar(char c) {
 	if (kb_shift) { VirtualKeyboard_ToggleTable(); kb_shift = false; }
 }
 
+static void VirtualKeyboard_Backspace(void) {
+	if (kb_str.length) kb_str.length--;
+	Event_RaiseString(&InputEvents.TextChanged, &kb_str);
+	KB_MarkDirty();
+}
+
 static void VirtualKeyboard_ClickSelected(void) {
 	int selected = VirtualKeyboard_GetSelected();
 	if (selected < 0) return;
@@ -161,9 +167,7 @@ static void VirtualKeyboard_ClickSelected(void) {
 	/* TODO kinda hacky, redo this */
 	switch (selected) {
 	case KB_INDEX(KB_LAST_CELL, 0):
-		if (kb_str.length) kb_str.length--;
-		Event_RaiseString(&InputEvents.TextChanged, &kb_str);
-		KB_MarkDirty();
+		VirtualKeyboard_Backspace();
 		break;
 	case KB_INDEX(KB_LAST_CELL, 2):
 		OnscreenKeyboard_Close();
@@ -192,19 +196,19 @@ static void VirtualKeyboard_ClickSelected(void) {
 }
 
 static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
-	if (Input_IsLeftButton(key)) {
-		VirtualKeyboard_Scroll(-1);
-	} else if (Input_IsRightButton(key)) {
-		VirtualKeyboard_Scroll(+1);
-	} else if (Input_IsUpButton(key)) {
-		VirtualKeyboard_Scroll(-KB_CELLS_PER_ROW);
-	} else if (Input_IsDownButton(key)) {
-		VirtualKeyboard_Scroll(+KB_CELLS_PER_ROW);
-	} else if (Input_IsEnterButton(key)  || key == CCPAD_A) {
+	int delta = Input_CalcDelta(key, 1, KB_CELLS_PER_ROW);
+	if (delta) {
+		VirtualKeyboard_Scroll(delta);
+	} else if (key == CCPAD_START  || key == CCPAD_A) {
 		VirtualKeyboard_ClickSelected();
-	} else if (Input_IsEscapeButton(key) || key == CCPAD_B) {
+	} else if (key == CCPAD_SELECT || key == CCPAD_B) {
 		VirtualKeyboard_Close();
+	} else if (key == CCPAD_X) {
+		VirtualKeyboard_Backspace();
+	} else if (key == CCPAD_Y) {
+		VirtualKeyboard_AppendChar(' ');
 	}
+}
 }
 
 static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, float y) {
