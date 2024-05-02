@@ -209,7 +209,6 @@ static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
 		VirtualKeyboard_AppendChar(' ');
 	}
 }
-}
 
 static void VirtualKeyboard_PadAxis(void* obj, int port, int axis, float x, float y) {
 	int xSteps, ySteps;
