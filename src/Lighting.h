@@ -49,4 +49,6 @@ CC_VAR extern struct _Lighting {
 	PackedCol (*Color_XSide_Fast)(int x, int y, int z);
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);
 } Lighting;
+
+void Lighting_ApplyActive(void);
 #endif
