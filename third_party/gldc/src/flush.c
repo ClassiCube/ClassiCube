@@ -33,9 +33,9 @@ void APIENTRY glKosInit() {
     PT_LIST.list_type = GPU_LIST_PT_POLY;
     TR_LIST.list_type = GPU_LIST_TR_POLY;
 
-    aligned_vector_init(&OP_LIST.vector, sizeof(Vertex));
-    aligned_vector_init(&PT_LIST.vector, sizeof(Vertex));
-    aligned_vector_init(&TR_LIST.vector, sizeof(Vertex));
+    aligned_vector_init(&OP_LIST.vector);
+    aligned_vector_init(&PT_LIST.vector);
+    aligned_vector_init(&TR_LIST.vector);
 
     aligned_vector_reserve(&OP_LIST.vector, 1024 * 3);
     aligned_vector_reserve(&PT_LIST.vector,  512 * 3);
