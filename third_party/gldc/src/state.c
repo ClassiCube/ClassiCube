@@ -132,7 +132,7 @@ GLAPI void APIENTRY glDisable(GLenum cap) {
 /* Depth Testing */
 GLAPI void APIENTRY glClearDepth(GLfloat depth) {
     /* We reverse because using invW means that farther Z == lower number */
-    GPUSetClearDepth(MIN(1.0f - depth, PVR_MIN_Z));
+    pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
 }
 
 GLAPI void APIENTRY glDepthMask(GLboolean flag) {

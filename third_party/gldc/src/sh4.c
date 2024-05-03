@@ -317,7 +317,7 @@ void SceneListSubmit(Vertex* v3, int n) {
             continue;
         };
 
-	// Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
+    // Quads [0, 1, 2, 3] -> Triangles [{0, 1, 2}  {2, 3, 0}]
         Vertex* const v0 = v3 - 3;
         Vertex* const v1 = v3 - 2;
         Vertex* const v2 = v3 - 1;
