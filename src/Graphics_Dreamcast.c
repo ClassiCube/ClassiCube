@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include "../third_party/gldc/gldc.h"
+#include "../third_party/gldc/src/draw.c"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
@@ -465,6 +466,22 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
 #define VB_PTR gfx_vertices
+static const void* VERTEX_PTR;
+
+extern void DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
+extern void DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+
+void DrawQuads(int count) {
+	if (!count) return;
+	Vertex* start = submitVertices(count);
+
+	if (TEXTURES_ENABLED) {
+		DrawTexturedQuads(VERTEX_PTR, start, count >> 2);
+	} else {
+		DrawColouredQuads(VERTEX_PTR, start, count >> 2);
+	}
+}
+
 
 static void SetupVertices(int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
@@ -489,29 +506,33 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	SetupVertices(0);
+	//SetupVertices(0);
 	//glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	SetupVertices(startVertex);
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+                VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+        } else {
+                VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
+        }
+
+	DrawQuads(verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	SetupVertices(0);
-	
+	VERTEX_PTR = gfx_vertices;
+
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	DrawQuads(verticesCount);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	DrawQuads(verticesCount);
 }
 
 
