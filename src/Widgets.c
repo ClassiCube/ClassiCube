@@ -2778,7 +2778,7 @@ static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 
 		dx = Pointers[i].x - (w->x + w->width  / 2);
 		dy = Pointers[i].y - (w->y + w->height / 2);
-		angle = Math_Atan2(dx, dy) * MATH_RAD2DEG;
+		angle = Math_Atan2f(dx, dy) * MATH_RAD2DEG;
 
 		/* 4 quadrants diagonally, but slightly expanded for overlap*/
 		if (angle >=   30 && angle <= 150) dirs |= DIR_YMAX;

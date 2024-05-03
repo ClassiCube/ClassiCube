@@ -1,12 +1,13 @@
-name: Build latest (Webclient2)
+name: Build latest (Webclient)
 on: [push]
 
 concurrency:
-  group: ${{ github.ref }}-webclient2
+  group: ${{ github.ref }}-webclient
   cancel-in-progress: true
 
 jobs:
   build:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: trzeci/emscripten-fastcomp:1.39.0

@@ -500,7 +500,7 @@ static void PlayerInputPad(int port, int axis, struct LocalPlayer* p, float* xMo
 	y = gamepads[port].axisY[axis];
 	
 	if (x != 0 || y != 0) {
-		angle    = Math_Atan2(x, y);
+		angle    = Math_Atan2f(x, y);
 		*xMoving = Math_CosF(angle);
 		*zMoving = Math_SinF(angle);
 	}
