@@ -163,7 +163,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
 void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { GU_Toggle(GU_BLEND); }
+static void SetAlphaBlend(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {

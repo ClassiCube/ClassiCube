@@ -299,7 +299,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) { 
+static void SetAlphaBlend(cc_bool enabled) { 
 	uint32_t* p = pb_begin();
 	p = pb_push1(p, NV097_SET_BLEND_ENABLE, enabled);
 	pb_end(p);

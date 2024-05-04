@@ -176,7 +176,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	glPolyFmt(POLY_ALPHA(31) | (enabled ? POLY_CULL_BACK : POLY_CULL_NONE));
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	/*if (enabled) {
 		glEnable(GL_BLEND);
 	} else {

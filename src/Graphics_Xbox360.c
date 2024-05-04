@@ -82,7 +82,7 @@ static void Gfx_FreeState(void) {
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	Gfx_SetFaceCulling(false);
-	Gfx_SetAlphaBlending(false);
+	SetAlphaBlend(false);
 
 	Xe_SetAlphaFunc(xe, XE_CMP_GREATER);
 	Xe_SetAlphaRef(xe,  0.5f);
@@ -159,7 +159,7 @@ static void SetAlphaTest(cc_bool enabled) {
 	Xe_SetAlphaTestEnable(xe, enabled);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	if (enabled) {
 		Xe_SetBlendControl(xe,
 			XE_BLEND_SRCALPHA, XE_BLENDOP_ADD, XE_BLEND_INVSRCALPHA,

@@ -889,7 +889,7 @@ static ID3D11DepthStencilView* depthbufferView;
 static ID3D11BlendState* om_blendStates[4];
 static ID3D11DepthStencilState* om_depthStates[4];
 static float gfx_clearColor[4];
-static cc_bool gfx_alphaBlending, gfx_colorEnabled = true;
+static cc_bool gfx_colorEnabled = true;
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(GfxBuffers buffers) {
@@ -980,7 +980,7 @@ static void OM_CreateBlendStates(void) {
 }
 
 static void OM_UpdateBlendState(void) {
-	ID3D11BlendState* blendState = om_blendStates[gfx_colorEnabled | (gfx_alphaBlending << 1)];
+	ID3D11BlendState* blendState = om_blendStates[gfx_colorEnabled | (gfx_alphaBlend << 1)];
 	ID3D11DeviceContext_OMSetBlendState(context, blendState, NULL, 0xffffffff);
 }
 
@@ -1029,8 +1029,7 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	OM_UpdateDepthState();
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	gfx_alphaBlending = enabled;
+static void SetAlphaBlend(cc_bool enabled) {
 	OM_UpdateBlendState();
 }
 

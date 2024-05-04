@@ -10,8 +10,6 @@ static struct Bitmap fb_bmp;
 static float vp_hwidth, vp_hheight;
 static int sc_maxX, sc_maxY;
 
-static cc_bool alphaBlending;
-
 static PackedCol* colorBuffer;
 static PackedCol clearColor;
 static cc_bool colWrite = true;
@@ -118,8 +116,8 @@ static void SetAlphaTest(cc_bool enabled) {
 	/* Uses value from Gfx_SetAlphaTest */
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	alphaBlending = enabled;
+static void SetAlphaBlend(cc_bool enabled) {
+	/* Uses value from Gfx_SetAlphaBlending */
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -390,7 +388,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			int B = PackedCol_B(fragColor);
 			int A = PackedCol_A(fragColor);
 
-			if (alphaBlending) {
+			if (gfx_alphaBlend) {
 				PackedCol dst = colorBuffer[index];
 				int dstR = BitmapCol_R(dst);
 				int dstG = BitmapCol_G(dst);

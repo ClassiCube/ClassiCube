@@ -181,12 +181,12 @@ static void SetAlphaTest(cc_bool enabled) {
 	GX2SetAlphaTest(enabled, GX2_COMPARE_FUNC_GEQUAL, 0.5f);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	GX2SetBlendControl(GX2_RENDER_TARGET_0,
 		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
 		true,
 		GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
-    GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
+	GX2SetColorControl(GX2_LOGIC_OP_COPY, enabled, FALSE, TRUE);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {

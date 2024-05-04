@@ -460,10 +460,7 @@ static void SetAlphaTest(cc_bool enabled) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE, enabled);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	if (gfx_alphaBlending == enabled) return;
-	gfx_alphaBlending = enabled;
-
+static void SetAlphaBlend(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, enabled);
 }

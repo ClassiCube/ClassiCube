@@ -439,7 +439,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) { 
+static void SetAlphaBlend(cc_bool enabled) { 
 	if (enabled) {
 		C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA);
 	} else {

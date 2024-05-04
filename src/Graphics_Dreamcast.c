@@ -60,7 +60,7 @@ void Gfx_Free(void) {
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
 void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+static void SetAlphaBlend(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -353,7 +353,7 @@ static FogFunc gfx_fogMode = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
+	gl_Toggle(GL_FOG);
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -372,7 +372,7 @@ static void UpdateFog(void) {
 	if (gfx_fogMode == FOG_LINEAR) {
 		pvr_fog_table_linear(0.0f, gfx_fogEnd);
 	} else if (gfx_fogMode == FOG_EXP) {
-    		pvr_fog_table_exp(gfx_fogDensity);
+		pvr_fog_table_exp(gfx_fogDensity);
 	} else if (gfx_fogMode == FOG_EXP2) {
 		pvr_fog_table_exp2(gfx_fogDensity);
 	}
@@ -482,17 +482,6 @@ void DrawQuads(int count) {
 	}
 }
 
-
-static void SetupVertices(int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-		gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	} else {
-		cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-		gldcVertexPointer(SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
-	}
-}
-
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_format) return;
 	gfx_format = fmt;
@@ -512,10 +501,10 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-                VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
-        } else {
-                VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
-        }
+		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	} else {
+		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
+	}
 
 	DrawQuads(verticesCount);
 }

@@ -8,7 +8,6 @@
 
 // TODO track last frame used on
 static cc_bool gfx_depthOnly;
-static cc_bool gfx_alphaBlending;
 static int frontBufferIndex, backBufferIndex;
 // Inspired from
 // https://github.com/xerpi/gxmfun/blob/master/source/main.c
@@ -242,7 +241,7 @@ static void FP_SwitchActive(void) {
 	// [normal rendering, blend rendering, no rendering]
 	if (gfx_depthOnly) {
 		index += 2;
-	} else if (gfx_alphaBlending) {
+	} else if (gfx_alphaBlend) {
 		index += 1;
 	}
 	
@@ -968,8 +967,7 @@ static void SetAlphaTest(cc_bool enabled) {
 	FP_SwitchActive();
 }
  
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	gfx_alphaBlending = enabled;
+static void SetAlphaBlend(cc_bool enabled) {
 	FP_SwitchActive();
 }
 

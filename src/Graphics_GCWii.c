@@ -187,7 +187,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	GX_SetCullMode(enabled ? GX_CULL_FRONT : GX_CULL_NONE);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	if (enabled) {
 		GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
 	} else {
