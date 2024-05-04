@@ -244,7 +244,6 @@ void Gfx_DisableMipmaps(void) { }
 *#########################################################################################################################*/
 static int clearR, clearG, clearB;
 static cc_bool gfx_alphaBlend;
-static cc_bool gfx_alphaTest;
 static cc_bool gfx_depthTest;
 static cc_bool stateDirty;
 
@@ -274,9 +273,8 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	gfx_alphaTest = enabled;
-	stateDirty    = true;
+static void SetAlphaTest(cc_bool enabled) {
+	stateDirty = true;
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {

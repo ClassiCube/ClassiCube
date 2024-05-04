@@ -377,7 +377,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	/* TODO: Implemen fake exp/exp2 fog */
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
+static void SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;

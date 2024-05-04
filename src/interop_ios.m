@@ -76,7 +76,7 @@ static UIInterfaceOrientationMask SupportedOrientations(void) {
 
 static cc_bool fullscreen = true;
 static void UpdateStatusBar(void) {
-    if (@available(iOS 10.7, *)) {
+    if ([cc_controller respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
         // setNeedsStatusBarAppearanceUpdate - iOS 7.0
         [cc_controller setNeedsStatusBarAppearanceUpdate];
     } else {
@@ -509,16 +509,16 @@ void ShowDialogCore(const char* title, const char* msg) {
     NSString* _msg   = [NSString stringWithCString:msg encoding:NSASCIIStringEncoding];
     alert_completed  = false;
     
-    if (@available(iOS 10.8, *)) {
-        UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
-        [alert addAction:okBtn];
-        [cc_controller presentViewController:alert animated:YES completion: Nil];
-    } else {
-        UIAlertView* alert = [UIAlertView alloc];
-        alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
-        [alert show];
-    }
+#ifdef TARGET_OS_TV
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { alert_completed = true; }];
+    [alert addAction:okBtn];
+    [cc_controller presentViewController:alert animated:YES completion: Nil];
+#else
+    UIAlertView* alert = [UIAlertView alloc];
+    alert = [alert initWithTitle:_title message:_msg delegate:cc_controller cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    [alert show];
+#endif
     
     // TODO clicking outside message box crashes launcher
     // loop until alert is closed TODO avoid sleeping
@@ -651,18 +651,15 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
         if (utType) [types addObject:utType];
     }
     
-    if (@available(iOS 10.8, *)) {
-        UIDocumentPickerViewController* dlg;
-        dlg = [UIDocumentPickerViewController alloc];
-        dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
-        //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
-        
-        open_dlg_callback = args->Callback;
-        dlg.delegate = cc_controller;
-        [cc_controller presentViewController:dlg animated:YES completion: Nil];
-        return 0; // TODO still unfinished
-    }
-    return ERR_NOT_SUPPORTED;
+    UIDocumentPickerViewController* dlg;
+    dlg = [UIDocumentPickerViewController alloc];
+    dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeOpen];
+    //dlg = [dlg initWithDocumentTypes:types inMode:UIDocumentPickerModeImport];
+    
+    open_dlg_callback = args->Callback;
+    dlg.delegate = cc_controller;
+    [cc_controller presentViewController:dlg animated:YES completion: Nil];
+    return 0; // TODO still unfinished
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
@@ -680,16 +677,13 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
     NSString* str = ToNSString(&save_path);
     NSURL* url    = [NSURL fileURLWithPath:str isDirectory:NO];
     
-    if (@available(iOS 10.8, *)) {
-        UIDocumentPickerViewController* dlg;
-        dlg = [UIDocumentPickerViewController alloc];
-        dlg = [dlg initWithURL:url inMode:UIDocumentPickerModeExportToService];
-        
-        dlg.delegate = cc_controller;
-        [cc_controller presentViewController:dlg animated:YES completion: Nil];
-        return 0; // TODO still unfinished
-    }
-    return ERR_NOT_SUPPORTED;
+    UIDocumentPickerViewController* dlg;
+    dlg = [UIDocumentPickerViewController alloc];
+    dlg = [dlg initWithURL:url inMode:UIDocumentPickerModeExportToService];
+    
+    dlg.delegate = cc_controller;
+    [cc_controller presentViewController:dlg animated:YES completion: Nil];
+    return 0;
 }
 
 

@@ -447,7 +447,7 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	}
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { 
+static void SetAlphaTest(cc_bool enabled) {
 	C3D_AlphaTest(enabled, GPU_GREATER, 0x7F);
 }
 

@@ -691,7 +691,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 static ID3D11SamplerState* ps_samplers[2];
 static ID3D11PixelShader* ps_shaders[12];
 static ID3D11Buffer* ps_cBuffer;
-static cc_bool ps_alphaTesting, ps_mipmaps;
+static cc_bool ps_mipmaps;
 static float ps_fogEnd, ps_fogDensity;
 static PackedCol ps_fogColor;
 static int ps_fogMode;
@@ -725,7 +725,7 @@ static void PS_CreateShaders(void) {
 
 static int PS_CalcShaderIndex(void) {
 	int idx = gfx_format == VERTEX_FORMAT_COLOURED ? 0 : 1;
-	if (ps_alphaTesting) idx += 2;
+	if (gfx_alphaTest) idx += 2;
 
 	if (gfx_fogEnabled) {
 		// uncomment when it works
@@ -822,8 +822,7 @@ static void PS_Free(void) {
 	PS_FreeConstants();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	ps_alphaTesting = enabled;
+static void SetAlphaTest(cc_bool enabled) {
 	PS_UpdateShader();
 }
 // unnecessary? check if any performance is gained, probably irrelevant

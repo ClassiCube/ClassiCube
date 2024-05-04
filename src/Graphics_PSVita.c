@@ -8,7 +8,7 @@
 
 // TODO track last frame used on
 static cc_bool gfx_depthOnly;
-static cc_bool gfx_alphaTesting, gfx_alphaBlending;
+static cc_bool gfx_alphaBlending;
 static int frontBufferIndex, backBufferIndex;
 // Inspired from
 // https://github.com/xerpi/gxmfun/blob/master/source/main.c
@@ -246,7 +246,7 @@ static void FP_SwitchActive(void) {
 		index += 1;
 	}
 	
-	if (gfx_alphaTesting) index += 2 * 3;
+	if (gfx_alphaTest) index += 2 * 3;
 	
 	FragmentProgram* FP = &FP_list[index];
 	if (FP == FP_Active) return;
@@ -964,8 +964,7 @@ void Gfx_SetFogMode(FogFunc func) {
  // TODO
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	gfx_alphaTesting = enabled;
+static void SetAlphaTest(cc_bool enabled) {
 	FP_SwitchActive();
 }
  

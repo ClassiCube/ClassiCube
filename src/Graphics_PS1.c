@@ -288,7 +288,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	// TODO
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {

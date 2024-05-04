@@ -11,7 +11,6 @@ static float vp_hwidth, vp_hheight;
 static int sc_maxX, sc_maxY;
 
 static cc_bool alphaBlending;
-static cc_bool alphaTest;
 
 static PackedCol* colorBuffer;
 static PackedCol clearColor;
@@ -115,8 +114,8 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	faceCulling = enabled;
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	alphaTest = enabled;
+static void SetAlphaTest(cc_bool enabled) {
+	/* Uses value from Gfx_SetAlphaTest */
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
@@ -401,7 +400,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 				G = (G * A) / 255 + (dstG * (255 - A)) / 255;
 				B = (B * A) / 255 + (dstB * (255 - A)) / 255;
 			}
-			if (alphaTest && A < 0x80) continue;
+			if (gfx_alphaTest && A < 0x80) continue;
 
 			if (depthWrite) depthBuffer[index] = z;
 			colorBuffer[index] = BitmapCol_Make(R, G, B, 0xFF);

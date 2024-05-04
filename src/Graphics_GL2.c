@@ -202,7 +202,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 
 /* cached uniforms (cached for multiple programs */
 static struct Matrix _view, _proj, _mvp;
-static cc_bool gfx_alphaTest, gfx_texTransform;
+static cc_bool gfx_texTransform;
 static float _texX, _texY;
 static PackedCol gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
@@ -500,7 +500,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	SwitchProgram();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
+static void SetAlphaTest(cc_bool enabled) { SwitchProgram(); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;

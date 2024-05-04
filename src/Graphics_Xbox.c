@@ -305,7 +305,7 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	pb_end(p);
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { 	
+static void SetAlphaTest(cc_bool enabled) {
 	uint32_t* p = pb_begin();
 	p = pb_push1(p, NV097_SET_ALPHA_TEST_ENABLE, enabled);
 	pb_end(p);

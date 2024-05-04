@@ -316,7 +316,7 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 	rsxSetAlphaTestEnable(context, enabled);
 }
 

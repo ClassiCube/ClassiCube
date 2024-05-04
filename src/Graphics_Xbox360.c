@@ -155,7 +155,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	// TODO
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 	Xe_SetAlphaTestEnable(xe, enabled);
 }
 

@@ -177,7 +177,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	// TODO
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 	GX2SetAlphaTest(enabled, GX2_COMPARE_FUNC_GEQUAL, 0.5f);
 }
 

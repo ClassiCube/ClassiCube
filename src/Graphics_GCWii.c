@@ -409,7 +409,7 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 	if (enabled) {
 		GX_SetAlphaCompare(GX_GREATER, 127, GX_AOP_AND, GX_ALWAYS, 0);
 	} else {
