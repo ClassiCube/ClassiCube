@@ -558,6 +558,7 @@ static cc_result ConnectionPool_Open(struct HttpConnection** conn, const struct 
 *--------------------------------------------------------HttpClient-------------------------------------------------------*
 *#########################################################################################################################*/
 enum HTTP_RESPONSE_STATE {
+	HTTP_RESPONSE_STATE_INITIAL,
 	HTTP_RESPONSE_STATE_HEADER,
 	HTTP_RESPONSE_STATE_DATA,
 	HTTP_RESPONSE_STATE_CHUNK_HEADER,
@@ -583,7 +584,7 @@ struct HttpClientState {
 };
 
 static void HttpClientState_Reset(struct HttpClientState* state) {
-	state->state       = HTTP_RESPONSE_STATE_HEADER;
+	state->state       = HTTP_RESPONSE_STATE_INITIAL;
 	state->chunked     = 0;
 	state->dataLeft    = 0;
 	state->autoClose   = false;
@@ -705,6 +706,9 @@ static cc_result HttpClient_Process(struct HttpClientState* state, char* buffer,
 
 	while (offset < total) {
 		switch (state->state) {
+		case HTTP_RESPONSE_STATE_INITIAL:
+			state->state = HTTP_RESPONSE_STATE_HEADER;
+			break;
 
 		case HTTP_RESPONSE_STATE_HEADER:
 		{
@@ -836,8 +840,8 @@ static cc_result HttpClient_ParseResponse(struct HttpClientState* state) {
 		if (res) return res;
 
 		if (total == 0) {
-			Platform_LogConst("Http read unexpectedly returned 0");
-			return ERR_END_OF_STREAM;
+			Platform_Log1("Http read unexpectedly returned 0 in state %i", &state->state);
+			return state->state == HTTP_RESPONSE_STATE_INITIAL ? HTTP_ERR_NO_RESPONSE : ERR_END_OF_STREAM;
 		}
 
 		if (dst != buffer) {
@@ -912,6 +916,11 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* urlStr) {
 		/* TODO: Can we handle this while preserving the TCP connection */
 		if (res == SSL_ERR_CONTEXT_DEAD && !retried) {
 			Platform_LogConst("Resetting connection due to SSL context being dropped..");
+			res = HttpBackend_PerformRequest(&state);
+			retried = true;
+		}
+		if (res == HTTP_ERR_NO_RESPONSE && !retried) {
+			Platform_LogConst("Resetting connection due to empty response..");
 			res = HttpBackend_PerformRequest(&state);
 			retried = true;
 		}

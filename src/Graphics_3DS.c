@@ -806,7 +806,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row1.y = -2.0f / width;
 	matrix->row4.y =  1.0f;
 	
-	matrix->row3.z = 1.0f / (zNear - zFar);		
+	matrix->row3.z = 1.0f / (zNear - zFar);
 	matrix->row4.z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
 	matrix->row4.w = 1.0f;
 }
