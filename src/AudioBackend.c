@@ -1544,7 +1544,7 @@ struct AudioContext {
 	HKAI hkai;
 	void *buffers[AUDIO_MAX_BUFFERS];
 	cc_uint32 bufferSize[AUDIO_MAX_BUFFERS];
-	int	fillBuffer, playbackBuffer;
+	int	fillBuffer, drainBuffer;
 	int	indexIntoBuffer;
 };
 
@@ -1555,66 +1555,38 @@ CC_INLINE void getNextBuffer(int count, int *bufferIndex) {
 
 ULONG APIENTRY kaiCallback(PVOID data, PVOID buffer, ULONG size) { 
 	struct AudioContext *ctx = (struct AudioContext*)data;
-	void* dest = buffer;
-	void* src = ctx->buffers[ctx->playbackBuffer];
-	cc_uint32 len = 0;
-	cc_uint32 bufferRemaining = ctx->bufferSize[ctx->playbackBuffer] - ctx->indexIntoBuffer;
-
-	if (src == NULL) {// Current buffer is empty
-		int inUse = 0;
-		Audio_Poll(ctx, &inUse);
-		if (inUse == 0) {
-			// No more buffers, we are done.
-			printf("Short Done\n");
-			return 0;
-		}
-		//Search for next buffer
-		for(inUse = 0; inUse < ctx->count; inUse++) {
-			getNextBuffer(ctx->count, &ctx->playbackBuffer);
-			if (ctx->buffers[ctx->playbackBuffer] != NULL) {
-				src = ctx->buffers[ctx->playbackBuffer];
-				bufferRemaining = ctx->bufferSize[ctx->playbackBuffer] - ctx->indexIntoBuffer;
-				break;
-			}
-		}
-	}
-
-	len = min(bufferRemaining, size);
-	Mem_Copy(dest, src, len);
+	char* dst = buffer;
+	void* src = ctx->buffers[ctx->drainBuffer];
+	cc_uint32 read = 0;
 	
-	// We have to fill the buffer completely, or KAI will stop playback
-	if (len < size) {
-		cc_uint32 len2 = size - len;
-		// Reset the current buffer
-  	ctx->bufferSize[ctx->playbackBuffer] = 0;
-  	ctx->buffers[ctx->playbackBuffer] = NULL;
-  	// Begin at the next buffer and go to it// Goto next buffer
-  	ctx->indexIntoBuffer = 0;
-		getNextBuffer(ctx->count, &ctx->playbackBuffer);
-		src = ctx->buffers[ctx->playbackBuffer];
-		// Most likely we are done
-		if (src == NULL) return len;
+	if (!src) return 0; // Reached end of playable queue
+
+	while (size) {
+  	cc_uint32 bufferLeft = ctx->bufferSize[ctx->drainBuffer] - ctx->indexIntoBuffer;
+		cc_uint32 len = min(bufferLeft, size);
 		
-		Mem_Copy(dest + len, src, len2); 
-		len += len2;
-		ctx->indexIntoBuffer += len2;
+		Mem_Copy(dst, src + ctx->indexIntoBuffer, len);
+		
+		dst  += len;
+		read += len;
+		size -= len;
+		ctx->indexIntoBuffer += len;
+		
+		// Finished current buffer
+		if (ctx->indexIntoBuffer >= ctx->bufferSize[ctx->drainBuffer]) {
+			// Reset the current buffer
+			ctx->bufferSize[ctx->drainBuffer] = 0;
+			ctx->buffers[ctx->drainBuffer]    = NULL;
+			// Begin at the next buffer and go to it
+			ctx->drainBuffer  = (ctx->drainBuffer + 1) % ctx->count;
+			ctx->indexIntoBuffer = 0;
+			src = ctx->buffers[ctx->drainBuffer]; 
+			if (!src) break; // Reached end of playable queue
+		}
 	}
-	
-	//printf("callback %d %d %d %d\n",size,ctx->count,ctx->bufferSize,len);
-  //printf("copied %d index %d buffer# %d\n", len, ctx->indexIntoBuffer, ctx->playbackBuffer);
 
-  ctx->indexIntoBuffer += len;
-  if (ctx->indexIntoBuffer >= ctx->bufferSize[ctx->playbackBuffer]) {
-  	// Reset the current buffer
-  	ctx->bufferSize[ctx->playbackBuffer] = 0;
-  	ctx->buffers[ctx->playbackBuffer] = NULL;
-  	// Begin at the next buffer and go to it
-  	ctx->indexIntoBuffer = 0;
-  	getNextBuffer(ctx->count, &ctx->playbackBuffer);
-  }
-  if (len < size) printf("Done\n");
-  return len;
-}		                               
+	return read;
+}
 
 cc_bool AudioBackend_Init(void) {
 	KAISPEC ksWanted, ksObtained;
@@ -1641,13 +1613,14 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 		ctx->bufferSize[i] = 0;
 	}
 	ctx->fillBuffer = 0;
-	ctx->playbackBuffer = 0;
+	ctx->drainBuffer = 0;
 	ctx->indexIntoBuffer = 0;
   return 0;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
 printf("Audio_CLose\n");
+	ctx->count = 0;
 	if (ctx->hkai > 0) {
 		kaiStop(ctx->hkai);
 		kaiClose(ctx->hkai);
@@ -1664,8 +1637,8 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
   ksWanted.ulSamplingRate     = Audio_AdjustSampleRate(sampleRate, playbackRate);
   ksWanted.ulDataFormat       = 0;
   ksWanted.ulChannels         = channels;
-  ksWanted.ulNumBuffers       = ctx->count;
-  ksWanted.ulBufferSize       = 4096*8;
+  ksWanted.ulNumBuffers       = 0;
+  ksWanted.ulBufferSize       = 0;
   ksWanted.fShareable         = TRUE;
   ksWanted.pfnCallBack        = kaiCallback;
   ksWanted.pCallBackData      = (PVOID)ctx;
@@ -1676,8 +1649,8 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
   	ctx->hkai = 0;
   	return rc;
   }
-  
-  kaiSetSoundState(ctx->hkai, MCI_SET_AUDIO_ALL, true);
+
+	kaiSetSoundState(ctx->hkai, MCI_SET_AUDIO_ALL, true);
 	return 0;
 }
 
@@ -1687,10 +1660,13 @@ void Audio_SetVolume(struct AudioContext* ctx, int volume) {
 }
 
 cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size) {
+	if (ctx->buffers[ctx->fillBuffer])
+		return ERR_INVALID_ARGUMENT; // tried to queue data while either playing or queued still
+	
 //printf("-> select buffer %d\n", ctx->fillBuffer);
-	ctx->buffers[ctx->fillBuffer] = chunk;
+  ctx->buffers[ctx->fillBuffer]    = chunk;
 	ctx->bufferSize[ctx->fillBuffer] = size;
-	getNextBuffer(ctx->count, &ctx->fillBuffer);
+	ctx->fillBuffer = (ctx->fillBuffer + 1) % ctx->count;
 //printf("<- select buffer %d\n", ctx->fillBuffer);
 	return 0;
 }
