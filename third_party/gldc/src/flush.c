@@ -45,7 +45,6 @@ void APIENTRY glKosInit() {
 
 void APIENTRY glKosSwapBuffers() {
     TRACE();
-    pvr_wait_ready();
     
     pvr_scene_begin();   
         if(aligned_vector_size(&OP_LIST.vector) > 2) {

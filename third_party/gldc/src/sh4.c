@@ -367,19 +367,16 @@ void SceneListSubmit(Vertex* v3, int n) {
             Vertex* a2 = &scratch[1];
             memcpy_vertex(a0, v0);
             memcpy_vertex(a2, v2);
-            
-            visible_mask &= (V0_VIS | V1_VIS | V2_VIS);       
+
             v2->flags = GPU_CMD_VERTEX_EOL;
-            SubmitTriangle(v0, v1, v2, visible_mask);
-            
-            visible_mask = (
-                (a2->xyz[2] > -a2->w) << 0 |
-                (v3->xyz[2] > -v3->w) << 1 |
-                (a0->xyz[2] > -a0->w) << 2
-            );         
+            SubmitTriangle(v0, v1, v2, 
+                visible_mask & (V0_VIS | V1_VIS | V2_VIS));
+
             v3->flags = GPU_CMD_VERTEX;
             a0->flags = GPU_CMD_VERTEX_EOL;
-            SubmitTriangle(a2, v3, a0, visible_mask);
+            SubmitTriangle(a2, v3, a0, 
+                (visible_mask & (V2_VIS | V3_VIS)) >> 2 | // v2 -> v0, v3 -> v1
+                (visible_mask &            V0_VIS) << 2); // v0 -> v2
         }
         break;
         }

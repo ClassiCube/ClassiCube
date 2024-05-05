@@ -560,6 +560,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
+	pvr_wait_ready();
 	glKosSwapBuffers();
 	if (gfx_minFrameMs) LimitFPS();
 }

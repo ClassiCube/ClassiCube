@@ -560,7 +560,7 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
+		GX_Color1u32(v->Col);
 	}
 	GX_End();
 }
@@ -572,7 +572,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
+		GX_Color1u32(v->Col);
 		GX_TexCoord2f32(v->U, v->V);
 	}
 	GX_End();
