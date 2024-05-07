@@ -62,4 +62,10 @@ CC_VAR extern struct _Lighting {
 
 void Lighting_SwitchActive(void);
 void Lighting_ApplyActive(void);
+void ModernLighting_SetActive(void);
+
+void ClassicLighting_FreeState(void);
+void ClassicLighting_AllocState(void);
+int ClassicLighting_GetLightHeight(int x, int z);
+void ClassicLighting_LightHint(int startX, int startZ);
 #endif

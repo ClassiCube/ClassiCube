@@ -500,6 +500,7 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
+    <ClCompile Include="ModernLighting.c" />
     <ClCompile Include="Platform_3DS.c" />
     <ClCompile Include="Platform_Android.c" />
     <ClCompile Include="Platform_Dreamcast.c" />

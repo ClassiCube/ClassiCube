@@ -752,6 +752,9 @@
     <ClCompile Include="Window_WiiU.cpp">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
+    <ClCompile Include="ModernLighting.c">
+      <Filter>Source Files\Map</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc">
