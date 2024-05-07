@@ -566,7 +566,7 @@ static PackedCol Normal_LightColor(int x, int y, int z, Face face, BlockID block
 	case FACE_YMIN:
 		return Lighting.Color_YMin_Fast(x, y - offset, z);		
 	case FACE_YMAX:
-		return Lighting.Color_Fast(x, y + offset, z);
+		return Lighting.Color_YMax_Fast(x, y + offset, z);
 	}
 	return 0; /* should never happen */
 }
@@ -1337,13 +1337,13 @@ static void Modern_DrawXMin(int count, int x, int y, int z) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_XMIN];
+	vertices = part->faces.vertices[FACE_XMIN];
 	v.x = adv_x1;
 		v.y = adv_y2; v.z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
 		              v.z = adv_z1;               v.U = u1;           v.Col = col1_0; *vertices++ = v;
 		v.y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
 		              v.z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
-	part->fVertices[FACE_XMIN] = vertices;
+	part->faces.vertices[FACE_XMIN] = vertices;
 }
 
 static void Modern_DrawXMax(int count, int x, int y, int z) {
@@ -1370,13 +1370,13 @@ static void Modern_DrawXMax(int count, int x, int y, int z) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_XMAX];
+	vertices = part->faces.vertices[FACE_XMAX];
 	v.x = adv_x2;
 		v.y = adv_y2; v.z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
 		v.y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
 		              v.z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
 		v.y = adv_y2;                                       v.V = v1; v.Col = col1_0; *vertices++ = v;
-	part->fVertices[FACE_XMAX] = vertices;
+	part->faces.vertices[FACE_XMAX] = vertices;
 }
 
 static PackedCol Modern_GetColorZ(PackedCol orig, int x, int y, int z, int oX, int oY) {
@@ -1416,13 +1416,13 @@ static void Modern_DrawZMin(int count, int x, int y, int z) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_ZMIN];
+	vertices = part->faces.vertices[FACE_ZMIN];
 	v.z = adv_z1;
 		v.x = adv_x1;               v.y = adv_y1; v.U = u1; v.V = v2; v.Col = col0_0; *vertices++ = v;
 		                            v.y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
 		                            v.y = adv_y1;           v.V = v2; v.Col = col1_0; *vertices++ = v;
-	part->fVertices[FACE_ZMIN] = vertices;
+	part->faces.vertices[FACE_ZMIN] = vertices;
 }
 
 static void Modern_DrawZMax(int count, int x, int y, int z) {
@@ -1449,13 +1449,13 @@ static void Modern_DrawZMax(int count, int x, int y, int z) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_ZMAX];
+	vertices = part->faces.vertices[FACE_ZMAX];
 	v.z = adv_z2;
 		v.x = adv_x2 + (count - 1); v.y = adv_y2; v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
 		v.x = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
 		                            v.y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
-	part->fVertices[FACE_ZMAX] = vertices;
+	part->faces.vertices[FACE_ZMAX] = vertices;
 }
 
 static PackedCol Modern_GetColorYMin(PackedCol orig, int x, int y, int z, int oX, int oZ) {
@@ -1495,13 +1495,13 @@ static void Modern_DrawYMin(int count, int x, int y, int z) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_YMIN];
+	vertices = part->faces.vertices[FACE_YMIN];
 	v.y = adv_y1;
 		v.x = adv_x1;               v.z = adv_z2; v.U = u1; v.V = v2; v.Col = col0_1; *vertices++ = v;
 		                            v.z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
 		                            v.z = adv_z2;           v.V = v2; v.Col = col1_1; *vertices++ = v;
-	part->fVertices[FACE_YMIN] = vertices;
+	part->faces.vertices[FACE_YMIN] = vertices;
 }
 
 static PackedCol Modern_GetColorYMax(PackedCol orig, int x, int y, int z, int oX, int oZ) {
@@ -1542,13 +1542,13 @@ static void Modern_DrawYMax(int count, int x, int y, int z) {
 		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
-	vertices = part->fVertices[FACE_YMAX];
+	vertices = part->faces.vertices[FACE_YMAX];
 	v.y = adv_y2;
 		v.x = adv_x1;               v.z = adv_z1; v.U = u1; v.V = v1; v.Col = col0_0; *vertices++ = v;
 		                            v.z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
 		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
 		                            v.z = adv_z1;           v.V = v1; v.Col = col1_0; *vertices++ = v;
-	part->fVertices[FACE_YMAX] = vertices;
+	part->faces.vertices[FACE_YMAX] = vertices;
 }
 
 static void Modern_RenderBlock(int index, int x, int y, int z) {

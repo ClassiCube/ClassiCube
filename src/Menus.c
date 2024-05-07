@@ -2923,7 +2923,6 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
 		{ -1,  50,  "Modern lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetModernLighting,     GraphicsOptionsScreen_SetModernLighting },
-
 		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
 		{ 1, -100, "Names",   MenuOptionsScreen_Enum,
@@ -2967,8 +2966,8 @@ void GraphicsOptionsScreen_Show(void) {
 	MenuInput_Float(menuOpts_descs[0], 1, 100, 20);
 	MenuInput_Enum(menuOpts_descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(menuOpts_descs[2],  8, 4096, 512);
-	MenuInput_Enum(menuOpts_descs[5], NameMode_Names,   NAME_MODE_COUNT);
-	MenuInput_Enum(menuOpts_descs[6], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[6], NameMode_Names,   NAME_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[7], ShadowMode_Names, SHADOW_MODE_COUNT);
 
 	MenuOptionsScreen_Show(GraphicsOptionsScreen_InitWidgets);
 }

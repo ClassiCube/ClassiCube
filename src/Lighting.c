@@ -214,7 +214,11 @@ static PackedCol ClassicLighting_Color_XSide(int x, int y, int z) {
 	return y > Heightmap_GetLightHeight(x, z) ? Env.SunXSide : Env.ShadowXSide;
 }
 
-static PackedCol ClassicLighting_Color_Fast(int x, int y, int z) {
+static PackedCol ClassicLighting_Color_Sprite_Fast(int x, int y, int z) {
+	return y > heightmap[Heightmap_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
+}
+
+static PackedCol ClassicLighting_Color_YMax_Fast(int x, int y, int z) {
 	return y > heightmap[Heightmap_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
@@ -378,16 +382,17 @@ static void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock
 
 static void ClassicLighting_SetActive(void) {
 	Lighting.OnBlockChanged = ClassicLighting_OnBlockChanged;
-	Lighting.Refresh = Heightmap_Reset;;
+	Lighting.Refresh = Heightmap_Reset;
 	Lighting.IsLit   = ClassicLighting_IsLit;
 	Lighting.Color   = ClassicLighting_Color;
 	Lighting.Color_XSide = ClassicLighting_Color_XSide;
 
-	Lighting.IsLit_Fast = ClassicLighting_IsLit_Fast;
-	Lighting.Color_Fast = ClassicLighting_Color_Fast;
-	Lighting.Color_YMin_Fast  = ClassicLighting_Color_YMin_Fast;
-	Lighting.Color_XSide_Fast = ClassicLighting_Color_XSide_Fast;
-	Lighting.Color_ZSide_Fast = ClassicLighting_Color_ZSide_Fast;
+	Lighting.IsLit_Fast        = ClassicLighting_IsLit_Fast;
+	Lighting.Color_Sprite_Fast = ClassicLighting_Color_Sprite_Fast;
+	Lighting.Color_YMax_Fast   = ClassicLighting_Color_YMax_Fast;
+	Lighting.Color_YMin_Fast   = ClassicLighting_Color_YMin_Fast;
+	Lighting.Color_XSide_Fast  = ClassicLighting_Color_XSide_Fast;
+	Lighting.Color_ZSide_Fast  = ClassicLighting_Color_ZSide_Fast;
 
 	Lighting.FreeState  = Heightmap_Free;
 	Lighting.AllocState = Heightmap_Allocate;
@@ -929,14 +934,17 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 static PackedCol ModernLighting_Color(int x, int y, int z) {
 	return ModernLighting_Color_Core(x, y, z, modernLighting_palette, Env.SunCol);
 }
+static PackedCol ModernLighting_Color_YMaxSide(int x, int y, int z) {
+	return ModernLighting_Color_Core(x, y, z, modernLighting_palette, Env.SunCol);
+}
+static PackedCol ModernLighting_Color_YMinSide(int x, int y, int z) {
+	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteY, Env.SunYMin);
+}
 static PackedCol ModernLighting_Color_XSide(int x, int y, int z) {
 	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteX, Env.SunXSide);
 }
 static PackedCol ModernLighting_Color_ZSide(int x, int y, int z) {
 	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteZ, Env.SunZSide);
-}
-static PackedCol ModernLighting_Color_YMinSide(int x, int y, int z) {
-	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteY, Env.SunYMin);
 }
 
 static void ModernLighting_LightHint(int startX, int startY, int startZ) {
@@ -958,13 +966,14 @@ static void ModernLighting_LightHint(int startX, int startY, int startZ) {
 
 static void ModernLighting_SetActive(void) {
 	Lighting.OnBlockChanged = ModernLighting_OnBlockChanged;
-	Lighting.Refresh = ModernLighting_Refresh;
-	Lighting.IsLit   = ModernLighting_IsLit;
-	Lighting.Color   = ModernLighting_Color;
-	Lighting.Color_XSide = ModernLighting_Color_XSide;
+	Lighting.Refresh        = ModernLighting_Refresh;
+	Lighting.IsLit          = ModernLighting_IsLit;
+	Lighting.Color          = ModernLighting_Color;
+	Lighting.Color_XSide    = ModernLighting_Color_XSide;
 
-	Lighting.IsLit_Fast = ModernLighting_IsLit_Fast;
-	Lighting.Color_Fast = ModernLighting_Color;
+	Lighting.IsLit_Fast        = ModernLighting_IsLit_Fast;
+	Lighting.Color_Sprite_Fast = ModernLighting_Color;
+	Lighting.Color_YMax_Fast   = ModernLighting_Color;
 	Lighting.Color_YMin_Fast   = ModernLighting_Color_YMinSide;
 	Lighting.Color_XSide_Fast  = ModernLighting_Color_XSide;
 	Lighting.Color_ZSide_Fast  = ModernLighting_Color_ZSide;
