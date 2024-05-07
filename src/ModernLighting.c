@@ -504,7 +504,7 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
-static void ModernLighting_OnBlockChanged(void) {}
+static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) { }
 static void ModernLighting_Refresh(void) {
 	ModernLighting_InitPalettes();
 	/* Set all the chunk lighting data flags to CHUNK_UNCALCULATED? */
