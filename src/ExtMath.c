@@ -156,12 +156,10 @@ static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
 /* TODO: Properly investigate this issue */
 /* double make_dreamcast_build_compile(void) { fabs(4); } */
 
-double Math_Sin(double x)  { return sin(x); }
-double Math_Cos(double x)  { return cos(x); }
+double Math_Sin(double x)  { return sinf(x); }
+double Math_Cos(double x)  { return cosf(x); }
 double Math_Exp2(double x) { return exp2(x); }
 double Math_Log2(double x) { return log2(x); }
-
-float Math_Atan2f(float x, float y) { return atan2f(y, x); }
 #else
 /***** Caleb's Math functions *****/
 
@@ -445,7 +443,7 @@ double Math_Log2(double x) {
 
 	return exponent + Log2Stage1(doi.d);
 }
-
+#endif
 
 // Approximation of atan2f using the Remez algorithm
 //  https://math.stackexchange.com/a/1105038
@@ -468,4 +466,3 @@ float Math_Atan2f(float x, float y) {
 	if (y < 0)   r = -r;
 	return r;
 }
-#endif
