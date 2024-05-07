@@ -45,67 +45,71 @@ static ULONG bufferScanLineSize, bufferScanLines;
 static ULONG clrColor;
 RECTL rcls[50];
 ULONG ulNumRcls;
-//static HDC win_DC;
-//static cc_bool suppress_resize;
-//static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
-//static cc_bool grabCursor;
-//static int windowX, windowY;
+static int win_width, win_height; /* Size of window including titlebar and borders */
+static int windowX, windowY;
 FOURCC fccColorFormat;
 
-// -- DEBUG VARIABLES
-ULONG bufferSize = 0;
-// ------------------
-
-static const cc_uint8 key_map[14 * 16] = { 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, '0', '1', '2',
-	'3', '4', '5', '6', '7', '8', '9', 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 'A', 'B', 'C', 'D',
-	'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-  'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-	'Y', 'Z', 0
-};
-
-static int MapNativeKey(MPARAM mp1, MPARAM mp2) {
-	USHORT flags = SHORT1FROMMP(mp1);
-	USHORT scanCode = CHAR4FROMMP(mp1);
-
-//printf("virtualkey %u kc_char %u scancode %u key %u char %u\n",flags&KC_VIRTUALKEY,flags&KC_CHAR,scanCode,vkey,char_);
-if (flags & KC_CHAR) {
-	//printf("key %c\n",SHORT1FROMMP(mp2));
-	return SHORT1FROMMP(mp2);
-}
-
-	if (flags & KC_VIRTUALKEY)
-	{
-		USHORT vkey = SHORT2FROMMP(mp2);
-		switch (vkey)
-		{
-		case VK_CTRL:
-			return scanCode == 0x1D ? CCKEY_LCTRL : CCKEY_RCTRL;
-		case VK_ALT:
-			return scanCode == 0x38 ? CCKEY_LALT  : CCKEY_RALT;
-		case VK_ENTER:
-			return scanCode == 0x1C ? CCKEY_ENTER : CCKEY_KP_ENTER;
+/**
+ * Handling native keystrokes 
+ * Borrowed from SDL2 OS/2 code
+ **/
+static void MapKeys(MPARAM mp1, MPARAM mp2) {
+	ULONG   ulFlags = SHORT1FROMMP(mp1);      /* WM_CHAR flags         */
+	ULONG   ulVirtualKey = SHORT2FROMMP(mp2); /* Virtual key code VK_* */
+	ULONG   ulCharCode = SHORT1FROMMP(mp2);   /* Character code        */
+	ULONG   ulScanCode = CHAR4FROMMP(mp1);    /* Scan code             */    
+	static const int aScancode[] = {
+		INPUT_NONE, CCKEY_ESCAPE, CCKEY_1, CCKEY_2, CCKEY_3, CCKEY_4, CCKEY_5, CCKEY_6,
+		CCKEY_7, CCKEY_8, CCKEY_9, CCKEY_0, CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB,
+		CCKEY_Q, CCKEY_W, CCKEY_E, CCKEY_R, CCKEY_T, CCKEY_Y, CCKEY_U, CCKEY_I,
+		CCKEY_O, CCKEY_P, CCKEY_LBRACKET, CCKEY_RBRACKET, CCKEY_ENTER, CCKEY_LCTRL, CCKEY_A, CCKEY_S,
+		CCKEY_D, CCKEY_F, CCKEY_G, CCKEY_H, CCKEY_J, CCKEY_K, CCKEY_L, CCKEY_SEMICOLON,
+		INPUT_NONE, INPUT_NONE, CCKEY_LSHIFT, CCKEY_BACKSLASH, CCKEY_Z, CCKEY_X, CCKEY_C, CCKEY_V,
+		CCKEY_B, CCKEY_N, CCKEY_M, CCKEY_COMMA, CCKEY_PERIOD, CCKEY_SLASH, CCKEY_RSHIFT, CCKEY_KP_MULTIPLY,
+		CCKEY_LALT, CCKEY_SPACE, CCKEY_CAPSLOCK, CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5,
+		CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, CCKEY_KP7,
+		CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MINUS, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP_PLUS, CCKEY_KP1,
+		CCKEY_KP2, CCKEY_KP3, CCKEY_KP0, CCKEY_KP_DECIMAL, INPUT_NONE, INPUT_NONE, CCKEY_BACKSLASH,CCKEY_F11,
+		CCKEY_F12, CCKEY_PAUSE, CCKEY_KP_ENTER, CCKEY_RCTRL, CCKEY_KP_DIVIDE, INPUT_NONE, CCKEY_RALT, INPUT_NONE,
+		CCKEY_HOME, CCKEY_UP, CCKEY_PAGEUP, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_END, CCKEY_DOWN, CCKEY_PAGEDOWN,
+		CCKEY_F17, CCKEY_DELETE, CCKEY_F19, INPUT_NONE, INPUT_NONE, INPUT_NONE, INPUT_NONE, INPUT_NONE,
+		INPUT_NONE, INPUT_NONE, INPUT_NONE, INPUT_NONE,INPUT_NONE, INPUT_NONE, INPUT_NONE, INPUT_NONE,
+		INPUT_NONE, INPUT_NONE, INPUT_NONE, INPUT_NONE,INPUT_NONE,INPUT_NONE,CCKEY_LWIN, CCKEY_RWIN
+	};
+	
+	if ((ulFlags & KC_CHAR) != 0 && (ulFlags & KC_KEYUP) == 0) {
+		if (WinQueryCapture(HWND_DESKTOP) != hwndClient) {
+			char c;
+			if (Convert_TryCodepointToCP437(ulCharCode, &c)) {
+				Event_RaiseInt(&InputEvents.Press, c);
+				return;
+			}
 		}
-		printf("KC_VIRTUALKEY not mapped %u\n", vkey);
+		else {
+			Input_Set(ulCharCode, (ulFlags & KC_KEYUP) == 0);
+		}
 	}
-
-	return 0;
+	if ((ulFlags & KC_SCANCODE) != 0) {
+		Input_Set(aScancode[ulScanCode], (ulFlags & KC_KEYUP) == 0); 
+	}
 }
 
 static void RefreshWindowBounds() {
 	RECTL rect;
+	cc_bool changed = false;
 
 	if (WinQueryWindowRect(hwndClient, &rect)) {
 		Window_Main.Width = Rect_Width(rect);
 		Window_Main.Height = Rect_Height(rect);
+		if (Window_Main.Width != win_width || Window_Main.Height != win_height) {
+			changed = true;
+			win_width = Window_Main.Width;
+			win_height = Window_Main.Height;
+		}
+		if (changed) {
+			Event_RaiseVoid(&WindowEvents.StateChanged);
+			Event_RaiseVoid(&WindowEvents.Resized);
+		}
 	}
 }
 
@@ -114,25 +118,26 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 //printf("m %lu (%x)\n", message, message);
 	switch(message) {
 		case WM_CLOSE:
-			if (hwnd == hwndClient) {
-        WinSendMsg(hwndFrame, WM_SetVideoMode, (MPARAM)WS_DesktopDive, 0);
-				WinPostMsg(hwnd, WM_QUIT, 0L, 0L);
-			}
+			WinPostMsg(hwnd, WM_QUIT, 0L, 0L);
 			break;
 
 		case WM_QUIT:
-         Window_Free();
-				 Window_Main.Handle = NULL;
-				 Window_Main.Exists = false;
-				 break;
+			Window_Free();
+			Window_Main.Handle = NULL;
+			Window_Main.Exists = false;
+			break;
 
+		case WM_ACTIVATE:
+			//Window_Main.Focused = SHORT1FROMMP(mp1) != 0;
+			//Event_RaiseVoid(&WindowEvents.FocusChanged);
+			break;
+			
 		case WM_SIZE:
 			RefreshWindowBounds();
-			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
 			break;
 
 		case WM_MOVE:
-			Event_RaiseVoid(&WindowEvents.RedrawNeeded);
+			RefreshWindowBounds();
 			break;
 
 		case WM_ERASEBACKGROUND:
@@ -143,7 +148,8 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
       return FALSE;
       break;
 
-    case WM_VRNENABLED: {
+    case WM_VRNENABLED: 
+    	{
     		HPS hps;
     		HRGN hrgn;
     		RGNRECT  rgnCtl;
@@ -179,13 +185,14 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 			return FALSE;
       break;
 
-		case WM_MOUSEMOVE: {
+		case WM_MOUSEMOVE: 
+			{
 				SHORT x = SHORT1FROMMP(mp1);
 				SHORT y = Window_Main.Height - SHORT2FROMMP(mp1);
 				Pointer_SetPosition(0, x, y);
 			}
 			break;
-
+			
 		case WM_BUTTON1DOWN:
 			Input_SetPressed(CCMOUSE_L); break;
 		case WM_BUTTON3DOWN:
@@ -200,22 +207,11 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 		case WM_BUTTON2UP:
 			Input_SetReleased(CCMOUSE_R); break;
 
-		case WM_MATCHMNEMONIC:
+		case WM_CHAR: 
+			MapKeys(mp1, mp2);
 			return (MRESULT)TRUE;
-		case WM_CHAR: {
-//printf("WM_CHAR\n");
-			USHORT flags = SHORT1FROMMP(mp1);
-
-			int mappedKey = MapNativeKey(mp1, mp2);
-			if (mappedKey != 0) {
-				//printf("key mapped %c => %c\n", CHAR4FROMMP(mp1), mappedKey);
-				Input_SetPressed(mappedKey/*, (flags & KC_KEYUP) == 0*/);
-				break;
-			}
-		}
-		break;
 	}
-	//printf("default msg %lu (%x)\n", message, message);
+//printf("default msg %lu (%x)\n", message, message);
 	return WinDefWindowProc(hwnd, message, mp1, mp2);
 }
 
@@ -266,7 +262,7 @@ void Window_Init(void) {
 	if (msgQueue == NULLHANDLE) {
 		Logger_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window queue creation failed");
 	}
-
+	
 	// Init Dive
 	caps.pFormatData = fccFormats;
   caps.ulFormatLength = 100;
@@ -290,17 +286,17 @@ void Window_Init(void) {
 	DisplayInfo.Width = screencaps[CAPS_WIDTH];
 	DisplayInfo.Height = screencaps[CAPS_HEIGHT];
 	DisplayInfo.Depth = screencaps[CAPS_COLOR_BITCOUNT];
-	// OS/2 gives the resolution per meter
-	DisplayInfo.ScaleX = 1;
-	DisplayInfo.ScaleY = 1;
-	DisplayInfo.DPIScaling = false; /*Options_GetBool(OPT_DPI_SCALING, false)*/
+	DisplayInfo.ScaleX = 1.0;
+	DisplayInfo.ScaleY = 1.0;
+	DisplayInfo.DPIScaling = Options_GetBool(OPT_DPI_SCALING, false);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 }
 
 void Window_Create(int width, int height) {
-	ULONG ulFlags = FCF_TITLEBAR | FCF_SYSMENU | FCF_SHELLPOSITION | FCF_TASKLIST
-		| FCF_MINBUTTON | FCF_MAXBUTTON | FCF_SIZEBORDER | FCF_ICON;
-
+	ULONG ulFlags = FCF_SHELLPOSITION | FCF_TASKLIST
+		| FCF_SIZEBORDER | FCF_ICON | FCF_MAXBUTTON |FCF_MINBUTTON 
+		| FCF_MAXBUTTON | FCF_TITLEBAR | FCF_SYSMENU;
+	
 	if (!WinRegisterClass(habAnchor, CC_WIN_CLASSNAME, ClientWndProc, 0, 0)) {
 		Logger_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window class registration failed");
 	}
@@ -320,7 +316,6 @@ void Window_Create(int width, int height) {
 }
 
 void Window_Create2D(int width, int height) {
-	printf("Window_Create2D\n");
 	Window_Create(width, height);
 }
 
@@ -337,10 +332,12 @@ void Window_Free(void) {
 void Window_ProcessEvents(float delta) {
 	QMSG msg;
 	HWND hwndFocused;
-
-	if (WinPeekMsg(habAnchor, &msg, NULLHANDLE, 0, 0, PM_NOREMOVE)) {
+	int roundtrips = 5;
+	
+	while (roundtrips && WinPeekMsg(habAnchor, &msg, NULLHANDLE, 0, 0, PM_NOREMOVE)) {
 		WinGetMsg(habAnchor, &msg, NULLHANDLE, 0, 0);
 		WinDispatchMsg(habAnchor, &msg);
+		roundtrips--;
 	}
 }
 
@@ -372,19 +369,15 @@ void Clipboard_SetText(const cc_string* value) {
 
 void Window_Show(void) {
 	WinShowWindow(hwndFrame, TRUE);
-	WinSetFocus(HWND_DESKTOP, hwndFrame);
+	WinSetFocus(HWND_DESKTOP, hwndClient);
 }
 
 void Window_SetSize(int width, int height) {
 	WinSetWindowPos(hwndFrame, HWND_TOP, 0, 0, width, height, SWP_SIZE);
 }
 
-void Cursor_SetPosition(int x, int y) {
-	WinSetWindowPos(hwndFrame, HWND_TOP, x, y, 0, 0, SWP_MOVE);
-}
-
 void Window_RequestClose(void) {
-	WinPostMsg(hwndFrame, WM_CLOSE, 0, 0);
+	WinPostMsg(hwndClient, WM_CLOSE, 0, 0);
 }
 
 int Window_GetWindowState(void) {
@@ -407,7 +400,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	scanLineSize  = (scanLineSize + 3) & ~3; /* 4-byte aligning */
 
 	rc = DosAllocMem((PVOID)&imageBuffer,
-		 bufferSize = (bmp->height * scanLineSize) + sizeof(ULONG),
+		 (bmp->height * scanLineSize) + sizeof(ULONG),
 		 PAG_COMMIT | PAG_READ | PAG_WRITE);
 	if (rc != NO_ERROR) {
 			// TODO Debug messages
@@ -450,8 +443,8 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	rc = DiveEndImageBufferAccess(hDive, bufNum);
 	if (rc != DIVE_SUCCESS) {
 		// TODO Error messages
+		return;
 	}
-
 	if (fVrnDisabled) {
 		DiveSetupBlitter(hDive, 0);
 	}
@@ -494,45 +487,54 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 }
 
 cc_result Window_EnterFullscreen(void) {
-printf("Window_EnterFullscreen\n");
+	SWP swp;
+	if (!WinGetMaxPosition(hwndFrame, &swp)) return ERROR_BASE; // TODO
+	if (!WinSetWindowPos(hwndFrame, HWND_TOP,
+		swp.x, swp.y, swp.cx, swp.cy, SWP_MAXIMIZE)
+	) return ERROR_BASE; // TODO
+	return 0;
 }
 
 cc_result Window_ExitFullscreen(void) {
-printf("Window_ExitFillscreen\n");
+	if (!WinSetWindowPos(hwndFrame, HWND_TOP,
+		0, 0, 0, 0, SWP_RESTORE | SWP_SHOW | SWP_ACTIVATE)) return ERROR_BASE; // TODO
+	return 0;
 }
-
-
-void Cursor_GetRawPos(int *x, int *y) {
-printf("Cursor_GetRawPos\n");
-}
-
-void Cursor_DoSetVisible(cc_bool visible) { printf("Cursor_DoSetVisible\n");}
 
 int Window_IsObscured(void) { return 0; }
-
 
 void ShowDialogCore(const char *title, const char *name) {
 	WinMessageBox(HWND_DESKTOP, hwndClient, name, title, 0, MB_OK|MB_APPLMODAL);
 }
 
+MRESULT EXPENTRY myFileDlgProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2) {
+	MRESULT result;
+	printf("Dialog message %04x, mp1 %u, mp2 %u hwnd %u (%u)\n", msg, mp1, mp2, hwnd, hwndFrame);
+	result = WinDefFileDlgProc(hwnd, msg, mp1, mp2);
+	printf("Default %u\n", result);
+	return result;
+}
+
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	FILEDLG fileDialog;
 	HWND hDialog;
+	char pszTitle[CCHMAXPATH] = "Open File";  
+	char pszFullFile[CCHMAXPATH] = "*.*";  
 
+	WinSetVisibleRegionNotify(hwndClient, FALSE);
 	memset(&fileDialog, 0, sizeof(FILEDLG));
 	fileDialog.cbSize = sizeof(FILEDLG);
-	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_OPEN_DIALOG;
-	fileDialog.pszTitle = (PSZ)args->description;
-	fileDialog.pszOKButton = NULL;
-	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+	fileDialog.fl = FDS_OPEN_DIALOG;
+	//fileDialog.pszTitle = (PSZ)pszTitle;
+	fileDialog.pfnDlgProc = myFileDlgProc;
 
-	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	//strcpy(fileDialog.szFullFile, pszFullFile);
 	hDialog = WinFileDlg(HWND_DESKTOP, hwndFrame, &fileDialog);
 	if (fileDialog.lReturn == DID_OK) {
 		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
-		args->Callback(&temp);
-	}
-
+		//args->Callback(&temp);
+	}                               
+	WinSetVisibleRegionNotify(hwndClient, TRUE);
 	return 0;
 }
 
@@ -548,7 +550,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	fileDialog.pfnDlgProc = WinDefFileDlgProc;
 
 	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
-	hDialog = WinFileDlg(HWND_DESKTOP, hwndFrame, &fileDialog);
+	hDialog = WinFileDlg(HWND_DESKTOP, hwndClient, &fileDialog);
 	if (fileDialog.lReturn == DID_OK) {
 		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
 		args->Callback(&temp);
@@ -574,12 +576,42 @@ void OnscreenKeyboard_Close(void) { }
 void Window_LockLandscapeOrientation(cc_bool lock) { }
 
 void Window_EnableRawMouse(void) {
-	printf("Window_EnableRawMouse\n");
+	if (WinSetCapture(HWND_DESKTOP, hwndClient)) 
+		DefaultEnableRawMouse();
 }
 
-void Window_UpdateRawMouse(void) { }
+void Window_UpdateRawMouse(void) { 
+	DefaultUpdateRawMouse();
+}
 
-void Window_DisableRawMouse(void) { }
+void Window_DisableRawMouse(void) {
+	if (WinSetCapture(HWND_DESKTOP, NULLHANDLE)) 
+		DefaultDisableRawMouse();
+}
+
+void Cursor_GetRawPos(int *x, int *y) {
+    POINTL  pointl;
+    ULONG   ulRes;
+
+    WinQueryPointerPos(HWND_DESKTOP, &pointl);
+    *x = pointl.x;
+    *y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - pointl.y - 1;
+}
+
+void Cursor_SetPosition(int x, int y) {
+	POINTL      pointl;
+
+  pointl.x = x;
+  pointl.y = win_height - y;
+  WinMapWindowPoints(hwndClient, HWND_DESKTOP, &pointl, 1);
+  WinSetPointerPos(HWND_DESKTOP, pointl.x, pointl.y);
+}
+
+static void Cursor_DoSetVisible(cc_bool visible) {
+	WinShowCursor(hwndClient, visible);
+}
+
+
 
 void Window_ProcessGamepads(float delta) { }
 
