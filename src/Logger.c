@@ -506,7 +506,7 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#define REG_GET_PC()      &r->Pc
 	Dump_ARM32()
 #elif defined _M_ARM64
-	#define REG_GNUM(num)     &r->x[num]
+	#define REG_GNUM(num)     &r->X[num]
 	#define REG_GET_FP()      &r->Fp
 	#define REG_GET_LR()      &r->Lr
 	#define REG_GET_SP()      &r->Sp

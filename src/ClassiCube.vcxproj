@@ -561,7 +561,7 @@
     <ClCompile Include="Window_SDL3.c" />
     <ClCompile Include="Window_Switch.c" />
     <ClCompile Include="Window_Web.c" />
-    <ClCompile Include="Window_WiiU.c" />
+    <ClCompile Include="Window_WiiU.cpp" />
     <ClCompile Include="Window_Win.c" />
     <ClCompile Include="Window_X11.c" />
     <ClCompile Include="Window_Xbox.c" />

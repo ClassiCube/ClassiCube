@@ -34,6 +34,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
+#include "Lighting.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {
@@ -2873,6 +2874,7 @@ static void GraphicsOptionsScreen_SetViewDist(const cc_string* v) { Game_UserSet
 static void GraphicsOptionsScreen_GetSmooth(cc_string* v) { Menu_GetBool(v, Builder_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
+	Lighting_ApplyActive();
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }

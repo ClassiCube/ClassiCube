@@ -163,7 +163,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
 void Gfx_SetFaceCulling(cc_bool enabled)   { GU_Toggle(GU_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { GU_Toggle(GU_BLEND); }
+static void SetAlphaBlend(cc_bool enabled) { GU_Toggle(GU_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -377,7 +377,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	/* TODO: Implemen fake exp/exp2 fog */
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
+static void SetAlphaTest(cc_bool enabled) { GU_Toggle(GU_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;

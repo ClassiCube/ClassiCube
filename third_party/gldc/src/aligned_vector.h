@@ -56,11 +56,11 @@ AV_FORCE_INLINE void *AV_MEMCPY4(void *dest, const void *src, size_t len)
 #else
 #define AV_MEMCPY4 memcpy
 #endif
+#define AV_ELEMENT_SIZE 32
 
 typedef struct {
     uint32_t size;
     uint32_t capacity;
-    uint32_t element_size;
 } __attribute__((aligned(32))) AlignedVectorHeader;
 
 typedef struct {
@@ -75,12 +75,10 @@ typedef struct {
     ((((v) + ALIGNED_VECTOR_CHUNK_SIZE - 1) / ALIGNED_VECTOR_CHUNK_SIZE) * ALIGNED_VECTOR_CHUNK_SIZE)
 
 
-void aligned_vector_init(AlignedVector* vector, uint32_t element_size);
-
 AV_FORCE_INLINE void* aligned_vector_at(const AlignedVector* vector, const uint32_t index) {
     const AlignedVectorHeader* hdr = &vector->hdr;
     assert(index < hdr->size);
-    return vector->data + (index * hdr->element_size);
+    return vector->data + (index * AV_ELEMENT_SIZE);
 }
 
 AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t element_count) {
@@ -90,12 +88,12 @@ AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t ele
         return aligned_vector_at(vector, element_count);
     }
 
-    uint32_t original_byte_size = (hdr->size * hdr->element_size);
+    uint32_t original_byte_size = (hdr->size * AV_ELEMENT_SIZE);
 
     /* We overallocate so that we don't make small allocations during push backs */
     element_count = ROUND_TO_CHUNK_SIZE(element_count);
 
-    uint32_t new_byte_size = (element_count * hdr->element_size);
+    uint32_t new_byte_size = (element_count * AV_ELEMENT_SIZE);
     uint8_t* original_data = vector->data;
 
     vector->data = (uint8_t*) memalign(0x20, new_byte_size);
@@ -169,10 +167,7 @@ AV_FORCE_INLINE void* aligned_vector_push_back(AlignedVector* vector, const void
     AlignedVectorHeader* hdr = &vector->hdr;
 
     assert(count);
-    assert(hdr->element_size);
-
 #ifndef NDEBUG
-    uint32_t element_size = hdr->element_size;
     uint32_t initial_size = hdr->size;
 #endif
 
@@ -180,9 +175,8 @@ AV_FORCE_INLINE void* aligned_vector_push_back(AlignedVector* vector, const void
     assert(dest);
 
     /* Copy the objects in */
-    AV_MEMCPY4(dest, objs, hdr->element_size * count);
+    AV_MEMCPY4(dest, objs, count * AV_ELEMENT_SIZE);
 
-    assert(hdr->element_size == element_size);
     assert(hdr->size == initial_size + count);
     return dest;
 }
@@ -199,6 +193,15 @@ AV_FORCE_INLINE void aligned_vector_clear(AlignedVector* vector){
     AlignedVectorHeader* hdr = &vector->hdr;
     hdr->size = 0;
 }
+
+AV_FORCE_INLINE void aligned_vector_init(AlignedVector* vector) {
+    /* Now initialize the header*/
+    AlignedVectorHeader* const hdr = &vector->hdr;
+    hdr->size = 0;
+    hdr->capacity = 0;
+    vector->data = NULL;
+}
+
 
 #ifdef __cplusplus
 }

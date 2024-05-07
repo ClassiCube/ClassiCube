@@ -439,7 +439,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) { 
+static void SetAlphaBlend(cc_bool enabled) { 
 	if (enabled) {
 		C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA);
 	} else {
@@ -447,7 +447,7 @@ void Gfx_SetAlphaBlending(cc_bool enabled) {
 	}
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { 
+static void SetAlphaTest(cc_bool enabled) {
 	C3D_AlphaTest(enabled, GPU_GREATER, 0x7F);
 }
 
@@ -806,7 +806,7 @@ void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float
 	matrix->row1.y = -2.0f / width;
 	matrix->row4.y =  1.0f;
 	
-	matrix->row3.z = 1.0f / (zNear - zFar);		
+	matrix->row3.z = 1.0f / (zNear - zFar);
 	matrix->row4.z = 0.5f * (zNear + zFar) / (zNear - zFar) - 0.5f;
 	matrix->row4.w = 1.0f;
 }

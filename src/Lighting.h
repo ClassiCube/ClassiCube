@@ -61,4 +61,5 @@ CC_VAR extern struct _Lighting {
 } Lighting;
 
 void Lighting_SwitchActive(void);
+void Lighting_ApplyActive(void);
 #endif

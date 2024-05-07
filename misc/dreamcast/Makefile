@@ -1,8 +1,9 @@
 BUILD_DIR		:= build-dc
-SOURCE_DIRS		:= src third_party/bearssl/src
+SOURCE_DIRS		:= src third_party/bearssl/src misc/dreamcast
 
+S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
 GLDC_LIB=third_party/gldc/libGLdc.a
@@ -30,6 +31,9 @@ $(CC_TEXTURES):
 	
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: misc/dreamcast/%.S
+	kos-cc -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@

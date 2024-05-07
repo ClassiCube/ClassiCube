@@ -381,6 +381,9 @@ static void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock
 }
 
 static void ClassicLighting_SetActive(void) {
+	cc_bool smoothLighting = false;
+	if (!Game_ClassicMode) smoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
+
 	Lighting.OnBlockChanged = ClassicLighting_OnBlockChanged;
 	Lighting.Refresh = Heightmap_Reset;
 	Lighting.IsLit   = ClassicLighting_IsLit;

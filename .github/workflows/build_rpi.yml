@@ -28,7 +28,7 @@ jobs:
           COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
           RPI32_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI -I rpi/include -L rpi/lib -Wl,--unresolved-symbols=ignore-in-shared-libs"
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"$GITHUB_SHA\"
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
           
           cd src
           $CC *.c ${{ env.COMMON_FLAGS }} ${{ env.RPI32_FLAGS }} $LATEST_FLAG -o cc-rpi32 -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt

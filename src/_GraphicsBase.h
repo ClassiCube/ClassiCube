@@ -31,6 +31,23 @@ static float gfx_minFrameMs;
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
 cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+static cc_bool gfx_alphaTest, gfx_alphaBlend;
+
+static void SetAlphaTest(cc_bool enabled);
+void Gfx_SetAlphaTest(cc_bool enabled) {
+	if (gfx_alphaTest == enabled) return;
+	
+	gfx_alphaTest = enabled;
+	SetAlphaTest(enabled);
+}
+
+static void SetAlphaBlend(cc_bool enabled);
+void Gfx_SetAlphaBlending(cc_bool enabled) {
+	if (gfx_alphaBlend == enabled) return;
+	
+	gfx_alphaBlend = enabled;
+	SetAlphaBlend(enabled);
+}
 
 /* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);

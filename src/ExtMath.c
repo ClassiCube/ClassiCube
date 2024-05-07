@@ -161,7 +161,7 @@ double Math_Cos(double x)  { return cos(x); }
 double Math_Exp2(double x) { return exp2(x); }
 double Math_Log2(double x) { return log2(x); }
 
-double Math_Atan2(double x, double y) { return atan2(y, x); }
+float Math_Atan2f(float x, float y) { return atan2f(y, x); }
 #else
 /***** Caleb's Math functions *****/
 
@@ -294,149 +294,6 @@ double Math_Cos(double x) {
 
 	x_div_pi_shifted = x * DIV_2_PI + 0.25;
 	return SinStage3(x_div_pi_shifted - Floord(x_div_pi_shifted));
-}
-
-/**************
- * Math_Atan2 *
- **************/
-
-/* Calculates the 5th degree polynomial ARCTN 4903 listed in the book's
- * appendix.
- *
- * Associated math function: arctan(x)
- * Allowed input range: [0, tan(pi/32)]
- * Precision: 16.52
- */
-static double AtanStage1(double x) {
-	const double A[] = {
-		.99999999999969557,
-		-.3333333333318,
-		.1999999997276,
-		-.14285702288,
-		.11108719478,
-		-.8870580341e-1,
-	};
-
-	double P = A[5];
-	double x_2 = x * x;
-	int i;
-
-	for (i = 4; i >= 0; i--) {
-		P *= x_2;
-		P += A[i];
-	}
-	P *= x;
-	return P;
-}
-
-/* This function finds out in which partition the non-negative real number x
- * resides out of 8 partitions, which are precomputed. It then uses the
- * following law:
- *
- *   t = x_i^{-1} - (x_i^{-2} + 1)/(x_i^{-1} + x)
- *   arctan(x) = arctan(x_i) + arctan(t)
- *
- * where x_i = tan((2i - 2)*pi/32) and i is the partition number. The value of t
- * is guaranteed to be between [-tan(pi/32), tan(pi/32)].
- *
- * Associated math function: arctan(x)
- * Allowed input range: [0, infinity]
- */
-static double AtanStage2(double x) {
-	const double X_i[] = {
-		0.0,
-		0.0984914033571642477671304050090839155018329620361328125,
-		0.3033466836073424044428747947677038609981536865234375,
-		0.53451113595079158269385288804187439382076263427734375,
-		0.82067879082866024287312711749109439551830291748046875,
-		1.218503525587976366040265929768793284893035888671875,
-		1.8708684117893887854933154812897555530071258544921875,
-		3.29655820893832096629694206058047711849212646484375,
-		(float)(1e+300 * 1e+300) /* Infinity */
-	};
-
-	const double div_x_i[] = {
-		0,
-		0,
-		5.02733949212584807497705696732737123966217041015625,
-		2.41421356237309492343001693370752036571502685546875,
-		1.496605762665489169904731170390732586383819580078125,
-		1.0000000000000002220446049250313080847263336181640625,
-		0.66817863791929898997778991542872972786426544189453125,
-		0.414213562373095089963470627481001429259777069091796875,
-		0.1989123673796580893391450217677629552781581878662109375,
-	};
-
-	const double div_x_i_2_plus_1[] = {
-		0,
-		0,
-		26.2741423690881816810360760428011417388916015625,
-		6.8284271247461898468600338674150407314300537109375,
-		3.23982880884355051165357508580200374126434326171875,
-		2.000000000000000444089209850062616169452667236328125,
-		1.446462692171689656817079594475217163562774658203125,
-		1.1715728752538099310953612075536511838436126708984375,
-		1.0395661298965801488947136022034101188182830810546875,
-	};
-
-	int L = 0;
-	int R = 8;
-	double t;
-
-	while (R - L > 1) {
-		int m = (L + R) / 2;
-		if (X_i[m] <= x)
-			L = m;
-		else if (X_i[m] > x)
-			R = m;
-	}
-
-	if (R <= 1)
-		return AtanStage1(x);
-
-	t = div_x_i[R] - div_x_i_2_plus_1[R] / (div_x_i[R] + x);
-	if (t >= 0)
-		return (2 * R - 2) * PI / 32.0 + AtanStage1(t);
-
-	return (2 * R - 2) * PI / 32.0 - AtanStage1(-t);
-}
-
-/* Uses the property arctan(x) = -arctan(-x).
- *
- * Associated math function: arctan(x)
- * Allowed input range: anything
- */
-static double Atan(double x) {
-	if (x == DBL_NAN)
-		return DBL_NAN;
-	if (x == NEG_INF)
-		return -PI / 2.0;
-	if (x == POS_INF)
-		return PI / 2.0;
-	if (x >= 0)
-		return AtanStage2(x);
-	return -AtanStage2(-x);
-}
-
-/* Implements the function atan2 using Atan.
- *
- * Associated math function: atan2(y, x)
- * Allowed input range: anything
- */
-double Math_Atan2(double x, double y) {
-	if (x > 0)
-		return Atan(y / x);
-	if (x < 0) {
-		if (y >= 0)
-			return Atan(y / x) + PI;
-		return Atan(y / x) - PI;
-	}
-
-	/* x = 0 case */
-	if (y > 0) return  PI / 2.0;
-	if (y < 0) return -PI / 2.0;
-
-	return DBL_NAN;
 }
 
 /************
@@ -589,4 +446,26 @@ double Math_Log2(double x) {
 	return exponent + Log2Stage1(doi.d);
 }
 
+
+// Approximation of atan2f using the Remez algorithm
+//  https://math.stackexchange.com/a/1105038
+float Math_Atan2f(float x, float y) {
+	if (x == 0) {
+		if (y > 0) return  PI / 2.0f;
+		if (y < 0) return -PI / 2.0f;
+		return 0; /* Should probably be NaN */
+	}
+	
+	float ax = Math_AbsF(x);
+	float ay = Math_AbsF(y);
+
+	float a = (ax < ay) ? (ax / ay) : (ay / ax);
+	float s = a * a;
+	float r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;
+
+	if (ay > ax) r = 1.57079637f - r;
+	if (x < 0)   r = 3.14159274f - r;
+	if (y < 0)   r = -r;
+	return r;
+}
 #endif

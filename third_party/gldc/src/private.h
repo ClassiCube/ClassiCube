@@ -40,11 +40,6 @@ typedef struct {
 } PolyList;
 
 typedef struct {
-    GLint x;
-    GLint y;
-    GLint width;
-    GLint height;
-
     float x_plus_hwidth;
     float y_plus_hheight;
     float hwidth;  /* width * 0.5f */

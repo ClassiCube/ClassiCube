@@ -291,6 +291,15 @@ void Input_Clear(void) {
 	ClearTouches();
 }
 
+int Input_CalcDelta(int key, int horDelta, int verDelta) {
+	if (Input_IsLeftButton(key)  || key == CCKEY_KP4) return -horDelta;
+	if (Input_IsRightButton(key) || key == CCKEY_KP6) return +horDelta;
+	if (Input_IsUpButton(key)    || key == CCKEY_KP8) return -verDelta;
+	if (Input_IsDownButton(key)  || key == CCKEY_KP2) return +verDelta;
+	
+	return 0;
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------------Mouse----------------------------------------------------------*
@@ -491,7 +500,7 @@ static void PlayerInputPad(int port, int axis, struct LocalPlayer* p, float* xMo
 	y = gamepads[port].axisY[axis];
 	
 	if (x != 0 || y != 0) {
-		angle    = Math_Atan2(x, y);
+		angle    = Math_Atan2f(x, y);
 		*xMoving = Math_CosF(angle);
 		*zMoving = Math_SinF(angle);
 	}

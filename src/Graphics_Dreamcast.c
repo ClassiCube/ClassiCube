@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include "../third_party/gldc/gldc.h"
+#include "../third_party/gldc/src/draw.c"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
@@ -59,7 +60,7 @@ void Gfx_Free(void) {
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
 void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+static void SetAlphaBlend(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -79,7 +80,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
 void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
+static void SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	// don't need a fake second pass in this case
@@ -352,7 +353,7 @@ static FogFunc gfx_fogMode = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
+	gl_Toggle(GL_FOG);
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -371,7 +372,7 @@ static void UpdateFog(void) {
 	if (gfx_fogMode == FOG_LINEAR) {
 		pvr_fog_table_linear(0.0f, gfx_fogEnd);
 	} else if (gfx_fogMode == FOG_EXP) {
-    		pvr_fog_table_exp(gfx_fogDensity);
+		pvr_fog_table_exp(gfx_fogDensity);
 	} else if (gfx_fogMode == FOG_EXP2) {
 		pvr_fog_table_exp2(gfx_fogDensity);
 	}
@@ -465,14 +466,19 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
 #define VB_PTR gfx_vertices
+static const void* VERTEX_PTR;
 
-static void SetupVertices(int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-		gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+extern void DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
+extern void DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+
+void DrawQuads(int count) {
+	if (!count) return;
+	Vertex* start = submitVertices(count);
+
+	if (TEXTURES_ENABLED) {
+		DrawTexturedQuads(VERTEX_PTR, start, count >> 2);
 	} else {
-		cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-		gldcVertexPointer(SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+		DrawColouredQuads(VERTEX_PTR, start, count >> 2);
 	}
 }
 
@@ -489,29 +495,33 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	SetupVertices(0);
+	//SetupVertices(0);
 	//glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	SetupVertices(startVertex);
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	} else {
+		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
+	}
+
+	DrawQuads(verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	SetupVertices(0);
-	
+	VERTEX_PTR = gfx_vertices;
+
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	DrawQuads(verticesCount);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	DrawQuads(verticesCount);
 }
 
 
@@ -550,6 +560,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
+	pvr_wait_ready();
 	glKosSwapBuffers();
 	if (gfx_minFrameMs) LimitFPS();
 }

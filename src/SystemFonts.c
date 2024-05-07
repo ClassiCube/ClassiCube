@@ -945,7 +945,7 @@ void SysFont_MakeDefault(struct FontDesc* desc, int size, int flags) {
     interop_SysMakeDefault(desc, size, flags);
 }
 
-void Font_Free(struct FontDesc* desc) {
+void SysFont_Free(struct FontDesc* desc) {
     interop_SysFontFree(desc->handle);
 }
 
