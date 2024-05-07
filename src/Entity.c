@@ -968,7 +968,7 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	}
 	
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, 0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
