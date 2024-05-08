@@ -622,6 +622,11 @@ void LocalPlayerInput_Add(struct LocalPlayerInput* source) {
 	LinkedList_Append(source, sources_head, sources_tail);
 }
 
+void LocalPlayerInput_Remove(struct LocalPlayerInput* source) {
+	struct LocalPlayerInput* cur;
+	LinkedList_Remove(source, cur, sources_head, sources_tail);
+}
+
 float LocalPlayer_JumpHeight(struct LocalPlayer* p) {
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
 }
@@ -1062,6 +1067,7 @@ static void Entities_Free(void) {
 	{
 		Entities_Remove((EntityID)i);
 	}
+	sources_head = NULL;
 }
 
 struct IGameComponent Entities_Component = {

@@ -231,6 +231,7 @@ struct LocalPlayerInput {
 	struct LocalPlayerInput* next;
 };
 void LocalPlayerInput_Add(struct LocalPlayerInput* source);
+void LocalPlayerInput_Remove(struct LocalPlayerInput* source);
 
 /* Represents the user/player's own entity. */
 struct LocalPlayer {
