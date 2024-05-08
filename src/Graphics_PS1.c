@@ -617,14 +617,20 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		poly->x2 = v[2].x; poly->y2 = v[2].y; 
 		poly->x3 = v[3].x; poly->y3 = v[3].y; 
 		
-		poly->u0 = ((int)(v[1].U * curTex->width) & curTex->width_mask) + uOffset; poly->v0 = ((int)(v[1].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u1 = ((int)(v[0].U * curTex->width) & curTex->width_mask) + uOffset; poly->v1 = ((int)(v[0].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u2 = ((int)(v[2].U * curTex->width) & curTex->width_mask) + uOffset; poly->v2 = ((int)(v[2].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u3 = ((int)(v[3].U * curTex->width) & curTex->width_mask) + uOffset; poly->v3 = ((int)(v[3].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u0 = ((int)(v[1].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v0 = ((int)(v[1].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u1 = ((int)(v[0].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v1 = ((int)(v[0].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u2 = ((int)(v[2].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v2 = ((int)(v[2].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u3 = ((int)(v[3].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v3 = ((int)(v[3].V         * curTex->height) & curTex->height_mask) + vOffset;
 
-		poly->r0 = PackedCol_R(v->Col);
-		poly->g0 = PackedCol_G(v->Col);
-		poly->b0 = PackedCol_B(v->Col);
+		// https://problemkaputt.de/psxspx-gpu-rendering-attributes.htm
+		// "For untextured graphics, 8bit RGB values of FFh are brightest. However, for texture blending, 8bit values of 80h are brightest"
+		poly->r0 = PackedCol_R(v->Col) >> 1;
+		poly->g0 = PackedCol_G(v->Col) >> 1;
+		poly->b0 = PackedCol_B(v->Col) >> 1;
 
 		if (lastPoly) { 
 			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
@@ -636,7 +642,6 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 }
 
 static void DrawColouredQuads3D(int verticesCount, int startVertex) {
-	return;
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
@@ -703,10 +708,14 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 			if (signA > signB) continue;
 		}
 		
-		poly->u0 = ((int)(v[1].U * curTex->width) & curTex->width_mask) + uOffset; poly->v0 = ((int)(v[1].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u1 = ((int)(v[0].U * curTex->width) & curTex->width_mask) + uOffset; poly->v1 = ((int)(v[0].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u2 = ((int)(v[2].U * curTex->width) & curTex->width_mask) + uOffset; poly->v2 = ((int)(v[2].V * curTex->height) & curTex->height_mask) + vOffset;
-		poly->u3 = ((int)(v[3].U * curTex->width) & curTex->width_mask) + uOffset; poly->v3 = ((int)(v[3].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u0 = ((int)(v[1].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v0 = ((int)(v[1].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u1 = ((int)(v[0].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v1 = ((int)(v[0].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u2 = ((int)(v[2].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v2 = ((int)(v[2].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u3 = ((int)(v[3].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v3 = ((int)(v[3].V * curTex->height) & curTex->height_mask) + vOffset;
 		
 		//int P = curTex->height, page = poly->tpage & 0xFF, ll = curTex->yOffset;
 		//Platform_Log4("XYZ: %f3 x %i, %i, %i", &v[0].V, &P, &page, &ll);
@@ -717,9 +726,9 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
 		X = poly->x1; Y = poly->y1, Z = coords[0].z;
 
-		poly->r0 = PackedCol_R(v->Col);
-		poly->g0 = PackedCol_G(v->Col);
-		poly->b0 = PackedCol_B(v->Col);
+		poly->r0 = PackedCol_R(v->Col) >> 1;
+		poly->g0 = PackedCol_G(v->Col) >> 1;
+		poly->b0 = PackedCol_B(v->Col) >> 1;
 		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
 		// TODO: 2D shouldn't use AddPrim, draws in the wrong way
