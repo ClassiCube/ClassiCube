@@ -4,6 +4,8 @@
 /* For abs(x) function */
 #include <stdlib.h>
 
+#define PI 3.141592653589793238462643383279502884197169399
+
 /* Sega saturn is missing these intrinsics */
 #ifdef CC_BUILD_SATURN
 #include <stdint.h>
@@ -80,8 +82,8 @@ float Math_ClampAngle(float degrees) {
 }
 
 float Math_LerpAngle(float leftAngle, float rightAngle, float t) {
-	/* We have to cheat a bit for angles here */
-	/* Consider 350* --> 0*, we only want to travel 10* */
+	/* Need to potentially adjust a bit when interpolating some angles */
+	/* Consider 350* --> 0*, we only want to interpolate across the 10* */
 	/* But without adjusting for this case, we would interpolate back the whole 350* degrees */
 	cc_bool invertLeft  = leftAngle  > 270.0f && rightAngle < 90.0f;
 	cc_bool invertRight = rightAngle > 270.0f && leftAngle  < 90.0f;
@@ -147,8 +149,6 @@ float Random_Float(RNGState* seed) {
 /*########################################################################################################################*
 *--------------------------------------------------Transcendental functions-----------------------------------------------*
 *#########################################################################################################################*/
-static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
-
 #ifdef CC_BUILD_DREAMCAST
 #include <math.h>
 
@@ -185,7 +185,7 @@ double Math_Log2(double x) { return log2(x); }
 /*  from the mathematical functions anyways */
 
 /* Global constants */
-#define PI 3.141592653589793238462643383279502884197169399
+static const double SQRT2 = 1.4142135623730950488016887242096980785696718753769;
 #define DIV_2_PI (1.0 / (2.0 * PI))
 
 static const cc_uint64 _DBL_NAN = 0x7FF8000000000000ULL;
@@ -431,7 +431,7 @@ double Math_Log2(double x) {
 	if (x == POS_INF)
 		return POS_INF;
 
-	if (x == NEG_INF || x == DBL_NAN || x <= 0.0)
+	if (x == DBL_NAN || x <= 0.0)
 		return DBL_NAN;
 
 	doi.d = x;

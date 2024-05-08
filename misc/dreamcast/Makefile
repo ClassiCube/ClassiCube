@@ -22,8 +22,9 @@ default: $(CC_TEXTURES) $(GLDC_LIB) $(BUILD_DIR) $(TARGET).cdi
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 	
-$(GLDC_LIB):
+$(GLDC_LIB): FORCE
 	$(MAKE) -C third_party/gldc
+FORCE: ;
 
 # TODO add textures to misc folder ?	
 $(CC_TEXTURES): 
