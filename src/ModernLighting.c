@@ -504,7 +504,11 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
-static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) { }
+static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+
+}
+/* Invalidates/Resets lighting state for all of the blocks in the world */
+/*  (e.g. because a block changed whether it is full bright or not) */
 static void ModernLighting_Refresh(void) {
 	ModernLighting_InitPalettes();
 	/* Set all the chunk lighting data flags to CHUNK_UNCALCULATED? */
@@ -583,4 +587,12 @@ void ModernLighting_SetActive(void) {
 	Lighting.FreeState = ModernLighting_FreeState;
 	Lighting.AllocState = ModernLighting_AllocState;
 	Lighting.LightHint = ModernLighting_LightHint;
+}
+
+void ModernLighting_OnEnvVariableChanged(void* obj, int envVar) {
+	/* This is always called, but should only do anything if modern lighting is on */
+	if (!Lighting_Modern) { return; }
+	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR) {
+		ModernLighting_InitPalettes();
+	}
 }

@@ -63,6 +63,7 @@ CC_VAR extern struct _Lighting {
 void Lighting_SwitchActive(void);
 void Lighting_ApplyActive(void);
 void ModernLighting_SetActive(void);
+void ModernLighting_OnEnvVariableChanged(void* obj, int envVar);
 
 void ClassicLighting_FreeState(void);
 void ClassicLighting_AllocState(void);

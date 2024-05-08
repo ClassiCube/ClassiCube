@@ -425,7 +425,10 @@ void Lighting_SwitchActive(void) {
 	Lighting.AllocState();
 }
 
-static void OnInit(void)         { Lighting_ApplyActive(); }
+static void OnInit(void) {
+	Event_Register_(&WorldEvents.EnvVarChanged, NULL, ModernLighting_OnEnvVariableChanged);
+	Lighting_ApplyActive();
+}
 static void OnReset(void)        { Lighting.FreeState(); }
 static void OnNewMapLoaded(void) { Lighting.AllocState(); }
 
