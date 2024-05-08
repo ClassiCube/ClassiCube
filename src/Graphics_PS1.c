@@ -36,6 +36,8 @@ static RenderBuffer buffers[2];
 static cc_uint8*    next_packet;
 static int          active_buffer;
 static RenderBuffer* buffer;
+static cc_bool rendering2D;
+static void* lastPoly;
 
 static void OnBufferUpdated(void) {
 	buffer      = &buffers[active_buffer];
@@ -530,7 +532,66 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 }
 
 cc_bool VERTEX_LOGGING;
-static void DrawColouredQuads(int verticesCount, int startVertex) {
+
+static void DrawColouredQuads2D(int verticesCount, int startVertex) {
+	return;
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
+		
+		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+		setPolyF4(poly);
+
+		poly->x0 = v[1].x; poly->y0 = v[1].y;
+		poly->x1 = v[0].x; poly->y1 = v[0].y;
+		poly->x2 = v[2].x; poly->y2 = v[2].y;
+		poly->x3 = v[3].x; poly->y3 = v[3].y;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+
+		if (lastPoly) { 
+			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
+		} else {
+			addPrim(&buffer->ot[0], poly);
+		}
+		lastPoly = poly;
+	}
+}
+
+static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
+	int pageOffset = active_tex->line % TPAGE_HEIGHT;
+
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
+		setPolyFT4(poly);
+		poly->tpage = active_tex->tpage;
+		poly->clut  = 0;
+
+		// TODO & instead of % 
+		poly->x0 = v[1].x; poly->y0 = v[1].y; poly->u0 = (int)(v[1].U * active_tex->width) % active_tex->width; poly->v0 = ((int)(v[1].V * active_tex->height) % active_tex->height) + pageOffset;
+		poly->x1 = v[0].x; poly->y1 = v[0].y; poly->u1 = (int)(v[0].U * active_tex->width) % active_tex->width; poly->v1 = ((int)(v[0].V * active_tex->height) % active_tex->height) + pageOffset;
+		poly->x2 = v[2].x; poly->y2 = v[2].y; poly->u2 = (int)(v[2].U * active_tex->width) % active_tex->width; poly->v2 = ((int)(v[2].V * active_tex->height) % active_tex->height) + pageOffset;
+		poly->x3 = v[3].x; poly->y3 = v[3].y; poly->u3 = (int)(v[3].U * active_tex->width) % active_tex->width; poly->v3 = ((int)(v[3].V * active_tex->height) % active_tex->height) + pageOffset;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+
+		if (lastPoly) { 
+			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
+		} else {
+			addPrim(&buffer->ot[0], poly);
+		}
+		lastPoly = poly;
+	}
+}
+
+static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	return;
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
@@ -567,7 +628,7 @@ static void DrawColouredQuads(int verticesCount, int startVertex) {
 	}
 }
 
-static void DrawTexturedQuads(int verticesCount, int startVertex) {
+static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	int pageOffset = active_tex->line % TPAGE_HEIGHT;
 
 	for (int i = 0; i < verticesCount; i += 4) 
@@ -678,24 +739,29 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 	}
 }*/
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, startVertex);
+static void DrawQuads(int verticesCount, int startVertex) {
+	if (rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads2D(verticesCount, startVertex);
+	} else if (rendering2D) {
+		DrawColouredQuads2D(verticesCount, startVertex);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads3D(verticesCount, startVertex);
 	} else {
-		DrawColouredQuads(verticesCount, startVertex);
+		DrawColouredQuads3D(verticesCount, startVertex);
 	}
+}
+
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	DrawQuads(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, 0);
-	} else {
-		DrawColouredQuads(verticesCount, 0);
-	}
+	DrawQuads(verticesCount, 0);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawTexturedQuads(verticesCount, startVertex);
+	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
 
@@ -711,6 +777,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 }
 
 void Gfx_BeginFrame(void) {
+	lastPoly = NULL;
 }
 
 void Gfx_EndFrame(void) {
@@ -735,4 +802,14 @@ void Gfx_GetApiInfo(cc_string* info) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
+
+void Gfx_Begin2D(int width, int height) {
+	rendering2D = true;
+	Gfx_SetAlphaBlending(true);
+}
+
+void Gfx_End2D(void) {
+	rendering2D = false;
+	Gfx_SetAlphaBlending(false);
+}
 #endif

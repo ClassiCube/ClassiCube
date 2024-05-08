@@ -273,6 +273,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
+#ifndef CC_BUILD_PS1
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
@@ -292,6 +293,7 @@ void Gfx_End2D(void) {
 	Gfx_SetAlphaBlending(false);
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
+#endif
 
 
 /*########################################################################################################################*
