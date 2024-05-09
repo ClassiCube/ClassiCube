@@ -36,3 +36,15 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-saturn.iso'
           DEST_NAME: 'ClassiCube-saturn.iso'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-saturn.bin'
+          DEST_NAME: 'ClassiCube-saturn.bin'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-saturn.cue'
+          DEST_NAME: 'ClassiCube-saturn.cue'
