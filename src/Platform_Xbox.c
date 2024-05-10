@@ -111,7 +111,7 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
+	if (!hdd_mounted) return 0;
 	
 	char str[NATIVE_STR_LEN];
 	DWORD attribs;
@@ -203,7 +203,8 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return CloseHandle(file) ? 0 : GetLastError();
+	NTSTATUS status = NtClose(file);
+	return NT_SUCCESS(status) ? 0 : status;
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -243,8 +244,9 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 }
 
 void Thread_Detach(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing thread handle");
+	NTSTATUS status = NtClose((HANDLE)handle);
+	if (!NT_SUCCESS(status)) {
+		Logger_Abort2(status, "Freeing thread handle");
 	}
 }
 

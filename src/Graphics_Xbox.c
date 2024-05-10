@@ -476,6 +476,18 @@ void Gfx_SetFog(cc_bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol color) {
+	int R = PackedCol_R(color);
+	int G = PackedCol_G(color);
+	int B = PackedCol_B(color);
+	int A = PackedCol_A(color);
+	
+	uint32_t* p = pb_begin();
+	p = pb_push1(p, NV097_SET_FOG_COLOR, 
+					MASK(NV097_SET_FOG_COLOR_RED,   R) |
+					MASK(NV097_SET_FOG_COLOR_GREEN, G) |
+					MASK(NV097_SET_FOG_COLOR_BLUE,  B) |
+					MASK(NV097_SET_FOG_COLOR_ALPHA, A));
+	pb_end(p);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -655,16 +667,16 @@ static void DrawArrays(int mode, int start, int count) {
 	uint32_t *p = pb_begin();
 	p = pb_push1(p, NV097_SET_BEGIN_END, mode);
 
-	// NV097_DRAW_ARRAYS_COUNT is an 8 bit mask, so must be < 256
+	// NV097_DRAW_ARRAYS_COUNT is an 8 bit mask, so must be <= 256
 	while (count > 0)
 	{
-		int batch_count = min(count, 64); // TODO increase?
+		int batch_count = min(count, 256);
 		
 		p = pb_push1(p, 0x40000000 | NV097_DRAW_ARRAYS,
 						MASK(NV097_DRAW_ARRAYS_COUNT, (batch_count-1)) | 
 						MASK(NV097_DRAW_ARRAYS_START_INDEX, start));
 		
-		start += batch_count;				
+		start += batch_count;
 		count -= batch_count;
 	}
 
@@ -676,7 +688,6 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 	DrawArrays(NV097_SET_BEGIN_END_OP_LINES, 0, verticesCount);
 }
 
-#define MAX_BATCH 120
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
 	// TODO switch to indexed rendering
 	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
