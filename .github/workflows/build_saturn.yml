@@ -1,5 +1,5 @@
 name: Build latest (Saturn)
-on: [push]
+on: [push, workflow_dispatch]
 
 concurrency:
   group: ${{ github.ref }}-saturn
@@ -36,3 +36,9 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-saturn.iso'
           DEST_NAME: 'ClassiCube-saturn.iso'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-saturn.cue'
+          DEST_NAME: 'ClassiCube-saturn.cue'

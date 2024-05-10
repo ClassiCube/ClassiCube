@@ -757,7 +757,6 @@ static void TouchScreen_GetMovement(struct LocalPlayer* p, float* xMoving, float
 	ThumbstickWidget_GetMovement(&TouchScreen.thumbstick, xMoving, zMoving);
 }
 static struct LocalPlayerInput touchInput = { TouchScreen_GetMovement };
-static cc_bool touchHooked;
 
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -772,15 +771,14 @@ static void TouchScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->more, 40, TouchScreen_MoreClick);
 	s->more.color = TOUCHSCREEN_BTN_COLOR;
 	ThumbstickWidget_Init(&s->thumbstick);
-	
-	if (touchHooked) return;
-	touchHooked = true;
+
 	LocalPlayerInput_Add(&touchInput);
 }
 
 static void TouchScreen_Free(void* s) {
 	Event_Unregister_(&UserEvents.HacksStateChanged, s, TouchScreen_HacksChanged);
 	Event_Unregister_(&UserEvents.HackPermsChanged,  s, TouchScreen_HacksChanged);
+	LocalPlayerInput_Remove(&touchInput);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {

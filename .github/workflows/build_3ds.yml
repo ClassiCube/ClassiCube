@@ -1,5 +1,5 @@
 name: Build latest (3DS)
-on: [push]
+on: [push, workflow_dispatch]
 
 concurrency:
   group: ${{ github.ref }}-3ds

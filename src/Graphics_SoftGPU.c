@@ -355,7 +355,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 		for (int x = minX; x <= maxX; x++) {
 			float xx = x + 0.5f;
 			
-			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;		
+			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;
 			if (ic0 < 0 || ic0 > 1) continue;
 			float ic1 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) * factor;
 			if (ic1 < 0 || ic1 > 1) continue;

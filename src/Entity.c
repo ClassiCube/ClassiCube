@@ -622,6 +622,11 @@ void LocalPlayerInput_Add(struct LocalPlayerInput* source) {
 	LinkedList_Append(source, sources_head, sources_tail);
 }
 
+void LocalPlayerInput_Remove(struct LocalPlayerInput* source) {
+	struct LocalPlayerInput* cur;
+	LinkedList_Remove(source, cur, sources_head, sources_tail);
+}
+
 float LocalPlayer_JumpHeight(struct LocalPlayer* p) {
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
 }
@@ -887,7 +892,9 @@ cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
 
 		/* Spawn is normally centered to match vanilla Minecraft classic */
 		if (!p->Hacks.CanNoclip) {
-			p->Spawn   = p->Base.Position;
+			/* Don't want to use Position because it is interpolated between prev and next. */
+			/* This means it can be halfway between stepping up a stair and clip through the floor. */
+			p->Spawn   = p->Base.prev.pos;
 		} else {
 			p->Spawn.x = Math_Floor(p->Base.Position.x) + 0.5f;
 			p->Spawn.y = p->Base.Position.y;
@@ -968,7 +975,7 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	}
 	
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, 0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
@@ -1062,6 +1069,7 @@ static void Entities_Free(void) {
 	{
 		Entities_Remove((EntityID)i);
 	}
+	sources_head = NULL;
 }
 
 struct IGameComponent Entities_Component = {

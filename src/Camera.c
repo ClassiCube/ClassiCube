@@ -154,8 +154,10 @@ static Vec2 FirstPersonCamera_GetOrientation(struct LocalPlayer* p) {
 	return v;
 }
 
-static Vec3 FirstPersonCamera_GetPosition(struct LocalPlayer* p, float t) {
+static Vec3 FirstPersonCamera_GetPosition(float t) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e = &p->Base;
+
 	Vec3 camPos   = Entity_GetEyePosition(e);
 	float yaw     = e->Yaw * MATH_DEG2RAD;
 	PerspectiveCamera_CalcViewBobbing(p, t, 1);
@@ -202,8 +204,10 @@ static float ThirdPersonCamera_GetZoom(struct LocalPlayer* p) {
 	return dist;
 }
 
-static Vec3 ThirdPersonCamera_GetPosition(struct LocalPlayer* p, float t) {
+static Vec3 ThirdPersonCamera_GetPosition(float t) {
+	struct LocalPlayer* p = Entities.CurPlayer;
 	struct Entity* e = &p->Base;
+
 	float dist = ThirdPersonCamera_GetZoom(p);
 	Vec3 target, dir;
 	Vec2 rot;

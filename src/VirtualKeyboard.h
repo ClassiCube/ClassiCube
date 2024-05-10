@@ -207,6 +207,10 @@ static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
 		VirtualKeyboard_Backspace();
 	} else if (key == CCPAD_Y) {
 		VirtualKeyboard_AppendChar(' ');
+	} else if (key == CCPAD_L) {
+		VirtualKeyboard_AppendChar('@');
+	} else if (key == CCPAD_R) {
+		VirtualKeyboard_AppendChar('/');
 	}
 }
 
@@ -330,7 +334,7 @@ static void VirtualKeyboard_Open(struct OpenKeyboardArgs* args, cc_bool launcher
 	kb_shift    = false;
 
 	kb_str.length = 0;
-	if (args) String_AppendConst(&kb_str, args->placeholder);
+	String_AppendString(&kb_str, args->text);
 
 	if (launcher) {
 		KB_MarkDirty = VirtualKeyboard_MarkDirty2D;

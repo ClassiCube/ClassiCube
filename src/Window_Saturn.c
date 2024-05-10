@@ -130,7 +130,7 @@ void Window_Create2D(int width, int height) {
 	};
 
 	vdp2_scrn_bitmap_format_set(&format);
-	vdp2_scrn_priority_set(VDP2_SCRN_NBG0, 7);
+	vdp2_scrn_priority_set(VDP2_SCRN_NBG0, 5);
 	vdp2_scrn_display_set(VDP2_SCRN_DISP_NBG0);
 
         const vdp2_vram_cycp_t vram_cycp = {

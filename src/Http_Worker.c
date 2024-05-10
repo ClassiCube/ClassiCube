@@ -41,6 +41,14 @@ static void Http_ParseCookie(struct HttpRequest* req, const cc_string* value) {
 	EntryList_Set(req->cookies, &name, &data, '=');
 }
 
+static void Http_ParseContentLength(struct HttpRequest* req, const cc_string* value) {
+	int contentLen = 0;
+	Convert_ParseInt(value, &contentLen);
+	
+	if (contentLen <= 0) return;
+	req->contentLength = contentLen;
+}
+
 /* Parses a HTTP header */
 static void Http_ParseHeader(struct HttpRequest* req, const cc_string* line) {
 	static const cc_string httpVersion = String_FromConst("HTTP");
@@ -58,11 +66,11 @@ static void Http_ParseHeader(struct HttpRequest* req, const cc_string* line) {
 	if (String_CaselessEqualsConst(&name, "ETag")) {
 		String_CopyToRawArray(req->etag, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-		Convert_ParseInt(&value, &req->contentLength);
+		Http_ParseContentLength(req, &value);
 	} else if (String_CaselessEqualsConst(&name, "X-Dropbox-Content-Length")) {
 		/* dropbox stopped returning Content-Length header since switching to chunked transfer */
 		/*  https://www.dropboxforum.com/t5/Discuss-Dropbox-Developer-API/Dropbox-media-can-t-be-access-by-azure-blob/td-p/575458 */
-		Convert_ParseInt(&value, &req->contentLength);
+		Http_ParseContentLength(req, &value);
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		String_CopyToRawArray(req->lastModified, &value);
 	} else if (req->cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
