@@ -892,7 +892,9 @@ cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
 
 		/* Spawn is normally centered to match vanilla Minecraft classic */
 		if (!p->Hacks.CanNoclip) {
-			p->Spawn   = p->Base.Position;
+			/* Don't want to use Position because it is interpolated between prev and next. */
+			/* This means it can be halfway between stepping up a stair and clip through the floor. */
+			p->Spawn   = p->Base.prev.pos;
 		} else {
 			p->Spawn.x = Math_Floor(p->Base.Position.x) + 0.5f;
 			p->Spawn.y = p->Base.Position.y;
