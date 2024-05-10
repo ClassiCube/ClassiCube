@@ -1,5 +1,5 @@
 name: Build latest (Saturn)
-on: [push]
+on: [push, workflow_dispatch]
 
 concurrency:
   group: ${{ github.ref }}-saturn

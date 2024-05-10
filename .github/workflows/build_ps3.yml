@@ -1,5 +1,5 @@
 name: Build latest (PS3)
-on: [push]
+on: [push, workflow_dispatch]
 
 concurrency:
   group: ${{ github.ref }}-ps3

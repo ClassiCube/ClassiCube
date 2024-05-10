@@ -1,5 +1,5 @@
 name: Build latest (Vita)
-on: [push]
+on: [push, workflow_dispatch]
 
 concurrency:
   group: ${{ github.ref }}-vita

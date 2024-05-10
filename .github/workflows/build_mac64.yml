@@ -1,5 +1,5 @@
 name: Build latest (macOS 64 bit)
-on: [push]
+on: [push, workflow_dispatch]
 
 concurrency:
   group: ${{ github.ref }}-mac64
