@@ -416,6 +416,7 @@
     <ClInclude Include="Particle.h" />
     <ClInclude Include="BlockPhysics.h" />
     <ClInclude Include="Picking.h" />
+    <ClInclude Include="Queue.h" />
     <ClInclude Include="SelOutlineRenderer.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Screens.h" />
@@ -530,6 +531,7 @@
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Particle.c" />
     <ClCompile Include="BlockPhysics.c" />
+    <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
     <ClCompile Include="main.c" />

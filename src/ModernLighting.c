@@ -11,78 +11,14 @@
 #include "Chat.h"
 #include "ExtMath.h"
 #include "Options.h"
-
-/*########################################################################################################################*
-*----------------------------------------------------Queue thing ---------------------------------------------------------*
-*#########################################################################################################################*/
-
-struct LightQueue {
-	IVec3* entries;     /* Buffer holding the items in the Block queue */
-	int capacity; /* Max number of elements in the buffer */
-	int mask;     /* capacity - 1, as capacity is always a power of two */
-	int count;    /* Number of used elements */
-	int head;     /* Head index into the buffer */
-	int tail;     /* Tail index into the buffer */
-};
-IVec3 LightQueue_EntryAtIndex(struct LightQueue* queue, int index) {
-	return queue->entries[(queue->head + index) & queue->mask];
-}
-void LightQueue_Init(struct LightQueue* queue) {
-	queue->entries = NULL;
-	queue->capacity = 0;
-	queue->mask = 0;
-	queue->count = 0;
-	queue->head = 0;
-	queue->tail = 0;
-}
-static void LightQueue_Clear(struct LightQueue* queue) {
-	if (!queue->entries) return;
-	Mem_Free(queue->entries);
-	LightQueue_Init(queue);
-}
-static void LightQueue_Resize(struct LightQueue* queue) {
-	IVec3* entries;
-	int i, idx, capacity;
-	if (queue->capacity >= (Int32_MaxValue / 4)) {
-		Chat_AddRaw("&cToo many block queue entries, clearing");
-		LightQueue_Clear(queue);
-		return;
-	}
-	capacity = queue->capacity * 2;
-	if (capacity < 32) capacity = 32;
-	entries = (IVec3*)Mem_Alloc(capacity, sizeof(IVec3), "Light queue");
-	for (i = 0; i < queue->count; i++) {
-		idx = (queue->head + i) & queue->mask;
-		entries[i] = queue->entries[idx];
-	}
-	Mem_Free(queue->entries);
-	queue->entries = entries;
-	queue->capacity = capacity;
-	queue->mask = capacity - 1; /* capacity is power of two */
-	queue->head = 0;
-	queue->tail = queue->count;
-}
-/* Appends an entry to the end of the queue, resizing if necessary. */
-void LightQueue_Enqueue(struct LightQueue* queue, IVec3 item) {
-	if (queue->count == queue->capacity)
-		LightQueue_Resize(queue);
-	queue->entries[queue->tail] = item;
-	queue->tail = (queue->tail + 1) & queue->mask;
-	queue->count++;
-}
-/* Retrieves the entry from the front of the queue. */
-IVec3 LightQueue_Dequeue(struct LightQueue* queue) {
-	IVec3 result = queue->entries[queue->head];
-	queue->head = (queue->head + 1) & queue->mask;
-	queue->count--;
-	return result;
-}
-static struct LightQueue lightQueue;
+#include "Queue.h"
 
 
 /*########################################################################################################################*
 *----------------------------------------------------Modern lighting------------------------------------------------------*
 *#########################################################################################################################*/
+
+static struct Queue lightQueue;
 
 /* A 16x16 palette of sun and block light colors. */
 /* It is indexed by a byte where the leftmost 4 bits represent sunlight level and the rightmost 4 bits represent blocklight level */
@@ -173,7 +109,7 @@ static void ModernLighting_AllocState(void) {
 
 	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(chunksCount, sizeof(cc_uint8));
 	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(chunksCount, sizeof(LightingChunk));
-	LightQueue_Init(&lightQueue);
+	Queue_Init(&lightQueue, sizeof(IVec3));
 
 }
 
@@ -194,7 +130,7 @@ static void ModernLighting_FreeState(void) {
 	Mem_Free(chunkLightingData);
 	chunkLightingDataFlags = NULL;
 	chunkLightingData = NULL;
-	LightQueue_Clear(&lightQueue);
+	Queue_Clear(&lightQueue);
 }
 
 /* Converts chunk x/y/z coordinates to the corresponding index in chunks array/list */
@@ -254,12 +190,12 @@ static cc_bool CanLightPass(BlockID thisBlock, Face face) {
 static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 	SetBlocklight(blockLight, x, y, z, false);
 	IVec3 entry = { x, y, z };
-	LightQueue_Enqueue(&lightQueue, entry);
+	Queue_Enqueue(&lightQueue, &entry);
 
 	//if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
 
 	while (lightQueue.count > 0) {
-		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
+		IVec3 curNode = *(IVec3*)(Queue_Dequeue(&lightQueue));
 		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, false);
 		if (curLight <= 0) {
 			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
@@ -277,7 +213,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMIN) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.x += 2;
 		if (curNode.x < World.MaxX &&
@@ -285,7 +221,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMAX) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.x--;
 
@@ -295,7 +231,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMIN) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.y += 2;
 		if (curNode.y < World.MaxY &&
@@ -303,7 +239,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMAX) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.y--;
 
@@ -313,7 +249,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMIN) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.z += 2;
 		if (curNode.z < World.MaxZ &&
@@ -321,7 +257,7 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMAX) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 	}
 }
@@ -329,12 +265,12 @@ static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
 static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 	SetBlocklight(blockLight, x, y, z, true);
 	IVec3 entry = { x, y, z };
-	LightQueue_Enqueue(&lightQueue, entry);
+	Queue_Enqueue(&lightQueue, &entry);
 
 	//if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
 
 	while (lightQueue.count > 0) {
-		IVec3 curNode = LightQueue_Dequeue(&lightQueue);
+		IVec3 curNode = *(IVec3*)(Queue_Dequeue(&lightQueue));
 		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, true);
 		if (curLight <= 0) {
 			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
@@ -354,7 +290,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
 			IVec3 entry = { curNode.x, curNode.y, curNode.z };
-			LightQueue_Enqueue(&lightQueue, entry);
+			Queue_Enqueue(&lightQueue, &entry);
 		}
 		curNode.x += 2;
 		if (curNode.x < World.MaxX &&
@@ -363,7 +299,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMAX) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.x--;
 
@@ -374,7 +310,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMIN) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.y += 2;
 		if (curNode.y < World.MaxY &&
@@ -383,7 +319,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMAX) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.y--;
 
@@ -394,7 +330,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMIN) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 		curNode.z += 2;
 		if (curNode.z < World.MaxZ &&
@@ -403,7 +339,7 @@ static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
 			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMAX) &&
 			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
 			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			LightQueue_Enqueue(&lightQueue, curNode);
+			Queue_Enqueue(&lightQueue, &curNode);
 		}
 	}
 }
