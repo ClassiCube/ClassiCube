@@ -164,7 +164,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	} while (FindNextFileA(find, &eA));
 
 	res = GetLastError(); /* return code from FindNextFile */
-	FindClose(find);
+	NtClose(find);
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
@@ -245,9 +245,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 
 void Thread_Detach(void* handle) {
 	NTSTATUS status = NtClose((HANDLE)handle);
-	if (!NT_SUCCESS(status)) {
-		Logger_Abort2(status, "Freeing thread handle");
-	}
+	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing thread handle");
 }
 
 void Thread_Join(void* handle) {
@@ -265,24 +263,32 @@ void Mutex_Free(void* handle)   {
 	RtlDeleteCriticalSection((CRITICAL_SECTION*)handle); 
 	Mem_Free(handle);
 }
-void Mutex_Lock(void* handle)   { RtlEnterCriticalSection((CRITICAL_SECTION*)handle); }
-void Mutex_Unlock(void* handle) { RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); }
+
+void Mutex_Lock(void* handle)   { 
+	RtlEnterCriticalSection((CRITICAL_SECTION*)handle); 
+}
+
+void Mutex_Unlock(void* handle) { 
+	RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); 
+}
 
 void* Waitable_Create(void) {
-	void* handle = CreateEventA(NULL, false, false, NULL);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating waitable");
-	}
+	HANDLE handle;
+	NTSTATUS status = NtCreateEvent(&handle, NULL, SynchronizationEvent, false);
+
+	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Creating waitable");
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing waitable");
-	}
+	NTSTATUS status = NtClose((HANDLE)handle);
+	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing waitable");
 }
 
-void Waitable_Signal(void* handle) { NtSetEvent((HANDLE)handle, NULL); }
+void Waitable_Signal(void* handle) { 
+	NtSetEvent((HANDLE)handle, NULL); 
+}
+
 void Waitable_Wait(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
 }
@@ -399,18 +405,20 @@ static void InitHDD(void) {
 	} else {
 		hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
 	}
-    
-    if (!hdd_mounted) {
-        Platform_LogConst("Failed to mount E:/ from Data partition");
-        return;
-    }
-    Directory_Create(&String_Empty); // create root ClassiCube folder
+
+	if (!hdd_mounted) {
+		Platform_LogConst("Failed to mount E:/ from Data partition");
+		return;
+	}
+	Directory_Create(&String_Empty); // create root ClassiCube folder
 }
 
 void Platform_Init(void) {
 	InitHDD();
 	Stopwatch_Init();
+#ifndef CC_BUILD_CXBX
 	nxNetInit(NULL);
+#endif
 }
 
 void Platform_Free(void) {
