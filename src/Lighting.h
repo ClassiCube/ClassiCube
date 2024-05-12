@@ -71,4 +71,5 @@ void ClassicLighting_FreeState(void);
 void ClassicLighting_AllocState(void);
 int ClassicLighting_GetLightHeight(int x, int z);
 void ClassicLighting_LightHint(int startX, int startZ);
+void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 #endif

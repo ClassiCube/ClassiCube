@@ -240,7 +240,7 @@ static void ClassicLighting_RefreshAffected(int x, int y, int z, BlockID block, 
 	}
 }
 
-static void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 	int hIndex = Lighting_Pack(x, z);
 	int lightH = classic_heightmap[hIndex];
 	int newHeight;

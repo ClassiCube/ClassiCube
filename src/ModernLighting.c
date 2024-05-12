@@ -136,6 +136,8 @@ static void ModernLighting_FreeState(void) {
 #define ChunkCoordsToIndex(cx, cy, cz) (((cy) * World.ChunksZ + (cz)) * World.ChunksX + (cx))
 /* Converts local x/y/z coordinates to the corresponding index in a chunk */
 #define LocalCoordsToIndex(lx, ly, lz) ((lx) | ((lz) << CHUNK_SHIFT) | ((ly) << (CHUNK_SHIFT * 2)))
+/* Converts global x/y/z coordinates to the corresponding index in a chunk */
+#define GlobalCoordsToChunkCoordsIndex(x, y, z) (LocalCoordsToIndex(x & CHUNK_MASK, y & CHUNK_MASK, z & CHUNK_MASK))
 
 static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun) {
 	cc_uint8 clearMask;
@@ -235,6 +237,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
 	int chunkEndX, chunkEndY, chunkEndZ; //world coords
 	cc_uint8 brightness;
+	BlockID curBlock;
 	chunkStartX = cx * CHUNK_SIZE;
 	chunkStartY = cy * CHUNK_SIZE;
 	chunkStartZ = cz * CHUNK_SIZE;
@@ -253,7 +256,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 		for (z = chunkStartZ; z < chunkEndZ; z++) {
 			for (x = chunkStartX; x < chunkEndX; x++) {
 
-				BlockID curBlock = World_GetBlock(x, y, z);
+				curBlock = World_GetBlock(x, y, z);
 				if (Blocks.Brightness[curBlock] > 0) {
 					/* mask out the sun brightness */
 					brightness = Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL;
@@ -274,7 +277,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	chunkLightingDataFlags[chunkIndex] = CHUNK_SELF_CALCULATED;
 }
 
-static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
+static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc_bool recalculate) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //chunk coords
 	int chunkEndX, chunkEndY, chunkEndZ; //chunk coords
@@ -294,6 +297,25 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	if (chunkEndY == World.ChunksY) { chunkEndY--; }
 	if (chunkEndZ == World.ChunksZ) { chunkEndZ--; }
 
+
+	if (recalculate) {
+		for (y = chunkStartY; y <= chunkEndY; y++) {
+			for (z = chunkStartZ; z <= chunkEndZ; z++) {
+				for (x = chunkStartX; x <= chunkEndX; x++) {
+					curChunkIndex = ChunkCoordsToIndex(x, y, z);
+
+					//Delete all lighting from this chunk
+					Mem_Free(chunkLightingData[curChunkIndex]);
+					//TODO: Why does skipping this allocation cause a crash? It should automatically allocate in SetBlocklight
+					chunkLightingData[curChunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
+					
+					chunkLightingDataFlags[curChunkIndex] = CHUNK_UNCALCULATED;
+					MapRenderer_RefreshChunk(x, y, z);
+				}
+			}
+		}
+	}
+
 	for (y = chunkStartY; y <= chunkEndY; y++) {
 		for (z = chunkStartZ; z <= chunkEndZ; z++) {
 			for (x = chunkStartX; x <= chunkEndX; x++) {
@@ -308,7 +330,31 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
+static void CalcUnlight(int x, int y, int z, cc_uint8 lightData) {
+
+}
 static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+	cc_uint8 lightData;
+	int cx, cy, cz, chunkIndex;
+	int chunkCoordsIndex;
+	BlockID curBlock;
+
+	ClassicLighting_OnBlockChanged(x, y, z, oldBlock, newBlock);
+
+	cx = x >> CHUNK_SHIFT;
+	cy = y >> CHUNK_SHIFT;
+	cz = z >> CHUNK_SHIFT;
+	
+	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
+	if (chunkLightingData[chunkIndex] == NULL) {
+		lightData = 0;
+	} else {
+		chunkCoordsIndex = GlobalCoordsToChunkCoordsIndex(x, y, z);
+		lightData = chunkLightingData[chunkIndex][chunkCoordsIndex];
+	}
+
+	/* lazily recalculate all lighting in this chunkand neighbors, TODO optimise this */
+	CalculateChunkLightingAll(chunkIndex, cx, cy, cz, true);
 
 }
 /* Invalidates/Resets lighting state for all of the blocks in the world */
@@ -320,19 +366,21 @@ static void ModernLighting_Refresh(void) {
 static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
 static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 
+
 static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palette, PackedCol outOfBoundsColor) {
 	cc_uint8 lightData;
-	int localIndex, cx, cy, cz, lx, ly, lz, chunkIndex;
+	int cx, cy, cz, chunkIndex;
+	int chunkCoordsIndex;
 
 	if (!World_Contains(x, y, z)) return outOfBoundsColor;
 
-	cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
-	cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
-	cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
+	cx = x >> CHUNK_SHIFT;
+	cy = y >> CHUNK_SHIFT;
+	cz = z >> CHUNK_SHIFT;
 
 	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
 	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) {
-		CalculateChunkLightingAll(chunkIndex, cx, cy, cz);
+		CalculateChunkLightingAll(chunkIndex, cx, cy, cz, false);
 	}
 
 	/* There might be no light data in this chunk even after it was calculated */
@@ -340,8 +388,8 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 		/* 0, no sun or light (but it may appear as sun based on the 2D sun map) */
 		lightData = 0;
 	} else {
-		localIndex = LocalCoordsToIndex(lx, ly, lz);
-		lightData = chunkLightingData[chunkIndex][localIndex];
+		chunkCoordsIndex = GlobalCoordsToChunkCoordsIndex(x, y, z);
+		lightData = chunkLightingData[chunkIndex][chunkCoordsIndex];
 	}
 
 	/* This cell is exposed to sunlight */
