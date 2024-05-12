@@ -34,7 +34,6 @@ static cc_uint8* chunkLightingDataFlags;
 #define CHUNK_SELF_CALCULATED 1
 #define CHUNK_ALL_CALCULATED 2
 static LightingChunk* chunkLightingData;
-static cc_uint8 allDarkChunkLightingData[CHUNK_SIZE_3];
 
 #define Modern_MakePaletteIndex(sun, block) ((sun << MODERN_LIGHTING_SUN_SHIFT) | block)
 
@@ -279,6 +278,7 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //chunk coords
 	int chunkEndX, chunkEndY, chunkEndZ; //chunk coords
+	int curChunkIndex;
 
 	chunkStartX = cx - 1;
 	chunkStartY = cy - 1;
@@ -294,34 +294,17 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	if (chunkEndY == World.ChunksY) { chunkEndY--; }
 	if (chunkEndZ == World.ChunksZ) { chunkEndZ--; }
 
-	cc_string msg; char msgBuffer[STRING_SIZE * 2];
-
-	//cc_uint64 BEG = Stopwatch_Measure();
-
 	for (y = chunkStartY; y <= chunkEndY; y++) {
 		for (z = chunkStartZ; z <= chunkEndZ; z++) {
 			for (x = chunkStartX; x <= chunkEndX; x++) {
-				int curChunkIndex = ChunkCoordsToIndex(x, y, z);
-
-				if (chunkLightingData[curChunkIndex] == NULL) {
-					chunkLightingData[curChunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
-				}
+				curChunkIndex = ChunkCoordsToIndex(x, y, z);
 
 				if (chunkLightingDataFlags[curChunkIndex] == CHUNK_UNCALCULATED) {
 					CalculateChunkLightingSelf(curChunkIndex, x, y, z);
 				}
-				//String_InitArray(msg, msgBuffer);
-
-				//Chat_Add(&msg);
 			}
 		}
 	}
-
-	//cc_uint64 END = Stopwatch_Measure();
-
-	//static float ELAPSED;
-	//ELAPSED += Stopwatch_ElapsedMicroseconds(BEG, END) / 1000.0;
-	//Platform_Log1("CALC TIME: %f3", &ELAPSED);
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
@@ -338,23 +321,32 @@ static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
 static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 
 static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palette, PackedCol outOfBoundsColor) {
+	cc_uint8 lightData;
+	int localIndex, cx, cy, cz, lx, ly, lz, chunkIndex;
+
 	if (!World_Contains(x, y, z)) return outOfBoundsColor;
 
-	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
-	int cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
-	int cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
+	cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
+	cy = y >> CHUNK_SHIFT, ly = y & CHUNK_MASK;
+	cz = z >> CHUNK_SHIFT, lz = z & CHUNK_MASK;
 
-	int chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
+	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
 	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) {
 		CalculateChunkLightingAll(chunkIndex, cx, cy, cz);
 	}
 
-	int localIndex = LocalCoordsToIndex(lx, ly, lz);
-	cc_uint8 lightData = chunkLightingData[chunkIndex][localIndex];
+	/* There might be no light data in this chunk even after it was calculated */
+	if (chunkLightingData[chunkIndex] == NULL) {
+		/* 0, no sun or light (but it may appear as sun based on the 2D sun map) */
+		lightData = 0;
+	} else {
+		localIndex = LocalCoordsToIndex(lx, ly, lz);
+		lightData = chunkLightingData[chunkIndex][localIndex];
+	}
 
 	/* This cell is exposed to sunlight */
 	if (y > ClassicLighting_GetLightHeight(x, z)) {
-		lightData |= MODERN_LIGHTING_SUN_MASK; /* Force the palette to have full sun color */
+		lightData |= MODERN_LIGHTING_SUN_MASK; /* Force the palette to use full sun color */
 	}
 
 	return palette[lightData];
