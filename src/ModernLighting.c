@@ -187,160 +187,46 @@ static cc_bool CanLightPass(BlockID thisBlock, Face face) {
 	return !Block_IsFaceHidden(BLOCK_STONE, thisBlock, face);
 }
 
-static void CalcBlockLight(cc_uint8 blockLight, int x, int y, int z) {
-	SetBlocklight(blockLight, x, y, z, false);
+#define Light_TrySpreadInto(axis, AXIS, dir, limit, isSun, thisFace, thatFace)\
+if (curNode.axis dir limit &&\
+	CanLightPass(thisBlock, FACE_ ## AXIS ## thisFace) &&\
+	CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ ## AXIS ## thatFace) &&\
+	GetBlocklight(curNode.x, curNode.y, curNode.z, isSun) < curLight) {\
+	SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, isSun);\
+	Queue_Enqueue(&lightQueue, &curNode);\
+}\
+
+
+static void CalcLight(cc_uint8 blockLight, int x, int y, int z, cc_bool isSun) {
+	SetBlocklight(blockLight, x, y, z, isSun);
 	IVec3 entry = { x, y, z };
 	Queue_Enqueue(&lightQueue, &entry);
-
-	//if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
-
+	
 	while (lightQueue.count > 0) {
 		IVec3 curNode = *(IVec3*)(Queue_Dequeue(&lightQueue));
-		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, false);
-		if (curLight <= 0) {
-			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
-			return;
-		}
-
+		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, isSun);
+		if (curLight <= 0) { return; }
+	
 		BlockID thisBlock = World_GetBlock(curNode.x, curNode.y, curNode.z);
-		curLight--; // 1 light level less in each neighbour
+		curLight--;
 		if (curLight == 0) continue;
 
-
 		curNode.x--;
-		if (curNode.x > 0 &&
-			CanLightPass(thisBlock, FACE_XMAX) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMIN) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
+		Light_TrySpreadInto(x, X, >, 0, isSun, MAX, MIN)
 		curNode.x += 2;
-		if (curNode.x < World.MaxX &&
-			CanLightPass(thisBlock, FACE_XMIN) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMAX) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
+		Light_TrySpreadInto(x, X, <, World.MaxX, isSun, MIN, MAX)
 		curNode.x--;
 
 		curNode.y--;
-		if (curNode.y > 0 &&
-			CanLightPass(thisBlock, FACE_YMAX) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMIN) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
+		Light_TrySpreadInto(y, Y, >, 0, isSun, MAX, MIN)
 		curNode.y += 2;
-		if (curNode.y < World.MaxY &&
-			CanLightPass(thisBlock, FACE_YMIN) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMAX) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
+		Light_TrySpreadInto(y, Y, <, World.MaxY, isSun, MIN, MAX)
 		curNode.y--;
 
 		curNode.z--;
-		if (curNode.z > 0 &&
-			CanLightPass(thisBlock, FACE_ZMAX) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMIN) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
+		Light_TrySpreadInto(z, Z, >, 0, isSun, MAX, MIN)
 		curNode.z += 2;
-		if (curNode.z < World.MaxZ &&
-			CanLightPass(thisBlock, FACE_ZMIN) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMAX) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, false) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, false);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
-	}
-}
-
-static void CalcSkyLight(cc_uint8 blockLight, int x, int y, int z) {
-	SetBlocklight(blockLight, x, y, z, true);
-	IVec3 entry = { x, y, z };
-	Queue_Enqueue(&lightQueue, &entry);
-
-	//if (Blocks.BlocksLight[World_GetBlock(x, y, z)]) { return; }
-
-	while (lightQueue.count > 0) {
-		IVec3 curNode = *(IVec3*)(Queue_Dequeue(&lightQueue));
-		cc_uint8 curLight = GetBlocklight(curNode.x, curNode.y, curNode.z, true);
-		if (curLight <= 0) {
-			Platform_Log1("but there were still %i entries left...", &lightQueue.capacity);
-			return;
-		}
-
-		BlockID thisBlock = World_GetBlock(curNode.x, curNode.y, curNode.z);
-		curLight--; // 1 light level less in each neighbour
-		if (curLight == MODERN_LIGHTING_LEVELS - SUN_LEVELS) continue;
-
-
-		curNode.x--;
-		if (curNode.x > 0 &&
-			curNode.y <= ClassicLighting_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
-			CanLightPass(thisBlock, FACE_XMAX) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMIN) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			IVec3 entry = { curNode.x, curNode.y, curNode.z };
-			Queue_Enqueue(&lightQueue, &entry);
-		}
-		curNode.x += 2;
-		if (curNode.x < World.MaxX &&
-			curNode.y <= ClassicLighting_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
-			CanLightPass(thisBlock, FACE_XMIN) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_XMAX) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
-		curNode.x--;
-
-		curNode.y--;
-		if (curNode.y > 0 &&
-			curNode.y <= ClassicLighting_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
-			CanLightPass(thisBlock, FACE_YMAX) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMIN) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
-		curNode.y += 2;
-		if (curNode.y < World.MaxY &&
-			curNode.y <= ClassicLighting_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
-			CanLightPass(thisBlock, FACE_YMIN) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_YMAX) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
-		curNode.y--;
-
-		curNode.z--;
-		if (curNode.z > 0 &&
-			curNode.y <= ClassicLighting_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
-			CanLightPass(thisBlock, FACE_ZMAX) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMIN) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
-		curNode.z += 2;
-		if (curNode.z < World.MaxZ &&
-			curNode.y <= ClassicLighting_GetLightHeight(curNode.x, curNode.z) && //don't propagate into full sunlight
-			CanLightPass(thisBlock, FACE_ZMIN) &&
-			CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ZMAX) &&
-			GetBlocklight(curNode.x, curNode.y, curNode.z, true) < curLight) {
-			SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, true);
-			Queue_Enqueue(&lightQueue, &curNode);
-		}
+		Light_TrySpreadInto(z, Z, <, World.MaxZ, isSun, MIN, MAX)
 	}
 }
 
@@ -349,7 +235,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
 	int chunkEndX, chunkEndY, chunkEndZ; //world coords
-	cc_bool brightness;
+	cc_uint8 brightness;
 	chunkStartX = cx * CHUNK_SIZE;
 	chunkStartY = cy * CHUNK_SIZE;
 	chunkStartZ = cz * CHUNK_SIZE;
@@ -370,20 +256,19 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 
 				BlockID curBlock = World_GetBlock(x, y, z);
 				if (Blocks.Brightness[curBlock] > 0) {
-					brightness = Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL; /* get block brightness */
-					if (brightness > 0) { CalcBlockLight(brightness, x, y, z); }
+					/* mask out the sun brightness */
+					brightness = Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL;
+
+					if (brightness > 0) { CalcLight(brightness, x, y, z, true); }
 					else {
 						/* If no block brightness, it must use sun brightness */
-						CalcSkyLight(Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT, x, y, z);
+						CalcLight(Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT, x, y, z, true);
 					}
 				}
 
-				//this cell is exposed to sunlight
-				if (y > ClassicLighting_GetLightHeight(x, z)) {
-					//CalcSkyLight(MODERN_LIGHTING_MAX_LEVEL, x, y, z);
-					/* Simply light this cell fully with sun, don't bother spreading */
-					SetBlocklight(MODERN_LIGHTING_MAX_LEVEL, x, y, z, true);
-				}
+				/* Note: This code only deals with generating light from block sources.
+				Regular sun light is added on as a "post process" step when returning light color in the exposed API.
+				This has the added benefit of being able to skip allocating chunk lighting data in regions that have no light-casting blocks*/
 			}
 		}
 	}
@@ -466,6 +351,12 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 
 	int localIndex = LocalCoordsToIndex(lx, ly, lz);
 	cc_uint8 lightData = chunkLightingData[chunkIndex][localIndex];
+
+	/* This cell is exposed to sunlight */
+	if (y > ClassicLighting_GetLightHeight(x, z)) {
+		lightData |= MODERN_LIGHTING_SUN_MASK; /* Force the palette to have full sun color */
+	}
+
 	return palette[lightData];
 
 	////palette test
