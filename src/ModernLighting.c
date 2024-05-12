@@ -259,7 +259,7 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 					/* mask out the sun brightness */
 					brightness = Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL;
 
-					if (brightness > 0) { CalcLight(brightness, x, y, z, true); }
+					if (brightness > 0) { CalcLight(brightness, x, y, z, false); }
 					else {
 						/* If no block brightness, it must use sun brightness */
 						CalcLight(Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT, x, y, z, true);
