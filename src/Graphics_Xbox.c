@@ -396,7 +396,6 @@ void Gfx_EndFrame(void) {
 *----------------------------------------------------------Buffers--------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_uint8* gfx_vertices;
-static cc_uint16* gfx_indices;
 
 static void* AllocBuffer(int count, int elemSize) {
 	return MmAllocateContiguousMemoryEx(count * elemSize, 0, MAX_RAM_ADDR, 16, PAGE_WRITECOMBINE | PAGE_READWRITE);
@@ -410,16 +409,12 @@ static void FreeBuffer(GfxResourceID* buffer) {
 
 
 GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
-	void* ib = AllocBuffer(count, sizeof(cc_uint16));
-	if (!ib) Logger_Abort("Failed to allocate memory for index buffer");
-
-	fillFunc(ib, count, obj);
-	return ib;
+	return (void*)1;
 }
 
-void Gfx_BindIb(GfxResourceID ib)    { gfx_indices = ib; }
+void Gfx_BindIb(GfxResourceID ib)    { }
 
-void Gfx_DeleteIb(GfxResourceID* ib) { FreeBuffer(ib); }
+void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
@@ -689,7 +684,6 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 }
 
 static void DrawIndexedVertices(int verticesCount, int startVertex) {
-	// TODO switch to indexed rendering
 	DrawArrays(NV097_SET_BEGIN_END_OP_QUADS, startVertex, verticesCount);
 }
 

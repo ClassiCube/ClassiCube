@@ -1046,7 +1046,6 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	gfx_channels[2] = b;
 	gfx_channels[3] = a;
 	OM_UpdateBlendState();
-	// TODO all channels
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
