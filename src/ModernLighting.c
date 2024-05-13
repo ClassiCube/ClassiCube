@@ -106,8 +106,8 @@ static void ModernLighting_AllocState(void) {
 	ModernLighting_InitPalettes();
 	chunksCount = World.ChunksCount;
 
-	chunkLightingDataFlags = (cc_uint8*)Mem_TryAllocCleared(chunksCount, sizeof(cc_uint8));
-	chunkLightingData = (LightingChunk*)Mem_TryAllocCleared(chunksCount, sizeof(LightingChunk));
+	chunkLightingDataFlags = (cc_uint8*)Mem_AllocCleared(chunksCount, sizeof(cc_uint8), "light flags");
+	chunkLightingData = (LightingChunk*)Mem_AllocCleared(chunksCount, sizeof(LightingChunk), "light chunks");
 	Queue_Init(&lightQueue, sizeof(IVec3));
 
 }
@@ -362,7 +362,6 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 	int chunkCoordsIndex;
 	BlockID thereBlock;
 	cc_uint8 blockLightThere;
-
 	if (oldBlock == newBlock) { return; }
 
 	ClassicLighting_OnBlockChanged(x, y, z, oldBlock, newBlock);
@@ -421,6 +420,10 @@ static void ModernLighting_Refresh(void) {
 static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
 static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 
+#define RecalcForChunkIfNeeded(cx, cy, cz, chunkIndex) \
+	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) { \
+		CalculateChunkLightingAll(chunkIndex, cx, cy, cz, false); \
+	}
 
 static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palette, PackedCol outOfBoundsColor) {
 	cc_uint8 lightData;
@@ -434,9 +437,7 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 	cz = z >> CHUNK_SHIFT;
 
 	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
-	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) {
-		CalculateChunkLightingAll(chunkIndex, cx, cy, cz, false);
-	}
+	RecalcForChunkIfNeeded(cx, cy, cz, chunkIndex);
 
 	/* There might be no light data in this chunk even after it was calculated */
 	if (chunkLightingData[chunkIndex] == NULL) {
@@ -477,22 +478,18 @@ static PackedCol ModernLighting_Color_ZSide(int x, int y, int z) {
 }
 
 static void ModernLighting_LightHint(int startX, int startY, int startZ) {
-	int cx, cy, cz, curX, curY, curZ;
+	int cx, cy, cz, chunkIndex;
 	ClassicLighting_LightHint(startX, startY, startZ);
 	/* Add 1 to startX/Z, as coordinates are for the extended chunk (18x18x18) */
-	//startX++; startY++; startZ++;
+	startX++; startY++; startZ++;
 
 	// precalculate lighting for this chunk and its neighbours
 	cx = (startX + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
 	cy = (startY + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
 	cz = (startZ + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
 
-	for (curY = cy - 1; curY <= cy + 1; curY++)
-		for (curZ = cz - 1; curZ <= cz + 1; curZ++)
-			for (curX = cx - 1; curX <= cx + 1; curX++) 
-			{
-				ModernLighting_Color(curX << CHUNK_SHIFT, curY << CHUNK_SHIFT, curZ << CHUNK_SHIFT);
-			}
+	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
+	RecalcForChunkIfNeeded(cx, cy, cz, chunkIndex);
 }
 
 void ModernLighting_SetActive(void) {
