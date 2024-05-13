@@ -396,7 +396,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 	info->allAir = allAir;
 	if (allAir || allSolid) return;
-	Lighting.LightHint(x1 - 1, z1 - 1);
+	Lighting.LightHint(x1 - 1, y1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
 	xMax = min(World.Width,  x1 + CHUNK_SIZE);

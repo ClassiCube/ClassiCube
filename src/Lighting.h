@@ -29,11 +29,9 @@ CC_VAR extern struct _Lighting {
 	/* Allocates the per-level lighting state */
 	/*  (called after map has been fully loaded) */
 	void (*AllocState)(void);
-	/* Equivalent to (but far more optimised form of)
-	* for x = startX; x < startX + 18; x++
-	*   for z = startZ; z < startZ + 18; z++
-	*      CalcLight(x, maxY, z)                         */
-	void (*LightHint)(int startX, int startZ);
+	/* Quickly calculates lighting for the blocks in the region */
+	/*  [x, y, z] to [x + 18, y + 18, z + 18] */
+	void (*LightHint)(int startX, int startY, int startZ);
 
 	/* Called when a block is changed to update internal lighting state. */
 	/* NOTE: Implementations ***MUST*** mark all chunks affected by this lighting change as needing to be refreshed. */
@@ -70,6 +68,6 @@ void ModernLighting_OnEnvVariableChanged(void* obj, int envVar);
 void ClassicLighting_FreeState(void);
 void ClassicLighting_AllocState(void);
 int ClassicLighting_GetLightHeight(int x, int z);
-void ClassicLighting_LightHint(int startX, int startZ);
+void ClassicLighting_LightHint(int startX, int startY, int startZ);
 void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 #endif

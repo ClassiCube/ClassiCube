@@ -478,7 +478,9 @@ static PackedCol ModernLighting_Color_ZSide(int x, int y, int z) {
 
 static void ModernLighting_LightHint(int startX, int startY, int startZ) {
 	int cx, cy, cz, curX, curY, curZ;
-	ClassicLighting_LightHint(startX, startZ);
+	ClassicLighting_LightHint(startX, startY, startZ);
+	/* Add 1 to startX/Z, as coordinates are for the extended chunk (18x18x18) */
+	//startX++; startY++; startZ++;
 
 	// precalculate lighting for this chunk and its neighbours
 	cx = (startX + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
@@ -487,7 +489,8 @@ static void ModernLighting_LightHint(int startX, int startY, int startZ) {
 
 	for (curY = cy - 1; curY <= cy + 1; curY++)
 		for (curZ = cz - 1; curZ <= cz + 1; curZ++)
-			for (curX = cx - 1; curX <= cx + 1; curX++) {
+			for (curX = cx - 1; curX <= cx + 1; curX++) 
+			{
 				ModernLighting_Color(curX << CHUNK_SHIFT, curY << CHUNK_SHIFT, curZ << CHUNK_SHIFT);
 			}
 }
