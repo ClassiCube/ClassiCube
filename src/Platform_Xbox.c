@@ -226,7 +226,15 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
-*#############################################################################################################p############*/
+*##########################################################################################################################*/
+static void WaitForSignal(HANDLE handle, LARGE_INTEGER* duration) {
+	for (;;) 
+	{
+		NTSTATUS status = NtWaitForSingleObjectEx((HANDLE)handle, UserMode, FALSE, duration);
+		if (status != STATUS_ALERTED) break;
+	}
+}
+
 void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
 static DWORD WINAPI ExecThread(void* param) {
 	Thread_StartFunc func = (Thread_StartFunc)param;
@@ -249,7 +257,7 @@ void Thread_Detach(void* handle) {
 }
 
 void Thread_Join(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
+	WaitForSignal((HANDLE)handle, NULL);
 	Thread_Detach(handle);
 }
 
@@ -290,11 +298,14 @@ void Waitable_Signal(void* handle) {
 }
 
 void Waitable_Wait(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
+	WaitForSignal((HANDLE)handle, NULL);
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	WaitForSingleObject((HANDLE)handle, milliseconds);
+	LARGE_INTEGER duration;
+	duration.QuadPart = ((LONGLONG)milliseconds) * -10000; // negative for relative timeout
+
+	WaitForSignal((HANDLE)handle, &duration);
 }
 
 

@@ -27,7 +27,11 @@ cc_result ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 #define INFLATE_MAX_DISTS 32
 #define INFLATE_MAX_LITS_DISTS (INFLATE_MAX_LITS + INFLATE_MAX_DISTS)
 #define INFLATE_MAX_BITS 16
+
 #define INFLATE_FAST_BITS 9
+#define INFLATE_FAST_LEN_SHIFT 9
+#define INFLATE_FAST_VAL_MASK  0x1FF
+
 #define INFLATE_WINDOW_SIZE 0x8000UL
 #define INFLATE_WINDOW_MASK 0x7FFFUL
 

@@ -243,7 +243,7 @@ static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLe
 		*   - set fast value to specify a 'value' value, and to skip 'len' bits
 		*/
 		if (len <= INFLATE_FAST_BITS) {
-			cc_int16 packed = (cc_int16)((len << INFLATE_FAST_BITS) | value);
+			cc_int16 packed = (cc_int16)((len << INFLATE_FAST_LEN_SHIFT) | value);
 			int codeword = table->firstCodewords[len] + (bl_offsets[len] - table->firstOffsets[len]);
 			codeword <<= (INFLATE_FAST_BITS - len);
 
@@ -273,9 +273,9 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 	if (state->NumBits >= INFLATE_FAST_BITS) {
 		packed = table->fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
 		if (packed >= 0) {
-			bits = packed >> INFLATE_FAST_BITS;
+			bits = packed >> INFLATE_FAST_LEN_SHIFT;
 			Inflate_ConsumeBits(state, bits);
-			return packed & 0x1FF;
+			return packed & INFLATE_FAST_VAL_MASK;
 		}
 	}
 
