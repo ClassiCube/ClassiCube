@@ -1,5 +1,10 @@
 name: Build latest (Dreamcast)
-on: [push, workflow_dispatch]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-dreamcast
@@ -7,7 +12,6 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: kazade/dreamcast-sdk

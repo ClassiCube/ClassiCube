@@ -1,5 +1,10 @@
 name: Build latest (Windows ARM32/64)
-on: [push, workflow_dispatch]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-windows-arm
@@ -10,7 +15,6 @@ jobs:
 # ============== ARM32 WINDOWS ==============
 # ===========================================
   build-32:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: dockcross/windows-armv7
@@ -44,7 +48,6 @@ jobs:
 # ============== ARM64 WINDOWS ==============
 # ===========================================
   build-64:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: dockcross/windows-arm64

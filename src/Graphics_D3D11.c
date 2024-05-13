@@ -886,10 +886,10 @@ void Gfx_DisableMipmaps(void) {
 static ID3D11RenderTargetView* backbuffer;
 static ID3D11Texture2D* depthbuffer;
 static ID3D11DepthStencilView* depthbufferView;
-static ID3D11BlendState* om_blendStates[4];
+static ID3D11BlendState* om_blendStates[16 * 2];
 static ID3D11DepthStencilState* om_depthStates[4];
 static float gfx_clearColor[4];
-static cc_bool gfx_colorEnabled = true;
+static cc_bool gfx_channels[4] = { true, true, true, true };
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(GfxBuffers buffers) {
@@ -971,8 +971,14 @@ static void OM_CreateBlendStates(void) {
 
 	for (int i = 0; i < Array_Elems(om_blendStates); i++) 
 	{
-		desc.RenderTarget[0].RenderTargetWriteMask = (i & 1) ? D3D11_COLOR_WRITE_ENABLE_ALL : 0;
-		desc.RenderTarget[0].BlendEnable           = (i & 2) != 0;
+		int mask = 0;
+		if (i & 0x01) mask |= D3D11_COLOR_WRITE_ENABLE_RED;
+		if (i & 0x02) mask |= D3D11_COLOR_WRITE_ENABLE_GREEN;
+		if (i & 0x04) mask |= D3D11_COLOR_WRITE_ENABLE_BLUE;
+		if (i & 0x08) mask |= D3D11_COLOR_WRITE_ENABLE_ALPHA;
+		
+		desc.RenderTarget[0].RenderTargetWriteMask = mask;
+		desc.RenderTarget[0].BlendEnable           = (i & 0x10) != 0;
 
 		hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[i]);
 		if (hr) Logger_Abort2(hr, "Failed to create blend state");
@@ -980,7 +986,8 @@ static void OM_CreateBlendStates(void) {
 }
 
 static void OM_UpdateBlendState(void) {
-	ID3D11BlendState* blendState = om_blendStates[gfx_colorEnabled | (gfx_alphaBlend << 1)];
+	int idx = (gfx_channels[0]) | (gfx_channels[1] << 1) | (gfx_channels[2] << 2) | (gfx_channels[3] << 3) | (gfx_alphaBlend << 4);
+	ID3D11BlendState* blendState = om_blendStates[idx];
 	ID3D11DeviceContext_OMSetBlendState(context, blendState, NULL, 0xffffffff);
 }
 
@@ -1034,9 +1041,11 @@ static void SetAlphaBlend(cc_bool enabled) {
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	gfx_colorEnabled = r;
+	gfx_channels[0] = r;
+	gfx_channels[1] = g;
+	gfx_channels[2] = b;
+	gfx_channels[3] = a;
 	OM_UpdateBlendState();
-	// TODO all channels
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {

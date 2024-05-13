@@ -1,13 +1,17 @@
 name: Build latest (Xbox 360)
-on: [push, workflow_dispatch]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-xbox360
   cancel-in-progress: true
 
 jobs:
-  build-Xbox:
-    if: github.ref_name == github.event.repository.default_branch
+  build-360:
     runs-on: ubuntu-latest
     container:
       image: free60/libxenon
