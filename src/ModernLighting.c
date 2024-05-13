@@ -164,10 +164,14 @@ static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun,
 		chunkLightingData[chunkIndex][localIndex] |= blockLight << shift;
 
 		//refresh chunk if new value is different
-		//if (prevValue != chunkLightingData[chunkIndex][localIndex]) {
-			Platform_Log3("Refreshing at chunk %i %i %i", &cx, &cy, &cz);
-			MapRenderer_RefreshChunk(cx, cy, cz);
-		//}
+		if (prevValue != chunkLightingData[chunkIndex][localIndex]) {
+			if (lx == CHUNK_MAX) MapRenderer_RefreshChunk(cx + 1, cy, cz);
+			if (lx == 0)         MapRenderer_RefreshChunk(cx - 1, cy, cz);
+			if (ly == CHUNK_MAX) MapRenderer_RefreshChunk(cx, cy + 1, cz);
+			if (ly == 0)         MapRenderer_RefreshChunk(cx, cy - 1, cz);
+			if (lz == CHUNK_MAX) MapRenderer_RefreshChunk(cx, cy, cz + 1);
+			if (lz == 0)         MapRenderer_RefreshChunk(cx, cy, cz - 1);
+		}
 	}
 	else {
 		chunkLightingData[chunkIndex][localIndex] &= clearMask;
@@ -210,14 +214,14 @@ static cc_bool CanLightPass(BlockID thisBlock, Face face) {
 	return !Block_IsFaceHidden(BLOCK_STONE, thisBlock, face);
 }
 
-#define Light_TrySpreadInto(axis, AXIS, dir, limit, isSun, thisFace, thatFace)\
-if (curNode.axis dir limit &&\
-	CanLightPass(thisBlock, FACE_ ## AXIS ## thisFace) &&\
-	CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ ## AXIS ## thatFace) &&\
-	GetBlocklight(curNode.x, curNode.y, curNode.z, isSun) < curLight) {\
-	SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, isSun, refreshChunk);\
-	Queue_Enqueue(&lightQueue, &curNode);\
-}\
+#define Light_TrySpreadInto(axis, AXIS, dir, limit, isSun, thisFace, thatFace) \
+	if (curNode.axis dir limit && \
+		CanLightPass(thisBlock, FACE_ ## AXIS ## thisFace) && \
+		CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ ## AXIS ## thatFace) && \
+		GetBlocklight(curNode.x, curNode.y, curNode.z, isSun) < curLight) { \
+		SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, isSun, refreshChunk); \
+		Queue_Enqueue(&lightQueue, &curNode); \
+	} \
 
 
 static void CalcLight(cc_uint8 blockLight, int x, int y, int z, cc_bool isSun, cc_bool refreshChunk) {
@@ -368,9 +372,6 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 
 	/* No lighting change */
 	if (IsFullOpaque(oldBlock) && IsFullOpaque(newBlock)) { return; }
-	/* Light passes through both and neither block casts light, no change */
-	if (IsFullTransparent(oldBlock) && IsFullTransparent(newBlock)) { return; }
-
 
 	cc_uint8 oldBlockLightLevel = BlockBlockBrightness(oldBlock);
 	cc_uint8 newBlockLightLevel = BlockBlockBrightness(newBlock);
@@ -388,6 +389,9 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 		CalcLight(newBlockLightLevel, x, y, z, false, true);
 		return;
 	}
+
+	/* Light passes through both and new block does not cast light, no change */
+	if (IsFullTransparent(oldBlock) && IsFullTransparent(newBlock)) { return; }
 
 	//incomplete stuff
 	//cc_bool oldLightPasses;
