@@ -139,7 +139,7 @@ static void ModernLighting_FreeState(void) {
 /* Converts global x/y/z coordinates to the corresponding index in a chunk */
 #define GlobalCoordsToChunkCoordsIndex(x, y, z) (LocalCoordsToIndex(x & CHUNK_MASK, y & CHUNK_MASK, z & CHUNK_MASK))
 
-static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun) {
+static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun, cc_bool refreshChunk) {
 	cc_uint8 clearMask;
 	cc_uint8 shift = sun ? MODERN_LIGHTING_SUN_SHIFT : 0;
 
@@ -157,8 +157,22 @@ static void SetBlocklight(cc_uint8 blockLight, int x, int y, int z, cc_bool sun)
 	/* 00001111 if sun, otherwise 11110000*/
 	clearMask = ~(MODERN_LIGHTING_MAX_LEVEL << shift);
 
-	chunkLightingData[chunkIndex][localIndex] &= clearMask;
-	chunkLightingData[chunkIndex][localIndex] |= blockLight << shift;
+	if (refreshChunk) {
+		cc_uint8 prevValue = chunkLightingData[chunkIndex][localIndex];
+
+		chunkLightingData[chunkIndex][localIndex] &= clearMask;
+		chunkLightingData[chunkIndex][localIndex] |= blockLight << shift;
+
+		//refresh chunk if new value is different
+		//if (prevValue != chunkLightingData[chunkIndex][localIndex]) {
+			Platform_Log3("Refreshing at chunk %i %i %i", &cx, &cy, &cz);
+			MapRenderer_RefreshChunk(cx, cy, cz);
+		//}
+	}
+	else {
+		chunkLightingData[chunkIndex][localIndex] &= clearMask;
+		chunkLightingData[chunkIndex][localIndex] |= blockLight << shift;
+	}
 }
 static cc_uint8 GetBlocklight(int x, int y, int z, cc_bool sun) {
 	int cx = x >> CHUNK_SHIFT, lx = x & CHUNK_MASK;
@@ -174,16 +188,24 @@ static cc_uint8 GetBlocklight(int x, int y, int z, cc_bool sun) {
 		chunkLightingData[chunkIndex][localIndex] & MODERN_LIGHTING_MAX_LEVEL;
 }
 
+
+/* Light can never pass through a block that's full sized and blocks light */
+/* We can assume a block is full sized if none of the LightOffset flags are 0 */
+#define IsFullOpaque(thisBlock) (Blocks.BlocksLight[thisBlock] && Blocks.LightOffset[thisBlock] == 0xFF)
+
+/* If it's not opaque and it doesn't block light, or it is brighter than 0, we can always pass through */
+/* Light can always pass through leaves and water */
+#define IsFullTransparent(thisBlock)\
+(\
+(Blocks.Draw[thisBlock] > DRAW_OPAQUE && !Blocks.BlocksLight[thisBlock]) || \
+Blocks.Draw[thisBlock] == DRAW_TRANSPARENT_THICK || \
+Blocks.Draw[thisBlock] == DRAW_TRANSLUCENT\
+)
+
 static cc_bool CanLightPass(BlockID thisBlock, Face face) {
-	/* If it's not opaque and it doesn't block light, or it is brighter than 0, we can always pass through */
-	if ((Blocks.Draw[thisBlock] > DRAW_OPAQUE && !Blocks.BlocksLight[thisBlock]) || Blocks.Brightness[thisBlock]) { return true; }
-	/* Light can always pass through leaves and water */
-	if (Blocks.Draw[thisBlock] == DRAW_TRANSPARENT_THICK || Blocks.Draw[thisBlock] == DRAW_TRANSLUCENT) { return true; }
-
-	/* Light can never pass through a block that's full sized and blocks light */
-	/* We can assume a block is full sized if none of the LightOffset flags are 0 */
-	if (Blocks.BlocksLight[thisBlock] && Blocks.LightOffset[thisBlock] == 0xFF) { return false; }
-
+	if (IsFullTransparent(thisBlock)) { return true; }
+	if (Blocks.Brightness[thisBlock]) { return true; }
+	if (IsFullOpaque(thisBlock)) { return false; }
 	/* Is stone's face hidden by thisBlock? TODO: Don't hardcode using stone */
 	return !Block_IsFaceHidden(BLOCK_STONE, thisBlock, face);
 }
@@ -193,13 +215,13 @@ if (curNode.axis dir limit &&\
 	CanLightPass(thisBlock, FACE_ ## AXIS ## thisFace) &&\
 	CanLightPass(World_GetBlock(curNode.x, curNode.y, curNode.z), FACE_ ## AXIS ## thatFace) &&\
 	GetBlocklight(curNode.x, curNode.y, curNode.z, isSun) < curLight) {\
-	SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, isSun);\
+	SetBlocklight(curLight, curNode.x, curNode.y, curNode.z, isSun, refreshChunk);\
 	Queue_Enqueue(&lightQueue, &curNode);\
 }\
 
 
-static void CalcLight(cc_uint8 blockLight, int x, int y, int z, cc_bool isSun) {
-	SetBlocklight(blockLight, x, y, z, isSun);
+static void CalcLight(cc_uint8 blockLight, int x, int y, int z, cc_bool isSun, cc_bool refreshChunk) {
+	SetBlocklight(blockLight, x, y, z, isSun, refreshChunk);
 	IVec3 entry = { x, y, z };
 	Queue_Enqueue(&lightQueue, &entry);
 	
@@ -231,7 +253,8 @@ static void CalcLight(cc_uint8 blockLight, int x, int y, int z, cc_bool isSun) {
 	}
 }
 
-
+#define BlockBlockBrightness(curBlock) (Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL)
+#define BlockSunBrightness(curBlock) (Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT)
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
@@ -258,13 +281,13 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 
 				curBlock = World_GetBlock(x, y, z);
 				if (Blocks.Brightness[curBlock] > 0) {
-					/* mask out the sun brightness */
-					brightness = Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL;
 
-					if (brightness > 0) { CalcLight(brightness, x, y, z, false); }
+					brightness = BlockBlockBrightness(curBlock);
+
+					if (brightness > 0) { CalcLight(brightness, x, y, z, false, false); }
 					else {
 						/* If no block brightness, it must use sun brightness */
-						CalcLight(Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT, x, y, z, true);
+						CalcLight(BlockSunBrightness(curBlock), x, y, z, true, false);
 					}
 				}
 
@@ -330,31 +353,63 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc
 	chunkLightingDataFlags[chunkIndex] = CHUNK_ALL_CALCULATED;
 }
 
-static void CalcUnlight(int x, int y, int z, cc_uint8 lightData) {
+static void CalcUnlight(int x, int y, int z, cc_uint8 lightData, cc_bool sun) {
 
 }
 static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 	cc_uint8 lightData;
 	int cx, cy, cz, chunkIndex;
 	int chunkCoordsIndex;
-	BlockID curBlock;
+	BlockID thereBlock;
+	cc_uint8 blockLightThere;
+
+	if (oldBlock == newBlock) { return; }
 
 	ClassicLighting_OnBlockChanged(x, y, z, oldBlock, newBlock);
 
-	cx = x >> CHUNK_SHIFT;
-	cy = y >> CHUNK_SHIFT;
-	cz = z >> CHUNK_SHIFT;
-	
-	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
-	if (chunkLightingData[chunkIndex] == NULL) {
-		lightData = 0;
-	} else {
-		chunkCoordsIndex = GlobalCoordsToChunkCoordsIndex(x, y, z);
-		lightData = chunkLightingData[chunkIndex][chunkCoordsIndex];
+	/* No lighting change */
+	if (IsFullOpaque(oldBlock) && IsFullOpaque(newBlock)) { return; }
+	/* Light passes through both and neither block casts light, no change */
+	if (IsFullTransparent(oldBlock) && IsFullTransparent(newBlock)) { return; }
+
+
+	cc_uint8 oldBlockLightLevel = BlockBlockBrightness(oldBlock);
+	cc_uint8 newBlockLightLevel = BlockBlockBrightness(newBlock);
+
+	cc_uint8 oldBlockLightLevelHere = GetBlocklight(x, y, z, false);
+
+	/* The new block casts light (therefore doesn't block light) */
+	if (newBlockLightLevel > 0) {
+		
+		/* doesn't brighten this spot, no change */
+		if (oldBlockLightLevelHere >= newBlockLightLevel) { return; }
+
+		Platform_LogConst("Adding light");
+		/* brightens this spot, recalculate lighting */
+		CalcLight(newBlockLightLevel, x, y, z, false, true);
+		return;
 	}
 
+	//incomplete stuff
+	//cc_bool oldLightPasses;
+	//cc_bool newLightPasses;
+	//
+	//x--;
+	//thereBlock = World_GetBlock(x, y, z);
+	//oldLightPasses = CanLightPass(oldBlock, FACE_XMIN) && CanLightPass(thereBlock, FACE_XMAX);
+	//newLightPasses = CanLightPass(newBlock, FACE_XMIN) && CanLightPass(thereBlock, FACE_XMAX);
+	///* Here to x-1 has been sealed */
+	//if (oldLightPasses && !newLightPasses) {
+	//
+	//}
+	//blockLightThere = GetBlocklight(x, y, z, false);
+	//
+	//if (CanLightPass(newBlock, FACE_XMIN) && CanLightPass(World_GetBlock(x, y, z), FACE_XMAX)) {
+	//	//if ()
+	//}
+
 	/* lazily recalculate all lighting in this chunkand neighbors, TODO optimise this */
-	CalculateChunkLightingAll(chunkIndex, cx, cy, cz, true);
+	//CalculateChunkLightingAll(chunkIndex, cx, cy, cz, true);
 
 }
 /* Invalidates/Resets lighting state for all of the blocks in the world */

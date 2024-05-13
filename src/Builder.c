@@ -1281,11 +1281,12 @@ static void AdvBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 
 static cc_bool Modern_IsOccluded(int x, int y, int z) {
 	BlockID block = World_SafeGetBlock(x, y, z);
+	if (Blocks.Brightness[block] > 0) { return false; }
 	/* If the block we're pulling colors from is solid, return a darker version of original and increment how many are like this */
 	if (Blocks.FullOpaque[block] || (Blocks.Draw[block] == DRAW_TRANSPARENT && Blocks.BlocksLight[block] && Blocks.LightOffset[block] == 0xFF)) {
 		return true;
 	}
-	return 0;
+	return false;
 }
 
 static cc_bool Modern_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
