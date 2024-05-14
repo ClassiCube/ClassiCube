@@ -126,7 +126,6 @@ static void ModernLighting_FreeState(void) {
 	if (!chunkLightingDataFlags) return;
 
 	for (i = 0; i < chunksCount; i++) {
-		if (chunkLightingDataFlags[i] == CHUNK_UNCALCULATED) continue;
 		Mem_Free(chunkLightingData[i]);
 	}
 
@@ -239,7 +238,6 @@ static void FlushLightQueue(cc_bool isSun, cc_bool refreshChunk) {
 		cc_uint8 brightnessHere = GetBlocklight(ln.coords.x, ln.coords.y, ln.coords.z, isSun);
 
 		/* If this cel is already more lit, we can assume this cel and its neighbors have been accounted for */
-		/* (the cell may be a re-spread from removing light, so we need to do it if it's equal to) */
 		if (brightnessHere >= ln.brightness) { continue; }
 		if (ln.brightness == 0) { continue; }
 
@@ -446,7 +444,7 @@ static void CalcUnlight(int x, int y, int z, cc_uint8 brightness, cc_bool isSun)
 		neighborCoords.z--;
 		Light_TryUnSpreadInto(z, >, 0, Block, Z, MAX, MIN)
 		neighborCoords.z += 2;
-		Light_TryUnSpreadInto(x, <, World.MaxZ, Block, Z, MIN, MAX)
+		Light_TryUnSpreadInto(z, <, World.MaxZ, Block, Z, MIN, MAX)
 	}
 
 	FlushLightQueue(isSun, true);
