@@ -572,6 +572,7 @@ cc_uint8 Block_WriteFullBright(cc_uint8 brightness) {
 	} else {
 		return 0;
 	}
+	return fullBright;
 }
 
 /*########################################################################################################################*
