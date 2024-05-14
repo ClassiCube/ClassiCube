@@ -13,7 +13,7 @@
 #include "Options.h"
 #include "Queue.h"
 
-static struct LightNode {
+struct LightNode {
 	IVec3 coords;
 	cc_uint8 brightness;
 };
@@ -231,17 +231,21 @@ static cc_bool CanLightPass(BlockID thisBlock, Face face) {
 	} \
 
 static void FlushLightQueue(cc_bool isSun, cc_bool refreshChunk) {
+	int handled = 0;
 	while (lightQueue.count > 0) {
+		handled++;
 		struct LightNode ln = *(struct LightNode*)(Queue_Dequeue(&lightQueue));
 
 		cc_uint8 brightnessHere = GetBlocklight(ln.coords.x, ln.coords.y, ln.coords.z, isSun);
 
-		/* If this cel is already just as or more lit, we can assume this cel and its neighbors have been accounted for */
+		/* If this cel is already more lit, we can assume this cel and its neighbors have been accounted for */
+		/* (the cell may be a re-spread from removing light, so we need to do it if it's equal to) */
 		if (brightnessHere >= ln.brightness) { continue; }
+		if (ln.brightness == 0) { continue; }
 
+		//Platform_Log4("Placing %i at %i %i %i", &ln.brightness, &ln.coords.x, &ln.coords.y, &ln.coords.z);
 		SetBlocklight(ln.brightness, ln.coords.x, ln.coords.y, ln.coords.z, isSun, refreshChunk);
 
-		if (ln.brightness == 0) { continue; }
 
 		BlockID thisBlock = World_GetBlock(ln.coords.x, ln.coords.y, ln.coords.z);
 		ln.brightness--;
@@ -253,17 +257,18 @@ static void FlushLightQueue(cc_bool isSun, cc_bool refreshChunk) {
 		Light_TrySpreadInto(x, X, < , World.MaxX, isSun, MIN, MAX)
 		ln.coords.x--;
 
-		//ln.coords.y--;
-		//Light_TrySpreadInto(y, Y, >, 0, isSun, MAX, MIN)
-		//ln.coords.y += 2;
-		//Light_TrySpreadInto(y, Y, <, World.MaxY, isSun, MIN, MAX)
-		//ln.coords.y--;
+		ln.coords.y--;
+		Light_TrySpreadInto(y, Y, >, 0, isSun, MAX, MIN)
+		ln.coords.y += 2;
+		Light_TrySpreadInto(y, Y, <, World.MaxY, isSun, MIN, MAX)
+		ln.coords.y--;
 
 		ln.coords.z--;
 		Light_TrySpreadInto(z, Z, > , 0, isSun, MAX, MIN)
 		ln.coords.z += 2;
 		Light_TrySpreadInto(z, Z, < , World.MaxZ, isSun, MIN, MAX)
 	}
+	//Platform_Log1("Handled %i queue entries.", &handled);
 }
 
 #define BlockBlockBrightness(curBlock) (curBlock == 201 ? 10 : (Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL))
@@ -283,10 +288,6 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	if (chunkEndX > World.Width) { chunkEndX = World.Width; }
 	if (chunkEndY > World.Height) { chunkEndY = World.Height; }
 	if (chunkEndZ > World.Length) { chunkEndZ = World.Length; }
-
-	//Platform_Log3("  calcing %i %i %i", &cx, &cy, &cz);
-
-	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 
 	for (y = chunkStartY; y < chunkEndY; y++) {
 		for (z = chunkStartZ; z < chunkEndZ; z++) {
@@ -374,8 +375,12 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc
 }
 
 
-#define Light_TryUnSpreadInto(axis, dir, limit, Type) \
-		if (neighborCoords.axis dir ## = limit) { \
+#define Light_TryUnSpreadInto(axis, dir, limit, Type, AXIS, thisFace, thatFace) \
+		if (neighborCoords.axis dir ## = limit && \
+			CanLightPass(thisBlock, FACE_ ## AXIS ## thisFace) && \
+			CanLightPass(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), FACE_ ## AXIS ## thatFace) \
+		) \
+		{ \
 			neighborBrightness = GetBlocklight(neighborCoords.x, neighborCoords.y, neighborCoords.z, isSun); \
 			neighborBlockBrightness = Block ## Type ## Brightness(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z)); \
 			/* This spot is a light caster, mark this spot as needing to be re-spread */ \
@@ -390,16 +395,25 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc
 					struct LightNode neighborNode = { { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBrightness }; \
 					Queue_Enqueue(&unlightQueue, &neighborNode); \
 				} \
-				/* This spot is brighter or same, mark this spot as needing to be re-spread */ \
+				/* This neighbor is brighter or same, mark this spot as needing to be re-spread */ \
 				else { \
-					Platform_Log1("Spread for me. %i", &neighborBrightness); \
-					struct LightNode entry = { neighborCoords.x, neighborCoords.y, neighborCoords.z, neighborBrightness }; \
-					Queue_Enqueue(&lightQueue, &entry); \
+					/* But only if the neighbor actually *can* spread to this block */ \
+					if ( \
+						CanLightPass(thisBlockTrue, FACE_ ## AXIS ## thisFace) && \
+						CanLightPass(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), FACE_ ## AXIS ## thatFace) \
+					) \
+					{ \
+						struct LightNode entry = curNode; \
+						entry.brightness = neighborBrightness-1; \
+						Queue_Enqueue(&lightQueue, &entry); \
+					} \
 				} \
 			} \
 		} \
 
+/* Spreads darkness out from this point and relights any necessary areas afterward */
 static void CalcUnlight(int x, int y, int z, cc_uint8 brightness, cc_bool isSun) {
+	int count = 0;
 	SetBlocklight(0, x, y, z, isSun, true);
 	struct LightNode sourceNode = { { x, y, z }, brightness };
 	Queue_Enqueue(&unlightQueue, &sourceNode);
@@ -408,39 +422,36 @@ static void CalcUnlight(int x, int y, int z, cc_uint8 brightness, cc_bool isSun)
 		struct LightNode curNode = *(struct LightNode*)(Queue_Dequeue(&unlightQueue));
 		cc_uint8 neighborBrightness;
 		cc_uint8 neighborBlockBrightness;
-		//Step 4: Look at all neighbouring voxels to that node.
-		//         if their light level is nonzero and is
-		//         less than the current lightLevel, then add them to the
-		//         queue and set their light level to zero.
-		//         Else if it is >= current node, then add it to
-		//         the light propagation queue.
-
 		IVec3 neighborCoords = curNode.coords;
 
+		BlockID thisBlockTrue = World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z);
+		/* For the original cell in the queue, assume this block is air
+		so that light can unspread "out" of it in the case of a solid blocks. */
+		BlockID thisBlock = count == 0 ? BLOCK_AIR : thisBlockTrue;
+		
+		count++;
+
 		neighborCoords.x--;
-		Light_TryUnSpreadInto(x, >, 0, Block)
+		Light_TryUnSpreadInto(x, >, 0, Block, X, MAX, MIN)
 		neighborCoords.x += 2;
-		Light_TryUnSpreadInto(x, <, World.MaxX, Block)
+		Light_TryUnSpreadInto(x, <, World.MaxX, Block, X, MIN, MAX)
 		neighborCoords.x--;
 
-
+		neighborCoords.y--;
+		Light_TryUnSpreadInto(y, >, 0, Block, Y, MAX, MIN)
+		neighborCoords.y += 2;
+		Light_TryUnSpreadInto(y, <, World.MaxY, Block, Y, MIN, MAX)
+		neighborCoords.y--;
 
 		neighborCoords.z--;
-		Light_TryUnSpreadInto(z, >, 0, Block)
+		Light_TryUnSpreadInto(z, >, 0, Block, Z, MAX, MIN)
 		neighborCoords.z += 2;
-		Light_TryUnSpreadInto(x, <, World.MaxZ, Block)
-		neighborCoords.z--;
+		Light_TryUnSpreadInto(x, <, World.MaxZ, Block, Z, MIN, MAX)
 	}
 
 	FlushLightQueue(isSun, true);
 }
 static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
-	cc_uint8 lightData;
-	int cx, cy, cz, chunkIndex;
-	int chunkCoordsIndex;
-	BlockID thereBlock;
-	cc_uint8 blockLightThere;
-	cc_bool newBlockFullOpaque = IsFullOpaque(newBlock);
 
 	/* For some reason this is a possible case */
 	if (oldBlock == newBlock) { return; }
@@ -453,36 +464,26 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 	cc_uint8 oldLightLevelHere = GetBlocklight(x, y, z, false);
 
 	/* Cel has no lighting and new block doesn't cast light and blocks all light, no change */
-	if (!oldLightLevelHere && !newBlockLightLevel && newBlockFullOpaque) {
-		Platform_LogConst("No change");
-		return;
-	}
+	if (!oldLightLevelHere && !newBlockLightLevel && IsFullOpaque(newBlock)) return;
 
 
 	/* Cel is darker than the new block, only brighter case */
 	if (oldLightLevelHere < newBlockLightLevel) {
 		/* brighten this spot, recalculate lighting */
-		Platform_LogConst("Brightening");
+		//Platform_LogConst("Brightening");
 		struct LightNode entry = { x, y, z, newBlockLightLevel };
 		Queue_Enqueue(&lightQueue, &entry);
 		FlushLightQueue(false, true);
 		return;
 	}
 
-
 	/* Light passes through old and new, old block does not cast light, new block does not cast light; no change */
 	if (IsFullTransparent(oldBlock) && IsFullTransparent(newBlock) && !oldBlockLightLevel && !newBlockLightLevel) {
-		Platform_LogConst("Light passes through old and new and new block does not cast light, no change");
+		//Platform_LogConst("Light passes through old and new and new block does not cast light, no change");
 		return;
 	}
 
 	CalcUnlight(x, y, z, oldLightLevelHere, false);
-	return;
-
-
-	/* lazily recalculate all lighting in this chunkand neighbors, TODO optimise this */
-	//CalculateChunkLightingAll(chunkIndex, cx, cy, cz, true);
-
 }
 /* Invalidates/Resets lighting state for all of the blocks in the world */
 /*  (e.g. because a block changed whether it is full bright or not) */
