@@ -1,3 +1,77 @@
+! =========================================================
+! ========================= VERTEX OUTPUT =================
+! =========================================================
+! To take advantage of SH4 dual instruction processing, interleave
+!  the clipflag calculation and vertex output instructions
+.macro ProcessVertex1
+    fmov.s  fr7,@-r5 ! dst->w = W
+    fmov.s  fr8,@-r5 ! dst->c = C
+    fneg    fr7      ! W = -W
+    fmov.s fr10,@-r5 ! dst->v = V
+    fcmp/gt fr7,fr6  ! T = Z > W (i.e. Z > -W)
+    fmov.s  fr9,@-r5 ! dst->u = U
+    movt    r0       ! CLIPFLAGS = T
+    fmov.s  fr6,@-r5 ! dst->z = Z
+    fmov.s  fr5,@-r5 ! dst->y = Y
+    fmov.s  fr4,@-r5 ! dst->x = X
+    mov.l   r1,@-r5  ! dst->flags = CMD_VERT
+.endm
+
+.macro ProcessVertex2
+    fmov.s  fr7,@-r5 ! dst->w = W
+    fmov.s  fr8,@-r5 ! dst->c = C
+    fneg    fr7      ! W = -W
+    fmov.s fr10,@-r5 ! dst->v = V
+    fcmp/gt fr7,fr6  ! T = Z > W (i.e. Z > -W)
+    fmov.s  fr9,@-r5 ! dst->u = U
+    movt    r2       ! tmp = T
+    fmov.s  fr6,@-r5 ! dst->z = Z
+    add     r2,r2    ! tmp = tmp + tmp
+    fmov.s  fr5,@-r5 ! dst->y = Y
+    or      r2,r0    ! CLIPFLAGS |= tmp (T << 1)
+    fmov.s  fr4,@-r5 ! dst->x = X
+    mov.l   r1,@-r5  ! dst->flags = CMD_VERT
+.endm
+
+.macro ProcessVertex3
+    fmov.s  fr7,@-r5 ! dst->w = W
+    fmov.s  fr8,@-r5 ! dst->c = C
+    fneg    fr7      ! W = -W
+    fmov.s fr10,@-r5 ! dst->v = V
+    fcmp/gt fr7,fr6  ! T = Z > W (i.e. Z > -W)
+    fmov.s  fr9,@-r5 ! dst->u = U
+    movt    r2       ! tmp = T
+    fmov.s  fr6,@-r5 ! dst->z = Z
+    fmov.s  fr5,@-r5 ! dst->y = Y
+    shll2   r2       ! tmp = tmp << 2
+    fmov.s  fr4,@-r5 ! dst->x = X
+    or      r2,r0    ! CLIPFLAGS |= tmp (T << 2)
+    mov.l   r1,@-r5  ! dst->flags = CMD_VERT
+.endm
+
+.macro ProcessVertex4 eos_addr
+    fmov.s  fr7,@-r5 ! dst->w = W
+    fmov.s  fr8,@-r5 ! dst->c = C
+    fneg    fr7      ! W = -W
+    fmov.s fr10,@-r5 ! dst->v = V
+    fcmp/gt fr7,fr6  ! T = Z > W (i.e. Z > -W)
+    fmov.s  fr9,@-r5 ! dst->u = U
+    movt    r2       ! tmp = T
+    fmov.s  fr6,@-r5 ! dst->z = Z
+    shll2   r2       ! tmp = tmp << 2
+    fmov.s  fr5,@-r5 ! dst->y = Y
+    add     r2,r2    ! tmp = (tmp << 2) + (tmp << 2)
+    fmov.s  fr4,@-r5 ! dst->x = X
+    mov.l \eos_addr, r1 ! r1  = GPU EOS command
+    or      r2,r0    ! CLIPFLAGS |= tmp (T << 3)
+    or      r0,r1    ! r1 |= CLIPFLAGS
+    mov.l   r1,@-r5  ! dst->flags = GPU EOS | CLIPFLAGS
+.endm
+
+
+! =========================================================
+! ====================== VIEWPORT TRANSFORM ===============
+! =========================================================
 !r2 = return addr
 !r0 = temp
 !r5 = dst pointer
