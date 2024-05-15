@@ -49,7 +49,7 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 	float blockLerp;
 	cc_uint8 R, G, B;
 
-	defaultBlockLight = PackedCol_Make(255, 235, 198, 255); /* A very mildly orange tinted light color */
+	defaultBlockLight = Env.BlockLightCol;
 	//darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
 	darkestShadow = Env.ShadowCol;
 
@@ -586,7 +586,9 @@ void ModernLighting_SetActive(void) {
 void ModernLighting_OnEnvVariableChanged(void* obj, int envVar) {
 	/* This is always called, but should only do anything if modern lighting is on */
 	if (!Lighting_Modern) { return; }
-	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR) {
+
+	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR || envVar == ENV_VAR_BLOCKLIGHT_COLOR) {
 		ModernLighting_InitPalettes();
 	}
+	if (envVar == ENV_VAR_BLOCKLIGHT_COLOR) MapRenderer_Refresh();
 }

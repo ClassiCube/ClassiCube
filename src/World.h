@@ -118,7 +118,7 @@ enum EnvVar {
 	ENV_VAR_CLOUDS_HEIGHT, ENV_VAR_CLOUDS_SPEED, ENV_VAR_WEATHER_SPEED, ENV_VAR_WEATHER_FADE,
 	ENV_VAR_WEATHER, ENV_VAR_EXP_FOG, ENV_VAR_SKYBOX_HOR_SPEED, ENV_VAR_SKYBOX_VER_SPEED,
 	ENV_VAR_SKY_COLOR, ENV_VAR_CLOUDS_COLOR, ENV_VAR_FOG_COLOR, 
-	ENV_VAR_SUN_COLOR, ENV_VAR_SHADOW_COLOR, ENV_VAR_SKYBOX_COLOR
+	ENV_VAR_SUN_COLOR, ENV_VAR_SHADOW_COLOR, ENV_VAR_SKYBOX_COLOR, ENV_VAR_BLOCKLIGHT_COLOR
 };
 
 CC_VAR extern struct _EnvData {
@@ -134,18 +134,20 @@ CC_VAR extern struct _EnvData {
 	PackedCol SkyCol, FogCol, CloudsCol, SkyboxCol;
 	PackedCol SunCol, SunXSide, SunZSide, SunYMin;
 	PackedCol ShadowCol, ShadowXSide, ShadowZSide, ShadowYMin;
+	PackedCol BlockLightCol;
 } Env;
 #define Env_SidesHeight (Env.EdgeHeight + Env.SidesOffset)
 
 enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* const Weather_Names[3];
 
-#define ENV_DEFAULT_SKY_COLOR    PackedCol_Make(0x99, 0xCC, 0xFF, 0xFF)
-#define ENV_DEFAULT_FOG_COLOR    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_CLOUDS_COLOR PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_SKYBOX_COLOR PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_SUN_COLOR    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_SHADOW_COLOR PackedCol_Make(0x9B, 0x9B, 0x9B, 0xFF)
+#define ENV_DEFAULT_SKY_COLOR        PackedCol_Make(0x99, 0xCC, 0xFF, 0xFF)
+#define ENV_DEFAULT_FOG_COLOR        PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_CLOUDS_COLOR     PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SKYBOX_COLOR     PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SUN_COLOR        PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SHADOW_COLOR     PackedCol_Make(0x9B, 0x9B, 0x9B, 0xFF)
+#define ENV_DEFAULT_BLOCKLIGHT_COLOR PackedCol_Make(0xFF, 0xEB, 0xC6, 0xFF)
 
 /* Resets all environment settings to default. */
 /* NOTE: Unlike Env_Set functions, DOES NOT raise EnvVarChanged event. */
@@ -197,6 +199,8 @@ CC_API void Env_SetSunCol(PackedCol color);
 /* Sets colour of shadow. (default #9B9B9B) */
 /* This is the colour used for lighting when underground. */
 CC_API void Env_SetShadowCol(PackedCol color);
+/* Sets colour that blocks cast with fancy lighting. (default #FFEBC6) */
+CC_API void Env_SetBlockLightCol(PackedCol color);
 
 #define RESPAWN_NOT_FOUND -100000.0f
 /* Finds the highest Y coordinate of any solid block that intersects the given bounding box */
