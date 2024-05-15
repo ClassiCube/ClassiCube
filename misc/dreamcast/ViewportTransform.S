@@ -1,4 +1,41 @@
 ! =========================================================
+! ========================= VERTEX LOADING ================
+! =========================================================
+.macro LoadColouredVertex
+! PREPARE NEXT VERTEX
+    add #16, r3     ! r3 += VERTEX_STRIDE
+    pref @r3        ! PREFETCH r3 (next vertex)
+    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
+! LOAD XYZ
+    fmov @r4+, fr4  ! X = src->x
+    fmov @r4+, fr5  ! Y = src->y
+    fmov @r4+, fr6  ! Z = src->z
+    fldi1 fr7       ! W = 1.0
+! TRANSFORM VERTEX
+    ftrv xmtrx, fv4 ! TRANSFORM(XYZW)
+! LOAD ATTRIBUTES
+    fmov   @r4+,fr3 ! C = src->color
+.endm
+
+.macro LoadTexturedVertex
+! PREPARE NEXT VERTEX
+    add #24, r3     ! r3 += VERTEX_STRIDE
+    pref @r3        ! PREFETCH r3 (next vertex)
+    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
+! LOAD XYZ
+    fmov @r4+, fr4  ! X = src->x
+    fmov @r4+, fr5  ! Y = src->y
+    fmov @r4+, fr6  ! Z = src->z
+    fldi1 fr7       ! W = 1.0
+! TRANSFORM VERTEX
+    ftrv xmtrx, fv4 ! TRANSFORM(XYZW)
+! LOAD ATTRIBUTES
+    fmov    @r4+,fr3 ! C = src->color
+    fmov    @r4+,fr1 ! U = src->u
+    fmov    @r4+,fr2 ! V = src->v
+.endm
+
+! =========================================================
 ! ========================= VERTEX OUTPUT =================
 ! =========================================================
 ! To take advantage of SH4 dual instruction processing, interleave
@@ -96,10 +133,10 @@
 
 .macro ViewportTransformVertex
 ! INVERSE W CALCULATION
-    add #28, r5       ! r5  = &vertex[0].w
-    fmov.s  @r5+,fr0  ! fr0 = vertex->w
+    add #28, r5       ! r5  = &vertex->w
+    fmov.s  @r5,fr0   ! fr0 = vertex->w
     fmul    fr0,fr0   ! fr0 = fr0 * fr0
-    add #-32, r5      ! r5  -= sizeof(VERTEX)
+    add #-24, r5      ! r5  = &vertex->x
     fsrra   fr0       ! fr0 = 1 / sqrt(fr0) -> 1 / vertex->w
 
 ! TRANSFORM X
@@ -107,22 +144,18 @@
     fmov  fr10,fr5    ! fr5 = VIEWPORT_X_PLUS_HWIDTH
     fmul  fr8,fr4     ! fr4 = VIEWPORT_HWIDTH * vertex->x
     fmac  fr0,fr4,fr5 ! fr5 = fr0 * fr4 + fr5 -- (X * F * hwidth) + x_plus_hwidth
-    fmov.s fr9,@r5    ! vertex->x = fr9
-    add #4, r5        ! r5 += 4 (points to vertex->y)
+    fmov.s fr5,@r5    ! vertex->x = fr5
+    add #4, r5        ! r5  = &vertex->y
 
 ! TRANSFORM Y
-    fmov.s @r5,fr3    ! fr4 = vertex->y
-    fmov  fr11,fr5    ! fr4  = VIEWPORT_Y_PLUS_HHEIGHT
+    fmov.s @r5,fr4    ! fr4 = vertex->y
+    fmov  fr11,fr5    ! fr5  = VIEWPORT_Y_PLUS_HHEIGHT
     fmul  fr9,fr4     ! fr4  = VIEWPORT_HHEIGHT * vertex->y
     fmac  fr0,fr4,fr5 ! fr5  = fr0 * fr4 + fr5 -- (Y * F * hheight) + y_plus_hheight
-    fmov.s fr9,@r5    ! vertex->y = fr9
-    add #4, r5        ! r5 += 4 (points to vertex->z)
+    fmov.s fr5,@r5    ! vertex->y = fr5
+    add #4, r5        ! r5  = &vertex->z
 
 ! ASSIGN Z
-!   fmov.s @r5,fr0    ! vertex->z = fr0
-!   add #24, r5       ! r5 += 24 (points to next vertex)
+    fmov.s fr0,@r5    ! vertex->z = fr0
+    add #20, r5       ! r5 += 20 (points to start of next vertex)
 .endm
-
-
-VP_ZSHIFT:
-        .float 1.0001

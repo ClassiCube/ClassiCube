@@ -36,64 +36,16 @@ _DrawTexturedQuads:
 .TRANSFORM_QUAD:
     mov.l CMD_TEX_VERT, r1 ! r1  = GPU VERT command
 
-! TRANSFORM VERTEX 1
-    add #24, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! X = src->x
-    fmov @r4+, fr5  ! Y = src->y
-    fmov @r4+, fr6  ! Z = src->z
-    fldi1 fr7       ! W = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(XYZW)
-! OUTPUT + CLIPFLAGS VERTEX 1
-    fmov    @r4+,fr3 ! C = src->color
-    fmov    @r4+,fr1 ! U = src->u
-    fmov    @r4+,fr2 ! V = src->v
+    LoadTexturedVertex
     ProcessVertex1
 
-! TRANSFORM VERTEX 2
-    add #24, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! X = src->x
-    fmov @r4+, fr5  ! Y = src->y
-    fmov @r4+, fr6  ! Z = src->z
-    fldi1 fr7       ! W = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(XYZW)
-! OUTPUT + CLIPFLAGS VERTEX 2
-    fmov    @r4+,fr3 ! C = src->color
-    fmov    @r4+,fr1 ! U = src->u
-    fmov    @r4+,fr2 ! V = src->v
+    LoadTexturedVertex
     ProcessVertex2
 
-! TRANSFORM VERTEX 3
-    add #24, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! X = src->x
-    fmov @r4+, fr5  ! Y = src->y
-    fmov @r4+, fr6  ! Z = src->z
-    fldi1 fr7       ! W = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(XYZW)
-! OUTPUT + CLIPFLAGS VERTEX 3
-    fmov    @r4+,fr3 ! C = src->color
-    fmov    @r4+,fr1 ! U = src->u
-    fmov    @r4+,fr2 ! V = src->v
+    LoadTexturedVertex
     ProcessVertex3
 
-! TRANSFORM VERTEX 4
-    add #24, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! X = src->x
-    fmov @r4+, fr5  ! Y = src->y
-    fmov @r4+, fr6  ! Z = src->z
-    fldi1 fr7       ! W = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(XYZW)
-! OUTPUT + CLIPFLAGS VERTEX 4
-    fmov    @r4+,fr3 ! C = src->color
-    fmov    @r4+,fr1 ! U = src->u
-    fmov    @r4+,fr2 ! V = src->v
+    LoadTexturedVertex
     ProcessVertex4 CMD_TEX_EOS
 
 ! CLIPFLAGS TESTING
@@ -124,20 +76,16 @@ CMD_TEX_EOS:  .long 0xf0000000
 
 .global _VP_TEX_HWIDTH
 .type   _VP_TEX_HWIDTH,%object
-.size   _VP_TEX_HWIDTH,4
 _VP_TEX_HWIDTH:  .long 0
 
 .global _VP_TEX_HHEIGHT
 .type   _VP_TEX_HHEIGHT,%object
-.size   _VP_TEX_HHEIGHT,4
 _VP_TEX_HHEIGHT: .long 0
 
 .global _VP_TEX_X_PLUS_HWIDTH
 .type   _VP_TEX_X_PLUS_HWIDTH,%object
-.size   _VP_TEX_X_PLUS_HWIDTH,4
 _VP_TEX_X_PLUS_HWIDTH:  .long 0
 
 .global _VP_TEX_Y_PLUS_HHEIGHT
 .type   _VP_TEX_Y_PLUS_HHEIGHT,%object
-.size   _VP_TEX_Y_PLUS_HHEIGHT,4
 _VP_TEX_Y_PLUS_HHEIGHT: .long 0

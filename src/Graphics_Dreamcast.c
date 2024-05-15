@@ -31,6 +31,7 @@ static void InitGLState(void) {
 
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
+
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	InitGLState();
 	

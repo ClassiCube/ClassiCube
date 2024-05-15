@@ -38,56 +38,16 @@ _DrawColouredQuads:
 .TRANSFORM_QUAD:
     mov.l CMD_COL_VERT, r1 ! r1  = GPU VERT command
 
-! TRANSFORM VERTEX 1
-    add #16, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
-
-    fmov   @r4+,fr3 ! C = src->color
+    LoadColouredVertex
     ProcessVertex1
 
-! TRANSFORM VERTEX 2
-    add #16, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
-
-    fmov   @r4+,fr3 ! C = src->color
+    LoadColouredVertex
     ProcessVertex2
 
-! TRANSFORM VERTEX 3
-    add #16, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
-
-    fmov   @r4+,fr3 ! C = src->color
+    LoadColouredVertex
     ProcessVertex3
 
-! TRANSFORM VERTEX 4
-    add #16, r3     ! r3 += VERTEX_STRIDE
-    pref @r3        ! PREFETCH r3 (next vertex)
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
-
-    fmov    @r4+,fr3 ! C = src->color
+    LoadColouredVertex
     ProcessVertex4 CMD_COL_EOS
 
 ! CLIPFLAGS TESTING
@@ -118,20 +78,16 @@ CMD_COL_EOS:  .long 0xf0000000
 
 .global _VP_COL_HWIDTH
 .type   _VP_COL_HWIDTH,%object
-.size   _VP_COL_HWIDTH,4
 _VP_COL_HWIDTH:  .long 0
 
 .global _VP_COL_HHEIGHT
 .type   _VP_COL_HHEIGHT,%object
-.size   _VP_COL_HHEIGHT,4
 _VP_COL_HHEIGHT: .long 0
 
 .global _VP_COL_X_PLUS_HWIDTH
 .type   _VP_COL_X_PLUS_HWIDTH,%object
-.size   _VP_COL_X_PLUS_HWIDTH,4
 _VP_COL_X_PLUS_HWIDTH:  .long 0
 
 .global _VP_COL_Y_PLUS_HHEIGHT
 .type   _VP_COL_Y_PLUS_HHEIGHT,%object
-.size   _VP_COL_Y_PLUS_HHEIGHT,4
 _VP_COL_Y_PLUS_HHEIGHT: .long 0
