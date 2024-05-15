@@ -5,14 +5,20 @@
 !r4 = src pointer ARG
 !r5 = dst pointer ARG
 !r6 = quads count ARG
+!r7 = ?
 
+!fr0  = temp
+!fr1  = u (0.0)
+!fr2  = v (0.0)
+!fr3  = c
 !fr4  = x
 !fr5  = y
 !fr6  = z
 !fr7  = w
-!fr9  = u (0.0)
-!fr10 = v (0.0)
-!fr11 = saved fr0 (for viewport transform)
+!fr8  = VIEWPORT_HWIDTH
+!fr9  = VIEWPORT_HHEIGHT
+!fr10 = VIEWPORT_X_PLUS_HWIDTH
+!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
 
 !fv4  = XYZW
 
@@ -23,66 +29,65 @@
 
 _DrawColouredQuads:
 ! Setup
-    fldi0 fr9     ! U = 0
-    fldi0 fr10    ! V = 0
+    fldi0 fr1     ! U = 0
+    fldi0 fr2     ! V = 0
     mov r4,r3     ! r3  = src
     add #-32, r5  ! r5 -= sizeof(VERTEX)
-    fmov fr0,fr11 ! fr11 = saved fr0
-    nop           ! loop align
+    ViewportTransformSetup _VP_COL_HWIDTH
 
 .TRANSFORM_QUAD:
     mov.l CMD_COL_VERT, r1 ! r1  = GPU VERT command
 
 ! TRANSFORM VERTEX 1
     add #16, r3     ! r3 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     pref @r3        ! PREFETCH r3 (next vertex)
+    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     fmov @r4+, fr4  ! fr4 = src->x
     fmov @r4+, fr5  ! fr5 = src->y
     fmov @r4+, fr6  ! fr6 = src->z
     fldi1 fr7       ! fr7 = 1.0
     ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
 
-    fmov   @r4+,fr8 ! C = src->color
+    fmov   @r4+,fr3 ! C = src->color
     ProcessVertex1
 
 ! TRANSFORM VERTEX 2
     add #16, r3     ! r3 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     pref @r3        ! PREFETCH r3 (next vertex)
+    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     fmov @r4+, fr4  ! fr4 = src->x
     fmov @r4+, fr5  ! fr5 = src->y
     fmov @r4+, fr6  ! fr6 = src->z
     fldi1 fr7       ! fr7 = 1.0
     ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
 
-    fmov   @r4+,fr8 ! C = src->color
+    fmov   @r4+,fr3 ! C = src->color
     ProcessVertex2
 
 ! TRANSFORM VERTEX 3
     add #16, r3     ! r3 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     pref @r3        ! PREFETCH r3 (next vertex)
+    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     fmov @r4+, fr4  ! fr4 = src->x
     fmov @r4+, fr5  ! fr5 = src->y
     fmov @r4+, fr6  ! fr6 = src->z
     fldi1 fr7       ! fr7 = 1.0
     ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
 
-    fmov   @r4+,fr8 ! C = src->color
+    fmov   @r4+,fr3 ! C = src->color
     ProcessVertex3
 
 ! TRANSFORM VERTEX 4
     add #16, r3     ! r3 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     pref @r3        ! PREFETCH r3 (next vertex)
+    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
     fmov @r4+, fr4  ! fr4 = src->x
     fmov @r4+, fr5  ! fr5 = src->y
     fmov @r4+, fr6  ! fr6 = src->z
     fldi1 fr7       ! fr7 = 1.0
     ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
 
-    fmov    @r4+,fr8 ! C = src->color
+    fmov    @r4+,fr3 ! C = src->color
     ProcessVertex4 CMD_COL_EOS
 
 ! CLIPFLAGS TESTING
@@ -104,9 +109,8 @@ _DrawColouredQuads:
     nop
     
     add #32, r5     ! r5 += sizeof(VERTEX)
-    mov r5,r0       ! r0 = r5
     rts             ! return after executing instruction in delay slot
-    fmov fr11,fr0   ! fr0 = original fr0
+    mov r5,r0       ! r0 = r5
 
 .align 2
 CMD_COL_VERT: .long 0xe0000000
