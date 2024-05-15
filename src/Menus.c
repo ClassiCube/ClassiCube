@@ -2921,9 +2921,9 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
 		{ -1,  -50, "View distance",     MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
-		{ -1,    0, "Advanced lighting", MenuOptionsScreen_Bool,
+		{ -1,    0, "Smooth lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
-		{ -1,  50,  "Modern lighting", MenuOptionsScreen_Bool,
+		{ -1,  50,  "Fancy lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetModernLighting,     GraphicsOptionsScreen_SetModernLighting },
 		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
@@ -2949,8 +2949,12 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
-	s->descriptions[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	s->descriptions[4] = "&cNote: &eModern lighting will reduce performance and increase memory usage.";
+	s->descriptions[3] = \
+		"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
+		"&cNote: &eThis setting may reduce performance.";
+	s->descriptions[4] = \
+		"&eFancy lighting allows bright blocks to cast a much wider range of light.\n" \
+		"&cNote: &eThis setting will reduce performance and increase memory usage.";
 	s->descriptions[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
