@@ -434,8 +434,15 @@ static int MapNativeMouse(long button) {
 	if (button == 0) return CCMOUSE_L;
 	if (button == 1) return CCMOUSE_R;
 	if (button == 2) return CCMOUSE_M;
+
 	if (button == 3) return CCMOUSE_X1;
 	if (button == 4) return CCMOUSE_X2;
+	if (button == 5) return CCMOUSE_X3;
+	if (button == 6) return CCMOUSE_X4;
+	if (button == 7) return CCMOUSE_X5;
+	if (button == 8) return CCMOUSE_X6;
+
+	Platform_Log1("Unknown mouse button: %i", &button);
 	return 0;
 }
 

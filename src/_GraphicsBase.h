@@ -31,6 +31,23 @@ static float gfx_minFrameMs;
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
 cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+static cc_bool gfx_alphaTest, gfx_alphaBlend;
+
+static void SetAlphaTest(cc_bool enabled);
+void Gfx_SetAlphaTest(cc_bool enabled) {
+	if (gfx_alphaTest == enabled) return;
+	
+	gfx_alphaTest = enabled;
+	SetAlphaTest(enabled);
+}
+
+static void SetAlphaBlend(cc_bool enabled);
+void Gfx_SetAlphaBlending(cc_bool enabled) {
+	if (gfx_alphaBlend == enabled) return;
+	
+	gfx_alphaBlend = enabled;
+	SetAlphaBlend(enabled);
+}
 
 /* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);
@@ -256,6 +273,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
+#ifndef CC_BUILD_PS1
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
@@ -275,6 +293,7 @@ void Gfx_End2D(void) {
 	Gfx_SetAlphaBlending(false);
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
+#endif
 
 
 /*########################################################################################################################*

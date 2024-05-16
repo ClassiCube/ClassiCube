@@ -818,6 +818,7 @@ static void CustomModel_DrawArm(struct Entity* e) {
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
 	int i;
 	if (!cm->numArmParts) return;
+	Gfx_SetAlphaTest(true);
 
 	Models.uScale = 1.0f / cm->uScale;
 	Models.vScale = 1.0f / cm->vScale;
@@ -952,6 +953,7 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 static void HumanModel_DrawArmCore(struct Entity* e, struct ModelSet* model) {
 	struct ModelLimbs* set;
 	int type, num;
+	Gfx_SetAlphaTest(true);
 
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
@@ -1854,6 +1856,7 @@ static void SkeletonModel_Draw(struct Entity* e) {
 }
 
 static void SkeletonModel_DrawArm(struct Entity* e) {
+	Gfx_SetAlphaTest(true);
 	Model_LockVB(e, MODEL_BOX_VERTICES);
 
 	Model_DrawArmPart(&skeleton_rightArm);

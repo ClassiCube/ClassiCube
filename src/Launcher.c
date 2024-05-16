@@ -65,8 +65,7 @@ void Launcher_DisplayHttpError(struct HttpRequest* req, const char* action, cc_s
 	if (res) {
 		/* Non HTTP error - this is not good */
 		Http_LogError(action, req);
-		String_Format2(dst, res >= 0x80000000 ? "&cError %h when %c" : "&cError %i when %c",
-						&res, action);
+		String_Format2(dst, "&cError %e when %c", &res, action);
 	} else if (status != 200) {
 		String_Format2(dst, "&c%i error when %c", &status, action);
 	} else {
@@ -272,8 +271,9 @@ void Launcher_Run(void) {
 #endif
 
 	for (;;) {
-		Window_ProcessEvents(10 / 1000.0);
-		Window_ProcessGamepads(10 / 1000.0);
+		Window_ProcessEvents(10 / 1000.0f);
+		Window_ProcessGamepads(10 / 1000.0f);
+		Gamepad_Tick(10 / 1000.0f);
 		if (!Window_Main.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Active->Tick(Launcher_Active);

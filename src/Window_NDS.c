@@ -15,6 +15,8 @@
 #include <nds/arm9/input.h>
 #include <nds/arm9/keyboard.h>
 #include <nds/interrupts.h>
+#include <nds/system.h>
+#include <fat.h>
 
 
 /*########################################################################################################################*
@@ -68,6 +70,8 @@ static void consoleNewLine(void) {
 }
 
 static void consolePrintChar(char c) {
+	if (c < ' ') return; // only ASCII supported
+
     if (conCursorX >= CON_WIDTH) 
         consoleNewLine();
 
@@ -110,7 +114,7 @@ static void consoleLoadFont(u16* fontBgGfx) {
 }
 
 static void consoleInit(void) {
-    int bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 14, 0);
+    int bgId = bgInitSub(0, BgType_Text4bpp, BgSize_T_256x256, 22, 2);
     conFontBgMap = (u16*)bgGetMapPtr(bgId);
 
     consoleLoadFont((u16*)bgGetGfxPtr(bgId));
@@ -129,17 +133,6 @@ static u16* bg_ptr;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-// Console and Keyboard combined need more than 32 kb of H VRAM bank
-// The simple solution would be to allocate the C VRAM bank, but ClassiCube
-// needs as much VRAM as it can get for textures
-// So the solution is to share the H VRAM bank between console and keyboard
-static void ResetHBank(void) {
-    // Map all VRAM banks to LCDC mode so that the CPU can access it
-    vramSetBankH(VRAM_H_LCD);
-    dmaFillWords(0, VRAM_H, 32 * 1024);
-    vramSetBankH(VRAM_H_SUB_BG);
-}
-
 void Window_Init(void) {  
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
@@ -157,8 +150,16 @@ void Window_Init(void) {
 
     videoSetModeSub(MODE_0_2D);
     vramSetBankH(VRAM_H_SUB_BG);
+	vramSetBankI(VRAM_I_SUB_BG_0x06208000);
     setBrightness(2, 0);
 	consoleInit();
+
+	cc_bool dsiMode = isDSiMode();
+	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
+
+	char* dir = fatGetDefaultCwd();
+    if (dir) Platform_Log1("CWD: %c", dir);
+	Mem_Free(dir);
 }
 
 void Window_Free(void) { }
@@ -309,7 +310,6 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     Keyboard* kbd = keyboardGetDefault();
     videoBgDisableSub(0); // hide console
 
-    ResetHBank(); // reset shared VRAM
     keyboardInit(kbd, 3, BgType_Text4bpp, BgSize_T_256x512,
                        14, 0, false, true);
     keyboardShow();
@@ -330,9 +330,7 @@ void OnscreenKeyboard_Close(void) {
 	if (!keyboardOpen) return;
     keyboardOpen = false;
 
-    ResetHBank(); // reset shared VRAM
     videoBgEnableSub(0); // show console
-    consoleInit();
 }
 
 

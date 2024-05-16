@@ -227,7 +227,7 @@ static void DisplayDialog(const char* msg) {
 	msgParam.buttonType = SCE_MSG_DIALOG_BUTTON_TYPE_OK;
 
 	int ret = sceMsgDialogInit(&param);
-	if (ret) { Platform_Log1("ERROR SHOWING DIALOG: %i", &ret); return; }
+	if (ret) { Platform_Log1("ERROR SHOWING DIALOG: %e", &ret); return; }
 	
 	void (*prevCallback)(void* fb);	
 	prevCallback   = DQ_OnNextFrame;
@@ -315,7 +315,7 @@ void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) {
     param.inputTextBuffer = imeBuffer;
 
     int ret = sceImeDialogInit(&param);
-	if (ret) { Platform_Log1("ERROR SHOWING IME: %i", &ret); return; }
+	if (ret) { Platform_Log1("ERROR SHOWING IME: %e", &ret); return; }
 	
 	void (*prevCallback)(void* fb);
 	prevCallback   = DQ_OnNextFrame;

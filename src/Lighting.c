@@ -7,6 +7,7 @@
 #include "Logger.h"
 #include "Event.h"
 #include "Game.h"
+#include "Options.h"
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
 
@@ -63,6 +64,12 @@ static cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z) {
 
 static PackedCol ClassicLighting_Color(int x, int y, int z) {
 	if (!World_Contains(x, y, z)) return Env.SunCol;
+	return y > ClassicLighting_GetLightHeight(x, z) ? Env.SunCol : Env.ShadowCol;
+}
+
+static PackedCol SmoothLighting_Color(int x, int y, int z) {
+	if (!World_Contains(x, y, z)) return Env.SunCol;
+	if (Blocks.FullBright[World_GetBlock(x, y, z)]) return Env.SunCol;
 	return y > ClassicLighting_GetLightHeight(x, z) ? Env.SunCol : Env.ShadowCol;
 }
 
@@ -375,10 +382,13 @@ static void ClassicLighting_AllocState(void) {
 }
 
 static void ClassicLighting_SetActive(void) {
+	cc_bool smoothLighting = false;
+	if (!Game_ClassicMode) smoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
+
 	Lighting.OnBlockChanged = ClassicLighting_OnBlockChanged;
 	Lighting.Refresh        = ClassicLighting_Refresh;
 	Lighting.IsLit          = ClassicLighting_IsLit;
-	Lighting.Color          = ClassicLighting_Color;
+	Lighting.Color          = smoothLighting ? SmoothLighting_Color : ClassicLighting_Color;
 	Lighting.Color_XSide    = ClassicLighting_Color_XSide;
 
 	Lighting.IsLit_Fast        = ClassicLighting_IsLit_Fast;
@@ -397,6 +407,10 @@ static void ClassicLighting_SetActive(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
+
+void Lighting_ApplyActive() {
+	ClassicLighting_SetActive();
+}
 
 static void OnInit(void)         { ClassicLighting_SetActive(); }
 static void OnReset(void)        { Lighting.FreeState(); }

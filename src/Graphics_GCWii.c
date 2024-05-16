@@ -187,7 +187,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	GX_SetCullMode(enabled ? GX_CULL_FRONT : GX_CULL_NONE);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	if (enabled) {
 		GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
 	} else {
@@ -409,7 +409,7 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 	if (enabled) {
 		GX_SetAlphaCompare(GX_GREATER, 127, GX_AOP_AND, GX_ALWAYS, 0);
 	} else {
@@ -560,7 +560,7 @@ static void Draw_ColouredTriangles(int verticesCount, int startVertex) {
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
+		GX_Color1u32(v->Col);
 	}
 	GX_End();
 }
@@ -572,7 +572,7 @@ static void Draw_TexturedTriangles(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 		
 		GX_Position3f32(v->x, v->y, v->z);
-		GX_Color4u8(PackedCol_R(v->Col), PackedCol_G(v->Col), PackedCol_B(v->Col), PackedCol_A(v->Col));
+		GX_Color1u32(v->Col);
 		GX_TexCoord2f32(v->U, v->V);
 	}
 	GX_End();

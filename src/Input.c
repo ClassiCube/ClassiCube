@@ -216,7 +216,8 @@ static const char* const storageNames[INPUT_COUNT] = {
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",
-	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse",
+	"XButton1", "XButton2", "XButton3", "XButton4", "XButton5", "XButton6",
+	"LeftMouse", "RightMouse", "MiddleMouse",
 	Pad_Names
 };
 
@@ -239,7 +240,8 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
-	"XBUTTON1", "XBUTTON2", "LMOUSE", "RMOUSE", "MMOUSE",
+	"XBUTTON1", "XBUTTON2", "XBUTTON3", "XBUTTON4", "XBUTTON5", "XBUTTON6",
+	"LMOUSE", "RMOUSE", "MMOUSE",
 	Pad_Names
 };
 
@@ -289,6 +291,15 @@ void Input_Clear(void) {
 	}
 	/* TODO: Properly release instead of just clearing */
 	ClearTouches();
+}
+
+int Input_CalcDelta(int key, int horDelta, int verDelta) {
+	if (Input_IsLeftButton(key)  || key == CCKEY_KP4) return -horDelta;
+	if (Input_IsRightButton(key) || key == CCKEY_KP6) return +horDelta;
+	if (Input_IsUpButton(key)    || key == CCKEY_KP8) return -verDelta;
+	if (Input_IsDownButton(key)  || key == CCKEY_KP2) return +verDelta;
+	
+	return 0;
 }
 
 
@@ -418,38 +429,49 @@ static void KeyBind_Init(void) {
 *---------------------------------------------------------Gamepad---------------------------------------------------------*
 *#########################################################################################################################*/
 #define GAMEPAD_BEG_BTN CCPAD_A
+#define GAMEPAD_BTN_COUNT (INPUT_COUNT - GAMEPAD_BEG_BTN)
+
 int Gamepad_AxisBehaviour[2]   = { AXIS_BEHAVIOUR_MOVEMENT, AXIS_BEHAVIOUR_CAMERA };
 int Gamepad_AxisSensitivity[2] = { AXIS_SENSI_NORMAL, AXIS_SENSI_NORMAL };
 static const float axis_sensiFactor[] = { 0.25f, 0.5f, 1.0f, 2.0f, 4.0f };
 
 struct GamepadState {
 	float axisX[2], axisY[2];
-	/*cc_bool pressed[INPUT_COUNT - GAMEPAD_BEG_BTN];*/
-	float holdtime[INPUT_COUNT - GAMEPAD_BEG_BTN];
+	cc_bool pressed[GAMEPAD_BTN_COUNT];
+	float holdtime[GAMEPAD_BTN_COUNT];
 };
 static struct GamepadState gamepads[INPUT_MAX_GAMEPADS];
 
 static void Gamepad_Update(struct GamepadState* pad, float delta) {
 	int btn;
-	for (btn = GAMEPAD_BEG_BTN; btn < INPUT_COUNT; btn++)
+	for (btn = 0; btn < GAMEPAD_BTN_COUNT; btn++)
 	{
-		if (!Input.Pressed[btn]) continue;
-		pad->holdtime[btn - GAMEPAD_BEG_BTN] += delta;
-		if (pad->holdtime[btn - GAMEPAD_BEG_BTN] < 1.0f) continue;
+		if (!pad->pressed[btn]) continue;
+		pad->holdtime[btn] += delta;
+		if (pad->holdtime[btn] < 1.0f) continue;
 
 		/* Held for over a second, trigger a fake press */
-		pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
-		Input_SetPressed(btn);
+		pad->holdtime[btn] = 0;
+		Input_SetPressed(btn + GAMEPAD_BEG_BTN);
 	}
 }
 
 
 void Gamepad_SetButton(int port, int btn, int pressed) {
 	struct GamepadState* pad = &gamepads[port];
-	/* Reset hold tracking time */
-	if (pressed && !Input.Pressed[btn]) pad->holdtime[btn - GAMEPAD_BEG_BTN] = 0;
+	int i;
+	btn -= GAMEPAD_BEG_BTN;
 
-	Input_SetNonRepeatable(btn, pressed);
+	/* Reset hold tracking time */
+	if (pressed && !pad->pressed[btn]) pad->holdtime[btn] = 0;
+	pad->pressed[btn] = pressed != 0;;
+
+	/* Set pressed if button pressed on any gamepad, to avoid constant flip flopping */
+	/*  between pressed and non-pressed when multiple controllers are plugged in */
+	for (i = 0; i < INPUT_MAX_GAMEPADS; i++) 
+		pressed |= gamepads[i].pressed[btn];
+
+	Input_SetNonRepeatable(btn + GAMEPAD_BEG_BTN, pressed);
 }
 
 void Gamepad_SetAxis(int port, int axis, float x, float y, float delta) {
@@ -480,7 +502,7 @@ static void PlayerInputPad(int port, int axis, struct LocalPlayer* p, float* xMo
 	y = gamepads[port].axisY[axis];
 	
 	if (x != 0 || y != 0) {
-		angle    = Math_Atan2(x, y);
+		angle    = Math_Atan2f(x, y);
 		*xMoving = Math_CosF(angle);
 		*zMoving = Math_SinF(angle);
 	}

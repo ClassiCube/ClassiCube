@@ -249,7 +249,6 @@ void Gui_Remove(struct Screen* s) {
 
 void Gui_Add(struct Screen* s, int priority) {
 	struct Screen* existing;
-	int i;
 	Gui_RemoveCore(s);
 	
 	existing = Gui_GetScreen(priority);

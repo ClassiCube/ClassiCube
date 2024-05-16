@@ -43,7 +43,8 @@ enum InputButtons {
 	CCKEY_KP_PLUS, CCKEY_KP_DECIMAL, CCKEY_KP_ENTER,
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
-	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
+	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_X3, CCMOUSE_X4, CCMOUSE_X5, CCMOUSE_X6,
+	CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
 
 	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R, CCPAD_Z,
 	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
@@ -106,6 +107,7 @@ void Input_Clear(void);
 #else
 	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
+int Input_CalcDelta(int btn, int horDelta, int verDelta);
 
 
 #ifdef CC_BUILD_TOUCH

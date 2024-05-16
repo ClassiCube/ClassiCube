@@ -132,7 +132,7 @@ GLAPI void APIENTRY glDisable(GLenum cap) {
 /* Depth Testing */
 GLAPI void APIENTRY glClearDepth(GLfloat depth) {
     /* We reverse because using invW means that farther Z == lower number */
-    GPUSetClearDepth(MIN(1.0f - depth, PVR_MIN_Z));
+    pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
 }
 
 GLAPI void APIENTRY glDepthMask(GLboolean flag) {
@@ -264,85 +264,99 @@ void APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
 }
 
 
-GL_FORCE_INLINE void _updatePVRTextureContext(PolyContext *context, GLshort textureUnit) {
+void apply_poly_header(PolyHeader* dst, PolyList* activePolyList) {
     const TextureObject *tx1 = TEXTURE_ACTIVE;
-
-    /* Disable all texturing to start with */
-    context->txr.enable  = GPU_TEXTURE_DISABLE;
-    context->txr2.enable = GPU_TEXTURE_DISABLE;
-    context->txr2.alpha  = GPU_TXRALPHA_DISABLE;
-
-    if(!TEXTURES_ENABLED || !tx1 || !tx1->data) {
-        context->txr.base = NULL;
-        return;
-    }
-
-    context->txr.alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_TXRALPHA_ENABLE : GPU_TXRALPHA_DISABLE;
-
-    GLuint filter = GPU_FILTER_NEAREST;
-
-    if(tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) {
-        filter = GPU_FILTER_BILINEAR;
-    }
-
-    if(tx1->data) {
-        context->txr.enable = GPU_TEXTURE_ENABLE;
-        context->txr.filter = filter;
-        context->txr.width = tx1->width;
-        context->txr.height = tx1->height;
-        context->txr.mipmap = GL_FALSE;
-        context->txr.mipmap_bias = tx1->mipmap_bias;
-        
-        context->txr.base = tx1->data;
-        context->txr.format = tx1->color;
-        context->txr.env = tx1->env;
-        context->txr.uv_flip = GPU_UVFLIP_NONE;
-        context->txr.uv_clamp = GPU_UVCLAMP_NONE;
-    }
-}
-
-void apply_poly_header(PolyHeader* header, PolyList* activePolyList) {
+    uint32_t txr_base;
     TRACE();
 
-    // Compile the header
-    PolyContext ctx;
-    memset(&ctx, 0, sizeof(PolyContext));
+    int list_type = activePolyList->list_type;
+    int gen_color_clamp = GPU_CLRCLAMP_DISABLE;
 
-    ctx.list_type = activePolyList->list_type;
-    ctx.fmt.color = GPU_CLRFMT_ARGBPACKED;
-    ctx.fmt.uv    = GPU_UVFMT_32BIT;
-    ctx.gen.color_clamp = GPU_CLRCLAMP_DISABLE;
+    int gen_culling = CULLING_ENABLED    ? GPU_CULLING_CW : GPU_CULLING_SMALL;
+    int depth_comp  = DEPTH_TEST_ENABLED ? GPU_DEPTHCMP_GEQUAL : GPU_DEPTHCMP_ALWAYS;
+    int depth_write = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
 
-    ctx.gen.culling      = CULLING_ENABLED ? GPU_CULLING_CW : GPU_CULLING_SMALL;
-    ctx.depth.comparison = DEPTH_TEST_ENABLED ? GPU_DEPTHCMP_GEQUAL : GPU_DEPTHCMP_ALWAYS;
-    ctx.depth.write      = DEPTH_MASK_ENABLED ? GPU_DEPTHWRITE_ENABLE : GPU_DEPTHWRITE_DISABLE;
+    int gen_shading   = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
+    int gen_clip_mode = SCISSOR_TEST_ENABLED ? GPU_USERCLIP_INSIDE : GPU_USERCLIP_DISABLE;
+    int gen_fog_type  = FOG_ENABLED ? GPU_FOG_TABLE : GPU_FOG_DISABLE;
 
-    ctx.gen.shading   = (SHADE_MODEL == GL_SMOOTH) ? GPU_SHADE_GOURAUD : GPU_SHADE_FLAT;
-    ctx.gen.clip_mode = SCISSOR_TEST_ENABLED ? GPU_USERCLIP_INSIDE : GPU_USERCLIP_DISABLE;
-    ctx.gen.fog_type  = FOG_ENABLED ? GPU_FOG_TABLE : GPU_FOG_DISABLE;
+    int gen_alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_ALPHA_ENABLE : GPU_ALPHA_DISABLE;
+    int blend_src = PVR_BLEND_SRCALPHA;
+    int blend_dst = PVR_BLEND_INVSRCALPHA;
 
-    ctx.gen.alpha = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_ALPHA_ENABLE : GPU_ALPHA_DISABLE;
-    ctx.blend.src = PVR_BLEND_SRCALPHA;
-    ctx.blend.dst = PVR_BLEND_INVSRCALPHA;
-
-    if(ctx.list_type == GPU_LIST_OP_POLY) {
+    if (list_type == GPU_LIST_OP_POLY) {
         /* Opaque polys are always one/zero */
-        ctx.blend.src = PVR_BLEND_ONE;
-        ctx.blend.dst = PVR_BLEND_ZERO;
-    } else if(ctx.list_type == GPU_LIST_PT_POLY) {
+        blend_src  = PVR_BLEND_ONE;
+        blend_dst  = PVR_BLEND_ZERO;
+    } else if (list_type == GPU_LIST_PT_POLY) {
         /* Punch-through polys require fixed blending and depth modes */
-        ctx.blend.src = PVR_BLEND_SRCALPHA;
-        ctx.blend.dst = PVR_BLEND_INVSRCALPHA;
-        ctx.depth.comparison = GPU_DEPTHCMP_LEQUAL;
-    } else if(ctx.list_type == GPU_LIST_TR_POLY && AUTOSORT_ENABLED) {
+        blend_src  = PVR_BLEND_SRCALPHA;
+        blend_dst  = PVR_BLEND_INVSRCALPHA;
+        depth_comp = GPU_DEPTHCMP_LEQUAL;
+    } else if (list_type == GPU_LIST_TR_POLY && AUTOSORT_ENABLED) {
         /* Autosort mode requires this mode for transparent polys */
-        ctx.depth.comparison = GPU_DEPTHCMP_GEQUAL;
+        depth_comp = GPU_DEPTHCMP_GEQUAL;
     }
 
-    _updatePVRTextureContext(&ctx, 0);
+    int txr_enable, txr_alpha;
+    if (!TEXTURES_ENABLED || !tx1 || !tx1->data) {
+        /* Disable all texturing to start with */
+        txr_enable = GPU_TEXTURE_DISABLE;
+    } else {
+        txr_alpha  = (BLEND_ENABLED || ALPHA_TEST_ENABLED) ? GPU_TXRALPHA_ENABLE : GPU_TXRALPHA_DISABLE;
+        txr_enable = GPU_TEXTURE_ENABLE;
+    }
 
-    CompilePolyHeader(header, &ctx);
-
+    /* The base values for CMD */
+    dst->cmd = GPU_CMD_POLYHDR;
+    dst->cmd |= txr_enable << 3;
     /* Force bits 18 and 19 on to switch to 6 triangle strips */
-    header->cmd |= 0xC0000;
+    dst->cmd |= 0xC0000;
+
+    /* Or in the list type, shading type, color and UV formats */
+    dst->cmd |= (list_type             << PVR_TA_CMD_TYPE_SHIFT)     & PVR_TA_CMD_TYPE_MASK;
+    dst->cmd |= (GPU_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)   & PVR_TA_CMD_CLRFMT_MASK;
+    dst->cmd |= (gen_shading           << PVR_TA_CMD_SHADE_SHIFT)    & PVR_TA_CMD_SHADE_MASK;
+    dst->cmd |= (GPU_UVFMT_32BIT       << PVR_TA_CMD_UVFMT_SHIFT)    & PVR_TA_CMD_UVFMT_MASK;
+    dst->cmd |= (gen_clip_mode         << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
+
+    /* Polygon mode 1 */
+    dst->mode1  = (depth_comp  << PVR_TA_PM1_DEPTHCMP_SHIFT)   & PVR_TA_PM1_DEPTHCMP_MASK;
+    dst->mode1 |= (gen_culling << PVR_TA_PM1_CULLING_SHIFT)    & PVR_TA_PM1_CULLING_MASK;
+    dst->mode1 |= (depth_write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
+    dst->mode1 |= (txr_enable  << PVR_TA_PM1_TXRENABLE_SHIFT)  & PVR_TA_PM1_TXRENABLE_MASK;
+
+    /* Polygon mode 2 */
+    dst->mode2  = (blend_src       << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
+    dst->mode2 |= (blend_dst       << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
+    dst->mode2 |= (gen_fog_type    << PVR_TA_PM2_FOG_SHIFT)      & PVR_TA_PM2_FOG_MASK;
+    dst->mode2 |= (gen_color_clamp << PVR_TA_PM2_CLAMP_SHIFT)    & PVR_TA_PM2_CLAMP_MASK;
+    dst->mode2 |= (gen_alpha       << PVR_TA_PM2_ALPHA_SHIFT)    & PVR_TA_PM2_ALPHA_MASK;
+
+    if (txr_enable == GPU_TEXTURE_DISABLE) {
+        dst->mode3 = 0;
+    } else {
+        GLuint filter = GPU_FILTER_NEAREST;
+        if (tx1->minFilter == GL_LINEAR && tx1->magFilter == GL_LINEAR) filter = GPU_FILTER_BILINEAR;
+
+        dst->mode2 |= (txr_alpha        << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
+        dst->mode2 |= (filter           << PVR_TA_PM2_FILTER_SHIFT)   & PVR_TA_PM2_FILTER_MASK;
+        dst->mode2 |= (tx1->mipmap_bias << PVR_TA_PM2_MIPBIAS_SHIFT)  & PVR_TA_PM2_MIPBIAS_MASK;
+        dst->mode2 |= (tx1->env         << PVR_TA_PM2_TXRENV_SHIFT)   & PVR_TA_PM2_TXRENV_MASK;
+
+        dst->mode2 |= (DimensionFlag(tx1->width)  << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
+        dst->mode2 |= (DimensionFlag(tx1->height) << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
+
+        /* Polygon mode 3 */
+        dst->mode3  = (GL_FALSE   << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
+        dst->mode3 |= (tx1->color << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
+
+        /* Convert the texture address */
+        txr_base = (uint32_t)tx1->data;
+        txr_base = (txr_base & 0x00fffff8) >> 3;
+        dst->mode3 |= txr_base;
+    }
+
+    dst->d1 = dst->d2 = 0xffffffff;
+    dst->d3 = dst->d4 = 0xffffffff;
 }

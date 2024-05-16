@@ -725,10 +725,8 @@ static void TouchScreen_LayoutOnscreen(struct TouchScreen* s, cc_uint8 alignment
 static void TouchScreen_Layout(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchButtonDesc* desc;
-	int haligns = GetOnscreenHAligns();
 	float scale = Gui.RawTouchScale;
-	cc_uint8 halign;
-	int i, x, y, height;
+	int i, height;
 
 	/* Need to align these relative to the hotbar */
 	height = HUDScreen_LayoutHotbar();
@@ -759,7 +757,6 @@ static void TouchScreen_GetMovement(struct LocalPlayer* p, float* xMoving, float
 	ThumbstickWidget_GetMovement(&TouchScreen.thumbstick, xMoving, zMoving);
 }
 static struct LocalPlayerInput touchInput = { TouchScreen_GetMovement };
-static cc_bool touchHooked;
 
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -774,15 +771,14 @@ static void TouchScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->more, 40, TouchScreen_MoreClick);
 	s->more.color = TOUCHSCREEN_BTN_COLOR;
 	ThumbstickWidget_Init(&s->thumbstick);
-	
-	if (touchHooked) return;
-	touchHooked = true;
+
 	LocalPlayerInput_Add(&touchInput);
 }
 
 static void TouchScreen_Free(void* s) {
 	Event_Unregister_(&UserEvents.HacksStateChanged, s, TouchScreen_HacksChanged);
 	Event_Unregister_(&UserEvents.HackPermsChanged,  s, TouchScreen_HacksChanged);
+	LocalPlayerInput_Remove(&touchInput);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {

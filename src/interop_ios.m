@@ -44,6 +44,7 @@
 static CCViewController* cc_controller;
 static UIWindow* win_handle;
 static UIView* view_handle;
+static cc_bool launcherMode;
 
 static void AddTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
@@ -93,6 +94,9 @@ static CGRect GetViewFrame(void) {
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
+    
+    // clicking on the background should dismiss onscren keyboard
+    if (launcherMode) { [view_handle endEditing:NO]; }
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
@@ -687,6 +691,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
  *--------------------------------------------------------2D window--------------------------------------------------------*
  *#########################################################################################################################*/
 void Window_Create2D(int width, int height) {
+    launcherMode  = true;
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[UIView alloc] initWithFrame:bounds];
@@ -716,8 +721,10 @@ static void GLContext_OnLayout(void);
 @end
 
 void Window_Create3D(int width, int height) {
-    // CAEAGLLayer - iOS 2.0
+    launcherMode  = false;
     CGRect bounds = DoCreateWindow();
+    
+    // CAEAGLLayer - iOS 2.0
     view_handle   = [[CCGLView alloc] initWithFrame:bounds];
     view_handle.multipleTouchEnabled = true;
     cc_controller.view = view_handle;

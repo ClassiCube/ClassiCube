@@ -360,7 +360,7 @@ static void FontDirCallback(const cc_string* path, void* obj) {
 	static const cc_string fonExt = String_FromConst(".fon");
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
-	SysFonts_Register(path);
+	SysFonts_Register(path, NULL);
 }
 
 void Platform_LoadSysFonts(void) { 
@@ -839,7 +839,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	dynamicErr = 0; /* Reset error (match posix behaviour) */
 
 	Platform_DescribeError(res, dst);
-	String_Format1(dst, " (error %i)", &res);
+	String_Format1(dst, " (error %e)", &res);
 
 	/* Plugin may have been compiled to load symbols from ClassiCube.exe, */
 	/*  but the user might have renamed it to something else */

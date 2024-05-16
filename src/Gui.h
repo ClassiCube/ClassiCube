@@ -45,7 +45,7 @@ CC_VAR extern struct _GuiData {
 	float RawHotbarScale, RawChatScale, RawInventoryScale, RawCrosshairScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
-	int __unused;
+	int _unused;
 	float RawTouchScale;
 	/* The highest priority screen that has grabbed input. */
 	struct Screen* InputGrab;

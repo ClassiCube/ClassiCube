@@ -33,6 +33,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
+#include "Lighting.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {
@@ -514,7 +515,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	if (Gui.ClassicMenu) return;
 
-	Widget_SetDisabled(&s->btns[4],
+	Widget_SetDisabled(&s->btns[1],
 			!Entities.CurPlayer->Hacks.CanAnyHacks); /* select texture pack */
 	s->dirty = true;
 }
@@ -541,11 +542,11 @@ static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	static const struct SimpleButtonDesc descs[] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
+		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
+		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   },
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
-		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
-		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
-		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
+		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
@@ -559,8 +560,8 @@ static void PauseScreen_Init(void* screen) {
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 
 	if (Server.IsSinglePlayer) return;
-	s->btns[1].flags = WIDGET_FLAG_DISABLED;
-	s->btns[2].flags = WIDGET_FLAG_DISABLED;
+	s->btns[3].flags = WIDGET_FLAG_DISABLED;
+	s->btns[5].flags = WIDGET_FLAG_DISABLED;
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -1655,8 +1656,18 @@ static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	ListScreen_Select(s, SysFonts_UNSAFE_GetDefault());
 }
 
+static void FontListScreen_RegisterCallback(const cc_string* path) {
+	Chat_Add1("Loaded font from %s", path);
+}
+
 static void FontListScreen_UploadCallback(const cc_string* path) { 
-	SysFonts_Register(path);
+	cc_result res = SysFonts_Register(path, FontListScreen_RegisterCallback);
+
+	if (res) {
+		Logger_SimpleWarn2(res, "loading font from", path);
+	} else {
+		SysFonts_SaveCache();
+	}
 }
 
 static void FontListScreen_ActionFunc(void* s, void* w) {
@@ -2862,6 +2873,7 @@ static void GraphicsOptionsScreen_SetViewDist(const cc_string* v) { Game_UserSet
 static void GraphicsOptionsScreen_GetSmooth(cc_string* v) { Menu_GetBool(v, Builder_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
+	Lighting_ApplyActive();
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }

@@ -227,8 +227,6 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 void Platform_Init(void) {
 	ResetGraph(0);
 	Stopwatch_Init();
-
-	Options_SetBool(OPT_USE_CHAT_FONT, true);
 }
 
 void Platform_Free(void) { }

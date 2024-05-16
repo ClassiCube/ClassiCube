@@ -264,7 +264,7 @@ static void MPConnection_FailConnect(cc_result result) {
 	String_InitArray(msg, msgBuffer);
 
 	if (result) {
-		String_Format3(&msg, "Error connecting to %s:%i: %i" _NL, &Server.Address, &Server.Port, &result);
+		String_Format3(&msg, "Error connecting to %s:%i: %e" _NL, &Server.Address, &Server.Port, &result);
 		Logger_Log(&msg);
 	}
 	MPConnection_Fail(&reason);
@@ -355,7 +355,7 @@ static void MPConnection_Disconnect(void) {
 static void DisconnectReadFailed(cc_result res) {
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 	String_InitArray(msg, msgBuffer);
-	String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
+	String_Format3(&msg, "Error reading from %s:%i: %e" _NL, &Server.Address, &Server.Port, &res);
 
 	Logger_Log(&msg);
 	MPConnection_Disconnect();
@@ -432,7 +432,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	if (net_writeFailure) {
-		Platform_Log1("Error from send: %i", &net_writeFailure);
+		Platform_Log1("Error from send: %e", &net_writeFailure);
 		MPConnection_Disconnect(); return;
 	}
 

@@ -110,6 +110,8 @@ static void HandleButtons(int port, int buttons) {
       
 	Gamepad_SetButton(port, CCPAD_START,  buttons & PAD_START);
 	Gamepad_SetButton(port, CCPAD_SELECT, buttons & PAD_SELECT);
+	Gamepad_SetButton(port, CCPAD_LSTICK, buttons & PAD_L3);
+	Gamepad_SetButton(port, CCPAD_RSTICK, buttons & PAD_L3);
 
 	Gamepad_SetButton(port, CCPAD_LEFT,   buttons & PAD_LEFT);
 	Gamepad_SetButton(port, CCPAD_RIGHT,  buttons & PAD_RIGHT);

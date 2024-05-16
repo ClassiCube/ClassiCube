@@ -73,7 +73,3 @@ void InitGPU(_Bool autosort, _Bool fsaa);
 static inline void GPUSetAlphaCutOff(uint8_t val) {
     PVR_SET(PT_ALPHA_REF, val);
 }
-
-static inline void GPUSetClearDepth(float v) {
-    pvr_set_zclip(v);
-}

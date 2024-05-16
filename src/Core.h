@@ -124,6 +124,7 @@ typedef cc_uint8  cc_bool;
 #define CC_BUILD_PLUGINS
 #define CC_BUILD_ANIMATIONS
 #define CC_BUILD_FILESYSTEM
+#define CC_BUILD_ADVLIGHTING
 /*#define CC_BUILD_GL11*/
 
 #ifndef CC_BUILD_MANUAL
@@ -297,7 +298,6 @@ typedef cc_uint8  cc_bool;
 #elif defined __vita__
 	#define CC_BUILD_PSVITA
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
@@ -313,7 +313,6 @@ typedef cc_uint8  cc_bool;
 #elif defined PLAT_PS3
 	#define CC_BUILD_PS3
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
@@ -347,6 +346,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TOUCH
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_ADVLIGHTING
 #elif defined __WIIU__
 	#define CC_BUILD_WIIU
 	#define CC_BUILD_CONSOLE
@@ -354,6 +354,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_OPENAL
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
+	#define CC_BUILD_SPLITSCREEN
 	#define CC_BUILD_TOUCH
 #elif defined __SWITCH__
 	#define CC_BUILD_SWITCH
@@ -375,6 +376,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #elif defined OS2
 	#define CC_BUILD_OS2
@@ -393,6 +395,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_NETWORKING
 	#undef  CC_BUILD_ANIMATIONS /* Very costly in FPU less system */
+	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #endif
 #endif

@@ -497,7 +497,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FontDirCallback(const cc_string* path, void* obj) {
-	SysFonts_Register(path);
+	SysFonts_Register(path, NULL);
 }
 
 void Platform_LoadSysFonts(void) {

@@ -360,9 +360,16 @@ static void OutputChunkPartsMeta(int x, int y, int z, struct ChunkInfo* info) {
 }
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
+#ifdef CC_BUILD_SATURN
+	/* The Saturn build only has 16 kb stack, not large enough */
+	static BlockID chunk[EXTCHUNK_SIZE_3]; 
+	static cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
+	static int bitFlags[1];
+#else
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
 	int bitFlags[EXTCHUNK_SIZE_3];
+#endif
 
 	cc_bool allAir, allSolid, onBorder;
 	int xMax, yMax, zMax, totalVerts;
@@ -761,6 +768,7 @@ static void NormalBuilder_SetActive(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Advanced mesh builder---------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_ADVLIGHTING
 static Vec3 adv_minBB, adv_maxBB;
 static int adv_initBitFlags, adv_baseOffset;
 static int* adv_bitFlags;
@@ -1259,6 +1267,9 @@ static void AdvBuilder_SetActive(void) {
 	Builder_RenderBlock     = Adv_RenderBlock;
 	Builder_PrePrepareChunk = Adv_PrePrepareChunk;
 }
+#else
+static void AdvBuilder_SetActive(void) { NormalBuilder_SetActive(); }
+#endif
 
 
 /*########################################################################################################################*

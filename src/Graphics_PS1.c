@@ -36,6 +36,9 @@ static RenderBuffer buffers[2];
 static cc_uint8*    next_packet;
 static int          active_buffer;
 static RenderBuffer* buffer;
+static cc_bool rendering2D;
+static void* lastPoly;
+static cc_bool cullingEnabled;
 
 static void OnBufferUpdated(void) {
 	buffer      = &buffers[active_buffer];
@@ -100,7 +103,7 @@ void Gfx_FreeState(void) {
 
 void Gfx_Create(void) {
 	Gfx.MaxTexWidth  = 128;
-	Gfx.MaxTexHeight = 128;
+	Gfx.MaxTexHeight = 256;
 	Gfx.Created      = true;
 	
 	Gfx_RestoreState();
@@ -126,30 +129,41 @@ void Gfx_Free(void) {
 // VRAM can be divided into texture pages
 //   32 texture pages total - each page is 64 x 256
 //   10 texture pages are occupied by the doublebuffered display
-//   22 texture packs are usable, and are then divided into
-//     - 4 pages for 256 wide textures, 8 for 128 wide, 10 for 64
-#define TPAGE_START_HOR 5
-#define TPAGES_PER_HALF 16
-
+//   22 texture pages are usable for textures
+// These 22 pages are then divided into:
+//     - 5 for 128+ wide horizontal, 6 otherwise
+//     - 11 pages for vertical textures
 #define TPAGE_WIDTH   64
 #define TPAGE_HEIGHT 256
-#define MAX_TEX_PAGES 22
-static cc_uint8 vram_used[(MAX_TEX_PAGES * TPAGE_HEIGHT) / 8];
+#define TPAGES_PER_HALF 16
 
+// Horizontally oriented textures (first group of 16)
+#define TPAGE_START_HOR 5
+#define MAX_HOR_TEX_PAGES 11
+#define MAX_HOR_TEX_LINES (MAX_HOR_TEX_PAGES * TPAGE_HEIGHT)
+
+// Horizontally oriented textures (second group of 16)
+#define TPAGE_START_VER (16 + 5)
+#define MAX_VER_TEX_PAGES 11
+#define MAX_VER_TEX_LINES (MAX_VER_TEX_PAGES * TPAGE_WIDTH)
+
+static cc_uint8 vram_used[(MAX_HOR_TEX_LINES + MAX_VER_TEX_LINES) / 8];
 #define VRAM_SetUsed(line) (vram_used[(line) / 8] |=  (1 << ((line) % 8)))
 #define VRAM_UnUsed(line)  (vram_used[(line) / 8] &= ~(1 << ((line) % 8)))
 #define VRAM_IsUsed(line)  (vram_used[(line) / 8] &   (1 << ((line) % 8)))
 
-static void VRAM_GetBlockRange(int width, int* beg, int* end) {
-	if (width >= 256) {
-		*beg =  0;
-		*end =  4 * TPAGE_HEIGHT;
+#define VRAM_BoundingAxis(width, height) height > width ? width : height
+
+static void VRAM_GetBlockRange(int width, int height, int* beg, int* end) {
+	if (height > width) {
+		*beg = MAX_HOR_TEX_LINES;
+		*end = MAX_HOR_TEX_LINES + MAX_VER_TEX_LINES;
 	} else if (width >= 128) {
-		*beg =  4 * TPAGE_HEIGHT;
-		*end = 12 * TPAGE_HEIGHT;
+		*beg = 0;
+		*end = 5 * TPAGE_HEIGHT;
 	} else {
-		*beg = 12 * TPAGE_HEIGHT;
-		*end = 22 * TPAGE_HEIGHT;
+		*beg = 5 * TPAGE_HEIGHT;
+		*end = MAX_HOR_TEX_LINES;
 	}
 }
 
@@ -163,7 +177,7 @@ static cc_bool VRAM_IsRangeFree(int beg, int end) {
 
 static int VRAM_FindFreeBlock(int width, int height) {
 	int beg, end;
-	VRAM_GetBlockRange(width, &beg, &end);
+	VRAM_GetBlockRange(width, height, &beg, &end);
 	
 	// TODO kinda inefficient
 	for (int i = beg; i < end - height; i++) 
@@ -175,13 +189,41 @@ static int VRAM_FindFreeBlock(int width, int height) {
 	return -1;
 }
 
+static void VRAM_AllocBlock(int line, int width, int height) {
+	int lines = VRAM_BoundingAxis(width, height);
+	for (int i = line; i < line + lines; i++) 
+	{
+		VRAM_SetUsed(i);
+	}
+}
+
+static void VRAM_FreeBlock(int line, int width, int height) {
+	int lines = VRAM_BoundingAxis(width, height);
+	for (int i = line; i < line + lines; i++) 
+	{
+		VRAM_UnUsed(i);
+	}
+}
+
+static int VRAM_CalcPage(int line) {
+	if (line < MAX_HOR_TEX_LINES) {
+		return TPAGE_START_HOR + (line / TPAGE_HEIGHT);
+	} else {
+		line -= MAX_HOR_TEX_LINES;
+		return TPAGE_START_VER + (line / TPAGE_WIDTH);
+	}
+}
+
+
 #define TEXTURES_MAX_COUNT 64
 typedef struct GPUTexture {
 	cc_uint16 width, height;
+	cc_uint8 width_mask, height_mask;
 	cc_uint16 line, tpage;
+	cc_uint8 xOffset, yOffset;
 } GPUTexture;
 static GPUTexture textures[TEXTURES_MAX_COUNT];
-static GPUTexture* active_tex;
+static GPUTexture* curTex;
 
 #define BGRA8_to_PS1(src) \
 	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
@@ -205,28 +247,30 @@ static void* AllocTextureAt(int i, struct Bitmap* bmp, int rowWidth) {
 	int line = VRAM_FindFreeBlock(bmp->width, bmp->height);
 	if (line == -1) { Mem_Free(tmp); return NULL; }
 	
-	tex->width  = bmp->width;
-	tex->height = bmp->height;
+	tex->width  = bmp->width;  tex->width_mask  = bmp->width  - 1;
+	tex->height = bmp->height; tex->height_mask = bmp->height - 1;
 	tex->line   = line;
 	
-	int page = TPAGE_START_HOR + (line / TPAGE_HEIGHT);
-	// In bottom half of VRAM? Need to offset horizontally again
-	if (page >= TPAGES_PER_HALF) page += TPAGE_START_HOR;
-
-	int pageX = (page % TPAGES_PER_HALF);
-	int pageY = (page / TPAGES_PER_HALF);
-
-	for (int i = tex->line; i < tex->line + tex->height; i++) 
-	{
-		VRAM_SetUsed(i);
-	}
+	int page   = VRAM_CalcPage(line);
+	int pageX  = (page % TPAGES_PER_HALF);
+	int pageY  = (page / TPAGES_PER_HALF);
 	tex->tpage = (2 << 7) | (pageY << 4) | pageX;
+
+	VRAM_AllocBlock(line, bmp->width, bmp->height);
+	if (bmp->height > bmp->width) {
+		tex->xOffset = line % TPAGE_WIDTH;
+		tex->yOffset = 0;
+	} else {
+		tex->xOffset = 0;
+		tex->yOffset = line % TPAGE_HEIGHT;
+	}
+	
 	Platform_Log3("%i x %i  = %i", &bmp->width, &bmp->height, &line);
 	Platform_Log3("  at %i (%i, %i)", &page, &pageX, &pageY);
 		
 	RECT rect;
-	rect.x = pageX * TPAGE_WIDTH;
-	rect.y = pageY * TPAGE_HEIGHT + (line % TPAGE_HEIGHT);
+	rect.x = pageX * TPAGE_WIDTH  + tex->xOffset;
+	rect.y = pageY * TPAGE_HEIGHT + tex->yOffset;
 	rect.w = bmp->width;
 	rect.h = bmp->height;
 
@@ -251,7 +295,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
-	active_tex = (GPUTexture*)texId;
+	curTex = (GPUTexture*)texId;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -259,10 +303,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	if (!data) return;
 	GPUTexture* tex = (GPUTexture*)data;
 
-	for (int i = tex->line; i < tex->line + tex->height; i++) 
-	{
-		VRAM_UnUsed(i);
-	}
+	VRAM_FreeBlock(tex->line, tex->width, tex->height);
 	tex->width = 0; tex->height = 0;
 	*texId = NULL;
 }
@@ -285,13 +326,13 @@ void Gfx_SetFogEnd(float value)     { }
 void Gfx_SetFogMode(FogFunc func)   { }
 
 void Gfx_SetFaceCulling(cc_bool enabled) {
-	// TODO
+	cullingEnabled = enabled;
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -530,8 +571,77 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 }
 
 cc_bool VERTEX_LOGGING;
-static void DrawColouredQuads(int verticesCount, int startVertex) {
+
+static void DrawColouredQuads2D(int verticesCount, int startVertex) {
 	return;
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
+		
+		POLY_F4* poly = new_primitive(sizeof(POLY_F4));
+		setPolyF4(poly);
+
+		poly->x0 = v[1].x; poly->y0 = v[1].y;
+		poly->x1 = v[0].x; poly->y1 = v[0].y;
+		poly->x2 = v[2].x; poly->y2 = v[2].y;
+		poly->x3 = v[3].x; poly->y3 = v[3].y;
+
+		poly->r0 = PackedCol_R(v->Col);
+		poly->g0 = PackedCol_G(v->Col);
+		poly->b0 = PackedCol_B(v->Col);
+
+		if (lastPoly) { 
+			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
+		} else {
+			addPrim(&buffer->ot[0], poly);
+		}
+		lastPoly = poly;
+	}
+}
+
+static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
+	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
+
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+		
+		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
+		setPolyFT4(poly);
+		poly->tpage = curTex->tpage;
+		poly->clut  = 0;
+
+		// TODO & instead of % 
+		poly->x0 = v[1].x; poly->y0 = v[1].y; 
+		poly->x1 = v[0].x; poly->y1 = v[0].y; 
+		poly->x2 = v[2].x; poly->y2 = v[2].y; 
+		poly->x3 = v[3].x; poly->y3 = v[3].y; 
+		
+		poly->u0 = ((int)(v[1].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v0 = ((int)(v[1].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u1 = ((int)(v[0].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v1 = ((int)(v[0].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u2 = ((int)(v[2].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v2 = ((int)(v[2].V         * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u3 = ((int)(v[3].U * 0.99f * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v3 = ((int)(v[3].V         * curTex->height) & curTex->height_mask) + vOffset;
+
+		// https://problemkaputt.de/psxspx-gpu-rendering-attributes.htm
+		// "For untextured graphics, 8bit RGB values of FFh are brightest. However, for texture blending, 8bit values of 80h are brightest"
+		poly->r0 = PackedCol_R(v->Col) >> 1;
+		poly->g0 = PackedCol_G(v->Col) >> 1;
+		poly->b0 = PackedCol_B(v->Col) >> 1;
+
+		if (lastPoly) { 
+			setaddr(poly, getaddr(lastPoly)); setaddr(lastPoly, poly); 
+		} else {
+			addPrim(&buffer->ot[0], poly);
+		}
+		lastPoly = poly;
+	}
+}
+
+static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct VertexColoured* v = (struct VertexColoured*)gfx_vertices + startVertex + i;
@@ -567,8 +677,8 @@ static void DrawColouredQuads(int verticesCount, int startVertex) {
 	}
 }
 
-static void DrawTexturedQuads(int verticesCount, int startVertex) {
-	int pageOffset = active_tex->line % TPAGE_HEIGHT;
+static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
+	int uOffset = curTex->xOffset, vOffset = curTex->yOffset;
 
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
@@ -576,7 +686,7 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 		
 		POLY_FT4* poly = new_primitive(sizeof(POLY_FT4));
 		setPolyFT4(poly);
-		poly->tpage = active_tex->tpage;
+		poly->tpage = curTex->tpage;
 		poly->clut  = 0;
 
 		Vec3 coords[4];
@@ -586,12 +696,28 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 		Transform(&coords[3], &v[3], &mvp);
 
 		// TODO & instead of % 
-		poly->x0 = coords[1].x; poly->y0 = coords[1].y; poly->u0 = (int)(v[1].U * active_tex->width) % active_tex->width; poly->v0 = ((int)(v[1].V * active_tex->height) % active_tex->height) + pageOffset;
-		poly->x1 = coords[0].x; poly->y1 = coords[0].y; poly->u1 = (int)(v[0].U * active_tex->width) % active_tex->width; poly->v1 = ((int)(v[0].V * active_tex->height) % active_tex->height) + pageOffset;
-		poly->x2 = coords[2].x; poly->y2 = coords[2].y; poly->u2 = (int)(v[2].U * active_tex->width) % active_tex->width; poly->v2 = ((int)(v[2].V * active_tex->height) % active_tex->height) + pageOffset;
-		poly->x3 = coords[3].x; poly->y3 = coords[3].y; poly->u3 = (int)(v[3].U * active_tex->width) % active_tex->width; poly->v3 = ((int)(v[3].V * active_tex->height) % active_tex->height) + pageOffset;
-
-		//int P = active_tex->height, page = poly->tpage & 0xFF, ll = active_tex->line % TPAGE_HEIGHT;
+		poly->x0 = coords[1].x; poly->y0 = coords[1].y;
+		poly->x1 = coords[0].x; poly->y1 = coords[0].y;
+		poly->x2 = coords[2].x; poly->y2 = coords[2].y;
+		poly->x3 = coords[3].x; poly->y3 = coords[3].y;
+		
+		if (cullingEnabled) {
+			// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
+			int signA = (poly->x0 - poly->x1) * (poly->y2 - poly->y1);
+			int signB = (poly->x2 - poly->x1) * (poly->y0 - poly->y1);
+			if (signA > signB) continue;
+		}
+		
+		poly->u0 = ((int)(v[1].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v0 = ((int)(v[1].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u1 = ((int)(v[0].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v1 = ((int)(v[0].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u2 = ((int)(v[2].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v2 = ((int)(v[2].V * curTex->height) & curTex->height_mask) + vOffset;
+		poly->u3 = ((int)(v[3].U * curTex->width)  & curTex->width_mask)  + uOffset;
+		poly->v3 = ((int)(v[3].V * curTex->height) & curTex->height_mask) + vOffset;
+		
+		//int P = curTex->height, page = poly->tpage & 0xFF, ll = curTex->yOffset;
 		//Platform_Log4("XYZ: %f3 x %i, %i, %i", &v[0].V, &P, &page, &ll);
 		int p = (coords[0].z + coords[1].z + coords[2].z + coords[3].z) / 4;
 		if (p < 0 || p >= OT_LENGTH) continue;
@@ -600,9 +726,9 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 		//if (VERTEX_LOGGING) Platform_Log3("IN: %i, %i, %i", &X, &Y, &Z);
 		X = poly->x1; Y = poly->y1, Z = coords[0].z;
 
-		poly->r0 = PackedCol_R(v->Col);
-		poly->g0 = PackedCol_G(v->Col);
-		poly->b0 = PackedCol_B(v->Col);
+		poly->r0 = PackedCol_R(v->Col) >> 1;
+		poly->g0 = PackedCol_G(v->Col) >> 1;
+		poly->b0 = PackedCol_B(v->Col) >> 1;
 		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
 		// TODO: 2D shouldn't use AddPrim, draws in the wrong way
@@ -678,24 +804,29 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 	}
 }*/
 
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, startVertex);
+static void DrawQuads(int verticesCount, int startVertex) {
+	if (rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads2D(verticesCount, startVertex);
+	} else if (rendering2D) {
+		DrawColouredQuads2D(verticesCount, startVertex);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads3D(verticesCount, startVertex);
 	} else {
-		DrawColouredQuads(verticesCount, startVertex);
+		DrawColouredQuads3D(verticesCount, startVertex);
 	}
+}
+
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	DrawQuads(verticesCount, startVertex);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, 0);
-	} else {
-		DrawColouredQuads(verticesCount, 0);
-	}
+	DrawQuads(verticesCount, 0);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawTexturedQuads(verticesCount, startVertex);
+	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
 
@@ -711,6 +842,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 }
 
 void Gfx_BeginFrame(void) {
+	lastPoly = NULL;
 }
 
 void Gfx_EndFrame(void) {
@@ -735,4 +867,14 @@ void Gfx_GetApiInfo(cc_string* info) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) { return true; }
+
+void Gfx_Begin2D(int width, int height) {
+	rendering2D = true;
+	Gfx_SetAlphaBlending(true);
+}
+
+void Gfx_End2D(void) {
+	rendering2D = false;
+	Gfx_SetAlphaBlending(false);
+}
 #endif

@@ -1,5 +1,11 @@
 name: Build latest (Linux)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - master
+      - ModernLighting
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-linux
@@ -10,7 +16,6 @@ jobs:
 # =============== 32 BIT LINUX ==============
 # ===========================================
   build-32:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +69,6 @@ jobs:
 # =============== 64 BIT LINUX ==============
 # ===========================================
   build-64:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4

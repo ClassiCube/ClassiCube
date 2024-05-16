@@ -111,7 +111,7 @@ cc_result Directory_Create(const cc_string* path) {
 }
 
 int File_Exists(const cc_string* path) {
-	if (!hdd_mounted) return ERR_NOT_SUPPORTED;
+	if (!hdd_mounted) return 0;
 	
 	char str[NATIVE_STR_LEN];
 	DWORD attribs;
@@ -164,7 +164,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	} while (FindNextFileA(find, &eA));
 
 	res = GetLastError(); /* return code from FindNextFile */
-	FindClose(find);
+	NtClose(find);
 	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
@@ -203,7 +203,8 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-	return CloseHandle(file) ? 0 : GetLastError();
+	NTSTATUS status = NtClose(file);
+	return NT_SUCCESS(status) ? 0 : status;
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -225,7 +226,15 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
-*#############################################################################################################p############*/
+*##########################################################################################################################*/
+static void WaitForSignal(HANDLE handle, LARGE_INTEGER* duration) {
+	for (;;) 
+	{
+		NTSTATUS status = NtWaitForSingleObjectEx((HANDLE)handle, UserMode, FALSE, duration);
+		if (status != STATUS_ALERTED) break;
+	}
+}
+
 void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
 static DWORD WINAPI ExecThread(void* param) {
 	Thread_StartFunc func = (Thread_StartFunc)param;
@@ -243,13 +252,12 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 }
 
 void Thread_Detach(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing thread handle");
-	}
+	NTSTATUS status = NtClose((HANDLE)handle);
+	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing thread handle");
 }
 
 void Thread_Join(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
+	WaitForSignal((HANDLE)handle, NULL);
 	Thread_Detach(handle);
 }
 
@@ -263,30 +271,41 @@ void Mutex_Free(void* handle)   {
 	RtlDeleteCriticalSection((CRITICAL_SECTION*)handle); 
 	Mem_Free(handle);
 }
-void Mutex_Lock(void* handle)   { RtlEnterCriticalSection((CRITICAL_SECTION*)handle); }
-void Mutex_Unlock(void* handle) { RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); }
+
+void Mutex_Lock(void* handle)   { 
+	RtlEnterCriticalSection((CRITICAL_SECTION*)handle); 
+}
+
+void Mutex_Unlock(void* handle) { 
+	RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); 
+}
 
 void* Waitable_Create(void) {
-	void* handle = CreateEventA(NULL, false, false, NULL);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating waitable");
-	}
+	HANDLE handle;
+	NTSTATUS status = NtCreateEvent(&handle, NULL, SynchronizationEvent, false);
+
+	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Creating waitable");
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing waitable");
-	}
+	NTSTATUS status = NtClose((HANDLE)handle);
+	if (!NT_SUCCESS(status)) Logger_Abort2(status, "Freeing waitable");
 }
 
-void Waitable_Signal(void* handle) { NtSetEvent((HANDLE)handle, NULL); }
+void Waitable_Signal(void* handle) { 
+	NtSetEvent((HANDLE)handle, NULL); 
+}
+
 void Waitable_Wait(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
+	WaitForSignal((HANDLE)handle, NULL);
 }
 
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	WaitForSingleObject((HANDLE)handle, milliseconds);
+	LARGE_INTEGER duration;
+	duration.QuadPart = ((LONGLONG)milliseconds) * -10000; // negative for relative timeout
+
+	WaitForSignal((HANDLE)handle, &duration);
 }
 
 
@@ -397,18 +416,20 @@ static void InitHDD(void) {
 	} else {
 		hdd_mounted = nxMountDrive('E', "\\Device\\Harddisk0\\Partition1\\");
 	}
-    
-    if (!hdd_mounted) {
-        Platform_LogConst("Failed to mount E:/ from Data partition");
-        return;
-    }
-    Directory_Create(&String_Empty); // create root ClassiCube folder
+
+	if (!hdd_mounted) {
+		Platform_LogConst("Failed to mount E:/ from Data partition");
+		return;
+	}
+	Directory_Create(&String_Empty); // create root ClassiCube folder
 }
 
 void Platform_Init(void) {
 	InitHDD();
 	Stopwatch_Init();
+#ifndef CC_BUILD_CXBX
 	nxNetInit(NULL);
+#endif
 }
 
 void Platform_Free(void) {

@@ -10,9 +10,6 @@ static struct Bitmap fb_bmp;
 static float vp_hwidth, vp_hheight;
 static int sc_maxX, sc_maxY;
 
-static cc_bool alphaBlending;
-static cc_bool alphaTest;
-
 static PackedCol* colorBuffer;
 static PackedCol clearColor;
 static cc_bool colWrite = true;
@@ -115,12 +112,12 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	faceCulling = enabled;
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	alphaTest = enabled;
+static void SetAlphaTest(cc_bool enabled) {
+	/* Uses value from Gfx_SetAlphaTest */
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	alphaBlending = enabled;
+static void SetAlphaBlend(cc_bool enabled) {
+	/* Uses value from Gfx_SetAlphaBlending */
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -358,7 +355,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 		for (int x = minX; x <= maxX; x++) {
 			float xx = x + 0.5f;
 			
-			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;		
+			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;
 			if (ic0 < 0 || ic0 > 1) continue;
 			float ic1 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) * factor;
 			if (ic1 < 0 || ic1 > 1) continue;
@@ -391,7 +388,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			int B = PackedCol_B(fragColor);
 			int A = PackedCol_A(fragColor);
 
-			if (alphaBlending) {
+			if (gfx_alphaBlend) {
 				PackedCol dst = colorBuffer[index];
 				int dstR = BitmapCol_R(dst);
 				int dstG = BitmapCol_G(dst);
@@ -401,7 +398,7 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 				G = (G * A) / 255 + (dstG * (255 - A)) / 255;
 				B = (B * A) / 255 + (dstB * (255 - A)) / 255;
 			}
-			if (alphaTest && A < 0x80) continue;
+			if (gfx_alphaTest && A < 0x80) continue;
 
 			if (depthWrite) depthBuffer[index] = z;
 			colorBuffer[index] = BitmapCol_Make(R, G, B, 0xFF);

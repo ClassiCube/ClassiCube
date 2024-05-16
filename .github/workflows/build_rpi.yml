@@ -1,5 +1,10 @@
 name: Build latest (RPI)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-rpi
@@ -10,7 +15,6 @@ jobs:
 # ================ 32 BIT RPI ===============
 # ===========================================
   build-RPI32:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: dockcross/linux-armv6-lts
@@ -59,7 +63,6 @@ jobs:
 # ================ 64 BIT RPI ===============
 # ===========================================
   build-RPI64:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
       image: dockcross/linux-arm64-lts
