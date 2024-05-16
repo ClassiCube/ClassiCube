@@ -25,13 +25,25 @@ struct LightNode {
 static struct Queue lightQueue;
 static struct Queue unlightQueue;
 
-/* A 16x16 palette of sun and block light colors. */
-/* It is indexed by a byte where the leftmost 4 bits represent sunlight level and the rightmost 4 bits represent blocklight level */
-/* E.G. modernLighting_palette[0b_0010_0001] will give us the color for sun level 2 and block level 1 (lowest level is 0) */
-static PackedCol modernLighting_palette[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
-static PackedCol modernLighting_paletteX[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
-static PackedCol modernLighting_paletteZ[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
-static PackedCol modernLighting_paletteY[MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS];
+
+
+/* Top face, X face, Z face, bottomY face*/
+#define PALETTE_SHADES 4
+/* One palette for sunlight, one palette for shadow */
+#define PALETTE_TYPES 2
+#define PALETTE_COUNT (PALETTE_SHADES * PALETTE_TYPES)
+
+/* Index into palettes of light colors. */
+/* There are 8 different palettes: Four block-face shades for shadowed areas and four block-face shades for sunlit areas. */
+/* A palette is a 16x16 color array indexed by a byte where the leftmost 4 bits represent lamplight level and the rightmost 4 bits represent lavalight level */
+/* E.G. myPalette[0b_0010_0001] will give us the color for lamp level 2 and lava level 1 (lowest level is 0) */
+static PackedCol* palettes[PALETTE_COUNT];
+
+#define PALETTE_YMAX_INDEX 0
+#define PALETTE_XSIDE_INDEX 1
+#define PALETTE_ZSIDE_INDEX 2
+#define PALETTE_YMIN_INDEX 3
+
 
 typedef cc_uint8* LightingChunk;
 static cc_uint8* chunkLightingDataFlags;
@@ -42,59 +54,83 @@ static LightingChunk* chunkLightingData;
 
 #define Modern_MakePaletteIndex(sun, block) ((sun << MODERN_LIGHTING_SUN_SHIFT) | block)
 
-/* Fill in a palette with values based on the current environment colors */
-static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
-	PackedCol darkestShadow, defaultBlockLight, blockColor, sunColor, invertedBlockColor, invertedSunColor, finalColor;
-	int sunLevel, blockLevel;
-	float blockLerp;
+
+static PackedCol PackedCol_ScreenBlend(PackedCol a, PackedCol b) {
+	PackedCol finalColor, aInverted, bInverted;
 	cc_uint8 R, G, B;
+	/* With Screen blend mode, the values of the pixels in the two layers are inverted, multiplied, and then inverted again. */
+	R = 255 - PackedCol_R(a);
+	G = 255 - PackedCol_G(a);
+	B = 255 - PackedCol_B(a);
+	aInverted = PackedCol_Make(R, G, B, 255);
 
-	defaultBlockLight = Env.LavaLightCol;
-	darkestShadow = Env.ShadowCol;
+	R = 255 - PackedCol_R(b);
+	G = 255 - PackedCol_G(b);
+	B = 255 - PackedCol_B(b);
+	bInverted = PackedCol_Make(R, G, B, 255);
 
-	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
-		for (blockLevel = 0; blockLevel < MODERN_LIGHTING_LEVELS; blockLevel++) {
-			if (sunLevel == MODERN_LIGHTING_LEVELS - 1) {
-				sunColor = Env.SunCol;
+	finalColor = PackedCol_Tint(aInverted, bInverted);
+	R = 255 - PackedCol_R(finalColor);
+	G = 255 - PackedCol_G(finalColor);
+	B = 255 - PackedCol_B(finalColor);
+	return PackedCol_Make(R, G, B, 255);
+}
+/* Fill in a palette with values based on the current environment colors */
+static void ModernLighting_InitPalette(PackedCol* palette, float shaded, PackedCol ambientColor) {
+	PackedCol lavaColor, lampColor;
+	int lampLevel, lavaLevel;
+	float blockLerp;
+
+	for (lampLevel = 0; lampLevel < MODERN_LIGHTING_LEVELS; lampLevel++) {
+		for (lavaLevel = 0; lavaLevel < MODERN_LIGHTING_LEVELS; lavaLevel++) {
+			if (lampLevel == MODERN_LIGHTING_LEVELS - 1) {
+				lampColor = Env.LampLightCol;
 			}
 			else {
-				blockLerp = max(sunLevel, MODERN_LIGHTING_LEVELS - SUN_LEVELS) / (float)(MODERN_LIGHTING_LEVELS - 1);
+				blockLerp = max(lampLevel, MODERN_LIGHTING_LEVELS - SUN_LEVELS) / (float)(MODERN_LIGHTING_LEVELS - 1);
 				blockLerp *= (MATH_PI / 2);
 				blockLerp = Math_Cos(blockLerp);
-				sunColor = PackedCol_Lerp(darkestShadow, Env.SunCol, 1 - blockLerp);
+				lampColor = PackedCol_Lerp(0, Env.LampLightCol, 1 - blockLerp);
 			}
 
-			blockLerp = blockLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
+			blockLerp = lavaLevel / (float)(MODERN_LIGHTING_LEVELS - 1);
 			//blockLerp *= blockLerp;
 			blockLerp *= (MATH_PI / 2);
 			blockLerp = Math_Cos(blockLerp);
-			blockColor = PackedCol_Lerp(0, defaultBlockLight, 1 - blockLerp);
 
-			/* With Screen blend mode, the values of the pixels in the two layers are inverted, multiplied, and then inverted again. */
-			R = 255 - PackedCol_R(sunColor);
-			G = 255 - PackedCol_G(sunColor);
-			B = 255 - PackedCol_B(sunColor);
-			invertedSunColor = PackedCol_Make(R, G, B, 255);
-			R = 255 - PackedCol_R(blockColor);
-			G = 255 - PackedCol_G(blockColor);
-			B = 255 - PackedCol_B(blockColor);
-			invertedBlockColor = PackedCol_Make(R, G, B, 255);
+			lavaColor = PackedCol_Lerp(0, Env.LavaLightCol, 1 - blockLerp);
 
-			finalColor = PackedCol_Tint(invertedSunColor, invertedBlockColor);
+			lampColor = PackedCol_ScreenBlend(lampColor, ambientColor);
+			lavaColor = PackedCol_ScreenBlend(lavaColor, ambientColor);
 
-			R = 255 - PackedCol_R(finalColor);
-			G = 255 - PackedCol_G(finalColor);
-			B = 255 - PackedCol_B(finalColor);
-			palette[Modern_MakePaletteIndex(sunLevel, blockLevel)] =
-				PackedCol_Scale(PackedCol_Make(R, G, B, 255), shaded);
+			palette[Modern_MakePaletteIndex(lampLevel, lavaLevel)] =
+				PackedCol_Scale(PackedCol_ScreenBlend(lampColor, lavaColor), shaded);
 		}
 	}
 }
 static void ModernLighting_InitPalettes(void) {
-	ModernLighting_InitPalette(modernLighting_palette, 1);
-	ModernLighting_InitPalette(modernLighting_paletteX, PACKEDCOL_SHADE_X);
-	ModernLighting_InitPalette(modernLighting_paletteZ, PACKEDCOL_SHADE_Z);
-	ModernLighting_InitPalette(modernLighting_paletteY, PACKEDCOL_SHADE_YMIN);
+	int i;
+	for (i = 0; i < PALETTE_COUNT; i++) {
+		palettes[i] = (PackedCol*)Mem_Alloc(MODERN_LIGHTING_LEVELS * MODERN_LIGHTING_LEVELS, sizeof(PackedCol), "light color palette");
+	}
+
+	i = 0;
+	ModernLighting_InitPalette(palettes[i + PALETTE_YMAX_INDEX],  1,                    Env.ShadowCol);
+	ModernLighting_InitPalette(palettes[i + PALETTE_XSIDE_INDEX], PACKEDCOL_SHADE_X,    Env.ShadowCol);
+	ModernLighting_InitPalette(palettes[i + PALETTE_ZSIDE_INDEX], PACKEDCOL_SHADE_Z,    Env.ShadowCol);
+	ModernLighting_InitPalette(palettes[i + PALETTE_YMIN_INDEX],  PACKEDCOL_SHADE_YMIN, Env.ShadowCol);
+	i += PALETTE_SHADES;
+	ModernLighting_InitPalette(palettes[i + PALETTE_YMAX_INDEX],  1,                    Env.SunCol);
+	ModernLighting_InitPalette(palettes[i + PALETTE_XSIDE_INDEX], PACKEDCOL_SHADE_X,    Env.SunCol);
+	ModernLighting_InitPalette(palettes[i + PALETTE_ZSIDE_INDEX], PACKEDCOL_SHADE_Z,    Env.SunCol);
+	ModernLighting_InitPalette(palettes[i + PALETTE_YMIN_INDEX],  PACKEDCOL_SHADE_YMIN, Env.SunCol);
+}
+static void ModernLighting_FreePalettes(void) {
+	int i;
+
+	for (i = 0; i < PALETTE_COUNT; i++) {
+		Mem_Free(palettes[i]);
+	}
 }
 
 static int chunksCount;
@@ -111,7 +147,7 @@ static void ModernLighting_AllocState(void) {
 
 static void ModernLighting_FreeState(void) {
 	ClassicLighting_FreeState();
-
+	ModernLighting_FreePalettes();
 
 	int i;
 	/* This function can be called multiple times without calling ModernLighting_AllocState, so... */
@@ -479,7 +515,7 @@ static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 		CalculateChunkLightingAll(chunkIndex, cx, cy, cz); \
 	}
 
-static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palette, PackedCol outOfBoundsColor) {
+static PackedCol ModernLighting_Color_Core(int x, int y, int z, int paletteFace, PackedCol outOfBoundsColor) {
 	cc_uint8 lightData;
 	int cx, cy, cz, chunkIndex;
 	int chunkCoordsIndex;
@@ -504,32 +540,33 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 
 	/* This cell is exposed to sunlight */
 	if (y > ClassicLighting_GetLightHeight(x, z)) {
-		lightData |= MODERN_LIGHTING_SUN_MASK; /* Force the palette to use full sun color */
+		/* Push the pointer forward into the sun lit palette section */
+		paletteFace += PALETTE_SHADES;
 	}
 
 
 	////palette test
-	cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
-	cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
-	return modernLighting_palette[thing | (thing2 << 4)];
+	//cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
+	//cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
+	//return palettes[0][thing | (thing2 << 4)];
 
-	return palette[lightData];
+	return palettes[paletteFace][lightData];
 }
 
 static PackedCol ModernLighting_Color(int x, int y, int z) {
-	return ModernLighting_Color_Core(x, y, z, modernLighting_palette, Env.SunCol);
+	return ModernLighting_Color_Core(x, y, z, PALETTE_YMAX_INDEX, Env.SunCol);
 }
 static PackedCol ModernLighting_Color_YMaxSide(int x, int y, int z) {
-	return ModernLighting_Color_Core(x, y, z, modernLighting_palette, Env.SunCol);
+	return ModernLighting_Color_Core(x, y, z, PALETTE_YMAX_INDEX, Env.SunCol);
 }
 static PackedCol ModernLighting_Color_YMinSide(int x, int y, int z) {
-	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteY, Env.SunYMin);
+	return ModernLighting_Color_Core(x, y, z, PALETTE_YMIN_INDEX, Env.SunYMin);
 }
 static PackedCol ModernLighting_Color_XSide(int x, int y, int z) {
-	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteX, Env.SunXSide);
+	return ModernLighting_Color_Core(x, y, z, PALETTE_XSIDE_INDEX, Env.SunXSide);
 }
 static PackedCol ModernLighting_Color_ZSide(int x, int y, int z) {
-	return ModernLighting_Color_Core(x, y, z, modernLighting_paletteZ, Env.SunZSide);
+	return ModernLighting_Color_Core(x, y, z, PALETTE_ZSIDE_INDEX, Env.SunZSide);
 }
 
 static void ModernLighting_LightHint(int startX, int startY, int startZ) {
