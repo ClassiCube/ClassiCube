@@ -3,6 +3,7 @@ name: Build latest (Dreamcast)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

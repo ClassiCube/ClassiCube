@@ -3,6 +3,7 @@ name: Build latest (macOS 64 bit)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

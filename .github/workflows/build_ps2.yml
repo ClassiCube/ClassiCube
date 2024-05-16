@@ -3,6 +3,7 @@ name: Build latest (PS2)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

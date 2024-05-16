@@ -3,6 +3,7 @@ name: Build latest (FreeBSD)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 
