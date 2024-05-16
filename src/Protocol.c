@@ -1155,19 +1155,21 @@ static void CPE_SetEnvCol(cc_uint8* data) {
 	c = PackedCol_Make(data[2], data[4], data[6], 255);
 
 	if (variable == 0) {
-		Env_SetSkyCol(invalid        ? ENV_DEFAULT_SKY_COLOR        : c);
+		Env_SetSkyCol(invalid        ? ENV_DEFAULT_SKY_COLOR      : c);
 	} else if (variable == 1) {	     
-		Env_SetCloudsCol(invalid     ? ENV_DEFAULT_CLOUDS_COLOR     : c);
+		Env_SetCloudsCol(invalid     ? ENV_DEFAULT_CLOUDS_COLOR   : c);
 	} else if (variable == 2) {	     
-		Env_SetFogCol(invalid        ? ENV_DEFAULT_FOG_COLOR        : c);
+		Env_SetFogCol(invalid        ? ENV_DEFAULT_FOG_COLOR      : c);
 	} else if (variable == 3) {	     
-		Env_SetShadowCol(invalid     ? ENV_DEFAULT_SHADOW_COLOR     : c);
+		Env_SetShadowCol(invalid     ? ENV_DEFAULT_SHADOW_COLOR   : c);
 	} else if (variable == 4) {	     
-		Env_SetSunCol(invalid        ? ENV_DEFAULT_SUN_COLOR        : c);
+		Env_SetSunCol(invalid        ? ENV_DEFAULT_SUN_COLOR      : c);
 	} else if (variable == 5) {	     
-		Env_SetSkyboxCol(invalid     ? ENV_DEFAULT_SKYBOX_COLOR     : c);
+		Env_SetSkyboxCol(invalid     ? ENV_DEFAULT_SKYBOX_COLOR   : c);
 	} else if (variable == 6) {
-		Env_SetBlockLightCol(invalid ? ENV_DEFAULT_BLOCKLIGHT_COLOR : c);
+		Env_SetLavaLightCol(invalid ? ENV_DEFAULT_LAVALIGHT_COLOR : c);
+	} else if (variable == 7) {
+		Env_SetLampLightCol(invalid ? ENV_DEFAULT_LAMPLIGHT_COLOR : c);
 	}
 }
 

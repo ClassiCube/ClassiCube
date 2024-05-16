@@ -42,15 +42,14 @@ static LightingChunk* chunkLightingData;
 
 #define Modern_MakePaletteIndex(sun, block) ((sun << MODERN_LIGHTING_SUN_SHIFT) | block)
 
-/* Fill in modernLighting_palette with values based on the current environment colors in lieu of recieving a palette from the server */
+/* Fill in a palette with values based on the current environment colors */
 static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 	PackedCol darkestShadow, defaultBlockLight, blockColor, sunColor, invertedBlockColor, invertedSunColor, finalColor;
 	int sunLevel, blockLevel;
 	float blockLerp;
 	cc_uint8 R, G, B;
 
-	defaultBlockLight = Env.BlockLightCol;
-	//darkestShadow = PackedCol_Lerp(Env.ShadowCol, 0, 0.75f); /* Use a darkened version of shadow color as the darkest color in sun ramp */
+	defaultBlockLight = Env.LavaLightCol;
 	darkestShadow = Env.ShadowCol;
 
 	for (sunLevel = 0; sunLevel < MODERN_LIGHTING_LEVELS; sunLevel++) {
@@ -59,11 +58,7 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 				sunColor = Env.SunCol;
 			}
 			else {
-				//sunColor = PackedCol_Lerp(darkestShadow, Env.ShadowCol, sunLevel / (float)(MODERN_LIGHTING_LEVELS - 3));
-
-				//used -2 before to go from sun to darkest shadow, thus making sun cloned twice at the start of the ramp
 				blockLerp = max(sunLevel, MODERN_LIGHTING_LEVELS - SUN_LEVELS) / (float)(MODERN_LIGHTING_LEVELS - 1);
-				//blockLerp *= blockLerp;
 				blockLerp *= (MATH_PI / 2);
 				blockLerp = Math_Cos(blockLerp);
 				sunColor = PackedCol_Lerp(darkestShadow, Env.SunCol, 1 - blockLerp);
@@ -92,9 +87,6 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded) {
 			B = 255 - PackedCol_B(finalColor);
 			palette[Modern_MakePaletteIndex(sunLevel, blockLevel)] =
 				PackedCol_Scale(PackedCol_Make(R, G, B, 255), shaded);
-			//	PackedCol_Scale(PackedCol_Make(R, G, B, 255),
-			//		shaded + ((1-shaded) * ((MODERN_LIGHTING_LEVELS - sunLevel+1) / (float)MODERN_LIGHTING_LEVELS))
-			//	);
 		}
 	}
 }
@@ -266,7 +258,6 @@ static void FlushLightQueue(cc_bool isSun, cc_bool refreshChunk) {
 		ln.coords.z += 2;
 		Light_TrySpreadInto(z, Z, < , World.MaxZ, isSun, MIN, MAX)
 	}
-	//Platform_Log1("Handled %i queue entries.", &handled);
 }
 
 cc_uint8 GetBlockBrightness(BlockID curBlock, cc_bool isSun) {
@@ -516,12 +507,13 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 		lightData |= MODERN_LIGHTING_SUN_MASK; /* Force the palette to use full sun color */
 	}
 
-	return palette[lightData];
 
 	////palette test
-	//cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
-	//cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
-	//return modernLighting_palette[thing | (thing2 << 4)];
+	cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
+	cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
+	return modernLighting_palette[thing | (thing2 << 4)];
+
+	return palette[lightData];
 }
 
 static PackedCol ModernLighting_Color(int x, int y, int z) {
@@ -578,8 +570,8 @@ void ModernLighting_OnEnvVariableChanged(void* obj, int envVar) {
 	/* This is always called, but should only do anything if modern lighting is on */
 	if (!Lighting_Modern) { return; }
 
-	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR || envVar == ENV_VAR_BLOCKLIGHT_COLOR) {
+	if (envVar == ENV_VAR_SUN_COLOR || envVar == ENV_VAR_SHADOW_COLOR || envVar == ENV_VAR_LAVALIGHT_COLOR || envVar == ENV_VAR_LAMPLIGHT_COLOR) {
 		ModernLighting_InitPalettes();
 	}
-	if (envVar == ENV_VAR_BLOCKLIGHT_COLOR) MapRenderer_Refresh();
+	if (envVar == ENV_VAR_LAVALIGHT_COLOR || envVar == ENV_VAR_LAMPLIGHT_COLOR) MapRenderer_Refresh();
 }
