@@ -100,11 +100,9 @@ static void ModernLighting_InitPalette(PackedCol* palette, float shaded, PackedC
 
 			lavaColor = PackedCol_Lerp(0, Env.LavaLightCol, 1 - blockLerp);
 
-			lampColor = PackedCol_ScreenBlend(lampColor, ambientColor);
-			lavaColor = PackedCol_ScreenBlend(lavaColor, ambientColor);
-
+			/* Blend the two light colors together, then blend that with the ambient color, then shade that by the face darkness */
 			palette[Modern_MakePaletteIndex(lampLevel, lavaLevel)] =
-				PackedCol_Scale(PackedCol_ScreenBlend(lampColor, lavaColor), shaded);
+				PackedCol_Scale(PackedCol_ScreenBlend(PackedCol_ScreenBlend(lampColor, lavaColor), ambientColor), shaded);
 		}
 	}
 }
@@ -146,12 +144,13 @@ static void ModernLighting_AllocState(void) {
 }
 
 static void ModernLighting_FreeState(void) {
-	ClassicLighting_FreeState();
-	ModernLighting_FreePalettes();
-
 	int i;
+	ClassicLighting_FreeState();
+	
 	/* This function can be called multiple times without calling ModernLighting_AllocState, so... */
 	if (!chunkLightingDataFlags) return;
+
+	ModernLighting_FreePalettes();
 
 	for (i = 0; i < chunksCount; i++) {
 		Mem_Free(chunkLightingData[i]);
@@ -548,7 +547,7 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, int paletteFace,
 	////palette test
 	//cc_uint8 thing = y % MODERN_LIGHTING_LEVELS;
 	//cc_uint8 thing2 = z % MODERN_LIGHTING_LEVELS;
-	//return palettes[0][thing | (thing2 << 4)];
+	//return palettes[paletteFace][thing | (thing2 << 4)];
 
 	return palettes[paletteFace][lightData];
 }
