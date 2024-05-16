@@ -11,7 +11,7 @@ LDFLAGS=-g
 LIBS=-lm $(GLDC_LIB) -lppp -lkosfat
 
 TARGET := ClassiCube-dc
-CC_TEXTURES = classicube.zip
+CC_TEXTURES = misc/dreamcast/classicube.zip
 
 ifeq ($(strip $(KOS_BASE)),)
 $(error "Please set KOS variables in your environment.")

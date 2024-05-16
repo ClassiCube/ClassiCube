@@ -36,7 +36,6 @@ static RenderBuffer buffers[2];
 static cc_uint8*    next_packet;
 static int          active_buffer;
 static RenderBuffer* buffer;
-static cc_bool rendering2D;
 static void* lastPoly;
 static cc_bool cullingEnabled;
 
@@ -805,9 +804,9 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 }*/
 
 static void DrawQuads(int verticesCount, int startVertex) {
-	if (rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+	if (gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
 		DrawTexturedQuads2D(verticesCount, startVertex);
-	} else if (rendering2D) {
+	} else if (gfx_rendering2D) {
 		DrawColouredQuads2D(verticesCount, startVertex);
 	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		DrawTexturedQuads3D(verticesCount, startVertex);
@@ -869,12 +868,12 @@ void Gfx_GetApiInfo(cc_string* info) {
 cc_bool Gfx_TryRestoreContext(void) { return true; }
 
 void Gfx_Begin2D(int width, int height) {
-	rendering2D = true;
+	gfx_rendering2D = true;
 	Gfx_SetAlphaBlending(true);
 }
 
 void Gfx_End2D(void) {
-	rendering2D = false;
+	gfx_rendering2D = false;
 	Gfx_SetAlphaBlending(false);
 }
 #endif

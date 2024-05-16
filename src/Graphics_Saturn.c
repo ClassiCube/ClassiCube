@@ -99,6 +99,8 @@ void Gfx_Create(void) {
 		_primitive_init();
 	}
 
+	Gfx.MinTexWidth  =  8;
+	Gfx.MinTexHeight =  8;
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 128;
 	Gfx.Created      = true;
@@ -314,7 +316,32 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 
 #define IsPointCulled(vec) vec.x < -10000 || vec.x > 10000 || vec.y < -10000 || vec.y > 10000 || vec.z < 0 || vec.z > 1024
 
-static void DrawTexturedQuads(int verticesCount, int startVertex) {
+static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+
+		int16_vec2_t points[4];
+		points[0].x = v[0].X; points[0].y = v[0].Y;
+		points[1].x = v[1].X; points[1].y = v[1].Y;
+		points[2].x = v[2].X; points[2].y = v[2].Y;
+		points[3].x = v[3].X; points[3].y = v[3].Y;
+
+		int R = PackedCol_R(v->Col);
+		int G = PackedCol_G(v->Col);
+		int B = PackedCol_B(v->Col);
+
+		vdp1_cmdt_t* cmd;
+
+		cmd = NextPrimitive();
+		vdp1_cmdt_polygon_set(cmd);
+		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
+		vdp1_cmdt_draw_mode_set(cmd, _primitive_draw_mode);
+		vdp1_cmdt_vtx_set(cmd, 		 points);
+	}
+}
+
+static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
@@ -352,18 +379,18 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, startVertex);
+		DrawTexturedQuads3D(verticesCount, startVertex);
 	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, 0);
+		DrawTexturedQuads3D(verticesCount, 0);
 	}
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawTexturedQuads(verticesCount, startVertex);
+	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
 
