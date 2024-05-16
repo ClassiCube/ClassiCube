@@ -474,8 +474,17 @@ static int MapNativeMouse(int button) {
 	if (button == 1) return CCMOUSE_L;
 	if (button == 2) return CCMOUSE_M;
 	if (button == 3) return CCMOUSE_R;
-	if (button == 8) return CCMOUSE_X1;
-	if (button == 9) return CCMOUSE_X2;
+
+	if (button ==  8) return CCMOUSE_X1;
+	if (button ==  9) return CCMOUSE_X2;
+	if (button == 10) return CCMOUSE_X3;
+	if (button == 11) return CCMOUSE_X4;
+	if (button == 12) return CCMOUSE_X5;
+	if (button == 13) return CCMOUSE_X6;
+
+	/* Mouse horizontal and vertical scroll */
+	if (button >= 4 && button <= 7) return 0;
+	Platform_Log1("Unknown mouse button: %i", &button);
 	return 0;
 }
 
