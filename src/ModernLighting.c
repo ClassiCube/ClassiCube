@@ -486,8 +486,9 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 /* Invalidates/Resets lighting state for all of the blocks in the world */
 /*  (e.g. because a block changed whether it is full bright or not) */
 static void ModernLighting_Refresh(void) {
-	ModernLighting_InitPalettes();
-	/* Set all the chunk lighting data flags to CHUNK_UNCALCULATED? */
+	ClassicLighting_Refresh();
+	ModernLighting_FreeState();
+	ModernLighting_AllocState();
 }
 static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
 static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }

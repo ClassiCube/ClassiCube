@@ -1718,10 +1718,17 @@ static void CustomModels_Reset(void) { }
 /*########################################################################################################################*
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
-static void BlockDefs_OnBlockUpdated(BlockID block, cc_bool didBlockLight) {
+static void BlockDefs_OnBlocksLightPropertyUpdated(BlockID block, cc_bool oldProp) {
 	if (!World.Loaded) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
-	if (Blocks.BlocksLight[block] != didBlockLight) Lighting.Refresh();
+	if (Blocks.BlocksLight[block] != oldProp) Lighting.Refresh();
+}
+
+static void BlockDefs_OnBrightnessPropertyUpdated(BlockID block, cc_uint8 oldProp) {
+	if (!World.Loaded) return;
+	if (!Lighting_Modern) return;
+	/* Need to refresh modern lighting when a block's brightness changes */
+	if (Blocks.Brightness[block] != oldProp) Lighting.Refresh();
 }
 
 static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
@@ -1740,13 +1747,15 @@ static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
 static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSideTexs) {
 	cc_string name;
 	BlockID block;
-	cc_bool didBlockLight;
+	cc_bool oldBlocksLight;
+	cc_uint8 oldBrightness;
 	float speedLog2;
 	cc_uint8 sound;
 	cc_uint8* data = *ptr;
 
 	ReadBlock(data, block);
-	didBlockLight = Blocks.BlocksLight[block];
+	oldBlocksLight = Blocks.BlocksLight[block];
+	oldBrightness = Blocks.Brightness[block];
 	Block_ResetProps(block);
 	
 	name = UNSAFE_GetString(data); data += STRING_SIZE;
@@ -1768,7 +1777,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSi
 	Block_Tex(block, FACE_YMIN) = BlockDefs_Tex(&data);
 
 	Blocks.BlocksLight[block] = *data++ == 0;
-	BlockDefs_OnBlockUpdated(block, didBlockLight);
+	BlockDefs_OnBlocksLightPropertyUpdated(block, oldBlocksLight);
 
 	sound = *data++;
 	Blocks.StepSounds[block] = sound;
@@ -1776,6 +1785,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSi
 	if (sound == SOUND_GLASS) Blocks.StepSounds[block] = SOUND_STONE;
 
 	Blocks.Brightness[block] = Block_ReadBrightness(*data++);
+	BlockDefs_OnBrightnessPropertyUpdated(block, oldBrightness);
 	*ptr = data;
 	return block;
 }
@@ -1812,7 +1822,7 @@ static void BlockDefs_UndefineBlock(cc_uint8* data) {
 	didBlockLight = Blocks.BlocksLight[block];
 
 	Block_UndefineCustom(block);
-	BlockDefs_OnBlockUpdated(block, didBlockLight);
+	BlockDefs_OnBlocksLightPropertyUpdated(block, didBlockLight);
 }
 
 static void BlockDefs_DefineBlockExt(cc_uint8* data) {

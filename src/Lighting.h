@@ -65,6 +65,7 @@ void Lighting_ApplyActive(void);
 void ModernLighting_SetActive(void);
 void ModernLighting_OnEnvVariableChanged(void* obj, int envVar);
 
+void ClassicLighting_Refresh(void);
 void ClassicLighting_FreeState(void);
 void ClassicLighting_AllocState(void);
 int ClassicLighting_GetLightHeight(int x, int z);

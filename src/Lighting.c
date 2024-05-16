@@ -102,7 +102,7 @@ static PackedCol ClassicLighting_Color_ZSide_Fast(int x, int y, int z) {
 	return y > classic_heightmap[Lighting_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
 }
 
-static void ClassicLighting_Refresh(void) {
+void ClassicLighting_Refresh(void) {
 	int i;
 	for (i = 0; i < World.Width * World.Length; i++) {
 		classic_heightmap[i] = HEIGHT_UNCALCULATED;
