@@ -26,7 +26,7 @@ const char* const Sound_Names[SOUND_COUNT] = {
 /* Brightness */
 #define BRIT_NONE 0
 #define BRIT_FULL MODERN_LIGHTING_MAX_LEVEL
-#define BRIT_MAGM 7
+#define BRIT_MAGM 10
 
 struct SimpleBlockDef {
 	const char* name;

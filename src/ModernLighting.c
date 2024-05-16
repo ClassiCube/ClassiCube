@@ -269,8 +269,11 @@ static void FlushLightQueue(cc_bool isSun, cc_bool refreshChunk) {
 	//Platform_Log1("Handled %i queue entries.", &handled);
 }
 
-#define BlockBlockBrightness(curBlock) (curBlock == 201 ? 10 : (Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL))
-#define BlockSunBrightness(curBlock) (Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT)
+cc_uint8 GetBlockBrightness(BlockID curBlock, cc_bool isSun) {
+	if (isSun) return Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT;
+	return Blocks.Brightness[curBlock] & MODERN_LIGHTING_MAX_LEVEL;
+}
+
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //world coords
@@ -295,15 +298,19 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 				
 				if (Blocks.Brightness[curBlock] > 0) {
 
-					brightness = BlockBlockBrightness(curBlock);
+					brightness = GetBlockBrightness(curBlock, false);
 
 					if (brightness > 0) {
 						struct LightNode entry = { x, y, z, brightness };
 						Queue_Enqueue(&lightQueue, &entry);
+						FlushLightQueue(false, false);
 					}
 					else {
 						/* If no block brightness, it must use sun brightness */
-						//TODO
+						brightness = Blocks.Brightness[curBlock] >> MODERN_LIGHTING_SUN_SHIFT;
+						struct LightNode entry = { x, y, z, brightness };
+						Queue_Enqueue(&lightQueue, &entry);
+						FlushLightQueue(true, false);
 					}
 				}
 
@@ -314,12 +321,10 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 		}
 	}
 
-	FlushLightQueue(false, false);
-
 	chunkLightingDataFlags[chunkIndex] = CHUNK_SELF_CALCULATED;
 }
 
-static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc_bool recalculate) {
+static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
 	int chunkStartX, chunkStartY, chunkStartZ; //chunk coords
 	int chunkEndX, chunkEndY, chunkEndZ; //chunk coords
@@ -339,25 +344,6 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc
 	if (chunkEndY == World.ChunksY) { chunkEndY--; }
 	if (chunkEndZ == World.ChunksZ) { chunkEndZ--; }
 
-
-	if (recalculate) {
-		for (y = chunkStartY; y <= chunkEndY; y++) {
-			for (z = chunkStartZ; z <= chunkEndZ; z++) {
-				for (x = chunkStartX; x <= chunkEndX; x++) {
-					curChunkIndex = ChunkCoordsToIndex(x, y, z);
-
-					//Delete all lighting from this chunk
-					Mem_Free(chunkLightingData[curChunkIndex]);
-					//TODO: Why does skipping this allocation cause a crash? It should automatically allocate in SetBlocklight
-					chunkLightingData[curChunkIndex] = (cc_uint8*)Mem_TryAllocCleared(CHUNK_SIZE_3, sizeof(cc_uint8));
-					
-					chunkLightingDataFlags[curChunkIndex] = CHUNK_UNCALCULATED;
-					MapRenderer_RefreshChunk(x, y, z);
-				}
-			}
-		}
-	}
-
 	for (y = chunkStartY; y <= chunkEndY; y++) {
 		for (z = chunkStartZ; z <= chunkEndZ; z++) {
 			for (x = chunkStartX; x <= chunkEndX; x++) {
@@ -373,14 +359,14 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz, cc
 }
 
 
-#define Light_TryUnSpreadInto(axis, dir, limit, Type, AXIS, thisFace, thatFace) \
+#define Light_TryUnSpreadInto(axis, dir, limit, AXIS, thisFace, thatFace) \
 		if (neighborCoords.axis dir ## = limit && \
 			CanLightPass(thisBlock, FACE_ ## AXIS ## thisFace) && \
 			CanLightPass(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), FACE_ ## AXIS ## thatFace) \
 		) \
 		{ \
 			neighborBrightness = GetBlocklight(neighborCoords.x, neighborCoords.y, neighborCoords.z, isSun); \
-			neighborBlockBrightness = Block ## Type ## Brightness(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z)); \
+			neighborBlockBrightness = GetBlockBrightness(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), isSun); \
 			/* This spot is a light caster, mark this spot as needing to be re-spread */ \
 			if (neighborBlockBrightness > 0) { \
 				struct LightNode entry = { neighborCoords.x, neighborCoords.y, neighborCoords.z, neighborBlockBrightness }; \
@@ -426,40 +412,34 @@ static void CalcUnlight(int x, int y, int z, cc_uint8 brightness, cc_bool isSun)
 		/* For the original cell in the queue, assume this block is air
 		so that light can unspread "out" of it in the case of a solid blocks. */
 		BlockID thisBlock = count == 0 ? BLOCK_AIR : thisBlockTrue;
-		
+
 		count++;
 
 		neighborCoords.x--;
-		Light_TryUnSpreadInto(x, >, 0, Block, X, MAX, MIN)
+		Light_TryUnSpreadInto(x, >, 0, X, MAX, MIN)
 		neighborCoords.x += 2;
-		Light_TryUnSpreadInto(x, <, World.MaxX, Block, X, MIN, MAX)
+		Light_TryUnSpreadInto(x, <, World.MaxX, X, MIN, MAX)
 		neighborCoords.x--;
 
 		neighborCoords.y--;
-		Light_TryUnSpreadInto(y, >, 0, Block, Y, MAX, MIN)
+		Light_TryUnSpreadInto(y, >, 0, Y, MAX, MIN)
 		neighborCoords.y += 2;
-		Light_TryUnSpreadInto(y, <, World.MaxY, Block, Y, MIN, MAX)
+		Light_TryUnSpreadInto(y, <, World.MaxY, Y, MIN, MAX)
 		neighborCoords.y--;
 
 		neighborCoords.z--;
-		Light_TryUnSpreadInto(z, >, 0, Block, Z, MAX, MIN)
+		Light_TryUnSpreadInto(z, >, 0, Z, MAX, MIN)
 		neighborCoords.z += 2;
-		Light_TryUnSpreadInto(z, <, World.MaxZ, Block, Z, MIN, MAX)
+		Light_TryUnSpreadInto(z, <, World.MaxZ, Z, MIN, MAX)
 	}
 
 	FlushLightQueue(isSun, true);
 }
-static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+static void CalcBlockChange(int x, int y, int z, BlockID oldBlock, BlockID newBlock, cc_bool isSun) {
+	cc_uint8 oldBlockLightLevel = GetBlockBrightness(oldBlock, isSun);
+	cc_uint8 newBlockLightLevel = GetBlockBrightness(newBlock, isSun);
 
-	/* For some reason this is a possible case */
-	if (oldBlock == newBlock) { return; }
-
-	ClassicLighting_OnBlockChanged(x, y, z, oldBlock, newBlock);
-
-	cc_uint8 oldBlockLightLevel = BlockBlockBrightness(oldBlock);
-	cc_uint8 newBlockLightLevel = BlockBlockBrightness(newBlock);
-
-	cc_uint8 oldLightLevelHere = GetBlocklight(x, y, z, false);
+	cc_uint8 oldLightLevelHere = GetBlocklight(x, y, z, isSun);
 
 	/* Cel has no lighting and new block doesn't cast light and blocks all light, no change */
 	if (!oldLightLevelHere && !newBlockLightLevel && IsFullOpaque(newBlock)) return;
@@ -471,7 +451,7 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 		//Platform_LogConst("Brightening");
 		struct LightNode entry = { x, y, z, newBlockLightLevel };
 		Queue_Enqueue(&lightQueue, &entry);
-		FlushLightQueue(false, true);
+		FlushLightQueue(isSun, true);
 		return;
 	}
 
@@ -481,7 +461,17 @@ static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock,
 		return;
 	}
 
-	CalcUnlight(x, y, z, oldLightLevelHere, false);
+	CalcUnlight(x, y, z, oldLightLevelHere, isSun);
+}
+static void ModernLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+
+	/* For some reason this is a possible case */
+	if (oldBlock == newBlock) { return; }
+
+	ClassicLighting_OnBlockChanged(x, y, z, oldBlock, newBlock);
+
+	CalcBlockChange(x, y, z, oldBlock, newBlock, false);
+	CalcBlockChange(x, y, z, oldBlock, newBlock, true);
 }
 /* Invalidates/Resets lighting state for all of the blocks in the world */
 /*  (e.g. because a block changed whether it is full bright or not) */
@@ -493,9 +483,9 @@ static void ModernLighting_Refresh(void) {
 static cc_bool ModernLighting_IsLit(int x, int y, int z) { return true; }
 static cc_bool ModernLighting_IsLit_Fast(int x, int y, int z) { return true; }
 
-#define RecalcForChunkIfNeeded(cx, cy, cz, chunkIndex) \
+#define CalcForChunkIfNeeded(cx, cy, cz, chunkIndex) \
 	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) { \
-		CalculateChunkLightingAll(chunkIndex, cx, cy, cz, false); \
+		CalculateChunkLightingAll(chunkIndex, cx, cy, cz); \
 	}
 
 static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palette, PackedCol outOfBoundsColor) {
@@ -510,7 +500,7 @@ static PackedCol ModernLighting_Color_Core(int x, int y, int z, PackedCol* palet
 	cz = z >> CHUNK_SHIFT;
 
 	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
-	RecalcForChunkIfNeeded(cx, cy, cz, chunkIndex);
+	CalcForChunkIfNeeded(cx, cy, cz, chunkIndex);
 
 	/* There might be no light data in this chunk even after it was calculated */
 	if (chunkLightingData[chunkIndex] == NULL) {
@@ -562,7 +552,7 @@ static void ModernLighting_LightHint(int startX, int startY, int startZ) {
 	cz = (startZ + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
 
 	chunkIndex = ChunkCoordsToIndex(cx, cy, cz);
-	RecalcForChunkIfNeeded(cx, cy, cz, chunkIndex);
+	CalcForChunkIfNeeded(cx, cy, cz, chunkIndex);
 }
 
 void ModernLighting_SetActive(void) {
