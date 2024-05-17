@@ -499,8 +499,8 @@ static void Refresh(void) {
 	FreeState();
 	AllocState();
 }
-static cc_bool IsLit(int x, int y, int z) { return true; }
-static cc_bool IsLit_Fast(int x, int y, int z) { return true; }
+static cc_bool IsLit(int x, int y, int z) { return ClassicLighting_IsLit(x, y, z); }
+static cc_bool IsLit_Fast(int x, int y, int z) { return ClassicLighting_IsLit_Fast(x, y, z); }
 
 #define CalcForChunkIfNeeded(cx, cy, cz, chunkIndex) \
 	if (chunkLightingDataFlags[chunkIndex] < CHUNK_ALL_CALCULATED) { \
