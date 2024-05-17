@@ -23,7 +23,7 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 #define OPT_ENTITY_SHADOW "entityshadow"
 #define OPT_RENDER_TYPE "normal"
 #define OPT_SMOOTH_LIGHTING "gfx-smoothlighting"
-#define OPT_MODERN_LIGHTING "gfx-modernlighting"
+#define OPT_LIGHTING_MODE "gfx-lightingmode"
 #define OPT_MIPMAPS "gfx-mipmaps"
 #define OPT_CHAT_LOGGING "chat-logging"
 #define OPT_WINDOW_WIDTH "window-width"

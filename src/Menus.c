@@ -2878,9 +2878,11 @@ static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }
-static void GraphicsOptionsScreen_GetModernLighting(cc_string* v) { Menu_GetBool(v, Lighting_Modern); }
-static void GraphicsOptionsScreen_SetModernLighting(const cc_string* v) {
-	Lighting_Modern = Menu_SetBool(v, OPT_MODERN_LIGHTING);
+static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
+static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
+	Lighting_Mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
+	Options_Set(OPT_LIGHTING_MODE, v);
+
 	Lighting_SwitchActive();
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
@@ -2923,8 +2925,8 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
 		{ -1,    0, "Smooth lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
-		{ -1,  50,  "Fancy lighting", MenuOptionsScreen_Bool,
-			GraphicsOptionsScreen_GetModernLighting,     GraphicsOptionsScreen_SetModernLighting },
+		{ -1,  50,  "Lighting mode", MenuOptionsScreen_Enum,
+			GraphicsOptionsScreen_GetLighting,   GraphicsOptionsScreen_SetLighting },
 		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
 		{ 1, -100, "Names",   MenuOptionsScreen_Enum,
@@ -2953,8 +2955,9 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
 		"&cNote: &eThis setting may reduce performance.";
 	s->descriptions[4] = \
-		"&eFancy lighting allows bright blocks to cast a much wider range of light.\n" \
-		"&cNote: &eThis setting will reduce performance and increase memory usage.";
+		"&eClassic: &fTwo levels of light, sun and shadow. Good for performance.\n" \
+		"&eFancy: &fAllows bright blocks to cast a much wider range of light.\n" \
+		"&cNote: &eFancy will reduce performance and increase memory usage.";
 	s->descriptions[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
@@ -2972,8 +2975,9 @@ void GraphicsOptionsScreen_Show(void) {
 	MenuInput_Float(menuOpts_descs[0], 1, 100, 20);
 	MenuInput_Enum(menuOpts_descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(menuOpts_descs[2],  8, 4096, 512);
-	MenuInput_Enum(menuOpts_descs[6], NameMode_Names,   NAME_MODE_COUNT);
-	MenuInput_Enum(menuOpts_descs[7], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[4], LightingMode_Names, LIGHTING_MODE_COUNT)
+	MenuInput_Enum(menuOpts_descs[6], NameMode_Names,     NAME_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[7], ShadowMode_Names,   SHADOW_MODE_COUNT);
 
 	MenuOptionsScreen_Show(GraphicsOptionsScreen_InitWidgets);
 }

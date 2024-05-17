@@ -10,18 +10,23 @@ Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
-/* Whether MC-style 16-level lighting should be used. */
-extern cc_bool Lighting_Modern;
-/* How much ambient occlusion to apply in modern lighting where 1.0f = none and 0.0f = maximum*/
-#define MODERN_AO 0.5F
-/* How many unique "levels" of light there are when modern lighting is used. */
-#define MODERN_LIGHTING_LEVELS 16
-#define MODERN_LIGHTING_MAX_LEVEL (MODERN_LIGHTING_LEVELS - 1)
-/* How many bits to shift sunlight level to the left when storing it in a byte along with blocklight level. */
-#define MODERN_LIGHTING_SUN_SHIFT 4
-#define SUN_LEVELS 16
-/* A byte that fills the sun level area with ones. Equivalent to 0b_1111_0000 */
-#define MODERN_LIGHTING_SUN_MASK 0xF0
+
+enum LightingMode {
+	LIGHTING_MODE_CLASSIC, LIGHTING_MODE_FANCY, LIGHTING_MODE_COUNT
+};
+extern const char* const LightingMode_Names[LIGHTING_MODE_COUNT];
+extern cc_uint8 Lighting_Mode;
+
+
+/* How much ambient occlusion to apply in fancy lighting where 1.0f = none and 0.0f = maximum*/
+#define FANCY_AO 0.5F
+/* How many unique "levels" of light there are when fancy lighting is used. */
+#define FANCY_LIGHTING_LEVELS 16
+#define FANCY_LIGHTING_MAX_LEVEL (FANCY_LIGHTING_LEVELS - 1)
+/* How many bits to shift lamplight level to the left when storing it in a byte along with lavalight level. */
+#define FANCY_LIGHTING_LAMP_SHIFT 4
+/* A byte that fills the lamp level area with ones. Equivalent to 0b_1111_0000 */
+#define FANCY_LIGHTING_LAMP_MASK 0xF0
 
 CC_VAR extern struct _Lighting {
 	/* Releases/Frees the per-level lighting state */
@@ -62,13 +67,17 @@ CC_VAR extern struct _Lighting {
 
 void Lighting_SwitchActive(void);
 void Lighting_ApplyActive(void);
-void ModernLighting_SetActive(void);
-void ModernLighting_OnEnvVariableChanged(void* obj, int envVar);
+void FancyLighting_SetActive(void);
+void FancyLighting_OnInit(void);
 
+/* Expose ClassicLighting functions for reuse in Fancy lighting */
 void ClassicLighting_Refresh(void);
 void ClassicLighting_FreeState(void);
 void ClassicLighting_AllocState(void);
 int ClassicLighting_GetLightHeight(int x, int z);
 void ClassicLighting_LightHint(int startX, int startY, int startZ);
+cc_bool ClassicLighting_IsLit(int x, int y, int z);
+cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z);
 void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
+
 #endif

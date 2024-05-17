@@ -11,7 +11,10 @@
 #include "Chat.h"
 #include "ExtMath.h"
 #include "Options.h"
-cc_bool Lighting_Modern;
+
+const char* const LightingMode_Names[LIGHTING_MODE_COUNT] = { "Classic", "Fancy" };
+
+cc_uint8 Lighting_Mode;
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
 
@@ -58,11 +61,11 @@ int ClassicLighting_GetLightHeight(int x, int z) {
 }
 
 /* Outside color is same as sunlight color, so we reuse when possible */
-static cc_bool ClassicLighting_IsLit(int x, int y, int z) {
+cc_bool ClassicLighting_IsLit(int x, int y, int z) {
 	return y > ClassicLighting_GetLightHeight(x, z);
 }
 
-static cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z) {
+cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z) {
 	return y > classic_heightmap[Lighting_Pack(x, z)];
 }
 
@@ -412,8 +415,8 @@ static void ClassicLighting_SetActive(void) {
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
 void Lighting_ApplyActive(void) {
-	if (Lighting_Modern) {
-		ModernLighting_SetActive();
+	if (Lighting_Mode != LIGHTING_MODE_CLASSIC) {
+		FancyLighting_SetActive();
 	} else {
 		ClassicLighting_SetActive();
 	}
@@ -426,7 +429,10 @@ void Lighting_SwitchActive(void) {
 }
 
 static void OnInit(void) {
-	Event_Register_(&WorldEvents.EnvVarChanged, NULL, ModernLighting_OnEnvVariableChanged);
+	
+	Lighting_Mode = Options_GetEnum(OPT_LIGHTING_MODE, LIGHTING_MODE_CLASSIC, LightingMode_Names, LIGHTING_MODE_COUNT);
+
+	FancyLighting_OnInit();
 	Lighting_ApplyActive();
 }
 static void OnReset(void)        { Lighting.FreeState(); }

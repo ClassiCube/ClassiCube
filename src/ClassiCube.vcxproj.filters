@@ -755,7 +755,7 @@
     <ClCompile Include="Window_WiiU.cpp">
       <Filter>Source Files\Window</Filter>
     </ClCompile>
-    <ClCompile Include="ModernLighting.c">
+    <ClCompile Include="FancyLighting.c">
       <Filter>Source Files\Map</Filter>
     </ClCompile>
     <ClCompile Include="Queue.c">

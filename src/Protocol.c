@@ -1728,8 +1728,8 @@ static void BlockDefs_OnBlocksLightPropertyUpdated(BlockID block, cc_bool oldPro
 
 static void BlockDefs_OnBrightnessPropertyUpdated(BlockID block, cc_uint8 oldProp) {
 	if (!World.Loaded) return;
-	if (!Lighting_Modern) return;
-	/* Need to refresh modern lighting when a block's brightness changes */
+	if (Lighting_Mode == LIGHTING_MODE_CLASSIC) return;
+	/* Need to refresh fancy lighting when a block's brightness changes */
 	if (Blocks.Brightness[block] != oldProp) Lighting.Refresh();
 }
 

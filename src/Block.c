@@ -25,7 +25,7 @@ const char* const Sound_Names[SOUND_COUNT] = {
 
 /* Brightness */
 #define BRIT_NONE 0
-#define BRIT_FULL MODERN_LIGHTING_MAX_LEVEL
+#define BRIT_FULL FANCY_LIGHTING_MAX_LEVEL
 #define BRIT_MAGM 10
 
 struct SimpleBlockDef {
@@ -535,41 +535,41 @@ int Block_Parse(const cc_string* name) {
 /* 0b_1000_0000 */
 #define USE_MODERN_BRIGHTNESS_FLAG 1 << 7
 /* 0b_0100_0000 */
-#define USE_SUN_COLOR 1 << 6
+#define USE_LAMP_COLOR 1 << 6
 /* 0b_0000_1111 */
-#define BRIGHTNESS_MASK MODERN_LIGHTING_MAX_LEVEL
+#define BRIGHTNESS_MASK FANCY_LIGHTING_MAX_LEVEL
 
 /* Reads network format    0b_US--_LLLL where U = uses fancy brightness, S = uses lamp brightness, and L = brightness */
 /* Into CC's native format 0b_SSSS_BBBB where S = lamp brightness and B = lava brightness */
 cc_uint8 Block_ReadBrightness(cc_uint8 fullBright) {
 	cc_bool useSun;
 	/* If the fullBright byte does not use the flag, we should interpret it as either completely dark or casting max block light */
-	if ((fullBright & USE_MODERN_BRIGHTNESS_FLAG) == 0) { return fullBright > 0 ? MODERN_LIGHTING_MAX_LEVEL : 0; }
+	if ((fullBright & USE_MODERN_BRIGHTNESS_FLAG) == 0) { return fullBright > 0 ? FANCY_LIGHTING_MAX_LEVEL : 0; }
 
-	useSun = fullBright & USE_SUN_COLOR;
+	useSun = fullBright & USE_LAMP_COLOR;
 
 	/* Preserve only the least significant four bits. This gives us our raw brightness level for sun or block light. */
 	fullBright &= BRIGHTNESS_MASK;
 
 	/* Sun light is stored in the upper four bits */
-	if (useSun) { fullBright <<= MODERN_LIGHTING_SUN_SHIFT; }
+	if (useSun) { fullBright <<= FANCY_LIGHTING_LAMP_SHIFT; }
 	return fullBright;
 }
 
 /* Writes CC's native format 0b_SSSS_BBBB where S = lamp brightness and B = lava brightness */
 /* into network format       0b_US--_LLLL where U = uses fancy brightness, S = uses lamp brightness, and L = brightness */
 cc_uint8 Block_WriteFullBright(cc_uint8 brightness) {
-	cc_uint8 blockBrightness, sunBrightness, fullBright;
-	blockBrightness = brightness & BRIGHTNESS_MASK;
-	sunBrightness   = brightness >> MODERN_LIGHTING_SUN_SHIFT;
-	fullBright      = USE_MODERN_BRIGHTNESS_FLAG;
+	cc_uint8 lavaBrightness, lampBrightness, fullBright;
+	lavaBrightness = brightness & BRIGHTNESS_MASK;
+	lampBrightness = brightness >> FANCY_LIGHTING_LAMP_SHIFT;
+	fullBright     = USE_MODERN_BRIGHTNESS_FLAG;
 
 	/* Modern brightness stored in a fullbright value is mutually exclusive between using block and using sun light */
-	if (blockBrightness > 0) {
-		fullBright |= blockBrightness;
-	} else if (sunBrightness > 0) {
-		fullBright |= USE_SUN_COLOR; /* Insert flag that tells us this fullbright value should be interpreted as sun brightness */
-		fullBright |= sunBrightness;
+	if (lavaBrightness > 0) {
+		fullBright |= lavaBrightness;
+	} else if (lampBrightness > 0) {
+		fullBright |= USE_LAMP_COLOR; /* Insert flag that tells us this fullbright value should be interpreted as sun brightness */
+		fullBright |= lampBrightness;
 	} else {
 		return 0;
 	}
