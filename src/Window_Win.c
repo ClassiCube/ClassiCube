@@ -52,7 +52,7 @@ static int win_totalWidth, win_totalHeight; /* Size of window including titlebar
 static cc_bool is_ansiWindow, grabCursor;
 static int windowX, windowY;
 
-static const cc_uint8 key_map[14 * 16] = {
+static const cc_uint8 key_map[] = {
 /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_BACKSPACE, CCKEY_TAB, 0, 0, CCKEY_F5, CCKEY_ENTER, 0, 0,
 /* 10 */ 0, 0, 0, CCKEY_PAUSE, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, CCKEY_ESCAPE, 0, 0, 0, 0,
 /* 20 */ CCKEY_SPACE, CCKEY_PAGEUP, CCKEY_PAGEDOWN, CCKEY_END, CCKEY_HOME, CCKEY_LEFT, CCKEY_UP, CCKEY_RIGHT, CCKEY_DOWN, 0, CCKEY_PRINTSCREEN, 0, CCKEY_PRINTSCREEN, CCKEY_INSERT, CCKEY_DELETE, 0,

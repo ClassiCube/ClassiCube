@@ -252,7 +252,8 @@ static int MapNativeKey(int k, int l) {
 	case DOM_VK_VOLUME_DOWN: return CCKEY_VOLUME_DOWN;
 	case DOM_VK_VOLUME_UP:   return CCKEY_VOLUME_UP;
 
-	case 173: return CCKEY_VOLUME_MUTE;
+	/* Chrome specific keys */
+	/*case 173: return CCKEY_VOLUME_MUTE; same as DOM_VK_HYPHEN_MINUS */
 	case 174: return CCKEY_VOLUME_DOWN;
 	case 175: return CCKEY_VOLUME_UP;
 	case 176: return CCKEY_MEDIA_NEXT;

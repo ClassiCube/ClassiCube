@@ -330,8 +330,8 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
 	float w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
 	
-	result->x = (x/w) *  (320/2); 
-	result->y = (y/w) * -(224/2);
+	result->x = (x/w) *  (SCREEN_WIDTH  / 2); 
+	result->y = (y/w) * -(SCREEN_HEIGHT / 2);
 	result->z = (z/w) * 1024;
 }
 
@@ -343,10 +343,10 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 
 		int16_vec2_t points[4];
-		points[0].x = v[0].x; points[0].y = v[0].y;
-		points[1].x = v[1].x; points[1].y = v[1].y;
-		points[2].x = v[2].x; points[2].y = v[2].y;
-		points[3].x = v[3].x; points[3].y = v[3].y;
+		points[0].x = (int)v[0].x - SCREEN_WIDTH / 2; points[0].y = (int)v[0].y - SCREEN_HEIGHT / 2;
+		points[1].x = (int)v[1].x - SCREEN_WIDTH / 2; points[1].y = (int)v[1].y - SCREEN_HEIGHT / 2;
+		points[2].x = (int)v[2].x - SCREEN_WIDTH / 2; points[2].y = (int)v[2].y - SCREEN_HEIGHT / 2;
+		points[3].x = (int)v[3].x - SCREEN_WIDTH / 2; points[3].y = (int)v[3].y - SCREEN_HEIGHT / 2;
 
 		int R = PackedCol_R(v->Col);
 		int G = PackedCol_G(v->Col);
@@ -399,13 +399,17 @@ static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+	if (gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads2D(verticesCount, startVertex);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		DrawTexturedQuads3D(verticesCount, startVertex);
 	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+	if (gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads2D(verticesCount, 0);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		DrawTexturedQuads3D(verticesCount, 0);
 	}
 }

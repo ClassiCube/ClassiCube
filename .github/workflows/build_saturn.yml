@@ -21,7 +21,8 @@ jobs:
       - name: Compile Saturn build
         id: compile
         run: |
-          pacman -S curl
+          apt-get update
+          apt-get -y install curl
           make saturn
 
       - uses: ./.github/actions/notify_failure
