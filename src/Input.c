@@ -216,6 +216,8 @@ static const char* const storageNames[INPUT_COUNT] = {
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
+	
+	"VolumeMute", "VolumeUp", "VolumeDown",
 	"MediaNext", "MediaPrev", "MediaPlay", "MediaStop",
 
 	"XButton1", "XButton2", "XButton3", "XButton4", "XButton5", "XButton6",
@@ -242,6 +244,8 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
+	
+	"VOLUMEMUTE", "VOLUMEUP", "VOLUMEDOWN",
 	"MEDIANEXT", "MEDIAPREV", "MEDIAPLAY", "MEDIASTOP",
 	
 	"XBUTTON1", "XBUTTON2", "XBUTTON3", "XBUTTON4", "XBUTTON5", "XBUTTON6",

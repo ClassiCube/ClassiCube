@@ -176,6 +176,15 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_RSHIFT: return CCKEY_RSHIFT;
 		case SDLK_RALT: return CCKEY_RALT;
 		case SDLK_RGUI: return CCKEY_RWIN;
+		
+		case SDLK_AUDIONEXT: return CCKEY_MEDIA_NEXT;
+		case SDLK_AUDIOPREV: return CCKEY_MEDIA_PREV;
+		case SDLK_AUDIOPLAY: return CCKEY_MEDIA_PLAY;
+		case SDLK_AUDIOSTOP: return CCKEY_MEDIA_STOP;
+		
+		case SDLK_AUDIOMUTE:  return CCKEY_VOLUME_MUTE;
+		case SDLK_VOLUMEDOWN: return CCKEY_VOLUME_DOWN;
+		case SDLK_VOLUMEUP:   return CCKEY_VOLUME_UP;
 	}
 	return INPUT_NONE;
 }

@@ -247,12 +247,25 @@ static int MapNativeKey(int k, int l) {
 	case DOM_VK_BACK_SLASH:    return CCKEY_BACKSLASH;
 	case DOM_VK_CLOSE_BRACKET: return CCKEY_RBRACKET;
 	case DOM_VK_QUOTE:         return CCKEY_QUOTE;
+	
+	case DOM_VK_VOLUME_MUTE: return CCKEY_VOLUME_MUTE;
+	case DOM_VK_VOLUME_DOWN: return CCKEY_VOLUME_DOWN;
+	case DOM_VK_VOLUME_UP:   return CCKEY_VOLUME_UP;
 
-	/* chrome */
+	case 173: return CCKEY_VOLUME_MUTE;
+	case 174: return CCKEY_VOLUME_DOWN;
+	case 175: return CCKEY_VOLUME_UP;
+	case 176: return CCKEY_MEDIA_NEXT;
+	case 177: return CCKEY_MEDIA_PREV;
+	case 178: return CCKEY_MEDIA_STOP;
+	case 179: return CCKEY_MEDIA_PLAY;
+	
 	case 186: return CCKEY_SEMICOLON;
 	case 187: return CCKEY_EQUALS;
 	case 189: return CCKEY_MINUS;
 	}
+	
+	Platform_Log1("Unknown key: %i", &k);
 	return INPUT_NONE;
 }
 
