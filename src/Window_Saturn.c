@@ -20,7 +20,6 @@
 #define SCREEN_HEIGHT   224
 
 static cc_bool launcherMode;
-static smpc_peripheral_digital_t state;
 
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
@@ -109,15 +108,58 @@ static void ProcessButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & PERIPHERAL_DIGITAL_DOWN);
 }
 
+static smpc_peripheral_digital_t dig_state;
+static smpc_peripheral_analog_t  ana_state;
+
 void Window_ProcessGamepads(float delta) {
-	smpc_peripheral_digital_port(1, &state);
-	ProcessButtons(0, state.pressed.raw | state.held.raw);
+	smpc_peripheral_digital_port(1, &dig_state);
+	ProcessButtons(0, dig_state.pressed.raw | dig_state.held.raw);
+	
+	smpc_peripheral_analog_port(1, &ana_state);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Framebuffer--------------------------------------------------------*
 *#########################################################################################################################*/
+static const vdp2_vram_cycp_t vram_cycp = {
+	.pt[0].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[0].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	
+	.pt[1].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[1].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	
+	.pt[2].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[2].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	
+	.pt[3].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
+	.pt[3].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0
+};
+		
 void Window_Create2D(int width, int height) {
 	launcherMode = true;
 
@@ -132,46 +174,8 @@ void Window_Create2D(int width, int height) {
 	vdp2_scrn_bitmap_format_set(&format);
 	vdp2_scrn_priority_set(VDP2_SCRN_NBG0, 5);
 	vdp2_scrn_display_set(VDP2_SCRN_DISP_NBG0);
-
-        const vdp2_vram_cycp_t vram_cycp = {
-                .pt[0].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[0].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-
-                .pt[1].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[1].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-
-                .pt[2].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[2].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-
-                .pt[3].t0 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t1 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t2 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t3 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t4 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t5 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t6 = VDP2_VRAM_CYCP_CHPNDR_NBG0,
-                .pt[3].t7 = VDP2_VRAM_CYCP_CHPNDR_NBG0
-        };
-
-        vdp2_vram_cycp_set(&vram_cycp);
+	
+	vdp2_vram_cycp_set(&vram_cycp);
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
@@ -192,10 +196,10 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 		{
 			// TODO optimise
 			BitmapCol col = row[x];
-			cc_uint8 r = BitmapCol_R(col);
-			cc_uint8 g = BitmapCol_G(col);
-			cc_uint8 b = BitmapCol_B(col);
-			vram[x + (y * 512)] = RGB1555(0, r >> 3, g >> 3, b >> 3);
+			cc_uint8 R = BitmapCol_R(col);
+			cc_uint8 G = BitmapCol_G(col);
+			cc_uint8 B = BitmapCol_B(col);
+			vram[x + (y * 512)] = RGB1555(0, R >> 3, G >> 3, B >> 3);
 		}
 	}
 

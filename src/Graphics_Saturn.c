@@ -90,7 +90,7 @@ void Gfx_FreeState(void) {
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
         vdp1_vram_partitions_get(&_vdp1_vram_partitions);
-// TODO less ram for gourad base
+		// TODO less ram for gourad base
         vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(3, 0x01FFFE),
             RGB1555(1, 0, 3, 15));
         vdp2_sprite_priority_set(0, 6);
@@ -114,8 +114,29 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+#define BGRA8_to_SATURN(src) \
+	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	return NULL;
+	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
+	if (!tmp) return NULL;
+
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* dst = tmp        + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) 
+		{
+			cc_uint8* color = (cc_uint8*)&src[x];
+			dst[x] = BGRA8_to_SATURN(color);
+		}
+	}
+	
+	scu_dma_transfer(0, _vdp1_vram_partitions.texture_base, tmp, bmp->width * bmp->height * 2);
+    scu_dma_transfer_wait(0);
+	Mem_Free(tmp);
+	return (void*)1;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -322,10 +343,10 @@ static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
 
 		int16_vec2_t points[4];
-		points[0].x = v[0].X; points[0].y = v[0].Y;
-		points[1].x = v[1].X; points[1].y = v[1].Y;
-		points[2].x = v[2].X; points[2].y = v[2].Y;
-		points[3].x = v[3].X; points[3].y = v[3].Y;
+		points[0].x = v[0].x; points[0].y = v[0].y;
+		points[1].x = v[1].x; points[1].y = v[1].y;
+		points[2].x = v[2].x; points[2].y = v[2].y;
+		points[3].x = v[3].x; points[3].y = v[3].y;
 
 		int R = PackedCol_R(v->Col);
 		int G = PackedCol_G(v->Col);

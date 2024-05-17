@@ -671,7 +671,6 @@ static void DrawColouredQuads3D(int verticesCount, int startVertex) {
 		poly->b0 = PackedCol_B(v->Col);
 		//if (VERTEX_LOGGING) Platform_Log4("OUT: %i, %i, %i (%i)", &X, &Y, &Z, &p);
 
-		// TODO: 2D shouldn't use AddPrim, draws in the wrong way
 		addPrim(&buffer->ot[p >> 2], poly);
 	}
 }
