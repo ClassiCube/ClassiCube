@@ -83,9 +83,13 @@ static const cc_uint8 key_map[] = {
 /* D8 */ 0, 0, 0, CCKEY_LBRACKET, CCKEY_BACKSLASH, CCKEY_RBRACKET, CCKEY_QUOTE, 0,
 };
 
-static int MapNativeKey(WPARAM key, LPARAM meta) {
-	LPARAM ext = meta & (1UL << 24);
-	switch (key)
+static int MapNativeKey(WPARAM vk_key, LPARAM meta) {
+	LPARAM ext      = meta & (1UL << 24);
+	LPARAM scancode = (meta >> 16) & 0xFF;
+	int key;
+	if (ext) scancode |= 0xE000;
+	
+	switch (vk_key)
 	{
 	case VK_CONTROL:
 		return ext ? CCKEY_RCTRL : CCKEY_LCTRL;
@@ -93,9 +97,11 @@ static int MapNativeKey(WPARAM key, LPARAM meta) {
 		return ext ? CCKEY_RALT  : CCKEY_LALT;
 	case VK_RETURN:
 		return ext ? CCKEY_KP_ENTER : CCKEY_ENTER;
-	default:
-		return key < Array_Elems(key_map) ? key_map[key] : 0;
 	}
+	
+	key = vk_key < Array_Elems(key_map) ? key_map[vk_key] : 0;
+	if (!key) Platform_Log2("Unknown key: %x, %x", &vk_key, &scancode);
+	return key;
 }
 
 static void RefreshWindowBounds(void) {
@@ -256,7 +262,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		} else {
 			key = MapNativeKey(wParam, lParam);
 			if (key) Input_Set(key, pressed);
-			else Platform_Log1("Unknown key: %x", &wParam);
 		}
 		return 0;
 	} break;
