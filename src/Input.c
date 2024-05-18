@@ -215,8 +215,13 @@ static const char* const storageNames[INPUT_COUNT] = {
 	"Keypad0", "Keypad1", "Keypad2", "Keypad3", "Keypad4",
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
-	"KeypadAdd", "KeypadDecimal", "KeypadEnter",
-	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse",
+	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
+	
+	"VolumeMute", "VolumeUp", "VolumeDown",
+	"MediaNext", "MediaPrev", "MediaPlay", "MediaStop",
+
+	"XButton1", "XButton2", "XButton3", "XButton4", "XButton5", "XButton6",
+	"LeftMouse", "RightMouse", "MiddleMouse",
 	Pad_Names
 };
 
@@ -239,7 +244,12 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
-	"XBUTTON1", "XBUTTON2", "LMOUSE", "RMOUSE", "MMOUSE",
+	
+	"VOLUMEMUTE", "VOLUMEUP", "VOLUMEDOWN",
+	"MEDIANEXT", "MEDIAPREV", "MEDIAPLAY", "MEDIASTOP",
+	
+	"XBUTTON1", "XBUTTON2", "XBUTTON3", "XBUTTON4", "XBUTTON5", "XBUTTON6",
+	"LMOUSE", "RMOUSE", "MMOUSE",
 	Pad_Names
 };
 

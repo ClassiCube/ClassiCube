@@ -31,6 +31,7 @@ static void InitGLState(void) {
 
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
+
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	InitGLState();
 	
@@ -467,19 +468,34 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *#########################################################################################################################*/
 #define VB_PTR gfx_vertices
 static const void* VERTEX_PTR;
+extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
 
-extern void DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
-extern void DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
 
 void DrawQuads(int count) {
 	if (!count) return;
-	Vertex* start = submitVertices(count);
+	PolyList* output = _glActivePolyList();
+	AlignedVectorHeader* hdr = &output->vector.hdr;
+
+	uint32_t header_required = (hdr->size == 0) || STATE_DIRTY;
+	// Reserve room for the vertices and header
+	Vertex* beg = aligned_vector_reserve(&output->vector, hdr->size + (header_required) + count);
+
+	if (header_required) {
+		apply_poly_header((PolyHeader*)beg, output);
+		STATE_DIRTY = GL_FALSE;
+		beg++; 
+		hdr->size += 1;
+	}
+	Vertex* end;
 
 	if (TEXTURES_ENABLED) {
-		DrawTexturedQuads(VERTEX_PTR, start, count >> 2);
+		end = DrawTexturedQuads(VERTEX_PTR, beg, count >> 2);
 	} else {
-		DrawColouredQuads(VERTEX_PTR, start, count >> 2);
+		end = DrawColouredQuads(VERTEX_PTR, beg, count >> 2);
 	}
+	hdr->size += (end - beg);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -569,6 +585,11 @@ void Gfx_OnWindowResize(void) {
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
+extern float VP_COL_HWIDTH,  VP_TEX_HWIDTH;
+extern float VP_COL_HHEIGHT, VP_TEX_HHEIGHT;
+extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
+extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
+
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
 		glDisable(GL_SCISSOR_TEST);
@@ -578,5 +599,11 @@ void Gfx_SetViewport(int x, int y, int w, int h) {
 	
 	glViewport(x, y, w, h);
 	glScissor (x, y, w, h);
+
+	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
+	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;
+
+	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
+	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
 }
 #endif

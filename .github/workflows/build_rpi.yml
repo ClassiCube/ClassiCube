@@ -3,6 +3,7 @@ name: Build latest (RPI)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

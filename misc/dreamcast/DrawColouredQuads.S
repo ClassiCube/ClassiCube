@@ -1,126 +1,93 @@
-!r0 = prefetch address
-!r1 = GPU VERT command
-!r2 = GPU EOS command
-!r3 = colour
+!r0 = clip flags
+!r1 = GPU command
+!r2 = temp
+!r3 = prefetch address
 !r4 = src pointer ARG
 !r5 = dst pointer ARG
 !r6 = quads count ARG
+!r7 = ?
 
+!fr0  = temp
+!fr1  = u (0.0)
+!fr2  = v (0.0)
+!fr3  = c
 !fr4  = x
 !fr5  = y
 !fr6  = z
 !fr7  = w
-!fr9  = 0
-!fr10 = ?
-!fr11 = ?
+!fr8  = VIEWPORT_HWIDTH
+!fr9  = VIEWPORT_HHEIGHT
+!fr10 = VIEWPORT_X_PLUS_HWIDTH
+!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
 
 !fv4  = XYZW
 
-.globl _DrawColouredQuads
+#include "ViewportTransform.S"
+.global _DrawColouredQuads
 .align 4
 .type  _DrawColouredQuads,%function
 
-! See https://shared-ptr.com/sh_insns.html
-! Although there is fmov.s	@Rm+,FRn, there isn't fmov.s	FRn,@Rm+
-! So have to use fmov.s	FRn,@-Rm instead
-
 _DrawColouredQuads:
 ! Setup
-    mov.l CMD_COL_VERT, r1 ! r1  = GPU VERT command
-    mov.l CMD_COL_EOS,  r2 ! r2  = GPU EOS  command
-    fldi0 fr9              ! fr9 = 0
-    mov r4,r0              ! r0  = src
-    add #-32, r5           ! r5 -= sizeof(VERTEX)
-    nop                    ! align loop
+    fldi0 fr1     ! U = 0
+    fldi0 fr2     ! V = 0
+    mov r4,r3     ! r3  = src
+    add #-32, r5  ! r5 -= sizeof(VERTEX)
+    ViewportTransformSetup _VP_COL_HWIDTH
 
 .TRANSFORM_QUAD:
-! TRANSFORM VERTEX 1
-    add #16, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+    mov.l CMD_COL_VERT, r1 ! r1  = GPU VERT command
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s  fr9,@-r5 ! dst->v = 0.0
-    fmov.s  fr9,@-r5 ! dst->u = 0.0
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r1,@-r5 ! dst->flags = CMD_VERT
+    LoadColouredVertex
+    ProcessVertex1
 
-! TRANSFORM VERTEX 2
-    add #16, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+    LoadColouredVertex
+    ProcessVertex2
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s  fr9,@-r5 ! dst->v = 0.0
-    fmov.s  fr9,@-r5 ! dst->u = 0.0
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r1,@-r5 ! dst->flags = CMD_VERT
+    LoadColouredVertex
+    ProcessVertex3
 
-! TRANSFORM VERTEX 3
-    add #16, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+    LoadColouredVertex
+    ProcessVertex4 CMD_COL_EOS
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s  fr9,@-r5 ! dst->v = 0.0
-    fmov.s  fr9,@-r5 ! dst->u = 0.0
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r1,@-r5 ! dst->flags = CMD_VERT
+! CLIPFLAGS TESTING
+    cmp/eq   #0,r0 ! T = r0 == 0 (all points invisible)
+    bt/s    .NO_POINTS_VISIBLE  ! if T goto NO_POINTS_VISIBLE
+    nop
+    bra .SOME_POINTS_VISIBLE
+    nop
 
-! TRANSFORM VERTEX 4
-    add #16, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+.NO_POINTS_VISIBLE:
+    bra .LOOP_END ! jump to loop end after executing instruction in delay slot
+    add #-128, r5 ! r5 -= 4 * sizeof(VERTEX), move back to 1 vertex before start of quad
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s  fr9,@-r5 ! dst->v = 0.0
-    fmov.s  fr9,@-r5 ! dst->u = 0.0
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r2,@-r5 ! dst->flags = CMD_EOS
+.SOME_POINTS_VISIBLE:
 
-    dt r6 ! r6--; T = 1 if r6 == 0, else 0
-    bf .TRANSFORM_QUAD ! if T == 0 then goto TRANSFORM_QUAD
+.LOOP_END:
+    dt r6 ! r6--; T = r6 == 0
+    bf .TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
     nop
     
-    rts ! return
-    nop
+    add #32, r5     ! r5 += sizeof(VERTEX)
+    rts             ! return after executing instruction in delay slot
+    mov r5,r0       ! r0 = r5
 
 .align 2
 CMD_COL_VERT: .long 0xe0000000
 CMD_COL_EOS:  .long 0xf0000000
+
+.global _VP_COL_HWIDTH
+.type   _VP_COL_HWIDTH,%object
+_VP_COL_HWIDTH:  .long 0
+
+.global _VP_COL_HHEIGHT
+.type   _VP_COL_HHEIGHT,%object
+_VP_COL_HHEIGHT: .long 0
+
+.global _VP_COL_X_PLUS_HWIDTH
+.type   _VP_COL_X_PLUS_HWIDTH,%object
+_VP_COL_X_PLUS_HWIDTH:  .long 0
+
+.global _VP_COL_Y_PLUS_HHEIGHT
+.type   _VP_COL_Y_PLUS_HHEIGHT,%object
+_VP_COL_Y_PLUS_HHEIGHT: .long 0

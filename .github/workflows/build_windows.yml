@@ -3,6 +3,7 @@ name: Build latest (Windows)
 on:
   push:
     branches:
+      - main
       - master
       - ModernLighting
   workflow_dispatch:

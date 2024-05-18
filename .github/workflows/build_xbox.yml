@@ -3,6 +3,7 @@ name: Build latest (Xbox)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

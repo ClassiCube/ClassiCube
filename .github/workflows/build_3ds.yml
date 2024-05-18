@@ -3,6 +3,7 @@ name: Build latest (3DS)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

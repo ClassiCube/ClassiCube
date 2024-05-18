@@ -24,6 +24,7 @@ static int gfx_stride, gfx_format = -1;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
+static cc_bool gfx_rendering2D;
 
 
 /*########################################################################################################################*
@@ -284,14 +285,18 @@ void Gfx_Begin2D(int width, int height) {
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(true);
+	
 	gfx_hadFog = Gfx_GetFog();
 	if (gfx_hadFog) Gfx_SetFog(false);
+	gfx_rendering2D = true;
 }
 
 void Gfx_End2D(void) {
 	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
+	
 	if (gfx_hadFog) Gfx_SetFog(true);
+	gfx_rendering2D = false;
 }
 #endif
 

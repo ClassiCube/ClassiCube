@@ -83,12 +83,11 @@ AV_FORCE_INLINE void* aligned_vector_at(const AlignedVector* vector, const uint3
 
 AV_FORCE_INLINE void* aligned_vector_reserve(AlignedVector* vector, uint32_t element_count) {
     AlignedVectorHeader* hdr = &vector->hdr;
+    uint32_t original_byte_size = (hdr->size * AV_ELEMENT_SIZE);
 
     if(element_count < hdr->capacity) {
-        return aligned_vector_at(vector, element_count);
+        return vector->data + original_byte_size;
     }
-
-    uint32_t original_byte_size = (hdr->size * AV_ELEMENT_SIZE);
 
     /* We overallocate so that we don't make small allocations during push backs */
     element_count = ROUND_TO_CHUNK_SIZE(element_count);

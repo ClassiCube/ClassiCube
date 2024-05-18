@@ -30,7 +30,7 @@ static const cc_uint8 key_map[8 * 16] = {
 /* 0x30 */ CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0,
 /* 0x38 */ 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
 /* 0x40 */ 0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK,
-/* 0x48 */ 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+/* 0x48 */ CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_VOLUME_MUTE, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
 /* 0x50 */ 0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5,
 /* 0x58 */ CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
 /* 0x60 */ CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11,
@@ -434,8 +434,15 @@ static int MapNativeMouse(long button) {
 	if (button == 0) return CCMOUSE_L;
 	if (button == 1) return CCMOUSE_R;
 	if (button == 2) return CCMOUSE_M;
+
 	if (button == 3) return CCMOUSE_X1;
 	if (button == 4) return CCMOUSE_X2;
+	if (button == 5) return CCMOUSE_X3;
+	if (button == 6) return CCMOUSE_X4;
+	if (button == 7) return CCMOUSE_X5;
+	if (button == 8) return CCMOUSE_X6;
+
+	Platform_Log1("Unknown mouse button: %i", &button);
 	return 0;
 }
 

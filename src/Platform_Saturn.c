@@ -64,13 +64,17 @@ cc_uint64 Stopwatch_Measure(void) {
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg); // TODO measure time
+	cc_uint32 delta = end - beg;
+
+	// TODO still wrong?? and overflows?? and PAL detection ???
+	return (delta * 1000) / CPU_FRT_NTSC_320_128_COUNT_1MS;
 }
 
 static void ovf_handler(void) { overflow_count++; }
 
 static void Stopwatch_Init(void) {
-	cpu_frt_init(CPU_FRT_CLOCK_DIV_8);
+	//cpu_frt_init(CPU_FRT_CLOCK_DIV_8);
+	cpu_frt_init(CPU_FRT_CLOCK_DIV_128);
 	cpu_frt_ovi_set(ovf_handler);
 
 	cpu_frt_interrupt_priority_set(15);

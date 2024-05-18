@@ -1,128 +1,91 @@
-!r0 = prefetch address
-!r1 = GPU VERT command
-!r2 = GPU EOS command
-!r3 = colour
+!r0 = clip flags
+!r1 = GPU command
+!r2 = temp
+!r3 = prefetch address
 !r4 = src pointer ARG
 !r5 = dst pointer ARG
 !r6 = quads count ARG
+!r7 = ?
 
+!fr0  = temp
+!fr1  = u
+!fr2  = v
+!fr3  = c
 !fr4  = x
 !fr5  = y
 !fr6  = z
 !fr7  = w
-!fr9  = ?
-!fr10 = u
-!fr11 = v
+!fr8  = VIEWPORT_HWIDTH
+!fr9  = VIEWPORT_HHEIGHT
+!fr10 = VIEWPORT_X_PLUS_HWIDTH
+!fr11 = VIEWPORT_Y_PLUS_HHEIGHT
 
 !fv4  = XYZW
 
-.globl _DrawTexturedQuads
+#include "ViewportTransform.S"
+.global _DrawTexturedQuads
 .align 4
 .type  _DrawTexturedQuads,%function
 
 _DrawTexturedQuads:
 ! Setup
-    mov.l CMD_TEX_VERT, r1 ! r1  = GPU VERT command
-    mov.l CMD_TEX_EOS,  r2 ! r2  = GPU EOS  command
-    mov r4,r0              ! r0  = src
-    add #-32, r5           ! r5 -= sizeof(VERTEX)
+    mov r4,r3     ! r3  = src
+    add #-32, r5  ! r5 -= sizeof(VERTEX)
+    ViewportTransformSetup _VP_TEX_HWIDTH
 
 .TRANSFORM_QUAD:
-! TRANSFORM VERTEX 1
-    add #24, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+    mov.l CMD_TEX_VERT, r1 ! r1  = GPU VERT command
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov    @r4+,fr10! fr10 = src->u
-    fmov    @r4+,fr11! fr11 = src->v
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s fr11,@-r5 ! dst->v = fr11
-    fmov.s fr10,@-r5 ! dst->u = fr10
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r1,@-r5 ! dst->flags = CMD_VERT
+    LoadTexturedVertex
+    ProcessVertex1
 
-! TRANSFORM VERTEX 2
-    add #24, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+    LoadTexturedVertex
+    ProcessVertex2
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov    @r4+,fr10! fr10 = src->u
-    fmov    @r4+,fr11! fr11 = src->v
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s fr11,@-r5 ! dst->v = fr11
-    fmov.s fr10,@-r5 ! dst->u = fr10
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r1,@-r5 ! dst->flags = CMD_VERT
+    LoadTexturedVertex
+    ProcessVertex3
 
-! TRANSFORM VERTEX 3
-    add #24, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+    LoadTexturedVertex
+    ProcessVertex4 CMD_TEX_EOS
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov    @r4+,fr10! fr10 = src->u
-    fmov    @r4+,fr11! fr11 = src->v
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s fr11,@-r5 ! dst->v = fr11
-    fmov.s fr10,@-r5 ! dst->u = fr10
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r1,@-r5 ! dst->flags = CMD_VERT
+! CLIPFLAGS TESTING
+    cmp/eq  #0,r0  ! T = r0 == 0 (all points invisible)
+    bt/s    .NO_POINTS_VISIBLE  ! if T goto NO_POINTS_VISIBLE
+    nop
+    bra .SOME_POINTS_VISIBLE
+    nop
 
-! TRANSFORM VERTEX 4
-    add #24, r0     ! r0 += VERTEX_STRIDE
-    add #64, r5     ! r5 += 2 * sizeof(VERTEX)
-    pref @r0        ! PREFETCH r0 (next vertex)
-    fmov @r4+, fr4  ! fr4 = src->x
-    fmov @r4+, fr5  ! fr5 = src->y
-    fmov @r4+, fr6  ! fr6 = src->z
-    fldi1 fr7       ! fr7 = 1.0
-    ftrv xmtrx, fv4 ! TRANSFORM(fr4..fr7)
+.NO_POINTS_VISIBLE:
+    bra .LOOP_END ! jump to loop end after executing instruction in delay slot
+    add #-128, r5 ! r5 -= 4 * sizeof(VERTEX), move back to prior quad, so that this invisible quad gets overwritten in next iteration
 
-    mov.l   @r4+,r3  ! r3 = src->color
-    fmov    @r4+,fr10! fr10 = src->u
-    fmov    @r4+,fr11! fr11 = src->v
-    fmov.s  fr7,@-r5 ! dst->w = fr7
-    mov.l    r3,@-r5 ! dst->bgra = r3
-    fmov.s fr11,@-r5 ! dst->v = fr11
-    fmov.s fr10,@-r5 ! dst->u = fr10
-    fmov.s  fr6,@-r5 ! dst->z = fr6
-    fmov.s  fr5,@-r5 ! dst->y = fr5
-    fmov.s  fr4,@-r5 ! dst->x = fr4
-    mov.l    r2,@-r5 ! dst->flags = CMD_EOS
+.SOME_POINTS_VISIBLE:
 
-    dt r6 ! r6--; T = 1 if r6 == 0, else 0
-    bf .TRANSFORM_QUAD ! if T == 0 then goto TRANSFORM_QUAD
+.LOOP_END:
+    dt r6 ! r6--; T = r6 == 0
+    bf .TRANSFORM_QUAD ! if !T then goto TRANSFORM_QUAD
     nop
     
-    rts ! return
-    nop
+    add #32, r5     ! r5 += sizeof(VERTEX)
+    rts             ! return after executing instruction in delay slot
+    mov r5,r0       ! r0 = r5
 
 .align 2
 CMD_TEX_VERT: .long 0xe0000000
 CMD_TEX_EOS:  .long 0xf0000000
+
+.global _VP_TEX_HWIDTH
+.type   _VP_TEX_HWIDTH,%object
+_VP_TEX_HWIDTH:  .long 0
+
+.global _VP_TEX_HHEIGHT
+.type   _VP_TEX_HHEIGHT,%object
+_VP_TEX_HHEIGHT: .long 0
+
+.global _VP_TEX_X_PLUS_HWIDTH
+.type   _VP_TEX_X_PLUS_HWIDTH,%object
+_VP_TEX_X_PLUS_HWIDTH:  .long 0
+
+.global _VP_TEX_Y_PLUS_HHEIGHT
+.type   _VP_TEX_Y_PLUS_HHEIGHT,%object
+_VP_TEX_Y_PLUS_HHEIGHT: .long 0

@@ -465,7 +465,7 @@ void SceneListSubmit(Vertex* v3, int n) {
 
     for(int i = 0; i < n; ++i, ++v3) {
         PREFETCH(v3 + 1);
-        switch(v3->flags) {
+        switch(v3->flags & 0xFF000000) {
         case GPU_CMD_VERTEX_EOL:
             break;
         case GPU_CMD_VERTEX:
@@ -480,12 +480,8 @@ void SceneListSubmit(Vertex* v3, int n) {
         Vertex* const v1 = v3 - 2;
         Vertex* const v2 = v3 - 1;
 
-        visible_mask = (
-            (v0->xyz[2] > -v0->w) << 0 |
-            (v1->xyz[2] > -v1->w) << 1 |
-            (v2->xyz[2] > -v2->w) << 2 | 
-            (v3->xyz[2] > -v3->w) << 3
-        );
+        visible_mask = v3->flags & 0xFF;
+        v3->flags &= ~0xFF;
         
         // Stats gathering found that when testing a 64x64x64 sized world, at most
         //   ~400-500 triangles needed clipping
@@ -505,16 +501,13 @@ void SceneListSubmit(Vertex* v3, int n) {
 
             _glPerspectiveDivideVertex(v2);
             _glPushHeaderOrVertex(v2);
-            
+
             _glPerspectiveDivideVertex(v0);
             _glPushHeaderOrVertex(v0);
 
             _glPerspectiveDivideVertex(v3);
             _glPushHeaderOrVertex(v3);
         }
-        break;
-        
-        case 0: // No vertices visible
         break;
         
         default: // Some vertices visible

@@ -516,7 +516,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	if (Gui.ClassicMenu) return;
 
-	Widget_SetDisabled(&s->btns[4],
+	Widget_SetDisabled(&s->btns[1],
 			!Entities.CurPlayer->Hacks.CanAnyHacks); /* select texture pack */
 	s->dirty = true;
 }
@@ -543,11 +543,11 @@ static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	static const struct SimpleButtonDesc descs[] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
+		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
+		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   },
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
-		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
-		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
-		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
+		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
@@ -561,8 +561,8 @@ static void PauseScreen_Init(void* screen) {
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 
 	if (Server.IsSinglePlayer) return;
-	s->btns[1].flags = WIDGET_FLAG_DISABLED;
-	s->btns[2].flags = WIDGET_FLAG_DISABLED;
+	s->btns[3].flags = WIDGET_FLAG_DISABLED;
+	s->btns[5].flags = WIDGET_FLAG_DISABLED;
 }
 
 static void PauseScreen_Free(void* screen) {

@@ -3,6 +3,7 @@ name: Build latest (WiiU)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 

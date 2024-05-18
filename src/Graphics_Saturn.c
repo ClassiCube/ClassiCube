@@ -90,7 +90,7 @@ void Gfx_FreeState(void) {
 void Gfx_Create(void) {
 	if (!Gfx.Created) {
         vdp1_vram_partitions_get(&_vdp1_vram_partitions);
-// TODO less ram for gourad base
+		// TODO less ram for gourad base
         vdp2_scrn_back_color_set(VDP2_VRAM_ADDR(3, 0x01FFFE),
             RGB1555(1, 0, 3, 15));
         vdp2_sprite_priority_set(0, 6);
@@ -99,6 +99,8 @@ void Gfx_Create(void) {
 		_primitive_init();
 	}
 
+	Gfx.MinTexWidth  =  8;
+	Gfx.MinTexHeight =  8;
 	Gfx.MaxTexWidth  = 128;
 	Gfx.MaxTexHeight = 128;
 	Gfx.Created      = true;
@@ -112,8 +114,29 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
+#define BGRA8_to_SATURN(src) \
+	((src[2] & 0xF8) >> 3) | ((src[1] & 0xF8) << 2) | ((src[0] & 0xF8) << 7) | ((src[3] & 0x80) << 8)
+
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	return NULL;
+	cc_uint16* tmp = Mem_TryAlloc(bmp->width * bmp->height, 2);
+	if (!tmp) return NULL;
+
+	for (int y = 0; y < bmp->height; y++)
+	{
+		cc_uint32* src = bmp->scan0 + y * rowWidth;
+		cc_uint16* dst = tmp        + y * bmp->width;
+		
+		for (int x = 0; x < bmp->width; x++) 
+		{
+			cc_uint8* color = (cc_uint8*)&src[x];
+			dst[x] = BGRA8_to_SATURN(color);
+		}
+	}
+	
+	scu_dma_transfer(0, _vdp1_vram_partitions.texture_base, tmp, bmp->width * bmp->height * 2);
+    scu_dma_transfer_wait(0);
+	Mem_Free(tmp);
+	return (void*)1;
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -307,14 +330,39 @@ static void Transform(Vec3* result, struct VertexTextured* a, const struct Matri
 	float z = a->x * mat->row1.z + a->y * mat->row2.z + a->z * mat->row3.z + mat->row4.z;
 	float w = a->x * mat->row1.w + a->y * mat->row2.w + a->z * mat->row3.w + mat->row4.w;
 	
-	result->x = (x/w) *  (320/2); 
-	result->y = (y/w) * -(224/2);
+	result->x = (x/w) *  (SCREEN_WIDTH  / 2); 
+	result->y = (y/w) * -(SCREEN_HEIGHT / 2);
 	result->z = (z/w) * 1024;
 }
 
 #define IsPointCulled(vec) vec.x < -10000 || vec.x > 10000 || vec.y < -10000 || vec.y > 10000 || vec.z < 0 || vec.z > 1024
 
-static void DrawTexturedQuads(int verticesCount, int startVertex) {
+static void DrawTexturedQuads2D(int verticesCount, int startVertex) {
+	for (int i = 0; i < verticesCount; i += 4) 
+	{
+		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
+
+		int16_vec2_t points[4];
+		points[0].x = (int)v[0].x - SCREEN_WIDTH / 2; points[0].y = (int)v[0].y - SCREEN_HEIGHT / 2;
+		points[1].x = (int)v[1].x - SCREEN_WIDTH / 2; points[1].y = (int)v[1].y - SCREEN_HEIGHT / 2;
+		points[2].x = (int)v[2].x - SCREEN_WIDTH / 2; points[2].y = (int)v[2].y - SCREEN_HEIGHT / 2;
+		points[3].x = (int)v[3].x - SCREEN_WIDTH / 2; points[3].y = (int)v[3].y - SCREEN_HEIGHT / 2;
+
+		int R = PackedCol_R(v->Col);
+		int G = PackedCol_G(v->Col);
+		int B = PackedCol_B(v->Col);
+
+		vdp1_cmdt_t* cmd;
+
+		cmd = NextPrimitive();
+		vdp1_cmdt_polygon_set(cmd);
+		vdp1_cmdt_color_set(cmd,     RGB1555(1, R >> 3, G >> 3, B >> 3));
+		vdp1_cmdt_draw_mode_set(cmd, _primitive_draw_mode);
+		vdp1_cmdt_vtx_set(cmd, 		 points);
+	}
+}
+
+static void DrawTexturedQuads3D(int verticesCount, int startVertex) {
 	for (int i = 0; i < verticesCount; i += 4) 
 	{
 		struct VertexTextured* v = (struct VertexTextured*)gfx_vertices + startVertex + i;
@@ -351,19 +399,23 @@ static void DrawTexturedQuads(int verticesCount, int startVertex) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, startVertex);
+	if (gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads2D(verticesCount, startVertex);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads3D(verticesCount, startVertex);
 	}
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		DrawTexturedQuads(verticesCount, 0);
+	if (gfx_rendering2D && gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads2D(verticesCount, 0);
+	} else if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		DrawTexturedQuads3D(verticesCount, 0);
 	}
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
-	DrawTexturedQuads(verticesCount, startVertex);
+	DrawTexturedQuads3D(verticesCount, startVertex);
 }
 
 

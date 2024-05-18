@@ -3,6 +3,7 @@ name: Build latest (Saturn)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 
@@ -20,6 +21,8 @@ jobs:
       - name: Compile Saturn build
         id: compile
         run: |
+          apt-get update
+          apt-get -y install curl
           make saturn
 
       - uses: ./.github/actions/notify_failure

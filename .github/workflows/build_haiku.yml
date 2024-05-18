@@ -3,6 +3,7 @@ name: Build latest (Haiku)
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 
