@@ -507,12 +507,10 @@ static cc_bool IsLit_Fast(int x, int y, int z) { return ClassicLighting_IsLit_Fa
 		CalculateChunkLightingAll(chunkIndex, cx, cy, cz); \
 	}
 
-static PackedCol Color_Core(int x, int y, int z, int paletteFace, PackedCol outOfBoundsColor) {
+static PackedCol Color_Core(int x, int y, int z, int paletteFace) {
 	cc_uint8 lightData;
 	int cx, cy, cz, chunkIndex;
 	int chunkCoordsIndex;
-
-	if (!World_Contains(x, y, z)) return outOfBoundsColor;
 
 	cx = x >> CHUNK_SHIFT;
 	cy = y >> CHUNK_SHIFT;
@@ -539,20 +537,26 @@ static PackedCol Color_Core(int x, int y, int z, int paletteFace, PackedCol outO
 	return palettes[paletteFace][lightData];
 }
 
+#define TRY_OOB_CASE(sun, shadow) if (!World_Contains(x, y, z)) return y >= Env.EdgeHeight ? sun : shadow
 static PackedCol Color(int x, int y, int z) {
-	return Color_Core(x, y, z, PALETTE_YMAX_INDEX, Env.SunCol);
+	TRY_OOB_CASE(Env.SunCol, Env.ShadowCol);
+	return Color_Core(x, y, z, PALETTE_YMAX_INDEX);
 }
 static PackedCol Color_YMaxSide(int x, int y, int z) {
-	return Color_Core(x, y, z, PALETTE_YMAX_INDEX, Env.SunCol);
+	TRY_OOB_CASE(Env.SunCol, Env.ShadowCol);
+	return Color_Core(x, y, z, PALETTE_YMAX_INDEX);
 }
 static PackedCol Color_YMinSide(int x, int y, int z) {
-	return Color_Core(x, y, z, PALETTE_YMIN_INDEX, Env.SunYMin);
+	TRY_OOB_CASE(Env.SunYMin, Env.ShadowYMin);
+	return Color_Core(x, y, z, PALETTE_YMIN_INDEX);
 }
 static PackedCol Color_XSide(int x, int y, int z) {
-	return Color_Core(x, y, z, PALETTE_XSIDE_INDEX, Env.SunXSide);
+	TRY_OOB_CASE(Env.SunXSide, Env.ShadowXSide);
+	return Color_Core(x, y, z, PALETTE_XSIDE_INDEX);
 }
 static PackedCol Color_ZSide(int x, int y, int z) {
-	return Color_Core(x, y, z, PALETTE_ZSIDE_INDEX, Env.SunZSide);
+	TRY_OOB_CASE(Env.SunZSide, Env.ShadowZSide);
+	return Color_Core(x, y, z, PALETTE_ZSIDE_INDEX);
 }
 
 static void LightHint(int startX, int startY, int startZ) {
