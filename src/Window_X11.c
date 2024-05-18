@@ -10,6 +10,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
+#include <X11/XF86keysym.h>
 #ifdef CC_BUILD_XINPUT2
 #include <X11/extensions/XInput2.h>
 #endif
@@ -66,6 +67,31 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 		if (key == XK_KP_End)  return CCKEY_END;
 		if (key == XK_KP_Down) return CCKEY_DOWN;
 		if (key == XK_KP_Page_Down) return CCKEY_PAGEDOWN;
+	}
+	
+	switch (key) {
+		case XF86XK_AudioLowerVolume: return CCKEY_VOLUME_DOWN;
+		case XF86XK_AudioMute:        return CCKEY_VOLUME_MUTE;
+		case XF86XK_AudioRaiseVolume: return CCKEY_VOLUME_UP;
+		
+		case XF86XK_AudioPlay: return CCKEY_MEDIA_PLAY;
+		case XF86XK_AudioStop: return CCKEY_MEDIA_STOP;
+		case XF86XK_AudioPrev: return CCKEY_MEDIA_PREV;
+		case XF86XK_AudioNext: return CCKEY_MEDIA_NEXT;
+		
+		case XF86XK_HomePage:   return CCKEY_BROWSER_HOME;
+		case XF86XK_Mail:       return CCKEY_LAUNCH_MAIL;
+		case XF86XK_Search:     return CCKEY_BROWSER_SEARCH;
+		case XF86XK_Calculator: return CCKEY_LAUNCH_CALC;
+		
+		case XF86XK_Back:       return CCKEY_BROWSER_PREV;
+		case XF86XK_Forward:    return CCKEY_BROWSER_NEXT;
+		case XF86XK_Stop:       return CCKEY_BROWSER_STOP;
+		case XF86XK_Refresh:    return CCKEY_BROWSER_REFRESH;
+		case XF86XK_Sleep:      return CCKEY_SLEEP;
+		case XF86XK_Favorites:  return CCKEY_BROWSER_FAVORITES;
+		case XF86XK_AudioMedia: return CCKEY_LAUNCH_MEDIA;
+		case XF86XK_MyComputer: return CCKEY_LAUNCH_APP1;
 	}
 
 	/* A chromebook user reported issues with pressing some keys: */

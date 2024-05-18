@@ -561,7 +561,7 @@ static void PauseScreen_Init(void* screen) {
 
 	if (Server.IsSinglePlayer) return;
 	s->btns[3].flags = WIDGET_FLAG_DISABLED;
-	s->btns[5].flags = WIDGET_FLAG_DISABLED;
+	s->btns[4].flags = WIDGET_FLAG_DISABLED;
 }
 
 static void PauseScreen_Free(void* screen) {
