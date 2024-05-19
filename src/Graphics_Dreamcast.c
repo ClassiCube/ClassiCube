@@ -18,7 +18,7 @@ static cc_bool renderingDisabled;
 *#########################################################################################################################*/
 static void InitGLState(void) {
 	glClearDepth(1.0f);
-	glShadeModel(GL_SMOOTH);
+	GPUSetAlphaCutOff(127);
 
 	ALPHA_TEST_ENABLED = GL_FALSE;
 	CULLING_ENABLED    = GL_FALSE;
@@ -479,8 +479,6 @@ static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	gfx_format = -1;
-
-	glAlphaFunc(GL_GREATER, 0.5f);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {

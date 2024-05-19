@@ -122,8 +122,6 @@ GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
-GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
-
 
 /*
  * Dreamcast specific compressed + twiddled formats.

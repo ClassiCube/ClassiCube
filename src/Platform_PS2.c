@@ -15,13 +15,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <kernel.h>
-#include <timer_alarm.h>
+#include <delaythread.h>
 #include <debug.h>
 #include <sifrpc.h>
 #include <iopheap.h>
@@ -251,7 +252,7 @@ void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char*
 	
 	int thdID = CreateThread(&thread);
 	if (thdID < 0) Logger_Abort2(thdID, "Creating thread");
-	*handle = thdID;
+	*handle = (void*)thdID;
 	
 	int res = StartThread(thdID, (void*)func);
 	if (res < 0) Logger_Abort2(res, "Running thread");
