@@ -217,8 +217,10 @@ static const char* const storageNames[INPUT_COUNT] = {
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
 	
-	"VolumeMute", "VolumeUp", "VolumeDown",
+	"VolumeMute", "VolumeUp", "VolumeDown", "Sleep",
 	"MediaNext", "MediaPrev", "MediaPlay", "MediaStop",
+	"BrowserPrev", "BrowserNext", "BrowserRefresh", "BrowserStop", "BrowserSsearch", "BrowserFavorites", "BrowserHome",
+	"LaunchMail", "LaunchMedia", "LaunchApp1", "LaunchCalc", 
 
 	"XButton1", "XButton2", "XButton3", "XButton4", "XButton5", "XButton6",
 	"LeftMouse", "RightMouse", "MiddleMouse",
@@ -245,8 +247,10 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
 	
-	"VOLUMEMUTE", "VOLUMEUP", "VOLUMEDOWN",
+	"VOLUMEMUTE", "VOLUMEUP", "VOLUMEDOWN", "SLEEP",
 	"MEDIANEXT", "MEDIAPREV", "MEDIAPLAY", "MEDIASTOP",
+	"BROWSERPREV", "BROWSERNEXT", "BROWSERREFRESH", "BROWSERSTOP", "BROWSERSEARCH", "BROWSERFAVORITES", "BROWSERHOME",
+	"LAUNCHMAIL", "LAUNCHMEDIA", "LAUNCHAPP1", "LAUNCHCALC", 
 	
 	"XBUTTON1", "XBUTTON2", "XBUTTON3", "XBUTTON4", "XBUTTON5", "XBUTTON6",
 	"LMOUSE", "RMOUSE", "MMOUSE",
