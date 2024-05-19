@@ -552,6 +552,7 @@ void Physics_Init(void) {
 	Physics.OnRandomTick[BLOCK_STILL_LAVA]  = Physics_ActivateLava;
 
 	Physics.OnPlace[BLOCK_SLAB]        = Physics_HandleSlab;
+	if (Game_ClassicMode) return;
 	Physics.OnPlace[BLOCK_COBBLE_SLAB] = Physics_HandleCobblestoneSlab;
 	Physics.OnPlace[BLOCK_TNT]         = Physics_HandleTnt;
 }

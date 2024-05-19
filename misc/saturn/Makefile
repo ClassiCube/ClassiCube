@@ -12,7 +12,7 @@ BUILTIN_ASSETS=
 SH_PROGRAM		:= ClassiCube-saturn
 SH_SRCS			:= $(wildcard src/*.c)
 
-SH_CFLAGS+= -Os -I. -DPLAT_SATURN
+SH_CFLAGS+= -Os -I. -DPLAT_SATURN -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers
 SH_LDFLAGS+=
 
 IP_VERSION:= V1.000

@@ -39,107 +39,10 @@ void _glInitContext() {
     scissor_rect.height = vid_mode->height;
 }
 
-GLAPI void APIENTRY glEnable(GLenum cap) {
-    switch(cap) {
-        case GL_TEXTURE_2D:
-            if(TEXTURES_ENABLED != GL_TRUE) {
-                TEXTURES_ENABLED = GL_TRUE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        break;
-        case GL_CULL_FACE: {
-            CULLING_ENABLED = GL_TRUE;
-            STATE_DIRTY = GL_TRUE;
-        } break;
-        case GL_DEPTH_TEST: {
-            if(DEPTH_TEST_ENABLED != GL_TRUE) {
-                DEPTH_TEST_ENABLED = GL_TRUE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        } break;
-        case GL_BLEND: {
-            if(BLEND_ENABLED != GL_TRUE) {
-                BLEND_ENABLED = GL_TRUE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        } break;
-        case GL_SCISSOR_TEST: {
-            SCISSOR_TEST_ENABLED = GL_TRUE;
-            STATE_DIRTY = GL_TRUE;
-        } break;
-        case GL_FOG:
-            if(FOG_ENABLED != GL_TRUE) {
-                FOG_ENABLED = GL_TRUE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        break;
-        case GL_ALPHA_TEST: {
-            if(ALPHA_TEST_ENABLED != GL_TRUE) {
-                ALPHA_TEST_ENABLED = GL_TRUE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        } break;
-    default:
-        break;
-    }
-}
-
-GLAPI void APIENTRY glDisable(GLenum cap) {
-    switch(cap) {
-        case GL_TEXTURE_2D:
-            if(TEXTURES_ENABLED != GL_FALSE) {
-                TEXTURES_ENABLED = GL_FALSE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        break;
-        case GL_CULL_FACE: {
-            CULLING_ENABLED = GL_FALSE;
-            STATE_DIRTY = GL_TRUE;
-        } break;
-        case GL_DEPTH_TEST: {
-            if(DEPTH_TEST_ENABLED != GL_FALSE) {
-                DEPTH_TEST_ENABLED = GL_FALSE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        } break;
-        case GL_BLEND: {
-            if(BLEND_ENABLED != GL_FALSE) {
-                BLEND_ENABLED = GL_FALSE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        } break;
-        case GL_SCISSOR_TEST: {
-            SCISSOR_TEST_ENABLED = GL_FALSE;
-            STATE_DIRTY = GL_TRUE;
-        } break;
-        case GL_FOG:
-            if(FOG_ENABLED != GL_FALSE) {
-                FOG_ENABLED = GL_FALSE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        break;
-        case GL_ALPHA_TEST: {
-            if(ALPHA_TEST_ENABLED != GL_FALSE) {
-                ALPHA_TEST_ENABLED = GL_FALSE;
-                STATE_DIRTY = GL_TRUE;
-            }
-        } break;
-    default:
-        break;
-    }
-}
-
 /* Depth Testing */
 GLAPI void APIENTRY glClearDepth(GLfloat depth) {
     /* We reverse because using invW means that farther Z == lower number */
     pvr_set_zclip(MIN(1.0f - depth, PVR_MIN_Z));
-}
-
-GLAPI void APIENTRY glDepthMask(GLboolean flag) {
-    if(DEPTH_MASK_ENABLED != flag) {
-        DEPTH_MASK_ENABLED = flag;
-        STATE_DIRTY = GL_TRUE;
-    }
 }
 
 /* Shading - Flat or Goraud */
@@ -237,21 +140,6 @@ void _glApplyScissor(bool force) {
 
     scissor_rect.applied = true;
 }
-
-void APIENTRY glGetIntegerv(GLenum pname, GLint *params) {
-    switch(pname) {
-        case GL_FREE_TEXTURE_MEMORY_KOS:
-            *params = _glFreeTextureMemory();
-        break;
-        case GL_USED_TEXTURE_MEMORY_KOS:
-            *params = _glUsedTextureMemory();
-        break;
-        case GL_FREE_CONTIGUOUS_TEXTURE_MEMORY_KOS:
-            *params = _glFreeContiguousTextureMemory();
-        break;
-    }
-}
-
 
 Viewport VIEWPORT;
 

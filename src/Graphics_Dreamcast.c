@@ -18,15 +18,17 @@ static cc_bool renderingDisabled;
 *#########################################################################################################################*/
 static void InitGLState(void) {
 	glClearDepth(1.0f);
-	glDepthMask(GL_TRUE);
 	glShadeModel(GL_SMOOTH);
 
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_FOG);
+	ALPHA_TEST_ENABLED = GL_FALSE;
+	CULLING_ENABLED    = GL_FALSE;
+	BLEND_ENABLED      = GL_FALSE;
+	DEPTH_TEST_ENABLED = GL_FALSE;
+	DEPTH_MASK_ENABLED = GL_TRUE;
+	TEXTURES_ENABLED   = GL_FALSE;
+	FOG_ENABLED        = GL_FALSE;
+	
+	STATE_DIRTY = GL_TRUE;
 }
 
 void Gfx_Create(void) {
@@ -53,15 +55,21 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 }
 
-#define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-static void SetAlphaBlend(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+
+void Gfx_SetFaceCulling(cc_bool enabled) { 
+	CULLING_ENABLED = enabled;
+	STATE_DIRTY     = GL_TRUE;
+}
+
+static void SetAlphaBlend(cc_bool enabled) { 
+	BLEND_ENABLED = enabled;
+	STATE_DIRTY   = GL_TRUE;
+}
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -78,10 +86,24 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO: Doesn't work
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
-void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
+void Gfx_SetDepthWrite(cc_bool enabled) { 
+	if (DEPTH_MASK_ENABLED == enabled) return;
+	
+	DEPTH_MASK_ENABLED = enabled;
+	STATE_DIRTY        = GL_TRUE;
+}
 
-static void SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
+void Gfx_SetDepthTest(cc_bool enabled) { 
+	if (DEPTH_TEST_ENABLED == enabled) return;
+	
+	DEPTH_TEST_ENABLED = enabled;
+	STATE_DIRTY        = GL_TRUE;
+}
+
+static void SetAlphaTest(cc_bool enabled) {
+	ALPHA_TEST_ENABLED = enabled;
+	STATE_DIRTY        = GL_TRUE;
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	// don't need a fake second pass in this case
@@ -354,7 +376,10 @@ static FogFunc gfx_fogMode = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	gl_Toggle(GL_FOG);
+	if (FOG_ENABLED == enabled) return;
+	
+	FOG_ENABLED = enabled;
+	STATE_DIRTY = GL_TRUE;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -503,11 +528,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnable(GL_TEXTURE_2D);
-	} else {
-		glDisable(GL_TEXTURE_2D);
-	}
+	TEXTURES_ENABLED = fmt == VERTEX_FORMAT_TEXTURED;
+	STATE_DIRTY      = GL_TRUE;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -549,9 +571,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	GLint freeMem, usedMem;
-	glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &freeMem);
-	glGetIntegerv(GL_USED_TEXTURE_MEMORY_KOS, &usedMem);
+	GLint freeMem = _glFreeTextureMemory();
+	GLint usedMem = _glUsedTextureMemory();
 	
 	float freeMemMB = freeMem / (1024.0 * 1024.0);
 	float usedMemMB = usedMem / (1024.0 * 1024.0);
@@ -592,10 +613,11 @@ extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
 
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
-		glDisable(GL_SCISSOR_TEST);
+		SCISSOR_TEST_ENABLED = GL_FALSE;
 	} else {
-		glEnable(GL_SCISSOR_TEST);
+		SCISSOR_TEST_ENABLED = GL_TRUE;
 	}
+	STATE_DIRTY = GL_TRUE;
 	
 	glViewport(x, y, w, h);
 	glScissor (x, y, w, h);

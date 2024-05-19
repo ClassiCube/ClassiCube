@@ -543,7 +543,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 		*dw++ = xyz.xyz;
 	}
 	dw++; // one more to even out number of doublewords
-	q = dw;
+	q = (qword_t*)dw;
 }
 
 static void DrawTriangles(int verticesCount, int startVertex) {
