@@ -82,6 +82,7 @@ void Event_UnregisterAll(void) {
 	WorldEvents.Loading.Count   = 0;
 	WorldEvents.MapLoaded.Count = 0;
 	WorldEvents.EnvVarChanged.Count = 0;
+	WorldEvents.LightingModeChanged.Count = 0;
 
 	ChatEvents.FontChanged.Count    = 0;
 	ChatEvents.ChatReceived.Count   = 0;

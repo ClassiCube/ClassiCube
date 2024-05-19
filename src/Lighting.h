@@ -17,6 +17,12 @@ enum LightingMode {
 extern const char* const LightingMode_Names[LIGHTING_MODE_COUNT];
 extern cc_uint8 Lighting_Mode;
 
+extern cc_bool Lighting_ModeLockedByServer;
+/* True if the current lighting mode has been set by the server instead of the client */
+extern cc_bool Lighting_ModeSetByServer;
+/* The lighting mode that was set by the client before being set by the server */
+extern cc_uint8 Lighting_ModeCached;
+
 
 /* How much ambient occlusion to apply in fancy lighting where 1.0f = none and 0.0f = maximum*/
 #define FANCY_AO 0.5F
@@ -65,8 +71,6 @@ CC_VAR extern struct _Lighting {
 	PackedCol (*Color_ZSide_Fast)(int x, int y, int z);
 } Lighting;
 
-void Lighting_SwitchActive(void);
-void Lighting_ApplyActive(void);
 void FancyLighting_SetActive(void);
 void FancyLighting_OnInit(void);
 

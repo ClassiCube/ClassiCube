@@ -11,10 +11,14 @@
 #include "Chat.h"
 #include "ExtMath.h"
 #include "Options.h"
+#include "Builder.h"
 
 const char* const LightingMode_Names[LIGHTING_MODE_COUNT] = { "Classic", "Fancy" };
 
 cc_uint8 Lighting_Mode;
+cc_bool  Lighting_ModeLockedByServer;
+cc_bool  Lighting_ModeSetByServer;
+cc_uint8 Lighting_ModeCached;
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
 
@@ -414,7 +418,7 @@ static void ClassicLighting_SetActive(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
-void Lighting_ApplyActive(void) {
+static void Lighting_ApplyActive(void) {
 	if (Lighting_Mode != LIGHTING_MODE_CLASSIC) {
 		FancyLighting_SetActive();
 	} else {
@@ -422,18 +426,33 @@ void Lighting_ApplyActive(void) {
 	}
 }
 
-void Lighting_SwitchActive(void) {
+static void Lighting_SwitchActive(void) {
 	Lighting.FreeState();
 	Lighting_ApplyActive();
 	Lighting.AllocState();
 }
 
+static void Lighting_HandleModeChanged(void* obj, int locked) {
+	Builder_ApplyActive();
+	if (World.Loaded) {
+		Lighting_SwitchActive();
+		MapRenderer_Refresh();
+	} else {
+		Lighting_ApplyActive();
+	}
+}
+
 static void OnInit(void) {
 	
 	Lighting_Mode = Options_GetEnum(OPT_LIGHTING_MODE, LIGHTING_MODE_CLASSIC, LightingMode_Names, LIGHTING_MODE_COUNT);
+	Lighting_ModeLockedByServer = false;
+	Lighting_ModeSetByServer = false;
+	Lighting_ModeCached = Lighting_Mode;
 
 	FancyLighting_OnInit();
 	Lighting_ApplyActive();
+
+	Event_Register_(&WorldEvents.LightingModeChanged, NULL, Lighting_HandleModeChanged);
 }
 static void OnReset(void)        { Lighting.FreeState(); }
 static void OnNewMapLoaded(void) { Lighting.AllocState(); }

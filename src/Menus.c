@@ -562,7 +562,7 @@ static void PauseScreen_Init(void* screen) {
 
 	if (Server.IsSinglePlayer) return;
 	s->btns[3].flags = WIDGET_FLAG_DISABLED;
-	s->btns[5].flags = WIDGET_FLAG_DISABLED;
+	s->btns[4].flags = WIDGET_FLAG_DISABLED;
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -2389,7 +2389,7 @@ static struct MenuOptionsScreen {
 	Screen_Body
 	const char* descriptions[MENUOPTS_MAX_OPTS + 1];
 	struct ButtonWidget* activeBtn;
-	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
+	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged, OnLightingModeServerChanged;
 	int numButtons;
 	struct FontDesc titleFont, textFont;
 	struct TextGroupWidget extHelp;
@@ -2584,6 +2584,14 @@ static void MenuOptionsScreen_OnHacksChanged(void* screen) {
 	if (s->OnHacksChanged) s->OnHacksChanged(s);
 	s->dirty = true;
 }
+static void MenuOptionsScreen_OnLightingModeServerChanged(void* screen, int fromServer) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	/* This event only actually matters if it's from the server */
+	if (fromServer) {
+		if (s->OnLightingModeServerChanged) s->OnLightingModeServerChanged(s);
+		s->dirty = true;
+	}
+}
 
 static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
@@ -2606,6 +2614,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
 	s->extHelp.lines = 0;
 	Event_Register_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Register_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
 	
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -2629,6 +2638,7 @@ static void MenuOptionsScreen_Render(void* screen, float delta) {
 static void MenuOptionsScreen_Free(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Event_Unregister_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Unregister_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
 	Gui_RemoveCore((struct Screen*)&MenuInputOverlay);
 }
 
@@ -2868,13 +2878,22 @@ void EnvSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
+static void GraphicsOptionsScreen_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->widgets;
+	cc_bool disabled = Lighting_ModeLockedByServer;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widgets[4];
+
+	MenuOptionsScreen_Update(s, btn);
+	Widget_SetDisabled(widgets[4], disabled);
+	MenuInputOverlay_CheckStillValid(s);
+}
+
 static void GraphicsOptionsScreen_GetViewDist(cc_string* v) { String_AppendInt(v, Game_ViewDistance); }
 static void GraphicsOptionsScreen_SetViewDist(const cc_string* v) { Game_UserSetViewDistance(Menu_Int(v)); }
 
 static void GraphicsOptionsScreen_GetSmooth(cc_string* v) { Menu_GetBool(v, Builder_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
-	Lighting_ApplyActive();
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }
@@ -2882,10 +2901,9 @@ static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst
 static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
 	Lighting_Mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
 	Options_Set(OPT_LIGHTING_MODE, v);
-
-	Lighting_SwitchActive();
-	Builder_ApplyActive();
-	MapRenderer_Refresh();
+	Lighting_ModeSetByServer = false;
+	/* Call with 0 to indicate clientside menu change */
+	Event_RaiseInt(&WorldEvents.LightingModeChanged, 0);
 }
 
 static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
@@ -2943,7 +2961,11 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50,  "Anaglyph 3D", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
+
+	s->OnLightingModeServerChanged = GraphicsOptionsScreen_CheckLightingModeAllowed;
+
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	GraphicsOptionsScreen_CheckLightingModeAllowed(s);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
 	s->descriptions[1] = \
@@ -2955,9 +2977,11 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
 		"&cNote: &eThis setting may reduce performance.";
 	s->descriptions[4] = \
-		"&eClassic: &fTwo levels of light, sun and shadow. Good for performance.\n" \
-		"&eFancy: &fAllows bright blocks to cast a much wider range of light.\n" \
-		"&cNote: &eFancy will reduce performance and increase memory usage.";
+		"&eClassic: &fTwo levels of light, sun and shadow.\n" \
+		"    Good for performance.\n" \
+		"&eFancy: &fBright blocks cast a much wider range of light\n" \
+		"    May heavily reduce performance.\n" \
+		"&cNote: &eIn multiplayer, this option may be changed or locked by the server.";
 	s->descriptions[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \

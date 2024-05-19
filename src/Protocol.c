@@ -88,6 +88,7 @@ static struct CpeExt
 	customModels_Ext    = { "CustomModels", 2 },
 	pluginMessages_Ext  = { "PluginMessages", 1 },
 	extTeleport_Ext     = { "ExtEntityTeleport", 1 },
+	lightingMode_Ext    = { "LightingMode", 1 },
 	extTextures_Ext     = { "ExtendedTextures", 1 },
 	extBlocks_Ext       = { "ExtendedBlocks", 1 };
 
@@ -97,7 +98,7 @@ static struct CpeExt* cpe_clientExtensions[] = {
 	&messageTypes_Ext, &hackControl_Ext, &playerClick_Ext, &fullCP437_Ext, &longerMessages_Ext, &blockDefs_Ext,
 	&blockDefsExt_Ext, &bulkBlockUpdate_Ext, &textColors_Ext, &envMapAspect_Ext, &entityProperty_Ext, &extEntityPos_Ext,
 	&twoWayPing_Ext, &invOrder_Ext, &instantMOTD_Ext, &fastMap_Ext, &setHotbar_Ext, &setSpawnpoint_Ext, &velControl_Ext,
-	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext,
+	&customParticles_Ext, &pluginMessages_Ext, &extTeleport_Ext, &lightingMode_Ext,
 #ifdef CUSTOM_MODELS
 	&customModels_Ext,
 #endif
@@ -1530,6 +1531,35 @@ static void CPE_ExtEntityTeleport(cc_uint8* data) {
 	Classic_ReadAbsoluteLocation(data, id, flags);
 }
 
+static void CPE_LightingMode(cc_uint8* data) {
+	cc_uint8  mode = *data++;
+	cc_uint8 lockedByte = *data++;
+	cc_bool locked = lockedByte > 0 ? true : false;
+
+	if (mode == 0) {
+		if (!Lighting_ModeSetByServer) return;
+		/* locked is ignored with mode 0 and always set to false */
+		Lighting_ModeLockedByServer = false;
+		Lighting_ModeSetByServer = false;
+		Lighting_Mode = Lighting_ModeCached;
+		/* Call event even if mode is unchanged in case menu needs to be enabled/disabled */
+		/* 1 indicates changed by server and thus menu needs to update */
+		Event_RaiseInt(&WorldEvents.LightingModeChanged, 1);
+		return;
+	}
+	/* Convert from Network mode (0 = no change, 1 = classic, 2 = fancy) to client mode (0 = classic, 1 = fancy) */
+	mode--;
+	if (mode >= LIGHTING_MODE_COUNT) return;
+
+	if (!Lighting_ModeSetByServer) Lighting_ModeCached = Lighting_Mode;
+	Lighting_ModeLockedByServer = locked;
+	Lighting_ModeSetByServer = true;
+	Lighting_Mode = mode;
+	/* Call event even if mode is unchanged in case menu needs to be enabled/disabled */
+	/* 1 indicates changed by server and thus menu needs to update */
+	Event_RaiseInt(&WorldEvents.LightingModeChanged, 1);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	CPEExtensions_Reset();
@@ -1572,6 +1602,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
 	Net_Set(OPCODE_PLUGIN_MESSAGE, CPE_PluginMessage, 66);
 	Net_Set(OPCODE_ENTITY_TELEPORT_EXT, CPE_ExtEntityTeleport, 11);
+	Net_Set(OPCODE_LIGHTING_MODE, CPE_LightingMode, 3);
 }
 
 static cc_uint8* CPE_Tick(cc_uint8* data) {

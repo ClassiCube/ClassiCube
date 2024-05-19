@@ -162,10 +162,11 @@ CC_VAR extern struct _BlockEventsList {
 } BlockEvents;
 
 CC_VAR extern struct _WorldEventsList {
-	struct Event_Void  NewMap;        /* Player begins loading a new world */
-	struct Event_Float Loading;       /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
-	struct Event_Void  MapLoaded;     /* New world has finished loading, player can now interact with it */
-	struct Event_Int   EnvVarChanged; /* World environment variable changed by player/CPE/WoM config */
+	struct Event_Void  NewMap;              /* Player begins loading a new world */
+	struct Event_Float Loading;             /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
+	struct Event_Void  MapLoaded;           /* New world has finished loading, player can now interact with it */
+	struct Event_Int   EnvVarChanged;       /* World environment variable changed by player/CPE/WoM config */
+	struct Event_Int   LightingModeChanged; /* Lighting mode changed. 0 or 1 indicates whether client or server is the cause of the change */
 } WorldEvents;
 
 CC_VAR extern struct _ChatEventsList {
