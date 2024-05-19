@@ -1535,6 +1535,7 @@ static void CPE_LightingMode(cc_uint8* data) {
 	cc_uint8  mode = *data++;
 	cc_uint8 lockedByte = *data++;
 	cc_bool locked = lockedByte > 0 ? true : false;
+	cc_uint8 oldMode = Lighting_Mode;
 
 	if (mode == 0) {
 		if (!Lighting_ModeSetByServer) return;
@@ -1542,9 +1543,8 @@ static void CPE_LightingMode(cc_uint8* data) {
 		Lighting_ModeLockedByServer = false;
 		Lighting_ModeSetByServer = false;
 		Lighting_Mode = Lighting_ModeCached;
-		/* Call event even if mode is unchanged in case menu needs to be enabled/disabled */
-		/* 1 indicates changed by server and thus menu needs to update */
-		Event_RaiseInt(&WorldEvents.LightingModeChanged, 1);
+
+		Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, true);
 		return;
 	}
 	/* Convert from Network mode (0 = no change, 1 = classic, 2 = fancy) to client mode (0 = classic, 1 = fancy) */
@@ -1555,9 +1555,8 @@ static void CPE_LightingMode(cc_uint8* data) {
 	Lighting_ModeLockedByServer = locked;
 	Lighting_ModeSetByServer = true;
 	Lighting_Mode = mode;
-	/* Call event even if mode is unchanged in case menu needs to be enabled/disabled */
-	/* 1 indicates changed by server and thus menu needs to update */
-	Event_RaiseInt(&WorldEvents.LightingModeChanged, 1);
+
+	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, true);
 }
 
 static void CPE_Reset(void) {

@@ -192,3 +192,10 @@ void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 cha
 		handlers->Handlers[i](handlers->Objs[i], channel, data);
 	}
 }
+
+void Event_RaiseLightingMode(struct Event_LightingMode* handlers, cc_uint8 oldMode, cc_bool fromServer) {
+	int i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](handlers->Objs[i], oldMode, fromServer);
+	}
+}

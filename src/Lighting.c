@@ -432,7 +432,8 @@ static void Lighting_SwitchActive(void) {
 	Lighting.AllocState();
 }
 
-static void Lighting_HandleModeChanged(void* obj, int locked) {
+static void Lighting_HandleModeChanged(void* obj, cc_uint8 oldMode, cc_bool fromServer) {
+	if (Lighting_Mode == oldMode) return;
 	Builder_ApplyActive();
 	if (World.Loaded) {
 		Lighting_SwitchActive();

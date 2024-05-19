@@ -76,6 +76,12 @@ struct Event_PluginMessage {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
+typedef void (*Event_LightingMode_Callback)(void* obj, cc_uint8 oldMode, cc_bool fromServer);
+struct Event_LightingMode {
+	Event_LightingMode_Callback Handlers[EVENT_MAX_CALLBACKS];
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
+};
+
 /* Registers a callback function for the given event. */
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
@@ -111,6 +117,8 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 void Event_RaisePadAxis(struct Event_PadAxis* handlers, int port, int axis, float x, float y);
 /* Calls all registered callbacks for an event which has a channel and a 64 byte data argument. */
 void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 channel, cc_uint8* data);
+/* Calls all registered callbacks for an event called when the Lighting_LightingMode is changed */
+void Event_RaiseLightingMode(struct Event_LightingMode* handlers, cc_uint8 oldMode, cc_bool fromServer);
 
 void Event_UnregisterAll(void);
 /* NOTE: Event_UnregisterAll MUST be updated when events lists are changed */
@@ -162,11 +170,11 @@ CC_VAR extern struct _BlockEventsList {
 } BlockEvents;
 
 CC_VAR extern struct _WorldEventsList {
-	struct Event_Void  NewMap;              /* Player begins loading a new world */
-	struct Event_Float Loading;             /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
-	struct Event_Void  MapLoaded;           /* New world has finished loading, player can now interact with it */
-	struct Event_Int   EnvVarChanged;       /* World environment variable changed by player/CPE/WoM config */
-	struct Event_Int   LightingModeChanged; /* Lighting mode changed. 0 or 1 indicates whether client or server is the cause of the change */
+	struct Event_Void  NewMap;        /* Player begins loading a new world */
+	struct Event_Float Loading;       /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
+	struct Event_Void  MapLoaded;     /* New world has finished loading, player can now interact with it */
+	struct Event_Int   EnvVarChanged; /* World environment variable changed by player/CPE/WoM config */
+	struct Event_LightingMode LightingModeChanged; /* Lighting mode changed. */
 } WorldEvents;
 
 CC_VAR extern struct _ChatEventsList {
