@@ -119,6 +119,7 @@ cc_string SP_AutoloadMap = String_FromArray(autoloadBuffer);
 static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
 	RNGState rnd;
+	int horSize, verSize;
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_Version.HasCPE;
 
@@ -131,12 +132,16 @@ static void SPConnection_BeginConnect(void) {
 	World_NewMap();
 
 #if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
-	World_SetDimensions(16, 16, 16);
+	horSize = 16;
+	verSize = 16;
 #elif defined CC_BUILD_LOWMEM
-	World_SetDimensions(64, 64, 64);
+	horSize = 64;
+	verSize = 64;
 #else
-	World_SetDimensions(128, 64, 128);
+	horSize = Game_ClassicMode ? 256 : 128;
+	verSize = 64;
 #endif
+	World_SetDimensions(horSize, verSize, horSize);
 
 #if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
 	Gen_Active = &FlatgrassGen;

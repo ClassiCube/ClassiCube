@@ -17,6 +17,9 @@ all: $(EE_BIN)
 clean:
 	rm -f $(EE_BIN) $(EE_OBJS)
 	
+$(BUILD_DIR):
+	mkdir -p $@
+	
 # Networking IRX modules
 $(BUILD_DIR)/DEV9_irx.c: $(PS2SDK)/iop/irx/ps2dev9.irx
 	bin2c $< $@ DEV9_irx
