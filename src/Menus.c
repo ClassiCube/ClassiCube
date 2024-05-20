@@ -241,7 +241,6 @@ static struct ListScreen {
 	struct ButtonWidget btns[LIST_SCREEN_ITEMS];
 	struct ButtonWidget left, right, done, action;
 	struct FontDesc font;
-	float wheelAcc;
 	int currentIndex;
 	Widget_LeftClick EntryClick, DoneClick, ActionClick;
 	const char* actionText;
@@ -374,17 +373,13 @@ static int ListScreen_KeyDown(void* screen, int key) {
 		ListScreen_PageClick(s, false);
 	} else if (Input_IsRightButton(key) || key == CCKEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
+	} else if (key == CCWHEEL_UP) {
+		ListScreen_SetCurrentIndex(s, s->currentIndex - 1);
+	} else if (key == CCWHEEL_DOWN) {
+		ListScreen_SetCurrentIndex(s, s->currentIndex + 1);
 	} else {
 		Menu_InputDown(screen, key);
 	}
-	return true;
-}
-
-static int ListScreen_MouseScroll(void* screen, float delta) {
-	struct ListScreen* s = (struct ListScreen*)screen;
-	int steps = Utils_AccumulateWheelDelta(&s->wheelAcc, delta);
-
-	if (steps) ListScreen_SetCurrentIndex(s, s->currentIndex - steps);
 	return true;
 }
 
@@ -394,8 +389,6 @@ static void ListScreen_Init(void* screen) {
 	s->widgets    = list_widgets;
 	s->numWidgets = 0;
 	s->maxWidgets = Array_Elems(list_widgets);
-
-	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) 
@@ -455,7 +448,7 @@ static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    Screen_NullUpdate, ListScreen_Free,  
 	ListScreen_Render,  Screen_BuildMesh,
 	ListScreen_KeyDown, Screen_InputUp,    Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,   Screen_PointerUp,  Menu_PointerMove, ListScreen_MouseScroll,
+	Menu_PointerDown,   Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
 	ListScreen_Layout,  ListScreen_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {

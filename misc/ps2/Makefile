@@ -12,7 +12,7 @@ EE_OBJS = $(OBJS) $(patsubst %.o, $(BUILD_DIR)/%.o, $(IOP_MODS))
 EE_LIBS = -lpatches -lpad -lpacket -ldma -lgraph -ldraw -lc -lps2ip -lnetman -lmc
 EE_CFLAGS = -DPLAT_PS2
 
-all: $(EE_BIN)
+all: $(BUILD_DIR) $(EE_BIN)
 
 clean:
 	rm -f $(EE_BIN) $(EE_OBJS)

@@ -224,6 +224,7 @@ static const char* const storageNames[INPUT_COUNT] = {
 
 	"XButton1", "XButton2", "XButton3", "XButton4", "XButton5", "XButton6",
 	"LeftMouse", "RightMouse", "MiddleMouse",
+	"WheelUp", "WheelDown", "WheelLeft", "WheelRight",
 	Pad_Names
 };
 
@@ -254,6 +255,7 @@ const char* const Input_DisplayNames[INPUT_COUNT] = {
 	
 	"XBUTTON1", "XBUTTON2", "XBUTTON3", "XBUTTON4", "XBUTTON5", "XBUTTON6",
 	"LMOUSE", "RMOUSE", "MMOUSE",
+	"WHEELUP", "WHEELDOWN", "WHEELLEFT", "WHEELRIGHT",
 	Pad_Names
 };
 
@@ -328,8 +330,20 @@ void Pointer_SetPressed(int idx, cc_bool pressed) {
 	}
 }
 
+static float scrollingAcc;
 void Mouse_ScrollWheel(float delta) {
+	int steps = Utils_AccumulateWheelDelta(&scrollingAcc, delta);
 	Event_RaiseFloat(&InputEvents.Wheel, delta);
+	
+	if (steps > 0) {
+		for (; steps != 0; steps--) 
+			Input_SetPressed(CCWHEEL_UP);
+		Input_SetReleased(CCWHEEL_UP);
+	} else if (steps < 0) {
+		for (; steps != 0; steps++) 
+			Input_SetPressed(CCWHEEL_DOWN);
+		Input_SetReleased(CCWHEEL_DOWN);
+	}
 }
 
 void Pointer_SetPosition(int idx, int x, int y) {

@@ -283,7 +283,6 @@ static struct ColoursScreen {
 	struct LLabel lblRGB[COLOURS_NUM_COLS];
 	struct LInput iptColours[COLOURS_NUM_ENTRIES];
 	struct LCheckbox cbClassic;
-	float colourAcc;
 } ColoursScreen;
 
 #define COLOURSSCREEN_MAX_WIDGETS 25
@@ -373,14 +372,11 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	ColoursScreen_TextChanged(w);
 }
 
-static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
-	struct ColoursScreen* s = (struct ColoursScreen*)s_;
-	int steps = Utils_AccumulateWheelDelta(&s->colourAcc, delta);
-	ColoursScreen_AdjustSelected(s_, steps);
-}
-
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	int delta = Input_CalcDelta(key, 1, 10);
+	if (key == CCWHEEL_UP)   delta = +1;
+	if (key == CCWHEEL_DOWN) delta = -1;
+	
 	if (delta) {
 		ColoursScreen_AdjustSelected(s, delta);
 	} else {
@@ -423,7 +419,6 @@ static void ColoursScreen_Activated(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	ColoursScreen_AddWidgets(s);
 
-	s->colourAcc = 0;
 	LCheckbox_Set(&s->cbClassic, Launcher_Theme.ClassicBackground);
 	ColoursScreen_UpdateAll(s);
 }
@@ -437,7 +432,6 @@ void ColoursScreen_SetActive(void) {
 
 	s->Activated  = ColoursScreen_Activated;
 	s->KeyDown    = ColoursScreen_KeyDown;
-	s->MouseWheel = ColoursScreen_MouseWheel;
 
 	s->title          = "Custom theme";
 	s->onEscapeWidget = (struct LWidget*)&s->btnBack;
