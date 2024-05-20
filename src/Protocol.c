@@ -1533,30 +1533,26 @@ static void CPE_ExtEntityTeleport(cc_uint8* data) {
 
 static void CPE_LightingMode(cc_uint8* data) {
 	cc_uint8  mode = *data++;
-	cc_uint8 lockedByte = *data++;
-	cc_bool locked = lockedByte > 0 ? true : false;
-	cc_uint8 oldMode = Lighting_Mode;
+	cc_bool locked = *data++ != 0;
 
 	if (mode == 0) {
 		if (!Lighting_ModeSetByServer) return;
 		/* locked is ignored with mode 0 and always set to false */
 		Lighting_ModeLockedByServer = false;
-		Lighting_ModeSetByServer = false;
-		Lighting_Mode = Lighting_ModeCached;
+		Lighting_ModeSetByServer    = false;
 
-		Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, true);
+		Lighting_SetMode(Lighting_ModeUserCached, true);
 		return;
 	}
 	/* Convert from Network mode (0 = no change, 1 = classic, 2 = fancy) to client mode (0 = classic, 1 = fancy) */
 	mode--;
 	if (mode >= LIGHTING_MODE_COUNT) return;
 
-	if (!Lighting_ModeSetByServer) Lighting_ModeCached = Lighting_Mode;
+	if (!Lighting_ModeSetByServer) Lighting_ModeUserCached = Lighting_Mode;
 	Lighting_ModeLockedByServer = locked;
-	Lighting_ModeSetByServer = true;
-	Lighting_Mode = mode;
+	Lighting_ModeSetByServer    = true;
 
-	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, true);
+	Lighting_SetMode(mode, true);
 }
 
 static void CPE_Reset(void) {

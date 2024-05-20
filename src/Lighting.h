@@ -21,7 +21,8 @@ extern cc_bool Lighting_ModeLockedByServer;
 /* True if the current lighting mode has been set by the server instead of the client */
 extern cc_bool Lighting_ModeSetByServer;
 /* The lighting mode that was set by the client before being set by the server */
-extern cc_uint8 Lighting_ModeCached;
+extern cc_uint8 Lighting_ModeUserCached;
+void Lighting_SetMode(cc_uint8 mode, cc_bool fromServer);
 
 
 /* How much ambient occlusion to apply in fancy lighting where 1.0f = none and 0.0f = maximum*/

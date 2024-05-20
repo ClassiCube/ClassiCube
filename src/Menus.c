@@ -2899,12 +2899,11 @@ static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 }
 static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
 static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
-	cc_uint8 oldMode = Lighting_Mode;
-	Lighting_Mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
+	cc_uint8 mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
 	Options_Set(OPT_LIGHTING_MODE, v);
-	Lighting_ModeSetByServer = false;
 
-	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, false);
+	Lighting_ModeSetByServer = false;
+	Lighting_SetMode(mode, false);
 }
 
 static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }

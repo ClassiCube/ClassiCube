@@ -18,9 +18,17 @@ const char* const LightingMode_Names[LIGHTING_MODE_COUNT] = { "Classic", "Fancy"
 cc_uint8 Lighting_Mode;
 cc_bool  Lighting_ModeLockedByServer;
 cc_bool  Lighting_ModeSetByServer;
-cc_uint8 Lighting_ModeCached;
+cc_uint8 Lighting_ModeUserCached;
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
+
+void Lighting_SetMode(cc_uint8 mode, cc_bool fromServer) {
+	cc_uint8 oldMode = Lighting_Mode;
+	Lighting_Mode    = mode;
+
+	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, fromServer);
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------Classic lighting-----------------------------------------------------*
@@ -435,6 +443,7 @@ static void Lighting_SwitchActive(void) {
 static void Lighting_HandleModeChanged(void* obj, cc_uint8 oldMode, cc_bool fromServer) {
 	if (Lighting_Mode == oldMode) return;
 	Builder_ApplyActive();
+
 	if (World.Loaded) {
 		Lighting_SwitchActive();
 		MapRenderer_Refresh();
@@ -444,11 +453,10 @@ static void Lighting_HandleModeChanged(void* obj, cc_uint8 oldMode, cc_bool from
 }
 
 static void OnInit(void) {
-	
 	Lighting_Mode = Options_GetEnum(OPT_LIGHTING_MODE, LIGHTING_MODE_CLASSIC, LightingMode_Names, LIGHTING_MODE_COUNT);
 	Lighting_ModeLockedByServer = false;
-	Lighting_ModeSetByServer = false;
-	Lighting_ModeCached = Lighting_Mode;
+	Lighting_ModeSetByServer    = false;
+	Lighting_ModeUserCached = Lighting_Mode;
 
 	FancyLighting_OnInit();
 	Lighting_ApplyActive();

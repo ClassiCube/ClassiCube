@@ -583,14 +583,14 @@ void FancyLighting_SetActive(void) {
 
 	Lighting.IsLit_Fast = IsLit_Fast;
 	Lighting.Color_Sprite_Fast = Color;
-	Lighting.Color_YMax_Fast = Color;
-	Lighting.Color_YMin_Fast = Color_YMinSide;
-	Lighting.Color_XSide_Fast = Color_XSide;
-	Lighting.Color_ZSide_Fast = Color_ZSide;
+	Lighting.Color_YMax_Fast   = Color;
+	Lighting.Color_YMin_Fast   = Color_YMinSide;
+	Lighting.Color_XSide_Fast  = Color_XSide;
+	Lighting.Color_ZSide_Fast  = Color_ZSide;
 
-	Lighting.FreeState = FreeState;
+	Lighting.FreeState  = FreeState;
 	Lighting.AllocState = AllocState;
-	Lighting.LightHint = LightHint;
+	Lighting.LightHint  = LightHint;
 }
 
 static void OnEnvVariableChanged(void* obj, int envVar) {
