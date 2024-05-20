@@ -18,12 +18,12 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <kernel.h>
 #include <delaythread.h>
 #include <debug.h>
+#include <ps2ip.h>
 #include <sifrpc.h>
 #include <iopheap.h>
 #include <loadfile.h>
