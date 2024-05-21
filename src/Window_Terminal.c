@@ -9,14 +9,16 @@
 #include "Utils.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
-#include <sys/ioctl.h>
 #include <poll.h>
-#include <linux/keyboard.h>
 #include <sys/ioctl.h>
+#ifdef CC_BUILD_LINUX
 #include <sys/kd.h>
+#include <linux/keyboard.h>
+#endif
 
 // Inspired from https://github.com/Cubified/tuibox/blob/main/tuibox.h#L606
 // Uses '▄' to double the vertical resolution
@@ -29,7 +31,26 @@ static struct winsize ws;
 #define ERASE_CMD(cmd)    CSI cmd "J"
 #define DEC_PM_SET(cmd)   CSI "?" cmd "h"
 #define DEC_PM_RESET(cmd) CSI "?" cmd "1"
+
+#ifdef CC_BUILD_LINUX
 static int orig_KB = K_XLATE;
+#endif
+
+static void UpdateDimensions(void) {
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+
+	DisplayInfo.Width  = ws.ws_col;
+	DisplayInfo.Height = ws.ws_row * 2;
+	DisplayInfo.Depth  = 4;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
+
+	Window_Main.Width  = DisplayInfo.Width;
+	Window_Main.Height = DisplayInfo.Height;	
+}
+
+static cc_bool pendingResize;
+static void sigwinch_handler(int sig) { pendingResize = true; }
 
 void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_NORMAL;
@@ -44,14 +65,8 @@ void Window_Init(void) {
 	raw.c_lflag &= ~(ECHO | ICANON);
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 
-	DisplayInfo.Width  = ws.ws_col;
-	DisplayInfo.Height = ws.ws_row * 2;
-	DisplayInfo.Depth  = 4;
-	DisplayInfo.ScaleX = 0.5f;
-	DisplayInfo.ScaleY = 0.5f;
-
-	Window_Main.Width  = DisplayInfo.Width;
-	Window_Main.Height = DisplayInfo.Height;
+	UpdateDimensions();
+	signal(SIGWINCH, sigwinch_handler);
 
 	// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Normal-tracking-mode
 	printf(DEC_PM_SET("1049")); // Use Normal Screen Buffer and restore cursor as in DECRC, xterm.
@@ -64,17 +79,16 @@ void Window_Init(void) {
 }
 
 void Window_Free(void) {
-	//ioctl(STDIN_FILENO, KDSKBMODE, orig_KB);
+	//ioctl(STDIN_FILENO, KDSKBMODE, orig_KB);	
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
 	
+	printf(DEC_PM_RESET("1049"));
 	printf(CSI "0m");
 	printf(ERASE_CMD("2")); // Ps = 2  ⇒  Erase All.
-	printf(DEC_PM_RESET("1049"));
 	printf(DEC_PM_RESET("1003"));
 	printf(DEC_PM_RESET("1015"));
 	printf(DEC_PM_RESET("1006"));
 	printf(DEC_PM_SET("25"));
-		
-	tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
 }
 
 static void DoCreateWindow(int width, int height) {
@@ -192,8 +206,14 @@ static void ProcessKey(int key) {
 void Window_ProcessEvents(float delta) {
 	char buf[256];
 	int n;
+	
+	if (pendingResize) {
+		pendingResize = false;
+		UpdateDimensions();
+		Event_RaiseVoid(&WindowEvents.Resized);
+	}
+	
 	if (!stdin_available()) return;
-
 	n = read(STDIN_FILENO, buf, sizeof(buf));
 	int A = buf[0];
 	//Platform_Log2("IN: %i, %i", &n, &A);
