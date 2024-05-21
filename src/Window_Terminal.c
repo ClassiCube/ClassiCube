@@ -19,6 +19,8 @@
 #include <sys/kd.h>
 
 // Inspired from https://github.com/Cubified/tuibox/blob/main/tuibox.h#L606
+// Uses '▄' to double the vertical resolution
+// (this trick was inspired from https://github.com/ichinaski/pxl/blob/master/main.go#L30)
 static struct termios tio;
 static struct winsize ws;
 
@@ -43,10 +45,10 @@ void Window_Init(void) {
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 
 	DisplayInfo.Width  = ws.ws_col;
-	DisplayInfo.Height = ws.ws_row;
+	DisplayInfo.Height = ws.ws_row * 2;
 	DisplayInfo.Depth  = 4;
-	DisplayInfo.ScaleX = 0.25f;
-	DisplayInfo.ScaleY = 0.25f;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
 
 	Window_Main.Width  = DisplayInfo.Width;
 	Window_Main.Height = DisplayInfo.Height;
@@ -178,6 +180,9 @@ static void ProcessKey(int key) {
 	if (key >= 'A' && key <= 'Z') {
 		Input_SetPressed(key);
 //		Input_SetReleased(key);
+	} else if (key == ' ') {
+		Input_SetPressed(CCKEY_SPACE);
+		Input_SetReleased(CCKEY_SPACE);
 	}
 }
 
@@ -234,16 +239,17 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	for (int y = r.y; y < r.y + r.height; y++)
+	for (int y = r.y & ~0x01; y < r.y + r.height; y += 2)
 		for (int x = r.x; x < r.x + r.width; x++)
 	{
-		BitmapCol color = Bitmap_GetPixel(bmp, x, y);
-		int R = BitmapCol_R(color);
-		int G = BitmapCol_G(color);
-		int B = BitmapCol_B(color);
+		BitmapCol top = Bitmap_GetPixel(bmp, x, y + 0);
+		BitmapCol bot = Bitmap_GetPixel(bmp, x, y + 1);
 
-		printf(CSI "38;2;%i;%i;%im", R, G, B);
-		printf(CSI "%i;%iH#", y, x);
+		// Use '▄' so each cell can use a background and foreground colour
+		// This essentially doubles the vertical resolution of the displayed image
+		printf(CSI "48;2;%i;%i;%im", BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top));
+		printf(CSI "38;2;%i;%i;%im", BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
+		printf(CSI "%i;%iH\xE2\x96\x84", y / 2, x);
 	}
 }
 
