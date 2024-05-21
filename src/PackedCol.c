@@ -24,6 +24,27 @@ PackedCol PackedCol_Tint(PackedCol a, PackedCol b) {
 	return (a & PACKEDCOL_A_MASK) | (R << PACKEDCOL_R_SHIFT) | (G << PACKEDCOL_G_SHIFT) | (B << PACKEDCOL_B_SHIFT);
 }
 
+PackedCol PackedCol_ScreenBlend(PackedCol a, PackedCol b) {
+	PackedCol finalColor, aInverted, bInverted;
+	cc_uint8 R, G, B;
+	/* With Screen blend mode, the values of the pixels in the two layers are inverted, multiplied, and then inverted again. */
+	R = 255 - PackedCol_R(a);
+	G = 255 - PackedCol_G(a);
+	B = 255 - PackedCol_B(a);
+	aInverted = PackedCol_Make(R, G, B, 255);
+
+	R = 255 - PackedCol_R(b);
+	G = 255 - PackedCol_G(b);
+	B = 255 - PackedCol_B(b);
+	bInverted = PackedCol_Make(R, G, B, 255);
+
+	finalColor = PackedCol_Tint(aInverted, bInverted);
+	R = 255 - PackedCol_R(finalColor);
+	G = 255 - PackedCol_G(finalColor);
+	B = 255 - PackedCol_B(finalColor);
+	return PackedCol_Make(R, G, B, 255);
+}
+
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin) {
 	*xSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_X);
 	*zSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_Z);

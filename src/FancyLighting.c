@@ -47,27 +47,6 @@ static cc_uint8* chunkLightingDataFlags;
 #define CHUNK_ALL_CALCULATED 2
 static LightingChunk* chunkLightingData;
 
-static PackedCol PackedCol_ScreenBlend(PackedCol a, PackedCol b) {
-	PackedCol finalColor, aInverted, bInverted;
-	cc_uint8 R, G, B;
-	/* With Screen blend mode, the values of the pixels in the two layers are inverted, multiplied, and then inverted again. */
-	R = 255 - PackedCol_R(a);
-	G = 255 - PackedCol_G(a);
-	B = 255 - PackedCol_B(a);
-	aInverted = PackedCol_Make(R, G, B, 255);
-
-	R = 255 - PackedCol_R(b);
-	G = 255 - PackedCol_G(b);
-	B = 255 - PackedCol_B(b);
-	bInverted = PackedCol_Make(R, G, B, 255);
-
-	finalColor = PackedCol_Tint(aInverted, bInverted);
-	R = 255 - PackedCol_R(finalColor);
-	G = 255 - PackedCol_G(finalColor);
-	B = 255 - PackedCol_B(finalColor);
-	return PackedCol_Make(R, G, B, 255);
-}
-
 #define MakePaletteIndex(lampLevel, lavaLevel) ((lampLevel << FANCY_LIGHTING_LAMP_SHIFT) | lavaLevel)
 /* Fill in a palette with values based on the current light colors, shaded by the given shade value and lightened by the given ambientColor */
 static void InitPalette(PackedCol* palette, float shaded, PackedCol ambientColor) {
@@ -254,13 +233,11 @@ static void FlushLightQueue(cc_bool isLamp, cc_bool refreshChunk) {
 
 		brightnessHere = GetBrightness(ln.coords.x, ln.coords.y, ln.coords.z, isLamp);
 
-		/* If this cel is already more lit, we can assume this cel and its neighbors have been accounted for */
+		/* If this cell is already more lit, we can assume this cell and its neighbors have been accounted for */
 		if (brightnessHere >= ln.brightness) { continue; }
 		if (ln.brightness == 0) { continue; }
 
-		//Platform_Log4("Placing %i at %i %i %i", &ln.brightness, &ln.coords.x, &ln.coords.y, &ln.coords.z);
 		SetBrightness(ln.brightness, ln.coords.x, ln.coords.y, ln.coords.z, isLamp, refreshChunk);
-
 
 		thisBlock = World_GetBlock(ln.coords.x, ln.coords.y, ln.coords.z);
 		ln.brightness--;
@@ -292,8 +269,8 @@ cc_uint8 GetBlockBrightness(BlockID curBlock, cc_bool isLamp) {
 
 static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
-	int chunkStartX, chunkStartY, chunkStartZ; //world coords
-	int chunkEndX, chunkEndY, chunkEndZ; //world coords
+	/* Block coordinates */
+	int chunkStartX, chunkStartY, chunkStartZ, chunkEndX, chunkEndY, chunkEndZ;
 	cc_uint8 brightness;
 	BlockID curBlock;
 	chunkStartX = cx * CHUNK_SIZE;
@@ -344,8 +321,9 @@ static void CalculateChunkLightingSelf(int chunkIndex, int cx, int cy, int cz) {
 
 static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 	int x, y, z;
-	int chunkStartX, chunkStartY, chunkStartZ; //chunk coords
-	int chunkEndX, chunkEndY, chunkEndZ; //chunk coords
+	/* Chunk coordinates */
+	int chunkStartX, chunkStartY, chunkStartZ;
+	int chunkEndX, chunkEndY, chunkEndZ;
 	int curChunkIndex;
 
 	chunkStartX = cx - 1;
@@ -387,15 +365,15 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 			neighborBlockBrightness = GetBlockBrightness(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), isLamp); \
 			/* This spot is a light caster, mark this spot as needing to be re-spread */ \
 			if (neighborBlockBrightness > 0) { \
-				entry = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBlockBrightness }; \
-				Queue_Enqueue(&lightQueue, &entry); \
+				otherNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBlockBrightness }; \
+				Queue_Enqueue(&lightQueue, &otherNode); \
 			} \
 			if (neighborBrightness > 0) { \
 				/* This neighbor is darker than cur spot, darken it*/ \
 				if (neighborBrightness < curNode.brightness) { \
 					SetBrightness(0, neighborCoords.x, neighborCoords.y, neighborCoords.z, isLamp, true); \
-					neighborNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBrightness }; \
-					Queue_Enqueue(&unlightQueue, &neighborNode); \
+					otherNode = (struct LightNode){ { neighborCoords.x, neighborCoords.y, neighborCoords.z }, neighborBrightness }; \
+					Queue_Enqueue(&unlightQueue, &otherNode); \
 				} \
 				/* This neighbor is brighter or same, mark this spot as needing to be re-spread */ \
 				else { \
@@ -405,9 +383,9 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 						CanLightPass(World_GetBlock(neighborCoords.x, neighborCoords.y, neighborCoords.z), FACE_ ## AXIS ## thatFace) \
 					) \
 					{ \
-						entry = curNode; \
-						entry.brightness = neighborBrightness-1; \
-						Queue_Enqueue(&lightQueue, &entry); \
+						otherNode = curNode; \
+						otherNode.brightness = neighborBrightness-1; \
+						Queue_Enqueue(&lightQueue, &otherNode); \
 					} \
 				} \
 			} \
@@ -416,14 +394,14 @@ static void CalculateChunkLightingAll(int chunkIndex, int cx, int cy, int cz) {
 /* Spreads darkness out from this point and relights any necessary areas afterward */
 static void CalcUnlight(int x, int y, int z, cc_uint8 brightness, cc_bool isLamp) {
 	int count = 0;
-	struct LightNode sourceNode, curNode, entry, neighborNode;
+	struct LightNode curNode, otherNode;
 	cc_uint8 neighborBrightness, neighborBlockBrightness;
 	IVec3 neighborCoords;
 	BlockID thisBlockTrue, thisBlock;
 
 	SetBrightness(0, x, y, z, isLamp, true);
-	sourceNode = (struct LightNode){ { x, y, z }, brightness };
-	Queue_Enqueue(&unlightQueue, &sourceNode);
+	curNode = (struct LightNode){ { x, y, z }, brightness };
+	Queue_Enqueue(&unlightQueue, &curNode);
 
 	while (unlightQueue.count > 0) {
 		curNode = *(struct LightNode*)(Queue_Dequeue(&unlightQueue));
@@ -462,13 +440,12 @@ static void CalcBlockChange(int x, int y, int z, BlockID oldBlock, BlockID newBl
 	cc_uint8 oldLightLevelHere = GetBrightness(x, y, z, isLamp);
 	struct LightNode entry;
 
-	/* Cel has no lighting and new block doesn't cast light and blocks all light, no change */
+	/* Cell has no lighting and new block doesn't cast light and blocks all light, no change */
 	if (!oldLightLevelHere && !newBlockLightLevel && IsFullOpaque(newBlock)) return;
 
-	/* Cel is darker than the new block, only brighter case */
+	/* Cell is darker than the new block, only brighter case */
 	if (oldLightLevelHere < newBlockLightLevel) {
 		/* brighten this spot, recalculate lighting */
-		//Platform_LogConst("Brightening");
 		entry = (struct LightNode){ { x, y, z }, newBlockLightLevel };
 		Queue_Enqueue(&lightQueue, &entry);
 		FlushLightQueue(isLamp, true);
@@ -476,10 +453,7 @@ static void CalcBlockChange(int x, int y, int z, BlockID oldBlock, BlockID newBl
 	}
 
 	/* Light passes through old and new, old block does not cast light, new block does not cast light; no change */
-	if (IsFullTransparent(oldBlock) && IsFullTransparent(newBlock) && !oldBlockLightLevel && !newBlockLightLevel) {
-		//Platform_LogConst("Light passes through old and new and new block does not cast light, no change");
-		return;
-	}
+	if (IsFullTransparent(oldBlock) && IsFullTransparent(newBlock) && !oldBlockLightLevel && !newBlockLightLevel) return;
 
 	CalcUnlight(x, y, z, oldLightLevelHere, isLamp);
 }
@@ -521,7 +495,6 @@ static PackedCol Color_Core(int x, int y, int z, int paletteFace) {
 
 	/* There might be no light data in this chunk even after it was calculated */
 	if (chunkLightingData[chunkIndex] == NULL) {
-		/* 0, no lava or lamp */
 		lightData = 0;
 	} else {
 		chunkCoordsIndex = GlobalCoordsToChunkCoordsIndex(x, y, z);
@@ -565,7 +538,6 @@ static void LightHint(int startX, int startY, int startZ) {
 	/* Add 1 to startX/Z, as coordinates are for the extended chunk (18x18x18) */
 	startX++; startY++; startZ++;
 
-	// precalculate lighting for this chunk and its neighbours
 	cx = (startX + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
 	cy = (startY + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
 	cz = (startZ + HALF_CHUNK_SIZE) >> CHUNK_SHIFT;
