@@ -49,25 +49,14 @@ static void UpdateDimensions(void) {
 	Window_Main.Height = DisplayInfo.Height;	
 }
 
-static cc_bool pendingResize;
-static void sigwinch_handler(int sig) { pendingResize = true; }
-
-void Window_Init(void) {
-	Input.Sources = INPUT_SOURCE_NORMAL;
+static void HookTerminal(void) {
 	struct termios raw;
-
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-	//ioctl(STDIN_FILENO , KDGKBMODE, &orig_KB);
-	//ioctl(STDIN_FILENO,  KDSKBMODE, K_MEDIUMRAW);
-
+	
 	tcgetattr(STDIN_FILENO, &tio);
 	raw = tio;
 	raw.c_lflag &= ~(ECHO | ICANON);
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-
-	UpdateDimensions();
-	signal(SIGWINCH, sigwinch_handler);
-
+	
 	// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Normal-tracking-mode
 	printf(DEC_PM_SET("1049")); // Use Normal Screen Buffer and restore cursor as in DECRC, xterm.
 	printf(CSI "0m");
@@ -78,7 +67,7 @@ void Window_Init(void) {
 	printf(DEC_PM_RESET("25")); // Ps = 2 5  ⇒  Show cursor (DECTCEM), VT220.
 }
 
-void Window_Free(void) {
+static void UnhookTerminal(void) {
 	//ioctl(STDIN_FILENO, KDSKBMODE, orig_KB);	
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
 	
@@ -89,6 +78,28 @@ void Window_Free(void) {
 	printf(DEC_PM_RESET("1015"));
 	printf(DEC_PM_RESET("1006"));
 	printf(DEC_PM_SET("25"));
+}
+
+static cc_bool pendingResize, pendingClose;
+static void sigwinch_handler(int sig) { pendingResize = true; }
+static void sigterm_handler(int sig)  { pendingClose  = true; UnhookTerminal(); }
+
+void Window_Init(void) {
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+	//ioctl(STDIN_FILENO , KDGKBMODE, &orig_KB);
+	//ioctl(STDIN_FILENO,  KDSKBMODE, K_MEDIUMRAW);
+	HookTerminal();
+
+	UpdateDimensions();
+	signal(SIGWINCH, sigwinch_handler);
+	signal(SIGTERM,  sigterm_handler);
+	signal(SIGINT,   sigterm_handler);
+}
+
+void Window_Free(void) {
+	UnhookTerminal();
 }
 
 static void DoCreateWindow(int width, int height) {
@@ -211,6 +222,13 @@ void Window_ProcessEvents(float delta) {
 		pendingResize = false;
 		UpdateDimensions();
 		Event_RaiseVoid(&WindowEvents.Resized);
+	}
+	
+	if (pendingClose) {
+		pendingClose = false;
+		Window_Main.Exists = false;
+		Event_RaiseVoid(&WindowEvents.Closing);
+		return;
 	}
 	
 	if (!stdin_available()) return;
