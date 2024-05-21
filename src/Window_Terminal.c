@@ -153,23 +153,26 @@ static int stdin_available(void) {
   tok = strtok(NULL, ";"); \
   x   = atoi(tok); \
   tok = strtok(NULL, ";"); \
-  y   = atoi(tok);
+  y   = atoi(tok) * 2;
 
 static void ProcessMouse(char* buf, int n) {
-	char cpy[128];
-	char* tok = strtok(cpy+3, ";");
-		int x, y, mouse;
+	char cpy[256+2];
+	strncpy(cpy, buf, n);
+	char* tok = strtok(cpy + 3, ";");
+	int x, y, mouse;
+	if (!tok) return;
 
-    switch(tok[0]){
-      case '0':
-	mouse = (strchr(buf, 'm') == NULL);
-	ExtractXY();
-	Platform_Log2("CLICK: %i, %i", &x, &y);
-	break;
-      case '3':
-	mouse = (strcmp(tok, "32") == 0);
-	ExtractXY();
-	Platform_Log2("HOVER: %i, %i", &x, &y);
+    switch (tok[0]){
+	case '0':
+		mouse = strchr(buf, 'm') == NULL;
+		ExtractXY();
+		Pointer_SetPosition(0, x, y);
+		Input_SetNonRepeatable(CCMOUSE_L, mouse);
+		break;
+	case '3':
+		mouse = (strcmp(tok, "32") == 0);
+		ExtractXY();
+		Pointer_SetPosition(0, x, y);
 	break;
     }
 }
@@ -187,13 +190,13 @@ static void ProcessKey(int key) {
 }
 
 void Window_ProcessEvents(float delta) {
-	char buf[128];
+	char buf[256];
 	int n;
 	if (!stdin_available()) return;
 
 	n = read(STDIN_FILENO, buf, sizeof(buf));
 	int A = buf[0];
-	Platform_Log2("IN: %i, %i", &n, &A);
+	//Platform_Log2("IN: %i, %i", &n, &A);
 
 	if (n >= 4 && buf[0] == '\x1b' && buf[1] == '[' && buf[2] == '<') {
 		ProcessMouse(buf, n);
