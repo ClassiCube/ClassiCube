@@ -46,7 +46,7 @@ CC_VAR extern struct _BlockLists {
 	/* Whether this block prevents lights from passing through it. */
 	cc_bool BlocksLight[BLOCK_COUNT];
 	/* Whether this block is fully bright/light emitting. (Like lava) */
-	cc_bool FullBright[BLOCK_COUNT];
+	cc_uint8 Brightness[BLOCK_COUNT];
 	/* Fog colour when player is inside this block. */
 	/* NOTE: Only applies if fog density is not 0. */
 	PackedCol FogCol[BLOCK_COUNT];
@@ -112,6 +112,8 @@ if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 /* The difference can be seen by placing a lower and upper slab block on a wall, */
 /*  and comparing whether the block directly behind them is in shadow or not */
 #define LIGHT_FLAG_SHADES_FROM_BELOW 6
+cc_uint8 Block_ReadBrightness(cc_uint8 fullBright);
+cc_uint8 Block_WriteFullBright(cc_uint8 brightness);
 
 /* Returns whether the given block has been changed from default */
 cc_bool Block_IsCustomDefined(BlockID block);

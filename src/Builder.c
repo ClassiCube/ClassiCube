@@ -183,7 +183,7 @@ static void PrepareChunk(int x1, int y1, int z1) {
 				if (Blocks.Draw[b] == DRAW_SPRITE) { AddSpriteVertices(b); continue; }
 
 				Builder_X = x; Builder_Y = y; Builder_Z = z;
-				Builder_FullBright = Blocks.FullBright[b];
+				Builder_FullBright = Blocks.Brightness[b];
 				tileIdx = b * BLOCK_COUNT;
 				/* All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times. */
 
@@ -396,7 +396,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 	info->allAir = allAir;
 	if (allAir || allSolid) return;
-	Lighting.LightHint(x1 - 1, z1 - 1);
+	Lighting.LightHint(x1 - 1, y1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
 	xMax = min(World.Width,  x1 + CHUNK_SIZE);
@@ -517,7 +517,7 @@ static void Builder_DrawSprite(int x, int y, int z) {
 		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 	}
 	
-	bright = Blocks.FullBright[Builder_Block];
+	bright = Blocks.Brightness[Builder_Block];
 	part   = &Builder_Parts[Atlas1D_Index(loc)];
 	color  = bright ? PACKEDCOL_WHITE : Lighting.Color_Sprite_Fast(x, y, z);
 	Block_Tint(color, Builder_Block);
@@ -673,7 +673,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 	if (!count_XMin && !count_XMax && !count_ZMin &&
 		!count_ZMax && !count_YMin && !count_YMax) return;
 
-	fullBright = Blocks.FullBright[Builder_Block];
+	fullBright = Blocks.Brightness[Builder_Block];
 	baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	lightFlags = Blocks.LightOffset[Builder_Block];
 
@@ -828,9 +828,9 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 	flags |= Lighting.IsLit_Fast(x, (y + 1) - offset, z) ? LIT_P1 : 0;
 
 	/* If a block is fullbright, it should also look as if that spot is lit */
-	if (Blocks.FullBright[Builder_Chunk[cIndex - 324]]) flags |= LIT_M1;
-	if (Blocks.FullBright[block])                       flags |= LIT_CC;
-	if (Blocks.FullBright[Builder_Chunk[cIndex + 324]]) flags |= LIT_P1;
+	if (Blocks.Brightness[Builder_Chunk[cIndex - 324]]) flags |= LIT_M1;
+	if (Blocks.Brightness[block])                       flags |= LIT_CC;
+	if (Blocks.Brightness[Builder_Chunk[cIndex + 324]]) flags |= LIT_P1;
 	
 	return flags;
 }
@@ -1227,7 +1227,7 @@ static void Adv_RenderBlock(int index, int x, int y, int z) {
 	if (!count_XMin && !count_XMax && !count_ZMin &&
 		!count_ZMax && !count_YMin && !count_YMax) return;
 
-	Builder_FullBright = Blocks.FullBright[Builder_Block];
+	Builder_FullBright = Blocks.Brightness[Builder_Block];
 	adv_baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	adv_tinted     = Blocks.Tinted[Builder_Block];
 
@@ -1272,13 +1272,361 @@ static void AdvBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #endif
 
 
+
+/*########################################################################################################################*
+*-------------------------------------------------Modern mesh builder-----------------------------------------------------*
+*#########################################################################################################################*/
+/* Fast color averaging wizardy from https://stackoverflow.com/questions/8440631/how-would-you-average-two-32-bit-colors-packed-into-an-integer */
+#define AVERAGE(a, b)   ( ((((a) ^ (b)) & 0xfefefefe) >> 1) + ((a) & (b)) )
+
+static cc_bool Modern_IsOccluded(int x, int y, int z) {
+	BlockID block = World_SafeGetBlock(x, y, z);
+	if (Blocks.Brightness[block] > 0) { return false; }
+	/* If the block we're pulling colors from is solid, return a darker version of original and increment how many are like this */
+	if (Blocks.FullOpaque[block] || (Blocks.Draw[block] == DRAW_TRANSPARENT && Blocks.BlocksLight[block] && Blocks.LightOffset[block] == 0xFF)) {
+		return true;
+	}
+	return false;
+}
+
+static cc_bool Modern_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
+	return false;
+}
+
+static int Modern_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
+	int count = 1;
+	if (Builder_OccludedLiquid(chunkIndex)) return 0;
+	AddVertices(block, FACE_YMAX);
+	return count;
+}
+
+static int Modern_StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
+	int count = 1;
+	AddVertices(block, face);
+	return count;
+}
+
+static int Modern_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
+	int count = 1;
+	AddVertices(block, face);
+	return count;
+}
+
+static PackedCol Modern_GetColorX(PackedCol orig, int x, int y, int z, int oY, int oZ) {
+	cc_bool xOccluded =  Modern_IsOccluded(x, y + oY, z     );
+	cc_bool zOccluded =  Modern_IsOccluded(x, y     , z + oZ);
+	cc_bool xzOccluded = Modern_IsOccluded(x, y + oY, z + oZ);
+
+	PackedCol CoX = xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_XSide_Fast(x, y + oY, z     );
+	PackedCol CoZ = zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_XSide_Fast(x, y     , z + oZ);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_XSide_Fast(x, y + oY, z + oZ);
+
+	PackedCol ab = AVERAGE(CoX, CoZ);
+	PackedCol cd = AVERAGE(CoXoZ, orig);
+	return AVERAGE(ab, cd);
+}
+static void Modern_DrawXMin(int count, int x, int y, int z) {
+	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMIN);
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
+
+	float u1 = adv_minBB.z, u2 = (count - 1) + adv_maxBB.z * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	PackedCol tint, white = PACKEDCOL_WHITE;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_XMIN) & 1;
+	PackedCol orig = Lighting.Color_XSide_Fast(x-offset, y, z);
+	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x-offset, y, z, -1, -1);
+	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x-offset, y, z, 1, -1);
+	PackedCol col1_1 = Builder_FullBright ? white : Modern_GetColorX(orig, x-offset, y, z, 1, 1);
+	PackedCol col0_1 = Builder_FullBright ? white : Modern_GetColorX(orig, x-offset, y, z, -1, 1);
+	struct VertexTextured* vertices, v;
+
+	if (adv_tinted) {
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
+	}
+
+	vertices = part->faces.vertices[FACE_XMIN];
+	v.x = adv_x1;
+		v.y = adv_y2; v.z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		              v.z = adv_z1;               v.U = u1;           v.Col = col1_0; *vertices++ = v;
+		v.y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
+		              v.z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
+	part->faces.vertices[FACE_XMIN] = vertices;
+}
+
+static void Modern_DrawXMax(int count, int x, int y, int z) {
+	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMAX);
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
+
+	float u1 = (count - adv_minBB.z), u2 = (1 - adv_maxBB.z) * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	PackedCol tint, white = PACKEDCOL_WHITE;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_XMAX) & 1;
+	PackedCol orig = Lighting.Color_XSide_Fast(x+offset, y, z);
+	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x+offset, y, z, -1, -1);
+	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorX(orig, x+offset, y, z, 1, -1);
+	PackedCol col1_1 = Builder_FullBright ? white : Modern_GetColorX(orig, x+offset, y, z, 1, 1);
+	PackedCol col0_1 = Builder_FullBright ? white : Modern_GetColorX(orig, x+offset, y, z, -1, 1);
+	struct VertexTextured* vertices, v;
+
+	if (adv_tinted) {
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
+	}
+
+	vertices = part->faces.vertices[FACE_XMAX];
+	v.x = adv_x2;
+		v.y = adv_y2; v.z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
+		              v.z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		v.y = adv_y2;                                       v.V = v1; v.Col = col1_0; *vertices++ = v;
+	part->faces.vertices[FACE_XMAX] = vertices;
+}
+
+static PackedCol Modern_GetColorZ(PackedCol orig, int x, int y, int z, int oX, int oY) {
+	cc_bool xOccluded  = Modern_IsOccluded(x + oX, y     , z);
+	cc_bool zOccluded  = Modern_IsOccluded(x,      y + oY, z);
+	cc_bool xzOccluded = Modern_IsOccluded(x + oX, y + oY, z);
+
+	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_ZSide_Fast(x + oX, y     , z);
+	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_ZSide_Fast(x     , y + oY, z);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_ZSide_Fast(x + oX, y + oY, z);
+
+	PackedCol ab = AVERAGE(CoX, CoZ);
+	PackedCol cd = AVERAGE(CoXoZ, orig);
+	return AVERAGE(ab, cd);
+}
+static void Modern_DrawZMin(int count, int x, int y, int z) {
+	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_ZMIN);
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
+
+	float u1 = (count - adv_minBB.x), u2 = (1 - adv_maxBB.x) * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	PackedCol tint, white = PACKEDCOL_WHITE;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_ZMIN) & 1;
+	PackedCol orig = Lighting.Color_ZSide_Fast(x, y, z-offset);
+	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z-offset, -1, -1);
+	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z-offset, 1, -1);
+	PackedCol col1_1 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z-offset, 1, 1);
+	PackedCol col0_1 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z-offset, -1, 1);
+	struct VertexTextured* vertices, v;
+
+	if (adv_tinted) {
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
+	}
+
+	vertices = part->faces.vertices[FACE_ZMIN];
+	v.z = adv_z1;
+		v.x = adv_x1;               v.y = adv_y1; v.U = u1; v.V = v2; v.Col = col0_0; *vertices++ = v;
+		                            v.y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		                            v.y = adv_y1;           v.V = v2; v.Col = col1_0; *vertices++ = v;
+	part->faces.vertices[FACE_ZMIN] = vertices;
+}
+
+static void Modern_DrawZMax(int count, int x, int y, int z) {
+	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_ZMAX);
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
+
+	float u1 = adv_minBB.x, u2 = (count - 1) + adv_maxBB.x * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.y * Atlas1D.InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	PackedCol tint, white = PACKEDCOL_WHITE;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_ZMAX) & 1;
+	PackedCol orig = Lighting.Color_ZSide_Fast(x, y, z+offset);
+	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z+offset, -1, -1);
+	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z+offset, 1, -1);
+	PackedCol col1_1 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z+offset, 1, 1);
+	PackedCol col0_1 = Builder_FullBright ? white : Modern_GetColorZ(orig, x, y, z+offset, -1, 1);
+	struct VertexTextured* vertices, v;
+
+	if (adv_tinted) {
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
+	}
+
+	vertices = part->faces.vertices[FACE_ZMAX];
+	v.z = adv_z2;
+		v.x = adv_x2 + (count - 1); v.y = adv_y2; v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.x = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
+		                            v.y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+	part->faces.vertices[FACE_ZMAX] = vertices;
+}
+
+static PackedCol Modern_GetColorYMin(PackedCol orig, int x, int y, int z, int oX, int oZ) {
+	cc_bool xOccluded  = Modern_IsOccluded(x + oX, y, z     );
+	cc_bool zOccluded  = Modern_IsOccluded(x,      y, z + oZ);
+	cc_bool xzOccluded = Modern_IsOccluded(x + oX, y, z + oZ);
+
+	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_YMin_Fast(x + oX, y, z     );
+	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_YMin_Fast(x     , y, z + oZ);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color_YMin_Fast(x + oX, y, z + oZ);
+
+	PackedCol ab = AVERAGE(CoX, CoZ);
+	PackedCol cd = AVERAGE(CoXoZ, orig);
+	return AVERAGE(ab, cd);
+}
+static void Modern_DrawYMin(int count, int x, int y, int z) {
+	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_YMIN);
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
+
+	float u1 = adv_minBB.x, u2 = (count - 1) + adv_maxBB.x * UV2_Scale;
+	float v1 = vOrigin + adv_minBB.z * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_maxBB.z * Atlas1D.InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	PackedCol tint, white = PACKEDCOL_WHITE;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_YMIN) & 1;
+	PackedCol orig = Lighting.Color_YMin_Fast(x, y-offset, z);
+	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorYMin(orig, x, y-offset, z, -1, -1);
+	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorYMin(orig, x, y-offset, z,  1, -1);
+	PackedCol col1_1 = Builder_FullBright ? white : Modern_GetColorYMin(orig, x, y-offset, z,  1,  1);
+	PackedCol col0_1 = Builder_FullBright ? white : Modern_GetColorYMin(orig, x, y-offset, z, -1,  1);
+	struct VertexTextured* vertices, v;
+
+	if (adv_tinted) {
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
+	}
+
+	vertices = part->faces.vertices[FACE_YMIN];
+	v.y = adv_y1;
+		v.x = adv_x1;               v.z = adv_z2; v.U = u1; v.V = v2; v.Col = col0_1; *vertices++ = v;
+		                            v.z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		                            v.z = adv_z2;           v.V = v2; v.Col = col1_1; *vertices++ = v;
+	part->faces.vertices[FACE_YMIN] = vertices;
+}
+
+static PackedCol Modern_GetColorYMax(PackedCol orig, int x, int y, int z, int oX, int oZ) {
+	cc_bool xOccluded  = Modern_IsOccluded(x + oX, y, z     );
+	cc_bool zOccluded  = Modern_IsOccluded(x,      y, z + oZ);
+	cc_bool xzOccluded = Modern_IsOccluded(x + oX, y, z + oZ);
+
+	PackedCol CoX   =                                xOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color(x + oX, y, z     );
+	PackedCol CoZ   =                                zOccluded ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color(x     , y, z + oZ);
+	PackedCol CoXoZ = (xzOccluded || (xOccluded && zOccluded)) ? PackedCol_Scale(orig, FANCY_AO) : Lighting.Color(x + oX, y, z + oZ);
+
+	PackedCol ab = AVERAGE(CoX, CoZ);
+	PackedCol cd = AVERAGE(CoXoZ, orig);
+	return AVERAGE(ab, cd);
+}
+static void Modern_DrawYMax(int count, int x, int y, int z) {
+	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_YMAX);
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
+
+	float u1 = adv_minBB.x, u2 = (count - 1) + adv_maxBB.x * UV2_Scale;
+	float v1 = vOrigin + adv_minBB.z * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_maxBB.z * Atlas1D.InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	PackedCol tint, white = PACKEDCOL_WHITE;
+	int offset = 1;// (Blocks.LightOffset[Builder_Block] >> FACE_YMAX) & 1;
+	PackedCol orig = Lighting.Color(x, y+offset, z);
+	PackedCol col0_0 = Builder_FullBright ? white : Modern_GetColorYMax(orig, x, y+offset, z, -1, -1);
+	PackedCol col1_0 = Builder_FullBright ? white : Modern_GetColorYMax(orig, x, y+offset, z,  1, -1);
+	PackedCol col1_1 = Builder_FullBright ? white : Modern_GetColorYMax(orig, x, y+offset, z,  1,  1);
+	PackedCol col0_1 = Builder_FullBright ? white : Modern_GetColorYMax(orig, x, y+offset, z, -1,  1);
+
+	struct VertexTextured* vertices, v;
+
+	if (adv_tinted) {
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
+	}
+
+	vertices = part->faces.vertices[FACE_YMAX];
+	v.y = adv_y2;
+		v.x = adv_x1;               v.z = adv_z1; v.U = u1; v.V = v1; v.Col = col0_0; *vertices++ = v;
+		                            v.z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
+		v.x = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		                            v.z = adv_z1;           v.V = v1; v.Col = col1_0; *vertices++ = v;
+	part->faces.vertices[FACE_YMAX] = vertices;
+}
+
+static void Modern_RenderBlock(int index, int x, int y, int z) {
+	Vec3 min, max;
+	int count_XMin, count_XMax, count_ZMin;
+	int count_ZMax, count_YMin, count_YMax;
+
+	if (Blocks.Draw[Builder_Block] == DRAW_SPRITE) {
+		Builder_DrawSprite(x, y, z); return;
+	}
+
+	count_XMin = Builder_Counts[index + FACE_XMIN];
+	count_XMax = Builder_Counts[index + FACE_XMAX];
+	count_ZMin = Builder_Counts[index + FACE_ZMIN];
+	count_ZMax = Builder_Counts[index + FACE_ZMAX];
+	count_YMin = Builder_Counts[index + FACE_YMIN];
+	count_YMax = Builder_Counts[index + FACE_YMAX];
+
+	if (!count_XMin && !count_XMax && !count_ZMin &&
+		!count_ZMax && !count_YMin && !count_YMax) return;
+
+	Builder_FullBright = Blocks.Brightness[Builder_Block];
+	adv_baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
+	adv_tinted = Blocks.Tinted[Builder_Block];
+
+	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
+	adv_x1 = x + min.x; adv_y1 = y + min.y; adv_z1 = z + min.z;
+	adv_x2 = x + max.x; adv_y2 = y + max.y; adv_z2 = z + max.z;
+
+	adv_minBB = Blocks.MinBB[Builder_Block]; adv_maxBB = Blocks.MaxBB[Builder_Block];
+	adv_minBB.y = 1.0f - adv_minBB.y; adv_maxBB.y = 1.0f - adv_maxBB.y;
+
+	if (count_XMin) Modern_DrawXMin(count_XMin, x, y, z);
+	if (count_XMax) Modern_DrawXMax(count_XMax, x, y, z);
+	if (count_ZMin) Modern_DrawZMin(count_ZMin, x, y, z);
+	if (count_ZMax) Modern_DrawZMax(count_ZMax, x, y, z);
+	if (count_YMin) Modern_DrawYMin(count_YMin, x, y, z);
+	if (count_YMax) Modern_DrawYMax(count_YMax, x, y, z);
+}
+
+static void Modern_PrePrepareChunk(void) {
+	DefaultPrePrepateChunk();
+	adv_bitFlags = Builder_BitFlags;
+}
+
+static void ModernBuilder_SetActive(void) {
+	Builder_SetDefault();
+	Builder_StretchXLiquid =  Modern_StretchXLiquid;
+	Builder_StretchX =        Modern_StretchX;
+	Builder_StretchZ =        Modern_StretchZ;
+	Builder_RenderBlock =     Modern_RenderBlock;
+	Builder_PrePrepareChunk = Modern_PrePrepareChunk;
+}
+
 /*########################################################################################################################*
 *---------------------------------------------------Builder interface-----------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Builder_SmoothLighting;
 void Builder_ApplyActive(void) {
 	if (Builder_SmoothLighting) {
-		AdvBuilder_SetActive();
+		if (Lighting_Mode != LIGHTING_MODE_CLASSIC) {
+			ModernBuilder_SetActive();
+		}
+		else {
+			AdvBuilder_SetActive();
+		}
 	} else {
 		NormalBuilder_SetActive();
 	}

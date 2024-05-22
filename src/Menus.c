@@ -27,6 +27,7 @@
 #include "Deflate.h"
 #include "Stream.h"
 #include "Builder.h"
+#include "Lighting.h"
 #include "Logger.h"
 #include "Options.h"
 #include "Input.h"
@@ -2381,7 +2382,7 @@ static struct MenuOptionsScreen {
 	Screen_Body
 	const char* descriptions[MENUOPTS_MAX_OPTS + 1];
 	struct ButtonWidget* activeBtn;
-	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
+	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged, OnLightingModeServerChanged;
 	int numButtons;
 	struct FontDesc titleFont, textFont;
 	struct TextGroupWidget extHelp;
@@ -2576,6 +2577,14 @@ static void MenuOptionsScreen_OnHacksChanged(void* screen) {
 	if (s->OnHacksChanged) s->OnHacksChanged(s);
 	s->dirty = true;
 }
+static void MenuOptionsScreen_OnLightingModeServerChanged(void* screen, cc_uint8 oldMode, cc_bool fromServer) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	/* This event only actually matters if it's from the server */
+	if (fromServer) {
+		if (s->OnLightingModeServerChanged) s->OnLightingModeServerChanged(s);
+		s->dirty = true;
+	}
+}
 
 static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
@@ -2598,6 +2607,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
 	s->extHelp.lines = 0;
 	Event_Register_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Register_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
 	
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -2621,6 +2631,7 @@ static void MenuOptionsScreen_Render(void* screen, float delta) {
 static void MenuOptionsScreen_Free(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Event_Unregister_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Unregister_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
 	Gui_RemoveCore((struct Screen*)&MenuInputOverlay);
 }
 
@@ -2860,15 +2871,32 @@ void EnvSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
+static void GraphicsOptionsScreen_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->widgets;
+	cc_bool disabled = Lighting_ModeLockedByServer;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widgets[4];
+
+	MenuOptionsScreen_Update(s, btn);
+	Widget_SetDisabled(widgets[4], disabled);
+	MenuInputOverlay_CheckStillValid(s);
+}
+
 static void GraphicsOptionsScreen_GetViewDist(cc_string* v) { String_AppendInt(v, Game_ViewDistance); }
 static void GraphicsOptionsScreen_SetViewDist(const cc_string* v) { Game_UserSetViewDistance(Menu_Int(v)); }
 
 static void GraphicsOptionsScreen_GetSmooth(cc_string* v) { Menu_GetBool(v, Builder_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
-	Lighting_ApplyActive();
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
+}
+static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
+static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
+	cc_uint8 mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
+	Options_Set(OPT_LIGHTING_MODE, v);
+
+	Lighting_ModeSetByServer = false;
+	Lighting_SetMode(mode, false);
 }
 
 static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
@@ -2906,9 +2934,10 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
 		{ -1,  -50, "View distance",     MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
-		{ -1,    0, "Advanced lighting", MenuOptionsScreen_Bool,
+		{ -1,    0, "Smooth lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
-
+		{ -1,  50,  "Lighting mode", MenuOptionsScreen_Enum,
+			GraphicsOptionsScreen_GetLighting,   GraphicsOptionsScreen_SetLighting },
 		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
 		{ 1, -100, "Names",   MenuOptionsScreen_Enum,
@@ -2925,7 +2954,11 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50,  "Anaglyph 3D", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
+
+	s->OnLightingModeServerChanged = GraphicsOptionsScreen_CheckLightingModeAllowed;
+
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	GraphicsOptionsScreen_CheckLightingModeAllowed(s);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
 	s->descriptions[1] = \
@@ -2933,14 +2966,22 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
-	s->descriptions[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	s->descriptions[5] = \
+	s->descriptions[3] = \
+		"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
+		"&cNote: &eThis setting may reduce performance.";
+	s->descriptions[4] = \
+		"&eClassic: &fTwo levels of light, sun and shadow.\n" \
+		"    Good for performance.\n" \
+		"&eFancy: &fBright blocks cast a much wider range of light\n" \
+		"    May heavily reduce performance.\n" \
+		"&cNote: &eIn multiplayer, this option may be changed or locked by the server.";
+	s->descriptions[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	s->descriptions[6] = \
+	s->descriptions[7] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
@@ -2951,8 +2992,9 @@ void GraphicsOptionsScreen_Show(void) {
 	MenuInput_Float(menuOpts_descs[0], 1, 100, 20);
 	MenuInput_Enum(menuOpts_descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(menuOpts_descs[2],  8, 4096, 512);
-	MenuInput_Enum(menuOpts_descs[5], NameMode_Names,   NAME_MODE_COUNT);
-	MenuInput_Enum(menuOpts_descs[6], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[4], LightingMode_Names, LIGHTING_MODE_COUNT)
+	MenuInput_Enum(menuOpts_descs[6], NameMode_Names,     NAME_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[7], ShadowMode_Names,   SHADOW_MODE_COUNT);
 
 	MenuOptionsScreen_Show(GraphicsOptionsScreen_InitWidgets);
 }

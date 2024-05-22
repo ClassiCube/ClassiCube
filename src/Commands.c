@@ -689,8 +689,8 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		Blocks.DigSounds[block]  = v;
 	} else if (String_CaselessEqualsConst(prop, "fullbright")) {
 		if (!BlockEditCommand_GetBool(value, "Full brightness", &b))  return;
-
-		Blocks.FullBright[block] = b;
+		//TODO: Fix this, brightness isn't just a bool anymore
+		Blocks.Brightness[block] = b;
 	} else if (String_CaselessEqualsConst(prop, "blockslight")) {
 		if (!BlockEditCommand_GetBool(value, "Blocks light", &b)) return;
 

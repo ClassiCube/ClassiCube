@@ -87,7 +87,7 @@ static void IsometricDrawer_Angled(BlockID block, float size) {
 	Drawer.Z1 = scale * (1.0f - min.z * 2.0f);
 	Drawer.Z2 = scale * (1.0f - max.z * 2.0f);
 
-	bright = Blocks.FullBright[block];
+	bright = Blocks.Brightness[block];
 	Drawer.Tinted  = Blocks.Tinted[block];
 	Drawer.TintCol = Blocks.FogCol[block];
 

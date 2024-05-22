@@ -7,9 +7,28 @@
 #include "Logger.h"
 #include "Event.h"
 #include "Game.h"
+#include "String.h"
+#include "Chat.h"
+#include "ExtMath.h"
 #include "Options.h"
+#include "Builder.h"
+
+const char* const LightingMode_Names[LIGHTING_MODE_COUNT] = { "Classic", "Fancy" };
+
+cc_uint8 Lighting_Mode;
+cc_bool  Lighting_ModeLockedByServer;
+cc_bool  Lighting_ModeSetByServer;
+cc_uint8 Lighting_ModeUserCached;
 struct _Lighting Lighting;
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
+
+void Lighting_SetMode(cc_uint8 mode, cc_bool fromServer) {
+	cc_uint8 oldMode = Lighting_Mode;
+	Lighting_Mode    = mode;
+
+	Event_RaiseLightingMode(&WorldEvents.LightingModeChanged, oldMode, fromServer);
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------Classic lighting-----------------------------------------------------*
@@ -47,18 +66,18 @@ static int ClassicLighting_CalcHeightAt(int x, int maxY, int z, int hIndex) {
 	return -10;
 }
 
-static int ClassicLighting_GetLightHeight(int x, int z) {
+int ClassicLighting_GetLightHeight(int x, int z) {
 	int hIndex = Lighting_Pack(x, z);
 	int lightH = classic_heightmap[hIndex];
 	return lightH == HEIGHT_UNCALCULATED ? ClassicLighting_CalcHeightAt(x, World.Height - 1, z, hIndex) : lightH;
 }
 
 /* Outside color is same as sunlight color, so we reuse when possible */
-static cc_bool ClassicLighting_IsLit(int x, int y, int z) {
+cc_bool ClassicLighting_IsLit(int x, int y, int z) {
 	return y > ClassicLighting_GetLightHeight(x, z);
 }
 
-static cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z) {
+cc_bool ClassicLighting_IsLit_Fast(int x, int y, int z) {
 	return y > classic_heightmap[Lighting_Pack(x, z)];
 }
 
@@ -69,7 +88,7 @@ static PackedCol ClassicLighting_Color(int x, int y, int z) {
 
 static PackedCol SmoothLighting_Color(int x, int y, int z) {
 	if (!World_Contains(x, y, z)) return Env.SunCol;
-	if (Blocks.FullBright[World_GetBlock(x, y, z)]) return Env.SunCol;
+	if (Blocks.Brightness[World_GetBlock(x, y, z)]) return Env.SunCol;
 	return y > ClassicLighting_GetLightHeight(x, z) ? Env.SunCol : Env.ShadowCol;
 }
 
@@ -98,7 +117,7 @@ static PackedCol ClassicLighting_Color_ZSide_Fast(int x, int y, int z) {
 	return y > classic_heightmap[Lighting_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
 }
 
-static void ClassicLighting_Refresh(void) {
+void ClassicLighting_Refresh(void) {
 	int i;
 	for (i = 0; i < World.Width * World.Length; i++) {
 		classic_heightmap[i] = HEIGHT_UNCALCULATED;
@@ -236,7 +255,7 @@ static void ClassicLighting_RefreshAffected(int x, int y, int z, BlockID block, 
 	}
 }
 
-static void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+void ClassicLighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 	int hIndex = Lighting_Pack(x, z);
 	int lightH = classic_heightmap[hIndex];
 	int newHeight;
@@ -355,7 +374,7 @@ static void Heightmap_FinishCoverage(int x1, int z1, int xCount, int zCount) {
 }
 
 
-static void ClassicLighting_LightHint(int startX, int startZ) {
+void ClassicLighting_LightHint(int startX, int startY, int startZ) {
 	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
@@ -367,12 +386,12 @@ static void ClassicLighting_LightHint(int startX, int startZ) {
 	}
 }
 
-static void ClassicLighting_FreeState(void) {
+void ClassicLighting_FreeState(void) {
 	Mem_Free(classic_heightmap);
 	classic_heightmap = NULL;
 }
 
-static void ClassicLighting_AllocState(void) {
+void ClassicLighting_AllocState(void) {
 	classic_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
 	if (classic_heightmap) {
 		ClassicLighting_Refresh();
@@ -407,12 +426,43 @@ static void ClassicLighting_SetActive(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
-
-void Lighting_ApplyActive() {
-	ClassicLighting_SetActive();
+static void Lighting_ApplyActive(void) {
+	if (Lighting_Mode != LIGHTING_MODE_CLASSIC) {
+		FancyLighting_SetActive();
+	} else {
+		ClassicLighting_SetActive();
+	}
 }
 
-static void OnInit(void)         { ClassicLighting_SetActive(); }
+static void Lighting_SwitchActive(void) {
+	Lighting.FreeState();
+	Lighting_ApplyActive();
+	Lighting.AllocState();
+}
+
+static void Lighting_HandleModeChanged(void* obj, cc_uint8 oldMode, cc_bool fromServer) {
+	if (Lighting_Mode == oldMode) return;
+	Builder_ApplyActive();
+
+	if (World.Loaded) {
+		Lighting_SwitchActive();
+		MapRenderer_Refresh();
+	} else {
+		Lighting_ApplyActive();
+	}
+}
+
+static void OnInit(void) {
+	Lighting_Mode = Options_GetEnum(OPT_LIGHTING_MODE, LIGHTING_MODE_CLASSIC, LightingMode_Names, LIGHTING_MODE_COUNT);
+	Lighting_ModeLockedByServer = false;
+	Lighting_ModeSetByServer    = false;
+	Lighting_ModeUserCached = Lighting_Mode;
+
+	FancyLighting_OnInit();
+	Lighting_ApplyActive();
+
+	Event_Register_(&WorldEvents.LightingModeChanged, NULL, Lighting_HandleModeChanged);
+}
 static void OnReset(void)        { Lighting.FreeState(); }
 static void OnNewMapLoaded(void) { Lighting.AllocState(); }
 

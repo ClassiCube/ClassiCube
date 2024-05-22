@@ -183,10 +183,12 @@ void Env_Reset(void) {
 	PackedCol_GetShaded(Env.SunCol, &Env.SunXSide,
 		&Env.SunZSide, &Env.SunYMin);
 
-	Env.SkyCol    = ENV_DEFAULT_SKY_COLOR;
-	Env.FogCol    = ENV_DEFAULT_FOG_COLOR;
-	Env.CloudsCol = ENV_DEFAULT_CLOUDS_COLOR;
-	Env.SkyboxCol = ENV_DEFAULT_SKYBOX_COLOR;
+	Env.SkyCol       = ENV_DEFAULT_SKY_COLOR;
+	Env.FogCol       = ENV_DEFAULT_FOG_COLOR;
+	Env.CloudsCol    = ENV_DEFAULT_CLOUDS_COLOR;
+	Env.SkyboxCol    = ENV_DEFAULT_SKYBOX_COLOR;
+	Env.LavaLightCol = ENV_DEFAULT_LAVALIGHT_COLOR;
+	Env.LampLightCol = ENV_DEFAULT_LAMPLIGHT_COLOR;
 	Env.Weather   = WEATHER_SUNNY;
 	Env.ExpFog    = false;
 }
@@ -247,7 +249,12 @@ void Env_SetCloudsCol(PackedCol color) {
 void Env_SetSkyboxCol(PackedCol color) {
 	Env_Set(color, Env.SkyboxCol, ENV_VAR_SKYBOX_COLOR);
 }
-
+void Env_SetLavaLightCol(PackedCol color) {
+	Env_Set(color, Env.LavaLightCol, ENV_VAR_LAVALIGHT_COLOR);
+}
+void Env_SetLampLightCol(PackedCol color) {
+	Env_Set(color, Env.LampLightCol, ENV_VAR_LAMPLIGHT_COLOR);
+}
 void Env_SetSunCol(PackedCol color) {
 	PackedCol_GetShaded(color, &Env.SunXSide, &Env.SunZSide, &Env.SunYMin);
 	Env_Set(color, Env.SunCol, ENV_VAR_SUN_COLOR);
