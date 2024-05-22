@@ -417,6 +417,9 @@ typedef cc_uint8  cc_bool;
 #if defined DEFAULT_WIN_BACKEND && !defined CC_WIN_BACKEND
 	#define CC_WIN_BACKEND DEFAULT_WIN_BACKEND
 #endif
+#if defined DEFAULT_GFX_BACKEND && !defined CC_GFX_BACKEND
+	#define CC_GFX_BACKEND DEFAULT_GFX_BACKEND
+#endif
 
 #ifdef CC_BUILD_CONSOLE
 #undef CC_BUILD_FREETYPE
