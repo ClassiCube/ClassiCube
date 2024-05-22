@@ -129,7 +129,7 @@ void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
 	iso_posX = x; iso_posY = y;
 	/* See comment in Gfx_Make2DQuad() for why 0.5 is subtracted in D3D9 */
 	/* TODO pass as arguments? test diff */
-#ifdef CC_BUILD_D3D9
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	iso_posX -= 0.5f; iso_posY -= 0.5f;
 #endif
 

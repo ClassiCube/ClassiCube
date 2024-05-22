@@ -242,7 +242,7 @@ void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matri
 	FrustumCulling_Normalise(&frustum30, &frustum31, &frustum32, &frustum33);
 
 	/* Extract the FAR plane (Different for each graphics backend) */
-#if defined CC_BUILD_D3D9 || defined CC_BUILD_D3D11
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11)
 	/* OpenGL and Direct3D require slightly different behaviour for NEAR clipping planes */
 	/* https://www.gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf */
 	/* (and because reverse Z is used, 'NEAR' plane is actually the 'FAR' clipping plane) */
