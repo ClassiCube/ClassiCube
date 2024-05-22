@@ -62,6 +62,7 @@ static void HookTerminal(void) {
 	
 	GetConsoleMode(hStdin,  &inOldMode);
 	GetConsoleMode(hStdout, &outOldMode);
+	SetConsoleOutputCP(CP_UTF8);
 
 	SetConsoleMode(hStdin,  ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 	SetConsoleMode(hStdout, ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
@@ -432,7 +433,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 #ifdef CC_BUILD_WIN
 	#define OutputConsole(buf, len) WriteConsole(hStdout, buf, len, NULL, NULL)
-	#define BOX_CHAR "\xDC"
+	#define BOX_CHAR "\xE2\x96\x84"
 #else
 	#define OutputConsole(buf, len) write(STDOUT_FILENO, buf, len)
 	#define BOX_CHAR "\xE2\x96\x84"
