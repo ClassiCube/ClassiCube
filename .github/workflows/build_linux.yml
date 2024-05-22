@@ -25,7 +25,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get -y update
-          sudo apt-get -y install gcc-multilib libx11-dev:i386 libxi-dev:i386 libgl1-mesa-dev:i386 libsdl2-dev:i386
+          sudo apt-get -y install gcc-multilib libx11-dev:i386 libxi-dev:i386 libgl1-mesa-dev:i386
       - name: Compile 32 bit Linux builds
         shell: bash
         id: compile
@@ -38,7 +38,6 @@ jobs:
           cd src
           gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -o cc-nix32-gl1 -lX11 -lXi -lpthread -lGL -lm -ldl
           gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-nix32-gl2 -lX11 -lXi -lpthread -lGL -lm -ldl
-          gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.NIX32_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2 -o cc-sdl32-gl2 -lSDL2 -lpthread -lGL -lm -ldl
 
 
       - uses: ./.github/actions/notify_failure
@@ -59,12 +58,6 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc-nix32-gl2'
           DEST_NAME: 'ClassiCube-Linux32-ModernGL'
-          
-      - uses: ./.github/actions/upload_build
-        if: ${{ always() && steps.compile.outcome == 'success' }}
-        with:
-          SOURCE_FILE: 'src/cc-sdl32-gl2'
-          DEST_NAME: 'ClassiCube-Linux32-SDL2'
           
           
       - uses: ./.github/actions/notify_success

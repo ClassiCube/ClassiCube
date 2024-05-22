@@ -1,5 +1,5 @@
 #include "Core.h"
-#ifdef CC_BUILD_D3D11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
