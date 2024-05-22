@@ -1,6 +1,6 @@
 #define GL_SILENCE_DEPRECATION
 #include "Core.h"
-#ifdef CC_BUILD_COCOA
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_COCOA
 #include "_WindowBase.h"
 #include "ExtMath.h"
 #include "Funcs.h"

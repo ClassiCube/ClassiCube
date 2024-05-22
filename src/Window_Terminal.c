@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_TERMINAL
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_TERMINAL
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"

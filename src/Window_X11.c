@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL2 && !defined CC_BUILD_SDL3
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_X11
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -270,7 +270,7 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_EGL
+#if defined CC_BUILD_EGL || !defined CC_BUILD_GL
 static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;

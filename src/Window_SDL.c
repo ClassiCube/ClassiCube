@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_SDL2
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_SDL2
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"

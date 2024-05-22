@@ -117,6 +117,13 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
+#define CC_WIN_BACKEND_X11      1
+#define CC_WIN_BACKEND_WIN32    2
+#define CC_WIN_BACKEND_COCOA    3
+#define CC_WIN_BACKEND_TERMINAL 4
+#define CC_WIN_BACKEND_SDL2     5
+#define CC_WIN_BACKEND_SDL3     6
+#define CC_WIN_BACKEND_BEOS     7
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
@@ -149,10 +156,10 @@ typedef cc_uint8  cc_bool;
 #elif defined _WIN32
 	#define CC_BUILD_WIN
 	#define CC_BUILD_D3D9
-	#define CC_BUILD_WINGUI
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_SCHANNEL
 	#define CC_BUILD_WINMM
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32
 #elif defined __ANDROID__
 	#define CC_BUILD_ANDROID
 	#define CC_BUILD_MOBILE
@@ -167,17 +174,17 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SERENITY
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_GL
-	#define CC_BUILD_SDL
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_SDL2
 #elif defined __linux__
 	#define CC_BUILD_LINUX
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_GL
-	#define CC_BUILD_X11
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 	#if defined CC_BUILD_RPI
 	#define CC_BUILD_GLMODERN
 	#define CC_BUILD_GLES
@@ -195,7 +202,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_CFNETWORK
 	#else
-	#define CC_BUILD_COCOA
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_COCOA
 	#define CC_BUILD_MACOS
 	#define CC_BUILD_CURL
 	#endif
@@ -204,7 +211,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_SOLARIS
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_GL
-	#define CC_BUILD_X11
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
@@ -213,28 +220,28 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
 	#define CC_BUILD_GL
-	#define CC_BUILD_X11
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __OpenBSD__
 	#define CC_BUILD_OPENBSD
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
 	#define CC_BUILD_GL
-	#define CC_BUILD_X11
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __NetBSD__
 	#define CC_BUILD_NETBSD
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
 	#define CC_BUILD_GL
-	#define CC_BUILD_X11
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __HAIKU__
 	#define CC_BUILD_HAIKU
 	#define CC_BUILD_POSIX
@@ -242,6 +249,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
 	#define CC_BACKTRACE_BUILTIN
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_BEOS
 #elif defined __BEOS__
 	#define CC_BUILD_BEOS
 	#define CC_BUILD_POSIX
@@ -250,14 +258,15 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_OPENAL
 	#define CC_BACKTRACE_BUILTIN
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_BEOS
 #elif defined __sgi
 	#define CC_BUILD_IRIX
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_GL
-	#define CC_BUILD_X11
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
 	#define CC_BIG_ENDIAN
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __EMSCRIPTEN__
 	#define CC_BUILD_WEB
 	#define CC_BUILD_GL
@@ -398,6 +407,11 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_ADVLIGHTING
 	#undef  CC_BUILD_FILESYSTEM
 #endif
+#endif
+
+/* Use platform default unless override is provided via command line/makefile/etc */
+#if defined DEFAULT_WIN_BACKEND && !defined CC_WIN_BACKEND
+	#define CC_WIN_BACKEND DEFAULT_WIN_BACKEND
 #endif
 
 #ifdef CC_BUILD_CONSOLE

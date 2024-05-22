@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_WINGUI && !defined CC_BUILD_SDL
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_WIN32
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
