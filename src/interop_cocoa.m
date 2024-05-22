@@ -1,4 +1,6 @@
 #define GL_SILENCE_DEPRECATION
+#include "Core.h"
+#ifdef CC_BUILD_COCOA
 #include "_WindowBase.h"
 #include "ExtMath.h"
 #include "Funcs.h"
@@ -244,7 +246,9 @@ static void RefreshWindowBounds(void) {
 
 - (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
+#ifdef CC_BUILD_GL
 	GLContext_Update();
+#endif
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
@@ -924,4 +928,5 @@ cc_result Window_ExitFullscreen(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
+#endif
 #endif

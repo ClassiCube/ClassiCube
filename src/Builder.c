@@ -1276,6 +1276,7 @@ static void AdvBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 /*########################################################################################################################*
 *-------------------------------------------------Modern mesh builder-----------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_ADVLIGHTING
 /* Fast color averaging wizardy from https://stackoverflow.com/questions/8440631/how-would-you-average-two-32-bit-colors-packed-into-an-integer */
 #define AVERAGE(a, b)   ( ((((a) ^ (b)) & 0xfefefefe) >> 1) + ((a) & (b)) )
 
@@ -1614,6 +1615,9 @@ static void ModernBuilder_SetActive(void) {
 	Builder_RenderBlock =     Modern_RenderBlock;
 	Builder_PrePrepareChunk = Modern_PrePrepareChunk;
 }
+#else
+static void ModernBuilder_SetActive(void) { NormalBuilder_SetActive(); }
+#endif
 
 /*########################################################################################################################*
 *---------------------------------------------------Builder interface-----------------------------------------------------*

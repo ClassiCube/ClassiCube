@@ -29,10 +29,10 @@ static struct Queue unlightQueue;
 #define PALLETE_GROUP_COUNT 2
 #define PALETTE_COUNT (PALETTE_SHADES * PALLETE_GROUP_COUNT)
 
-#define PALETTE_YMAX_INDEX 0
+#define PALETTE_YMAX_INDEX  0
 #define PALETTE_XSIDE_INDEX 1
 #define PALETTE_ZSIDE_INDEX 2
-#define PALETTE_YMIN_INDEX 3
+#define PALETTE_YMIN_INDEX  3
 
 /* Index into palettes of light colors. */
 /* There are 8 different palettes: Four block-face shades for shadowed areas and four block-face shades for sunlit areas. */
