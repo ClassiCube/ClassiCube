@@ -35,7 +35,7 @@ static cc_bool pendingResize, pendingClose;
 
 #ifdef CC_BUILD_WIN
 static HANDLE hStdin, hStdout;
-static DWORD fdwSaveOldMode;
+static DWORD inOldMode, outOldMode;
 
 static void UpdateDimensions(void) {
 	CONSOLE_SCREEN_BUFFER_INFO csbi = { 0 };
@@ -44,6 +44,7 @@ static void UpdateDimensions(void) {
     GetConsoleScreenBufferInfo(hStdout, &csbi);
     cols = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
     rows = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;
+	Platform_Log2("RESIZE: %i, %i", &cols, &rows);
 
 	DisplayInfo.Width  = cols;
 	DisplayInfo.Height = rows * 2;
@@ -58,14 +59,17 @@ static void UpdateDimensions(void) {
 static void HookTerminal(void) {
 	hStdin  = GetStdHandle(STD_INPUT_HANDLE);
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	GetConsoleMode(hStdin, &fdwSaveOldMode);
+	
+	GetConsoleMode(hStdin,  &inOldMode);
+	GetConsoleMode(hStdout, &outOldMode);
 
-	DWORD mode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
-	SetConsoleMode(hStdin, mode);
+	SetConsoleMode(hStdin,  ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+	SetConsoleMode(hStdout, ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT);
 }
 
 static void UnhookTerminal(void) {
-	SetConsoleMode(hStdin, fdwSaveOldMode);
+	SetConsoleMode(hStdin,  inOldMode);
+	SetConsoleMode(hStdout, outOldMode);
 }
 
 static BOOL WINAPI consoleHandler(DWORD signal) {
@@ -204,12 +208,10 @@ void Window_RequestClose(void) {
 #ifdef CC_BUILD_WIN
 static void KeyEventProc(KEY_EVENT_RECORD ker)
 {
-	printf("Key event: ");
-
 	if(ker.bKeyDown)
-		printf("key pressed\n");
+		Platform_LogConst("key pressed");
 	else 
-		printf("key released\n");
+		Platform_LogConst("key released");
 }
 
 static VOID MouseEventProc(MOUSE_EVENT_RECORD mer) {
@@ -218,28 +220,28 @@ static VOID MouseEventProc(MOUSE_EVENT_RECORD mer) {
 		case 0:
 			if(mer.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED)
 			{
-				printf("left button press \n");
+				Platform_LogConst("left button press");
 			}
 			else if(mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED)
 			{
-				printf("right button press \n");
+				Platform_LogConst("right button press");
 			}
 			else
 			{
-				printf("button press\n");
+				Platform_LogConst("button press");
 			}
 			break;
 		case DOUBLE_CLICK:
-			printf("double click\n");
+			Platform_LogConst("double click");
 			break;
 		case MOUSE_MOVED:
-			printf("mouse moved\n");
+			Platform_LogConst("mouse moved");
 			break;
 		case MOUSE_WHEELED:
-			printf("vertical mouse wheel\n");
+			Platform_LogConst("vertical mouse wheel");
 			break;
 		default:
-			printf("unknown\n");
+			Platform_LogConst("unknown");
 			break;
 	}
 }
@@ -275,12 +277,8 @@ static int MapNativeMouse(int button) {
 	if (button == 2) return CCMOUSE_M;
 	if (button == 3) return CCMOUSE_R;
 
-	if (button ==  8) return CCMOUSE_X1;
-	if (button ==  9) return CCMOUSE_X2;
-	if (button == 10) return CCMOUSE_X3;
-	if (button == 11) return CCMOUSE_X4;
-	if (button == 12) return CCMOUSE_X5;
-	if (button == 13) return CCMOUSE_X6;
+	if (button == 8) return CCMOUSE_X1;
+	if (button == 9) return CCMOUSE_X2;
 
 	/* Mouse horizontal and vertical scroll */
 	if (button >= 4 && button <= 7) return 0;
@@ -351,12 +349,10 @@ static void ProcessKey(int raw) {
 	}
 }
 
-static void ProcessConsoleEvents(float delta) {
+static void ProcessConsoleInput(void) {
 	char buf[256];
-	int n;
 
-	if (!stdin_available()) return;
-	n = read(STDIN_FILENO, buf, sizeof(buf));
+	int n = read(STDIN_FILENO, buf, sizeof(buf));
 	int A = buf[0];
 	//Platform_Log2("IN: %i, %i", &n, &A);
 
@@ -365,6 +361,10 @@ static void ProcessConsoleEvents(float delta) {
 	} else if (buf[0] >= 32 && buf[0] < 127) {
 		ProcessKey(buf[0]);
 	}
+}
+
+static void ProcessConsoleEvents(float delta) {
+	if (stdin_available()) ProcessConsoleInput();
 	
 	event_time += delta;
 	// Auto release keys after a while
@@ -430,10 +430,23 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
+#ifdef CC_BUILD_WIN
+	#define OutputConsole(buf, len) WriteConsole(hStdout, buf, len, NULL, NULL)
+	#define BOX_CHAR "\xDC"
+#else
+	#define OutputConsole(buf, len) write(STDOUT_FILENO, buf, len)
+	#define BOX_CHAR "\xE2\x96\x84"
+#endif
+
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	char buf[256];
+	int len;
+	
 	for (int y = r.y & ~0x01; y < r.y + r.height; y += 2)
 	{
-		printf(CSI "%i;%iH", y / 2, r.x); // move cursor to start
+		len = sprintf(buf, CSI "%i;%iH", y / 2, r.x); // move cursor to start
+		OutputConsole(buf, len);
+		
 		for (int x = r.x; x < r.x + r.width; x++)
 		{
 			BitmapCol top = Bitmap_GetPixel(bmp, x, y + 0);
@@ -444,10 +457,11 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			//printf(CSI "48;2;%i;%i;%im", BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top));
 			//printf(CSI "38;2;%i;%i;%im", BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
 			//printf("\xE2\x96\x84");
-			printf(CSI "48;2;%i;%i;%im" CSI "38;2;%i;%i;%im" "\xE2\x96\x84", 
-					BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top),
-					BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
-		}
+			len = sprintf(buf, CSI "48;2;%i;%i;%im" CSI "38;2;%i;%i;%im" BOX_CHAR, 
+							BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top),
+							BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
+			OutputConsole(buf, len);
+		}		
 	}
 }
 
