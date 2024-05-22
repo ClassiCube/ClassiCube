@@ -522,7 +522,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	}
 }
 
-#if defined CC_BUILD_GL || defined CC_BUILD_D3D9
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
 /* Slightly more efficient implementations are defined in the backends */
 #else
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {

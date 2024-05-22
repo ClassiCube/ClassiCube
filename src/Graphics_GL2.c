@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"

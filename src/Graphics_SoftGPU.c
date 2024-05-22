@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_SOFTGPU
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_SOFTGPU
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"

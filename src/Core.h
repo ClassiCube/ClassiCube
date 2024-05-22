@@ -125,6 +125,11 @@ typedef cc_uint8  cc_bool;
 #define CC_WIN_BACKEND_SDL3     6
 #define CC_WIN_BACKEND_BEOS     7
 
+#define CC_GFX_BACKEND_GL      1
+#define CC_GFX_BACKEND_D3D9    2
+#define CC_GFX_BACKEND_D3D11   3
+#define CC_GFX_BACKEND_SOFTGPU 4
+
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE
 #define CC_BUILD_RESOURCES
@@ -155,121 +160,119 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 #elif defined _WIN32
 	#define CC_BUILD_WIN
-	#define CC_BUILD_D3D9
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_SCHANNEL
 	#define CC_BUILD_WINMM
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_D3D9
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_WIN32
 #elif defined __ANDROID__
 	#define CC_BUILD_ANDROID
 	#define CC_BUILD_MOBILE
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
 	#define CC_BUILD_GLMODERN
 	#define CC_BUILD_GLES
 	#define CC_BUILD_EGL
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_OPENSLES
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 #elif defined __serenity__
 	#define CC_BUILD_SERENITY
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_SDL2
 #elif defined __linux__
 	#define CC_BUILD_LINUX
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 	#if defined CC_BUILD_RPI
-	#define CC_BUILD_GLMODERN
-	#define CC_BUILD_GLES
-	#define CC_BUILD_EGL
+		#define CC_BUILD_GLMODERN
+		#define CC_BUILD_GLES
+		#define CC_BUILD_EGL
 	#endif
 #elif defined __APPLE__
 	#define CC_BUILD_DARWIN
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#if defined __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
-	#define CC_BUILD_MOBILE
-	#define CC_BUILD_GLES
-	#define CC_BUILD_GLMODERN
-	#define CC_BUILD_IOS
-	#define CC_BUILD_TOUCH
-	#define CC_BUILD_CFNETWORK
+		#define CC_BUILD_MOBILE
+		#define CC_BUILD_GLES
+		#define CC_BUILD_GLMODERN
+		#define CC_BUILD_IOS
+		#define CC_BUILD_TOUCH
+		#define CC_BUILD_CFNETWORK
 	#else
-	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_COCOA
-	#define CC_BUILD_MACOS
-	#define CC_BUILD_CURL
+		#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_COCOA
+		#define CC_BUILD_MACOS
+		#define CC_BUILD_CURL
 	#endif
 	#define CC_BUILD_OPENAL
 #elif defined __sun__
 	#define CC_BUILD_SOLARIS
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
-	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __FreeBSD__ || defined __DragonFly__
 	#define CC_BUILD_FREEBSD
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
-	#define CC_BUILD_GL
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
-	#define CC_BUILD_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __OpenBSD__
 	#define CC_BUILD_OPENBSD
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
-	#define CC_BUILD_GL
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __NetBSD__
 	#define CC_BUILD_NETBSD
 	#define CC_BUILD_POSIX
 	#define CC_BUILD_BSD
-	#define CC_BUILD_GL
 	#define CC_BUILD_XINPUT2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __HAIKU__
 	#define CC_BUILD_HAIKU
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
 	#define CC_BACKTRACE_BUILTIN
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_BEOS
 #elif defined __BEOS__
 	#define CC_BUILD_BEOS
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
 	#define CC_BUILD_GL11
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_OPENAL
 	#define CC_BACKTRACE_BUILTIN
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_BEOS
 #elif defined __sgi
 	#define CC_BUILD_IRIX
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_GL
 	#define CC_BUILD_CURL
 	#define CC_BUILD_OPENAL
 	#define CC_BIG_ENDIAN
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_X11
 #elif defined __EMSCRIPTEN__
 	#define CC_BUILD_WEB
-	#define CC_BUILD_GL
 	#define CC_BUILD_GLMODERN
 	#define CC_BUILD_GLES
 	#define CC_BUILD_TOUCH
@@ -280,6 +283,7 @@ typedef cc_uint8  cc_bool;
 	#undef  CC_BUILD_FREETYPE
 	#undef  CC_BUILD_RESOURCES
 	#undef  CC_BUILD_PLUGINS
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 #elif defined __psp__
 	#define CC_BUILD_PSP
 	#define CC_BUILD_CONSOLE
@@ -371,10 +375,10 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
 	#define CC_BUILD_TOUCH
-	#define CC_BUILD_GL
 	#define CC_BUILD_GLMODERN
 	#define CC_BUILD_GLES
 	#define CC_BUILD_EGL
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
 #elif defined PLAT_PS1
 	#define CC_BUILD_PS1
 	#define CC_BUILD_CONSOLE
@@ -390,10 +394,10 @@ typedef cc_uint8  cc_bool;
 #elif defined OS2
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
-	#define CC_BUILD_SOFTGPU
-	#define CC_BUILD_SDL2
 	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_SDL2
 #elif defined PLAT_SATURN
 	#define CC_BUILD_SATURN
 	#define CC_BUILD_CONSOLE
@@ -455,13 +459,7 @@ typedef struct cc_string_ {
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
 
-#if defined CC_BUILD_GL
-/* NOTE: Although normally OpenGL object/resource IDs are 32 bit integers, */
-/*  OpenGL 1.1 does actually use the full 64 bits for 'dynamic' vertex buffers */
-typedef cc_uintptr GfxResourceID;
-#else
 typedef void* GfxResourceID;
-#endif
 
 /* Contains the information to describe a 2D textured quad. */
 struct Texture {

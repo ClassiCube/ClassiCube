@@ -246,7 +246,7 @@ static void RefreshWindowBounds(void) {
 
 - (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
-#ifdef CC_BUILD_GL
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 	GLContext_Update();
 #endif
 }
@@ -736,7 +736,7 @@ void OnscreenKeyboard_Close(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 

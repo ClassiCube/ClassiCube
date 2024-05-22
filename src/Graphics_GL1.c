@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_GL && !defined CC_BUILD_GLMODERN
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -207,11 +207,11 @@ static void LoadCoreFuncs(void) {
 static GfxResourceID GL_GenBuffer(void) {
 	GLuint id;
 	_glGenBuffers(1, &id);
-	return id;
+	return uint_to_ptr(id);
 }
 
 static void GL_DelBuffer(GfxResourceID id) {
-	GLuint gl_id = (GLuint)id;
+	GLuint gl_id = ptr_to_uint(id);
 	_glDeleteBuffers(1, &gl_id);
 }
 
@@ -275,10 +275,10 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) { 
 	return glGenLists(1); 
 }
-void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
+void Gfx_BindVb(GfxResourceID vb) { activeList = ptr_to_uint(vb); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
+	GLuint id = ptr_to_uint(*vb);
 	if (id) glDeleteLists(id, 1);
 	*vb = 0;
 }
@@ -365,21 +365,21 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
 	activeList      = gl_DYNAMICLISTID;
-	dynamicListData = (void*)vb;
+	dynamicListData = vb;
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
-	void* addr = (void*)(*vb);
+	void* addr = *vb;
 	if (addr) Mem_Free(addr);
 	*vb = 0;
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return (void*)vb; }
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return vb; }
 void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_BindDynamicVb(vb);
-	Mem_Copy((void*)vb, vertices, vCount * gfx_stride);
+	Mem_Copy(vb, vertices, vCount * gfx_stride);
 }
 #endif
 
@@ -479,7 +479,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_BindTexture(GfxResourceID texId) {
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
+	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
 
 
@@ -640,7 +640,7 @@ static GfxResourceID GenFakeBuffer(void) {
 }
 
 static void DelFakeBuffer(GfxResourceID id) {
-	Mem_Free((void*)id);
+	Mem_Free(id);
 }
 
 static void APIENTRY fake_bufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {

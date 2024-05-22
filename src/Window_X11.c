@@ -270,7 +270,7 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_EGL || !defined CC_BUILD_GL
+#if defined CC_BUILD_EGL || (CC_GFX_BACKEND != CC_GFX_BACKEND_GL)
 static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;
@@ -1306,7 +1306,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 #include <GL/glx.h>
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);

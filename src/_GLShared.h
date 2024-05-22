@@ -18,6 +18,9 @@
 #define TRANSFER_FORMAT GL_UNSIGNED_BYTE
 #endif
 
+#define uint_to_ptr(raw) ((void*)((cc_uintptr)raw))
+#define ptr_to_uint(raw) ((GLuint)((cc_uintptr)(raw)))
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
@@ -147,11 +150,11 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	}
 
 	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, rowWidth, false);
-	return texId;
+	return uint_to_ptr(texId);
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
+	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 
 	if (part->width == rowWidth) {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
@@ -163,7 +166,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	GLuint id = (GLuint)(*texId);
+	GLuint id = ptr_to_uint(*texId);
 	if (id) glDeleteTextures(1, &id);
 	*texId = 0;
 }

@@ -1239,13 +1239,13 @@ static void CloseLogFile(void) {
 }
 #endif
 
-#if defined CC_BUILD_D3D11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
 	#define GFX_BACKEND " (Direct3D11)"
-#elif defined CC_BUILD_D3D9
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	#define GFX_BACKEND " (Direct3D9)"
-#elif defined CC_BUILD_GLMODERN
+#elif (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
 	#define GFX_BACKEND " (ModernGL)"
-#elif defined CC_BUILD_GL
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 	#define GFX_BACKEND " (OpenGL)"
 #else
 	#define GFX_BACKEND " (Unknown)"

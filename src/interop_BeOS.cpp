@@ -785,7 +785,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static cc_bool win_vsync;
 
 void GLContext_Create(void) {
@@ -823,6 +823,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif // CC_BUILD_GL && !CC_BUILD_EGL
+#endif // CC_GFX_BACKEND == CC_GFX_BACKEND_GL && !CC_BUILD_EGL
+
 #endif // !CC_BUILD_SDL
 #endif
