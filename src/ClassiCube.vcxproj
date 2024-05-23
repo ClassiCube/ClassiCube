@@ -563,6 +563,7 @@
     <ClCompile Include="Window_SDL.c" />
     <ClCompile Include="Window_SDL3.c" />
     <ClCompile Include="Window_Switch.c" />
+    <ClCompile Include="Window_Terminal.c" />
     <ClCompile Include="Window_Web.c" />
     <ClCompile Include="Window_WiiU.cpp" />
     <ClCompile Include="Window_Win.c" />

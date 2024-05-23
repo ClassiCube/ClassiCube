@@ -8,7 +8,6 @@
 #include "Errors.h"
 #include "Utils.h"
 #include <stdio.h>
-#include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +15,7 @@
 #ifdef CC_BUILD_WIN
 #include <windows.h>
 #else
+#include <unistd.h>
 #include <termios.h>
 #include <poll.h>
 #include <sys/ioctl.h>
@@ -439,14 +439,31 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	#define BOX_CHAR "\xE2\x96\x84"
 #endif
 
+// TODO doesn't work
+static void AppendByteFast(cc_string* str, int value) {
+	if (value >= 100) { String_Append(str, '0' + (value / 100)); value %= 100; }
+	if (value >=  10) { String_Append(str, '0' + (value /  10)); value %=  10; }
+	String_Append(str, '0' + value);
+}
+
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	char buf[256];
+	cc_string str;
 	int len;
+	String_InitArray(str, buf);
 	
 	for (int y = r.y & ~0x01; y < r.y + r.height; y += 2)
 	{
-		len = sprintf(buf, CSI "%i;%iH", y / 2, r.x); // move cursor to start
-		OutputConsole(buf, len);
+		//len = sprintf(buf, CSI "%i;%iH", y / 2, r.x); // move cursor to start
+		//OutputConsole(buf, len);
+		str.length = 0;
+		String_AppendConst(&str, CSI);
+		String_AppendInt(  &str, y / 2);
+		String_Append(     &str, ';');
+		String_AppendInt(  &str, r.x);
+		String_Append(     &str, 'H');
+		String_Append(     &str, '\0');
+		OutputConsole(buf, str.length);
 		
 		for (int x = r.x; x < r.x + r.width; x++)
 		{
@@ -458,10 +475,30 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 			//printf(CSI "48;2;%i;%i;%im", BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top));
 			//printf(CSI "38;2;%i;%i;%im", BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
 			//printf("\xE2\x96\x84");
-			len = sprintf(buf, CSI "48;2;%i;%i;%im" CSI "38;2;%i;%i;%im" BOX_CHAR, 
-							BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top),
-							BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
-			OutputConsole(buf, len);
+			//len = sprintf(buf, CSI "48;2;%i;%i;%im" CSI "38;2;%i;%i;%im" BOX_CHAR, 
+			//				BitmapCol_R(top), BitmapCol_G(top), BitmapCol_B(top),
+			//				BitmapCol_R(bot), BitmapCol_G(bot), BitmapCol_B(bot));
+			
+			str.length = 0;
+			String_AppendConst(&str, CSI "48;2;");
+			String_AppendInt(  &str, BitmapCol_R(top));
+			String_Append(     &str, ';');
+			String_AppendInt(  &str, BitmapCol_G(top));
+			String_Append(     &str, ';');
+			String_AppendInt(  &str, BitmapCol_B(top));
+			String_Append(     &str, 'm');
+			
+			String_AppendConst(&str, CSI "38;2;");
+			String_AppendInt(  &str, BitmapCol_R(bot));
+			String_Append(     &str, ';');
+			String_AppendInt(  &str, BitmapCol_G(bot));
+			String_Append(     &str, ';');
+			String_AppendInt(  &str, BitmapCol_B(bot));
+			String_Append(     &str, 'm');
+			
+			String_AppendConst(&str, BOX_CHAR);
+			String_Append(     &str, '\0');
+			OutputConsole(buf, str.length);
 		}		
 	}
 }
