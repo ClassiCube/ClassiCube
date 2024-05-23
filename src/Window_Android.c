@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_ANDROID && !defined CC_BUILD_SDL
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_ANDROID
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -146,6 +146,14 @@ static void JNICALL java_processPointerMove(JNIEnv* env, jobject o, jint id, jin
 	Input_UpdateTouch(id, x, y);
 }
 
+static void JNICALL java_processJoystickL(JNIEnv* env, jobject o, jint x, jint y) {
+	Gamepad_SetAxis(0, PAD_AXIS_LEFT,  x / 4096.0f, y / 4096.0f);
+}
+
+static void JNICALL java_processJoystickR(JNIEnv* env, jobject o, jint x, jint y) {
+	Gamepad_SetAxis(0, PAD_AXIS_RIGHT, x / 4096.0f, y / 4096.0f);
+}
+
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - CREATED");
 	win_handle        = ANativeWindow_fromSurface(env, surface);
@@ -233,6 +241,9 @@ static const JNINativeMethod methods[] = {
 	{ "processPointerDown", "(IIII)V", java_processPointerDown },
 	{ "processPointerUp",   "(IIII)V", java_processPointerUp },
 	{ "processPointerMove", "(IIII)V", java_processPointerMove },
+
+	{ "processJoystickL", "(II)V", java_processJoystickL },
+	{ "processJoystickR", "(II)V", java_processJoystickR },
 
 	{ "processSurfaceCreated",      "(Landroid/view/Surface;)V",  java_processSurfaceCreated },
 	{ "processSurfaceDestroyed",    "()V",                        java_processSurfaceDestroyed },

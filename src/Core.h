@@ -117,13 +117,14 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
-#define CC_WIN_BACKEND_X11      1
-#define CC_WIN_BACKEND_WIN32    2
-#define CC_WIN_BACKEND_COCOA    3
-#define CC_WIN_BACKEND_TERMINAL 4
-#define CC_WIN_BACKEND_SDL2     5
-#define CC_WIN_BACKEND_SDL3     6
-#define CC_WIN_BACKEND_BEOS     7
+#define CC_WIN_BACKEND_TERMINAL 1
+#define CC_WIN_BACKEND_SDL2     2
+#define CC_WIN_BACKEND_SDL3     3
+#define CC_WIN_BACKEND_X11      10
+#define CC_WIN_BACKEND_WIN32    11
+#define CC_WIN_BACKEND_COCOA    12
+#define CC_WIN_BACKEND_BEOS     13
+#define CC_WIN_BACKEND_ANDROID  14
 
 #define CC_GFX_BACKEND_GL      1
 #define CC_GFX_BACKEND_D3D9    2
@@ -175,6 +176,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_TOUCH
 	#define CC_BUILD_OPENSLES
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
+	#define DEFAULT_WIN_BACKEND CC_WIN_BACKEND_ANDROID
 #elif defined __serenity__
 	#define CC_BUILD_SERENITY
 	#define CC_BUILD_POSIX

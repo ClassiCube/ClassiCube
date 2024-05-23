@@ -157,6 +157,9 @@ public class MainActivity extends Activity
 	public final static int CMD_UI_CLICKED  = 22;
 	public final static int CMD_UI_CHANGED  = 23;
 	public final static int CMD_UI_STRING   = 24;
+
+	public final static int CMD_GPAD_AXISL  = 25;
+	public final static int CMD_GPAD_AXISR  = 26;
 	
 	
 	// ====================================================================
@@ -343,7 +346,10 @@ public class MainActivity extends Activity
 			case CMD_POINTER_DOWN: processPointerDown(c.arg1, c.arg2, c.arg3, c.arg4); break;
 			case CMD_POINTER_UP:   processPointerUp(  c.arg1, c.arg2, c.arg3, c.arg4); break;
 			case CMD_POINTER_MOVE: processPointerMove(c.arg1, c.arg2, c.arg3, c.arg4); break;
-	
+
+			case CMD_GPAD_AXISL: processJoystickL(c.arg1, c.arg2); break;
+			case CMD_GPAD_AXISR: processJoystickR(c.arg1, c.arg2); break;
+
 			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur);   break;
 			case CMD_WIN_DESTROYED: processSurfaceDestroyed();      break;
 			case CMD_WIN_RESIZED:   processSurfaceResized(c.sur);   break;
@@ -377,6 +383,9 @@ public class MainActivity extends Activity
 	native void processPointerDown(int id, int x, int y, int isMouse);
 	native void processPointerUp(  int id, int x, int y, int isMouse);
 	native void processPointerMove(int id, int x, int y, int isMouse);
+
+	native void processJoystickL(int x, int y);
+	native void processJoystickR(int x, int y);
 
 	native void processSurfaceCreated(Surface sur);
 	native void processSurfaceDestroyed();
@@ -414,7 +423,18 @@ public class MainActivity extends Activity
 		curView = view;
 		setContentView(view);
 		curView.requestFocus();
+
 		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
+		hookMotionListener(view);
+	}
+	
+	void hookMotionListener(View view) {
+		try {
+			CCMotionListener listener = new CCMotionListener(this);
+			view.setOnGenericMotionListener(listener);
+		} catch (Exception ex) {
+			// Unsupported on android 12
+		}
 	}
 	
 	// SurfaceHolder.Callback - API level 1
