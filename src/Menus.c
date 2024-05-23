@@ -3217,7 +3217,7 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			HacksSettingsScreen_GetClipping, HacksSettingsScreen_SetClipping },
 		{ -1,    0, "Jump height",      MenuOptionsScreen_Input,
 			HacksSettingsScreen_GetJump,     HacksSettingsScreen_SetJump },
-		{ -1,   50, "WOM style hacks",  MenuOptionsScreen_Bool,
+		{ -1,   50, "WoM style hacks",  MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetWOMHacks, HacksSettingsScreen_SetWOMHacks },
 	
 		{ 1, -150, "Full block stepping", MenuOptionsScreen_Bool,
@@ -3238,6 +3238,11 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
 	s->descriptions[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
+	s->descriptions[4] = \
+		"&eIf &fON&e, gives you a triple jump which increases speed massively.\n" \
+		"&eThis is based on the \"World of Minecraft\" classic client mod,\n" \
+		"&ewhich popularized hacks conventions and controls\n" \
+		"&ebefore ClassiCube was created.";
 	s->descriptions[7] = \
 		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
 		"&ethe block to be placed, and you to be moved out of the way.\n" \
