@@ -18,7 +18,7 @@
 #define TRANSFER_FORMAT GL_UNSIGNED_BYTE
 #endif
 
-#define uint_to_ptr(raw) ((void*)((cc_uintptr)raw))
+#define uint_to_ptr(raw) ((void*)((cc_uintptr)(raw)))
 #define ptr_to_uint(raw) ((GLuint)((cc_uintptr)(raw)))
 
 

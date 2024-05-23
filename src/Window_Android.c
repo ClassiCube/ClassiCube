@@ -147,11 +147,11 @@ static void JNICALL java_processPointerMove(JNIEnv* env, jobject o, jint id, jin
 }
 
 static void JNICALL java_processJoystickL(JNIEnv* env, jobject o, jint x, jint y) {
-	Gamepad_SetAxis(0, PAD_AXIS_LEFT,  x / 4096.0f, y / 4096.0f);
+	Gamepad_SetAxis(0, PAD_AXIS_LEFT,  x / 4096.0f, y / 4096.0f, 1.0f / 60);
 }
 
 static void JNICALL java_processJoystickR(JNIEnv* env, jobject o, jint x, jint y) {
-	Gamepad_SetAxis(0, PAD_AXIS_RIGHT, x / 4096.0f, y / 4096.0f);
+	Gamepad_SetAxis(0, PAD_AXIS_RIGHT, x / 4096.0f, y / 4096.0f, 1.0f / 60);
 }
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
