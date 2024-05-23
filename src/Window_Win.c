@@ -39,6 +39,10 @@
 /* Missing when compiling with some older winapi SDKs */
 #define WM_INPUT       0x00FF
 #endif
+#ifndef WM_MOUSEHWHEEL
+/* Missing when compiling with some older winapi SDKs */
+#define WM_MOUSEHWHEEL 0x020E
+#endif
 
 static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
@@ -178,7 +182,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEWHEEL:
 		wheelDelta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
-		Mouse_ScrollWheel(wheelDelta);
+		Mouse_ScrollVWheel(wheelDelta);
+		return 0;
+	case WM_MOUSEHWHEEL:
+		wheelDelta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
+		Mouse_ScrollHWheel(wheelDelta);
 		return 0;
 
 	case WM_LBUTTONDOWN:

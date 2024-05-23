@@ -49,7 +49,8 @@ static void DeferredEnableRawMouse(void) {
 
 static EM_BOOL OnMouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
 	/* TODO: The scale factor isn't standardised.. is there a better way though? */
-	Mouse_ScrollWheel(-Math_Sign(ev->deltaY));
+	Mouse_ScrollHWheel(-Math_Sign(ev->deltaX));
+	Mouse_ScrollVWheel(-Math_Sign(ev->deltaY));
 	DeferredEnableRawMouse();
 	return true;
 }

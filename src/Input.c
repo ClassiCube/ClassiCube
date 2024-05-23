@@ -330,9 +330,9 @@ void Pointer_SetPressed(int idx, cc_bool pressed) {
 	}
 }
 
-static float scrollingAcc;
-void Mouse_ScrollWheel(float delta) {
-	int steps = Utils_AccumulateWheelDelta(&scrollingAcc, delta);
+static float scrollingVAcc;
+void Mouse_ScrollVWheel(float delta) {
+	int steps = Utils_AccumulateWheelDelta(&scrollingVAcc, delta);
 	Event_RaiseFloat(&InputEvents.Wheel, delta);
 	
 	if (steps > 0) {
@@ -343,6 +343,21 @@ void Mouse_ScrollWheel(float delta) {
 		for (; steps != 0; steps++) 
 			Input_SetPressed(CCWHEEL_DOWN);
 		Input_SetReleased(CCWHEEL_DOWN);
+	}
+}
+
+static float scrollingHAcc;
+void Mouse_ScrollHWheel(float delta) {
+	int steps = Utils_AccumulateWheelDelta(&scrollingHAcc, delta);
+	
+	if (steps > 0) {
+		for (; steps != 0; steps--) 
+			Input_SetPressed(CCWHEEL_RIGHT);
+		Input_SetReleased(CCWHEEL_RIGHT);
+	} else if (steps < 0) {
+		for (; steps != 0; steps++) 
+			Input_SetPressed(CCWHEEL_LEFT);
+		Input_SetReleased(CCWHEEL_LEFT);
 	}
 }
 

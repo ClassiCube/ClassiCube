@@ -239,7 +239,8 @@ void Window_ProcessEvents(float delta) {
 		case SDL_EVENT_MOUSE_BUTTON_UP:
 			OnMouseEvent(&e); break;
 		case SDL_EVENT_MOUSE_WHEEL:
-			Mouse_ScrollWheel(e.wheel.y);
+			Mouse_ScrollHWheel(e.wheel.x);
+			Mouse_ScrollVWheel(e.wheel.y);
 			break;
 		case SDL_EVENT_MOUSE_MOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);

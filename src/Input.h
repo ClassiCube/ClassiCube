@@ -146,9 +146,11 @@ void Input_RemoveTouch(long id, int x, int y);
 
 /* Data for mouse and touch */
 extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
-/* Raises InputEvents.Wheel with the given wheel delta. */
-void Mouse_ScrollWheel(float delta);
-/* Sets X and Y position of the given pointer, always raising PointerEvents.Moved. */
+/* Raises appropriate events for a mouse vertical scroll */
+void Mouse_ScrollVWheel(float delta);
+/* Raises appropriate events for a mouse horizontal scroll */
+void Mouse_ScrollHWheel(float delta);
+/* Sets X and Y position of the given pointer, then raises appropriate events */
 void Pointer_SetPosition(int idx, int x, int y);
 
 

@@ -655,8 +655,10 @@ void Window_ProcessEvents(float delta) {
 		case ButtonPress:
 			btn = MapNativeMouse(e.xbutton.button);
 			if (btn) Input_SetPressed(btn);
-			else if (e.xbutton.button == 4) Mouse_ScrollWheel(+1);
-			else if (e.xbutton.button == 5) Mouse_ScrollWheel(-1);
+			else if (e.xbutton.button == 4) Mouse_ScrollVWheel( +1);
+			else if (e.xbutton.button == 5) Mouse_ScrollVWheel( -1);
+			else if (e.xbutton.button == 6) Mouse_ScrollHWheel(+1);
+			else if (e.xbutton.button == 7) Mouse_ScrollHWheel(-1);
 			break;
 
 		case ButtonRelease:

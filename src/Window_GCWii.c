@@ -336,7 +336,7 @@ static void ProcessNunchuck_Game(int port, int mods, float delta) {
 	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_FLY], mods & WPAD_BUTTON_LEFT);
 
 	if (mods & WPAD_BUTTON_RIGHT) {
-		Mouse_ScrollWheel(1.0*delta);
+		Mouse_ScrollVWheel(1.0*delta);
 	}
 
 	Input_SetNonRepeatable(KeyBinds_Normal[KEYBIND_THIRD_PERSON], mods & WPAD_BUTTON_UP);

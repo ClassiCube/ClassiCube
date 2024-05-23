@@ -500,7 +500,7 @@ static void DebugScrollEvent(NSEvent* ev) {
 void Window_ProcessEvents(float delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
-	float dy;
+	float dx, dy;
 	
 	// https://wiki.freepascal.org/Cocoa_Internals/Application 
 	[pool release];
@@ -554,15 +554,19 @@ void Window_ProcessEvents(float delta) {
 
 		case 22: // NSScrollWheel
 			if (scroll_debugging) DebugScrollEvent(ev);
+			dx    = [ev deltaX];
 			dy    = [ev deltaY];
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175
 			//  delta is in 'line height' units, but I don't know how to map that to actual units.
 			// All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that
 			//  sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll.
 			// So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards.
-			//  TODO: Figure out if there's a better way than this. */
+			//  TODO: Figure out if there's a better way than this. */	
+			steps = dx > 0.0f ? Math_Ceil(dx) : Math_Floor(dx);
+			Mouse_ScrollHWheel(steps);
+			
 			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
-			Mouse_ScrollWheel(steps);
+			Mouse_ScrollVWheel(steps);
 			break;
 
 		case  5: // NSMouseMoved
