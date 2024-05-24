@@ -3239,9 +3239,9 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
 	s->descriptions[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
 	s->descriptions[4] = \
-		"&eIf &fON&e, gives you a triple jump which increases speed massively.\n" \
-		"&eThis is based on the \"World of Minecraft\" classic client mod,\n" \
-		"&ewhich popularized hacks conventions and controls\n" \
+		"&eIf &fON&e, gives you a triple jump which increases speed massively,\n" \
+		"&ealong with older noclip style. This is based on the \"World of Minecraft\"\n" \
+		"&eclassic client mod, which popularized hacks conventions and controls\n" \
 		"&ebefore ClassiCube was created.";
 	s->descriptions[7] = \
 		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
