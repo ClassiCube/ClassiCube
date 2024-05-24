@@ -190,7 +190,8 @@ static void ClearTouches(void) { }
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 #define Pad_Names \
-"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", "PAD_Z", \
+"PAD_A", "PAD_B", "PAD_X", "PAD_Y", "PAD_L", "PAD_R", \
+"PAD_Z", "PAD_C", "PAD_D", \
 "PAD_LEFT", "PAD_RIGHT", "PAD_UP", "PAD_DOWN", \
 "PAD_START", "PAD_SELECT", "PAD_ZL", "PAD_ZR", \
 "PAD_LSTICK", "PAD_RSTICK", \

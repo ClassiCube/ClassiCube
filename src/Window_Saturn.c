@@ -95,6 +95,9 @@ static void ProcessButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_A, mods & PERIPHERAL_DIGITAL_A);
 	Gamepad_SetButton(port, CCPAD_B, mods & PERIPHERAL_DIGITAL_B);
 	Gamepad_SetButton(port, CCPAD_X, mods & PERIPHERAL_DIGITAL_C);
+	
+	Gamepad_SetButton(port, CCPAD_Y, mods & PERIPHERAL_DIGITAL_X);
+	Gamepad_SetButton(port, CCPAD_Z, mods & PERIPHERAL_DIGITAL_Y);
 
 	Gamepad_SetButton(port, CCPAD_L, mods & PERIPHERAL_DIGITAL_L);
 	Gamepad_SetButton(port, CCPAD_R, mods & PERIPHERAL_DIGITAL_R);
