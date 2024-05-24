@@ -654,7 +654,7 @@ static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eGui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
-	"&eSet key bindings, bind keys to act as mouse clicks",
+	"&eSet key and mouse bindings",
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
 	"&eEnv colours, water level, weather, and more",
@@ -1948,7 +1948,7 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	const cc_uint8* curBinds;
 
 	String_InitArray(text, textBuffer);
-	curBinds = binds_gamepad ? KeyBinds_Gamepad : KeyBinds_Normal;
+	curBinds = binds_gamepad ? PadBind_Mappings : KeyBind_Mappings;
 
 	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
 		s->descs[i], Input_DisplayNames[curBinds[s->binds[i]]]);
@@ -1972,17 +1972,19 @@ static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 static int KeyBindsScreen_KeyDown(void* screen, int key) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	const cc_uint8* defaults;
-	cc_uint8* curBinds;
-	KeyBind bind;
+	InputBind bind;
 	int idx;
 
 	if (s->curI == -1) return Menu_InputDown(s, key);
-	curBinds = binds_gamepad ? KeyBinds_Gamepad        : KeyBinds_Normal;
-	defaults = binds_gamepad ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults;
-
+	defaults = binds_gamepad ? PadBind_Defaults : KeyBind_Defaults;
 	bind = s->binds[s->curI];
 	if (Input_IsEscapeButton(key)) key = defaults[bind];
-	KeyBind_Set(bind, key, curBinds);
+	
+	if (binds_gamepad) {
+		PadBind_Set(bind, key);
+	} else {
+		KeyBind_Set(bind, key);
+	}
 
 	idx         = s->curI;
 	s->curI     = -1;
@@ -2108,7 +2110,7 @@ static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const cha
 *------------------------------------------------ClassicBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void ClassicBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
+	static const cc_uint8 binds[]    = { BIND_FORWARD, BIND_BACK, BIND_JUMP, BIND_CHAT, BIND_SET_SPAWN, BIND_LEFT, BIND_RIGHT, BIND_INVENTORY, BIND_FOG, BIND_RESPAWN };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Save location", "Left", "Right", "Build", "Toggle fog", "Load location" };
 	binds_gamepad = false;
 
@@ -2127,7 +2129,7 @@ void ClassicBindingsScreen_Show(void) {
 *----------------------------------------------ClassicHacksBindingsScreen-------------------------------------------------*
 *#########################################################################################################################*/
 void ClassicHacksBindingsScreen_Show(void) {
-	static const cc_uint8 binds[6]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
+	static const cc_uint8 binds[6]    = { BIND_SPEED, BIND_NOCLIP, BIND_HALF_SPEED, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN };
 	static const char* const descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	binds_gamepad = false;
 
@@ -2141,7 +2143,7 @@ void ClassicHacksBindingsScreen_Show(void) {
 *-------------------------------------------------NormalBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void NormalBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_TABLIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
+	static const cc_uint8 binds[]    = { BIND_FORWARD, BIND_BACK, BIND_JUMP, BIND_CHAT, BIND_SET_SPAWN, BIND_TABLIST, BIND_LEFT, BIND_RIGHT, BIND_INVENTORY, BIND_FOG, BIND_RESPAWN, BIND_SEND_CHAT };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	
 	KeyBindsScreen_Reset(NULL, Menu_SwitchBindsHacks, 250);
@@ -2154,7 +2156,7 @@ void NormalBindingsScreen_Show(void) {
 *--------------------------------------------------HacksBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void HacksBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
+	static const cc_uint8 binds[]    = { BIND_SPEED, BIND_NOCLIP, BIND_HALF_SPEED, BIND_ZOOM_SCROLL, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN, BIND_THIRD_PERSON };
 	static const char* const descs[] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	
 	KeyBindsScreen_Reset(Menu_SwitchBindsNormal, Menu_SwitchBindsOther, 260);
@@ -2167,7 +2169,7 @@ void HacksBindingsScreen_Show(void) {
 *--------------------------------------------------OtherBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void OtherBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]     = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
+	static const cc_uint8 binds[]     = { BIND_EXT_INPUT, BIND_HIDE_FPS, BIND_HIDE_GUI, BIND_HOTBAR_SWITCH, BIND_DROP_BLOCK,BIND_SCREENSHOT, BIND_FULLSCREEN, BIND_AXIS_LINES, BIND_AUTOROTATE, BIND_SMOOTH_CAMERA, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS };
 	static const char* const descs[]  = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	
 	KeyBindsScreen_Reset(Menu_SwitchBindsHacks, Menu_SwitchBindsMouse, 260);
@@ -2180,7 +2182,7 @@ void OtherBindingsScreen_Show(void) {
 *--------------------------------------------------MouseBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void MouseBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK, KEYBIND_LOOK_UP, KEYBIND_LOOK_DOWN, KEYBIND_LOOK_LEFT, KEYBIND_LOOK_RIGHT };
+	static const cc_uint8 binds[]    = { BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK, BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_LEFT, BIND_LOOK_RIGHT };
 	static const char* const descs[] = { "Delete block", "Pick block", "Place block", "Look Up", "Look Down", "Look Left", "Look Right" };
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsOther, Menu_SwitchBindsHotbar, 260);
@@ -2194,8 +2196,8 @@ void MouseBindingsScreen_Show(void) {
 *-------------------------------------------------HotbarBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void HotbarBindingsScreen_Show(void) {
-	static const cc_uint8 binds[] = { KEYBIND_HOTBAR_1,KEYBIND_HOTBAR_2,KEYBIND_HOTBAR_3, KEYBIND_HOTBAR_4,KEYBIND_HOTBAR_5,KEYBIND_HOTBAR_6, KEYBIND_HOTBAR_7,KEYBIND_HOTBAR_8,KEYBIND_HOTBAR_9,
-										KEYBIND_HOTBAR_LEFT, KEYBIND_HOTBAR_RIGHT };
+	static const cc_uint8 binds[] = { BIND_HOTBAR_1,BIND_HOTBAR_2,BIND_HOTBAR_3, BIND_HOTBAR_4,BIND_HOTBAR_5,BIND_HOTBAR_6, BIND_HOTBAR_7,BIND_HOTBAR_8,BIND_HOTBAR_9,
+										BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT };
 	static const char* const descs[] = { "Slot #1","Slot #2","Slot #3", "Slot #4","Slot #5","Slot #6", "Slot #7","Slot #8","Slot #9", "Slot left","Slot right" };
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsMouse, NULL, 260);
@@ -3731,7 +3733,7 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 
 static int TexIdsOverlay_KeyDown(void* screen, int key) {
 	struct Screen* s = (struct Screen*)screen;
-	if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
+	if (InputBind_Claims(BIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
 	return false;
 }
 

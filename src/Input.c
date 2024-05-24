@@ -377,10 +377,10 @@ void Pointer_SetPosition(int idx, int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
-cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
+cc_uint8 PadBind_Mappings[BIND_COUNT];
+cc_uint8 KeyBind_Mappings[BIND_COUNT];
 
-const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
+const cc_uint8 PadBind_Defaults[BIND_COUNT] = {
 	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
 	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
 	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
@@ -393,7 +393,7 @@ const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT] = {
 	0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
 	CCPAD_ZL, CCPAD_ZR
 };
-const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
+const cc_uint8 KeyBind_Defaults[BIND_COUNT] = {
 	'W', 'S', 'A', 'D',
 	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
 	'B', 'F', CCKEY_ENTER, CCKEY_TAB, 
@@ -408,7 +408,7 @@ const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT] = {
 	0, 0
 };
 
-static const char* const keybindNames[KEYBIND_COUNT] = {
+static const char* const keybindNames[BIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
 	"ToggleFog", "SendChat", "PlayerList", 
@@ -425,9 +425,13 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"HotbarLeft", "HotbarRight"
 };
 
-cc_bool KeyBind_IsPressed(KeyBind binding) { 
-	return Input.Pressed[KeyBinds_Normal[binding]] || 
-		   Input.Pressed[KeyBinds_Gamepad[binding]];
+cc_bool InputBind_Claims(InputBind binding, int btn) { 
+	return KeyBind_Mappings[binding] == btn || PadBind_Mappings[binding] == btn;
+}
+
+cc_bool InputBind_IsPressed(InputBind binding) { 
+	return Input.Pressed[KeyBind_Mappings[binding]] || 
+		   Input.Pressed[PadBind_Mappings[binding]];
 }
 
 static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8* defaults) {
@@ -435,7 +439,7 @@ static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8*
 	int mapping, i;
 
 	String_InitArray_NT(name, nameBuffer);
-	for (i = 0; i < KEYBIND_COUNT; i++) 
+	for (i = 0; i < BIND_COUNT; i++) 
 	{
 		name.length = 0;
 		String_Format1(&name, prefix, keybindNames[i]);
@@ -448,22 +452,29 @@ static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8*
 	}
 }
 
-void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds) {
+static void InputBind_Set(InputBind binding, int key, cc_uint8* binds, const char* fmt) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	cc_string value;
 	String_InitArray(name, nameBuffer);
 
-	String_Format1(&name, binds == KeyBinds_Gamepad ? "pad-%c" : "key-%c", 
-		keybindNames[binding]);
+	String_Format1(&name, fmt, keybindNames[binding]);
 	value = String_FromReadonly(storageNames[key]);
 	Options_SetString(&name, &value);
 	binds[binding] = key;
 }
 
-/* Initialises and loads key bindings from options */
+void KeyBind_Set(InputBind binding, int key) {
+	InputBind_Set(binding, key, KeyBind_Mappings, "key-%c");
+}
+
+void PadBind_Set(InputBind binding, int key) {
+	InputBind_Set(binding, key, PadBind_Mappings, "pad-%c");
+}
+
+/* Initialises and loads input bindings from options */
 static void KeyBind_Init(void) {
-	KeyBind_Load("key-%c", KeyBinds_Normal,  KeyBind_NormalDefaults);
-	KeyBind_Load("pad-%c", KeyBinds_Gamepad, KeyBind_GamepadDefaults);
+	KeyBind_Load("key-%c", KeyBind_Mappings,  KeyBind_Defaults);
+	KeyBind_Load("pad-%c", PadBind_Mappings, PadBind_Defaults);
 }
 
 
@@ -972,9 +983,9 @@ void InputHandler_Tick(void) {
 	/*  elapsed time using DateTime_CurrentUTC_MS() instead */
 	input_lastClick = now;
 
-	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
-	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
-	right  = KeyBind_IsPressed(KEYBIND_PLACE_BLOCK);
+	left   = InputBind_IsPressed(BIND_DELETE_BLOCK);
+	middle = InputBind_IsPressed(BIND_PICK_BLOCK);
+	right  = InputBind_IsPressed(BIND_PLACE_BLOCK);
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode) {
@@ -1039,7 +1050,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 
 	hotbar = Input_IsAltPressed() || Input_IsCtrlPressed() || Input_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta))   return true;
-	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
+	if (!InputBind_IsPressed(BIND_ZOOM_SCROLL)) return false;
 
 	h = &Entities.CurPlayer->Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
@@ -1059,13 +1070,13 @@ static void InputHandler_CheckZoomFov(void* obj) {
 static cc_bool HandleBlockKey(int key) {
 	if (Gui.InputGrab) return false;
 
-	if (KeyBind_Claims(KEYBIND_DELETE_BLOCK, key)) {
+	if (InputBind_Claims(BIND_DELETE_BLOCK, key)) {
 		MouseStatePress(MOUSE_LEFT);
 		InputHandler_DeleteBlock();
-	} else if (KeyBind_Claims(KEYBIND_PLACE_BLOCK, key)) {
+	} else if (InputBind_Claims(BIND_PLACE_BLOCK, key)) {
 		MouseStatePress(MOUSE_RIGHT);
 		InputHandler_PlaceBlock();
-	} else if (KeyBind_Claims(KEYBIND_PICK_BLOCK, key)) {
+	} else if (InputBind_Claims(BIND_PICK_BLOCK, key)) {
 		MouseStatePress(MOUSE_MIDDLE);
 		InputHandler_PickBlock();
 	} else {
@@ -1075,32 +1086,32 @@ static cc_bool HandleBlockKey(int key) {
 }
 
 static cc_bool HandleNonClassicKey(int key) {
-	if (KeyBind_Claims(KEYBIND_HIDE_GUI, key)) {
+	if (InputBind_Claims(BIND_HIDE_GUI, key)) {
 		Game_HideGui = !Game_HideGui;
-	} else if (KeyBind_Claims(KEYBIND_SMOOTH_CAMERA, key)) {
+	} else if (InputBind_Claims(BIND_SMOOTH_CAMERA, key)) {
 		InputHandler_Toggle(key, &Camera.Smooth,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
-	} else if (KeyBind_Claims(KEYBIND_AXIS_LINES, key)) {
+	} else if (InputBind_Claims(BIND_AXIS_LINES, key)) {
 		InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
-	} else if (KeyBind_Claims(KEYBIND_AUTOROTATE, key)) {
+	} else if (InputBind_Claims(BIND_AUTOROTATE, key)) {
 		InputHandler_Toggle(key, &AutoRotate_Enabled,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
-	} else if (KeyBind_Claims(KEYBIND_THIRD_PERSON, key)) {
+	} else if (InputBind_Claims(BIND_THIRD_PERSON, key)) {
 		Camera_CycleActive();
-	} else if (KeyBind_Claims(KEYBIND_DROP_BLOCK, key)) {
+	} else if (InputBind_Claims(BIND_DROP_BLOCK, key)) {
 		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
-	} else if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) {
+	} else if (InputBind_Claims(BIND_IDOVERLAY, key)) {
 		TexIdsOverlay_Show();
-	} else if (KeyBind_Claims(KEYBIND_BREAK_LIQUIDS, key)) {
+	} else if (InputBind_Claims(BIND_BREAK_LIQUIDS, key)) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
 			"  &eBreakable liquids is &cdisabled");
@@ -1111,11 +1122,11 @@ static cc_bool HandleNonClassicKey(int key) {
 }
 
 static cc_bool HandleCoreKey(int key) {
-	if (KeyBind_Claims(KEYBIND_HIDE_FPS, key)) {
+	if (InputBind_Claims(BIND_HIDE_FPS, key)) {
 		Gui.ShowFPS = !Gui.ShowFPS;
-	} else if (KeyBind_Claims(KEYBIND_FULLSCREEN, key)) {
+	} else if (InputBind_Claims(BIND_FULLSCREEN, key)) {
 		Game_ToggleFullscreen();
-	} else if (KeyBind_Claims(KEYBIND_FOG, key)) {
+	} else if (InputBind_Claims(BIND_FOG, key)) {
 		Game_CycleViewDistance();
 	} else if (key == CCKEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
@@ -1146,15 +1157,15 @@ static void HandleHotkeyDown(int key) {
 static cc_bool HandleLocalPlayerKey(int key) {
 	struct LocalPlayer* p = Entities.CurPlayer;
 	
-	if (KeyBind_Claims(KEYBIND_RESPAWN, key)) {
+	if (InputBind_Claims(BIND_RESPAWN, key)) {
 		return LocalPlayer_HandleRespawn(p);
-	} else if (KeyBind_Claims(KEYBIND_SET_SPAWN, key)) {
+	} else if (InputBind_Claims(BIND_SET_SPAWN, key)) {
 		return LocalPlayer_HandleSetSpawn(p);
-	} else if (KeyBind_Claims(KEYBIND_FLY, key)) {
+	} else if (InputBind_Claims(BIND_FLY, key)) {
 		return LocalPlayer_HandleFly(p);
-	} else if (KeyBind_Claims(KEYBIND_NOCLIP, key)) {
+	} else if (InputBind_Claims(BIND_NOCLIP, key)) {
 		return LocalPlayer_HandleNoclip(p);
-	} else if (KeyBind_Claims(KEYBIND_JUMP, key)) {
+	} else if (InputBind_Claims(BIND_JUMP, key)) {
 		return LocalPlayer_HandleJump(p);
 	}
 	return false;
@@ -1227,7 +1238,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_RequestClose(); return;
-	} else if (KeyBind_Claims(KEYBIND_SCREENSHOT, key) && !was) {
+	} else if (InputBind_Claims(BIND_SCREENSHOT, key) && !was) {
 		Game_ScreenshotRequested = true; return;
 	}
 	
@@ -1261,7 +1272,7 @@ static void OnInputUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
-	if (KeyBind_Claims(KEYBIND_ZOOM_SCROLL, key)) Camera_SetFov(Camera.DefaultFov);
+	if (InputBind_Claims(BIND_ZOOM_SCROLL, key)) Camera_SetFov(Camera.DefaultFov);
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
@@ -1279,18 +1290,18 @@ static void OnInputUp(void* obj, int key) {
 	}
 
 	if (Gui.InputGrab) return;
-	if (KeyBind_Claims(KEYBIND_DELETE_BLOCK, key)) MouseStateRelease(MOUSE_LEFT);
-	if (KeyBind_Claims(KEYBIND_PLACE_BLOCK,  key)) MouseStateRelease(MOUSE_RIGHT);
-	if (KeyBind_Claims(KEYBIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
+	if (InputBind_Claims(BIND_DELETE_BLOCK, key)) MouseStateRelease(MOUSE_LEFT);
+	if (InputBind_Claims(BIND_PLACE_BLOCK,  key)) MouseStateRelease(MOUSE_RIGHT);
+	if (InputBind_Claims(BIND_PICK_BLOCK,   key)) MouseStateRelease(MOUSE_MIDDLE);
 }
 
 static void OnFocusChanged(void* obj) { if (!Window_Main.Focused) Input_Clear(); }
 
 static void PlayerInputNormal(struct LocalPlayer* p, float* xMoving, float* zMoving) {
-	if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 1;
-	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
-	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
-	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
+	if (InputBind_IsPressed(BIND_FORWARD)) *zMoving -= 1;
+	if (InputBind_IsPressed(BIND_BACK))    *zMoving += 1;
+	if (InputBind_IsPressed(BIND_LEFT))    *xMoving -= 1;
+	if (InputBind_IsPressed(BIND_RIGHT))   *xMoving += 1;
 }
 static struct LocalPlayerInput normalInput = { PlayerInputNormal };
 

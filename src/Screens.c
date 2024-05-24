@@ -753,7 +753,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 
 static void TabListOverlay_KeyUp(void* screen, int key) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	if (!KeyBind_Claims(KEYBIND_TABLIST, key) || s->staysOpen) return;
+	if (!InputBind_Claims(BIND_TABLIST, key) || s->staysOpen) return;
 	Gui_Remove((struct Screen*)s);
 }
 
@@ -1313,10 +1313,10 @@ static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
 static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int playerListKey    = KeyBinds_Normal[KEYBIND_TABLIST];
+	int playerListKey    = KeyBind_Mappings[BIND_TABLIST];
 	cc_bool handlesList  = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
-	if (KeyBind_Claims(KEYBIND_TABLIST, key) && handlesList) {
+	if (InputBind_Claims(BIND_TABLIST, key) && handlesList) {
 		if (!tablist_active && !Server.IsSinglePlayer) {
 			TabListOverlay_Show(false);
 		}
@@ -1328,10 +1328,10 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
 		/* See reason for this in HandleInputUp */
-		if (KeyBind_Claims(KEYBIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER) {
+		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER) {
 			ChatScreen_EnterChatInput(s, false);
 #else
-		if (KeyBind_Claims(KEYBIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
+		if (InputBind_Claims(BIND_SEND_CHAT, key) || key == CCKEY_KP_ENTER || Input_IsEscapeButton(key)) {
 			ChatScreen_EnterChatInput(s, Input_IsEscapeButton(key));
 #endif
 		} else if (key == CCKEY_PAGEUP) {
@@ -1344,11 +1344,11 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 		return key < CCKEY_F1 || key > CCKEY_F24;
 	}
 
-	if (KeyBind_Claims(KEYBIND_CHAT, key)) {
+	if (InputBind_Claims(BIND_CHAT, key)) {
 		ChatScreen_OpenInput(&String_Empty);
 	} else if (key == CCKEY_SLASH) {
 		ChatScreen_OpenInput(&slash);
-	} else if (KeyBind_Claims(KEYBIND_INVENTORY, key)) {
+	} else if (InputBind_Claims(BIND_INVENTORY, key)) {
 		InventoryScreen_Show();
 	} else {
 		return false;
@@ -1370,7 +1370,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 	if (key == CCKEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
 #endif
 
-	if (Server.SupportsFullCP437 && KeyBind_Claims(KEYBIND_EXT_INPUT, key)) {
+	if (Server.SupportsFullCP437 && InputBind_Claims(BIND_EXT_INPUT, key)) {
 		if (!Window_Main.Focused) return;
 		ChatScreen_ToggleAltInput(s);
 	}
@@ -1719,7 +1719,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 	struct TableWidget* table = &s->table;
 
 	/* Accuracy: Original classic doesn't close inventory menu when B is pressed */
-	if (KeyBind_Claims(KEYBIND_INVENTORY, key) && s->releasedInv && !Game_ClassicMode) {
+	if (InputBind_Claims(BIND_INVENTORY, key) && s->releasedInv && !Game_ClassicMode) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Input_IsEnterButton(key) && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
@@ -1739,7 +1739,7 @@ static cc_bool InventoryScreen_IsHotbarActive(void) {
 
 static void InventoryScreen_KeyUp(void* screen, int key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	if (KeyBind_Claims(KEYBIND_INVENTORY, key)) s->releasedInv = true;
+	if (InputBind_Claims(BIND_INVENTORY, key)) s->releasedInv = true;
 }
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {

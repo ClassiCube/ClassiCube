@@ -155,42 +155,43 @@ void Mouse_ScrollHWheel(float delta);
 void Pointer_SetPosition(int idx, int x, int y);
 
 
-/* Enumeration of all key bindings. */
-enum KeyBind_ {
-	KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_LEFT, KEYBIND_RIGHT,
-	KEYBIND_JUMP, KEYBIND_RESPAWN, KEYBIND_SET_SPAWN, KEYBIND_CHAT,
-	KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_SEND_CHAT, KEYBIND_TABLIST,
-	KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN,
-	KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN,
-	KEYBIND_THIRD_PERSON, KEYBIND_HIDE_GUI, KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL,
-	KEYBIND_HALF_SPEED, KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK,
-	KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, KEYBIND_SMOOTH_CAMERA,
-	KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
-	KEYBIND_LOOK_UP, KEYBIND_LOOK_DOWN, KEYBIND_LOOK_RIGHT, KEYBIND_LOOK_LEFT,
-	KEYBIND_HOTBAR_1, KEYBIND_HOTBAR_2, KEYBIND_HOTBAR_3,
-	KEYBIND_HOTBAR_4, KEYBIND_HOTBAR_5, KEYBIND_HOTBAR_6,
-	KEYBIND_HOTBAR_7, KEYBIND_HOTBAR_8, KEYBIND_HOTBAR_9,
-	KEYBIND_HOTBAR_LEFT, KEYBIND_HOTBAR_RIGHT,
-	KEYBIND_COUNT
+/* Enumeration of all input bindings. */
+enum InputBind_ {
+	BIND_FORWARD, BIND_BACK, BIND_LEFT, BIND_RIGHT,
+	BIND_JUMP, BIND_RESPAWN, BIND_SET_SPAWN, BIND_CHAT,
+	BIND_INVENTORY, BIND_FOG, BIND_SEND_CHAT, BIND_TABLIST,
+	BIND_SPEED, BIND_NOCLIP, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN,
+	BIND_EXT_INPUT, BIND_HIDE_FPS, BIND_SCREENSHOT, BIND_FULLSCREEN,
+	BIND_THIRD_PERSON, BIND_HIDE_GUI, BIND_AXIS_LINES, BIND_ZOOM_SCROLL,
+	BIND_HALF_SPEED, BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK,
+	BIND_AUTOROTATE, BIND_HOTBAR_SWITCH, BIND_SMOOTH_CAMERA,
+	BIND_DROP_BLOCK, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS,
+	BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT,
+	BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3,
+	BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6,
+	BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9,
+	BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT,
+	BIND_COUNT
 };
-typedef int KeyBind;
+typedef int InputBind;
 
-/* The keyboard/mouse buttons that are bound to each key binding */
-extern cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
-/* The gamepad buttons that are bound to each key binding */
-extern cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
-/* Default keyboard/mouse button that each key binding is bound to */
-extern const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT];
-/* Default gamepad button that each key binding is bound to */
-extern const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT];
-#define KeyBind_GetDefaults() (Input.GamepadSource ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults)
+/* The keyboard/mouse buttons that are bound to each input binding */
+extern cc_uint8 KeyBind_Mappings[BIND_COUNT];
+/* The gamepad buttons that are bound to each input binding */
+extern cc_uint8 PadBind_Mappings[BIND_COUNT];
+/* Default keyboard/mouse button that each input binding is bound to */
+extern const cc_uint8 KeyBind_Defaults[BIND_COUNT];
+/* Default gamepad button that each input binding is bound to */
+extern const cc_uint8 PadBind_Defaults[BIND_COUNT];
 
-/* Whether the given keyboard/mouse or gamepad button is bound to the given keybinding */
-#define KeyBind_Claims(binding, btn) (KeyBinds_Normal[binding] == (btn) || KeyBinds_Gamepad[binding] == (btn))
-/* Gets whether the key bound to the given key binding is pressed. */
-CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
-/* Set the key that the given key binding is bound to. (also updates options list) */
-void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
+/* Whether the given binding should be triggered in response to given input button being pressed */
+CC_API cc_bool InputBind_Claims(InputBind binding, int btn);
+/* Gets whether the given input binding is currently being triggered */
+CC_API cc_bool InputBind_IsPressed(InputBind binding);
+/* Sets the key/mouse button that the given input binding is bound to (Also updates options list) */
+void KeyBind_Set(InputBind binding, int key);
+/* Sets the gamepad button that the given input binding is bound to (Also updates options list) */
+void PadBind_Set(InputBind binding, int key);
 
 
 /* Gamepad axes. Default behaviour is: */

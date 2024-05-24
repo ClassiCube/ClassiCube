@@ -655,16 +655,16 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	*xMoving *= 0.98f; 
 	*zMoving *= 0.98f;
 
-	p->Physics.Jumping = KeyBind_IsPressed(KEYBIND_JUMP);
-	hacks->FlyingUp    = KeyBind_IsPressed(KEYBIND_FLY_UP);
-	hacks->FlyingDown  = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
+	p->Physics.Jumping = InputBind_IsPressed(BIND_JUMP);
+	hacks->FlyingUp    = InputBind_IsPressed(BIND_FLY_UP);
+	hacks->FlyingDown  = InputBind_IsPressed(BIND_FLY_DOWN);
 
 	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 		if (hacks->Noclip) {
 			/* need a { } block because it's a macro */
 			Vec3_Set(p->Base.Velocity, 0,0,0);
 		}
-		HacksComp_SetNoclip(hacks, KeyBind_IsPressed(KEYBIND_NOCLIP));
+		HacksComp_SetNoclip(hacks, InputBind_IsPressed(BIND_NOCLIP));
 	}
 }
 
@@ -672,8 +672,8 @@ static void LocalPlayer_InputSet(int key, cc_bool pressed) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[0].Hacks;
 
 	if (pressed && !hacks->Enabled) return;
-	if (KeyBind_Claims(KEYBIND_SPEED, key))      hacks->Speeding     = pressed;
-	if (KeyBind_Claims(KEYBIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
+	if (InputBind_Claims(BIND_SPEED, key))      hacks->Speeding     = pressed;
+	if (InputBind_Claims(BIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
 }
 
 static void LocalPlayer_InputDown(void* obj, int key, cc_bool was) {

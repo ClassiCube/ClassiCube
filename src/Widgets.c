@@ -540,7 +540,7 @@ static int HotbarWidget_MapKey(int key) {
 	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++)
 	{
-		if (KeyBind_Claims(KEYBIND_HOTBAR_1 + i, key)) return i;
+		if (InputBind_Claims(BIND_HOTBAR_1 + i, key)) return i;
 	}
 	return -1;
 }
@@ -560,14 +560,14 @@ static int HotbarWidget_KeyDown(void* widget, int key) {
 	int index = HotbarWidget_MapKey(key);
 
 	if (index == -1) {
-		if (KeyBind_Claims(KEYBIND_HOTBAR_LEFT, key))
+		if (InputBind_Claims(BIND_HOTBAR_LEFT, key))
 			return HotbarWidget_CycleIndex(-1);
-		if (KeyBind_Claims(KEYBIND_HOTBAR_RIGHT, key))
+		if (InputBind_Claims(BIND_HOTBAR_RIGHT, key))
 			return HotbarWidget_CycleIndex(+1);
 		return false;
 	}
 
-	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
+	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */
 		Inventory_SetHotbarIndex(index);
 		w->altHandled = true;
@@ -583,7 +583,7 @@ static void HotbarWidget_InputUp(void* widget, int key) {
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (!KeyBind_Claims(KEYBIND_HOTBAR_SWITCH, key)) return;
+	if (!InputBind_Claims(BIND_HOTBAR_SWITCH, key)) return;
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
@@ -656,7 +656,7 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
-	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
+	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
 		index = Inventory.Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
 		Inventory_SetHotbarIndex(index);

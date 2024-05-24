@@ -553,7 +553,7 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
 	int i = btn->meta.val;
-	Input_Set(KeyBinds_Normal[s->descs[i].bind], true);
+	Input_Set(KeyBind_Mappings[s->descs[i].bind], true);
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
@@ -572,11 +572,11 @@ static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Hotbar",    0,0,0, TouchScreen_SwitchClick }
 };
 static const struct TouchButtonDesc normDescs[1] = {
-	{ "\x1E", KEYBIND_JUMP,     50,  10, TouchScreen_BindClick }
+	{ "\x1E", BIND_JUMP,     50,  10, TouchScreen_BindClick }
 };
 static const struct TouchButtonDesc hackDescs[2] = {
-	{ "\x1E", KEYBIND_FLY_UP,   50,  70, TouchScreen_BindClick },
-	{ "\x1F", KEYBIND_FLY_DOWN, 50,  10, TouchScreen_BindClick }
+	{ "\x1E", BIND_FLY_UP,   50,  70, TouchScreen_BindClick },
+	{ "\x1F", BIND_FLY_DOWN, 50,  10, TouchScreen_BindClick }
 };
 
 #define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 200)
@@ -693,8 +693,8 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	{
 		if (!(s->btns[i].active & id)) continue;
 
-		if (s->descs[i].bind < KEYBIND_COUNT) {
-			Input_Set(KeyBinds_Normal[s->descs[i].bind], false);
+		if (s->descs[i].bind < BIND_COUNT) {
+			Input_Set(KeyBind_Mappings[s->descs[i].bind], false);
 		}
 		s->btns[i].active &= ~id;
 		return;
