@@ -387,8 +387,10 @@ const BindMapping PadBind_Defaults[BIND_COUNT] = {
 	{ CCPAD_START, 0 }, { CCPAD_Y,     0 }, /* BIND_SET_SPAWN, BIND_CHAT */
 	{ CCPAD_X, 0     }, { 0, 0 },           /* BIND_INVENTORY, BIND_FOG */
 	{ CCPAD_START, 0 }, { 0, 0 },           /* BIND_SEND_CHAT, BIND_TABLIST */
-	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_SPEED, BIND_NOCLIP, BIND_FLY */ 
-	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_FLY_UP, BIND_FLY_DOWN, BIND_EXT_INPUT, BIND_HIDE_FPS */
+	{ CCPAD_B, CCPAD_L},{ CCPAD_B, CCPAD_X},/* BIND_SPEED, BIND_NOCLIP */ 
+	{ CCPAD_B, CCPAD_R },                   /* BIND_FLY */ 
+	{CCPAD_B,CCPAD_UP},{CCPAD_B,CCPAD_DOWN},/* BIND_FLY_UP, BIND_FLY_DOWN */
+	{ 0, 0 }, { 0, 0 },                     /* BIND_EXT_INPUT, BIND_HIDE_FPS */
 	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_SCREENSHOT, BIND_FULLSCREEN, BIND_THIRD_PERSON, BIND_HIDE_GUI */
 	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
 	{ CCPAD_L, 0 }, { 0, 0 },{ CCPAD_R, 0 },/* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
