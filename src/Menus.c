@@ -1945,13 +1945,19 @@ static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5];
 
 static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	cc_string text; char textBuffer[STRING_SIZE];
-	const cc_uint8* curBinds;
+	const BindMapping* curBinds;
+	BindMapping curBind; 
 
 	String_InitArray(text, textBuffer);
 	curBinds = binds_gamepad ? PadBind_Mappings : KeyBind_Mappings;
+	curBind  = curBinds[s->binds[i]];
 
-	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
-		s->descs[i], Input_DisplayNames[curBinds[s->binds[i]]]);
+	String_Format4(&text, s->curI == i ? "> %c: %c%c%c <" : "%c: %c%c%c", 
+		s->descs[i],
+		Input_DisplayNames[curBind.button1],
+		curBind.button2 ? " + " : "",
+		curBind.button2 ? Input_DisplayNames[curBind.button2] : "");
+		
 	ButtonWidget_Set(&s->buttons[i], &text, &s->titleFont);
 	s->dirty = true;
 }
@@ -1969,21 +1975,34 @@ static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 	if (old >= 0) KeyBindsScreen_Update(s, old);
 }
 
-static int KeyBindsScreen_KeyDown(void* screen, int key) {
-	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
-	const cc_uint8* defaults;
-	InputBind bind;
-	int idx;
+static void KeyBindsScreen_ResetBinding(InputBind bind) {
+	if (binds_gamepad) {
+		PadBind_Reset(bind);
+	} else {
+		KeyBind_Reset(bind);
+	}
+}
 
-	if (s->curI == -1) return Menu_InputDown(s, key);
-	defaults = binds_gamepad ? PadBind_Defaults : KeyBind_Defaults;
-	bind = s->binds[s->curI];
-	if (Input_IsEscapeButton(key)) key = defaults[bind];
-	
+static void KeyBindsScreen_UpdateBinding(InputBind bind, int key) {
 	if (binds_gamepad) {
 		PadBind_Set(bind, key);
 	} else {
 		KeyBind_Set(bind, key);
+	}
+}
+
+static int KeyBindsScreen_KeyDown(void* screen, int key) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
+	InputBind bind;
+	int idx;
+
+	if (s->curI == -1) return Menu_InputDown(s, key);
+	bind = s->binds[s->curI];
+	
+	if (Input_IsEscapeButton(key)) {
+		KeyBindsScreen_ResetBinding(bind);
+	} else {
+		KeyBindsScreen_UpdateBinding(bind, key);
 	}
 
 	idx         = s->curI;
