@@ -377,38 +377,56 @@ void Pointer_SetPosition(int idx, int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint8 PadBind_Mappings[BIND_COUNT];
-cc_uint8 KeyBind_Mappings[BIND_COUNT];
+BindMapping PadBind_Mappings[BIND_COUNT];
+BindMapping KeyBind_Mappings[BIND_COUNT];
 
-const cc_uint8 PadBind_Defaults[BIND_COUNT] = {
-	CCPAD_UP, CCPAD_DOWN, CCPAD_LEFT, CCPAD_RIGHT, /* Movement */
-	CCPAD_A, 0, CCPAD_START, CCPAD_Y, /* Jump, SetSpawn, OpenChat */
-	CCPAD_X, 0, CCPAD_START, 0,       /* Inventory, EnterChat */
-	0, 0, 0, 0, 0,                    /* Hacks */
-	0, 0, 0, 0,                       /* LAlt - F11 */
-	0, 0, 0, 0,                       /* F5 - C */
-	0, CCPAD_L, 0, CCPAD_R,
-	0, 0, 0,
-	0,0,0, 0,0,0,0,
-	0,0,0, 0,0,0, 0,0,0, /* Hotbar slots */
-	CCPAD_ZL, CCPAD_ZR
-};
-const cc_uint8 KeyBind_Defaults[BIND_COUNT] = {
-	'W', 'S', 'A', 'D',
-	CCKEY_SPACE, 'R', CCKEY_ENTER, 'T',
-	'B', 'F', CCKEY_ENTER, CCKEY_TAB, 
-	CCKEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
-	CCKEY_LALT, CCKEY_F3, CCKEY_F12, CCKEY_F11, 
-	CCKEY_F5, CCKEY_F1, CCKEY_F7, 'C', 
-	CCKEY_LCTRL, CCMOUSE_L, CCMOUSE_M, CCMOUSE_R, 
-	CCKEY_F6, CCKEY_LALT, CCKEY_F8, 
-	'G', CCKEY_F10, 0,
-	0, 0, 0, 0,
-	'1','2','3', '4','5','6', '7','8','9',
-	0, 0
+const BindMapping PadBind_Defaults[BIND_COUNT] = {
+	{ CCPAD_UP,   0 },  { CCPAD_DOWN,  0 }, /* BIND_FORWARD, BIND_BACK */
+	{ CCPAD_LEFT, 0 },  { CCPAD_RIGHT, 0 }, /* BIND_LEFT, BIND_RIGHT */
+	{ CCPAD_A, 0 },     { 0, 0 },           /* BIND_JUMP, BIND_RESPAWN */
+	{ CCPAD_START, 0 }, { CCPAD_Y,     0 }, /* BIND_SET_SPAWN, BIND_CHAT */
+	{ CCPAD_X, 0     }, { 0, 0 },           /* BIND_INVENTORY, BIND_FOG */
+	{ CCPAD_START, 0 }, { 0, 0 },           /* BIND_SEND_CHAT, BIND_TABLIST */
+	{ CCPAD_B, CCPAD_L},{ CCPAD_B, CCPAD_X},/* BIND_SPEED, BIND_NOCLIP */ 
+	{ CCPAD_B, CCPAD_R },                   /* BIND_FLY */ 
+	{CCPAD_B,CCPAD_UP},{CCPAD_B,CCPAD_DOWN},/* BIND_FLY_UP, BIND_FLY_DOWN */
+	{ 0, 0 }, { 0, 0 },                     /* BIND_EXT_INPUT, BIND_HIDE_FPS */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_SCREENSHOT, BIND_FULLSCREEN, BIND_THIRD_PERSON, BIND_HIDE_GUI */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
+	{ CCPAD_L, 0 }, { 0, 0 },{ CCPAD_R, 0 },/* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH, BIND_SMOOTH_CAMERA */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_DROP_BLOCK, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 },           /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
+	{ CCPAD_ZL, 0 }, { CCPAD_ZR, 0 }        /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
 };
 
-static const char* const keybindNames[BIND_COUNT] = {
+const BindMapping KeyBind_Defaults[BIND_COUNT] = {
+	{ 'W', 0 }, { 'S', 0 }, { 'A', 0 }, { 'D', 0 }, /* BIND_FORWARD - BIND_RIGHT */
+	{ CCKEY_SPACE, 0 },  { 'R', 0 },                /* BIND_JUMP, BIND_RESPAWN */
+	{ CCKEY_ENTER, 0 },  { 'T', 0 },                /* BIND_SET_SPAWN, BIND_CHAT */
+	{ 'B', 0 },          { 'F', 0 },                /* BIND_INVENTORY, BIND_FOG */
+	{ CCKEY_ENTER, 0 },  { CCKEY_TAB, 0 },          /* BIND_SEND_CHAT, BIND_TABLIST */
+	{ CCKEY_LSHIFT, 0 }, { 'X', 0}, { 'Z', 0 },     /* BIND_SPEED, BIND_NOCLIP, BIND_FLY */ 
+	{ 'Q', 0 },          { 'E', 0 },                /* BIND_FLY_UP, BIND_FLY_DOWN */
+	{ CCKEY_LALT, 0 },   { CCKEY_F3, 0 },           /* BIND_EXT_INPUT, BIND_HIDE_FPS */
+	{ CCKEY_F12, 0 },    { CCKEY_F11, 0 },          /* BIND_SCREENSHOT, BIND_FULLSCREEN */
+	{ CCKEY_F5, 0 },     { CCKEY_F1, 0 },           /* BIND_THIRD_PERSON, BIND_HIDE_GUI */ 
+	{ CCKEY_F7, 0 }, { 'C', 0 }, { CCKEY_LCTRL, 0 },/* BIND_AXIS_LINES, BIND_ZOOM_SCROLL, BIND_HALF_SPEED */
+	{ CCMOUSE_L, 0},{ CCMOUSE_M, 0},{ CCMOUSE_R, 0},/* BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK */
+	{ CCKEY_F6, 0 },     { CCKEY_LALT, 0 },         /* BIND_AUTOROTATE, BIND_HOTBAR_SWITCH */
+	{ CCKEY_F8, 0 },     { 'G', 0 },                /* BIND_SMOOTH_CAMERA, BIND_DROP_BLOCK */
+	{ CCKEY_F10, 0 },    { 0, 0 },                  /* BIND_IDOVERLAY, BIND_BREAK_LIQUIDS */
+	{ 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 },         /* BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT */
+	{ '1', 0 }, { '2', 0 }, { '3', 0 },             /* BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3 */
+	{ '4', 0 }, { '5', 0 }, { '6', 0 },             /* BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6 */
+	{ '7', 0 }, { '8', 0 }, { '9', 0 },             /* BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9 */
+	{ 0, 0 }, { 0, 0 }                              /* BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT */
+};
+
+static const char* const bindNames[BIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
 	"ToggleFog", "SendChat", "PlayerList", 
@@ -425,55 +443,120 @@ static const char* const keybindNames[BIND_COUNT] = {
 	"HotbarLeft", "HotbarRight"
 };
 
+
+#define BindMapping2_Claims(mapping, btn) (Input.Pressed[(mapping)->button1] && (mapping)->button2 == btn)
+static cc_bool Mappings_DoesClaim(InputBind binding, int btn, BindMapping* mappings) {
+	BindMapping* bind = &mappings[binding];
+	int i;
+	if (bind->button2) return BindMapping2_Claims(bind, btn);
+	
+	/* Two button mapping takes priority over one button mapping */
+	for (i = 0; i < BIND_COUNT; i++)
+	{
+		if (mappings[i].button2 && BindMapping2_Claims(&mappings[i], btn)) return false;
+	}
+	return bind->button1 == btn;
+}
+
+static cc_bool Mappings_IsPressed(InputBind binding, BindMapping* mappings) {
+	BindMapping* bind = &mappings[binding];
+	int btn = bind->button1;
+	int i;
+	
+	if (!Input.Pressed[btn]) return false;
+	if (bind->button2) return Input.Pressed[bind->button2];
+	
+	/* Two button mappings to the button takes priority one button mapping */
+	for (i = 0; i < BIND_COUNT; i++)
+	{	
+		bind = &mappings[i];
+		if (!bind->button2) continue;
+		if (!(bind->button1 == btn || bind->button2 == btn)) continue;
+		
+		if (Input.Pressed[bind->button1] && Input.Pressed[bind->button2]) return false;
+	}
+	return true;
+}
+
+
 cc_bool InputBind_Claims(InputBind binding, int btn) { 
-	return KeyBind_Mappings[binding] == btn || PadBind_Mappings[binding] == btn;
+	return Mappings_DoesClaim(binding, btn, KeyBind_Mappings) || 
+		   Mappings_DoesClaim(binding, btn, PadBind_Mappings);
 }
 
-cc_bool InputBind_IsPressed(InputBind binding) { 
-	return Input.Pressed[KeyBind_Mappings[binding]] || 
-		   Input.Pressed[PadBind_Mappings[binding]];
+cc_bool InputBind_IsPressed(InputBind binding) {
+	return Mappings_IsPressed(binding, KeyBind_Mappings) || 
+		   Mappings_IsPressed(binding, PadBind_Mappings);
 }
 
-static void KeyBind_Load(const char* prefix, cc_uint8* keybinds, const cc_uint8* defaults) {
+static void KeyBind_Load(const char* prefix, BindMapping* keybinds, const BindMapping* defaults) {
 	cc_string name; char nameBuffer[STRING_SIZE + 1];
-	int mapping, i;
+	BindMapping mapping;
+	cc_string str, part1, part2;
+	int i;
 
 	String_InitArray_NT(name, nameBuffer);
 	for (i = 0; i < BIND_COUNT; i++) 
 	{
 		name.length = 0;
-		String_Format1(&name, prefix, keybindNames[i]);
+		String_Format1(&name, prefix, bindNames[i]);
 		name.buffer[name.length] = '\0';
-
-		mapping = Options_GetEnum(name.buffer, defaults[i], storageNames, INPUT_COUNT);
-		if (mapping == CCKEY_ESCAPE) mapping = defaults[i];
 		
+		if (!Options_UNSAFE_Get(name.buffer, &str)) {
+			keybinds[i] = defaults[i];
+			continue;
+		}
+
+		String_UNSAFE_Separate(&str, ',', &part1, &part2); 
+		mapping.button1 = Utils_ParseEnum(&part1, defaults[i].button1, storageNames, INPUT_COUNT);
+		mapping.button2 = Utils_ParseEnum(&part2, defaults[i].button2, storageNames, INPUT_COUNT);
+		
+		if (mapping.button1 == CCKEY_ESCAPE) mapping = defaults[i];
 		keybinds[i] = mapping;
 	}
 }
 
-static void InputBind_Set(InputBind binding, int key, cc_uint8* binds, const char* fmt) {
+static void InputBind_Set(InputBind binding, int btn, BindMapping* binds, const char* fmt) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	cc_string value;
 	String_InitArray(name, nameBuffer);
 
-	String_Format1(&name, fmt, keybindNames[binding]);
-	value = String_FromReadonly(storageNames[key]);
+	String_Format1(&name, fmt, bindNames[binding]);
+	value = String_FromReadonly(storageNames[btn]);
 	Options_SetString(&name, &value);
-	binds[binding] = key;
+	
+	BindMapping_Set(&binds[binding], btn, 0);
 }
 
-void KeyBind_Set(InputBind binding, int key) {
-	InputBind_Set(binding, key, KeyBind_Mappings, "key-%c");
+void KeyBind_Set(InputBind binding, int btn) {
+	InputBind_Set(binding, btn, KeyBind_Mappings, "key-%c");
 }
 
-void PadBind_Set(InputBind binding, int key) {
-	InputBind_Set(binding, key, PadBind_Mappings, "pad-%c");
+void PadBind_Set(InputBind binding, int btn) {
+	InputBind_Set(binding, btn, PadBind_Mappings, "pad-%c");
+}
+
+static void InputBind_ResetOption(InputBind binding, const char* fmt) {
+	cc_string name; char nameBuffer[STRING_SIZE];
+	String_InitArray(name, nameBuffer);
+	
+	String_Format1(&name, fmt, bindNames[binding]);
+	Options_SetString(&name, &String_Empty);
+}
+
+void KeyBind_Reset(InputBind binding) {
+	InputBind_ResetOption(binding, "key-%c");
+	KeyBind_Mappings[binding] = KeyBind_Defaults[binding];
+}
+
+void PadBind_Reset(InputBind binding) {
+	InputBind_ResetOption(binding, "pad-%c");
+	PadBind_Mappings[binding] = PadBind_Defaults[binding];
 }
 
 /* Initialises and loads input bindings from options */
 static void KeyBind_Init(void) {
-	KeyBind_Load("key-%c", KeyBind_Mappings,  KeyBind_Defaults);
+	KeyBind_Load("key-%c", KeyBind_Mappings, KeyBind_Defaults);
 	KeyBind_Load("pad-%c", PadBind_Mappings, PadBind_Defaults);
 }
 

@@ -37,22 +37,22 @@ void Window_Init(void) {
 	joypad_init();
 
 	// change defaults to make more sense for N64
-	cc_uint8* binds = (cc_uint8*)PadBind_Defaults;
-	binds[BIND_JUMP]         = CCPAD_A;
-	binds[BIND_INVENTORY]    = CCPAD_B;
-	binds[BIND_PLACE_BLOCK]  = CCPAD_Z;
-	binds[BIND_HOTBAR_RIGHT] = CCPAD_L;
-	binds[BIND_DELETE_BLOCK] = CCPAD_R;
+	BindMapping* binds = (BindMapping*)PadBind_Defaults;
+	BindMapping_Set(&binds[BIND_JUMP],         CCPAD_A, 0);
+	BindMapping_Set(&binds[BIND_INVENTORY],    CCPAD_B, 0);
+	BindMapping_Set(&binds[BIND_PLACE_BLOCK],  CCPAD_Z, 0);
+	BindMapping_Set(&binds[BIND_HOTBAR_RIGHT], CCPAD_L, 0);
+	BindMapping_Set(&binds[BIND_DELETE_BLOCK], CCPAD_R, 0);
 
-	binds[BIND_FORWARD]   = CCPAD_CUP;
-	binds[BIND_BACK]      = CCPAD_CDOWN;
-	binds[BIND_LEFT]      = CCPAD_CLEFT;
-	binds[BIND_RIGHT]     = CCPAD_CRIGHT;
+	BindMapping_Set(&binds[BIND_FORWARD], CCPAD_CUP,    0);
+	BindMapping_Set(&binds[BIND_BACK],    CCPAD_CDOWN,  0);
+	BindMapping_Set(&binds[BIND_LEFT],    CCPAD_CLEFT,  0);
+	BindMapping_Set(&binds[BIND_RIGHT],   CCPAD_CRIGHT, 0);
 
-	binds[BIND_FLY_UP]    = CCPAD_UP;
-	binds[BIND_FLY_DOWN]  = CCPAD_DOWN;
-	binds[BIND_SPEED]     = CCPAD_LEFT;
-	binds[BIND_FLY]       = CCPAD_RIGHT;
+	BindMapping_Set(&binds[BIND_FLY_UP],   CCPAD_UP,    0);
+	BindMapping_Set(&binds[BIND_FLY_DOWN], CCPAD_DOWN,  0);
+	BindMapping_Set(&binds[BIND_SPEED],    CCPAD_LEFT,  0);
+	BindMapping_Set(&binds[BIND_FLY],      CCPAD_RIGHT, 0);
 }
 
 void Window_Free(void) { }

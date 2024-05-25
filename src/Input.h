@@ -174,24 +174,31 @@ enum InputBind_ {
 	BIND_COUNT
 };
 typedef int InputBind;
+typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
+#define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
 
 /* The keyboard/mouse buttons that are bound to each input binding */
-extern cc_uint8 KeyBind_Mappings[BIND_COUNT];
+extern BindMapping KeyBind_Mappings[BIND_COUNT];
 /* The gamepad buttons that are bound to each input binding */
-extern cc_uint8 PadBind_Mappings[BIND_COUNT];
+extern BindMapping PadBind_Mappings[BIND_COUNT];
 /* Default keyboard/mouse button that each input binding is bound to */
-extern const cc_uint8 KeyBind_Defaults[BIND_COUNT];
+extern const BindMapping KeyBind_Defaults[BIND_COUNT];
 /* Default gamepad button that each input binding is bound to */
-extern const cc_uint8 PadBind_Defaults[BIND_COUNT];
+extern const BindMapping PadBind_Defaults[BIND_COUNT];
 
 /* Whether the given binding should be triggered in response to given input button being pressed */
 CC_API cc_bool InputBind_Claims(InputBind binding, int btn);
 /* Gets whether the given input binding is currently being triggered */
 CC_API cc_bool InputBind_IsPressed(InputBind binding);
-/* Sets the key/mouse button that the given input binding is bound to (Also updates options list) */
-void KeyBind_Set(InputBind binding, int key);
-/* Sets the gamepad button that the given input binding is bound to (Also updates options list) */
-void PadBind_Set(InputBind binding, int key);
+
+/* Sets the key/mouse button that the given input binding is bound to */
+void KeyBind_Set(InputBind binding, int btn);
+/* Sets the gamepad button that the given input binding is bound to */
+void PadBind_Set(InputBind binding, int btn);
+/* Resets the key/mouse button that the given input binding is bound to */
+void KeyBind_Reset(InputBind binding);
+/* Resets the gamepad button that the given input binding is bound to*/
+void PadBind_Reset(InputBind binding);
 
 
 /* Gamepad axes. Default behaviour is: */

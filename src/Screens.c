@@ -1313,7 +1313,7 @@ static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
 static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int playerListKey    = KeyBind_Mappings[BIND_TABLIST];
+	int playerListKey    = KeyBind_Mappings[BIND_TABLIST].button1;
 	cc_bool handlesList  = playerListKey != CCKEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (InputBind_Claims(BIND_TABLIST, key) && handlesList) {
