@@ -553,7 +553,7 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
 	int i = btn->meta.val;
-	Input_Set(KeyBind_Mappings[s->descs[i].bind], true);
+	Input_Set(KeyBind_Mappings[s->descs[i].bind].button1, true);
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
@@ -694,7 +694,7 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 		if (!(s->btns[i].active & id)) continue;
 
 		if (s->descs[i].bind < BIND_COUNT) {
-			Input_Set(KeyBind_Mappings[s->descs[i].bind], false);
+			Input_Set(KeyBind_Mappings[s->descs[i].bind].button1, false);
 		}
 		s->btns[i].active &= ~id;
 		return;
