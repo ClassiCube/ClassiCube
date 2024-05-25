@@ -9,7 +9,8 @@
 #include "Bitmap.h"
 #include "String.h"
 #include "Options.h"
-#include <Cocoa/Cocoa.h>
+#import  <Foundation/Foundation.h>
+#import  <AppKit/AppKit.h>
 #include <ApplicationServices/ApplicationServices.h>
 
 static int windowX, windowY;
@@ -23,11 +24,15 @@ static cc_bool scroll_debugging;
 #if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
 	#define WIN_MASK (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
 	#define ANY_EVENT_MASK NSEventMaskAny
-	#define DIALOG_OK NSModalResponseOK
+	#define DIALOG_OK      NSModalResponseOK
+	
+	#define PASTEBOARD_STRING_TYPE NSPasteboardTypeString
 #else
 	#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 	#define ANY_EVENT_MASK NSAnyEventMask
-	#define DIALOG_OK NSOKButton
+	#define DIALOG_OK      NSOKButton
+	
+	#define PASTEBOARD_STRING_TYPE NSStringPboardType
 #endif
 
 extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
@@ -136,7 +141,7 @@ void Clipboard_GetText(cc_string* value) {
 	int len;
 
 	pasteboard = [NSPasteboard generalPasteboard];
-	str        = [pasteboard stringForType:NSStringPboardType];
+	str        = [pasteboard stringForType:PASTEBOARD_STRING_TYPE];
 
 	if (!str) return;
 	src = [str UTF8String];
@@ -153,8 +158,8 @@ void Clipboard_SetText(const cc_string* value) {
 	str        = [NSString stringWithUTF8String:raw];
 	pasteboard = [NSPasteboard generalPasteboard];
 
-	[pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
-	[pasteboard setString:str forType:NSStringPboardType];
+	[pasteboard declareTypes:[NSArray arrayWithObject:PASTEBOARD_STRING_TYPE] owner:nil];
+	[pasteboard setString:str forType:PASTEBOARD_STRING_TYPE];
 }
 
 

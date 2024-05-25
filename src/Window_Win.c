@@ -608,7 +608,7 @@ static cc_result OpenSaveFileDialog(const cc_string* filters, FileDialogCallback
 	/*  OPENFILENAME increased after Windows 9x/NT4 with the addition of pvReserved and later fields */
 	/* (and Windows 9x/NT4 return an error if a lStructSize > OPENFILENAME_SIZE_VERSION_400 is used) */
 	ofn.wide.lStructSize  = OPENFILENAME_SIZE_VERSION_400;
-	/* also note that this only works when you *don't* have OFN_HOOK in Flags - if you do, then */
+	/* also note that this only works when OFN_HOOK is *not* included in Flags - if it is, then */
 	/*  on modern Windows versions the dialogs are altered to show an old Win 9x style appearance */
 	/* (see https://github.com/geany/geany/issues/578 for example of this problem) */
 

@@ -113,7 +113,9 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 	return uint_to_ptr(id);
 }
 
-void Gfx_BindIb(GfxResourceID ib) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
+void Gfx_BindIb(GfxResourceID ib) { 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ptr_to_uint(ib)); 
+}
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	GLuint id = ptr_to_uint(*ib);
@@ -166,7 +168,7 @@ void Gfx_BindDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
+	GLuint id = ptr_to_uint(*vb);
 	if (id) glDeleteBuffers(1, &id);
 	*vb = 0;
 }
