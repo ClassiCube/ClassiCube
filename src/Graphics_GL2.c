@@ -6,22 +6,28 @@
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
 
 #if defined CC_BUILD_WIN
-/* Avoid pointless includes */
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#include <windows.h>
-#include <GL/gl.h>
+	/* Avoid pointless includes */
+	#define WIN32_LEAN_AND_MEAN
+	#define NOSERVICE
+	#define NOMCX
+	#define NOIME
+	#include <windows.h>
+	#include <GL/gl.h>
 #elif defined CC_BUILD_IOS
-#include <OpenGLES/ES2/gl.h>
+	#include <OpenGLES/ES2/gl.h>
+	/* Silence deprecation warnings on modern iOS */
+	#define GL_SILENCE_DEPRECATION
+	#define GLES_SILENCE_DEPRECATION
 #elif defined CC_BUILD_MACOS
-#include <OpenGL/gl.h>
+	#include <OpenGL/gl.h>
+	/* Silence deprecation warnings on modern macOS */
+	#define GL_SILENCE_DEPRECATION
+	#define GLES_SILENCE_DEPRECATION
 #elif defined CC_BUILD_GLES
-#include <GLES2/gl2.h>
+	#include <GLES2/gl2.h>
 #else
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
+	#define GL_GLEXT_PROTOTYPES
+	#include <GL/gl.h>
 #endif
 
 /* Windows gl.h only supplies up to OpenGL 1.1 headers */

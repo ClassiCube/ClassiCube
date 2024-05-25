@@ -1338,6 +1338,10 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
 		} else if (key == CCKEY_PAGEDOWN) {
 			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
+		} else if (key == CCWHEEL_UP) {
+			ChatScreen_ScrollChatBy(s, -1);
+		} else if (key == CCWHEEL_DOWN) {
+			ChatScreen_ScrollChatBy(s, +1);
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
 		}
@@ -1378,12 +1382,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 
 static int ChatScreen_MouseScroll(void* screen, float delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int steps;
-	if (!s->grabsInput) return false;
-
-	steps = Utils_AccumulateWheelDelta(&s->chatAcc, delta);
-	ChatScreen_ScrollChatBy(s, -steps);
-	return true;
+	return s->grabsInput;
 }
 
 static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {

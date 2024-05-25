@@ -9,16 +9,19 @@
 */
 
 #if defined CC_BUILD_WIN
-/* Avoid pointless includes */
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#include <windows.h>
-#define GLAPI WINGDIAPI
+	/* Avoid pointless includes */
+	#define WIN32_LEAN_AND_MEAN
+	#define NOSERVICE
+	#define NOMCX
+	#define NOIME
+	#include <windows.h>
+	#define GLAPI WINGDIAPI
 #else
-#define GLAPI extern
-#define APIENTRY
+	#define GLAPI extern
+	#define APIENTRY
+	/* Silence deprecation warnings on modern macOS/iOS */
+	#define GL_SILENCE_DEPRECATION
+	#define GLES_SILENCE_DEPRECATION
 #endif
 /* === BEGIN OPENGL HEADERS === */
 typedef unsigned int GLenum;
