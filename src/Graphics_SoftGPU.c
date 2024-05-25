@@ -452,7 +452,9 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Other/Misc------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	return ERR_NOT_SUPPORTED;
+	struct Bitmap bmp;
+	Bitmap_Init(bmp, width, height, colorBuffer);
+	return Png_Encode(&bmp, output, NULL, false, NULL);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
