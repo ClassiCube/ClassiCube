@@ -444,31 +444,38 @@ static const char* const bindNames[BIND_COUNT] = {
 };
 
 
-#define BindMapping2_Claims(bind, btn) (Input.Pressed[bind.button1] && bind.button2 == btn)
-#define BindMapping2_Pressed(bind)     (Input.Pressed[bind.button1] && Input.Pressed[bind.button2])
-/* 2 button input binds should take priority over 1 button input binds */
+#define BindMapping2_Claims(mapping, btn) (Input.Pressed[(mapping)->button1] && (mapping)->button2 == btn)
 static cc_bool Mappings_DoesClaim(InputBind binding, int btn, BindMapping* mappings) {
+	BindMapping* bind = &mappings[binding];
 	int i;
-	if (mappings[binding].button2) return BindMapping2_Claims(mappings[binding], btn);
+	if (bind->button2) return BindMapping2_Claims(bind, btn);
 	
+	/* Two button mapping takes priority over one button mapping */
 	for (i = 0; i < BIND_COUNT; i++)
 	{
-		/* Two button mapping takes priority */
-		if (mappings[i].button2 && BindMapping2_Claims(mappings[i], btn)) return false;
+		if (mappings[i].button2 && BindMapping2_Claims(&mappings[i], btn)) return false;
 	}
-	return mappings[binding].button1 == btn;
+	return bind->button1 == btn;
 }
 
 static cc_bool Mappings_IsPressed(InputBind binding, BindMapping* mappings) {
+	BindMapping* bind = &mappings[binding];
+	int btn = bind->button1;
 	int i;
-	if (mappings[binding].button2) return BindMapping2_Pressed(mappings[binding]);
 	
+	if (!Input.Pressed[btn]) return false;
+	if (bind->button2) return Input.Pressed[bind->button2];
+	
+	/* Two button mappings to the button takes priority one button mapping */
 	for (i = 0; i < BIND_COUNT; i++)
-	{
-		/* Two button mapping takes priority */
-		if (mappings[i].button2 && BindMapping2_Pressed(mappings[i])) return false;
+	{	
+		bind = &mappings[i];
+		if (!bind->button2) continue;
+		if (!(bind->button1 == btn || bind->button2 == btn)) continue;
+		
+		if (Input.Pressed[bind->button1] && Input.Pressed[bind->button2]) return false;
 	}
-	return Input.Pressed[mappings[binding].button1];
+	return true;
 }
 
 
