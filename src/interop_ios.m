@@ -1,4 +1,6 @@
+// Silence deprecation warnings on modern iOS
 #define GLES_SILENCE_DEPRECATION
+
 #include "_WindowBase.h"
 #include "Bitmap.h"
 #include "Input.h"

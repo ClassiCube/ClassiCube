@@ -1,4 +1,6 @@
+// Silence deprecation warnings on modern macOS
 #define GL_SILENCE_DEPRECATION
+
 #include "Core.h"
 #if CC_WIN_BACKEND == CC_WIN_BACKEND_COCOA
 #include "_WindowBase.h"
@@ -17,6 +19,16 @@ static NSView* viewHandle;
 static cc_bool canCheckOcclusion;
 static cc_bool legacy_fullscreen;
 static cc_bool scroll_debugging;
+
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+	#define WIN_MASK (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
+	#define ANY_EVENT_MASK NSEventMaskAny
+	#define DIALOG_OK NSModalResponseOK
+#else
+	#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
+	#define ANY_EVENT_MASK NSAnyEventMask
+	#define DIALOG_OK NSOKButton
+#endif
 
 extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
 // TODO: Try replacing with NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
@@ -337,7 +349,6 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 	return 0;
 }
 
-#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 static void DoCreateWindow(int width, int height) {
 	CCWindowDelegate* del;
 	NSRect rect;
@@ -507,7 +518,7 @@ void Window_ProcessEvents(float delta) {
 	pool = [[NSAutoreleasePool alloc] init];
 
 	for (;;) {
-		ev = [appHandle nextEventMatchingMask:NSAnyEventMask untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
+		ev = [appHandle nextEventMatchingMask:ANY_EVENT_MASK untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
 		if (!ev) break;
 		type = [ev type];
 
@@ -643,7 +654,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setAllowedFileTypes:types];
-	if ([dlg runModal] != NSOKButton) return 0;
+	if ([dlg runModal] != DIALOG_OK) return 0;
 
 	NSURL* file = [dlg URL];
     if (file) OpenSaveDoCallback(file, args->Callback);
@@ -655,11 +666,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setCanChooseFiles: YES];
-    if ([dlg runModalForTypes:types] != NSOKButton) return 0;
+    if ([dlg runModalForTypes:types] != DIALOG_OK) return 0;
     // unfortunately below code doesn't work when linked against SDK < 10.6
     //   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
     // [dlg setAllowedFileTypes:types];
-    // if ([dlg runModal] != NSOKButton) return 0;
+    // if ([dlg runModal] != DIALOG_OK) return 0;
     
     NSArray* files = [dlg URLs];
     if ([files count] < 1) return 0;

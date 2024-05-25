@@ -1,3 +1,7 @@
+/* Silence deprecation warnings on modern macOS/iOS */
+#define GL_SILENCE_DEPRECATION
+#define GLES_SILENCE_DEPRECATION
+
 #include "Core.h"
 #if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
@@ -15,14 +19,8 @@
 	#include <GL/gl.h>
 #elif defined CC_BUILD_IOS
 	#include <OpenGLES/ES2/gl.h>
-	/* Silence deprecation warnings on modern iOS */
-	#define GL_SILENCE_DEPRECATION
-	#define GLES_SILENCE_DEPRECATION
 #elif defined CC_BUILD_MACOS
 	#include <OpenGL/gl.h>
-	/* Silence deprecation warnings on modern macOS */
-	#define GL_SILENCE_DEPRECATION
-	#define GLES_SILENCE_DEPRECATION
 #elif defined CC_BUILD_GLES
 	#include <GLES2/gl2.h>
 #else
@@ -112,13 +110,13 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 
 	fillFunc(indices, count, obj);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
-	return id;
+	return uint_to_ptr(id);
 }
 
 void Gfx_BindIb(GfxResourceID ib) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-	GLuint id = (GLuint)(*ib);
+	GLuint id = ptr_to_uint(*ib);
 	if (!id) return;
 	glDeleteBuffers(1, &id);
 	*ib = 0;
@@ -129,15 +127,16 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return GL_GenAndBind(GL_ARRAY_BUFFER);
+	GLuint id = GL_GenAndBind(GL_ARRAY_BUFFER);
+	return uint_to_ptr(id);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { 
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb)); 
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
+	GLuint id = ptr_to_uint(*vb);
 	if (id) glDeleteBuffers(1, &id);
 	*vb = 0;
 }
@@ -159,11 +158,11 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	cc_uint32 size = maxVertices * strideSizes[fmt];
 
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
-	return id;
+	return uint_to_ptr(id);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb)); 
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
@@ -177,13 +176,13 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb));
 	glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb));
 	glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 
@@ -471,7 +470,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	/*   WebGL/OpenGL ES - pure black 1x1 texture */
 	/* So for consistency, always use a 1x1 pure white texture */
 	if (!texId) texId = white_square;
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
+	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
 
 
