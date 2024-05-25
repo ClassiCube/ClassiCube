@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_X11 && !defined CC_BUILD_SDL2 && !defined CC_BUILD_SDL3
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_X11
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -10,6 +10,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
+#include <X11/XF86keysym.h>
 #ifdef CC_BUILD_XINPUT2
 #include <X11/extensions/XInput2.h>
 #endif
@@ -66,6 +67,31 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 		if (key == XK_KP_End)  return CCKEY_END;
 		if (key == XK_KP_Down) return CCKEY_DOWN;
 		if (key == XK_KP_Page_Down) return CCKEY_PAGEDOWN;
+	}
+	
+	switch (key) {
+		case XF86XK_AudioLowerVolume: return CCKEY_VOLUME_DOWN;
+		case XF86XK_AudioMute:        return CCKEY_VOLUME_MUTE;
+		case XF86XK_AudioRaiseVolume: return CCKEY_VOLUME_UP;
+		
+		case XF86XK_AudioPlay: return CCKEY_MEDIA_PLAY;
+		case XF86XK_AudioStop: return CCKEY_MEDIA_STOP;
+		case XF86XK_AudioPrev: return CCKEY_MEDIA_PREV;
+		case XF86XK_AudioNext: return CCKEY_MEDIA_NEXT;
+		
+		case XF86XK_HomePage:   return CCKEY_BROWSER_HOME;
+		case XF86XK_Mail:       return CCKEY_LAUNCH_MAIL;
+		case XF86XK_Search:     return CCKEY_BROWSER_SEARCH;
+		case XF86XK_Calculator: return CCKEY_LAUNCH_CALC;
+		
+		case XF86XK_Back:       return CCKEY_BROWSER_PREV;
+		case XF86XK_Forward:    return CCKEY_BROWSER_NEXT;
+		case XF86XK_Stop:       return CCKEY_BROWSER_STOP;
+		case XF86XK_Refresh:    return CCKEY_BROWSER_REFRESH;
+		case XF86XK_Sleep:      return CCKEY_SLEEP;
+		case XF86XK_Favorites:  return CCKEY_BROWSER_FAVORITES;
+		case XF86XK_AudioMedia: return CCKEY_LAUNCH_MEDIA;
+		case XF86XK_MyComputer: return CCKEY_LAUNCH_APP1;
 	}
 
 	/* A chromebook user reported issues with pressing some keys: */
@@ -157,21 +183,31 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 		case XK_KP_Page_Up: return CCKEY_KP9;
 		case XK_KP_Delete:  return CCKEY_KP_DECIMAL;
 		case XK_KP_Enter:   return CCKEY_KP_ENTER;
+		
+		case XK_ISO_Level3_Shift: return CCKEY_RALT; /* AltGr mode switch on some European keyboard layouts */
 	}
 	return INPUT_NONE;
 }
 
 /* NOTE: This may not be entirely accurate, because user can configure keycode mappings */
 static const cc_uint8 keycodeMap[136] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_ESCAPE, '1', '2', '3', '4', '5', '6',
-	'7', '8', '9', '0', CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
-	'O',  'P', CCKEY_LBRACKET, CCKEY_RBRACKET, CCKEY_ENTER, CCKEY_LCTRL, 'A', 'S', 'D', 'F', 'G', 'H',  'J', 'K', 'L', CCKEY_SEMICOLON,
-	CCKEY_QUOTE, CCKEY_TILDE, CCKEY_LSHIFT, CCKEY_BACKSLASH, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', CCKEY_PERIOD, CCKEY_COMMA, CCKEY_SLASH, CCKEY_RSHIFT, CCKEY_KP_MULTIPLY,
-	CCKEY_LALT, CCKEY_SPACE, CCKEY_CAPSLOCK, CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, CCKEY_KP7,
-	CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MINUS, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP_PLUS, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP0, CCKEY_KP_DECIMAL, 0, 0, 0, CCKEY_F11,
-	CCKEY_F12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	CCKEY_RALT, CCKEY_RCTRL, CCKEY_HOME, CCKEY_UP, CCKEY_PAGEUP, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_END, CCKEY_DOWN, CCKEY_PAGEDOWN, CCKEY_INSERT, CCKEY_DELETE, 0, 0, 0, 0,
-	0, 0, 0, CCKEY_PAUSE, 0, 0, 0, 0, 0, CCKEY_LWIN, 0, CCKEY_RWIN
+/* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 
+/* 08 */ 0, CCKEY_ESCAPE, '1', '2', '3', '4', '5', '6',
+/* 10 */ '7', '8', '9', '0', CCKEY_MINUS, CCKEY_EQUALS, CCKEY_BACKSPACE, CCKEY_TAB, 
+/* 18 */ 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+/* 20 */ 'O',  'P', CCKEY_LBRACKET, CCKEY_RBRACKET, CCKEY_ENTER, CCKEY_LCTRL, 'A', 'S', 
+/* 28 */ 'D', 'F', 'G', 'H',  'J', 'K', 'L', CCKEY_SEMICOLON,
+/* 30 */ CCKEY_QUOTE, CCKEY_TILDE, CCKEY_LSHIFT, CCKEY_BACKSLASH, 'Z', 'X', 'C', 'V', 
+/* 38 */ 'B', 'N', 'M', CCKEY_PERIOD, CCKEY_COMMA, CCKEY_SLASH, CCKEY_RSHIFT, CCKEY_KP_MULTIPLY,
+/* 40 */ CCKEY_LALT, CCKEY_SPACE, CCKEY_CAPSLOCK, CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, 
+/* 48 */ CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, CCKEY_KP7,
+/* 50 */ CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MINUS, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP_PLUS, CCKEY_KP1, 
+/* 58 */ CCKEY_KP2, CCKEY_KP3, CCKEY_KP0, CCKEY_KP_DECIMAL, 0, 0, 0, CCKEY_F11,
+/* 60 */ CCKEY_F12, 0, 0, 0, 0, 0, 0, 0, 
+/* 68 */ 0, 0, 0, 0, CCKEY_RALT, CCKEY_RCTRL, CCKEY_HOME, CCKEY_UP, 
+/* 70 */ CCKEY_PAGEUP, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_END, CCKEY_DOWN, CCKEY_PAGEDOWN, CCKEY_INSERT, CCKEY_DELETE, 
+/* 78 */ 0, 0, 0, 0, 0, 0, 0, CCKEY_PAUSE, 
+/* 80 */ 0, 0, 0, 0, 0, CCKEY_LWIN, 0, CCKEY_RWIN
 };
 
 static int MapNativeKeycode(unsigned int keycode) {
@@ -234,7 +270,7 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_EGL
+#if defined CC_BUILD_EGL || (CC_GFX_BACKEND != CC_GFX_BACKEND_GL)
 static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;
@@ -474,8 +510,17 @@ static int MapNativeMouse(int button) {
 	if (button == 1) return CCMOUSE_L;
 	if (button == 2) return CCMOUSE_M;
 	if (button == 3) return CCMOUSE_R;
-	if (button == 8) return CCMOUSE_X1;
-	if (button == 9) return CCMOUSE_X2;
+
+	if (button ==  8) return CCMOUSE_X1;
+	if (button ==  9) return CCMOUSE_X2;
+	if (button == 10) return CCMOUSE_X3;
+	if (button == 11) return CCMOUSE_X4;
+	if (button == 12) return CCMOUSE_X5;
+	if (button == 13) return CCMOUSE_X6;
+
+	/* Mouse horizontal and vertical scroll */
+	if (button >= 4 && button <= 7) return 0;
+	Platform_Log1("Unknown mouse button: %i", &button);
 	return 0;
 }
 
@@ -610,8 +655,10 @@ void Window_ProcessEvents(float delta) {
 		case ButtonPress:
 			btn = MapNativeMouse(e.xbutton.button);
 			if (btn) Input_SetPressed(btn);
-			else if (e.xbutton.button == 4) Mouse_ScrollWheel(+1);
-			else if (e.xbutton.button == 5) Mouse_ScrollWheel(-1);
+			else if (e.xbutton.button == 4) Mouse_ScrollVWheel( +1);
+			else if (e.xbutton.button == 5) Mouse_ScrollVWheel( -1);
+			else if (e.xbutton.button == 6) Mouse_ScrollHWheel(+1);
+			else if (e.xbutton.button == 7) Mouse_ScrollHWheel(-1);
 			break;
 
 		case ButtonRelease:
@@ -1261,7 +1308,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 #include <GL/glx.h>
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);

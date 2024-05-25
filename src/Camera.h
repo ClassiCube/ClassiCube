@@ -51,7 +51,7 @@ struct Camera {
 	/* Returns the current orientation of the camera. */
 	Vec2 (*GetOrientation)(struct LocalPlayer* p);
 	/* Returns the current interpolated position of the camera. */
-	Vec3 (*GetPosition)(struct LocalPlayer* p, float t);
+	Vec3 (*GetPosition)(float t);
 
 	/* Called to update the camera's state. */
 	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */

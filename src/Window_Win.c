@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_WINGUI && !defined CC_BUILD_SDL
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_WIN32
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
@@ -39,6 +39,10 @@
 /* Missing when compiling with some older winapi SDKs */
 #define WM_INPUT       0x00FF
 #endif
+#ifndef WM_MOUSEHWHEEL
+/* Missing when compiling with some older winapi SDKs */
+#define WM_MOUSEHWHEEL 0x020E
+#endif
 
 static BOOL (WINAPI *_RegisterRawInputDevices)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static UINT (WINAPI *_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
@@ -52,25 +56,44 @@ static int win_totalWidth, win_totalHeight; /* Size of window including titlebar
 static cc_bool is_ansiWindow, grabCursor;
 static int windowX, windowY;
 
-static const cc_uint8 key_map[14 * 16] = {
-	0, 0, 0, 0, 0, 0, 0, 0, CCKEY_BACKSPACE, CCKEY_TAB, 0, 0, 0, CCKEY_ENTER, 0, 0,
-	0, 0, 0, CCKEY_PAUSE, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, CCKEY_ESCAPE, 0, 0, 0, 0,
-	CCKEY_SPACE, CCKEY_PAGEUP, CCKEY_PAGEDOWN, CCKEY_END, CCKEY_HOME, CCKEY_LEFT, CCKEY_UP, CCKEY_RIGHT, CCKEY_DOWN, 0, CCKEY_PRINTSCREEN, 0, CCKEY_PRINTSCREEN, CCKEY_INSERT, CCKEY_DELETE, 0,
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 0, 0, 0, 0, 0, 0,
-	0, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-	'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', CCKEY_LWIN, CCKEY_RWIN, CCKEY_MENU, 0, 0,
-	CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MULTIPLY, CCKEY_KP_PLUS, 0, CCKEY_KP_MINUS, CCKEY_KP_DECIMAL, CCKEY_KP_DIVIDE,
-	CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F8, CCKEY_F9, CCKEY_F10, CCKEY_F11, CCKEY_F12, CCKEY_F13, CCKEY_F14, CCKEY_F15, CCKEY_F16,
-	CCKEY_F17, CCKEY_F18, CCKEY_F19, CCKEY_F20, CCKEY_F21, CCKEY_F22, CCKEY_F23, CCKEY_F24, 0, 0, 0, 0, 0, 0, 0, 0,
-	CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	CCKEY_LSHIFT, CCKEY_RSHIFT, CCKEY_LCTRL, CCKEY_RCTRL, CCKEY_LALT, CCKEY_RALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_SEMICOLON, CCKEY_EQUALS, CCKEY_COMMA, CCKEY_MINUS, CCKEY_PERIOD, CCKEY_SLASH,
-	CCKEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, CCKEY_LBRACKET, CCKEY_BACKSLASH, CCKEY_RBRACKET, CCKEY_QUOTE, 0,
+static const cc_uint8 key_map[] = {
+/* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 
+/* 08 */ CCKEY_BACKSPACE, CCKEY_TAB, 0, 0, CCKEY_F5, CCKEY_ENTER, 0, 0,
+/* 10 */ 0, 0, 0, CCKEY_PAUSE, CCKEY_CAPSLOCK, 0, 0, 0, 
+/* 18 */ 0, 0, 0, CCKEY_ESCAPE, 0, 0, 0, 0,
+/* 20 */ CCKEY_SPACE, CCKEY_PAGEUP, CCKEY_PAGEDOWN, CCKEY_END, CCKEY_HOME, CCKEY_LEFT, CCKEY_UP, CCKEY_RIGHT, 
+/* 28 */ CCKEY_DOWN, 0, CCKEY_PRINTSCREEN, 0, CCKEY_PRINTSCREEN, CCKEY_INSERT, CCKEY_DELETE, 0,
+/* 30 */ '0', '1', '2', '3', '4', '5', '6', '7', 
+/* 38 */ '8', '9', 0, 0, 0, 0, 0, 0,
+/* 40 */ 0, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 
+/* 48 */ 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+/* 50 */ 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 
+/* 58 */ 'X', 'Y', 'Z', CCKEY_LWIN, CCKEY_RWIN, CCKEY_MENU, 0, CCKEY_SLEEP,
+/* 60 */ CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, 
+/* 68 */ CCKEY_KP8, CCKEY_KP9, CCKEY_KP_MULTIPLY, CCKEY_KP_PLUS, 0, CCKEY_KP_MINUS, CCKEY_KP_DECIMAL, CCKEY_KP_DIVIDE,
+/* 70 */ CCKEY_F1, CCKEY_F2, CCKEY_F3, CCKEY_F4, CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F8, 
+/* 78 */ CCKEY_F9, CCKEY_F10, CCKEY_F11, CCKEY_F12, CCKEY_F13, CCKEY_F14, CCKEY_F15, CCKEY_F16,
+/* 80 */ CCKEY_F17, CCKEY_F18, CCKEY_F19, CCKEY_F20, CCKEY_F21, CCKEY_F22, CCKEY_F23, CCKEY_F24, 
+/* 88 */ 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */ CCKEY_NUMLOCK, CCKEY_SCROLLLOCK, 0, 0, 0, 0, 0, 0, 
+/* 98 */ 0, 0, 0, 0, 0, 0, 0, 0,
+/* A0 */ CCKEY_LSHIFT, CCKEY_RSHIFT, CCKEY_LCTRL, CCKEY_RCTRL, CCKEY_LALT, CCKEY_RALT, CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, 
+/* A8 */ CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME, CCKEY_VOLUME_MUTE, CCKEY_VOLUME_DOWN, CCKEY_VOLUME_UP,
+/* B0 */ CCKEY_MEDIA_NEXT, CCKEY_MEDIA_PREV, CCKEY_MEDIA_STOP, CCKEY_MEDIA_PLAY, CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
+/* B8 */ 0, 0, CCKEY_SEMICOLON, CCKEY_EQUALS, CCKEY_COMMA, CCKEY_MINUS, CCKEY_PERIOD, CCKEY_SLASH,
+/* C0 */ CCKEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 
+/* C8 */ 0, 0, 0, 0, 0, 0, 0, 0,
+/* D0 */ 0, 0, 0, 0, 0, 0, 0, 0, 
+/* D8 */ 0, 0, 0, CCKEY_LBRACKET, CCKEY_BACKSLASH, CCKEY_RBRACKET, CCKEY_QUOTE, 0,
 };
-static int MapNativeKey(WPARAM key, LPARAM meta) {
-	LPARAM ext = meta & (1UL << 24);
-	switch (key)
+
+static int MapNativeKey(WPARAM vk_key, LPARAM meta) {
+	LPARAM ext      = meta & (1UL << 24);
+	LPARAM scancode = (meta >> 16) & 0xFF;
+	int key;
+	if (ext) scancode |= 0xE000;
+	
+	switch (vk_key)
 	{
 	case VK_CONTROL:
 		return ext ? CCKEY_RCTRL : CCKEY_LCTRL;
@@ -78,9 +101,11 @@ static int MapNativeKey(WPARAM key, LPARAM meta) {
 		return ext ? CCKEY_RALT  : CCKEY_LALT;
 	case VK_RETURN:
 		return ext ? CCKEY_KP_ENTER : CCKEY_ENTER;
-	default:
-		return key < Array_Elems(key_map) ? key_map[key] : 0;
 	}
+	
+	key = vk_key < Array_Elems(key_map) ? key_map[vk_key] : 0;
+	if (!key) Platform_Log2("Unknown key: %x, %x", &vk_key, &scancode);
+	return key;
 }
 
 static void RefreshWindowBounds(void) {
@@ -157,7 +182,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEWHEEL:
 		wheelDelta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
-		Mouse_ScrollWheel(wheelDelta);
+		Mouse_ScrollVWheel(wheelDelta);
+		return 0;
+	case WM_MOUSEHWHEEL:
+		wheelDelta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
+		Mouse_ScrollHWheel(wheelDelta);
 		return 0;
 
 	case WM_LBUTTONDOWN:
@@ -241,7 +270,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		} else {
 			key = MapNativeKey(wParam, lParam);
 			if (key) Input_Set(key, pressed);
-			else Platform_Log1("Unknown key: %x", &wParam);
 		}
 		return 0;
 	} break;
@@ -745,7 +773,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);

@@ -1,0 +1,80 @@
+name: Build latest (Windows ARM32/64)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-windows-arm
+  cancel-in-progress: true
+
+jobs:
+#============================================
+# ============== ARM32 WINDOWS ==============
+# ===========================================
+  build-32:
+    runs-on: ubuntu-latest
+    container:
+      image: dockcross/windows-armv7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile ARM32 Windows builds
+        shell: bash
+        id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          WIN32_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          
+          cd src
+          armv7-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN32_FLAGS }} -o cc-arm32-d3d11.exe $LATEST_FLAG -lwinmm -limagehlp
+          
+          
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile 32 bit Windows build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-arm32-d3d11.exe'
+          DEST_NAME: 'ClassiCube-arm32-Direct3D11.exe'
+#============================================
+# ============== ARM64 WINDOWS ==============
+# ===========================================
+  build-64:
+    runs-on: ubuntu-latest
+    container:
+      image: dockcross/windows-arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile ARM64 Windows builds
+        shell: bash
+        id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          WIN64_FLAGS:  "-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN -DCC_GFX_BACKEND=CC_GFX_BACKEND_D3D11"
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"${GITHUB_SHA::9}\"
+          
+          cd src
+          aarch64-w64-mingw32-gcc *.c ${{ env.COMMON_FLAGS }} ${{ env.WIN64_FLAGS }} -o cc-arm64-d3d11.exe $LATEST_FLAG -lwinmm -limagehlp
+          
+          
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile 64 bit Windows build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-arm64-d3d11.exe'
+          DEST_NAME: 'ClassiCube-arm64-Direct3D11.exe'

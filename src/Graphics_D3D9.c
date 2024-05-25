@@ -1,5 +1,5 @@
 #include "Core.h"
-#ifdef CC_BUILD_D3D9
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -394,7 +394,7 @@ void Gfx_DisableMipmaps(void) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
-static cc_bool gfx_alphaTesting, gfx_alphaBlending;
+static cc_bool gfx_alphaBlending;
 static cc_bool gfx_depthTesting, gfx_depthWriting;
 static PackedCol gfx_clearColor, gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
@@ -455,18 +455,12 @@ void Gfx_SetFogMode(FogFunc func) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	if (gfx_alphaTesting == enabled) return;
-	gfx_alphaTesting = enabled;
-
+static void SetAlphaTest(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE, enabled);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	if (gfx_alphaBlending == enabled) return;
-	gfx_alphaBlending = enabled;
-
+static void SetAlphaBlend(cc_bool enabled) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, enabled);
 }
@@ -529,7 +523,7 @@ void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,   gfx_alphaTesting);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,   gfx_alphaTest);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlending);
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, gfx_fogEnabled);

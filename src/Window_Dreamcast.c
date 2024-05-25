@@ -222,7 +222,9 @@ static void HandleButtons(int port, int mods) {
 	Gamepad_SetButton(port, CCPAD_UP,     mods & CONT_DPAD_UP);
 	Gamepad_SetButton(port, CCPAD_DOWN,   mods & CONT_DPAD_DOWN);
 	
-	// Buttons not on standard controller (todo C)
+	// Buttons not on standard controller
+	Gamepad_SetButton(port, CCPAD_C,       mods & CONT_C);
+	Gamepad_SetButton(port, CCPAD_D,       mods & CONT_D);
 	Gamepad_SetButton(port, CCPAD_Z,       mods & CONT_Z);
 	Gamepad_SetButton(port, CCPAD_CLEFT,   mods & CONT_DPAD2_LEFT);
 	Gamepad_SetButton(port, CCPAD_CRIGHT,  mods & CONT_DPAD2_RIGHT);
@@ -241,7 +243,7 @@ static void HandleJoystick(int port, int axis, int x, int y, float delta) {
 static void HandleController(int port, cont_state_t* state, float delta) {
 	Gamepad_SetButton(port, CCPAD_L, state->ltrig > 10);
 	Gamepad_SetButton(port, CCPAD_R, state->rtrig > 10);
-	// TODO CONT_Z, joysticks
+	// TODO second joystick
 	// TODO: verify values are right     
 	HandleJoystick(port, PAD_AXIS_RIGHT, state->joyx, state->joyy, delta);
 }

@@ -97,6 +97,8 @@ CMakeCache.txt
 
 #GCC object files
 *.o
+# Build dependency files
+*.d
 
 # Roslyn cache directories
 *.ide/

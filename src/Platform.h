@@ -270,6 +270,8 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 /* Attempts to close the given socket */
 void Socket_Close(cc_socket s);
+/* Attempts to write all data to the given socket, returning ERR_END_OF_STREAM if it could not */
+cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count);
 
 #ifdef CC_BUILD_MOBILE
 void Platform_ShareScreenshot(const cc_string* filename);

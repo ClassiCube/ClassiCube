@@ -1,5 +1,11 @@
 name: Build latest (NetBSD)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-netbsd
@@ -7,10 +13,9 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cross-rs/x86_64-unknown-netbsd
+      image: ghcr.io/cross-rs/x86_64-unknown-netbsd:edge
     steps:
       - uses: actions/checkout@v3
       - name: Install prerequisites

@@ -43,7 +43,6 @@ static void HeldBlockRenderer_RenderModel(void) {
 		SetHeldModel(model);
 		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
 
-		Gfx_SetAlphaTest(true);
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {	

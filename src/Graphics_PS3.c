@@ -286,7 +286,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	rsxSetCullFaceEnable(context, enabled);
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	rsxSetBlendEnable(context, enabled);
 }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -316,7 +316,7 @@ void Gfx_SetDepthTest(cc_bool enabled) {
 	UpdateDepthState();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
 	rsxSetAlphaTestEnable(context, enabled);
 }
 

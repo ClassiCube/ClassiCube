@@ -27,12 +27,14 @@
 #include "Deflate.h"
 #include "Stream.h"
 #include "Builder.h"
+#include "Lighting.h"
 #include "Logger.h"
 #include "Options.h"
 #include "Input.h"
 #include "Utils.h"
 #include "Errors.h"
 #include "SystemFonts.h"
+#include "Lighting.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {
@@ -240,7 +242,6 @@ static struct ListScreen {
 	struct ButtonWidget btns[LIST_SCREEN_ITEMS];
 	struct ButtonWidget left, right, done, action;
 	struct FontDesc font;
-	float wheelAcc;
 	int currentIndex;
 	Widget_LeftClick EntryClick, DoneClick, ActionClick;
 	const char* actionText;
@@ -373,17 +374,13 @@ static int ListScreen_KeyDown(void* screen, int key) {
 		ListScreen_PageClick(s, false);
 	} else if (Input_IsRightButton(key) || key == CCKEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
+	} else if (key == CCWHEEL_UP) {
+		ListScreen_SetCurrentIndex(s, s->currentIndex - 1);
+	} else if (key == CCWHEEL_DOWN) {
+		ListScreen_SetCurrentIndex(s, s->currentIndex + 1);
 	} else {
 		Menu_InputDown(screen, key);
 	}
-	return true;
-}
-
-static int ListScreen_MouseScroll(void* screen, float delta) {
-	struct ListScreen* s = (struct ListScreen*)screen;
-	int steps = Utils_AccumulateWheelDelta(&s->wheelAcc, delta);
-
-	if (steps) ListScreen_SetCurrentIndex(s, s->currentIndex - steps);
 	return true;
 }
 
@@ -393,8 +390,6 @@ static void ListScreen_Init(void* screen) {
 	s->widgets    = list_widgets;
 	s->numWidgets = 0;
 	s->maxWidgets = Array_Elems(list_widgets);
-
-	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) 
@@ -454,7 +449,7 @@ static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    Screen_NullUpdate, ListScreen_Free,  
 	ListScreen_Render,  Screen_BuildMesh,
 	ListScreen_KeyDown, Screen_InputUp,    Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,   Screen_PointerUp,  Menu_PointerMove, ListScreen_MouseScroll,
+	Menu_PointerDown,   Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
 	ListScreen_Layout,  ListScreen_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {
@@ -514,7 +509,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	if (Gui.ClassicMenu) return;
 
-	Widget_SetDisabled(&s->btns[4],
+	Widget_SetDisabled(&s->btns[1],
 			!Entities.CurPlayer->Hacks.CanAnyHacks); /* select texture pack */
 	s->dirty = true;
 }
@@ -541,11 +536,11 @@ static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	static const struct SimpleButtonDesc descs[] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
+		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
+		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   },
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
-		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
-		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
-		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
+		{  160,   50, "Save level...",          Menu_SwitchSaveLevel }
 	};
 	s->widgets     = pause_widgets;
 	s->numWidgets  = 0;
@@ -559,8 +554,8 @@ static void PauseScreen_Init(void* screen) {
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 
 	if (Server.IsSinglePlayer) return;
-	s->btns[1].flags = WIDGET_FLAG_DISABLED;
-	s->btns[2].flags = WIDGET_FLAG_DISABLED;
+	s->btns[3].flags = WIDGET_FLAG_DISABLED;
+	s->btns[4].flags = WIDGET_FLAG_DISABLED;
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -659,7 +654,7 @@ static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eGui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
-	"&eSet key bindings, bind keys to act as mouse clicks",
+	"&eSet key and mouse bindings",
 	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
 	"&eEnv colours, water level, weather, and more",
@@ -1953,7 +1948,7 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	const cc_uint8* curBinds;
 
 	String_InitArray(text, textBuffer);
-	curBinds = binds_gamepad ? KeyBinds_Gamepad : KeyBinds_Normal;
+	curBinds = binds_gamepad ? PadBind_Mappings : KeyBind_Mappings;
 
 	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
 		s->descs[i], Input_DisplayNames[curBinds[s->binds[i]]]);
@@ -1977,17 +1972,19 @@ static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 static int KeyBindsScreen_KeyDown(void* screen, int key) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	const cc_uint8* defaults;
-	cc_uint8* curBinds;
-	KeyBind bind;
+	InputBind bind;
 	int idx;
 
 	if (s->curI == -1) return Menu_InputDown(s, key);
-	curBinds = binds_gamepad ? KeyBinds_Gamepad        : KeyBinds_Normal;
-	defaults = binds_gamepad ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults;
-
+	defaults = binds_gamepad ? PadBind_Defaults : KeyBind_Defaults;
 	bind = s->binds[s->curI];
 	if (Input_IsEscapeButton(key)) key = defaults[bind];
-	KeyBind_Set(bind, key, curBinds);
+	
+	if (binds_gamepad) {
+		PadBind_Set(bind, key);
+	} else {
+		KeyBind_Set(bind, key);
+	}
 
 	idx         = s->curI;
 	s->curI     = -1;
@@ -2113,7 +2110,7 @@ static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const cha
 *------------------------------------------------ClassicBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void ClassicBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
+	static const cc_uint8 binds[]    = { BIND_FORWARD, BIND_BACK, BIND_JUMP, BIND_CHAT, BIND_SET_SPAWN, BIND_LEFT, BIND_RIGHT, BIND_INVENTORY, BIND_FOG, BIND_RESPAWN };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Save location", "Left", "Right", "Build", "Toggle fog", "Load location" };
 	binds_gamepad = false;
 
@@ -2132,7 +2129,7 @@ void ClassicBindingsScreen_Show(void) {
 *----------------------------------------------ClassicHacksBindingsScreen-------------------------------------------------*
 *#########################################################################################################################*/
 void ClassicHacksBindingsScreen_Show(void) {
-	static const cc_uint8 binds[6]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
+	static const cc_uint8 binds[6]    = { BIND_SPEED, BIND_NOCLIP, BIND_HALF_SPEED, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN };
 	static const char* const descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	binds_gamepad = false;
 
@@ -2146,7 +2143,7 @@ void ClassicHacksBindingsScreen_Show(void) {
 *-------------------------------------------------NormalBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void NormalBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_TABLIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
+	static const cc_uint8 binds[]    = { BIND_FORWARD, BIND_BACK, BIND_JUMP, BIND_CHAT, BIND_SET_SPAWN, BIND_TABLIST, BIND_LEFT, BIND_RIGHT, BIND_INVENTORY, BIND_FOG, BIND_RESPAWN, BIND_SEND_CHAT };
 	static const char* const descs[] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	
 	KeyBindsScreen_Reset(NULL, Menu_SwitchBindsHacks, 250);
@@ -2159,7 +2156,7 @@ void NormalBindingsScreen_Show(void) {
 *--------------------------------------------------HacksBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void HacksBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
+	static const cc_uint8 binds[]    = { BIND_SPEED, BIND_NOCLIP, BIND_HALF_SPEED, BIND_ZOOM_SCROLL, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN, BIND_THIRD_PERSON };
 	static const char* const descs[] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	
 	KeyBindsScreen_Reset(Menu_SwitchBindsNormal, Menu_SwitchBindsOther, 260);
@@ -2172,7 +2169,7 @@ void HacksBindingsScreen_Show(void) {
 *--------------------------------------------------OtherBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void OtherBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]     = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
+	static const cc_uint8 binds[]     = { BIND_EXT_INPUT, BIND_HIDE_FPS, BIND_HIDE_GUI, BIND_HOTBAR_SWITCH, BIND_DROP_BLOCK,BIND_SCREENSHOT, BIND_FULLSCREEN, BIND_AXIS_LINES, BIND_AUTOROTATE, BIND_SMOOTH_CAMERA, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS };
 	static const char* const descs[]  = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	
 	KeyBindsScreen_Reset(Menu_SwitchBindsHacks, Menu_SwitchBindsMouse, 260);
@@ -2185,7 +2182,7 @@ void OtherBindingsScreen_Show(void) {
 *--------------------------------------------------MouseBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void MouseBindingsScreen_Show(void) {
-	static const cc_uint8 binds[]    = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK, KEYBIND_LOOK_UP, KEYBIND_LOOK_DOWN, KEYBIND_LOOK_LEFT, KEYBIND_LOOK_RIGHT };
+	static const cc_uint8 binds[]    = { BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK, BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_LEFT, BIND_LOOK_RIGHT };
 	static const char* const descs[] = { "Delete block", "Pick block", "Place block", "Look Up", "Look Down", "Look Left", "Look Right" };
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsOther, Menu_SwitchBindsHotbar, 260);
@@ -2199,8 +2196,8 @@ void MouseBindingsScreen_Show(void) {
 *-------------------------------------------------HotbarBindingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
 void HotbarBindingsScreen_Show(void) {
-	static const cc_uint8 binds[] = { KEYBIND_HOTBAR_1,KEYBIND_HOTBAR_2,KEYBIND_HOTBAR_3, KEYBIND_HOTBAR_4,KEYBIND_HOTBAR_5,KEYBIND_HOTBAR_6, KEYBIND_HOTBAR_7,KEYBIND_HOTBAR_8,KEYBIND_HOTBAR_9,
-										KEYBIND_HOTBAR_LEFT, KEYBIND_HOTBAR_RIGHT };
+	static const cc_uint8 binds[] = { BIND_HOTBAR_1,BIND_HOTBAR_2,BIND_HOTBAR_3, BIND_HOTBAR_4,BIND_HOTBAR_5,BIND_HOTBAR_6, BIND_HOTBAR_7,BIND_HOTBAR_8,BIND_HOTBAR_9,
+										BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT };
 	static const char* const descs[] = { "Slot #1","Slot #2","Slot #3", "Slot #4","Slot #5","Slot #6", "Slot #7","Slot #8","Slot #9", "Slot left","Slot right" };
 
 	KeyBindsScreen_Reset(Menu_SwitchBindsMouse, NULL, 260);
@@ -2387,7 +2384,7 @@ static struct MenuOptionsScreen {
 	Screen_Body
 	const char* descriptions[MENUOPTS_MAX_OPTS + 1];
 	struct ButtonWidget* activeBtn;
-	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
+	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged, OnLightingModeServerChanged;
 	int numButtons;
 	struct FontDesc titleFont, textFont;
 	struct TextGroupWidget extHelp;
@@ -2582,6 +2579,14 @@ static void MenuOptionsScreen_OnHacksChanged(void* screen) {
 	if (s->OnHacksChanged) s->OnHacksChanged(s);
 	s->dirty = true;
 }
+static void MenuOptionsScreen_OnLightingModeServerChanged(void* screen, cc_uint8 oldMode, cc_bool fromServer) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	/* This event only actually matters if it's from the server */
+	if (fromServer) {
+		if (s->OnLightingModeServerChanged) s->OnLightingModeServerChanged(s);
+		s->dirty = true;
+	}
+}
 
 static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
@@ -2604,6 +2609,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
 	s->extHelp.lines = 0;
 	Event_Register_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Register_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
 	
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
@@ -2627,6 +2633,7 @@ static void MenuOptionsScreen_Render(void* screen, float delta) {
 static void MenuOptionsScreen_Free(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Event_Unregister_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Unregister_(&WorldEvents.LightingModeChanged, screen, MenuOptionsScreen_OnLightingModeServerChanged);
 	Gui_RemoveCore((struct Screen*)&MenuInputOverlay);
 }
 
@@ -2866,6 +2873,16 @@ void EnvSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
+static void GraphicsOptionsScreen_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->widgets;
+	cc_bool disabled = Lighting_ModeLockedByServer;
+	struct ButtonWidget* btn = (struct ButtonWidget*)widgets[4];
+
+	MenuOptionsScreen_Update(s, btn);
+	Widget_SetDisabled(widgets[4], disabled);
+	MenuInputOverlay_CheckStillValid(s);
+}
+
 static void GraphicsOptionsScreen_GetViewDist(cc_string* v) { String_AppendInt(v, Game_ViewDistance); }
 static void GraphicsOptionsScreen_SetViewDist(const cc_string* v) { Game_UserSetViewDistance(Menu_Int(v)); }
 
@@ -2874,6 +2891,14 @@ static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
+}
+static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
+static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
+	cc_uint8 mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);
+	Options_Set(OPT_LIGHTING_MODE, v);
+
+	Lighting_ModeSetByServer = false;
+	Lighting_SetMode(mode, false);
 }
 
 static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
@@ -2911,9 +2936,10 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
 		{ -1,  -50, "View distance",     MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist },
-		{ -1,    0, "Advanced lighting", MenuOptionsScreen_Bool,
+		{ -1,    0, "Smooth lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
-
+		{ -1,  50,  "Lighting mode", MenuOptionsScreen_Enum,
+			GraphicsOptionsScreen_GetLighting,   GraphicsOptionsScreen_SetLighting },
 		{ 1, -150, "Smooth camera", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
 		{ 1, -100, "Names",   MenuOptionsScreen_Enum,
@@ -2930,7 +2956,11 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50,  "Anaglyph 3D", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetAnaglyph, ClassicOptionsScreen_SetAnaglyph }
 	};
+
+	s->OnLightingModeServerChanged = GraphicsOptionsScreen_CheckLightingModeAllowed;
+
 	MenuOptionsScreen_AddButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+	GraphicsOptionsScreen_CheckLightingModeAllowed(s);
 
 	s->descriptions[0] = "&eChange the smoothness of the smooth camera.";
 	s->descriptions[1] = \
@@ -2938,14 +2968,22 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
-	s->descriptions[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	s->descriptions[5] = \
+	s->descriptions[3] = \
+		"&eSmooth lighting smooths lighting and adds a minor glow to bright blocks.\n" \
+		"&cNote: &eThis setting may reduce performance.";
+	s->descriptions[4] = \
+		"&eClassic: &fTwo levels of light, sun and shadow.\n" \
+		"    Good for performance.\n" \
+		"&eFancy: &fBright blocks cast a much wider range of light\n" \
+		"    May heavily reduce performance.\n" \
+		"&cNote: &eIn multiplayer, this option may be changed or locked by the server.";
+	s->descriptions[6] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	s->descriptions[6] = \
+	s->descriptions[7] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
@@ -2956,8 +2994,9 @@ void GraphicsOptionsScreen_Show(void) {
 	MenuInput_Float(menuOpts_descs[0], 1, 100, 20);
 	MenuInput_Enum(menuOpts_descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(menuOpts_descs[2],  8, 4096, 512);
-	MenuInput_Enum(menuOpts_descs[5], NameMode_Names,   NAME_MODE_COUNT);
-	MenuInput_Enum(menuOpts_descs[6], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[4], LightingMode_Names, LIGHTING_MODE_COUNT)
+	MenuInput_Enum(menuOpts_descs[6], NameMode_Names,     NAME_MODE_COUNT);
+	MenuInput_Enum(menuOpts_descs[7], ShadowMode_Names,   SHADOW_MODE_COUNT);
 
 	MenuOptionsScreen_Show(GraphicsOptionsScreen_InitWidgets);
 }
@@ -3180,7 +3219,7 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			HacksSettingsScreen_GetClipping, HacksSettingsScreen_SetClipping },
 		{ -1,    0, "Jump height",      MenuOptionsScreen_Input,
 			HacksSettingsScreen_GetJump,     HacksSettingsScreen_SetJump },
-		{ -1,   50, "WOM style hacks",  MenuOptionsScreen_Bool,
+		{ -1,   50, "WoM style hacks",  MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetWOMHacks, HacksSettingsScreen_SetWOMHacks },
 	
 		{ 1, -150, "Full block stepping", MenuOptionsScreen_Bool,
@@ -3201,6 +3240,11 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 	s->descriptions[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
 	s->descriptions[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
+	s->descriptions[4] = \
+		"&eIf &fON&e, gives you a triple jump which increases speed massively,\n" \
+		"&ealong with older noclip style. This is based on the \"World of Minecraft\"\n" \
+		"&eclassic client mod, which popularized hacks conventions and controls\n" \
+		"&ebefore ClassiCube was created.";
 	s->descriptions[7] = \
 		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
 		"&ethe block to be placed, and you to be moved out of the way.\n" \
@@ -3689,7 +3733,7 @@ static void TexIdsOverlay_Render(void* screen, float delta) {
 
 static int TexIdsOverlay_KeyDown(void* screen, int key) {
 	struct Screen* s = (struct Screen*)screen;
-	if (KeyBind_Claims(KEYBIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
+	if (InputBind_Claims(BIND_IDOVERLAY, key)) { Gui_Remove(s); return true; }
 	return false;
 }
 

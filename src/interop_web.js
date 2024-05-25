@@ -350,8 +350,8 @@ mergeInto(LibraryManager.library, {
     // previously you were required to add interop_LoadIndexedDB to Module.preRun array
     //  to load the indexedDB asynchronously *before* starting ClassiCube, because it
     //  could not load indexedDB asynchronously
-    // however, as ClassiCube now loads IndexedDB asynchronously itself, this is no longer
-    //  necessary, but is kept arounf foe backwards compatibility
+    // however, as ClassiCube now loads IndexedDB asynchronously itself, this is
+    //   no longer necessary, but is kept around for backwards compatibility
   },
   interop_SaveNode__deps: ['IDBFS_getDB', 'IDBFS_storeRemoteEntry'],
   interop_SaveNode: function(path) {
@@ -441,7 +441,7 @@ mergeInto(LibraryManager.library, {
     req.onsuccess = function() {
       db = req.result;
       window.IDBFS_db = db;
-      // browser will sometimes close connection behind the scenes
+      // browser will sometimes close IndexedDB connection behind the scenes
       db.onclose = function(ev) { 
         console.log('IndexedDB connection closed unexpectedly!');
         window.IDBFS_db = null; 

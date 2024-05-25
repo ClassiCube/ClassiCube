@@ -82,6 +82,7 @@ void Event_UnregisterAll(void) {
 	WorldEvents.Loading.Count   = 0;
 	WorldEvents.MapLoaded.Count = 0;
 	WorldEvents.EnvVarChanged.Count = 0;
+	WorldEvents.LightingModeChanged.Count = 0;
 
 	ChatEvents.FontChanged.Count    = 0;
 	ChatEvents.ChatReceived.Count   = 0;
@@ -189,5 +190,12 @@ void Event_RaisePluginMessage(struct Event_PluginMessage* handlers, cc_uint8 cha
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], channel, data);
+	}
+}
+
+void Event_RaiseLightingMode(struct Event_LightingMode* handlers, cc_uint8 oldMode, cc_bool fromServer) {
+	int i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](handlers->Objs[i], oldMode, fromServer);
 	}
 }

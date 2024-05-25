@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
@@ -202,7 +202,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 
 /* cached uniforms (cached for multiple programs */
 static struct Matrix _view, _proj, _mvp;
-static cc_bool gfx_alphaTest, gfx_texTransform;
+static cc_bool gfx_texTransform;
 static float _texX, _texY;
 static PackedCol gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
@@ -500,7 +500,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	SwitchProgram();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
+static void SetAlphaTest(cc_bool enabled) { SwitchProgram(); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
@@ -617,27 +617,27 @@ static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 static void GL_SetupVbColoured(void) {
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, (void*)12);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, uint_to_ptr( 0));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, uint_to_ptr(12));
 }
 
 static void GL_SetupVbTextured(void) {
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)12);
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)16);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr( 0));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, uint_to_ptr(12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(16));
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, (void*)(offset + 12));
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, uint_to_ptr(offset     ));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, uint_to_ptr(offset + 12));
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 16));
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset     ));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset + 12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {

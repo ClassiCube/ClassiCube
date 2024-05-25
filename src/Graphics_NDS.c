@@ -176,7 +176,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 	glPolyFmt(POLY_ALPHA(31) | (enabled ? POLY_CULL_BACK : POLY_CULL_NONE));
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
+static void SetAlphaBlend(cc_bool enabled) {
 	/*if (enabled) {
 		glEnable(GL_BLEND);
 	} else {
@@ -376,7 +376,7 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
+static void SetAlphaTest(cc_bool enabled) {
     if (enabled) {
         //glEnable(GL_ALPHA_TEST);
     } else {

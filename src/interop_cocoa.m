@@ -1,4 +1,6 @@
 #define GL_SILENCE_DEPRECATION
+#include "Core.h"
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_COCOA
 #include "_WindowBase.h"
 #include "ExtMath.h"
 #include "Funcs.h"
@@ -30,7 +32,7 @@ static const cc_uint8 key_map[8 * 16] = {
 /* 0x30 */ CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0,
 /* 0x38 */ 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
 /* 0x40 */ 0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK,
-/* 0x48 */ 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+/* 0x48 */ CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_VOLUME_MUTE, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
 /* 0x50 */ 0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5,
 /* 0x58 */ CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
 /* 0x60 */ CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11,
@@ -244,7 +246,9 @@ static void RefreshWindowBounds(void) {
 
 - (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 	GLContext_Update();
+#endif
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
@@ -434,8 +438,15 @@ static int MapNativeMouse(long button) {
 	if (button == 0) return CCMOUSE_L;
 	if (button == 1) return CCMOUSE_R;
 	if (button == 2) return CCMOUSE_M;
+
 	if (button == 3) return CCMOUSE_X1;
 	if (button == 4) return CCMOUSE_X2;
+	if (button == 5) return CCMOUSE_X3;
+	if (button == 6) return CCMOUSE_X4;
+	if (button == 7) return CCMOUSE_X5;
+	if (button == 8) return CCMOUSE_X6;
+
+	Platform_Log1("Unknown mouse button: %i", &button);
 	return 0;
 }
 
@@ -489,7 +500,7 @@ static void DebugScrollEvent(NSEvent* ev) {
 void Window_ProcessEvents(float delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
-	float dy;
+	float dx, dy;
 	
 	// https://wiki.freepascal.org/Cocoa_Internals/Application 
 	[pool release];
@@ -543,15 +554,19 @@ void Window_ProcessEvents(float delta) {
 
 		case 22: // NSScrollWheel
 			if (scroll_debugging) DebugScrollEvent(ev);
+			dx    = [ev deltaX];
 			dy    = [ev deltaY];
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175
 			//  delta is in 'line height' units, but I don't know how to map that to actual units.
 			// All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that
 			//  sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll.
 			// So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards.
-			//  TODO: Figure out if there's a better way than this. */
+			//  TODO: Figure out if there's a better way than this. */	
+			steps = dx > 0.0f ? Math_Ceil(dx) : Math_Floor(dx);
+			Mouse_ScrollHWheel(steps);
+			
 			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
-			Mouse_ScrollWheel(steps);
+			Mouse_ScrollVWheel(steps);
 			break;
 
 		case  5: // NSMouseMoved
@@ -725,7 +740,7 @@ void OnscreenKeyboard_Close(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
@@ -917,4 +932,5 @@ cc_result Window_ExitFullscreen(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
+#endif
 #endif

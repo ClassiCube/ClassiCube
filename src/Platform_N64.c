@@ -260,9 +260,6 @@ void Platform_Init(void) {
 	DisableFpuExceptions();
 	
 	Platform_ReadonlyFilesystem = true;
-	// TODO: Redesign Drawer2D to better handle this
-	Options_SetBool(OPT_USE_CHAT_FONT, true);
-	
 	dfs_init(DFS_DEFAULT_LOCATION);
 	timer_init();
 	rtc_init();

@@ -31,7 +31,9 @@ CC_API double Math_Sin(double x);
 CC_API double Math_Cos(double x);
 float Math_SinF(float x);
 float Math_CosF(float x);
-double Math_Atan2(double x, double y);
+/* Computes atan2(y, x), intended primarily for angle calculation*/
+/*  Note that accuracy is only up to around 4 decimal places */
+float Math_Atan2f(float x, float y);
 
 /* Computes log2(x). Can also be used to approximate log_y(x). */
 /*   e.g. for log3(x), use: log2(x)/log2(3) */

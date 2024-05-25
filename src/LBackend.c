@@ -332,6 +332,7 @@ static void OnPointerDown(void* obj, int idx) {
 	struct LScreen* s = Launcher_Active;
 	struct LWidget* over;
 	struct LWidget* prev;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -345,6 +346,7 @@ static void OnPointerUp(void* obj, int idx) {
 	struct LScreen* s = Launcher_Active;
 	struct LWidget* over;
 	struct LWidget* prev;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -365,6 +367,7 @@ static void OnPointerMove(void* obj, int idx) {
 	struct LWidget* over;
 	struct LWidget* prev;
 	cc_bool overSame;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);

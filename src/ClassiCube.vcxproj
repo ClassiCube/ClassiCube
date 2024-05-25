@@ -416,6 +416,7 @@
     <ClInclude Include="Particle.h" />
     <ClInclude Include="BlockPhysics.h" />
     <ClInclude Include="Picking.h" />
+    <ClInclude Include="Queue.h" />
     <ClInclude Include="SelOutlineRenderer.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Screens.h" />
@@ -500,6 +501,7 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
+    <ClCompile Include="FancyLighting.c" />
     <ClCompile Include="Platform_3DS.c" />
     <ClCompile Include="Platform_Android.c" />
     <ClCompile Include="Platform_Dreamcast.c" />
@@ -529,6 +531,7 @@
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Particle.c" />
     <ClCompile Include="BlockPhysics.c" />
+    <ClCompile Include="Queue.c" />
     <ClCompile Include="SelOutlineRenderer.c" />
     <ClCompile Include="Picking.c" />
     <ClCompile Include="main.c" />
@@ -560,8 +563,9 @@
     <ClCompile Include="Window_SDL.c" />
     <ClCompile Include="Window_SDL3.c" />
     <ClCompile Include="Window_Switch.c" />
+    <ClCompile Include="Window_Terminal.c" />
     <ClCompile Include="Window_Web.c" />
-    <ClCompile Include="Window_WiiU.c" />
+    <ClCompile Include="Window_WiiU.cpp" />
     <ClCompile Include="Window_Win.c" />
     <ClCompile Include="Window_X11.c" />
     <ClCompile Include="Window_Xbox.c" />

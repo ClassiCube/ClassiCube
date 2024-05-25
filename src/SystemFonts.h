@@ -11,6 +11,9 @@ struct IGameComponent;
 struct StringsBuffer;
 extern struct IGameComponent SystemFonts_Component;
 
+int FallbackFont_TextWidth(const struct DrawTextArgs* args);
+void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow);
+
 /* Allocates a new system font from the given arguments */
 cc_result SysFont_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
 /* Frees an allocated system font */

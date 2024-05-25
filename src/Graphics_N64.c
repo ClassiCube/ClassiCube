@@ -237,7 +237,7 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+static void SetAlphaBlend(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -377,7 +377,7 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { 
+static void SetAlphaTest(cc_bool enabled) {
 	if (enabled) { glEnable(GL_ALPHA_TEST); } else { glDisable(GL_ALPHA_TEST); }
 }
 

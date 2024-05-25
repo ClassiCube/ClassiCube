@@ -2,6 +2,7 @@
 #include "String.h"
 #include "Logger.h"
 #include "Constants.h"
+#include "Errors.h"
 cc_bool Platform_ReadonlyFilesystem;
 
 /*########################################################################################################################*
@@ -87,6 +88,21 @@ int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end) {
 	cc_uint64 raw = Stopwatch_ElapsedMicroseconds(beg, end);
 	if (raw > Int32_MaxValue) return Int32_MaxValue / 1000;
 	return (int)raw / 1000;
+}
+
+cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
+	cc_uint32 sent;
+	cc_result res;
+
+	while (count)
+	{
+		if ((res = Socket_Write(socket, data, count, &sent))) return res;
+		if (!sent) return ERR_END_OF_STREAM;
+
+		data  += sent;
+		count -= sent;
+	}
+	return 0;
 }
 
 

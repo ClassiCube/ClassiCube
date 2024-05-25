@@ -87,7 +87,7 @@ static void IsometricDrawer_Angled(BlockID block, float size) {
 	Drawer.Z1 = scale * (1.0f - min.z * 2.0f);
 	Drawer.Z2 = scale * (1.0f - max.z * 2.0f);
 
-	bright = Blocks.FullBright[block];
+	bright = Blocks.Brightness[block];
 	Drawer.Tinted  = Blocks.Tinted[block];
 	Drawer.TintCol = Blocks.FogCol[block];
 
@@ -129,7 +129,7 @@ void IsometricDrawer_AddBatch(BlockID block, float size, float x, float y) {
 	iso_posX = x; iso_posY = y;
 	/* See comment in Gfx_Make2DQuad() for why 0.5 is subtracted in D3D9 */
 	/* TODO pass as arguments? test diff */
-#ifdef CC_BUILD_D3D9
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	iso_posX -= 0.5f; iso_posY -= 0.5f;
 #endif
 

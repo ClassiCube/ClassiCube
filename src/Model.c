@@ -818,6 +818,7 @@ static void CustomModel_DrawArm(struct Entity* e) {
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
 	int i;
 	if (!cm->numArmParts) return;
+	Gfx_SetAlphaTest(true);
 
 	Models.uScale = 1.0f / cm->uScale;
 	Models.vScale = 1.0f / cm->vScale;
@@ -952,6 +953,7 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 static void HumanModel_DrawArmCore(struct Entity* e, struct ModelSet* model) {
 	struct ModelLimbs* set;
 	int type, num;
+	Gfx_SetAlphaTest(true);
 
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
@@ -1854,6 +1856,7 @@ static void SkeletonModel_Draw(struct Entity* e) {
 }
 
 static void SkeletonModel_DrawArm(struct Entity* e) {
+	Gfx_SetAlphaTest(true);
 	Model_LockVB(e, MODEL_BOX_VERTICES);
 
 	Model_DrawArmPart(&skeleton_rightArm);
@@ -2190,8 +2193,8 @@ static void BlockModel_Draw(struct Entity* e) {
 	bModel_index = 0;
 	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
-	if (Blocks.FullBright[bModel_block]) {
-		for (i = 0; i < FACE_COUNT; i++) 
+	if (Blocks.Brightness[bModel_block]) {
+		for (i = 0; i < FACE_COUNT; i++)
 		{
 			Models.Cols[i] = PACKEDCOL_WHITE;
 		}
