@@ -1,0 +1,38 @@
+name: Build latest (macOS ARM64)
+on: [push]
+
+concurrency:
+  group: ${{ github.ref }}-mac-ARM64
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile ARM64 macOS builds
+        shell: bash
+        id: compile
+        env: 
+          COMMON_FLAGS: "-O1 -s -fno-stack-protector -fno-math-errno -Qn"
+          MAC_FLAGS:    "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_GLMODERN -arch arm64"
+        run: |
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"  
+          
+          cd src
+          clang *.c interop_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_FLAGS }} $LATEST_FLAG -o cc-mac-arm64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          # https://wiki.freepascal.org/Code_Signing_for_macOS#Ad_hoc_signing
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile ARM64 macOS build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/cc-mac-arm64'
+          DEST_NAME: 'ClassiCube-mac-ARM64'
