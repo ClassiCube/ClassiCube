@@ -1943,14 +1943,19 @@ static struct KeyBindsScreen {
 
 static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5];
 
+static BindMapping KeyBindsScreen_GetBinding(struct KeyBindsScreen* s, int i) {
+	const BindMapping* curBinds;
+
+	curBinds = binds_gamepad ? PadBind_Mappings : KeyBind_Mappings;
+	return curBinds[s->binds[i]];
+}
+
 static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	cc_string text; char textBuffer[STRING_SIZE];
-	const BindMapping* curBinds;
 	BindMapping curBind; 
 
 	String_InitArray(text, textBuffer);
-	curBinds = binds_gamepad ? PadBind_Mappings : KeyBind_Mappings;
-	curBind  = curBinds[s->binds[i]];
+	curBind = KeyBindsScreen_GetBinding(s, i);
 
 	String_Format4(&text, s->curI == i ? "> %c: %c%c%c <" : "%c: %c%c%c", 
 		s->descs[i],

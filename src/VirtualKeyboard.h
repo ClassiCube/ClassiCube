@@ -206,9 +206,9 @@ static void VirtualKeyboard_ProcessDown(void* obj, int key, cc_bool was) {
 	} else if (key == CCPAD_X) {
 		VirtualKeyboard_Backspace();
 	} else if (key == CCPAD_Y) {
-		VirtualKeyboard_AppendChar(' ');
-	} else if (key == CCPAD_L) {
 		VirtualKeyboard_AppendChar('@');
+	} else if (key == CCPAD_L) {
+		VirtualKeyboard_AppendChar(' ');
 	} else if (key == CCPAD_R) {
 		VirtualKeyboard_AppendChar('/');
 	}

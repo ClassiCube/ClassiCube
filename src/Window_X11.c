@@ -309,8 +309,8 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 #ifdef CC_BUILD_ICON
-/* See misc/linux_icon_gen.cs for how to generate this file */
-#include "_CCIcon_X11.h"
+/* See misc/linux/linux_icon_gen.cs for how to generate this file */
+#include "../misc/linux/CCIcon_X11.h"
 
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);

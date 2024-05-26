@@ -322,8 +322,8 @@ static void MakeContentView(void) {
 }
 
 #ifdef CC_BUILD_ICON
-// See misc/mac_icon_gen.cs for how to generate this file
-#include "_CCIcon_mac.h"
+// See misc/macOS/mac_icon_gen.cs for how to generate this file
+#include "../misc/macOS/CCIcon_mac.h"
 
 static void ApplyIcon(void) {
 	NSImage* img;

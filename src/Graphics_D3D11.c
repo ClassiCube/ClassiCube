@@ -3,7 +3,7 @@
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
-#include "_D3D11Shaders.h"
+#include "../misc/windows/D3D11Shaders.h"
 
 /* Avoid pointless includes */
 #define WIN32_LEAN_AND_MEAN
