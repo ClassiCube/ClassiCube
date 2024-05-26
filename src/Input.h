@@ -186,6 +186,8 @@ extern const BindMapping KeyBind_Defaults[BIND_COUNT];
 /* Default gamepad button that each input binding is bound to */
 extern const BindMapping PadBind_Defaults[BIND_COUNT];
 
+/* InputBind_IsPressed is what should be used, but export KeyBind_IsPressed for backwards compatibility */
+#define InputBind_IsPressed KeyBind_IsPressed
 /* Whether the given binding should be triggered in response to given input button being pressed */
 CC_API cc_bool InputBind_Claims(InputBind binding, int btn);
 /* Gets whether the given input binding is currently being triggered */
