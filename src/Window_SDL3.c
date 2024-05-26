@@ -61,8 +61,13 @@ static void DoCreateWindow(int width, int height, int flags) {
 	Window_Main.Handle = win_handle;
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
+
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
+#else
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
+#endif
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
