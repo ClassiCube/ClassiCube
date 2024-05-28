@@ -1,4 +1,6 @@
+// Silence deprecation warnings on modern iOS
 #define GLES_SILENCE_DEPRECATION
+
 #include "_WindowBase.h"
 #include "Bitmap.h"
 #include "Input.h"
@@ -17,8 +19,6 @@
 #include <sys/stat.h>
 #include <UIKit/UIKit.h>
 #include <UIKit/UIPasteboard.h>
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
 #include <CoreText/CoreText.h>
 
 #ifdef TARGET_OS_TV
@@ -44,6 +44,7 @@
 static CCViewController* cc_controller;
 static UIWindow* win_handle;
 static UIView* view_handle;
+static cc_bool launcherMode;
 
 static void AddTouch(UITouch* t) {
     CGPoint loc = [t locationInView:view_handle];
@@ -93,6 +94,9 @@ static CGRect GetViewFrame(void) {
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent *)event {
     // touchesBegan:withEvent - iOS 2.0
     for (UITouch* t in touches) AddTouch(t);
+    
+    // clicking on the background should dismiss onscren keyboard
+    if (launcherMode) { [view_handle endEditing:NO]; }
 }
 
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent *)event {
@@ -684,9 +688,14 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
 
 /*#########################################################################################################################*
- *--------------------------------------------------------2D window--------------------------------------------------------*
+ *-----------------------------------------------------Window creation-----------------------------------------------------*
  *#########################################################################################################################*/
+@interface CC3DView : UIView
+@end
+static void Init3DLayer(void);
+
 void Window_Create2D(int width, int height) {
+    launcherMode  = true;
     CGRect bounds = DoCreateWindow();
     
     view_handle = [[UIView alloc] initWithFrame:bounds];
@@ -694,47 +703,25 @@ void Window_Create2D(int width, int height) {
     cc_controller.view = view_handle;
 }
 
-
-/*#########################################################################################################################*
- *--------------------------------------------------------3D window--------------------------------------------------------*
- *#########################################################################################################################*/
-static void GLContext_OnLayout(void);
-
-@interface CCGLView : UIView
-@end
-
-@implementation CCGLView
-
-+ (Class)layerClass {
-    return [CAEAGLLayer class];
-}
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    GLContext_OnLayout();
-}
-@end
-
 void Window_Create3D(int width, int height) {
-    // CAEAGLLayer - iOS 2.0
+    launcherMode  = false;
     CGRect bounds = DoCreateWindow();
-    view_handle   = [[CCGLView alloc] initWithFrame:bounds];
+    
+    view_handle = [[CC3DView alloc] initWithFrame:bounds];
     view_handle.multipleTouchEnabled = true;
     cc_controller.view = view_handle;
-    
-    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
-    layer.opaque = YES;
-    layer.drawableProperties =
-   @{
-        kEAGLDrawablePropertyRetainedBacking : [NSNumber numberWithBool:NO],
-        kEAGLDrawablePropertyColorFormat : kEAGLColorFormatRGBA8
-    };
+
+    Init3DLayer();
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------GLContext--------------------------------------------------------*
 *#########################################################################################################################*/
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
+
 static EAGLContext* ctx_handle;
 static GLuint framebuffer;
 static GLuint color_renderbuffer, depth_renderbuffer;
@@ -828,14 +815,40 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) { }
 void GLContext_GetApiInfo(cc_string* info) { }
-const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+
+
+@implementation CC3DView
+
++ (Class)layerClass {
+    return [CAEAGLLayer class];
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    GLContext_OnLayout();
+}
+@end
+
+static void Init3DLayer(void) {
+    // CAEAGLLayer - iOS 2.0
+    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+
+    layer.opaque = YES;
+    layer.drawableProperties =
+   @{
+        kEAGLDrawablePropertyRetainedBacking : [NSNumber numberWithBool:NO],
+        kEAGLDrawablePropertyColorFormat : kEAGLColorFormatRGBA8
+    };
+}
+#endif
 
 
 /*########################################################################################################################*
  *--------------------------------------------------------Updater----------------------------------------------------------*
  *#########################################################################################################################*/
-const char* const Updater_OGL  = NULL;
-const char* const Updater_D3D9 = NULL;
+const struct UpdaterInfo Updater_Info = {
+	"&eRedownload and reinstall to update", 0
+};
 cc_bool Updater_Clean(void) { return true; }
 
 cc_result Updater_GetBuildTime(cc_uint64* t) {
@@ -864,6 +877,7 @@ cc_result Process_StartOpen(const cc_string* args) {
     // openURL - iOS 2.0 (deprecated)
     NSString* str = ToNSString(args);
     NSURL* url    = [[NSURL alloc] initWithString:str];
+
     [UIApplication.sharedApplication openURL:url];
     return 0;
 }
@@ -1678,17 +1692,6 @@ void LBackend_TableUpdate(struct LTable* w) {
     [tbl reloadData];
 }
 
-// TODO only redraw flags
-void LBackend_TableFlagAdded(struct LTable* w) {
-    UITableView* tbl = (__bridge UITableView*)w->meta;
-    
-    // trying to update cell.imageView.image doesn't seem to work,
-    // so pointlessly reload entire table data instead
-    NSIndexPath* selected = [tbl indexPathForSelectedRow];
-    [tbl reloadData];
-    [tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
-}
-
 void LBackend_TableDraw(struct LTable* w) { }
 void LBackend_TableReposition(struct LTable* w) { }
 void LBackend_TableMouseDown(struct LTable* w, int idx) { }
@@ -1696,7 +1699,7 @@ void LBackend_TableMouseUp(struct   LTable* w, int idx) { }
 void LBackend_TableMouseMove(struct LTable* w, int idx) { }
 
 static void LTable_UpdateCellColor(UIView* view, struct ServerInfo* server, int row, cc_bool selected) {
-    BitmapCol color = LTable_RowColor(server, row, selected);
+    BitmapCol color = LTable_RowColor(row, selected, server && server->featured);
     if (color) {
         view.backgroundColor = ToUIColor(color, 1.0f);
         view.opaque          = YES;
@@ -1716,10 +1719,6 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_FormatUptime(&desc, server->uptime);
     if (server->software.length) String_Format1(&desc, " | %s", &server->software);
     
-    if (flag && !flag->meta && flag->bmp.scan0) {
-        UIImage* img = ToUIImage(&flag->bmp);
-        flag->meta   = CFBridgingRetain(img);
-    }
     if (flag && flag->meta)
         cell.imageView.image = (__bridge UIImage*)flag->meta;
         
@@ -1734,9 +1733,33 @@ static void LTable_UpdateCell(UITableView* table, UITableViewCell* cell, int row
     LTable_UpdateCellColor(cell, server, row, selected);
 }
 
+// TODO only redraw flags
+static void OnFlagsChanged(void) {
+	struct LScreen* s = Launcher_Active;
+    for (int i = 0; i < s->numWidgets; i++)
+    {
+		if (s->widgets[i]->type != LWIDGET_TABLE) continue;
+        UITableView* tbl = (__bridge UITableView*)s->widgets[i]->meta;
+    
+		// trying to update cell.imageView.image doesn't seem to work,
+		// so pointlessly reload entire table data instead
+		NSIndexPath* selected = [tbl indexPathForSelectedRow];
+		[tbl reloadData];
+		[tbl selectRowAtIndexPath:selected animated:NO scrollPosition:UITableViewScrollPositionNone];
+    }
+}
+
 /*########################################################################################################################*
  *------------------------------------------------------UI Backend--------------------------------------------------------*
  *#########################################################################################################################*/
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	NSData* ns_data = [NSData dataWithBytes:data length:len];
+	UIImage* img = [UIImage imageWithData:ns_data];
+	if (!img) return;
+	
+    flag->meta = CFBridgingRetain(img);  
+	OnFlagsChanged();
+}
 
 static void LBackend_LayoutDimensions(struct LWidget* w, CGRect* r) {
     const struct LLayout* l = w->layouts + 2;

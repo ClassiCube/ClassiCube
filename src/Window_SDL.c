@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_SDL2
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_SDL2
 #include "_WindowBase.h"
 #include "Graphics.h"
 #include "String.h"
@@ -7,9 +7,36 @@
 #include "Bitmap.h"
 #include "Errors.h"
 #include <SDL2/SDL.h>
-static SDL_Window* win_handle;
 
-#error "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+static SDL_Window* win_handle;
+#warning "Some features are missing from the SDL backend. If possible, it is recommended that you use a native windowing backend instead"
+
+#ifdef CC_BUILD_OS2
+#define INCL_PM
+#include <os2.h>
+// Internal OS/2 driver data
+typedef struct _WINDATA {
+    SDL_Window     *window;
+    void					 *pOutput; /* Video output routines */
+    HWND            hwndFrame;
+    HWND            hwnd;
+    PFNWP           fnUserWndProc;
+    PFNWP           fnWndFrameProc;
+
+    void         		*pVOData; /* Video output data */
+
+    HRGN            hrgnShape;
+    HPOINTER        hptrIcon;
+    RECTL           rectlBeforeFS;
+
+    LONG            lSkipWMSize;
+    LONG            lSkipWMMove;
+    LONG            lSkipWMMouseMove;
+    LONG            lSkipWMVRNEnabled;
+    LONG            lSkipWMAdjustFramePos;
+} WINDATA;
+#endif
+
 
 static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Main.Width, &Window_Main.Height);
@@ -50,8 +77,9 @@ static void DoCreateWindow(int width, int height, int flags) {
 	Window_Main.Handle = win_handle;
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
+
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
-#if !defined CC_BUILD_SOFTGPU
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
 #else
 void Window_Create3D(int width, int height) { DoCreateWindow(width, height, 0); }
@@ -162,6 +190,15 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_RSHIFT: return CCKEY_RSHIFT;
 		case SDLK_RALT: return CCKEY_RALT;
 		case SDLK_RGUI: return CCKEY_RWIN;
+		
+		case SDLK_AUDIONEXT: return CCKEY_MEDIA_NEXT;
+		case SDLK_AUDIOPREV: return CCKEY_MEDIA_PREV;
+		case SDLK_AUDIOPLAY: return CCKEY_MEDIA_PLAY;
+		case SDLK_AUDIOSTOP: return CCKEY_MEDIA_STOP;
+		
+		case SDLK_AUDIOMUTE:  return CCKEY_VOLUME_MUTE;
+		case SDLK_VOLUMEDOWN: return CCKEY_VOLUME_DOWN;
+		case SDLK_VOLUMEUP:   return CCKEY_VOLUME_UP;
 	}
 	return INPUT_NONE;
 }
@@ -231,7 +268,7 @@ static void OnWindowEvent(const SDL_Event* e) {
 		}
 }
 
-void Window_ProcessEvents(double delta) {
+void Window_ProcessEvents(float delta) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {
@@ -243,7 +280,8 @@ void Window_ProcessEvents(double delta) {
 		case SDL_MOUSEBUTTONUP:
 			OnMouseEvent(&e); break;
 		case SDL_MOUSEWHEEL:
-			Mouse_ScrollWheel(e.wheel.y);
+			Mouse_ScrollHWheel(e.wheel.x);
+			Mouse_ScrollVWheel(e.wheel.y);
 			break;
 		case SDL_MOUSEMOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);
@@ -268,6 +306,8 @@ void Window_ProcessEvents(double delta) {
 	}
 }
 
+void Window_ProcessGamepads(float delta) { }
+
 static void Cursor_GetRawPos(int* x, int* y) {
 	SDL_GetMouseState(x, y);
 }
@@ -284,11 +324,53 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
+#if defined CC_BUILD_OS2
+	FILEDLG fileDialog;
+	HWND hDialog;
+
+	memset(&fileDialog, 0, sizeof(FILEDLG));
+	fileDialog.cbSize = sizeof(FILEDLG);
+	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_OPEN_DIALOG;
+	fileDialog.pszTitle = args->description;
+	fileDialog.pszOKButton = NULL;
+	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+
+	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	hDialog = WinFileDlg(HWND_DESKTOP, 0, &fileDialog);
+	if (fileDialog.lReturn == DID_OK) {
+		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH); 
+		args->Callback(&temp);
+	}
+	
+	return 0;
+#else
 	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
+#if defined CC_BUILD_OS2
+	FILEDLG fileDialog;
+	HWND hDialog;
+
+	memset(&fileDialog, 0, sizeof(FILEDLG));
+	fileDialog.cbSize = sizeof(FILEDLG);
+	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_SAVEAS_DIALOG;
+	fileDialog.pszTitle = args->titles;
+	fileDialog.pszOKButton = NULL;
+	fileDialog.pfnDlgProc = WinDefFileDlgProc;
+
+	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	hDialog = WinFileDlg(HWND_DESKTOP, 0, &fileDialog);
+	if (fileDialog.lReturn == DID_OK) {
+		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
+		args->Callback(&temp);
+	}
+	
+	return 0;
+#else
 	return ERR_NOT_SUPPORTED;
+#endif
 }
 
 static SDL_Surface* win_surface;
@@ -359,7 +441,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static SDL_GLContext win_ctx;
 
 void GLContext_Create(void) {

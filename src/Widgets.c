@@ -399,7 +399,7 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width) {
 
 	/* It's easy to accidentally touch a bit to the right of the */
 	/* scrollbar with your finger, so just add some padding */
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 	w->padding = Display_ScaleX(15);
 }
 
@@ -429,9 +429,8 @@ static void HotbarWidget_BuildEntriesMesh(struct HotbarWidget* w, struct VertexT
 		x = HotbarWidget_TileX(w, i);
 		y = w->y + (w->height / 2);
 
-#ifdef CC_BUILD_TOUCH
-		if (i == HOTBAR_MAX_INDEX && Gui.TouchUI) continue;
-#endif
+		if (i == HOTBAR_MAX_INDEX && Gui_TouchUI) continue;
+
 		IsometricDrawer_AddBatch(Inventory_Get(i), scale, x, y);
 	}
 	w->verticesCount = IsometricDrawer_EndBatch();
@@ -467,13 +466,11 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 	HotbarWidget_RenderOutline(w, offset    );
 	HotbarWidget_RenderEntries(w, offset + 8);
 
-#ifdef CC_BUILD_TOUCH
-	if (Gui.TouchUI) {
+	if (Gui_TouchUI) {
 		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.width / 2;
 		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.height / 2;
 		Texture_Render(&w->ellipsisTex);
 	}
-#endif
 
 	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 	return HOTBAR_MAX_VERTICES;
@@ -482,9 +479,8 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 static int HotbarWidget_MaxVertices(void* w) { return HOTBAR_MAX_VERTICES; }
 
 void HotbarWidget_Update(struct HotbarWidget* w, float delta) {
-#ifdef CC_BUILD_TOUCH
 	int i;
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 
 	for (i = 0; i < HOTBAR_MAX_INDEX; i++) 
 	{
@@ -497,7 +493,6 @@ void HotbarWidget_Update(struct HotbarWidget* w, float delta) {
 		w->touchTime[i] =  0;
 		Inventory_Set(i, 0);
 	}
-#endif
 }
 
 static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int index, int dir) {
@@ -540,7 +535,7 @@ static int HotbarWidget_MapKey(int key) {
 	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++)
 	{
-		if (KeyBind_Claims(KEYBIND_HOTBAR_1 + i, key)) return i;
+		if (InputBind_Claims(BIND_HOTBAR_1 + i, key)) return i;
 	}
 	return -1;
 }
@@ -560,14 +555,14 @@ static int HotbarWidget_KeyDown(void* widget, int key) {
 	int index = HotbarWidget_MapKey(key);
 
 	if (index == -1) {
-		if (KeyBind_Claims(KEYBIND_HOTBAR_LEFT, key))
+		if (InputBind_Claims(BIND_HOTBAR_LEFT, key))
 			return HotbarWidget_CycleIndex(-1);
-		if (KeyBind_Claims(KEYBIND_HOTBAR_RIGHT, key))
+		if (InputBind_Claims(BIND_HOTBAR_RIGHT, key))
 			return HotbarWidget_CycleIndex(+1);
 		return false;
 	}
 
-	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
+	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */
 		Inventory_SetHotbarIndex(index);
 		w->altHandled = true;
@@ -583,7 +578,7 @@ static void HotbarWidget_InputUp(void* widget, int key) {
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (!KeyBind_Claims(KEYBIND_HOTBAR_SWITCH, key)) return;
+	if (!InputBind_Claims(BIND_HOTBAR_SWITCH, key)) return;
 	if (w->altHandled) { w->altHandled = false; return; } /* handled already */
 
 	/* Don't switch hotbar when alt+tabbing to another window */
@@ -604,16 +599,15 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 		cellY = w->y;
 		if (!Gui_Contains(cellX, cellY, width, height, x, y)) continue;
 
-#ifdef CC_BUILD_TOUCH
-		if(Gui.TouchUI) {
+		if (Gui_TouchUI) {
 			if (i == HOTBAR_MAX_INDEX) {
 				InventoryScreen_Show(); return TOUCH_TYPE_GUI;
 			} else {
-				w->touchId[i] = id;
+				w->touchId[i]   = id;
 				w->touchTime[i] = 0;
 			}
 		}
-#endif
+
 		Inventory_SetSelectedIndex(i);
 		return TOUCH_TYPE_GUI;
 	}
@@ -627,7 +621,7 @@ static void HotbarWidget_PointerUp(void* widget, int id, int x, int y) {
 
 	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
 		if (w->touchId[i] == id) {
-			w->touchId[i] = -1;
+			w->touchId[i]   = -1;
 			w->touchTime[i] = 0;
 		}
 	}
@@ -639,13 +633,12 @@ static int HotbarWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int i;
 
-	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
-		if (w->touchId[i] == id) {
-			if (!Widget_Contains(w, x, y)) {
-				w->touchId[i] = -1;
-				w->touchTime[i] = 0;
-				return true;
-			}
+	for (i = 0; i < HOTBAR_MAX_INDEX; i++) 
+	{
+		if (w->touchId[i] == id && !Widget_Contains(w, x, y)) {
+			w->touchId[i]   = -1;
+			w->touchTime[i] = 0;
+			return true;
 		}
 	}
 #endif
@@ -656,7 +649,7 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
-	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
+	if (InputBind_IsPressed(BIND_HOTBAR_SWITCH)) {
 		index = Inventory.Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
 		Inventory_SetHotbarIndex(index);
@@ -669,12 +662,10 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static void HotbarWidget_Free(void* widget) {
-#ifdef CC_BUILD_TOUCH
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 
 	Gfx_DeleteTexture(&w->ellipsisTex.ID);
-#endif
 }
 
 static const struct WidgetVTABLE HotbarWidget_VTABLE = {
@@ -700,14 +691,12 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 }
 
 void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
-#ifdef CC_BUILD_TOUCH
 	static const cc_string dots = String_FromConst("...");
 	struct DrawTextArgs args;
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 
 	DrawTextArgs_Make(&args, &dots, font, true);
 	Drawer2D_MakeTextTexture(&w->ellipsisTex, &args);
-#endif
 }
 
 
@@ -975,20 +964,15 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 
 static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
+	int delta;
 	if (w->selectedIndex == -1) return false;
 
-	if (Input_IsLeftButton(key)         || key == CCKEY_KP4) {
-		TableWidget_ScrollRelative(w, -1);
-	} else if (Input_IsRightButton(key) || key == CCKEY_KP6) {
-		TableWidget_ScrollRelative(w, 1);
-	} else if (Input_IsUpButton(key)    || key == CCKEY_KP8) {
-		TableWidget_ScrollRelative(w, -w->blocksPerRow);
-	} else if (Input_IsDownButton(key)  || key == CCKEY_KP2) {
-		TableWidget_ScrollRelative(w, w->blocksPerRow);
-	} else {
-		return false;
+	delta = Input_CalcDelta(key, 1, w->blocksPerRow);
+	if (delta) {
+		TableWidget_ScrollRelative(w, delta);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 static int TableWidget_PadAxis(void* widget, int axis, float x, float y) {
@@ -1722,7 +1706,7 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
-	w->base.showCaret       = !Gui.TouchUI;
+	w->base.showCaret       = !Gui_TouchUI;
 	w->base.flags           = WIDGET_FLAG_SELECTABLE;
 
 	w->base.GetMaxLines    = TextInputWidget_GetMaxLines;
@@ -2783,7 +2767,7 @@ static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 
 		dx = Pointers[i].x - (w->x + w->width  / 2);
 		dy = Pointers[i].y - (w->y + w->height / 2);
-		angle = Math_Atan2(dx, dy) * MATH_RAD2DEG;
+		angle = Math_Atan2f(dx, dy) * MATH_RAD2DEG;
 
 		/* 4 quadrants diagonally, but slightly expanded for overlap*/
 		if (angle >=   30 && angle <= 150) dirs |= DIR_YMAX;

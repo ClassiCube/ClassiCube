@@ -57,6 +57,7 @@ import android.view.inputmethod.InputMethodManager;
 // implements InputQueue.Callback
 public class MainActivity extends Activity 
 {
+	public boolean launcher;
 	// ==================================================================
 	// ---------------------------- COMMANDS ----------------------------
 	// ==================================================================
@@ -72,21 +73,29 @@ public class MainActivity extends Activity
 		NativeCmdArgs args = freeCmds.poll();
 		return args != null ? args : new NativeCmdArgs();
 	}
-	
-	void pushCmd(int cmd) {
+
+	public void pushCmd(int cmd) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
 		pending.add(args);
 	}
-	
-	void pushCmd(int cmd, int a1) {
+
+	public void pushCmd(int cmd, int a1) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd  = cmd;
 		args.arg1 = a1;
 		pending.add(args);
 	}
+
+	public void pushCmd(int cmd, int a1, int a2) {
+		NativeCmdArgs args = getCmdArgs();
+		args.cmd  = cmd;
+		args.arg1 = a1;
+		args.arg2 = a2;
+		pending.add(args);
+	}
 	
-	void pushCmd(int cmd, int a1, int a2, int a3, int a4) {
+	public void pushCmd(int cmd, int a1, int a2, int a3, int a4) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
 		args.arg1 = a1;
@@ -96,45 +105,61 @@ public class MainActivity extends Activity
 		pending.add(args);
 	}
 
-	void pushCmd(int cmd, String text) {
+	public void pushCmd(int cmd, String text) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
 		args.str = text;
 		pending.add(args);
 	}
-	
-	void pushCmd(int cmd, Surface surface) {
+
+	public void pushCmd(int cmd, int a1, String str) {
+		NativeCmdArgs args = getCmdArgs();
+		args.cmd  = cmd;
+		args.arg1 = a1;
+		args.str  = str;
+		pending.add(args);
+	}
+
+	public void pushCmd(int cmd, Surface surface) {
 		NativeCmdArgs args = getCmdArgs();
 		args.cmd = cmd;
 		args.sur = surface;
 		pending.add(args);
 	}
 	
-	final static int CMD_KEY_DOWN = 0;
-	final static int CMD_KEY_UP   = 1;
-	final static int CMD_KEY_CHAR = 2;
-	final static int CMD_POINTER_DOWN = 3;
-	final static int CMD_POINTER_UP   = 4;
-	final static int CMD_POINTER_MOVE = 5;
-	
-	final static int CMD_WIN_CREATED   = 6;
-	final static int CMD_WIN_DESTROYED = 7;
-	final static int CMD_WIN_RESIZED   = 8;
-	final static int CMD_WIN_REDRAW    = 9;
+	public final static int CMD_KEY_DOWN = 0;
+	public final static int CMD_KEY_UP   = 1;
+	public final static int CMD_KEY_CHAR = 2;
+	public final static int CMD_POINTER_DOWN = 3;
+	public final static int CMD_POINTER_UP   = 4;
+	public final static int CMD_POINTER_MOVE = 5;
 
-	final static int CMD_APP_START   = 10;
-	final static int CMD_APP_STOP    = 11;
-	final static int CMD_APP_RESUME  = 12;
-	final static int CMD_APP_PAUSE   = 13;
-	final static int CMD_APP_DESTROY = 14;
+	public final static int CMD_WIN_CREATED   = 6;
+	public final static int CMD_WIN_DESTROYED = 7;
+	public final static int CMD_WIN_RESIZED   = 8;
+	public final static int CMD_WIN_REDRAW    = 9;
 
-	final static int CMD_GOT_FOCUS   = 15;
-	final static int CMD_LOST_FOCUS  = 16;
-	final static int CMD_CONFIG_CHANGED = 17;
-	final static int CMD_LOW_MEMORY  = 18;
+	public final static int CMD_APP_START   = 10;
+	public final static int CMD_APP_STOP    = 11;
+	public final static int CMD_APP_RESUME  = 12;
+	public final static int CMD_APP_PAUSE   = 13;
+	public final static int CMD_APP_DESTROY = 14;
 
-	final static int CMD_KEY_TEXT   = 19;
-	final static int CMD_OFD_RESULT = 20;
+	public final static int CMD_GOT_FOCUS   = 15;
+	public final static int CMD_LOST_FOCUS  = 16;
+	public final static int CMD_CONFIG_CHANGED = 17;
+	public final static int CMD_LOW_MEMORY  = 18;
+
+	public final static int CMD_KEY_TEXT   = 19;
+	public final static int CMD_OFD_RESULT = 20;
+
+	public final static int CMD_UI_CREATED  = 21;
+	public final static int CMD_UI_CLICKED  = 22;
+	public final static int CMD_UI_CHANGED  = 23;
+	public final static int CMD_UI_STRING   = 24;
+
+	public final static int CMD_GPAD_AXISL  = 25;
+	public final static int CMD_GPAD_AXISR  = 26;
 	
 	
 	// ====================================================================
@@ -321,7 +346,10 @@ public class MainActivity extends Activity
 			case CMD_POINTER_DOWN: processPointerDown(c.arg1, c.arg2, c.arg3, c.arg4); break;
 			case CMD_POINTER_UP:   processPointerUp(  c.arg1, c.arg2, c.arg3, c.arg4); break;
 			case CMD_POINTER_MOVE: processPointerMove(c.arg1, c.arg2, c.arg3, c.arg4); break;
-	
+
+			case CMD_GPAD_AXISL: processJoystickL(c.arg1, c.arg2); break;
+			case CMD_GPAD_AXISR: processJoystickR(c.arg1, c.arg2); break;
+
 			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur);   break;
 			case CMD_WIN_DESTROYED: processSurfaceDestroyed();      break;
 			case CMD_WIN_RESIZED:   processSurfaceResized(c.sur);   break;
@@ -356,6 +384,9 @@ public class MainActivity extends Activity
 	native void processPointerUp(  int id, int x, int y, int isMouse);
 	native void processPointerMove(int id, int x, int y, int isMouse);
 
+	native void processJoystickL(int x, int y);
+	native void processJoystickR(int x, int y);
+
 	native void processSurfaceCreated(Surface sur);
 	native void processSurfaceDestroyed();
 	native void processSurfaceResized(Surface sur);
@@ -385,7 +416,26 @@ public class MainActivity extends Activity
 	// static to persist across activity destroy/create
 	static final Semaphore winDestroyedSem = new Semaphore(0, true);
 	SurfaceHolder.Callback callback;
-	CCView curView;
+	public View curView;
+
+	public void setActiveView(View view) {
+		// setContentView, requestFocus - API level 1
+		curView = view;
+		setContentView(view);
+		curView.requestFocus();
+
+		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
+		hookMotionListener(view);
+	}
+	
+	void hookMotionListener(View view) {
+		try {
+			CCMotionListener listener = new CCMotionListener(this);
+			view.setOnGenericMotionListener(listener);
+		} catch (Exception ex) {
+			// Unsupported on android 12
+		}
+	}
 	
 	// SurfaceHolder.Callback - API level 1
 	class CCSurfaceCallback implements SurfaceHolder.Callback {
@@ -449,107 +499,11 @@ public class MainActivity extends Activity
 	void attachSurface() {
 		// setContentView, requestFocus, getHolder, addCallback, RGBX_8888 - API level 1
 		createSurfaceCallback();
-		curView = new CCView(this);
-		curView.getHolder().addCallback(callback);
-		curView.getHolder().setFormat(PixelFormat.RGBX_8888);
-		
-		setContentView(curView);
-		curView.requestFocus();
-		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
-	}
+		CCView view = new CCView(this);
+		view.getHolder().addCallback(callback);
+		view.getHolder().setFormat(PixelFormat.RGBX_8888);
 
-	class CCView extends SurfaceView {
-		SpannableStringBuilder kbText;
-
-		public CCView(Context context) {
-			// setFocusable, setFocusableInTouchMode - API level 1
-			super(context);
-			setFocusable(true);
-			setFocusableInTouchMode(true);
-		}
-
-		@Override
-		public boolean dispatchTouchEvent(MotionEvent ev) {
-			return MainActivity.this.handleTouchEvent(ev) || super.dispatchTouchEvent(ev);
-		}
-
-		@Override
-		public InputConnection onCreateInputConnection(EditorInfo attrs) {
-			// BaseInputConnection, IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
-			attrs.actionLabel = null;
-			attrs.inputType   = MainActivity.this.getKeyboardType();
-			attrs.imeOptions  = MainActivity.this.getKeyboardOptions();
-
-			kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
-
-			InputConnection ic = new BaseInputConnection(this, true) {
-				boolean inited;
-				void updateText() { MainActivity.this.pushCmd(CMD_KEY_TEXT, kbText.toString()); }
-
-				@Override
-				public Editable getEditable() {
-					if (!inited) {
-						// needed to set selection, otherwise random crashes later with backspacing
-						// set selection to end, so backspacing after opening keyboard with text still works
-						Selection.setSelection(kbText, kbText.toString().length());
-						inited = true;
-					}
-					return kbText;
-				}
-
-				@Override
-				public boolean setComposingText(CharSequence text, int newCursorPosition) {
-					boolean success = super.setComposingText(text, newCursorPosition);
-					updateText();
-					return success;
-				}
-
-				@Override
-				public boolean deleteSurroundingText(int beforeLength, int afterLength) {
-					
-					boolean success = super.deleteSurroundingText(beforeLength, afterLength);
-					updateText();
-					return success;
-				}
-
-				@Override
-				public boolean commitText(CharSequence text, int newCursorPosition) {
-					boolean success = super.commitText(text, newCursorPosition);
-					updateText();
-					return success;
-				}
-
-				@Override
-				public boolean sendKeyEvent(KeyEvent ev) {
-					// getSelectionStart - API level 1
-					if (ev.getAction() != KeyEvent.ACTION_DOWN) return super.sendKeyEvent(ev);
-					int code  = ev.getKeyCode();
-					int uni   = ev.getUnicodeChar();
-
-					// start is -1 sometimes, and trying to insert/delete there crashes
-					int start = Selection.getSelectionStart(kbText);
-					if (start == -1) start = kbText.toString().length();
-
-					if (code == KeyEvent.KEYCODE_ENTER) {
-						// enter maps to \n but that should not be intercepted
-					} else if (code == KeyEvent.KEYCODE_DEL) {
-						if (start <= 0) return false;
-						kbText.delete(start - 1, start);
-						updateText();
-						return false;
-					} else if (uni != 0) {
-						kbText.insert(start, String.valueOf((char)uni));
-						updateText();
-						return false;
-					}
-					return super.sendKeyEvent(ev);
-				}
-
-			};
-			//String text = MainActivity.this.keyboardText;
-			//if (text != null) ic.setComposingText(text, 0);
-			return ic;
-		}
+		setActiveView(view);
 	}
 	
 	
@@ -655,8 +609,9 @@ public class MainActivity extends Activity
 		if (curView == null) return;
 
 		// Try to avoid restarting input if possible
-		if (curView.kbText != null) {
-			String curText = curView.kbText.toString();
+		CCView view = (CCView)curView;
+		if (view.kbText != null) {
+			String curText = view.kbText.toString();
 			if (text.equals(curText)) return;
 		}
 
@@ -668,9 +623,9 @@ public class MainActivity extends Activity
 		input.restartInput(curView);
 	}
 
-	public int getKeyboardType() {
+	public static int calcKeyboardType(int kbType) {
 		// TYPE_CLASS_TEXT, TYPE_CLASS_NUMBER, TYPE_TEXT_VARIATION_PASSWORD - API level 3
-		int type = keyboardType & 0xFF;
+		int type = kbType & 0xFF;
 		
 		if (type == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
 		if (type == 1) return InputType.TYPE_CLASS_NUMBER; // KEYBOARD_TYPE_NUMERIC
@@ -678,9 +633,9 @@ public class MainActivity extends Activity
 		return InputType.TYPE_CLASS_TEXT;
 	}
 	
-	public int getKeyboardOptions() {
+	public static int calcKeyboardOptions(int kbType) {
 		// IME_ACTION_GO, IME_FLAG_NO_EXTRACT_UI - API level 3
-		if ((keyboardType & 0x100) != 0) {
+		if ((kbType & 0x100) != 0) {
 			return EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
 		} else {
 			return EditorInfo.IME_ACTION_GO   | EditorInfo.IME_FLAG_NO_EXTRACT_UI;

@@ -1,5 +1,11 @@
 name: Build latest (NetBSD)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-netbsd
@@ -7,10 +13,9 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cross-rs/x86_64-unknown-netbsd
+      image: ghcr.io/cross-rs/x86_64-unknown-netbsd:edge
     steps:
       - uses: actions/checkout@v3
       - name: Install prerequisites
@@ -47,3 +52,10 @@ jobs:
         with:
           SOURCE_FILE: 'src/cc-netbsd64-gl1'
           DEST_NAME: 'ClassiCube-NetBSD-64'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'netbsd'

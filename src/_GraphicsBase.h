@@ -24,6 +24,7 @@ static int gfx_stride, gfx_format = -1;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
+static cc_bool gfx_rendering2D;
 
 
 /*########################################################################################################################*
@@ -31,6 +32,23 @@ static float gfx_minFrameMs;
 *#########################################################################################################################*/
 static cc_bool gfx_colorMask[4] = { true, true, true, true };
 cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+static cc_bool gfx_alphaTest, gfx_alphaBlend;
+
+static void SetAlphaTest(cc_bool enabled);
+void Gfx_SetAlphaTest(cc_bool enabled) {
+	if (gfx_alphaTest == enabled) return;
+	
+	gfx_alphaTest = enabled;
+	SetAlphaTest(enabled);
+}
+
+static void SetAlphaBlend(cc_bool enabled);
+void Gfx_SetAlphaBlending(cc_bool enabled) {
+	if (gfx_alphaBlend == enabled) return;
+	
+	gfx_alphaBlend = enabled;
+	SetAlphaBlend(enabled);
+}
 
 /* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);
@@ -242,7 +260,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	float y1 = (float)tex->y, y2 = (float)(tex->y + tex->height);
 	struct VertexTextured* v = *vertices;
 
-#ifdef CC_BUILD_D3D9
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
 	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
 	x1 -= 0.5f; x2 -= 0.5f;
@@ -256,6 +274,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTex
 	*vertices = v;
 }
 
+#ifndef CC_BUILD_PS1
 static cc_bool gfx_hadFog;
 void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
@@ -266,15 +285,20 @@ void Gfx_Begin2D(int width, int height) {
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(true);
+	
 	gfx_hadFog = Gfx_GetFog();
 	if (gfx_hadFog) Gfx_SetFog(false);
+	gfx_rendering2D = true;
 }
 
 void Gfx_End2D(void) {
 	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
+	
 	if (gfx_hadFog) Gfx_SetFog(true);
+	gfx_rendering2D = false;
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -498,7 +522,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	}
 }
 
-#if defined CC_BUILD_GL || defined CC_BUILD_D3D9
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) || (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9)
 /* Slightly more efficient implementations are defined in the backends */
 #else
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {

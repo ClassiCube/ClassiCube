@@ -1,8 +1,9 @@
 BUILD_DIR		:= build-dc
-SOURCE_DIRS		:= src third_party/bearssl/src
+SOURCE_DIRS		:= src third_party/bearssl/src misc/dreamcast
 
+S_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.S))
 C_FILES := $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c))
-OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o)))
+OBJS 	:= $(addprefix $(BUILD_DIR)/, $(notdir $(C_FILES:%.c=%.o) $(S_FILES:%.S=%.o)))
 CFLAGS	:=-g -O1 -pipe -fno-math-errno -Ithird_party/bearssl/inc
 
 GLDC_LIB=third_party/gldc/libGLdc.a
@@ -10,7 +11,7 @@ LDFLAGS=-g
 LIBS=-lm $(GLDC_LIB) -lppp -lkosfat
 
 TARGET := ClassiCube-dc
-CC_TEXTURES = classicube.zip
+CC_TEXTURES = misc/dreamcast/classicube.zip
 
 ifeq ($(strip $(KOS_BASE)),)
 $(error "Please set KOS variables in your environment.")
@@ -21,8 +22,9 @@ default: $(CC_TEXTURES) $(GLDC_LIB) $(BUILD_DIR) $(TARGET).cdi
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 	
-$(GLDC_LIB):
+$(GLDC_LIB): FORCE
 	$(MAKE) -C third_party/gldc
+FORCE: ;
 
 # TODO add textures to misc folder ?	
 $(CC_TEXTURES): 
@@ -30,6 +32,9 @@ $(CC_TEXTURES):
 	
 $(BUILD_DIR)/%.o: src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: misc/dreamcast/%.S
+	kos-cc -c $< -o $@
 
 $(BUILD_DIR)/%.o: third_party/bearssl/src/%.c
 	kos-cc $(CFLAGS) -c $< -o $@

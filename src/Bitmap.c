@@ -163,8 +163,8 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 
 /* 7.2 Scanlines */
 #define PNG_Do_Grayscale(dstI, src, scale)  rgb = (src) * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
-#define PNG_Do_Grayscale_8()      rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb,    255); dst--; src -= 2;
-#define PNG_Do_Grayscale_A__8()   rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb, src[1]); dst--; src -= 1;
+#define PNG_Do_Grayscale_8()      rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb,    255); dst--; src -= 1;
+#define PNG_Do_Grayscale_A__8()   rgb = src[0]; Bitmap_Set(*dst, rgb, rgb, rgb, src[1]); dst--; src -= 2;
 #define PNG_Do_RGB__8()           Bitmap_Set(*dst, src[0], src[1], src[2],    255); dst--; src -= 3;
 #define PNG_Do_RGB_A__8()         Bitmap_Set(*dst, src[0], src[1], src[2], src[3]); dst++; src += 4;
 #define PNG_Do_Palette__8()       *dst-- = palette[*src--];
@@ -334,7 +334,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint32 i;
 
 	/* idat state */
-	cc_uint32 begY, rowY = 0, endY;
+	cc_uint32 available = 0, rowY = 0;
 	cc_uint8 buffer[PNG_PALETTE * 3];
 	cc_uint32 read, bufferIdx = 0;
 	cc_uint32 left, bufferLen = 0;
@@ -461,19 +461,18 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 
 			if (!bmp->scan0) return PNG_ERR_NO_DATA;
 			if (rowY >= bmp->height) break;
-
-			begY = bufferIdx / scanlineBytes;
 			left = bufferLen - bufferIdx;
 
-			res = compStream.Read(&compStream, &data[bufferIdx], left, &read);
+			res  = compStream.Read(&compStream, &data[bufferIdx], left, &read);
 			if (res) return res;
 			if (!read) break;
 
+			available += read;
 			bufferIdx += read;
-			endY = bufferIdx / scanlineBytes;
 
+			/* Process all of the scanline(s) that have been fully decompressed */
 			/* NOTE: Need to check height too, in case IDAT is corrupted and has extra data */
-			for (rowY = begY; rowY < endY && rowY < bmp->height; rowY++) {
+			for (; available >= scanlineBytes && rowY < bmp->height; rowY++, available -= scanlineBytes) {
 				cc_uint8* scanline = &data[rowY * scanlineBytes];
 				if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
 
@@ -489,11 +488,13 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 					/* immediately into the destination colour format */
 					if (colorspace == PNG_COLOR_RGB_A) {
 						/* Prior line is no longer needed and can be overwritten now */
-						rowExpander(bmp->width,     palette, &prior[1],    Bitmap_GetRow(bmp, rowY - 1));
-						/* Current line is also no longer needed and can be overwritten now */
-						if (rowY == bmp->height - 1)
-							rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, rowY));
+						rowExpander(bmp->width, palette, &prior[1], Bitmap_GetRow(bmp, rowY - 1));
 					}
+				}
+
+				/* Current line is also no longer needed and can be overwritten now */
+				if (colorspace == PNG_COLOR_RGB_A && rowY == bmp->height - 1) {
+					rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, rowY));
 				}
 			}
 

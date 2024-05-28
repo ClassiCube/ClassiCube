@@ -624,7 +624,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->sampleRate = 0;
 }
 
-static float Log10(float volume) { return Math_Log(volume) / Math_Log(10); }
+static float Log10(float volume) { return Math_Log2(volume) / Math_Log2(10); }
 
 static void UpdateVolume(struct AudioContext* ctx) {
 	/* Object doesn't exist until Audio_SetFormat is called */
@@ -1305,6 +1305,7 @@ void Audio_FreeChunks(void** chunks, int numChunks) {
 *#########################################################################################################################*/
 #include <kos.h>
 /* TODO needs way more testing, especially with sounds */
+static cc_bool valid_handles[SND_STREAM_MAX];
 
 struct AudioBuffer {
 	int available;
@@ -1325,8 +1326,10 @@ cc_bool AudioBackend_Init(void) {
 
 void AudioBackend_Tick(void) {
 	// TODO is this really threadsafe with music? should this be done in Audio_Poll instead?
-	for (int i = 0; i < SND_STREAM_MAX; i++)
-		snd_stream_poll(i);
+	for (int i = 0; i < SND_STREAM_MAX; i++) 
+	{
+		if (valid_handles[i]) snd_stream_poll(i);
+	}
 }
 
 void AudioBackend_Free(void) { 
@@ -1367,6 +1370,7 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	
 	ctx->count   = buffers;
 	ctx->bufHead = 0;
+	valid_handles[ctx->hnd] = true;
 	return 0;
 }
 
@@ -1374,6 +1378,7 @@ void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->count) {
 		snd_stream_stop(ctx->hnd);
 		snd_stream_destroy(ctx->hnd);
+		valid_handles[ctx->hnd] = false;
 	}
 	
 	ctx->hnd   = SND_STREAM_INVALID;

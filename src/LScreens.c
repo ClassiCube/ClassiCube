@@ -283,7 +283,6 @@ static struct ColoursScreen {
 	struct LLabel lblRGB[COLOURS_NUM_COLS];
 	struct LInput iptColours[COLOURS_NUM_ENTRIES];
 	struct LCheckbox cbClassic;
-	float colourAcc;
 } ColoursScreen;
 
 #define COLOURSSCREEN_MAX_WIDGETS 25
@@ -373,21 +372,13 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	ColoursScreen_TextChanged(w);
 }
 
-static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
-	struct ColoursScreen* s = (struct ColoursScreen*)s_;
-	int steps = Utils_AccumulateWheelDelta(&s->colourAcc, delta);
-	ColoursScreen_AdjustSelected(s_, steps);
-}
-
 static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
-	if (Input_IsLeftButton(key)) {
-		ColoursScreen_AdjustSelected(s, -1);
-	} else if (Input_IsRightButton(key)) {
-		ColoursScreen_AdjustSelected(s, +1);
-	} else if (Input_IsUpButton(key)) {
-		ColoursScreen_AdjustSelected(s, +10);
-	} else if (Input_IsDownButton(key)) {
-		ColoursScreen_AdjustSelected(s, -10);
+	int delta = Input_CalcDelta(key, 1, 10);
+	if (key == CCWHEEL_UP)   delta = +1;
+	if (key == CCWHEEL_DOWN) delta = -1;
+	
+	if (delta) {
+		ColoursScreen_AdjustSelected(s, delta);
 	} else {
 		LScreen_KeyDown(s, key, was);
 	}
@@ -428,7 +419,6 @@ static void ColoursScreen_Activated(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	ColoursScreen_AddWidgets(s);
 
-	s->colourAcc = 0;
 	LCheckbox_Set(&s->cbClassic, Launcher_Theme.ClassicBackground);
 	ColoursScreen_UpdateAll(s);
 }
@@ -442,7 +432,6 @@ void ColoursScreen_SetActive(void) {
 
 	s->Activated  = ColoursScreen_Activated;
 	s->KeyDown    = ColoursScreen_KeyDown;
-	s->MouseWheel = ColoursScreen_MouseWheel;
 
 	s->title          = "Custom theme";
 	s->onEscapeWidget = (struct LWidget*)&s->btnBack;
@@ -886,6 +875,12 @@ static void MainScreen_ApplyUpdateLabel(struct MainScreen* s) {
 	}
 }
 
+#ifdef CC_BUILD_CONSOLE
+static void MainScreen_ExitApp(void* w) {
+	Window_Main.Exists = false;
+}
+#endif
+
 static void MainScreen_Activated(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 
@@ -909,8 +904,6 @@ static void MainScreen_Activated(struct LScreen* s_) {
 				SwitchToSplitScreen,     main_btnSplit);
 #endif
 
-	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
-				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	if (Process_OpenSupported) {
 		LButton_Add(s, &s->btnRegister, 100, 35, "Register", 
 					MainScreen_Register, main_btnRegister);
@@ -918,10 +911,19 @@ static void MainScreen_Activated(struct LScreen* s_) {
 
 	LButton_Add(s, &s->btnOptions, 100, 35, "Options", 
 				SwitchToSettings, main_btnOptions);
+
+#ifdef CC_BUILD_CONSOLE
+	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..", main_lblUpdate_N);
+	LButton_Add(s, &s->btnUpdates,  100, 35, "Exit", 
+				MainScreen_ExitApp, main_btnUpdates);
+#else
+	LLabel_Add(s,  &s->lblUpdate,  "&eChecking..",      
+				Updater_Supported ? main_lblUpdate_N : main_lblUpdate_H);
 	if (Updater_Supported) {
 		LButton_Add(s, &s->btnUpdates,  100, 35, "Updates", 
 					SwitchToUpdates, main_btnUpdates);
 	}
+#endif
 
 	s->btnResume.OnHover   = MainScreen_ResumeHover;
 	s->btnResume.OnUnhover = MainScreen_ResumeUnhover;
@@ -1367,12 +1369,8 @@ static void ServersScreen_Activated(struct LScreen* s_) {
 
 static void ServersScreen_Tick(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	int count;
 	LScreen_Tick(s_);
-
-	count = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base, NULL);
-	if (count != FetchFlagsTask.count) LBackend_TableFlagAdded(&s->table);
 
 	if (!FetchServersTask.Base.working) return;
 	LWebTask_Tick(&FetchServersTask.Base, NULL);

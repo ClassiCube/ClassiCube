@@ -49,7 +49,8 @@ static void DeferredEnableRawMouse(void) {
 
 static EM_BOOL OnMouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
 	/* TODO: The scale factor isn't standardised.. is there a better way though? */
-	Mouse_ScrollWheel(-Math_Sign(ev->deltaY));
+	Mouse_ScrollHWheel(-Math_Sign(ev->deltaX));
+	Mouse_ScrollVWheel(-Math_Sign(ev->deltaY));
 	DeferredEnableRawMouse();
 	return true;
 }
@@ -247,12 +248,26 @@ static int MapNativeKey(int k, int l) {
 	case DOM_VK_BACK_SLASH:    return CCKEY_BACKSLASH;
 	case DOM_VK_CLOSE_BRACKET: return CCKEY_RBRACKET;
 	case DOM_VK_QUOTE:         return CCKEY_QUOTE;
+	
+	case DOM_VK_VOLUME_MUTE: return CCKEY_VOLUME_MUTE;
+	case DOM_VK_VOLUME_DOWN: return CCKEY_VOLUME_DOWN;
+	case DOM_VK_VOLUME_UP:   return CCKEY_VOLUME_UP;
 
-	/* chrome */
+	/* Chrome specific keys */
+	/*case 173: return CCKEY_VOLUME_MUTE; same as DOM_VK_HYPHEN_MINUS */
+	case 174: return CCKEY_VOLUME_DOWN;
+	case 175: return CCKEY_VOLUME_UP;
+	case 176: return CCKEY_MEDIA_NEXT;
+	case 177: return CCKEY_MEDIA_PREV;
+	case 178: return CCKEY_MEDIA_STOP;
+	case 179: return CCKEY_MEDIA_PLAY;
+	
 	case 186: return CCKEY_SEMICOLON;
 	case 187: return CCKEY_EQUALS;
 	case 189: return CCKEY_MINUS;
 	}
+	
+	Platform_Log1("Unknown key: %i", &k);
 	return INPUT_NONE;
 }
 
@@ -529,69 +544,7 @@ static void ProcessPendingResize(void) {
 	UpdateWindowBounds();
 }
 
-/* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
-#define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
-static void ProcessGamepadButtons(EmscriptenGamepadEvent* ev) {
-	int numButtons = ev->numButtons;
-
-	Gamepad_SetButton(CCPAD_A, GetGamepadButton(0));
-	Gamepad_SetButton(CCPAD_B, GetGamepadButton(1));
-	Gamepad_SetButton(CCPAD_X, GetGamepadButton(2));
-	Gamepad_SetButton(CCPAD_Y, GetGamepadButton(3));
-
-	Gamepad_SetButton(CCPAD_ZL, GetGamepadButton(4));
-	Gamepad_SetButton(CCPAD_ZR, GetGamepadButton(5));
-	Gamepad_SetButton(CCPAD_L,  GetGamepadButton(6));
-	Gamepad_SetButton(CCPAD_R,  GetGamepadButton(7));
-
-	Gamepad_SetButton(CCPAD_SELECT, GetGamepadButton( 8));
-	Gamepad_SetButton(CCPAD_START,  GetGamepadButton( 9));
-	Gamepad_SetButton(CCPAD_LSTICK, GetGamepadButton(10));
-	Gamepad_SetButton(CCPAD_RSTICK, GetGamepadButton(11));
-	
-	Gamepad_SetButton(CCPAD_UP,    GetGamepadButton(12));
-	Gamepad_SetButton(CCPAD_DOWN,  GetGamepadButton(13));
-	Gamepad_SetButton(CCPAD_LEFT,  GetGamepadButton(14));
-	Gamepad_SetButton(CCPAD_RIGHT, GetGamepadButton(15));
-}
-
-#define AXIS_SCALE 8.0f
-static void ProcessGamepadAxis(int axis, float x, float y, double delta) {
-	/* Deadzone adjustment */
-	if (x >= -0.1 && x <= 0.1) x = 0;
-	if (y >= -0.1 && y <= 0.1) y = 0;
-
-	Gamepad_SetAxis(axis, x * AXIS_SCALE, y * AXIS_SCALE, delta);
-}
-
-static void ProcessGamepadInput(EmscriptenGamepadEvent* ev, double delta) {
-	Input.Sources |= INPUT_SOURCE_GAMEPAD;
-	Input.JoystickMovement = false;
-	ProcessGamepadButtons(ev);
-
-	if (ev->numAxes >= 4) {
-		ProcessGamepadAxis(PAD_AXIS_LEFT,  ev->axis[0], ev->axis[1], delta);
-		ProcessGamepadAxis(PAD_AXIS_RIGHT, ev->axis[2], ev->axis[3], delta);
-	} else if (ev->numAxes >= 2) {
-		ProcessGamepadAxis(PAD_AXIS_RIGHT, ev->axis[0], ev->axis[1], delta);
-	}
-}
-
-void Window_ProcessEvents(double delta) {
-	int i, res, count;
-	Input.Sources = INPUT_SOURCE_NORMAL;
-
-	if (emscripten_sample_gamepad_data() == 0) {
-		count = emscripten_get_num_gamepads();
-
-		for (i = 0; i < count; i++)
-		{
-			EmscriptenGamepadEvent ev;
-			res = emscripten_get_gamepad_status(i, &ev);
-			if (res == 0) ProcessGamepadInput(&ev, delta);
-		}	
-	}
-
+void Window_ProcessEvents(float delta) {
 	if (!needResize) return;
 	needResize = false;
 	ProcessPendingResize();
@@ -607,6 +560,77 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	interop_SetCursorVisible(visible);
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Gamepads----------------------------------------------------------*
+*#########################################################################################################################*/
+/* https://www.w3.org/TR/gamepad/#dfn-standard-gamepad */
+#define GetGamepadButton(i) i < numButtons ? ev->digitalButton[i] : 0
+static void ProcessGamepadButtons(int port, EmscriptenGamepadEvent* ev) {
+	int numButtons = ev->numButtons;
+
+	Gamepad_SetButton(port, CCPAD_A, GetGamepadButton(0));
+	Gamepad_SetButton(port, CCPAD_B, GetGamepadButton(1));
+	Gamepad_SetButton(port, CCPAD_X, GetGamepadButton(2));
+	Gamepad_SetButton(port, CCPAD_Y, GetGamepadButton(3));
+
+	Gamepad_SetButton(port, CCPAD_ZL, GetGamepadButton(4));
+	Gamepad_SetButton(port, CCPAD_ZR, GetGamepadButton(5));
+	Gamepad_SetButton(port, CCPAD_L,  GetGamepadButton(6));
+	Gamepad_SetButton(port, CCPAD_R,  GetGamepadButton(7));
+
+	Gamepad_SetButton(port, CCPAD_SELECT, GetGamepadButton( 8));
+	Gamepad_SetButton(port, CCPAD_START,  GetGamepadButton( 9));
+	Gamepad_SetButton(port, CCPAD_LSTICK, GetGamepadButton(10));
+	Gamepad_SetButton(port, CCPAD_RSTICK, GetGamepadButton(11));
+	
+	Gamepad_SetButton(port, CCPAD_UP,    GetGamepadButton(12));
+	Gamepad_SetButton(port, CCPAD_DOWN,  GetGamepadButton(13));
+	Gamepad_SetButton(port, CCPAD_LEFT,  GetGamepadButton(14));
+	Gamepad_SetButton(port, CCPAD_RIGHT, GetGamepadButton(15));
+}
+
+#define AXIS_SCALE 8.0f
+static void ProcessGamepadAxis(int port, int axis, float x, float y, float delta) {
+	/* Deadzone adjustment */
+	if (x >= -0.1 && x <= 0.1) x = 0;
+	if (y >= -0.1 && y <= 0.1) y = 0;
+
+	Gamepad_SetAxis(port, axis, x * AXIS_SCALE, y * AXIS_SCALE, delta);
+}
+
+static void ProcessGamepadInput(int port, EmscriptenGamepadEvent* ev, float delta) {
+	Input.Sources |= INPUT_SOURCE_GAMEPAD;
+	ProcessGamepadButtons(port, ev);
+
+	if (ev->numAxes >= 4) {
+		ProcessGamepadAxis(port, PAD_AXIS_LEFT,  ev->axis[0], ev->axis[1], delta);
+		ProcessGamepadAxis(port, PAD_AXIS_RIGHT, ev->axis[2], ev->axis[3], delta);
+	} else if (ev->numAxes >= 2) {
+		ProcessGamepadAxis(port, PAD_AXIS_RIGHT, ev->axis[0], ev->axis[1], delta);
+	}
+}
+
+void Window_ProcessGamepads(float delta) {
+	int i, res, count;
+	Input.Sources = INPUT_SOURCE_NORMAL;
+
+	if (emscripten_sample_gamepad_data() == 0) {
+		count = emscripten_get_num_gamepads();
+
+		for (i = 0; i < count; i++)
+		{
+			EmscriptenGamepadEvent ev;
+			res = emscripten_get_gamepad_status(i, &ev);
+			if (res == 0) ProcessGamepadInput(i, &ev, delta);
+		}	
+	}
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Misc/Other--------------------------------------------------------*
+*#########################################################################################################################*/
 extern void interop_ShowDialog(const char* title, const char* msg);
 static void ShowDialogCore(const char* title, const char* msg) { 
 	interop_ShowDialog(title, msg); 
@@ -719,7 +743,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_GL
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 #include "Graphics.h"
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
 

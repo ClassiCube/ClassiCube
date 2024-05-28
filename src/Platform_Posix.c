@@ -497,7 +497,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FontDirCallback(const cc_string* path, void* obj) {
-	SysFonts_Register(path);
+	SysFonts_Register(path, NULL);
 }
 
 void Platform_LoadSysFonts(void) {
@@ -1006,27 +1006,19 @@ cc_bool Updater_Clean(void) { return true; }
 #elif defined CC_BUILD_LINUX
 	#if __x86_64__
 	const struct UpdaterInfo Updater_Info = {
-		#ifndef CC_BUILD_GLMODERN
-		"", 1, { { "OpenGL", "ClassiCube" } }
-		#else	
-		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		"&eModernGL is recommended for newer machines (2015 or later)", 2,
 		{
 			{ "ModernGL", "cc-nix64-gl2" },
 			{ "OpenGL",   "ClassiCube" }
 		}
-		#endif
 	};
 	#elif __i386__
 	const struct UpdaterInfo Updater_Info = {
-		#ifndef CC_BUILD_GLMODERN
-		"", 1, { { "OpenGL", "ClassiCube.32" } }
-		#else
-		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		"&eModernGL is recommended for newer machines (2015 or later)", 2,
 		{
 			{ "ModernGL", "cc-nix32-gl2" },
 			{ "OpenGL",   "ClassiCube.32" }
 		}
-		#endif
 	};
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
@@ -1034,27 +1026,19 @@ cc_bool Updater_Clean(void) { return true; }
 #elif defined CC_BUILD_MACOS
 	#if __x86_64__
 	const struct UpdaterInfo Updater_Info = {
-		#ifndef CC_BUILD_GLMODERN
-		"", 1, { { "OpenGL", "ClassiCube.64.osx" } }
-		#else
-		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		"&eModernGL is recommended for newer machines (2015 or later)", 2,
 		{
 			{ "ModernGL", "cc-osx64-gl2" },
 			{ "OpenGL",   "ClassiCube.64.osx" }
 		}
-		#endif
 	};
 	#elif __i386__
 	const struct UpdaterInfo Updater_Info = {
-		#ifndef CC_BUILD_GLMODERN
-		"", 1, { { "OpenGL", "ClassiCube.osx" } }
-		#else
-		"&eModernGL is recommended for newer machines (2010 or later)", 2,
+		"&eModernGL is recommended for newer machines (2015 or later)", 2,
 		{
 			{ "ModernGL", "cc-osx32-gl2" },
 			{ "OpenGL",   "ClassiCube.osx" }
 		}
-		#endif
 	};
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };

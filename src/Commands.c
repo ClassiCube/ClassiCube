@@ -267,6 +267,23 @@ static struct ChatCommand ClearDeniedCommand = {
 	}
 };
 
+static void MotdCommand_Execute(const cc_string* args, int argsCount) {
+	if (Server.IsSinglePlayer) {
+		Chat_AddRaw("&eThis command can only be used in multiplayer.");
+		return;
+	}
+	Chat_Add1("&eName: &f%s", &Server.Name);
+	Chat_Add1("&eMOTD: &f%s", &Server.MOTD);
+}
+
+static struct ChatCommand MotdCommand = {
+	"Motd", MotdCommand_Execute,
+	COMMAND_FLAG_UNSPLIT_ARGS,
+	{
+		"&a/client motd",
+		"&eDisplays the server's name and MOTD."
+	}
+};
 
 /*########################################################################################################################*
 *-------------------------------------------------------DrawOpCommand-----------------------------------------------------*
@@ -672,8 +689,8 @@ static void BlockEditCommand_Execute(const cc_string* args, int argsCount__) {
 		Blocks.DigSounds[block]  = v;
 	} else if (String_CaselessEqualsConst(prop, "fullbright")) {
 		if (!BlockEditCommand_GetBool(value, "Full brightness", &b))  return;
-
-		Blocks.FullBright[block] = b;
+		//TODO: Fix this, brightness isn't just a bool anymore
+		Blocks.Brightness[block] = b;
 	} else if (String_CaselessEqualsConst(prop, "blockslight")) {
 		if (!BlockEditCommand_GetBool(value, "Blocks light", &b)) return;
 
@@ -709,6 +726,7 @@ static void OnInit(void) {
 	Commands_Register(&ModelCommand);
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
+	Commands_Register(&MotdCommand);
 	Commands_Register(&BlockEditCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&ReplaceCommand);

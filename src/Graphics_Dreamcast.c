@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include "../third_party/gldc/gldc.h"
+#include "../third_party/gldc/src/draw.c"
 #include <malloc.h>
 #include <kos.h>
 #include <dc/matrix.h>
@@ -17,19 +18,22 @@ static cc_bool renderingDisabled;
 *#########################################################################################################################*/
 static void InitGLState(void) {
 	glClearDepth(1.0f);
-	glDepthMask(GL_TRUE);
-	glShadeModel(GL_SMOOTH);
+	GPUSetAlphaCutOff(127);
 
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_FOG);
+	ALPHA_TEST_ENABLED = GL_FALSE;
+	CULLING_ENABLED    = GL_FALSE;
+	BLEND_ENABLED      = GL_FALSE;
+	DEPTH_TEST_ENABLED = GL_FALSE;
+	DEPTH_MASK_ENABLED = GL_TRUE;
+	TEXTURES_ENABLED   = GL_FALSE;
+	FOG_ENABLED        = GL_FALSE;
+	
+	STATE_DIRTY = GL_TRUE;
 }
 
 void Gfx_Create(void) {
 	if (!Gfx.Created) glKosInit();
+
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 	InitGLState();
 	
@@ -51,15 +55,21 @@ void Gfx_Free(void) {
 	Gfx_FreeState();
 }
 
-#define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol gfx_clearColor;
-void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+
+void Gfx_SetFaceCulling(cc_bool enabled) { 
+	CULLING_ENABLED = enabled;
+	STATE_DIRTY     = GL_TRUE;
+}
+
+static void SetAlphaBlend(cc_bool enabled) { 
+	BLEND_ENABLED = enabled;
+	STATE_DIRTY   = GL_TRUE;
+}
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {
@@ -76,10 +86,24 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	// TODO: Doesn't work
 }
 
-void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
-void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
+void Gfx_SetDepthWrite(cc_bool enabled) { 
+	if (DEPTH_MASK_ENABLED == enabled) return;
+	
+	DEPTH_MASK_ENABLED = enabled;
+	STATE_DIRTY        = GL_TRUE;
+}
 
-void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
+void Gfx_SetDepthTest(cc_bool enabled) { 
+	if (DEPTH_TEST_ENABLED == enabled) return;
+	
+	DEPTH_TEST_ENABLED = enabled;
+	STATE_DIRTY        = GL_TRUE;
+}
+
+static void SetAlphaTest(cc_bool enabled) {
+	ALPHA_TEST_ENABLED = enabled;
+	STATE_DIRTY        = GL_TRUE;
+}
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	// don't need a fake second pass in this case
@@ -352,7 +376,10 @@ static FogFunc gfx_fogMode = -1;
 
 void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
-	if (enabled) { glEnable(GL_FOG); } else { glDisable(GL_FOG); }
+	if (FOG_ENABLED == enabled) return;
+	
+	FOG_ENABLED = enabled;
+	STATE_DIRTY = GL_TRUE;
 }
 
 void Gfx_SetFogCol(PackedCol color) {
@@ -371,7 +398,7 @@ static void UpdateFog(void) {
 	if (gfx_fogMode == FOG_LINEAR) {
 		pvr_fog_table_linear(0.0f, gfx_fogEnd);
 	} else if (gfx_fogMode == FOG_EXP) {
-    		pvr_fog_table_exp(gfx_fogDensity);
+		pvr_fog_table_exp(gfx_fogDensity);
 	} else if (gfx_fogMode == FOG_EXP2) {
 		pvr_fog_table_exp2(gfx_fogDensity);
 	}
@@ -452,8 +479,6 @@ static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	gfx_format = -1;
-
-	glAlphaFunc(GL_GREATER, 0.5f);
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
@@ -465,15 +490,35 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
 #define VB_PTR gfx_vertices
+static const void* VERTEX_PTR;
+extern void apply_poly_header(PolyHeader* header, PolyList* activePolyList);
 
-static void SetupVertices(int startVertex) {
-	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-		cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-		gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	} else {
-		cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-		gldcVertexPointer(SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+extern Vertex* DrawColouredQuads(const void* src, Vertex* dst, int numQuads);
+extern Vertex* DrawTexturedQuads(const void* src, Vertex* dst, int numQuads);
+
+void DrawQuads(int count) {
+	if (!count) return;
+	PolyList* output = _glActivePolyList();
+	AlignedVectorHeader* hdr = &output->vector.hdr;
+
+	uint32_t header_required = (hdr->size == 0) || STATE_DIRTY;
+	// Reserve room for the vertices and header
+	Vertex* beg = aligned_vector_reserve(&output->vector, hdr->size + (header_required) + count);
+
+	if (header_required) {
+		apply_poly_header((PolyHeader*)beg, output);
+		STATE_DIRTY = GL_FALSE;
+		beg++; 
+		hdr->size += 1;
 	}
+	Vertex* end;
+
+	if (TEXTURES_ENABLED) {
+		end = DrawTexturedQuads(VERTEX_PTR, beg, count >> 2);
+	} else {
+		end = DrawColouredQuads(VERTEX_PTR, beg, count >> 2);
+	}
+	hdr->size += (end - beg);
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
@@ -481,37 +526,38 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_format = fmt;
 	gfx_stride = strideSizes[fmt];
 
-	if (fmt == VERTEX_FORMAT_TEXTURED) {
-		glEnable(GL_TEXTURE_2D);
-	} else {
-		glDisable(GL_TEXTURE_2D);
-	}
+	TEXTURES_ENABLED = fmt == VERTEX_FORMAT_TEXTURED;
+	STATE_DIRTY      = GL_TRUE;
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	SetupVertices(0);
+	//SetupVertices(0);
 	//glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	SetupVertices(startVertex);
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	} else {
+		VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_COLOURED;
+	}
+
+	DrawQuads(verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	SetupVertices(0);
-	
+	VERTEX_PTR = gfx_vertices;
+
 	if (textureOffset) ShiftTextureCoords(verticesCount);
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	DrawQuads(verticesCount);
 	if (textureOffset) UnshiftTextureCoords(verticesCount);
 }
 
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	if (renderingDisabled) return;
 	
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	gldcVertexPointer(SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
-	glDrawArrays(GL_QUADS, 0, verticesCount);
+	VERTEX_PTR = gfx_vertices + startVertex * SIZEOF_VERTEX_TEXTURED;
+	DrawQuads(verticesCount);
 }
 
 
@@ -523,9 +569,8 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 }
 
 void Gfx_GetApiInfo(cc_string* info) {
-	GLint freeMem, usedMem;
-	glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &freeMem);
-	glGetIntegerv(GL_USED_TEXTURE_MEMORY_KOS, &usedMem);
+	GLint freeMem = _glFreeTextureMemory();
+	GLint usedMem = _glUsedTextureMemory();
 	
 	float freeMemMB = freeMem / (1024.0 * 1024.0);
 	float usedMemMB = usedMem / (1024.0 * 1024.0);
@@ -550,6 +595,7 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
+	pvr_wait_ready();
 	glKosSwapBuffers();
 	if (gfx_minFrameMs) LimitFPS();
 }
@@ -558,14 +604,26 @@ void Gfx_OnWindowResize(void) {
 	Gfx_SetViewport(0, 0, Game.Width, Game.Height);
 }
 
+extern float VP_COL_HWIDTH,  VP_TEX_HWIDTH;
+extern float VP_COL_HHEIGHT, VP_TEX_HHEIGHT;
+extern float VP_COL_X_PLUS_HWIDTH,  VP_TEX_X_PLUS_HWIDTH;
+extern float VP_COL_Y_PLUS_HHEIGHT, VP_TEX_Y_PLUS_HHEIGHT;
+
 void Gfx_SetViewport(int x, int y, int w, int h) {
 	if (x == 0 && y == 0 && w == Game.Width && h == Game.Height) {
-		glDisable(GL_SCISSOR_TEST);
+		SCISSOR_TEST_ENABLED = GL_FALSE;
 	} else {
-		glEnable(GL_SCISSOR_TEST);
+		SCISSOR_TEST_ENABLED = GL_TRUE;
 	}
+	STATE_DIRTY = GL_TRUE;
 	
 	glViewport(x, y, w, h);
 	glScissor (x, y, w, h);
+
+	VP_COL_HWIDTH  = VP_TEX_HWIDTH  = w *  0.5f;
+	VP_COL_HHEIGHT = VP_TEX_HHEIGHT = h * -0.5f;
+
+	VP_COL_X_PLUS_HWIDTH  = VP_TEX_X_PLUS_HWIDTH  = x + w * 0.5f;
+	VP_COL_Y_PLUS_HHEIGHT = VP_TEX_Y_PLUS_HHEIGHT = y + h * 0.5f;
 }
 #endif

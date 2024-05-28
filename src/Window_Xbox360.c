@@ -96,8 +96,10 @@ struct controller_data_s
 */
 
 static void HandleButtons(int port, struct controller_data_s* pad) {
-	Gamepad_SetButton(port, CCPAD_L, pad->lb);
-	Gamepad_SetButton(port, CCPAD_R, pad->rb);
+	Gamepad_SetButton(port, CCPAD_L,      pad->lb);
+	Gamepad_SetButton(port, CCPAD_R,      pad->rb);
+	Gamepad_SetButton(port, CCPAD_LSTICK, pad->lt > 100);
+	Gamepad_SetButton(port, CCPAD_RSTICK, pad->rt > 100);
 	
 	Gamepad_SetButton(port, CCPAD_A, pad->a);
 	Gamepad_SetButton(port, CCPAD_B, pad->b);
@@ -113,12 +115,22 @@ static void HandleButtons(int port, struct controller_data_s* pad) {
 	Gamepad_SetButton(port, CCPAD_DOWN,   pad->down);
 }
 
+#define AXIS_SCALE 8192.0f
+static void HandleJoystick(int port, int axis, int x, int y, float delta) {
+	if (Math_AbsI(x) <= 4096) x = 0;
+	if (Math_AbsI(y) <= 4096) y = 0;	
+	
+	Gamepad_SetAxis(port, axis, x / AXIS_SCALE, -y / AXIS_SCALE, delta);
+}
+
 void Window_ProcessGamepads(float delta) {
 	struct controller_data_s pad;
 	int res = get_controller_data(&pad, 0);
 	if (res == 0) return;
 	
 	HandleButtons(0, &pad);
+	HandleJoystick(0, PAD_AXIS_LEFT,  pad.s1_x, pad.s1_y, delta);
+	HandleJoystick(0, PAD_AXIS_RIGHT, pad.s2_x, pad.s2_y, delta);
 }
 
 

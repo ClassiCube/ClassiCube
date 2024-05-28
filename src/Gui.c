@@ -35,7 +35,7 @@ static CC_NOINLINE int GetWindowScale(void) {
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
 #ifndef CC_BUILD_DUALSCREEN
-	if (!Gui.TouchUI) {
+	if (!Gui_TouchUI) {
 #endif
 		widthScale  /= DisplayInfo.ScaleX;
 		heightScale /= DisplayInfo.ScaleY;
@@ -249,7 +249,6 @@ void Gui_Remove(struct Screen* s) {
 
 void Gui_Add(struct Screen* s, int priority) {
 	struct Screen* existing;
-	int i;
 	Gui_RemoveCore(s);
 	
 	existing = Gui_GetScreen(priority);

@@ -1,9 +1,9 @@
 #include "Core.h"
-#ifdef CC_BUILD_D3D11
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_D3D11
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
-#include "_D3D11Shaders.h"
+#include "../misc/windows/D3D11Shaders.h"
 
 /* Avoid pointless includes */
 #define WIN32_LEAN_AND_MEAN
@@ -691,7 +691,7 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 static ID3D11SamplerState* ps_samplers[2];
 static ID3D11PixelShader* ps_shaders[12];
 static ID3D11Buffer* ps_cBuffer;
-static cc_bool ps_alphaTesting, ps_mipmaps;
+static cc_bool ps_mipmaps;
 static float ps_fogEnd, ps_fogDensity;
 static PackedCol ps_fogColor;
 static int ps_fogMode;
@@ -725,7 +725,7 @@ static void PS_CreateShaders(void) {
 
 static int PS_CalcShaderIndex(void) {
 	int idx = gfx_format == VERTEX_FORMAT_COLOURED ? 0 : 1;
-	if (ps_alphaTesting) idx += 2;
+	if (gfx_alphaTest) idx += 2;
 
 	if (gfx_fogEnabled) {
 		// uncomment when it works
@@ -822,8 +822,7 @@ static void PS_Free(void) {
 	PS_FreeConstants();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) {
-	ps_alphaTesting = enabled;
+static void SetAlphaTest(cc_bool enabled) {
 	PS_UpdateShader();
 }
 // unnecessary? check if any performance is gained, probably irrelevant
@@ -887,10 +886,10 @@ void Gfx_DisableMipmaps(void) {
 static ID3D11RenderTargetView* backbuffer;
 static ID3D11Texture2D* depthbuffer;
 static ID3D11DepthStencilView* depthbufferView;
-static ID3D11BlendState* om_blendStates[4];
+static ID3D11BlendState* om_blendStates[16 * 2];
 static ID3D11DepthStencilState* om_depthStates[4];
 static float gfx_clearColor[4];
-static cc_bool gfx_alphaBlending, gfx_colorEnabled = true;
+static cc_bool gfx_channels[4] = { true, true, true, true };
 static cc_bool gfx_depthTest, gfx_depthWrite;
 
 static void OM_Clear(GfxBuffers buffers) {
@@ -972,8 +971,14 @@ static void OM_CreateBlendStates(void) {
 
 	for (int i = 0; i < Array_Elems(om_blendStates); i++) 
 	{
-		desc.RenderTarget[0].RenderTargetWriteMask = (i & 1) ? D3D11_COLOR_WRITE_ENABLE_ALL : 0;
-		desc.RenderTarget[0].BlendEnable           = (i & 2) != 0;
+		int mask = 0;
+		if (i & 0x01) mask |= D3D11_COLOR_WRITE_ENABLE_RED;
+		if (i & 0x02) mask |= D3D11_COLOR_WRITE_ENABLE_GREEN;
+		if (i & 0x04) mask |= D3D11_COLOR_WRITE_ENABLE_BLUE;
+		if (i & 0x08) mask |= D3D11_COLOR_WRITE_ENABLE_ALPHA;
+		
+		desc.RenderTarget[0].RenderTargetWriteMask = mask;
+		desc.RenderTarget[0].BlendEnable           = (i & 0x10) != 0;
 
 		hr = ID3D11Device_CreateBlendState(device, &desc, &om_blendStates[i]);
 		if (hr) Logger_Abort2(hr, "Failed to create blend state");
@@ -981,7 +986,8 @@ static void OM_CreateBlendStates(void) {
 }
 
 static void OM_UpdateBlendState(void) {
-	ID3D11BlendState* blendState = om_blendStates[gfx_colorEnabled | (gfx_alphaBlending << 1)];
+	int idx = (gfx_channels[0]) | (gfx_channels[1] << 1) | (gfx_channels[2] << 2) | (gfx_channels[3] << 3) | (gfx_alphaBlend << 4);
+	ID3D11BlendState* blendState = om_blendStates[idx];
 	ID3D11DeviceContext_OMSetBlendState(context, blendState, NULL, 0xffffffff);
 }
 
@@ -1030,15 +1036,16 @@ void Gfx_SetDepthWrite(cc_bool enabled) {
 	OM_UpdateDepthState();
 }
 
-void Gfx_SetAlphaBlending(cc_bool enabled) {
-	gfx_alphaBlending = enabled;
+static void SetAlphaBlend(cc_bool enabled) {
 	OM_UpdateBlendState();
 }
 
 static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
-	gfx_colorEnabled = r;
+	gfx_channels[0] = r;
+	gfx_channels[1] = g;
+	gfx_channels[2] = b;
+	gfx_channels[3] = a;
 	OM_UpdateBlendState();
-	// TODO all channels
 }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {

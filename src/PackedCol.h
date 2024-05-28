@@ -6,7 +6,7 @@
 */
 
 typedef cc_uint32 PackedCol;
-#if defined CC_BUILD_D3D9 || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9) || defined CC_BUILD_XBOX || defined CC_BUILD_DREAMCAST
 	#define PACKEDCOL_B_SHIFT  0
 	#define PACKEDCOL_G_SHIFT  8
 	#define PACKEDCOL_R_SHIFT 16
@@ -48,6 +48,8 @@ CC_API PackedCol PackedCol_Scale(PackedCol value, float t);
 CC_API PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 /* Multiplies RGB components of the two given colours. */
 CC_API PackedCol PackedCol_Tint(PackedCol a, PackedCol b);
+/* Adds the two colors together in a way that gives a brighter result. */
+CC_API PackedCol PackedCol_ScreenBlend(PackedCol a, PackedCol b);
 
 CC_NOINLINE int PackedCol_DeHex(char hex);
 CC_NOINLINE cc_bool PackedCol_Unhex(const char* src, int* dst, int count);

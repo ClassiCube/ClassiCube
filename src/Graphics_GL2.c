@@ -1,27 +1,31 @@
+/* Silence deprecation warnings on modern macOS/iOS */
+#define GL_SILENCE_DEPRECATION
+#define GLES_SILENCE_DEPRECATION
+
 #include "Core.h"
-#if defined CC_BUILD_GL && defined CC_BUILD_GLMODERN
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"
 /* OpenGL 2.0 backend (alternative modern-ish backend) */
 
 #if defined CC_BUILD_WIN
-/* Avoid pointless includes */
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#include <windows.h>
-#include <GL/gl.h>
+	/* Avoid pointless includes */
+	#define WIN32_LEAN_AND_MEAN
+	#define NOSERVICE
+	#define NOMCX
+	#define NOIME
+	#include <windows.h>
+	#include <GL/gl.h>
 #elif defined CC_BUILD_IOS
-#include <OpenGLES/ES2/gl.h>
+	#include <OpenGLES/ES2/gl.h>
 #elif defined CC_BUILD_MACOS
-#include <OpenGL/gl.h>
+	#include <OpenGL/gl.h>
 #elif defined CC_BUILD_GLES
-#include <GLES2/gl2.h>
+	#include <GLES2/gl2.h>
 #else
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
+	#define GL_GLEXT_PROTOTYPES
+	#include <GL/gl.h>
 #endif
 
 /* Windows gl.h only supplies up to OpenGL 1.1 headers */
@@ -106,13 +110,15 @@ GfxResourceID Gfx_CreateIb2(int count, Gfx_FillIBFunc fillFunc, void* obj) {
 
 	fillFunc(indices, count, obj);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
-	return id;
+	return uint_to_ptr(id);
 }
 
-void Gfx_BindIb(GfxResourceID ib) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
+void Gfx_BindIb(GfxResourceID ib) { 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ptr_to_uint(ib)); 
+}
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-	GLuint id = (GLuint)(*ib);
+	GLuint id = ptr_to_uint(*ib);
 	if (!id) return;
 	glDeleteBuffers(1, &id);
 	*ib = 0;
@@ -123,15 +129,16 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 static GfxResourceID Gfx_AllocStaticVb(VertexFormat fmt, int count) {
-	return GL_GenAndBind(GL_ARRAY_BUFFER);
+	GLuint id = GL_GenAndBind(GL_ARRAY_BUFFER);
+	return uint_to_ptr(id);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { 
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb)); 
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
+	GLuint id = ptr_to_uint(*vb);
 	if (id) glDeleteBuffers(1, &id);
 	*vb = 0;
 }
@@ -153,15 +160,15 @@ static GfxResourceID Gfx_AllocDynamicVb(VertexFormat fmt, int maxVertices) {
 	cc_uint32 size = maxVertices * strideSizes[fmt];
 
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
-	return id;
+	return uint_to_ptr(id);
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb)); 
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
-	GLuint id = (GLuint)(*vb);
+	GLuint id = ptr_to_uint(*vb);
 	if (id) glDeleteBuffers(1, &id);
 	*vb = 0;
 }
@@ -171,13 +178,13 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb));
 	glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * gfx_stride;
-	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
+	glBindBuffer(GL_ARRAY_BUFFER, ptr_to_uint(vb));
 	glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 
@@ -202,7 +209,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 
 /* cached uniforms (cached for multiple programs */
 static struct Matrix _view, _proj, _mvp;
-static cc_bool gfx_alphaTest, gfx_texTransform;
+static cc_bool gfx_texTransform;
 static float _texX, _texY;
 static PackedCol gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
@@ -465,7 +472,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	/*   WebGL/OpenGL ES - pure black 1x1 texture */
 	/* So for consistency, always use a 1x1 pure white texture */
 	if (!texId) texId = white_square;
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
+	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
 
 
@@ -500,7 +507,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	SwitchProgram();
 }
 
-void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
+static void SetAlphaTest(cc_bool enabled) { SwitchProgram(); }
 
 void Gfx_DepthOnlyRendering(cc_bool depthOnly) {
 	cc_bool enabled = !depthOnly;
@@ -617,27 +624,27 @@ static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 static void GL_SetupVbColoured(void) {
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, (void*)12);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, uint_to_ptr( 0));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, uint_to_ptr(12));
 }
 
 static void GL_SetupVbTextured(void) {
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)12);
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)16);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr( 0));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, uint_to_ptr(12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(16));
 }
 
 static void GL_SetupVbColoured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, (void*)(offset + 12));
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, uint_to_ptr(offset     ));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, uint_to_ptr(offset + 12));
 }
 
 static void GL_SetupVbTextured_Range(int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 16));
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset     ));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset + 12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, uint_to_ptr(offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {

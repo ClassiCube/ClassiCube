@@ -29,26 +29,6 @@ __BEGIN_DECLS
 
 /* Scissor box */
 #define GL_SCISSOR_TEST     0x0008      /* capability bit */
-#define GL_SCISSOR_BOX      0x0C10
-
-/* Depth buffer */
-#define GL_NEVER              0x0200
-#define GL_LESS               0x0201
-#define GL_EQUAL              0x0202
-#define GL_LEQUAL             0x0203
-#define GL_GREATER            0x0204
-#define GL_NOTEQUAL           0x0205
-#define GL_GEQUAL             0x0206
-#define GL_ALWAYS             0x0207
-#define GL_DEPTH_TEST         0x0B71
-#define GL_DEPTH_FUNC         0x0B74
-#define GL_DEPTH_WRITEMASK    0x0B72
-
-/* Blending */
-#define GL_BLEND              0x0BE2 /* capability bit */
-
-/* Misc texture constants */
-#define GL_TEXTURE_2D           0x0001      /* capability bit */
 
 /* Texture Environment */
 #define GL_TEXTURE_ENV_MODE 0x2200
@@ -59,13 +39,6 @@ __BEGIN_DECLS
 /* TextureMagFilter */
 #define GL_NEAREST                      0x2600
 #define GL_LINEAR                       0x2601
-
-/* Fog */
-#define GL_FOG              0x0004      /* capability bit */
-
-#define GL_FRONT_AND_BACK                       0x0408
-#define GL_FRONT                                0x0404
-#define GL_BACK                                 0x0405
 
 #define GL_SHADE_MODEL      0x0b54
 #define GL_FLAT         0x1d00
@@ -93,8 +66,6 @@ __BEGIN_DECLS
 
 #define GL_RGBA                           0x1908
 
-#define GL_CULL_FACE				0x0B44
-
 #define GLbyte   char
 #define GLshort  short
 #define GLint    int
@@ -105,50 +76,19 @@ __BEGIN_DECLS
 #define GLenum   unsigned int
 #define GLsizei  unsigned int
 #define GLclampf float
-#define GLclampd float
 #define GLubyte  unsigned char
 #define GLboolean  unsigned char
 #define GL_FALSE   0
 #define GL_TRUE    1
 
-/* Stubs for portability */
-#define GL_ALPHA_TEST                     0x0BC0
-
 #define GLAPI extern
 #define APIENTRY
-
-/* Start Submission of Primitive Data */
-/* Currently Supported Primitive Types:
-   -GL_POINTS   ( does NOT work with glDrawArrays )( ZClipping NOT supported )
-   -GL_TRIANGLES        ( works with glDrawArrays )( ZClipping supported )
-   -GL_TRIANLGLE_STRIP  ( works with glDrawArrays )( ZClipping supported )
-   -GL_QUADS            ( works with glDrawArrays )( ZClipping supported )
-**/
-
-/* Enable / Disable Capability */
-/* Currently Supported Capabilities:
-        GL_TEXTURE_2D
-        GL_BLEND
-        GL_DEPTH_TEST
-        GL_LIGHTING
-        GL_SCISSOR_TEST
-        GL_FOG
-        GL_CULL_FACE
-        GL_KOS_NEARZ_CLIPPING
-        GL_KOS_TEXTURE_MATRIX
-*/
-GLAPI void glEnable(GLenum cap);
-GLAPI void glDisable(GLenum cap);
 
 /* Clear Caps */
 GLAPI void glClear(GLuint mode);
 
 /* Depth Testing */
 GLAPI void glClearDepth(GLfloat depth);
-GLAPI void glDepthMask(GLboolean flag);
-GLAPI void glDepthFunc(GLenum func);
-GLAPI void glDepthRange(GLclampf n, GLclampf f);
-GLAPI void glDepthRangef(GLclampf n, GLclampf f);
 
 /* Shading - Flat or Goraud */
 GLAPI void glShadeModel(GLenum mode);
@@ -178,23 +118,9 @@ GLAPI void   gldcBindTexture(GLuint texture);
 GLAPI int  gldcAllocTexture(GLsizei w, GLsizei h, GLenum format, GLenum type);
 GLAPI void gldcGetTexture(GLvoid** data, GLsizei* width, GLsizei* height);
 
-
-/* GL Array API - Only GL_TRIANGLES, GL_TRIANGLE_STRIP, and GL_QUADS are supported */
-GLAPI void gldcVertexPointer(GLsizei stride, const GLvoid *pointer);
-
-/* Array Data Submission */
-GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-
-/* Transformation / Matrix Functions */
-
 GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
-
-/* glGet Functions */
-GLAPI void glGetIntegerv(GLenum pname, GLint *params);
-
-GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
 
 
 /*
@@ -225,10 +151,6 @@ typedef struct {
 
 /* Memory allocation extension (GL_KOS_texture_memory_management) */
 GLAPI void glDefragmentTextureMemory_KOS(void);
-
-#define GL_FREE_TEXTURE_MEMORY_KOS                  0xEF3D
-#define GL_USED_TEXTURE_MEMORY_KOS                  0xEF3E
-#define GL_FREE_CONTIGUOUS_TEXTURE_MEMORY_KOS       0xEF3F
 
 __END_DECLS
 

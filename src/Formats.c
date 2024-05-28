@@ -798,7 +798,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 		if (IsTag(tag, "CollideType"))    { Blocks.Collide[id] = NbtTag_U8(tag); return; }
 		if (IsTag(tag, "Speed"))          { Blocks.SpeedMultiplier[id] = NbtTag_F32(tag); return; }
 		if (IsTag(tag, "TransmitsLight")) { Blocks.BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
-		if (IsTag(tag, "FullBright"))     { Blocks.FullBright[id] = NbtTag_U8(tag) != 0; return; }
+		if (IsTag(tag, "FullBright"))     { Blocks.Brightness[id] = Block_ReadBrightness(NbtTag_U8(tag)); return; }
 		if (IsTag(tag, "BlockDraw"))      { Blocks.Draw[id] = NbtTag_U8(tag); return; }
 		if (IsTag(tag, "Shape"))          { Blocks.SpriteOffset[id] = NbtTag_U8(tag); return; }
 
@@ -1546,7 +1546,7 @@ static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 
 		cur  = Nbt_WriteUInt8(cur,  "TransmitsLight", Blocks.BlocksLight[b] ? 0 : 1);
 		cur  = Nbt_WriteUInt8(cur,  "WalkSound",      Blocks.DigSounds[b]);
-		cur  = Nbt_WriteUInt8(cur,  "FullBright",     Blocks.FullBright[b] ? 1 : 0);
+		cur  = Nbt_WriteUInt8(cur,  "FullBright",     Block_WriteFullBright(Blocks.Brightness[b]));
 		cur  = Nbt_WriteUInt8(cur,  "Shape",          sprite ? 0 : (cc_uint8)(Blocks.MaxBB[b].y * 16));
 		cur  = Nbt_WriteUInt8(cur,  "BlockDraw",      sprite ? Blocks.SpriteOffset[b] : Blocks.Draw[b]);
 

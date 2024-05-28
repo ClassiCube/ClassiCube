@@ -41,11 +41,19 @@ enum InputButtons {
 	CCKEY_KP5, CCKEY_KP6, CCKEY_KP7, CCKEY_KP8, CCKEY_KP9,
 	CCKEY_KP_DIVIDE, CCKEY_KP_MULTIPLY, CCKEY_KP_MINUS,
 	CCKEY_KP_PLUS, CCKEY_KP_DECIMAL, CCKEY_KP_ENTER,
+	
+	CCKEY_VOLUME_MUTE, CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_SLEEP,
+	CCKEY_MEDIA_NEXT, CCKEY_MEDIA_PREV, CCKEY_MEDIA_PLAY, CCKEY_MEDIA_STOP,
+	CCKEY_BROWSER_PREV, CCKEY_BROWSER_NEXT, CCKEY_BROWSER_REFRESH, CCKEY_BROWSER_STOP, CCKEY_BROWSER_SEARCH, CCKEY_BROWSER_FAVORITES, CCKEY_BROWSER_HOME,
+	CCKEY_LAUNCH_MAIL, CCKEY_LAUNCH_MEDIA, CCKEY_LAUNCH_APP1, CCKEY_LAUNCH_CALC, 
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
-	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
+	CCMOUSE_X1, CCMOUSE_X2, CCMOUSE_X3, CCMOUSE_X4, CCMOUSE_X5, CCMOUSE_X6,
+	CCMOUSE_L, CCMOUSE_R, CCMOUSE_M,
+	CCWHEEL_UP, CCWHEEL_DOWN, CCWHEEL_LEFT, CCWHEEL_RIGHT,
 
-	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R, CCPAD_Z,
+	CCPAD_A, CCPAD_B, CCPAD_X, CCPAD_Y, CCPAD_L, CCPAD_R, 
+	CCPAD_Z, CCPAD_C, CCPAD_D,
 	CCPAD_LEFT, CCPAD_RIGHT, CCPAD_UP, CCPAD_DOWN,
 	CCPAD_START, CCPAD_SELECT, CCPAD_ZL, CCPAD_ZR,
 	CCPAD_LSTICK, CCPAD_RSTICK,
@@ -106,6 +114,7 @@ void Input_Clear(void);
 #else
 	#define Input_IsActionPressed() Input_IsCtrlPressed()
 #endif
+int Input_CalcDelta(int btn, int horDelta, int verDelta);
 
 
 #ifdef CC_BUILD_TOUCH
@@ -138,48 +147,60 @@ void Input_RemoveTouch(long id, int x, int y);
 
 /* Data for mouse and touch */
 extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
-/* Raises InputEvents.Wheel with the given wheel delta. */
-void Mouse_ScrollWheel(float delta);
-/* Sets X and Y position of the given pointer, always raising PointerEvents.Moved. */
+/* Raises appropriate events for a mouse vertical scroll */
+void Mouse_ScrollVWheel(float delta);
+/* Raises appropriate events for a mouse horizontal scroll */
+void Mouse_ScrollHWheel(float delta);
+/* Sets X and Y position of the given pointer, then raises appropriate events */
 void Pointer_SetPosition(int idx, int x, int y);
 
 
-/* Enumeration of all key bindings. */
-enum KeyBind_ {
-	KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_LEFT, KEYBIND_RIGHT,
-	KEYBIND_JUMP, KEYBIND_RESPAWN, KEYBIND_SET_SPAWN, KEYBIND_CHAT,
-	KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_SEND_CHAT, KEYBIND_TABLIST,
-	KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN,
-	KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN,
-	KEYBIND_THIRD_PERSON, KEYBIND_HIDE_GUI, KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL,
-	KEYBIND_HALF_SPEED, KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK,
-	KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, KEYBIND_SMOOTH_CAMERA,
-	KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
-	KEYBIND_LOOK_UP, KEYBIND_LOOK_DOWN, KEYBIND_LOOK_RIGHT, KEYBIND_LOOK_LEFT,
-	KEYBIND_HOTBAR_1, KEYBIND_HOTBAR_2, KEYBIND_HOTBAR_3,
-	KEYBIND_HOTBAR_4, KEYBIND_HOTBAR_5, KEYBIND_HOTBAR_6,
-	KEYBIND_HOTBAR_7, KEYBIND_HOTBAR_8, KEYBIND_HOTBAR_9,
-	KEYBIND_HOTBAR_LEFT, KEYBIND_HOTBAR_RIGHT,
-	KEYBIND_COUNT
+/* Enumeration of all input bindings. */
+enum InputBind_ {
+	BIND_FORWARD, BIND_BACK, BIND_LEFT, BIND_RIGHT,
+	BIND_JUMP, BIND_RESPAWN, BIND_SET_SPAWN, BIND_CHAT,
+	BIND_INVENTORY, BIND_FOG, BIND_SEND_CHAT, BIND_TABLIST,
+	BIND_SPEED, BIND_NOCLIP, BIND_FLY, BIND_FLY_UP, BIND_FLY_DOWN,
+	BIND_EXT_INPUT, BIND_HIDE_FPS, BIND_SCREENSHOT, BIND_FULLSCREEN,
+	BIND_THIRD_PERSON, BIND_HIDE_GUI, BIND_AXIS_LINES, BIND_ZOOM_SCROLL,
+	BIND_HALF_SPEED, BIND_DELETE_BLOCK, BIND_PICK_BLOCK, BIND_PLACE_BLOCK,
+	BIND_AUTOROTATE, BIND_HOTBAR_SWITCH, BIND_SMOOTH_CAMERA,
+	BIND_DROP_BLOCK, BIND_IDOVERLAY, BIND_BREAK_LIQUIDS,
+	BIND_LOOK_UP, BIND_LOOK_DOWN, BIND_LOOK_RIGHT, BIND_LOOK_LEFT,
+	BIND_HOTBAR_1, BIND_HOTBAR_2, BIND_HOTBAR_3,
+	BIND_HOTBAR_4, BIND_HOTBAR_5, BIND_HOTBAR_6,
+	BIND_HOTBAR_7, BIND_HOTBAR_8, BIND_HOTBAR_9,
+	BIND_HOTBAR_LEFT, BIND_HOTBAR_RIGHT,
+	BIND_COUNT
 };
-typedef int KeyBind;
+typedef int InputBind;
+typedef struct BindMapping_ { cc_uint8 button1, button2; } BindMapping;
+#define BindMapping_Set(mapping, btn1, btn2) (mapping)->button1 = btn1; (mapping)->button2 = btn2;
 
-/* The keyboard/mouse buttons that are bound to each key binding */
-extern cc_uint8 KeyBinds_Normal[KEYBIND_COUNT];
-/* The gamepad buttons that are bound to each key binding */
-extern cc_uint8 KeyBinds_Gamepad[KEYBIND_COUNT];
-/* Default keyboard/mouse button that each key binding is bound to */
-extern const cc_uint8 KeyBind_NormalDefaults[KEYBIND_COUNT];
-/* Default gamepad button that each key binding is bound to */
-extern const cc_uint8 KeyBind_GamepadDefaults[KEYBIND_COUNT];
-#define KeyBind_GetDefaults() (Input.GamepadSource ? KeyBind_GamepadDefaults : KeyBind_NormalDefaults)
+/* The keyboard/mouse buttons that are bound to each input binding */
+extern BindMapping KeyBind_Mappings[BIND_COUNT];
+/* The gamepad buttons that are bound to each input binding */
+extern BindMapping PadBind_Mappings[BIND_COUNT];
+/* Default keyboard/mouse button that each input binding is bound to */
+extern const BindMapping KeyBind_Defaults[BIND_COUNT];
+/* Default gamepad button that each input binding is bound to */
+extern const BindMapping PadBind_Defaults[BIND_COUNT];
 
-/* Whether the given keyboard/mouse or gamepad button is bound to the given keybinding */
-#define KeyBind_Claims(binding, btn) (KeyBinds_Normal[binding] == (btn) || KeyBinds_Gamepad[binding] == (btn))
-/* Gets whether the key bound to the given key binding is pressed. */
-CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
-/* Set the key that the given key binding is bound to. (also updates options list) */
-void KeyBind_Set(KeyBind binding, int key, cc_uint8* binds);
+/* InputBind_IsPressed is what should be used, but export KeyBind_IsPressed for backwards compatibility */
+#define InputBind_IsPressed KeyBind_IsPressed
+/* Whether the given binding should be triggered in response to given input button being pressed */
+CC_API cc_bool InputBind_Claims(InputBind binding, int btn);
+/* Gets whether the given input binding is currently being triggered */
+CC_API cc_bool InputBind_IsPressed(InputBind binding);
+
+/* Sets the key/mouse button that the given input binding is bound to */
+void KeyBind_Set(InputBind binding, int btn);
+/* Sets the gamepad button that the given input binding is bound to */
+void PadBind_Set(InputBind binding, int btn);
+/* Resets the key/mouse button that the given input binding is bound to */
+void KeyBind_Reset(InputBind binding);
+/* Resets the gamepad button that the given input binding is bound to*/
+void PadBind_Reset(InputBind binding);
 
 
 /* Gamepad axes. Default behaviour is: */

@@ -1,13 +1,18 @@
 name: Build latest (Xbox 360)
-on: [push]
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}-xbox360
   cancel-in-progress: true
 
 jobs:
-  build-Xbox:
-    if: github.ref_name == github.event.repository.default_branch
+  build-360:
     runs-on: ubuntu-latest
     container:
       image: free60/libxenon
@@ -16,18 +21,12 @@ jobs:
       - name: Compile 360 build
         id: compile
         run: |
-          export DEVKITXENON=/usr/local/xenon
-          export PATH=$PATH:$DEVKITXENON/bin:$DEVKITXENON/usr/bin
-          make xbox360
-          find .
-
-      # otherwise notify_failure doesn't work
-      - name: Install curl when necessary
-        if: ${{ always() && steps.compile.outcome == 'failure' }}
-        run: |
           sed -i -e 's/archive.ubuntu.com\|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
           apt-get update
           apt-get install -y curl
+          export DEVKITXENON=/usr/local/xenon
+          export PATH=$PATH:$DEVKITXENON/bin:$DEVKITXENON/usr/bin
+          make xbox360
 
       - uses: ./.github/actions/notify_failure
         if: ${{ always() && steps.compile.outcome == 'failure' }}
@@ -47,3 +46,10 @@ jobs:
         with:
           SOURCE_FILE: 'ClassiCube-xbox360.elf32'
           DEST_NAME: 'ClassiCube-xbox360.elf32'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'xbox360'

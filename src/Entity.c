@@ -622,6 +622,11 @@ void LocalPlayerInput_Add(struct LocalPlayerInput* source) {
 	LinkedList_Append(source, sources_head, sources_tail);
 }
 
+void LocalPlayerInput_Remove(struct LocalPlayerInput* source) {
+	struct LocalPlayerInput* cur;
+	LinkedList_Remove(source, cur, sources_head, sources_tail);
+}
+
 float LocalPlayer_JumpHeight(struct LocalPlayer* p) {
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
 }
@@ -650,16 +655,16 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	*xMoving *= 0.98f; 
 	*zMoving *= 0.98f;
 
-	p->Physics.Jumping = KeyBind_IsPressed(KEYBIND_JUMP);
-	hacks->FlyingUp    = KeyBind_IsPressed(KEYBIND_FLY_UP);
-	hacks->FlyingDown  = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
+	p->Physics.Jumping = InputBind_IsPressed(BIND_JUMP);
+	hacks->FlyingUp    = InputBind_IsPressed(BIND_FLY_UP);
+	hacks->FlyingDown  = InputBind_IsPressed(BIND_FLY_DOWN);
 
 	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 		if (hacks->Noclip) {
 			/* need a { } block because it's a macro */
 			Vec3_Set(p->Base.Velocity, 0,0,0);
 		}
-		HacksComp_SetNoclip(hacks, KeyBind_IsPressed(KEYBIND_NOCLIP));
+		HacksComp_SetNoclip(hacks, InputBind_IsPressed(BIND_NOCLIP));
 	}
 }
 
@@ -667,8 +672,8 @@ static void LocalPlayer_InputSet(int key, cc_bool pressed) {
 	struct HacksComp* hacks = &LocalPlayer_Instances[0].Hacks;
 
 	if (pressed && !hacks->Enabled) return;
-	if (KeyBind_Claims(KEYBIND_SPEED, key))      hacks->Speeding     = pressed;
-	if (KeyBind_Claims(KEYBIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
+	if (InputBind_Claims(BIND_SPEED, key))      hacks->Speeding     = pressed;
+	if (InputBind_Claims(BIND_HALF_SPEED, key)) hacks->HalfSpeeding = pressed;
 }
 
 static void LocalPlayer_InputDown(void* obj, int key, cc_bool was) {
@@ -887,7 +892,9 @@ cc_bool LocalPlayer_HandleSetSpawn(struct LocalPlayer* p) {
 
 		/* Spawn is normally centered to match vanilla Minecraft classic */
 		if (!p->Hacks.CanNoclip) {
-			p->Spawn   = p->Base.Position;
+			/* Don't want to use Position because it is interpolated between prev and next. */
+			/* This means it can be halfway between stepping up a stair and clip through the floor. */
+			p->Spawn   = p->Base.prev.pos;
 		} else {
 			p->Spawn.x = Math_Floor(p->Base.Position.x) + 0.5f;
 			p->Spawn.y = p->Base.Position.y;
@@ -968,7 +975,7 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	}
 	
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, 0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
@@ -1062,6 +1069,7 @@ static void Entities_Free(void) {
 	{
 		Entities_Remove((EntityID)i);
 	}
+	sources_head = NULL;
 }
 
 struct IGameComponent Entities_Component = {

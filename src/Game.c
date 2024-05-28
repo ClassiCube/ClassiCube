@@ -640,7 +640,7 @@ static void DrawSplitscreen(float delta, float t, int i, int x, int y, int w, in
 	
 	Entities.CurPlayer = &LocalPlayer_Instances[i];
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
-	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
+	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	
 	Game_DrawFrame(delta, t);
 }
@@ -675,7 +675,7 @@ static CC_INLINE void Game_RenderFrame(double delta) {
 
 	if (!Window_Main.Focused && !Gui.InputGrab) Gui_ShowPauseMenu();
 
-	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui.InputGrab) {
+	if (InputBind_IsPressed(BIND_ZOOM_SCROLL) && !Gui.InputGrab) {
 		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 
@@ -684,7 +684,7 @@ static CC_INLINE void Game_RenderFrame(double delta) {
 	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
 
-	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
+	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
 	AudioBackend_Tick();

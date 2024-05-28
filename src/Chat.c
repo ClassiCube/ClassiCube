@@ -21,7 +21,7 @@ static char smallAnnouncement[STRING_SIZE];
 cc_string Chat_Status[5]       = { String_FromArray(status[0]), String_FromArray(status[1]), String_FromArray(status[2]),
                                                                 String_FromArray(status[3]), String_FromArray(status[4]) };
 cc_string Chat_BottomRight[3]  = { String_FromArray(bottom[0]), String_FromArray(bottom[1]), String_FromArray(bottom[2]) };
-cc_string Chat_ClientStatus[2] = { String_FromArray(client[0]), String_FromArray(client[8]) };
+cc_string Chat_ClientStatus[2] = { String_FromArray(client[0]), String_FromArray(client[1]) };
 
 cc_string Chat_Announcement = String_FromArray(announcement);
 cc_string Chat_BigAnnouncement = String_FromArray(bigAnnouncement);

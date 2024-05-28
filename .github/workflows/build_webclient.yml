@@ -1,0 +1,45 @@
+name: Build latest (Webclient)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-webclient
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: trzeci/emscripten-fastcomp:1.39.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compiles webclient
+        id: compile
+        run: |
+          cd src
+          emcc *.c -o ClassiCube.js -s WASM=0 -s NO_EXIT_RUNTIME=1 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 -s ENVIRONMENT=web -s TOTAL_STACK=256Kb --js-library interop_web.js -Os -g2 -s SINGLE_FILE
+          sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' ClassiCube.js
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Webclient'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'src/ClassiCube.js'
+          DEST_NAME: 'ClassiCube.js'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'webclient'

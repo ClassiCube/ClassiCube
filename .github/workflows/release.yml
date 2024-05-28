@@ -1,0 +1,178 @@
+name: Produce release
+on: [workflow_dispatch]
+
+concurrency:
+  group: ${{ github.ref }}-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Download resources
+      - name: Retrieve classicube texture pack
+        run: |
+          wget https://www.classicube.net/static/default.zip
+      - name: Retrieve classicube audio pack
+        run: |
+          wget https://www.classicube.net/static/audio.zip
+          
+      # Download windows artifacts
+      - name: Retrieve Windows binaries
+        run: |
+          wget https://cdn.classicube.net/client/latest/ClassiCube.64.exe -O cc-w64.exe
+          wget https://cdn.classicube.net/client/latest/ClassiCube.exe -O cc-w32.exe
+          
+      # Download Linux artifacts
+      - name: Retrieve Linux binaries
+        run: |
+          wget https://cdn.classicube.net/client/latest/ClassiCube -O cc-linux-64
+          wget https://cdn.classicube.net/client/latest/ClassiCube.32 -O cc-linux-32
+          
+      # Download macOS artifacts
+      - name: Retrieve macOS binaries
+        run: |
+          wget https://cdn.classicube.net/client/latest/ClassiCube.64.osx -O cc-mac-64
+          wget https://cdn.classicube.net/client/latest/ClassiCube.osx -O cc-mac-32
+          
+      # Download RPI artifacts
+      - name: Retrieve RPI binaries
+        run: |
+          wget https://cdn.classicube.net/client/latest/cc-rpi64 -O cc-rpi-64
+          wget https://cdn.classicube.net/client/latest/ClassiCube.rpi -O cc-rpi-32
+          
+      # Download FreeBSD artifacts
+      - name: Retrieve macOS binaries
+        run: |
+          wget https://cdn.classicube.net/client/latest/cc-freebsd-64 -O cc-freebsd-64
+          wget https://cdn.classicube.net/client/latest/cc-freebsd-32 -O cc-freebsd-32
+          
+      - name: Generate builds
+        id: compile
+        shell: bash
+        run: |
+          mkdir ClassiCube
+          mkdir ClassiCube/audio
+          mkdir ClassiCube/texpacks
+          cp audio.zip ClassiCube/audio/classicube.zip
+          cp default.zip ClassiCube/texpacks/classicube.zip
+          
+          # ./ClassiCube
+          make_unix_tar() {
+            cp $2 ClassiCube/ClassiCube
+            chmod +x ClassiCube/ClassiCube
+            tar -zcvf $1 ClassiCube
+            rm ClassiCube/ClassiCube
+          }
+           
+          # ./ClassiCube
+          make_windows_zip() {
+            cp $2 ClassiCube/ClassiCube.exe
+            zip -r $1 ClassiCube
+            rm ClassiCube/ClassiCube.exe
+          }
+          
+          # Generate FreeBSD builds
+          make_unix_tar cc-freebsd32.tar.gz cc-freebsd-32
+          make_unix_tar cc-freebsd64.tar.gz cc-freebsd-64
+          
+          # Generate RPI builds
+          make_unix_tar cc-rpi32.tar.gz cc-rpi-32
+          make_unix_tar cc-rpi64.tar.gz cc-rpi-64
+          
+          # Generate Linux builds
+          make_unix_tar cc-linux32.tar.gz cc-linux-32
+          make_unix_tar cc-linux64.tar.gz cc-linux-64
+          
+          # Generate macOS builds
+          make_unix_tar cc-mac32.tar.gz cc-mac-32
+          make_unix_tar cc-mac64.tar.gz cc-mac-64
+          
+          # Generate Windows builds
+          make_windows_zip cc-win32.zip cc-w32.exe
+          make_windows_zip cc-win64.zip cc-w64.exe
+
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to produce release'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+          
+        
+      # Generate Linux release files
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-linux32.tar.gz'
+          DEST_NAME: 'cc-linux32.tar.gz'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-linux64.tar.gz'
+          DEST_NAME: 'cc-linux64.tar.gz'
+          
+          
+      # Generate macOS release files
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-mac32.tar.gz'
+          DEST_NAME: 'cc-mac32.tar.gz'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-mac64.tar.gz'
+          DEST_NAME: 'cc-mac64.tar.gz'
+          
+          
+      # Generate Windows release files
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-win32.zip'
+          DEST_NAME: 'cc-win32.zip'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-win64.zip'
+          DEST_NAME: 'cc-win64.zip'
+          
+          
+      # Generate RPI release files
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-rpi32.tar.gz'
+          DEST_NAME: 'cc-rpi32.tar.gz'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-rpi64.tar.gz'
+          DEST_NAME: 'cc-rpi64.tar.gz'
+          
+          
+      # Generate FreeBSD release files
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-freebsd32.tar.gz'
+          DEST_NAME: 'cc-freebsd32.tar.gz'
+          
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'cc-freebsd64.tar.gz'
+          DEST_NAME: 'cc-freebsd64.tar.gz'
+          
+          
+      - uses: ./.github/actions/notify_success
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          DESTINATION_URL: '${{ secrets.NOTIFY_URL }}'
+          WORKFLOW_NAME: 'release'

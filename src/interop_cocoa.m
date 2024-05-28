@@ -1,11 +1,16 @@
+// Silence deprecation warnings on modern macOS
 #define GL_SILENCE_DEPRECATION
+
+#include "Core.h"
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_COCOA
 #include "_WindowBase.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "String.h"
 #include "Options.h"
-#include <Cocoa/Cocoa.h>
+#import  <Foundation/Foundation.h>
+#import  <AppKit/AppKit.h>
 #include <ApplicationServices/ApplicationServices.h>
 
 static int windowX, windowY;
@@ -15,6 +20,20 @@ static NSView* viewHandle;
 static cc_bool canCheckOcclusion;
 static cc_bool legacy_fullscreen;
 static cc_bool scroll_debugging;
+
+#if defined MAC_OS_X_VERSION_10_12 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12
+	#define WIN_MASK (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
+	#define ANY_EVENT_MASK NSEventMaskAny
+	#define DIALOG_OK      NSModalResponseOK
+	
+	#define PASTEBOARD_STRING_TYPE NSPasteboardTypeString
+#else
+	#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
+	#define ANY_EVENT_MASK NSAnyEventMask
+	#define DIALOG_OK      NSOKButton
+	
+	#define PASTEBOARD_STRING_TYPE NSStringPboardType
+#endif
 
 extern size_t CGDisplayBitsPerPixel(CGDirectDisplayID display);
 // TODO: Try replacing with NSBitsPerPixelFromDepth([NSScreen mainScreen].depth) instead
@@ -30,7 +49,7 @@ static const cc_uint8 key_map[8 * 16] = {
 /* 0x30 */ CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, 0,
 /* 0x38 */ 0, CCKEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
 /* 0x40 */ 0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK,
-/* 0x48 */ 0, 0, 0, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+/* 0x48 */ CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_VOLUME_MUTE, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
 /* 0x50 */ 0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5,
 /* 0x58 */ CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
 /* 0x60 */ CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11,
@@ -122,7 +141,7 @@ void Clipboard_GetText(cc_string* value) {
 	int len;
 
 	pasteboard = [NSPasteboard generalPasteboard];
-	str        = [pasteboard stringForType:NSStringPboardType];
+	str        = [pasteboard stringForType:PASTEBOARD_STRING_TYPE];
 
 	if (!str) return;
 	src = [str UTF8String];
@@ -139,8 +158,8 @@ void Clipboard_SetText(const cc_string* value) {
 	str        = [NSString stringWithUTF8String:raw];
 	pasteboard = [NSPasteboard generalPasteboard];
 
-	[pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
-	[pasteboard setString:str forType:NSStringPboardType];
+	[pasteboard declareTypes:[NSArray arrayWithObject:PASTEBOARD_STRING_TYPE] owner:nil];
+	[pasteboard setString:str forType:PASTEBOARD_STRING_TYPE];
 }
 
 
@@ -244,7 +263,9 @@ static void RefreshWindowBounds(void) {
 
 - (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL
 	GLContext_Update();
+#endif
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
@@ -301,8 +322,8 @@ static void MakeContentView(void) {
 }
 
 #ifdef CC_BUILD_ICON
-// See misc/mac_icon_gen.cs for how to generate this file
-#include "_CCIcon_mac.h"
+// See misc/macOS/mac_icon_gen.cs for how to generate this file
+#include "../misc/macOS/CCIcon_mac.h"
 
 static void ApplyIcon(void) {
 	NSImage* img;
@@ -333,7 +354,6 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 	return 0;
 }
 
-#define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 static void DoCreateWindow(int width, int height) {
 	CCWindowDelegate* del;
 	NSRect rect;
@@ -434,8 +454,15 @@ static int MapNativeMouse(long button) {
 	if (button == 0) return CCMOUSE_L;
 	if (button == 1) return CCMOUSE_R;
 	if (button == 2) return CCMOUSE_M;
+
 	if (button == 3) return CCMOUSE_X1;
 	if (button == 4) return CCMOUSE_X2;
+	if (button == 5) return CCMOUSE_X3;
+	if (button == 6) return CCMOUSE_X4;
+	if (button == 7) return CCMOUSE_X5;
+	if (button == 8) return CCMOUSE_X6;
+
+	Platform_Log1("Unknown mouse button: %i", &button);
 	return 0;
 }
 
@@ -489,14 +516,14 @@ static void DebugScrollEvent(NSEvent* ev) {
 void Window_ProcessEvents(float delta) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
-	float dy;
+	float dx, dy;
 	
 	// https://wiki.freepascal.org/Cocoa_Internals/Application 
 	[pool release];
 	pool = [[NSAutoreleasePool alloc] init];
 
 	for (;;) {
-		ev = [appHandle nextEventMatchingMask:NSAnyEventMask untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
+		ev = [appHandle nextEventMatchingMask:ANY_EVENT_MASK untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
 		if (!ev) break;
 		type = [ev type];
 
@@ -543,15 +570,19 @@ void Window_ProcessEvents(float delta) {
 
 		case 22: // NSScrollWheel
 			if (scroll_debugging) DebugScrollEvent(ev);
+			dx    = [ev deltaX];
 			dy    = [ev deltaY];
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175
 			//  delta is in 'line height' units, but I don't know how to map that to actual units.
 			// All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that
 			//  sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll.
 			// So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards.
-			//  TODO: Figure out if there's a better way than this. */
+			//  TODO: Figure out if there's a better way than this. */	
+			steps = dx > 0.0f ? Math_Ceil(dx) : Math_Floor(dx);
+			Mouse_ScrollHWheel(steps);
+			
 			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
-			Mouse_ScrollWheel(steps);
+			Mouse_ScrollVWheel(steps);
 			break;
 
 		case  5: // NSMouseMoved
@@ -628,7 +659,7 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setAllowedFileTypes:types];
-	if ([dlg runModal] != NSOKButton) return 0;
+	if ([dlg runModal] != DIALOG_OK) return 0;
 
 	NSURL* file = [dlg URL];
     if (file) OpenSaveDoCallback(file, args->Callback);
@@ -640,11 +671,11 @@ cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
     
     NSMutableArray* types = GetOpenSaveFilters(args->filters);
     [dlg setCanChooseFiles: YES];
-    if ([dlg runModalForTypes:types] != NSOKButton) return 0;
+    if ([dlg runModalForTypes:types] != DIALOG_OK) return 0;
     // unfortunately below code doesn't work when linked against SDK < 10.6
     //   https://developer.apple.com/documentation/appkit/nssavepanel/1534419-allowedfiletypes
     // [dlg setAllowedFileTypes:types];
-    // if ([dlg runModal] != NSOKButton) return 0;
+    // if ([dlg runModal] != DIALOG_OK) return 0;
     
     NSArray* files = [dlg URLs];
     if ([files count] < 1) return 0;
@@ -725,7 +756,7 @@ void OnscreenKeyboard_Close(void) { }
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 #include <OpenGL/OpenGL.h>
 
@@ -917,4 +948,5 @@ cc_result Window_ExitFullscreen(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return 0;
 }
+#endif
 #endif

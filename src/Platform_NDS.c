@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <nds/bios.h>
+#include <nds/cothread.h>
 #include <nds/interrupts.h>
 #include <nds/timers.h>
 #include <nds/debug.h>
@@ -63,30 +64,21 @@ cc_uint64 Stopwatch_Measure(void) {
 	return base_time + raw;
 }
 
-static void LogConsole(const char* msg, int len) {
-	char buffer[256 + 2];
-	len = min(len, 256);
-	
-	Mem_Copy(buffer, msg, len);
-    buffer[len + 0] = '\n';
-	buffer[len + 1] = '\0';
-	
-	fwrite(buffer, 1, len + 1, stdout);
-}
-
 static void LogNocash(const char* msg, int len) {
     // Can only be up to 120 bytes total
 	char buffer[120];
-	len = min(len, 119);
+	len = min(len, 118);
 	
 	Mem_Copy(buffer, msg, len);
-	buffer[len] = '\n';
-	nocashWrite(buffer, len + 1);
+	buffer[len + 0] = '\n';
+	buffer[len + 1] = '\0';
+	nocashWrite(buffer, len + 2);
 }
 
+extern void consolePrintString(const char* ptr, int len);
 void Platform_Log(const char* msg, int len) {
     LogNocash(msg, len);
-	if (!keyboardOpen) LogConsole(msg, len);
+	consolePrintString(msg, len);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -118,16 +110,17 @@ static bool fat_available;
 
 static void GetNativePath(char* str, const cc_string* path) {
 	Mem_Copy(str, root_path.buffer, root_path.length);
-	str   += root_path.length;
+	str += root_path.length;
 	String_EncodeUtf8(str, path);
-    Platform_Log1("Open %c", str - root_path.length);
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	if (!fat_available) return ENOSYS;
-	
+	if (!fat_available) return 0;
+
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+    Platform_Log1("mkdir %c", str);
+
 	return mkdir(str, 0) == -1 ? errno : 0;
 }
 
@@ -137,6 +130,8 @@ int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	GetNativePath(str, path);
+    Platform_Log1("Check %c", str);
+
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -147,6 +142,8 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
+    Platform_Log1("Open %c", str);
+
 	*file = open(str, mode, 0);
 	return *file == -1 ? errno : 0;
 }
@@ -196,24 +193,36 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	*len = st.st_size; return 0;
 }
 
+static int LoadFatFilesystem(void* arg) {
+	fat_available = fatInitDefault();
+	return 0;
+}
+
 static void InitFilesystem(void) {
-	// I don't know why I have to call this function, but if I don't,
-	//  then when running in DSi mode AND an SD card is readable,
-	//  fatInitDefault gets stuck somewhere (in disk_initialize it seems)
-	if (isDSiMode()) {
- 		const DISC_INTERFACE* sd_io = get_io_dsisd();
-		if (sd_io) sd_io->startup();
+	cothread_t thread = cothread_create(LoadFatFilesystem, NULL, 0, 0);
+	// If running with DSi mode in melonDS and the internal SD card is enabled, then
+	//  fatInitDefault gets stuck in sdmmc_ReadSectors - because the fifoWaitValue32Async will never return
+	// (You can tell when this happens - "MMC: unknown CMD 17 00000000" is logged to console)
+	// However, since it does yield to cothreads, workaround this by running fatInitDefault on another thread
+	//  and then giving up if it takes too long.. not the most elegant solution, but it does work
+	if (thread == -1) {
+		LoadFatFilesystem(NULL);
+	} else {
+		for (int i = 0; i < 100; i++)
+		{
+			cothread_yield();
+			if (cothread_has_joined(thread)) break;
+			
+			swiDelay(2000);
+		}
 	}
 
-    fat_available = fatInitDefault();
-	Platform_ReadonlyFilesystem = !fat_available;
-    if (!fat_available) return;
-
     char* dir = fatGetDefaultCwd();
-    if (dir && dir[0]) {
+    if (dir) {
         root_path.buffer = dir;
         root_path.length = String_Length(dir);
     }
+	Platform_ReadonlyFilesystem = !fat_available;
 }
 
 
@@ -416,9 +425,6 @@ void Platform_Init(void) {
     InitNetworking();
 
 	cpuStartTiming(1);
-	// TODO: Redesign Drawer2D to better handle this
-	Options_Load();
-	Options_SetBool(OPT_USE_CHAT_FONT, true);
 }
 void Platform_Free(void) { }
 

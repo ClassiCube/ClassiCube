@@ -74,7 +74,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 
 struct GraphicsMode { int R, G, B, A; };
 /* Creates a GraphicsMode compatible with the default display device */
-static void InitGraphicsMode(struct GraphicsMode* m) {
+static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 	int bpp = DisplayInfo.Depth;
 	m->A = 0;
 
@@ -100,7 +100,7 @@ static void InitGraphicsMode(struct GraphicsMode* m) {
 }
 
 /* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system */
-#if defined CC_BUILD_GL && defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_EGL
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/

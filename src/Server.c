@@ -119,6 +119,7 @@ cc_string SP_AutoloadMap = String_FromArray(autoloadBuffer);
 static void SPConnection_BeginConnect(void) {
 	static const cc_string logName = String_FromConst("Singleplayer");
 	RNGState rnd;
+	int horSize, verSize;
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_Version.HasCPE;
 
@@ -131,12 +132,16 @@ static void SPConnection_BeginConnect(void) {
 	World_NewMap();
 
 #if defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
-	World_SetDimensions(16, 16, 16);
+	horSize = 16;
+	verSize = 16;
 #elif defined CC_BUILD_LOWMEM
-	World_SetDimensions(64, 64, 64);
+	horSize = 64;
+	verSize = 64;
 #else
-	World_SetDimensions(128, 64, 128);
+	horSize = Game_ClassicMode ? 256 : 128;
+	verSize = 64;
 #endif
+	World_SetDimensions(horSize, verSize, horSize);
 
 #if defined CC_BUILD_N64 || defined CC_BUILD_NDS || defined CC_BUILD_PS1 || defined CC_BUILD_SATURN
 	Gen_Active = &FlatgrassGen;
@@ -264,7 +269,7 @@ static void MPConnection_FailConnect(cc_result result) {
 	String_InitArray(msg, msgBuffer);
 
 	if (result) {
-		String_Format3(&msg, "Error connecting to %s:%i: %i" _NL, &Server.Address, &Server.Port, &result);
+		String_Format3(&msg, "Error connecting to %s:%i: %e" _NL, &Server.Address, &Server.Port, &result);
 		Logger_Log(&msg);
 	}
 	MPConnection_Fail(&reason);
@@ -355,7 +360,7 @@ static void MPConnection_Disconnect(void) {
 static void DisconnectReadFailed(cc_result res) {
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 	String_InitArray(msg, msgBuffer);
-	String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
+	String_Format3(&msg, "Error reading from %s:%i: %e" _NL, &Server.Address, &Server.Port, &res);
 
 	Logger_Log(&msg);
 	MPConnection_Disconnect();
@@ -432,7 +437,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	if (net_writeFailure) {
-		Platform_Log1("Error from send: %i", &net_writeFailure);
+		Platform_Log1("Error from send: %e", &net_writeFailure);
 		MPConnection_Disconnect(); return;
 	}
 

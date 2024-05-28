@@ -24,6 +24,9 @@
 #include "Input.h"
 #include "Utils.h"
 #include "Event.h"
+#include "Stream.h"
+#include "Logger.h"
+#include "Errors.h"
 
 struct FontDesc titleFont, textFont, hintFont, logoFont, rowFont;
 /* Contains the pixels that are drawn to the window */
@@ -100,6 +103,36 @@ void LBackend_UpdateTitleFont(void) {
 }
 void LBackend_DrawTitle(struct Context2D* ctx, const char* title) {
 	Launcher_DrawTitle(&logoFont, title, ctx);
+}
+
+/* Scales up flag bitmap if necessary */
+static void LBackend_ScaleFlag(struct Bitmap* bmp) {
+	struct Bitmap scaled;
+	int width  = Display_ScaleX(bmp->width);
+	int height = Display_ScaleY(bmp->height);
+	/* at default DPI don't need to rescale it */
+	if (width == bmp->width && height == bmp->height) return;
+
+	Bitmap_TryAllocate(&scaled, width, height);
+	if (!scaled.scan0) {
+		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
+	}
+
+	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->width, bmp->height);
+	Mem_Free(bmp->scan0);
+	*bmp = scaled;
+}
+
+void LBackend_DecodeFlag(struct Flag* flag, cc_uint8* data, cc_uint32 len) {
+	struct Stream s;
+	cc_result res;
+
+	Stream_ReadonlyMemory(&s, data, len);
+	res = Png_Decode(&flag->bmp, &s);
+	if (res) Logger_SysWarn(res, "decoding flag");
+	flag->meta = NULL;
+
+	LBackend_ScaleFlag(&flag->bmp);
 }
 
 static void OnPointerMove(void* obj, int idx);
@@ -299,6 +332,7 @@ static void OnPointerDown(void* obj, int idx) {
 	struct LScreen* s = Launcher_Active;
 	struct LWidget* over;
 	struct LWidget* prev;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -312,6 +346,7 @@ static void OnPointerUp(void* obj, int idx) {
 	struct LScreen* s = Launcher_Active;
 	struct LWidget* over;
 	struct LWidget* prev;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -332,6 +367,7 @@ static void OnPointerMove(void* obj, int idx) {
 	struct LWidget* over;
 	struct LWidget* prev;
 	cc_bool overSame;
+	if (Window_Main.SoftKeyboardFocus) return;
 
 	if (!s) return;
 	over = GetWidgetAt(s, idx);
@@ -899,8 +935,9 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 static BitmapCol LBackend_TableRowColor(struct LTable* w, int row) {
 	struct ServerInfo* entry = row < w->rowsCount ? LTable_Get(row) : NULL;
 	cc_bool selected         = entry && String_Equals(&entry->hash, w->selectedHash);
+	cc_bool featured         = entry && entry->featured;
 
-	return LTable_RowColor(entry, row, selected);
+	return LTable_RowColor(row, selected, featured);
 }
 
 /* Draws background behind each row in the table */

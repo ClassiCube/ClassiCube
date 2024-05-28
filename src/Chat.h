@@ -67,8 +67,8 @@ typedef void (*FP_Chat_AddOf)(const cc_string* text, int msgType);
 /* Shorthand for Chat_AddOf(String_FromReadonly(raw), MSG_TYPE_NORMAL) */
 void Chat_AddRaw(const char* raw);
 
-void Chat_Add1(const char* format, const void* a1);
-void Chat_Add2(const char* format, const void* a1, const void* a2);
-void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3);
-void Chat_Add4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
+CC_API void Chat_Add1(const char* format, const void* a1);
+CC_API void Chat_Add2(const char* format, const void* a1, const void* a2);
+CC_API void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3);
+CC_API void Chat_Add4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 #endif

@@ -245,7 +245,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct Ve
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
 	size.x = p->base.size * 0.015625f; size.y = size.x;
 	
-	if (!Blocks.FullBright[p->block]) {
+	if (!Blocks.Brightness[p->block]) {
 		x = Math_Floor(pos.x); y = Math_Floor(pos.y); z = Math_Floor(pos.z);
 		col = Lighting.Color_XSide(x, y, z);
 	}

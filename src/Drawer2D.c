@@ -187,7 +187,7 @@ void Gradient_Noise(struct Context2D* ctx, BitmapCol color, int variation,
 	cc_uint32 alpha;
 
 	if (!Drawer2D_Clamp(ctx, &x, &y, &width, &height)) return;
-	alpha = BitmapColor_A_Bits(color);
+	alpha = color & BITMAPCOLOR_A_MASK;
 
 	for (yy = 0; yy < height; yy++) {
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
@@ -539,6 +539,12 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 static void DrawBitmappedText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	int offset = Drawer2D_ShadowOffset(args->font->size);
 
+	if (!fontBitmap.scan0) {
+		if (args->useShadow) FallbackFont_DrawText(args, bmp, x, y, true);
+		FallbackFont_DrawText(args, bmp, x, y, false);
+		return;
+	}
+
 	if (args->useShadow) {
 		DrawBitmappedTextCore(bmp, args, x + offset, y + offset, true);
 	}
@@ -549,6 +555,8 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	int i, point = args->font->size;
 	int xPadding, width;
 	cc_string text;
+
+	if (!fontBitmap.scan0) return FallbackFont_TextWidth(args);
 
 	/* adjust coords to make drawn text match GDI fonts */
 	xPadding = Drawer2D_XPadding(point);

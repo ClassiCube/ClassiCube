@@ -45,7 +45,7 @@ CC_VAR extern struct _GuiData {
 	float RawHotbarScale, RawChatScale, RawInventoryScale, RawCrosshairScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
-	int __unused;
+	int _unused;
 	float RawTouchScale;
 	/* The highest priority screen that has grabbed input. */
 	struct Screen* InputGrab;
@@ -54,6 +54,12 @@ CC_VAR extern struct _GuiData {
 	/* Whether the touch UI is currently being displayed */
 	cc_bool TouchUI;
 } Gui;
+
+#ifdef CC_BUILD_TOUCH
+#define Gui_TouchUI Gui.TouchUI
+#else
+#define Gui_TouchUI false
+#endif
 
 float Gui_Scale(float value);
 float Gui_GetHotbarScale(void);

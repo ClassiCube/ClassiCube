@@ -1,5 +1,5 @@
 #include "Core.h"
-#if defined CC_BUILD_HAIKU || defined CC_BUILD_BEOS 
+#if defined CC_BUILD_BEOS || defined CC_BUILD_HAIKU
 extern "C" {
 #include "_WindowBase.h"
 #include "Graphics.h"
@@ -130,7 +130,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 /*########################################################################################################################*
 *---------------------------------------------------------Window----------------------------------------------------------*
 *#########################################################################################################################*/
-#if !defined CC_BUILD_SDL
+#if CC_WIN_BACKEND == CC_WIN_BACKEND_BEOS
 static BApplication* app_handle;
 static BWindow* win_handle;
 static BView* view_handle;
@@ -286,11 +286,16 @@ static void UpdateMouseButtons(int buttons) {
 	
 	// TODO move logic to UpdateMouseButton instead?
 	if (changed & B_PRIMARY_MOUSE_BUTTON)   
-		UpdateMouseButton(CCMOUSE_L, buttons & B_PRIMARY_MOUSE_BUTTON);
+		UpdateMouseButton(CCMOUSE_L,  buttons & B_PRIMARY_MOUSE_BUTTON);
 	if (changed & B_SECONDARY_MOUSE_BUTTON)
-		UpdateMouseButton(CCMOUSE_R, buttons & B_SECONDARY_MOUSE_BUTTON);
-	if (changed & B_TERTIARY_MOUSE_BUTTON) 
-		UpdateMouseButton(CCMOUSE_M, buttons & B_TERTIARY_MOUSE_BUTTON);
+		UpdateMouseButton(CCMOUSE_R,  buttons & B_SECONDARY_MOUSE_BUTTON);
+	if (changed & B_TERTIARY_MOUSE_BUTTON)
+		UpdateMouseButton(CCMOUSE_M,  buttons & B_TERTIARY_MOUSE_BUTTON);
+	if (changed & B_MOUSE_BUTTON(4))
+		UpdateMouseButton(CCMOUSE_X1, buttons & B_MOUSE_BUTTON(4));
+	if (changed & B_MOUSE_BUTTON(5))
+		UpdateMouseButton(CCMOUSE_X2, buttons & B_MOUSE_BUTTON(5));
+		
 	last_buttons = buttons;
 }
 
@@ -327,37 +332,47 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 		if (msg->FindInt32("key", &value) == B_OK) {
 			event.type   = CC_KEY_DOWN;
 			event.v1.i32 = value;
-		} break;
+		} 
+		break;
 	case B_KEY_UP:
 	case B_UNMAPPED_KEY_UP:
 		if (msg->FindInt32("key", &value) == B_OK) {
 			event.type   = CC_KEY_UP;
 			event.v1.i32 = value;
-		} break;
+		} 
+		break;
 	case B_MOUSE_DOWN:
 	case B_MOUSE_UP:
 		if (msg->FindInt32("buttons", &value) == B_OK) {
 			UpdateMouseButtons(value);
 			HandleMouseMovement(msg);
-		} break;
+		} 
+		break;
 	case B_MOUSE_MOVED:
 		if (msg->FindPoint("where", &where) == B_OK) {
 			event.type   = CC_MOUSE_MOVE;
 			event.v1.i32 = where.x;
 			event.v2.i32 = where.y;
 			HandleMouseMovement(msg);
-		} break;
+		} 
+		break;
 	case B_MOUSE_WHEEL_CHANGED:
 		if (msg->FindFloat("be:wheel_delta_y", &delta) == B_OK) {
 			event.type   = CC_MOUSE_SCROLL;
 			event.v1.f32 = -delta; // negate to match other platforms
-		} break;
+		} 
+		if (msg->FindFloat("be:wheel_delta_x", &delta) == B_OK) {
+			event.type   = CC_MOUSE_SCROLL;
+			event.v2.f32 = -delta; // negate to match other platforms
+		} 
+		break;
 		
 	case B_WINDOW_ACTIVATED:
 		if (msg->FindBool("active", &active) == B_OK) {
 			event.type   = CC_WIN_FOCUS;
 			event.v1.i32 = active;
-		} break;
+		} 
+		break;
 	case B_WINDOW_MOVED:
 		break; // avoid unhandled message spam
 	case B_WINDOW_RESIZED:
@@ -367,7 +382,8 @@ void CC_BWindow::DispatchMessage(BMessage* msg, BHandler* handler) {
 			// width/height is 1 less than actual width/height
 			event.v1.i32 = width  + 1;
 			event.v2.i32 = height + 1;
-		} break;
+		} 
+		break;
 	case B_QUIT_REQUESTED:
 		event.type = CC_WIN_QUIT;
 		Platform_LogConst("WINQUIT");
@@ -583,7 +599,8 @@ void Window_ProcessEvents(float delta) {
 		switch (event.type)
 		{
 		case CC_MOUSE_SCROLL:
-			Mouse_ScrollWheel(event.v1.f32);
+			Mouse_ScrollVWheel(event.v1.f32);
+			Mouse_ScrollHWheel(event.v2.f32);
 			break;
 		case CC_MOUSE_DOWN:
 			Input_SetPressed(event.v1.i32);
@@ -785,7 +802,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
 static cc_bool win_vsync;
 
 void GLContext_Create(void) {
@@ -823,6 +840,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	win_vsync = vsync;
 }
 void GLContext_GetApiInfo(cc_string* info) { }
-#endif // CC_BUILD_GL && !CC_BUILD_EGL
-#endif // !CC_BUILD_SDL
+#endif // CC_GFX_BACKEND == CC_GFX_BACKEND_GL && !CC_BUILD_EGL
+#endif // CC_WIN_BACKEND == CC_WIN_BACKEND_BEOS
+
 #endif

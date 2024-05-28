@@ -49,36 +49,62 @@ static int GetOnscreenButtons(void) {
 							Server.IsSinglePlayer ? DEFAULT_SP_ONSCREEN : DEFAULT_MP_ONSCREEN);
 }
 
+static int GetOnscreenHAligns(void) {
+	return Options_GetInt(OPT_TOUCH_HALIGN, 0, Int32_MaxValue, 0);
+}
+
 /*########################################################################################################################*
 *---------------------------------------------------TouchControlsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-#define ONSCREEN_PAGE_BTNS 8
+#define ONSCREEN_PAGE_BTNS 4
+#define ONSCREEN_NUM_PAGES 4
 static struct TouchOnscreenScreen {
 	Screen_Body
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget btns[ONSCREEN_PAGE_BTNS];
-	const struct SimpleButtonDesc* btnDescs;
 	struct FontDesc font;
+	int page;
 } TouchOnscreenScreen;
 
-static struct Widget* touchOnscreen_widgets[3 + ONSCREEN_PAGE_BTNS] = {
-	(struct Widget*)&TouchOnscreenScreen.back,    (struct Widget*)&TouchOnscreenScreen.left,
-	(struct Widget*)&TouchOnscreenScreen.right,   (struct Widget*)&TouchOnscreenScreen.btns[0], 
-	(struct Widget*)&TouchOnscreenScreen.btns[1], (struct Widget*)&TouchOnscreenScreen.btns[2], 
-	(struct Widget*)&TouchOnscreenScreen.btns[3], (struct Widget*)&TouchOnscreenScreen.btns[4], 
-	(struct Widget*)&TouchOnscreenScreen.btns[5], (struct Widget*)&TouchOnscreenScreen.btns[6],
-	(struct Widget*)&TouchOnscreenScreen.btns[7]
+static struct Widget* touchOnscreen_widgets[3 + ONSCREEN_PAGE_BTNS];
+
+static const char* const touchOnscreen[ONSCREEN_PAGE_BTNS * ONSCREEN_NUM_PAGES] = {
+	"Chat", "Tablist", "Spawn", "Set spawn",
+	"Fly",  "Noclip",  "Speed", "Half speed",
+	"Third person", "Delete", "Pick", "Place",
+	"Switch hotbar", "---", "---", "---",
 };
 
-static void TouchOnscreen_UpdateColors(struct TouchOnscreenScreen* s) {
+static void TouchOnscreen_UpdateButton(struct TouchOnscreenScreen* s, struct ButtonWidget* btn) {
 	PackedCol grey = PackedCol_Make(0x7F, 0x7F, 0x7F, 0xFF);
 	int buttons = GetOnscreenButtons();
-	int i, bit;
+	int haligns = GetOnscreenHAligns();
+	const char* label;
+	char buffer[64];
+	cc_string str;
+	int bit;
 
+	bit        = 1 << btn->meta.val;
+	btn->color = (buttons & bit) ? PACKEDCOL_WHITE : grey;
+	
+	String_InitArray(str, buffer);
+	label = touchOnscreen[btn->meta.val];
+	
+	if ((buttons & bit) && (haligns & bit)) {
+		String_Format1(&str, "%c: Left aligned",  label);
+	} else if (buttons & bit) {
+		String_Format1(&str, "%c: Right aligned", label);
+	} else {
+		String_AppendConst(&str, label);
+	}
+	ButtonWidget_Set(btn, &str, &s->font);
+}
+
+static void TouchOnscreen_UpdateAll(struct TouchOnscreenScreen* s) {
+	int i;
 	for (i = 0; i < ONSCREEN_PAGE_BTNS; i++) 
 	{
-		bit = s->btns[i].meta.val;
-		s->btns[i].color = (buttons & bit) ? PACKEDCOL_WHITE : grey;
+		TouchOnscreen_UpdateButton(s, &s->btns[i]);
 	}
 }
 
@@ -86,84 +112,68 @@ static void TouchOnscreen_Any(void* screen, void* w) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
 	struct ButtonWidget* btn      = (struct ButtonWidget*)w;
 	int buttons = GetOnscreenButtons();
-	int bit = btn->meta.val;
+	int haligns = GetOnscreenHAligns();
+	int bit = 1 << btn->meta.val;
 	
-	if (buttons & bit) {
+	if ((buttons & bit) & (haligns & bit)) {
 		buttons &= ~bit;
+		haligns &= ~bit;
+	} else if (buttons & bit) {
+		haligns |= bit;
 	} else {
 		buttons |= bit;
 	}
 
 	Options_SetInt(OPT_TOUCH_BUTTONS, buttons);
-	TouchOnscreen_UpdateColors(s);
+	Options_SetInt(OPT_TOUCH_HALIGN,  haligns);
+	TouchOnscreen_UpdateButton(s, btn);
 	TouchScreen_Refresh();
 }
 static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
 
-static const struct SimpleButtonDesc touchOnscreen_page1[ONSCREEN_PAGE_BTNS] = {
-	{ -120,  -50, "Chat",  TouchOnscreen_Any }, {  120,  -50, "Tablist",    TouchOnscreen_Any },
-	{ -120,    0, "Spawn", TouchOnscreen_Any }, {  120,    0, "Set spawn",  TouchOnscreen_Any },
-	{ -120,   50, "Fly",   TouchOnscreen_Any }, {  120,   50, "Noclip",     TouchOnscreen_Any },
-	{ -120,  100, "Speed", TouchOnscreen_Any }, {  120,  100, "Half speed", TouchOnscreen_Any }
-};
-static const struct SimpleButtonDesc touchOnscreen_page2[ONSCREEN_PAGE_BTNS] = {
-	{ -120,  -50, "Third person",  TouchOnscreen_Any }, {  120,  -50, "Delete", TouchOnscreen_Any },
-	{ -120,    0, "Pick",          TouchOnscreen_Any }, {  120,    0, "Place",  TouchOnscreen_Any },
-	{ -120,   50, "Switch hotbar", TouchOnscreen_Any }, {  120,   50, "---",    TouchOnscreen_Any },
-	{ -120,  100, "---",           TouchOnscreen_Any }, {  120,  100, "---",    TouchOnscreen_Any }
-};
-
 static void TouchOnscreen_Left(void* screen,  void* b);
 static void TouchOnscreen_Right(void* screen, void* b);
 
-static void TouchOnscreen_RemakeWidgets(struct TouchOnscreenScreen* s, cc_bool page1) {
+static void TouchOnscreen_RemakeWidgets(struct TouchOnscreenScreen* s) {
 	int i;
-	int offset  = page1 ? 0 : ONSCREEN_PAGE_BTNS;
-	s->btnDescs = page1 ? touchOnscreen_page1 : touchOnscreen_page2;
-	
+	int offset    = s->page * ONSCREEN_PAGE_BTNS;
 	s->widgets    = touchOnscreen_widgets;
 	s->numWidgets = 0;
 	s->maxWidgets = Array_Elems(touchOnscreen_widgets);
 
-	Menu_AddButtons(s, s->btns,   200, s->btnDescs, ONSCREEN_PAGE_BTNS);
+	for (i = 0; i < ONSCREEN_PAGE_BTNS; i++) 
+	{
+		ButtonWidget_Add(s, &s->btns[i], 300, TouchOnscreen_Any);
+		s->btns[i].meta.val = i + offset;
+	}
 	ButtonWidget_Add(s, &s->back, 400, TouchOnscreen_More);
 	ButtonWidget_Add(s, &s->left,  40, TouchOnscreen_Left);
 	ButtonWidget_Add(s, &s->right, 40, TouchOnscreen_Right);
 
-	Widget_SetDisabled(&s->left,   page1);
-	Widget_SetDisabled(&s->right, !page1);
-	
-	for (i = 0; i < ONSCREEN_PAGE_BTNS; i++) 
-	{
-		s->btns[i].meta.val = 1 << (i + offset);
-	}
+	Widget_SetDisabled(&s->left,  s->page == 0);
+	Widget_SetDisabled(&s->right, s->page == ONSCREEN_NUM_PAGES - 1);
 }
 
 static void TouchOnscreen_Left(void* screen, void* b) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	TouchOnscreen_RemakeWidgets(s, true);
+	s->page--;
+	TouchOnscreen_RemakeWidgets(s);
 	Gui_Refresh((struct Screen*)s);
-	TouchOnscreen_UpdateColors(s);
+	TouchOnscreen_UpdateAll(s);
 }
 
 static void TouchOnscreen_Right(void* screen, void* b) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	TouchOnscreen_RemakeWidgets(s, false);
+	s->page++;
+	TouchOnscreen_RemakeWidgets(s);
 	Gui_Refresh((struct Screen*)s);
-	TouchOnscreen_UpdateColors(s);
-}
-
-static void TouchOnscreenScreen_ContextLost(void* screen) {
-	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	Font_Free(&s->font);
-	Screen_ContextLost(screen);
+	TouchOnscreen_UpdateAll(s);
 }
 
 static void TouchOnscreenScreen_ContextRecreated(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	Gui_MakeTitleFont(&s->font);
 	Screen_UpdateVb(screen);
-	Menu_SetButtons(s->btns, &s->font, s->btnDescs, ONSCREEN_PAGE_BTNS);
+	TouchOnscreen_UpdateAll(s);
 	ButtonWidget_SetConst(&s->back,  "Done", &s->font);
 	ButtonWidget_SetConst(&s->left,  "<",    &s->font);
 	ButtonWidget_SetConst(&s->right, ">",    &s->font);
@@ -171,26 +181,38 @@ static void TouchOnscreenScreen_ContextRecreated(void* screen) {
 
 static void TouchOnscreenScreen_Layout(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	Menu_LayoutButtons(s->btns, s->btnDescs, ONSCREEN_PAGE_BTNS);
+	int i;
+	for (i = 0; i < ONSCREEN_PAGE_BTNS; i++) 
+	{
+		Widget_SetLocation(&s->btns[i], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -75 + i * 50);
+	}
+	
 	Menu_LayoutBack(&s->back);
-	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -260,    0);
-	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  260,    0);
+	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220, 0);
+	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220, 0);
 }
 
 static void TouchOnscreenScreen_Init(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	TouchOnscreen_RemakeWidgets(s, true);
-	TouchOnscreen_UpdateColors(screen);
+	s->page = 0;
+	Gui_MakeTitleFont(&s->font);
+	TouchOnscreen_RemakeWidgets(s);
+	TouchOnscreen_UpdateAll(screen);
 
 	s->maxVertices = Screen_CalcDefaultMaxVertices(s);
 }
 
+static void TouchOnscreenScreen_Free(void* screen) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	Font_Free(&s->font);
+}
+
 static const struct ScreenVTABLE TouchOnscreenScreen_VTABLE = {
-	TouchOnscreenScreen_Init,   Screen_NullUpdate, Screen_NullFunc,
+	TouchOnscreenScreen_Init,   Screen_NullUpdate, TouchOnscreenScreen_Free,
 	MenuScreen_Render2,         Screen_BuildMesh,
 	Menu_InputDown,             Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,           Screen_PointerUp,  Menu_PointerMove, Screen_TMouseScroll,
-	TouchOnscreenScreen_Layout, TouchOnscreenScreen_ContextLost, TouchOnscreenScreen_ContextRecreated
+	TouchOnscreenScreen_Layout, Screen_ContextLost, TouchOnscreenScreen_ContextRecreated
 };
 void TouchOnscreenScreen_Show(void) {
 	struct TouchOnscreenScreen* s = &TouchOnscreenScreen;
@@ -486,7 +508,6 @@ static struct TouchScreen {
 	int numOnscreen, numBtns;
 	struct FontDesc font;
 	struct ThumbstickWidget thumbstick;
-	const struct TouchButtonDesc* onscreenDescs[ONSCREEN_MAX_BTNS];
 	struct ButtonWidget onscreen[ONSCREEN_MAX_BTNS];
 	struct ButtonWidget btns[TOUCH_EXTRA_BTNS], more;
 } TouchScreen;
@@ -532,7 +553,7 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	
 	int i = btn->meta.val;
-	Input_Set(KeyBinds_Normal[s->descs[i].bind], true);
+	Input_Set(KeyBind_Mappings[s->descs[i].bind].button1, true);
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
@@ -551,14 +572,14 @@ static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Hotbar",    0,0,0, TouchScreen_SwitchClick }
 };
 static const struct TouchButtonDesc normDescs[1] = {
-	{ "\x1E", KEYBIND_JUMP,     50,  10, TouchScreen_BindClick }
+	{ "\x1E", BIND_JUMP,     50,  10, TouchScreen_BindClick }
 };
 static const struct TouchButtonDesc hackDescs[2] = {
-	{ "\x1E", KEYBIND_FLY_UP,   50,  70, TouchScreen_BindClick },
-	{ "\x1F", KEYBIND_FLY_DOWN, 50,  10, TouchScreen_BindClick }
+	{ "\x1E", BIND_FLY_UP,   50,  70, TouchScreen_BindClick },
+	{ "\x1F", BIND_FLY_DOWN, 50,  10, TouchScreen_BindClick }
 };
 
-#define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 220)
+#define TOUCHSCREEN_BTN_COLOR PackedCol_Make(255, 255, 255, 200)
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	struct HacksComp* hacks = &Entities.CurPlayer->Hacks;
 	const struct TouchButtonDesc* desc;
@@ -574,8 +595,9 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 		ButtonWidget_Init(&s->onscreen[j], 100, desc->OnClick);
 		if (desc->enabled) Widget_SetDisabled(&s->onscreen[j], !(*desc->enabled));
 
-		s->onscreenDescs[j] = desc;
-		s->widgets[j]       = (struct Widget*)&s->onscreen[j];
+		s->onscreen[j].meta.val = i;
+		s->onscreen[j].color    = TOUCHSCREEN_BTN_COLOR;
+		s->widgets[j]           = (struct Widget*)&s->onscreen[j];
 		j++;
 	}
 
@@ -622,7 +644,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 
 	for (i = 0; i < s->numOnscreen; i++) 
 	{
-		desc = s->onscreenDescs[i];
+		desc = &onscreenDescs[s->onscreen[i].meta.val];
 		ButtonWidget_SetConst(&s->onscreen[i], desc->text, &s->font);
 	}
 	for (i = 0; i < s->numBtns; i++) 
@@ -671,11 +693,32 @@ static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	{
 		if (!(s->btns[i].active & id)) continue;
 
-		if (s->descs[i].bind < KEYBIND_COUNT) {
-			Input_Set(KeyBinds_Normal[s->descs[i].bind], false);
+		if (s->descs[i].bind < BIND_COUNT) {
+			Input_Set(KeyBind_Mappings[s->descs[i].bind].button1, false);
 		}
 		s->btns[i].active &= ~id;
 		return;
+	}
+}
+
+static void TouchScreen_LayoutOnscreen(struct TouchScreen* s, cc_uint8 alignment) {
+	int haligns = GetOnscreenHAligns();
+	cc_uint8 halign;
+	int i, index, x, y;
+
+	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++) 
+	{
+		index  = s->onscreen[i].meta.val;
+		halign = (haligns & (1 << index)) ? ANCHOR_MIN : ANCHOR_MAX;
+		if (halign != alignment) continue;
+		
+		Widget_SetLocation(&s->onscreen[i], halign, ANCHOR_MIN, x, y);
+		if (s->onscreen[i].y + s->onscreen[i].height <= s->btns[0].y){ y += 40; continue; }
+
+		// overflowed onto jump/fly buttons, move to next column
+		y = 10;
+		x += 110;
+		Widget_SetLocation(&s->onscreen[i], halign, ANCHOR_MIN, x, y);
 	}
 }
 
@@ -683,7 +726,7 @@ static void TouchScreen_Layout(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchButtonDesc* desc;
 	float scale = Gui.RawTouchScale;
-	int i, x, y, height;
+	int i, height;
 
 	/* Need to align these relative to the hotbar */
 	height = HUDScreen_LayoutHotbar();
@@ -700,16 +743,8 @@ static void TouchScreen_Layout(void* screen) {
 		Widget_Layout(&s->btns[i]);
 	}
 
-	for (i = 0, x = 10, y = 10; i < s->numOnscreen; i++, y += 40) 
-	{
-		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, x, y);
-		if (s->onscreen[i].y + s->onscreen[i].height <= s->btns[0].y) continue;
-
-		// overflowed onto jump/fly buttons, move to next column
-		y = 10;
-		x += 110;
-		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, x, y);
-	}
+	TouchScreen_LayoutOnscreen(s, ANCHOR_MIN);
+	TouchScreen_LayoutOnscreen(s, ANCHOR_MAX);
 	Widget_SetLocation(&s->more, ANCHOR_CENTRE, ANCHOR_MIN, 0, 10);
 
 	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 5);
@@ -722,7 +757,6 @@ static void TouchScreen_GetMovement(struct LocalPlayer* p, float* xMoving, float
 	ThumbstickWidget_GetMovement(&TouchScreen.thumbstick, xMoving, zMoving);
 }
 static struct LocalPlayerInput touchInput = { TouchScreen_GetMovement };
-static cc_bool touchHooked;
 
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -737,15 +771,14 @@ static void TouchScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->more, 40, TouchScreen_MoreClick);
 	s->more.color = TOUCHSCREEN_BTN_COLOR;
 	ThumbstickWidget_Init(&s->thumbstick);
-	
-	if (touchHooked) return;
-	touchHooked = true;
+
 	LocalPlayerInput_Add(&touchInput);
 }
 
 static void TouchScreen_Free(void* s) {
 	Event_Unregister_(&UserEvents.HacksStateChanged, s, TouchScreen_HacksChanged);
 	Event_Unregister_(&UserEvents.HackPermsChanged,  s, TouchScreen_HacksChanged);
+	LocalPlayerInput_Remove(&touchInput);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
