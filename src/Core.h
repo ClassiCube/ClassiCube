@@ -1,6 +1,6 @@
 #ifndef CC_CORE_H
 #define CC_CORE_H
-/* 
+/*
 Core fixed-size integer types, automatic platform detection, and common small structs
 Copyright 2014-2023 ClassiCube | Licensed under BSD-3
 */
@@ -396,10 +396,7 @@ typedef cc_uint8  cc_bool;
 #elif defined OS2
 	#define CC_BUILD_OS2
 	#define CC_BUILD_POSIX
-<<<<<<< HEAD
 	#define CC_BUILD_SOFTGPU
-=======
->>>>>>> origin/master
 	#define CC_BUILD_CURL
 	#define CC_BUILD_FREETYPE
 	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_SOFTGPU
