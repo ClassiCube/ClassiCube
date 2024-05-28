@@ -1606,7 +1606,7 @@ void AudioBackend_Tick(void) { }
 
 cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
-	//printf("audio_init %d %d\n", ctx->count, buffers);
+	
 	ctx->count = buffers;
 	for(i = 0; i < AUDIO_MAX_BUFFERS; i++) {
 		ctx->buffers[i] = NULL;
@@ -1619,7 +1619,6 @@ cc_result Audio_Init(struct AudioContext* ctx, int buffers) {
 }
 
 void Audio_Close(struct AudioContext* ctx) {
-printf("Audio_CLose\n");
 	ctx->count = 0;
 	if (ctx->hkai > 0) {
 		kaiStop(ctx->hkai);
@@ -1663,11 +1662,9 @@ cc_result Audio_QueueChunk(struct AudioContext* ctx, void* chunk, cc_uint32 size
 	if (ctx->buffers[ctx->fillBuffer])
 		return ERR_INVALID_ARGUMENT; // tried to queue data while either playing or queued still
 	
-//printf("-> select buffer %d\n", ctx->fillBuffer);
   ctx->buffers[ctx->fillBuffer]    = chunk;
 	ctx->bufferSize[ctx->fillBuffer] = size;
 	ctx->fillBuffer = (ctx->fillBuffer + 1) % ctx->count;
-//printf("<- select buffer %d\n", ctx->fillBuffer);
 	return 0;
 }
 
@@ -1690,7 +1687,6 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	for(i = 0; i < ctx->count; i++) {
 		if(ctx->bufferSize[i] > 0) (*inUse)++;
 	}
-	//printf("used buffers %d\n", *inUse);
 	return 0;
 }
 

@@ -49,6 +49,9 @@ static int win_width, win_height; /* Size of window including titlebar and borde
 static int windowX, windowY;
 FOURCC fccColorFormat;
 
+FILEDLG fileDialog;
+void *mutex = NULL;
+
 /**
  * Handling native keystrokes 
  * Borrowed from SDL2 OS/2 code
@@ -125,11 +128,11 @@ MRESULT EXPENTRY ClientWndProc(HWND hwnd, ULONG message, MPARAM mp1, MPARAM mp2)
 			Window_Free();
 			Window_Main.Handle = NULL;
 			Window_Main.Exists = false;
-			break;
+			return (MRESULT)0;
 
 		case WM_ACTIVATE:
-			//Window_Main.Focused = SHORT1FROMMP(mp1) != 0;
-			//Event_RaiseVoid(&WindowEvents.FocusChanged);
+			Window_Main.Focused = SHORT1FROMMP(mp1) != 0;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			break;
 			
 		case WM_SIZE:
@@ -262,9 +265,9 @@ void Window_Init(void) {
 	if (msgQueue == NULLHANDLE) {
 		Logger_Abort2(LOUSHORT(WinGetLastError(habAnchor)), "Window queue creation failed");
 	}
-	
+
 	// Init Dive
-	caps.pFormatData = fccFormats;
+	caps.pFormatData = fccFormats; //TODO do something with it.
   caps.ulFormatLength = 100;
   caps.ulStructLen = sizeof(DIVE_CAPS);
 	if (rc = DiveQueryCaps(&caps, DIVE_BUFFER_SCREEN)) {
@@ -327,6 +330,7 @@ void Window_Free(void) {
 	WinSetVisibleRegionNotify (hwndClient, FALSE);
 	DiveFreeBuffer();
 	if (hDive != NULLHANDLE) DiveClose(hDive);
+	hDive = NULLHANDLE;
 }
 
 void Window_ProcessEvents(float delta) {
@@ -342,7 +346,10 @@ void Window_ProcessEvents(float delta) {
 }
 
 void Window_SetTitle(const cc_string* title) {
-	WinSetWindowText(hwndFrame, title->buffer);
+	char nativeTitle[title->capacity+1];
+	Mem_Set(nativeTitle, 0, title->capacity+1);
+	String_CopyToRaw(nativeTitle, title->capacity, title);
+	WinSetWindowText(hwndFrame, nativeTitle);
 }
 
 void Clipboard_GetText(cc_string* value) {
@@ -509,30 +516,29 @@ void ShowDialogCore(const char *title, const char *name) {
 
 MRESULT EXPENTRY myFileDlgProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2) {
 	MRESULT result;
-	printf("Dialog message %04x, mp1 %u, mp2 %u hwnd %u (%u)\n", msg, mp1, mp2, hwnd, hwndFrame);
+	printf("Dialog message %04x, mp1 %u, mp2 %u hwnd %u (%u, %u)\n", msg, mp1, mp2, hwnd, hwndFrame, hwndClient);
 	result = WinDefFileDlgProc(hwnd, msg, mp1, mp2);
 	printf("Default %u\n", result);
 	return result;
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
-	FILEDLG fileDialog;
-	HWND hDialog;
-	char pszTitle[CCHMAXPATH] = "Open File";  
-	char pszFullFile[CCHMAXPATH] = "*.*";  
 
+	HWND hDialog;
+	
 	WinSetVisibleRegionNotify(hwndClient, FALSE);
 	memset(&fileDialog, 0, sizeof(FILEDLG));
 	fileDialog.cbSize = sizeof(FILEDLG);
-	fileDialog.fl = FDS_OPEN_DIALOG;
-	//fileDialog.pszTitle = (PSZ)pszTitle;
-	fileDialog.pfnDlgProc = myFileDlgProc;
+	fileDialog.fl = FDS_OPEN_DIALOG | FDS_CENTER | FDS_HELPBUTTON;
+	fileDialog.pszTitle = (PSZ)args->description;
+	//fileDialog.pfnDlgProc = myFileDlgProc;
 
-	//strcpy(fileDialog.szFullFile, pszFullFile);
+	strcpy(fileDialog.szFullFile, *(args->filters));
 	hDialog = WinFileDlg(HWND_DESKTOP, hwndFrame, &fileDialog);
+
 	if (fileDialog.lReturn == DID_OK) {
 		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
-		//args->Callback(&temp);
+		args->Callback(&temp);
 	}                               
 	WinSetVisibleRegionNotify(hwndClient, TRUE);
 	return 0;
@@ -547,9 +553,8 @@ cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	fileDialog.fl = FDS_HELPBUTTON | FDS_CENTER | FDS_PRELOAD_VOLINFO | FDS_SAVEAS_DIALOG;
 	fileDialog.pszTitle = (PSZ)args->titles;
 	fileDialog.pszOKButton = NULL;
-	fileDialog.pfnDlgProc = WinDefFileDlgProc;
 
-	Mem_Copy(fileDialog.szFullFile, *args->filters, CCHMAXPATH);
+	Mem_Copy(fileDialog.szFullFile, *(args->filters), CCHMAXPATH);
 	hDialog = WinFileDlg(HWND_DESKTOP, hwndClient, &fileDialog);
 	if (fileDialog.lReturn == DID_OK) {
 		cc_string temp = String_FromRaw(fileDialog.szFullFile, CCHMAXPATH);
