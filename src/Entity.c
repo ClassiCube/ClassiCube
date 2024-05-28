@@ -98,7 +98,7 @@ static void Entity_ParseScale(struct Entity* e, const cc_string* scale) {
 	/* local player doesn't allow giant model scales */
 	/* (can't climb stairs, extremely CPU intensive collisions) */
 	if (e->Flags & ENTITY_FLAG_MODEL_RESTRICTED_SCALE) {
-		value = min(value, e->Model->maxScale); 
+		value = min(value, e->Model->maxScale);
 	}
 	Vec3_Set(e->ModelScale, value,value,value);
 }
@@ -329,7 +329,7 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 	if (!Gfx_CheckTextureSize(bmp->width, bmp->height, 0)) {
 		Chat_Add1("&cSkin %s is too large", skin);
 	} else {
-		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT) 
+		if (e->Model->flags & MODEL_FLAG_CLEAR_HAT)
 			Entity_ClearHat(bmp, e->SkinType);
 
 		e->TextureId = Gfx_CreateTexture(bmp, TEXTURE_FLAG_MANAGED, false);
@@ -381,7 +381,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!Http_GetResult(e->_skinReqID, &item)) return;
 
-	if (!item.success) { 
+	if (!item.success) {
 		Entity_SetSkinAll(e, true);
 	} else {
 		Stream_ReadonlyMemory(&mem, item.data, item.size);
@@ -445,7 +445,7 @@ struct _EntitiesData Entities;
 
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->interval);
@@ -456,7 +456,7 @@ void Entities_RenderModels(float delta, float t) {
 	int i;
 	Gfx_SetAlphaTest(true);
 	
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		if (!Entities.List[i]) continue;
 		Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
@@ -468,7 +468,7 @@ static void Entities_ContextLost(void* obj) {
 	struct Entity* entity;
 	int i;
 
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		entity = Entities.List[i];
 		if (!entity) continue;
@@ -476,7 +476,7 @@ static void Entities_ContextLost(void* obj) {
 		if (entity->Flags & ENTITY_FLAG_HAS_MODELVB)
 			Gfx_DeleteDynamicVb(&entity->ModelVB);
 
-		if (!Gfx.ManagedTextures) 
+		if (!Gfx.ManagedTextures)
 			DeleteSkin(entity);
 	}
 }
@@ -652,7 +652,7 @@ static void LocalPlayer_HandleInput(struct LocalPlayer* p, float* xMoving, float
 	for (input = sources_head; input; input = input->next) {
 		input->GetMovement(p, xMoving, zMoving);
 	}
-	*xMoving *= 0.98f; 
+	*xMoving *= 0.98f;
 	*zMoving *= 0.98f;
 
 	p->Physics.Jumping = InputBind_IsPressed(BIND_JUMP);
@@ -975,11 +975,11 @@ void LocalPlayers_MoveToSpawn(struct LocationUpdate* update) {
 	}
 	
 	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(p, 0.0f);
 }
 
 void LocalPlayer_CalcDefaultSpawn(struct LocalPlayer* p, struct LocationUpdate* update) {
-	float x = (World.Width  / 2) + 0.5f; 
+	float x = (World.Width  / 2) + 0.5f;
 	float z = (World.Length / 2) + 0.5f;
 
 	update->flags = LU_HAS_POS | LU_HAS_YAW | LU_HAS_PITCH;
@@ -1065,7 +1065,7 @@ static void Entities_Init(void) {
 
 static void Entities_Free(void) {
 	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) 
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++)
 	{
 		Entities_Remove((EntityID)i);
 	}

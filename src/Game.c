@@ -217,7 +217,7 @@ cc_bool Game_CanPick(BlockID block) {
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, 
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file,
 							cc_uint8* skinType, int* heightDivisor) {
 	struct Bitmap bmp;
 	cc_bool success;
@@ -227,7 +227,7 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 	if (res) { Logger_SysWarn2(res, "decoding", file); }
 	
 	/* E.g. gui.png only need top half of the texture loaded */
-	if (heightDivisor && bmp.height >= *heightDivisor) 
+	if (heightDivisor && bmp.height >= *heightDivisor)
 		bmp.height /= *heightDivisor;
 
 	success = !res && Game_ValidateBitmap(file, &bmp);
@@ -252,7 +252,7 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 	if (bmp->width > maxWidth || bmp->height > maxHeight) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
-		Chat_Add4("&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
+		Chat_Add4("&c Its size is (%i,%i), your GPU supports (%i,%i) at most.",
 				&bmp->width, &bmp->height, &maxWidth, &maxHeight);
 		return false;
 	}
@@ -262,7 +262,7 @@ cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 		texSize = (bmp->width * bmp->height) / (1024.0f * 1024.0f);
 		maxSize = Gfx.MaxTexSize             / (1024.0f * 1024.0f);
 
-		Chat_Add2("&c Its size is %f3 MB, your GPU supports %f3 MB at most.", 
+		Chat_Add2("&c Its size is %f3 MB, your GPU supports %f3 MB at most.",
 				&texSize, &maxSize);
 		return false;
 	}
@@ -274,7 +274,7 @@ cc_bool Game_ValidateBitmapPow2(const cc_string* file, struct Bitmap* bmp) {
 	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
-		Chat_Add2("&c Its size is (%i,%i), which is not a power of two size.", 
+		Chat_Add2("&c Its size is (%i,%i), which is not a power of two size.",
 			&bmp->width, &bmp->height);
 		return false;
 	}
@@ -589,7 +589,7 @@ void Game_TakeScreenshot(void) {
 	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
 
 	res = Gfx_TakeScreenshot(&stream);
-	if (res) { 
+	if (res) {
 		Logger_SysWarn2(res, "saving to", &path); stream.Close(&stream); return;
 	}
 
@@ -684,7 +684,7 @@ static CC_INLINE void Game_RenderFrame(double delta) {
 	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(Entities.CurPlayer, t);
 
-	Camera.CurrentPos = Camera.Active->GetPosition(t);
+	Camera.CurrentPos = Camera.Active->GetPosition(Entities.CurPlayer, t);
 	/* NOTE: EnvRenderer_UpdateFog also also sets clear color */
 	EnvRenderer_UpdateFog();
 	AudioBackend_Tick();
@@ -752,7 +752,7 @@ static void Game_Free(void* obj) {
 
 #ifdef CC_BUILD_WEB
 void Game_DoFrame(void) {
-	cc_uint64 render; 
+	cc_uint64 render;
 	double delta;
 	Game_DoFrameBody()
 }
