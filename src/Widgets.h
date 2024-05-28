@@ -77,10 +77,8 @@ struct HotbarWidget {
 	struct Texture ellipsisTex;
 	int state[HOTBAR_CORE_VERTICES / 4];
 	int verticesCount;
-#ifdef CC_BUILD_TOUCH
 	int touchId[HOTBAR_MAX_INDEX];
 	float touchTime[HOTBAR_MAX_INDEX];
-#endif
 };
 #define HOTBAR_MAX_VERTICES (4 + 4 + HOTBAR_CORE_VERTICES)
 

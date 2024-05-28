@@ -55,6 +55,12 @@ CC_VAR extern struct _GuiData {
 	cc_bool TouchUI;
 } Gui;
 
+#ifdef CC_BUILD_TOUCH
+#define Gui_TouchUI Gui.TouchUI
+#else
+#define Gui_TouchUI false
+#endif
+
 float Gui_Scale(float value);
 float Gui_GetHotbarScale(void);
 float Gui_GetInventoryScale(void);

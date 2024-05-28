@@ -258,7 +258,7 @@ static void HUDScreen_InputUp(void* screen, int key) {
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if (Gui.TouchUI || Gui.InputGrab) {
+	if (Gui_TouchUI || Gui.InputGrab) {
 		return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
 	}
 	return false;
@@ -266,13 +266,13 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 
 static void HUDScreen_PointerUp(void *screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if(!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 	Elem_OnPointerUp(&s->hotbar, id, x, y);
 }
 
 static int HUDScreen_PointerMove(void *screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if(!Gui.TouchUI) return false;
+	if (!Gui_TouchUI) return false;
 	return Elem_HandlesPointerMove(&s->hotbar, id, x, y);
 }
 
@@ -1392,7 +1392,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	if (Game_HideGui) return false;
 
 	if (!s->grabsInput) {
-		if (!Gui.TouchUI) return false;
+		if (!Gui_TouchUI) return false;
 		String_InitArray(text, textBuffer);
 
 		/* Should be able to click on links with touch */

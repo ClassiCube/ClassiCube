@@ -35,7 +35,7 @@ static CC_NOINLINE int GetWindowScale(void) {
 	/* Use larger UI scaling on mobile */
 	/* TODO move this DPI scaling elsewhere.,. */
 #ifndef CC_BUILD_DUALSCREEN
-	if (!Gui.TouchUI) {
+	if (!Gui_TouchUI) {
 #endif
 		widthScale  /= DisplayInfo.ScaleX;
 		heightScale /= DisplayInfo.ScaleY;

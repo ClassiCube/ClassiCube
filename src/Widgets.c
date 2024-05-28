@@ -399,7 +399,7 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w, int width) {
 
 	/* It's easy to accidentally touch a bit to the right of the */
 	/* scrollbar with your finger, so just add some padding */
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 	w->padding = Display_ScaleX(15);
 }
 
@@ -429,9 +429,8 @@ static void HotbarWidget_BuildEntriesMesh(struct HotbarWidget* w, struct VertexT
 		x = HotbarWidget_TileX(w, i);
 		y = w->y + (w->height / 2);
 
-#ifdef CC_BUILD_TOUCH
-		if (i == HOTBAR_MAX_INDEX && Gui.TouchUI) continue;
-#endif
+		if (i == HOTBAR_MAX_INDEX && Gui_TouchUI) continue;
+
 		IsometricDrawer_AddBatch(Inventory_Get(i), scale, x, y);
 	}
 	w->verticesCount = IsometricDrawer_EndBatch();
@@ -467,13 +466,11 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 	HotbarWidget_RenderOutline(w, offset    );
 	HotbarWidget_RenderEntries(w, offset + 8);
 
-#ifdef CC_BUILD_TOUCH
-	if (Gui.TouchUI) {
+	if (Gui_TouchUI) {
 		w->ellipsisTex.x = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.width / 2;
 		w->ellipsisTex.y = w->y + (w->height / 2) - w->ellipsisTex.height / 2;
 		Texture_Render(&w->ellipsisTex);
 	}
-#endif
 
 	Gfx_3DS_SetRenderScreen(TOP_SCREEN);
 	return HOTBAR_MAX_VERTICES;
@@ -482,9 +479,8 @@ static int HotbarWidget_Render2(void* widget, int offset) {
 static int HotbarWidget_MaxVertices(void* w) { return HOTBAR_MAX_VERTICES; }
 
 void HotbarWidget_Update(struct HotbarWidget* w, float delta) {
-#ifdef CC_BUILD_TOUCH
 	int i;
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 
 	for (i = 0; i < HOTBAR_MAX_INDEX; i++) 
 	{
@@ -497,7 +493,6 @@ void HotbarWidget_Update(struct HotbarWidget* w, float delta) {
 		w->touchTime[i] =  0;
 		Inventory_Set(i, 0);
 	}
-#endif
 }
 
 static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int index, int dir) {
@@ -604,16 +599,15 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 		cellY = w->y;
 		if (!Gui_Contains(cellX, cellY, width, height, x, y)) continue;
 
-#ifdef CC_BUILD_TOUCH
-		if(Gui.TouchUI) {
+		if (Gui_TouchUI) {
 			if (i == HOTBAR_MAX_INDEX) {
 				InventoryScreen_Show(); return TOUCH_TYPE_GUI;
 			} else {
-				w->touchId[i] = id;
+				w->touchId[i]   = id;
 				w->touchTime[i] = 0;
 			}
 		}
-#endif
+
 		Inventory_SetSelectedIndex(i);
 		return TOUCH_TYPE_GUI;
 	}
@@ -627,7 +621,7 @@ static void HotbarWidget_PointerUp(void* widget, int id, int x, int y) {
 
 	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
 		if (w->touchId[i] == id) {
-			w->touchId[i] = -1;
+			w->touchId[i]   = -1;
 			w->touchTime[i] = 0;
 		}
 	}
@@ -639,13 +633,12 @@ static int HotbarWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int i;
 
-	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
-		if (w->touchId[i] == id) {
-			if (!Widget_Contains(w, x, y)) {
-				w->touchId[i] = -1;
-				w->touchTime[i] = 0;
-				return true;
-			}
+	for (i = 0; i < HOTBAR_MAX_INDEX; i++) 
+	{
+		if (w->touchId[i] == id && !Widget_Contains(w, x, y)) {
+			w->touchId[i]   = -1;
+			w->touchTime[i] = 0;
+			return true;
 		}
 	}
 #endif
@@ -669,12 +662,10 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static void HotbarWidget_Free(void* widget) {
-#ifdef CC_BUILD_TOUCH
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 
 	Gfx_DeleteTexture(&w->ellipsisTex.ID);
-#endif
 }
 
 static const struct WidgetVTABLE HotbarWidget_VTABLE = {
@@ -700,14 +691,12 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 }
 
 void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
-#ifdef CC_BUILD_TOUCH
 	static const cc_string dots = String_FromConst("...");
 	struct DrawTextArgs args;
-	if (!Gui.TouchUI) return;
+	if (!Gui_TouchUI) return;
 
 	DrawTextArgs_Make(&args, &dots, font, true);
 	Drawer2D_MakeTextTexture(&w->ellipsisTex, &args);
-#endif
 }
 
 
@@ -1717,7 +1706,7 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
-	w->base.showCaret       = !Gui.TouchUI;
+	w->base.showCaret       = !Gui_TouchUI;
 	w->base.flags           = WIDGET_FLAG_SELECTABLE;
 
 	w->base.GetMaxLines    = TextInputWidget_GetMaxLines;
