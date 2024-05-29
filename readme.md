@@ -159,6 +159,10 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 Note: You may need to install Xcode before you can compile ClassiCube
 
+##### Using Xcode GUI
+
+Open the `misc/macOS/CCMAC.xcodeproj` project in Xcode, and then compile it
+
 ## Compiling - for Android
 
 NOTE: If you are distributing a modified version, **please change the package ID from `com.classicube.android.client` to something else** - otherwise Android users won't be able to have both ClassiCube and your modified version installed at the same time on their Android device
@@ -179,7 +183,7 @@ NOTE: If you are distributing a modified version, **please change the bundle ID 
 
 ##### Using Xcode GUI
 
-Import `ios/CCIOS.xcodeproj` project into Xcode (TODO explain more detailed)
+Open the `ios/CCIOS.xcodeproj` project in Xcode, and then compile it
 
 ##### Using command line (Xcode)
 

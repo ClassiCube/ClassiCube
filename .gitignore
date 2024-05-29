@@ -20,6 +20,10 @@ android/app/.externalNativeBuild/
 android/local.properties
 *.iml
 
+#XCode stuff
+project.xcworkspace/
+xcuserdata/
+
 # Nintendo Console build results
 build-3ds/
 build-gc/
