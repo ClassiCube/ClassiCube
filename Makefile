@@ -201,8 +201,8 @@ $(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
 endif
 	
 # === Platform specific file compiling ===
-$(BUILD_DIR)/interop_cocoa.o: $(SOURCE_DIR)/interop_cocoa.m
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.m
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-$(BUILD_DIR)/interop_BeOS.o: $(SOURCE_DIR)/interop_BeOS.cpp
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
