@@ -1151,8 +1151,6 @@ static void InputHandler_CheckZoomFov(void* obj) {
 }
 
 static cc_bool HandleBlockKey(int key) {
-	if (Gui.InputGrab) return false;
-
 	if (InputBind_Claims(BIND_DELETE_BLOCK, key)) {
 		MouseStatePress(MOUSE_LEFT);
 		InputHandler_DeleteBlock();
@@ -1330,8 +1328,9 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		s->dirty = true;
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
+	if (Gui.InputGrab) return;
 
-	if (Input_IsPauseButton(key) && !Gui.InputGrab) {
+	if (Input_IsPauseButton(key)) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
