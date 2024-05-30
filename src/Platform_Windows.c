@@ -726,17 +726,29 @@ cc_result Process_StartOpen(const cc_string* args) {
 #define UPDATE_SRC TEXT(UPDATE_FILE)
 cc_bool Updater_Supported = true;
 
+#if defined _M_IX86
 const struct UpdaterInfo Updater_Info = {
 	"&eDirect3D 9 is recommended", 2,
 	{
-#if _WIN64
-		{ "Direct3D9", "ClassiCube.64.exe" },
-		{ "OpenGL",    "ClassiCube.64-opengl.exe" }
-#else
 		{ "Direct3D9", "ClassiCube.exe" },
 		{ "OpenGL",    "ClassiCube.opengl.exe" }
-#endif
 	}
+};
+#elif defined _M_X64
+const struct UpdaterInfo Updater_Info = {
+	"&eDirect3D 9 is recommended", 2,
+	{
+		{ "Direct3D9", "ClassiCube.64.exe" },
+		{ "OpenGL",    "ClassiCube.64-opengl.exe" }
+	}
+};
+#elif defined _M_ARM64
+const struct UpdaterInfo Updater_Info = { "", 1, { { "Direct3D11", "cc-arm64-d3d11.exe" } } };
+#elif defined _M_ARM
+const struct UpdaterInfo Updater_Info = { "", 1, { { "Direct3D11", "cc-arm32-d3d11.exe" } } };
+#else
+const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+#endif
 };
 
 cc_bool Updater_Clean(void) {

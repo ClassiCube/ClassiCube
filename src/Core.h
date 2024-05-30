@@ -129,7 +129,8 @@ typedef cc_uint8  cc_bool;
 #define CC_GFX_BACKEND_GL      1
 #define CC_GFX_BACKEND_D3D9    2
 #define CC_GFX_BACKEND_D3D11   3
-#define CC_GFX_BACKEND_SOFTGPU 4
+#define CC_GFX_BACKEND_VULKAN  4
+#define CC_GFX_BACKEND_SOFTGPU 11
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE

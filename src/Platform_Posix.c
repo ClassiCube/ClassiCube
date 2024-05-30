@@ -1050,6 +1050,20 @@ cc_bool Updater_Clean(void) { return true; }
 	#else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 	#endif
+#elif defined CC_BUILD_FREEBSD
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-fbsd64-gl1" } } };
+	#elif __i386__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-fbsd32-gl1" } } };
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
+#elif defined CC_BUILD_NETBSD
+	#if __x86_64__
+	const struct UpdaterInfo Updater_Info = { "", 1, { { "OpenGL", "cc-netbsd64-gl1" } } };
+	#else
+	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
+	#endif
 #else
 	const struct UpdaterInfo Updater_Info = { "&eCompile latest source code to update", 0 };
 #endif

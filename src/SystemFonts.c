@@ -258,20 +258,26 @@ void FallbackFont_DrawText(struct DrawTextArgs* args, struct Bitmap* bmp, int x,
 #include "freetype/ftmodapi.h"
 #include "freetype/ftglyph.h"
 
-int cc_strncmp(const char* a, const char* b, size_t maxCount) {
+int cc_strncmp(const char* strA, const char* strB, size_t maxCount) {
+	const unsigned char* a = (const unsigned char*)strA;
+	const unsigned char* b = (const unsigned char*)strB;
 	int i;
+
 	for (i = 0; a[i] && i < maxCount; i++)
 	{
-		if (a[i] != b[i]) return (unsigned char)a[i] - (unsigned char)b[i];
+		if (a[i] != b[i]) return a[i] - b[i];
 	}
 	return 0;
 }
 
-int cc_strcmp(const char* a, const char* b) {
+int cc_strcmp(const char* strA, const char* strB) {
+	const unsigned char* a = (const unsigned char*)strA;
+	const unsigned char* b = (const unsigned char*)strB;
 	int i;
+
 	for (i = 0; a[i]; i++)
 	{
-		if (a[i] != b[i]) return (unsigned char)a[i] - (unsigned char)b[i];
+		if (a[i] != b[i]) return a[i] - b[i];
 	}
 	return 0;
 }
