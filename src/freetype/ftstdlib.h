@@ -76,15 +76,19 @@
 
 
 #include <string.h>
+/* ClassiCube functions to avoid stdlib */
+extern int cc_strncmp(const char* a, const char* b, size_t maxCount);
+extern int cc_strcmp( const char* a, const char* b);
+extern size_t cc_strlen(const char* a);
 
 #define ft_memchr   memchr
 #define ft_memcmp   memcmp
 #define ft_memcpy   memcpy
 #define ft_memmove  memmove
 #define ft_memset   memset
-#define ft_strcmp   strcmp
-#define ft_strlen   strlen
-#define ft_strncmp  strncmp
+#define ft_strcmp   cc_strcmp
+#define ft_strlen   cc_strlen
+#define ft_strncmp  cc_strncmp
 #define ft_strstr   strstr
 
 

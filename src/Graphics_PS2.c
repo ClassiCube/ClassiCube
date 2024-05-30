@@ -482,10 +482,10 @@ static Vector4 TransformVertex(struct VertexTextured* pos) {
 }
 
 //#define VCopy(dst, src) dst.x = vp_hwidth  * (1 + src.x / src.w); dst.y = vp_hheight * (1 - src.y / src.w); dst.z = src.z / src.w; dst.w = src.w;
-static xyz_t FinishVertex(struct Vector4 src) {
-	float x = (vp_hwidth/2048)  * (src.x / src.w);
-	float y = (vp_hheight/2048) * (src.y / src.w);
-	float z = src.z / src.w;
+static xyz_t FinishVertex(struct Vector4 src, float invW) {
+	float x = (vp_hwidth /2048) * (src.x * invW);
+	float y = (vp_hheight/2048) * (src.y * invW);
+	float z = src.z * invW;
 	
 	int originX = ftoi4(2048);
 	int originY = ftoi4(2048);
@@ -518,7 +518,7 @@ static void DrawTriangle(Vector4 v0, Vector4 v1, Vector4 v2, struct VertexTextur
 	for (int i = 0; i < 3; i++)
 	{
 		float Q   = 1.0f / verts[i].w;
-		xyz_t xyz = FinishVertex(verts[i]);
+		xyz_t xyz = FinishVertex(verts[i], Q);
 		color_t color;
 		texel_t texel;
 		
