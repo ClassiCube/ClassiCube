@@ -77,19 +77,23 @@
 
 #include <string.h>
 /* ClassiCube functions to avoid stdlib */
-extern int cc_strncmp(const char* a, const char* b, size_t maxCount);
-extern int cc_strcmp( const char* a, const char* b);
+extern int   cc_strncmp(const char* a, const char* b, size_t maxCount);
+extern int    cc_strcmp(const char* a, const char* b);
 extern size_t cc_strlen(const char* a);
+extern char*  cc_strstr(const char* str, const char* substr);
 
-#define ft_memchr   memchr
-#define ft_memcmp   memcmp
+extern int   cc_memcmp(const void* ptrA, const void* ptrB, size_t num);
+extern void* cc_memchr(const void* ptr, int ch, size_t num);
+
+#define ft_memchr   cc_memchr
+#define ft_memcmp   cc_memcmp
 #define ft_memcpy   memcpy
 #define ft_memmove  memmove
 #define ft_memset   memset
 #define ft_strcmp   cc_strcmp
 #define ft_strlen   cc_strlen
 #define ft_strncmp  cc_strncmp
-#define ft_strstr   strstr
+#define ft_strstr   cc_strstr
 
 
   /**********************************************************************/

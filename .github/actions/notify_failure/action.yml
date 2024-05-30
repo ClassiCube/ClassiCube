@@ -25,5 +25,6 @@ runs:
   steps:
     - name: Notify failure
       shell: sh
+      if: ${{ inputs.WEBHOOK_URL != '' }}
       run: |
         curl ${{ inputs.WEBHOOK_URL }} -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "{\"username\": \"${{ inputs.BOT_USERNAME }}\", \"avatar_url\": \"${{ inputs.BOT_AVATAR }}\", \"content\": \"${{ inputs.NOTIFY_MESSAGE }}\" }"

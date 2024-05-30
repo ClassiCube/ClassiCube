@@ -288,6 +288,45 @@ size_t cc_strlen(const char* a) {
 	return i;
 }
 
+char* cc_strstr(const char* str, const char* substr) {
+	const char* a;
+	const char* b;
+	if (!substr[0]) return (char*)str;
+
+	for (; *str; str++) 
+	{
+		/* Definitely not a match */
+		if (*str != substr[0]) continue;
+
+		/* It's a possible match */
+		if (cc_strcmp(str, substr) == 0) return (char*)str;
+	}
+	return NULL;
+}
+
+int cc_memcmp(const void* ptrA, const void* ptrB, size_t num) {
+	const unsigned char* a = (const unsigned char*)ptrA;
+	const unsigned char* b = (const unsigned char*)ptrB;
+
+	for (; num > 0; num--, a++, b++)
+	{
+		if (*a != *b) return *a - *b;
+	}
+	return 0;
+}
+
+void* cc_memchr(const void* ptr, int ch, size_t num) {
+	const char* a = (const char*)ptr;
+
+	for (; num > 0; num--, a++)
+	{
+		if (*a == ch) return a;
+	}
+	return NULL;
+}
+
+
+
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct StringsBuffer font_list;
