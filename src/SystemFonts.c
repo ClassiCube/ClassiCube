@@ -320,7 +320,7 @@ void* cc_memchr(const void* ptr, int ch, size_t num) {
 
 	for (; num > 0; num--, a++)
 	{
-		if (*a == ch) return a;
+		if (*a == ch) return (void*)a;
 	}
 	return NULL;
 }

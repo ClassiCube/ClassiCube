@@ -1703,7 +1703,7 @@
                          FALSE );
 
     /* save a copy of current HintMap to use when drawing initial point */
-    glyphpath->firstHintMap = glyphpath->hintMap;     /* structure copy */
+    ft_memcpy(&glyphpath->firstHintMap, &glyphpath->hintMap, sizeof(glyphpath->hintMap));
   }
 
 
