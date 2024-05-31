@@ -43,9 +43,43 @@ cc_bool Platform_SingleProcess;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NOSTDLIB
+void* Mem_Set(void* dst, cc_uint8 value,  unsigned numBytes) {
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = value; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Copy(void* dst, const void* src, unsigned numBytes) {
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+
+	while (numBytes--) *dp++ = *sp++; /* TODO optimise */
+	return dst;
+}
+
+void* Mem_Move(void* dst, const void* src, unsigned numBytes) { 
+	char* sp = (char*)src;
+	char* dp = (char*)dst;
+	
+	/* Check if destination range overlaps source range */
+	/* If this happens, then need to copy backwards */
+	if (dp >= sp && dp < (sp + numBytes)) {
+		sp += numBytes;
+		dp += numBytes;
+
+		while (numBytes--) *--dp = *--sp;
+	} else {
+		while (numBytes--) *dp++ = *sp++;
+	}
+	return dst;
+}
+#else
 void* Mem_Set(void*  dst, cc_uint8 value,  unsigned numBytes) { return memset( dst, value, numBytes); }
 void* Mem_Copy(void* dst, const void* src, unsigned numBytes) { return memcpy( dst, src,   numBytes); }
 void* Mem_Move(void* dst, const void* src, unsigned numBytes) { return memmove(dst, src,   numBytes); }
+#endif
 
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);

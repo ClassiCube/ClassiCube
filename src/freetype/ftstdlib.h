@@ -84,12 +84,18 @@ extern char*  cc_strstr(const char* str, const char* substr);
 
 extern int   cc_memcmp(const void* ptrA, const void* ptrB, size_t num);
 extern void* cc_memchr(const void* ptr, int ch, size_t num);
+extern void* Mem_Copy(void* dst, const void* src,  unsigned size);
+extern void* Mem_Move(void* dst, const void* src,  unsigned size);
+extern void* Mem_Set(void* dst, unsigned char val, unsigned size);
+
+extern void cc_qsort(void* v, size_t count, size_t size,
+					int (*comp)(const void*, const void*));
 
 #define ft_memchr   cc_memchr
 #define ft_memcmp   cc_memcmp
-#define ft_memcpy   memcpy
-#define ft_memmove  memmove
-#define ft_memset   memset
+#define ft_memcpy   Mem_Copy
+#define ft_memmove  Mem_Move
+#define ft_memset   Mem_Set
 #define ft_strcmp   cc_strcmp
 #define ft_strlen   cc_strlen
 #define ft_strncmp  cc_strncmp
@@ -105,7 +111,7 @@ extern void* cc_memchr(const void* ptr, int ch, size_t num);
 
 #include <stdlib.h>
 
-#define ft_qsort  qsort
+#define ft_qsort  cc_qsort
 
 
   /**********************************************************************/
@@ -117,12 +123,20 @@ extern void* cc_memchr(const void* ptr, int ch, size_t num);
 
 #include <setjmp.h>
 
+
+
 #define ft_jmp_buf     jmp_buf  /* note: this cannot be a typedef since */
                                 /*       jmp_buf is defined as a macro  */
                                 /*       on certain platforms           */
 
-#define ft_longjmp     longjmp
-#define ft_setjmp( b ) setjmp( *(ft_jmp_buf*) &(b) ) /* same thing here */
+#ifdef CC_BUILD_NOSTDLIB
+	/* Avoid stdlib with MinGW for Win9x build */
+	#define ft_longjmp     __builtin_longjmp
+	#define ft_setjmp( b ) __builtin_setjmp( *(ft_jmp_buf*) &(b) ) /* same thing here */
+#else
+	#define ft_longjmp     longjmp
+	#define ft_setjmp( b ) setjmp( *(ft_jmp_buf*) &(b) ) /* same thing here */
+#endif
 
 #endif /* FTSTDLIB_H_ */
 
