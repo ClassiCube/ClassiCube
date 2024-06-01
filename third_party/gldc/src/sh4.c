@@ -449,7 +449,7 @@ void SceneListSubmit(Vertex* v3, int n) {
     *PVR_LMMODE1 = 0;
 
     //Set QACR registers
-    QACR[1] = QACR[0] = 0x11;
+    QACR[1] = QACR[0] = 0x10;
 
 #if CLIP_DEBUG
     Vertex* vertex = (Vertex*) src;
