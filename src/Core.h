@@ -306,7 +306,9 @@ typedef cc_uint8  cc_bool;
 #elif defined GEKKO
 	#define CC_BUILD_GCWII
 	#define CC_BUILD_CONSOLE
-	#define CC_BUILD_LOWMEM
+	#ifndef HW_RVL
+		#define CC_BUILD_LOWMEM
+	#endif
 	#define CC_BUILD_COOPTHREADED
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_BEARSSL
