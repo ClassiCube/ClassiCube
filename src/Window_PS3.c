@@ -36,9 +36,11 @@ static void sysutil_callback(u64 status, u64 param, void* usrdata) {
 	}
 }
 
-void Window_Init(void) {
+void Window_PreInit(void) {
 	sysUtilRegisterCallback(0, sysutil_callback, NULL);
-	
+}
+
+void Window_Init(void) {
 	videoState state;
 	videoResolution resolution;
 	

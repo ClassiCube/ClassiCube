@@ -215,7 +215,7 @@ static double Floord(double x) {
  * Precision: 16.47
  */
 static double SinStage1(double x) {
-	const double A[] = {
+	const static double A[] = {
 		.52359877559829885532,
 		-.2392459620393377657e-1,
 		.32795319441392666e-3,

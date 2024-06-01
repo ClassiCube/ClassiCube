@@ -133,6 +133,14 @@ static u16* bg_ptr;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
+void Window_PreInit(void) {
+	videoSetModeSub(MODE_0_2D);
+    vramSetBankH(VRAM_H_SUB_BG);
+	vramSetBankI(VRAM_I_SUB_BG_0x06208000);
+    setBrightness(2, 0);
+	consoleInit();
+}
+
 void Window_Init(void) {  
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
@@ -147,19 +155,6 @@ void Window_Init(void) {
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-
-    videoSetModeSub(MODE_0_2D);
-    vramSetBankH(VRAM_H_SUB_BG);
-	vramSetBankI(VRAM_I_SUB_BG_0x06208000);
-    setBrightness(2, 0);
-	consoleInit();
-
-	cc_bool dsiMode = isDSiMode();
-	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
-
-	char* dir = fatGetDefaultCwd();
-    if (dir) Platform_Log1("CWD: %c", dir);
-	Mem_Free(dir);
 }
 
 void Window_Free(void) { }

@@ -17,10 +17,12 @@ static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
-void Window_Init(void) {
+void Window_PreInit(void) {
     display_init(RESOLUTION_320x240, DEPTH_32_BPP, 2, GAMMA_NONE, FILTERS_DISABLED);
-    //display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);
-    
+    //display_init(RESOLUTION_320x240, DEPTH_16_BPP, 3, GAMMA_NONE, ANTIALIAS_RESAMPLE_FETCH_ALWAYS);    
+}
+
+void Window_Init(void) {
 	DisplayInfo.Width  = display_get_width();
 	DisplayInfo.Height = display_get_height();
 	DisplayInfo.ScaleX = 0.5f;

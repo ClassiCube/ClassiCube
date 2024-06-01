@@ -30,6 +30,12 @@ extern void Gfx_UpdateCommonDialogBuffers(void);
 extern void (*DQ_OnNextFrame)(void* fb);
 static void DQ_OnNextFrame2D(void* fb);
 
+void Window_PreInit(void) {
+	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = DISPLAY_WIDTH;
 	DisplayInfo.Height = DISPLAY_HEIGHT;
@@ -44,13 +50,8 @@ void Window_Init(void) {
 	Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_SetTouchMode(true);
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-
-	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
-	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
-	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK,  SCE_TOUCH_SAMPLING_STATE_START);
 	
 	sceTouchGetPanelInfo(SCE_TOUCH_PORT_FRONT, &frontPanel);
-	
 	Gfx_InitGXM();
 	Gfx_AllocFramebuffers();
 }

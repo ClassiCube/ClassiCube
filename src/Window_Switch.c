@@ -51,13 +51,17 @@ static void Applet_Event(AppletHookType type, void* param) {
 	}
 }
 
-void Window_Init(void) {
+void Window_PreInit(void) {
 	// Configure our supported input layout: a single player with standard controller styles
 	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 	hidInitializeTouchScreen();
 	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
 	padInitializeDefault(&pad);
+	
+	appletHook(&cookie, Applet_Event, NULL);
+}
 
+void Window_Init(void) {
 	DisplayInfo.Depth  = 4; // 32 bit TODO wrong, this is actually 4 bit
 	DisplayInfo.ScaleX = 1;
 	DisplayInfo.ScaleY = 1;
@@ -72,8 +76,6 @@ void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
 
 	nwindowSetDimensions(Window_Main.Handle, 1920, 1080);
-
-	appletHook(&cookie, Applet_Event, NULL);
 	SetResolution();
 }
 

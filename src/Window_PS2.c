@@ -28,6 +28,7 @@ static char padBuf[256] __attribute__((aligned(64)));
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	DisplayInfo.Width  = 640;
 	DisplayInfo.Height = graph_get_region() == GRAPH_MODE_PAL ? 512 : 448;

@@ -383,10 +383,12 @@ extern void interop_AddClipboardListeners(void);
 extern void interop_ForceTouchPageLayout(void);
 
 extern void Game_DoFrame(void);
+void Window_PreInit(void) {
+	emscripten_set_main_loop(Game_DoFrame, 0, false);
+}
+
 void Window_Init(void) {
 	int is_ios, droid;
-	emscripten_set_main_loop(Game_DoFrame, 0, false);
-
 	DisplayInfo.Width  = GetScreenWidth();
 	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;

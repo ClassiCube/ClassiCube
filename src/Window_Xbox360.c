@@ -26,6 +26,7 @@ static uint32_t reg_read32(int reg)
 	return read32n(0xec800000 + reg);
 }
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	DisplayInfo.Width  = reg_read32(D1GRPH_X_END);
 	DisplayInfo.Height = reg_read32(D1GRPH_Y_END);

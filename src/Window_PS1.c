@@ -29,6 +29,7 @@ static char pad_buff[2][34];
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_XRES;
 	DisplayInfo.Height = SCREEN_YRES;

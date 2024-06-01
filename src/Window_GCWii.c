@@ -56,13 +56,15 @@ static void InitVideo(void) {
 	VIDEO_WaitVSync();
 }
 
-void Window_Init(void) {	
+void Window_PreInit(void) {
 	// TODO: SYS_SetResetCallback(reload); too? not sure how reset differs on GC/WII
 	#if defined HW_RVL
 	SYS_SetPowerCallback(OnPowerOff);
 	#endif
 	InitVideo();
-	
+}
+
+void Window_Init(void) {
 	DisplayInfo.Width  = rmode->fbWidth;
 	DisplayInfo.Height = rmode->xfbHeight;
 	DisplayInfo.ScaleX = 1;

@@ -436,6 +436,7 @@ void Window_SetTitle(const cc_string* title) {
     // TODO: Implement this somehow
 }
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
     //Window_Main.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
     // keyboard now shifts up

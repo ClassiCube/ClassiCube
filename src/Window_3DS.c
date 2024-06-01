@@ -23,13 +23,15 @@ struct _WindowData WindowInfo;
 struct _WindowData Window_Alt;
 cc_bool launcherTop;
 
+void Window_PreInit(void) {
+	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
+}
+
 // Note from https://github.com/devkitPro/libctru/blob/master/libctru/include/3ds/gfx.h
 //  * Please note that the 3DS uses *portrait* screens rotated 90 degrees counterclockwise.
 //  * Width/height refer to the physical dimensions of the screen; that is, the top screen
 //  * is 240 pixels wide and 400 pixels tall; while the bottom screen is 240x320.
 void Window_Init(void) {
-	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, false);
-	
 	// deliberately swapped
 	gfxGetFramebuffer(GFX_TOP,    GFX_LEFT, &top_height, &top_width);
 	gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, &btm_height, &btm_width);

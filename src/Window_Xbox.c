@@ -58,8 +58,11 @@ static void OnDeviceChanged(xid_dev_t *xid_dev__, int status__) {
     xid_ctrl = NULL;
 }
 
-void Window_Init(void) {
+void Window_PreInit(void) {
 	XVideoSetMode(640, 480, 32, REFRESH_DEFAULT); // TODO not call
+}
+
+void Window_Init(void) {
 	VIDEO_MODE mode = XVideoGetMode();
 	
 	DisplayInfo.Width  = mode.width;

@@ -76,6 +76,14 @@ static uint32_t OnReleased(void* context) {
 	return 0;
 }
 
+void Window_PreInit(void) {
+	KPADInit();
+	VPADInit();
+
+	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
+	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
+}
+
 void Window_Init(void) {
 	LoadTVDimensions();
 	DisplayInfo.ScaleX = 1;
@@ -95,12 +103,6 @@ void Window_Init(void) {
 	
 	Window_Alt.Width  = 854;
 	Window_Alt.Height = 480;
-		
-	KPADInit();
-	VPADInit();
-
-	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, OnAcquired, NULL, 100);
-	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, OnReleased, NULL, 100);
 	WHBGfxInit();
 }
 

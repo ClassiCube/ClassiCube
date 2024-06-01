@@ -139,10 +139,10 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
+static cc_result File_Do(cc_file* file, const cc_string* path, int mode, const char* type) {
 	char str[NATIVE_STR_LEN];
 	GetNativePath(str, path);
-    Platform_Log1("Open %c", str);
+	Platform_Log2("%c %c", type, str);
 
 	*file = open(str, mode, 0);
 	return *file == -1 ? errno : 0;
@@ -150,17 +150,17 @@ static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
 	if (!fat_available) return ReturnCode_FileNotFound;
-	return File_Do(file, path, O_RDONLY);
+	return File_Do(file, path, O_RDONLY, "Open");
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC, "Create");
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	if (!fat_available) return ENOTSUP;
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return File_Do(file, path, O_RDWR | O_CREAT, "Update");
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -219,6 +219,7 @@ static void InitFilesystem(void) {
 
     char* dir = fatGetDefaultCwd();
     if (dir) {
+		Platform_Log1("CWD: %c", dir);
         root_path.buffer = dir;
         root_path.length = String_Length(dir);
     }
@@ -421,9 +422,11 @@ static void InitNetworking(void) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Init(void) {
+	cc_bool dsiMode = isDSiMode();
+	Platform_Log1("Running in %c mode", dsiMode ? "DSi" : "DS");
+
 	InitFilesystem();
     InitNetworking();
-
 	cpuStartTiming(1);
 }
 void Platform_Free(void) { }

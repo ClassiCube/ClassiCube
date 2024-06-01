@@ -286,6 +286,7 @@ static XVisualInfo GLContext_SelectVisual(void) {
 static XVisualInfo GLContext_SelectVisual(void);
 #endif
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;

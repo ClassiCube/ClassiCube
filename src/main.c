@@ -56,9 +56,10 @@ static void SetupProgram(int argc, char** argv) {
 	static char ipBuffer[STRING_SIZE];
 	cc_result res;
 	Logger_Hook();
+	Window_PreInit();
 	Platform_Init();
+	
 	res = Platform_SetDefaultCurrentDirectory(argc, argv);
-
 	Options_Load();
 	Window_Init();
 	

@@ -28,6 +28,7 @@ static void OnVblank(void* work) {
 	smpc_peripheral_intback_issue();
 }
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;

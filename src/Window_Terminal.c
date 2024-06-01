@@ -146,6 +146,7 @@ static void HookSignals(void) {
 }
 #endif
 
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	Input.Sources = INPUT_SOURCE_NORMAL;
 	DisplayInfo.Depth  = 4;

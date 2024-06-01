@@ -181,9 +181,12 @@ static void LogUnhandledNSErrors(NSException* ex) {
 	LogUnhandled([ex reason]);
 }
 
+void Window_PreInit(void) {
+	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
+}
+
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
-	NSSetUncaughtExceptionHandler(LogUnhandledNSErrors);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 
 	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html

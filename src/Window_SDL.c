@@ -52,9 +52,12 @@ static void Window_SDLFail(const char* place) {
 	Logger_Abort(str.buffer);
 }
 
+void Window_PreInit(void) {
+	SDL_Init(SDL_INIT_VIDEO);
+}
+
 void Window_Init(void) {
 	SDL_DisplayMode mode = { 0 };
-	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GetDesktopDisplayMode(0, &mode);
 	Input.Sources = INPUT_SOURCE_NORMAL;
 

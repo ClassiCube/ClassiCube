@@ -24,6 +24,11 @@ static cc_bool launcherMode;
 struct _DisplayData DisplayInfo;
 struct _WindowData WindowInfo;
 
+void Window_PreInit(void) {
+	sceCtrlSetSamplingCycle(0);
+	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+}
+
 void Window_Init(void) {
 	DisplayInfo.Width  = SCREEN_WIDTH;
 	DisplayInfo.Height = SCREEN_HEIGHT;
@@ -36,9 +41,6 @@ void Window_Init(void) {
 	Window_Main.Exists  = true;
 
 	Input.Sources = INPUT_SOURCE_GAMEPAD;
-	sceCtrlSetSamplingCycle(0);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-	
 	sceDisplaySetMode(0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 

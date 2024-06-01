@@ -303,6 +303,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
+void Window_PreInit(void) { }
 void Window_Init(void) {
 	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(RegisterRawInputDevices),

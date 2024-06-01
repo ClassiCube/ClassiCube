@@ -24,11 +24,14 @@ static void Window_SDLFail(const char* place) {
 	Logger_Abort(str.buffer);
 }
 
-void Window_Init(void) {
+void Window_PreInit(void) {
 	SDL_Init(SDL_INIT_VIDEO);
 	#ifdef CC_BUILD_FLATPAK
 	SDL_SetHint(SDL_HINT_APP_ID, "net.classicube.flatpak.client");
 	#endif
+}
+
+void Window_Init(void) {
 	int displayID = SDL_GetPrimaryDisplay();
 	Input.Sources = INPUT_SOURCE_NORMAL;
 	
