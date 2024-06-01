@@ -94,6 +94,8 @@ CC_VAR extern struct _WindowData WindowInfo; /* Named WindowInfo for backwards c
 /* Data for alternate game window (e.g. 3DS) */
 extern struct _WindowData Window_Alt;
 
+/* Initialises necessary state before initing platform and loading options */
+void Window_PreInit(void);
 /* Initialises state for window, input, and display. */
 void Window_Init(void);
 /* Potentially frees/resets state for window, input, and display. */

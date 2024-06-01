@@ -13,13 +13,12 @@ jobs:
       image: ghcr.io/classicube/minimal-psn00b:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile PS3 build
+      - name: Compile PS1 build
         id: compile
         run: |
           apt-get update
           apt-get install -y curl
           export PSNOOB=/usr/local/psnoob
-          export PSL1GHT=/usr/local/ps3dev
           export PATH=$PATH:$PSNOOB/bin
           export PSN00BSDK_LIBS=$PSNOOB/lib/libpsn00b
           make ps1
