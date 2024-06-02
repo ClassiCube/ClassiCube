@@ -19,6 +19,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+
+#undef true
+#undef false
 #include <MacMemory.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -184,7 +187,9 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
+void Thread_Sleep(cc_uint32 milliseconds) { 
+// TODO Delay API
+}
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
 	*handle = NULL;
@@ -296,18 +301,8 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 cc_bool Process_OpenSupported = true;
 
 static cc_result Process_RawStart(const char* path, char** argv) {
-	pid_t pid = fork();
-	if (pid == -1) return errno;
-
-	if (pid == 0) {
-		/* Executed in child process */
-		execvp(path, argv);
-		_exit(127); /* "command not found" */
-	} else {
-		/* Executed in parent process */
-		/* We do nothing here.. */
-		return 0;
-	}
+	// TODO
+	return ERR_NOT_SUPPORTED;
 }
 
 static cc_result Process_RawGetExePath(char* path, int* len);
