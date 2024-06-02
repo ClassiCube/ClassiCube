@@ -413,7 +413,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 #endif
 
 void Platform_Init(void) {
-
+	printf("Macintosh ClassiCube has started to init.\n");
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {

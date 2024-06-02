@@ -21,21 +21,22 @@ static WindowPtr win;
 *#########################################################################################################################*/
 void Window_PreInit(void) { }
 void Window_Init(void) {
-	InitGraf(&qd.thePort);
-    InitFonts();
-    InitWindows();
-    InitMenus();
+	printf("Creating window boolean/starting stuff.\n");
+	InitGraf(&qd.thePort);	printf("InitGraf\n");
+    InitFonts();			printf("InitFonts\n");
+    InitWindows();			printf("InitWindows\n");
+    InitMenus();			printf("InitMenus\n");
 }
 
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height) {
-	Rect r = qd.screenBits.bounds;
+	Rect r = qd.screenBits.bounds;													printf("Configure screen bounds.\n");
 
 	// TODO
-    SetRect(&r, r.left + 5, r.top + 45, r.right - 5, r.bottom - 5);
-    win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
-	SetPort(win);
+    SetRect(&r, r.left + 5, r.top + 45, r.right - 5, r.bottom - 5);					printf("Set window size.\n");
+    win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);	printf("Make Window.\n");
+	SetPort(win);																	printf("Set viewport to current window.\n");
 }
 
 void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
