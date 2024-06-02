@@ -215,6 +215,11 @@ typedef cc_uint8  cc_bool;
 		#define CC_BUILD_CURL
 	#endif
 	#define CC_BUILD_OPENAL
+#elif defined Macintosh
+	#define DEFAULT_GFX_BACKEND CC_GFX_BACKEND_GL
+	#define CC_BUILD_MACCLASSIC
+	#define CC_BUILD_CURL
+	#define CC_BUILD_OPENAL
 #elif defined __sun__
 	#define CC_BUILD_SOLARIS
 	#define CC_BUILD_POSIX

@@ -135,7 +135,7 @@ serenityos:
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
 
-# consoles builds require special handling, so are moved to
+# Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
 dreamcast:
 	$(MAKE) -f misc/dreamcast/Makefile
@@ -172,6 +172,8 @@ switch:
 	$(MAKE) -f misc/switch/Makefile
 os/2:
 	$(MAKE) -f misc/os2/Makefile
+macclassic:
+	$(MAKE) -f misc/macclassic/Makefile
 	
 clean:
 	$(DEL) $(OBJECTS)

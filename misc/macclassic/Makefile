@@ -1,0 +1,34 @@
+# path to RETRO68
+RETRO68=../Retro68-build/toolchain
+
+PREFIX=$(RETRO68)/m68k-apple-macos
+CC=$(RETRO68)/bin/m68k-apple-macos-gcc
+CXX=$(RETRO68)/bin/m68k-apple-macos-g++
+REZ=$(RETRO68)/bin/Rez
+
+LDFLAGS=-lRetroConsole
+RINCLUDES=$(PREFIX)/RIncludes
+REZFLAGS=-I$(RINCLUDES)
+
+TARGET		:=	ClassiCube
+BUILD_DIR 	:=	build
+SOURCE_DIR	:=	src
+C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
+C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
+
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).code.bin $(BUILD_DIR)
+	$(REZ) $(REZFLAGS) \
+		--copy "$(TARGET).code.bin" \
+		"$(RINCLUDES)/Retro68APPL.r" \
+		-t "APPL" -c "????" \
+		-o $(TARGET).bin --cc $(TARGET).APPL --cc $(TARGET).dsk
+
+
+$(TARGET).code.bin: $(C_OBJECTS)
+	$(CXX) $(C_OBJECTS) -o $@ $(LDFLAGS)	# C++ used for linking because RetroConsole needs it
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(C_OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
