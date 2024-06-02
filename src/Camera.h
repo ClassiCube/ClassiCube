@@ -46,10 +46,10 @@ struct Camera {
 	/* Calculates the current projection matrix of this camera. */
 	void (*GetProjection)(struct Matrix* proj);
 	/* Calculates the current modelview matrix of this camera. */
-	void (*GetView)(struct LocalPlayer* p, struct Matrix* view);
+	void (*GetView)(struct Matrix* view);
 
 	/* Returns the current orientation of the camera. */
-	Vec2 (*GetOrientation)(struct LocalPlayer* p);
+	Vec2 (*GetOrientation)(void);
 	/* Returns the current interpolated position of the camera. */
 	Vec3 (*GetPosition)(float t);
 
@@ -64,7 +64,7 @@ struct Camera {
 	void (*LoseFocus)(void);
 
 	/* Calculates selected block in the world, based on camera's current state */
-	void (*GetPickedBlock)(struct LocalPlayer* p, struct RayTracer* t);
+	void (*GetPickedBlock)(struct RayTracer* t);
 	/* Zooms the camera in or out when scrolling mouse wheel. */
 	cc_bool (*Zoom)(float amount);
 

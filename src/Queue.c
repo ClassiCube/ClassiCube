@@ -20,7 +20,8 @@ void Queue_Clear(struct Queue* queue) {
 }
 static void Queue_Resize(struct Queue* queue) {
 	cc_uint8* entries;
-	int i, idx, capacity, headToEndSize, byteOffsetToHead;
+	int idx, capacity, headToEndSize, byteOffsetToHead;
+
 	if (queue->capacity >= (Int32_MaxValue / 4)) {
 		Chat_AddRaw("&cToo many generic queue entries, clearing");
 		Queue_Clear(queue);

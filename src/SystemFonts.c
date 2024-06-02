@@ -289,8 +289,6 @@ size_t cc_strlen(const char* a) {
 }
 
 char* cc_strstr(const char* str, const char* substr) {
-	const char* a;
-	const char* b;
 	if (!substr[0]) return (char*)str;
 
 	for (; *str; str++) 

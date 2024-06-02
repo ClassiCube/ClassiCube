@@ -483,7 +483,7 @@ void Game_SetFpsLimit(int method) {
 }
 
 static void UpdateViewMatrix(void) {
-	Camera.Active->GetView(Entities.CurPlayer, &Gfx.View);
+	Camera.Active->GetView(&Gfx.View);
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
@@ -607,7 +607,7 @@ static CC_INLINE void Game_DrawFrame(float delta, float t) {
 	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld()) {
-		Camera.Active->GetPickedBlock(Entities.CurPlayer, &Game_SelectedPos); /* TODO: only pick when necessary */
+		Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 		Camera_KeyLookUpdate(delta);
 		InputHandler_Tick();
 
