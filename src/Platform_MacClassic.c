@@ -115,6 +115,12 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return (end - beg) / 1000;
 }
 
+void Stopwatch_Init(void) {
+    //TODO
+	cc_uint64 doSomething = Stopwatch_Measure();
+}
+
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
@@ -414,7 +420,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 
 void Platform_Init(void) {
 	printf("Macintosh ClassiCube has started to init.\n");	// Test, just to see if it's actually *running* at all.
-	Stopwatch_Measure();
+	Stopwatch_Init();
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {

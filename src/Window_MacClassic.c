@@ -31,9 +31,12 @@ void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height) {
 	Rect r = qd.screenBits.bounds;
+	/* TODO: Make less-crap method of getting center. */
+	int centerX = r.right/2;
+	int centerY = r.bottom/2;
 
 	// TODO
-    SetRect(&r, r.left + 5, r.top + 45, r.right - 5, r.bottom - 5);
+    SetRect(&r, centerX-(width/2), centerY-(height/2), centerX+(width/2), centerY+(height/2));
     win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
 	SetPort(win);
 }
