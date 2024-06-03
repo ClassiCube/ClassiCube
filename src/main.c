@@ -165,7 +165,11 @@ int main(int argc, char** argv) {
 	cc_result res;
 	SetupProgram(argc, argv);
 
-	res = RunProgram(argc, argv);
+	/* If single process mode, then the loop is launcher -> game -> launcher etc */
+	do {
+		res = RunProgram(argc, argv);
+	} while (Platform_SingleProcess && Window_Main.Exists);
+
 	Process_Exit(res);
 	return res;
 }

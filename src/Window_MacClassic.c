@@ -15,9 +15,8 @@
 #include <Fonts.h>
 #include <Events.h>
 #include <Scrap.h>
-
+#include <DiskInit.h>
 static WindowPtr win;
-static cc_bool launcherMode;
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
@@ -31,12 +30,15 @@ void Window_Init(void) {
 	InitDialogs(NULL);
 	InitCursor();
 
+	EventRecord event;
+	for (int i = 0; i < 5; i++)
+		EventAvail(everyEvent, &event);
 	FlushEvents(everyEvent, 0);
 
 	Rect r = qd.screenBits.bounds;
 	DisplayInfo.x      = r.left;
 	DisplayInfo.y      = r.top;
-	DisplayInfo.Width  = r.right - r.left; // TODO +1 or not?
+	DisplayInfo.Width  = r.right - r.left;
 	DisplayInfo.Height = r.bottom - r.top;
 
 	DisplayInfo.ScaleX = 1.0f;
@@ -46,24 +48,24 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height) {
-	Rect windR;
-	/* TODO: Make less-crap method of getting center. */
-	int middleX = Display_CentreX(width);
-	int middleY = Display_CentreY(height);
+	if (Window_Main.Exists) return;
 
-    SetRect(&windR, middleX - width / 2, middleY - height / 2, 
-					middleX + width / 2, middleY + height / 2);
-    win = NewWindow(NULL, &windR, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+	Rect r = qd.screenBits.bounds;
+    r.top += 40;
+    InsetRect(&r, 100, 100);
+
+    win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
 	SetPort(win);
+	r = win->portRect;
 	
-	Window_Main.Width   = width;
-	Window_Main.Height  = height;
+	Window_Main.Width   = r.right  - r.left;
+	Window_Main.Height  = r.bottom - r.top;
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 }
 
-void Window_Create2D(int width, int height) { launcherMode = true;	DoCreateWindow(width, height); }
-void Window_Create3D(int width, int height) { launcherMode = false;	DoCreateWindow(width, height); }
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	// TODO
@@ -111,13 +113,92 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_RequestClose(void) {
+	Event_RaiseVoid(&WindowEvents.Closing);
 	// TODO
+}
+
+
+static void HandleMouseDown(EventRecord* event) {
+	WindowPartCode part;
+	WindowPtr      window;
+	Point localPoint;
+                    
+	int x, y;
+
+	part = FindWindow(event->where, &window);
+	switch (part)
+	{
+		 case inMenuBar:
+			HiliteMenu(0);
+			break;
+		case inSysWindow:
+			SystemClick(event, window);
+			break;
+		case inContent:
+			SetPt(&localPoint, event->where.h, event->where.v);
+			GlobalToLocal(&localPoint);
+
+			x = localPoint.h;
+			y = localPoint.v;
+			Pointer_SetPosition(0, x, y);
+			Input_SetPressed(CCMOUSE_L);
+			break;
+		case inDrag:
+			DragWindow(window, event->where, &qd.screenBits.bounds);
+			break;
+		case inGoAway:
+			if (TrackGoAway(window, event->where))
+ 				Window_RequestClose();
+	}
+}
+
+
+static void HandleMouseUp(EventRecord* event) {
+	Input_SetReleased(CCMOUSE_L);
+}
+
+static void HandleKeyPress(EventRecord* event) {
+	if ((event->modifiers & cmdKey))
+		HiliteMenu(0);
 }
 
 void Window_ProcessEvents(float delta) {
 	EventRecord	event;
+	SystemTask();
 
 	while (GetNextEvent(everyEvent, &event)) {
+		switch (event.what)
+        {
+            case mouseDown:
+                HandleMouseDown(&event);
+                break;
+            case mouseUp:
+                HandleMouseUp(&event);
+                break;
+            case keyDown:
+            case autoKey:
+                HandleKeyPress(&event);
+                break;
+            case updateEvt:
+                BeginUpdate((WindowPtr)event.message);
+                EndUpdate(  (WindowPtr)event.message);
+				Event_RaiseVoid(&WindowEvents.RedrawNeeded);
+                break;
+            case diskEvt:
+                if ((event.message & 0xFFFF0000) != noErr)
+                {
+                    Point pt = { 100, 100 };
+                    DILoad();
+                    DIBadMount(pt, event.message);
+                    DIUnload();
+                }
+                break;
+            case kHighLevelEvent:
+                AEProcessAppleEvent(&event);
+                break;
+            default:
+                break;
+        }
 	}
 }
 
@@ -169,8 +250,8 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// Grab Window port.
-    GrafPtr thePort = GetWindowPort(win);
+    GrafPtr thePort = (CGrafPtr)win;
+	SetPort(win);
 	int ww = bmp->width;
 	int hh = bmp->height;
 
@@ -187,12 +268,13 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
             // Set the pixel color in the window
             RGBColor	pixelColor;
-						pixelColor.red = R * 256;
+						pixelColor.red   = R * 256;
 						pixelColor.green = G * 256;
-						pixelColor.blue = B * 256;
+						pixelColor.blue  = B * 256;
             RGBForeColor(&pixelColor);
             MoveTo(x, y);
             Line(0, 0);
+//SetCPixel(x, y, &pixelColor);
         }
     }
 }
