@@ -142,7 +142,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 
 #define GetWindowPort(w) w
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-    // Assuming 'win' is a valid window context (you need to define it)
+	// Grab Window port.
     GrafPtr thePort = GetWindowPort(win);
 	int ww = bmp->width;
 	int hh = bmp->height;
@@ -159,9 +159,9 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
             // Set the pixel color in the window
             RGBColor	pixelColor;
-						pixelColor.red = R * 255;
-						pixelColor.green = G * 255;
-						pixelColor.blue = B * 255;
+						pixelColor.red = R * 256;
+						pixelColor.green = G * 256;
+						pixelColor.blue = B * 256;
             RGBForeColor(&pixelColor);
             MoveTo(x, y);
             Line(0, 0);
