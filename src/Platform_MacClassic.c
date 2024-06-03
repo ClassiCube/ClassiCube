@@ -31,7 +31,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
 const char* Platform_AppNameSuffix = "MAC68k";
-cc_bool Platform_SingleProcess;
+cc_bool Platform_SingleProcess = true;
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -304,7 +304,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Process_OpenSupported = true;
+cc_bool Process_OpenSupported = false;
 
 static cc_result Process_RawStart(const char* path, char** argv) {
 	// TODO
