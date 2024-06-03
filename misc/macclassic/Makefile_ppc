@@ -1,10 +1,11 @@
 # path to RETRO68
 RETRO68=../Retro68-build/toolchain
 
-PREFIX=$(RETRO68)/m68k-apple-macos
-CC=$(RETRO68)/bin/m68k-apple-macos-gcc
-CXX=$(RETRO68)/bin/m68k-apple-macos-g++
+PREFIX=$(RETRO68)/powerpc-apple-macos
+CC=$(RETRO68)/bin/powerpc-apple-macos-gcc
+CXX=$(RETRO68)/bin/powerpc-apple-macos-g++
 REZ=$(RETRO68)/bin/Rez
+MakePEF=$(RETRO68)/bin/MakePEF
 
 LDFLAGS=-lRetroConsole
 RINCLUDES=$(PREFIX)/RIncludes
@@ -16,16 +17,18 @@ SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).code.bin $(BUILD_DIR)
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).pef $(BUILD_DIR)
 	$(REZ) $(REZFLAGS) \
-		--copy "$(TARGET).code.bin" \
-		"$(RINCLUDES)/Retro68APPL.r" \
+		"misc/macclassic/ppcAPPL.r" \
 		-t "APPL" -c "????" \
+		--data $(TARGET).pef \
 		-o $(TARGET).bin --cc $(TARGET).APPL --cc $(TARGET).dsk
 
-
-$(TARGET).code.bin: $(C_OBJECTS)
+$(TARGET).elf: $(C_OBJECTS)
 	$(CXX) $(C_OBJECTS) -o $@ $(LDFLAGS)	# C++ used for linking because RetroConsole needs it
+
+$(TARGET).pef: $(TARGET).elf
+	$(MakePEF) $(TARGET).elf -o $(TARGET).pef
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

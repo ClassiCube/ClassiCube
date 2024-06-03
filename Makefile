@@ -172,8 +172,10 @@ switch:
 	$(MAKE) -f misc/switch/Makefile
 os/2:
 	$(MAKE) -f misc/os2/Makefile
-macclassic:
-	$(MAKE) -f misc/macclassic/Makefile
+macclassic_68k:
+	$(MAKE) -f misc/macclassic/Makefile_68k
+macclassic_ppc:
+	$(MAKE) -f misc/macclassic/Makefile_ppc
 	
 clean:
 	$(DEL) $(OBJECTS)
