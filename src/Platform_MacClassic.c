@@ -31,7 +31,7 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
-const char* Platform_AppNameSuffix = "MAC68k";
+const char* Platform_AppNameSuffix = " MAC68k";
 cc_bool Platform_SingleProcess = true;
 
 /*########################################################################################################################*
@@ -117,14 +117,7 @@ cc_uint64 Stopwatch_Measure(void) {
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return end - beg;
-	//return (end - beg) / 1000;
 }
-
-void Stopwatch_Init(void) {
-    //TODO
-	cc_uint64 doSomething = Stopwatch_Measure();
-}
-
 
 
 /*########################################################################################################################*
@@ -144,54 +137,40 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	return ERR_NOT_SUPPORTED;
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
-	char str[NATIVE_STR_LEN];
-	String_EncodeUtf8(str, path);
-
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
-}
-
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDONLY);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, O_RDWR | O_CREAT);
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Close(cc_file file) {
-	return close(file) == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	return ERR_NOT_SUPPORTED;
 }
 
 
@@ -309,49 +288,32 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Process_OpenSupported = true;
-
-static cc_result Process_RawStart(const char* path, char** argv) {
-	// TODO
-	return ERR_NOT_SUPPORTED;
-}
-
-static cc_result Process_RawGetExePath(char* path, int* len);
-
-/*
-cc_result Process_StartGame2(const cc_string* args, int numArgs) {
-	char raw[GAME_MAX_CMDARGS][NATIVE_STR_LEN];
-	char path[NATIVE_STR_LEN];
-	int i, j, len = 0;
-	char* argv[15];
-
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-	argv[0]   = path;
-
-	for (i = 0, j = 1; i < numArgs; i++, j++) {
-		String_EncodeUtf8(raw[i], &args[i]);
-		argv[j] = raw[i];
-	}
-
-	argv[j] = NULL;
-	return Process_RawStart(path, argv);
-}
-*/
-
+cc_bool Process_OpenSupported = false;
 static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
 static int gameNumArgs;
-static cc_bool gameHasArgs;
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	int count = gameNumArgs;
+	for (int i = 0; i < count; i++) 
+	{
+		args[i] = String_FromRawArray(gameArgs[i]);
+	}
+	
+	// clear arguments so after game is closed, launcher is started
+	gameNumArgs = 0;
+	return count;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+	return 0;
+}
 
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	for (int i = 0; i < numArgs; i++) 
 	{
 		String_CopyToRawArray(gameArgs[i], &args[i]);
 	}
-	
-	Platform_LogConst("START CLASSICUBE");
-	gameHasArgs = true;
+
 	gameNumArgs = numArgs;
 	return 0;
 }
@@ -442,16 +404,10 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 }
 #endif
 
-static void Platform_InitSpecific(void) {
-	Platform_SingleProcess = true;
-}
-
 void Platform_Init(void) {
-	printf("Macintosh ClassiCube has started to init.\n");	// Test, just to see if it's actually *running* at all.
+	puts("Init phase 1");
 	Platform_LoadSysFonts();
-	Stopwatch_Init();
-
-	Platform_ReadonlyFilesystem = true;
+	puts("Init phase 2");
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
@@ -460,24 +416,5 @@ cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 
 cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	return ERR_NOT_SUPPORTED;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------Configuration-------------------------------------------------------*
-*#########################################################################################################################*/
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return 0;
 }
 #endif

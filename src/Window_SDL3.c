@@ -141,7 +141,7 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_BACKSPACE: return CCKEY_BACKSPACE;
 		case SDLK_TAB:    return CCKEY_TAB;
 		case SDLK_SPACE:  return CCKEY_SPACE;
-		case SDLK_QUOTE:  return CCKEY_QUOTE;
+		case SDLK_APOSTROPHE: return CCKEY_QUOTE;
 		case SDLK_EQUALS: return CCKEY_EQUALS;
 		case SDLK_COMMA:  return CCKEY_COMMA;
 		case SDLK_MINUS:  return CCKEY_MINUS;
@@ -151,7 +151,7 @@ static int MapNativeKey(SDL_Keycode k) {
 		case SDLK_LEFTBRACKET:  return CCKEY_LBRACKET;
 		case SDLK_BACKSLASH:    return CCKEY_BACKSLASH;
 		case SDLK_RIGHTBRACKET: return CCKEY_RBRACKET;
-		case SDLK_BACKQUOTE:    return CCKEY_TILDE;
+		case SDLK_GRAVE:        return CCKEY_TILDE;
 		case SDLK_CAPSLOCK:     return CCKEY_CAPSLOCK;
 		case SDLK_PRINTSCREEN: return CCKEY_PRINTSCREEN;
 		case SDLK_SCROLLLOCK:  return CCKEY_SCROLLLOCK;

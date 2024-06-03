@@ -120,6 +120,8 @@ TestResult.xml
 [Rr]eleasePS/
 dlldata.c
 
+retro68scripts/
+
 *_i.c
 *_p.c
 *_i.h

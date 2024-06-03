@@ -24,14 +24,17 @@ static cc_bool launcherMode;
 *#########################################################################################################################*/
 void Window_PreInit(void) { }
 void Window_Init(void) {
+	puts("Init phase 3");
 	InitGraf(&qd.thePort);
 	InitFonts();
 	InitWindows();
 	InitMenus();
 	InitDialogs(NULL);
 	InitCursor();
+	puts("Init phase 4");
 
 	FlushEvents(everyEvent, 0);
+	puts("Init phase 5");
 
 	Rect r = qd.screenBits.bounds;
 	DisplayInfo.x      = r.left;
@@ -41,6 +44,7 @@ void Window_Init(void) {
 
 	DisplayInfo.ScaleX = 1.0f;
 	DisplayInfo.ScaleY = 1.0f;
+	puts("Init phase 6");
 }
 
 void Window_Free(void) { }
