@@ -33,8 +33,26 @@ cc_bool Platform_SingleProcess = true;
 /*########################################################################################################################*
 *---------------------------------------------------Imported headers------------------------------------------------------*
 *#########################################################################################################################*/
+// On 68k these are implemented using direct 68k opcodes
+// On PPC these are implemented using function calls
+#if TARGET_CPU_68K
+	#define MAC_SYSAPI(_type) static _type
+    #define MAC_ONEWORDINLINE(w1)           = w1
+    #define MAC_TWOWORDINLINE(w1,w2)        = {w1, w2}
+    #define MAC_THREEWORDINLINE(w1,w2,w3)   = {w1, w2, w3}
+    #define MAC_FOURWORDINLINE(w1,w2,w3,w4) = {w1, w2, w3, w4}
+#else
+	#define MAC_SYSAPI(_type) extern pascal _type
+    #define MAC_ONEWORDINLINE(w1)
+    #define MAC_TWOWORDINLINE(w1,w2)
+    #define MAC_THREEWORDINLINE(w1,w2,w3)
+    #define MAC_FOURWORDINLINE(w1,w2,w3,w4)
+#endif
+typedef unsigned long MAC_FourCharCode;
+
+// ==================================== IMPORTS FROM TIMER.H ====================================
 // Availability: in InterfaceLib 7.1 and later
-static void Microseconds(UnsignedWide* microTickCount) FOURWORDINLINE(0xA193, 0x225F, 0x22C8, 0x2280);
+MAC_SYSAPI(void) Microseconds(UnsignedWide* microTickCount) MAC_FOURWORDINLINE(0xA193, 0x225F, 0x22C8, 0x2280);
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
