@@ -14,6 +14,8 @@
 #include <Dialogs.h>
 #include <Fonts.h>
 static WindowPtr win;
+Rect r;
+BitMap bitmapScreen;
 
 
 /*########################################################################################################################*
@@ -21,6 +23,10 @@ static WindowPtr win;
 *#########################################################################################################################*/
 void Window_PreInit(void) { }
 void Window_Init(void) {
+	DisplayInfo.Width  = 320;
+	DisplayInfo.Height = 200;
+	Window_Main.Exists  = true;
+
 	InitGraf(&qd.thePort);
     InitFonts();
     InitWindows();
@@ -30,10 +36,11 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height) {
-	Rect r = qd.screenBits.bounds;
+	r = qd.screenBits.bounds;
 	/* TODO: Make less-crap method of getting center. */
 	int centerX = r.right/2;	int centerY = r.bottom/2;
 	int ww = (width/2);			int hh = (height/2);
+	SetRect(&bitmapScreen.bounds, 0, 0, width, height);
 
 	// TODO
     SetRect(&r, centerX-ww, centerY-hh, centerX+ww, centerY+hh);
@@ -122,7 +129,12 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 }
 
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// TODO
+    // Create a Rect to cover the entire image
+    Rect rectngl;
+    SetRect(&rectngl, 0, 0, bmp->width, bmp->height);
+
+	// Now copy the bits to the display.
+    CopyBits(&bmp->scan0, &win->portBits, &bitmapScreen.bounds, &rectngl, srcCopy, NULL);
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
