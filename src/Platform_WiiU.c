@@ -202,7 +202,7 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	static cc_uint8 modes[] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 

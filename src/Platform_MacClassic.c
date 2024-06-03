@@ -11,18 +11,14 @@
 #include "Errors.h"
 #include "PackedCol.h"
 #include <errno.h>
-#include <time.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 
 #undef true
 #undef false
 #include <MacMemory.h>
+#include <Processes.h>
+#include <Files.h>
 #include <Timer.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -76,21 +72,34 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
+ssize_t _consolewrite(int fd, const void *buf, size_t count);
+
 void Platform_Log(const char* msg, int len) {
-	//write(STDOUT_FILENO, msg,  len);
-	//write(STDOUT_FILENO, "\n",   1);
+	_consolewrite(0, msg,  len);
+	_consolewrite(0, "\n",   1);
+}
+
+// classic macOS uses an epoch of 1904
+#define EPOCH_ADJUSTMENT 2082866400UL
+
+static void gettod(struct timeval *tp) {
+    unsigned long secs;
+    GetDateTime(&secs);
+
+	tp->tv_sec  = secs - EPOCH_ADJUSTMENT;
+	tp->tv_usec = 0;
 }
 
 TimeMS DateTime_CurrentUTC(void) {
 	struct timeval cur;
-	gettimeofday(&cur, NULL);
+	gettod(&cur);
 	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
 	struct timeval cur;
 	struct tm loc_time;
-	gettimeofday(&cur, NULL);
+	gettod(&cur);
 	localtime_r(&cur.tv_sec, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
@@ -150,11 +159,19 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	return ERR_NOT_SUPPORTED;
+	long cnt = count;
+    int res  = FSRead(file, &cnt, data);
+
+	*bytesRead = cnt;
+	return res;
 }
 
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	return ERR_NOT_SUPPORTED;
+	long cnt = count;
+    int res  = FSWrite(file, &cnt, data);
+
+	*bytesWrote = cnt;
+	return res;
 }
 
 cc_result File_Close(cc_file file) {
@@ -162,7 +179,9 @@ cc_result File_Close(cc_file file) {
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
-	return ERR_NOT_SUPPORTED;
+	static cc_uint8 modes[] = { fsFromStart, fsFromMark, fsFromLEOF };
+	SetFPos(file, modes[seekType], offset);
+	return 0;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
@@ -318,13 +337,12 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	return 0;
 }
 
-void Process_Exit(cc_result code) { exit(code); }
-
-cc_result Process_StartOpen(const cc_string* args) {
-	return ERR_NOT_SUPPORTED;
+void Process_Exit(cc_result code) { 
+	ExitToShell();
+    for(;;) { }
 }
 
-static cc_result Process_RawGetExePath(char* path, int* len) {
+cc_result Process_StartOpen(const cc_string* args) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -377,37 +395,13 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 *#########################################################################################################################*/
 void Platform_Free(void) { }
 
-#ifdef CC_BUILD_IRIX
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	const char* err = strerror(res);
-	if (!err || res >= 1000) return false;
-
-	String_AppendUtf8(dst, err, String_Length(err));
-	return true;
+	// TODO
+	return false;
 }
-#else
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	char chars[NATIVE_STR_LEN];
-	int len;
-
-	/* For unrecognised error codes, strerror_r might return messages */
-	/*  such as 'No error information', which is not very useful */
-	/* (could check errno here but quicker just to skip entirely) */
-	if (res >= 1000) return false;
-
-	len = strerror_r(res, chars, NATIVE_STR_LEN);
-	if (len == -1) return false;
-
-	len = String_CalcLen(chars, NATIVE_STR_LEN);
-	String_AppendUtf8(dst, chars, len);
-	return true;
-}
-#endif
 
 void Platform_Init(void) {
-	puts("Init phase 1");
 	Platform_LoadSysFonts();
-	puts("Init phase 2");
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
