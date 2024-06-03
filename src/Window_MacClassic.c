@@ -13,14 +13,34 @@
 #include <Quickdraw.h>
 #include <Dialogs.h>
 #include <Fonts.h>
+#include <Events.h>
 static WindowPtr win;
+Rect r;
+BitMap bitmapScreen;
 
+#define SCREEN_WIDTH    320
+#define SCREEN_HEIGHT   224
+static cc_bool launcherMode = true;
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 void Window_PreInit(void) { }
 void Window_Init(void) {
+	DisplayInfo.Width  = SCREEN_WIDTH;
+	DisplayInfo.Height = SCREEN_HEIGHT;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
+	
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
+	Window_Main.Focused = true;
+	Window_Main.Exists  = true;
+	
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 10;
+
 	InitGraf(&qd.thePort);
     InitFonts();
     InitWindows();
@@ -30,16 +50,21 @@ void Window_Init(void) {
 void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height) {
-	Rect r = qd.screenBits.bounds;
+	r = qd.screenBits.bounds;
+	Rect windR;
+	/* TODO: Make less-crap method of getting center. */
+	int centerX = r.right/2;	int centerY = r.bottom/2;
+	int ww = (SCREEN_WIDTH/2);			int hh = (SCREEN_HEIGHT/2);
+	SetRect(&bitmapScreen.bounds, 0, 0, width, height);
 
 	// TODO
-    SetRect(&r, r.left + 5, r.top + 45, r.right - 5, r.bottom - 5);
-    win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+    SetRect(&windR, centerX-ww, centerY-hh, centerX+ww, centerY+hh);
+    win = NewWindow(NULL, &windR, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
 	SetPort(win);
 }
 
-void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
-void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create2D(int width, int height) { launcherMode=true;	DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { launcherMode=false;	DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	// TODO
@@ -86,7 +111,20 @@ void Window_ProcessEvents(float delta) {
 	// TODO
 }
 
-void Window_ProcessGamepads(float delta) { }
+short isPressed(unsigned short k) {
+	unsigned char km[16];
+
+	GetKeys((long *)km);
+	return ((km[k>>3] >> (k&7) ) &1);
+}
+
+int theKeys;
+void Window_ProcessGamepads(float delta) {
+	GetKeys(theKeys);
+	Gamepad_SetButton(0, CCPAD_UP,			isPressed(0x0D));
+	Gamepad_SetButton(0, CCPAD_DOWN,		isPressed(0x01));
+	Gamepad_SetButton(0, CCPAD_START,		isPressed(0x24));
+}
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	// TODO
@@ -118,8 +156,34 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
+#define GetWindowPort(w) w
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-	// TODO
+	// Grab Window port.
+    GrafPtr thePort = GetWindowPort(win);
+	int ww = bmp->width;
+	int hh = bmp->height;
+
+    // Iterate through each pixel
+    for (int y = r.y; y < r.y + r.height; ++y) {
+        BitmapCol* row = Bitmap_GetRow(bmp, y);
+        for (int x = r.x; x < r.x + r.width; ++x) {
+
+            // TODO optimise
+            BitmapCol	col = row[x];
+						cc_uint8 R = BitmapCol_R(col);
+						cc_uint8 G = BitmapCol_G(col);
+						cc_uint8 B = BitmapCol_B(col);
+
+            // Set the pixel color in the window
+            RGBColor	pixelColor;
+						pixelColor.red = R * 256;
+						pixelColor.green = G * 256;
+						pixelColor.blue = B * 256;
+            RGBForeColor(&pixelColor);
+            MoveTo(x, y);
+            Line(0, 0);
+        }
+    }
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {

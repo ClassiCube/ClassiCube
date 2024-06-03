@@ -30,8 +30,8 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
-const char* Platform_AppNameSuffix = "";
-cc_bool Platform_SingleProcess;
+const char* Platform_AppNameSuffix = "MAC68k";
+cc_bool Platform_SingleProcess = true;
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -76,8 +76,8 @@ void Mem_Free(void* mem) {
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	//write(STDOUT_FILENO, msg,  len);
+	//write(STDOUT_FILENO, "\n",   1);
 }
 
 TimeMS DateTime_CurrentUTC(void) {
@@ -114,6 +114,12 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return (end - beg) / 1000;
 }
+
+void Stopwatch_Init(void) {
+    //TODO
+	cc_uint64 doSomething = Stopwatch_Measure();
+}
+
 
 
 /*########################################################################################################################*
@@ -188,7 +194,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) { 
-// TODO Delay API
+	// TODO Delay API
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
@@ -307,6 +313,7 @@ static cc_result Process_RawStart(const char* path, char** argv) {
 
 static cc_result Process_RawGetExePath(char* path, int* len);
 
+/*
 cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	char raw[GAME_MAX_CMDARGS][NATIVE_STR_LEN];
 	char path[NATIVE_STR_LEN];
@@ -326,6 +333,24 @@ cc_result Process_StartGame2(const cc_string* args, int numArgs) {
 	argv[j] = NULL;
 	return Process_RawStart(path, argv);
 }
+*/
+
+static char gameArgs[GAME_MAX_CMDARGS][STRING_SIZE];
+static int gameNumArgs;
+static cc_bool gameHasArgs;
+
+cc_result Process_StartGame2(const cc_string* args, int numArgs) {
+	for (int i = 0; i < numArgs; i++) 
+	{
+		String_CopyToRawArray(gameArgs[i], &args[i]);
+	}
+	
+	Platform_LogConst("START CLASSICUBE");
+	gameHasArgs = true;
+	gameNumArgs = numArgs;
+	return 0;
+}
+
 void Process_Exit(cc_result code) { exit(code); }
 
 cc_result Process_StartOpen(const cc_string* args) {
@@ -412,8 +437,16 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 }
 #endif
 
-void Platform_Init(void) {
+static void Platform_InitSpecific(void) {
+	Platform_SingleProcess = true;
+}
 
+void Platform_Init(void) {
+	printf("Macintosh ClassiCube has started to init.\n");	// Test, just to see if it's actually *running* at all.
+	Platform_LoadSysFonts();
+	Stopwatch_Init();
+
+	Platform_ReadonlyFilesystem = true;
 }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
