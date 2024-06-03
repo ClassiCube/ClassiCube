@@ -13,6 +13,7 @@
 #include <Quickdraw.h>
 #include <Dialogs.h>
 #include <Fonts.h>
+#include <Events.h>
 static WindowPtr win;
 Rect r;
 BitMap bitmapScreen;
@@ -36,6 +37,7 @@ void Window_Init(void) {
 	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
 	
+	Input.Sources = INPUT_SOURCE_GAMEPAD;
 	DisplayInfo.ContentOffsetX = 10;
 	DisplayInfo.ContentOffsetY = 10;
 
@@ -61,8 +63,8 @@ static void DoCreateWindow(int width, int height) {
 	SetPort(win);
 }
 
-void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
-void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create2D(int width, int height) { launcherMode=true;	DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { launcherMode=false;	/*DoCreateWindow(width, height);*/ }
 
 void Window_SetTitle(const cc_string* title) {
 	// TODO
@@ -109,7 +111,20 @@ void Window_ProcessEvents(float delta) {
 	// TODO
 }
 
-void Window_ProcessGamepads(float delta) { }
+short isPressed(unsigned short k) {
+	unsigned char km[16];
+
+	GetKeys((long *)km);
+	return ((km[k>>3] >> (k&7) ) &1);
+}
+
+int theKeys;
+void Window_ProcessGamepads(float delta) {
+	GetKeys(theKeys);
+	Gamepad_SetButton(0, CCPAD_UP,			isPressed(0x0D));
+	Gamepad_SetButton(0, CCPAD_DOWN,		isPressed(0x01));
+	Gamepad_SetButton(0, CCPAD_START,		isPressed(0x24));
+}
 
 static void Cursor_GetRawPos(int* x, int* y) {
 	// TODO
@@ -152,11 +167,12 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
     for (int y = r.y; y < r.y + r.height; ++y) {
         BitmapCol* row = Bitmap_GetRow(bmp, y);
         for (int x = r.x; x < r.x + r.width; ++x) {
+
             // TODO optimise
-            BitmapCol col = row[x];
-            cc_uint8 R = BitmapCol_R(col);
-            cc_uint8 G = BitmapCol_G(col);
-            cc_uint8 B = BitmapCol_B(col);
+            BitmapCol	col = row[x];
+						cc_uint8 R = BitmapCol_R(col);
+						cc_uint8 G = BitmapCol_G(col);
+						cc_uint8 B = BitmapCol_B(col);
 
             // Set the pixel color in the window
             RGBColor	pixelColor;
