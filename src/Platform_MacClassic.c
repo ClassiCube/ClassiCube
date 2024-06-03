@@ -23,6 +23,7 @@
 #undef true
 #undef false
 #include <MacMemory.h>
+#include <Timer.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -107,12 +108,16 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 #define NS_PER_SEC 1000000000ULL
 
 cc_uint64 Stopwatch_Measure(void) {
-	return clock();
+	//return TickCount();
+	UnsignedWide count;
+	Microseconds(&count);
+	return (cc_uint64)count.lo | ((cc_uint64)count.hi << 32);
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
-	return (end - beg) / 1000;
+	return end - beg;
+	//return (end - beg) / 1000;
 }
 
 void Stopwatch_Init(void) {

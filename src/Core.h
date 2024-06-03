@@ -220,6 +220,7 @@ typedef cc_uint8  cc_bool;
 	#define CC_BUILD_MACCLASSIC
 	#define CC_BUILD_HTTPCLIENT
 	#define CC_BUILD_OPENAL
+	#define CC_BUILD_COOPTHREADED
 #elif defined __sun__
 	#define CC_BUILD_SOLARIS
 	#define CC_BUILD_POSIX
