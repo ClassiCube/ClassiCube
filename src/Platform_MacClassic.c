@@ -304,7 +304,7 @@ cc_result Socket_CheckWritable(cc_socket s, cc_bool* writable) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Process_OpenSupported = false;
+cc_bool Process_OpenSupported = true;
 
 static cc_result Process_RawStart(const char* path, char** argv) {
 	// TODO

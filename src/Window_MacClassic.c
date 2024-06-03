@@ -64,7 +64,7 @@ static void DoCreateWindow(int width, int height) {
 }
 
 void Window_Create2D(int width, int height) { launcherMode=true;	DoCreateWindow(width, height); }
-void Window_Create3D(int width, int height) { launcherMode=false;	/*DoCreateWindow(width, height);*/ }
+void Window_Create3D(int width, int height) { launcherMode=false;	DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	// TODO
