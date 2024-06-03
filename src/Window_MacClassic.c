@@ -20,7 +20,7 @@ BitMap bitmapScreen;
 
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   224
-static cc_bool launcherMode;
+static cc_bool launcherMode = true;
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
