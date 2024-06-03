@@ -49,14 +49,15 @@ void Window_Free(void) { }
 
 static void DoCreateWindow(int width, int height) {
 	r = qd.screenBits.bounds;
+	Rect windR;
 	/* TODO: Make less-crap method of getting center. */
 	int centerX = r.right/2;	int centerY = r.bottom/2;
-	int ww = (width/2);			int hh = (height/2);
+	int ww = (SCREEN_WIDTH/2);			int hh = (SCREEN_HEIGHT/2);
 	SetRect(&bitmapScreen.bounds, 0, 0, width, height);
 
 	// TODO
-    SetRect(&r, centerX-ww, centerY-hh, centerX+ww, centerY+hh);
-    win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+    SetRect(&windR, centerX-ww, centerY-hh, centerX+ww, centerY+hh);
+    win = NewWindow(NULL, &windR, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
 	SetPort(win);
 }
 
