@@ -14,9 +14,19 @@
 #include <Dialogs.h>
 #include <Fonts.h>
 #include <Events.h>
-#include <Scrap.h>
 #include <DiskInit.h>
 static WindowPtr win;
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Imported headers------------------------------------------------------*
+*#########################################################################################################################*/
+
+// Availability: in InterfaceLib 7.1 and later
+static long GetScrap(Handle dst, FourCharCode type, SInt32* offset)         ONEWORDINLINE(0xA9FD);
+// Availability: in InterfaceLib 7.1 and later
+static OSStatus PutScrap(SInt32 srcLen, FourCharCode type, const void* src) ONEWORDINLINE(0xA9FE);
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*

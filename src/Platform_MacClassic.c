@@ -19,7 +19,6 @@
 #include <MacMemory.h>
 #include <Processes.h>
 #include <Files.h>
-#include <Timer.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -29,6 +28,13 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
 const char* Platform_AppNameSuffix = " MAC68k";
 cc_bool Platform_SingleProcess = true;
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Imported headers------------------------------------------------------*
+*#########################################################################################################################*/
+// Availability: in InterfaceLib 7.1 and later
+static void Microseconds(UnsignedWide* microTickCount) FOURWORDINLINE(0xA193, 0x225F, 0x22C8, 0x2280);
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
