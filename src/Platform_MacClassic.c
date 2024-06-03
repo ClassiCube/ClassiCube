@@ -30,7 +30,7 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
-const char* Platform_AppNameSuffix = "";
+const char* Platform_AppNameSuffix = "MAC68k";
 cc_bool Platform_SingleProcess;
 
 /*########################################################################################################################*
@@ -194,7 +194,7 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) { 
-// TODO Delay API
+	// TODO Delay API
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
@@ -420,6 +420,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 
 void Platform_Init(void) {
 	printf("Macintosh ClassiCube has started to init.\n");	// Test, just to see if it's actually *running* at all.
+	Platform_LoadSysFonts();
 	Stopwatch_Init();
 }
 

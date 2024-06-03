@@ -17,15 +17,27 @@ static WindowPtr win;
 Rect r;
 BitMap bitmapScreen;
 
+#define SCREEN_WIDTH    320
+#define SCREEN_HEIGHT   224
+static cc_bool launcherMode;
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 void Window_PreInit(void) { }
 void Window_Init(void) {
-	DisplayInfo.Width  = 320;
-	DisplayInfo.Height = 200;
+	DisplayInfo.Width  = SCREEN_WIDTH;
+	DisplayInfo.Height = SCREEN_HEIGHT;
+	DisplayInfo.ScaleX = 0.5f;
+	DisplayInfo.ScaleY = 0.5f;
+	
+	Window_Main.Width   = DisplayInfo.Width;
+	Window_Main.Height  = DisplayInfo.Height;
+	Window_Main.Focused = true;
 	Window_Main.Exists  = true;
+	
+	DisplayInfo.ContentOffsetX = 10;
+	DisplayInfo.ContentOffsetY = 10;
 
 	InitGraf(&qd.thePort);
     InitFonts();
@@ -128,13 +140,33 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 }
 
+#define GetWindowPort(w) w
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-    // Create a Rect to cover the entire image
-    Rect rectngl;
-    SetRect(&rectngl, 0, 0, bmp->width, bmp->height);
+    // Assuming 'win' is a valid window context (you need to define it)
+    GrafPtr thePort = GetWindowPort(win);
+	int ww = bmp->width;
+	int hh = bmp->height;
 
-	// Now copy the bits to the display.
-    CopyBits(&bmp->scan0, &win->portBits, &bitmapScreen.bounds, &rectngl, srcCopy, NULL);
+    // Iterate through each pixel
+    for (int y = r.y; y < r.y + r.height; ++y) {
+        BitmapCol* row = Bitmap_GetRow(bmp, y);
+        for (int x = r.x; x < r.x + r.width; ++x) {
+            // TODO optimise
+            BitmapCol col = row[x];
+            cc_uint8 R = BitmapCol_R(col);
+            cc_uint8 G = BitmapCol_G(col);
+            cc_uint8 B = BitmapCol_B(col);
+
+            // Set the pixel color in the window
+            RGBColor	pixelColor;
+						pixelColor.red = R * 255;
+						pixelColor.green = G * 255;
+						pixelColor.blue = B * 255;
+            RGBForeColor(&pixelColor);
+            MoveTo(x, y);
+            Line(0, 0);
+        }
+    }
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
