@@ -402,7 +402,7 @@ static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
 			int A = PackedCol_A(fragColor);
 
 			if (gfx_alphaBlend) {
-				PackedCol dst = colorBuffer[index];
+				BitmapCol dst = colorBuffer[index];
 				int dstR = BitmapCol_R(dst);
 				int dstG = BitmapCol_G(dst);
 				int dstB = BitmapCol_B(dst);

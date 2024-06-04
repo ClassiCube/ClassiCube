@@ -738,6 +738,5 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 }
 void GLContext_GetApiInfo(cc_string* info) { }
 #endif // CC_GFX_BACKEND == CC_GFX_BACKEND_GL && !CC_BUILD_EGL
-#endif // CC_WIN_BACKEND == CC_WIN_BACKEND_BEOS
 
 #endif
