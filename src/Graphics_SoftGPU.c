@@ -5,10 +5,10 @@
 #include "Window.h"
 
 static cc_bool faceCulling;
-static int width, height; 
+static int fb_width, fb_height; 
 static struct Bitmap fb_bmp;
 static float vp_hwidth, vp_hheight;
-static int sc_maxX, sc_maxY;
+static int fb_maxX, fb_maxY;
 
 static PackedCol* colorBuffer;
 static PackedCol clearColor;
@@ -63,6 +63,7 @@ typedef struct CCTexture {
 static CCTexture* curTexture;
 static BitmapCol* curTexPixels;
 static int curTexWidth, curTexHeight;
+static int texWidthMask, texHeightMask;
 		
 void Gfx_BindTexture(GfxResourceID texId) {
 	if (!texId) texId = white_square;
@@ -72,6 +73,9 @@ void Gfx_BindTexture(GfxResourceID texId) {
 	curTexPixels = tex->pixels;
 	curTexWidth  = tex->width;
 	curTexHeight = tex->height;
+
+	texWidthMask  = (1 << Math_ilog2(tex->width))  - 1;
+	texHeightMask = (1 << Math_ilog2(tex->height)) - 1;
 }
 		
 void Gfx_DeleteTexture(GfxResourceID* texId) {
@@ -123,7 +127,7 @@ static void SetAlphaBlend(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearBuffers(GfxBuffers buffers) {
-	int i, size = width * height;
+	int i, size = fb_width * fb_height;
 
 	if (buffers & GFX_BUFFER_COLOR) {
 		for (i = 0; i < size; i++) colorBuffer[i] = clearColor;
@@ -275,35 +279,39 @@ void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, f
 /*########################################################################################################################*
 *---------------------------------------------------------Rendering-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct Vector4 { float x, y, z, w; } Vector4;
 typedef struct Vector3 { float x, y, z; } Vector3;
 typedef struct Vector2 { float x, y; } Vector2;
+typedef struct Vertex_ {
+	float x, y, z, w;
+	float u, v;
+	PackedCol c;
+} Vertex;
 
-static void TransformVertex(int index, Vector4* frag, Vector2* uv, PackedCol* color) {
+static void TransformVertex(int index, Vertex* vertex) {
 	// TODO: avoid the multiply, just add down in DrawTriangles
 	char* ptr = (char*)gfx_vertices + index * gfx_stride;
 	Vector3* pos = (Vector3*)ptr;
 
-	Vector4 coord;
+	struct Vec4 coord;
 	coord.x = pos->x * mvp.row1.x + pos->y * mvp.row2.x + pos->z * mvp.row3.x + mvp.row4.x;
 	coord.y = pos->x * mvp.row1.y + pos->y * mvp.row2.y + pos->z * mvp.row3.y + mvp.row4.y;
 	coord.z = pos->x * mvp.row1.z + pos->y * mvp.row2.z + pos->z * mvp.row3.z + mvp.row4.z;
 	coord.w = pos->x * mvp.row1.w + pos->y * mvp.row2.w + pos->z * mvp.row3.w + mvp.row4.w;
 
 	float invW = 1.0f / coord.w;
-	frag->x = vp_hwidth  * (1 + coord.x * invW);
-	frag->y = vp_hheight * (1 - coord.y * invW);
-	frag->z = coord.z * invW;
-	frag->w = invW;
+	vertex->x = vp_hwidth  * (1 + coord.x * invW);
+	vertex->y = vp_hheight * (1 - coord.y * invW);
+	vertex->z = coord.z * invW;
+	vertex->w = invW;
 
 	if (gfx_format != VERTEX_FORMAT_TEXTURED) {
 		struct VertexColoured* v = (struct VertexColoured*)ptr;
-		*color = v->Col;
+		vertex->c = v->Col;
 	} else {
 		struct VertexTextured* v = (struct VertexTextured*)ptr;
-		*color = v->Col;
-		uv->x  = (v->U + texOffsetX) * invW;
-		uv->y  = (v->V + texOffsetY) * invW;
+		vertex->u = (v->U + texOffsetX) * invW;
+		vertex->v = (v->V + texOffsetY) * invW;
+		vertex->c = v->Col;
 	}
 }
 	
@@ -319,11 +327,10 @@ static int MultiplyColours(PackedCol vColor, BitmapCol tColor) {
 	return PackedCol_Make(r, g, b, a);
 }
 
-static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
-						Vector2 uv1, Vector2 uv2, Vector2 uv3, PackedCol color) {
-	int x1 = (int)frag1.x, y1 = (int)frag1.y;
-	int x2 = (int)frag2.x, y2 = (int)frag2.y;
-	int x3 = (int)frag3.x, y3 = (int)frag3.y;
+static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
+	int x1 = (int)frag1->x, y1 = (int)frag1->y;
+	int x2 = (int)frag2->x, y2 = (int)frag2->y;
+	int x3 = (int)frag3->x, y3 = (int)frag3->y;
 	int minX = min(x1, min(x2, x3));
 	int minY = min(y1, min(y2, y3));
 	int maxX = max(x1, max(x2, x3));
@@ -337,18 +344,24 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 	}
 
 	// Reject triangles completely outside
-	if (minX < 0 && maxX < 0 || minX >= width  && maxX >= width ) return;
-	if (minY < 0 && maxY < 0 || minY >= height && maxY >= height) return;
+	if ((minX < 0 && maxX < 0) || (minX > fb_maxX && maxX > fb_maxX)) return;
+	if ((minY < 0 && maxY < 0) || (minY > fb_maxY && maxY > fb_maxY)) return;
 
 	// Perform scissoring
-	minX = max(minX, 0); maxX = min(maxX, sc_maxX);
-	minY = max(minY, 0); maxY = min(maxY, sc_maxY);
+	minX = max(minX, 0); maxX = min(maxX, fb_maxX);
+	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
 
 	// NOTE: W in frag variables below is actually 1/W 
 	float factor = 1.0f / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+	float w1 = frag1->w, w2 = frag2->w, w3 = frag3->w;
 	
 	// TODO proper clipping
-	if (frag1.w <= 0 || frag2.w <= 0 || frag3.w <= 0) return;
+	if (w1 <= 0 || w2 <= 0 || w3 <= 0) return;
+
+	float z1 = frag1->z, z2 = frag2->z, z3 = frag3->z;
+	float u1 = frag1->u, u2 = frag2->u, u3 = frag3->u;
+	float v1 = frag1->v, v2 = frag2->v, v3 = frag3->v;
+	PackedCol color = frag1->c;
 	
 	for (int y = minY; y <= maxY; y++) {
 		float yy = y + 0.5f;
@@ -362,9 +375,9 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 			float ic2 = 1.0f - ic0 - ic1;
 			if (ic2 < 0 || ic2 > 1) continue;
 
-			int index = y * width + x;
-			float w = 1 / (ic0 * frag1.w + ic1 * frag2.w + ic2 * frag3.w);
-			float z = (ic0 * frag1.z + ic1 * frag2.z + ic2 * frag3.z) * w;
+			int index = y * fb_width + x;
+			float w = 1 / (ic0 * w1 + ic1 * w2 + ic2 * w3);
+			float z = (ic0 * z1 + ic1 * z2 + ic2 * z3) * w;
 
 			if (depthTest && (z < 0 || z > depthBuffer[index])) continue;
 			if (!colWrite) {
@@ -374,10 +387,10 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 
 			PackedCol fragColor = color;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-				float u = (ic0 * uv1.x + ic1 * uv2.x + ic2 * uv3.x) * w;
-				float v = (ic0 * uv1.y + ic1 * uv2.y + ic2 * uv3.y) * w;
-				int texX = ((int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth )) % curTexWidth; // TODO avoid slow %
-				int texY = ((int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight)) % curTexHeight;
+				float u = (ic0 * u1 + ic1 * u2 + ic2 * u3) * w;
+				float v = (ic0 * v1 + ic1 * v2 + ic2 * v3) * w;
+				int texX = ((int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth )) & texWidthMask;
+				int texY = ((int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight)) & texHeightMask;
 				int texIndex = texY * curTexWidth + texX;
 
 				fragColor = MultiplyColours(fragColor, curTexPixels[texIndex]);
@@ -407,24 +420,19 @@ static void DrawTriangle(Vector4 frag1, Vector4 frag2, Vector4 frag3,
 }
 
 void DrawQuads(int startVertex, int verticesCount) {
-	Vector4 frag[4];
-	Vector2 uv[4];
-	PackedCol color[4];
+	Vertex vertices[4];
 	int j = startVertex;
 
 	// 4 vertices = 1 quad = 2 triangles
 	for (int i = 0; i < verticesCount / 4; i++, j += 4)
 	{
-		TransformVertex(j + 0, &frag[0], &uv[0], &color[0]);
-		TransformVertex(j + 1, &frag[1], &uv[1], &color[1]);
-		TransformVertex(j + 2, &frag[2], &uv[2], &color[2]);
-		TransformVertex(j + 3, &frag[3], &uv[3], &color[3]);
+		TransformVertex(j + 0, &vertices[0]);
+		TransformVertex(j + 1, &vertices[1]);
+		TransformVertex(j + 2, &vertices[2]);
+		TransformVertex(j + 3, &vertices[3]);
 
-		DrawTriangle(frag[0], frag[1], frag[2], 
-					uv[0], uv[1], uv[2], color[0]);
-
-		DrawTriangle(frag[2], frag[3], frag[0],
-					uv[2], uv[3], uv[0], color[2]);
+		DrawTriangle(&vertices[0], &vertices[1], &vertices[2]);
+		DrawTriangle(&vertices[2], &vertices[3], &vertices[0]);
 	}
 }
 
@@ -453,7 +461,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *#########################################################################################################################*/
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	struct Bitmap bmp;
-	Bitmap_Init(bmp, width, height, colorBuffer);
+	Bitmap_Init(bmp, fb_width, fb_height, colorBuffer);
 	return Png_Encode(&bmp, output, NULL, false, NULL);
 }
 
@@ -464,7 +472,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 void Gfx_BeginFrame(void) { }
 
 void Gfx_EndFrame(void) {
-	Rect2D r = { 0, 0, width, height };
+	Rect2D r = { 0, 0, fb_width, fb_height };
 	Window_DrawFramebuffer(r, &fb_bmp);
 }
 
@@ -476,17 +484,17 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 void Gfx_OnWindowResize(void) {
 	if (depthBuffer) DestroyBuffers();
 
-	fb_bmp.width  = width  = Game.Width;
-	fb_bmp.height = height = Game.Height;
+	fb_bmp.width  = fb_width  = Game.Width;
+	fb_bmp.height = fb_height = Game.Height;
 
-	vp_hwidth  = width  / 2.0f;
-	vp_hheight = height / 2.0f;
+	vp_hwidth  = fb_width  / 2.0f;
+	vp_hheight = fb_height / 2.0f;
 
-	sc_maxX = width  - 1;
-	sc_maxY = height - 1;
+	fb_maxX = fb_width  - 1;
+	fb_maxY = fb_height - 1;
 
 	Window_AllocFramebuffer(&fb_bmp);
-	depthBuffer = Mem_Alloc(width * height, 4, "depth buffer");
+	depthBuffer = Mem_Alloc(fb_width * fb_height, 4, "depth buffer");
 	colorBuffer = fb_bmp.scan0;
 }
 
