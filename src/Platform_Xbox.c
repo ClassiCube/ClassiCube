@@ -261,7 +261,7 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	RtlInitializeCriticalSection(ptr);
 	return ptr;
@@ -280,7 +280,7 @@ void Mutex_Unlock(void* handle) {
 	RtlLeaveCriticalSection((CRITICAL_SECTION*)handle); 
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	HANDLE handle;
 	NTSTATUS status = NtCreateEvent(&handle, NULL, SynchronizationEvent, false);
 

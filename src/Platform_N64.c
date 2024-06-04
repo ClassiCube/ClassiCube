@@ -180,7 +180,7 @@ void Thread_Detach(void* handle) {
 void Thread_Join(void* handle) {
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	return NULL;
 }
 
@@ -193,7 +193,7 @@ void Mutex_Lock(void* handle) {
 void Mutex_Unlock(void* handle) {
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	return NULL;
 }
 

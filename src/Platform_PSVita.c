@@ -222,9 +222,9 @@ void Thread_Join(void* handle) {
 	sceKernelDeleteThread((int)handle);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	SceKernelLwMutexWork* ptr = (SceKernelLwMutexWork*)Mem_Alloc(1, sizeof(SceKernelLwMutexWork), "mutex");
-	int res = sceKernelCreateLwMutex(ptr, "CC mutex", 0, 0, NULL);
+	int res = sceKernelCreateLwMutex(ptr, name, 0, 0, NULL);
 	if (res) Logger_Abort2(res, "Creating mutex");
 	return ptr;
 }
@@ -245,8 +245,8 @@ void Mutex_Unlock(void* handle) {
 	if (res) Logger_Abort2(res, "Unlocking mutex");
 }
 
-void* Waitable_Create(void) {
-	int evid = sceKernelCreateEventFlag("CC event", SCE_EVENT_WAITMULTIPLE, 0, NULL);
+void* Waitable_Create(const char* name) {
+	int evid = sceKernelCreateEventFlag(name, SCE_EVENT_WAITMULTIPLE, 0, NULL);
 	if (evid < 0) Logger_Abort2(evid, "Creating waitable");
 	return (void*)evid;
 }

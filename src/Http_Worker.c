@@ -1377,10 +1377,10 @@ static void Http_Init(void) {
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);
 
-	workerWaitable  = Waitable_Create();
-	pendingMutex    = Mutex_Create();
-	processedMutex  = Mutex_Create();
-	curRequestMutex = Mutex_Create();
+	workerWaitable  = Waitable_Create("HTTP wakeup");
+	pendingMutex    = Mutex_Create("HTTP pending");
+	processedMutex  = Mutex_Create("HTTP processed");
+	curRequestMutex = Mutex_Create("HTTP current");
 	
 	Thread_Run(&workerThread, WorkerLoop, 128 * 1024, "HTTP");
 }

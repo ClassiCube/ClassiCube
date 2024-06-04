@@ -1,12 +1,14 @@
 #include "Core.h"
 #if defined CC_BUILD_BEOS || defined CC_BUILD_HAIKU
 extern "C" {
+#include "Platform.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Utils.h"
 }
 #include <errno.h>
-#include <Application.h> 
+#include <OS.h>
+#include <Roster.h>
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
@@ -38,7 +40,6 @@ cc_result Process_StartOpen(const cc_string* args) {
 *#########################################################################################################################*/
 // NOTE: BeOS only, as haiku uses the more efficient pthreads implementation in Platform_Posix.c
 #if defined CC_BUILD_BEOS
-#include <OS.h>
 void Thread_Sleep(cc_uint32 milliseconds) { snooze(milliseconds * 1000); }
 
 static int32 ExecThread(void* param) {
@@ -60,8 +61,8 @@ void Thread_Join(void* handle) {
 	wait_for_thread(thread, NULL);
 }
 
-void* Mutex_Create(void) {
-	sem_id id = create_sem(1, "CC MUTEX");
+void* Mutex_Create(const char* name) {
+	sem_id id = create_sem(1, name);
 	return (void*)id;
 }
 
@@ -80,8 +81,8 @@ void Mutex_Unlock(void* handle) {
 	release_sem(id);
 }
 
-void* Waitable_Create(void) {
-	sem_id id = create_sem(0, "CC WAITABLE");
+void* Waitable_Create(const char* name) {
+	sem_id id = create_sem(0, name);
 	return (void*)id;
 }
 
@@ -105,4 +106,5 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	sem_id id = (sem_id)handle;
 	acquire_sem_etc(id, 1, B_RELATIVE_TIMEOUT, microseconds);
 }
+#endif
 #endif

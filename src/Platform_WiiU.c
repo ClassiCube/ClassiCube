@@ -254,10 +254,10 @@ void Thread_Join(void* handle) {
 	OSJoinThread((OSThread*)handle, &result);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	OSFastMutex* mutex = (OSFastMutex*)Mem_Alloc(1, sizeof(OSFastMutex), "mutex");
 	
-	OSFastMutex_Init(mutex, "CC mutex");
+	OSFastMutex_Init(mutex, name);
 	return mutex;
 }
 
@@ -273,7 +273,7 @@ void Mutex_Unlock(void* handle) {
 	OSFastMutex_Unlock((OSFastMutex*)handle);
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	OSEvent* event = (OSEvent*)Mem_Alloc(1, sizeof(OSEvent), "waitable");
 
 	OSInitEvent(event, false, OS_EVENT_MODE_AUTO);

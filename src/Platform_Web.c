@@ -228,12 +228,12 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /* No real threading support with emscripten backend */
 void  Thread_Sleep(cc_uint32 milliseconds) { }
 
-void* Mutex_Create(void) { return NULL; }
+void* Mutex_Create(const char* name) { return NULL; }
 void  Mutex_Free(void* handle) { }
 void  Mutex_Lock(void* handle) { }
 void  Mutex_Unlock(void* handle) { }
 
-void* Waitable_Create(void) { return NULL; }
+void* Waitable_Create(const char* name) { return NULL; }
 void  Waitable_Free(void* handle) { }
 void  Waitable_Signal(void* handle) { }
 void  Waitable_Wait(void* handle) { }

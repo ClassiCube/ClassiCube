@@ -228,7 +228,7 @@ void Thread_Join(void* handle) {
 	threadFree(thread);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	LightLock* lock = (LightLock*)Mem_Alloc(1, sizeof(LightLock), "mutex");
 	LightLock_Init(lock);
 	return lock;
@@ -246,7 +246,7 @@ void Mutex_Unlock(void* handle) {
 	LightLock_Unlock((LightLock*)handle);
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	LightEvent* event = (LightEvent*)Mem_Alloc(1, sizeof(LightEvent), "waitable");
 	LightEvent_Init(event, RESET_ONESHOT);
 	return event;

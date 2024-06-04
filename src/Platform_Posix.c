@@ -389,7 +389,7 @@ void Thread_Join(void* handle) {
 	Mem_Free(ptr);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	pthread_mutex_t* ptr = (pthread_mutex_t*)Mem_Alloc(1, sizeof(pthread_mutex_t), "mutex");
 	int res = pthread_mutex_init(ptr, NULL);
 	if (res) Logger_Abort2(res, "Creating mutex");
@@ -418,7 +418,7 @@ struct WaitData {
 	int signalled; /* For when Waitable_Signal is called before Waitable_Wait */
 };
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
 	int res;
 	

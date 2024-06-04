@@ -351,7 +351,7 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	InitializeCriticalSection(ptr);
 	return ptr;
@@ -364,7 +364,7 @@ void Mutex_Free(void* handle)   {
 void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle); }
 void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	void* handle = CreateEventA(NULL, false, false, NULL);
 	if (!handle) {
 		Logger_Abort2(GetLastError(), "Creating waitable");

@@ -205,7 +205,7 @@ void Thread_Detach(void* handle) {// TODO
 void Thread_Join(void* handle) {// TODO
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	return Mem_AllocCleared(1, sizeof(int), "mutex");
 }
 
@@ -215,7 +215,7 @@ void Mutex_Free(void* handle) {
 void Mutex_Lock(void* handle)   {  } // TODO
 void Mutex_Unlock(void* handle) {  } // TODO
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	return NULL; // TODO
 }
 

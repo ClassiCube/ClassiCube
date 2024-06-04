@@ -276,7 +276,7 @@ void Thread_Join(void* handle) {
 	}
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	ee_sema_t sema  = { 0 };
 	sema.init_count = 1;
 	sema.max_count  = 1;
@@ -307,7 +307,7 @@ void Mutex_Unlock(void* handle) {
 	if (res < 0) Logger_Abort2(res, "Unlocking mutex");
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	ee_sema_t sema  = { 0 };
 	sema.init_count = 0;
 	sema.max_count  = 1;

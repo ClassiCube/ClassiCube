@@ -52,7 +52,7 @@ static int events_count, events_capacity;
 static CCEvent* events_list, events_default[EVENTS_DEFAULT_MAX];
 
 static void Events_Init(void) {
-	events_mutex    = Mutex_Create();
+	events_mutex    = Mutex_Create("BeOS events");
 	events_capacity = EVENTS_DEFAULT_MAX;
 	events_list     = events_default;
 }

@@ -226,7 +226,7 @@ CC_API void Thread_Detach(void* handle);
 CC_API void Thread_Join(void* handle);
 
 /* Allocates a new mutex. (used to synchronise access to a shared resource) */
-CC_API void* Mutex_Create(void);
+CC_API void* Mutex_Create(const char* name);
 /* Frees an allocated mutex. */
 CC_API void  Mutex_Free(void* handle);
 /* Locks the given mutex, blocking other threads from entering. */
@@ -235,7 +235,7 @@ CC_API void  Mutex_Lock(void* handle);
 CC_API void  Mutex_Unlock(void* handle);
 
 /* Allocates a new waitable. (used to conditionally wake-up a blocked thread) */
-CC_API void* Waitable_Create(void);
+CC_API void* Waitable_Create(const char* name);
 /* Frees an allocated waitable. */
 CC_API void  Waitable_Free(void* handle);
 /* Signals a waitable, waking up blocked threads. */

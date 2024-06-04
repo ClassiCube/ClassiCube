@@ -272,7 +272,7 @@ void Thread_Join(void* handle) {
 	thd_join((kthread_t*)handle, NULL);
 }
 
-void* Mutex_Create(void) {
+void* Mutex_Create(const char* name) {
 	mutex_t* ptr = (mutex_t*)Mem_Alloc(1, sizeof(mutex_t), "mutex");
 	int res = mutex_init(ptr, MUTEX_TYPE_NORMAL);
 	if (res) Logger_Abort2(errno, "Creating mutex");
@@ -295,7 +295,7 @@ void Mutex_Unlock(void* handle) {
 	if (res) Logger_Abort2(errno, "Unlocking mutex");
 }
 
-void* Waitable_Create(void) {
+void* Waitable_Create(const char* name) {
 	semaphore_t* ptr = (semaphore_t*)Mem_Alloc(1, sizeof(semaphore_t), "waitable");
 	int res = sem_init(ptr, 0);
 	if (res) Logger_Abort2(errno, "Creating waitable");

@@ -248,9 +248,8 @@ void Thread_Join(void* handle) {
 	// TODO
 }
 
-void* Mutex_Create(void) {
-	// TODO
-	return 1;
+void* Mutex_Create(const char* name) {
+	return NULL;
 }
 
 void Mutex_Free(void* handle) {
@@ -265,9 +264,8 @@ void Mutex_Unlock(void* handle) {
 	// TODO
 }
 
-void* Waitable_Create(void) {
-	return 1;
-	// TODO
+void* Waitable_Create(const char* name) {
+	return NULL;
 }
 
 void Waitable_Free(void* handle) {
