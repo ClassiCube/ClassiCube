@@ -170,6 +170,7 @@ int main(int argc, char** argv) {
 		res = RunProgram(argc, argv);
 	} while (Platform_SingleProcess && Window_Main.Exists);
 
+	Window_Free();
 	Process_Exit(res);
 	return res;
 }

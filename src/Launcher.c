@@ -290,15 +290,13 @@ void Launcher_Run(void) {
 	Platform_LogConst("undoing components");
 	Drawer2D_Component.Free();
 	Http_Component.Free();
-#else
+#endif
+
 	if (Launcher_ShouldUpdate) {
 		const char* action;
 		cc_result res = Updater_Start(&action);
 		if (res) Logger_SysWarn(res, action);
 	}
-
-	if (Window_Main.Exists) Window_RequestClose();
-#endif
 }
 
 

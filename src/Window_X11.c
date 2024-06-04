@@ -502,7 +502,7 @@ void Window_RequestClose(void) {
 	ev.xclient.display = win_display;
 	ev.xclient.window  = win_handle;
 	ev.xclient.data.l[0] = wm_destroy;
-
+	
 	XSendEvent(win_display, win_handle, false, 0, &ev);
 	XFlush(win_display);
 }
