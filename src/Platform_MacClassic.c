@@ -141,10 +141,15 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 /*########################################################################################################################*
 *--------------------------------------------------------Stopwatch--------------------------------------------------------*
 *#########################################################################################################################*/
-#define NS_PER_SEC 1000000000ULL
+#define MS_PER_SEC 1000000ULL
 
 cc_uint64 Stopwatch_Measure(void) {
-	//return TickCount();
+	if (sysVersion < 0x7000) {
+		// 60 ticks a second
+		cc_uint64 count = TickCount();
+		return count * MS_PER_SEC / 60;
+	}
+
 	UnsignedWide count;
 	Microseconds(&count);
 	return (cc_uint64)count.lo | ((cc_uint64)count.hi << 32);

@@ -81,6 +81,7 @@ void Window_PreInit(void) {
     long tmpLong = 0;
     Gestalt(gestaltQuickdrawVersion, &tmpLong);
     hasColorQD = tmpLong >= gestalt32BitQD;
+	if (!hasColorQD) Platform_LogConst("RUNNING IN SLOW MODE");
 }
 
 void Window_Init(void) {
