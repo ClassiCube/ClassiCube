@@ -4,6 +4,8 @@ RETRO68=../Retro68-build/toolchain
 PREFIX=$(RETRO68)/powerpc-apple-macos
 CC=$(RETRO68)/bin/powerpc-apple-macos-gcc
 CXX=$(RETRO68)/bin/powerpc-apple-macos-g++
+CFLAGS=-O1 -fno-math-errno
+
 REZ=$(RETRO68)/bin/Rez
 MakePEF=$(RETRO68)/bin/MakePEF
 

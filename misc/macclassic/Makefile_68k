@@ -4,6 +4,8 @@ RETRO68=../Retro68-build/toolchain
 PREFIX=$(RETRO68)/m68k-apple-macos
 CC=$(RETRO68)/bin/m68k-apple-macos-gcc
 CXX=$(RETRO68)/bin/m68k-apple-macos-g++
+CFLAGS=-O1 -fno-math-errno
+
 REZ=$(RETRO68)/bin/Rez
 
 LDFLAGS=-lRetroConsole
