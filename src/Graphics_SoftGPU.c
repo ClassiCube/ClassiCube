@@ -314,17 +314,11 @@ static void TransformVertex(int index, Vertex* vertex) {
 		vertex->c = v->Col;
 	}
 }
-	
-static int MultiplyColours(PackedCol vColor, BitmapCol tColor) {
-	int a1 = PackedCol_A(vColor), a2 = BitmapCol_A(tColor);
-	int a  = ( a1 * a2 ) / 255;
-	int r1 = PackedCol_R(vColor), r2 = BitmapCol_R(tColor);
-	int r  = ( r1 * r2 ) / 255;
-	int g1 = PackedCol_G(vColor), g2 = BitmapCol_G(tColor);
-	int g  = ( g1 * g2 ) / 255;
-	int b1 = PackedCol_B(vColor), b2 = BitmapCol_B(tColor);
-	int b  = ( b1 * b2 ) / 255;
-	return PackedCol_Make(r, g, b, a);
+
+// Ensure it's inlined, whereas Math_FloorF might not be
+static CC_INLINE int FastFloor(float value) {
+	int valueI = (int)value;
+	return valueI > value ? valueI - 1 : valueI;
 }
 
 static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
@@ -385,21 +379,30 @@ static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
 				continue;
 			}
 
-			PackedCol fragColor = color;
+			int R, G, B, A;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 				float u = (ic0 * u1 + ic1 * u2 + ic2 * u3) * w;
 				float v = (ic0 * v1 + ic1 * v2 + ic2 * v3) * w;
-				int texX = ((int)(Math_AbsF(u - Math_Floor(u)) * curTexWidth )) & texWidthMask;
-				int texY = ((int)(Math_AbsF(v - Math_Floor(v)) * curTexHeight)) & texHeightMask;
+				int texX = ((int)(Math_AbsF(u - FastFloor(u)) * curTexWidth )) & texWidthMask;
+				int texY = ((int)(Math_AbsF(v - FastFloor(v)) * curTexHeight)) & texHeightMask;
 				int texIndex = texY * curTexWidth + texX;
 
-				fragColor = MultiplyColours(fragColor, curTexPixels[texIndex]);
+				BitmapCol tColor = curTexPixels[texIndex];
+				int a1 = PackedCol_A(color), a2 = BitmapCol_A(tColor);
+				A  = ( a1 * a2 ) / 255;
+				int r1 = PackedCol_R(color), r2 = BitmapCol_R(tColor);
+				R  = ( r1 * r2 ) / 255;
+				int g1 = PackedCol_G(color), g2 = BitmapCol_G(tColor);
+				G  = ( g1 * g2 ) / 255;
+				int b1 = PackedCol_B(color), b2 = BitmapCol_B(tColor);
+				B = ( b1 * b2 ) / 255;
+			} else {
+				R = PackedCol_R(color);
+				G = PackedCol_G(color);
+				B = PackedCol_B(color);
+				A = PackedCol_A(color);
 			}
 
-			int R = PackedCol_R(fragColor);
-			int G = PackedCol_G(fragColor);
-			int B = PackedCol_B(fragColor);
-			int A = PackedCol_A(fragColor);
 
 			if (gfx_alphaBlend) {
 				BitmapCol dst = colorBuffer[index];
