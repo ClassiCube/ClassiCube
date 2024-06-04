@@ -229,9 +229,8 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-void Thread_Sleep(cc_uint32 milliseconds) { 
-	// TODO Delay API
-	long delay = milliseconds * 100; // TODO wrong
+void Thread_Sleep(cc_uint32 milliseconds) {
+	long delay = milliseconds * 1000 / 60;
 	long final;
 	Delay(delay, &final);
 }

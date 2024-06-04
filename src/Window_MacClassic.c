@@ -18,7 +18,7 @@
 #include <Scrap.h>
 #include <Gestalt.h>
 static WindowPtr win;
-static cc_bool hasColorQD;
+static cc_bool hasColorQD, useGWorld;
 
 
 /*########################################################################################################################*
@@ -81,7 +81,6 @@ void Window_PreInit(void) {
     long tmpLong = 0;
     Gestalt(gestaltQuickdrawVersion, &tmpLong);
     hasColorQD = tmpLong >= gestalt32BitQD;
-	if (!hasColorQD) Platform_LogConst("RUNNING IN SLOW MODE");
 }
 
 void Window_Init(void) {
@@ -105,10 +104,18 @@ static void DoCreateWindow(int width, int height) {
     InsetRect(&r, 100, 100);
 
 	if (hasColorQD) {
-    	win = NewCWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+    	win = NewCWindow(NULL, &r, "\pClassiCube", true, documentProc, (WindowPtr)-1, true, 0);
 	} else {
-		win = NewWindow( NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+		win = NewWindow( NULL, &r, "\pClassiCube", true, documentProc, (WindowPtr)-1, true, 0);
 	}
+
+	if (hasColorQD) {
+		Platform_LogConst("BLITTING IN FAST MODE");
+	} else {
+		Platform_LogConst("BLITTING IN SLOW MODE");
+	}
+
+	useGWorld = hasColorQD;
 	SetPort(win);
 	r = win->portRect;
 	
@@ -168,7 +175,6 @@ void Window_SetSize(int width, int height) {
 
 void Window_RequestClose(void) {
 	Event_RaiseVoid(&WindowEvents.Closing);
-	// TODO
 }
 
 
@@ -201,8 +207,10 @@ static void HandleMouseDown(EventRecord* event) {
 			DragWindow(window, event->where, &qd.screenBits.bounds);
 			break;
 		case inGoAway:
-			if (TrackGoAway(window, event->where))
+			if (TrackGoAway(window, event->where)) {
  				Window_RequestClose();
+				Window_Main.Exists = false;
+			}
 	}
 }
 
@@ -211,9 +219,25 @@ static void HandleMouseUp(EventRecord* event) {
 	Input_SetReleased(CCMOUSE_L);
 }
 
-static void HandleKeyPress(EventRecord* event) {
+static void HandleKeyDown(EventRecord* event) {
 	if ((event->modifiers & cmdKey))
 		HiliteMenu(0);
+
+	int ch  = event->message & 0xFF;
+	int key = (event->message >> 8) & 0xFF;
+
+	if (ch >= 32 && ch <= 127)
+		Event_RaiseInt(&InputEvents.Press, (cc_unichar)ch);
+
+	key = MapNativeKey(key);
+	if (key) Input_SetPressed(key);
+}
+
+static void HandleKeyUp(EventRecord* event) {
+	int key = (event->message >> 8) & 0xFF;
+
+	key = MapNativeKey(key);
+	if (key) Input_SetReleased(key);
 }
 
 void Window_ProcessEvents(float delta) {
@@ -231,7 +255,10 @@ void Window_ProcessEvents(float delta) {
                 break;
             case keyDown:
             case autoKey:
-                HandleKeyPress(&event);
+                HandleKeyDown(&event);
+                break;
+            case keyUp:
+                HandleKeyUp(&event);
                 break;
             case updateEvt:
                 BeginUpdate((WindowPtr)event.message);
@@ -260,8 +287,11 @@ void Window_ProcessGamepads(float delta) {
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
-	// TODO
-	*x=0;*y=0;
+	Point point;
+	GetMouse(&point);
+
+	*x = point.h;
+	*y = point.v;
 }
 
 void Cursor_SetPosition(int x, int y) { 
@@ -302,7 +332,7 @@ static char* fb_bits;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	if (!hasColorQD) return;
+	if (!useGWorld) return;
 
 	// TODO bmp->scan0 should be the fb_world
 	QDErr err = NewGWorld(&fb_world, 32, &win->portRect, 0, 0, 0);
@@ -316,7 +346,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_bits   = (char*)GetPixBaseAddr(fb_pixmap);
 }
 
-static void DrawFramebufferFast(Rect2D r, struct Bitmap* bmp) {
+static void DrawFramebufferBulk(Rect2D r, struct Bitmap* bmp) {
     GrafPtr thePort = (GrafPtr)win;
 	const BitMap* memBits;
 	const BitMap* winBits;
@@ -372,8 +402,8 @@ static void DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 	SetPort(win);
 
-    if (hasColorQD) {
-		DrawFramebufferFast(r, bmp);
+	if (useGWorld) {
+		DrawFramebufferBulk(r, bmp);
 	} else {
 		DrawFramebufferSlow(r, bmp);
 	}
@@ -381,7 +411,7 @@ void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
-	if (!hasColorQD) return;
+	if (!useGWorld) return;
 
 	UnlockPixels(fb_pixmap);
 	DisposeGWorld(fb_world);
