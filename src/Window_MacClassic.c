@@ -14,7 +14,11 @@
 #include <Dialogs.h>
 #include <Fonts.h>
 #include <Events.h>
+#include <DiskInit.h>
+#include <Scrap.h>
+#include <Gestalt.h>
 static WindowPtr win;
+static cc_bool hasColorQD;
 
 
 /*########################################################################################################################*
@@ -37,30 +41,31 @@ static WindowPtr win;
 #endif
 typedef unsigned long MAC_FourCharCode;
 
-// ==================================== IMPORTS FROM DISKINIT.H ====================================
-// Availability: in InterfaceLib 7.1 and later
-MAC_SYSAPI(void) DILoad(void)                                MAC_THREEWORDINLINE(0x7002, 0x3F00, 0xA9E9);
-
-// Availability: in InterfaceLib 7.1 and later
-MAC_SYSAPI(void) DIUnload(void)                              MAC_THREEWORDINLINE(0x7004, 0x3F00, 0xA9E9);
-
-// Availability: in InterfaceLib 7.1 and later
-MAC_SYSAPI(short) DIBadMount(Point where, UInt32 evtMessage) MAC_THREEWORDINLINE(0x7000, 0x3F00, 0xA9E9);
-
-
-// ==================================== IMPORTS FROM SCRAP.H ====================================
-// Availability: in InterfaceLib 7.1 and later
-MAC_SYSAPI(long) GetScrap(Handle dst, MAC_FourCharCode type, SInt32* offset)         MAC_ONEWORDINLINE(0xA9FD);
-
-// Availability: in InterfaceLib 7.1 and later
-MAC_SYSAPI(OSStatus) PutScrap(SInt32 srcLen, MAC_FourCharCode type, const void* src) MAC_ONEWORDINLINE(0xA9FE);
-
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-void Window_PreInit(void) { }
-void Window_Init(void) {
+static const cc_uint8 key_map[8 * 16] = {
+/* 0x00 */ 'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X',
+/* 0x08 */ 'C', 'V',   0, 'B', 'Q', 'W', 'E', 'R',
+/* 0x10 */ 'Y', 'T', '1', '2', '3', '4', '6', '5',
+/* 0x18 */ CCKEY_EQUALS, '9', '7', CCKEY_MINUS, '8', '0', CCKEY_RBRACKET, 'O',
+/* 0x20 */ 'U', CCKEY_LBRACKET, 'I', 'P', CCKEY_ENTER, 'L', 'J', CCKEY_QUOTE,
+/* 0x28 */ 'K', CCKEY_SEMICOLON, CCKEY_BACKSLASH, CCKEY_COMMA, CCKEY_SLASH, 'N', 'M', CCKEY_PERIOD,
+/* 0x30 */ CCKEY_TAB, CCKEY_SPACE, CCKEY_TILDE, CCKEY_BACKSPACE, 0, CCKEY_ESCAPE, 0, CCKEY_LWIN,
+/* 0x38 */ CCKEY_LSHIFT, CCKEY_CAPSLOCK, CCKEY_LALT, CCKEY_LCTRL, 0, 0, 0, 0,
+/* 0x40 */ 0, CCKEY_KP_DECIMAL, 0, CCKEY_KP_MULTIPLY, 0, CCKEY_KP_PLUS, 0, CCKEY_NUMLOCK,
+/* 0x48 */ CCKEY_VOLUME_UP, CCKEY_VOLUME_DOWN, CCKEY_VOLUME_MUTE, CCKEY_KP_DIVIDE, CCKEY_KP_ENTER, 0, CCKEY_KP_MINUS, 0,
+/* 0x50 */ 0, CCKEY_KP_ENTER, CCKEY_KP0, CCKEY_KP1, CCKEY_KP2, CCKEY_KP3, CCKEY_KP4, CCKEY_KP5,
+/* 0x58 */ CCKEY_KP6, CCKEY_KP7, 0, CCKEY_KP8, CCKEY_KP9, 'N', 'M', CCKEY_PERIOD,
+/* 0x60 */ CCKEY_F5, CCKEY_F6, CCKEY_F7, CCKEY_F3, CCKEY_F8, CCKEY_F9, 0, CCKEY_F11,
+/* 0x68 */ 0, CCKEY_F13, 0, CCKEY_F14, 0, CCKEY_F10, 0, CCKEY_F12,
+/* 0x70 */ 'U', CCKEY_F15, CCKEY_INSERT, CCKEY_HOME, CCKEY_PAGEUP, CCKEY_DELETE, CCKEY_F4, CCKEY_END,
+/* 0x78 */ CCKEY_F2, CCKEY_PAGEDOWN, CCKEY_F1, CCKEY_LEFT, CCKEY_RIGHT, CCKEY_DOWN, CCKEY_UP, 0,
+};
+static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+
+void Window_PreInit(void) {
 	InitGraf(&qd.thePort);
 	InitFonts();
 	InitWindows();
@@ -73,6 +78,12 @@ void Window_Init(void) {
 		EventAvail(everyEvent, &event);
 	FlushEvents(everyEvent, 0);
 
+    long tmpLong = 0;
+    Gestalt(gestaltQuickdrawVersion, &tmpLong);
+    hasColorQD = tmpLong >= gestalt32BitQD;
+}
+
+void Window_Init(void) {
 	Rect r = qd.screenBits.bounds;
 	DisplayInfo.x      = r.left;
 	DisplayInfo.y      = r.top;
@@ -92,7 +103,11 @@ static void DoCreateWindow(int width, int height) {
     r.top += 40;
     InsetRect(&r, 100, 100);
 
-    win = NewWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+	if (hasColorQD) {
+    	win = NewCWindow(NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+	} else {
+		win = NewWindow( NULL, &r, "\pClassiCube", true, 0, (WindowPtr)-1, false, 0);
+	}
 	SetPort(win);
 	r = win->portRect;
 	
@@ -240,17 +255,7 @@ void Window_ProcessEvents(float delta) {
 	}
 }
 
-short isPressed(unsigned short k) {
-	unsigned char km[16];
-
-	GetKeys((long *)km);
-	return ((km[k>>3] >> (k&7) ) &1);
-}
-
 void Window_ProcessGamepads(float delta) {
-	Gamepad_SetButton(0, CCPAD_UP,			isPressed(0x0D));
-	Gamepad_SetButton(0, CCPAD_DOWN,		isPressed(0x01));
-	Gamepad_SetButton(0, CCPAD_START,		isPressed(0x24));
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
@@ -261,6 +266,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 void Cursor_SetPosition(int x, int y) { 
 	// TODO
 }
+
 static void Cursor_DoSetVisible(cc_bool visible) {
 	if (visible) {
 		ShowCursor();
@@ -271,54 +277,113 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 
 static void ShowDialogCore(const char* title, const char* msg) {
 	// TODO
+	for (int i = 0; i < 20; i++) 
+	{
+		Platform_LogConst(title);
+		Platform_LogConst(msg);
+	}
 }
 
 cc_result Window_OpenFileDialog(const struct OpenFileDialogArgs* args) {
 	// TODO
-	return 1;
+	return ERR_NOT_SUPPORTED;
 }
 
 cc_result Window_SaveFileDialog(const struct SaveFileDialogArgs* args) {
 	// TODO
-	return 1;
+	return ERR_NOT_SUPPORTED;
 }
+
+static GWorldPtr fb_world;
+static PixMapHandle fb_pixmap;
+static int fb_stride;
+static char* fb_bits;
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
+	if (!hasColorQD) return;
+
+	// TODO bmp->scan0 should be the fb_world
+	QDErr err = NewGWorld(&fb_world, 32, &win->portRect, 0, 0, 0);
+	if (err != noErr) Logger_Abort2(err, "Failed to allocate GWorld");
+	
+	fb_pixmap = GetGWorldPixMap(fb_world);
+	if (!fb_pixmap) Logger_Abort("Failed to allocate pixmap");
+
+	LockPixels(fb_pixmap);
+	fb_stride = (*fb_pixmap)->rowBytes & 0x3FFF;
+	fb_bits   = (char*)GetPixBaseAddr(fb_pixmap);
 }
 
-void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
-    GrafPtr thePort = (CGrafPtr)win;
-	SetPort(win);
-	int ww = bmp->width;
-	int hh = bmp->height;
+static void DrawFramebufferFast(Rect2D r, struct Bitmap* bmp) {
+    GrafPtr thePort = (GrafPtr)win;
+	const BitMap* memBits;
+	const BitMap* winBits;
 
-    // Iterate through each pixel
-    for (int y = r.y; y < r.y + r.height; ++y) {
+	for (int y = r.y; y < r.y + r.height; y++)
+	{
+		BitmapCol* src = Bitmap_GetRow(bmp, y);
+		uint32_t*  dst = (uint32_t*)(fb_bits + fb_stride * y);
+		
+		for (int x = r.x; x < r.x + r.width; x++)
+		{
+			dst[x] = src[x];
+		}
+	}
+
+	memBits = &((GrafPtr)fb_world)->portBits;
+	winBits = &thePort->portBits;
+
+	Rect update;
+	update.left   = r.x;
+	update.right  = r.x + r.width;
+	update.top    = r.y;
+	update.bottom = r.y + r.height;
+
+    CopyBits(memBits, winBits, &update, &update, srcCopy, nil);
+}
+
+static void DrawFramebufferSlow(Rect2D r, struct Bitmap* bmp) {
+    for (int y = r.y; y < r.y + r.height; ++y) 
+	{
         BitmapCol* row = Bitmap_GetRow(bmp, y);
-        for (int x = r.x; x < r.x + r.width; ++x) {
-
+        for (int x = r.x; x < r.x + r.width; ++x) 
+		{
             // TODO optimise
             BitmapCol	col = row[x];
 			cc_uint8 R = BitmapCol_R(col);
 			cc_uint8 G = BitmapCol_G(col);
 			cc_uint8 B = BitmapCol_B(col);
 
-            // Set the pixel color in the window
-            RGBColor	pixelColor;
-						pixelColor.red   = R * 256;
-						pixelColor.green = G * 256;
-						pixelColor.blue  = B * 256;
+            RGBColor pixelColor;
+			pixelColor.red   = R << 8;
+			pixelColor.green = G << 8;
+			pixelColor.blue  = B << 8;
+
             RGBForeColor(&pixelColor);
             MoveTo(x, y);
             Line(0, 0);
-//SetCPixel(x, y, &pixelColor);
+			//SetCPixel(x, y, &pixelColor);
         }
     }
 }
 
+void Window_DrawFramebuffer(Rect2D r, struct Bitmap* bmp) {
+	SetPort(win);
+
+    if (hasColorQD) {
+		DrawFramebufferFast(r, bmp);
+	} else {
+		DrawFramebufferSlow(r, bmp);
+	}
+}
+
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
+	if (!hasColorQD) return;
+
+	UnlockPixels(fb_pixmap);
+	DisposeGWorld(fb_world);
 }
 
 void OnscreenKeyboard_Open(struct OpenKeyboardArgs* args) { }

@@ -19,6 +19,8 @@
 #include <MacMemory.h>
 #include <Processes.h>
 #include <Files.h>
+#include <Gestalt.h>
+#include <Math64.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -26,8 +28,13 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 
-const char* Platform_AppNameSuffix = " MAC68k";
+#if TARGET_CPU_68K
+const char* Platform_AppNameSuffix = " MAC 68k";
+#else
+const char* Platform_AppNameSuffix = " MAC PPC";
+#endif
 cc_bool Platform_SingleProcess = true;
+static long sysVersion;
 
 
 /*########################################################################################################################*
@@ -106,25 +113,21 @@ void Platform_Log(const char* msg, int len) {
 // classic macOS uses an epoch of 1904
 #define EPOCH_ADJUSTMENT 2082866400UL
 
-static void gettod(struct timeval *tp) {
+static time_t gettod(void) {
     unsigned long secs;
     GetDateTime(&secs);
-
-	tp->tv_sec  = secs - EPOCH_ADJUSTMENT;
-	tp->tv_usec = 0;
+	return secs - EPOCH_ADJUSTMENT;
 }
 
 TimeMS DateTime_CurrentUTC(void) {
-	struct timeval cur;
-	gettod(&cur);
-	return (cc_uint64)cur.tv_sec + UNIX_EPOCH_SECONDS;
+	time_t secs = gettod();
+	return (cc_uint64)secs + UNIX_EPOCH_SECONDS;
 }
 
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur;
 	struct tm loc_time;
-	gettod(&cur);
-	localtime_r(&cur.tv_sec, &loc_time);
+	time_t secs = gettod();
+	localtime_r(&secs, &loc_time);
 
 	t->year   = loc_time.tm_year + 1900;
 	t->month  = loc_time.tm_mon  + 1;
@@ -145,6 +148,7 @@ cc_uint64 Stopwatch_Measure(void) {
 	UnsignedWide count;
 	Microseconds(&count);
 	return (cc_uint64)count.lo | ((cc_uint64)count.hi << 32);
+	//return UnsignedWideToUInt64(count);
 }
 
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
@@ -159,7 +163,7 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 void Directory_GetCachePath(cc_string* path) { }
 
 cc_result Directory_Create(const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+	return 0; // TODO
 }
 
 int File_Exists(const cc_string* path) {
@@ -171,7 +175,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return ERR_NOT_SUPPORTED;
+	return ReturnCode_FileNotFound;
 }
 
 cc_result File_Create(cc_file* file, const cc_string* path) {
@@ -222,6 +226,9 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 *#########################################################################################################################*/
 void Thread_Sleep(cc_uint32 milliseconds) { 
 	// TODO Delay API
+	long delay = milliseconds * 100; // TODO wrong
+	long final;
+	Delay(delay, &final);
 }
 
 void Thread_Run(void** handle, Thread_StartFunc func, int stackSize, const char* name) {
@@ -425,6 +432,8 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 }
 
 void Platform_Init(void) {
+	Gestalt(gestaltSystemVersion, &sysVersion);
+	Platform_Log1("Running on Mac OS %h", &sysVersion);
 	Platform_LoadSysFonts();
 }
 
