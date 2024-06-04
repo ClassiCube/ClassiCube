@@ -69,7 +69,7 @@
 		9A6C7CC82C073E0C00676D27 /* _psmodule.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C582C073E0100676D27 /* _psmodule.c */; };
 		9A6C7CC92C073E0C00676D27 /* Gui.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C5A2C073E0100676D27 /* Gui.c */; };
 		9A6C7CCA2C073E0C00676D27 /* _truetype.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C5B2C073E0200676D27 /* _truetype.c */; };
-		9A6C7CCB2C073E0C00676D27 /* interop_cocoa.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C5E2C073E0200676D27 /* interop_cocoa.m */; };
+		9A6C7CCB2C073E0C00676D27 /* Window_cocoa.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C5E2C073E0200676D27 /* Window_cocoa.m */; };
 		9A6C7CCC2C073E0C00676D27 /* Vorbis.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C5F2C073E0200676D27 /* Vorbis.c */; };
 		9A6C7CCD2C073E0C00676D27 /* Inventory.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C602C073E0300676D27 /* Inventory.c */; };
 		9A6C7CCE2C073E0C00676D27 /* Animations.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A6C7C622C073E0300676D27 /* Animations.c */; };
@@ -229,7 +229,7 @@
 		9A6C7C5B2C073E0200676D27 /* _truetype.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = _truetype.c; path = "../../../../../../ClassiCube-master/src/_truetype.c"; sourceTree = "<group>"; };
 		9A6C7C5C2C073E0200676D27 /* Generator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Generator.h; path = "../../../../../../ClassiCube-master/src/Generator.h"; sourceTree = "<group>"; };
 		9A6C7C5D2C073E0200676D27 /* Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Game.h; path = "../../../../../../ClassiCube-master/src/Game.h"; sourceTree = "<group>"; };
-		9A6C7C5E2C073E0200676D27 /* interop_cocoa.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = interop_cocoa.m; path = "../../../../../../ClassiCube-master/src/interop_cocoa.m"; sourceTree = "<group>"; };
+		9A6C7C5E2C073E0200676D27 /* Window_cocoa.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Window_cocoa.m; path = "../../../../../../ClassiCube-master/src/Window_cocoa.m"; sourceTree = "<group>"; };
 		9A6C7C5F2C073E0200676D27 /* Vorbis.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Vorbis.c; path = "../../../../../../ClassiCube-master/src/Vorbis.c"; sourceTree = "<group>"; };
 		9A6C7C602C073E0300676D27 /* Inventory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Inventory.c; path = "../../../../../../ClassiCube-master/src/Inventory.c"; sourceTree = "<group>"; };
 		9A6C7C612C073E0300676D27 /* _PlatformBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = _PlatformBase.h; path = "../../../../../../ClassiCube-master/src/_PlatformBase.h"; sourceTree = "<group>"; };
@@ -393,7 +393,7 @@
 				9A6C7C032C073DEF00676D27 /* Http.h */,
 				9A6C7BF02C073DED00676D27 /* Input.c */,
 				9A6C7C372C073DF700676D27 /* Input.h */,
-				9A6C7C5E2C073E0200676D27 /* interop_cocoa.m */,
+				9A6C7C5E2C073E0200676D27 /* Window_cocoa.m */,
 				9A6C7C602C073E0300676D27 /* Inventory.c */,
 				9A6C7C642C073E0400676D27 /* Inventory.h */,
 				9A6C7C552C073E0000676D27 /* IsometricDrawer.c */,
@@ -569,7 +569,7 @@
 				9A6C7CD82C073E0C00676D27 /* Entity.c in Sources */,
 				9A6C7CA02C073E0C00676D27 /* Resources.c in Sources */,
 				9A6C7CA72C073E0C00676D27 /* _psaux.c in Sources */,
-				9A6C7CCB2C073E0C00676D27 /* interop_cocoa.m in Sources */,
+				9A6C7CCB2C073E0C00676D27 /* Window_cocoa.m in Sources */,
 				9A6C7C9C2C073E0C00676D27 /* EntityComponents.c in Sources */,
 				9A6C7C982C073E0C00676D27 /* LBackend_Android.c in Sources */,
 				9A6C7CB02C073E0C00676D27 /* Particle.c in Sources */,

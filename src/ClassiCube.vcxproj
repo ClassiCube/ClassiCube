@@ -504,8 +504,10 @@
     <ClCompile Include="FancyLighting.c" />
     <ClCompile Include="Platform_3DS.c" />
     <ClCompile Include="Platform_Android.c" />
+    <ClCompile Include="Platform_BeOS.cpp" />
     <ClCompile Include="Platform_Dreamcast.c" />
     <ClCompile Include="Platform_GCWii.c" />
+    <ClCompile Include="Platform_MacClassic.c" />
     <ClCompile Include="Platform_N64.c" />
     <ClCompile Include="Platform_NDS.c" />
     <ClCompile Include="Platform_Posix.c" />
@@ -551,8 +553,10 @@
     <ClCompile Include="Logger.c" />
     <ClCompile Include="Window_3DS.c" />
     <ClCompile Include="Window_Android.c" />
+    <ClCompile Include="Window_BeOS.cpp" />
     <ClCompile Include="Window_Dreamcast.c" />
     <ClCompile Include="Window_GCWii.c" />
+    <ClCompile Include="Window_MacClassic.c" />
     <ClCompile Include="Window_N64.c" />
     <ClCompile Include="Window_NDS.c" />
     <ClCompile Include="Window_PS1.c" />
@@ -588,6 +592,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\misc\windows\CCicon.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Window_cocoa.m" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -28,10 +28,10 @@ jobs:
           LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"           
           cd src
           
-          MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c interop_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
-          MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c interop_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-mac64-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -DCC_BUILD_GLMODERN -o cc-mac64-gl2 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
           
-          clang *.c interop_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_ARM64_FLAGS }} $LATEST_FLAG -o cc-mac-arm64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+          clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_ARM64_FLAGS }} $LATEST_FLAG -o cc-mac-arm64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
           # https://wiki.freepascal.org/Code_Signing_for_macOS#Ad_hoc_signing
 
       - uses: ./.github/actions/notify_failure

@@ -48,7 +48,7 @@ ifeq ($(PLAT),sunos)
 endif
 
 ifeq ($(PLAT),darwin)
-	OBJECTS += $(BUILD_DIR)/interop_cocoa.o
+	OBJECTS += $(BUILD_DIR)/Window_cocoa.o
 	CFLAGS  = -g -pipe -fno-math-errno -DCC_BUILD_ICON
 	LIBS    =
 	LDFLAGS = -rdynamic -framework Cocoa -framework OpenGL -framework IOKit -lobjc
@@ -79,14 +79,14 @@ ifeq ($(PLAT),dragonfly)
 endif
 
 ifeq ($(PLAT),haiku)
-	OBJECTS += $(BUILD_DIR)/interop_BeOS.o
+	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
 	CFLAGS  = -g -pipe -fno-math-errno
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
 endif
 
 ifeq ($(PLAT),beos)
-	OBJECTS += $(BUILD_DIR)/interop_BeOS.o
+	OBJECTS += $(BUILD_DIR)/Platform_BeOS.o $(BUILD_DIR)/Window_BeOS.o
 	CFLAGS  = -g -pipe
 	LDFLAGS = -g
 	LIBS    = -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
