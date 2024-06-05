@@ -2898,13 +2898,7 @@ void EnvSettingsScreen_Show(void) {
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
 static void GraphicsOptionsScreen_CheckLightingModeAllowed(struct MenuOptionsScreen* s) {
-	struct Widget** widgets = s->widgets;
-	cc_bool disabled = Lighting_ModeLockedByServer;
-	struct ButtonWidget* btn = (struct ButtonWidget*)widgets[4];
-
-	MenuOptionsScreen_Update(s, btn);
-	Widget_SetDisabled(widgets[4], disabled);
-	MenuInputOverlay_CheckStillValid(s);
+	Widget_SetDisabled(s->widgets[4], Lighting_ModeLockedByServer);
 }
 
 static void GraphicsOptionsScreen_GetViewDist(cc_string* v) { String_AppendInt(v, Game_ViewDistance); }
@@ -2916,6 +2910,7 @@ static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }
+
 static void GraphicsOptionsScreen_GetLighting(cc_string* v) { String_AppendConst(v, LightingMode_Names[Lighting_Mode]); }
 static void GraphicsOptionsScreen_SetLighting(const cc_string* v) {
 	cc_uint8 mode = Utils_ParseEnum(v, 0, LightingMode_Names, LIGHTING_MODE_COUNT);

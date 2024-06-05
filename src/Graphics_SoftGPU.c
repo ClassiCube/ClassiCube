@@ -389,13 +389,13 @@ static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
 
 				BitmapCol tColor = curTexPixels[texIndex];
 				int a1 = PackedCol_A(color), a2 = BitmapCol_A(tColor);
-				A  = ( a1 * a2 ) / 255;
+				A = ( a1 * a2 ) >> 8;
 				int r1 = PackedCol_R(color), r2 = BitmapCol_R(tColor);
-				R  = ( r1 * r2 ) / 255;
+				R = ( r1 * r2 ) >> 8;
 				int g1 = PackedCol_G(color), g2 = BitmapCol_G(tColor);
-				G  = ( g1 * g2 ) / 255;
+				G = ( g1 * g2 ) >> 8;
 				int b1 = PackedCol_B(color), b2 = BitmapCol_B(tColor);
-				B = ( b1 * b2 ) / 255;
+				B = ( b1 * b2 ) >> 8;
 			} else {
 				R = PackedCol_R(color);
 				G = PackedCol_G(color);
