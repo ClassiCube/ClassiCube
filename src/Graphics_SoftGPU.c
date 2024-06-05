@@ -410,9 +410,9 @@ static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
 				int dstG = BitmapCol_G(dst);
 				int dstB = BitmapCol_B(dst);
 
-				R = (R * A) / 255 + (dstR * (255 - A)) / 255;
-				G = (G * A) / 255 + (dstG * (255 - A)) / 255;
-				B = (B * A) / 255 + (dstB * (255 - A)) / 255;
+				R = (R * A + dstR * (255 - A)) >> 8;
+				G = (G * A + dstG * (255 - A)) >> 8;
+				B = (B * A + dstB * (255 - A)) >> 8;
 			}
 			if (gfx_alphaTest && A < 0x80) continue;
 
