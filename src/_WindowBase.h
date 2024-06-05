@@ -100,7 +100,7 @@ static CC_INLINE void InitGraphicsMode(struct GraphicsMode* m) {
 }
 
 /* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system */
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && defined CC_BUILD_EGL
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -132,7 +132,7 @@ static void GLContext_FreeSurface(void) {
 }
 
 void GLContext_Create(void) {
-#ifdef CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 #else
 	static EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 1, EGL_NONE };
@@ -145,7 +145,7 @@ void GLContext_Create(void) {
 		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
 		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
 
-#if defined CC_BUILD_GLES && defined CC_BUILD_GLMODERN
+#if defined CC_BUILD_GLES && (CC_GFX_BACKEND == CC_GFX_BACKEND_GL2)
 		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT,
 #elif defined CC_BUILD_GLES
 		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES_BIT,

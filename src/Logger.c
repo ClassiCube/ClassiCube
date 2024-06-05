@@ -1243,9 +1243,9 @@ static void CloseLogFile(void) {
 	#define GFX_BACKEND " (Direct3D11)"
 #elif CC_GFX_BACKEND == CC_GFX_BACKEND_D3D9
 	#define GFX_BACKEND " (Direct3D9)"
-#elif (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && defined CC_BUILD_GLMODERN
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	#define GFX_BACKEND " (ModernGL)"
-#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL
+#elif CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
 	#define GFX_BACKEND " (OpenGL)"
 #else
 	#define GFX_BACKEND " (Unknown)"

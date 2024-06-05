@@ -3,7 +3,7 @@
 #define GLES_SILENCE_DEPRECATION
 
 #include "Core.h"
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
 #include "_GraphicsBase.h"
 #include "Errors.h"
 #include "Window.h"

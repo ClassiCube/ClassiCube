@@ -270,14 +270,14 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_EGL || (CC_GFX_BACKEND != CC_GFX_BACKEND_GL)
+#if defined CC_BUILD_EGL || !(CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK)
 static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;
 	int screen = DefaultScreen(win_display);
 
 	res = XMatchVisualInfo(win_display, screen, 24, TrueColor, &info) ||
-		XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
+		  XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
 
 	if (!res) Logger_Abort("Selecting visual");
 	return info;
@@ -1309,7 +1309,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if (CC_GFX_BACKEND == CC_GFX_BACKEND_GL) && !defined CC_BUILD_EGL
+#if (CC_GFX_BACKEND & CC_GFX_BACKEND_GL_MASK) && !defined CC_BUILD_EGL
 #include <GL/glx.h>
 static GLXContext ctx_handle;
 typedef int  (*FP_SWAPINTERVAL)(int interval);

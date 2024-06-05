@@ -285,7 +285,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 	int pointerSize = sizeof(void*) * 8;
 
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-#ifdef CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL2
 	String_Format1(info, "-- Using OpenGL Modern (%i bit) --\n", &pointerSize);
 #else
 	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
@@ -315,13 +315,14 @@ void Gfx_ClearBuffers(GfxBuffers buffers) {
 }
 
 void Gfx_EndFrame(void) {
-#ifndef CC_BUILD_GLMODERN
+#if CC_GFX_BACKEND == CC_GFX_BACKEND_GL1
 	if (Window_IsObscured()) {
 		TickReducedPerformance();
 	} else {
 		EndReducedPerformance();
 	}
 #endif
+	/* TODO always run ?? */
 
 	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
 	if (gfx_minFrameMs) LimitFPS();
