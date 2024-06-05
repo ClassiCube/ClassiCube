@@ -13,14 +13,16 @@ void Queue_Init(struct Queue* queue, cc_uint32 structSize) {
 	queue->head = 0;
 	queue->tail = 0;
 }
+
 void Queue_Clear(struct Queue* queue) {
 	if (!queue->entries) return;
 	Mem_Free(queue->entries);
 	Queue_Init(queue, queue->structSize);
 }
+
 static void Queue_Resize(struct Queue* queue) {
 	cc_uint8* entries;
-	int idx, capacity, headToEndSize, byteOffsetToHead;
+	int capacity, headToEndSize, byteOffsetToHead;
 
 	if (queue->capacity >= (Int32_MaxValue / 4)) {
 		Chat_AddRaw("&cToo many generic queue entries, clearing");
@@ -49,6 +51,7 @@ static void Queue_Resize(struct Queue* queue) {
 	queue->head = 0;
 	queue->tail = queue->count;
 }
+
 /* Appends an entry to the end of the queue, resizing if necessary. */
 void Queue_Enqueue(struct Queue* queue, void* item) {
 	if (queue->count == queue->capacity)
@@ -59,6 +62,7 @@ void Queue_Enqueue(struct Queue* queue, void* item) {
 	queue->tail = (queue->tail + 1) & queue->mask;
 	queue->count++;
 }
+
 /* Retrieves the entry from the front of the queue. */
 void* Queue_Dequeue(struct Queue* queue) {
 	void* result = queue->entries + queue->head * queue->structSize;

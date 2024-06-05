@@ -368,8 +368,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next, i++) 
 	{
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
 	}
 
 	freeaddrinfo(result);

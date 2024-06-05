@@ -117,22 +117,26 @@ typedef cc_uint8  cc_bool;
 #endif
 #endif
 
-#define CC_WIN_BACKEND_TERMINAL 0x01
-#define CC_WIN_BACKEND_SDL2     0x11
-#define CC_WIN_BACKEND_SDL3     0x12
-#define CC_WIN_BACKEND_X11      0x21
-#define CC_WIN_BACKEND_WIN32    0x31
-#define CC_WIN_BACKEND_COCOA    0x41
-#define CC_WIN_BACKEND_BEOS     0x51
-#define CC_WIN_BACKEND_ANDROID  0x61
+/* Lowest 4 bits are for backends in same group */
+/* Rest of the bits indicate the unique group type */
 
-#define CC_GFX_BACKEND_SOFTGPU   0x01
-#define CC_GFX_BACKEND_GL_MASK   0x10
-#define CC_GFX_BACKEND_GL1       0x11
-#define CC_GFX_BACKEND_GL2       0x12
-#define CC_GFX_BACKEND_D3D9      0x21
-#define CC_GFX_BACKEND_D3D11     0x31
-#define CC_GFX_BACKEND_VULKAN    0x41
+#define CC_WIN_BACKEND_TERMINAL 0x0001
+#define CC_WIN_BACKEND_SDL_MASK 0x0010
+#define CC_WIN_BACKEND_SDL2     0x0011
+#define CC_WIN_BACKEND_SDL3     0x0012
+#define CC_WIN_BACKEND_X11      0x0021
+#define CC_WIN_BACKEND_WIN32    0x0041
+#define CC_WIN_BACKEND_COCOA    0x0081
+#define CC_WIN_BACKEND_BEOS     0x0101
+#define CC_WIN_BACKEND_ANDROID  0x0201
+
+#define CC_GFX_BACKEND_SOFTGPU   0x0001
+#define CC_GFX_BACKEND_GL_MASK   0x0010
+#define CC_GFX_BACKEND_GL1       0x0011
+#define CC_GFX_BACKEND_GL2       0x0012
+#define CC_GFX_BACKEND_D3D9      0x0021
+#define CC_GFX_BACKEND_D3D11     0x0041
+#define CC_GFX_BACKEND_VULKAN    0x0081
 
 #define CC_BUILD_NETWORKING
 #define CC_BUILD_FREETYPE

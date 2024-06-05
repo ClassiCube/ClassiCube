@@ -90,6 +90,13 @@ int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end) {
 	return (int)raw / 1000;
 }
 
+static CC_INLINE void SocketAddr_Set(cc_sockaddr* addr, const void* src, unsigned srcLen) {
+	if (srcLen > CC_SOCKETADDR_MAXSIZE) Logger_Abort("Attempted to copy too large socket");
+
+	Mem_Copy(addr->data, src, srcLen);
+	addr->size = srcLen;
+}
+
 cc_result Socket_WriteAll(cc_socket socket, const cc_uint8* data, cc_uint32 count) {
 	cc_uint32 sent;
 	cc_result res;

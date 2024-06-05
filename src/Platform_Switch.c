@@ -384,15 +384,13 @@ static cc_result ParseHost(const char* host, int port, cc_sockaddr* addrs, int* 
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family != AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 	
 	for (cur = result; cur && i < SOCKET_MAX_ADDRS; cur = cur->ai_next) 
 	{
 		if (cur->ai_family == AF_INET) continue;
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen; i++;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen); i++;
 	}
 
 	freeaddrinfo(result);

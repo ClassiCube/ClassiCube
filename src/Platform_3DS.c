@@ -311,8 +311,7 @@ cc_result Socket_ParseAddress(const cc_string* address, int port, cc_sockaddr* a
 		if (!cur->ai_addrlen) break; 
 		// TODO citra returns empty addresses past first one? does that happen on real hardware too?
 		
-		Mem_Copy(addrs[i].data, cur->ai_addr, cur->ai_addrlen);
-		addrs[i].size = cur->ai_addrlen;
+		SocketAddr_Set(&addrs[i], cur->ai_addr, cur->ai_addrlen);
 	}
 
 	freeaddrinfo(result);
