@@ -321,20 +321,21 @@ static CC_INLINE int FastFloor(float value) {
 	return valueI > value ? valueI - 1 : valueI;
 }
 
-static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
-	int x1 = (int)frag1->x, y1 = (int)frag1->y;
-	int x2 = (int)frag2->x, y2 = (int)frag2->y;
-	int x3 = (int)frag3->x, y3 = (int)frag3->y;
-	int minX = min(x1, min(x2, x3));
-	int minY = min(y1, min(y2, y3));
-	int maxX = max(x1, max(x2, x3));
-	int maxY = max(y1, max(y2, y3));
+#define edgeFunction(ax,ay, bx,by, cx,cy) ((bx - ax) * (cy - ay) - (by - ay) * (cx - ax))
 
-	// TODO backface culling
+static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
+	int x0 = (int)V0->x, y0 = (int)V0->y;
+	int x1 = (int)V1->x, y1 = (int)V1->y;
+	int x2 = (int)V2->x, y2 = (int)V2->y;
+	int minX = min(x0, min(x1, x2));
+	int minY = min(y0, min(y1, y2));
+	int maxX = max(x0, max(x1, x2));
+	int maxY = max(y0, max(y1, y2));
+
+	int area = edgeFunction(x0,y0, x1,y1, x2,y2);
 	if (faceCulling) {
 		// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
-		int sign = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
-		if (sign > 0) return;
+		if (area > 0) return;
 	}
 
 	// Reject triangles completely outside
@@ -346,32 +347,32 @@ static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
 	minY = max(minY, 0); maxY = min(maxY, fb_maxY);
 
 	// NOTE: W in frag variables below is actually 1/W 
-	float factor = 1.0f / ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
-	float w1 = frag1->w, w2 = frag2->w, w3 = frag3->w;
+	float factor = 1.0f / area;
+	float w0 = V0->w, w1 = V1->w, w2 = V2->w;
 	
 	// TODO proper clipping
-	if (w1 <= 0 || w2 <= 0 || w3 <= 0) return;
+	if (w0 <= 0 || w1 <= 0 || w2 <= 0) return;
 
-	float z1 = frag1->z, z2 = frag2->z, z3 = frag3->z;
-	float u1 = frag1->u, u2 = frag2->u, u3 = frag3->u;
-	float v1 = frag1->v, v2 = frag2->v, v3 = frag3->v;
-	PackedCol color = frag1->c;
+	float z0 = V0->z, z1 = V1->z, z2 = V2->z;
+	float u0 = V0->u, u1 = V1->u, u2 = V2->u;
+	float v0 = V0->v, v1 = V1->v, v2 = V2->v;
+	PackedCol color = V0->c;
 	
 	for (int y = minY; y <= maxY; y++) {
 		float yy = y + 0.5f;
 		for (int x = minX; x <= maxX; x++) {
 			float xx = x + 0.5f;
 			
-			float ic0 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) * factor;
+			float ic0 = ((y1 - y2) * (xx - x2) + (x2 - x1) * (yy - y2)) * factor;
 			if (ic0 < 0 || ic0 > 1) continue;
-			float ic1 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) * factor;
+			float ic1 = ((y2 - y0) * (xx - x2) + (x0 - x2) * (yy - y2)) * factor;
 			if (ic1 < 0 || ic1 > 1) continue;
 			float ic2 = 1.0f - ic0 - ic1;
 			if (ic2 < 0 || ic2 > 1) continue;
 
 			int index = y * fb_width + x;
-			float w = 1 / (ic0 * w1 + ic1 * w2 + ic2 * w3);
-			float z = (ic0 * z1 + ic1 * z2 + ic2 * z3) * w;
+			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
+			float z = (ic0 * z0 + ic1 * z1 + ic2 * z2) * w;
 
 			if (depthTest && (z < 0 || z > depthBuffer[index])) continue;
 			if (!colWrite) {
@@ -381,8 +382,8 @@ static void DrawTriangle(Vertex* frag1, Vertex* frag2, Vertex* frag3) {
 
 			int R, G, B, A;
 			if (gfx_format == VERTEX_FORMAT_TEXTURED) {
-				float u = (ic0 * u1 + ic1 * u2 + ic2 * u3) * w;
-				float v = (ic0 * v1 + ic1 * v2 + ic2 * v3) * w;
+				float u = (ic0 * u0 + ic1 * u1 + ic2 * u2) * w;
+				float v = (ic0 * v0 + ic1 * v1 + ic2 * v2) * w;
 				int texX = ((int)(Math_AbsF(u - FastFloor(u)) * curTexWidth )) & texWidthMask;
 				int texY = ((int)(Math_AbsF(v - FastFloor(v)) * curTexHeight)) & texHeightMask;
 				int texIndex = texY * curTexWidth + texX;
