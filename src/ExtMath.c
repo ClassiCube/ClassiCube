@@ -463,3 +463,6 @@ float Math_Atan2f(float x, float y) {
 	if (y < 0)   r = -r;
 	return r;
 }
+
+double Math_Sin(double x) { return Math_SinF(x); }
+double Math_Cos(double x) { return Math_CosF(x); }
