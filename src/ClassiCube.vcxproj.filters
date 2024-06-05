@@ -761,9 +761,6 @@
     <ClCompile Include="Queue.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Window_Terminal.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Platform_MacClassic.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -775,6 +772,9 @@
     </ClCompile>
     <ClCompile Include="Platform_BeOS.cpp">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Terminal.c">
+      <Filter>Source Files\Window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

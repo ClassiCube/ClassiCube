@@ -37,26 +37,26 @@ void Vec3_TransformY(Vec3* result, float y, const struct Matrix* mat) {
 }
 
 Vec3 Vec3_RotateX(Vec3 v, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	return Vec3_Create3(v.x, cosA * v.y + sinA * v.z, -sinA * v.y + cosA * v.z);
 }
 
 Vec3 Vec3_RotateY(Vec3 v, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	return Vec3_Create3(cosA * v.x - sinA * v.z, v.y, sinA * v.x + cosA * v.z);
 }
 
 Vec3 Vec3_RotateY3(float x, float y, float z, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	return Vec3_Create3(cosA * x - sinA * z, y, sinA * x + cosA * z);
 }
 
 Vec3 Vec3_RotateZ(Vec3 v, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	return Vec3_Create3(cosA * v.x + sinA * v.y, -sinA * v.x + cosA * v.y, v.z);
 }
 
@@ -96,8 +96,8 @@ const struct Matrix Matrix_Identity = Matrix_IdentityValue;
 /* Transposed, source https://open.gl/transformations */
 
 void Matrix_RotateX(struct Matrix* result, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 
 	result->row2.y = cosA;  result->row2.z = sinA;
@@ -105,8 +105,8 @@ void Matrix_RotateX(struct Matrix* result, float angle) {
 }
 
 void Matrix_RotateY(struct Matrix* result, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 
 	result->row1.x = cosA; result->row1.z = -sinA;
@@ -114,8 +114,8 @@ void Matrix_RotateY(struct Matrix* result, float angle) {
 }
 
 void Matrix_RotateZ(struct Matrix* result, float angle) {
-	float cosA = (float)Math_Cos(angle);
-	float sinA = (float)Math_Sin(angle);
+	float cosA = Math_CosF(angle);
+	float sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 
 	result->row1.x = cosA;  result->row1.y = sinA;

@@ -139,8 +139,8 @@ void Model_SetupState(struct Model* model, struct Entity* e) {
 	Models.Cols[5] = Models.Cols[4];
 	yawDelta = e->Yaw - e->RotY;
 
-	Models.cosHead = (float)Math_Cos(yawDelta * MATH_DEG2RAD);
-	Models.sinHead = (float)Math_Sin(yawDelta * MATH_DEG2RAD);
+	Models.cosHead = Math_CosF(yawDelta * MATH_DEG2RAD);
+	Models.sinHead = Math_SinF(yawDelta * MATH_DEG2RAD);
 	Models.Active  = model;
 }
 
@@ -233,9 +233,9 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 	struct ModelVertex* src    = &model->vertices[part->offset];
 	struct VertexTextured* dst = &Models.Vertices[model->index];
 
-	float cosX = (float)Math_Cos(-angleX), sinX = (float)Math_Sin(-angleX);
-	float cosY = (float)Math_Cos(-angleY), sinY = (float)Math_Sin(-angleY);
-	float cosZ = (float)Math_Cos(-angleZ), sinZ = (float)Math_Sin(-angleZ);
+	float cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
+	float cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
+	float cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
 	float t, x = part->rotX, y = part->rotY, z = part->rotZ;
 	
 	struct ModelVertex v;
@@ -1938,9 +1938,9 @@ static void SpiderModel_Draw(struct Entity* e) {
 	Model_DrawPart(&spider_link);
 	Model_DrawPart(&spider_end);
 
-	rotX = (float)Math_Sin(e->Anim.WalkTime)     * e->Anim.Swing * MATH_PI;
-	rotZ = (float)Math_Cos(e->Anim.WalkTime * 2) * e->Anim.Swing * MATH_PI / 16.0f;
-	rotY = (float)Math_Sin(e->Anim.WalkTime * 2) * e->Anim.Swing * MATH_PI / 32.0f;
+	rotX = Math_SinF(e->Anim.WalkTime)     * e->Anim.Swing * MATH_PI;
+	rotZ = Math_CosF(e->Anim.WalkTime * 2) * e->Anim.Swing * MATH_PI / 16.0f;
+	rotY = Math_SinF(e->Anim.WalkTime * 2) * e->Anim.Swing * MATH_PI / 32.0f;
 	Models.Rotation = ROTATE_ORDER_XZY;
 
 	Model_DrawRotate(rotX,  quarterPi  + rotY, eighthPi + rotZ, &spider_leftLeg,  false);
@@ -2312,12 +2312,11 @@ static void DrawBlockTransform(struct Entity* e, float dispX, float dispY, float
 }
 
 static void HoldModel_Draw(struct Entity* e) {
-	static float handBob;
-	static float handIdle;
-
+	float handBob;
+	float handIdle;
 	RecalcProperties(e);
 
-	handBob = (float)Math_Sin(e->Anim.WalkTime * 2.0f) * e->Anim.Swing * MATH_PI / 16.0f;
+	handBob  = Math_SinF(e->Anim.WalkTime * 2.0f) * e->Anim.Swing * MATH_PI / 16.0f;
 	handIdle = e->Anim.RightArmX * (1.0f - e->Anim.Swing);
 
 	e->Anim.RightArmX = 0.5f + handBob + handIdle;

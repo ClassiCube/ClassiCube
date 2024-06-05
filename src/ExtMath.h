@@ -27,10 +27,8 @@ float Math_SqrtF(float x);
 float Math_Mod1(float x);
 int   Math_AbsI(int x);
 
-CC_API double Math_Sin(double x);
-CC_API double Math_Cos(double x);
-float Math_SinF(float x);
-float Math_CosF(float x);
+CC_API float Math_SinF(float x);
+CC_API float Math_CosF(float x);
 /* Computes atan2(y, x), intended primarily for angle calculation*/
 /*  Note that accuracy is only up to around 4 decimal places */
 float Math_Atan2f(float x, float y);
