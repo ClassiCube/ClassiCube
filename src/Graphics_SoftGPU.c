@@ -243,35 +243,34 @@ void Gfx_DisableTextureOffset(void) {
 }
 
 void Gfx_CalcOrthoMatrix(struct Matrix* matrix, float width, float height, float zNear, float zFar) {
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glortho */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthooffcenterrh */
 	/*   The simplified calculation below uses: L = 0, R = width, T = 0, B = height */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  2.0f / width;
 	matrix->row2.y = -2.0f / height;
-	matrix->row3.z = -2.0f / (zFar - zNear);
+	matrix->row3.z =  1.0f / (zNear - zFar);
 
 	matrix->row4.x = -1.0f;
 	matrix->row4.y =  1.0f;
-	matrix->row4.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row4.z = zNear / (zNear - zFar);
 }
 
 static float Cotangent(float x) { return Math_CosF(x) / Math_SinF(x); }
 void Gfx_CalcPerspectiveMatrix(struct Matrix* matrix, float fov, float aspect, float zFar) {
 	float zNear = 0.1f;
-	float c = Cotangent(0.5f * fov);
 
-	/* Transposed, source https://learn.microsoft.com/en-us/windows/win32/opengl/glfrustum */
-	/* For pos FOV based perspective matrix, left/right/top/bottom are calculated as: */
-	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
-	/* Calculations are simplified because of left/right and top/bottom symmetry */
+	/* Source https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh */
+	/* NOTE: This calculation is shared with Direct3D 11 backend */
+	float c = Cotangent(0.5f * fov);
 	*matrix = Matrix_Identity;
 
 	matrix->row1.x =  c / aspect;
 	matrix->row2.y =  c;
-	matrix->row3.z = -(zFar + zNear) / (zFar - zNear);
+	matrix->row3.z = zFar / (zNear - zFar);
 	matrix->row3.w = -1.0f;
-	matrix->row4.z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	matrix->row4.z = (zNear * zFar) / (zNear - zFar);
 	matrix->row4.w =  0.0f;
 }
 
@@ -321,7 +320,7 @@ static CC_INLINE int FastFloor(float value) {
 	return valueI > value ? valueI - 1 : valueI;
 }
 
-#define edgeFunction(ax,ay, bx,by, cx,cy) ((bx - ax) * (cy - ay) - (by - ay) * (cx - ax))
+#define edgeFunction(ax,ay, bx,by, cx,cy) (((bx) - (ax)) * ((cy) - (ay)) - ((by) - (ay)) * ((cx) - (ax)))
 
 static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int x0 = (int)V0->x, y0 = (int)V0->y;
@@ -335,7 +334,7 @@ static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
 	int area = edgeFunction(x0,y0, x1,y1, x2,y2);
 	if (faceCulling) {
 		// https://gamedev.stackexchange.com/questions/203694/how-to-make-backface-culling-work-correctly-in-both-orthographic-and-perspective
-		if (area > 0) return;
+		if (area < 0) return;
 	}
 
 	// Reject triangles completely outside
@@ -358,17 +357,27 @@ static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
 	float v0 = V0->v, v1 = V1->v, v2 = V2->v;
 	PackedCol color = V0->c;
 	
-	for (int y = minY; y <= maxY; y++) {
-		float yy = y + 0.5f;
-		for (int x = minX; x <= maxX; x++) {
-			float xx = x + 0.5f;
-			
-			float ic0 = ((y1 - y2) * (xx - x2) + (x2 - x1) * (yy - y2)) * factor;
-			if (ic0 < 0 || ic0 > 1) continue;
-			float ic1 = ((y2 - y0) * (xx - x2) + (x0 - x2) * (yy - y2)) * factor;
-			if (ic1 < 0 || ic1 > 1) continue;
-			float ic2 = 1.0f - ic0 - ic1;
-			if (ic2 < 0 || ic2 > 1) continue;
+	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
+	int dx01  = y0 - y1, dy01 = x1 - x0;
+	int dx12  = y1 - y2, dy12 = x2 - x1;
+	int dx20  = y2 - y0, dy20 = x0 - x2;
+
+	float bc0_start = edgeFunction(x1,y1, x2,y2, minX+0.5f,minY+0.5f);
+	float bc1_start = edgeFunction(x2,y2, x0,y0, minX+0.5f,minY+0.5f);
+	float bc2_start = edgeFunction(x0,y0, x1,y1, minX+0.5f,minY+0.5f);
+
+	for (int y = minY; y <= maxY; y++, bc0_start += dy12, bc1_start += dy20, bc2_start += dy01) 
+	{
+		float bc0 = bc0_start;
+		float bc1 = bc1_start;
+		float bc2 = bc2_start;
+
+		for (int x = minX; x <= maxX; x++, bc0 += dx12, bc1 += dx20, bc2 += dx01) 
+		{
+			float ic0 = bc0 * factor;
+			float ic1 = bc1 * factor;
+			float ic2 = bc2 * factor;
+			if (ic0 < 0 || ic1 < 0 || ic2 < 0) continue;
 
 			int index = y * fb_width + x;
 			float w = 1 / (ic0 * w0 + ic1 * w1 + ic2 * w2);
@@ -404,7 +413,6 @@ static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
 				A = PackedCol_A(color);
 			}
 
-
 			if (gfx_alphaBlend) {
 				BitmapCol dst = colorBuffer[index];
 				int dstR = BitmapCol_R(dst);
@@ -435,8 +443,8 @@ void DrawQuads(int startVertex, int verticesCount) {
 		TransformVertex(j + 2, &vertices[2]);
 		TransformVertex(j + 3, &vertices[3]);
 
-		DrawTriangle(&vertices[0], &vertices[1], &vertices[2]);
-		DrawTriangle(&vertices[2], &vertices[3], &vertices[0]);
+		DrawTriangle(&vertices[0], &vertices[2], &vertices[1]);
+		DrawTriangle(&vertices[2], &vertices[0], &vertices[3]);
 	}
 }
 
