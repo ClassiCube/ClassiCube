@@ -339,8 +339,8 @@ static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
 	}
 
 	// Reject triangles completely outside
-	if ((minX < 0 && maxX < 0) || (minX > fb_maxX && maxX > fb_maxX)) return;
-	if ((minY < 0 && maxY < 0) || (minY > fb_maxY && maxY > fb_maxY)) return;
+	if (maxX < 0 || minX > fb_maxX) return;
+	if (maxY < 0 || minY > fb_maxY) return;
 
 	// Perform scissoring
 	minX = max(minX, 0); maxX = min(maxX, fb_maxX);

@@ -212,9 +212,7 @@ static void SetColorWrite(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 
 static cc_bool depth_write = true, depth_test = true;
 static void UpdateDepthState(void) {
-	// match Desktop behaviour, where disabling depth testing also disables depth writing
-	// TODO do we actually need to & here?
-	GX_SetZMode(depth_test, GX_LEQUAL, depth_write & depth_test);
+	GX_SetZMode(depth_test, GX_LEQUAL, depth_write);
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {

@@ -292,28 +292,19 @@ static void SetAlphaBlend(cc_bool enabled) {
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 void Gfx_ClearColor(PackedCol color) {
-        cc_uint32 R = PackedCol_R(color);
-        cc_uint32 G = PackedCol_G(color);
-        cc_uint32 B = PackedCol_B(color);
-        
-        clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
-}
+	cc_uint32 R = PackedCol_R(color);
+	cc_uint32 G = PackedCol_G(color);
+	cc_uint32 B = PackedCol_B(color);
 
-static cc_bool depth_write = true, depth_test = true;
-static void UpdateDepthState(void) {
-	// match Desktop behaviour, where disabling depth testing also disables depth writing
-	rsxSetDepthWriteEnable(context, depth_write & depth_test);
-	rsxSetDepthTestEnable(context,  depth_test);
+	clearColor  = B | (G << 8) | (R << 16) | (0xFF << 24);
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
-	depth_write = enabled;
-	UpdateDepthState();
+	rsxSetDepthWriteEnable(context, enabled);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
-	depth_test = enabled;
-	UpdateDepthState();
+	rsxSetDepthTestEnable(context, enabled);
 }
 
 static void SetAlphaTest(cc_bool enabled) {

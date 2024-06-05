@@ -284,6 +284,7 @@ void Gfx_Begin2D(int width, int height) {
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 
 	Gfx_SetDepthTest(false);
+	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
 	
 	gfx_hadFog = Gfx_GetFog();
@@ -293,6 +294,7 @@ void Gfx_Begin2D(int width, int height) {
 
 void Gfx_End2D(void) {
 	Gfx_SetDepthTest(true);
+	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 	
 	if (gfx_hadFog) Gfx_SetFog(true);
