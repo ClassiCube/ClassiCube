@@ -516,7 +516,28 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const cc_str
 /*########################################################################################################################*
 *------------------------------------------------------Custom Models------------------------------------------------------*
 *#########################################################################################################################*/
-struct CustomModel custom_models[MAX_CUSTOM_MODELS];
+#ifdef CC_BUILD_LOWMEM
+static struct CustomModel* custom_models;
+
+struct CustomModel* CustomModel_Get(int id) {
+	if (id >= MAX_CUSTOM_MODELS) return NULL;
+
+	/* TODO log message if allocation fails? */
+	if (!custom_models)
+		custom_models = Mem_TryAlloc(MAX_CUSTOM_MODELS, sizeof(struct CustomModel));
+
+	if (!custom_models) return NULL;
+	return &custom_models[id];
+}
+#else
+static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
+
+struct CustomModel* CustomModel_Get(int id) {
+	if (id >= MAX_CUSTOM_MODELS) return NULL;
+
+	return &custom_models[MAX_CUSTOM_MODELS];
+}
+#endif
 
 void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part) {
 	float x1 = part->min.x, y1 = part->min.y, z1 = part->min.z;
@@ -881,6 +902,8 @@ void CustomModel_Undefine(struct CustomModel* cm) {
 
 static void CustomModel_FreeAll(void) {
 	int i;
+	if (!custom_models) return;
+
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) 
 	{
 		CustomModel_Undefine(&custom_models[i]);

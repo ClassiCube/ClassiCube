@@ -443,9 +443,11 @@ typedef cc_uint8  cc_bool;
 #undef CC_BUILD_PLUGINS
 #endif
 
+#ifdef CC_BUILD_NETWORKING
+#define CUSTOM_MODELS
+#endif
 #ifndef CC_BUILD_LOWMEM
 #define EXTENDED_BLOCKS
-#define CUSTOM_MODELS
 #endif
 #define EXTENDED_TEXTURES
 

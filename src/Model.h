@@ -292,8 +292,7 @@ struct CustomModel {
 	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
 };
 
-extern struct CustomModel custom_models[MAX_CUSTOM_MODELS];
-
+struct CustomModel* CustomModel_Get(int id);
 void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part);
 void CustomModel_Register(struct CustomModel* cm);
 void CustomModel_Undefine(struct CustomModel* cm);
