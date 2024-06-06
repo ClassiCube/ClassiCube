@@ -25,13 +25,6 @@
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
-	int i;
-	for (i = 0; i < count; i++) {
-		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
-	}
-}
-
 static void GL_UpdateVsync(void) {
 	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
 }
@@ -93,9 +86,9 @@ static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_boo
 		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		if (partial) {
-			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
+			_glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		} else {
-			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
+			_glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		}
 
 		if (prev != bmp->scan0) Mem_Free(prev);
@@ -144,7 +137,7 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	}
 
 	if (bmp->width == rowWidth) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
+		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
 	} else {
 		UpdateTextureSlow(0, 0, bmp, rowWidth, true);
 	}
@@ -157,7 +150,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 
 	if (part->width == rowWidth) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
+		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
 	} else {
 		UpdateTextureSlow(x, y, part, rowWidth, false);
 	}

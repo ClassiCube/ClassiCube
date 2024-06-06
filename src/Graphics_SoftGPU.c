@@ -358,6 +358,7 @@ static void DrawTriangle(Vertex* V0, Vertex* V1, Vertex* V2) {
 	PackedCol color = V0->c;
 	
 	// https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
+	// Essentially these are the deltas of edge functions between X/Y and X/Y + 1 (i.e. one X/Y step)
 	int dx01  = y0 - y1, dy01 = x1 - x0;
 	int dx12  = y1 - y2, dy12 = x2 - x1;
 	int dx20  = y2 - y0, dy20 = x0 - x2;

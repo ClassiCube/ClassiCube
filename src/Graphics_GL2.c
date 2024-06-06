@@ -89,6 +89,12 @@ static const struct DynamicLibSym core_funcs[] = {
 /* === END OPENGL HEADERS === */
 #endif
 
+#define _glBindTexture    glBindTexture
+#define _glDeleteTextures glDeleteTextures
+#define _glGenTextures    glGenTextures
+#define _glTexImage2D     glTexImage2D
+#define _glTexSubImage2D  glTexSubImage2D
+
 #include "_GLShared.h"
 static GfxResourceID white_square;
 
@@ -549,7 +555,11 @@ void Gfx_DisableTextureOffset(void) {
 *#########################################################################################################################*/
 static void GLBackend_Init(void) {
 #ifdef CC_BUILD_WIN
-	GLContext_GetAll(core_funcs, Array_Elems(core_funcs));
+	int i;
+	for (i = 0; i < Array_Elems(core_funcs); i++) 
+	{
+		core_funcs[i].symAddr = GLContext_GetAddress(core_funcs[i].name);
+	}
 #endif
 
 #ifdef CC_BUILD_GLES
