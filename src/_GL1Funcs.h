@@ -48,9 +48,14 @@ GL_FUNC(void,           glGetFloatv)(GLenum pname, GLfloat* params);
 GL_FUNC(void,           glGetIntegerv)(GLenum pname, GLint* params);
 GL_FUNC(const GLubyte*, glGetString)(GLenum name);
 
-/* Display list functions */
+/* Legacy display list functions */
 GL_FUNC(void,   glCallList)(GLuint list);
 GL_FUNC(void,   glDeleteLists)(GLuint list, GLsizei range);
 GL_FUNC(GLuint, glGenLists)(GLsizei range);
 GL_FUNC(void,   glNewList)(GLuint list, GLenum mode);
 GL_FUNC(void,   glEndList)(void);
+
+/* Legacy vertex draw functions */
+GL_FUNC(void,   glBegin)(GLenum mode);
+GL_FUNC(void,   glEnd)(void);
+GL_FUNC(void,   glVertex3f)(float x, float y, float z);

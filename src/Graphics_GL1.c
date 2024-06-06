@@ -654,6 +654,51 @@ static void APIENTRY legacy_bufferSubData(GLenum target, cc_uintptr offset, cc_u
 }
 
 
+static void APIENTRY gl10_bindTexture(GLenum target, GLuint texture) {
+	
+}
+static void APIENTRY gl10_deleteTexture(GLsizei n, const GLuint* textures) {
+
+}
+static void APIENTRY gl10_genTexture(GLsizei n, GLuint* textures) {
+
+}
+static void APIENTRY gl10_texImage(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
+	
+}
+static void APIENTRY gl10_texSubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
+	
+}
+
+static cc_uint8* gl10_vb;
+static void APIENTRY gl10_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
+	/* TODO */
+	int i;
+	glBegin(GL_QUADS);
+
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
+		struct VertexTextured* src = (struct VertexTextured*)gl10_vb;
+		for (i = 0; i < count; i++, src++) {
+			glVertex3f(src->x, src->y, src->z);
+		}
+	} else {
+		struct VertexColoured* src = (struct VertexColoured*)gl10_vb;
+		for (i = 0; i < count; i++, src++) {
+			glVertex3f(src->x, src->y, src->z);
+		}
+	}
+
+	glEnd();
+}
+static void APIENTRY gl10_colorPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+}
+static void APIENTRY gl10_texCoordPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+}
+static void APIENTRY gl10_vertexPointer(GLint size, GLenum type, GLsizei stride, GLpointer offset) {
+	gl10_vb = cur_vb->data + offset;
+}
+
+
 static void APIENTRY gl11_drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices) {
 	_realDrawElements(mode, count, type, (cc_uintptr)indices + cur_ib->data);
 }
@@ -686,6 +731,19 @@ static void FallbackOpenGL(void) {
 
 	_glDrawElements    = gl11_drawElements;    _glColorPointer  = gl11_colorPointer;
 	_glTexCoordPointer = gl11_texCoordPointer; _glVertexPointer = gl11_vertexPointer;
+
+	/* OpenGL 1.0 fallback support */
+	if (_realDrawElements) return;
+	Window_ShowDialog("Performance warning", "OpenGL 1.0 only support, expect awful performance");
+
+	_glDrawElements    = gl10_drawElements;    _glColorPointer  = gl10_colorPointer;
+	_glTexCoordPointer = gl10_texCoordPointer; _glVertexPointer = gl10_vertexPointer;
+
+	_glBindTexture    = gl10_bindTexture;
+	_glGenTextures    = gl10_genTexture;
+	_glDeleteTextures = gl10_deleteTexture;
+	_glTexImage2D     = gl10_texImage;
+	_glTexSubImage2D  = gl10_texSubImage;
 }
 #else
 /* No point in even trying for other systems */

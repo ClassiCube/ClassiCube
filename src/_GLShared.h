@@ -113,17 +113,17 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int
 	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
 
 	if (full) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+		_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, part->width, part->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
 	} else {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
 	}
 	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
 }
 
 static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8 flags, cc_bool mipmaps) {
-	GLuint texId;
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
+	GfxResourceID texId = NULL;
+	_glGenTextures(1, (GLuint*)&texId);
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (mipmaps) {
@@ -143,11 +143,11 @@ static GfxResourceID Gfx_AllocTexture(struct Bitmap* bmp, int rowWidth, cc_uint8
 	}
 
 	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, rowWidth, false);
-	return uint_to_ptr(texId);
+	return texId;
 }
 
 void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
-	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 
 	if (part->width == rowWidth) {
 		_glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
@@ -160,7 +160,7 @@ void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, i
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	GLuint id = ptr_to_uint(*texId);
-	if (id) glDeleteTextures(1, &id);
+	if (id) _glDeleteTextures(1, &id);
 	*texId = 0;
 }
 
