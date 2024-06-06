@@ -58,4 +58,6 @@ GL_FUNC(void,   glEndList)(void);
 /* Legacy vertex draw functions */
 GL_FUNC(void,   glBegin)(GLenum mode);
 GL_FUNC(void,   glEnd)(void);
+GL_FUNC(void,   glColor4ub)(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
+GL_FUNC(void,   glTexCoord2f)(float u, float v);
 GL_FUNC(void,   glVertex3f)(float x, float y, float z);

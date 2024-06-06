@@ -51,6 +51,7 @@ typedef cc_uintptr GLpointer;
 
 #define GL_LINES                 0x0001
 #define GL_TRIANGLES             0x0004
+#define GL_QUADS                 0x0007
 
 #define GL_BLEND                 0x0BE2
 #define GL_SRC_ALPHA             0x0302
@@ -471,7 +472,7 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 void Gfx_BindTexture(GfxResourceID texId) {
-	glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
+	_glBindTexture(GL_TEXTURE_2D, ptr_to_uint(texId));
 }
 
 
@@ -675,15 +676,21 @@ static void APIENTRY gl10_drawElements(GLenum mode, GLsizei count, GLenum type, 
 	/* TODO */
 	int i;
 	glBegin(GL_QUADS);
+	count = (count * 4) / 6;
 
 	if (gfx_format == VERTEX_FORMAT_TEXTURED) {
 		struct VertexTextured* src = (struct VertexTextured*)gl10_vb;
-		for (i = 0; i < count; i++, src++) {
+		for (i = 0; i < count; i++, src++) 
+		{
+			glColor4ub(PackedCol_R(src->Col), PackedCol_G(src->Col), PackedCol_B(src->Col), PackedCol_A(src->Col));
+			glTexCoord2f(src->U, src->V);
 			glVertex3f(src->x, src->y, src->z);
 		}
 	} else {
 		struct VertexColoured* src = (struct VertexColoured*)gl10_vb;
-		for (i = 0; i < count; i++, src++) {
+		for (i = 0; i < count; i++, src++) 
+		{
+			glColor4ub(PackedCol_R(src->Col), PackedCol_G(src->Col), PackedCol_B(src->Col), PackedCol_A(src->Col));
 			glVertex3f(src->x, src->y, src->z);
 		}
 	}
@@ -731,6 +738,7 @@ static void FallbackOpenGL(void) {
 
 	_glDrawElements    = gl11_drawElements;    _glColorPointer  = gl11_colorPointer;
 	_glTexCoordPointer = gl11_texCoordPointer; _glVertexPointer = gl11_vertexPointer;
+	_realDrawElements = NULL;
 
 	/* OpenGL 1.0 fallback support */
 	if (_realDrawElements) return;
