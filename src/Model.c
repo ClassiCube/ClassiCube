@@ -535,7 +535,7 @@ static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 struct CustomModel* CustomModel_Get(int id) {
 	if (id >= MAX_CUSTOM_MODELS) return NULL;
 
-	return &custom_models[MAX_CUSTOM_MODELS];
+	return &custom_models[id];
 }
 #endif
 
