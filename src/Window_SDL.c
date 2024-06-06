@@ -70,6 +70,20 @@ void Window_Init(void) {
 
 void Window_Free(void) { }
 
+
+#ifdef CC_BUILD_ICON
+/* See misc/sdl/sdl_icon_gen.cs for how to generate this file */
+#include "../misc/sdl/CCIcon_SDL.h"
+
+static void ApplyIcon(void) {
+	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(CCIcon_Data, CCIcon_Width, CCIcon_Height, 32, CCIcon_Pitch,
+													0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	SDL_SetWindowIcon(win_handle, surface);
+}
+#else
+static void ApplyIcon(void) { }
+#endif
+
 static void DoCreateWindow(int width, int height, int flags) {
 	win_handle = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 
 					flags | SDL_WINDOW_RESIZABLE);
@@ -78,6 +92,7 @@ static void DoCreateWindow(int width, int height, int flags) {
 	RefreshWindowBounds();
 	Window_Main.Exists = true;
 	Window_Main.Handle = win_handle;
+	ApplyIcon();
 	/* TODO grab using SDL_SetWindowGrab? seems to be unnecessary on Linux at least */
 }
 

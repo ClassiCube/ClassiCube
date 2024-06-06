@@ -102,8 +102,18 @@ ifeq ($(PLAT),irix)
 	LIBS    = -lGL -lX11 -lXi -lpthread -ldl
 endif
 
+
 ifeq ($(OS),Windows_NT)
 	DEL     = del
+endif
+
+ifdef SDL2
+	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL2
+	LIBS += -lSDL2
+endif
+ifdef SDL3
+	CFLAGS += -DCC_WIN_BACKEND=CC_WIN_BACKEND_SDL3
+	LIBS += -lSDL3
 endif
 
 default: $(PLAT)
@@ -134,6 +144,10 @@ serenityos:
 	$(MAKE) $(ENAME) PLAT=serenityos
 irix:
 	$(MAKE) $(ENAME) PLAT=irix
+sdl2:
+	$(MAKE) $(ENAME) SDL2=1
+sdl3:
+	$(MAKE) $(ENAME) SDL3=1
 
 # Some builds require more complex handling, so are moved to
 #  separate makefiles to avoid having one giant messy makefile
