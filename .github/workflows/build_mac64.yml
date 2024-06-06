@@ -25,7 +25,7 @@ jobs:
           MAC_ARM64_FLAGS:   "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_GFX_BACKEND=CC_GFX_BACKEND_GL2 -arch arm64"
           MAC_INTEL64_FLAGS: "-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -arch x86_64"
         run: |
-          LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"           
+          LATEST_FLAG=-DCC_COMMIT_SHA=\"$(git rev-parse --short "$GITHUB_SHA")\"
           cd src
           
           MACOSX_DEPLOYMENT_TARGET=10.5 clang *.c Window_cocoa.m ${{ env.COMMON_FLAGS }} ${{ env.MAC_INTEL64_FLAGS }} $LATEST_FLAG -o cc-mac64-gl1 -framework Cocoa -framework OpenGL -framework IOKit -lobjc

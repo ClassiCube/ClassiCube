@@ -1,0 +1,45 @@
+name: Build latest (Mac Classic)
+# trigger via either push to selected branches or on manual run
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-mac-classic
+  cancel-in-progress: true
+
+jobs:
+  build-mac-classic:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/autc04/retro68
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Mac classic build
+        id: compile
+        run: |
+          make macclassic_68k RETRO68=/Retro68-build/toolchain
+          make macclassic_ppc RETRO68=/Retro68-build/toolchain
+
+
+      - uses: ./.github/actions/notify_failure
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        with:
+          NOTIFY_MESSAGE: 'Failed to compile Mac Classic build'
+          WEBHOOK_URL: '${{ secrets.WEBHOOK_URL }}'
+
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-68k.dsk'
+          DEST_NAME: 'ClassiCube-68k.dsk'
+
+      - uses: ./.github/actions/upload_build
+        if: ${{ always() && steps.compile.outcome == 'success' }}
+        with:
+          SOURCE_FILE: 'ClassiCube-ppc.dsk'
+          DEST_NAME: 'ClassiCube-ppc.dsk'

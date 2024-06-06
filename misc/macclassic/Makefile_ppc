@@ -13,13 +13,13 @@ LDFLAGS=-lRetroConsole
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
-TARGET		:=	ClassiCube
-BUILD_DIR 	:=	build
+TARGET		:=	ClassiCube-ppc
+BUILD_DIR 	:=	build-ppc
 SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).pef $(BUILD_DIR)
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).pef
 	$(REZ) $(REZFLAGS) \
 		"misc/macclassic/ppcAPPL.r" \
 		-t "APPL" -c "????" \

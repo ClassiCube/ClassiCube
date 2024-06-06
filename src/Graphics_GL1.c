@@ -738,7 +738,6 @@ static void FallbackOpenGL(void) {
 
 	_glDrawElements    = gl11_drawElements;    _glColorPointer  = gl11_colorPointer;
 	_glTexCoordPointer = gl11_texCoordPointer; _glVertexPointer = gl11_vertexPointer;
-	_realDrawElements = NULL;
 
 	/* OpenGL 1.0 fallback support */
 	if (_realDrawElements) return;

@@ -12,13 +12,13 @@ LDFLAGS=-lRetroConsole
 RINCLUDES=$(PREFIX)/RIncludes
 REZFLAGS=-I$(RINCLUDES)
 
-TARGET		:=	ClassiCube
-BUILD_DIR 	:=	build
+TARGET		:=	ClassiCube-68k
+BUILD_DIR 	:=	build-68k
 SOURCE_DIR	:=	src
 C_SOURCES   := $(wildcard $(SOURCE_DIR)/*.c)
 C_OBJECTS   := $(patsubst $(SOURCE_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SOURCES))
 
-$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(TARGET).code.bin $(BUILD_DIR)
+$(TARGET).bin $(TARGET).APPL $(TARGET).dsk: $(BUILD_DIR) $(TARGET).code.bin
 	$(REZ) $(REZFLAGS) \
 		--copy "$(TARGET).code.bin" \
 		"misc/macclassic/68APPL.r" \
